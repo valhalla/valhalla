@@ -1,9 +1,9 @@
 #include "heimdall/worker.h"
+#include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
-#include "heimdall/util.h"
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
@@ -14,6 +14,7 @@
 #include <boost/geometry/geometries/linestring.hpp>
 #include <boost/geometry/geometries/multi_linestring.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <vtzero/builder.hpp>
 
 #include <algorithm>
@@ -30,6 +31,11 @@ namespace valhalla {
 namespace heimdall {
 
 namespace {
+/**
+ * Earth radius in meters for EPSG:3857 Web Mercator projection.
+ * This is the WGS84 ellipsoid semi-major axis.
+ */
+constexpr double kEarthRadiusMeters = 6378137.0;
 
 /**
  * Helper class to build the edges layer with pre-registered keys
@@ -519,14 +525,11 @@ public:
     key_named_intersection_ = layer_.add_key_without_dup_check("named_intersection");
     key_is_transit_ = layer_.add_key_without_dup_check("is_transit");
     key_transition_count_ = layer_.add_key_without_dup_check("transition_count");
+    key_timezone_ = layer_.add_key_without_dup_check("timezone");
   }
 
   void
-  add_feature(const vtzero::point& position, baldr::GraphId node_id, const baldr::NodeInfo* node) {
-    if (!node) {
-      return;
-    }
-
+  add_feature(const vtzero::point& position, baldr::GraphId node_id, const baldr::NodeInfo& node) {
     // Create point feature
     vtzero::point_feature_builder node_feature{layer_};
     node_feature.set_id(static_cast<uint64_t>(node_id));
@@ -539,12 +542,12 @@ public:
 
     // Add node properties
     node_feature.add_property(key_node_type_,
-                              vtzero::encoded_property_value(static_cast<uint32_t>(node->type())));
+                              vtzero::encoded_property_value(static_cast<uint32_t>(node.type())));
     node_feature.add_property(key_traffic_signal_,
-                              vtzero::encoded_property_value(node->traffic_signal()));
+                              vtzero::encoded_property_value(node.traffic_signal()));
 
     // Add individual access mode properties
-    uint16_t access = node->access();
+    uint16_t access = node.access();
     node_feature.add_property(key_access_auto_, vtzero::encoded_property_value(
                                                     static_cast<bool>(access & kAutoAccess)));
     node_feature.add_property(key_access_pedestrian_,
@@ -571,27 +574,30 @@ public:
                               vtzero::encoded_property_value(
                                   static_cast<bool>(access & kMotorcycleAccess)));
 
-    node_feature.add_property(key_edge_count_, vtzero::encoded_property_value(node->edge_count()));
+    node_feature.add_property(key_edge_count_, vtzero::encoded_property_value(node.edge_count()));
     node_feature.add_property(key_intersection_, vtzero::encoded_property_value(
-                                                     static_cast<uint32_t>(node->intersection())));
-    node_feature.add_property(key_density_, vtzero::encoded_property_value(node->density()));
+                                                     static_cast<uint32_t>(node.intersection())));
+    node_feature.add_property(key_density_, vtzero::encoded_property_value(node.density()));
     node_feature.add_property(key_local_edge_count_,
-                              vtzero::encoded_property_value(node->local_edge_count()));
+                              vtzero::encoded_property_value(node.local_edge_count()));
     node_feature.add_property(key_drive_on_right_,
-                              vtzero::encoded_property_value(node->drive_on_right()));
-    node_feature.add_property(key_elevation_, vtzero::encoded_property_value(node->elevation()));
+                              vtzero::encoded_property_value(node.drive_on_right()));
+    node_feature.add_property(key_elevation_, vtzero::encoded_property_value(node.elevation()));
     node_feature.add_property(key_tagged_access_,
-                              vtzero::encoded_property_value(node->tagged_access()));
+                              vtzero::encoded_property_value(node.tagged_access()));
     node_feature.add_property(key_private_access_,
-                              vtzero::encoded_property_value(node->private_access()));
+                              vtzero::encoded_property_value(node.private_access()));
     node_feature.add_property(key_cash_only_toll_,
-                              vtzero::encoded_property_value(node->cash_only_toll()));
-    node_feature.add_property(key_mode_change_, vtzero::encoded_property_value(node->mode_change()));
+                              vtzero::encoded_property_value(node.cash_only_toll()));
+    node_feature.add_property(key_mode_change_, vtzero::encoded_property_value(node.mode_change()));
     node_feature.add_property(key_named_intersection_,
-                              vtzero::encoded_property_value(node->named_intersection()));
-    node_feature.add_property(key_is_transit_, vtzero::encoded_property_value(node->is_transit()));
+                              vtzero::encoded_property_value(node.named_intersection()));
+    node_feature.add_property(key_is_transit_, vtzero::encoded_property_value(node.is_transit()));
     node_feature.add_property(key_transition_count_,
-                              vtzero::encoded_property_value(node->transition_count()));
+                              vtzero::encoded_property_value(node.transition_count()));
+    node_feature.add_property(key_timezone_,
+                              vtzero::encoded_property_value(
+                                  DateTime::get_tz_db().from_index(node.timezone())->name()));
 
     node_feature.commit();
   }
@@ -630,8 +636,86 @@ private:
   vtzero::index_value key_named_intersection_;
   vtzero::index_value key_is_transit_;
   vtzero::index_value key_transition_count_;
+  vtzero::index_value key_timezone_;
 };
 
+double lon_to_merc_x(const double lon) {
+  return kEarthRadiusMeters * lon * kPiD / 180.0;
+}
+
+double lat_to_merc_y(const double lat) {
+  return kEarthRadiusMeters * std::log(std::tan(kPiD / 4.0 + lat * kPiD / 360.0));
+}
+
+midgard::AABB2<midgard::PointLL> tile_to_bbox(const uint32_t z, const uint32_t x, const uint32_t y) {
+  const double n = std::pow(2.0, z);
+
+  double min_lon = x / n * 360.0 - 180.0;
+  double max_lon = (x + 1) / n * 360.0 - 180.0;
+
+  double min_lat_rad = std::atan(std::sinh(kPiD * (1 - 2 * (y + 1) / n)));
+  double max_lat_rad = std::atan(std::sinh(kPiD * (1 - 2 * y / n)));
+
+  double min_lat = min_lat_rad * 180.0 / kPiD;
+  double max_lat = max_lat_rad * 180.0 / kPiD;
+
+  return AABB2<PointLL>(PointLL(min_lon, min_lat), PointLL(max_lon, max_lat));
+}
+
+/**
+ * Encapsulates tile projection parameters for Web Mercator coordinate conversion
+ */
+struct TileProjection {
+  TileProjection(const midgard::AABB2<midgard::PointLL>& bbox) {
+    tile_merc_minx = lon_to_merc_x(bbox.minx());
+    tile_merc_maxx = lon_to_merc_x(bbox.maxx());
+    tile_merc_miny = lat_to_merc_y(bbox.miny());
+    tile_merc_maxy = lat_to_merc_y(bbox.maxy());
+    tile_merc_width = tile_merc_maxx - tile_merc_minx;
+    tile_merc_height = tile_merc_maxy - tile_merc_miny;
+  }
+  double tile_merc_minx;
+  double tile_merc_maxx;
+  double tile_merc_miny;
+  double tile_merc_maxy;
+  double tile_merc_width;
+  double tile_merc_height;
+  int32_t tile_extent = 4096;
+  int32_t tile_buffer = 128;
+};
+
+std::pair<int32_t, int32_t> ll_to_tile_coords(const midgard::PointLL node_ll,
+                                              const TileProjection& projection) {
+  double merc_x = lon_to_merc_x(node_ll.lng());
+  double merc_y = lat_to_merc_y(node_ll.lat());
+
+  double norm_x = (merc_x - projection.tile_merc_minx) / projection.tile_merc_width;
+  double norm_y = (projection.tile_merc_maxy - merc_y) / projection.tile_merc_height;
+
+  int32_t tile_x = static_cast<int32_t>(std::round(norm_x * projection.tile_extent));
+  int32_t tile_y = static_cast<int32_t>(std::round(norm_y * projection.tile_extent));
+
+  return {tile_x, tile_y};
+}
+
+void build_nodes_layer(NodesLayerBuilder& nodes_builder,
+                       const baldr::GraphId& node_id,
+                       const baldr::NodeInfo& node,
+                       const midgard::PointLL node_ll,
+                       const TileProjection& projection) {
+
+  // Convert to tile coordinates
+  const auto [tile_x, tile_y] = ll_to_tile_coords(node_ll, projection);
+
+  // Only render nodes that are within the tile (including buffer)
+  if (tile_x < -projection.tile_buffer || tile_x > projection.tile_extent + projection.tile_buffer ||
+      tile_y < -projection.tile_buffer || tile_y > projection.tile_extent + projection.tile_buffer) {
+    return;
+  }
+
+  // Add feature using the builder
+  nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node);
+}
 } // anonymous namespace
 
 heimdall_worker_t::heimdall_worker_t(const boost::property_tree::ptree& config,
@@ -663,35 +747,38 @@ heimdall_worker_t::heimdall_worker_t(const boost::property_tree::ptree& config,
   min_zoom_ = *std::min_element(min_zoom_road_class_.begin(), min_zoom_road_class_.end());
 }
 
-std::unordered_set<GraphId>
-heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
+void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
                                      const midgard::AABB2<midgard::PointLL>& bounds,
                                      const std::unordered_set<baldr::GraphId>& edge_ids,
                                      uint32_t z,
-                                     const TileProjection& projection,
                                      bool return_shortcuts) {
   using point_t = boost::geometry::model::d2::point_xy<double>;
   using linestring_t = boost::geometry::model::linestring<point_t>;
   using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
   using box_t = boost::geometry::model::box<point_t>;
 
+  // Pre-compute Web Mercator projection tile bounds
+  const TileProjection projection{bounds};
+
   // Create clip box with buffer to handle edges that cross boundaries
   const box_t clip_box(point_t(-projection.tile_buffer, -projection.tile_buffer),
                        point_t(projection.tile_extent + projection.tile_buffer,
                                projection.tile_extent + projection.tile_buffer));
 
-  // Create edges layer builder
+  // Create edges & nodes layer builder
   EdgesLayerBuilder edges_builder(tile);
+  NodesLayerBuilder nodes_builder(tile);
 
   // Collect unique nodes for the nodes layer
   std::unordered_set<GraphId> unique_nodes;
+  linestring_t unclipped_line;
+  unclipped_line.reserve(20);
+  multi_linestring_t clipped_lines;
 
+  baldr::graph_tile_ptr edge_tile;
+  // TODO: sort edge_ids
   for (const auto& edge_id : edge_ids) {
-    baldr::graph_tile_ptr edge_tile;
     const auto* edge = reader_->directededge(edge_id, edge_tile);
-    if (!edge || !edge_tile) {
-      continue;
-    }
 
     // Filter out shortcut edges if return_shortcuts is false
     if (!return_shortcuts && edge->is_shortcut()) {
@@ -701,7 +788,6 @@ heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
     // Filter by road class and zoom level
     auto road_class = edge->classification();
     uint32_t road_class_idx = static_cast<uint32_t>(road_class);
-    assert(road_class_idx < min_zoom_road_class_.size());
     if (z < min_zoom_road_class_[road_class_idx]) {
       continue;
     }
@@ -709,62 +795,29 @@ heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
     // Get edge geometry
     auto edge_info = edge_tile->edgeinfo(edge);
     auto shape = edge_info.shape();
+    if (shape.size() < 2) {
+      continue;
+    }
 
     // Reverse if needed
     if (!edge->forward()) {
       std::reverse(shape.begin(), shape.end());
     }
 
-    if (shape.size() < 2) {
-      continue;
-    }
-
-    // Convert lat/lon shape to tile coordinates (unclipped)
-    linestring_t unclipped_line;
-
-    for (const auto& ll : shape) {
-      // Convert point to Web Mercator
-      double merc_x = lon_to_merc_x(ll.lng());
-      double merc_y = lat_to_merc_y(ll.lat());
-
-      // Normalize to 0-1 within tile's mercator bounds
-      double norm_x = (merc_x - projection.tile_merc_minx) / projection.tile_merc_width;
-      double norm_y = (projection.tile_merc_maxy - merc_y) /
-                      projection.tile_merc_height; // Y is inverted in tiles
-
-      // Scale to tile extent and convert to tile coordinates
-      double tile_x = norm_x * projection.tile_extent;
-      double tile_y = norm_y * projection.tile_extent;
-
-      boost::geometry::append(unclipped_line, point_t(tile_x, tile_y));
-    }
-
-    // Clip the line to the tile boundaries using Boost.Geometry
-    // This properly handles lines that cross tile boundaries
-    multi_linestring_t clipped_lines;
-    boost::geometry::intersection(clip_box, unclipped_line, clipped_lines);
-
-    // Skip if no clipped segments (edge is completely outside tile)
-    if (clipped_lines.empty()) {
-      continue;
-    }
-
-    // Process each clipped line segment (there may be multiple if line crosses tile multiple
-    // times)
-    for (const auto& clipped_line : clipped_lines) {
+    auto process_single_line = [&](const linestring_t& line) {
       // Skip degenerate lines (less than 2 points)
-      if (clipped_line.size() < 2) {
-        continue;
+      if (line.size() < 2) {
+        return;
       }
 
       // Convert to vtzero points, removing consecutive duplicates
       std::vector<vtzero::point> tile_coords;
-      tile_coords.reserve(clipped_line.size());
+      tile_coords.reserve(line.size());
 
       int32_t last_x = INT32_MIN;
       int32_t last_y = INT32_MIN;
 
-      for (const auto& pt : clipped_line) {
+      for (const auto& pt : line) {
         int32_t x = static_cast<int32_t>(std::round(pt.x()));
         int32_t y = static_cast<int32_t>(std::round(pt.y()));
 
@@ -780,7 +833,7 @@ heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
 
       // Must have at least 2 unique points to create a valid linestring
       if (tile_coords.size() < 2) {
-        continue;
+        return;
       }
 
       // Check for opposing edge
@@ -788,74 +841,70 @@ heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
       const DirectedEdge* opp_edge = nullptr;
       GraphId opp_edge_id = reader_->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
 
-      // Add feature using the builder
-
-      const volatile baldr::TrafficSpeed* forward_traffic =
-          edge ? &edge_tile->trafficspeed(edge) : nullptr;
+      const volatile baldr::TrafficSpeed* forward_traffic = &edge_tile->trafficspeed(edge);
       const volatile baldr::TrafficSpeed* reverse_traffic =
           opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
       edges_builder.add_feature(tile_coords, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
                                 reverse_traffic, edge_info);
 
-      // Collect the end node of this edge for the nodes layer
-      unique_nodes.insert(edge->endnode());
+      // adding nodes only works if we have the opposing tile
+      if (opp_tile) {
+        if (const auto& it = unique_nodes.insert(edge->endnode()); it.second) {
+          const auto& node = *reader_->nodeinfo(*it.first, opp_tile);
+          auto ll = node.latlng(opp_tile->header()->base_ll());
+          build_nodes_layer(nodes_builder, *it.first, node, ll, projection);
+        }
+        if (const auto& it = unique_nodes.insert(opp_edge->endnode()); it.second) {
+          const auto& node = *reader_->nodeinfo(*it.first, edge_tile);
+          auto ll = node.latlng(edge_tile->header()->base_ll());
+          build_nodes_layer(nodes_builder, *it.first, node, ll, projection);
+        }
+      }
+    };
+
+    unclipped_line.clear();
+    bool line_leaves_bbox = false;
+    for (const auto& ll : shape) {
+      const auto [tile_x, tile_y] = ll_to_tile_coords(ll, projection);
+
+      // only in this case we need an intersection with the clip_box
+      line_leaves_bbox = tile_x > clip_box.max_corner().x() || tile_y > clip_box.max_corner().y() ||
+                         tile_x < clip_box.min_corner().x() || tile_y < clip_box.min_corner().y();
+
+      boost::geometry::append(unclipped_line, point_t(tile_x, tile_y));
     }
-  }
 
-  return unique_nodes;
-}
-
-void heimdall_worker_t::build_nodes_layer(vtzero::tile_builder& tile,
-                                          const std::unordered_set<baldr::GraphId>& unique_nodes,
-                                          const TileProjection& projection) {
-  // Create nodes layer builder
-  NodesLayerBuilder nodes_builder(tile);
-
-  // Render unique nodes as points
-  for (const auto& node_id : unique_nodes) {
-    baldr::graph_tile_ptr node_tile;
-    const auto* node = reader_->nodeinfo(node_id, node_tile);
-    if (!node || !node_tile) {
+    if (!line_leaves_bbox) {
+      process_single_line(unclipped_line);
       continue;
     }
 
-    // Get node position
-    auto node_ll = node->latlng(node_tile->header()->base_ll());
+    clipped_lines.clear();
+    boost::geometry::intersection(clip_box, unclipped_line, clipped_lines);
 
-    // Convert to Web Mercator and then to tile coordinates
-    double merc_x = lon_to_merc_x(node_ll.lng());
-    double merc_y = lat_to_merc_y(node_ll.lat());
-
-    double norm_x = (merc_x - projection.tile_merc_minx) / projection.tile_merc_width;
-    double norm_y = (projection.tile_merc_maxy - merc_y) / projection.tile_merc_height;
-
-    int32_t tile_x = static_cast<int32_t>(std::round(norm_x * projection.tile_extent));
-    int32_t tile_y = static_cast<int32_t>(std::round(norm_y * projection.tile_extent));
-
-    // Only render nodes that are within the tile (including buffer)
-    if (tile_x < -projection.tile_buffer ||
-        tile_x > projection.tile_extent + projection.tile_buffer ||
-        tile_y < -projection.tile_buffer ||
-        tile_y > projection.tile_extent + projection.tile_buffer) {
+    // skip if no clipped segments, i.e. edge is completely outside tile
+    if (clipped_lines.empty()) {
       continue;
     }
 
-    // Add feature using the builder
-    nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node);
+    // process each clipped line segment (there may be multiple if line crosses tile multiple
+    // times)
+    for (const auto& clipped_line : clipped_lines) {
+      process_single_line(clipped_line);
+    }
   }
 }
 
-std::string
-heimdall_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y, bool return_shortcuts) {
+std::string heimdall_worker_t::render_tile(const uint32_t z,
+                                           const uint32_t x,
+                                           const uint32_t y,
+                                           const bool return_shortcuts) {
   // Validate tile coordinates
-  uint32_t max_coord = (1u << z);
+  const uint32_t max_coord = (1u << z);
   if (x >= max_coord || y >= max_coord || z > 30) {
-    throw valhalla_exception_t{400, "Invalid tile coordinates"};
+    throw valhalla_exception_t{600};
   }
-
-  // Calculate tile bounding box
-  auto bounds = tile_to_bbox(z, x, y);
 
   // Create vector tile
   vtzero::tile_builder tile;
@@ -865,27 +914,14 @@ heimdall_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y, bool return_s
     return tile.serialize();
   }
 
+  // Calculate tile bounding box
+  const auto bounds = tile_to_bbox(z, x, y);
+
   // Query edges within the tile bounding box
-  auto edge_ids = candidate_query_.RangeQuery(bounds);
+  const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
-  // Pre-compute Web Mercator projection tile bounds (once for all edges)
-  const int32_t TILE_EXTENT = 4096;
-  const int32_t TILE_BUFFER = 128;
-
-  TileProjection projection{lon_to_merc_x(bounds.minx()),
-                            lon_to_merc_x(bounds.maxx()),
-                            lat_to_merc_y(bounds.miny()),
-                            lat_to_merc_y(bounds.maxy()),
-                            lon_to_merc_x(bounds.maxx()) - lon_to_merc_x(bounds.minx()),
-                            lat_to_merc_y(bounds.maxy()) - lat_to_merc_y(bounds.miny()),
-                            TILE_EXTENT,
-                            TILE_BUFFER};
-
-  // Build edges layer and collect unique nodes
-  auto unique_nodes = build_edges_layer(tile, bounds, edge_ids, z, projection, return_shortcuts);
-
-  // Build nodes layer
-  build_nodes_layer(tile, unique_nodes, projection);
+  // Build layers
+  build_layers(tile, bounds, edge_ids, z, return_shortcuts);
 
   return tile.serialize();
 }

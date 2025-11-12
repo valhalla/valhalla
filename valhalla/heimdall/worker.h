@@ -44,23 +44,12 @@ public:
    * @param return_shortcuts  If false (default), filter out shortcut edges
    * @return  Serialized MVT tile data as a string
    */
-  std::string render_tile(uint32_t z, uint32_t x, uint32_t y, bool return_shortcuts = false);
+  std::string render_tile(const uint32_t z,
+                          const uint32_t x,
+                          const uint32_t y,
+                          const bool return_shortcuts = false);
 
 private:
-  /**
-   * Encapsulates tile projection parameters for Web Mercator coordinate conversion
-   */
-  struct TileProjection {
-    double tile_merc_minx;
-    double tile_merc_maxx;
-    double tile_merc_miny;
-    double tile_merc_maxy;
-    double tile_merc_width;
-    double tile_merc_height;
-    int32_t tile_extent;
-    int32_t tile_buffer;
-  };
-
   // Default minimum zoom levels for each road class:
   // Motorway=7, Trunk=7, Primary=8, Secondary=10, Tertiary=11,
   // Unclassified=11, Residential=13, Service/Other=14
@@ -69,24 +58,14 @@ private:
   using ZoomConfig = std::array<uint32_t, kNumRoadClasses>;
 
   /**
-   * Build the edges layer for the vector tile
+   * Build the edges & nodes layers for the vector tile
    * @param return_shortcuts  If false, filter out shortcut edges
-   * @return Set of unique nodes encountered while building edges
    */
-  std::unordered_set<baldr::GraphId>
-  build_edges_layer(vtzero::tile_builder& tile,
+  void build_layers(vtzero::tile_builder& tile,
                     const midgard::AABB2<midgard::PointLL>& bounds,
                     const std::unordered_set<baldr::GraphId>& edge_ids,
                     uint32_t z,
-                    const TileProjection& projection,
                     bool return_shortcuts);
-
-  /**
-   * Build the nodes layer for the vector tile
-   */
-  void build_nodes_layer(vtzero::tile_builder& tile,
-                         const std::unordered_set<baldr::GraphId>& unique_nodes,
-                         const TileProjection& projection);
 
   boost::property_tree::ptree config_;
   std::shared_ptr<baldr::GraphReader> reader_;

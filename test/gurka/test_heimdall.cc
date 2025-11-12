@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "heimdall/worker.h"
+#include "midgard/constants.h"
 
 #include <valhalla/exceptions.h>
 
@@ -9,6 +10,7 @@
 #include <set>
 
 using namespace valhalla;
+using namespace valhalla::midgard;
 
 TEST(Heimdall, BasicTileRendering) {
   constexpr double gridsize = 100;
@@ -39,7 +41,7 @@ TEST(Heimdall, BasicTileRendering) {
   double n = std::pow(2.0, z);
   uint32_t x = static_cast<uint32_t>((node_b.lng() + 180.0) / 360.0 * n);
   uint32_t y = static_cast<uint32_t>(
-      (1.0 - std::asinh(std::tan(node_b.lat() * M_PI / 180.0)) / M_PI) / 2.0 * n);
+      (1.0 - std::asinh(std::tan(node_b.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n);
 
   // Render the tile
   auto tile_data = worker.render_tile(z, x, y);
@@ -164,14 +166,14 @@ TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
   double n10 = std::pow(2.0, z10);
   uint32_t x10 = static_cast<uint32_t>((node_f.lng() + 180.0) / 360.0 * n10);
   uint32_t y10 = static_cast<uint32_t>(
-      (1.0 - std::asinh(std::tan(node_f.lat() * M_PI / 180.0)) / M_PI) / 2.0 * n10);
+      (1.0 - std::asinh(std::tan(node_f.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n10);
 
   // zoom 12
   uint32_t z12 = 12;
   double n12 = std::pow(2.0, z12);
   uint32_t x12 = static_cast<uint32_t>((node_f.lng() + 180.0) / 360.0 * n12);
   uint32_t y12 = static_cast<uint32_t>(
-      (1.0 - std::asinh(std::tan(node_f.lat() * M_PI / 180.0)) / M_PI) / 2.0 * n12);
+      (1.0 - std::asinh(std::tan(node_f.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n12);
 
   // Render tile at zoom 10
   auto tile_data_z10 = worker.render_tile(z10, x10, y10);
