@@ -30,15 +30,15 @@ constexpr std::array<Turn::Type, 360> make_turn_type_lut() {
 constexpr auto kTurnTypeLUT = make_turn_type_lut();
 } // namespace
 
-const std::unordered_map<int, std::string>
-    turn_type_to_string{{static_cast<int>(Turn::Type::kStraight), "straight"},
-                        {static_cast<int>(Turn::Type::kSlightRight), "slight right"},
-                        {static_cast<int>(Turn::Type::kRight), "right"},
-                        {static_cast<int>(Turn::Type::kSharpRight), "sharp right"},
-                        {static_cast<int>(Turn::Type::kReverse), "reverse"},
-                        {static_cast<int>(Turn::Type::kSharpLeft), "sharp left"},
-                        {static_cast<int>(Turn::Type::kLeft), "left"},
-                        {static_cast<int>(Turn::Type::kSlightLeft), "slight left"}};
+const std::unordered_map<Turn::Type, std::string>
+    turn_type_to_string{{Turn::Type::kStraight, "straight"},
+                        {Turn::Type::kSlightRight, "slight right"},
+                        {Turn::Type::kRight, "right"},
+                        {Turn::Type::kSharpRight, "sharp right"},
+                        {Turn::Type::kReverse, "reverse"},
+                        {Turn::Type::kSharpLeft, "sharp left"},
+                        {Turn::Type::kLeft, "left"},
+                        {Turn::Type::kSlightLeft, "slight left"}};
 
 // Returns the turn type based on the specified turn degree.
 Turn::Type Turn::GetType(uint32_t turn_degree) {
@@ -47,7 +47,7 @@ Turn::Type Turn::GetType(uint32_t turn_degree) {
 }
 
 std::string Turn::GetTypeString(Turn::Type turn_type) {
-  auto it_type = turn_type_to_string.find(static_cast<int>(turn_type));
+  auto it_type = turn_type_to_string.find(turn_type);
   return (it_type != turn_type_to_string.cend()) ? it_type->second : "undefined";
 }
 
