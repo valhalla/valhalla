@@ -21,6 +21,7 @@
    * ADDED: Make possible to use `-DCMAKE_UNITY_BUILD=ON` [#5691](https://github.com/valhalla/valhalla/pull/5691)
    * CHANGED: make alternative_iterations_delta configurable [#5679](https://github.com/valhalla/valhalla/pull/5679)
    * ADDED: `flow_sources` expansion property [#5697](https://github.com/valhalla/valhalla/pull/5697)
+   * ADDED: valhalla_ingest_traffic uses calendar_dates.txt if calendar.txt is missing [#5705](https://github.com/valhalla/valhalla/pull/5705)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
