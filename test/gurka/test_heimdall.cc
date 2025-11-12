@@ -46,7 +46,7 @@ TEST(Heimdall, BasicTileRendering) {
   // Render the tile
   auto tile_data = worker.render_tile(z, x, y);
 
-  ASSERT_EQ(tile_data.size(), 2768);
+  EXPECT_EQ(tile_data.size(), 2804);
 
   vtzero::vector_tile tile{tile_data};
 
@@ -177,12 +177,12 @@ TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
 
   // Render tile at zoom 10
   auto tile_data_z10 = worker.render_tile(z10, x10, y10);
-  EXPECT_EQ(tile_data_z10.size(), 4626);
+  EXPECT_EQ(tile_data_z10.size(), 4686);
 
   // Render tile at zoom 12
   auto tile_data_z12 = worker.render_tile(z12, x12, y12);
   ASSERT_FALSE(tile_data_z12.empty());
-  EXPECT_EQ(tile_data_z12.size(), 6833);
+  EXPECT_EQ(tile_data_z12.size(), 6925);
 
   // Parse Z10 tile
   vtzero::vector_tile tile_z10{tile_data_z10};

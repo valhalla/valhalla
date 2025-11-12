@@ -131,14 +131,14 @@
                             ],
                             [
                                 'case',
-                                ['all', ['has', 'speed:forward'], ['has', 'speed:reverse']],
+                                ['all', ['has', 'speed:forward'], ['has', 'speed:backward']],
                                 '\n',
                                 ''
                             ],
                             [
                                 'case',
-                                ['has', 'speed:reverse'],
-                                ['concat', 'BWD ', ['get', 'speed:reverse'], ' KPH'],
+                                ['has', 'speed:backward'],
+                                ['concat', 'BWD ', ['get', 'speed:backward'], ' KPH'],
                                 ''
                             ]
                         ],
@@ -314,6 +314,8 @@
                                 value = `${value} KPH`;
                             } else if (key.includes('slope')) {
                                 value = `${value}°`;
+                            } else {
+                                value = `${value}`;
                             }
                             
                             html += '<tr>';

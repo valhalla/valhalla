@@ -6,7 +6,7 @@
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include <array>
 #include <cstdint>
@@ -67,7 +67,6 @@ private:
                     uint32_t z,
                     bool return_shortcuts);
 
-  boost::property_tree::ptree config_;
   std::shared_ptr<baldr::GraphReader> reader_;
   meili::CandidateGridQuery candidate_query_;
 

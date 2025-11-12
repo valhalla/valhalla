@@ -716,8 +716,8 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
                        const baldr::GraphId& node_id,
                        const TileProjection& projection) {
   const auto& node = *graph_tile->node(node_id);
-  const auto node_ll = node.latlng(graph_tile->header()->base_ll());
-  const auto admin_info = graph_tile->admininfo(node.admin_index());
+  const auto& node_ll = node.latlng(graph_tile->header()->base_ll());
+  const auto& admin_info = graph_tile->admininfo(node.admin_index());
 
   // Convert to tile coordinates
   const auto [tile_x, tile_y] = ll_to_tile_coords(node_ll, projection);
@@ -735,7 +735,7 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
 
 heimdall_worker_t::heimdall_worker_t(const boost::property_tree::ptree& config,
                                      const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : config_(config), reader_(graph_reader),
+    : reader_(graph_reader),
       candidate_query_(*graph_reader,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
@@ -797,14 +797,13 @@ void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
       continue;
     }
 
-    // filter road classed by zoom
+    // filter road classes by zoom
     auto road_class = edge->classification();
     uint32_t road_class_idx = static_cast<uint32_t>(road_class);
     if (z < min_zoom_road_class_[road_class_idx]) {
       continue;
     }
 
-    // get edge shape
     auto edge_info = edge_tile->edgeinfo(edge);
     auto shape = edge_info.shape();
     if (!edge->forward()) {
