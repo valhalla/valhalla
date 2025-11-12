@@ -43,7 +43,7 @@ uint64_t CountryISOCodeToValue(const std::string& countryIso) {
     value = (static_cast<uint64_t>(countryIso[0]) << 8) | static_cast<uint64_t>(countryIso[1]);
   }
   else {
-    LOG_INFO("Country ISO is not valid. Must be 2 characters.");
+    LOG_DEBUG("Country ISO is not valid. Must be 2 characters.");
   }
   return value;
 }
@@ -406,13 +406,13 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
         (forward && direction == AccessRestrictionDirection::kForward) ||
         (!forward && direction == AccessRestrictionDirection::kBackward)) {
           auto type = r->second.type();
-          if(type == valhalla::baldr::AccessType::kMaxHeight)
+          /*if(type == valhalla::baldr::AccessType::kMaxHeight)
           {
             type = valhalla::baldr::AccessType::kVignette;
-          }
+          }*/
       AccessRestriction access_restriction(edgeid, type, r->second.modes(),
                                            r->second.value(), r->second.except_destination(), 
-                                          CountryISOCodeToValue(countryIso));
+                                           CountryISOCodeToValue(countryIso));
       graphtile.AddAccessRestriction(access_restriction);
       modes |= r->second.modes();
     }

@@ -786,7 +786,8 @@ public:
         bool doNotAvoidVignette = true;
 
         auto countryIso = ConvertIntToISO(restriction.countryIsoCode());
-        if (exclude_country_vignettes_.contains(countryIso)) {
+        if (exclude_country_vignettes_.contains(countryIso) ||
+            exclude_country_vignettes_.contains("ALL")) {
           doNotAvoidVignette = false;
         }
         return doNotAvoidVignette;
