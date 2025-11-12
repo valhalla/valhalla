@@ -6,6 +6,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
 
+#include <charconv>
 #include <cstdint>
 #include <cstring>
 #include <limits>
@@ -670,6 +671,77 @@ template <typename numeric_t> bool is_invalid(numeric_t value) {
  */
 template <typename numeric_t> bool is_valid(numeric_t value) {
   return value != invalid<numeric_t>();
+}
+
+namespace to_float_detail {
+// SFINAE helper to detect if std::from_chars supports floating-point type T,
+// some compilers (e.g. Clang) don't support it yet, so we need to fallback to std::stof
+template <typename T, typename = void> struct has_from_chars_for_float : std::false_type {};
+
+template <typename T>
+struct has_from_chars_for_float<T,
+                                std::void_t<decltype(std::from_chars(std::declval<const char*>(),
+                                                                     std::declval<const char*>(),
+                                                                     std::declval<T&>()))>>
+    : std::true_type {};
+
+template <typename T>
+inline constexpr bool has_from_chars_for_float_v = has_from_chars_for_float<T>::value;
+} // namespace to_float_detail
+
+/**
+ * Convert a string to a floating-point value.
+ * Uses std::from_chars if available for the type (faster, locale-independent),
+ * otherwise falls back to std::stof/std::stod (locale-dependent).
+ * @tparam  T      Floating-point type (float, double, or long double)
+ * @param   value  String representation of the floating-point number
+ * @return  Returns the parsed floating-point value
+ * @throws  std::invalid_argument if the string cannot be converted
+ * @throws  std::out_of_range if the value is outside the representable range for type T
+ */
+template <typename T = float> T to_float(const std::string& value) {
+  static_assert(std::is_floating_point_v<T>, "T must be a floating-point type");
+
+  if constexpr (to_float_detail::has_from_chars_for_float_v<T>) {
+    T result;
+    auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+    if (ec == std::errc::invalid_argument) {
+      throw std::invalid_argument("Invalid float value: " + value);
+    }
+    if (ec == std::errc::result_out_of_range) {
+      throw std::out_of_range("Float value out of range: " + value);
+    }
+    return result;
+  } else {
+    if constexpr (std::is_same_v<T, float>) {
+      return std::stof(value);
+    } else if constexpr (std::is_same_v<T, double>) {
+      return std::stod(value);
+    } else {
+      static_assert(false, "Unsupported floating-point type");
+    }
+  }
+}
+
+/**
+ * Convert a string to an integer value.
+ * Uses std::from_chars for fast, locale-independent parsing.
+ * @tparam  T      Integer type (int, int64_t, uint32_t, etc.)
+ * @param   value  String representation of the integer
+ * @return  Returns the parsed integer value
+ * @throws  std::invalid_argument if the string cannot be converted
+ * @throws  std::out_of_range if the value is outside the representable range for type T
+ */
+template <typename T = int> T to_int(std::string_view value) {
+  T result;
+  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+  if (ec == std::errc::invalid_argument) {
+    throw std::invalid_argument("Invalid int value: " + std::string(value));
+  }
+  if (ec == std::errc::result_out_of_range) {
+    throw std::out_of_range("Int value out of range: " + std::string(value));
+  }
+  return result;
 }
 
 } // namespace midgard
