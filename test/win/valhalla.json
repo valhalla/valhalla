@@ -277,5 +277,8 @@
         "expand_within_distance": { "0": 1e8, "1": 100000, "2": 5000 }
       }
     }
+  },
+  "heimdall": {
+    "min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14]
   }
 }

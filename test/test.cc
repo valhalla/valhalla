@@ -485,6 +485,9 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
                 "expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
             }
         }
+      },
+      "heimdall": {
+        "min_zoom_road_class": [8, 9, 10, 11, 12, 12, 12, 12]
       }
     }
   )";

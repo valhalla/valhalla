@@ -526,10 +526,14 @@ public:
     key_is_transit_ = layer_.add_key_without_dup_check("is_transit");
     key_transition_count_ = layer_.add_key_without_dup_check("transition_count");
     key_timezone_ = layer_.add_key_without_dup_check("timezone");
+    key_iso_3166_1_ = layer_.add_key_without_dup_check("iso_3166_1");
+    key_iso_3166_2_ = layer_.add_key_without_dup_check("iso_3166_2");
   }
 
-  void
-  add_feature(const vtzero::point& position, baldr::GraphId node_id, const baldr::NodeInfo& node) {
+  void add_feature(const vtzero::point& position,
+                   baldr::GraphId node_id,
+                   const baldr::NodeInfo& node,
+                   const baldr::AdminInfo& admin_info) {
     // Create point feature
     vtzero::point_feature_builder node_feature{layer_};
     node_feature.set_id(static_cast<uint64_t>(node_id));
@@ -595,9 +599,16 @@ public:
     node_feature.add_property(key_is_transit_, vtzero::encoded_property_value(node.is_transit()));
     node_feature.add_property(key_transition_count_,
                               vtzero::encoded_property_value(node.transition_count()));
-    node_feature.add_property(key_timezone_,
-                              vtzero::encoded_property_value(
-                                  DateTime::get_tz_db().from_index(node.timezone())->name()));
+    node_feature.add_property(key_iso_3166_1_,
+                              vtzero::encoded_property_value(admin_info.country_iso()));
+    node_feature.add_property(key_iso_3166_2_,
+                              vtzero::encoded_property_value(admin_info.state_iso()));
+
+    if (node.timezone()) {
+      node_feature.add_property(key_timezone_,
+                                vtzero::encoded_property_value(
+                                    DateTime::get_tz_db().from_index(node.timezone())->name()));
+    }
 
     node_feature.commit();
   }
@@ -637,6 +648,8 @@ private:
   vtzero::index_value key_is_transit_;
   vtzero::index_value key_transition_count_;
   vtzero::index_value key_timezone_;
+  vtzero::index_value key_iso_3166_1_;
+  vtzero::index_value key_iso_3166_2_;
 };
 
 double lon_to_merc_x(const double lon) {
@@ -699,10 +712,12 @@ std::pair<int32_t, int32_t> ll_to_tile_coords(const midgard::PointLL node_ll,
 }
 
 void build_nodes_layer(NodesLayerBuilder& nodes_builder,
+                       const baldr::graph_tile_ptr& graph_tile,
                        const baldr::GraphId& node_id,
-                       const baldr::NodeInfo& node,
-                       const midgard::PointLL node_ll,
                        const TileProjection& projection) {
+  const auto& node = *graph_tile->node(node_id);
+  const auto node_ll = node.latlng(graph_tile->header()->base_ll());
+  const auto admin_info = graph_tile->admininfo(node.admin_index());
 
   // Convert to tile coordinates
   const auto [tile_x, tile_y] = ll_to_tile_coords(node_ll, projection);
@@ -714,7 +729,7 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
   }
 
   // Add feature using the builder
-  nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node);
+  nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
 }
 } // anonymous namespace
 
@@ -757,60 +772,52 @@ void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
   using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
   using box_t = boost::geometry::model::box<point_t>;
 
-  // Pre-compute Web Mercator projection tile bounds
   const TileProjection projection{bounds};
 
-  // Create clip box with buffer to handle edges that cross boundaries
+  // create clip box with buffer to handle edges that cross boundaries
   const box_t clip_box(point_t(-projection.tile_buffer, -projection.tile_buffer),
                        point_t(projection.tile_extent + projection.tile_buffer,
                                projection.tile_extent + projection.tile_buffer));
 
-  // Create edges & nodes layer builder
   EdgesLayerBuilder edges_builder(tile);
   NodesLayerBuilder nodes_builder(tile);
 
-  // Collect unique nodes for the nodes layer
   std::unordered_set<GraphId> unique_nodes;
+  unique_nodes.reserve(edge_ids.size());
   linestring_t unclipped_line;
   unclipped_line.reserve(20);
   multi_linestring_t clipped_lines;
-
   baldr::graph_tile_ptr edge_tile;
   // TODO: sort edge_ids
   for (const auto& edge_id : edge_ids) {
     const auto* edge = reader_->directededge(edge_id, edge_tile);
 
-    // Filter out shortcut edges if return_shortcuts is false
+    // no shortcuts if not requested
     if (!return_shortcuts && edge->is_shortcut()) {
       continue;
     }
 
-    // Filter by road class and zoom level
+    // filter road classed by zoom
     auto road_class = edge->classification();
     uint32_t road_class_idx = static_cast<uint32_t>(road_class);
     if (z < min_zoom_road_class_[road_class_idx]) {
       continue;
     }
 
-    // Get edge geometry
+    // get edge shape
     auto edge_info = edge_tile->edgeinfo(edge);
     auto shape = edge_info.shape();
-    if (shape.size() < 2) {
-      continue;
-    }
-
-    // Reverse if needed
     if (!edge->forward()) {
       std::reverse(shape.begin(), shape.end());
     }
 
+    // lambda to add VT line & nodes features
     auto process_single_line = [&](const linestring_t& line) {
-      // Skip degenerate lines (less than 2 points)
       if (line.size() < 2) {
         return;
       }
 
-      // Convert to vtzero points, removing consecutive duplicates
+      // convert to vtzero points, removing consecutive duplicates
       std::vector<vtzero::point> tile_coords;
       tile_coords.reserve(line.size());
 
@@ -851,14 +858,10 @@ void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
       // adding nodes only works if we have the opposing tile
       if (opp_tile) {
         if (const auto& it = unique_nodes.insert(edge->endnode()); it.second) {
-          const auto& node = *reader_->nodeinfo(*it.first, opp_tile);
-          auto ll = node.latlng(opp_tile->header()->base_ll());
-          build_nodes_layer(nodes_builder, *it.first, node, ll, projection);
+          build_nodes_layer(nodes_builder, opp_tile, *it.first, projection);
         }
         if (const auto& it = unique_nodes.insert(opp_edge->endnode()); it.second) {
-          const auto& node = *reader_->nodeinfo(*it.first, edge_tile);
-          auto ll = node.latlng(edge_tile->header()->base_ll());
-          build_nodes_layer(nodes_builder, *it.first, node, ll, projection);
+          build_nodes_layer(nodes_builder, edge_tile, *it.first, projection);
         }
       }
     };
@@ -872,6 +875,8 @@ void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
       line_leaves_bbox = tile_x > clip_box.max_corner().x() || tile_y > clip_box.max_corner().y() ||
                          tile_x < clip_box.min_corner().x() || tile_y < clip_box.min_corner().y();
 
+      // TODO(nils): is there a point promoting int32 to double? could just register a custom boost
+      // geometry type for vtzero points
       boost::geometry::append(unclipped_line, point_t(tile_x, tile_y));
     }
 
@@ -900,27 +905,24 @@ std::string heimdall_worker_t::render_tile(const uint32_t z,
                                            const uint32_t x,
                                            const uint32_t y,
                                            const bool return_shortcuts) {
-  // Validate tile coordinates
   const uint32_t max_coord = (1u << z);
   if (x >= max_coord || y >= max_coord || z > 30) {
     throw valhalla_exception_t{600};
   }
 
-  // Create vector tile
   vtzero::tile_builder tile;
 
-  // Don't render anything below minimum zoom level
   if (z < min_zoom_) {
     return tile.serialize();
   }
 
-  // Calculate tile bounding box
+  // get lat/lon bbox
   const auto bounds = tile_to_bbox(z, x, y);
 
-  // Query edges within the tile bounding box
+  // query edges in bbox, omits opposing edges
+  // TODO(nils): can RangeQuery be updated to skip hierarchy levels?
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
-  // Build layers
   build_layers(tile, bounds, edge_ids, z, return_shortcuts);
 
   return tile.serialize();
