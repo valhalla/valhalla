@@ -68,25 +68,25 @@ inline BuildStage string_to_buildstage(const std::string& s) {
 
 // Convert BuildStage to string
 inline std::string to_string(BuildStage stg) {
-  static const std::unordered_map<uint8_t, std::string> BuildStageStrings =
-      {{static_cast<int8_t>(BuildStage::kInitialize), "initialize"},
-       {static_cast<int8_t>(BuildStage::kParseWays), "parseways"},
-       {static_cast<int8_t>(BuildStage::kParseRelations), "parserelations"},
-       {static_cast<int8_t>(BuildStage::kParseNodes), "parsenodes"},
-       {static_cast<int8_t>(BuildStage::kConstructEdges), "constructedges"},
-       {static_cast<int8_t>(BuildStage::kBuild), "build"},
-       {static_cast<int8_t>(BuildStage::kEnhance), "enhance"},
-       {static_cast<int8_t>(BuildStage::kFilter), "filter"},
-       {static_cast<int8_t>(BuildStage::kTransit), "transit"},
-       {static_cast<int8_t>(BuildStage::kBss), "bss"},
-       {static_cast<int8_t>(BuildStage::kHierarchy), "hierarchy"},
-       {static_cast<int8_t>(BuildStage::kShortcuts), "shortcuts"},
-       {static_cast<int8_t>(BuildStage::kRestrictions), "restrictions"},
-       {static_cast<int8_t>(BuildStage::kElevation), "elevation"},
-       {static_cast<int8_t>(BuildStage::kValidate), "validate"},
-       {static_cast<int8_t>(BuildStage::kCleanup), "cleanup"}};
+  static const std::unordered_map<BuildStage, std::string> BuildStageStrings =
+      {{BuildStage::kInitialize, "initialize"},
+       {BuildStage::kParseWays, "parseways"},
+       {BuildStage::kParseRelations, "parserelations"},
+       {BuildStage::kParseNodes, "parsenodes"},
+       {BuildStage::kConstructEdges, "constructedges"},
+       {BuildStage::kBuild, "build"},
+       {BuildStage::kEnhance, "enhance"},
+       {BuildStage::kFilter, "filter"},
+       {BuildStage::kTransit, "transit"},
+       {BuildStage::kBss, "bss"},
+       {BuildStage::kHierarchy, "hierarchy"},
+       {BuildStage::kShortcuts, "shortcuts"},
+       {BuildStage::kRestrictions, "restrictions"},
+       {BuildStage::kElevation, "elevation"},
+       {BuildStage::kValidate, "validate"},
+       {BuildStage::kCleanup, "cleanup"}};
 
-  auto i = BuildStageStrings.find(static_cast<int8_t>(stg));
+  auto i = BuildStageStrings.find(stg);
   return (i == BuildStageStrings.cend()) ? "null" : i->second;
 }
 
