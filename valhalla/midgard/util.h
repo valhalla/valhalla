@@ -697,29 +697,29 @@ inline constexpr bool has_from_chars_for_float_v = has_from_chars_for_float<T>::
  * @param   value  String representation of the floating-point number
  * @return  Returns the parsed floating-point value
  * @throws  std::invalid_argument if the string cannot be converted
- * @throws  std::out_of_range if the value is outside the representable range for type T
  */
-template <typename T = float> T to_float(const std::string& value) {
+template <typename T = float,
+          std::enable_if_t<to_float_detail::has_from_chars_for_float_v<T>, int> = 0>
+T to_float(std::string_view value) {
   static_assert(std::is_floating_point_v<T>, "T must be a floating-point type");
+  T result;
+  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+  if (ec != std::errc()) {
+    throw std::invalid_argument("Invalid float value: " + std::string(value));
+  }
+  return result;
+}
 
-  if constexpr (to_float_detail::has_from_chars_for_float_v<T>) {
-    T result;
-    auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
-    if (ec == std::errc::invalid_argument) {
-      throw std::invalid_argument("Invalid float value: " + value);
-    }
-    if (ec == std::errc::result_out_of_range) {
-      throw std::out_of_range("Float value out of range: " + value);
-    }
-    return result;
+template <typename T = float,
+          std::enable_if_t<!to_float_detail::has_from_chars_for_float_v<T>, int> = 0>
+T to_float(const std::string& value) {
+  static_assert(std::is_floating_point_v<T>, "T must be a floating-point type");
+  if constexpr (std::is_same_v<T, float>) {
+    return std::stof(value);
+  } else if constexpr (std::is_same_v<T, double>) {
+    return std::stod(value);
   } else {
-    if constexpr (std::is_same_v<T, float>) {
-      return std::stof(value);
-    } else if constexpr (std::is_same_v<T, double>) {
-      return std::stod(value);
-    } else {
-      static_assert(false, "Unsupported floating-point type");
-    }
+    static_assert(false, "Unsupported floating-point type");
   }
 }
 
@@ -730,16 +730,12 @@ template <typename T = float> T to_float(const std::string& value) {
  * @param   value  String representation of the integer
  * @return  Returns the parsed integer value
  * @throws  std::invalid_argument if the string cannot be converted
- * @throws  std::out_of_range if the value is outside the representable range for type T
  */
 template <typename T = int> T to_int(std::string_view value) {
   T result;
   auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
-  if (ec == std::errc::invalid_argument) {
+  if (ec != std::errc()) {
     throw std::invalid_argument("Invalid int value: " + std::string(value));
-  }
-  if (ec == std::errc::result_out_of_range) {
-    throw std::out_of_range("Int value out of range: " + std::string(value));
   }
   return result;
 }
