@@ -30,6 +30,7 @@ The `expansion_properties` choices are as follows:
 | `pred_edge_id` |  Returns the internal edge IDs of the predecessor for each edge in order of graph traversal. Mostly interesting for debugging. |
 | `edge_status`   | Returns the edge states for each edge in order of graph traversal. Mostly interesting for debugging. Can be one of "r" (reached), "s" (settled), "c" (connected). |
 | `expansion_type`   | Returns the expansion direction from which the edge was encountered. 0 for forward, 1 for reverse. |
+| `flow_sources`   | Returns which speed sources were used on the edge. Only populated when an edge is first reached. Adds the following boolean properties in JSON: `["flow_sources_current", "flow_sources_predicted", "flow_sources_free_flow", "flow_sources_constrained"]`. |
 
 An example request is:
 

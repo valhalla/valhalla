@@ -638,8 +638,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   if (expansion_callback_) {
     expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix",
                         Expansion_EdgeStatus_reached, newcost.secs, pred_dist, newcost.cost,
-                        static_cast<Expansion_ExpansionType>(
-                            !static_cast<bool>(expansion_direction)));
+                        static_cast<Expansion_ExpansionType>(!static_cast<bool>(expansion_direction)),
+                        flow_sources);
   }
 
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
@@ -686,8 +686,8 @@ bool CostMatrix::Expand(const uint32_t index,
     expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix",
                         Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
                         pred.cost().cost,
-                        static_cast<Expansion_ExpansionType>(
-                            !static_cast<bool>(expansion_direction)));
+                        static_cast<Expansion_ExpansionType>(!static_cast<bool>(expansion_direction)),
+                        kNoFlowMask);
   }
 
   if (FORWARD) {
@@ -964,7 +964,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "costmatrix",
                           Expansion_EdgeStatus_connected, fwd_pred.cost().secs,
                           fwd_pred.path_distance(), fwd_pred.cost().cost,
-                          Expansion_ExpansionType_forward);
+                          Expansion_ExpansionType_forward, kNoFlowMask);
     }
   }
 
@@ -1114,7 +1114,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
         expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "costmatrix",
                             Expansion_EdgeStatus_connected, rev_pred.cost().secs,
                             rev_pred.path_distance(), rev_pred.cost().cost,
-                            Expansion_ExpansionType_reverse);
+                            Expansion_ExpansionType_reverse, kNoFlowMask);
       }
     }
   }
