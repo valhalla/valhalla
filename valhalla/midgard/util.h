@@ -11,6 +11,7 @@
 #include <cstring>
 #include <limits>
 #include <list>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <string>
