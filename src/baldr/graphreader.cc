@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 
 #include <filesystem>
+#include <span>
 #include <string>
 #include <utility>
 
@@ -185,8 +186,8 @@ void GraphReader::load_remote_tar_offsets() {
 
   remote_tar_offsets_.reserve(index_bin_size);
   const auto entries =
-      iterable_t(reinterpret_cast<tile_index_entry*>(index_bin_response.bytes_.data()),
-                 index_bin_size);
+      std::span(reinterpret_cast<tile_index_entry*>(index_bin_response.bytes_.data()),
+                index_bin_size);
   for (const auto& entry : entries) {
     remote_tar_offsets_.insert({GraphId{entry.tile_id}, {entry.offset, entry.size}});
   }
@@ -645,60 +646,51 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
     // Keep a copy in the cache and return it
     const size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
     return cache_->Put(base, std::move(tile), size);
-  } // Try getting it from flat file
-  else {
-    auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
-    auto traffic_memory = traffic_ptr != tile_extract_->traffic_tiles.end()
-                              ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive,
-                                                                     traffic_ptr->second)
-                              : nullptr;
-
-    // Try to get it from disk and if we cant..
-    graph_tile_ptr tile = GraphTile::Create(tile_dir_, base, std::move(traffic_memory));
-    if (!tile || !tile->header()) {
-      if (!tile_getter_) {
-        return nullptr;
-      }
-
-      // we record missing tiles from URL (tar or plain) so we don't bother to get them again
-      {
-        std::lock_guard<std::mutex> lock(_404s_lock);
-        if (_404s.find(base) != _404s.end()) {
-          // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
-          return nullptr;
-        }
-      }
-
-      if (!tile_url_.empty() && !is_tar_url_) {
-        // plain tiles
-        // Get it from the url and cache it to disk if you can
-        tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_, 0, 0,
-                                       url_id_txt_path_, url_id_txt_checksum_);
-      } else if (is_tar_url_) {
-        // tiles from remote tar
-        auto pos = remote_tar_offsets_.find(base);
-        tile = (pos == remote_tar_offsets_.end())
-                   ? nullptr
-                   : GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_,
-                                             pos->second.offset, pos->second.size, url_id_txt_path_,
-                                             url_id_txt_checksum_);
-      }
-
-      if (!tile) {
-        LOG_WARN("Failed to download tile " + std::to_string(base) + " from " + tile_url_);
-        std::lock_guard<std::mutex> lock(_404s_lock);
-        _404s.insert(base);
-        return nullptr;
-      }
-      // LOG_DEBUG("Url cache hit " + GraphTile::FileSuffix(base));
-    } else {
-      // LOG_DEBUG("Disk cache hit " + GraphTile::FileSuffix(base));
-    }
-
-    // Keep a copy in the cache and return it
-    const size_t size = tile->header()->end_offset();
-    return cache_->Put(base, std::move(tile), size);
   }
+
+  auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+  auto traffic_memory =
+      traffic_ptr != tile_extract_->traffic_tiles.end()
+          ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive, traffic_ptr->second)
+          : nullptr;
+
+  // Try to get it from tile_dir and if we cant, try URL
+  graph_tile_ptr tile = GraphTile::Create(tile_dir_, base, std::move(traffic_memory));
+  if (tile && tile->header()) {
+    return tile;
+  } else if (!tile_getter_) {
+    return nullptr;
+  }
+
+  // we record missing tiles from URL (tar or plain) so we don't bother to get them again
+  {
+    std::lock_guard<std::mutex> lock(_404s_lock);
+    if (_404s.find(base) != _404s.end()) {
+      return nullptr;
+    }
+  }
+
+  const auto pos = remote_tar_offsets_.find(base);
+  const bool tar_has_tile = pos != remote_tar_offsets_.end();
+  uint64_t tar_offset = tar_has_tile ? pos->second.offset : 0;
+  uint64_t tar_size = tar_has_tile ? pos->second.size : 0;
+  tile = nullptr;
+  // either we find its tar offset or it's a plain tiles URL
+  if (tar_has_tile || !is_tar_url_) {
+    tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_, tar_offset,
+                                   tar_size, url_id_txt_path_, url_id_txt_checksum_);
+  }
+
+  if (!tile) {
+    LOG_WARN("Failed to download tile " + std::to_string(base) + " from " + tile_url_);
+    std::lock_guard<std::mutex> lock(_404s_lock);
+    _404s.insert(base);
+    return nullptr;
+  }
+
+  // Keep a copy in the cache and return it
+  const size_t size = tile->header()->end_offset();
+  return cache_->Put(base, std::move(tile), size);
 }
 
 // Convenience method to get an opposing directed edge graph Id.
