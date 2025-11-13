@@ -44,10 +44,12 @@ constexpr char kExceptDestinationRestrictionFlag = '~';
 // Convenience method to get a number from a string. Uses try/catch in case
 // to_int throws an exception
 int get_number(std::string_view tag, const std::string& value) { // NOLINT
-  const auto num = try_to_int(value) if (!num.has_value()) {
+  const auto num = try_to_int(value);
+  if (!num.has_value()) {
     LOG_DEBUG("Cannot parse int for {} value: {}", tag, value);
+    return -1;
   }
-  return num.value_or(-1);
+  return num.value();
 }
 
 void set_access_restriction_value(OSMAccessRestriction& restriction,
