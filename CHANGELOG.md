@@ -17,7 +17,10 @@
    * ADDED: PyPI `sdist` for python to install the bindings from source [#5649](https://github.com/valhalla/valhalla/pull/5649)
    * CHANGED: Refactor GraphTile::GetLaneConnectivity to return std::span instead of std::vector [#5683](https://github.com/valhalla/valhalla/pull/5683)
    * CHANGED: Get rid of midgard::iterable_t in favor of std::span [#5682](https://github.com/valhalla/valhalla/pull/5682)
+   * CHANGED: Optimise CostMatrix::ReachedMap [#5690](https://github.com/valhalla/valhalla/pull/5690)
    * ADDED: Make possible to use `-DCMAKE_UNITY_BUILD=ON` [#5691](https://github.com/valhalla/valhalla/pull/5691)
+   * CHANGED: make alternative_iterations_delta configurable [#5679](https://github.com/valhalla/valhalla/pull/5679)
+   * ADDED: `flow_sources` expansion property [#5697](https://github.com/valhalla/valhalla/pull/5697)
    * CHANGED: Use std::from_chars instead of std::stoi/stof/stod [#5704](https://github.com/valhalla/valhalla/pull/5704)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
