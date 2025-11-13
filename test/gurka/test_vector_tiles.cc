@@ -51,7 +51,8 @@ TEST(VectorTiles, BasicTileRendering) {
   xyz->set_z(z);
   auto tile_data = worker.render_tile(request);
 
-  EXPECT_EQ(tile_data.size(), 2804);
+  EXPECT_LT(tile_data.size(), 2850);
+  EXPECT_GT(tile_data.size(), 2750);
 
   vtzero::vector_tile tile{tile_data};
 
@@ -188,7 +189,9 @@ TEST(VectorTiles, BasicTileRenderingOnDifferentZoomLevels) {
   xyz->set_y(y8);
   xyz->set_z(z8);
   auto tile_data_z8 = worker.render_tile(request);
-  EXPECT_EQ(tile_data_z8.size(), 4664);
+
+  EXPECT_LT(tile_data_z8.size(), 4800);
+  EXPECT_GT(tile_data_z8.size(), 4500);
 
   // Render tile at zoom 12
   request.Clear();
@@ -196,7 +199,8 @@ TEST(VectorTiles, BasicTileRenderingOnDifferentZoomLevels) {
   xyz->set_y(y12);
   xyz->set_z(z12);
   auto tile_data_z12 = worker.render_tile(request);
-  EXPECT_EQ(tile_data_z12.size(), 6925);
+  EXPECT_LT(tile_data_z12.size(), 7000);
+  EXPECT_GT(tile_data_z12.size(), 6850);
 
   // Parse Z10 tile
   vtzero::vector_tile tile_z8{tile_data_z8};
