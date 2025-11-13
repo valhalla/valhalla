@@ -404,12 +404,7 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
     if ((direction == AccessRestrictionDirection::kBoth) ||
         (forward && direction == AccessRestrictionDirection::kForward) ||
         (!forward && direction == AccessRestrictionDirection::kBackward)) {
-          auto type = r->second.type();
-          /*if(type == valhalla::baldr::AccessType::kMaxHeight)
-          {
-            type = valhalla::baldr::AccessType::kVignette;
-          }*/
-      AccessRestriction access_restriction(edgeid, type, r->second.modes(),
+      AccessRestriction access_restriction(edgeid, r->second.type(), r->second.modes(),
                                            r->second.value(), r->second.except_destination(), 
                                            CountryISOCodeToValue(countryIso));
       graphtile.AddAccessRestriction(access_restriction);
@@ -1074,17 +1069,17 @@ void BuildTileSet(const std::string& ways_file,
           // Add restrictions..For now only storing access restrictions for trucks
           // TODO - support more than one mode
           if (directededge.forwardaccess()) {
-                        std::string countryText = "";
+            std::string countryIso = "";
             try{
               const Admin& admin = graphtile.admins_builder(admin_index);
-              countryText = admin.country_iso();
+              countryIso = admin.country_iso();
             }
             catch(...)
             {
               LOG_ERROR("admin_index size is greater than admin count in Graphbuilder");
             }
             uint32_t ar_modes =
-                AddAccessRestrictions(idx, w.way_id(), osmdata, directededge.forward(), graphtile, countryText);
+                AddAccessRestrictions(idx, w.way_id(), osmdata, directededge.forward(), graphtile, countryIso);
             if (ar_modes) {
               directededge.set_access_restriction(ar_modes);
             }

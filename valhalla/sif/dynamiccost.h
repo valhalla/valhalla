@@ -815,11 +815,14 @@ public:
       if(restriction.type() == baldr::AccessType::kVignette)
       {
         bool doNotAvoidVignette = true;
-
         auto countryIso = ConvertIntToISO(restriction.countryIsoCode());
-        if (exclude_country_vignettes_.contains(countryIso) ||
-            exclude_country_vignettes_.contains("ALL")) {
-          doNotAvoidVignette = false;
+        for(auto v : exclude_country_vignettes_)
+        {
+          if ((v == countryIso) || (v == "ALL"))
+          {
+            doNotAvoidVignette = false;
+            break;
+          }
         }
         return doNotAvoidVignette;
       }
@@ -1349,7 +1352,7 @@ protected:
   bool is_hgv_{false};
   
   // List of country vignettes to exclude
-  std::unordered_set<std::string> exclude_country_vignettes_;
+  std::vector<std::string> exclude_country_vignettes_;
 
 
   // User specified edges to cost based on user provided factors
@@ -1456,7 +1459,7 @@ protected:
     has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_highways_ ||
                     exclude_ferries_;
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
-    exclude_country_vignettes_.insert(
+    exclude_country_vignettes_  = std::vector<std::string>(
         costing_options.exclude_country_vignettes().begin(),
         costing_options.exclude_country_vignettes().end());
     default_hierarchy_limits = costing_options.hierarchy_limits_size() == 0;
