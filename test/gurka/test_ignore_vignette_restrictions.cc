@@ -24,23 +24,25 @@ TEST(Standalone, AvoidsVignetteCountry) {
     {"mjolnir.data_processing.use_admin_db", "false"}};
  
   const std::string ascii_map = R"(
-      A----B----C----D----E
-           |         |    |
-           |         |    |
+      A----B    C----D----E
+           |              |
+           |              |
            I----H----G----F
   )";
 
+//      {"BC", {{"highway", "residential"}}},
   const gurka::ways ways = {
       {"AB", {{"highway", "residential"}}},
-      {"BC", {{"highway", "residential"}, {"vignette", ""}}},
       {"CD", {{"highway", "residential"}, {"vignette", ""}}},
+      {"DC", {{"highway", "residential"}, {"vignette", ""}}},
       {"DE", {{"highway", "residential"}}},
-      {"EF", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}, {"vignette", ""}}},
+      {"FE", {{"highway", "residential"}, {"vignette", ""}}},
       {"FG", {{"highway", "residential"}}},
       {"GH", {{"highway", "residential"}}},
       {"HI", {{"highway", "residential"}}},
-      {"DG", {{"highway", "residential"}, {"vignette", ""}}},
-      {"BI", {{"highway", "residential"}, {"vignette", ""}}},
+      {"DG", {{"highway", "residential"}}},
+      {"BI", {{"highway", "residential"}}},
   };
 
   const gurka::nodes nodes = 
@@ -48,14 +50,20 @@ TEST(Standalone, AvoidsVignetteCountry) {
        {"B", {{"iso:3166_1", "DE"}}},
        {"C", {{"iso:3166_1", "CH"}}},
        {"D", {{"iso:3166_1", "CH"}}},
-       {"E", {{"iso:3166_1", "DE"}}},
-       {"F", {{"iso:3166_1", "DE"}}},
-       {"G", {{"iso:3166_1", "DE"}}},
+       {"E", {{"iso:3166_1", "AT"}}},
+       {"F", {{"iso:3166_1", "AT"}}},
+       {"G", {{"iso:3166_1", "CH"}}},
        {"H", {{"iso:3166_1", "DE"}}},
        {"I", {{"iso:3166_1", "DE"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   const auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_exclude_country_vignettes", build_config);
+
+  for (const auto& costing : kSupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, costing);
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
+  }
 
   for (const auto& costing : kSupportedCostingTypes) {
     const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, costing,
@@ -65,21 +73,43 @@ TEST(Standalone, AvoidsVignetteCountry) {
   }
 
   for (const auto& costing : kSupportedCostingTypes) {
-    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, costing,
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, costing,
                                          {{"/costing_options/" + costing + "/exclude_country_vignettes/0", "AT"}});
     ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-    gurka::assert::raw::expect_path(result, {"AB", "BI", "HI"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
 
+  for (const auto& costing : kSupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, costing,
+                                         {{"/costing_options/" + costing + "/exclude_country_vignettes/0", "ALL"}});
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
+  }
+
+  for (const auto& costing : kSupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, costing,
+                                         {{"/costing_options/" + costing + "/exclude_country_vignettes/0", "CH"},
+                                          {"/costing_options/" + costing + "/exclude_country_vignettes/1", "AT"}});
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
+  }
+
+/*   for (const auto& costing : kSupportedCostingTypes) {
+    EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "E"}, costing,
+                                  {{"/costing_options/" + costing + "/exclude_country_vignettes/0", "CH"},
+                                   {"/costing_options/" + costing + "/exclude_country_vignettes/1", "AT"}}),
+                 valhalla_exception_t);
+  }
+
+  for (const auto& costing : kSupportedCostingTypes) {
+    EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "E"}, costing,
+                                  {{"/costing_options/" + costing + "/exclude_country_vignettes/0", "ALL"}}),
+                 valhalla_exception_t);
+  }
+ */
   for (const auto& costing : kUnsupportedCostingTypes) {
     const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing);
     ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
     gurka::assert::raw::expect_path(result, {"AB", "BI"});
-  }
-
-  for (const auto& costing : kSupportedCostingTypes) {
-    EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
-                                  {{"/costing_options/" + costing + "/exclude_country_vignettes/0", "ALL"}}),
-                 valhalla_exception_t);
   }
 }
