@@ -31,12 +31,8 @@ using namespace valhalla::baldr::json;
 
 namespace {
 
-// describe the two custom GDAL tags to libtiff
-// FIELD_CUSTOM: ASCII, variable length
-constexpr TIFFFieldInfo TIFF_GDAL_INFO[] = {{TIFFTAG_GDAL_METADATA, -1, -1, TIFF_ASCII, FIELD_CUSTOM,
-                                             1, 0, const_cast<char*>("GDAL_METADATA")},
-                                            {TIFFTAG_GDAL_NODATA, -1, -1, TIFF_ASCII, FIELD_CUSTOM, 1,
-                                             0, const_cast<char*>("GDAL_NODATA")}};
+#ifdef ENABLE_GEOTIFF
+#endif
 
 using rgba_t = std::tuple<float, float, float>;
 
@@ -50,65 +46,6 @@ using contour_group_t = std::vector<const contour_t*>;
 using grouped_contours_t = std::vector<contour_group_t>;
 // dimension, value (seconds/meters), name (time/distance), color
 using contour_interval_t = std::tuple<size_t, float, std::string, std::string>;
-class MemTIFFStream {
-public:
-  // used as callbacks in lib(geo)tiff
-  static tmsize_t read(thandle_t handle, void* buf, tmsize_t size) {
-    auto* self = static_cast<MemTIFFStream*>(handle);
-    if (self->pos_ >= self->buffer_.size())
-      return 0;
-    tmsize_t can = std::min<tmsize_t>(size, self->buffer_.size() - self->pos_);
-    std::memcpy(buf, self->buffer_.data() + self->pos_, static_cast<size_t>(can));
-    self->pos_ += can;
-    return can;
-  }
-
-  static tmsize_t write(thandle_t handle, void* buf, tmsize_t size) {
-    auto* self = static_cast<MemTIFFStream*>(handle);
-    if (self->pos_ + size > self->buffer_.size())
-      self->buffer_.resize(static_cast<size_t>(self->pos_ + size));
-    std::memcpy(self->buffer_.data() + self->pos_, buf, static_cast<size_t>(size));
-    self->pos_ += size;
-    return size;
-  }
-
-  static toff_t seek(thandle_t handle, toff_t off, int whence) {
-    auto* self = static_cast<MemTIFFStream*>(handle);
-    toff_t newpos = self->pos_;
-    if (whence == SEEK_SET)
-      newpos = off;
-    else if (whence == SEEK_CUR)
-      newpos += off;
-    else if (whence == SEEK_END)
-      newpos = static_cast<toff_t>(self->buffer_.size()) + off;
-    self->pos_ = newpos;
-    return self->pos_;
-  }
-
-  static toff_t size(thandle_t handle) {
-    auto* self = static_cast<MemTIFFStream*>(handle);
-    return static_cast<toff_t>(self->buffer_.size());
-  }
-
-  static int close(thandle_t /*handle*/) {
-    return 0;
-  }
-
-  thandle_t handle() noexcept {
-    return reinterpret_cast<thandle_t>(this);
-  }
-  std::string str() const {
-    return std::string(reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
-  }
-
-private:
-  std::vector<uint8_t> buffer_;
-  toff_t pos_ = 0;
-};
-
-void register_gdal_custom_tags(TIFF* tif) {
-  TIFFMergeFieldInfo(tif, TIFF_GDAL_INFO, sizeof(TIFF_GDAL_INFO) / sizeof(TIFF_GDAL_INFO[0]));
-}
 
 grouped_contours_t GroupContours(const bool polygons, const feature_t& contours) {
   grouped_contours_t results;
@@ -238,6 +175,72 @@ void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
 }
 
 #ifdef ENABLE_GEOTIFF
+// describe the two custom GDAL tags to libtiff
+// FIELD_CUSTOM: ASCII, variable length
+constexpr TIFFFieldInfo TIFF_GDAL_INFO[] = {{TIFFTAG_GDAL_METADATA, -1, -1, TIFF_ASCII, FIELD_CUSTOM,
+                                             1, 0, const_cast<char*>("GDAL_METADATA")},
+                                            {TIFFTAG_GDAL_NODATA, -1, -1, TIFF_ASCII, FIELD_CUSTOM, 1,
+                                             0, const_cast<char*>("GDAL_NODATA")}};
+
+class MemTIFFStream {
+public:
+  // used as callbacks in lib(geo)tiff
+  static tmsize_t read(thandle_t handle, void* buf, tmsize_t size) {
+    auto* self = static_cast<MemTIFFStream*>(handle);
+    if (self->pos_ >= self->buffer_.size())
+      return 0;
+    tmsize_t can = std::min<tmsize_t>(size, self->buffer_.size() - self->pos_);
+    std::memcpy(buf, self->buffer_.data() + self->pos_, static_cast<size_t>(can));
+    self->pos_ += can;
+    return can;
+  }
+
+  static tmsize_t write(thandle_t handle, void* buf, tmsize_t size) {
+    auto* self = static_cast<MemTIFFStream*>(handle);
+    if (self->pos_ + size > self->buffer_.size())
+      self->buffer_.resize(static_cast<size_t>(self->pos_ + size));
+    std::memcpy(self->buffer_.data() + self->pos_, buf, static_cast<size_t>(size));
+    self->pos_ += size;
+    return size;
+  }
+
+  static toff_t seek(thandle_t handle, toff_t off, int whence) {
+    auto* self = static_cast<MemTIFFStream*>(handle);
+    toff_t newpos = self->pos_;
+    if (whence == SEEK_SET)
+      newpos = off;
+    else if (whence == SEEK_CUR)
+      newpos += off;
+    else if (whence == SEEK_END)
+      newpos = static_cast<toff_t>(self->buffer_.size()) + off;
+    self->pos_ = newpos;
+    return self->pos_;
+  }
+
+  static toff_t size(thandle_t handle) {
+    auto* self = static_cast<MemTIFFStream*>(handle);
+    return static_cast<toff_t>(self->buffer_.size());
+  }
+
+  static int close(thandle_t /*handle*/) {
+    return 0;
+  }
+
+  thandle_t handle() noexcept {
+    return reinterpret_cast<thandle_t>(this);
+  }
+  std::string str() const {
+    return std::string(reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
+  }
+
+private:
+  std::vector<uint8_t> buffer_;
+  toff_t pos_ = 0;
+};
+
+void register_gdal_custom_tags(TIFF* tif) {
+  TIFFMergeFieldInfo(tif, TIFF_GDAL_INFO, sizeof(TIFF_GDAL_INFO) / sizeof(TIFF_GDAL_INFO[0]));
+}
 // Serialize GeoTIFF via lib(geo)tiff
 std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedData<2>>& isogrid) {
 
