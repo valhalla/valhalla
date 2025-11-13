@@ -226,7 +226,7 @@ void store(const std::string& cache_location,
 graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        const GraphId& graphid,
                                        tile_getter_t* tile_getter,
-                                       const std::string& cache_location,
+                                       const std::string& tile_dir,
                                        uint64_t range_offset,
                                        uint64_t range_size,
                                        const std::filesystem::path& id_txt_path,
@@ -258,9 +258,9 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
   if (tile_checksum == 0) {
     // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
     LOG_WARN(
-        "Remote tile is missing the checksum attribute, please update the tile builder instance");
+        "Remote tile is missing the checksum attribute, please update the tile building valhalla instance");
   }
-  if (!cache_location.empty()) {
+  if (!tile_dir.empty()) {
     if (id_checksum == 0) {
       // this is the first tile in a fresh tile_dir
       static std::mutex mutex;
@@ -280,7 +280,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     return nullptr;
   }
   // try to cache it on disk so we dont have to keep fetching it from url
-  store(cache_location, graphid, tile_getter, result.bytes_);
+  store(tile_dir, graphid, tile_getter, result.bytes_);
 
   // turn the memory into a tile
   if (tile_getter->gzipped()) {

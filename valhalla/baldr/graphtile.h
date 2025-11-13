@@ -93,6 +93,7 @@ public:
    * @param  tile_url URL of tile
    * @param  graphid Tile Id
    * @param  tile_getter object that will handle tile downloading
+   * @param  tile_dir the directory to cache graph tiles
    * @param  range_offset HTTP range offsete in case of a tar URL
    * @param  range_size HTTP range offsete in case of a tar URL
    * @param  id_txt_path the file path to the tile_dir's id.txt
@@ -103,7 +104,7 @@ public:
   static graph_tile_ptr CacheTileURL(const std::string& tile_url,
                                      const GraphId& graphid,
                                      tile_getter_t* tile_getter,
-                                     const std::string& cache_location,
+                                     const std::string& tile_dir,
                                      uint64_t range_offset = 0,
                                      uint64_t range_size = 0,
                                      const std::filesystem::path& id_txt_path = "",
