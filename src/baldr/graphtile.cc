@@ -8,6 +8,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
+#include "midgard/util.h"
 
 #include <chrono>
 #include <cmath>

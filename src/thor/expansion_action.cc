@@ -1,3 +1,4 @@
+#include "baldr/graphconstants.h"
 #include "midgard/logging.h"
 #include "midgard/polyline2.h"
 #include "thor/pathalgorithm.h"
@@ -23,7 +24,8 @@ void writeExpansionProgress(Expansion* expansion,
                             const float& duration,
                             const uint32_t& distance,
                             const float& cost,
-                            const Expansion_ExpansionType expansion_type) {
+                            const Expansion_ExpansionType expansion_type,
+                            const uint8_t flow_sources) {
 
   auto* geom = expansion->add_geometries();
   // make the geom
@@ -52,6 +54,8 @@ void writeExpansionProgress(Expansion* expansion,
     expansion->add_pred_edge_id(static_cast<uint64_t>(prev_edgeid));
   if (exp_props.count(Options_ExpansionProperties_expansion_type))
     expansion->add_expansion_type(expansion_type);
+  if (exp_props.count(Options_ExpansionProperties_flow_sources))
+    expansion->add_flow_sources(static_cast<uint32_t>(flow_sources));
 }
 
 struct expansion_properties_t {
@@ -63,6 +67,7 @@ struct expansion_properties_t {
   uint32_t distance;
   float cost;
   Expansion_ExpansionType expansion_type;
+  uint8_t flow_sources;
 
   expansion_properties_t() = default;
   expansion_properties_t(baldr::GraphId prev_edgeid,
@@ -71,9 +76,10 @@ struct expansion_properties_t {
                          uint32_t distance,
                          std::vector<midgard::PointLL>&& shape,
                          float cost,
-                         Expansion_ExpansionType expansion_type)
+                         Expansion_ExpansionType expansion_type,
+                         const uint8_t flow_sources)
       : prev_edgeid(prev_edgeid), status(status), duration(duration), shape(std::move(shape)),
-        distance(distance), cost(cost), expansion_type(expansion_type){};
+        distance(distance), cost(cost), expansion_type(expansion_type), flow_sources(flow_sources){};
 
   // check if status is higher or same – as we will keep track of the latest one
   static bool is_latest_status(Expansion_EdgeStatus current, Expansion_EdgeStatus candidate) {
@@ -113,7 +119,8 @@ std::string thor_worker_t::expansion(Api& request) {
           const char* algorithm = nullptr,
           const Expansion_EdgeStatus status = Expansion_EdgeStatus_reached,
           const float duration = 0.f, const uint32_t distance = 0, const float cost = 0.f,
-          const Expansion_ExpansionType expansion_type = Expansion_ExpansionType_forward) {
+          const Expansion_ExpansionType expansion_type = Expansion_ExpansionType_forward,
+          const uint8_t flow_sources = baldr::kNoFlowMask) {
         algo = algorithm;
 
         auto tile = reader.GetGraphTile(edgeid);
@@ -146,11 +153,12 @@ std::string thor_worker_t::expansion(Api& request) {
               return;
             }
           }
-          edge_state[edgeid] = expansion_properties_t(prev_edgeid, status, duration, distance,
-                                                      std::move(shape), cost, expansion_type);
+          edge_state[edgeid] =
+              expansion_properties_t(prev_edgeid, status, duration, distance, std::move(shape), cost,
+                                     expansion_type, flow_sources);
         } else {
           writeExpansionProgress(expansion, edgeid, prev_edgeid, shape, exp_props, status, duration,
-                                 distance, cost, expansion_type);
+                                 distance, cost, expansion_type, flow_sources);
         }
       };
 
@@ -189,7 +197,7 @@ std::string thor_worker_t::expansion(Api& request) {
     for (const auto& e : edge_state) {
       writeExpansionProgress(expansion, e.first, e.second.prev_edgeid, e.second.shape, exp_props,
                              e.second.status, e.second.duration, e.second.distance, e.second.cost,
-                             e.second.expansion_type);
+                             e.second.expansion_type, e.second.flow_sources);
     }
   }
 

@@ -51,7 +51,7 @@ endif()
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
-  distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
+  distanceapproximator double_bucket_queue edgecollapser edgeinfo edgestatus ellipse encode
   enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll pointtileindex
   polyline2 predictedspeeds queue routing sample sequence sign signs statsd streetname streetnames streetnames_factory
@@ -61,7 +61,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller configurati
   incident_loading worker_nullptr_tiles curl_tilegetter filesystem_utils narrativebuilder util_odin)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar astar_bikeshare complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
+  list(APPEND tests astar astar_bikeshare complexrestriction countryaccess graphbuilder graphparser
     graphtilebuilder graphreader hierarchylimits isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
     names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban tar_index
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
