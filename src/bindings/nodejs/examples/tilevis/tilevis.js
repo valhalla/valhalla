@@ -110,18 +110,23 @@ function createRequestHandler(actor) {
       return;
     }
     
-    // Parse tile coordinates from URL: /z/x/y.mvt or /z/x/y.pbf
-    const match = url.pathname.match(/^\/(\d+)\/(\d+)\/(\d+)\.(mvt|pbf)$/);
-    
-    if (!match) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('Not found. Expected format: /z/x/y.mvt');
-      return;
+    // Validate tile coordinates from URL: /?json={"tile": {"z": 10, "x": 10, "y": 10}}
+    let error = false;
+    const jsonString = url.searchParams.get('json');
+    if (!jsonString) {
+      error = true;
+    }
+    const data = JSON.parse(decodeURIComponent(jsonString));
+    const { x = null, y = null, z = null } = data?.tile ?? {};
+    if ([x, y, z].some(v => typeof v !== 'number')) {
+      error = true;
     }
     
-    const z = parseInt(match[1], 10);
-    const x = parseInt(match[2], 10);
-    const y = parseInt(match[3], 10);
+    if (error) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not found. Expected format: /?json={"tile": {"z": 10, "x": 10, "y": 10}}');
+      return;
+    }
     
     // Validate tile coordinates
     const maxCoord = Math.pow(2, z);
@@ -130,10 +135,11 @@ function createRequestHandler(actor) {
       res.end(`Invalid tile coordinates: z=${z}, x=${x}, y=${y}`);
       return;
     }
-       
+
     try {
-      const tileData = await actor.tile(JSON.stringify({ z, x, y }));
+      const tileData = await actor.tile(JSON.stringify(data));
       const buf = Buffer.isBuffer(tileData) ? tileData : Buffer.from(tileData, 'binary');
+      //console.log(buf.length)
       
       res.writeHead(200, {
         'Content-Type': 'application/vnd.mapbox-vector-tile',
@@ -156,7 +162,7 @@ function startServer(server, host, port) {
   server.listen(port, host, () => {
     console.log(`
 Server listening at: http://${host}:${port}
-Tile URL format:     http://${host}:${port}/{z}/{x}/{y}.mvt
+Tile URL format:     http://${host}:${port}/?json={"tile": {"z": 10, "x": 10, "y": 10}}
 
 Open http://${host}:${port} in your browser to view the map
 Press Ctrl+C to stop

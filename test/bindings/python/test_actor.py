@@ -123,9 +123,11 @@ class TestBindings(unittest.TestCase):
     def test_tile(self):
         # Utrecht center tile coordinates (52.08778°N, 5.13142°E at zoom 14)
         query = {
-            "z": 14,
-            "x": 8425,
-            "y": 5405
+            "tile": {
+                "z": 14,
+                "x": 8425,
+                "y": 5405
+            }
         }
 
         tile_data = self.actor.tile(query)

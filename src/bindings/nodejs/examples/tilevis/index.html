@@ -69,9 +69,9 @@
         map.on('load', () => {
                 map.addSource('valhalla', {
                     type: 'vector',
-                    tiles: [`${TILE_SERVER_URL}/{z}/{x}/{y}.mvt`],
+                    tiles: [`${TILE_SERVER_URL}/tile?json=%7B%22tile%22%3A%7B%22z%22%3A{z}%2C%22x%22%3A{x}%2C%22y%22%3A{y}%7D%7D`],
                     minzoom: 0,
-                    maxzoom: 18,  
+                    maxzoom: 14,  
                     scheme: 'xyz'
                 });
                 

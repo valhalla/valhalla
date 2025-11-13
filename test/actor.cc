@@ -84,7 +84,7 @@ TEST(Actor, Tile) {
 
   // Request a tile for Utrecht center (52.08778°N, 5.13142°E)
   // At zoom 14, this is tile 14/8425/5405
-  std::string request = R"({"z":14,"x":8425,"y":5405})";
+  std::string request = R"({"tile": {"z": 14,"x": 8425,"y": 5405}})";
 
   auto tile_data = actor.tile(request);
   actor.cleanup();
@@ -122,12 +122,14 @@ TEST(Actor, TileReturnShortcuts) {
   tyr::actor_t actor(utrecht_conf);
 
   // Request the same tile without shortcuts (default)
-  std::string request_no_shortcuts = R"({"z":14,"x":8425,"y":5405,"return_shortcuts":false})";
+  std::string request_no_shortcuts =
+      R"({"tile": {"z": 14,"x": 8425,"y": 5405}, "tile_options": {"return_shortcuts": false}})";
   auto tile_data_no_shortcuts = actor.tile(request_no_shortcuts);
   actor.cleanup();
 
   // Request the same tile with shortcuts
-  std::string request_with_shortcuts = R"({"z":14,"x":8425,"y":5405,"return_shortcuts":true})";
+  std::string request_with_shortcuts =
+      R"({"tile": {"z": 14,"x": 8425,"y": 5405}, "tile_options": {"return_shortcuts": true}})";
   auto tile_data_with_shortcuts = actor.tile(request_with_shortcuts);
   actor.cleanup();
 
@@ -198,6 +200,13 @@ TEST(Actor, SupportedFormats) {
   isochrone_options.set_costing_type(Costing_Type::Costing_Type_auto_);
   isochrone_options.mutable_locations()->Add()->CopyFrom(loc1);
 
+  // for tile
+  Options tile_options;
+  auto* xyz = tile_options.mutable_tile_xyz();
+  xyz->set_x(8425);
+  xyz->set_y(5405);
+  xyz->set_z(14);
+
   const struct {
     Options::Action action;
     std::string (tyr::actor_t::*action_fn)(const std::string& request_str,
@@ -217,6 +226,7 @@ TEST(Actor, SupportedFormats) {
       {Options::expansion, &tyr::actor_t::expansion, options},
       {Options::centroid, &tyr::actor_t::centroid, options},
       {Options::status, &tyr::actor_t::status, options},
+      {Options::tile, &tyr::actor_t::tile, tile_options},
   };
   ASSERT_EQ(std::size(tests), Options::Action_ARRAYSIZE - 1) // -1 for `Options::no_action`
       << "Please add missing action to this test";

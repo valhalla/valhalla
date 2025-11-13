@@ -43,7 +43,6 @@ valhalla_module(NAME tyr
     valhalla::loki
     valhalla::thor
     valhalla::odin
-    valhalla::heimdall
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost

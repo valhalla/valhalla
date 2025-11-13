@@ -22,7 +22,8 @@
       "transit_available",
       "expansion",
       "centroid",
-      "status"
+      "status",
+      "tile"
     ],
     "logging": {
       "color": true,
@@ -40,7 +41,8 @@
       "node_snap_tolerance": 5,
       "street_side_tolerance": 5,
       "street_side_max_distance": 1000,
-      "heading_tolerance": 60
+      "heading_tolerance": 60,
+      "min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14]
     },
     "use_connectivity": true
   },
@@ -277,8 +279,5 @@
         "expand_within_distance": { "0": 1e8, "1": 100000, "2": 5000 }
       }
     }
-  },
-  "heimdall": {
-    "min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14]
   }
 }
