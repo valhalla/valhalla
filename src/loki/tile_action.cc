@@ -1,9 +1,9 @@
-#include "heimdall/worker.h"
 #include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "loki/worker.h"
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
@@ -26,9 +26,6 @@
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-
-namespace valhalla {
-namespace heimdall {
 
 namespace {
 /**
@@ -660,7 +657,11 @@ double lat_to_merc_y(const double lat) {
   return kEarthRadiusMeters * std::log(std::tan(kPiD / 4.0 + lat * kPiD / 360.0));
 }
 
-midgard::AABB2<midgard::PointLL> tile_to_bbox(const uint32_t z, const uint32_t x, const uint32_t y) {
+midgard::AABB2<midgard::PointLL> tile_to_bbox(const valhalla::Tile& xyz) {
+  const auto x = xyz.x();
+  const auto y = xyz.y();
+  const auto z = xyz.z();
+
   const double n = std::pow(2.0, z);
 
   double min_lon = x / n * 360.0 - 180.0;
@@ -731,42 +732,14 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
   // Add feature using the builder
   nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
 }
-} // anonymous namespace
 
-heimdall_worker_t::heimdall_worker_t(const boost::property_tree::ptree& config,
-                                     const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : reader_(graph_reader),
-      candidate_query_(*graph_reader,
-                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
-                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
-
-  min_zoom_road_class_ = kDefaultMinZoomRoadClass;
-
-  auto tile_config = config.get_child("heimdall");
-  auto zoom_array = tile_config.get_child("min_zoom_road_class");
-  size_t i = 0;
-  for (const auto& item : zoom_array) {
-    if (i >= kNumRoadClasses) {
-      break;
-    }
-    min_zoom_road_class_[i] = item.second.get_value<uint32_t>();
-    ++i;
-  }
-  if (i != kNumRoadClasses) {
-    throw std::runtime_error(
-        std::format("min_zoom_road_class out of bounds, expected {} elements but got {}",
-                    kNumRoadClasses, i));
-  }
-
-  // Compute overall minimum zoom level (minimum of all road class zooms)
-  min_zoom_ = *std::min_element(min_zoom_road_class_.begin(), min_zoom_road_class_.end());
-}
-
-void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
-                                     const midgard::AABB2<midgard::PointLL>& bounds,
-                                     const std::unordered_set<baldr::GraphId>& edge_ids,
-                                     uint32_t z,
-                                     bool return_shortcuts) {
+void build_layers(const std::shared_ptr<GraphReader>& reader,
+                  vtzero::tile_builder& tile,
+                  const midgard::AABB2<midgard::PointLL>& bounds,
+                  const std::unordered_set<baldr::GraphId>& edge_ids,
+                  const decltype(loki::loki_worker_t::kDefaultMinZoomRoadClass)& min_zoom_road_class,
+                  uint32_t z,
+                  bool return_shortcuts) {
   using point_t = boost::geometry::model::d2::point_xy<double>;
   using linestring_t = boost::geometry::model::linestring<point_t>;
   using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
@@ -790,7 +763,7 @@ void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
   baldr::graph_tile_ptr edge_tile;
   // TODO: sort edge_ids
   for (const auto& edge_id : edge_ids) {
-    const auto* edge = reader_->directededge(edge_id, edge_tile);
+    const auto* edge = reader->directededge(edge_id, edge_tile);
 
     // no shortcuts if not requested
     if (!return_shortcuts && edge->is_shortcut()) {
@@ -800,7 +773,7 @@ void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
     // filter road classes by zoom
     auto road_class = edge->classification();
     uint32_t road_class_idx = static_cast<uint32_t>(road_class);
-    if (z < min_zoom_road_class_[road_class_idx]) {
+    if (z < min_zoom_road_class[road_class_idx]) {
       continue;
     }
 
@@ -845,7 +818,7 @@ void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
       // Check for opposing edge
       baldr::graph_tile_ptr opp_tile = edge_tile;
       const DirectedEdge* opp_edge = nullptr;
-      GraphId opp_edge_id = reader_->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+      GraphId opp_edge_id = reader->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
 
       const volatile baldr::TrafficSpeed* forward_traffic = &edge_tile->trafficspeed(edge);
       const volatile baldr::TrafficSpeed* reverse_traffic =
@@ -899,33 +872,35 @@ void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
     }
   }
 }
+} // anonymous namespace
 
-std::string heimdall_worker_t::render_tile(const uint32_t z,
-                                           const uint32_t x,
-                                           const uint32_t y,
-                                           const bool return_shortcuts) {
-  const uint32_t max_coord = (1u << z);
-  if (x >= max_coord || y >= max_coord || z > 30) {
-    throw valhalla_exception_t{600};
-  }
+namespace valhalla {
+namespace loki {
+
+std::string loki_worker_t::render_tile(Api& request) {
+  const auto& options = request.options();
 
   vtzero::tile_builder tile;
-
+  const auto z = options.tile_xyz().z();
   if (z < min_zoom_) {
     return tile.serialize();
   }
 
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request);
+
   // get lat/lon bbox
-  const auto bounds = tile_to_bbox(z, x, y);
+  const auto bounds = tile_to_bbox(options.tile_xyz());
 
   // query edges in bbox, omits opposing edges
   // TODO(nils): can RangeQuery be updated to skip hierarchy levels?
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
-  build_layers(tile, bounds, edge_ids, z, return_shortcuts);
+  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
+               options.tile_options().return_shortcuts());
 
   return tile.serialize();
 }
 
-} // namespace heimdall
+} // namespace loki
 } // namespace valhalla

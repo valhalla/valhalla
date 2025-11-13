@@ -1,5 +1,5 @@
 #include "gurka.h"
-#include "heimdall/worker.h"
+#include "loki/worker.h"
 #include "midgard/constants.h"
 
 #include <valhalla/exceptions.h>
@@ -12,7 +12,7 @@
 using namespace valhalla;
 using namespace valhalla::midgard;
 
-TEST(Heimdall, BasicTileRendering) {
+TEST(VectorTiles, BasicTileRendering) {
   constexpr double gridsize = 100;
 
   const std::string ascii_map = R"(
@@ -28,10 +28,10 @@ TEST(Heimdall, BasicTileRendering) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_heimdall_basic");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_vt_basic");
 
   auto graph_reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
-  heimdall::heimdall_worker_t worker(map.config, graph_reader);
+  loki::loki_worker_t worker(map.config, graph_reader);
 
   const auto& node_b = layout.at("B");
 
@@ -44,7 +44,12 @@ TEST(Heimdall, BasicTileRendering) {
       (1.0 - std::asinh(std::tan(node_b.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n);
 
   // Render the tile
-  auto tile_data = worker.render_tile(z, x, y);
+  Api request;
+  auto* xyz = request.mutable_options()->mutable_tile_xyz();
+  xyz->set_x(x);
+  xyz->set_y(y);
+  xyz->set_z(z);
+  auto tile_data = worker.render_tile(request);
 
   EXPECT_EQ(tile_data.size(), 2804);
 
@@ -121,7 +126,7 @@ TEST(Heimdall, BasicTileRendering) {
   EXPECT_TRUE(has_nodes);
 }
 
-TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
+TEST(VectorTiles, BasicTileRenderingOnDifferentZoomLevels) {
   constexpr double gridsize = 500;
 
   const std::string ascii_map = R"(
@@ -153,20 +158,20 @@ TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_heimdall_zoom_compare");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_vt_zoom_compare");
 
   auto graph_reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
-  heimdall::heimdall_worker_t worker(map.config, graph_reader);
+  loki::loki_worker_t worker(map.config, graph_reader);
 
   // Use center node to calculate tile coordinates
   const auto& node_f = layout.at("F"); // Center node
 
   // zoom 10
-  uint32_t z10 = 10;
-  double n10 = std::pow(2.0, z10);
-  uint32_t x10 = static_cast<uint32_t>((node_f.lng() + 180.0) / 360.0 * n10);
-  uint32_t y10 = static_cast<uint32_t>(
-      (1.0 - std::asinh(std::tan(node_f.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n10);
+  uint32_t z8 = 8;
+  double n8 = std::pow(2.0, z8);
+  uint32_t x8 = static_cast<uint32_t>((node_f.lng() + 180.0) / 360.0 * n8);
+  uint32_t y8 = static_cast<uint32_t>(
+      (1.0 - std::asinh(std::tan(node_f.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n8);
 
   // zoom 12
   uint32_t z12 = 12;
@@ -175,28 +180,37 @@ TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
   uint32_t y12 = static_cast<uint32_t>(
       (1.0 - std::asinh(std::tan(node_f.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n12);
 
+  Api request;
+  auto* xyz = request.mutable_options()->mutable_tile_xyz();
+
   // Render tile at zoom 10
-  auto tile_data_z10 = worker.render_tile(z10, x10, y10);
-  EXPECT_EQ(tile_data_z10.size(), 4686);
+  xyz->set_x(x8);
+  xyz->set_y(y8);
+  xyz->set_z(z8);
+  auto tile_data_z8 = worker.render_tile(request);
+  EXPECT_EQ(tile_data_z8.size(), 4664);
 
   // Render tile at zoom 12
-  auto tile_data_z12 = worker.render_tile(z12, x12, y12);
-  ASSERT_FALSE(tile_data_z12.empty());
+  request.Clear();
+  xyz->set_x(x12);
+  xyz->set_y(y12);
+  xyz->set_z(z12);
+  auto tile_data_z12 = worker.render_tile(request);
   EXPECT_EQ(tile_data_z12.size(), 6925);
 
   // Parse Z10 tile
-  vtzero::vector_tile tile_z10{tile_data_z10};
-  uint32_t edges_z10 = 0;
-  uint32_t nodes_z10 = 0;
+  vtzero::vector_tile tile_z8{tile_data_z8};
+  uint32_t edges_z8 = 0;
+  uint32_t nodes_z8 = 0;
 
-  while (auto layer = tile_z10.next_layer()) {
+  while (auto layer = tile_z8.next_layer()) {
     std::string layer_name = std::string(layer.name());
     if (layer_name == "edges") {
-      edges_z10 = layer.num_features();
+      edges_z8 = layer.num_features();
       EXPECT_EQ(layer.version(), 2);
       EXPECT_EQ(layer.extent(), 4096);
     } else if (layer_name == "nodes") {
-      nodes_z10 = layer.num_features();
+      nodes_z8 = layer.num_features();
     } else {
       FAIL() << "Unexpected layer: " << layer_name;
     }
@@ -220,8 +234,8 @@ TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
     }
   }
 
-  EXPECT_EQ(edges_z10, 7);
-  EXPECT_EQ(nodes_z10, 8);
+  EXPECT_EQ(edges_z8, 7);
+  EXPECT_EQ(nodes_z8, 8);
 
   EXPECT_EQ(edges_z12, 14);
   EXPECT_EQ(nodes_z12, 16);

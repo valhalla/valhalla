@@ -96,6 +96,7 @@ config = {
             "expansion",
             "centroid",
             "status",
+            "tile",
         ],
         "use_connectivity": True,
         "service_defaults": {
@@ -106,6 +107,7 @@ config = {
             "street_side_tolerance": 5,
             "street_side_max_distance": 1000,
             "heading_tolerance": 60,
+            "min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14],
         },
         "logging": {
             "type": "std_out",
@@ -359,9 +361,6 @@ config = {
         "batch_size": Optional(int),
         "tags": Optional(list),
     },
-    "heimdall": {
-        "min_zoom_road_class": [8, 9, 10, 11, 12, 12, 12, 12],
-    },
 }
 
 help_text = {
@@ -431,7 +430,7 @@ help_text = {
         "elevation_url": "Http location to read elevations from. this address is used if elevation tiles were not found in the elevation directory. Ex.: http://<your_valhalla_tile_server_host>:<your_valhalla_tile_server_port>/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with an elevation path when it makes a request for that particular elevation",
     },
     "loki": {
-        "actions": "Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status",
+        "actions": "Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status, tile",
         "use_connectivity": "a boolean value to know whether or not to construct the connectivity maps",
         "service_defaults": {
             "radius": "Default radius to apply to incoming locations should one not be supplied",
@@ -441,6 +440,7 @@ help_text = {
             "street_side_tolerance": "If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel",
             "street_side_max_distance": "The max distance in meters that the input coordinates or display ll can be from the edge centerline for them to be used for determining the side of street. Beyond this distance the side of street is set to none",
             "heading_tolerance": "When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading",
+            "min_zoom_road_class": "Minimum zoom level for each road class (8 values: Motorway, Trunk, Primary, Secondary, Tertiary, Unclassified, Residential, Service/Other). Roads will only be rendered at or above their minimum zoom level.",
         },
         "logging": {
             "__note__": (
@@ -742,9 +742,6 @@ help_text = {
         "prefix": "The statsd prefix to use for each metric",
         "batch_size": "Approximate maximum size in bytes of each batch of stats to send to statsd",
         "tags": "List of tags to include with each metric",
-    },
-    "heimdall": {
-        "min_zoom_road_class": "Minimum zoom level for each road class (8 values: Motorway, Trunk, Primary, Secondary, Tertiary, Unclassified, Residential, Service/Other). Roads will only be rendered at or above their minimum zoom level.",
     },
 }
 

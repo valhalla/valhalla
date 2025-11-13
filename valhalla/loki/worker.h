@@ -4,6 +4,7 @@
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/exceptions.h>
+#include <valhalla/meili/candidate_search.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costfactory.h>
@@ -40,8 +41,11 @@ public:
   std::string height(Api& request);
   std::string transit_available(Api& request);
   void status(Api& request) const;
+  std::string render_tile(Api& request);
 
   void set_interrupt(const std::function<void()>* interrupt) override;
+
+  static constexpr std::array kDefaultMinZoomRoadClass = {7u, 7u, 8u, 10u, 11u, 11u, 13u, 14u};
 
 protected:
   void parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
@@ -102,9 +106,14 @@ protected:
   unsigned int max_alternates;
   bool allow_verbose;
   bool allow_hard_exclusions;
-
-  // add max_distance_disable_hierarchy_culling
   float max_distance_disable_hierarchy_culling;
+
+  // for /tile requests
+  static_assert(kDefaultMinZoomRoadClass.size() == static_cast<size_t>(baldr::RoadClass::kInvalid));
+  std::array<uint32_t, static_cast<size_t>(baldr::RoadClass::kInvalid)> min_zoom_road_class_ =
+      kDefaultMinZoomRoadClass;
+  uint32_t min_zoom_;
+  meili::CandidateGridQuery candidate_query_;
 
 private:
   std::string service_name() const override {

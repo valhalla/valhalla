@@ -87,6 +87,23 @@ message HierarchyLimits {
                                    // always allowed. Used for A*.
 }
 
+// for /tile requests
+message Tile {
+  oneof has_x {
+    uint32 x = 1;
+  }
+  oneof has_y {
+    uint32 y = 2;
+  }
+  oneof has_z {
+    uint32 z = 3;
+  }
+}
+
+message TileOptions {
+  bool return_shortcuts = 1;      // include shortcuts in /tile responses
+}
+
 message Costing {
   enum Type {
     none_ = 0;
@@ -348,6 +365,7 @@ message Options {
     osrm = 2;
     pbf = 3;
     geotiff = 4;
+    mvt = 5;  // we set this ourselves and throw if it's set by the user
   }
 
   enum Action {
@@ -364,6 +382,7 @@ message Options {
     expansion = 10;
     centroid = 11;
     status = 12;
+    tile = 13;
   }
 
   enum DateTimeType {
@@ -486,4 +505,6 @@ message Options {
                                                                    // ensuring that each edge appears in the output only once. [default = false]
   bool admin_crossings = 59;                                       // Include administrative boundary crossings
   bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
+  Tile tile_xyz = 61;                                              // x, y, z for /tile requests
+  TileOptions tile_options = 62;                                   // additional /tile specific options
 }

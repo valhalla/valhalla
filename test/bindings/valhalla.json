@@ -56,7 +56,8 @@
       "transit_available",
       "expansion",
       "centroid",
-      "status"
+      "status",
+      "tile"
     ],
     "use_connectivity": true,
     "service_defaults": {
@@ -66,7 +67,8 @@
       "node_snap_tolerance": 5,
       "street_side_tolerance": 5,
       "street_side_max_distance": 1000,
-      "heading_tolerance": 60
+      "heading_tolerance": 60,
+      "min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14]
     },
     "logging": {
       "type": "std_out",
@@ -348,8 +350,5 @@
   "statsd": {
     "port": 8125,
     "prefix": "valhalla"
-  },
-  "heimdall": {
-    "min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14]
   }
 }

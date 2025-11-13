@@ -213,7 +213,14 @@ public:
                      const std::function<void()>* interrupt = nullptr,
                      Api* api = nullptr);
 
-  std::string tile(const std::string& request_str);
+  /**
+   * Perform the tile action and return MVT pbf responses, either with or without shortcuts. The
+   * request may either be in the form of a json string provided by the request_str parameter or
+   * contained in the api parameter as a deserialized protobuf object
+   */
+  std::string tile(const std::string& request_str,
+                   const std::function<void()>* interrupt = nullptr,
+                   Api* api = nullptr);
 
 protected:
   struct pimpl_t;
