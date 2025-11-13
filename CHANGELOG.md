@@ -18,6 +18,7 @@
    * CHANGED: Refactor GraphTile::GetLaneConnectivity to return std::span instead of std::vector [#5683](https://github.com/valhalla/valhalla/pull/5683)
    * CHANGED: Get rid of midgard::iterable_t in favor of std::span [#5682](https://github.com/valhalla/valhalla/pull/5682)
    * ADDED: Make possible to use `-DCMAKE_UNITY_BUILD=ON` [#5691](https://github.com/valhalla/valhalla/pull/5691)
+   * CHANGED: Use std::from_chars instead of std::stoi/stof/stod [#5704](https://github.com/valhalla/valhalla/pull/5704)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
