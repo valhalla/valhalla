@@ -5,6 +5,7 @@
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/sqlite3.h"
 #include "sif/nocost.h"
@@ -195,11 +196,11 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   auto populate_landmarks = [](void* data, int /*argc*/, char** argv, char** /*col_names*/) {
     std::vector<Landmark>* landmarks = static_cast<std::vector<Landmark>*>(data);
 
-    int64_t landmark_id = static_cast<int64_t>(std::stoi(argv[0]));
+    int64_t landmark_id = static_cast<int64_t>(valhalla::midgard::to_int(argv[0]));
     const char* landmark_name = argv[1];
-    int landmark_type = std::stoi(argv[2]);
-    double lng = std::stod(argv[3]);
-    double lat = std::stod(argv[4]);
+    int landmark_type = valhalla::midgard::to_int(argv[2]);
+    double lng = valhalla::midgard::to_float<double>(argv[3]);
+    double lat = valhalla::midgard::to_float<double>(argv[4]);
 
     landmarks->emplace_back(
         Landmark(landmark_id, landmark_name, static_cast<LandmarkType>(landmark_type), lng, lat));
