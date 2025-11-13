@@ -26,6 +26,7 @@
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::loki;
 
 namespace {
 /**
@@ -737,7 +738,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                   vtzero::tile_builder& tile,
                   const midgard::AABB2<midgard::PointLL>& bounds,
                   const std::unordered_set<baldr::GraphId>& edge_ids,
-                  const decltype(loki::loki_worker_t::kDefaultMinZoomRoadClass)& min_zoom_road_class,
+                  const loki_worker_t::ZoomConfig& min_zoom_road_class,
                   uint32_t z,
                   bool return_shortcuts) {
   using point_t = boost::geometry::model::d2::point_xy<double>;

@@ -46,6 +46,7 @@ public:
   void set_interrupt(const std::function<void()>* interrupt) override;
 
   static constexpr std::array kDefaultMinZoomRoadClass = {7u, 7u, 8u, 10u, 11u, 11u, 13u, 14u};
+  using ZoomConfig = std::array<uint32_t, kDefaultMinZoomRoadClass.size()>;
 
 protected:
   void parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
@@ -110,8 +111,7 @@ protected:
 
   // for /tile requests
   static_assert(kDefaultMinZoomRoadClass.size() == static_cast<size_t>(baldr::RoadClass::kInvalid));
-  std::array<uint32_t, static_cast<size_t>(baldr::RoadClass::kInvalid)> min_zoom_road_class_ =
-      kDefaultMinZoomRoadClass;
+  ZoomConfig min_zoom_road_class_ = kDefaultMinZoomRoadClass;
   uint32_t min_zoom_;
   meili::CandidateGridQuery candidate_query_;
 

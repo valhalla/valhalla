@@ -573,9 +573,6 @@ TEST(LokiService, test_actions_whitelist) {
 
     // failed to find that action in the whitelist
     auto front = result.messages.front();
-    if (result.messages.front().find("Try any") == std::string::npos) {
-      std::cout << std::endl;
-    }
     EXPECT_TRUE(result.messages.front().find("Try any") != std::string::npos);
 
     http_request_t request1(method_t::GET, get_endpoint(wrong_action));
