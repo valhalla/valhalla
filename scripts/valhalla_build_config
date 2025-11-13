@@ -48,6 +48,8 @@ config = {
         "transit_pbf_limit": 20000,
         "hierarchy": True,
         "shortcuts": True,
+        "keep_all_osm_node_ids": False,
+        "keep_osm_node_ids": False,
         "include_platforms": False,
         "include_driveways": True,
         "include_construction": False,
@@ -150,13 +152,16 @@ config = {
             },
         },
         "bidirectional_astar": {
+            "threshold_delta": 420.0,
+            "alternative_cost_extend": 1.2,
+            "alternative_iterations_delta": 100000,
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": 400,
                     "2": 100,
                 },
                 "expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000},
-            }
+            },
         },
         "unidirectional_astar": {
             "hierarchy_limits": {
@@ -391,6 +396,8 @@ help_text = {
         "transit_pbf_limit": "Limit individual PBF files to this many trips (needed for PBF's stupid size limit)",
         "hierarchy": "bool indicating whether road hierarchy is to be built - default to True",
         "shortcuts": "bool indicating whether shortcuts are to be built - default to True",
+        "keep_all_osm_node_ids": "bool indicating whether to store all OSM node ids in the graph data - defaults to False",
+        "keep_osm_node_ids": "bool indicating whether to store OSM node ids (at topological/graph nodes) in the graph data - defaults to False",
         "include_platforms": "bool indicating whether to include highway=platform - default to False",
         "include_driveways": "bool indicating whether private driveways are included - default to True",
         "include_construction": "bool indicating where roads under construction are included - default to False",
@@ -493,6 +500,9 @@ help_text = {
             },
         },
         "bidirectional_astar": {
+            "threshold_delta": "Time (seconds) to extend search once the first connection has been found",
+            "alternative_cost_extend": "Relative cost extension to find alternative routes",
+            "alternative_iterations_delta": "Number of extra iterations to allow when searching for alternative paths. Higher values will find more alternatives but will be slower",
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": "The default maximum up transitions for level 1 in CostMatrix",
@@ -503,7 +513,7 @@ help_text = {
                     "1": "The default distance within which expansion is allowed from the origin/destination on level 1 in bidirectional astar",
                     "2": "The default distance within which expansion is allowed from the origin/destination on level 2 in bidirectional astar",
                 },
-            }
+            },
         },
         "unidirectional_astar": {
             "hierarchy_limits": {
@@ -776,9 +786,9 @@ def add_leaf_args(
         if isinstance(tree, Optional):
             t = tree.type
         elif isinstance(tree, list):
-            t = lambda arg: arg.split(",")
+            t = lambda arg: arg.split(",")  # noqa: E731
         elif isinstance(tree, bool):
-            t = lambda arg: bool(strtobool(arg))
+            t = lambda arg: bool(strtobool(arg))  # noqa: E731
         else:
             t = type(tree)
 

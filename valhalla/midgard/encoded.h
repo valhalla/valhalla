@@ -61,6 +61,47 @@ private:
   }
 };
 
+template <typename value_type> class Int7Decoder {
+public:
+  Int7Decoder(const char* begin, const size_t size) : begin(begin), end(begin + size) {
+  }
+  value_type pop() noexcept(false) {
+    value = next(value);
+    return value;
+  }
+  bool empty() const {
+    return begin == end;
+  }
+
+private:
+  const char* begin;
+  const char* end;
+  value_type value = 0;
+
+  value_type next(const value_type previous) noexcept(false) {
+    using uvalue_t = typename std::make_unsigned<value_type>::type;
+    using svalue_t = typename std::make_signed<value_type>::type;
+
+    uvalue_t byte, shift = 0, result = 0;
+    do {
+      if (empty()) {
+        throw std::runtime_error("Bad varint offset encoding");
+      }
+      // take the least significant 7 bits shifted into place
+      byte = static_cast<uvalue_t>(static_cast<unsigned char>(*begin++));
+      result |= (byte & 0x7f) << shift;
+      shift += 7;
+      // if the most significant bit is set there is more to this number
+    } while (byte & 0x80);
+
+    // Decode zigzag encoding back to signed difference
+    svalue_t diff = (result & 1) ? ~(result >> 1) : (result >> 1);
+
+    // Add offset to previous value
+    return previous + static_cast<value_type>(diff);
+  }
+};
+
 template <typename Point> class Shape5Decoder {
 public:
   Shape5Decoder(const char* begin, const size_t size, const double precision = DECODE_PRECISION)
@@ -147,15 +188,41 @@ container_t decode7(const char* encoded, size_t length, const double precision =
                                                                               precision);
 }
 
+// specialized implementation for std::vector with reserve
+template <class container_t, class IntDecoder = Int7Decoder<typename container_t::value_type>>
+typename std::enable_if<
+    std::is_same<std::vector<typename container_t::value_type>, container_t>::value,
+    container_t>::type
+decode7int(const char* encoded, size_t length) {
+  IntDecoder decoder(encoded, length);
+  container_t c;
+  c.reserve(length / 8);
+  while (!decoder.empty()) {
+    c.emplace_back(decoder.pop());
+  }
+  return c;
+}
+
 /**
  * Varint decode a string into a container of points
  *
  * @param encoded    the encoded points
+ * @param precision  the multiplier to turn the encoded integers back into floating point default 1e-6
  * @return points   the container of points
  */
 template <class container_t>
 container_t decode7(const std::string& encoded, const double precision = DECODE_PRECISION) {
   return decode7<container_t>(encoded.c_str(), encoded.length(), precision);
+}
+
+/**
+ * Varint decode a string into a container of integral values
+ *
+ * @param encoded  the encoded points in string form
+ * @return integer values in the templated container type
+ */
+template <class container_t> container_t decode7int(const std::string& encoded) {
+  return decode7int<container_t>(encoded.c_str(), encoded.length());
 }
 
 /**
@@ -250,6 +317,45 @@ std::string encode7(const container_t& points, const int precision = ENCODE_PREC
     // remember the last one we encountered
     last_lon = lon;
     last_lat = lat;
+  }
+  return output;
+}
+
+template <class container_t> std::string encode7int(const container_t& values) {
+  // a place to keep the output
+  using value_t = typename container_t::value_type;
+  using uvalue_t = typename std::make_unsigned<value_t>::type;
+  std::string output;
+  output.reserve(values.size() * 8);
+
+  // handy lambda to turn an integer into an encoded string
+  auto serialize = [&output](value_t number) {
+    // Convert to unsigned for bitwise operations
+    uvalue_t unumber;
+    if constexpr (std::is_signed<value_t>::value) {
+      // For signed types, use zigzag encoding
+      unumber =
+          number < 0 ? ~(static_cast<uvalue_t>(number) << 1) : static_cast<uvalue_t>(number) << 1;
+    } else {
+      // For unsigned types, use zigzag encoding on the difference
+      // which could be negative when interpreted as signed
+      auto signed_number = static_cast<typename std::make_signed<value_t>::type>(number);
+      unumber = signed_number < 0 ? ~(static_cast<uvalue_t>(signed_number) << 1)
+                                  : static_cast<uvalue_t>(signed_number) << 1;
+    }
+    while (unumber > 0x7f) {
+      auto nextValue = static_cast<std::string::value_type>(0x80 | (unumber & 0x7f));
+      output.push_back(nextValue);
+      unumber >>= 7;
+    }
+    output.push_back(static_cast<std::string::value_type>(unumber & 0x7f));
+  };
+
+  // this is an offset encoding so we remember the last value we saw
+  value_t last_value = 0;
+  for (const auto& value : values) {
+    serialize(value - last_value);
+    last_value = value;
   }
   return output;
 }

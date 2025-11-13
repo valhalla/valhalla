@@ -15,7 +15,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
-#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -78,7 +77,8 @@ public:
                                                   float,
                                                   uint32_t,
                                                   float,
-                                                  const Expansion_ExpansionType)>;
+                                                  const Expansion_ExpansionType,
+                                                  const uint8_t)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }
@@ -244,6 +244,7 @@ protected:
    */
   void SetOriginLocations(baldr::GraphReader& graphreader,
                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                          const std::vector<baldr::TimeInfo>& time_infos,
                           const sif::cost_ptr_t& costing);
 
   /**
@@ -265,6 +266,7 @@ protected:
    */
   void SetDestinationLocations(baldr::GraphReader& graphreader,
                                google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                               const std::vector<baldr::TimeInfo>& time_infos,
                                const sif::cost_ptr_t& costing);
 
   /**

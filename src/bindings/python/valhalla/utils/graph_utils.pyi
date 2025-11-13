@@ -13,15 +13,15 @@ class GraphId:
         """Constructs an invalid GraphId"""
 
     @overload
-    def __init__(self, tile_id: int, level: int, id: int) -> None:
+    def __init__(self, tile_id: int, level: int, id: int) -> None:  # noqa: F811
         """Constructs a GraphId from its portions."""
 
     @overload
-    def __init__(self, value: int) -> None:
+    def __init__(self, value: int) -> None:  # noqa: F811
         """Constructs a GraphId from its integer value, e.g. 118931 == 3/14866/0."""
 
     @overload
-    def __init__(self, value: str) -> None:
+    def __init__(self, value: str) -> None:  # noqa: F811
         """Constructs a GraphId from its string representation, e.g. "2/71944/0"."""
 
     def __add__(self, value: int) -> None:
@@ -76,7 +76,11 @@ def get_tile_id_from_lon_lat(level: int, coord: Tuple[float, float]) -> GraphId:
     """
 
 def get_tile_ids_from_bbox(
-    minx: float, miny: float, maxx: float, maxy: float, levels: Optional[List[int]] = [0, 1, 2]
+    minx: float,
+    miny: float,
+    maxx: float,
+    maxy: float,
+    levels: Optional[List[int]] = [0, 1, 2],
 ) -> List[GraphId]:
     """Returns all tiles GraphIds for the specified levels (default: all),
     which intersect the bbox.
