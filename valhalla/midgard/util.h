@@ -719,7 +719,7 @@ T to_float(const std::string& value) {
   } else if constexpr (std::is_same_v<T, double>) {
     return std::stod(value);
   } else {
-    static_assert(false, "Unsupported floating-point type");
+    static_assert(!std::is_same_v<T, T>, "Unsupported floating-point type");
   }
 }
 
