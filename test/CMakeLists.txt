@@ -50,6 +50,10 @@ if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_test PkgConfig::GEOS)
 endif()
 
+if (ENABLE_GEOTIFF)
+  find_package(GDAL QUIET)
+  target_link_libraries(valhalla_test GDAL::GDAL)
+endif()
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
