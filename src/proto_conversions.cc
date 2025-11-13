@@ -370,7 +370,8 @@ bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
               {"edge_status", Options_ExpansionProperties_edge_status},
               {"edge_id", Options::ExpansionProperties::Options_ExpansionProperties_edge_id},
               {"pred_edge_id", Options_ExpansionProperties_pred_edge_id},
-              {"expansion_type", Options_ExpansionProperties_expansion_type}};
+              {"expansion_type", Options_ExpansionProperties_expansion_type},
+              {"flow_sources", Options_ExpansionProperties_flow_sources}};
   auto i = actions.find(prop);
   if (i == actions.cend())
     return false;
