@@ -8,33 +8,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-namespace {
-
-// Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const graph_tile_ptr& tile,
-                       uint32_t routeid,
-                       std::unordered_map<std::string, uint32_t>& operators) {
-  const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
-
-  // Test if the transit operator changed
-  if (transit_route && transit_route->op_by_onestop_id_offset()) {
-    // Get the operator name and look up in the operators map
-    std::string operator_name = tile->GetName(transit_route->op_by_onestop_id_offset());
-    auto operator_itr = operators.find(operator_name);
-    if (operator_itr == operators.end()) {
-      // Operator not found - add to the map
-      uint32_t id = operators.size() + 1;
-      operators[operator_name] = id;
-      return id;
-    } else {
-      return operator_itr->second;
-    }
-  }
-  return 0;
-}
-
-} // namespace
-
 namespace valhalla {
 namespace thor {
 
@@ -386,8 +359,8 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
                                  : bdedgelabels_[pred.predecessor()].edgeid();
       expansion_callback_(graphreader, pred.edgeid(), prev_pred, "dijkstras",
                           Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
-                          pred.cost().cost,
-                          static_cast<Expansion_ExpansionType>(expansion_direction));
+                          pred.cost().cost, static_cast<Expansion_ExpansionType>(expansion_direction),
+                          kNoFlowMask);
     }
   }
 }
@@ -577,7 +550,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
           }
 
           // Get the operator Id
-          operator_id = GetOperatorId(tile, departure->routeindex(), operators_);
+          operator_id = tile->GetTransitOperatorId(departure->routeindex(), operators_);
 
           // Add transfer penalty and operator change penalty
           if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {
@@ -762,7 +735,7 @@ void Dijkstras::ComputeMultiModal(
         expansion_callback_(graphreader, pred.edgeid(), pred_edge, "multimodal",
                             valhalla::Expansion_EdgeStatus_reached, pred.cost().secs,
                             pred.path_distance(), pred.cost().cost,
-                            valhalla::Expansion_ExpansionType_forward);
+                            valhalla::Expansion_ExpansionType_forward, kNoFlowMask);
       }
       // Expand from the end node of the predecessor edge.
       ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,

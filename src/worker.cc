@@ -18,7 +18,6 @@
 #include <cpp-statsd-client/StatsdClient.hpp>
 
 #include <sstream>
-#include <unordered_map>
 
 using namespace valhalla;
 #ifdef ENABLE_SERVICES
