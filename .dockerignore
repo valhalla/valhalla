@@ -46,10 +46,6 @@ mason/
 mason_packages/
 .DS_Store
 
-# scripts
-scripts/gdal-2.0.0/
-scripts/gdal-2.0.0.tar.gz
-
 # tools
 .cproject
 .project

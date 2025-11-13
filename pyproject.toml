@@ -55,7 +55,6 @@ sdist.exclude = ["test", "test_requests"]
 ENABLE_PYTHON_BINDINGS = "ON"
 ENABLE_TESTS = "OFF"
 ENABLE_SINGLE_FILES_WERROR = "OFF"
-ENABLE_GDAL = "OFF"
 CMAKE_BUILD_TYPE = "Release"
 
 [tool.setuptools_scm]
@@ -91,13 +90,6 @@ before-all = "pip install \"delvewheel<=2.0.0\""
 repair-wheel-command = "delvewheel repair --analyze-existing-exes --add-path build/vcpkg_installed/x64-windows/bin {wheel} -w {dest_dir}"
 
 [tool.cibuildwheel.linux]
-# we remove some system libraries to try and simulate a more pristine environment before testing
-# CI is testing the built wheel in a fresh Docker container
-test-command=[
-    'dnf remove -y libspatialite-devel luajit-devel lz4-devel czmq-devel > /dev/null',
-    '{project}/src/bindings/python/test/test_pyvalhalla_package.sh',
-    'dnf install -y libspatialite-devel luajit-devel lz4-devel czmq-devel > /dev/null'
-]
 # 1. patch auditwheel so that it allows to vendor libraries also linked to libpython
 # 2. configure and write the pyproject.toml
 before-build = """
