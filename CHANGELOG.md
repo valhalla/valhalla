@@ -22,6 +22,7 @@
    * CHANGED: make alternative_iterations_delta configurable [#5679](https://github.com/valhalla/valhalla/pull/5679)
    * ADDED: `flow_sources` expansion property [#5697](https://github.com/valhalla/valhalla/pull/5697)
    * CHANGED: Replace GDAL with libgeotiff, re-enable support for bindings [#5680](https://github.com/valhalla/valhalla/pull/5680)
+   * ADDED: NODATA value to isochrone's geotiff output [#5685](https://github.com/valhalla/valhalla/pull/5685)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
