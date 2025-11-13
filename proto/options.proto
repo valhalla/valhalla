@@ -382,6 +382,7 @@ message Options {
     edge_id = 4;
     pred_edge_id = 5;
     expansion_type = 6;
+    flow_sources = 7;
   }
 
   Units units = 1;                                                 // kilometers or miles
