@@ -740,5 +740,21 @@ template <typename T = int> T to_int(std::string_view value) {
   return result;
 }
 
+/**
+ * Try to convert a string to an integer value.
+ * Uses std::from_chars for fast, locale-independent parsing.
+ * @tparam  T      Integer type (int, int64_t, uint32_t, etc.)
+ * @param   value  String representation of the integer
+ * @return  Returns std::optional<T> containing the parsed value, or std::nullopt on failure
+ */
+template <typename T = int> std::optional<T> try_to_int(std::string_view value) noexcept {
+  T result;
+  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+  if (ec != std::errc()) {
+    return std::nullopt;
+  }
+  return result;
+}
+
 } // namespace midgard
 } // namespace valhalla
