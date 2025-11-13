@@ -409,8 +409,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
     if(child.IsArray()) {
       for (const auto& item : child.GetArray()) {
         if (item.IsString()) {
-          std::string country = item.GetString();
-          co->add_exclude_country_vignettes(country);
+          co->add_exclude_country_vignettes(item.GetString());
         }
       }
     }
