@@ -34,13 +34,11 @@ TEST(Standalone, AvoidsVignetteCountry) {
       {"AB", {{"highway", "residential"}}},
       {"BC", {{"highway", "residential"}}},
       {"CD", {{"highway", "residential"}, {"vignette", ""}}},
-      {"DC", {{"highway", "residential"}, {"vignette", ""}}},
       {"DE", {{"highway", "residential"}}},
       {"EF", {{"highway", "residential"}, {"vignette", ""}}},
       {"FG", {{"highway", "residential"}}},
       {"GH", {{"highway", "residential"}}},
       {"HI", {{"highway", "residential"}}},
-      {"DG", {{"highway", "residential"}}},
       {"BI", {{"highway", "residential"}}},
   };
 
@@ -58,11 +56,11 @@ TEST(Standalone, AvoidsVignetteCountry) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   const auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_exclude_country_vignettes", build_config);
 
-/*   for (const auto& costing : kSupportedCostingTypes) {
+  for (const auto& costing : kSupportedCostingTypes) {
     const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, costing);
     ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
-  } */
+  }
 
   for (const auto& costing : kSupportedCostingTypes) {
     const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, costing,
