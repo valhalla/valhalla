@@ -326,7 +326,7 @@ message Costing {
     bool exclude_ferries = 91;
     map<uint32, HierarchyLimits> hierarchy_limits = 92;
     bool ignore_construction = 93;
-    repeated CostFactorEdge cost_factor_edges = 94;
+    repeated CostFactorEdge cost_factor_edges = 94;     // identified edges along user provided linear features, to which to apply special cost factors
   }
 
   oneof has_options {
@@ -501,5 +501,5 @@ message Options {
                                                                    // ensuring that each edge appears in the output only once. [default = false]
   bool admin_crossings = 59;                                       // Include administrative boundary crossings
   bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
-  repeated LinearFeatureCost cost_factor_lines = 61;
+  repeated LinearFeatureCost cost_factor_lines = 61;               // User provided linear features to which apply special cost factors to
 }

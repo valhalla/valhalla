@@ -296,6 +296,10 @@ public:
    * cost to the destination. So a time based estimate based on speed should
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
+   *
+   * The speed factor is multiplied with the minimum user provided cost factor to
+   * avoid overestimating real cost. Unless a user passes linear features with custom cost
+   * factors, this value will always be 1.
    */
   virtual float AStarCostFactor() const override {
     return kSpeedFactor[top_speed_] * static_cast<float>(min_linear_cost_factor_);

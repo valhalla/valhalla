@@ -169,13 +169,12 @@ opposing) { loc.mutable_correlation()->mutable_edges()->SwapElements(i, loc.path
  * Adds a shortcut to the cost factor edges given one
  * of its constituents
  */
-void add_shortcut(baldr::GraphReader& reader,
-                  GraphId shortcut,
-                  valhalla::Costing_Options* options,
-                  valhalla::CostFactorEdge* cost_factor) {
+void add_partial_shortcut(baldr::GraphReader& reader,
+                          GraphId shortcut,
+                          valhalla::Costing_Options* options,
+                          valhalla::CostFactorEdge* cost_factor) {
   GraphId edge = static_cast<GraphId>(cost_factor->id());
-  graph_tile_ptr tile = nullptr;
-  tile = reader.GetGraphTile(shortcut);
+  graph_tile_ptr tile = reader.GetGraphTile(shortcut);
   // it's part of a shortcut
   auto constituents = reader.RecoverShortcut(shortcut);
   auto* shortcut_edge = tile->directededge(shortcut);
@@ -226,12 +225,12 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
   for (auto& line : *options.mutable_cost_factor_lines()) {
     std::vector<std::vector<PathInfo>> legs;
     if (!RouteMatcher::FormPath(costing, mode, reader, line, false, /* use_shortcuts=*/true, legs)) {
-      throw valhalla_exception_t{174};
+      throw valhalla_exception_t{233};
     }
     for (const auto& leg : legs) {
       for (size_t i = 0; i < leg.size(); ++i) {
         if (edge_count > max_allowed_edges)
-          throw valhalla_exception_t{175};
+          throw valhalla_exception_t{234};
         auto& path_info = leg[i];
         bool is_first = i == 0;
         bool is_last = i == leg.size() - 1;
@@ -240,13 +239,13 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(line.cost_factor());
-          for (auto& edge : line.locations(0).correlation().edges()) {
+          for (const auto& edge : line.locations(0).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
               e->set_start(edge.percent_along());
               break;
             }
           }
-          for (auto& edge : line.locations(1).correlation().edges()) {
+          for (const auto& edge : line.locations(1).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
               e->set_end(edge.percent_along());
               break;
@@ -254,10 +253,11 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           }
           auto shortcut = reader.GetShortcut(path_info.edgeid);
           if (shortcut.Is_Valid()) {
-            add_shortcut(reader, shortcut, costing_options, e);
+            add_partial_shortcut(reader, shortcut, costing_options, e);
           }
         } else if (is_first || is_last) { // beginning or end edge
-          for (auto& edge : line.locations(static_cast<size_t>(is_last)).correlation().edges()) {
+          for (const auto& edge :
+               line.locations(static_cast<size_t>(is_last)).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
               edge_count++;
               auto* e = costing_options->add_cost_factor_edges();
@@ -268,7 +268,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
               e->set_end(is_last ? edge.percent_along() : 1.);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
               if (shortcut.Is_Valid()) {
-                add_shortcut(reader, shortcut, costing_options, e);
+                add_partial_shortcut(reader, shortcut, costing_options, e);
               }
               break;
             }
@@ -277,7 +277,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           edge_count++;
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
-          e->set_factor(line.cost_factor());
+          e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
           e->set_start(0.);
           e->set_end(1.);
 
@@ -288,7 +288,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
               edge_count++;
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(constituent);
-              e->set_factor(line.cost_factor());
+              e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
               e->set_start(0);
               e->set_end(1);
             }
@@ -298,7 +298,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
             // a little, can't we persist this information somehow?
             auto shortcut = reader.GetShortcut(path_info.edgeid);
             if (shortcut.Is_Valid()) {
-              add_shortcut(reader, shortcut, costing_options, e);
+              add_partial_shortcut(reader, shortcut, costing_options, e);
             }
           }
         }
@@ -360,7 +360,6 @@ void thor_worker_t::route(Api& request) {
     add_cost_factor_edges(mode_costing, mode, *reader, *request.mutable_options(),
                           min_linear_cost_factor, max_linear_cost_edges);
   }
-
   auto costing = parse_costing(request);
 
   // get all the legs

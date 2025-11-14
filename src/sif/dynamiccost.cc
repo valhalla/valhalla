@@ -119,7 +119,7 @@ constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpe
  * When all ranges for a given edge are added, sort by range start
  * and return the smallest factor found for this edge.
  */
-double custom_cost_t::finalize() {
+double custom_cost_t::sort_and_find_smallest() {
   if (ranges.empty())
     return 1.;
 
@@ -229,7 +229,8 @@ DynamicCost::DynamicCost(const Costing& costing,
   // once all cost factors are filled, sort by range, precompute overall average
   // and store the overall minimum factor so it won't mess with the A* heuristic
   for (auto& [edge, cost_factors] : linear_cost_edges_) {
-    min_linear_cost_factor_ = std::min(min_linear_cost_factor_, cost_factors.finalize());
+    min_linear_cost_factor_ =
+        std::min(min_linear_cost_factor_, cost_factors.sort_and_find_smallest());
   }
 }
 

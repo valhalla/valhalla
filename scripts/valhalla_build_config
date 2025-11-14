@@ -710,7 +710,7 @@ help_text = {
         "max_timedep_distance_matrix": "Maximum b-line distance between 2 most distant locations in meters to allow a time-dependent matrix",
         "max_alternates": "Maximum number of alternate routes to allow in a request",
         "max_exclude_polygons_length": "Maximum total perimeter of all exclude_polygons in meters",
-        "min_linear_cost_factor": "Minimum allowed factor admissible for linear feature cost factors.",
+        "min_linear_cost_factor": "Minimum allowed factor admissible for linear feature cost factors. Beware: low values approaching zero will render the A* heuristic unusable",
         "max_linear_cost_edges": "Maximum total number of linear cost edges",
         "max_distance_disable_hierarchy_culling": "Maximum search distance allowed with hierarchy culling disabled",
         "hierarchy_limits": {

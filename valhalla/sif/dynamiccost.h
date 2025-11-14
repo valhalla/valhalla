@@ -121,7 +121,7 @@ struct custom_cost_t {
 
   // once ranges are filled up, sort and compute average
   // returns the minimum factor
-  double finalize();
+  double sort_and_find_smallest();
 };
 
 // Holds a range plus a default value for that range
@@ -1174,20 +1174,31 @@ protected:
       double partial_factor = 0.;
       double uncovered = 1.;
       for (const auto& range : it->second.ranges) {
+        // skip if the range ends before our fraction starts or starts after our fraction ends
         if (range.end <= start || range.start >= end)
           continue;
+
+        // this range overlaps with the traversed fraction of the edge; figure out
+        // how big the overlap is and apply the factor accordingly
         double fraction = (range.end - std::max(static_cast<double>(start), range.start)) /
                           (static_cast<double>(end - start));
         partial_factor += fraction * range.factor;
-        uncovered -= fraction;
+
+        uncovered -= fraction; // keep track of how much of the partial edge is not covered by a range
       }
-      partial_factor += uncovered;
+      partial_factor += uncovered; // whatever part of the fraction that was not covered by a range
+                                   // implicitly gets a factor of 1
       return partial_factor;
     }
 
+    // linear cost edges were present but none matched this edge
     return 1.;
   }
 
+  /**
+   * Returns a factor to be applied to edge cost based on user provided input. If
+   * no custom cost factors were provided for this edge, return 1.
+   */
   double EdgeFactor(const baldr::GraphId& edgeid) const {
     if (linear_cost_edges_.empty() || edgeid == baldr::kInvalidGraphId)
       return 1.;
