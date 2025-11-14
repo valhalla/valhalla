@@ -356,6 +356,8 @@ void thor_worker_t::route(Api& request) {
   controller = AttributesController(options);
 
   if (!request.options().cost_factor_lines().empty()) {
+    // we parse costing twice in this case, once for edge walking,
+    // and then again once with the edge factors added
     parse_costing(request);
     add_cost_factor_edges(mode_costing, mode, *reader, *request.mutable_options(),
                           min_linear_cost_factor, max_linear_cost_edges);
