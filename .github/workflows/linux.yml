@@ -107,7 +107,7 @@ jobs:
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DENABLE_NODE_BINDINGS=On -DLOGGING_LEVEL=TRACE \
             -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON \
-            -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
+            -DENABLE_SINGLE_FILES_WERROR=Off
           make -C build -j$(nproc)
           make -C build -j$(nproc) utrecht_tiles
           make -C build -j$(nproc) tests gurka
@@ -183,7 +183,7 @@ jobs:
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
             -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-            -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_NODE_BINDINGS=On -DENABLE_GDAL=On \
+            -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_NODE_BINDINGS=On \
             -DBUILD_SHARED_LIBS=On
           make -C build -j$(nproc)
           make -C build -j$(nproc) utrecht_tiles
@@ -266,7 +266,7 @@ jobs:
       - name: Build Valhalla
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
-            -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
+            -DENABLE_SINGLE_FILES_WERROR=Off
           make -C build -j$(nproc)
           # make -C build -j$(nproc) utrecht_tiles
           make -C build -j$(nproc) gurka
