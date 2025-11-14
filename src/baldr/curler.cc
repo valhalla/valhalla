@@ -233,7 +233,7 @@ void curler_pool_t::release(curler_t&& curler) {
 // if you dont build with CURL support we always error when you try to use it
 namespace valhalla {
 namespace baldr {
-curler_t::curler_t(const std::string& user_agent) {
+curler_t::curler_t(const std::string& user_agent, const std::string& user_pw) {
 }
 
 curler_t::GET_response_t curler_t::get(const std::string& url,
@@ -251,13 +251,14 @@ curler_t::HEAD_response_t curler_t::head(const std::string& url,
   throw std::runtime_error("This version of libvalhalla was not built with CURL support");
 }
 
-curler_pool_t::curler_pool_t(const size_t pool_size, const std::string&) : size_(pool_size) {
+curler_pool_t::curler_pool_t(const size_t pool_size, const std::string&, const std::string& user_pw)
+    : size_(pool_size) {
 }
 
 curler_t curler_pool_t::acquire() {
   LOG_ERROR("This version of libvalhalla was not built with CURL support");
   throw std::runtime_error("This version of libvalhalla was not built with CURL support");
-  return curler_t("");
+  return curler_t("", "");
 }
 
 void curler_pool_t::release(curler_t&&) {
