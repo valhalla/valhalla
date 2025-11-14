@@ -373,8 +373,9 @@ TEST(Shortcuts, ShortcutRestrictions) {
 
   // test that the long shortcut has the strictest non-conditional access restrictions
   const auto AF = gurka::findEdgeByNodes(reader, layout, "A", "F");
-  const auto AF_res =
+  auto AF_res_view =
       reader.GetGraphTile(std::get<0>(AF))->GetAccessRestrictions(std::get<0>(AF).id(), kAllAccess);
+  std::vector<baldr::AccessRestriction> AF_res(AF_res_view.begin(), AF_res_view.end());
   EXPECT_EQ(AF_res.size(), 5);
   for (const auto& res : AF_res) {
     uint64_t expected_value = 0;
