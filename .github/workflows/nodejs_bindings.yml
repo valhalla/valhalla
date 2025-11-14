@@ -75,7 +75,7 @@ jobs:
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos'
         run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install boost protobuf libspatialite luajit spatialite-tools dylibbundler
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install boost protobuf libspatialite libgeotiff libtiff luajit spatialite-tools dylibbundler
       
       # TODO: can we move this to manylinux image?
       - name: Setup Python alias (Linux)
@@ -89,7 +89,6 @@ jobs:
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
           -DENABLE_NODE_BINDINGS=ON \
           -DENABLE_SERVICES=OFF \
-          -DENABLE_GDAL=OFF \
           -DENABLE_TESTS=OFF \
           -DVALHALLA_VERSION_MODIFIFER=$(git rev-parse --short HEAD) \
           -DENABLE_SINGLE_FILES_WERROR=OFF
