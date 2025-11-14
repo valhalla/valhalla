@@ -28,7 +28,7 @@ if [[ $server == "builder" ]]; then
         -DENABLE_PYTHON_BINDINGS=OFF \
         -DENABLE_TESTS=OFF \
         -DENABLE_SINGLE_FILES_WERROR=OFF \
-        -DENABLE_GDAL=OFF \
+        -DENABLE_GEOTIFF=OFF \
         -DVALHALLA_VERSION_MODIFIER=$version_modifier
 
     sudo make -C "${src_dir}/build" -j$(nproc) install

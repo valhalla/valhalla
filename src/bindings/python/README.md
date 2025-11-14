@@ -7,6 +7,7 @@ This folder contains the Python bindings to [Valhalla routing engine](https://gi
 > [!NOTE]
 > `pyvalhalla(-weekly)` packages are currently only published for:
 > - `linux-x86_x64`
+> - `linux-aarch64`
 > - `win-amd64`
 > - `macos-arm64`
 
@@ -14,7 +15,7 @@ On top of the (very) high-level Python bindings, we package some data-building V
 
 ### Installation
 
-We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. We **do not** offer a source distribution on PyPI.
+We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`/`aarch64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. To install on Python < 3.12, make sure to install the system dependencies as described in [the docs](https://valhalla.github.io/valhalla/building/#platform-specific-builds) before trying a `pip install pyvalhalla`.
 
 `pip install pyvalhalla` to install the most recent Valhalla **release**.  
 `pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
@@ -27,27 +28,34 @@ cd valhalla
 pip install .
 ```
 
+
+In case you need to do a source installation (from `sdist`), follow the [build instructions](https://valhalla.github.io/valhalla/building/) for your platform to install the needed dependencies. Then a simple `pip install pyvalhalla` should work fine for Linux/OSX. On Windows one needs to install C++ developer tools, see also below in the developer notes for external `vcpkg` usage to resolve dependencies.
+
 > [!TIP]
 > **For developers**: `pip install -e` (editable build) will by default build into a temp directory, so everytime it's invoked it'll rebuild all of libvalhalla. Use the following command to enable real incremental builds:
 > 
 > ```shell
-> # produces pyproject.toml, optionally specify the package name
-> cmake -DPYVALHALLA_NAME=pyvalhalla-weekly -P cmake/ValhallaConfigPyProject.cmake
 > pip install -e . --no-build-isolation \
 >   -Cbuild-dir=build_python (or other build dir) \
 >   -Ccmake.build-type=Release \
 >   -Ccmake.define.VALHALLA_VERSION_MODIFIER="$(git rev-parse --short HEAD)"
+>   # optionally for vcpkg package management
+>   -Ccmake.define.CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+>   -Ccmake.define.VCPKG_TARGET_TRIPLET=x64-windows
+>   -Ccmake.define.VCPKG_OVERLAY_PORTS=overlay-ports-vcpkg
 > ```
 > 
 > Similarly for building a wheel:
 > 
 > ```shell
-> # produces pyproject.toml, optionally specify the package name
-> cmake -DPYVALHALLA_NAME=pyvalhalla -P cmake/ValhallaConfigPyProject.cmake
 > pip wheel . -w dist --no-build-isolation \
 >   -Cbuild-dir=build_python (or other build dir) \
 >   -Ccmake.build-type=Release \
 >   -Ccmake.define.VALHALLA_VERSION_MODIFIER="$(git rev-parse --short HEAD)"
+>   # optionally for vcpkg package management
+>   -Ccmake.define.CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+>   -Ccmake.define.VCPKG_TARGET_TRIPLET=x64-windows
+>   -Ccmake.define.VCPKG_OVERLAY_PORTS=overlay-ports-vcpkg
 > ```
 >
 > Both commands have to repeated for each build.
@@ -154,6 +162,6 @@ docker exec -t valhalla-py /valhalla-py/src/bindings/python/scripts/build_manyli
 
 This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.13 installations.
 
-### Testing (**`linux-x86_x64` only**)
+### Testing (**`linux` only**)
 
 We have a small [test script](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/test/test_pyvalhalla_package.sh) which makes sure that all the executables are working properly. If run locally for some reason, install a `pyvalhalla` wheel first. We run this in CI in a fresh Docker container with no dependencies installed, mostly to verify dynamic linking of the vendored dependencies.
