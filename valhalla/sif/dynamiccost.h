@@ -136,6 +136,7 @@ template <class T> struct ranged_default_t {
     return value;
   }
 };
+
 const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingTypeMapping{
     {Costing::none_, {Costing::none_}},
     {Costing::bicycle, {Costing::bicycle}},
