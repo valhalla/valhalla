@@ -30,6 +30,7 @@
    * ADDED: `flow_sources` expansion property [#5697](https://github.com/valhalla/valhalla/pull/5697)
    * CHANGED: Replace GDAL with libgeotiff, re-enable support for bindings [#5680](https://github.com/valhalla/valhalla/pull/5680)
    * ADDED: Support for loading tiles from a remote tarball with optional HTTP basic auth [#5467](https://github.com/valhalla/valhalla/pull/5467)
+   * ADDED: `timed_predicted_speed` on `/locate` response if location had a date time set [#5714](https://github.com/valhalla/valhalla/pull/5714)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
