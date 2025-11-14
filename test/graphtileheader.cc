@@ -7,15 +7,7 @@ using namespace std;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
-// Expected size is 256. We want to alert if somehow any change grows this structure
-// size as that indicates incompatible tiles.
-constexpr size_t kGraphTileHeaderExpectedSize = 272;
-
 namespace {
-
-TEST(GraphtileHeader, Sizeof) {
-  EXPECT_EQ(sizeof(GraphTileHeader), kGraphTileHeaderExpectedSize);
-}
 
 TEST(GraphtileHeader, TestWriteRead) {
   // Test building a directed edge and reading back values

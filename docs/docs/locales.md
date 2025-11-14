@@ -138,7 +138,7 @@ Translation files for new languages that are contributed in Transifex are not au
 
 1. Pull the new language:
     ```
-    tx pull --language <lang>
+    tx pull --languages <lang>
     ```
 2. Make sure the new translation filename is following the <lng-REGION.json> convention.
 3. Update `./.tx/config` with the new translation file mapping.
