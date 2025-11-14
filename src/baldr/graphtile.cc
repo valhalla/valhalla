@@ -250,6 +250,10 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     result = tile_getter->get(tile_url, range_offset, range_size);
   }
 
+  if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
+    return nullptr;
+  }
+
   // inspect the header for the checksum
   // it's a POD type and thus trivially copyable
   GraphTileHeader header;
@@ -276,9 +280,6 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     }
   }
 
-  if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
-    return nullptr;
-  }
   // try to cache it on disk so we dont have to keep fetching it from url
   store(tile_dir, graphid, tile_getter, result.bytes_);
 
