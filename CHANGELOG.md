@@ -1,19 +1,34 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2025-11-14 Valhalla 3.6.1
+* **Removed**
    * REMOVED: ENABLE_GDAL define for **Linux-only** Python binding releases [#5642](https://github.com/valhalla/valhalla/pull/5642)
    * REMOVED: pyvalhalla-weekly PyPI package [#5673](https://github.com/valhalla/valhalla/pull/5673)
 * **Bug Fix**
    * FIXED: Pass time to `EdgeCost` for initial edges in Dijkstra [#5677](https://github.com/valhalla/valhalla/pull/5677)
+   * FIXED: Handle access restriction tag values separated by semicolon [#5560](https://github.com/valhalla/valhalla/pull/5560)
 * **Enhancement**
    * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
-   * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647) 
+   * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647)
    * UPGRADED: vcpkg to 0e39c10736341cc8135b560438229bbda3d3219a [#5654](https://github.com/valhalla/valhalla/pull/5654)
+   * ADDED: Add NodeJs bindings [#5621](https://github.com/valhalla/valhalla/pull/5621)
    * FIXED: returns GeoTIFF with Content-Type image/tiff header [#5665](https://github.com/valhalla/valhalla/pull/5665)
    * CHANGED: Improve logging using std::format [#5666](https://github.com/valhalla/valhalla/pull/5666)
    * CHANGED: Migrated from pybind11 to nanobind to release `abi3` wheels (Python version agnostic), also changes minimum version of PyPI packages to 3.12 [#5628](https://github.com/valhalla/valhalla/pull/5628)
    * CHANGED: Avoid temporary std::string in some places in serializers [#5674](https://github.com/valhalla/valhalla/pull/5674)
    * ADDED: linux-aarch64 wheel for Python releases [#5670](https://github.com/valhalla/valhalla/pull/5670)
    * ADDED: PyPI `sdist` for python to install the bindings from source [#5649](https://github.com/valhalla/valhalla/pull/5649)
+   * CHANGED: Refactor GraphTile::GetLaneConnectivity to return std::span instead of std::vector [#5683](https://github.com/valhalla/valhalla/pull/5683)
+   * CHANGED: Get rid of midgard::iterable_t in favor of std::span [#5682](https://github.com/valhalla/valhalla/pull/5682)
+   * CHANGED: Optimise CostMatrix::ReachedMap [#5690](https://github.com/valhalla/valhalla/pull/5690)
+   * ADDED: Make possible to use `-DCMAKE_UNITY_BUILD=ON` [#5691](https://github.com/valhalla/valhalla/pull/5691)
+   * CHANGED: make alternative_iterations_delta configurable [#5679](https://github.com/valhalla/valhalla/pull/5679)
+   * ADDED: `flow_sources` expansion property [#5697](https://github.com/valhalla/valhalla/pull/5697)
+   * CHANGED: Replace GDAL with libgeotiff, re-enable support for bindings [#5680](https://github.com/valhalla/valhalla/pull/5680)
+   * ADDED: Support for loading tiles from a remote tarball with optional HTTP basic auth [#5467](https://github.com/valhalla/valhalla/pull/5467)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
@@ -163,6 +178,7 @@
    * CHANGED: Use rapidjson for transit_available serializer [#5430](https://github.com/valhalla/valhalla/pull/5430)
    * CHANGED: Switch from CircleCI to Github Actions [#5427](https://github.com/valhalla/valhalla/pull/5427)
    * CHANGED: Use rapidjson for isochrone serializer [#5429](https://github.com/valhalla/valhalla/pull/5429)
+   * ADDED: Support for storing osm node ids either just for graph nodes or also for all nodes (non-topological) [#5450](https://github.com/valhalla/valhalla/pull/5450)
    * ADDED: Allow pedestrian routing through highway=via_ferrata [#5480](https://github.com/valhalla/valhalla/pull/5480)
    * ADDED: generic level change maneuver [#5431](https://github.com/valhalla/valhalla/pull/5431)
    * ADDED: Publish timezone db on Github Actions artifacts [#5479](https://github.com/valhalla/valhalla/pull/5479)

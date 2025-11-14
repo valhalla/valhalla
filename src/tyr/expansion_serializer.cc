@@ -70,6 +70,13 @@ std::string serializeExpansion(Api& request, const std::string& algo) {
       writer("pred_edge_id", expansion.pred_edge_id(i));
     if (exp_props.count(Options_ExpansionProperties_expansion_type))
       writer("expansion_type", static_cast<uint64_t>(expansion.expansion_type(i)));
+    if (exp_props.count(Options_ExpansionProperties_flow_sources)) {
+      auto flow_sources = expansion.flow_sources(i);
+      writer("flow_mask_current", static_cast<bool>(flow_sources & baldr::kCurrentFlowMask));
+      writer("flow_mask_predicted", static_cast<bool>(flow_sources & baldr::kPredictedFlowMask));
+      writer("flow_mask_free_flow", static_cast<bool>(flow_sources & baldr::kFreeFlowMask));
+      writer("flow_mask_constrained", static_cast<bool>(flow_sources & baldr::kConstrainedFlowMask));
+    }
 
     writer.end_object(); // properties
     writer.end_object(); // feature

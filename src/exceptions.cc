@@ -116,6 +116,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {443, {443, "Exact route match algorithm failed to find path", 400, HTTP_400, OSRM_NO_SEGMENT, "shape_match_failed"}},
     {444, {444, "Map Match algorithm failed to find path", 400, HTTP_400, OSRM_NO_SEGMENT, "map_match_failed"}},
     {445, {445, "Shape match algorithm specification in api request is incorrect. Please see documentation for valid shape_match input.", 400, HTTP_400, OSRM_INVALID_URL, "wrong_match_type"}},
+    {446, {446, "Remote tar file has changed, service is unavailable", 500, HTTP_500, OSRM_SERVER_ERROR, "remote_tar_changed"}},
     {499, {499, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
     {504, {504, "This service does not support GeoTIFF serialization.", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},

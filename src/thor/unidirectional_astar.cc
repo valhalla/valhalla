@@ -325,7 +325,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                   : (edgelabels_)[pred.predecessor()].edgeid();
       expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
                           "unidirectional_astar", Expansion_EdgeStatus_reached, cost.secs,
-                          path_distance, cost.cost, expansion_type);
+                          path_distance, cost.cost, expansion_type, flow_sources);
     }
 
     return true;
@@ -375,7 +375,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                     : (edgelabels_)[pred.predecessor()].edgeid();
         expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
                             "unidirectional_astar", Expansion_EdgeStatus_reached, newcost.secs,
-                            lab.path_distance(), newcost.cost, expansion_type);
+                            lab.path_distance(), newcost.cost, expansion_type, flow_sources);
       }
       return true;
     };
@@ -548,7 +548,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
                                    : edgelabels_[pred.predecessor()].edgeid();
         expansion_callback_(graphreader, pred.edgeid(), prev_pred, "unidirectional_astar",
                             Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
-                            pred.cost().cost, expansion_type);
+                            pred.cost().cost, expansion_type, kNoFlowMask);
       }
       return {FormPath(predindex)};
     }
@@ -567,7 +567,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
           pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels_[pred.predecessor()].edgeid();
       expansion_callback_(graphreader, pred.edgeid(), prev_pred, "unidirectional_astar",
                           Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
-                          pred.cost().cost, expansion_type);
+                          pred.cost().cost, expansion_type, kNoFlowMask);
     }
 
     // Check that distance is converging towards the destination. Return route
@@ -858,7 +858,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
             FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
         expansion_callback_(graphreader, edgeid, GraphId{}, "unidirectional_astar",
                             Expansion_EdgeStatus_reached, cost.secs,
-                            static_cast<uint32_t>(edge.distance() + 0.5), cost.cost, expansion_type);
+                            static_cast<uint32_t>(edge.distance() + 0.5), cost.cost, expansion_type,
+                            flow_sources);
       }
 
       adjacencylist_.add(idx);
