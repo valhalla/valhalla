@@ -55,7 +55,7 @@ bool is_format_supported(Options::Action action, Options::Format format) {
           (1 << Options::centroid) | (1 << Options::trace_attributes) | (1 << Options::status) |
           (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion),
   // geotiff
-#ifdef ENABLE_GDAL
+#ifdef ENABLE_GEOTIFF
       (1 << Options::isochrone),
 #else
       0,
