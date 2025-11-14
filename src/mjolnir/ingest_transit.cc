@@ -439,7 +439,8 @@ bool write_stop_pair(
     return false;
   }
 
-  uint32_t service_start_date_local_pivot_sec, service_end_date_local_pivot_sec;
+  uint32_t service_start_date_local_pivot_sec = 0;
+  uint32_t service_end_date_local_pivot_sec = 0;
 
   uint8_t dow_mask = gtfs::availability(trip_calendar);
 
@@ -484,14 +485,29 @@ bool write_stop_pair(
         std::string iso = raw.substr(0, 4) + "-" + raw.substr(4, 2) + "-" + raw.substr(6, 2);
         auto dow = DateTime::day_of_week(iso);
         switch (dow) {
-          case 0: dow_mask |= gtfs::Sunday; break; // 0 maps to Sunday according to std::mktime and tm_wday
-          case 1: dow_mask |= gtfs::Monday; break;
-          case 2: dow_mask |= gtfs::Tuesday; break;
-          case 3: dow_mask |= gtfs::Wednesday; break;
-          case 4: dow_mask |= gtfs::Thursday; break;
-          case 5: dow_mask |= gtfs::Friday; break;
-          case 6: dow_mask |= gtfs::Saturday; break;
-          default: break; 
+          case 0:
+            dow_mask |= gtfs::Sunday;
+            break; // 0 maps to Sunday according to std::mktime and tm_wday
+          case 1:
+            dow_mask |= gtfs::Monday;
+            break;
+          case 2:
+            dow_mask |= gtfs::Tuesday;
+            break;
+          case 3:
+            dow_mask |= gtfs::Wednesday;
+            break;
+          case 4:
+            dow_mask |= gtfs::Thursday;
+            break;
+          case 5:
+            dow_mask |= gtfs::Friday;
+            break;
+          case 6:
+            dow_mask |= gtfs::Saturday;
+            break;
+          default:
+            break;
         }
       }
     }

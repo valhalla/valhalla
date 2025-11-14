@@ -1249,7 +1249,7 @@ TEST(GtfsExample, CalendarDatesOnly) {
       uint32_t sum_mask = 0;
       for (int i = 0; i < sp.service_days_of_week_size(); ++i) {
         if (sp.service_days_of_week(i)) {
-          sum_mask |= (1 << (i)); 
+          sum_mask |= (1 << (i));
         }
       }
       std::string iso = only_date.substr(0, 4) + std::string("-") + only_date.substr(4, 2) +
