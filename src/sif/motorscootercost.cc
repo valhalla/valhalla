@@ -254,6 +254,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
@@ -310,7 +311,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return kSpeedFactor[top_speed_];
+    return kSpeedFactor[top_speed_] * min_linear_cost_factor_;
   }
 
   /**
@@ -420,6 +421,7 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
+                                const baldr::GraphId& edgeid,
                                 const graph_tile_ptr& tile,
                                 const baldr::TimeInfo& time_info,
                                 uint8_t& flow_sources) const {
@@ -468,6 +470,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= closure_factor_;
   }
 
+  factor *= EdgeFactor(edgeid);
   return {sec * factor, sec};
 }
 

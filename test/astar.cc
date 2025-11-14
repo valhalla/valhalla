@@ -296,7 +296,9 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
     case TrivialPathTest::MatchesEdge:
       // Grab time from an edge index
       const DirectedEdge* expected_edge = tile->directededge(assert_type_value);
-      auto expected_cost = mode_costing[int(mode)]->EdgeCost(expected_edge, tile);
+      auto edgeid = tile->header()->graphid();
+      edgeid.set_id(assert_type_value);
+      auto expected_cost = mode_costing[int(mode)]->EdgeCost(expected_edge, edgeid, tile);
       expected_time = expected_cost.secs;
       break;
   };
@@ -436,7 +438,7 @@ TEST(Astar, TestTrivialPathNoUturns) {
   actor.route(
       R"({"costing":"pedestrian","locations":[{"lon":5.114587,"lat":52.095957},{"lon":5.114506,"lat":52.096141}]})",
       {}, &api);
-  EXPECT_EQ(api.directions().routes(0).legs(0).summary().time(), 0);
+  EXPECT_NEAR(api.directions().routes(0).legs(0).summary().time(), 0, 0.001);
 }
 
 struct route_tester {

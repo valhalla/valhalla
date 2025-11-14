@@ -136,6 +136,9 @@ protected:
   hierarchy_limits_config_t hierarchy_limits_config_bidirectional_astar;
   hierarchy_limits_config_t hierarchy_limits_config_costmatrix;
 
+  double min_linear_cost_factor;
+  uint64_t max_linear_cost_edges;
+
 private:
   std::string service_name() const override {
     return "thor";

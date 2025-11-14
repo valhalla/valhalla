@@ -277,8 +277,9 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // Get cost
   uint8_t flow_sources;
   sif::Cost newcost =
-      pred.cost() + (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
-                             : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
+      pred.cost() + (FORWARD
+                         ? costing_->EdgeCost(meta.edge, meta.edge_id, tile, time_info, flow_sources)
+                         : costing_->EdgeCost(opp_edge, opp_edge_id, t2, time_info, flow_sources));
 
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
   // Separate out transition cost.
@@ -1012,8 +1013,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) *
-                (1.0f - edge.percent_along());
+    Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                          edge.percent_along(), 1.f);
 
     // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
@@ -1121,8 +1122,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
     uint8_t flow_sources;
-    Cost cost =
-        costing_->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();
+    Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources, 0.0f,
+                                          edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
