@@ -2,8 +2,8 @@ name: Create a quarterly release PR
 
 on:
   schedule:
-    # every first of the month
-    - cron: "0 0 1 * *"
+    # every first of a quarter
+    - cron: "0 0 1 */3 *"
   workflow_dispatch:
     inputs:
       new_tag:

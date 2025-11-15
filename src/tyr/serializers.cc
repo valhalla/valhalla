@@ -493,8 +493,7 @@ void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
            baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
   }
   if (incident_metadata.impact()) {
-    writer(key_prefix + "impact",
-           std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
+    writer(key_prefix + "impact", valhalla::incidentImpactToString(incident_metadata.impact()));
   }
   if (!incident_metadata.sub_type().empty()) {
     writer(key_prefix + "sub_type", incident_metadata.sub_type());

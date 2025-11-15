@@ -8,6 +8,7 @@
 #include <valhalla/meili/grid_range_query.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/sif/dynamiccost.h>
 
 #include <cmath>

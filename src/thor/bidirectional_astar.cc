@@ -30,6 +30,7 @@ constexpr float kThresholdDelta = 420.0f;
 // we can't estimate route cost that goes through some particular edge very precisely, we
 // can find alternatives with costs greater than the threshold.
 constexpr float kAlternativeCostExtend = 1.2f;
+
 // Maximum number of additional iterations allowed once the first connection has been found.
 // For alternative routes we use bigger cost extension than in the case with one route. This
 // may lead to a significant increase in the number of iterations (~time). So, we should limit
@@ -65,6 +66,12 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
+  threshold_delta_ = config.get<float>("bidirectional_astar.threshold_delta", kThresholdDelta);
+  alternative_cost_extend_ =
+      config.get<float>("bidirectional_astar.alternative_cost_extend", kAlternativeCostExtend);
+  alternative_iterations_delta_ =
+      config.get<uint32_t>("bidirectional_astar.alternative_iterations_delta",
+                           kAlternativeIterationsDelta);
 }
 
 // Destructor
@@ -270,8 +277,9 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // Get cost
   uint8_t flow_sources;
   sif::Cost newcost =
-      pred.cost() + (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
-                             : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
+      pred.cost() + (FORWARD
+                         ? costing_->EdgeCost(meta.edge, meta.edge_id, tile, time_info, flow_sources)
+                         : costing_->EdgeCost(opp_edge, opp_edge_id, t2, time_info, flow_sources));
 
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
   // Separate out transition cost.
@@ -373,7 +381,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
                         "bidirectional_astar", Expansion_EdgeStatus_reached, newcost.secs,
                         pred.path_distance() + meta.edge->length(), newcost.cost,
-                        static_cast<Expansion_ExpansionType>(expansion_direction));
+                        static_cast<Expansion_ExpansionType>(expansion_direction), flow_sources);
   }
 
   // we've just added this edge to the queue, but we won't expand from it if it's a not-thru edge that
@@ -718,7 +726,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "bidirectional_astar",
                             Expansion_EdgeStatus_settled, fwd_pred.cost().secs,
                             fwd_pred.path_distance(), fwd_pred.cost().cost,
-                            Expansion_ExpansionType_forward);
+                            Expansion_ExpansionType_forward, kNoFlowMask);
       }
 
       // Prune path if predecessor is not a through edge or if the maximum
@@ -767,7 +775,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "bidirectional_astar",
                             Expansion_EdgeStatus_settled, rev_pred.cost().secs,
                             rev_pred.path_distance(), rev_pred.cost().cost,
-                            Expansion_ExpansionType_reverse);
+                            Expansion_ExpansionType_reverse, kNoFlowMask);
       }
 
       // Prune path if predecessor is not a through edge
@@ -859,14 +867,14 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   // Set thresholds to extend search
   if (cost_threshold_ == std::numeric_limits<float>::max() || c < best_connections_.front().cost) {
     if (desired_paths_count_ == 1) {
-      cost_threshold_ = c + kThresholdDelta;
+      cost_threshold_ = c + threshold_delta_;
     } else {
       // For short routes it may be not enough to use just scale to extend the cost threshold.
       // So, we also add the delta to find more alternatives.
       // TODO: use different constants to extend the search based on route distance.
-      cost_threshold_ = kAlternativeCostExtend * c + kThresholdDelta;
+      cost_threshold_ = alternative_cost_extend_ * c + threshold_delta_;
       iterations_threshold_ =
-          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + alternative_iterations_delta_;
     }
   }
 
@@ -883,7 +891,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
                                : edgelabels_forward_[pred.predecessor()].edgeid();
     expansion_callback_(graphreader, pred.edgeid(), prev_pred, "bidirectional_astar",
                         Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
-                        pred.cost().cost, Expansion_ExpansionType_forward);
+                        pred.cost().cost, Expansion_ExpansionType_forward, kNoFlowMask);
   }
 
   return true;
@@ -932,14 +940,14 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   // Set thresholds to extend search
   if (cost_threshold_ == std::numeric_limits<float>::max() || c < best_connections_.front().cost) {
     if (desired_paths_count_ == 1) {
-      cost_threshold_ = c + kThresholdDelta;
+      cost_threshold_ = c + threshold_delta_;
     } else {
       // For short routes it may be not enough to use just scale to extend the cost threshold.
       // So, we also add the delta to find more alternatives.
       // TODO: use different constants to extend the search based on route distance.
-      cost_threshold_ = kAlternativeCostExtend * c + kThresholdDelta;
+      cost_threshold_ = alternative_cost_extend_ * c + threshold_delta_;
       iterations_threshold_ =
-          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + alternative_iterations_delta_;
     }
   }
 
@@ -957,7 +965,7 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
     expansion_callback_(graphreader, fwd_edge_id, prev_pred, "bidirectional_astar",
                         Expansion_EdgeStatus_connected, fwd_pred.cost().secs,
                         fwd_pred.path_distance(), fwd_pred.cost().cost,
-                        Expansion_ExpansionType_reverse);
+                        Expansion_ExpansionType_reverse, kNoFlowMask);
   }
 
   return true;
@@ -1005,8 +1013,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) *
-                (1.0f - edge.percent_along());
+    Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                          edge.percent_along(), 1.f);
 
     // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
@@ -1050,7 +1058,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
       expansion_callback_(graphreader, edgeid, GraphId{}, "bidirectional_astar",
                           Expansion_EdgeStatus_reached, cost.secs,
                           static_cast<uint32_t>(edge.distance() + 0.5), cost.cost,
-                          Expansion_ExpansionType_forward);
+                          Expansion_ExpansionType_forward, flow_sources);
     }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
@@ -1114,8 +1122,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
     uint8_t flow_sources;
-    Cost cost =
-        costing_->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();
+    Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources, 0.0f,
+                                          edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1159,7 +1167,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
       expansion_callback_(graphreader, edgeid, GraphId{}, "bidirectional_astar",
                           Expansion_EdgeStatus_reached, cost.secs,
                           static_cast<uint32_t>(edge.distance() + 0.5), cost.cost,
-                          Expansion_ExpansionType_reverse);
+                          Expansion_ExpansionType_reverse, flow_sources);
     }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
