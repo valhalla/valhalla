@@ -483,27 +483,27 @@ bool write_stop_pair(
       const auto& raw = cal_itr->date.get_raw_date(); // YYYYMMDD by GTFS spec
       if (raw.size() == 8) {
         std::string iso = raw.substr(0, 4) + "-" + raw.substr(4, 2) + "-" + raw.substr(6, 2);
-        auto dow = DateTime::day_of_week(iso);
+        auto dow = DateTime::day_of_week_mask(iso);
         switch (dow) {
-          case 0:
+          case kSunday:
             dow_mask |= gtfs::Sunday;
             break; // 0 maps to Sunday according to std::mktime and tm_wday
-          case 1:
+          case kMonday:
             dow_mask |= gtfs::Monday;
             break;
-          case 2:
+          case kTuesday:
             dow_mask |= gtfs::Tuesday;
             break;
-          case 3:
+          case kWednesday:
             dow_mask |= gtfs::Wednesday;
             break;
-          case 4:
+          case kThursday:
             dow_mask |= gtfs::Thursday;
             break;
-          case 5:
+          case kFriday:
             dow_mask |= gtfs::Friday;
             break;
-          case 6:
+          case kSaturday:
             dow_mask |= gtfs::Saturday;
             break;
           default:
