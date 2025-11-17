@@ -130,6 +130,7 @@ message TripLeg {
 
   message Restriction{
     uint32 type = 1;
+    uint64 countryisocode = 2;
   }
 
   // represents a single date/time range from https://wiki.openstreetmap.org/wiki/Key:opening_hours

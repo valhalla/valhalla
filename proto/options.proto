@@ -327,6 +327,7 @@ message Costing {
     map<uint32, HierarchyLimits> hierarchy_limits = 92;
     bool ignore_construction = 93;
     repeated CostFactorEdge cost_factor_edges = 94;     // identified edges along user provided linear features, to which to apply special cost factors
+    repeated string exclude_country_vignettes = 95;     // list of country codes for which to avoid vignette toll roads
   }
 
   oneof has_options {

@@ -4,9 +4,10 @@
 #include <string>
 
 namespace {
-constexpr std::array<const char*, 10> kTypeToString = {
+constexpr std::array<const char*, 11> kTypeToString = {
     "hazmat",        "max_height",    "max_width",    "max_length",          "max_weight",
     "max_axle_load", "timed_allowed", "timed_denied", "destination_allowed", "max_axles",
+    "vignette"
 };
 }
 
@@ -18,9 +19,11 @@ AccessRestriction::AccessRestriction(const uint32_t edgeindex,
                                      const AccessType type,
                                      const uint32_t modes,
                                      const uint64_t value,
-                                     const bool except_destination)
+                                     const bool except_destination,
+                                     const uint64_t countryIsoCode)
     : edgeindex_(edgeindex), type_(static_cast<uint32_t>(type)), modes_(modes),
-      except_destination_(except_destination), spare_(0), value_(value) {
+      except_destination_(except_destination), countryIsoCode_(countryIsoCode), 
+      spare_(0), value_(value) {
 }
 
 // Get the internal edge Id.
@@ -61,9 +64,20 @@ void AccessRestriction::set_value(const uint64_t v) {
   value_ = v;
 }
 
+// Get the value
+uint64_t AccessRestriction::countryIsoCode() const {
+  return countryIsoCode_;
+}
+
+// Set the value
+void AccessRestriction::set_countryIsoCode(const uint64_t countryIsoCode) {
+  countryIsoCode_ = countryIsoCode;
+}
+
+// Serialize to JSON
 void AccessRestriction::json(rapidjson::writer_wrapper_t& writer) const {
   std::string restriction_type = "unsupported";
-  if (static_cast<size_t>(type()) < 10) {
+  if (static_cast<size_t>(type()) < kTypeToString.size()) {
     restriction_type = kTypeToString[static_cast<size_t>(type())];
   }
 
@@ -96,6 +110,10 @@ void AccessRestriction::json(rapidjson::writer_wrapper_t& writer) const {
       break;
     case AccessType::kHazmat:
       writer("value", static_cast<bool>(value()));
+      break;
+    case AccessType::kVignette:
+      writer("value", countryIsoCode());
+      writer("country_iso", countryIsoCode());
       break;
     default:
       writer.set_precision(2);
