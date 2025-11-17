@@ -3,6 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
+   * ADDED: optional libvalhalla_test install target [#5719](https://github.com/valhalla/valhalla/pull/5719)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
