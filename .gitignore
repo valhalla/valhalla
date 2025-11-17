@@ -17,10 +17,6 @@ date_time_zonespec.csv
 mason/
 mason_packages/
 
-# scripts
-scripts/gdal-2.0.0/
-scripts/gdal-2.0.0.tar.gz
-
 # tools
 .cproject
 .project

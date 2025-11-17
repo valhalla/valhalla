@@ -988,6 +988,20 @@ protected:
   std::unique_ptr<tile_getter_t> tile_getter_;
   const size_t max_concurrent_users_;
   const std::string tile_url_;
+  const std::filesystem::path url_id_txt_path_;
+  const bool is_tar_url_;
+  const uint64_t url_id_txt_checksum_;
+
+  // for remote tar's we grab the index.bin when loading the remote_tar_offsets
+  // so we know all tiles' offset & size
+  struct remote_tile_position_t {
+    uint64_t offset;
+    uint64_t size;
+  };
+  using remote_tar_offsets_t = std::unordered_map<GraphId, remote_tile_position_t>;
+  remote_tar_offsets_t remote_tar_offsets_;
+  // loads the remote index.bin into remote_tar_offsets_
+  void load_remote_tar_offsets();
 
   std::mutex _404s_lock;
   std::unordered_set<GraphId> _404s;
@@ -995,6 +1009,16 @@ protected:
   std::unique_ptr<TileCache> cache_;
 
   bool enable_incidents_;
+
+  /**
+   * Loads the tile_dir/id.txt URL & MD5 hash and validates whether the URLs match
+   *
+   * @param id_txt_path the filesystem::path to the id.txt
+   * @param tile_url    the tile url in the config to match to the one in id.txt
+   * @return the checksum on the 2nd line of id.txt
+   */
+  uint64_t load_id_txt_checksum(const std::filesystem::path& id_txt_path,
+                                const std::string& tile_url);
 };
 
 class LimitedGraphReader {

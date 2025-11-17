@@ -108,8 +108,11 @@ void recost_forward(baldr::GraphReader& reader,
 
     // how much of the edge will we use, trim if its the first or last edge
     float edge_pct = 1.f;
+    float start = 0.f;
+    float end = 1.f;
     if (source_pct != -1) {
       edge_pct -= source_pct;
+      start = source_pct;
       source_pct = -1;
     }
 
@@ -117,6 +120,7 @@ void recost_forward(baldr::GraphReader& reader,
       edge_pct -= 1.f - target_pct;
       // just to keep compatibility with the logic that handled trivial path in bidiastar
       edge_pct = std::max(0.f, edge_pct);
+      end = target_pct;
     }
 
     // the cost for traversing this intersection
@@ -125,7 +129,8 @@ void recost_forward(baldr::GraphReader& reader,
         node ? costing.TransitionCost(edge, node, label, tile, reader_getter) : Cost{};
     // update the cost to the end of this edge
     uint8_t flow_sources;
-    cost += transition_cost + costing.EdgeCost(edge, tile, offset_time, flow_sources) * edge_pct;
+    cost += transition_cost + costing.PartialEdgeCost(edge, baldr::GraphId(baldr::kInvalidGraphId),
+                                                      tile, offset_time, flow_sources, start, end);
     // update the length to the end of this edge
     length += edge->length() * edge_pct;
     // construct the label

@@ -27,7 +27,7 @@ message Expansion {
   repeated uint64 edge_id = 5 [packed=true];
   repeated uint64 pred_edge_id = 6 [packed=true];
   repeated ExpansionType expansion_type = 8;
-
   repeated Geometry geometries = 7;
+  repeated uint32 flow_sources = 9 [packed=true];
 }
 
