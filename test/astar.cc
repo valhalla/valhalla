@@ -1866,6 +1866,7 @@ public:
   }
 
   vs::Cost EdgeCost(const DirectedEdge* edge,
+                    const GraphId& /*edgeid*/,
                     const graph_tile_ptr& /*tile*/,
                     const baldr::TimeInfo& time_info,
                     uint8_t& /*flow_sources*/) const override {
