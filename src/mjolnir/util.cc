@@ -47,7 +47,7 @@ const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
 
-uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& tile_dir) {
+uint64_t get_pbf_checksum(std::vector<std::string> paths) {
   std::sort(paths.begin(), paths.end());
 
   // uses openssl's API which can build the digest from byte chunks to save memory
@@ -684,7 +684,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
                                          way_nodes_bin, access_bin);
-    osm_data.pbf_checksum_ = get_pbf_checksum(input_files, tile_dir);
+    osm_data.pbf_checksum_ = get_pbf_checksum(input_files);
 
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
