@@ -749,7 +749,11 @@ help_text = {
                 },
             },
         },
+<<<<<<< HEAD
         "allow_hard_exclusions": "Whether hard exclusions, such as exclude_bridges, exclude_tunnels, exclude_tolls, exclude_highways or exclude_ferries are allowed on this server",
+=======
+        'allow_hard_exclusions': 'Whether hard exclusions, such as exclude_bridges, exclude_tunnels, exclude_tolls, exclude_highways or exclude_ferries are allowed on this server',
+>>>>>>> 82e990823 (Removed Vignette attributes from DirectedEdge.)
     },
     "statsd": {
         "host": "The statsd host address",

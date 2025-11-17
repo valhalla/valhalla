@@ -237,7 +237,6 @@ message TripLeg {
     }
     SpeedType speed_type = 65;
     bool traffic_signal = 66;
-    bool vignette = 67;
   }
 
   message IntersectingEdge {

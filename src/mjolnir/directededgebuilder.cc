@@ -45,7 +45,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
     set_use(Use::kRailFerry);
   }
   set_toll(way.toll());
-  set_vignette(way.vignette());
 
   // Set flag indicating this edge has a bike network
   if (bike_network) {
