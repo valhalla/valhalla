@@ -173,6 +173,7 @@ public:
   }
 
   Cost EdgeCost(const DirectedEdge* edge,
+                const GraphId& /*edgeid*/,
                 const graph_tile_ptr& /*tile*/,
                 const baldr::TimeInfo& time_info,
                 uint8_t& /*flow_sources*/) const override {
@@ -218,9 +219,9 @@ public:
   }
 };
 
-std::pair<cost_ptr_t, std::shared_ptr<SimpleCost>> CreateSimpleCost(const Costing& options) {
+std::shared_ptr<SimpleCost> CreateSimpleCost(const Costing& options) {
   auto dcost = std::make_shared<SimpleCost>(options);
-  return std::make_pair(dcost, dcost);
+  return dcost;
 }
 
 TEST_F(MatrixTrafficTest, MatrixNoTraffic) {
@@ -446,26 +447,23 @@ TEST_F(MatrixTrafficTest, CostMatrixPathfinding) {
   auto cost =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
-  mode_costing[0] = cost.first;
+  mode_costing[0] = cost;
   set_hierarchy_limits(mode_costing[0], map.config);
   CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  uint64_t invalid_count =
-      std::accumulate(cost.second->time_infos.begin(), cost.second->time_infos.end(), 0,
-                      [](uint64_t acc, const TimeInfo& a) {
-                        return acc + static_cast<uint64_t>(!a.valid);
-                      });
-  uint64_t valid_count =
-      std::accumulate(cost.second->time_infos.begin(), cost.second->time_infos.end(), 0,
-                      [](uint64_t acc, const TimeInfo& a) {
-                        return acc + static_cast<uint64_t>(a.valid);
-                      });
+  uint64_t invalid_count = std::accumulate(cost->time_infos.begin(), cost->time_infos.end(), 0,
+                                           [](uint64_t acc, const TimeInfo& a) {
+                                             return acc + static_cast<uint64_t>(!a.valid);
+                                           });
+  uint64_t valid_count = std::accumulate(cost->time_infos.begin(), cost->time_infos.end(), 0,
+                                         [](uint64_t acc, const TimeInfo& a) {
+                                           return acc + static_cast<uint64_t>(a.valid);
+                                         });
 
-  auto max_seconds_from_now =
-      std::max_element(cost.second->time_infos.begin(), cost.second->time_infos.end(),
-                       [](const TimeInfo& a, const TimeInfo& b) {
-                         return a.seconds_from_now < b.seconds_from_now;
-                       });
+  auto max_seconds_from_now = std::max_element(cost->time_infos.begin(), cost->time_infos.end(),
+                                               [](const TimeInfo& a, const TimeInfo& b) {
+                                                 return a.seconds_from_now < b.seconds_from_now;
+                                               });
 
   EXPECT_EQ(24, invalid_count);
   EXPECT_EQ(24, valid_count);
