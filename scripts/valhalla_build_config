@@ -728,7 +728,7 @@ help_text = {
                 },
             },
         },
-        'allow_hard_exclusions': 'Whether hard exclusions, such as exclude_bridges, exclude_tunnels, exclude_tolls, exclude_vignettes, exclude_highways or exclude_ferries are allowed on this server',
+        'allow_hard_exclusions': 'Whether hard exclusions, such as exclude_bridges, exclude_tunnels, exclude_tolls, exclude_highways or exclude_ferries are allowed on this server',
     },
     'statsd': {
         'host': 'The statsd host address',

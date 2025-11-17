@@ -22,7 +22,6 @@ const std::string kEdgeEndShapeIndex = "edge.end_shape_index";
 const std::string kEdgeTraversability = "edge.traversability";
 const std::string kEdgeUse = "edge.use";
 const std::string kEdgeToll = "edge.toll";
-const std::string kEdgeVignette = "edge.vignette";
 const std::string kEdgeUnpaved = "edge.unpaved";
 const std::string kEdgeTunnel = "edge.tunnel";
 const std::string kEdgeBridge = "edge.bridge";

@@ -31,7 +31,6 @@ constexpr float kDefaultServicePenalty = 0.0f; // Seconds
 // Other options
 constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
 constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
-constexpr float kDefaultUseVignettes = 0.5f;     // Factor between 0 and 1
 constexpr float kDefaultUseTracks = 0.f;         // Avoid tracks by default. Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets =
     0.f;                                    // Avoid living streets by default. Factor between 0 and 1
@@ -99,7 +98,6 @@ constexpr ranged_default_t<float> kTruckHeightRange{0.f, kDefaultTruckHeight, 10
 constexpr ranged_default_t<float> kTruckWidthRange{0.f, kDefaultTruckWidth, 10.0f};
 constexpr ranged_default_t<float> kTruckLengthRange{0.f, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0.f, kDefaultUseTolls, 1.0f};
-constexpr ranged_default_t<float> kUseVignettesRange{0.f, kDefaultUseVignettes, 1.0f};
 constexpr ranged_default_t<uint32_t> kAxleCountRange{2, kDefaultAxleCount, 20};
 constexpr ranged_default_t<float> kUseHighwaysRange{0.f, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kTopSpeedRange{10.f, kMaxAssumedTruckSpeed, kMaxSpeedKph};
@@ -318,7 +316,6 @@ public:
 public:
   VehicleType type_;        // Vehicle type: truck
   float toll_factor_;       // Factor applied when road has a toll
-  float vignette_factor_;   // Factor applied when road has a vignette
   float low_class_penalty_; // Penalty (seconds) to go to residential or service road
 
   // Vehicle attributes (used for special restrictions and costing)
@@ -383,14 +380,6 @@ TruckCost::TruckCost(const Costing& costing)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.015
-
-  // Preference to use vignette roads. Sets a vignette factor.
-  // A vignette factor of 0 would indicate no adjustment to weighting for vignette roads.
-  // use_vignettes = 1 would reduce weighting slightly (a negative delta) while
-  // use_vignettes = 0 would penalize (positive delta to weighting factor).
-  float use_vignettes = costing_options.use_vignettes();
-  vignette_factor_ = use_vignettes < 0.5f ? (2.0f - 4 * use_vignettes) : // ranges from 2 to 0
-                         (0.5f - use_vignettes) * 0.03f;                 // ranges from 0 to -0.015
 
   // determine what to do with hgv=no edges
   bool no_hgv_access_penalty_active = !(costing_options.hgv_no_access_penalty() == kMaxPenalty);
@@ -552,10 +541,6 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   if (edge->toll()) {
     factor += toll_factor_;
-  }
-
-  if (edge->vignette()) {
-    factor += vignette_factor_;
   }
 
   if (edge->use() == Use::kTrack) {
@@ -758,7 +743,6 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
   JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
-  JSON_PBF_RANGED_DEFAULT(co, kUseVignettesRange, json, "/use_vignettes", use_vignettes);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT_V2(co, kAxleCountRange, json, "/axle_count", axle_count);
   JSON_PBF_RANGED_DEFAULT(co, kTopSpeedRange, json, "/top_speed", top_speed);
