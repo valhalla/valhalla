@@ -252,7 +252,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
             }
           }
           auto shortcut = reader.GetShortcut(path_info.edgeid);
-          if (shortcut.Is_Valid()) {
+          if (shortcut.is_valid()) {
             add_partial_shortcut(reader, shortcut, costing_options, e);
           }
         } else if (is_first || is_last) { // beginning or end edge
@@ -267,7 +267,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
               e->set_start(is_first ? edge.percent_along() : 0.);
               e->set_end(is_last ? edge.percent_along() : 1.);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
-              if (shortcut.Is_Valid()) {
+              if (shortcut.is_valid()) {
                 add_partial_shortcut(reader, shortcut, costing_options, e);
               }
               break;
@@ -297,7 +297,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
             // TODO: this is an expensive operation, since we need to expand the graph
             // a little, can't we persist this information somehow?
             auto shortcut = reader.GetShortcut(path_info.edgeid);
-            if (shortcut.Is_Valid()) {
+            if (shortcut.is_valid()) {
               add_partial_shortcut(reader, shortcut, costing_options, e);
             }
           }
