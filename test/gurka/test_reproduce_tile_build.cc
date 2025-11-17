@@ -88,7 +88,7 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
   }
 }
 
-uint64_t get_pbf_md5(std::string pbf_path) {
+uint64_t get_pbf_md5(const std::string& pbf_path) {
   std::ifstream file(pbf_path, std::ios::binary);
   std::vector<unsigned char> data((std::istreambuf_iterator<char>(file)),
                                   std::istreambuf_iterator<char>());
