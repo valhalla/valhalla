@@ -1293,8 +1293,8 @@ protected:
     exclude_tolls_ = costing_options.exclude_tolls();
     exclude_highways_ = costing_options.exclude_highways();
     exclude_ferries_ = costing_options.exclude_ferries();
-    has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ ||
-                    exclude_highways_ || exclude_ferries_;
+    has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_highways_ ||
+                    exclude_ferries_;
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
     default_hierarchy_limits = costing_options.hierarchy_limits_size() == 0;
   }

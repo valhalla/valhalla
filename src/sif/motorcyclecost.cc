@@ -24,9 +24,9 @@ namespace sif {
 namespace {
 
 // Other options
-constexpr float kDefaultUseHighways = 0.5f;  // Factor between 0 and 1
-constexpr float kDefaultUseTolls = 0.5f;     // Factor between 0 and 1
-constexpr float kDefaultUseTrails = 0.0f;    // Factor between 0 and 1
+constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
+constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
+constexpr float kDefaultUseTrails = 0.0f;   // Factor between 0 and 1
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kImpassable;
 
@@ -286,10 +286,10 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
-  VehicleType type_;      // Vehicle type: car (default), motorcycle, etc
-  float toll_factor_;     // Factor applied when road has a toll
-  float surface_factor_;  // How much the surface factors are applied when using trails
-  float highway_factor_;  // Factor applied when road is a motorway or trunk
+  VehicleType type_;     // Vehicle type: car (default), motorcycle, etc
+  float toll_factor_;    // Factor applied when road has a toll
+  float surface_factor_; // How much the surface factors are applied when using trails
+  float highway_factor_; // Factor applied when road is a motorway or trunk
 };
 
 // Constructor
