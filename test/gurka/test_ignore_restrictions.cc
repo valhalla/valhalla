@@ -539,3 +539,100 @@ TEST(StandAlone, MultipleDestinationAccessRestrictions) {
 //   // NOTE: this fails right now
 //   gurka::assert::raw::expect_path(route, {"AB", "BG", "GH", "HE", "EF"});
 // }
+
+/* class ExclusionTestExcludeCountryVignettes : public ::testing::TestWithParam<std::vector<std::string>> {
+protected:
+  static gurka::map map;
+  static gurka::map mapNotAllowed;
+
+  static void SetUpTestSuite() {
+  const std::string ascii_map = R"(
+    A----B----C----D----E
+         |         |    |
+         |         |    |
+         I----H----G----F
+  )";
+
+    const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}, {"vignette", "DE"}}},
+      {"CD", {{"highway", "residential"}, {"vignette", "DE"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FG", {{"highway", "residential"}}},
+      {"GH", {{"highway", "residential"}}},
+      {"HI", {{"highway", "residential"}}},
+      {"DG", {{"highway", "residential"}, {"vignette", "CH"}}},
+      {"BI", {{"highway", "residential"}, {"vignette", "CH"}}},
+    };
+
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+    // Create two maps: one allowing exclusions, one not
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/exclude_country_vignettes",
+                            {{"service_limits.allow_hard_exclusions", "false"}});
+    mapNotAllowed =
+        gurka::buildtiles(layout, ways, {}, {}, "test/data/exclude_country_vignettes_not_allowed");
+  }
+};
+
+gurka::map ExclusionTestExcludeCountryVignettes::map = {};
+gurka::map ExclusionTestExcludeCountryVignettes::mapNotAllowed = {};
+
+TEST_P(ExclusionTestExcludeCountryVignettes, AvoidsVignetteCountry) {
+  const std::string& costing = GetParam()[0];
+  const std::string exclude_param = "exclude_country_vignettes";
+
+  // Route from A → D (would normally go A-B-C-D, but C is vignette country AT)
+  const auto result = gurka::do_action(valhalla::Options::route,
+                                       map,
+                                       {"A", "G"},
+                                       costing,
+                                       {{"/costing_options/" + costing + "/" + exclude_param,
+                                         R"(["CH"])"}}); // Exclude Austria
+
+  // Check path avoids vignette road "BC"
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG"}); // baseline
+   // Actually verify that BC is not used
+  const auto& trip = result.trip();
+  for (const auto& leg : trip.routes(0).legs()) {
+    for (const auto& edge : leg.node()) {
+      if (edge.has_edge() && edge.edge().has_name()) {
+        EXPECT_NE(edge.edge().name(), "BC") << "Route used vignette road in AT!";
+      }
+    }
+  }
+}
+
+ TEST_P(ExclusionTestExcludeCountryVignettes, NotAllowedExclusion) {
+  const std::string& costing = GetParam()[0];
+  const std::string exclude_param = "exclude_country_vignettes";
+
+  try {
+    gurka::do_action(valhalla::Options::route,
+                     mapNotAllowed,
+                     {"A", "D"},
+                     costing,
+                     {{"/costing_options/" + costing + "/" + exclude_param, R"(["AT"])"}});
+
+    FAIL() << "Expected valhalla_exception_t due to disabled hard exclusions";
+  } catch (const valhalla_exception_t& err) {
+    EXPECT_EQ(err.code, 145);
+  } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P(ExcludeCountryVignettesTests,
+                         ExclusionTestExcludeCountryVignettes,
+                         ::testing::ValuesIn([]() {
+                           std::vector<std::vector<std::string>> values;
+                           const std::vector<std::string> costing_models = {
+                               "auto", "truck", "motorcycle", "taxi", "bus"};
+                           for (const auto& costing : costing_models) {
+                             values.push_back({costing});
+                           }
+                           return values;
+                         }()));
+ */

@@ -17,7 +17,8 @@ public:
                     const AccessType type,
                     const uint32_t modes,
                     const uint64_t value,
-                    const bool except_destination);
+                    const bool except_destination,
+                    const uint64_t countryIsoCode);
 
   /**
    * Get the internal edge index to which this access restriction applies.
@@ -69,6 +70,19 @@ public:
    */
   void set_value(const uint64_t v);
 
+  /**
+   * Set the CountryIsoCode for this restriction.
+   * @param  countryIsoCode  countryIsoCode for this restriction.
+   */
+  void set_countryIsoCode(const uint64_t countryIsoCode);
+
+  /**
+   * Get the CountryIsoCode for this restriction.
+   * @return  Returns the value
+   */
+  uint64_t countryIsoCode() const;
+
+
   void json(rapidjson::writer_wrapper_t& writer) const;
 
   /**
@@ -84,6 +98,7 @@ protected:
   uint64_t type_ : 6;               // Access type
   uint64_t modes_ : 12;             // Mode(s) this access restriction applies to
   uint64_t except_destination_ : 1; // Whether local traffic is exempted from this restriction
+  uint64_t countryIsoCode_ : 16;
   uint64_t spare_ : 23;
 
   uint64_t value_; // Value for this restriction. Can take on

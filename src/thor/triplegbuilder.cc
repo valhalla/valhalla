@@ -1348,6 +1348,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
         graphtile->GetAccessRestrictions(edge.id(), costing->access_mode());
     trip_edge->mutable_restriction()->set_type(
         static_cast<uint32_t>(restrictions[edge_itr->restriction_index].type()));
+    trip_edge->mutable_restriction()->set_countryisocode(restrictions[edge_itr->restriction_index].countryIsoCode());
   }
 
   trip_edge->set_has_time_restrictions(edge_itr->restriction_index != kInvalidRestriction);

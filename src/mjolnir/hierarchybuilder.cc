@@ -276,7 +276,7 @@ void FormTilesInNewLevel(GraphReader& reader,
         for (const auto& res : restrictions) {
           tilebuilder->AddAccessRestriction(AccessRestriction(tilebuilder->directededges().size(),
                                                               res.type(), res.modes(), res.value(),
-                                                              res.except_destination()));
+                                                              res.except_destination(), res.countryIsoCode()));
         }
       }
 
