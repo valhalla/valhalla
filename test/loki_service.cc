@@ -97,10 +97,10 @@ const std::
     vector<std::pair<uint16_t, std::string>>
         valhalla_responses{
             {200,
-             R"({"version":")" VALHALLA_VERSION
+             R"({"version":")" VALHALLA_PRINT_VERSION
              R"(","tileset_last_modified":0,"available_actions":["tile", "status","centroid","expansion","transit_available","trace_attributes","trace_route","isochrone","optimized_route","sources_to_targets","height","route","locate"]})"},
             {200,
-             R"({"version":")" VALHALLA_VERSION
+             R"({"version":")" VALHALLA_PRINT_VERSION
              R"(","tileset_last_modified":0,"available_actions":["tile", "status","centroid","expansion","transit_available","trace_attributes","trace_route","isochrone","optimized_route","sources_to_targets","height","route","locate"],"has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"has_transit_tiles":false,"bbox":{"features":[],"type":"FeatureCollection"}})"},
             {405,
              R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
@@ -178,9 +178,9 @@ const std::
             {400,
              R"({"error_code":153,"error":"Too many shape points: (102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"},
             {400,
-             R"({"error_code":173,"error":"Invalid tile coordinates","status_code":400,"status":"Bad Request"})"},
+             R"({"error_code":174,"error":"Invalid tile coordinates","status_code":400,"status":"Bad Request"})"},
             {400,
-             R"({"error_code":173,"error":"Invalid tile coordinates","status_code":400,"status":"Bad Request"})"},
+             R"({"error_code":174,"error":"Invalid tile coordinates","status_code":400,"status":"Bad Request"})"},
         };
 
 const std::vector<http_request_t> osrm_requests{
@@ -278,7 +278,7 @@ const std::vector<http_request_t> osrm_requests{
 
 const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
     {200,
-     R"({"version":")" VALHALLA_VERSION
+     R"({"version":")" VALHALLA_PRINT_VERSION
      R"(","tileset_last_modified":0,"available_actions":["tile","status","centroid","expansion","transit_available","trace_attributes","trace_route","isochrone","optimized_route","sources_to_targets","height","route","locate"]})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
