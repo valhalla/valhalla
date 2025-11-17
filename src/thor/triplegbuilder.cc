@@ -1206,7 +1206,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     } else {
       uint8_t flow_sources;
       speed = directededge->length() /
-              costing->EdgeCost(directededge, graphtile, time_info, flow_sources).secs *
+              costing->EdgeCost(directededge, edge, graphtile, time_info, flow_sources).secs *
               kMetersPerSectoKPH;
     }
     trip_edge->set_speed(speed);
