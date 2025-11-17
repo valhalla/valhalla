@@ -647,16 +647,8 @@ std::span<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const NodeInfo* 
   return std::span<const DirectedEdgeExt>{edge_ext, node->edge_count()};
 }
 
-<<<<<<< HEAD
-iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const GraphId& node) const {
-  if (node.tile_base() != header_->graphid() || node.id() >= header_->nodecount()) {
-||||||| 30b167a61
-iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const GraphId& node) const {
-  if (node.Tile_Base() != header_->graphid() || node.id() >= header_->nodecount()) {
-=======
 std::span<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const GraphId& node) const {
-  if (node.Tile_Base() != header_->graphid() || node.id() >= header_->nodecount()) {
->>>>>>> origin/master
+  if (node.tile_base() != header_->graphid() || node.id() >= header_->nodecount()) {
     throw std::logic_error(
         std::string(__FILE__) + ":" + std::to_string(__LINE__) +
         " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
