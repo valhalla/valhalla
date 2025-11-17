@@ -86,6 +86,8 @@ std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
       return centroid("", interrupt, &api);
     case Options::status:
       return status("", interrupt, &api);
+    case Options::tile:
+      return tile("", interrupt, &api);
     default:
       throw valhalla_exception_t{106};
   }

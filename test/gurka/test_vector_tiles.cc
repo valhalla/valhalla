@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 #include <vtzero/vector_tile.hpp>
 
+#include <format>
 #include <set>
 
 using namespace valhalla;
@@ -28,28 +29,10 @@ TEST(VectorTiles, BasicTileRendering) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_vt_basic");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_vt_basic");
 
-  auto graph_reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
-  loki::loki_worker_t worker(map.config, graph_reader);
-
-  const auto& node_b = layout.at("B");
-
-  // Calculate which tile contains this point at zoom 14
-  // Using standard slippy map tile formula
-  uint32_t z = 14;
-  double n = std::pow(2.0, z);
-  uint32_t x = static_cast<uint32_t>((node_b.lng() + 180.0) / 360.0 * n);
-  uint32_t y = static_cast<uint32_t>(
-      (1.0 - std::asinh(std::tan(node_b.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n);
-
-  // Render the tile
-  Api request;
-  auto* xyz = request.mutable_options()->mutable_tile_xyz();
-  xyz->set_x(x);
-  xyz->set_y(y);
-  xyz->set_z(z);
-  auto tile_data = worker.render_tile(request);
+  std::string tile_data;
+  auto api = gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
 
   EXPECT_LT(tile_data.size(), 2850);
   EXPECT_GT(tile_data.size(), 2750);
@@ -159,88 +142,41 @@ TEST(VectorTiles, BasicTileRenderingOnDifferentZoomLevels) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_vt_zoom_compare");
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_vt_zoom_compare");
 
-  auto graph_reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
-  loki::loki_worker_t worker(map.config, graph_reader);
+  auto test_tile = [&](const uint32_t z, const uint32_t exp_total_size, const uint32_t exp_edges,
+                       const uint32_t exp_nodes) {
+    SCOPED_TRACE(std::format("Zoom {} failed", z));
+    std::string tile_data;
+    std::ignore = gurka::do_action(Options::tile, map, "F", z, "auto", {}, nullptr, &tile_data);
 
-  // Use center node to calculate tile coordinates
-  const auto& node_f = layout.at("F"); // Center node
+    // with some buffer due to arch-dependent float interpretation
+    uint32_t buffer = (exp_total_size * 0.02);
+    EXPECT_LT(tile_data.size(), exp_total_size + buffer);
+    EXPECT_GT(tile_data.size(), exp_total_size - buffer);
 
-  // zoom 10
-  uint32_t z8 = 8;
-  double n8 = std::pow(2.0, z8);
-  uint32_t x8 = static_cast<uint32_t>((node_f.lng() + 180.0) / 360.0 * n8);
-  uint32_t y8 = static_cast<uint32_t>(
-      (1.0 - std::asinh(std::tan(node_f.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n8);
+    vtzero::vector_tile tile{tile_data};
+    uint32_t edges = 0;
+    uint32_t nodes = 0;
 
-  // zoom 12
-  uint32_t z12 = 12;
-  double n12 = std::pow(2.0, z12);
-  uint32_t x12 = static_cast<uint32_t>((node_f.lng() + 180.0) / 360.0 * n12);
-  uint32_t y12 = static_cast<uint32_t>(
-      (1.0 - std::asinh(std::tan(node_f.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n12);
-
-  Api request;
-  auto* xyz = request.mutable_options()->mutable_tile_xyz();
-
-  // Render tile at zoom 10
-  xyz->set_x(x8);
-  xyz->set_y(y8);
-  xyz->set_z(z8);
-  auto tile_data_z8 = worker.render_tile(request);
-
-  EXPECT_LT(tile_data_z8.size(), 4800);
-  EXPECT_GT(tile_data_z8.size(), 4500);
-
-  // Render tile at zoom 12
-  request.Clear();
-  xyz->set_x(x12);
-  xyz->set_y(y12);
-  xyz->set_z(z12);
-  auto tile_data_z12 = worker.render_tile(request);
-  EXPECT_LT(tile_data_z12.size(), 7000);
-  EXPECT_GT(tile_data_z12.size(), 6850);
-
-  // Parse Z10 tile
-  vtzero::vector_tile tile_z8{tile_data_z8};
-  uint32_t edges_z8 = 0;
-  uint32_t nodes_z8 = 0;
-
-  while (auto layer = tile_z8.next_layer()) {
-    std::string layer_name = std::string(layer.name());
-    if (layer_name == "edges") {
-      edges_z8 = layer.num_features();
-      EXPECT_EQ(layer.version(), 2);
-      EXPECT_EQ(layer.extent(), 4096);
-    } else if (layer_name == "nodes") {
-      nodes_z8 = layer.num_features();
-    } else {
-      FAIL() << "Unexpected layer: " << layer_name;
+    while (auto layer = tile.next_layer()) {
+      std::string layer_name = std::string(layer.name());
+      if (layer_name == "edges") {
+        edges = layer.num_features();
+        EXPECT_EQ(layer.version(), 2);
+        EXPECT_EQ(layer.extent(), 4096);
+      } else if (layer_name == "nodes") {
+        nodes = layer.num_features();
+      } else {
+        FAIL() << "Unexpected layer: " << layer_name;
+      }
     }
-  }
 
-  // Parse Z12 tile
-  vtzero::vector_tile tile_z12{tile_data_z12};
-  uint32_t edges_z12 = 0;
-  uint32_t nodes_z12 = 0;
+    EXPECT_EQ(edges, exp_edges);
+    EXPECT_EQ(nodes, exp_nodes);
+  };
 
-  while (auto layer = tile_z12.next_layer()) {
-    std::string layer_name = std::string(layer.name());
-    if (layer_name == "edges") {
-      edges_z12 = layer.num_features();
-      EXPECT_EQ(layer.version(), 2);
-      EXPECT_EQ(layer.extent(), 4096);
-    } else if (layer_name == "nodes") {
-      nodes_z12 = layer.num_features();
-    } else {
-      FAIL() << "Unexpected layer: " << layer_name;
-    }
-  }
-
-  EXPECT_EQ(edges_z8, 7);
-  EXPECT_EQ(nodes_z8, 8);
-
-  EXPECT_EQ(edges_z12, 14);
-  EXPECT_EQ(nodes_z12, 16);
+  test_tile(8, 4664, 7, 8);
+  test_tile(12, 6925, 14, 16);
 }
