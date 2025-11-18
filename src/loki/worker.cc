@@ -6,6 +6,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
+#include <format>
 #include <functional>
 #include <stdexcept>
 #include <string>
@@ -194,7 +195,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")),
-      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)) {
+      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)),
+      candidate_query_(*reader,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -210,6 +214,24 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   if (action_str.empty()) {
     throw std::runtime_error("The config actions for Loki are incorrectly loaded");
   }
+
+  // get /tile parameters
+  size_t i = 0;
+  const auto max_road_classes = min_zoom_road_class_.size();
+  for (const auto& zoom : config.get_child("loki.service_defaults.min_zoom_road_class")) {
+    if (i >= max_road_classes) {
+      break;
+    }
+    min_zoom_road_class_[i] = zoom.second.get_value<uint32_t>();
+    ++i;
+  }
+  if (i != max_road_classes) {
+    throw std::runtime_error(
+        std::format("min_zoom_road_class out of bounds, expected {} elements but got {}",
+                    max_road_classes, i));
+  }
+  // Compute overall minimum zoom level (minimum of all road class zooms)
+  min_zoom_ = *std::min_element(min_zoom_road_class_.begin(), min_zoom_road_class_.end());
 
   // Build max_locations and max_distance maps
   for (const auto& kv : config.get_child("service_limits")) {
@@ -284,6 +306,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
+  candidate_query_cache_size = config.get<size_t>("meili.grid.cache_size");
 
   // signal that the worker started successfully
   started();
@@ -293,6 +316,9 @@ void loki_worker_t::cleanup() {
   service_worker_t::cleanup();
   if (reader->OverCommitted()) {
     reader->Trim();
+  }
+  if (candidate_query_.size() > candidate_query_cache_size) {
+    candidate_query_.Clear();
   }
 }
 
@@ -418,6 +444,9 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
           matrix(request);
         }
         result.messages.emplace_back(request.SerializeAsString());
+        break;
+      case Options::tile:
+        result = to_response(render_tile(request), info, request);
         break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet

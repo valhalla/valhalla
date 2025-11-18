@@ -85,5 +85,12 @@ NB_MODULE(_valhalla, m) {
           "Returns routes from all the input locations to the minimum cost meeting point of those paths.")
       .def(
           "status", [](vt::actor_t& self, std::string& req) { return self.status(req); },
-          "Returns nothing or optionally details about Valhalla's configuration.");
+          "Returns nothing or optionally details about Valhalla's configuration.")
+      .def(
+          "tile",
+          [](vt::actor_t& self, std::string& req) -> nb::bytes {
+            auto result = self.tile(req);
+            return nb::bytes(result.c_str(), result.size());
+          },
+          "Returns a vector tile (MVT binary data) with a bounding box feature for the given z/x/y tile coordinates.");
 }
