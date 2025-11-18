@@ -11,7 +11,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
-#include <memory>
 #include <vector>
 
 namespace valhalla {
@@ -121,6 +120,15 @@ protected:
   uint32_t iterations_threshold_;
   uint32_t desired_paths_count_;
   std::vector<CandidateConnection> best_connections_;
+
+  // Threshold (seconds) to extend search once the first connection has been found.
+  float threshold_delta_;
+
+  // Relative cost extension to find alternative routes.
+  float alternative_cost_extend_;
+
+  // Maximum number of additional iterations allowed once the first connection has been found.
+  uint32_t alternative_iterations_delta_;
 
   // Extends search in one direction if the other direction exhausted, but only if the non-exhausted
   // end started on a not_thru or closed (due to live-traffic) edge

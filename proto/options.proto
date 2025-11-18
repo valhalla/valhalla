@@ -68,6 +68,13 @@ message AvoidEdge {
   }
 }
 
+message CostFactorEdge {
+  uint64 id = 1;    // the edge's graph id
+  double factor = 2; // the factor applied to the (partial) edge cost
+  double start = 3;  // the start fraction along the edge 
+  double end = 4;    // the end fraction along the edge 
+}
+
 /**
  * Hierarchy limits controls expansion and transitions between hierarchy
  * levels. It allows limiting expansion on hierarchy levels once
@@ -319,6 +326,7 @@ message Costing {
     bool exclude_ferries = 91;
     map<uint32, HierarchyLimits> hierarchy_limits = 92;
     bool ignore_construction = 93;
+    repeated CostFactorEdge cost_factor_edges = 94;     // identified edges along user provided linear features, to which to apply special cost factors
   }
 
   oneof has_options {
@@ -333,6 +341,12 @@ message Costing {
   oneof has_filter_closures {
     bool filter_closures = 4;
   }
+}
+
+message LinearFeatureCost {
+  repeated Location locations = 1;                               // In here we just store the first and last location correlation
+  repeated Location shape = 2;                                   // This is where the actual line geometry goes
+  double cost_factor = 3;
 }
 
 message Options {
@@ -382,6 +396,7 @@ message Options {
     edge_id = 4;
     pred_edge_id = 5;
     expansion_type = 6;
+    flow_sources = 7;
   }
 
   Units units = 1;                                                 // kilometers or miles
@@ -486,4 +501,5 @@ message Options {
                                                                    // ensuring that each edge appears in the output only once. [default = false]
   bool admin_crossings = 59;                                       // Include administrative boundary crossings
   bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
+  repeated LinearFeatureCost cost_factor_lines = 61;               // User provided linear features to which apply special cost factors to
 }

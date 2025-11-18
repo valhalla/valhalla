@@ -8,33 +8,6 @@
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-namespace {
-
-// Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const graph_tile_ptr& tile,
-                       uint32_t routeid,
-                       std::unordered_map<std::string, uint32_t>& operators) {
-  const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
-
-  // Test if the transit operator changed
-  if (transit_route && transit_route->op_by_onestop_id_offset()) {
-    // Get the operator name and look up in the operators map
-    std::string operator_name = tile->GetName(transit_route->op_by_onestop_id_offset());
-    auto operator_itr = operators.find(operator_name);
-    if (operator_itr == operators.end()) {
-      // Operator not found - add to the map
-      uint32_t id = operators.size() + 1;
-      operators[operator_name] = id;
-      return id;
-    } else {
-      return operator_itr->second;
-    }
-  }
-  return 0;
-}
-
-} // namespace
-
 namespace valhalla {
 namespace thor {
 
@@ -402,7 +375,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
           }
 
           // Get the operator Id
-          operator_id = GetOperatorId(tile, departure->routeindex(), operators_);
+          operator_id = tile->GetTransitOperatorId(departure->routeindex(), operators_);
 
           // Add transfer penalty and operator change penalty
           if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {
@@ -448,7 +421,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
         continue;
       }
 
-      Cost c = pc->EdgeCost(directededge, tile);
+      Cost c = pc->EdgeCost(directededge, edgeid, tile);
       c.cost *= pc->GetModeFactor();
       newcost += c;
     }
@@ -579,7 +552,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+    Cost cost = costing->EdgeCost(directededge, edgeid, tile) * (1.0f - edge.percent_along());
     float dist = astarheuristic_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -604,8 +577,8 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
             // remaining must be zero.
             const DirectedEdge* dest_diredge =
                 tile->directededge(GraphId(destination_edge.graph_id()));
-            Cost dest_cost =
-                costing->EdgeCost(dest_diredge, tile) * (1.0f - destination_edge.percent_along());
+            Cost dest_cost = costing->EdgeCost(dest_diredge, edgeid, tile) *
+                             (1.0f - destination_edge.percent_along());
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
             cost.cost += destination_edge.distance();
@@ -676,7 +649,7 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
     graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* dest_diredge = tile->directededge(edgeid);
     destinations_[edge.graph_id()] =
-        costing->EdgeCost(dest_diredge, tile) * (1.0f - edge.percent_along());
+        costing->EdgeCost(dest_diredge, edgeid, tile) * (1.0f - edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -738,7 +711,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Get cost
     auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
-    Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile) + transition_cost;
+    Cost newcost = pred.cost() + costing->EdgeCost(directededge, edgeid, tile) + transition_cost;
     uint32_t walking_distance = pred.path_distance() + directededge->length();
 
     // Check if lower cost path
@@ -808,7 +781,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
     graph_tile_ptr tile = graphreader.GetGraphTile(oppedge);
     const DirectedEdge* diredge = tile->directededge(oppedge);
     uint32_t length = static_cast<uint32_t>(diredge->length()) * ratio;
-    Cost cost = costing->EdgeCost(diredge, tile) * ratio;
+    Cost cost = costing->EdgeCost(diredge, edgeid, tile) * ratio;
     // we cannot do transition_cost on this label yet because we have no predecessor, but when we find
     // it, we will do an update on it and set the real transition cost based on the path to it
     edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, mode_, length,

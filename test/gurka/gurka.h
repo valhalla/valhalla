@@ -66,7 +66,6 @@ void build_pbf(const nodelayout& node_locations,
                const nodes& nodes,
                const relations& relations,
                const std::string& filename,
-               const uint64_t initial_osm_id = 0,
                const bool strict = true);
 
 /**

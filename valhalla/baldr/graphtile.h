@@ -26,7 +26,6 @@
 #include <valhalla/baldr/turnlanes.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
 
 #include <ranges>
 #include <span>
@@ -38,6 +37,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <iterator>
+#include <list>
 #include <memory>
 
 namespace valhalla {
@@ -178,13 +178,22 @@ public:
    * @param  tile_url URL of tile
    * @param  graphid Tile Id
    * @param  tile_getter object that will handle tile downloading
-   * @return whether or not the tile could be cached to disk
+   * @param  tile_dir the directory to cache graph tiles
+   * @param  range_offset HTTP range offsete in case of a tar URL
+   * @param  range_size HTTP range offsete in case of a tar URL
+   * @param  id_txt_path the file path to the tile_dir's id.txt
+   * @param  id_creation_time the timestamp according to the id.txt
+   * @return the graph tile or nullptr
    */
 
   static graph_tile_ptr CacheTileURL(const std::string& tile_url,
                                      const GraphId& graphid,
                                      tile_getter_t* tile_getter,
-                                     const std::string& cache_location);
+                                     const std::string& tile_dir,
+                                     uint64_t range_offset = 0,
+                                     uint64_t range_size = 0,
+                                     const std::filesystem::path& id_txt_path = "",
+                                     uint64_t id_checksum = 0);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -664,6 +673,33 @@ public:
    *          nullptr if the route is not found.
    */
   const TransitRoute* GetTransitRoute(const uint32_t idx) const;
+
+  /**
+   * Get an operator Id from a map of operator strings or add it to the map.
+   * @param routeid The route ID to look up
+   * @param operators Map of operator names to IDs (will be modified if new operator found)
+   * @return The operator ID, or 0 if there is no operator for the route.
+   */
+  uint32_t GetTransitOperatorId(uint32_t routeid,
+                                std::unordered_map<std::string, uint32_t>& operators) const {
+    const TransitRoute* transit_route = GetTransitRoute(routeid);
+
+    // Test if the transit operator changed
+    if (transit_route && transit_route->op_by_onestop_id_offset()) {
+      // Get the operator name and look up in the operators map
+      std::string operator_name = GetName(transit_route->op_by_onestop_id_offset());
+      auto operator_itr = operators.find(operator_name);
+      if (operator_itr == operators.end()) {
+        // Operator not found - add to the map
+        const uint32_t id = operators.size() + 1;
+        operators[operator_name] = id;
+        return id;
+      } else {
+        return operator_itr->second;
+      }
+    }
+    return 0;
+  }
 
   /**
    * Get the transit schedule given its schedule index.
