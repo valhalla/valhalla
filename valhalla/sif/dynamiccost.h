@@ -109,6 +109,21 @@
 namespace valhalla {
 namespace sif {
 
+struct cost_edge_t {
+  double start{0.};
+  double end{1.};
+  double factor{1.};
+};
+
+struct custom_cost_t {
+  std::vector<cost_edge_t> ranges;
+  double avg_factor{1.};
+
+  // once ranges are filled up, sort and compute average
+  // returns the minimum factor
+  double sort_and_find_smallest();
+};
+
 // Holds a range plus a default value for that range
 template <class T> struct ranged_default_t {
   T min, def, max;
@@ -153,6 +168,7 @@ constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 // Default uturn costs
 constexpr float kTCUnfavorablePencilPointUturn = 15.f;
 constexpr float kTCUnfavorableUturn = 600.f;
+constexpr float kTCNameInconsistentUturn = 10.f;
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -436,6 +452,7 @@ public:
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& id,
                         const baldr::graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const = 0;
@@ -447,7 +464,9 @@ public:
    * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
    * @return  Returns the cost and time (seconds).
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const baldr::graph_tile_ptr& tile) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
+                        const baldr::graph_tile_ptr& tile) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -849,21 +868,25 @@ public:
 
     if (node->drive_on_right()) {
       // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
-      if (has_reverse ||
-          (penalize_internal_uturns && internal_turn == InternalTurn::kLeftTurn && has_left))
+      if (has_reverse && !edge->name_consistency(idx)) {
+        seconds += kTCNameInconsistentUturn;
+      } else if (has_reverse ||
+                 (penalize_internal_uturns && internal_turn == InternalTurn::kLeftTurn && has_left)) {
         seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
-               !edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
+        // Did we make a pencil point uturn?
+      } else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+                 !edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
       // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
-      if (has_reverse ||
-          (penalize_internal_uturns && internal_turn == InternalTurn::kRightTurn && has_right))
+      if (has_reverse && !edge->name_consistency(idx)) {
+        seconds += kTCNameInconsistentUturn;
+      } else if (has_reverse || (penalize_internal_uturns &&
+                                 internal_turn == InternalTurn::kRightTurn && has_right)) {
         seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
-               edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
+        // Did we make a pencil point uturn?
+      } else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+                 edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     }
   }
@@ -1041,6 +1064,58 @@ public:
   }
 
   /**
+   * Get the partial cost along a fraction of the edge. Calls `EdgeCost`, scales it accordingly
+   * and applies the edge factors that apply along the portion of the edge.
+   *
+   * @param   edge          Pointer to a directed edge
+   * @param   edgeid        GraphId of the directed edge
+   * @param   tile          Pointer to the tile which contains the directed edge for speed lookup
+   * @param   time_info     Time info about edge passing, uses second_of_week for historical speed
+   * lookup and seconds_from_now for live-traffic smoothing
+   * @param   flow_sources  Which speed sources were used in this speed calculation
+   * @param   start         Start of the fraction along the edge
+   * @param   end           End of the fraction along the edge
+   *
+   * @return  Returns the cost and time (seconds).
+   *
+   */
+  Cost PartialEdgeCost(const baldr::DirectedEdge* edge,
+                       const baldr::GraphId& edgeid,
+                       const baldr::graph_tile_ptr& tile,
+                       const baldr::TimeInfo& time_info,
+                       uint8_t& flow_sources,
+                       const float start,
+                       const float end) const {
+    // pass an invalid edge id to EdgeCost to avoid applying an average factor along the whole edge
+    return EdgeCost(edge, baldr::GraphId(baldr::kInvalidGraphId), tile, time_info, flow_sources) *
+           std::max(end - start, std::numeric_limits<float>::epsilon()) *
+           PartialEdgeFactor(edgeid, start, end);
+  };
+
+  /**
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge. This is the overload that can be called by non-time
+   * aware algorithms.
+   *
+   * @param   edge    Pointer to a directed edge.
+   * @param   edgeid        GraphId of the directed edge
+   * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
+   * @param   start         Start of the fraction along the edge
+   * @param   end           End of the fraction along the edge
+   *
+   * @return  Returns the cost and time (seconds).
+   */
+  Cost PartialEdgeCost(const baldr::DirectedEdge* edge,
+                       const baldr::GraphId& edgeid,
+                       const baldr::graph_tile_ptr& tile,
+                       const float start,
+                       const float end) const {
+    return EdgeCost(edge, baldr::GraphId(baldr::kInvalidGraphId), tile) *
+           std::max(end - start, std::numeric_limits<float>::epsilon()) *
+           PartialEdgeFactor(edgeid, start, end);
+  };
+
+  /**
    * Get the flow mask used for accessing traffic flow data from the tile
    * @return the flow mask used
    */
@@ -1092,6 +1167,53 @@ public:
   }
 
 protected:
+  /**
+   * Returns the averaged factor for an edge fraction based on user provided custom factors
+   * along linear features. If no custom factors are present for an edge, returns 1.
+   */
+  double PartialEdgeFactor(const baldr::GraphId& edgeid, const float start, const float end) const {
+    if (linear_cost_edges_.empty() || start == end)
+      return 1.;
+
+    if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end()) {
+      double partial_factor = 0.;
+      double uncovered = 1.;
+      for (const auto& range : it->second.ranges) {
+        // skip if the range ends before our fraction starts or starts after our fraction ends
+        if (range.end <= start || range.start >= end)
+          continue;
+
+        // this range overlaps with the traversed fraction of the edge; figure out
+        // how big the overlap is and apply the factor accordingly
+        double fraction = (range.end - std::max(static_cast<double>(start), range.start)) /
+                          (static_cast<double>(end - start));
+        partial_factor += fraction * range.factor;
+
+        uncovered -= fraction; // keep track of how much of the partial edge is not covered by a range
+      }
+      partial_factor += uncovered; // whatever part of the fraction that was not covered by a range
+                                   // implicitly gets a factor of 1
+      return partial_factor;
+    }
+
+    // linear cost edges were present but none matched this edge
+    return 1.;
+  }
+
+  /**
+   * Returns a factor to be applied to edge cost based on user provided input. If
+   * no custom cost factors were provided for this edge, return 1.
+   */
+  double EdgeFactor(const baldr::GraphId& edgeid) const {
+    if (linear_cost_edges_.empty() || edgeid == baldr::kInvalidGraphId)
+      return 1.;
+
+    if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end())
+      return it->second.avg_factor;
+
+    return 1.;
+  }
+
   /**
    * Calculate `track` costs based on tracks preference.
    * @param use_tracks value of tracks preference in range [0; 1]
@@ -1207,6 +1329,10 @@ protected:
 
   // Is it truck?
   bool is_hgv_{false};
+
+  // User specified edges to cost based on user provided factors
+  std::unordered_map<baldr::GraphId, custom_cost_t> linear_cost_edges_;
+  double min_linear_cost_factor_;
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.

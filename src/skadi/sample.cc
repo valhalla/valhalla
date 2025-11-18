@@ -424,10 +424,10 @@ sample::sample(const boost::property_tree::ptree& pt)
   url_ = pt.get<std::string>("additional_data.elevation_url", "");
 
   auto max_concurrent_users = pt.get<size_t>("mjolnir.max_concurrent_reader_users", 1);
-  remote_loader_ =
-      std::make_unique<baldr::curl_tile_getter_t>(max_concurrent_users,
-                                                  pt.get<std::string>("mjolnir.user_agent", ""),
-                                                  false);
+  remote_loader_ = std::make_unique<
+      baldr::curl_tile_getter_t>(max_concurrent_users, pt.get<std::string>("mjolnir.user_agent", ""),
+                                 false,
+                                 pt.get<std::string>("additional_data.elevation_url_user_pw", ""));
 
   // this line used only for testing, for more details check elevation_builder.cc
   remote_path_ = pt.get<std::string>("additional_data.elevation_dir", "");
