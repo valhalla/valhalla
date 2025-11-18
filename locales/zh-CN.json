@@ -1,7 +1,7 @@
 {
   "posix_locale": "zh_CN.UTF-8",
   "aliases": [
-    "zh", "zh-CN"
+    "zh"
   ],
   "instructions": {
     "arrive": {
