@@ -404,12 +404,7 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
     if ((direction == AccessRestrictionDirection::kBoth) ||
         (forward && direction == AccessRestrictionDirection::kForward) ||
         (!forward && direction == AccessRestrictionDirection::kBackward)) {
-          auto type = r->second.type();
-          if(type == valhalla::baldr::AccessType::kMaxHeight)
-          {
-            type = valhalla::baldr::AccessType::kVignette;
-          }
-      AccessRestriction access_restriction(edgeid, type, r->second.modes(),
+      AccessRestriction access_restriction(edgeid, r->second.type(), r->second.modes(),
                                            r->second.value(), r->second.except_destination(), 
                                            CountryISOCodeToValue(countryIso));
       graphtile.AddAccessRestriction(access_restriction);
