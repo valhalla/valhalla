@@ -1,6 +1,7 @@
 #include "mjolnir/osmway.h"
 #include "baldr/edgeinfo.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "mjolnir/util.h"
 
 #include <boost/algorithm/string.hpp>
@@ -1128,8 +1129,8 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
               precision = std::max(precision, static_cast<int>(match[1].str().size()));
             }
           }
-          range.first = std::stof(nums[0]);
-          range.second = std::stof(nums[1]);
+          range.first = midgard::to_float(nums[0]);
+          range.second = midgard::to_float(nums[1]);
         } catch (...) {
           LOG_WARN("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
           continue;
@@ -1147,7 +1148,7 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
           if (std::regex_search(token, match, kFloatRegex)) {
             precision = std::max(precision, static_cast<int>(match[1].str().size()));
           }
-          range.first = std::stof(token);
+          range.first = midgard::to_float(token);
           range.second = range.first;
         } catch (...) {
           LOG_WARN("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));

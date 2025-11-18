@@ -4,6 +4,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "valhalla/baldr/curl_tilegetter.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -174,8 +175,8 @@ public:
         fmt = format_t::RAW;
       }
 
-      auto lon = std::stoi(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
-      auto lat = std::stoi(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
+      auto lon = valhalla::midgard::to_int(m[4].str()) * (m[3] == "E" ? 1 : -1) + 180;
+      auto lat = valhalla::midgard::to_int(m[2].str()) * (m[1] == "N" ? 1 : -1) + 90;
       if (lon >= 0 && lon < 360 && lat >= 0 && lat < 180) {
         return std::make_pair(uint16_t(lat * 360 + lon), fmt);
       }
