@@ -306,6 +306,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
+  candidate_query_cache_size = config.get<size_t>("meili.grid.cache_size");
 
   // signal that the worker started successfully
   started();
@@ -315,6 +316,9 @@ void loki_worker_t::cleanup() {
   service_worker_t::cleanup();
   if (reader->OverCommitted()) {
     reader->Trim();
+  }
+  if (candidate_query_.size() > candidate_query_cache_size) {
+    candidate_query_.Clear();
   }
 }
 
