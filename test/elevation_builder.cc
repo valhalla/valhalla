@@ -164,7 +164,7 @@ struct ElevationDownloadTestData {
 };
 
 struct TestableSample : public valhalla::skadi::sample {
-  static uint16_t get_tile_index(const valhalla::midgard::PointLL& coord) {
+  static uint16_t get_tile_index(const PointLL& coord) {
     return valhalla::skadi::sample::get_tile_index(coord);
   }
 };

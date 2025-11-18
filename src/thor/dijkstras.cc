@@ -749,7 +749,7 @@ void Dijkstras::ComputeMultiModal(
 void Dijkstras::SetOriginLocations(GraphReader& graphreader,
                                    google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                                    const std::vector<baldr::TimeInfo>& time_infos,
-                                   const cost_ptr_t& /*costing*/) {
+                                   const cost_ptr_t& costing) {
   // Bail if you want to do a multipath expansion with more locations than edge label/status supports
   if (multipath_ && locations.size() > baldr::kMaxMultiPathId)
     throw std::runtime_error("Max number of locations exceeded");
@@ -838,7 +838,7 @@ void Dijkstras::SetDestinationLocations(
     GraphReader& graphreader,
     google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     const std::vector<baldr::TimeInfo>& time_infos,
-    const cost_ptr_t& /*costing*/) {
+    const cost_ptr_t& costing) {
   // Bail if you want to do a multipath expansion with more locations than edge label/status supports
   if (multipath_ && locations.size() > baldr::kMaxMultiPathId)
     throw std::runtime_error("Max number of locations exceeded");

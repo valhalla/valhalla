@@ -210,12 +210,13 @@ constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1
                                                        1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                        2.5f, 2.8f, 3.1f, 3.5f};
 
+constexpr std::string HardAvoidVignette = "ALL";
+
 // Convert Back Int Value to ISO String
 inline std::string ConvertIntToISO(uint64_t countryIsoCode) {
   std::string iso;
   iso.push_back(static_cast<char>((countryIsoCode >> 8) & 0xFF));
   iso.push_back(static_cast<char>(countryIsoCode & 0xFF));
-  LOG_INFO("Country ISO: " + iso + " Value in Int: " + std::to_string(countryIsoCode));
   return iso;
 }
 
@@ -814,8 +815,9 @@ public:
       // Special check for vignette restrictions
       if (restriction.type() == baldr::AccessType::kVignette) {
         auto countryIso = ConvertIntToISO(restriction.countryIsoCode());
+        std::transform(countryIso.begin(), countryIso.end(), countryIso.begin(), ::toupper);
         for (auto v : exclude_country_vignettes_) {
-          if ((v == countryIso) || (v == "ALL")) {
+          if ((v == countryIso) || (v == HardAvoidVignette)) {
             return false;
           }
         }

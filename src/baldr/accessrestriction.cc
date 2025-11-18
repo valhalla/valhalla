@@ -111,7 +111,6 @@ void AccessRestriction::json(rapidjson::writer_wrapper_t& writer) const {
       writer("value", static_cast<bool>(value()));
       break;
     case AccessType::kVignette:
-      writer("value", countryIsoCode());
       writer("country_iso", countryIsoCode());
       break;
     default:
