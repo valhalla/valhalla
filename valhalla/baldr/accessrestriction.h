@@ -70,9 +70,9 @@ public:
   void set_value(const uint64_t v);
 
   /**
-  * Set the CountryIsoCode for this restriction.
-  * @param  countryIsoCode  countryIsoCode for this restriction.
-  */
+   * Set the CountryIsoCode for this restriction.
+   * @param  countryIsoCode  countryIsoCode for this restriction.
+   */
   void set_countryIsoCode(const uint64_t countryIsoCode);
 
   /**
@@ -80,7 +80,7 @@ public:
    * @return  Returns the value
    */
   uint64_t countryIsoCode() const;
-  
+
   /**
    * JSON representation of the access restriction.
    * @param writer  Rapidjson writer to write to.

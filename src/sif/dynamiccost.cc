@@ -454,7 +454,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   country_vignettes->Clear();
   if (exclude_vignettes_node) {
     const auto& child = exclude_vignettes_node.get();
-    if(child.IsArray()) {
+    if (child.IsArray()) {
       for (const auto& item : child.GetArray()) {
         if (item.IsString()) {
           co->add_exclude_country_vignettes(item.GetString());

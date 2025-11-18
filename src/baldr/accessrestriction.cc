@@ -4,11 +4,10 @@
 #include <string>
 
 namespace {
-constexpr std::array<const char*, 11> kTypeToString = {
-    "hazmat",        "max_height",    "max_width",    "max_length",          "max_weight",
-    "max_axle_load", "timed_allowed", "timed_denied", "destination_allowed", "max_axles",
-    "vignette"
-};
+constexpr std::array<const char*, 11> kTypeToString =
+    {"hazmat",        "max_height",    "max_width",    "max_length",          "max_weight",
+     "max_axle_load", "timed_allowed", "timed_denied", "destination_allowed", "max_axles",
+     "vignette"};
 }
 
 namespace valhalla {
@@ -22,8 +21,8 @@ AccessRestriction::AccessRestriction(const uint32_t edgeindex,
                                      const bool except_destination,
                                      const uint64_t countryIsoCode)
     : edgeindex_(edgeindex), type_(static_cast<uint32_t>(type)), modes_(modes),
-      except_destination_(except_destination),  countryIsoCode_(countryIsoCode), 
-      spare_(0), value_(value) {
+      except_destination_(except_destination), countryIsoCode_(countryIsoCode), spare_(0),
+      value_(value) {
 }
 
 // Get the internal edge Id.

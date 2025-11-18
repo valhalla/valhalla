@@ -1170,8 +1170,10 @@ struct graph_parser {
     tag_handlers_["vignette"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kVignette);
-      restriction.set_modes(kAutoAccess | kTruckAccess | kTaxiAccess | kBusAccess | kMotorcycleAccess);
-      osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+      restriction.set_modes(kAutoAccess | kTruckAccess | kTaxiAccess | kBusAccess |
+                            kMotorcycleAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["hov_type"] = [this]() {
       // If this tag is set then the way is either HOV-2 or HOV-3.

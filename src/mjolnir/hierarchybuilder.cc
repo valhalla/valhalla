@@ -274,9 +274,9 @@ void FormTilesInNewLevel(GraphReader& reader,
       if (directededge->access_restriction()) {
         auto restrictions = tile->GetAccessRestrictions(base_edge_id.id(), kAllAccess);
         for (const auto& res : restrictions) {
-          tilebuilder->AddAccessRestriction(AccessRestriction(tilebuilder->directededges().size(),
-                                                              res.type(), res.modes(), res.value(),
-                                                              res.except_destination(), res.countryIsoCode()));
+          tilebuilder->AddAccessRestriction(
+              AccessRestriction(tilebuilder->directededges().size(), res.type(), res.modes(),
+                                res.value(), res.except_destination(), res.countryIsoCode()));
         }
       }
 
