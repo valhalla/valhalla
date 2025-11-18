@@ -30,6 +30,7 @@ config = {
         "user_agent": Optional(str),
         "tile_url": Optional(str),
         "tile_url_gz": Optional(bool),
+        "tile_url_user_pw": Optional(str),
         "concurrency": Optional(int),
         "tile_dir": "/data/valhalla",
         "tile_extract": "/data/valhalla/tiles.tar",
@@ -47,6 +48,8 @@ config = {
         "transit_pbf_limit": 20000,
         "hierarchy": True,
         "shortcuts": True,
+        "keep_all_osm_node_ids": False,
+        "keep_osm_node_ids": False,
         "include_platforms": False,
         "include_driveways": True,
         "include_construction": False,
@@ -81,6 +84,7 @@ config = {
     "additional_data": {
         "elevation": "/data/valhalla/elevation/",
         "elevation_url": Optional(str),
+        "elevation_url_user_pw": Optional(str),
     },
     "loki": {
         "actions": [
@@ -148,13 +152,16 @@ config = {
             },
         },
         "bidirectional_astar": {
+            "threshold_delta": 420.0,
+            "alternative_cost_extend": 1.2,
+            "alternative_iterations_delta": 100000,
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": 400,
                     "2": 100,
                 },
                 "expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000},
-            }
+            },
         },
         "unidirectional_astar": {
             "hierarchy_limits": {
@@ -326,6 +333,8 @@ config = {
         "max_timedep_distance_matrix": 0,
         "max_alternates": 2,
         "max_exclude_polygons_length": 10000,
+        "min_linear_cost_factor": 1,
+        "max_linear_cost_edges": 50000,
         "max_distance_disable_hierarchy_culling": 0,
         "hierarchy_limits": {
             "allow_modification": False,
@@ -371,6 +380,7 @@ help_text = {
         "user_agent": "User-Agent http header to request single tiles",
         "tile_url": "Http location to read tiles from if they are not found in the tile_dir, e.g.: http://your_valhalla_tile_server_host:8000/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with a given tile path when it make a request for that tile",
         "tile_url_gz": "Whether or not to request for compressed tiles",
+        "tile_url_user_pw": 'User & password for HTTP basic auth in the form of "user:password"',
         "concurrency": "How many threads to use in the concurrent parts of tile building",
         "tile_dir": "Location to read/write tiles to/from",
         "tile_extract": "Location to read tiles from tar",
@@ -388,6 +398,8 @@ help_text = {
         "transit_pbf_limit": "Limit individual PBF files to this many trips (needed for PBF's stupid size limit)",
         "hierarchy": "bool indicating whether road hierarchy is to be built - default to True",
         "shortcuts": "bool indicating whether shortcuts are to be built - default to True",
+        "keep_all_osm_node_ids": "bool indicating whether to store all OSM node ids in the graph data - defaults to False",
+        "keep_osm_node_ids": "bool indicating whether to store OSM node ids (at topological/graph nodes) in the graph data - defaults to False",
         "include_platforms": "bool indicating whether to include highway=platform - default to False",
         "include_driveways": "bool indicating whether private driveways are included - default to True",
         "include_construction": "bool indicating where roads under construction are included - default to False",
@@ -426,6 +438,7 @@ help_text = {
     "additional_data": {
         "elevation": "Location of elevation tiles",
         "elevation_url": "Http location to read elevations from. this address is used if elevation tiles were not found in the elevation directory. Ex.: http://<your_valhalla_tile_server_host>:<your_valhalla_tile_server_port>/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with an elevation path when it makes a request for that particular elevation",
+        "elevation_url_user_pw": 'User & password for HTTP basic auth in the form of "user:password"',
     },
     "loki": {
         "actions": "Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status",
@@ -489,6 +502,9 @@ help_text = {
             },
         },
         "bidirectional_astar": {
+            "threshold_delta": "Time (seconds) to extend search once the first connection has been found",
+            "alternative_cost_extend": "Relative cost extension to find alternative routes",
+            "alternative_iterations_delta": "Number of extra iterations to allow when searching for alternative paths. Higher values will find more alternatives but will be slower",
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": "The default maximum up transitions for level 1 in CostMatrix",
@@ -499,7 +515,7 @@ help_text = {
                     "1": "The default distance within which expansion is allowed from the origin/destination on level 1 in bidirectional astar",
                     "2": "The default distance within which expansion is allowed from the origin/destination on level 2 in bidirectional astar",
                 },
-            }
+            },
         },
         "unidirectional_astar": {
             "hierarchy_limits": {
@@ -694,6 +710,8 @@ help_text = {
         "max_timedep_distance_matrix": "Maximum b-line distance between 2 most distant locations in meters to allow a time-dependent matrix",
         "max_alternates": "Maximum number of alternate routes to allow in a request",
         "max_exclude_polygons_length": "Maximum total perimeter of all exclude_polygons in meters",
+        "min_linear_cost_factor": "Minimum allowed factor admissible for linear feature cost factors. Beware: low values approaching zero will render the A* heuristic unusable",
+        "max_linear_cost_edges": "Maximum total number of linear cost edges",
         "max_distance_disable_hierarchy_culling": "Maximum search distance allowed with hierarchy culling disabled",
         "hierarchy_limits": {
             "allow_modification": "Whether hierarchy limits can be modified via the request",

@@ -4,6 +4,7 @@
 #include "baldr/nodetransition.h"
 #include "baldr/pathlocation.h"
 #include "midgard/distanceapproximator.h"
+#include "midgard/util.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 
@@ -432,8 +433,8 @@ find_shortest_path(baldr::GraphReader& reader,
               // Override cost portion to be distance. Heuristic cost from a
               // destination to itself must be 0, so sortcost = cost
               sif::Cost cost(label.cost().cost + directededge->length() * edge.percent_along,
-                             label.cost().secs +
-                                 costing->EdgeCost(directededge, tile).secs * edge.percent_along);
+                             label.cost().secs + costing->EdgeCost(directededge, edgeid, tile).secs *
+                                                     edge.percent_along);
               // We only add the labels if we are under the limits for
               // distance and for time or time limit is 0
               if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -452,7 +453,7 @@ find_shortest_path(baldr::GraphReader& reader,
         // Get cost - use EdgeCost to get time along the edge. Override
         // cost portion to be distance. Add heuristic to get sort cost.
         sif::Cost cost(label.cost().cost + directededge->length(),
-                       label.cost().secs + costing->EdgeCost(directededge, tile).secs);
+                       label.cost().secs + costing->EdgeCost(directededge, edgeid, tile).secs);
         // We only add the labels if we are under the limits for distance
         // and for time or time limit is 0
         if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -580,8 +581,9 @@ find_shortest_path(baldr::GraphReader& reader,
               // from a destination to itself must be 0
               float segment_percentage = (destination_edge.percent_along - origin_edge.percent_along);
               sif::Cost cost(label.cost().cost + directed_edge->length() * segment_percentage,
-                             label.cost().secs + costing->EdgeCost(directed_edge, start_tile).secs *
-                                                     segment_percentage);
+                             label.cost().secs +
+                                 costing->EdgeCost(directed_edge, origin_edge.id, start_tile).secs *
+                                     segment_percentage);
               // We only add the labels if we are under the limits for
               // distance and for time or time limit is 0
               if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -598,7 +600,8 @@ find_shortest_path(baldr::GraphReader& reader,
         // destination to itself must be 0
         float f = (1.0f - origin_edge.percent_along);
         sif::Cost cost(label.cost().cost + directed_edge->length() * f,
-                       label.cost().secs + costing->EdgeCost(directed_edge, start_tile).secs * f);
+                       label.cost().secs +
+                           costing->EdgeCost(directed_edge, origin_edge.id, start_tile).secs * f);
         // We only add the labels if we are under the limits for distance
         // and for time or time limit is 0
         if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
