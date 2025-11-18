@@ -347,6 +347,7 @@ message Costing {
     oneof has_speed_penalty_factor {
           float speed_penalty_factor = 95;
         }
+    repeated string exclude_country_vignettes = 96;
   }
 
   oneof has_options {
