@@ -221,10 +221,10 @@ select_transit_tiles(const std::filesystem::path& gtfs_path) {
           tile_info.station_children.insert({{stop.stop_id, feed_name}, stop.stop_id});
         }
 
-        auto stop_time_indices = feed.get_stop_time_indices_for_stop(stop.stop_id);
-        for (; stop_time_indices.first < stop_time_indices.second; ++stop_time_indices.first) {
+        auto stop_times = feed.get_stop_times_for_stop(stop.stop_id);
+        for (; stop_times.first < stop_times.second; ++stop_times.first) {
           // add trip, route, agency and service_id from stop_time, it's the only place with that info
-          const auto& stop_time = feed.get_stop_times()[*stop_time_indices.first];
+          const auto &stop_time = **stop_times.first;
           auto trip = feed.get_trip(stop_time.trip_id);
           auto route = feed.get_route(trip.route_id);
           if (!gtfs::valid(trip) || !gtfs::valid(route) || trip.service_id.empty()) {
