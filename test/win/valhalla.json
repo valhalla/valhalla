@@ -183,6 +183,8 @@
     },
     "max_exclude_locations": 50,
     "max_exclude_polygons_length": 10000,
+    "min_linear_cost_factor": 1,
+    "max_linear_cost_edges": 50000,
     "max_radius": 200,
     "max_reachability": 100,
     "max_alternates": 2,

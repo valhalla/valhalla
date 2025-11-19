@@ -2,6 +2,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
@@ -11,6 +12,7 @@
 #include <sstream>
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 
 namespace {
@@ -421,20 +423,20 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           if (months_dow.size() == 4 && is_date && is_range) {
             timedomain.set_type(kYMD);
             timedomain.set_begin_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
-            timedomain.set_begin_day_dow(std::stoi(months_dow.at(1)));
+            timedomain.set_begin_day_dow(to_int(months_dow.at(1)));
 
             timedomain.set_end_month(static_cast<uint8_t>(get_month(months_dow.at(2))));
-            timedomain.set_end_day_dow(std::stoi(months_dow.at(3)));
+            timedomain.set_end_day_dow(to_int(months_dow.at(3)));
 
             break;
           } // May 16-31
           else if (months_dow.size() == 3 && is_date && is_range) {
             timedomain.set_type(kYMD);
             timedomain.set_begin_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
-            timedomain.set_begin_day_dow(std::stoi(months_dow.at(1)));
+            timedomain.set_begin_day_dow(to_int(months_dow.at(1)));
 
             timedomain.set_end_month(timedomain.begin_month());
-            timedomain.set_end_day_dow(std::stoi(months_dow.at(2)));
+            timedomain.set_end_day_dow(to_int(months_dow.at(2)));
             break;
           }
           // Apr-Sep or May 15
@@ -448,7 +450,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
               timedomain.set_end_month(static_cast<uint8_t>(month));
             } else if (is_date) { // May 15
               timedomain.set_type(kYMD);
-              timedomain.set_begin_day_dow(std::stoi(months_dow.at(1)));
+              timedomain.set_begin_day_dow(to_int(months_dow.at(1)));
               timedomain.set_end_month(timedomain.begin_month());
               timedomain.set_end_day_dow(timedomain.begin_day_dow());
             } else {
@@ -483,7 +485,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
                     md != months_dow.at(months_dow.size() - 1)) { // Dec Su[-1]-Mar 3 Sat
 
                   if (months_dow.at(months_dow.size() - 1).find('[') == std::string::npos) {
-                    timedomain.set_end_day_dow(std::stoi(months_dow.at(months_dow.size() - 1)));
+                    timedomain.set_end_day_dow(to_int(months_dow.at(months_dow.size() - 1)));
                     break;
                   } else {
                     ends_nth_week = true;
@@ -503,18 +505,18 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
               md.erase(boost::remove_if(md, boost::is_any_of("[]")), md.end());
 
               if (timedomain.begin_week() == 0 && !ends_nth_week) {
-                timedomain.set_begin_week(std::stoi(md));
+                timedomain.set_begin_week(to_int(md));
                 // assume no range.  Dec Su[-1] Su-Sa 15:00-17:00 starts on the last week
                 // in Dec and ends in the last week in Dec
                 if (!is_range) {
                   timedomain.set_end_week(timedomain.begin_week());
                 }
               } else {
-                timedomain.set_end_week(std::stoi(md));
+                timedomain.set_end_week(to_int(md));
               }
             } else if (is_date && is_range && timedomain.begin_month() != 0 &&
                        timedomain.end_month() == 0) { // Mar 3-Dec Su[-1] Sat
-              timedomain.set_begin_day_dow(std::stoi(md));
+              timedomain.set_begin_day_dow(to_int(md));
             }
           }
         }
@@ -538,7 +540,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
             if (week.find('[') != std::string::npos && week.find(']') != std::string::npos) {
               timedomain.set_type(kNthDow);
               week.erase(boost::remove_if(week, boost::is_any_of("[]")), week.end());
-              timedomain.set_begin_week(std::stoi(week));
+              timedomain.set_begin_week(to_int(week));
               break;
             }
           }
