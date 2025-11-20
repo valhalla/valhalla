@@ -376,6 +376,7 @@ dedicated = {
 
 separated = {
 ["opposite_track"] = 3,
+["separate"] = 3,
 ["track"] = 3
 }
 
@@ -1663,6 +1664,11 @@ function filter_tags_generic(kv)
 
     --Figure out which side of the road has what cyclelane
     cycle_lane_right = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or buffer[kv["cycleway:both:buffer"]] or 0
+
+    if cycle_lane_right == 0 then
+      cycle_lane_right = shared[kv["cycleway:both"]] or separated[kv["cycleway:both"]] or dedicated[kv["cycleway:both"]] or 0
+    end
+
     cycle_lane_left = cycle_lane_right
 
     if cycle_lane_right == 0 then
