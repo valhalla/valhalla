@@ -42,17 +42,14 @@ constexpr size_t kWaysChunksPerLua = 8;
 constexpr char kExceptDestinationRestrictionFlag = '~';
 
 // Convenience method to get a number from a string. Uses try/catch in case
-// stoi throws an exception
-int get_number(const std::string& tag, const std::string& value) { // NOLINT
-  int num = -1;
-  try {
-    num = stoi(value);
-  } catch (const std::invalid_argument& arg) {
-    LOG_DEBUG("invalid_argument thrown for " + tag + " value: " + value);
-  } catch (const std::out_of_range& oor) {
-    LOG_DEBUG("out_of_range exception thrown for " + tag + " value: " + value);
+// to_int throws an exception
+int get_number(std::string_view tag, const std::string& value) { // NOLINT
+  const auto num = try_to_int(value);
+  if (!num.has_value()) {
+    LOG_DEBUG("Cannot parse int for {} value: {}", tag, value);
+    return -1;
   }
-  return num;
+  return num.value();
 }
 
 void set_access_restriction_value(OSMAccessRestriction& restriction,
@@ -204,12 +201,12 @@ struct graph_parser {
     };
 
     tag_handlers_["layer"] = [this]() {
-      auto layer = static_cast<int8_t>(std::stoi(tag_.second));
+      auto layer = static_cast<int8_t>(to_int(tag_.second));
       way_.set_layer(layer);
     };
 
     tag_handlers_["road_class"] = [this]() {
-      RoadClass roadclass = (RoadClass)std::stoi(tag_.second);
+      RoadClass roadclass = (RoadClass)to_int(tag_.second);
       switch (roadclass) {
 
         case RoadClass::kMotorway:
@@ -375,7 +372,7 @@ struct graph_parser {
     };
 
     tag_handlers_["use"] = [this]() {
-      Use use = (Use)std::stoi(tag_.second);
+      Use use = (Use)to_int(tag_.second);
       switch (use) {
         case Use::kCycleway:
           way_.set_use(Use::kCycleway);
@@ -900,7 +897,7 @@ struct graph_parser {
           // this way has an unlimited speed limit (german autobahn)
           max_speed_ = kUnlimitedSpeedLimit;
         } else {
-          max_speed_ = std::stof(tag_.second);
+          max_speed_ = to_float(tag_.second);
         }
         way_.set_tagged_speed(true);
         has_max_speed_ = true;
@@ -910,7 +907,7 @@ struct graph_parser {
     };
     tag_handlers_["average_speed"] = [this]() {
       try {
-        average_speed_ = std::stof(tag_.second);
+        average_speed_ = to_float(tag_.second);
         has_average_speed_ = true;
         way_.set_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
@@ -919,7 +916,7 @@ struct graph_parser {
     };
     tag_handlers_["advisory_speed"] = [this]() {
       try {
-        advisory_speed_ = std::stof(tag_.second);
+        advisory_speed_ = to_float(tag_.second);
         has_advisory_speed_ = true;
         way_.set_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
@@ -928,7 +925,7 @@ struct graph_parser {
     };
     tag_handlers_["forward_speed"] = [this]() {
       try {
-        way_.set_forward_speed(std::stof(tag_.second));
+        way_.set_forward_speed(to_float(tag_.second));
         way_.set_forward_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
@@ -936,7 +933,7 @@ struct graph_parser {
     };
     tag_handlers_["backward_speed"] = [this]() {
       try {
-        way_.set_backward_speed(std::stof(tag_.second));
+        way_.set_backward_speed(to_float(tag_.second));
         way_.set_backward_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
@@ -944,21 +941,21 @@ struct graph_parser {
     };
     tag_handlers_["maxspeed:hgv"] = [this]() {
       try {
-        way_.set_truck_speed(std::stof(tag_.second));
+        way_.set_truck_speed(to_float(tag_.second));
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
     tag_handlers_["maxspeed:hgv:forward"] = [this]() {
       try {
-        way_.set_truck_speed_forward(std::stof(tag_.second));
+        way_.set_truck_speed_forward(to_float(tag_.second));
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
     tag_handlers_["maxspeed:hgv:backward"] = [this]() {
       try {
-        way_.set_truck_speed_backward(std::stof(tag_.second));
+        way_.set_truck_speed_backward(to_float(tag_.second));
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
@@ -975,7 +972,7 @@ struct graph_parser {
         speed = kUnlimitedSpeedLimit;
       } else {
         try {
-          const float parsed = std::stof(tokens.at(0));
+          const float parsed = to_float(tokens.at(0));
           if (parsed > kMaxAssumedSpeed) {
             // LOG_WARN("Ignoring maxspeed:conditional that exceedes max for way id: " +
             //          std::to_string(osmid_));
@@ -1038,7 +1035,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxHeight);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1048,7 +1045,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1058,7 +1055,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1067,7 +1064,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxWidth);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1077,7 +1074,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1087,7 +1084,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1096,7 +1093,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxLength);
       restriction.set_modes(kTruckAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1106,7 +1103,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1116,7 +1113,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1125,7 +1122,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxWeight);
       restriction.set_modes(kTruckAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1135,7 +1132,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1145,7 +1142,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1154,7 +1151,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxAxleLoad);
       restriction.set_modes(kTruckAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1162,7 +1159,7 @@ struct graph_parser {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxAxles);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val); });
+                                   [](const std::string& val) { return to_float(val); });
       restriction.set_modes(kTruckAccess);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1182,7 +1179,7 @@ struct graph_parser {
     };
     tag_handlers_["default_speed"] = [this]() {
       try {
-        default_speed_ = std::stof(tag_.second);
+        default_speed_ = to_float(tag_.second);
         has_default_speed_ = true;
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
@@ -1575,7 +1572,7 @@ struct graph_parser {
       way_.set_shoulder_left(tag_.second == "true" ? true : false);
     };
     tag_handlers_["cycle_lane_right"] = [this]() {
-      CycleLane cyclelane_right = (CycleLane)std::stoi(tag_.second);
+      CycleLane cyclelane_right = (CycleLane)to_int(tag_.second);
       switch (cyclelane_right) {
         case CycleLane::kDedicated:
           way_.set_cyclelane_right(CycleLane::kDedicated);
@@ -1593,7 +1590,7 @@ struct graph_parser {
       }
     };
     tag_handlers_["cycle_lane_left"] = [this]() {
-      CycleLane cyclelane_left = (CycleLane)std::stoi(tag_.second);
+      CycleLane cyclelane_left = (CycleLane)to_int(tag_.second);
       switch (cyclelane_left) {
         case CycleLane::kDedicated:
           way_.set_cyclelane_left(CycleLane::kDedicated);
@@ -1617,22 +1614,22 @@ struct graph_parser {
       way_.set_cyclelane_left_opposite(tag_.second == "true" ? true : false);
     };
     tag_handlers_["lanes"] = [this]() {
-      way_.set_lanes(std::stoi(tag_.second));
+      way_.set_lanes(to_int(tag_.second));
       way_.set_tagged_lanes(true);
     };
     tag_handlers_["forward_lanes"] = [this]() {
-      way_.set_forward_lanes(std::stoi(tag_.second));
+      way_.set_forward_lanes(to_int(tag_.second));
       way_.set_forward_tagged_lanes(true);
     };
     tag_handlers_["backward_lanes"] = [this]() {
-      way_.set_backward_lanes(std::stoi(tag_.second));
+      way_.set_backward_lanes(to_int(tag_.second));
       way_.set_backward_tagged_lanes(true);
     };
     tag_handlers_["tunnel"] = [this]() { way_.set_tunnel(tag_.second == "true" ? true : false); };
     tag_handlers_["toll"] = [this]() { way_.set_toll(tag_.second == "true" ? true : false); };
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
     tag_handlers_["indoor"] = [this]() { way_.set_indoor(tag_.second == "yes" ? true : false); };
-    tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
+    tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(to_int(tag_.second)); };
     //    tag_handlers_["bike_national_ref"] = [this]() {
     //      if (!tag_.second.empty())
     //        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
@@ -2220,9 +2217,9 @@ struct graph_parser {
         intersection = true;
         n.set_type(NodeType::kElevator);
       } else if (tag.first == "access_mask") {
-        n.set_access(std::stoi(tag.second));
+        n.set_access(to_int(tag.second));
       } else if (tag.first == "tagged_access") {
-        n.set_tagged_access(std::stoi(tag.second));
+        n.set_tagged_access(to_int(tag.second));
       } else if (tag.first == "private") {
         n.set_private_access(tag.second == "true");
       } else if (!is_lang_pronunciation) {
@@ -2400,7 +2397,7 @@ struct graph_parser {
       // Throw away use if include_driveways_ is false
       Tags::const_iterator use;
       if (!include_driveways_ && (use = tags.find("use")) != tags.end() &&
-          static_cast<Use>(std::stoi(use->second)) == Use::kDriveway) {
+          static_cast<Use>(to_int(use->second)) == Use::kDriveway) {
 
         // only private use.
         Tags::const_iterator priv;
@@ -2410,12 +2407,12 @@ struct graph_parser {
       }
       // Throw away constructions if include_construction_ is false
       if (!include_construction_ && (use = tags.find("use")) != tags.end() &&
-          static_cast<Use>(std::stoi(use->second)) == Use::kConstruction) {
+          static_cast<Use>(to_int(use->second)) == Use::kConstruction) {
         return;
       }
       // Throw away platforms if include_platforms_ is false
       if (!include_platforms_ && (use = tags.find("use")) != tags.end() &&
-          static_cast<Use>(std::stoi(use->second)) == Use::kPlatform) {
+          static_cast<Use>(to_int(use->second)) == Use::kPlatform) {
         return;
       }
     } catch (const std::invalid_argument& arg) {
@@ -2924,7 +2921,7 @@ struct graph_parser {
       int scale = get_number("mtb:scale", mtb_scale->second);
       if (scale >= 0) {
         // Set surface based on scale
-        uint32_t scale = stoi(mtb_scale->second);
+        uint32_t scale = to_int(mtb_scale->second);
         if (scale == 0) {
           way_.set_surface(Surface::kDirt);
         } else if (scale == 1) {
@@ -2951,7 +2948,7 @@ struct graph_parser {
       int scale = get_number("mtb:uphill:scale", mtb_uphill_scale->second);
       if (scale >= 0) {
         // Set surface based on scale (if no scale exists)
-        uint32_t scale = stoi(mtb_uphill_scale->second);
+        uint32_t scale = to_int(mtb_uphill_scale->second);
         if (!has_mtb_scale) {
           if (scale < 2) {
             way_.set_surface(Surface::kGravel);
@@ -3866,7 +3863,7 @@ struct graph_parser {
         // probability=73
         std::vector<std::string> prob_tok = GetTagTokens(tag.second, '=');
         if (prob_tok.size() == 2) {
-          const auto& p = stoi(prob_tok.at(1));
+          const auto& p = to_int(prob_tok.at(1));
           if (p > 0) {
             isProbable = true;
             restriction.set_probability(p);
@@ -3914,7 +3911,7 @@ struct graph_parser {
           modes |= (kPedestrianAccess | kWheelchairAccess);
         }
 
-        RestrictionType type = (RestrictionType)std::stoi(tag.second);
+        RestrictionType type = (RestrictionType)to_int(tag.second);
 
         switch (type) {
 
@@ -3969,7 +3966,7 @@ struct graph_parser {
         isConditional = true;
         day_end = tag.second;
       } else if (tag.first == "bike_network_mask") {
-        bike_network_mask = std::stoi(tag.second);
+        bike_network_mask = to_int(tag.second);
       } else if (tag.first == "to:lanes") {
         to_lanes = tag.second;
       } else if (tag.first == "from:lanes") {
