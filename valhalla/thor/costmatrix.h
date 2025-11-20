@@ -222,6 +222,8 @@ protected:
    * @param  source  Source index
    * @param  target  Target index
    */
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   void UpdateStatus(const uint32_t source, const uint32_t target);
 
   /**

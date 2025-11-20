@@ -661,11 +661,7 @@ bool CostMatrix::Expand(const uint32_t index,
     // search is exhausted - mark this and update so we don't
     // extend searches more than we need to
     for (uint32_t st = 0; st < locs_count_[!FORWARD]; st++) {
-      if (FORWARD) {
-        UpdateStatus(index, st);
-      } else {
-        UpdateStatus(st, index);
-      }
+      UpdateStatus<expansion_direction>(index, st);
     }
     locs_status_[FORWARD][index].threshold = 0;
     return false;
@@ -947,11 +943,7 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
 
       // Update status and update threshold if this is the last location
       // to find for this source or target
-      if (FORWARD) {
-        UpdateStatus(loc_idx, opp_loc_idx);
-      } else {
-        UpdateStatus(opp_loc_idx, loc_idx);
-      }
+      UpdateStatus<expansion_direction>(loc_idx, opp_loc_idx);
     } else {
       // at this point, the found connection might still be somewhat trivial:
       // the connecting edge might be an initial edge for either the given source or target
@@ -984,11 +976,7 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
 
         // Update status and update threshold if this is the last location
         // to find for this source or target
-        if (FORWARD) {
-          UpdateStatus(loc_idx, opp_loc_idx);
-        } else {
-          UpdateStatus(opp_loc_idx, loc_idx);
-        }
+        UpdateStatus<expansion_direction>(loc_idx, opp_loc_idx);
       }
     }
 
@@ -1008,34 +996,25 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
 }
 
 // Update status when a connection is found.
-void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
-  // Remove the target from the source status
-  auto& s = locs_status_[MATRIX_FORW][source].unfound_connections;
-  auto it = s.find(target);
-  if (it != s.end()) {
-    s.erase(it);
-    if (s.empty() && locs_status_[MATRIX_FORW][source].threshold > 0) {
-      // At least 1 connection has been found to each target for this source.
-      // Set a threshold to continue search for a limited number of times.
-      locs_status_[MATRIX_FORW][source].threshold =
-          GetThreshold(mode_,
-                       edgelabel_[MATRIX_FORW][source].size() + edgelabel_[MATRIX_REV][target].size(),
-                       max_iterations_, min_iterations_);
-    }
-  }
+template <const MatrixExpansionType expansion_direction, const bool FORWARD>
+void CostMatrix::UpdateStatus(const uint32_t loc_idx, const uint32_t opp_loc_idx) {
 
-  // Remove the source from the target status
-  auto& t = locs_status_[MATRIX_REV][target].unfound_connections;
-  it = t.find(source);
-  if (it != t.end()) {
-    t.erase(it);
-    if (t.empty() && locs_status_[MATRIX_REV][target].threshold > 0) {
-      // At least 1 connection has been found to each source for this target.
-      // Set a threshold to continue search for a limited number of times.
-      locs_status_[MATRIX_REV][target].threshold =
-          GetThreshold(mode_,
-                       edgelabel_[MATRIX_FORW][source].size() + edgelabel_[MATRIX_REV][target].size(),
-                       max_iterations_, min_iterations_);
+  for (const bool DIRECTION : {MATRIX_FORW, MATRIX_REV}) {
+    uint32_t index = (DIRECTION == MATRIX_FORW) == FORWARD ? loc_idx : opp_loc_idx;
+    uint32_t counter_index = (DIRECTION == MATRIX_FORW) == FORWARD ? opp_loc_idx : loc_idx;
+    auto& unfound_conns = locs_status_[DIRECTION][index].unfound_connections;
+    auto it = unfound_conns.find(counter_index);
+    if (it != unfound_conns.end()) {
+      unfound_conns.erase(it);
+      if (unfound_conns.empty() && locs_status_[DIRECTION][index].threshold > 0) {
+        // At least 1 connection has been found to each opposite location for this location.
+        // Set a threshold to continue search for a limited number of times.
+        locs_status_[DIRECTION][index].threshold =
+            GetThreshold(mode_,
+                         edgelabel_[DIRECTION][index].size() +
+                             edgelabel_[!DIRECTION][counter_index].size(),
+                         max_iterations_, min_iterations_);
+      }
     }
   }
 }
