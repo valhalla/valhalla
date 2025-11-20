@@ -32,7 +32,7 @@ constexpr float kDefaultBssCost = 120.0f;     // Seconds
 constexpr float kDefaultBssPenalty = 0.0f;    // Seconds
 
 // Other options
-constexpr float kDefaultUseRoad = 0.25f;          // Factor between 0 and 1
+constexpr float kDefaultUseRoad = 0.5f;           // Factor between 0 and 1
 constexpr float kDefaultAvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets = 0.5f;  // Factor between 0 and 1
 const std::string kDefaultBicycleType = "hybrid"; // Bicycle type
