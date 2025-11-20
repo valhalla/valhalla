@@ -840,7 +840,7 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
     return;
   }
 
-  // Get the opposing edge. Get a list of target locations whose reverse
+  // Get the opposing edge. Get a list of opposing locations whose
   // search has reached this edge.
   GraphId opp_edgeid = pred.opp_edgeid();
   const ReachedMap::PmrVector* opp_locs = (FORWARD ? targets_ : sources_)->get(opp_edgeid);
@@ -856,14 +856,14 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
       continue;
     }
 
-    // Update any targets whose threshold has been reached
+    // Update any opposing locations whose threshold has been reached
     if (best_connection_[idx].max_iterations > 0 && n > best_connection_[idx].max_iterations) {
       best_connection_[idx].found = true;
       continue;
     }
 
-    // If we came down here, we know this opposing edge is either settled, or it's a
-    // target correlated edge which hasn't been pulled out of the queue yet, so a path
+    // If we came down here, we know this edge is either settled, or it's a
+    // opposing side's correlated edge which hasn't been pulled out of the queue yet, so a path
     // has been found to the end node of this directed edge
     const auto& opp_edgestate = edgestatus_[!FORWARD][opp_loc_idx];
     EdgeStatusInfo opp_edgestatus = opp_edgestate.Get(opp_edgeid);
@@ -885,12 +885,9 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
         return;
       }
 
-      // if source percent along edge is larger than target percent along,
-      // can't connect on this edge
-
       const valhalla::PathEdge* source_edge;
       const valhalla::PathEdge* target_edge;
-      float traversed_portion, opp_traversed_portion, traversed_fraction;
+      float traversed_portion, opp_traversed_portion;
 
       if (FORWARD) {
         source_edge = find_correlated_edge(options.sources(loc_idx), pred.edgeid());
@@ -898,16 +895,16 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
 
         traversed_portion = 1.0f - source_edge->percent_along();
         opp_traversed_portion = target_edge->percent_along();
-        traversed_fraction = target_edge->percent_along() - source_edge->percent_along();
       } else {
         source_edge = find_correlated_edge(options.sources(opp_loc_idx), opp_label.edgeid());
         target_edge = find_correlated_edge(options.targets(loc_idx), opp_label.edgeid());
 
         traversed_portion = source_edge->percent_along();
         opp_traversed_portion = 1.0f - target_edge->percent_along();
-        traversed_fraction = source_edge->percent_along() - target_edge->percent_along();
       }
 
+      // if source percent along edge is larger than target percent along,
+      // can't connect on this edge
       if (target_edge->percent_along() < source_edge->percent_along())
         continue;
 
@@ -915,10 +912,11 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
       Cost partial_primary_cost = pred.cost() - pred.transition_cost();
       Cost partial_opposing_cost = opp_label.cost() - opp_label.transition_cost();
 
-      // the forward and reverse label costs include 1) the partial cost to/from the end/start of
+      // the label costs include 1) the partial cost to/from the end/start of
       // the edge and 2) the distance penalty. We use the distance penalty stored in transition_cost
       // to scale the costs to the traversed fraction and set the route cost to the average of both
       // the fractional cost and the distance penalties
+      float traversed_fraction = target_edge->percent_along() - source_edge->percent_along();
       Cost partial_cost =
           ((partial_primary_cost * (1 / traversed_portion) * traversed_fraction) +
            (partial_opposing_cost * (1 / opp_traversed_portion) * traversed_fraction) +
@@ -965,11 +963,12 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
           opp_predidx == kInvalidLabel ? edgelabels[pred.predecessor()] : pred;
 
       Cost total_cost =
-          pred_connecting_label.cost() + opp_label.cost() +
+          pred_connecting_label.cost() + opp_connecting_label.cost() +
           (opp_predidx == kInvalidLabel ? pred.transition_cost() : opp_label.transition_cost());
       // Check if best connection
       if (total_cost < best_connection_[idx].cost) {
-        uint32_t total_dist = pred_connecting_label.path_distance() + opp_label.path_distance();
+        uint32_t total_dist =
+            pred_connecting_label.path_distance() + opp_connecting_label.path_distance();
 
         // Update best connection and set a threshold
         best_connection_[idx].Update(FORWARD ? pred.edgeid() : opp_edgeid,
@@ -991,6 +990,7 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
         }
       }
     }
+
     // setting this edge as connected
     if (expansion_callback_) {
       auto prev_pred = pred.predecessor() == kInvalidLabel
