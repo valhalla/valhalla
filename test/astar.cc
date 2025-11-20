@@ -1470,15 +1470,15 @@ TEST(ComplexRestriction, WalkVias) {
 
   // Need to figure out if it's the forward or backward edge that we need to
   // use for walking
-  const auto cr = [&]() -> ComplexRestriction* {
+  const auto* cr = [&]() -> const ComplexRestriction* {
     const auto first_id = correlated.edges.front().id;
-    auto restrictions = tile->GetRestrictions(is_forward, first_id, costing->access_mode());
+    auto restrictions = tile->GetComplexRestrictions(is_forward, first_id, costing->access_mode());
     if (!restrictions.empty())
-      return restrictions.front();
+      return &restrictions.front();
     const auto second_id = correlated.edges.back().id;
-    restrictions = tile->GetRestrictions(is_forward, second_id, costing->access_mode());
+    restrictions = tile->GetComplexRestrictions(is_forward, second_id, costing->access_mode());
     if (!restrictions.empty())
-      return restrictions.front();
+      return &restrictions.front();
     return nullptr;
   }();
 

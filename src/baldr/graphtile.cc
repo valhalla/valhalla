@@ -721,30 +721,15 @@ EdgeInfo GraphTile::edgeinfo(const DirectedEdge* edge) const {
 
 // Get the complex restrictions in the forward or reverse order based on
 // the id and modes.
-std::vector<ComplexRestriction*>
-GraphTile::GetRestrictions(const bool forward, const GraphId id, const uint64_t modes) const {
-  size_t offset = 0;
-  std::vector<ComplexRestriction*> cr_vector;
+ComplexRestrictionView
+GraphTile::GetComplexRestrictions(const bool forward, const GraphId id, const uint64_t modes) const {
   if (forward) {
-    while (offset < complex_restriction_forward_size_) {
-      ComplexRestriction* cr =
-          reinterpret_cast<ComplexRestriction*>(complex_restriction_forward_ + offset);
-      if (cr->to_graphid() == id && (cr->modes() & modes)) {
-        cr_vector.push_back(cr);
-      }
-      offset += cr->SizeOf();
-    }
+    return ComplexRestrictionView(complex_restriction_forward_, complex_restriction_forward_size_, id,
+                                  modes, true);
   } else {
-    while (offset < complex_restriction_reverse_size_) {
-      ComplexRestriction* cr =
-          reinterpret_cast<ComplexRestriction*>(complex_restriction_reverse_ + offset);
-      if (cr->from_graphid() == id && (cr->modes() & modes)) {
-        cr_vector.push_back(cr);
-      }
-      offset += cr->SizeOf();
-    }
+    return ComplexRestrictionView(complex_restriction_reverse_, complex_restriction_reverse_size_, id,
+                                  modes, false);
   }
-  return cr_vector;
 }
 
 // Get the directed edges outbound from the specified node index.
