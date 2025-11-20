@@ -8,6 +8,7 @@
    * CHANGED: Use std::from_chars instead of std::stoi/stof/stod [#5704](https://github.com/valhalla/valhalla/pull/5704)
    * CHANGED: Speed up transit feed ingestion with faster stop time look up via stop id [#5134](https://github.com/valhalla/valhalla/pull/5134)
    * CHANGED: Avoid dynamic allocation in loki::Search [#5724](https://github.com/valhalla/valhalla/pull/5724)
+   * CHANGED: Get rid of temporary vector in GraphTile::GetAccessRestrictions [#5689](https://github.com/valhalla/valhalla/pull/5689)
    * ADDED: `timed_predicted_speed` on `/locate` response if location had a date time set [#5714](https://github.com/valhalla/valhalla/pull/5714)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
