@@ -754,6 +754,33 @@ TEST(UtilMidgard, PolygonArea) {
   }
 }
 
+TEST(UtilMidgard, Enumerate) {
+  std::vector<int> values = {10, 20, 30, 40, 50};
+
+  size_t expected_index = 0;
+  for (const auto& [i, value] : enumerate(values)) {
+    EXPECT_EQ(i, expected_index);
+    EXPECT_EQ(value, values[expected_index]);
+    ++expected_index;
+  }
+  EXPECT_EQ(expected_index, values.size());
+
+  // Test with filtered range (lazy evaluation)
+  auto filtered = values | std::views::filter([](int x) { return x > 20; });
+  std::vector<std::pair<size_t, int>> enumerated_results;
+  for (const auto& [i, value] : enumerate(filtered)) {
+    enumerated_results.emplace_back(i, value);
+  }
+
+  ASSERT_EQ(enumerated_results.size(), 3);
+  EXPECT_EQ(enumerated_results[0].first, 0);
+  EXPECT_EQ(enumerated_results[0].second, 30);
+  EXPECT_EQ(enumerated_results[1].first, 1);
+  EXPECT_EQ(enumerated_results[1].second, 40);
+  EXPECT_EQ(enumerated_results[2].first, 2);
+  EXPECT_EQ(enumerated_results[2].second, 50);
+}
+
 TEST(UtilMidgard, ToFloat) {
   EXPECT_FLOAT_EQ(to_float("123.456"), 123.456f);
   EXPECT_FLOAT_EQ(to_float("-42.5"), -42.5f);
