@@ -1206,7 +1206,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     } else {
       uint8_t flow_sources;
       speed = directededge->length() /
-              costing->EdgeCost(directededge, graphtile, time_info, flow_sources).secs *
+              costing->EdgeCost(directededge, edge, graphtile, time_info, flow_sources).secs *
               kMetersPerSectoKPH;
     }
     trip_edge->set_speed(speed);
@@ -1344,10 +1344,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   if (directededge->access_restriction() && edge_itr->restriction_index != kInvalidRestriction) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        graphtile->GetAccessRestrictions(edge.id(), costing->access_mode());
-    trip_edge->mutable_restriction()->set_type(
-        static_cast<uint32_t>(restrictions[edge_itr->restriction_index].type()));
+    auto restriction = graphtile->GetAccessRestrictionAtIndex(edge.id(), costing->access_mode(),
+                                                              edge_itr->restriction_index);
+    assert(restriction != nullptr);
+    trip_edge->mutable_restriction()->set_type(static_cast<uint32_t>(restriction->type()));
   }
 
   trip_edge->set_has_time_restrictions(edge_itr->restriction_index != kInvalidRestriction);

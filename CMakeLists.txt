@@ -28,7 +28,7 @@ option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for singl
 option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find the equivalent external package" OFF)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
-option(ENABLE_GDAL "Whether to include GDAL; currently only used for raster serialization of isotile grid" ON)
+option(ENABLE_GEOTIFF "Whether to include libgeotiff; currently only used for raster serialization of isotile grid" ON)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -207,15 +207,16 @@ endif()
 
 # unless you said you didnt want gdal we try to turn it on, if we cant we tell you
 # we don't need it to build tiles (yet)
-set(GDAL_TARGET "")
-if (ENABLE_GDAL AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_NODE_BINDINGS))
-  find_package(GDAL QUIET)
-  if (GDAL_FOUND)
-    set(GDAL_TARGET GDAL::GDAL)
-    add_compile_definitions(ENABLE_GDAL)
-    message(STATUS "Gdal support is enabled")
+set(GTIFF_TARGETS "")
+if (ENABLE_GEOTIFF AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDINGS OR ENABLE_NODE_BINDINGS))
+  find_package(TIFF)
+  find_package(GeoTIFF)
+  if (GeoTIFF_FOUND AND TIFF_FOUND)
+    add_compile_definitions(ENABLE_GEOTIFF)
+    set(GTIFF_TARGETS TIFF::TIFF geotiff_library)
+    message(STATUS "libgeotiff support is enabled")
   else()
-    message(WARNING "Unable to enable gdal support")
+    message(WARNING "Unable to enable libgeotiff support")
   endif()
 endif()
 

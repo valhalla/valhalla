@@ -97,8 +97,19 @@ void loki_worker_t::route(Api& request) {
   std::unordered_map<size_t, size_t> color_counts;
   try {
     auto locations = PathLocation::fromPBF(options.locations(), true);
+    size_t locations_end = locations.size();
+
+    // maybe squeeze in the first and last locations of each user specified feature for cost factor
+    // lines as we'll need those for edge walking
+    for (const auto& line : options.cost_factor_lines()) {
+      locations.push_back(PathLocation::fromPBF(line.shape(0)));
+      locations.back().min_inbound_reach_ = 0;
+      locations.push_back(PathLocation::fromPBF(line.shape(line.shape_size() - 1)));
+      locations.back().min_inbound_reach_ = 0;
+    }
+
     const auto projections = loki::Search(locations, *reader, costing);
-    for (size_t i = 0; i < locations.size(); ++i) {
+    for (size_t i = 0; i < locations_end; ++i) {
       const auto& correlated = projections.at(locations[i]);
       PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);
       if (!connectivity_map) {
@@ -114,7 +125,21 @@ void loki_worker_t::route(Api& request) {
         }
       }
     }
-  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
+
+    // store the correlations for the cost factor lines
+    size_t i = 0;
+    for (auto& line : *options.mutable_cost_factor_lines()) {
+      const auto& correlated_start = projections.at(locations[locations_end + 2 * i]);
+      auto* start = line.mutable_locations()->Add();
+      PathLocation::toPBF(correlated_start, start, *reader);
+      const auto& correlated_end = projections.at(locations[locations_end + 2 * i + 1]);
+      auto* end = line.mutable_locations()->Add();
+      PathLocation::toPBF(correlated_end, end, *reader);
+      ++i;
+    }
+  } catch (const valhalla_exception_t& e) { throw e; } catch (const std::exception&) {
+    throw valhalla_exception_t{171};
+  }
 
   // are all the locations in the same color regions
   if (!connectivity_map) {

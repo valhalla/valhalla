@@ -1,5 +1,16 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+   * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
+   * CHANGED: Get rid of temporary std::vector in GraphTile::GetRestrictions [#5688](https://github.com/valhalla/valhalla/pull/5688)
+   * CHANGED: Use std::from_chars instead of std::stoi/stof/stod [#5704](https://github.com/valhalla/valhalla/pull/5704)
+   * CHANGED: Avoid dynamic allocation in loki::Search [#5724](https://github.com/valhalla/valhalla/pull/5724)
+   * CHANGED: Get rid of temporary vector in GraphTile::GetAccessRestrictions [#5689](https://github.com/valhalla/valhalla/pull/5689)
+   * ADDED: Bounding circles for faster loki [#5103](https://github.com/valhalla/valhalla/pull/5103)
+
+## Release Date: 2025-11-14 Valhalla 3.6.1
+* **Removed**
    * REMOVED: ENABLE_GDAL define for **Linux-only** Python binding releases [#5642](https://github.com/valhalla/valhalla/pull/5642)
    * REMOVED: pyvalhalla-weekly PyPI package [#5673](https://github.com/valhalla/valhalla/pull/5673)
 * **Bug Fix**
@@ -9,6 +20,7 @@
    * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
    * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647)
    * UPGRADED: vcpkg to 0e39c10736341cc8135b560438229bbda3d3219a [#5654](https://github.com/valhalla/valhalla/pull/5654)
+   * ADDED: Add NodeJs bindings [#5621](https://github.com/valhalla/valhalla/pull/5621)
    * FIXED: returns GeoTIFF with Content-Type image/tiff header [#5665](https://github.com/valhalla/valhalla/pull/5665)
    * CHANGED: Improve logging using std::format [#5666](https://github.com/valhalla/valhalla/pull/5666)
    * CHANGED: Migrated from pybind11 to nanobind to release `abi3` wheels (Python version agnostic), also changes minimum version of PyPI packages to 3.12 [#5628](https://github.com/valhalla/valhalla/pull/5628)
@@ -20,7 +32,11 @@
    * CHANGED: Optimise CostMatrix::ReachedMap [#5690](https://github.com/valhalla/valhalla/pull/5690)
    * ADDED: Make possible to use `-DCMAKE_UNITY_BUILD=ON` [#5691](https://github.com/valhalla/valhalla/pull/5691)
    * CHANGED: make alternative_iterations_delta configurable [#5679](https://github.com/valhalla/valhalla/pull/5679)
-   * ADDED: Bounding circles for faster loki [#5103](https://github.com/valhalla/valhalla/pull/5103)
+   * ADDED: `flow_sources` expansion property [#5697](https://github.com/valhalla/valhalla/pull/5697)
+   * CHANGED: Replace GDAL with libgeotiff, re-enable support for bindings [#5680](https://github.com/valhalla/valhalla/pull/5680)
+   * ADDED: Support for loading tiles from a remote tarball with optional HTTP basic auth [#5467](https://github.com/valhalla/valhalla/pull/5467)
+   * CHANGED: lower penalty for u-turns without name consistency [#5696](https://github.com/valhalla/valhalla/pull/5696)
+   * CHANGED: Speed up transit feed ingestion with faster stop time look up via stop id [#5134](https://github.com/valhalla/valhalla/pull/5134)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
@@ -196,7 +212,6 @@
    * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
    * CHANGED: added openssl as a linked library to all build configs when `ENABLE_DATA_TOOLS=ON` [#5626](https://github.com/valhalla/valhalla/pull/5626)
    * UPGRADED: C++17 to C++20 [#5575](https://github.com/valhalla/valhalla/pull/5575)
-   * ADDED: Add NodeJs bindings [#5621](https://github.com/valhalla/valhalla/pull/5621)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

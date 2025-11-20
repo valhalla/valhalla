@@ -55,7 +55,7 @@ bool is_format_supported(Options::Action action, Options::Format format) {
           (1 << Options::centroid) | (1 << Options::trace_attributes) | (1 << Options::status) |
           (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion),
   // geotiff
-#ifdef ENABLE_GDAL
+#ifdef ENABLE_GEOTIFF
       (1 << Options::isochrone),
 #else
       0,
@@ -534,6 +534,30 @@ void parse_recostings(const rapidjson::Document& doc,
   }
 }
 
+void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
+  auto json_obj = json_feat.GetObject();
+  for (const auto& coords_j : json_obj["geometry"].GetObject()["coordinates"].GetArray()) {
+    auto* shape_pt = line_feat->add_shape();
+    shape_pt->mutable_ll()->set_lng(coords_j.GetArray()[0].GetFloat());
+    shape_pt->mutable_ll()->set_lat(coords_j.GetArray()[1].GetFloat());
+  }
+  line_feat->set_cost_factor(json_obj["properties"].GetObject()["factor"].GetFloat());
+}
+void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
+  auto json_obj = json_feat.GetObject();
+  auto shape = std::string(json_obj["shape"].GetString());
+  auto lazy_shape = midgard::Shape5Decoder<midgard::PointLL>(shape.data(), shape.size());
+
+  while (!lazy_shape.empty()) {
+    midgard::PointLL ll = lazy_shape.pop();
+    auto* shape_pt = line_feat->add_shape();
+    shape_pt->mutable_ll()->set_lng(ll.lng());
+    shape_pt->mutable_ll()->set_lat(ll.lat());
+  }
+
+  line_feat->set_cost_factor(json_obj["factor"].GetFloat());
+}
+
 /**
  * This function takes a json document and parses it into an options (request pbf) object.
  * The implementation is such that if you passed an already filled out options object the
@@ -983,6 +1007,29 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   else if (options.exclude_polygons_size()) {
     for (auto& ring : *options.mutable_exclude_polygons()) {
       parse_ring(&ring, rapidjson::Value{});
+    }
+  }
+
+  // does the user want to apply custom costs to linear features?
+  auto linear_feats = rapidjson::get_child_optional(doc, "/linear_cost_factors");
+
+  if (linear_feats) {
+    if (!linear_feats->IsArray()) {
+      add_warning(api, 212);
+    } else {
+      try {
+        for (const auto& linear_feat : linear_feats->GetArray()) {
+          auto is_geojson = linear_feat.GetObject().HasMember("type");
+          auto* l = options.mutable_cost_factor_lines()->Add();
+
+          // either GeoJSON
+          if (is_geojson) {
+            parse_line_geojson(linear_feat, l);
+          } else { // or an encoded polyline and a cost factor
+            parse_line(linear_feat, l);
+          }
+        }
+      } catch (const std::exception& e) { throw valhalla_exception_t{173, std::string(e.what())}; }
     }
   }
 

@@ -208,8 +208,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
   // Compute the cost to the end of this edge
   uint8_t flow_sources;
-  auto edge_cost = FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
-                           : costing_->EdgeCost(opp_edge, endtile, time_info, flow_sources);
+  auto edge_cost = FORWARD
+                       ? costing_->EdgeCost(meta.edge, meta.edge_id, tile, time_info, flow_sources)
+                       : costing_->EdgeCost(opp_edge, opp_edge_id, endtile, time_info, flow_sources);
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
 
   sif::Cost transition_cost =
@@ -324,7 +325,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                   : (edgelabels_)[pred.predecessor()].edgeid();
       expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
                           "unidirectional_astar", Expansion_EdgeStatus_reached, cost.secs,
-                          path_distance, cost.cost, expansion_type);
+                          path_distance, cost.cost, expansion_type, flow_sources);
     }
 
     return true;
@@ -374,7 +375,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                     : (edgelabels_)[pred.predecessor()].edgeid();
         expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
                             "unidirectional_astar", Expansion_EdgeStatus_reached, newcost.secs,
-                            lab.path_distance(), newcost.cost, expansion_type);
+                            lab.path_distance(), newcost.cost, expansion_type, flow_sources);
       }
       return true;
     };
@@ -547,7 +548,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
                                    : edgelabels_[pred.predecessor()].edgeid();
         expansion_callback_(graphreader, pred.edgeid(), prev_pred, "unidirectional_astar",
                             Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
-                            pred.cost().cost, expansion_type);
+                            pred.cost().cost, expansion_type, kNoFlowMask);
       }
       return {FormPath(predindex)};
     }
@@ -566,7 +567,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
           pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels_[pred.predecessor()].edgeid();
       expansion_callback_(graphreader, pred.edgeid(), prev_pred, "unidirectional_astar",
                           Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
-                          pred.cost().cost, expansion_type);
+                          pred.cost().cost, expansion_type, kNoFlowMask);
     }
 
     // Check that distance is converging towards the destination. Return route
@@ -783,21 +784,22 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     }
 
     uint8_t flow_sources;
-    auto edge_cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources);
-
     auto add_label = [&](const valhalla::PathEdge* dest_path_edge) {
-      auto percent_traversed = !dest_path_edge ? 1.0f
-                                               : (FORWARD ? dest_path_edge->percent_along()
-                                                          : 1.0f - dest_path_edge->percent_along());
+      auto start =
+          FORWARD ? edge.percent_along() : (dest_path_edge ? dest_path_edge->percent_along() : 0.0f);
+      auto end =
+          FORWARD ? (dest_path_edge ? dest_path_edge->percent_along() : 1.0f) : edge.percent_along();
 
-      percent_traversed -= FORWARD ? percent_along : 1.0f - percent_along;
+      auto percent_traversed = end - start;
 
       if (percent_traversed < 0) {
         // not trivial
         return;
       }
 
-      auto cost = edge_cost * percent_traversed;
+      Cost cost =
+          costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources, start, end);
+
       cost.cost += edge.distance() + (dest_path_edge ? dest_path_edge->distance() : 0.0f);
 
       auto dist = 0.0f;
@@ -856,7 +858,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
             FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
         expansion_callback_(graphreader, edgeid, GraphId{}, "unidirectional_astar",
                             Expansion_EdgeStatus_reached, cost.secs,
-                            static_cast<uint32_t>(edge.distance() + 0.5), cost.cost, expansion_type);
+                            static_cast<uint32_t>(edge.distance() + 0.5), cost.cost, expansion_type,
+                            flow_sources);
       }
 
       adjacencylist_.add(idx);

@@ -556,8 +556,9 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
 
   // Get cost. Separate out transition cost.
   uint8_t flow_sources;
-  Cost newcost = pred.cost() + (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
-                                        : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
+  Cost newcost = pred.cost() +
+                 (FORWARD ? costing_->EdgeCost(meta.edge, meta.edge_id, tile, time_info, flow_sources)
+                          : costing_->EdgeCost(opp_edge, opp_edge_id, t2, time_info, flow_sources));
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
   sif::Cost tc =
       FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter)
@@ -638,8 +639,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   if (expansion_callback_) {
     expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix",
                         Expansion_EdgeStatus_reached, newcost.secs, pred_dist, newcost.cost,
-                        static_cast<Expansion_ExpansionType>(
-                            !static_cast<bool>(expansion_direction)));
+                        static_cast<Expansion_ExpansionType>(!static_cast<bool>(expansion_direction)),
+                        flow_sources);
   }
 
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
@@ -686,8 +687,8 @@ bool CostMatrix::Expand(const uint32_t index,
     expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix",
                         Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
                         pred.cost().cost,
-                        static_cast<Expansion_ExpansionType>(
-                            !static_cast<bool>(expansion_direction)));
+                        static_cast<Expansion_ExpansionType>(!static_cast<bool>(expansion_direction)),
+                        kNoFlowMask);
   }
 
   if (FORWARD) {
@@ -964,7 +965,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "costmatrix",
                           Expansion_EdgeStatus_connected, fwd_pred.cost().secs,
                           fwd_pred.path_distance(), fwd_pred.cost().cost,
-                          Expansion_ExpansionType_forward);
+                          Expansion_ExpansionType_forward, kNoFlowMask);
     }
   }
 
@@ -1114,7 +1115,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
         expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "costmatrix",
                             Expansion_EdgeStatus_connected, rev_pred.cost().secs,
                             rev_pred.path_distance(), rev_pred.cost().cost,
-                            Expansion_ExpansionType_reverse);
+                            Expansion_ExpansionType_reverse, kNoFlowMask);
       }
     }
   }
@@ -1202,26 +1203,26 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Get cost. Get distance along the remainder of this edge.
       uint8_t flow_sources;
-      Cost edgecost = costing_->EdgeCost(directededge, tile, time_infos[index], flow_sources);
-      Cost cost = edgecost * (1.0f - edge.percent_along());
+      Cost edgecost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_infos[index],
+                                                flow_sources, edge.percent_along(), 1.0f);
       uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
       Cost distance_penalty(edge.distance(), 0);
-      cost += distance_penalty;
+      edgecost += distance_penalty;
 
       // 2 adjustments related only to properly handle trivial routes:
       //   - "transition_cost" is used to store the distance penalty
       //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
-      Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
 
       // we call this to find out if we're starting on access restrictions with a local traffic
       // exemption and push this info into the label
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_,
+
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, edgecost, mode_,
                              distance_penalty, d, !directededge->not_thru(),
                              !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -1233,7 +1234,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       auto newsortcost =
           GetAstarHeuristic<MatrixExpansionType::forward>(index, opp_tile->get_node_ll(
                                                                      directededge->endnode()));
-      edge_label.SetSortCost(cost.cost + newsortcost);
+      edge_label.SetSortCost(edgecost.cost + newsortcost);
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
@@ -1308,26 +1309,27 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Use the directed edge for costing, as this is the forward direction
       // along the destination edge.
       uint8_t flow_sources;
-      Cost edgecost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
-      Cost cost = edgecost * edge.percent_along();
+
+      Cost edgecost = costing_->PartialEdgeCost(directededge, edgeid, tile, TimeInfo::invalid(),
+                                                flow_sources, 0, edge.percent_along());
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
       Cost distance_penalty(edge.distance(), 0);
-      cost += distance_penalty;
+      edgecost += distance_penalty;
 
       // 2 adjustments related only to properly handle trivial routes:
       //   - "transition_cost" is used to store the distance penalty
       //   - "path_id" is used to store whether the opp edge is even allowed (e.g. no oneway)
-      Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
 
       // we call this to find out if we're starting on access restrictions with a local traffic
       // exemption and push this info into the label
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
-      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
+
+      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, edgecost, mode_,
                              distance_penalty, d, !opp_dir_edge->not_thru(),
                              !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -1340,7 +1342,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       auto newsortcost =
           GetAstarHeuristic<MatrixExpansionType::reverse>(index,
                                                           tile->get_node_ll(opp_dir_edge->endnode()));
-      edge_label.SetSortCost(cost.cost + newsortcost);
+      edge_label.SetSortCost(edgecost.cost + newsortcost);
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       edge_label.set_not_thru(false);

@@ -114,8 +114,8 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     }
 
     // Get cost and update distance
-    auto edge_cost = FORWARD ? current_costing->EdgeCost(directededge, tile)
-                             : current_costing->EdgeCost(opp_edge, t2);
+    auto edge_cost = FORWARD ? current_costing->EdgeCost(directededge, edgeid, tile)
+                             : current_costing->EdgeCost(opp_edge, opp_edge_id, t2);
     auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost =
         FORWARD
@@ -235,8 +235,8 @@ bool TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
         // have been settled.
         tile = graphreader.GetGraphTile(pred.edgeid());
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
-        if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred,
-                               matrix_locations)) {
+        if (UpdateDestinations<expansion_direction>(origin, destinations, destedge->second, edge,
+                                                    tile, pred, matrix_locations)) {
           FormTimeDistanceMatrix(request, FORWARD, origin_index);
           break;
         }
@@ -317,8 +317,8 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
     const auto time_info = TimeInfo::invalid();
     if (FORWARD) {
       const auto percent_along = 1.0f - edge.percent_along();
-      cost =
-          pedestrian_costing_->EdgeCost(directededge, tile, time_info, flow_sources) * percent_along;
+      cost = pedestrian_costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                                  edge.percent_along(), 1.0f);
       dist = static_cast<uint32_t>(directededge->length() * percent_along);
 
     } else {
@@ -327,8 +327,8 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid, endtile);
-      cost = pedestrian_costing_->EdgeCost(opp_dir_edge, endtile, time_info, flow_sources) *
-             edge.percent_along();
+      cost = pedestrian_costing_->PartialEdgeCost(opp_dir_edge, opp_edge_id, endtile, time_info,
+                                                  flow_sources, 0.0f, edge.percent_along());
       dist = static_cast<uint32_t>(directededge->length() * edge.percent_along());
     }
 
@@ -395,7 +395,7 @@ void TimeDistanceBSSMatrix::InitDestinations(
       // Form a threshold cost (the total cost to traverse the edge)
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
-      float c = pedestrian_costing_->EdgeCost(directededge, tile).cost;
+      float c = pedestrian_costing_->EdgeCost(directededge, edgeid, tile).cost;
 
       // Keep the id and the partial distance for the remainder of the edge.
       Destination& d = destinations_.back();
@@ -421,6 +421,8 @@ void TimeDistanceBSSMatrix::InitDestinations(
 
 // Update any destinations along the edge. Returns true if all destinations
 // have be settled.
+
+template <const ExpansionType expansion_direction, const bool FORWARD>
 bool TimeDistanceBSSMatrix::UpdateDestinations(
     const valhalla::Location& origin,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
@@ -462,7 +464,18 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
     float remainder = dest_edge->second;
-    Cost newcost = pred.cost() - (pedestrian_costing_->EdgeCost(edge, tile) * remainder);
+    float start, end;
+
+    if (FORWARD) {
+      start = 0.f;
+      end = remainder;
+    } else {
+      start = 1.f - remainder;
+      end = 1.f;
+    }
+
+    Cost newcost =
+        pred.cost() - (pedestrian_costing_->PartialEdgeCost(edge, pred.edgeid(), tile, start, end));
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);

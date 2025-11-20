@@ -324,6 +324,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId&,
                         const graph_tile_ptr&,
                         const baldr::TimeInfo&,
                         uint8_t&) const override;
@@ -381,7 +382,7 @@ public:
    */
   virtual float AStarCostFactor() const override {
     // Assume max speed of 2 * the average speed set for costing
-    return kSpeedFactor[static_cast<uint32_t>(2 * speed_)];
+    return kSpeedFactor[static_cast<uint32_t>(2 * speed_)] * min_linear_cost_factor_;
   }
 
   /**
@@ -621,6 +622,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
 Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
+                           const baldr::GraphId& edgeid,
                            const graph_tile_ptr&,
                            const baldr::TimeInfo&,
                            uint8_t&) const {
@@ -713,6 +715,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                              (speed_ * surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
                               kGradeBasedSpeedFactor[edge->weighted_grade()]) +
                              0.5f);
+
+  factor *= EdgeFactor(edgeid);
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
   float sec = (edge->length() * kSpeedFactor[bike_speed]);
