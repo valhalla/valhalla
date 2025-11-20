@@ -713,7 +713,7 @@ bool CostMatrix::Expand(const uint32_t index,
 
   // Get the opposing predecessor directed edge if this is reverse.
   const DirectedEdge* opp_pred_edge = nullptr;
-  if (!FORWARD) {
+  if constexpr (!FORWARD) {
     const auto rev_pred_tile = graphreader.GetGraphTile(pred.opp_edgeid(), tile);
     if (rev_pred_tile == nullptr) {
       return false;
@@ -886,7 +886,7 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
       const valhalla::PathEdge* target_edge;
       float traversed_portion, opp_traversed_portion;
 
-      if (FORWARD) {
+      if constexpr (FORWARD) {
         source_edge = find_correlated_edge(options.sources(loc_idx), pred.edgeid());
         target_edge = find_correlated_edge(options.targets(opp_loc_idx), pred.edgeid());
 
