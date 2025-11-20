@@ -850,7 +850,8 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
 
   // Iterate through the opposing side's locations
   for (auto opp_loc_idx : *opp_locs) {
-    uint32_t idx = loc_idx * locs_count_[!FORWARD] + opp_loc_idx;
+    uint32_t idx = (FORWARD ? loc_idx : opp_loc_idx) * locs_count_[MATRIX_REV] +
+                   (FORWARD ? opp_loc_idx : loc_idx);
 
     if (best_connection_[idx].found) {
       continue;
@@ -869,7 +870,7 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
     EdgeStatusInfo opp_edgestatus = opp_edgestate.Get(opp_edgeid);
 
     // TODO(chris): why only on the reverse tree?
-    if (!FORWARD && opp_edgestatus.set() != EdgeSet::kUnreachedOrReset) {
+    if (!FORWARD && opp_edgestatus.set() == EdgeSet::kUnreachedOrReset) {
       continue;
     }
 
