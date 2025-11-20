@@ -41,9 +41,9 @@ target_include_directories(valhalla_test SYSTEM PUBLIC
   ${vtzero_include_dirs})
 target_link_libraries(valhalla_test
   valhalla gtest gtest_main gmock
-  $<$<BOOL:${ENABLE_COVERAGE}>:gcov> 
+  $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
   ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
-target_compile_definitions(valhalla_test PUBLIC 
+target_compile_definitions(valhalla_test PUBLIC
   VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
   VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
 
@@ -53,7 +53,9 @@ endif()
 
 if (ENABLE_GEOTIFF)
   find_package(GDAL QUIET)
-  target_link_libraries(valhalla_test GDAL::GDAL)
+  if (GDAL_FOUND)
+    target_link_libraries(valhalla_test GDAL::GDAL)
+  endif()
 endif()
 
 ## Lists tests
