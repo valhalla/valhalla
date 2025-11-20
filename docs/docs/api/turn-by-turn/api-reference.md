@@ -130,7 +130,6 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `use_distance` | A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account (default) and 1 only distance. A factor of 0.5 will weight them roughly equally. **Note:** this costing is currently only available for auto costing. |
 | `disable_hierarchy_pruning` | Disable hierarchies to calculate the actual optimal route. The default is `false`. **Note:** This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be `false`. |
 | `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 120 KPH for `truck` and 140 KPH for `auto` and `bus`. |
-| `speed_penalty_factor` | Penalty factor applied for edges when edge speed is faster than top speed. The default value is 0.05. |
 | `fixed_speed` | Fixed speed the vehicle can go. Used to override the calculated speed. Can be useful if speed of vehicle is known. `fixed_speed` must be between 1 and 252 KPH. The default value is 0 KPH which disables fixed speed and falls back to the standard calculated speed based on the road attribution. |
 | `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is. Default is `false` |
 | `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. |
@@ -149,18 +148,19 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 | :-------------------------- | :----------- |
 | `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 4.11 for truck. |
 | `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 2.6 for truck. |
+| `length` | The length of the truck (in meters). Default 21.64. |
+| `weight` | The weight of the truck (in metric tons). Default 21.77. |
 | `exclude_unpaved` | This value indicates whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
 | `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false. |
 | `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false. |
 | `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false. |
 | `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false. |
+| `speed_penalty_factor` | Penalty factor applied for edges when edge speed is faster than top speed. The default value is 0.05. |
 
 The following options are available for `truck` costing.
 
 | Truck options | Description |
 | :-------------------------- | :----------- |
-| `length` | The length of the truck (in meters). Default 21.64. |
-| `weight` | The weight of the truck (in metric tons). Default 21.77. |
 | `axle_load` | The axle load of the truck (in metric tons). Default 9.07. |
 | `axle_count` | The axle count of the truck. Default 5. |
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
