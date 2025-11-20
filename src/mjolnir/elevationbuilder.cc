@@ -239,12 +239,8 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
     if (directededge.bridge() || directededge.tunnel()) {
       // Clamp grades to +/- 3% (weighted grade values between 4 and 8)
       weighted_grade = std::clamp(weighted_grade, 4u, 8u);
-      if (max_up_slope > 3.0f) {
-        max_up_slope = 3.0f;
-      }
-      if (max_down_slope < -3.0f) {
-        max_down_slope = -3.0f;
-      }
+      max_up_slope = std::min(3.0f, max_up_slope);
+      max_down_slope = std::max(-3.0f, max_down_slope);
     }
     directededge.set_weighted_grade(weighted_grade);
     directededge.set_max_up_slope(max_up_slope);
