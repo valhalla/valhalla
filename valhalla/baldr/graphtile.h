@@ -872,7 +872,7 @@ public:
     return (is_truck && (de->truck_speed() > 0)) ? std::min(de->truck_speed(), speed) : speed;
   }
 
-  inline const volatile TrafficSpeed& trafficspeed(const DirectedEdge* de) const {
+  inline TrafficSpeed trafficspeed(const DirectedEdge* de) const {
     auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
     return traffic_tile.trafficspeed(directed_edge_index);
   }
@@ -906,8 +906,7 @@ public:
    * @return      whether or not its closed
    */
   inline bool IsClosed(const DirectedEdge* edge) const {
-    auto volatile& live_speed =
-        traffic_tile.trafficspeed(static_cast<uint32_t>(edge - directededges_));
+    auto live_speed = traffic_tile.trafficspeed(static_cast<uint32_t>(edge - directededges_));
     return live_speed.closed();
   }
 

@@ -43,18 +43,24 @@ constexpr uint8_t UNKNOWN_CONGESTION_VAL = 0;
 constexpr uint8_t MAX_CONGESTION_VAL = 63;
 
 struct TrafficSpeed {
-  uint64_t
-      overall_encoded_speed : 7; // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
-  uint64_t encoded_speed1 : 7;   // 0-255kph in 2kph resolution (access with `get_speed(0)`)
-  uint64_t encoded_speed2 : 7;
-  uint64_t encoded_speed3 : 7;
-  uint64_t breakpoint1 : 8;   // position = length * (breakpoint1 / 255)
-  uint64_t breakpoint2 : 8;   // position = length * (breakpoint2 / 255)
-  uint64_t congestion1 : 6;   // Stores 0 (unknown), or 1->63 (no congestion->max congestion)
-  uint64_t congestion2 : 6;   //
-  uint64_t congestion3 : 6;   //
-  uint64_t has_incidents : 1; // Are there incidents on this edge in the corresponding incident tile
-  uint64_t spare : 1;
+  union {
+    struct {
+      uint64_t overall_encoded_speed : 7; // 0-255kph in 2kph resolution (access with
+                                          // `get_overall_speed()`)
+      uint64_t encoded_speed1 : 7;        // 0-255kph in 2kph resolution (access with `get_speed(0)`)
+      uint64_t encoded_speed2 : 7;
+      uint64_t encoded_speed3 : 7;
+      uint64_t breakpoint1 : 8; // position = length * (breakpoint1 / 255)
+      uint64_t breakpoint2 : 8; // position = length * (breakpoint2 / 255)
+      uint64_t congestion1 : 6; // Stores 0 (unknown), or 1->63 (no congestion->max congestion)
+      uint64_t congestion2 : 6; //
+      uint64_t congestion3 : 6; //
+      uint64_t
+          has_incidents : 1; // Are there incidents on this edge in the corresponding incident tile
+      uint64_t spare : 1;
+    };
+    uint64_t bits;
+  };
 
 #ifndef C_ONLY_INTERFACE
   inline bool speed_valid() const volatile {
@@ -126,6 +132,12 @@ struct TrafficSpeed {
         encoded_speed3{s3}, breakpoint1{b1}, breakpoint2{b2}, congestion1{c1}, congestion2{c2},
         congestion3{c3}, has_incidents{incidents}, spare{0} {
   }
+
+  constexpr TrafficSpeed(const TrafficSpeed& other) : bits{other.bits} {
+  }
+
+  constexpr TrafficSpeed(const uint64_t bits) : bits{bits} {
+  }
 #endif
 };
 
@@ -157,7 +169,7 @@ static_assert(sizeof(TrafficSpeed) == sizeof(uint64_t),
  */
 #ifndef C_ONLY_INTERFACE
 namespace {
-static constexpr volatile TrafficSpeed INVALID_SPEED{
+static constexpr TrafficSpeed INVALID_SPEED = {
     UNKNOWN_TRAFFIC_SPEED_RAW,
     UNKNOWN_TRAFFIC_SPEED_RAW,
     UNKNOWN_TRAFFIC_SPEED_RAW,
@@ -193,7 +205,7 @@ public:
                        : nullptr) {
   }
 
-  const volatile TrafficSpeed& trafficspeed(const uint32_t directed_edge_offset) const {
+  TrafficSpeed trafficspeed(const uint32_t directed_edge_offset) const {
     if (header == nullptr || header->traffic_tile_version != TRAFFIC_TILE_VERSION) {
       return INVALID_SPEED;
     }
@@ -202,7 +214,10 @@ public:
                                std::to_string(directed_edge_offset) +
                                ", edge count: " + std::to_string(header->directed_edge_count));
 
-    return *(speeds + directed_edge_offset);
+    // it is important to copy the speed to a local variable to avoid race conditions when traffic
+    // data is updated by background process
+    auto bits = (speeds + directed_edge_offset)->bits;
+    return TrafficSpeed(bits);
   }
 
   // Returns true if this tile is valid or not
