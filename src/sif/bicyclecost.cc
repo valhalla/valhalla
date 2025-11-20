@@ -153,11 +153,11 @@ constexpr float kCycleLaneTransitionFactor[] = {
     1.0f,  // No shoulder or cycle lane
     0.5f,  // No shoulder, shared cycle lane
     0.25f, // No shoulder, dedicated cycle lane
-    0.1f,  // No shoulder, separated cycle lane
+    1.0f,  // No shoulder, separated cycle lane
     0.4f,  // Shoulder, no cycle lane
     0.5f,  // Shoulder, shared cycle lane
     0.25f, // Shoulder, dedicated cycle lane
-    0.1f   // Shoulder, separated cycle lane
+    0.8f   // Shoulder, separated cycle lane
 };
 
 // Factor when transitioning onto a living street
@@ -511,11 +511,15 @@ BicycleCost::BicycleCost(const Costing& costing)
   cyclelane_factor_[0] = 1.0f;                          // No shoulder or cycle lane
   cyclelane_factor_[1] = 0.9f + use_roads_ * 0.05f;     // No shoulder, shared cycle lane
   cyclelane_factor_[2] = 0.4f + use_roads_ * 0.45f;     // No shoulder, dedicated cycle lane
-  cyclelane_factor_[3] = 0.15f + use_roads_ * 0.6f;     // No shoulder, separated cycle lane
+  cyclelane_factor_[3] = 1.5f - use_roads_;             // No shoulder, separated cycle lane
+                                                        //    penalize the road so the separate
+                                                        //    cycleway is used
   cyclelane_factor_[4] = 0.7f + use_roads_ * 0.2f;      // Shoulder, no cycle lane
   cyclelane_factor_[5] = 0.9f + use_roads_ * 0.05f;     // Shoulder, shared cycle lane
   cyclelane_factor_[6] = 0.4f + use_roads_ * 0.45f;     // Shoulder, dedicated cycle lane
-  cyclelane_factor_[7] = 0.15f + use_roads_ * 0.6f;     // Shoulder, separated cycle lane
+  cyclelane_factor_[7] = 1.5f - use_roads_;             // Shoulder, separated cycle lane
+                                                        //    penalize the road so the separate
+                                                        //    cycleway is used
   path_cyclelane_factor_[0] = 0.2f + use_roads_;        // Share path with pedestrians
   path_cyclelane_factor_[1] = 0.2f + use_roads_;        // Share path with pedestrians
   path_cyclelane_factor_[2] = 0.1f + use_roads_ * 0.9f; // Segregated lane from pedestrians
@@ -697,6 +701,9 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // stress) and the weighted grade penalty for the edge.
   float factor =
       1.0f + grade_penalty[edge->weighted_grade()] + (accommodation_factor * roadway_stress);
+
+  // Update factor based on edge use (increases impact of use_roads).
+  factor += edge->is_road() ? 0.5f - use_roads_ : -0.5f + use_roads_;
 
   // If surface is worse than the minimum we add a surface factor
   if (edge->surface() >= minimal_surface_penalized_) {
