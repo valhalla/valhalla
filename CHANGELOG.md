@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: Clamp grades on bridges and tunnels. [#5728](https://github.com/valhalla/valhalla/pull/5728)
 * **Enhancement**
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
    * CHANGED: Get rid of temporary std::vector in GraphTile::GetRestrictions [#5688](https://github.com/valhalla/valhalla/pull/5688)
