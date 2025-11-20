@@ -787,7 +787,8 @@ public:
     float partial_live_pct = 0;
     if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
-      // it is important to copy the speed to a local variable to avoid race conditions when traffic data is updated by background process
+      // it is important to copy the speed to a local variable to avoid race conditions when traffic
+      // data is updated by background process
       auto volatile live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
       if (live_speed.speed_valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
