@@ -186,11 +186,14 @@ protected:
    * @param  options     the request options to check for the position along origin and destination
    *                     edges
    */
-  void CheckForwardConnections(const uint32_t source,
-                               const sif::BDEdgeLabel& pred,
-                               const uint32_t n,
-                               baldr::GraphReader& graphreader,
-                               const valhalla::Options& options);
+
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
+  void CheckConnections(const uint32_t source,
+                        const sif::BDEdgeLabel& pred,
+                        const uint32_t n,
+                        baldr::GraphReader& graphreader,
+                        const valhalla::Options& options);
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
@@ -213,22 +216,6 @@ protected:
                    uint32_t& shortcuts,
                    const baldr::graph_tile_ptr& tile,
                    const baldr::TimeInfo& time_info);
-
-  /**
-   * Check if the edge on the backward search connects to a reached edge
-   * on the reverse search tree.
-   * @param  target      target index.
-   * @param  pred        Edge label of the predecessor.
-   * @param  n           Iteration counter.
-   * @param  graphreader the graph reader instance
-   * @param  options     the request options to check for the position along origin and destination
-   *                     edges
-   */
-  void CheckReverseConnections(const uint32_t target,
-                               const sif::BDEdgeLabel& pred,
-                               const uint32_t n,
-                               baldr::GraphReader& graphreader,
-                               const valhalla::Options& options);
 
   /**
    * Update status when a connection is found.
