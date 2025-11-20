@@ -43,7 +43,7 @@ struct ShortcutAccessRestriction {
   // TODO(nils): we could also contract over conditional restrictions with a bit more work:
   //   kTimeDenied is fine to just append all restrictions of the base edges, but kTimeAllowed
   //   will be harder, there we'll have to merge overlapping time periods
-  void update_nonconditional(const std::vector<AccessRestriction>&& other_restrictions) {
+  void update_nonconditional(std::span<const AccessRestriction> other_restrictions) {
     for (const auto& new_ar : other_restrictions) {
       // update the modes for the edge attribute regardless
       if (new_ar.type() == AccessType::kTimedAllowed || new_ar.type() == AccessType::kTimedDenied ||
@@ -58,18 +58,6 @@ struct ShortcutAccessRestriction {
     }
   }
 };
-
-// only keeps access restrictions which can fail contraction
-void remove_nonconditional_restrictions(std::vector<AccessRestriction>& access_restrictions) {
-  access_restrictions.erase(std::remove_if(std::begin(access_restrictions),
-                                           std::end(access_restrictions),
-                                           [](const AccessRestriction& elem) {
-                                             return elem.type() != AccessType::kDestinationAllowed &&
-                                                    elem.type() != AccessType::kTimedAllowed &&
-                                                    elem.type() != AccessType::kTimedDenied;
-                                           }),
-                            std::end(access_restrictions));
-}
 
 // Simple structure to hold the 2 pair of directed edges at a node.
 // First edge in the pair is incoming and second is outgoing
@@ -121,17 +109,23 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
 
   // if there's conditional access restrictions, they must match; others we can safely contract over
   if (edge1->access_restriction() || edge2->access_restriction()) {
-    auto res1 = tile->GetAccessRestrictions(edge1 - tile->directededge(0), kVehicularAccess);
-    remove_nonconditional_restrictions(res1);
-    auto res2 = tile->GetAccessRestrictions(edge2 - tile->directededge(0), kVehicularAccess);
-    remove_nonconditional_restrictions(res2);
-    if (res1.size() != res2.size())
+    // Filter to keep only conditional restrictions
+    auto conditional_filter = [](const AccessRestriction& r) {
+      return r.type() == AccessType::kDestinationAllowed || r.type() == AccessType::kTimedAllowed ||
+             r.type() == AccessType::kTimedDenied;
+    };
+
+    auto res1 = tile->GetAccessRestrictions(edge1 - tile->directededge(0), kVehicularAccess) |
+                std::views::filter(conditional_filter);
+    auto res2 = tile->GetAccessRestrictions(edge2 - tile->directededge(0), kVehicularAccess) |
+                std::views::filter(conditional_filter);
+
+    auto comparator = [](const AccessRestriction& a, const AccessRestriction& b) {
+      return a.type() == b.type() && a.modes() == b.modes() && a.value() == b.value();
+    };
+
+    if (!std::ranges::equal(res1, res2, comparator))
       return false;
-    for (size_t i = 0; i < res1.size(); ++i) {
-      if (res1[i].type() != res2[i].type() || res1[i].modes() != res2[i].modes() ||
-          res1[i].value() != res2[i].value())
-        return false;
-    }
   }
 
   return true;
@@ -355,7 +349,7 @@ void ConnectEdges(GraphReader& reader,
   average_density += directededge->length() * directededge->density();
 
   // Preserve the most restrictive access restrictions
-  access_restrictions.update_nonconditional(tile->GetAccessRestrictions(edgeid.id(), kAllAccess));
+  access_restrictions.update_nonconditional(tile->GetAccessRestrictions(edgeid.id()));
 
   // Update the end node
   endnode = directededge->endnode();
@@ -443,8 +437,9 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
 
       // store all access_restrictions of the base edge: non-conditional ones will be updated while
       // contracting, conditional ones are breaking contraction and are safe to simply copy
+      auto restrictions_view = tile->GetAccessRestrictions(edge_id.id());
       ShortcutAccessRestriction access_restrictions{
-          tile->GetAccessRestrictions(edge_id.id(), kAllAccess)};
+          std::vector<AccessRestriction>(restrictions_view.begin(), restrictions_view.end())};
 
       // Connect edges to the shortcut while the end node is marked as
       // contracted (contains edge pairs in the shortcut info).
@@ -686,7 +681,7 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id());
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                                res.type(), res.modes(), res.value(),
