@@ -472,10 +472,9 @@ void validate(
     // Write the bins to it
     if (tile->header()->graphid().level() == TileHierarchy::levels().back().level) {
       auto reloaded = GraphTile::Create(graph_reader.tile_dir(), tile_id);
-      set_density
-          // Sort bins using a custom comparator in each vector of the array to make tile generation
-          // deterministic
-          for (auto& bin : bins) {
+      // Sort bins using a custom comparator in each vector of the array to make tile generation
+      // deterministic
+      for (auto& bin : bins) {
         std::sort(bin.begin(), bin.end(),
                   [](std::pair<GraphId, DiscretizedBoundingCircle>& a,
                      std::pair<GraphId, DiscretizedBoundingCircle>& b) {
