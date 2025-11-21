@@ -725,8 +725,6 @@ struct bin_handler_t {
     auto reservation = std::max(max_reach_limit, static_cast<decltype(max_reach_limit)>(1));
     directed_reaches.reserve(reservation * 1024);
 
-    // Perform bin search - keep the points sorted at each round such that unfinished ones
-    // are at the front of the sorted list
     std::sort(pps.begin(), pps.end());
     while (pps.front().has_bin()) {
       auto range = find_best_range(pps);
@@ -734,7 +732,6 @@ struct bin_handler_t {
       std::sort(pps.begin(), pps.end());
     }
 
-    // Finalize and return results
     return finalize();
   }
 
@@ -846,7 +843,6 @@ private:
 namespace valhalla {
 namespace loki {
 
-// Define bin_handler_t as a member type
 struct Search::bin_handler_t : public ::bin_handler_t {
   bin_handler_t(vb::GraphReader& reader) : ::bin_handler_t(reader) {
   }

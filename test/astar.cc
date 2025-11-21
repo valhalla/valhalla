@@ -1560,7 +1560,8 @@ TEST(Astar, BiDirTrivial) {
   set_hierarchy_limits(cost, true);
 
   // Loki
-  const auto projections = vk::Search(locations, graph_reader, cost);
+  vk::Search searcher(graph_reader);
+  const auto projections = searcher.search(locations, cost);
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {
     ASSERT_NO_THROW(
