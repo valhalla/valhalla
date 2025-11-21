@@ -221,7 +221,7 @@ public:
                                ", edge count: " + std::to_string(header->directed_edge_count));
 
     // TODO: this should be atomic on both x86 and arm, but ideally we should use something like
-    // std::atomic_ref<uint64_t>, but it is not support by all compilers on CI yet
+    // std::atomic_ref<uint64_t>, but it is not supported by all compilers on CI yet
     uint64_t bits = (speeds + directed_edge_offset)->bits;
     return TrafficSpeed(bits);
   }
