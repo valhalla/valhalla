@@ -18,10 +18,16 @@ constexpr unsigned int kRadiiCount = 1 << kRadiiBits;
 constexpr uint32_t kMaxOffsetValue = (1 << kCoordinateBits) - 1;
 
 constexpr std::array<uint16_t, kRadiiCount> kBoundingCircleRadii =
-    {2,   4,   5,   7,   10,  13,  15,   18,   20,   25,   30,   35,   40,   45,   50,   55,
-     60,  65,  70,  75,  80,  85,  90,   95,   100,  110,  120,  130,  140,  150,  160,  170,
-     180, 190, 200, 210, 220, 230, 240,  250,  275,  300,  325,  350,  375,  400,  500,  550,
-     600, 650, 700, 750, 800, 900, 1000, 1100, 1200, 1300, 1500, 1750, 2000, 2500, 3000, 4000};
+    {1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  13,  15,  17,   18,   20,   23,
+     25,  27,  30,  35,  40,  43,  45,  50,  55,  60,  65,  70,  75,   80,   85,   90,
+     95,  100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210,  220,  230,  240,
+     250, 275, 300, 325, 350, 375, 400, 500, 550, 600, 700, 800, 1000, 1500, 2000, 2500};
+// Optimal
+// constexpr std::array<uint16_t, kRadiiCount> kBoundingCircleRadii =
+//     {3,   5,   7,   10,  12,  15,   18,   21,   24,   27,   30,   33,   36,   39,   43,   47,
+//      51,  55,  60,  65,  70,  76,   82,   89,   96,   104,  113,  123,  133,  143,  155,  167,
+//      181, 195, 211, 228, 246, 266,  288,  311,  336,  365,  396,  430,  465,  507,  556,  611,
+//      668, 730, 801, 890, 990, 1108, 1251, 1418, 1625, 1853, 2115, 2384, 2782, 3104, 3512, 4000};
 
 constexpr double kMaxOffsetMeters =
     0.05 * midgard::kMetersPerDegreeLat / 2 + kBoundingCircleRadii.back();
@@ -36,7 +42,7 @@ struct DiscretizedBoundingCircle {
    * to the bin (i.e. this edge cannot be possibly be intersecting the bin)
    */
   DiscretizedBoundingCircle()
-      : y_offset(kMaxOffsetValue), x_offset(kMaxOffsetValue), radius_index(0){};
+      : y_offset(kMaxOffsetValue), x_offset(kMaxOffsetValue), radius_index(0) {};
 
   /**
    * Constructor.
