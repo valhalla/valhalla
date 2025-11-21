@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 
@@ -16,38 +17,9 @@
 
 namespace {
 
-inline std::tm* get_gmtime(const std::time_t* time, std::tm* tm) {
-#ifdef _WIN32
-  // MSVC gmtime() already returns tm allocated in thread-local storage
-  if (gmtime_s(tm, time) == 0)
-    return tm;
-  else
-    return nullptr;
-#else
-  return gmtime_r(time, tm);
-#endif
-}
-
-// returns formatted to: 'year/mo/dy hr:mn:sc.xxxxxx'
-std::string TimeStamp() {
-  // get the time
-  std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
-  std::time_t tt = std::chrono::system_clock::to_time_t(tp);
-  std::tm gmt{};
-  get_gmtime(&tt, &gmt);
-  std::chrono::duration<double> fractional_seconds =
-      (tp - std::chrono::system_clock::from_time_t(tt)) + std::chrono::seconds(gmt.tm_sec);
-  // format the string
-  std::string buffer("year/mo/dy hr:mn:sc.xxxxxx0");
-  [[maybe_unused]] int ret =
-      snprintf(&buffer.front(), buffer.length(), "%04d/%02d/%02d %02d:%02d:%09.6f",
-               gmt.tm_year + 1900, gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min,
-               fractional_seconds.count());
-  assert(ret == static_cast<int>(buffer.length()) - 1);
-
-  // Remove trailing null terminator added by snprintf.
-  buffer.pop_back();
-  return buffer;
+// append current timestamp formatted as: "year-mo-dy hr:mn:sc.xxxxxxxxx"
+void AppendTimeStamp(std::string& buffer) {
+  std::format_to(std::back_inserter(buffer), "{0:%F} {0:%T}", std::chrono::utc_clock::now());
 }
 
 // the Log levels we support
@@ -149,7 +121,7 @@ public:
 #else
     std::string output;
     output.reserve(message.length() + 64);
-    output.append(TimeStamp());
+    AppendTimeStamp(output);
     output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
@@ -179,7 +151,7 @@ class StdErrLogger : public StdOutLogger {
 #else
     std::string output;
     output.reserve(message.length() + 64);
-    output.append(TimeStamp());
+    AppendTimeStamp(output);
     output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
@@ -258,7 +230,7 @@ public:
 
     std::string output;
     output.reserve(message.length() + 64);
-    output.append(TimeStamp());
+    AppendTimeStamp(output);
     output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
