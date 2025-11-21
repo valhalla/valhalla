@@ -139,8 +139,7 @@ struct TrafficSpeed {
   constexpr TrafficSpeed(const uint64_t bits) : bits{bits} {
   }
 
-  constexpr valhalla::baldr::TrafficSpeed&
-  valhalla::baldr::TrafficSpeed::operator=(const valhalla::baldr::TrafficSpeed& other) {
+  constexpr valhalla::baldr::TrafficSpeed& operator=(const valhalla::baldr::TrafficSpeed& other) {
     bits = other.bits;
     return *this;
   }
