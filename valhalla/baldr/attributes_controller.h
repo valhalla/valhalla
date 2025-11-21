@@ -199,15 +199,15 @@ struct AttributesController {
     return enabled_categories.find(category) != enabled_categories.end();
   }
 
-private:
-  std::unordered_map<std::string_view, bool> attributes;
-
-  std::unordered_set<std::string_view> enabled_categories;
-
   /**
    * Disable all of the attributes.
    */
   void disable_all();
+
+private:
+  std::unordered_map<std::string_view, bool> attributes;
+
+  std::unordered_set<std::string_view> enabled_categories;
 };
 
 } // namespace baldr
