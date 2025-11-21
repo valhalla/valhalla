@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("LOCATIONS.TXT");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, &config, "loki.logging"))
+    if (!parse_common_args(program, options, result, &config, "loki.logging", true))
       return EXIT_SUCCESS;
 
     if (!result.count("input_files")) {
