@@ -27,6 +27,7 @@
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
 
+#include <ranges>
 #include <span>
 
 #ifndef ENABLE_THREAD_SAFE_TILE_REF_COUNT
@@ -38,10 +39,94 @@
 #include <iterator>
 #include <list>
 #include <memory>
-#include <span>
 
 namespace valhalla {
 namespace baldr {
+
+class ComplexRestrictionView : public std::ranges::view_interface<ComplexRestrictionView> {
+public:
+  class iterator {
+  public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ComplexRestriction;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const ComplexRestriction*;
+    using reference = const ComplexRestriction&;
+
+    iterator() = default;
+
+    iterator(const char* data, size_t size, GraphId id, uint64_t modes, bool forward)
+        : data_(data), size_(size), id_(id), modes_(modes), forward_(forward), offset_(0) {
+      // advance to the next restriction that matches the id and modes
+      advance_to_next();
+    }
+
+    const ComplexRestriction& operator*() const {
+      return *reinterpret_cast<const ComplexRestriction*>(data_ + offset_);
+    }
+
+    iterator& operator++() {
+      const auto* cr = reinterpret_cast<const ComplexRestriction*>(data_ + offset_);
+      offset_ += cr->SizeOf();
+      advance_to_next();
+      return *this;
+    }
+
+    iterator operator++(int) {
+      iterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    friend bool operator==(const iterator& a, const iterator& b) {
+      return a.data_ == b.data_ && a.offset_ == b.offset_;
+    }
+
+  private:
+    friend class ComplexRestrictionView;
+
+    void advance_to_next() {
+      while (offset_ < size_) {
+        const auto* cr = reinterpret_cast<const ComplexRestriction*>(data_ + offset_);
+        if ((forward_ ? cr->to_graphid() : cr->from_graphid()) == id_ && (cr->modes() & modes_)) {
+          return;
+        }
+        offset_ += cr->SizeOf();
+      }
+    }
+
+    const char* data_ = nullptr;
+    size_t size_ = 0;
+    GraphId id_;
+    uint64_t modes_ = 0;
+    bool forward_ = false;
+    size_t offset_ = 0;
+  };
+
+  ComplexRestrictionView() = default;
+
+  ComplexRestrictionView(const char* data, size_t size, GraphId id, uint64_t modes, bool forward)
+      : data_(data), size_(size), id_(id), modes_(modes), forward_(forward) {
+  }
+
+  iterator begin() const {
+    return iterator(data_, size_, id_, modes_, forward_);
+  }
+
+  iterator end() const {
+    iterator it;
+    it.offset_ = size_;
+    it.data_ = data_;
+    return it;
+  }
+
+private:
+  const char* data_ = nullptr;
+  size_t size_ = 0;
+  GraphId id_;
+  uint64_t modes_ = 0;
+  bool forward_ = false;
+};
 
 const std::string SUFFIX_NON_COMPRESSED = ".gph";
 const std::string SUFFIX_COMPRESSED = ".gph.gz";
@@ -415,11 +500,11 @@ public:
    * @param   forward - do we want the restrictions in reverse order?
    * @param   id - edge id
    * @param   modes - access modes
-   * @return  Returns the vector of complex restrictions in the order requested
+   * @return  Returns a view of complex restrictions in the order requested
    *          based on the id and modes.
    */
-  std::vector<ComplexRestriction*>
-  GetRestrictions(const bool forward, const GraphId id, const uint64_t modes) const;
+  ComplexRestrictionView
+  GetComplexRestrictions(const bool forward, const GraphId id, const uint64_t modes) const;
 
   /**
    * Convenience method to get the directed edges originating at a node.
@@ -628,12 +713,42 @@ public:
    * Convenience method to get the access restrictions for an edge given the
    * edge Id.
    * @param   edgeid  Directed edge Id.
-   * @param   access  Access.  Used to obtain the restrictions for the access
-   *                   that we are interested in (see graphconstants.h)
    * @return  Returns a list (vector) of AccessRestrictions.
    */
-  std::vector<AccessRestriction> GetAccessRestrictions(const uint32_t edgeid,
-                                                       const uint32_t access) const;
+  std::span<const AccessRestriction> GetAccessRestrictions(const uint32_t edgeid) const;
+
+  /**
+   * Convenience method to get the access restrictions for an edge given the
+   * edge Id.
+   * @param   edgeid  Directed edge Id.
+   * @param   access  Access.  Used to obtain the restrictions for the access
+   *                   that we are interested in (see graphconstants.h)
+   * @return  Returns a lazy filtered view of AccessRestrictions.
+   */
+  auto GetAccessRestrictions(const uint32_t edgeid, const uint32_t access) const {
+    auto all_restrictions = GetAccessRestrictions(edgeid);
+    return all_restrictions |
+           std::views::filter([access](const auto& r) { return r.modes() & access; });
+  }
+
+  /**
+   * Get a specific access restriction by index from the filtered results.
+   * @param   edgeid  Directed edge Id.
+   * @param   access  Access mode filter.
+   * @param   index   Index of the restriction in the filtered results.
+   * @return  Pointer to the AccessRestriction if found, nullptr otherwise.
+   */
+  const AccessRestriction* GetAccessRestrictionAtIndex(const uint32_t edgeid,
+                                                       const uint32_t access,
+                                                       const size_t index) const {
+    auto restrictions = GetAccessRestrictions(edgeid, access);
+    auto it = std::ranges::begin(restrictions);
+    auto end = std::ranges::end(restrictions);
+
+    for (size_t i = 0; i < index && it != end; ++i, ++it) {}
+
+    return (it != end) ? &(*it) : nullptr;
+  }
 
   /**
    * Get an iterable list of GraphIds given a bin in the tile

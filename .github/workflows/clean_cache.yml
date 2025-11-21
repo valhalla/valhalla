@@ -2,9 +2,15 @@ name: Clear S3 cache (master on workflow_dispatch)
 
 on:
   workflow_dispatch:
+    inputs:
+      clear_all:
+        type: boolean
+        description: "Clear all master ccaches (defaults to only debug build)"
+        required: false
+        default: false
   schedule:
     # every first of the month
-    - cron: "0 0 1 * *"
+    - cron: "0 0 1,15 * *"
   pull_request:
     branches:
       - master
@@ -61,7 +67,10 @@ jobs:
           else
             branch="${{ github.ref_name }}"
           fi
-          mc find hetzner/gha-cache --path "ccache-debug-linux-x86_64-${branch}*" --exec "mc rm --force {}"
-          mc find hetzner/gha-cache --path "ccache-release-linux-x86_64-${branch}*" --exec "mc rm --force {}"
-          mc find hetzner/gha-cache --path "ccache-release-linux-aarch64-${branch}*" --exec "mc rm --force {}"
-          mc find hetzner/gha-cache --path "ccache-osx-${branch}*" --exec "mc rm --force {}"
+          ./mc find hetzner/gha-cache --path "ccache-debug-linux-x86_64-${branch}*" --exec "mc rm --force {}"
+          # the others hardly accumulate, can be done manually every now and then
+          if [[ ${{ github.event.inputs.clear_all == 'true' }} ]]; then
+            ./mc find hetzner/gha-cache --path "ccache-release-linux-x86_64-${branch}*" --exec "mc rm --force {}"
+            ./mc find hetzner/gha-cache --path "ccache-release-linux-aarch64-${branch}*" --exec "mc rm --force {}"
+            ./mc find hetzner/gha-cache --path "ccache-osx-${branch}*" --exec "mc rm --force {}"
+          fi

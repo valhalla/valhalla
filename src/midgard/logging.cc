@@ -1,4 +1,5 @@
 #include "midgard/logging.h"
+#include "midgard/util.h"
 
 #include <cassert>
 #include <chrono>
@@ -232,7 +233,7 @@ public:
 
     if (archive_config != config.end() && !archive_config->second.empty()) {
       try {
-        max_archived_files = std::stoi(archive_config->second);
+        max_archived_files = midgard::to_int(archive_config->second);
         if (max_archived_files < 0) {
           throw std::runtime_error("max_archived_files must be greater than 0");
         }

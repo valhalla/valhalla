@@ -124,7 +124,10 @@ struct candidate_t {
 
   GraphId edge_id;
   const DirectedEdge* edge{};
-  std::shared_ptr<const EdgeInfo> edge_info;
+
+  // not actually optional, EdgeInfo has no default constructor, but we need to be able to initialize
+  // it
+  std::optional<EdgeInfo> edge_info;
 
   graph_tile_ptr tile;
 
@@ -574,8 +577,8 @@ struct bin_handler_t {
       // a trivial half plane test as maybe a single dot product and comparison?
 
       // get some shape of the edge
-      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
-      auto shape = edge_info->lazy_shape();
+      auto edge_info = tile->edgeinfo(edge);
+      auto shape = edge_info.lazy_shape();
       PointLL v;
       if (!shape.empty()) {
         v = shape.pop();
@@ -639,7 +642,7 @@ struct bin_handler_t {
         if (batch->empty()) {
           c_itr->edge = edge;
           c_itr->edge_id = edge_id;
-          c_itr->edge_info = edge_info;
+          c_itr->edge_info = std::move(edge_info);
           c_itr->tile = tile;
           batch->emplace_back(std::move(*c_itr));
           continue;
@@ -661,7 +664,7 @@ struct bin_handler_t {
         if (in_radius || better) {
           c_itr->edge = edge;
           c_itr->edge_id = edge_id;
-          c_itr->edge_info = edge_info;
+          c_itr->edge_info = std::move(edge_info);
           c_itr->tile = tile;
           // the last one wasnt in the radius so replace it with this one because its better or is
           // in the radius
