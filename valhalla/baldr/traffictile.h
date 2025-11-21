@@ -11,6 +11,7 @@
 #include <valhalla/baldr/graphmemory.h>
 #include <valhalla/valhalla.h>
 
+#include <atomic>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -219,9 +220,9 @@ public:
                                std::to_string(directed_edge_offset) +
                                ", edge count: " + std::to_string(header->directed_edge_count));
 
-    // it is important to copy the speed to a local variable to avoid race conditions when traffic
-    // data is updated by background process
-    auto bits = (speeds + directed_edge_offset)->bits;
+    std::atomic_ref<const uint64_t> atomic_bits((speeds + directed_edge_offset)->bits);
+    // Use atomic load to ensure we get a consistent 64-bit value without tearing
+    auto bits = atomic_bits.load(std::memory_order_relaxed);
     return TrafficSpeed(bits);
   }
 
