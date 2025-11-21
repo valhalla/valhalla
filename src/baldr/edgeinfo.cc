@@ -369,6 +369,7 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
             // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
             auto contents = get_tagged_value(value);
             if (contents) {
+              // remove the leading TaggedValue byte from the content
               tag_cache_.emplace(tv, contents->substr(1));
             }
           } catch (const std::logic_error& arg) {
