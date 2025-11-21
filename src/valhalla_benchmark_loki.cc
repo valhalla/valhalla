@@ -1,5 +1,7 @@
 #include "argparse_utils.h"
 #include "loki/search.h"
+#include "meili/map_matcher.h"
+#include "meili/map_matcher_factory.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "sif/costfactory.h"
@@ -78,6 +80,64 @@ valhalla::sif::cost_ptr_t create_costing() {
   return valhalla::sif::CostFactory{}.Create(options);
 }
 
+void work_meili(const boost::property_tree::ptree& config, std::promise<results_t>& promise) {
+  // lambda to do the current job
+  // auto costing = create_costing();
+  std::shared_ptr<valhalla::baldr::GraphReader> reader(
+      new valhalla::baldr::GraphReader(config.get_child("mjolnir")));
+  valhalla::meili::MapMatcherFactory factory(config, reader);
+  valhalla::Options options;
+  valhalla::Costing::Type costing;
+  if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
+    options.set_costing_type(costing);
+  } else {
+    options.set_costing_type(valhalla::Costing::none_);
+  }
+  (*options.mutable_costings())[costing];
+  auto* map_matcher = factory.Create(options);
+
+  auto search = [&reader, &costing, &map_matcher](const job_t& job) {
+    // so that we dont benefit from cache coherency
+    reader->Clear();
+    std::pair<result_t, result_t> result;
+    bool cached = false;
+    std::vector<valhalla::meili::Measurement> trace;
+    for (const auto& l : job) {
+      trace.emplace_back(valhalla::meili::Measurement{l.latlng_, 5, static_cast<float>(l.radius_), 0,
+                                                      valhalla::baldr::Location::StopType::VIA});
+    }
+    for (auto* r : {&result.first, &result.second}) {
+      auto start = std::chrono::high_resolution_clock::now();
+      try {
+        // TODO: actually save the result
+        // auto result = valhalla::loki::Search(job, reader, costing);
+        auto result = map_matcher->AppendMeasurements(trace);
+        auto end = std::chrono::high_resolution_clock::now();
+        (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job,
+                        cached};
+      } catch (...) {
+        auto end = std::chrono::high_resolution_clock::now();
+        (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), false,
+                        job, cached};
+      }
+      cached = true;
+    }
+    return result;
+  };
+
+  // pull work off and do it
+  results_t results;
+  size_t i;
+  while ((i = job_index.fetch_add(1)) < jobs.size()) {
+    auto result = search(jobs[i]);
+    results.emplace(std::move(result.first));
+    results.emplace(std::move(result.second));
+  }
+
+  // return the statistics
+  promise.set_value(std::move(results));
+}
+
 void work(const boost::property_tree::ptree& config, std::promise<results_t>& promise) {
   // lambda to do the current job
   auto costing = create_costing();
@@ -121,10 +181,11 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 int main(int argc, char** argv) {
   const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
-  size_t batch, isolated, radius;
+  size_t batch, isolated, radius, cutoff;
   bool extrema = false;
   std::vector<std::string> input_files;
   boost::property_tree::ptree config;
+  bool append_measurements = false;
 
   try {
     // clang-format off
@@ -145,7 +206,9 @@ int main(int argc, char** argv) {
       ("e,extrema", "Show the input locations of the extrema for a given statistic", cxxopts::value<bool>(extrema)->default_value("false"))
       ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>(isolated)->default_value("50"))
       ("r,radius", "How many meters to search away from the input location", cxxopts::value<size_t>(radius)->default_value("0"))
+      ("u,cutoff", "How many meters to search away from the input location (hard)", cxxopts::value<size_t>(cutoff)->default_value("35000"))
       ("costing", "Which costing model to use.", cxxopts::value<std::string>(costing_str)->default_value("auto"))
+      ("t", "Whether to call AppendMeasurements instead of loki", cxxopts::value<bool>(append_measurements))
       ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
     // clang-format on
 
@@ -189,6 +252,7 @@ int main(int argc, char** argv) {
       valhalla::baldr::Location loc(ll);
       loc.min_inbound_reach_ = loc.min_outbound_reach_ = isolated;
       loc.radius_ = radius;
+      loc.search_cutoff_ = cutoff;
       job.emplace_back(std::move(loc));
       if (job.size() == batch) {
         jobs.emplace_back(std::move(job));
@@ -206,7 +270,11 @@ int main(int argc, char** argv) {
   const auto num_threads = config.get<uint32_t>("mjolnir.concurrency");
   std::vector<std::promise<results_t>> pool_results(num_threads);
   for (size_t i = 0; i < num_threads; ++i) {
-    pool.emplace_back(work, std::cref(config), std::ref(pool_results[i]));
+    if (!append_measurements) {
+      pool.emplace_back(work, std::cref(config), std::ref(pool_results[i]));
+    } else {
+      pool.emplace_back(work_meili, std::cref(config), std::ref(pool_results[i]));
+    }
   }
 
   // let the threads finish up
