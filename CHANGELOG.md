@@ -6,6 +6,8 @@
    * CHANGED: Get rid of temporary std::vector in GraphTile::GetRestrictions [#5688](https://github.com/valhalla/valhalla/pull/5688)
    * CHANGED: Use std::from_chars instead of std::stoi/stof/stod [#5704](https://github.com/valhalla/valhalla/pull/5704)
    * CHANGED: Avoid dynamic allocation in loki::Search [#5724](https://github.com/valhalla/valhalla/pull/5724)
+   * CHANGED: Get rid of temporary vector in GraphTile::GetAccessRestrictions [#5689](https://github.com/valhalla/valhalla/pull/5689)
+   * ADDED: Bounding circles for faster loki [#5103](https://github.com/valhalla/valhalla/pull/5103)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
@@ -30,7 +32,6 @@
    * CHANGED: Optimise CostMatrix::ReachedMap [#5690](https://github.com/valhalla/valhalla/pull/5690)
    * ADDED: Make possible to use `-DCMAKE_UNITY_BUILD=ON` [#5691](https://github.com/valhalla/valhalla/pull/5691)
    * CHANGED: make alternative_iterations_delta configurable [#5679](https://github.com/valhalla/valhalla/pull/5679)
-   * ADDED: Bounding circles for faster loki [#5103](https://github.com/valhalla/valhalla/pull/5103)
    * ADDED: `flow_sources` expansion property [#5697](https://github.com/valhalla/valhalla/pull/5697)
    * CHANGED: Replace GDAL with libgeotiff, re-enable support for bindings [#5680](https://github.com/valhalla/valhalla/pull/5680)
    * ADDED: Support for loading tiles from a remote tarball with optional HTTP basic auth [#5467](https://github.com/valhalla/valhalla/pull/5467)
