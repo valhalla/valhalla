@@ -681,8 +681,8 @@ template <typename numeric_t> bool is_valid(numeric_t value) {
  */
 template <class container_t>
 std::tuple<PointLL, double> get_bounding_circle(const container_t& shape);
-  
- /* Enumerate over a range, providing both index and value.
+
+/* Enumerate over a range, providing both index and value.
  * This is a C++20-compatible alternative to C++23's std::views::enumerate.
  *
  * @param range The range to enumerate over
