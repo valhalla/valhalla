@@ -186,15 +186,16 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     auto reader_getter = [&]() { return baldr::LimitedGraphReader(graphreader); };
     if (FORWARD) {
       transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
-      newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time, flow_sources) +
+      newcost = pred.cost() +
+                costing_->EdgeCost(directededge, edgeid, tile, offset_time, flow_sources) +
                 transition_cost;
     } else {
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                           opp_pred_edge, t2, pred.edgeid(), reader_getter,
                                           pred.has_measured_speed(), pred.internal_turn());
-      newcost =
-          pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources) + transition_cost;
+      newcost = pred.cost() + costing_->EdgeCost(opp_edge, oppedgeid, t2, offset_time, flow_sources) +
+                transition_cost;
     }
     uint32_t path_dist = pred.path_distance() + directededge->length();
 
@@ -359,8 +360,8 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
                                  : bdedgelabels_[pred.predecessor()].edgeid();
       expansion_callback_(graphreader, pred.edgeid(), prev_pred, "dijkstras",
                           Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
-                          pred.cost().cost,
-                          static_cast<Expansion_ExpansionType>(expansion_direction));
+                          pred.cost().cost, static_cast<Expansion_ExpansionType>(expansion_direction),
+                          kNoFlowMask);
     }
   }
 }
@@ -598,7 +599,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
         continue;
       }
 
-      Cost c = pc->EdgeCost(directededge, tile);
+      Cost c = pc->EdgeCost(directededge, edgeid, tile);
       c.cost *= pc->GetModeFactor();
       newcost += c;
     }
@@ -735,7 +736,7 @@ void Dijkstras::ComputeMultiModal(
         expansion_callback_(graphreader, pred.edgeid(), pred_edge, "multimodal",
                             valhalla::Expansion_EdgeStatus_reached, pred.cost().secs,
                             pred.path_distance(), pred.cost().cost,
-                            valhalla::Expansion_ExpansionType_forward);
+                            valhalla::Expansion_ExpansionType_forward, kNoFlowMask);
       }
       // Expand from the end node of the predecessor edge.
       ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,
@@ -796,8 +797,9 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, time_info, flow_sources) *
-                  (1.0f - edge.percent_along());
+      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                            edge.percent_along(), 1.f);
+
       // Get path distance
       auto path_dist = directededge->length() * (1 - edge.percent_along());
 
@@ -886,8 +888,8 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       uint8_t flow_sources;
-      Cost cost =
-          costing->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();
+      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources, 0.f,
+                                            edge.percent_along());
       // Get the path distance
       auto path_dist = directededge->length() * edge.percent_along();
 
@@ -976,8 +978,7 @@ void Dijkstras::SetOriginLocationsMultiModal(
       }
 
       // Get cost
-      Cost cost = costing->EdgeCost(directededge, endtile) * (1.0f - edge.percent_along());
-
+      Cost cost = costing->PartialEdgeCost(directededge, edgeid, tile, edge.percent_along(), 1.0f);
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       cost.cost += edge.distance();

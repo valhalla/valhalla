@@ -214,7 +214,8 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
     }
     std::vector<std::vector<PathInfo>> paths;
-    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, options, paths);
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, options, options.use_timestamps(),
+                                      false, paths);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
