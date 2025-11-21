@@ -32,7 +32,8 @@
       "allow_alt_name": false,
       "use_urban_tag": false,
       "use_rest_area": false,
-      "scan_tar": false
+      "scan_tar": false,
+      "build_bounding_circles": true
     },
     "logging": {
       "type": "std_out",
