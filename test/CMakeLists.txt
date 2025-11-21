@@ -8,7 +8,9 @@
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # don't install googletest
-set(INSTALL_GTEST OFF)
+# unless you want the test library
+set(INSTALL_GTEST ${INSTALL_TEST_LIB})
+
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
 
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
@@ -18,15 +20,19 @@ set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
 # common things that the tests need
 find_package(Threads)
-set(TEST_SRCS test.h test.cc)
+set(TEST_SRCS test.cc)
+set(TEST_HDRS test.h)
 if(ENABLE_DATA_TOOLS)
-  list(APPEND TEST_SRCS gurka/gurka.h gurka/gurka.cc)
+  list(APPEND TEST_SRCS gurka/gurka.cc)
+  list(APPEND TEST_HDRS gurka/gurka.h)
 endif()
 if(ENABLE_HTTP AND ENABLE_SERVICES)
-  list(APPEND TEST_SRCS tile_server.h tile_server.cc)
+  list(APPEND TEST_SRCS tile_server.cc)
+  list(APPEND TEST_HDRS tile_server.h)
 endif()
 add_library(valhalla_test
   ${TEST_SRCS}
+  ${TEST_HDRS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
   )
@@ -420,3 +426,15 @@ add_custom_target(tests DEPENDS ${tests} ${cost_tests} ${tyr_tests})
 set_target_properties(tests PROPERTIES FOLDER "Tests")
 add_subdirectory(gurka)
 add_subdirectory(scripts)
+
+# optionally install the test library as well
+if (INSTALL_TEST_LIB)
+  install(TARGETS valhalla_test
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT development)
+
+  install(FILES ${TEST_HDRS}
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
+    COMPONENT development)
+endif()
+
