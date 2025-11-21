@@ -44,7 +44,17 @@ struct EdgeAttribute {
   vtzero::index_value EdgesLayerBuilder::*key_member;
 
   using value_func_t = vtzero::encoded_property_value (*)(const baldr::DirectedEdge&,
-                                                          const baldr::EdgeInfo&);
+                                                          const baldr::EdgeInfo&,
+                                                          const volatile baldr::TrafficSpeed*);
+  value_func_t value_func;
+};
+
+struct EdgeId {
+  const char* key_name;
+  std::string_view attribute_flag;
+  vtzero::index_value EdgesLayerBuilder::*key_member;
+
+  using value_func_t = vtzero::encoded_property_value (*)(const uint32_t edge_id);
   value_func_t value_func;
 };
 
@@ -55,6 +65,29 @@ class EdgesLayerBuilder {
 public:
   explicit EdgesLayerBuilder(vtzero::tile_builder& tile,
                              const baldr::AttributesController& controller);
+
+  template <std::size_t N>
+  void set_attribute_values(const EdgeAttribute (&arr)[N],
+                            const AttributesController& controller,
+                            vtzero::linestring_feature_builder& feature,
+                            const baldr::DirectedEdge& edge,
+                            const baldr::EdgeInfo& edge_info,
+                            const volatile baldr::TrafficSpeed* live_speed) {
+    for (const auto& def : arr) {
+      if (controller(def.attribute_flag)) {
+        const auto key = this->*(def.key_member);
+        feature.add_property(key, def.value_func(edge, edge_info, live_speed));
+      }
+    }
+  }
+
+  template <std::size_t N>
+  void init_attribute_keys(const EdgeAttribute (&arr)[N], const AttributesController& controller) {
+    for (const auto& def : arr) {
+      if (controller(def.attribute_flag))
+        this->*(def.key_member) = layer_.add_key_without_dup_check(def.key_name);
+    }
+  }
 
   void add_feature(const std::vector<vtzero::point>& geometry,
                    baldr::GraphId forward_edge_id,
@@ -108,7 +141,6 @@ public:
   vtzero::index_value key_dismount_;
   vtzero::index_value key_use_sidepath_;
   vtzero::index_value key_density_;
-  vtzero::index_value key_named_;
   vtzero::index_value key_sidewalk_left_;
   vtzero::index_value key_sidewalk_right_;
   vtzero::index_value key_bss_connection_;
@@ -177,12 +209,590 @@ public:
   vtzero::index_value key_live_congestion3_rev_;
 };
 
+static constexpr EdgeAttribute kForwardEdgeAttributes[] = {
+    {
+        "speed:forward",
+        baldr::kEdgeSpeedFwd,
+        &EdgesLayerBuilder::key_speed_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.speed()));
+        },
+    },
+    {
+        "deadend:forward",
+        baldr::kEdgeDeadendFwd,
+        &EdgesLayerBuilder::key_deadend_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.deadend()));
+        },
+    },
+    {
+        "lanecount:forward",
+        baldr::kEdgeLaneCountFwd,
+        &EdgesLayerBuilder::key_lanecount_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.lanecount()));
+        },
+    },
+    {
+        "truck_speed:forward",
+        baldr::kEdgeTruckSpeedFwd,
+        &EdgesLayerBuilder::key_truck_speed_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.truck_speed()));
+        },
+    },
+    {
+        "traffic_signal:forward",
+        baldr::kEdgeSignalFwd,
+        &EdgesLayerBuilder::key_traffic_signal_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.traffic_signal()));
+        },
+    },
+    {
+        "stop_sign:forward",
+        baldr::kEdgeStopSignFwd,
+        &EdgesLayerBuilder::key_stop_sign_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.stop_sign()));
+        },
+    },
+    {
+        "yield_sign:forward",
+        baldr::kEdgeYieldFwd,
+        &EdgesLayerBuilder::key_yield_sign_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.yield_sign()));
+        },
+    },
+    {
+        "access:auto:forward",
+        baldr::kEdgeAccessAutoFwd,
+        &EdgesLayerBuilder::key_access_auto_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kAutoAccess)));
+        },
+    },
+    {
+        "access:pedestrian:forward",
+        baldr::kEdgeAccessPedestrianFwd,
+        &EdgesLayerBuilder::key_access_pedestrian_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kPedestrianAccess)));
+        },
+    },
+    {
+        "access:bicycle:forward",
+        baldr::kEdgeAccessBicycleFwd,
+        &EdgesLayerBuilder::key_access_bicycle_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kBicycleAccess)));
+        },
+    },
+    {
+        "access:truck:forward",
+        baldr::kEdgeAccessTruckFwd,
+        &EdgesLayerBuilder::key_access_truck_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kTruckAccess)));
+        },
+    },
+    {
+        "access:emergency:forward",
+        baldr::kEdgeAccessEmergencyFwd,
+        &EdgesLayerBuilder::key_access_emergency_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kEmergencyAccess)));
+        },
+    },
+    {
+        "access:taxi:forward",
+        baldr::kEdgeAccessTaxiFwd,
+        &EdgesLayerBuilder::key_access_taxi_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kTaxiAccess)));
+        },
+    },
+    {
+        "access:bus:forward",
+        baldr::kEdgeAccessBusFwd,
+        &EdgesLayerBuilder::key_access_bus_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kBusAccess)));
+        },
+    },
+    {
+        "access:hov:forward",
+        baldr::kEdgeAccessHovFwd,
+        &EdgesLayerBuilder::key_access_hov_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kHOVAccess)));
+        },
+    },
+    {
+        "access:wheelchair:forward",
+        baldr::kEdgeAccessWheelchairFwd,
+        &EdgesLayerBuilder::key_access_wheelchair_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kWheelchairAccess)));
+        },
+    },
+    {
+        "access:moped:forward",
+        baldr::kEdgeAccessMopedFwd,
+        &EdgesLayerBuilder::key_access_moped_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kMopedAccess)));
+        },
+    },
+    {
+        "access:motorcycle:forward",
+        baldr::kEdgeAccessMotorcycleFwd,
+        &EdgesLayerBuilder::key_access_motorcycle_fwd_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & kMotorcycleAccess)));
+        },
+    },
+};
+
+static constexpr EdgeAttribute kForwardLiveSpeedAttributes[] = {
+
+    {
+        "live_speed:forward",
+        baldr::kEdgeLiveSpeedFwd,
+        &EdgesLayerBuilder::key_live_speed_fwd_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->get_overall_speed());
+        },
+    },
+    {
+        "live_speed:forward:speed1",
+        baldr::kEdgeLiveSpeed1Fwd,
+        &EdgesLayerBuilder::key_live_speed1_fwd_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->get_speed(0));
+        },
+    },
+    {
+        "live_speed:forward:speed2",
+        baldr::kEdgeLiveSpeed2Fwd,
+        &EdgesLayerBuilder::key_live_speed2_fwd_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->get_speed(1));
+        },
+    },
+    {
+        "live_speed:forward:speed3",
+        baldr::kEdgeLiveSpeed3Fwd,
+        &EdgesLayerBuilder::key_live_speed3_fwd_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->get_speed(2));
+        },
+    },
+    {
+        "live_speed:forward:breakpoint1",
+        baldr::kEdgeLiveSpeedBreakpoint1Fwd,
+        &EdgesLayerBuilder::key_live_breakpoint1_fwd_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->breakpoint1);
+        },
+    },
+    {
+        "live_speed:forward:breakpoint2",
+        baldr::kEdgeLiveSpeedBreakpoint2Fwd,
+        &EdgesLayerBuilder::key_live_breakpoint2_fwd_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->breakpoint2);
+        },
+    },
+    {
+        "live_speed:forward:congestion1",
+        baldr::kEdgeLiveSpeedCongestion1Fwd,
+        &EdgesLayerBuilder::key_live_congestion1_fwd_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->congestion1);
+        },
+    },
+    {
+        "live_speed:forward:congestion2",
+        baldr::kEdgeLiveSpeedCongestion2Fwd,
+        &EdgesLayerBuilder::key_live_congestion2_fwd_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->congestion2);
+        },
+    },
+    {
+        "live_speed:forward:congestion3",
+        baldr::kEdgeLiveSpeedCongestion3Fwd,
+        &EdgesLayerBuilder::key_live_congestion3_fwd_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->congestion3);
+        },
+    },
+};
+
+static constexpr EdgeAttribute kReverseEdgeAttributes[] = {
+    {
+        "speed:backward",
+        baldr::kEdgeSpeedBwd,
+        &EdgesLayerBuilder::key_speed_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.speed()));
+        },
+    },
+    {
+        "deadend:backward",
+        baldr::kEdgeDeadendBwd,
+        &EdgesLayerBuilder::key_deadend_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.deadend()));
+        },
+    },
+    {
+        "lanecount:backward",
+        baldr::kEdgeLaneCountBwd,
+        &EdgesLayerBuilder::key_lanecount_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.lanecount()));
+        },
+    },
+    {
+        "truck_speed:backward",
+        baldr::kEdgeTruckSpeedBwd,
+        &EdgesLayerBuilder::key_truck_speed_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.truck_speed()));
+        },
+    },
+    {
+        "traffic_signal:backward",
+        baldr::kEdgeSignalBwd,
+        &EdgesLayerBuilder::key_traffic_signal_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.traffic_signal()));
+        },
+    },
+    {
+        "stop_sign:backward",
+        baldr::kEdgeStopSignBwd,
+        &EdgesLayerBuilder::key_stop_sign_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.stop_sign()));
+        },
+    },
+    {
+        "yield_sign:backward",
+        baldr::kEdgeYieldBwd,
+        &EdgesLayerBuilder::key_yield_sign_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.yield_sign()));
+        },
+    },
+    {
+        "access:auto:backward",
+        baldr::kEdgeAccessAutoBwd,
+        &EdgesLayerBuilder::key_access_auto_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kAutoAccess)));
+        },
+    },
+    {
+        "access:pedestrian:backward",
+        baldr::kEdgeAccessPedestrianBwd,
+        &EdgesLayerBuilder::key_access_pedestrian_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kPedestrianAccess)));
+        },
+    },
+    {
+        "access:bicycle:backward",
+        baldr::kEdgeAccessBicycleBwd,
+        &EdgesLayerBuilder::key_access_bicycle_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kBicycleAccess)));
+        },
+    },
+    {
+        "access:truck:backward",
+        baldr::kEdgeAccessTruckBwd,
+        &EdgesLayerBuilder::key_access_truck_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kTruckAccess)));
+        },
+    },
+    {
+        "access:emergency:backward",
+        baldr::kEdgeAccessEmergencyBwd,
+        &EdgesLayerBuilder::key_access_emergency_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kEmergencyAccess)));
+        },
+    },
+    {
+        "access:taxi:backward",
+        baldr::kEdgeAccessTaxiBwd,
+        &EdgesLayerBuilder::key_access_taxi_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kTaxiAccess)));
+        },
+    },
+    {
+        "access:bus:backward",
+        baldr::kEdgeAccessBusBwd,
+        &EdgesLayerBuilder::key_access_bus_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kBusAccess)));
+        },
+    },
+    {
+        "access:hov:backward",
+        baldr::kEdgeAccessHovBwd,
+        &EdgesLayerBuilder::key_access_hov_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kHOVAccess)));
+        },
+    },
+    {
+        "access:wheelchair:backward",
+        baldr::kEdgeAccessWheelchairBwd,
+        &EdgesLayerBuilder::key_access_wheelchair_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kWheelchairAccess)));
+        },
+    },
+    {
+        "access:moped:backward",
+        baldr::kEdgeAccessMopedBwd,
+        &EdgesLayerBuilder::key_access_moped_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kMopedAccess)));
+        },
+    },
+    {
+        "access:motorcycle:backward",
+        baldr::kEdgeAccessMotorcycleBwd,
+        &EdgesLayerBuilder::key_access_motorcycle_rev_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(
+              static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & kMotorcycleAccess)));
+        },
+    },
+};
+
+static constexpr EdgeAttribute kReverseLiveSpeedAttributes[] = {
+
+    {
+        "live_speed:backward",
+        baldr::kEdgeLiveSpeedBwd,
+        &EdgesLayerBuilder::key_live_speed_rev_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->get_overall_speed());
+        },
+    },
+    {
+        "live_speed:backward:speed1",
+        baldr::kEdgeLiveSpeed1Bwd,
+        &EdgesLayerBuilder::key_live_speed1_rev_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->get_speed(0));
+        },
+    },
+    {
+        "live_speed:backward:speed2",
+        baldr::kEdgeLiveSpeed2Bwd,
+        &EdgesLayerBuilder::key_live_speed2_rev_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->get_speed(1));
+        },
+    },
+    {
+        "live_speed:backward:speed3",
+        baldr::kEdgeLiveSpeed3Bwd,
+        &EdgesLayerBuilder::key_live_speed3_rev_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->get_speed(2));
+        },
+    },
+    {
+        "live_speed:backward:breakpoint1",
+        baldr::kEdgeLiveSpeedBreakpoint1Bwd,
+        &EdgesLayerBuilder::key_live_breakpoint1_rev_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->breakpoint1);
+        },
+    },
+    {
+        "live_speed:backward:breakpoint2",
+        baldr::kEdgeLiveSpeedBreakpoint2Bwd,
+        &EdgesLayerBuilder::key_live_breakpoint2_rev_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->breakpoint2);
+        },
+    },
+    {
+        "live_speed:backward:congestion1",
+        baldr::kEdgeLiveSpeedCongestion1Bwd,
+        &EdgesLayerBuilder::key_live_congestion1_rev_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->congestion1);
+        },
+    },
+    {
+        "live_speed:backward:congestion2",
+        baldr::kEdgeLiveSpeedCongestion2Bwd,
+        &EdgesLayerBuilder::key_live_congestion2_rev_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->congestion2);
+        },
+    },
+    {
+        "live_speed:backward:congestion3",
+        baldr::kEdgeLiveSpeedCongestion3Bwd,
+        &EdgesLayerBuilder::key_live_congestion3_rev_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed* live_speed) {
+          return vtzero::encoded_property_value(live_speed->congestion3);
+        },
+    },
+};
+
 static constexpr EdgeAttribute kSharedEdgeAttributes[] = {
     {
         "use",
         baldr::kEdgeUse,
         &EdgesLayerBuilder::key_use_,
-        [](const baldr::DirectedEdge& e, const baldr::EdgeInfo&) {
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.use()));
         },
     },
@@ -190,7 +800,9 @@ static constexpr EdgeAttribute kSharedEdgeAttributes[] = {
         "tunnel",
         baldr::kEdgeTunnel,
         &EdgesLayerBuilder::key_tunnel_,
-        [](const baldr::DirectedEdge& e, const baldr::EdgeInfo&) {
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.tunnel());
         },
     },
@@ -198,8 +810,364 @@ static constexpr EdgeAttribute kSharedEdgeAttributes[] = {
         "bridge",
         baldr::kEdgeBridge,
         &EdgesLayerBuilder::key_bridge_,
-        [](const baldr::DirectedEdge& e, const baldr::EdgeInfo&) {
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.bridge());
+        },
+    },
+    {
+        "roundabout",
+        baldr::kEdgeRoundabout,
+        &EdgesLayerBuilder::key_roundabout_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.roundabout());
+        },
+    },
+    {
+        "shortcut",
+        baldr::kEdgeShortcut,
+        &EdgesLayerBuilder::key_is_shortcut_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.is_shortcut());
+        },
+    },
+    {
+        "leaves_tile",
+        baldr::kEdgeLeavesTile,
+        &EdgesLayerBuilder::key_leaves_tile_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.leaves_tile());
+        },
+    },
+    {
+        "length",
+        baldr::kEdgeLength,
+        &EdgesLayerBuilder::key_length_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.length());
+        },
+    },
+    {
+        "weighted_grade",
+        baldr::kEdgeWeightedGrade,
+        &EdgesLayerBuilder::key_weighted_grade_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.weighted_grade());
+        },
+    },
+    {
+        "max_up_slope",
+        baldr::kEdgeMaxUpwardGrade,
+        &EdgesLayerBuilder::key_max_up_slope_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.max_up_slope());
+        },
+    },
+    {
+        "max_down_slope",
+        baldr::kEdgeMaxDownwardGrade,
+        &EdgesLayerBuilder::key_max_down_slope_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.max_down_slope());
+        },
+    },
+    {
+        "curvature",
+        kEdgeCurvature,
+        &EdgesLayerBuilder::key_curvature_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.curvature());
+        },
+    },
+    {
+        "toll",
+        baldr::kEdgeToll,
+        &EdgesLayerBuilder::key_toll_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) { return vtzero::encoded_property_value(e.toll()); },
+    },
+    {
+        "destonly",
+        baldr::kEdgeDestinationOnly,
+        &EdgesLayerBuilder::key_destonly_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.destonly());
+        },
+    },
+    {
+        "destonly_hgv",
+        baldr::kEdgeDestinationOnly,
+        &EdgesLayerBuilder::key_destonly_hgv_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.destonly_hgv());
+        },
+    },
+    {
+        "indoor",
+        baldr::kEdgeIndoor,
+        &EdgesLayerBuilder::key_indoor_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.indoor());
+        },
+    },
+    {
+        "hov_type",
+        baldr::kEdgeHovType,
+        &EdgesLayerBuilder::key_hov_type_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.hov_type()));
+        },
+    },
+    {
+        "cyclelane",
+        baldr::kEdgeCycleLane,
+        &EdgesLayerBuilder::key_cyclelane_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.cyclelane()));
+        },
+    },
+    {
+        "bike_network",
+        baldr::kEdgeBicycleNetwork,
+        &EdgesLayerBuilder::key_bike_network_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.bike_network());
+        },
+    },
+    {
+        "truck_route",
+        baldr::kEdgeTruckRoute,
+        &EdgesLayerBuilder::key_truck_route_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.truck_route());
+        },
+    },
+    {
+        "speed_type",
+        baldr::kEdgeSpeedType,
+        &EdgesLayerBuilder::key_speed_type_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.speed_type()));
+        },
+    },
+    {
+        "country_crossing",
+        baldr::kEdgeCountryCrossing,
+        &EdgesLayerBuilder::key_ctry_crossing_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.ctry_crossing());
+        },
+    },
+    {
+        "sac_scale",
+        baldr::kEdgeSacScale,
+        &EdgesLayerBuilder::key_sac_scale_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.sac_scale()));
+        },
+    },
+    {
+        "unpaved",
+        baldr::kEdgeUnpaved,
+        &EdgesLayerBuilder::key_unpaved_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.indoor());
+        },
+    },
+    {
+        "surface",
+        baldr::kEdgeSurface,
+        &EdgesLayerBuilder::key_surface_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(static_cast<uint32_t>(e.surface()));
+        },
+    },
+    {
+        "ramp",
+        baldr::kEdgeRamp,
+        &EdgesLayerBuilder::key_link_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) { return vtzero::encoded_property_value(e.link()); },
+    },
+    {
+        "internal",
+        baldr::kEdgeInternalIntersection,
+        &EdgesLayerBuilder::key_internal_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.internal());
+        },
+    },
+    {
+        "shoulder",
+        baldr::kEdgeShoulder,
+        &EdgesLayerBuilder::key_shoulder_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.shoulder());
+        },
+    },
+    {
+        "dismount",
+        baldr::kEdgeDismount,
+        &EdgesLayerBuilder::key_dismount_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.dismount());
+        },
+    },
+    {
+        "use_sidepath",
+        baldr::kEdgeUseSidepath,
+        &EdgesLayerBuilder::key_use_sidepath_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.use_sidepath());
+        },
+    },
+    {
+        "density",
+        baldr::kEdgeDensity,
+        &EdgesLayerBuilder::key_density_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.density());
+        },
+    },
+    {
+        "sidewalk_left",
+        baldr::kEdgeSidewalkLeft,
+        &EdgesLayerBuilder::key_sidewalk_left_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.sidewalk_left());
+        },
+    },
+    {
+        "sidewalk_right",
+        baldr::kEdgeSidewalkRight,
+        &EdgesLayerBuilder::key_sidewalk_right_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.sidewalk_right());
+        },
+    },
+    {
+        "bss_connection",
+        baldr::kEdgeBSSConnection,
+        &EdgesLayerBuilder::key_bss_connection_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.bss_connection());
+        },
+    },
+    {
+        "lit",
+        baldr::kEdgeLit,
+        &EdgesLayerBuilder::key_lit_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) { return vtzero::encoded_property_value(e.lit()); },
+    },
+    {
+        "not_thru",
+        baldr::kEdgeNotThru,
+        &EdgesLayerBuilder::key_not_thru_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.not_thru());
+        },
+    },
+    {
+        "part_of_complex_restriction",
+        baldr::kEdgePartComplexRestriction,
+        &EdgesLayerBuilder::key_part_of_complex_restriction_,
+        [](const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(e.part_of_complex_restriction());
+        },
+    },
+    {
+        "osm_id",
+        baldr::kEdgeOsmId,
+        &EdgesLayerBuilder::key_osm_way_id_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo& ei,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(ei.wayid());
+        },
+    },
+    {
+        "speed_limit",
+        baldr::kEdgeSpeedLimit,
+        &EdgesLayerBuilder::key_speed_limit_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo& ei,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(ei.speed_limit());
+        },
+    },
+    {
+        "layer",
+        baldr::kEdgeLayer,
+        &EdgesLayerBuilder::key_layer_,
+        [](const baldr::DirectedEdge&,
+           const baldr::EdgeInfo& ei,
+           const volatile baldr::TrafficSpeed*) {
+          return vtzero::encoded_property_value(ei.layer());
         },
     },
 };
@@ -211,118 +1179,17 @@ EdgesLayerBuilder::EdgesLayerBuilder(vtzero::tile_builder& tile,
   key_tile_id_ = layer_.add_key_without_dup_check("tile_id");
   key_road_class_ = layer_.add_key_without_dup_check("road_class");
 
-  // bulk init from descriptor table
-  for (const auto& def : kSharedEdgeAttributes) {
-    if (controller_(def.attribute_flag))
-      this->*(def.key_member) = layer_.add_key_without_dup_check(def.key_name);
+  init_attribute_keys(kSharedEdgeAttributes, controller);
+  init_attribute_keys(kForwardEdgeAttributes, controller);
+  init_attribute_keys(kForwardLiveSpeedAttributes, controller);
+  init_attribute_keys(kReverseEdgeAttributes, controller);
+  init_attribute_keys(kReverseLiveSpeedAttributes, controller);
+
+  // edge ids don't need all those attributes
+  if (controller(kEdgeId)) {
+    key_edge_id_fwd_ = layer_.add_key_without_dup_check("edge_id:forward");
+    key_edge_id_rev_ = layer_.add_key_without_dup_check("edge_id:backward");
   }
-  // // Pre-add keys for edge properties
-  // key_tile_level_ = layer_.add_key_without_dup_check("tile_level");
-  // key_tile_id_ = layer_.add_key_without_dup_check("tile_id");
-  // // Shared edge properties
-  // key_speed_limit_ = layer_.add_key_without_dup_check("speed_limit");
-  // key_road_class_ = layer_.add_key_without_dup_check("road_class");
-  // key_use_ = layer_.add_key_without_dup_check("use");
-  // key_tunnel_ = layer_.add_key_without_dup_check("tunnel");
-  // key_bridge_ = layer_.add_key_without_dup_check("bridge");
-  // key_roundabout_ = layer_.add_key_without_dup_check("roundabout");
-  // key_is_shortcut_ = layer_.add_key_without_dup_check("is_shortcut");
-  // key_leaves_tile_ = layer_.add_key_without_dup_check("leaves_tile");
-  // key_length_ = layer_.add_key_without_dup_check("length");
-  // key_weighted_grade_ = layer_.add_key_without_dup_check("weighted_grade");
-  // key_max_up_slope_ = layer_.add_key_without_dup_check("max_up_slope");
-  // key_max_down_slope_ = layer_.add_key_without_dup_check("max_down_slope");
-  // key_curvature_ = layer_.add_key_without_dup_check("curvature");
-  // key_toll_ = layer_.add_key_without_dup_check("toll");
-  // key_destonly_ = layer_.add_key_without_dup_check("destonly");
-  // key_destonly_hgv_ = layer_.add_key_without_dup_check("destonly_hgv");
-  // key_indoor_ = layer_.add_key_without_dup_check("indoor");
-  // key_hov_type_ = layer_.add_key_without_dup_check("hov_type");
-  // key_cyclelane_ = layer_.add_key_without_dup_check("cyclelane");
-  // key_bike_network_ = layer_.add_key_without_dup_check("bike_network");
-  // key_truck_route_ = layer_.add_key_without_dup_check("truck_route");
-  // key_speed_type_ = layer_.add_key_without_dup_check("speed_type");
-  // key_ctry_crossing_ = layer_.add_key_without_dup_check("ctry_crossing");
-  // key_sac_scale_ = layer_.add_key_without_dup_check("sac_scale");
-  // key_unpaved_ = layer_.add_key_without_dup_check("unpaved");
-  // key_surface_ = layer_.add_key_without_dup_check("surface");
-  // key_link_ = layer_.add_key_without_dup_check("link");
-  // key_internal_ = layer_.add_key_without_dup_check("internal");
-  // key_shoulder_ = layer_.add_key_without_dup_check("shoulder");
-  // key_dismount_ = layer_.add_key_without_dup_check("dismount");
-  // key_use_sidepath_ = layer_.add_key_without_dup_check("use_sidepath");
-  // key_density_ = layer_.add_key_without_dup_check("density");
-  // key_named_ = layer_.add_key_without_dup_check("named");
-  // key_sidewalk_left_ = layer_.add_key_without_dup_check("sidewalk_left");
-  // key_sidewalk_right_ = layer_.add_key_without_dup_check("sidewalk_right");
-  // key_bss_connection_ = layer_.add_key_without_dup_check("bss_connection");
-  // key_lit_ = layer_.add_key_without_dup_check("lit");
-  // key_not_thru_ = layer_.add_key_without_dup_check("not_thru");
-  // key_part_of_complex_restriction_ =
-  //     layer_.add_key_without_dup_check("part_of_complex_restriction");
-  // key_osm_way_id_ = layer_.add_key_without_dup_check("osm_way_id");
-  // key_layer_ = layer_.add_key_without_dup_check("layer");
-  // // Direction-specific properties
-  // key_edge_id_fwd_ = layer_.add_key_without_dup_check("edge_id:forward");
-  // key_edge_id_rev_ = layer_.add_key_without_dup_check("edge_id:backward");
-  // key_speed_fwd_ = layer_.add_key_without_dup_check("speed:forward");
-  // key_speed_rev_ = layer_.add_key_without_dup_check("speed:backward");
-  // key_deadend_fwd_ = layer_.add_key_without_dup_check("deadend:forward");
-  // key_deadend_rev_ = layer_.add_key_without_dup_check("deadend:backward");
-  // key_lanecount_fwd_ = layer_.add_key_without_dup_check("lanecount:forward");
-  // key_lanecount_rev_ = layer_.add_key_without_dup_check("lanecount:backward");
-  // key_truck_speed_fwd_ = layer_.add_key_without_dup_check("truck_speed:forward");
-  // key_truck_speed_rev_ = layer_.add_key_without_dup_check("truck_speed:backward");
-  // key_traffic_signal_fwd_ = layer_.add_key_without_dup_check("traffic_signal:forward");
-  // key_traffic_signal_rev_ = layer_.add_key_without_dup_check("traffic_signal:backward");
-  // key_stop_sign_fwd_ = layer_.add_key_without_dup_check("stop_sign:forward");
-  // key_stop_sign_rev_ = layer_.add_key_without_dup_check("stop_sign:backward");
-  // key_yield_sign_fwd_ = layer_.add_key_without_dup_check("yield_sign:forward");
-  // key_yield_sign_rev_ = layer_.add_key_without_dup_check("yield_sign:backward");
-  // // Access properties (forward)
-  // key_access_auto_fwd_ = layer_.add_key_without_dup_check("access:auto:forward");
-  // key_access_pedestrian_fwd_ = layer_.add_key_without_dup_check("access:pedestrian:forward");
-  // key_access_bicycle_fwd_ = layer_.add_key_without_dup_check("access:bicycle:forward");
-  // key_access_truck_fwd_ = layer_.add_key_without_dup_check("access:truck:forward");
-  // key_access_emergency_fwd_ = layer_.add_key_without_dup_check("access:emergency:forward");
-  // key_access_taxi_fwd_ = layer_.add_key_without_dup_check("access:taxi:forward");
-  // key_access_bus_fwd_ = layer_.add_key_without_dup_check("access:bus:forward");
-  // key_access_hov_fwd_ = layer_.add_key_without_dup_check("access:hov:forward");
-  // key_access_wheelchair_fwd_ = layer_.add_key_without_dup_check("access:wheelchair:forward");
-  // key_access_moped_fwd_ = layer_.add_key_without_dup_check("access:moped:forward");
-  // key_access_motorcycle_fwd_ = layer_.add_key_without_dup_check("access:motorcycle:forward");
-  // // Access properties (reverse)
-  // key_access_auto_rev_ = layer_.add_key_without_dup_check("access:auto:backward");
-  // key_access_pedestrian_rev_ = layer_.add_key_without_dup_check("access:pedestrian:backward");
-  // key_access_bicycle_rev_ = layer_.add_key_without_dup_check("access:bicycle:backward");
-  // key_access_truck_rev_ = layer_.add_key_without_dup_check("access:truck:backward");
-  // key_access_emergency_rev_ = layer_.add_key_without_dup_check("access:emergency:backward");
-  // key_access_taxi_rev_ = layer_.add_key_without_dup_check("access:taxi:backward");
-  // key_access_bus_rev_ = layer_.add_key_without_dup_check("access:bus:backward");
-  // key_access_hov_rev_ = layer_.add_key_without_dup_check("access:hov:backward");
-  // key_access_wheelchair_rev_ = layer_.add_key_without_dup_check("access:wheelchair:backward");
-  // key_access_moped_rev_ = layer_.add_key_without_dup_check("access:moped:backward");
-  // key_access_motorcycle_rev_ = layer_.add_key_without_dup_check("access:motorcycle:backward");
-  // // Traffic speed properties (forward)
-  // key_live_speed_fwd_ = layer_.add_key_without_dup_check("live_speed:forward");
-  // key_live_speed1_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:speed1");
-  // key_live_speed2_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:speed2");
-  // key_live_speed3_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:speed3");
-  // key_live_breakpoint1_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:breakpoint1");
-  // key_live_breakpoint2_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:breakpoint2");
-  // key_live_congestion1_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:congestion1");
-  // key_live_congestion2_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:congestion2");
-  // key_live_congestion3_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:congestion3");
-  // // Traffic speed properties (reverse)
-  // key_live_speed_rev_ = layer_.add_key_without_dup_check("live_speed:backward");
-  // key_live_speed1_rev_ = layer_.add_key_without_dup_check("live_speed:backward:speed1");
-  // key_live_speed2_rev_ = layer_.add_key_without_dup_check("live_speed:backward:speed2");
-  // key_live_speed3_rev_ = layer_.add_key_without_dup_check("live_speed:backward:speed3");
-  // key_live_breakpoint1_rev_ = layer_.add_key_without_dup_check("live_speed:backward:breakpoint1");
-  // key_live_breakpoint2_rev_ = layer_.add_key_without_dup_check("live_speed:backward:breakpoint2");
-  // key_live_congestion1_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion1");
-  // key_live_congestion2_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion2");
-  // key_live_congestion3_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion3");
 }
 
 void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
@@ -351,268 +1218,34 @@ void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
   // Add shared tile properties (same for both directions)
   feature.add_property(key_tile_level_, vtzero::encoded_property_value(edge_id.level()));
   feature.add_property(key_tile_id_, vtzero::encoded_property_value(edge_id.tileid()));
-
-  // Add shared edge properties (same for both directions)
   feature.add_property(key_road_class_,
                        vtzero::encoded_property_value(static_cast<uint32_t>(edge->classification())));
 
-  for (const auto& def : kSharedEdgeAttributes) {
-    if (controller_(def.attribute_flag)) {
-      const auto key = this->*(def.key_member);
-      feature.add_property(key, def.value_func(*edge, edge_info));
+  set_attribute_values(kSharedEdgeAttributes, controller_, feature, *edge, edge_info, nullptr);
+
+  if (forward_edge) {
+    if (controller_(kEdgeId))
+      feature.add_property(key_edge_id_fwd_, vtzero::encoded_property_value(forward_edge_id.id()));
+    set_attribute_values(kForwardEdgeAttributes, controller_, feature, *forward_edge, edge_info,
+                         nullptr);
+    if (forward_traffic) {
+      set_attribute_values(kForwardLiveSpeedAttributes, controller_, feature, *forward_edge,
+                           edge_info, forward_traffic);
     }
   }
 
-  // if (controller(baldr::kEdgeUse))
-  //   feature.add_property(key_use_,
-  //                        vtzero::encoded_property_value(static_cast<uint32_t>(edge->use())));
-  // if (controller(baldr::kEdgeTunnel))
-  //   feature.add_property(key_tunnel_, vtzero::encoded_property_value(edge->tunnel()));
-  // if (controller(baldr::kEdgeBridge))
-  //   feature.add_property(key_bridge_, vtzero::encoded_property_value(edge->bridge()));
-  // if (controller(baldr::kEdgeRoundabout))
-  //   feature.add_property(key_roundabout_, vtzero::encoded_property_value(edge->roundabout()));
-  // if (controller(baldr::kEdgeIsShortcut))
-  //   feature.add_property(key_is_shortcut_, vtzero::encoded_property_value(edge->is_shortcut()));
-  // if (controller(baldr::kEdgeLeavesTile))
-  //   feature.add_property(key_leaves_tile_, vtzero::encoded_property_value(edge->leaves_tile()));
-  // if (controller(baldr::kEdgeLength))
-  //   feature.add_property(key_length_, vtzero::encoded_property_value(edge->length()));
-  // if (controller(baldr::kEdgeWeightedGrade))
-  //   feature.add_property(key_weighted_grade_,
-  //   vtzero::encoded_property_value(edge->weighted_grade()));
-  // if (controller(baldr::kEdgeMaxUpwardGrade))
-  //   feature.add_property(key_max_up_slope_, vtzero::encoded_property_value(edge->max_up_slope()));
-  // if (controller(baldr::kEdgeMaxDownwardGrade))
-  //   feature.add_property(key_max_down_slope_,
-  //   vtzero::encoded_property_value(edge->max_down_slope()));
-  // if (controller(baldr::kEdgeCurvature))
-  //   feature.add_property(key_curvature_, vtzero::encoded_property_value(edge->curvature()));
-  // if (controller(baldr::kEdgeToll))
-  //   feature.add_property(key_toll_, vtzero::encoded_property_value(edge->toll()));
-  // if (controller(baldr::kEdgeDestinationOnly))
-  //   feature.add_property(key_destonly_, vtzero::encoded_property_value(edge->destonly()));
-  // if (controller(baldr::kEdgeDestinationOnlyHGV))
-  //   feature.add_property(key_destonly_hgv_, vtzero::encoded_property_value(edge->destonly_hgv()));
-  // if (controller(baldr::kEdgeIndoor))
-  //   feature.add_property(key_indoor_, vtzero::encoded_property_value(edge->indoor()));
-  // if (controller(baldr::kEdgeHovType))
-  //   feature.add_property(key_hov_type_,
-  //                      vtzero::encoded_property_value(static_cast<uint32_t>(edge->hov_type())));
-  // if (controller(baldr::kEdgeCycleLane))
-  //   feature.add_property(key_cyclelane_,
-  //                      vtzero::encoded_property_value(static_cast<uint32_t>(edge->cyclelane())));
-  // if (controller(baldr::kEdgeBicycleNetwork))
-  //   feature.add_property(key_bike_network_, vtzero::encoded_property_value(edge->bike_network()));
-  // if (controller(baldr::kEdgeTruckRoute))
-  //   feature.add_property(key_truck_route_, vtzero::encoded_property_value(edge->truck_route()));
-  // if (controller(baldr::kEdgeSpeedType))
-  //   feature.add_property(key_speed_type_,
-  //                      vtzero::encoded_property_value(static_cast<uint32_t>(edge->speed_type())));
-  // if (controller(baldr::kEdgeCountryCrossing))
-  //   feature.add_property(key_ctry_crossing_,
-  //   vtzero::encoded_property_value(edge->ctry_crossing()));
-  // if (controller(baldr::kEdgeSacScale))
-  //   feature.add_property(key_sac_scale_,
-  //                      vtzero::encoded_property_value(static_cast<uint32_t>(edge->sac_scale())));
-  // if (controller(baldr::kEdgeUnpaved))
-  //   feature.add_property(key_unpaved_, vtzero::encoded_property_value(edge->unpaved()));
-  // if (controller(baldr::kEdgeSurface))
-  //   feature.add_property(key_surface_,
-  //                      vtzero::encoded_property_value(static_cast<uint32_t>(edge->surface())));
-  // if (controller(baldr::kEdgeLink))
-  //   feature.add_property(key_link_, vtzero::encoded_property_value(edge->link()));
-  // if (controller(baldr::kEdgeInternalIntersection))
-  //   feature.add_property(key_internal_, vtzero::encoded_property_value(edge->internal()));
-  // if (controller(baldr::kEdgeShoulder))
-  //   feature.add_property(key_shoulder_, vtzero::encoded_property_value(edge->shoulder()));
-  // if (controller(baldr::kEdgeDismount))
-  //   feature.add_property(key_dismount_, vtzero::encoded_property_value(edge->dismount()));
-  // if (controller(baldr::kEdgeUseSidepath))
-  //   feature.add_property(key_use_sidepath_, vtzero::encoded_property_value(edge->use_sidepath()));
-  // if (controller(baldr::kEdgeDensity))
-  //   feature.add_property(key_density_, vtzero::encoded_property_value(edge->density()));
-  // if (controller(baldr::kEdgeNamed))
-  //   feature.add_property(key_named_, vtzero::encoded_property_value(edge->named()));
-  // if (controller(baldr::kEdgeSidewalk)) {
-  //   feature.add_property(key_sidewalk_left_,
-  //   vtzero::encoded_property_value(edge->sidewalk_left()));
-  //   feature.add_property(key_sidewalk_right_,
-  //   vtzero::encoded_property_value(edge->sidewalk_right()));
-  // }
-  // if (controller(baldr::kEdgeBssConnection))
-  //   feature.add_property(key_bss_connection_,
-  //   vtzero::encoded_property_value(edge->bss_connection()));
-  // if (controller(baldr::kEdgeLit))
-  //   feature.add_property(key_lit_, vtzero::encoded_property_value(edge->lit()));
-  // if (controller(baldr::kEdgeNotThru))
-  //   feature.add_property(key_not_thru_, vtzero::encoded_property_value(edge->not_thru()));
-  // if (controller(baldr::kEdgePartComplexRestriction))
-  //   feature.add_property(key_part_of_complex_restriction_,
-  //                        vtzero::encoded_property_value(edge->part_of_complex_restriction()));
-  // if (controller(baldr::kEdgeOsmId))
-  //   feature.add_property(key_osm_way_id_, vtzero::encoded_property_value(edge_info.wayid()));
-  // if (controller(baldr::kEdgeSpeedLimit))
-  //   feature.add_property(key_speed_limit_,
-  //   vtzero::encoded_property_value(edge_info.speed_limit()));
-  // if (controller(baldr::kEdgeLayer))
-  //   feature.add_property(key_layer_, vtzero::encoded_property_value(edge_info.layer()));
-
-  // // Add direction-specific properties
-  // if (forward_edge) {
-  //   if (controller(baldr::kEdgeId))
-  //     feature.add_property(key_edge_id_fwd_, vtzero::encoded_property_value(forward_edge_id.id()));
-  //   if (controller(baldr::kEdgeSpeed))
-  //     feature.add_property(key_speed_fwd_, vtzero::encoded_property_value(forward_edge->speed()));
-  //   if (controller(baldr::kEdgeTruckSpeed))
-  //     feature.add_property(key_truck_speed_fwd_,
-  //                        vtzero::encoded_property_value(forward_edge->truck_speed()));
-  //   if (controller(baldr::kEdgeTrafficSignal))
-  //     feature.add_property(key_traffic_signal_fwd_,
-  //                        vtzero::encoded_property_value(forward_edge->traffic_signal()));
-  //   if (controller(baldr::kEdgeStopSign))
-  //     feature.add_property(key_stop_sign_fwd_,
-  //                        vtzero::encoded_property_value(forward_edge->stop_sign()));
-  //   if (controller(baldr::kEdgeYieldSign))
-  //     feature.add_property(key_yield_sign_fwd_,
-  //                        vtzero::encoded_property_value(forward_edge->yield_sign()));
-  //   if (controller(baldr::kEdgeDeadend))
-  //     feature.add_property(key_deadend_fwd_, vtzero::encoded_property_value(edge->deadend()));
-  //   if (controller(baldr::kEdgeLaneCount))
-  //     feature.add_property(key_lanecount_fwd_, vtzero::encoded_property_value(edge->deadend()));
-
-  //   // Forward access properties
-  //   uint32_t fwd_access = forward_edge->forwardaccess();
-  //   if (controller(baldr::kEdgeAccess)) {
-  //     feature.add_property(key_access_auto_fwd_, vtzero::encoded_property_value(
-  //                                                   static_cast<bool>(fwd_access & kAutoAccess)));
-  //     feature.add_property(key_access_pedestrian_fwd_,
-  //                         vtzero::encoded_property_value(
-  //                             static_cast<bool>(fwd_access & kPedestrianAccess)));
-  //     feature.add_property(key_access_bicycle_fwd_,
-  //     vtzero::encoded_property_value(static_cast<bool>(
-  //                                                       fwd_access & kBicycleAccess)));
-  //     feature.add_property(key_access_truck_fwd_, vtzero::encoded_property_value(
-  //                                                     static_cast<bool>(fwd_access &
-  //                                                     kTruckAccess)));
-  //     feature.add_property(key_access_emergency_fwd_,
-  //                         vtzero::encoded_property_value(
-  //                             static_cast<bool>(fwd_access & kEmergencyAccess)));
-  //     feature.add_property(key_access_taxi_fwd_, vtzero::encoded_property_value(
-  //                                                   static_cast<bool>(fwd_access & kTaxiAccess)));
-  //     feature.add_property(key_access_bus_fwd_, vtzero::encoded_property_value(
-  //                                                   static_cast<bool>(fwd_access & kBusAccess)));
-  //     feature.add_property(key_access_hov_fwd_, vtzero::encoded_property_value(
-  //                                                   static_cast<bool>(fwd_access & kHOVAccess)));
-  //     feature.add_property(key_access_wheelchair_fwd_,
-  //                         vtzero::encoded_property_value(
-  //                             static_cast<bool>(fwd_access & kWheelchairAccess)));
-  //     feature.add_property(key_access_moped_fwd_, vtzero::encoded_property_value(
-  //                                                     static_cast<bool>(fwd_access &
-  //                                                     kMopedAccess)));
-  //     feature.add_property(key_access_motorcycle_fwd_,
-  //                         vtzero::encoded_property_value(
-  //                             static_cast<bool>(fwd_access & kMotorcycleAccess)));
-  //   }
-
-  //   // Add live traffic data if available
-  //   if (forward_traffic) {
-  //     feature.add_property(key_live_speed_fwd_,
-  //                          vtzero::encoded_property_value(forward_traffic->get_overall_speed()));
-  //     feature.add_property(key_live_speed1_fwd_,
-  //                          vtzero::encoded_property_value(forward_traffic->get_speed(0)));
-  //     feature.add_property(key_live_speed2_fwd_,
-  //                          vtzero::encoded_property_value(forward_traffic->get_speed(1)));
-  //     feature.add_property(key_live_speed3_fwd_,
-  //                          vtzero::encoded_property_value(forward_traffic->get_speed(2)));
-  //     feature.add_property(key_live_breakpoint1_fwd_,
-  //                          vtzero::encoded_property_value(
-  //                              static_cast<uint32_t>(forward_traffic->breakpoint1)));
-  //     feature.add_property(key_live_breakpoint2_fwd_,
-  //                          vtzero::encoded_property_value(
-  //                              static_cast<uint32_t>(forward_traffic->breakpoint2)));
-  //     feature.add_property(key_live_congestion1_fwd_,
-  //                          vtzero::encoded_property_value(
-  //                              static_cast<uint32_t>(forward_traffic->congestion1)));
-  //     feature.add_property(key_live_congestion2_fwd_,
-  //                          vtzero::encoded_property_value(
-  //                              static_cast<uint32_t>(forward_traffic->congestion2)));
-  //     feature.add_property(key_live_congestion3_fwd_,
-  //                          vtzero::encoded_property_value(
-  //                              static_cast<uint32_t>(forward_traffic->congestion3)));
-  //   }
-  // }
-
-  // if (reverse_edge && reverse_edge_id.Is_Valid()) {
-  //   feature.add_property(key_edge_id_rev_, vtzero::encoded_property_value(reverse_edge_id.id()));
-  //   feature.add_property(key_speed_rev_, vtzero::encoded_property_value(reverse_edge->speed()));
-  //   feature.add_property(key_truck_speed_rev_,
-  //                        vtzero::encoded_property_value(reverse_edge->truck_speed()));
-  //   feature.add_property(key_traffic_signal_rev_,
-  //                        vtzero::encoded_property_value(reverse_edge->traffic_signal()));
-  //   feature.add_property(key_stop_sign_rev_,
-  //                        vtzero::encoded_property_value(reverse_edge->stop_sign()));
-  //   feature.add_property(key_yield_sign_rev_,
-  //                        vtzero::encoded_property_value(reverse_edge->yield_sign()));
-  //   feature.add_property(key_deadend_rev_, vtzero::encoded_property_value(edge->deadend()));
-  //   feature.add_property(key_lanecount_rev_, vtzero::encoded_property_value(edge->deadend()));
-
-  //   // Reverse access properties
-  //   uint32_t rev_access = reverse_edge->reverseaccess();
-  //   feature.add_property(key_access_auto_rev_, vtzero::encoded_property_value(
-  //                                                  static_cast<bool>(rev_access & kAutoAccess)));
-  //   feature.add_property(key_access_pedestrian_rev_,
-  //                        vtzero::encoded_property_value(
-  //                            static_cast<bool>(rev_access & kPedestrianAccess)));
-  //   feature.add_property(key_access_bicycle_rev_, vtzero::encoded_property_value(static_cast<bool>(
-  //                                                     rev_access & kBicycleAccess)));
-  //   feature.add_property(key_access_truck_rev_, vtzero::encoded_property_value(
-  //                                                   static_cast<bool>(rev_access & kTruckAccess)));
-  //   feature.add_property(key_access_emergency_rev_,
-  //                        vtzero::encoded_property_value(
-  //                            static_cast<bool>(rev_access & kEmergencyAccess)));
-  //   feature.add_property(key_access_taxi_rev_, vtzero::encoded_property_value(
-  //                                                  static_cast<bool>(rev_access & kTaxiAccess)));
-  //   feature.add_property(key_access_bus_rev_, vtzero::encoded_property_value(
-  //                                                 static_cast<bool>(rev_access & kBusAccess)));
-  //   feature.add_property(key_access_hov_rev_, vtzero::encoded_property_value(
-  //                                                 static_cast<bool>(rev_access & kHOVAccess)));
-  //   feature.add_property(key_access_wheelchair_rev_,
-  //                        vtzero::encoded_property_value(
-  //                            static_cast<bool>(rev_access & kWheelchairAccess)));
-  //   feature.add_property(key_access_moped_rev_, vtzero::encoded_property_value(
-  //                                                   static_cast<bool>(rev_access & kMopedAccess)));
-  //   feature.add_property(key_access_motorcycle_rev_,
-  //                        vtzero::encoded_property_value(
-  //                            static_cast<bool>(rev_access & kMotorcycleAccess)));
-
-  //   // Add live traffic data if available
-  //   if (reverse_traffic) {
-  //     feature.add_property(key_live_speed_rev_,
-  //                          vtzero::encoded_property_value(reverse_traffic->get_overall_speed()));
-  //     feature.add_property(key_live_speed1_rev_,
-  //                          vtzero::encoded_property_value(reverse_traffic->get_speed(0)));
-  //     feature.add_property(key_live_speed2_rev_,
-  //                          vtzero::encoded_property_value(reverse_traffic->get_speed(1)));
-  //     feature.add_property(key_live_speed3_rev_,
-  //                          vtzero::encoded_property_value(reverse_traffic->get_speed(2)));
-  //     feature.add_property(key_live_breakpoint1_rev_,
-  //                          vtzero::encoded_property_value(
-  //                              static_cast<uint32_t>(reverse_traffic->breakpoint1)));
-  //     feature.add_property(key_live_breakpoint2_rev_,
-  //                          vtzero::encoded_property_value(
-  //                              static_cast<uint32_t>(reverse_traffic->breakpoint2)));
-  //     feature.add_property(key_live_congestion1_rev_,
-  //                          vtzero::encoded_property_value(
-  //                              static_cast<uint32_t>(reverse_traffic->congestion1)));
-  //     feature.add_property(key_live_congestion2_rev_,
-  //                          vtzero::encoded_property_value(
-  //                              static_cast<uint32_t>(reverse_traffic->congestion2)));
-  //     feature.add_property(key_live_congestion3_rev_,
-  //                          vtzero::encoded_property_value(
-  //                              static_cast<uint32_t>(reverse_traffic->congestion3)));
-  //   }
-  // }
+  if (reverse_edge && reverse_edge_id.Is_Valid()) {
+    if (controller_(kEdgeId))
+      feature.add_property(key_edge_id_rev_, vtzero::encoded_property_value(reverse_edge_id.id()));
+    set_attribute_values(kReverseEdgeAttributes, controller_, feature, *reverse_edge, edge_info,
+                         nullptr);
+    if (forward_traffic) {
+      for (const auto& def : kReverseLiveSpeedAttributes) {
+        set_attribute_values(kReverseLiveSpeedAttributes, controller_, feature, *reverse_edge,
+                             edge_info, reverse_traffic);
+      }
+    }
+  }
 
   feature.commit();
 }
@@ -724,8 +1357,6 @@ public:
     node_feature.add_property(key_cash_only_toll_,
                               vtzero::encoded_property_value(node.cash_only_toll()));
     node_feature.add_property(key_mode_change_, vtzero::encoded_property_value(node.mode_change()));
-    node_feature.add_property(key_named_intersection_,
-                              vtzero::encoded_property_value(node.named_intersection()));
     node_feature.add_property(key_is_transit_, vtzero::encoded_property_value(node.is_transit()));
     node_feature.add_property(key_transition_count_,
                               vtzero::encoded_property_value(node.transition_count()));
@@ -1029,12 +1660,16 @@ std::string loki_worker_t::render_tile(Api& request) {
 
   // query edges in bbox, omits opposing edges
   // TODO(nils): can RangeQuery be updated to skip hierarchy levels?
+  // How about filtering for costing? Probably better client filtering?
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
   // disable all attributes by default
   auto controller = baldr::AttributesController(options, true);
-  if (options.filter_action() == valhalla::no_action)
-    controller.disable_all();
+  if (options.filter_action() == valhalla::no_action && !options.verbose())
+    controller.set_all(false);
+  else if (options.verbose()) {
+    controller.set_all(true);
+  }
 
   build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
                options.tile_options().return_shortcuts(), controller);

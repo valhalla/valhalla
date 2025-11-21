@@ -104,6 +104,7 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeTruckRoute, true},
     {kEdgeDefaultSpeed, true},
     {kEdgeDestinationOnly, true},
+    {kEdgeDestinationOnlyHGV, true},
     {kEdgeIsUrban, false},
     {kEdgeTaggedValues, true},
     {kEdgeIndoor, true},
@@ -112,6 +113,80 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeForward, true},
     {kEdgeLevels, true},
     {kEdgeTrafficSignal, true},
+    {kEdgeHovType, false},
+    {kEdgeSpeedType, false},
+    {kEdgeRamp, true},
+    {kEdgeDismount, false},
+    {kEdgeUseSidepath, false},
+    {kEdgeSidewalkLeft, false},
+    {kEdgeSidewalkRight, false},
+    {kEdgeBSSConnection, false},
+    {kEdgeLit, false},
+    {kEdgeNotThru, false},
+    {kEdgePartComplexRestriction, false},
+    {kEdgeOsmId, true},
+    {kEdgeLayer, true},
+    {kEdgeShortcut, true},
+    {kEdgeLeavesTile, false},
+    {kEdgeCurvature, true},
+
+    // Mostly MVT relevant
+    {kEdgeSpeedFwd, false},
+    {kEdgeDeadendFwd, false},
+    {kEdgeLaneCountFwd, false},
+    {kEdgeTruckSpeedFwd, false},
+    {kEdgeSignalFwd, false},
+    {kEdgeStopSignFwd, false},
+    {kEdgeYieldFwd, false},
+    {kEdgeAccessAutoFwd, false},
+    {kEdgeAccessPedestrianFwd, false},
+    {kEdgeAccessBicycleFwd, false},
+    {kEdgeAccessTruckFwd, false},
+    {kEdgeAccessEmergencyFwd, false},
+    {kEdgeAccessTaxiFwd, false},
+    {kEdgeAccessBusFwd, false},
+    {kEdgeAccessHovFwd, false},
+    {kEdgeAccessWheelchairFwd, false},
+    {kEdgeAccessMopedFwd, false},
+    {kEdgeAccessMotorcycleFwd, false},
+    {kEdgeLiveSpeedFwd, false},
+    {kEdgeLiveSpeed1Fwd, false},
+    {kEdgeLiveSpeed2Fwd, false},
+    {kEdgeLiveSpeed3Fwd, false},
+    {kEdgeLiveSpeedBreakpoint1Fwd, false},
+    {kEdgeLiveSpeedBreakpoint2Fwd, false},
+    {kEdgeLiveSpeedCongestion1Fwd, false},
+    {kEdgeLiveSpeedCongestion2Fwd, false},
+    {kEdgeLiveSpeedCongestion3Fwd, false},
+
+    {kEdgeSpeedBwd, false},
+    {kEdgeDeadendBwd, false},
+    {kEdgeLaneCountBwd, false},
+    {kEdgeTruckSpeedBwd, false},
+    {kEdgeSignalBwd, false},
+    {kEdgeStopSignBwd, false},
+    {kEdgeYieldBwd, false},
+    {kEdgeAccessAutoBwd, false},
+    {kEdgeAccessPedestrianBwd, false},
+    {kEdgeAccessBicycleBwd, false},
+    {kEdgeAccessTruckBwd, false},
+    {kEdgeAccessEmergencyBwd, false},
+    {kEdgeAccessTaxiBwd, false},
+    {kEdgeAccessBusBwd, false},
+    {kEdgeAccessHovBwd, false},
+    {kEdgeAccessWheelchairBwd, false},
+    {kEdgeAccessMopedBwd, false},
+    {kEdgeAccessMotorcycleBwd, false},
+    {kEdgeLiveSpeedBwd, false},
+    {kEdgeLiveSpeed1Bwd, false},
+    {kEdgeLiveSpeed2Bwd, false},
+    {kEdgeLiveSpeed3Bwd, false},
+    {kEdgeLiveSpeedBreakpoint1Bwd, false},
+    {kEdgeLiveSpeedBreakpoint2Bwd, false},
+    {kEdgeLiveSpeedBreakpoint3Bwd, false},
+    {kEdgeLiveSpeedCongestion1Bwd, false},
+    {kEdgeLiveSpeedCongestion2Bwd, false},
+    {kEdgeLiveSpeedCongestion3Bwd, false},
 
     // Node keys
     {kIncidents, false},
@@ -189,7 +264,7 @@ AttributesController::AttributesController(const Options& options, bool is_stric
   switch (options.filter_action()) {
     case (FilterAction::include): {
       if (is_strict_filter)
-        disable_all();
+        set_all(false);
       for (const auto& filter_attribute : options.filter_attributes()) {
         try {
           attributes.at(filter_attribute) = true;
@@ -215,9 +290,9 @@ AttributesController::AttributesController(const Options& options, bool is_stric
   enabled_categories = PrecomputeEnabledCategories(attributes);
 }
 
-void AttributesController::disable_all() {
+void AttributesController::set_all(const bool value) {
   for (auto& pair : attributes) {
-    pair.second = false;
+    pair.second = value;
   }
 }
 
