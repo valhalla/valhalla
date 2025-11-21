@@ -334,7 +334,7 @@ std::vector<std::string> EdgeInfo::GetTaggedValues() const {
         // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
         auto contents = get_tagged_value(value);
         if (contents) {
-          tagged_values.emplace_back(std::move(*contents));
+          tagged_values.emplace_back(*contents);
         }
       } catch (const std::invalid_argument& arg) {
         LOG_DEBUG("invalid_argument thrown for tagged value: {}", value);
