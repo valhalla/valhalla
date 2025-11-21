@@ -220,10 +220,9 @@ public:
                                std::to_string(directed_edge_offset) +
                                ", edge count: " + std::to_string(header->directed_edge_count));
 
-    // Use atomic load to ensure we get a consistent 64-bit value without tearing
-    std::atomic_ref<uint64_t> atomic_bits(
-        const_cast<uint64_t&>((speeds + directed_edge_offset)->bits));
-    auto bits = atomic_bits.load(std::memory_order_relaxed);
+    // TODO: this should be atomic on both x86 and arm, but ideally we should use something like
+    // std::atomic_ref<uint64_t>, but it is not support by all compilers on CI yet
+    uint64_t bits = (speeds + directed_edge_offset)->bits;
     return TrafficSpeed(bits);
   }
 
