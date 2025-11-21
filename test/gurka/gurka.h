@@ -213,6 +213,17 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         std::string* response = nullptr,
                         std::string* request_json = nullptr);
 
+// overload for /tile
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::string& center,
+                        const uint32_t zoom,
+                        const std::string& costing,
+                        std::unordered_map<std::string, std::string> options = {},
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                        std::string* response = nullptr,
+                        std::string* request_json = nullptr);
+
 /* Returns the raw_result formatted as a JSON document in the given format.
  *
  * @param raw_result the result of a /route or /match request

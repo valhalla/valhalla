@@ -187,6 +187,7 @@ jobs:
         with:
           sparse-checkout: |
             src/bindings/nodejs/test/
+            src/bindings/nodejs/examples/
             test/data/utrecht_netherlands.osm.pbf
           sparse-checkout-cone-mode: false
 
