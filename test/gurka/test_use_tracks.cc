@@ -5,6 +5,7 @@
 
 using namespace valhalla;
 
+namespace {
 const std::vector<std::string>& costing = {"auto",          "taxi",       "bus",       "truck",
                                            "motor_scooter", "motorcycle", "pedestrian"};
 
@@ -88,3 +89,4 @@ TEST_F(UseTracksTest, test_use_tracks_if_no_other_roads) {
                   {"EF", "FG", "GH"});
   }
 }
+} // namespace

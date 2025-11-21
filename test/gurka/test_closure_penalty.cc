@@ -228,11 +228,13 @@ TEST_P(ClosurePenalty, AvoidClosure) {
   }
 }
 
+namespace {
 std::vector<std::string> buildParams() {
   // Return the different costings we want to test closures against
   return {
       "auto", "motorcycle", "motor_scooter", "bus", "truck", "taxi",
   };
 }
+} // namespace
 
 INSTANTIATE_TEST_SUITE_P(Test, ClosurePenalty, ::testing::ValuesIn(buildParams()));

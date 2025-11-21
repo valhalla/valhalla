@@ -266,6 +266,7 @@ TEST_P(TruckAsymmetricAccessRestrictions, ForwardBackward) {
   gurka::assert::raw::expect_path(success_route, expected_path_success);
 }
 
+namespace {
 std::vector<asymmetric_restriction_params_t> buildParams() {
   std::vector<asymmetric_restriction_params_t> params;
 
@@ -279,6 +280,7 @@ std::vector<asymmetric_restriction_params_t> buildParams() {
 
   return params;
 };
+} // namespace
 
 INSTANTIATE_TEST_SUITE_P(TruckAsymmetricAccessRestrictionsTest,
                          TruckAsymmetricAccessRestrictions,

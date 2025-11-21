@@ -14,6 +14,7 @@ using namespace valhalla::baldr;
 using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
+namespace {
 valhalla::gurka::map BuildPBF(const std::string& workdir) {
   const std::string ascii_map = R"(
 
@@ -71,6 +72,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
 
   return result;
 }
+} // namespace
 
 TEST(Standalone, TrafficSignals) {
 
