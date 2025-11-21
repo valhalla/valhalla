@@ -4,6 +4,10 @@
 * **Enhancement**
    * ADDED: valhalla_ingest_traffic uses calendar_dates.txt if calendar.txt is missing [#5705](https://github.com/valhalla/valhalla/pull/5705)
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
+   * CHANGED: Get rid of temporary std::vector in GraphTile::GetRestrictions [#5688](https://github.com/valhalla/valhalla/pull/5688)
+   * CHANGED: Use std::from_chars instead of std::stoi/stof/stod [#5704](https://github.com/valhalla/valhalla/pull/5704)
+   * CHANGED: Avoid dynamic allocation in loki::Search [#5724](https://github.com/valhalla/valhalla/pull/5724)
+   * CHANGED: Get rid of temporary vector in GraphTile::GetAccessRestrictions [#5689](https://github.com/valhalla/valhalla/pull/5689)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
@@ -31,6 +35,8 @@
    * ADDED: `flow_sources` expansion property [#5697](https://github.com/valhalla/valhalla/pull/5697)
    * CHANGED: Replace GDAL with libgeotiff, re-enable support for bindings [#5680](https://github.com/valhalla/valhalla/pull/5680)
    * ADDED: Support for loading tiles from a remote tarball with optional HTTP basic auth [#5467](https://github.com/valhalla/valhalla/pull/5467)
+   * CHANGED: lower penalty for u-turns without name consistency [#5696](https://github.com/valhalla/valhalla/pull/5696)
+   * CHANGED: Speed up transit feed ingestion with faster stop time look up via stop id [#5134](https://github.com/valhalla/valhalla/pull/5134)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**

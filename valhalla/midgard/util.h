@@ -6,11 +6,14 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
 
+#include <charconv>
 #include <cstdint>
 #include <cstring>
 #include <limits>
 #include <list>
+#include <optional>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -670,6 +673,108 @@ template <typename numeric_t> bool is_invalid(numeric_t value) {
  */
 template <typename numeric_t> bool is_valid(numeric_t value) {
   return value != invalid<numeric_t>();
+}
+
+/**
+ * Enumerate over a range, providing both index and value.
+ * This is a C++20-compatible alternative to C++23's std::views::enumerate.
+ *
+ * @param range The range to enumerate over
+ * @return A view that yields pairs of (index, value)
+ *
+ * Example:
+ *   for (auto [i, value] : enumerate(my_range)) {
+ *     // i is the index, value is the element
+ *   }
+ */
+template <std::ranges::viewable_range Range> auto enumerate(Range&& range) {
+  return std::views::transform(std::views::all(std::forward<Range>(range)),
+                               [i = size_t{0}](auto&& elem) mutable {
+                                 return std::pair{i++, std::forward<decltype(elem)>(elem)};
+                               });
+}
+
+namespace to_float_detail {
+// SFINAE helper to detect if std::from_chars supports floating-point type T,
+// some compilers (e.g. Clang) don't support it yet, so we need to fallback to std::stof
+template <typename T, typename = void> struct has_from_chars_for_float : std::false_type {};
+
+template <typename T>
+struct has_from_chars_for_float<T,
+                                std::void_t<decltype(std::from_chars(std::declval<const char*>(),
+                                                                     std::declval<const char*>(),
+                                                                     std::declval<T&>()))>>
+    : std::true_type {};
+
+template <typename T>
+inline constexpr bool has_from_chars_for_float_v = has_from_chars_for_float<T>::value;
+} // namespace to_float_detail
+
+/**
+ * Convert a string to a floating-point value.
+ * Uses std::from_chars if available for the type (faster, locale-independent),
+ * otherwise falls back to std::stof/std::stod (locale-dependent).
+ * @tparam  T      Floating-point type (float, double, or long double)
+ * @param   value  String representation of the floating-point number
+ * @return  Returns the parsed floating-point value
+ * @throws  std::invalid_argument if the string cannot be converted
+ */
+template <typename T = float,
+          std::enable_if_t<to_float_detail::has_from_chars_for_float_v<T>, int> = 0>
+T to_float(std::string_view value) {
+  static_assert(std::is_floating_point_v<T>, "T must be a floating-point type");
+  T result;
+  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+  if (ec != std::errc()) {
+    throw std::invalid_argument("Invalid float value: " + std::string(value));
+  }
+  return result;
+}
+
+template <typename T = float,
+          std::enable_if_t<!to_float_detail::has_from_chars_for_float_v<T>, int> = 0>
+T to_float(const std::string& value) {
+  static_assert(std::is_floating_point_v<T>, "T must be a floating-point type");
+  if constexpr (std::is_same_v<T, float>) {
+    return std::stof(value);
+  } else if constexpr (std::is_same_v<T, double>) {
+    return std::stod(value);
+  } else {
+    static_assert(!std::is_same_v<T, T>, "Unsupported floating-point type");
+  }
+}
+
+/**
+ * Convert a string to an integer value.
+ * Uses std::from_chars for fast, locale-independent parsing.
+ * @tparam  T      Integer type (int, int64_t, uint32_t, etc.)
+ * @param   value  String representation of the integer
+ * @return  Returns the parsed integer value
+ * @throws  std::invalid_argument if the string cannot be converted
+ */
+template <typename T = int> T to_int(std::string_view value) {
+  T result;
+  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+  if (ec != std::errc()) {
+    throw std::invalid_argument("Invalid int value: " + std::string(value));
+  }
+  return result;
+}
+
+/**
+ * Try to convert a string to an integer value.
+ * Uses std::from_chars for fast, locale-independent parsing.
+ * @tparam  T      Integer type (int, int64_t, uint32_t, etc.)
+ * @param   value  String representation of the integer
+ * @return  Returns std::optional<T> containing the parsed value, or std::nullopt on failure
+ */
+template <typename T = int> std::optional<T> try_to_int(std::string_view value) noexcept {
+  T result;
+  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+  if (ec != std::errc()) {
+    return std::nullopt;
+  }
+  return result;
 }
 
 } // namespace midgard
