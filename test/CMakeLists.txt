@@ -358,26 +358,26 @@ if(ENABLE_SERVICES)
 endif()
 
 # ENABLE_DATA_TOOLS is needed for utrecht_tiles
-# if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
-#   add_custom_command(OUTPUT python_valhalla.log
-#     COMMAND
-#       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-#       PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python
-#       ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-#       /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log && exit 1)"
-#     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-#     DEPENDS
-#       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py
-#       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_graph_utils.py
-#       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
-#       utrecht_tiles
-#       _valhalla
-#       graph_utils
-#     VERBATIM)
-#   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
-#   set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")
-#   set(python_tests python_valhalla)
-# endif()
+if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
+  add_custom_command(OUTPUT python_valhalla.log
+    COMMAND
+      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
+      PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python
+      ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
+      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log && exit 1)"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_graph_utils.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
+      utrecht_tiles
+      _valhalla
+      graph_utils
+    VERBATIM)
+  add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
+  set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")
+  set(python_tests python_valhalla)
+endif()
 
 # if(ENABLE_NODE_BINDINGS AND ENABLE_DATA_TOOLS)
 #   find_program(NODE_EXECUTABLE NAMES node nodejs)
