@@ -204,6 +204,27 @@ constexpr std::string_view kNodeTransitEgressInfoName = "node.transit_egress_inf
 constexpr std::string_view kNodeTransitEgressInfoLatLon = "node.transit_egress_info.lat_lon";
 constexpr std::string_view kNodeTimeZone = "node.time_zone";
 constexpr std::string_view kNodeTransitionTime = "node.transition_time";
+constexpr std::string_view kNodeDriveOnRight = "node.drive_on_right";
+constexpr std::string_view kNodeElevation = "node.elevation";
+constexpr std::string_view kNodeTaggedAccess = "node.tagged_access";
+constexpr std::string_view kNodePrivateAccess = "node.private_access";
+constexpr std::string_view kNodeCashOnlyToll = "node.cash_only_toll";
+constexpr std::string_view kNodeModeChangeAllowed = "node.mode_change_allowed";
+constexpr std::string_view kNodeNamedIntersection = "node.named_intersection";
+constexpr std::string_view kNodeIsTransit = "node.is_transit";
+
+// Node access
+constexpr std::string_view kNodeAccessAuto = "node.access_auto";
+constexpr std::string_view kNodeAccessPedestrian = "node.access_pedestrian";
+constexpr std::string_view kNodeAccessBicycle = "node.access_bicycle";
+constexpr std::string_view kNodeAccessTruck = "node.access_truck";
+constexpr std::string_view kNodeAccessEmergency = "node.access_emergency";
+constexpr std::string_view kNodeAccessTaxi = "node.access_taxi";
+constexpr std::string_view kNodeAccessBus = "node.access_bus";
+constexpr std::string_view kNodeAccessHov = "node.access_hov";
+constexpr std::string_view kNodeAccessWheelchair = "node.access_wheelchair";
+constexpr std::string_view kNodeAccessMoped = "node.access_moped";
+constexpr std::string_view kNodeAccessMotorcycle = "node.access_motorcycle";
 
 // Top level: osm changeset, admin list, and full shape keys
 constexpr std::string_view kOsmChangeset = "osm_changeset";

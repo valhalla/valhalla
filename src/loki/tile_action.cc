@@ -49,15 +49,6 @@ struct EdgeAttribute {
   value_func_t value_func;
 };
 
-struct EdgeId {
-  const char* key_name;
-  std::string_view attribute_flag;
-  vtzero::index_value EdgesLayerBuilder::*key_member;
-
-  using value_func_t = vtzero::encoded_property_value (*)(const uint32_t edge_id);
-  value_func_t value_func;
-};
-
 /**
  * Helper class to build the edges layer with pre-registered keys
  */
@@ -97,9 +88,6 @@ public:
                    const volatile baldr::TrafficSpeed* forward_traffic,
                    const volatile baldr::TrafficSpeed* reverse_traffic,
                    const baldr::EdgeInfo& edge_info);
-
-  vtzero::layer_builder layer_;
-  const baldr::AttributesController controller_;
 
   // Pre-registered keys
   vtzero::index_value key_tile_level_;
@@ -207,6 +195,10 @@ public:
   vtzero::index_value key_live_congestion1_rev_;
   vtzero::index_value key_live_congestion2_rev_;
   vtzero::index_value key_live_congestion3_rev_;
+
+private:
+  vtzero::layer_builder layer_;
+  const baldr::AttributesController controller_;
 };
 
 static constexpr EdgeAttribute kForwardEdgeAttributes[] = {
@@ -1250,141 +1242,33 @@ void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
   feature.commit();
 }
 
+class NodesLayerBuilder;
+struct NodeAttribute {
+  const char* key_name;
+  std::string_view attribute_flag;
+  vtzero::index_value NodesLayerBuilder::*key_member;
+
+  using value_func_t = vtzero::encoded_property_value (*)(const baldr::NodeInfo&);
+  value_func_t value_func;
+};
+
 /**
  * Helper class to build the nodes layer with pre-registered keys
  */
 class NodesLayerBuilder {
 public:
-  NodesLayerBuilder(vtzero::tile_builder& tile, const baldr::AttributesController& controller)
-      : layer_(tile, "nodes"), controller_(controller) {
-    // Pre-add keys for node properties
-    key_tile_level_ = layer_.add_key_without_dup_check("tile_level");
-    key_tile_id_ = layer_.add_key_without_dup_check("tile_id");
-    key_node_id_ = layer_.add_key_without_dup_check("node_id");
-    key_node_type_ = layer_.add_key_without_dup_check("type");
-    key_traffic_signal_ = layer_.add_key_without_dup_check("traffic_signal");
-    // Individual access mode keys
-    key_access_auto_ = layer_.add_key_without_dup_check("access:auto");
-    key_access_pedestrian_ = layer_.add_key_without_dup_check("access:pedestrian");
-    key_access_bicycle_ = layer_.add_key_without_dup_check("access:bicycle");
-    key_access_truck_ = layer_.add_key_without_dup_check("access:truck");
-    key_access_emergency_ = layer_.add_key_without_dup_check("access:emergency");
-    key_access_taxi_ = layer_.add_key_without_dup_check("access:taxi");
-    key_access_bus_ = layer_.add_key_without_dup_check("access:bus");
-    key_access_hov_ = layer_.add_key_without_dup_check("access:hov");
-    key_access_wheelchair_ = layer_.add_key_without_dup_check("access:wheelchair");
-    key_access_moped_ = layer_.add_key_without_dup_check("access:moped");
-    key_access_motorcycle_ = layer_.add_key_without_dup_check("access:motorcycle");
-    key_edge_count_ = layer_.add_key_without_dup_check("edge_count");
-    key_intersection_ = layer_.add_key_without_dup_check("intersection");
-    key_density_ = layer_.add_key_without_dup_check("density");
-    key_local_edge_count_ = layer_.add_key_without_dup_check("local_edge_count");
-    key_drive_on_right_ = layer_.add_key_without_dup_check("drive_on_right");
-    key_elevation_ = layer_.add_key_without_dup_check("elevation");
-    key_tagged_access_ = layer_.add_key_without_dup_check("tagged_access");
-    key_private_access_ = layer_.add_key_without_dup_check("private_access");
-    key_cash_only_toll_ = layer_.add_key_without_dup_check("cash_only_toll");
-    key_mode_change_ = layer_.add_key_without_dup_check("mode_change");
-    key_named_intersection_ = layer_.add_key_without_dup_check("named_intersection");
-    key_is_transit_ = layer_.add_key_without_dup_check("is_transit");
-    key_transition_count_ = layer_.add_key_without_dup_check("transition_count");
-    key_timezone_ = layer_.add_key_without_dup_check("timezone");
-    key_iso_3166_1_ = layer_.add_key_without_dup_check("iso_3166_1");
-    key_iso_3166_2_ = layer_.add_key_without_dup_check("iso_3166_2");
-  }
+  NodesLayerBuilder(vtzero::tile_builder& tile, const baldr::AttributesController& controller);
 
   void add_feature(const vtzero::point& position,
                    baldr::GraphId node_id,
                    const baldr::NodeInfo& node,
-                   const baldr::AdminInfo& admin_info) {
-    // Create point feature
-    vtzero::point_feature_builder node_feature{layer_};
-    node_feature.set_id(static_cast<uint64_t>(node_id));
-    node_feature.add_point(position);
+                   const baldr::AdminInfo& admin_info);
 
-    // Add tile properties (same structure as edges layer)
-    node_feature.add_property(key_tile_level_, vtzero::encoded_property_value(node_id.level()));
-    node_feature.add_property(key_tile_id_, vtzero::encoded_property_value(node_id.tileid()));
-    node_feature.add_property(key_node_id_, vtzero::encoded_property_value(node_id.id()));
-
-    // Add node properties
-    node_feature.add_property(key_node_type_,
-                              vtzero::encoded_property_value(static_cast<uint32_t>(node.type())));
-    node_feature.add_property(key_traffic_signal_,
-                              vtzero::encoded_property_value(node.traffic_signal()));
-
-    // Add individual access mode properties
-    uint16_t access = node.access();
-    node_feature.add_property(key_access_auto_, vtzero::encoded_property_value(
-                                                    static_cast<bool>(access & kAutoAccess)));
-    node_feature.add_property(key_access_pedestrian_,
-                              vtzero::encoded_property_value(
-                                  static_cast<bool>(access & kPedestrianAccess)));
-    node_feature.add_property(key_access_bicycle_, vtzero::encoded_property_value(
-                                                       static_cast<bool>(access & kBicycleAccess)));
-    node_feature.add_property(key_access_truck_, vtzero::encoded_property_value(
-                                                     static_cast<bool>(access & kTruckAccess)));
-    node_feature.add_property(key_access_emergency_, vtzero::encoded_property_value(static_cast<bool>(
-                                                         access & kEmergencyAccess)));
-    node_feature.add_property(key_access_taxi_, vtzero::encoded_property_value(
-                                                    static_cast<bool>(access & kTaxiAccess)));
-    node_feature.add_property(key_access_bus_,
-                              vtzero::encoded_property_value(static_cast<bool>(access & kBusAccess)));
-    node_feature.add_property(key_access_hov_,
-                              vtzero::encoded_property_value(static_cast<bool>(access & kHOVAccess)));
-    node_feature.add_property(key_access_wheelchair_,
-                              vtzero::encoded_property_value(
-                                  static_cast<bool>(access & kWheelchairAccess)));
-    node_feature.add_property(key_access_moped_, vtzero::encoded_property_value(
-                                                     static_cast<bool>(access & kMopedAccess)));
-    node_feature.add_property(key_access_motorcycle_,
-                              vtzero::encoded_property_value(
-                                  static_cast<bool>(access & kMotorcycleAccess)));
-
-    node_feature.add_property(key_edge_count_, vtzero::encoded_property_value(node.edge_count()));
-    node_feature.add_property(key_intersection_, vtzero::encoded_property_value(
-                                                     static_cast<uint32_t>(node.intersection())));
-    node_feature.add_property(key_density_, vtzero::encoded_property_value(node.density()));
-    node_feature.add_property(key_local_edge_count_,
-                              vtzero::encoded_property_value(node.local_edge_count()));
-    node_feature.add_property(key_drive_on_right_,
-                              vtzero::encoded_property_value(node.drive_on_right()));
-    node_feature.add_property(key_elevation_, vtzero::encoded_property_value(node.elevation()));
-    node_feature.add_property(key_tagged_access_,
-                              vtzero::encoded_property_value(node.tagged_access()));
-    node_feature.add_property(key_private_access_,
-                              vtzero::encoded_property_value(node.private_access()));
-    node_feature.add_property(key_cash_only_toll_,
-                              vtzero::encoded_property_value(node.cash_only_toll()));
-    node_feature.add_property(key_mode_change_, vtzero::encoded_property_value(node.mode_change()));
-    node_feature.add_property(key_is_transit_, vtzero::encoded_property_value(node.is_transit()));
-    node_feature.add_property(key_transition_count_,
-                              vtzero::encoded_property_value(node.transition_count()));
-    node_feature.add_property(key_iso_3166_1_,
-                              vtzero::encoded_property_value(admin_info.country_iso()));
-    node_feature.add_property(key_iso_3166_2_,
-                              vtzero::encoded_property_value(admin_info.state_iso()));
-
-    if (node.timezone()) {
-      node_feature.add_property(key_timezone_,
-                                vtzero::encoded_property_value(
-                                    DateTime::get_tz_db().from_index(node.timezone())->name()));
-    }
-
-    node_feature.commit();
-  }
-
-private:
-  vtzero::layer_builder layer_;
-  const baldr::AttributesController controller_;
-
-  // Pre-registered keys
   vtzero::index_value key_tile_level_;
   vtzero::index_value key_tile_id_;
   vtzero::index_value key_node_id_;
   vtzero::index_value key_node_type_;
   vtzero::index_value key_traffic_signal_;
-  // Individual access mode keys
   vtzero::index_value key_access_auto_;
   vtzero::index_value key_access_pedestrian_;
   vtzero::index_value key_access_bicycle_;
@@ -1396,10 +1280,7 @@ private:
   vtzero::index_value key_access_wheelchair_;
   vtzero::index_value key_access_moped_;
   vtzero::index_value key_access_motorcycle_;
-  vtzero::index_value key_edge_count_;
   vtzero::index_value key_intersection_;
-  vtzero::index_value key_density_;
-  vtzero::index_value key_local_edge_count_;
   vtzero::index_value key_drive_on_right_;
   vtzero::index_value key_elevation_;
   vtzero::index_value key_tagged_access_;
@@ -1408,11 +1289,218 @@ private:
   vtzero::index_value key_mode_change_;
   vtzero::index_value key_named_intersection_;
   vtzero::index_value key_is_transit_;
-  vtzero::index_value key_transition_count_;
   vtzero::index_value key_timezone_;
   vtzero::index_value key_iso_3166_1_;
   vtzero::index_value key_iso_3166_2_;
+
+private:
+  vtzero::layer_builder layer_;
+  const baldr::AttributesController controller_;
 };
+
+static constexpr NodeAttribute kNodeAttributes[] = {
+    {
+        "drive_on_right",
+        baldr::kNodeDriveOnRight,
+        &NodesLayerBuilder::key_drive_on_right_,
+        [](const baldr::NodeInfo& ni) { return vtzero::encoded_property_value(ni.drive_on_right()); },
+    },
+    {
+        "elevation",
+        baldr::kNodeElevation,
+        &NodesLayerBuilder::key_elevation_,
+        [](const baldr::NodeInfo& ni) { return vtzero::encoded_property_value(ni.elevation()); },
+    },
+    {
+        "tagged_access",
+        baldr::kNodeTaggedAccess,
+        &NodesLayerBuilder::key_tagged_access_,
+        [](const baldr::NodeInfo& ni) { return vtzero::encoded_property_value(ni.tagged_access()); },
+    },
+    {
+        "private_access",
+        baldr::kNodePrivateAccess,
+        &NodesLayerBuilder::key_private_access_,
+        [](const baldr::NodeInfo& ni) { return vtzero::encoded_property_value(ni.private_access()); },
+    },
+    {
+        "cash_only_toll",
+        baldr::kNodeCashOnlyToll,
+        &NodesLayerBuilder::key_cash_only_toll_,
+        [](const baldr::NodeInfo& ni) { return vtzero::encoded_property_value(ni.cash_only_toll()); },
+    },
+    {
+        "mode_change_allowed",
+        baldr::kNodeModeChangeAllowed,
+        &NodesLayerBuilder::key_mode_change_,
+        [](const baldr::NodeInfo& ni) { return vtzero::encoded_property_value(ni.mode_change()); },
+    },
+    {
+        "named_intersection",
+        baldr::kNodeNamedIntersection,
+        &NodesLayerBuilder::key_named_intersection_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(ni.named_intersection());
+        },
+    },
+    {
+        "is_transit",
+        baldr::kNodeNamedIntersection,
+        &NodesLayerBuilder::key_is_transit_,
+        [](const baldr::NodeInfo& ni) { return vtzero::encoded_property_value(ni.is_transit()); },
+    },
+    {
+        "timezone",
+        baldr::kNodeTimeZone,
+        &NodesLayerBuilder::key_timezone_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(
+              ni.timezone() ? DateTime::get_tz_db().from_index(ni.timezone())->name() : "");
+        },
+    },
+    {
+        "access:auto",
+        baldr::kNodeAccessAuto,
+        &NodesLayerBuilder::key_access_auto_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kAutoAccess));
+        },
+    },
+    {
+        "access:pedestrian",
+        baldr::kNodeAccessPedestrian,
+        &NodesLayerBuilder::key_access_pedestrian_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kPedestrianAccess));
+        },
+    },
+    {
+        "access:bicycle",
+        baldr::kNodeAccessBicycle,
+        &NodesLayerBuilder::key_access_bicycle_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kBicycleAccess));
+        },
+    },
+    {
+        "access:truck",
+        baldr::kNodeAccessTruck,
+        &NodesLayerBuilder::key_access_truck_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kTruckAccess));
+        },
+    },
+    {
+        "access:emergency",
+        baldr::kNodeAccessEmergency,
+        &NodesLayerBuilder::key_access_emergency_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kEmergencyAccess));
+        },
+    },
+    {
+        "access:taxi",
+        baldr::kNodeAccessTaxi,
+        &NodesLayerBuilder::key_access_taxi_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kTaxiAccess));
+        },
+    },
+    {
+        "access:bus",
+        baldr::kNodeAccessBus,
+        &NodesLayerBuilder::key_access_bus_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kBusAccess));
+        },
+    },
+    {
+        "access:hov",
+        baldr::kNodeAccessHov,
+        &NodesLayerBuilder::key_access_hov_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kHOVAccess));
+        },
+    },
+    {
+        "access:wheelchair",
+        baldr::kNodeAccessWheelchair,
+        &NodesLayerBuilder::key_access_wheelchair_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kWheelchairAccess));
+        },
+    },
+    {
+        "access:moped",
+        baldr::kNodeAccessMoped,
+        &NodesLayerBuilder::key_access_moped_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kMopedAccess));
+        },
+    },
+    {
+        "access:motorcycle",
+        baldr::kNodeAccessMotorcycle,
+        &NodesLayerBuilder::key_access_motorcycle_,
+        [](const baldr::NodeInfo& ni) {
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & kMotorcycleAccess));
+        },
+    },
+};
+
+NodesLayerBuilder::NodesLayerBuilder(vtzero::tile_builder& tile,
+                                     const baldr::AttributesController& controller)
+    : layer_(tile, "nodes"), controller_(controller) {
+  // Pre-add keys for node properties
+  key_tile_level_ = layer_.add_key_without_dup_check("tile_level");
+  key_tile_id_ = layer_.add_key_without_dup_check("tile_id");
+  key_node_id_ = layer_.add_key_without_dup_check("node_id");
+  key_node_type_ = layer_.add_key_without_dup_check("type");
+  key_traffic_signal_ = layer_.add_key_without_dup_check("traffic_signal");
+
+  for (const auto& def : kNodeAttributes) {
+    if (controller(def.attribute_flag)) {
+      this->*(def.key_member) = layer_.add_key_without_dup_check(def.key_name);
+    }
+  }
+
+  if (controller(kAdminCountryCode))
+    key_iso_3166_1_ = layer_.add_key_without_dup_check("iso_3166_1");
+  if (controller(kAdminStateCode))
+    key_iso_3166_2_ = layer_.add_key_without_dup_check("iso_3166_2");
+}
+
+void NodesLayerBuilder::add_feature(const vtzero::point& position,
+                                    baldr::GraphId node_id,
+                                    const baldr::NodeInfo& node,
+                                    const baldr::AdminInfo& admin_info) {
+  // Create point feature
+  vtzero::point_feature_builder node_feature{layer_};
+  node_feature.set_id(static_cast<uint64_t>(node_id));
+  node_feature.add_point(position);
+
+  // Add tile properties (same structure as edges layer)
+  node_feature.add_property(key_tile_level_, vtzero::encoded_property_value(node_id.level()));
+  node_feature.add_property(key_tile_id_, vtzero::encoded_property_value(node_id.tileid()));
+  node_feature.add_property(key_node_id_, vtzero::encoded_property_value(node_id.id()));
+
+  // Add node properties
+  for (const auto& def : kNodeAttributes) {
+    if (controller_(def.attribute_flag)) {
+      const auto key = this->*(def.key_member);
+      node_feature.add_property(key, def.value_func(node));
+    }
+  }
+
+  if (controller_(kAdminCountryCode))
+    node_feature.add_property(key_iso_3166_1_,
+                              vtzero::encoded_property_value(admin_info.country_iso()));
+  if (controller_(kAdminStateCode))
+    node_feature.add_property(key_iso_3166_2_,
+                              vtzero::encoded_property_value(admin_info.state_iso()));
+
+  node_feature.commit();
+}
 
 double lon_to_merc_x(const double lon) {
   return kEarthRadiusMeters * lon * kPiD / 180.0;
@@ -1659,8 +1747,6 @@ std::string loki_worker_t::render_tile(Api& request) {
   const auto bounds = tile_to_bbox(options.tile_xyz());
 
   // query edges in bbox, omits opposing edges
-  // TODO(nils): can RangeQuery be updated to skip hierarchy levels?
-  // How about filtering for costing? Probably better client filtering?
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
   // disable all attributes by default
