@@ -290,7 +290,7 @@ void GetAdminData(const std::string& dbname,
 
 } // anonymous namespace
 
-TEST(AdminTest, TestBuildAdminFromPBF) {
+TEST(BuildAdmin, TestBuildAdminFromPBF) {
   //======================================================================
   // part I: create a mock graph, build a pbf from it, build a sqlite
   // from that pbf, read a few bits from the sqlite to prove its there
