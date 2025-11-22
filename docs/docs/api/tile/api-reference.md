@@ -16,6 +16,8 @@ We support the usual GET & POST with the common "Slippy Map"/XYZ request pattern
 | `tile.x` | The "slippy map" X coordinate. |
 | `tile.y` | The "slippy map" Y coordinate. |
 | `tile_options.return_shortcuts` |  Whether the response contains shortcut edges. Default `false`. |
+| `filters` |  By default, the tiles only contain a small subset of attributes. Use `filters` to include more attributes:<ul><li>`attributes`: an array of attributes to include, see an exhaustive list in the [map-matching docs](../map-matching/api-reference.md#attribute-filters-trace_attributes-only)</li><li>`action`: either `include` or `exclude`</li></ul> |
+| `verbose` | If `true`, it'll enable _all_ attributes, regardless of `filters`. Default `false`. |
 
 ## Integration into MVT compatible clients/SDKs etc
 
