@@ -15,6 +15,14 @@ if(ENABLE_DATA_TOOLS)
   endif()
   add_dependencies(gurka build_timezones)
 
+  # Discover tests automatically using gtest_discover_tests
+  include(GoogleTest)
+  gtest_discover_tests(gurka
+    TEST_PREFIX "Gurka."
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    PROPERTIES ENVIRONMENT "LOCPATH=${VALHALLA_SOURCE_DIR}/locales"
+  )
+
   ## Test run target
   add_custom_command(OUTPUT gurka.log
     COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/gurka
