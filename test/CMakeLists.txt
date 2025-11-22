@@ -113,8 +113,7 @@ set(cost_test_sources
   ${VALHALLA_SOURCE_DIR}/src/sif/motorscootercost.cc
   ${VALHALLA_SOURCE_DIR}/src/sif/pedestriancost.cc
   ${VALHALLA_SOURCE_DIR}/src/sif/transitcost.cc
-  ${VALHALLA_SOURCE_DIR}/src/sif/truckcost.cc
-  ${VALHALLA_SOURCE_DIR}/test/cost_tests_main.cc)
+  ${VALHALLA_SOURCE_DIR}/src/sif/truckcost.cc)
 
 add_executable(cost_tests EXCLUDE_FROM_ALL ${cost_test_sources})
 set_target_properties(cost_tests PROPERTIES
