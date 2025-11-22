@@ -34,8 +34,14 @@ TEST(VectorTiles, BasicTileRendering) {
   std::string tile_data;
   auto api = gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 2850);
-  EXPECT_GT(tile_data.size(), 2750);
+  EXPECT_LT(tile_data.size(), 2900);
+  EXPECT_GT(tile_data.size(), 2800);
+
+  // expect a non-verbose request to have a lot less size
+  std::string tile_data_slim;
+  auto api_slim = gurka::do_action(Options::tile, map, "B", 14, "auto", {{"/verbose", "0"}}, nullptr,
+                                   &tile_data_slim);
+  EXPECT_LT(tile_data_slim.size(), tile_data.size() / 2);
 
   vtzero::vector_tile tile{tile_data};
 
@@ -90,7 +96,7 @@ TEST(VectorTiles, BasicTileRendering) {
 
       std::set<std::string> expected_props = {"tile_level",        "tile_id",
                                               "node_id",           "type",
-                                              "edge_count",        "access:auto",
+                                              "tagged_access",     "access:auto",
                                               "access:pedestrian", "access:bicycle"};
       std::set<std::string> found_props;
 
@@ -177,6 +183,6 @@ TEST(VectorTiles, BasicTileRenderingOnDifferentZoomLevels) {
     EXPECT_EQ(nodes, exp_nodes);
   };
 
-  test_tile(8, 4664, 7, 8);
-  test_tile(12, 6925, 14, 16);
+  test_tile(8, 5516, 7, 8);
+  test_tile(12, 8711, 14, 16);
 }

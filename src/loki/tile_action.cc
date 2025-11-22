@@ -1483,6 +1483,10 @@ void NodesLayerBuilder::add_feature(const vtzero::point& position,
   node_feature.add_property(key_tile_level_, vtzero::encoded_property_value(node_id.level()));
   node_feature.add_property(key_tile_id_, vtzero::encoded_property_value(node_id.tileid()));
   node_feature.add_property(key_node_id_, vtzero::encoded_property_value(node_id.id()));
+  node_feature.add_property(key_node_type_,
+                            vtzero::encoded_property_value(static_cast<uint32_t>(node.type())));
+  node_feature.add_property(key_traffic_signal_,
+                            vtzero::encoded_property_value(node.traffic_signal()));
 
   // Add node properties
   for (const auto& def : kNodeAttributes) {
