@@ -16,6 +16,9 @@ set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
+enable_testing()
+include(GoogleTest)
+
 # common things that the tests need
 find_package(Threads)
 set(TEST_SRCS test.h test.cc)
@@ -102,25 +105,36 @@ foreach(test ${tests})
   endif()
 endforeach()
 
-set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
-foreach(test ${cost_tests})
-  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  set_target_properties(${test} PROPERTIES
-    FOLDER "Tests"
-    COMPILE_DEFINITIONS INLINE_TEST)
-  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  target_link_libraries(${test} valhalla_test)
-endforeach()
+## Cost tests
+set(cost_test_sources
+  ${VALHALLA_SOURCE_DIR}/src/sif/autocost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/bicyclecost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/motorcyclecost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/motorscootercost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/pedestriancost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/transitcost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/truckcost.cc
+  ${VALHALLA_SOURCE_DIR}/test/cost_tests_main.cc)
 
-set(tyr_tests route_serializer_osrm)
-foreach(test ${tyr_tests})
-  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
-  set_target_properties(${test} PROPERTIES
-    FOLDER "Tests"
-    COMPILE_DEFINITIONS INLINE_TEST)
-  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
-  target_link_libraries(${test} valhalla_test)
-endforeach()
+add_executable(cost_tests EXCLUDE_FROM_ALL ${cost_test_sources})
+set_target_properties(cost_tests PROPERTIES
+  FOLDER "Tests"
+  COMPILE_DEFINITIONS INLINE_TEST)
+create_source_groups("Source Files" ${cost_test_sources})
+target_link_libraries(cost_tests valhalla_test)
+gtest_discover_tests(cost_tests TEST_PREFIX "Cost.")
+
+## Tyr tests
+set(tyr_test_sources
+  ${VALHALLA_SOURCE_DIR}/src/tyr/route_serializer_osrm.cc)
+
+add_executable(tyr_tests EXCLUDE_FROM_ALL ${tyr_test_sources})
+set_target_properties(tyr_tests PROPERTIES
+  FOLDER "Tests"
+  COMPILE_DEFINITIONS INLINE_TEST)
+create_source_groups("Source Files" ${tyr_test_sources})
+target_link_libraries(tyr_tests valhalla_test)
+gtest_discover_tests(tyr_tests TEST_PREFIX "Tyr.")
 
 ## Test-specific data, properties and dependencies
 target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
