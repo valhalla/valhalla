@@ -144,18 +144,18 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 ###### Other costing options
 The following options are available for `auto`, `bus`, `taxi`, and `truck` costing methods.
 
-| Vehicle Options | Description |
-| :-------------------------- | :----------- |
-| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 4.11 for truck. |
-| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 2.6 for truck. |
-| `length` | The length of the truck (in meters). Default 21.64. |
-| `weight` | The weight of the truck (in metric tons). Default 21.77. |
+| Vehicle Options | Description                                                                                                                                                                                                                                                             |
+| :-------------------------- |:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 4.11 for truck.                                                                                                                                                                               |
+| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 2.6 for truck.                                                                                                                                                                                 |
+| `length` | The length of the vehicle (in meters). Default 2.7 for car, bus, taxi and 21.64 for truck.                                                                                                                                                                              |
+| `weight` | The weight of the vehicle (in tons). Default 0.8 for car, bus, taxi and 21.77 for truck.                                                                                                                                                                                 |
 | `exclude_unpaved` | This value indicates whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
-| `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false. |
-| `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false. |
-| `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false. |
-| `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false. |
-| `speed_penalty_factor` | Penalty factor applied for edges when edge speed is faster than top speed. The default value is 0.05. |
+| `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false.                                                                                                                                                                         |
+| `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false.                                                                                                                            |
+| `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false.                                                                                                                            |
+| `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false.                                                                                                     |
+| `speed_penalty_factor` | Penalty factor applied for edges when edge speed is faster than top speed. The default value is 0.05.                                                                                                                                                                   |
 
 The following options are available for `truck` costing.
 
