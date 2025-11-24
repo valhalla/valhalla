@@ -1348,6 +1348,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                                                               edge_itr->restriction_index);
     assert(restriction != nullptr);
     trip_edge->mutable_restriction()->set_type(static_cast<uint32_t>(restriction->type()));
+    trip_edge->mutable_restriction()->set_countryisocode(
+        restriction->countryIsoCode());
   }
 
   trip_edge->set_has_time_restrictions(edge_itr->restriction_index != kInvalidRestriction);

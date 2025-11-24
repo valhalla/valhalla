@@ -514,10 +514,10 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       if (access_restrictions.all_restrictions.size()) {
         newedge.set_access_restriction(access_restrictions.modes);
         for (const auto& res : access_restrictions.all_restrictions) {
-          tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                             res.second.type(), res.second.modes(),
-                                                             res.second.value(),
-                                                             res.second.except_destination()));
+          tilebuilder.AddAccessRestriction(
+              AccessRestriction(tilebuilder.directededges().size(), res.second.type(),
+                                res.second.modes(), res.second.value(),
+                                res.second.except_destination(), res.second.countryIsoCode()));
         }
       }
 
@@ -683,9 +683,9 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
         if (directededge->access_restriction()) {
           auto restrictions = tile->GetAccessRestrictions(edgeid.id());
           for (const auto& res : restrictions) {
-            tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value(),
-                                                               res.except_destination()));
+            tilebuilder.AddAccessRestriction(
+                AccessRestriction(tilebuilder.directededges().size(), res.type(), res.modes(),
+                                  res.value(), res.except_destination(), res.countryIsoCode()));
           }
         }
 

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <utility>
 
 using namespace valhalla;
 
@@ -76,9 +77,9 @@ protected:
                      const std::vector<std::string>& props = {},
                      bool dedupe = false,
                      const bool use_depart_at = false,
-                     std::unordered_map<std::string, std::string> expected_props = {}) {
+                     const std::unordered_map<std::string, std::string>& expected_props = {}) {
     check_result_json(action, waypoints, skip_opps, dedupe, exp_feats, props, use_depart_at,
-                      expected_props);
+                      std::move(expected_props));
     check_result_pbf(action, waypoints, skip_opps, dedupe, exp_feats, props, use_depart_at);
   }
   void check_result_pbf(const std::string& action,
@@ -145,7 +146,7 @@ protected:
                          unsigned exp_feats,
                          const std::vector<std::string>& props,
                          const bool use_depart_at = false,
-                         std::unordered_map<std::string, std::string> expected_props = {}) {
+                         const std::unordered_map<std::string, std::string>& expected_props = {}) {
 
     SCOPED_TRACE("Failed on " +
                  std::string(::testing::UnitTest::GetInstance()->current_test_info()->name()));

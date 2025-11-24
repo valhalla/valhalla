@@ -371,9 +371,9 @@ void FilterTiles(GraphReader& reader,
         if (directededge->access_restriction()) {
           auto restrictions = tile->GetAccessRestrictions(edgeid.id());
           for (const auto& res : restrictions) {
-            tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value(),
-                                                               res.except_destination()));
+            tilebuilder.AddAccessRestriction(
+                AccessRestriction(tilebuilder.directededges().size(), res.type(), res.modes(),
+                                  res.value(), res.except_destination(), res.countryIsoCode()));
           }
         }
 
@@ -750,9 +750,9 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         if (directededge->access_restriction()) {
           auto restrictions = tile->GetAccessRestrictions(edgeid.id());
           for (const auto& res : restrictions) {
-            tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value(),
-                                                               res.except_destination()));
+            tilebuilder.AddAccessRestriction(
+                AccessRestriction(tilebuilder.directededges().size(), res.type(), res.modes(),
+                                  res.value(), res.except_destination(), res.countryIsoCode()));
           }
         }
 

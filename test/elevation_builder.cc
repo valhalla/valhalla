@@ -34,7 +34,8 @@ zmq::context_t context;
  * @brief Generate coords from tile
  *
  * */
-std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile);
+std::unordered_set<valhalla::midgard::PointLL> get_coord(const std::string& tile_dir,
+                                                         const std::string& tile);
 /**
  * @brief Contract full path to relative
  * */
@@ -168,11 +169,14 @@ struct TestableSample : public valhalla::skadi::sample {
   }
 };
 
-std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile) {
+std::unordered_set<valhalla::midgard::PointLL> get_coord(const std::string& tile_dir,
+                                                         const std::string& tile) {
   if (tile_dir.empty() || tile.empty())
     return {};
 
-  valhalla::mjolnir::GraphTileBuilder tilebuilder(tile_dir, GraphTile::GetTileId(tile_dir + tile),
+  valhalla::mjolnir::GraphTileBuilder tilebuilder(tile_dir,
+                                                  valhalla::baldr::GraphTile::GetTileId(tile_dir +
+                                                                                        tile),
                                                   true);
   tilebuilder.header_builder().set_has_elevation(true);
 
@@ -180,10 +184,10 @@ std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::st
   std::unordered_set<uint32_t> cache;
   cache.reserve(2 * count);
 
-  std::unordered_set<PointLL> result;
+  std::unordered_set<valhalla::midgard::PointLL> result;
   for (uint32_t i = 0; i < count; ++i) {
     // Get a writeable reference to the directed edge
-    const DirectedEdge& directededge = tilebuilder.directededge_builder(i);
+    const valhalla::baldr::DirectedEdge& directededge = tilebuilder.directededge_builder(i);
     // Get the edge info offset
     uint32_t edge_info_offset = directededge.edgeinfo_offset();
     if (cache.count(edge_info_offset))
@@ -195,7 +199,7 @@ std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::st
     auto length = directededge.length();
     if (!directededge.tunnel() && directededge.use() != Use::kFerry) {
       // Evenly sample the shape. If it is really short or a bridge just do both ends
-      std::vector<PointLL> resampled;
+      std::vector<valhalla::midgard::PointLL> resampled;
       if (length < POSTING_INTERVAL * 3 || directededge.bridge()) {
         resampled = {shape.front(), shape.back()};
       } else {
@@ -251,7 +255,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
 
   const auto& tile_dir = config.get<std::string>("mjolnir.tile_dir");
   ElevationDownloadTestData params{tile_dir};
-  std::unordered_set<PointLL> coords_storage;
+  std::unordered_set<valhalla::midgard::PointLL> coords_storage;
   for (const auto& tile : params.m_test_tile_names) {
     for (const auto& coord : get_coord(tile_dir, tile)) {
       coords_storage.insert(coord);
