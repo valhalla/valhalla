@@ -8,6 +8,7 @@
    * CHANGED: Use std::from_chars instead of std::stoi/stof/stod [#5704](https://github.com/valhalla/valhalla/pull/5704)
    * CHANGED: Avoid dynamic allocation in loki::Search [#5724](https://github.com/valhalla/valhalla/pull/5724)
    * CHANGED: Get rid of temporary vector in GraphTile::GetAccessRestrictions [#5689](https://github.com/valhalla/valhalla/pull/5689)
+   * ADDED: more options for `valhalla_benchmark_loki` [#5730](https://github.com/valhalla/valhalla/pull/5730)
    * CHANGED: Microoptimisation in EdgeInfo. [#5733](https://github.com/valhalla/valhalla/pull/5733)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
