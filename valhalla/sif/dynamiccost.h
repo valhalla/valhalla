@@ -13,6 +13,7 @@
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
@@ -709,11 +710,9 @@ public:
         allow_destination_only_)
       return 0;
 
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), access_mask_);
+    auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mask_);
 
-    for (size_t i = 0; i < restrictions.size(); ++i) {
-      const auto& restr = restrictions[i];
+    for (const auto& restr : restrictions) {
       if (restr.except_destination()) {
         destonly_access_restr_mask |=
             baldr::kAccessRestrictionMasks[static_cast<size_t>(restr.type())];
@@ -746,14 +745,12 @@ public:
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
 
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), access_mode);
+    auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
     bool time_allowed = false;
 
     uint8_t tmp_mask = 0;
-    for (size_t i = 0; i < restrictions.size(); ++i) {
-      const auto& restriction = restrictions[i];
+    for (const auto& [i, restriction] : midgard::enumerate(restrictions)) {
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
       if (!ignore_non_vehicular_restrictions_ &&
