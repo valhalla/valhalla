@@ -52,7 +52,7 @@ int32_t parse_varint(const char*& encoded) {
 // per tag parser. each returned string includes the leading TaggedValue.
 std::optional<std::string_view> get_tagged_value(const char* ptr) {
   TaggedValue tv = static_cast<TaggedValue>(ptr[0]);
-  if (tv == TaggedValue::kLinguistic) {
+  if (tv == TaggedValue::kLinguistic) { // we handle it separately
     return {};
   }
 
@@ -326,14 +326,7 @@ std::vector<std::string> EdgeInfo::GetTaggedValues() const {
     if (ni->name_offset_ < names_list_length_) {
       const char* value = names_list_ + ni->name_offset_;
       try {
-        TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
-        if (tv == baldr::TaggedValue::kLinguistic) {
-          continue;
-        }
-
-        // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
-        auto contents = get_tagged_value(value);
-        if (contents) {
+        if (auto contents = get_tagged_value(value)) {
           tagged_values.emplace_back(*contents);
         }
       } catch (const std::invalid_argument& arg) {
@@ -360,15 +353,8 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
         if (ni->name_offset_ < names_list_length_) {
           const char* value = names_list_ + ni->name_offset_;
           try {
-            // no pronunciations for some reason...
-            TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
-            if (tv == baldr::TaggedValue::kLinguistic) {
-              continue;
-            }
-            // get whatever tag value was in there
-            // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
-            auto contents = get_tagged_value(value);
-            if (contents) {
+            if (auto contents = get_tagged_value(value)) {
+              TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
               // remove the leading TaggedValue byte from the content
               tag_cache_.emplace(tv, contents->substr(1));
             }
