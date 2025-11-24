@@ -30,11 +30,16 @@ COPY README.md .
 
 ARG CONCURRENCY
 ARG ADDITIONAL_TARGETS
+ARG ENABLE_TESTS
+ARG INSTALL_TEST_LIB
+ARG BUILD_TYPE
 # this arg will always compile the full project on every build bcs it's a commit hash
 # but we only build the docker image in GHA if relevant files changed (extensive paths-ignore in GHA workflow)
 ARG VERSION_MODIFIER=""
+
 # switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
-RUN cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_TESTS=Off -DENABLE_SINGLE_FILES_WERROR=Off -DVALHALLA_VERSION_MODIFIER=${VERSION_MODIFIER} && \
+RUN cmake -B build -DCMAKE_BUILD_TYPE=${BUILD_TYPE-"RelWithDebInfo"} -DCMAKE_C_COMPILER=gcc -DENABLE_TESTS=${ENABLE_TESTS:-"Off"} && \
+  -DENABLE_SINGLE_FILES_WERROR=Off -DVALHALLA_VERSION_MODIFIER=${VERSION_MODIFIER} -DINSTALL_TEST_LIB=${INSTALL_TEST_LIB:-"Off"} && \
   make -C build all ${ADDITIONAL_TARGETS} -j${CONCURRENCY:-$(nproc)} && \
   make -C build install
 
