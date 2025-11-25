@@ -807,9 +807,4 @@ EXPECT_THAT(ctorTester->use_primary , test::IsBetween( kUsePrimaryRange.min ,kUs
 }
 } // namespace
 
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
-
 #endif
