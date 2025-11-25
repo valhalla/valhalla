@@ -29,6 +29,13 @@ inline TripLeg_SpeedType GetTripLegSpeedType(const baldr::SpeedType speed_type) 
   return kTripLegSpeedType[static_cast<int>(speed_type)];
 }
 
+// Associate HovTypes values to TripLeg proto
+constexpr TripLeg_HovType kTripLegHovType[] = {TripLeg_HovType_kHOV2,
+                                               TripLeg_HovType_kHOV3};
+inline TripLeg_HovType GetTripLegHovType(const baldr::HOVEdgeType hov_type) {
+  return kTripLegHovType[static_cast<int>(hov_type)];
+}
+
 // Associate Surface values to TripLeg proto
 constexpr TripLeg_Surface kTripLegSurface[] =
     {TripLeg_Surface_kPavedSmooth, TripLeg_Surface_kPaved,     TripLeg_Surface_kPavedRough,

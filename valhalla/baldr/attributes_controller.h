@@ -86,6 +86,8 @@ constexpr std::string_view kEdgeCountryCrossing = "edge.country_crossing";
 constexpr std::string_view kEdgeForward = "edge.forward";
 constexpr std::string_view kEdgeLevels = "edge.levels";
 constexpr std::string_view kEdgeTrafficSignal = "edge.traffic_signal";
+constexpr std::string_view kEdgeHovType = "edge.hov_type";
+
 
 // Node keys
 constexpr std::string_view kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
