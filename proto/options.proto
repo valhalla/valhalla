@@ -71,8 +71,8 @@ message AvoidEdge {
 message CostFactorEdge {
   uint64 id = 1;    // the edge's graph id
   double factor = 2; // the factor applied to the (partial) edge cost
-  double start = 3;  // the start fraction along the edge 
-  double end = 4;    // the end fraction along the edge 
+  double start = 3;  // the start fraction along the edge
+  double end = 4;    // the end fraction along the edge
 }
 
 /**
@@ -327,6 +327,9 @@ message Costing {
     map<uint32, HierarchyLimits> hierarchy_limits = 92;
     bool ignore_construction = 93;
     repeated CostFactorEdge cost_factor_edges = 94;     // identified edges along user provided linear features, to which to apply special cost factors
+    oneof has_speed_penalty_factor {
+          float speed_penalty_factor = 95;
+        }
   }
 
   oneof has_options {
