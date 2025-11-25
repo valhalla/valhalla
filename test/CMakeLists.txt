@@ -112,7 +112,7 @@ foreach(test ${tests})
 endforeach()
 
 ## Cost tests
-set(cost_test_sources
+set(cost_inline_test_sources
   ${VALHALLA_SOURCE_DIR}/src/sif/autocost.cc
   ${VALHALLA_SOURCE_DIR}/src/sif/bicyclecost.cc
   ${VALHALLA_SOURCE_DIR}/src/sif/motorcyclecost.cc
@@ -121,25 +121,25 @@ set(cost_test_sources
   ${VALHALLA_SOURCE_DIR}/src/sif/transitcost.cc
   ${VALHALLA_SOURCE_DIR}/src/sif/truckcost.cc)
 
-add_executable(cost_tests EXCLUDE_FROM_ALL ${cost_test_sources})
-set_target_properties(cost_tests PROPERTIES
+add_executable(cost_inline_tests EXCLUDE_FROM_ALL ${cost_inline_test_sources})
+set_target_properties(cost_inline_tests PROPERTIES
   FOLDER "Tests"
   COMPILE_DEFINITIONS INLINE_TEST)
-create_source_groups("Source Files" ${cost_test_sources})
-target_link_libraries(cost_tests valhalla_test)
-gtest_discover_tests(cost_tests TEST_PREFIX "Cost.")
+create_source_groups("Source Files" ${cost_inline_test_sources})
+target_link_libraries(cost_inline_tests valhalla_test)
+gtest_discover_tests(cost_inline_tests TEST_PREFIX "CostInline.")
 
 ## Tyr tests
-set(tyr_test_sources
+set(tyr_inline_test_sources
   ${VALHALLA_SOURCE_DIR}/src/tyr/route_serializer_osrm.cc)
 
-add_executable(tyr_tests EXCLUDE_FROM_ALL ${tyr_test_sources})
-set_target_properties(tyr_tests PROPERTIES
+add_executable(tyr_inline_tests EXCLUDE_FROM_ALL ${tyr_inline_test_sources})
+set_target_properties(tyr_inline_tests PROPERTIES
   FOLDER "Tests"
   COMPILE_DEFINITIONS INLINE_TEST)
-create_source_groups("Source Files" ${tyr_test_sources})
-target_link_libraries(tyr_tests valhalla_test)
-gtest_discover_tests(tyr_tests TEST_PREFIX "Tyr.")
+create_source_groups("Source Files" ${tyr_inline_test_sources})
+target_link_libraries(tyr_inline_tests valhalla_test)
+gtest_discover_tests(tyr_inline_tests TEST_PREFIX "TyrInline.")
 
 ## Test-specific data, properties and dependencies
 target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
