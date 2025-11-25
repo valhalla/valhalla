@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - "master"
-      - "cb-dev-docker" # TODO remove after testing
     tags:
       - "*"
     paths-ignore:
@@ -39,9 +38,6 @@ jobs:
             echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
           elif [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF_NAME}" == "cb-dev-docker" ]]; then
-            # custom branch condition for testing (remove before merge)
-            echo "tag=cb-dev-docker" >> $GITHUB_OUTPUT
           else
             echo "tag=latest" >> $GITHUB_OUTPUT
           fi
@@ -94,10 +90,6 @@ jobs:
             } >> "$GITHUB_OUTPUT"
             echo "image_name_suffix=-dev" >> "$GITHUB_OUTPUT"
           fi
-      - name: Debug build args
-        run: |
-          echo "Build args output:"
-          echo "${{ steps.buildargs.outputs.build_args }}"
 
       - name: Get version modifier
         if: github.ref == 'refs/heads/master'
