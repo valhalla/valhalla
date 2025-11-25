@@ -120,6 +120,7 @@ edge.truck_route
 edge.country_crossing
 edge.forward
 edge.traffic_signal
+edge.hov_type
 
 // Node filter keys
 node.intersecting_edge.begin_heading
@@ -233,6 +234,7 @@ Each `edge` may include:
 | `country_crossing` | True if the edge is a country crossing. |                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `forward` | True if the edge is traversed forwards and False if it is traversed backwards with respect to the reference shape/geometry (ie. the direction in which it was digitized). |
 | `traffic_signal` | True if the edge contains a traffic signal in its direction. |
+| `hov_type` | The type (if any) of HOV lane along this edge.
 
 #### Sign items
 

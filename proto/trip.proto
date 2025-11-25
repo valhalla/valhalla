@@ -101,6 +101,11 @@ message TripLeg {
     kBothSides = 3;
   }
 
+  enum HovType {
+    kHOV2 = 0;
+    kHOV3 = 1;
+  }
+
   enum SpeedType {
     kTagged = 0;
     kClassified = 1;
@@ -236,6 +241,7 @@ message TripLeg {
     }
     SpeedType speed_type = 65;
     bool traffic_signal = 66;
+    HovType hov_type = 67;
   }
 
   message IntersectingEdge {
