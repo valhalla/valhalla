@@ -30,8 +30,7 @@ inline TripLeg_SpeedType GetTripLegSpeedType(const baldr::SpeedType speed_type) 
 }
 
 // Associate HovTypes values to TripLeg proto
-constexpr TripLeg_HovType kTripLegHovType[] = {TripLeg_HovType_kHOV2,
-                                               TripLeg_HovType_kHOV3};
+constexpr TripLeg_HovType kTripLegHovType[] = {TripLeg_HovType_kHOV2, TripLeg_HovType_kHOV3};
 inline TripLeg_HovType GetTripLegHovType(const baldr::HOVEdgeType hov_type) {
   return kTripLegHovType[static_cast<int>(hov_type)];
 }
