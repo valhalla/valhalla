@@ -118,6 +118,7 @@ class SimpleCost final : public valhalla::sif::DynamicCost {
 public:
   // keep track of the time information with which edge cost was called
   mutable std::vector<baldr::TimeInfo> time_infos;
+  mutable std::unordered_set<baldr::GraphId> seen_edges;
 
   /**
    * Constructor.
@@ -173,11 +174,16 @@ public:
   }
 
   Cost EdgeCost(const DirectedEdge* edge,
-                const GraphId& /*edgeid*/,
+                const GraphId& edgeid,
                 const graph_tile_ptr& /*tile*/,
                 const baldr::TimeInfo& time_info,
                 uint8_t& /*flow_sources*/) const override {
-    time_infos.push_back(time_info);
+    // only gather time infos for edges when they are first
+    // reached to make sure the time_info objects are not
+    // from recosting, where we certainly have the correct time
+    if (seen_edges.insert(edgeid).second) {
+      time_infos.push_back(time_info);
+    }
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }
@@ -465,9 +471,9 @@ TEST_F(MatrixTrafficTest, CostMatrixPathfinding) {
                                                  return a.seconds_from_now < b.seconds_from_now;
                                                });
 
-  EXPECT_EQ(24, invalid_count);
-  EXPECT_EQ(24, valid_count);
-  EXPECT_EQ(7045, max_seconds_from_now->seconds_from_now);
+  EXPECT_EQ(6, invalid_count);
+  EXPECT_EQ(7, valid_count);
+  EXPECT_EQ(2820, max_seconds_from_now->seconds_from_now);
 }
 
 TEST(StandAlone, CostMatrixDeadends) {

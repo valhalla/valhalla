@@ -1811,6 +1811,7 @@ class SimpleCost final : public valhalla::sif::DynamicCost {
 public:
   // keep track of the time information with which edge cost was called
   mutable std::vector<baldr::TimeInfo> time_infos;
+  mutable std::unordered_set<baldr::GraphId> seen_edges;
 
   /**
    * Constructor.
@@ -1866,11 +1867,14 @@ public:
   }
 
   vs::Cost EdgeCost(const DirectedEdge* edge,
-                    const GraphId& /*edgeid*/,
+                    const GraphId& edgeid,
                     const graph_tile_ptr& /*tile*/,
                     const baldr::TimeInfo& time_info,
                     uint8_t& /*flow_sources*/) const override {
-    time_infos.push_back(time_info);
+    // only keep the time infos when an edge is first reached
+    if (seen_edges.insert(edgeid).second) {
+      time_infos.push_back(time_info);
+    }
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }
@@ -2003,8 +2007,8 @@ TEST(StandAlone, AstarReverseTimeTrackingTest) {
 
     // When called with rtt_heuristic (default), no invalid time should ever be passed
     EXPECT_EQ(0, invalid_count);
-    EXPECT_EQ(16, valid_count);
-    EXPECT_GT(max_seconds_from_now->seconds_from_now, 2000);
+    EXPECT_EQ(5, valid_count);
+    EXPECT_EQ(max_seconds_from_now->seconds_from_now, 1005);
   }
 
   // now disable the heuristic
@@ -2049,9 +2053,9 @@ TEST(StandAlone, AstarReverseTimeTrackingTest) {
                          });
 
     // When called with rtt_disabled some invalid times should have been passed
-    EXPECT_EQ(5, invalid_count);
-    EXPECT_EQ(11, valid_count);
-    EXPECT_GT(max_seconds_from_now->seconds_from_now, 2000);
+    EXPECT_EQ(2, invalid_count);
+    EXPECT_EQ(3, valid_count);
+    EXPECT_EQ(max_seconds_from_now->seconds_from_now, 1005);
   }
 }
 
