@@ -24,6 +24,7 @@ on:
 
 jobs:
   extract_image_tag: 
+    runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.imgtag.outputs.tag }}
 
@@ -42,12 +43,12 @@ jobs:
           fi
         shell: bash
 
-  build_publish_base:
+  build_publish:
     needs: [extract_image_tag]
     strategy:
       matrix:
         variant: [prod, dev]
-        arch: [amd64, arm64]
+        os: [ubuntu-latest, ubuntu-24.04-arm]
 
     if: ${{ github.repository_owner == 'valhalla' }}
     runs-on: ${{ matrix.os }}
@@ -59,26 +60,28 @@ jobs:
           submodules: "recursive"
           fetch-depth: 0
 
-     - name: Determine platform and tag suffix
+      - name: Determine platform and tag suffix
         id: vars
         run: |
-          if [ "${{ matrix.arch }}" = "amd64" ]; then
-            echo "platform=linux/amd64" >> $GITHUB_OUTPUT
-            echo "tagsuffix=amd64" >> $GITHUB_OUTPUT
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            echo "platform=linux/amd64" >> "$GITHUB_OUTPUT"
+            echo "tagsuffix=amd64" >> "$GITHUB_OUTPUT"
+            echo "arch=amd64" >> "$GITHUB_OUTPUT"
           else
-            echo "platform=linux/arm64" >> $GITHUB_OUTPUT
-            echo "tagsuffix=arm64" >> $GITHUB_OUTPUT
+            echo "platform=linux/arm64" >> "$GITHUB_OUTPUT"
+            echo "tagsuffix=arm64" >> "$GITHUB_OUTPUT"
+            echo "arch=arm64" >> "$GITHUB_OUTPUT"
           fi
 
-     - name: Set build args 
-       id: buildargs
-       run: |
+      - name: Set build args 
+        id: buildargs
+        run: |
           if [ "${{ matrix.variant }}" = "prod" ]; then
-            echo "build_args=" >> $GITHUB_OUTPUT
-            echo "image_name_suffix=" >> $GITHUB_OUTPUT
+            echo "build_args=" >> "$GITHUB_OUTPUT"
+            echo "image_name_suffix=" >> "$GITHUB_OUTPUT"
           else
-            echo "build_args=ENABLE_TESTS=On INSTALL_TEST_LIB=On BUILD_TYPE=RelWithDebInfo" >> $GITHUB_OUTPUT
-            echo "image_name_suffix=-dev" >> $GITHUB_OUTPUT
+            echo "build_args=ENABLE_TESTS=On,INSTALL_TEST_LIB=On,BUILD_TYPE=RelWithDebInfo" >> "$GITHUB_OUTPUT"
+            echo "image_name_suffix=-dev" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Get version modifier
@@ -104,11 +107,11 @@ jobs:
           context: .
           file: docker/Dockerfile
           provenance: false # needed to be able to converge into one image
-          platforms: ${{ matrix.platform }}
+          platforms: ${{ steps.vars.outputs.platform }}
           push: true
-          tags: ghcr.io/valhalla/valhalla${{ steps.buildargs.outputs.image_name_suffix }}:${{ needs.extract_image_tag.outputs.tag }}-${{ matrix.tagsuffix }}
-          cache-from: type=gha,scope=${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+          tags: ghcr.io/valhalla/valhalla${{ steps.buildargs.outputs.image_name_suffix }}:${{ needs.extract_image_tag.outputs.tag }}-${{ steps.vars.outputs.tagsuffix }}
+          cache-from: type=gha,scope=${{ steps.vars.outputs.platform }}
+          cache-to: type=gha,mode=max,scope=${{ steps.vars.outputs.platform }}
           build-args: |
             VERSION_MODIFIER=${{ steps.extract_gitsha.outputs.version_modifier }}
             ${{ steps.buildargs.outputs.build_args }}
@@ -120,14 +123,14 @@ jobs:
           context: .
           file: docker/Dockerfile-scripted
           provenance: false # needed to be able to converge into one image
-          platforms: ${{ matrix.platform }}
+          platforms: ${{ steps.vars.outputs.platform }}
           push: true
-          tags: ghcr.io/valhalla/valhalla-scripted:${{ needs.extract_image_tag.outputs.tag }}-${{ matrix.tagsuffix }}
-          cache-from: type=gha,scope=${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+          tags: ghcr.io/valhalla/valhalla-scripted:${{ needs.extract_image_tag.outputs.tag }}-${{ steps.vars.outputs.tagsuffix }}
+          cache-from: type=gha,scope=${{ steps.vars.outputs.platform }}
+          cache-to: type=gha,mode=max,scope=${{ steps.vars.outputs.platform }}
           build-args: |
             VERSION_MODIFIER=${{ steps.extract_gitsha.outputs.version_modifier }}
-            VALHALLA_BUILDER_IMAGE=ghcr.io/valhalla/valhalla:${{ needs.extract_image_tag.outputs.tag }}-${{ matrix.tagsuffix }}
+            VALHALLA_BUILDER_IMAGE=ghcr.io/valhalla/valhalla:${{ needs.extract_image_tag.outputs.tag }}-${{ steps.vars.outputs.tagsuffix }}
 
   create-manifests:
     strategy:
@@ -137,7 +140,7 @@ jobs:
           - image: valhalla-dev
           - image: valhalla-scripted
     runs-on: ubuntu-latest
-    needs: [build_publish]
+    needs: [build_publish, extract_image_tag]
     steps:
       - name: Log in to GitHub Docker Registry
         uses: docker/login-action@v2
@@ -149,7 +152,7 @@ jobs:
       - name: Create and push manifest
         run: |
           docker manifest create \
-            ghcr.io/valhalla/${{ matrix.image }}:${{ needs.build_publish.outputs.tag }} \
+            ghcr.io/valhalla/${{ matrix.image }}:${{ needs.extract_image_tag.outputs.tag }} \
             --amend ghcr.io/valhalla/${{ matrix.image }}:${{  needs.extract_image_tag.outputs.tag  }}-amd64 \
             --amend ghcr.io/valhalla/${{ matrix.image }}:${{ needs.extract_image_tag.outputs.tag }}-arm64 
           docker manifest push ghcr.io/valhalla/${{ matrix.image }}:${{ needs.extract_image_tag.outputs.tag }}
