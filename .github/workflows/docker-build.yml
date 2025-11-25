@@ -84,7 +84,14 @@ jobs:
             echo "build_args=" >> "$GITHUB_OUTPUT"
             echo "image_name_suffix=" >> "$GITHUB_OUTPUT"
           else
-            echo "build_args=ENABLE_TESTS=On,INSTALL_TEST_LIB=On,BUILD_TYPE=RelWithDebInfo" >> "$GITHUB_OUTPUT"
+           # Use newlines for multiple build args
+            {
+              echo "build_args<<EOF"
+              echo "ENABLE_TESTS=On"
+              echo "INSTALL_TEST_LIB=On"
+              echo "BUILD_TYPE=RelWithDebInfo"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
             echo "image_name_suffix=-dev" >> "$GITHUB_OUTPUT"
           fi
 
