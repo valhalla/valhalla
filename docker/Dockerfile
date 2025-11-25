@@ -38,7 +38,7 @@ ARG BUILD_TYPE
 ARG VERSION_MODIFIER=""
 
 # switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
-RUN cmake -B build -DCMAKE_BUILD_TYPE=${BUILD_TYPE-"RelWithDebInfo"} -DCMAKE_C_COMPILER=gcc -DENABLE_TESTS=${ENABLE_TESTS:-"Off"} && \
+RUN cmake -B build -DCMAKE_BUILD_TYPE=${BUILD_TYPE-"RelWithDebInfo"} -DCMAKE_C_COMPILER=gcc -DENABLE_TESTS=${ENABLE_TESTS:-"Off"} \
   -DENABLE_SINGLE_FILES_WERROR=Off -DVALHALLA_VERSION_MODIFIER=${VERSION_MODIFIER} -DINSTALL_TEST_LIB=${INSTALL_TEST_LIB:-"Off"} && \
   make -C build all ${ADDITIONAL_TARGETS} -j${CONCURRENCY:-$(nproc)} && \
   make -C build install
