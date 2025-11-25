@@ -1304,6 +1304,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_traffic_signal(directededge->traffic_signal());
   }
 
+  // Set hov type if requested
+  if (controller(kEdgeHovType)) {
+    trip_edge->set_hov_type(GetTripLegHovType(directededge->hov_type()));
+  }
+
   if (controller(kEdgeLevels)) {
     trip_edge->set_level_precision(std::max(static_cast<uint32_t>(1), levels.second));
     for (const auto& level : levels.first) {
