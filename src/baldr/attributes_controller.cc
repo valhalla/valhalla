@@ -112,6 +112,7 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeForward, true},
     {kEdgeLevels, true},
     {kEdgeTrafficSignal, true},
+    {kEdgeHovType, true},
 
     // Node keys
     {kIncidents, false},
