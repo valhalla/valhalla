@@ -56,7 +56,7 @@ struct edge_t {
     return e;
   }
   operator bool() const {
-    return i.Is_Valid() && e;
+    return i.is_valid() && e;
   }
 };
 
@@ -76,7 +76,7 @@ edge_t next(const std::unordered_map<GraphId, uint64_t>& tile_set,
             const edge_t& edge,
             const std::vector<std::string>& names) {
   // get the right tile
-  if (tile->id() != edge.e->endnode().Tile_Base()) {
+  if (tile->id() != edge.e->endnode().tile_base()) {
     tile = reader.GetGraphTile(edge.e->endnode());
   }
 
@@ -118,7 +118,7 @@ void extend(GraphReader& reader,
             const edge_t& edge,
             std::list<PointLL>& shape) {
   // get the shape
-  if (edge.i.Tile_Base() != tile->id()) {
+  if (edge.i.tile_base() != tile->id()) {
     tile = reader.GetGraphTile(edge.i);
   }
   // get the shape
@@ -245,7 +245,7 @@ int main(int argc, char* argv[]) {
       if (opposing_edge.e == nullptr) {
         continue;
       }
-      edge_set.set(tile_set.find(opposing_edge.i.Tile_Base())->second + opposing_edge.i.id());
+      edge_set.set(tile_set.find(opposing_edge.i.tile_base())->second + opposing_edge.i.id());
       ++set;
 
       // shortcuts arent real and maybe we dont want ferries
@@ -277,12 +277,12 @@ int main(int argc, char* argv[]) {
       auto t = tile;
       while ((edge = next(tile_set, edge_set, reader, t, edge, names))) {
         // mark them to never be used again
-        edge_set.set(tile_set.find(edge.i.Tile_Base())->second + edge.i.id());
+        edge_set.set(tile_set.find(edge.i.tile_base())->second + edge.i.id());
         edge_t other = opposing(reader, t, edge);
         if (other.e == nullptr) {
           continue;
         }
-        edge_set.set(tile_set.find(other.i.Tile_Base())->second + other.i.id());
+        edge_set.set(tile_set.find(other.i.tile_base())->second + other.i.id());
         set += 2;
         // keep this
         edges.push_back(edge);
@@ -292,12 +292,12 @@ int main(int argc, char* argv[]) {
       edge = opposing_edge;
       while ((edge = next(tile_set, edge_set, reader, t, edge, names))) {
         // mark them to never be used again
-        edge_set.set(tile_set.find(edge.i.Tile_Base())->second + edge.i.id());
+        edge_set.set(tile_set.find(edge.i.tile_base())->second + edge.i.id());
         edge_t other = opposing(reader, t, edge);
         if (other.e == nullptr) {
           continue;
         }
-        edge_set.set(tile_set.find(other.i.Tile_Base())->second + other.i.id());
+        edge_set.set(tile_set.find(other.i.tile_base())->second + other.i.id());
         set += 2;
         // keep this
         edges.push_front(other);
