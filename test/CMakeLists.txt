@@ -63,6 +63,11 @@ if (ENABLE_GEOTIFF)
   endif()
 endif()
 
+# stop if the user just wants the library
+if (NOT ENABLE_TESTS)
+  return()
+endif()
+
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgeinfo edgestatus ellipse encode

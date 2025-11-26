@@ -83,7 +83,6 @@ jobs:
            # Use newlines for multiple build args
             {
               echo "build_args<<EOF"
-              echo "ENABLE_TESTS=On"
               echo "INSTALL_TEST_LIB=On"
               echo "BUILD_TYPE=RelWithDebInfo"
               echo "EOF"

@@ -27,11 +27,16 @@ COPY LICENSE.md .
 COPY CHANGELOG.md .
 COPY COPYING .
 COPY README.md .
-COPY test/ test/
+COPY test/test.h test/
+COPY test/test.cc test/
+COPY test/gurka/gurka.h test/gurka/
+COPY test/gurka/gurka.cc test/gurka/
+COPY test/tile_server.h test/
+COPY test/tile_server.cc test/
+COPY test/CMakeLists.txt test/
 
 ARG CONCURRENCY
 ARG ADDITIONAL_TARGETS
-ARG ENABLE_TESTS
 ARG INSTALL_TEST_LIB
 ARG BUILD_TYPE
 # this arg will always compile the full project on every build bcs it's a commit hash
@@ -39,7 +44,7 @@ ARG BUILD_TYPE
 ARG VERSION_MODIFIER=""
 
 # switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
-RUN cmake -B build -DCMAKE_BUILD_TYPE=${BUILD_TYPE-"RelWithDebInfo"} -DCMAKE_C_COMPILER=gcc -DENABLE_TESTS=${ENABLE_TESTS:-"Off"} \
+RUN cmake -B build -DCMAKE_BUILD_TYPE=${BUILD_TYPE-"RelWithDebInfo"} -DCMAKE_C_COMPILER=gcc -DENABLE_TESTS=Off \
   -DENABLE_SINGLE_FILES_WERROR=Off -DVALHALLA_VERSION_MODIFIER=${VERSION_MODIFIER} -DINSTALL_TEST_LIB=${INSTALL_TEST_LIB:-"Off"} && \
   make -C build all ${ADDITIONAL_TARGETS} -j${CONCURRENCY:-$(nproc)} && \
   make -C build install
