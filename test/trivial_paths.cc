@@ -122,8 +122,3 @@ TEST(TrivialPaths, test_trivial_paths) {
   try_path(reader, loki_worker, test_request5, 5);
 }
 
-int main(int argc, char* argv[]) {
-  // logging::Configure({{"type", ""}}); // silence logs
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

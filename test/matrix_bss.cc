@@ -221,8 +221,3 @@ TEST_F(MatrixBssTest, DISABLED_ManyToManyMoreSources) {
       });
 }
 
-int main(int argc, char* argv[]) {
-  logging::Configure({{"type", ""}}); // silence logs
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

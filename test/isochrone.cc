@@ -535,24 +535,3 @@ TEST(Isochrones, test_geotiff_vertical_orientation) {
 
 } // namespace
 
-int main(int argc, char* argv[]) {
-
-#ifdef ENABLE_GEOTIFF
-  GDALRegister_GTiff();
-#endif
-  // user wants to try it
-  if (argc > 1) {
-    loki_worker_t loki_worker(cfg);
-    thor_worker_t thor_worker(cfg);
-    GraphReader reader(cfg.get_child("mjolnir"));
-    Api request;
-    ParseApi(argv[1], Options::isochrone, request);
-    loki_worker.isochrones(request);
-    std::cout << thor_worker.isochrones(request) << std::endl;
-    return EXIT_SUCCESS;
-  }
-  // Silence logs (especially long request logging)
-  logging::Configure({{"type", ""}});
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

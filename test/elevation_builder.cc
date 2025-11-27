@@ -539,9 +539,5 @@ public:
   }
 };
 
-int main(int argc, char* argv[]) {
-  testing::AddGlobalTestEnvironment(new HttpElevationsEnv);
-  testing::InitGoogleTest(&argc, argv);
+auto* const http_elevations_env_ = testing::AddGlobalTestEnvironment(new HttpElevationsEnv);
 
-  return RUN_ALL_TESTS();
-}

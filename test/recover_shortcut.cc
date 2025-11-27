@@ -12,12 +12,6 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
-namespace std {
-std::string to_string(const midgard::PointLL& p) {
-  return "[" + to_string(p.first) + "," + to_string(p.second) + "]";
-}
-} // namespace std
-
 const auto conf = test::make_config("test/data/utrecht_tiles");
 
 // expose the constructor
@@ -215,8 +209,3 @@ TEST(GetShortcut, check_false_positives) {
   }
 }
 
-int main(int argc, char* argv[]) {
-  // valhalla::midgard::logging::Configure({{"type", ""}});
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

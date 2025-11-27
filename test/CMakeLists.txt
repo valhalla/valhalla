@@ -93,23 +93,24 @@ if(ENABLE_SERVICES)
   list(APPEND tests loki_service skadi_service)
 endif()
 
-## Add executable targets
+## Collect test sources
+set(test_sources)
 foreach(test ${tests})
-  add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
-  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-    set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-  endif()
-
-
-  set_target_properties(${test} PROPERTIES FOLDER "Tests")
-  create_source_groups("Source Files" ${test}.cc)
-  target_link_libraries(${test} valhalla_test)
-  if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
-    # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
-    # Any tool that needs interact with Lua will need these flags on macOS
-    target_link_options(${test} PUBLIC -pagezero_size 10000 -image_base 100000000)
-  endif()
+  list(APPEND test_sources ${test}.cc)
 endforeach()
+
+## Add unified test executable
+add_executable(valhalla_tests EXCLUDE_FROM_ALL ${test_sources})
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+  target_compile_options(valhalla_tests PRIVATE -Wall -Werror)
+endif()
+set_target_properties(valhalla_tests PROPERTIES FOLDER "Tests")
+create_source_groups("Source Files" ${test_sources})
+target_link_libraries(valhalla_tests valhalla_test)
+if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+  target_link_options(valhalla_tests PUBLIC -pagezero_size 10000 -image_base 100000000)
+endif()
+gtest_discover_tests(valhalla_tests)
 
 ## Cost tests
 set(cost_inline_test_sources
@@ -142,7 +143,7 @@ target_link_libraries(tyr_inline_tests valhalla_test)
 gtest_discover_tests(tyr_inline_tests TEST_PREFIX "TyrInline.")
 
 ## Test-specific data, properties and dependencies
-target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
+set_source_files_properties(logging.cc PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   DEPENDS ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones
@@ -322,8 +323,8 @@ set (destination "${CMAKE_BINARY_DIR}/test/data/tile_src")
 #        COMMENT "tiles copied from ${source} to ${destination}"
 #)
 
-## Test run targets
-foreach(test ${tests} ${cost_inline_tests} ${tyr_inline_tests})
+## Test run targets for tests
+foreach(test valhalla_tests cost_inline_tests tyr_inline_tests)
   add_custom_command(OUTPUT ${test}.log
     COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/${test}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -333,44 +334,26 @@ foreach(test ${tests} ${cost_inline_tests} ${tyr_inline_tests})
 endforeach()
 
 ## Run test dependencies
-## TODO: fix apple tests!
 if(NOT APPLE)
-  add_dependencies(run-util_odin localedef)
-  add_dependencies(run-narrativebuilder localedef)
+  add_dependencies(run-valhalla_tests localedef)
 endif()
-
-add_dependencies(run-sample test_directories)
+add_dependencies(run-valhalla_tests test_directories)
 if(ENABLE_DATA_TOOLS)
-  add_dependencies(run-mapmatch utrecht_tiles)
-  add_dependencies(run-hierarchylimits utrecht_tiles)
-  add_dependencies(run-isochrone utrecht_tiles)
-  add_dependencies(run-matrix utrecht_tiles)
-  add_dependencies(run-matrix_bss paris_bss_tiles)
-  add_dependencies(run-timedep_paths utrecht_tiles)
-  add_dependencies(run-trivial_paths utrecht_tiles)
-  add_dependencies(predictive_traffic utrecht_tiles)
-  add_dependencies(run-multipoint_routes utrecht_tiles)
-  add_dependencies(run-reach utrecht_tiles)
-  add_dependencies(run-shape_attributes utrecht_tiles)
-  add_dependencies(run-summary utrecht_tiles)
-  add_dependencies(run-urban utrecht_tiles)
-  add_dependencies(run-thor_worker utrecht_tiles)
-  add_dependencies(run-recover_shortcut utrecht_tiles)
-  add_dependencies(run-minbb utrecht_tiles)
-  add_dependencies(run-astar_bikeshare paris_bss_tiles)
-  add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
-  add_dependencies(run-alternates utrecht_tiles)
-  add_dependencies(run-tar_index utrecht_tiles)
-  add_dependencies(run-graphtile utrecht_tiles)
-  add_dependencies(run-graphbuilder build_timezones)
+  add_dependencies(run-valhalla_tests
+    utrecht_tiles
+    paris_bss_tiles
+    whitelion_tiles
+    roma_tiles
+    reversed_whitelion_tiles
+    bayfront_singapore_tiles
+    ny_ar_tiles
+    pa_ar_tiles
+    nh_ar_tiles
+    melborne_tiles
+    build_timezones)
   if(ENABLE_HTTP AND ENABLE_SERVICES)
-    # http_tiles needs the proper .tar file with index.bin
-    add_dependencies(run-http_tiles utrecht_tiles run-scripts)
+    add_dependencies(run-valhalla_tests run-scripts)
   endif()
-endif()
-
-if(ENABLE_SERVICES)
-  add_dependencies(run-skadi_service test_directories)
 endif()
 
 # ENABLE_DATA_TOOLS is needed for utrecht_tiles
@@ -431,11 +414,12 @@ if(ENABLE_NODE_BINDINGS AND ENABLE_DATA_TOOLS)
 endif()
 
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${tyr_tests};${python_tests};${nodejs_tests}")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${python_tests};${nodejs_tests}")
+list(APPEND test_targets run-valhalla_tests run-cost_inline_tests run-tyr_inline_tests)
 
 add_custom_target(check DEPENDS ${test_targets})
 set_target_properties(check PROPERTIES FOLDER "Tests")
-add_custom_target(tests DEPENDS ${tests} ${cost_tests} ${tyr_tests})
+add_custom_target(tests DEPENDS valhalla_tests cost_inline_tests tyr_inline_tests)
 set_target_properties(tests PROPERTIES FOLDER "Tests")
 add_subdirectory(gurka)
 add_subdirectory(scripts)

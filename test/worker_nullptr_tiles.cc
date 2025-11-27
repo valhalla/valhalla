@@ -115,9 +115,3 @@ TEST_F(WorkerNullptrTiles, thor_worker_null_test) {
   }
 }
 
-int main(int argc, char* argv[]) {
-  midgard::logging::Configure({{"type", ""}});
-
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

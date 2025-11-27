@@ -127,7 +127,3 @@ TEST(PredictiveTraffic, test_get_speed) {
   EXPECT_EQ(tile->GetSpeed(&new_de, kNoFlowMask, kInvalidSecondsOfWeek, true), truck_speed);
 }
 
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

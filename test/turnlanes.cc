@@ -209,7 +209,3 @@ TEST(Turnlanes, validate_turn_lanes) {
 
 } // namespace
 
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

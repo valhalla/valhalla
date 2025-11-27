@@ -2875,7 +2875,3 @@ INSTANTIATE_TEST_SUITE_P(disable_hierarchy_pruning,
 
 } // namespace
 
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

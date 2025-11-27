@@ -121,8 +121,3 @@ TEST(Reach, transition_misscount) {
 
 } // namespace
 
-int main(int argc, char* argv[]) {
-  logging::Configure({{"type", ""}});
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

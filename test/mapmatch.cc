@@ -18,18 +18,15 @@
 using namespace valhalla;
 using namespace valhalla::midgard;
 
-namespace std {
-std::string to_string(const midgard::PointLL& p) {
-  return "[" + to_string(p.first) + "," + to_string(p.second) + "]";
-}
-} // namespace std
-
 namespace {
+std::string to_string(const midgard::PointLL& p) {
+  return "[" + std::to_string(p.first) + "," + std::to_string(p.second) + "]";
+}
 
 template <class container_t> std::string print(const container_t& container) {
   std::string output;
   for (const auto& e : container)
-    output += std::to_string(e) + ",";
+    output += to_string(e) + ",";
   if (container.size())
     output.pop_back();
   return output;
@@ -1519,15 +1516,3 @@ TEST(Mapmatch, openlr_parameter_falsy_native_api) {
 }
 } // namespace
 
-int main(int argc, char* argv[]) {
-  midgard::logging::Configure({{"type", ""}});
-  if (argc > 1 && std::string(argv[1]).find("gtest") == std::string::npos) {
-    if (argc > 1)
-      seed = std::stoi(argv[1]);
-    if (argc > 2)
-      bound = std::stoi(argv[2]);
-  }
-
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

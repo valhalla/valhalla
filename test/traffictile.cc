@@ -117,7 +117,3 @@ TEST(Traffic, SpeedValid) {
   EXPECT_EQ(speed.encoded_speed1, 0);
 }
 
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

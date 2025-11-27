@@ -530,7 +530,3 @@ TEST(TimeParsing, TestConditionalMaxspeed) {
   EXPECT_TRUE(get_time_range("winter").empty());
 }
 
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

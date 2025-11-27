@@ -348,8 +348,5 @@ public:
   }
 };
 
-int main(int argc, char* argv[]) {
-  testing::AddGlobalTestEnvironment(new HttpTilesEnv);
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+auto* const http_tiles_env_ = testing::AddGlobalTestEnvironment(new HttpTilesEnv);
+

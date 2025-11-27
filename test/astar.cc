@@ -1812,11 +1812,7 @@ public:
   }
 };
 
+auto* const astar_env_ = testing::AddGlobalTestEnvironment(new AstarTestEnv);
+
 } // anonymous namespace
 
-int main(int argc, char* argv[]) {
-  // logging::Configure({{"type", ""}});
-  testing::AddGlobalTestEnvironment(new AstarTestEnv);
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
