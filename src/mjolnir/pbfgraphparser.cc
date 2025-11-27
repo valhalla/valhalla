@@ -1091,7 +1091,7 @@ struct graph_parser {
     tag_handlers_["maxlength"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
                                    [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
@@ -1100,7 +1100,7 @@ struct graph_parser {
     tag_handlers_["maxlength_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
                                    [](const std::string& val) { return to_float(val) * 100; });
@@ -1110,7 +1110,7 @@ struct graph_parser {
     tag_handlers_["maxlength_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
                                    [](const std::string& val) { return to_float(val) * 100; });
@@ -1120,7 +1120,7 @@ struct graph_parser {
     tag_handlers_["maxweight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
                                    [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
@@ -1129,7 +1129,7 @@ struct graph_parser {
     tag_handlers_["maxweight_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
                                    [](const std::string& val) { return to_float(val) * 100; });
@@ -1139,7 +1139,7 @@ struct graph_parser {
     tag_handlers_["maxweight_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
                                    [](const std::string& val) { return to_float(val) * 100; });
