@@ -309,6 +309,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
   LandmarkDatabase db(db_name, true);
   GraphReader reader(pt);
+  loki::Search search(reader);
   // create the sequence file
   std::string file_name = "landmark_dump_" + std::to_string(thread_number);
   midgard::sequence<std::pair<GraphId, uint64_t>> seq_file(file_name, true);
@@ -332,7 +333,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
         // call loki::Search to get nearby edges to each landmark
         std::unordered_map<valhalla::baldr::Location, PathLocation> result =
-            loki::Search({landmark_location}, reader, sif::CreateNoCost({}));
+            search.search({landmark_location}, sif::CreateNoCost({}));
 
         // we only have one landmark as input so the return size should be no more than one
         if (result.size() > 1) {

@@ -108,7 +108,7 @@ void loki_worker_t::route(Api& request) {
       locations.back().min_inbound_reach_ = 0;
     }
 
-    const auto projections = loki::Search(locations, *reader, costing);
+    const auto projections = search_.search(locations, costing);
     for (size_t i = 0; i < locations_end; ++i) {
       const auto& correlated = projections.at(locations[i]);
       PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);

@@ -142,7 +142,8 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
   // lambda to do the current job
   auto costing = create_costing();
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
-  auto search = [&reader, &costing](const job_t& job) {
+  valhalla::loki::Search searcher(reader);
+  auto search = [&reader, &costing, &searcher](const job_t& job) {
     // so that we dont benefit from cache coherency
     reader.Clear();
     std::pair<result_t, result_t> result;
@@ -151,7 +152,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
       auto start = std::chrono::high_resolution_clock::now();
       try {
         // TODO: actually save the result
-        auto result = valhalla::loki::Search(job, reader, costing);
+        auto result = searcher.search(job, costing);
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job,
                         cached};

@@ -99,7 +99,8 @@ void walk_edges(const std::string& shape,
   locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape_pts, 30.f));
   locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape_pts, 30.f));
 
-  const auto projections = Search(locations, reader, cost);
+  Search search(reader);
+  const auto projections = search.search(locations, cost);
   std::vector<PathLocation> path_location;
   valhalla::Options options;
 
