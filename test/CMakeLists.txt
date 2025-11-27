@@ -334,6 +334,7 @@ foreach(test valhalla_tests cost_inline_tests tyr_inline_tests)
 endforeach()
 
 ## Run test dependencies
+## TODO: fix apple tests!
 if(NOT APPLE)
   add_dependencies(run-valhalla_tests localedef)
 endif()
