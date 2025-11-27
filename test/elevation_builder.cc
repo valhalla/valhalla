@@ -540,4 +540,3 @@ public:
 };
 
 auto* const http_elevations_env_ = testing::AddGlobalTestEnvironment(new HttpElevationsEnv);
-

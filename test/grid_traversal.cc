@@ -141,4 +141,3 @@ TEST(GridTraversal, TestGridTraversal) {
 }
 
 } // namespace
-

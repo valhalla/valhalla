@@ -309,4 +309,3 @@ TEST(Names, TaggedNamesTest) {
 }
 
 } // namespace
-

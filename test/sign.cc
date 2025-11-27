@@ -125,4 +125,3 @@ TEST(Sign, TestDescendingSortByConsecutiveCount_0_1_2) {
 }
 
 } // namespace
-

@@ -284,4 +284,3 @@ TEST_F(EncoderDecoderTest, test_speeds_decoder) {
 }
 
 } // namespace
-

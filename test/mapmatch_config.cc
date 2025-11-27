@@ -126,4 +126,3 @@ TEST(MapmatchConfig, validate_routing_params) {
 }
 
 } // namespace
-

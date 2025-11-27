@@ -90,4 +90,3 @@ TEST(MinBB, null_bb) {
 }
 
 } // namespace
-

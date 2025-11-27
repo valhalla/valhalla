@@ -154,4 +154,3 @@ TEST(Lua, TestForwardBackward) {
 } // namespace
 
 // TODO: sweet jesus add more tests of this class!
-

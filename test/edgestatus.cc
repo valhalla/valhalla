@@ -65,4 +65,3 @@ TEST(EdgeStatus, TestStatus) {
 }
 
 } // namespace
-

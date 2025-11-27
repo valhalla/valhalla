@@ -31,4 +31,3 @@ TEST(Location, Hashing) {
 }
 
 } // namespace
-

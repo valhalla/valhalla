@@ -470,4 +470,3 @@ public:
 };
 
 auto* const search_env_ = testing::AddGlobalTestEnvironment(new SearchTestSuiteEnv);
-

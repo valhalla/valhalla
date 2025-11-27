@@ -890,4 +890,3 @@ TEST(CacheLruSoft, TrimOnExactlyFullCache) {
 }
 
 } // namespace
-

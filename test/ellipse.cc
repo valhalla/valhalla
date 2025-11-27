@@ -81,4 +81,3 @@ TEST(Ellipse, TestCenter) {
 }
 
 } // namespace
-

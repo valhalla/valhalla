@@ -285,4 +285,3 @@ TEST(UtilOdin, test_streetname_string_check) {
   try_get_strlen_utf8(street_name, 5);
 }
 } // namespace
-

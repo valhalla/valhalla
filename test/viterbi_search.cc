@@ -533,4 +533,3 @@ TEST(ViterbiSearch, TestTopKSearch) {
     test_viterbisearch_brute_force(columns, vs);
   }
 }
-

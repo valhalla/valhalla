@@ -69,4 +69,3 @@ TEST(Turn, TestGetType) {
 }
 
 } // namespace
-

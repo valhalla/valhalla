@@ -375,4 +375,3 @@ TEST(VerbalTextFormatter, TestFormat) {
 }
 
 } // namespace
-

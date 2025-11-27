@@ -324,4 +324,3 @@ TEST(ComplexRestrictionView, ModeFiltering) {
 }
 
 } // namespace
-

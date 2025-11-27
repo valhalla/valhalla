@@ -1815,4 +1815,3 @@ public:
 auto* const astar_env_ = testing::AddGlobalTestEnvironment(new AstarTestEnv);
 
 } // anonymous namespace
-

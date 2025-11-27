@@ -776,4 +776,3 @@ public:
 };
 
 auto* const graphparser_env_ = testing::AddGlobalTestEnvironment(new GraphParserEnv);
-

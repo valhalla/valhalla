@@ -423,4 +423,3 @@ public:
 auto* const node_search_env_ = testing::AddGlobalTestEnvironment(new Env);
 
 } // namespace
-

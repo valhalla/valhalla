@@ -43,4 +43,3 @@ TEST(Sample, test_make_single_point_url) {
 }
 
 } // namespace
-

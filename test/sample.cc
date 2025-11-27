@@ -230,4 +230,3 @@ TEST(Sample, store) {
 }
 
 } // namespace
-

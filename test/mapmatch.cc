@@ -1515,4 +1515,3 @@ TEST(Mapmatch, openlr_parameter_falsy_native_api) {
   }
 }
 } // namespace
-

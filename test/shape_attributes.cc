@@ -192,4 +192,3 @@ TEST(ShapeAttributes, test_shape_attributes_no_turncosts) {
 }
 
 } // namespace
-

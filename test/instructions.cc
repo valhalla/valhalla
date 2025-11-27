@@ -584,4 +584,3 @@ TEST(Instructions, validate_obvious_maneuver_instructions) {
 }
 
 } // namespace
-

@@ -349,4 +349,3 @@ public:
 };
 
 auto* const http_tiles_env_ = testing::AddGlobalTestEnvironment(new HttpTilesEnv);
-

@@ -328,4 +328,3 @@ TEST(EdgeInfo, TaggedValueSize_LongStrings) {
 }
 
 } // namespace
-

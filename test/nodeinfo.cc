@@ -106,4 +106,3 @@ TEST(NodeInfo, Elevation) {
 }
 
 } // namespace
-

@@ -208,4 +208,3 @@ TEST(GetShortcut, check_false_positives) {
     }
   }
 }
-

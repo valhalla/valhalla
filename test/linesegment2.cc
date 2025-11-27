@@ -211,4 +211,3 @@ TEST(Linesegment, TestIsLeft) {
 }
 
 } // namespace
-

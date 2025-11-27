@@ -34,4 +34,3 @@ TEST(TransitStop, TestWriteRead) {
 }
 
 } // namespace
-

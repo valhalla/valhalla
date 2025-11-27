@@ -81,4 +81,3 @@ TEST(VeralTextFormatter, TestFormat) {
 }
 
 } // namespace
-

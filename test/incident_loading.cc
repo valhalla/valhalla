@@ -348,4 +348,3 @@ TEST_F(incident_loading, get) {
   got = incident_singleton_t::get({});
   ASSERT_FALSE(got);
 }
-

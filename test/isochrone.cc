@@ -534,4 +534,3 @@ TEST(Isochrones, test_geotiff_vertical_orientation) {
 #endif
 
 } // namespace
-

@@ -1340,4 +1340,3 @@ TEST(NarrativeDictionary, test_en_US_approach_verbal_alert) {
 }
 
 } // namespace
-

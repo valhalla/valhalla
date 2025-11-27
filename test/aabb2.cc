@@ -230,4 +230,3 @@ TEST(AABB2, TestIntersect) {
 }
 
 } // namespace
-

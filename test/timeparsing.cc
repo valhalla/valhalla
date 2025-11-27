@@ -529,4 +529,3 @@ TEST(TimeParsing, TestConditionalMaxspeed) {
   EXPECT_TRUE(get_time_range("summer").empty());
   EXPECT_TRUE(get_time_range("winter").empty());
 }
-

@@ -109,4 +109,3 @@ TEST(VerbalTextFormatterUsTx, TestFormat) {
 }
 
 } // namespace
-

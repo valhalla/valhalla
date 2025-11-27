@@ -321,4 +321,3 @@ TEST(Polyline2, TestClippedPolyline) {
 }
 
 } // namespace
-

@@ -325,4 +325,3 @@ TEST(Vector2, TestReflect) {
 }
 
 } // namespace
-

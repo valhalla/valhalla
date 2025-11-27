@@ -135,4 +135,3 @@ TEST(VerbalTextFormatterUsCo, TestFormat) {
 }
 
 } // namespace
-

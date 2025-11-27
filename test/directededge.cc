@@ -104,4 +104,3 @@ TEST(DirectedEdge, TestMaxSlope) {
 }
 
 } // namespace
-

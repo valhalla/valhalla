@@ -57,4 +57,3 @@ TEST(UnorderedIdTable, SerializeDeserialize) {
   b.deserialize("foo.bar");
   EXPECT_EQ(a, b);
 }
-

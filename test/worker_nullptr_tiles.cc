@@ -114,4 +114,3 @@ TEST_F(WorkerNullptrTiles, thor_worker_null_test) {
     thor_worker.cleanup();
   }
 }
-

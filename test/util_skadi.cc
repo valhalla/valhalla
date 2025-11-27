@@ -34,4 +34,3 @@ TEST(UtilSkadi, Grade) {
 }
 
 } // namespace
-

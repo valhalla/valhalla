@@ -75,4 +75,3 @@ TEST(JSON, Serialize) {
 }
 
 } // namespace
-

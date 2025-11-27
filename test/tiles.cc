@@ -588,4 +588,3 @@ TEST(Tiles, float_roundoff_issue) {
 }
 
 } // namespace
-

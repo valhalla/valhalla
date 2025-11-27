@@ -25,4 +25,3 @@ TEST(NodeTransition, WriteRead) {
 }
 
 } // namespace
-

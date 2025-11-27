@@ -261,4 +261,3 @@ TEST(EdgeCollapser, TestCollapseEdgeChain) {
 }
 
 } // anonymous namespace
-

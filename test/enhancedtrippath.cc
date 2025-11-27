@@ -646,4 +646,3 @@ TEST(EnhancedTripPath, TestActivateTurnLanesShortNextLeft) {
 }
 
 } // namespace
-

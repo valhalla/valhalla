@@ -805,4 +805,3 @@ TEST(UtilMidgard, ToInt) {
 }
 
 } // namespace
-

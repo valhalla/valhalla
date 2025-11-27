@@ -220,4 +220,3 @@ TEST_F(MatrixBssTest, DISABLED_ManyToManyMoreSources) {
           {48.86911, 2.36019},
       });
 }
-

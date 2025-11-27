@@ -231,4 +231,3 @@ public:
 auto* const utrecht_env_ = testing::AddGlobalTestEnvironment(new UtrecthTestSuiteEnv);
 
 } // namespace
-

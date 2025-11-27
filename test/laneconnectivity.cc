@@ -32,4 +32,3 @@ TEST(LaneConnectivity, SizeOf) {
 }
 
 } // namespace
-

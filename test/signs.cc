@@ -580,4 +580,3 @@ TEST(Signs, TestTrimSigns) {
 }
 
 } // namespace
-

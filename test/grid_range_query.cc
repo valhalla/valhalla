@@ -68,4 +68,3 @@ TEST(GridRangeQuery, TestQuery) {
 }
 
 } // namespace
-

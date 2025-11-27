@@ -271,4 +271,3 @@ public:
 auto* const harrisburg_env_ = testing::AddGlobalTestEnvironment(new HarrisburgTestSuiteEnv);
 
 } // namespace
-

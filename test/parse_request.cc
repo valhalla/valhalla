@@ -2874,4 +2874,3 @@ INSTANTIATE_TEST_SUITE_P(disable_hierarchy_pruning,
                                            Costing::taxi));
 
 } // namespace
-

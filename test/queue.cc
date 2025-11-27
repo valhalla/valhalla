@@ -159,4 +159,3 @@ TEST(Queue, TestSorting) {
 }
 
 } // namespace
-

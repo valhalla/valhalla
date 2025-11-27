@@ -113,4 +113,3 @@ TEST(ThorWorker, test_linear_references) {
 }
 
 } // namespace
-

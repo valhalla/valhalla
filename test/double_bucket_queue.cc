@@ -216,4 +216,3 @@ TEST(EdgeLabel, test_sizeof) {
 }
 
 } // namespace
-

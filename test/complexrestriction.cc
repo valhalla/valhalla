@@ -103,4 +103,3 @@ TEST(ComplexRestriction, WriteRead) {
 }
 
 } // namespace
-

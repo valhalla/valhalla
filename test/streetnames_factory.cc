@@ -33,4 +33,3 @@ TEST(StreetnamesFactory, Create) {
 }
 
 } // namespace
-

@@ -10107,4 +10107,3 @@ TEST(NarrativeBuilder, TestFormExitLeftInstruction) {
 }
 
 } // namespace
-

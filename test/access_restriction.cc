@@ -16,4 +16,3 @@ TEST(AccessRestrictions, SizeofCheck) {
 }
 
 } // namespace
-

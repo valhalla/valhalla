@@ -27,4 +27,3 @@ TEST(OBB2, TestOverlap) {
 }
 
 } // namespace
-

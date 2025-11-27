@@ -47,4 +47,3 @@ TEST(DistanceApproximator, TestDistanceSquared) {
 }
 
 } // namespace
-

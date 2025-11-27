@@ -26,4 +26,3 @@ TEST(Factory, Register) {
 // TODO: add many more tests!
 
 } // namespace
-

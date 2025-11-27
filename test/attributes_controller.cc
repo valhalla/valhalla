@@ -217,4 +217,3 @@ TEST(AttrController, TestAdminCategoryWithMixedAttributes) {
 }
 
 } // namespace
-

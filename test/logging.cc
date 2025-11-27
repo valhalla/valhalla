@@ -131,4 +131,3 @@ TEST(Logging, FileLoggerTest) {
 }
 
 } // namespace
-

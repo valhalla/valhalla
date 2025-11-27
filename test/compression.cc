@@ -139,4 +139,3 @@ TEST(Compression, fail_inflate) {
 }
 
 } // namespace
-

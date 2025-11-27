@@ -152,4 +152,3 @@ TEST(Point2, TestHash) {
 }
 
 } // namespace
-

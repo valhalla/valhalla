@@ -72,4 +72,3 @@ TEST(Sequence, Iterator) {
 }
 
 } // namespace
-

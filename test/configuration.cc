@@ -46,4 +46,3 @@ TEST(Configuration, OneInstanceExisting) {
 }
 
 } // namespace
-

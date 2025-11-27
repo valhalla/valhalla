@@ -150,4 +150,3 @@ TEST(TimeDepPaths, test_reverse_max_reserved_labels_count) {
   TimeDepReverseTest time_dep(config);
   time_dep.Clear();
 }
-

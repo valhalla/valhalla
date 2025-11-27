@@ -355,4 +355,3 @@ TEST(OpenLR, openlr_edges_duplicate) {
 }
 
 } // namespace
-

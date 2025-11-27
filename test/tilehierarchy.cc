@@ -68,4 +68,3 @@ TEST(TileHierarchy, parent) {
 }
 
 } // namespace
-

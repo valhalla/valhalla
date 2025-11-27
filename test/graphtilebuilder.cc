@@ -336,4 +336,3 @@ TEST(GraphTileBuilder, TestBinEdges) {
 }
 
 } // namespace
-

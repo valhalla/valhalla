@@ -46,4 +46,3 @@ TEST(UniqueNames, TestAddAndIndex) {
 }
 
 } // namespace
-

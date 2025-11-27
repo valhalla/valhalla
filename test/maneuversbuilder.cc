@@ -2027,4 +2027,3 @@ TEST(Maneuversbuilder, TestUnCollapseRoundaboutManeuvers) {
   TryUnCollapsedRoundaboutManeuvers(maneuvers, expected_maneuvers);
 }
 } // namespace
-
