@@ -285,8 +285,3 @@ TEST(UtilOdin, test_streetname_string_check) {
   try_get_strlen_utf8(street_name, 5);
 }
 } // namespace
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

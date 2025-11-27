@@ -420,10 +420,6 @@ public:
   }
 };
 
-} // namespace
+auto* const node_search_env_ = testing::AddGlobalTestEnvironment(new Env);
 
-int main(int argc, char* argv[]) {
-  testing::AddGlobalTestEnvironment(new Env);
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+} // namespace

@@ -228,10 +228,6 @@ public:
   }
 };
 
-} // namespace
+auto* const utrecht_env_ = testing::AddGlobalTestEnvironment(new UtrecthTestSuiteEnv);
 
-int main(int argc, char* argv[]) {
-  testing::AddGlobalTestEnvironment(new UtrecthTestSuiteEnv);
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+} // namespace

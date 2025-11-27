@@ -125,8 +125,3 @@ TEST(Sign, TestDescendingSortByConsecutiveCount_0_1_2) {
 }
 
 } // namespace
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

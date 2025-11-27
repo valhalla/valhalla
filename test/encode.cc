@@ -667,8 +667,3 @@ TEST(Encode, Int7_SmallerTypes) {
   test_int7_roundtrip<int16_t>({INT16_MIN, -1, 0, 1, INT16_MAX}, "int16_t");
 }
 } // namespace
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

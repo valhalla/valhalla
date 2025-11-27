@@ -150,9 +150,3 @@ TEST(TimeDepPaths, test_reverse_max_reserved_labels_count) {
   TimeDepReverseTest time_dep(config);
   time_dep.Clear();
 }
-
-int main(int argc, char* argv[]) {
-  // logging::Configure({{"type", ""}}); // silence logs
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

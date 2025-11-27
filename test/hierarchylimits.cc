@@ -392,8 +392,3 @@ TEST(StandAlone, Warnings) {
   result = gurka::do_action(valhalla::Options::route, map_mod, req);
   EXPECT_EQ(result.info().warnings().size(), 0);
 }
-int main(int argc, char* argv[]) {
-  logging::Configure({{"type", ""}}); // silence logs
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

@@ -1340,9 +1340,3 @@ TEST(NarrativeDictionary, test_en_US_approach_verbal_alert) {
 }
 
 } // namespace
-
-int main(int argc, char* argv[]) {
-  valhalla::midgard::logging::Configure({{"type", ""}}); // silence logs
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

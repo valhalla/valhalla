@@ -5,11 +5,13 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
 #include "microtar.h"
+#include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
 #include <cmath>
 #include <filesystem>
@@ -718,3 +720,14 @@ void customize_edges(const boost::property_tree::ptree& config, const EdgesCusto
 #endif
 
 } // namespace test
+
+namespace {
+class SilentLoggingEnvironment : public ::testing::Environment {
+public:
+  void SetUp() override {
+    valhalla::midgard::logging::Configure({{"type", ""}});
+  }
+};
+
+auto* const silent_logging_env_ = testing::AddGlobalTestEnvironment(new SilentLoggingEnvironment);
+} // namespace
