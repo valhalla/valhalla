@@ -544,7 +544,7 @@ TEST(StandAlone, CostMatrixShapes) {
   res.erase();
 }
 
-class DateTimeTest : public ::testing::Test {
+class DateTimeMatrixTest : public ::testing::Test {
 protected:
   // check both with and without time zones present
   static gurka::map map;
@@ -583,8 +583,8 @@ protected:
                                 {"service_limits.max_timedep_distance_matrix", "50000"}});
   }
 };
-gurka::map DateTimeTest::map = {};
-gurka::map DateTimeTest::map_tz = {};
+gurka::map DateTimeMatrixTest::map = {};
+gurka::map DateTimeMatrixTest::map_tz = {};
 
 void check_date_times(const Api& request,
                       const rapidjson::Document& res,
@@ -615,7 +615,7 @@ void check_date_times(const Api& request,
     }
   }
 }
-TEST_F(DateTimeTest, DepartAtCostMatrix) {
+TEST_F(DateTimeMatrixTest, DepartAtCostMatrix) {
   rapidjson::Document res_doc;
   std::string res;
   {
@@ -634,7 +634,7 @@ TEST_F(DateTimeTest, DepartAtCostMatrix) {
   }
 }
 
-TEST_F(DateTimeTest, DepartAtTimeDistanceMatrix) {
+TEST_F(DateTimeMatrixTest, DepartAtTimeDistanceMatrix) {
   rapidjson::Document res_doc;
   std::string res;
   {
@@ -651,7 +651,7 @@ TEST_F(DateTimeTest, DepartAtTimeDistanceMatrix) {
   }
 }
 
-TEST_F(DateTimeTest, NoTimeZone) {
+TEST_F(DateTimeMatrixTest, NoTimeZone) {
   rapidjson::Document res_doc;
   std::string res;
   {
@@ -1069,6 +1069,7 @@ TEST_P(TestConnectionCheck, VerboseResponse) {
 
 /************************************************************************ */
 
+namespace {
 std::string encode_shape(const std::vector<std::string>& nodes, valhalla::gurka::nodelayout& layout) {
   std::vector<PointLL> shape;
   shape.reserve(nodes.size());
@@ -1077,6 +1078,7 @@ std::string encode_shape(const std::vector<std::string>& nodes, valhalla::gurka:
   }
   return encode<std::vector<PointLL>>(shape, 1e6);
 }
+} // namespace
 
 void check_trivial_matrix(const gurka::map& map, gurka::nodelayout& layout) {
   std::unordered_map<std::string, std::string> options = {{"/shape_format", "polyline6"}};

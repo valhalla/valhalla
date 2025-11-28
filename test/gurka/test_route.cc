@@ -321,6 +321,7 @@ gurka::map AlgorithmTest::map = {};
 uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0,
          AlgorithmTest::freeflow = 0;
 
+namespace {
 uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
   uint32_t kmh = midgard::invalid<uint32_t>();
   const auto& nodes = api.trip().routes(0).legs(0).node();
@@ -340,6 +341,7 @@ uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_ed
   }
   return kmh;
 }
+} // namespace
 
 // this happens with depart_at routes trivial or not and trivial invariant routes
 TEST_F(AlgorithmTest, TDForward) {

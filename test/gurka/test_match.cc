@@ -251,6 +251,7 @@ gurka::map TrafficBasedTest::map = {};
 uint32_t TrafficBasedTest::current = 0, TrafficBasedTest::historical = 0,
          TrafficBasedTest::constrained = 0, TrafficBasedTest::freeflow = 0;
 
+namespace {
 uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
   uint32_t kmh = midgard::invalid<uint32_t>();
   const auto& nodes = api.trip().routes(0).legs(0).node();
@@ -270,6 +271,7 @@ uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_ed
   }
   return kmh;
 }
+} // namespace
 
 // map matching currently only allows forward time tracking and invariant so types 0, 1, 3.
 // type 2 arrive_by is not yet supported

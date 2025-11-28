@@ -11,7 +11,14 @@ const std::vector<std::string> kSupportedCostingModels = {"auto", "bus", "truck"
 const std::map<std::string, std::string> kParameters = {{"tolls", "toll"},
                                                         {"highways", "highway"},
                                                         {"ferry", "ferry"}};
-std::vector<std::string> kUseParameters;
+
+std::vector<std::string> kUseParameters = [] {
+  std::vector<std::string> params;
+  for (const auto& [key, value] : kParameters) {
+    params.push_back(key);
+  }
+  return params;
+}();
 
 constexpr double grid_size_meters = 100.;
 
@@ -140,10 +147,3 @@ INSTANTIATE_TEST_SUITE_P(UsePropsTest,
                          UseTest,
                          ::testing::Combine(::testing::ValuesIn(kSupportedCostingModels),
                                             ::testing::ValuesIn(kUseParameters)));
-
-int main(int argc, char** argv) {
-  std::transform(kParameters.begin(), kParameters.end(), std::back_inserter(kUseParameters),
-                 [](auto& pair) { return pair.first; });
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

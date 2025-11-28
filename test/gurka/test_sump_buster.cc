@@ -4,6 +4,7 @@
 
 using namespace valhalla;
 
+namespace {
 const std::vector<std::string>& costing = {"auto",    "taxi",          "bus",        "truck",
                                            "bicycle", "motor_scooter", "motorcycle", "pedestrian"};
 
@@ -85,3 +86,4 @@ TEST(Standalone, SumpBusterOverride) {
                   {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
   }
 }
+} // namespace
