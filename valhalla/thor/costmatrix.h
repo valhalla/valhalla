@@ -154,6 +154,7 @@ protected:
   std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;
+  std::array<std::vector<std::vector<std::bitset<768>>>, 2> connection_pruning_;
 
   // A* heuristics for both trees and each location
   std::array<std::vector<AStarHeuristic>, 2> astar_heuristics_;
@@ -189,11 +190,11 @@ protected:
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
-  void CheckConnections(const uint32_t source,
-                        const sif::BDEdgeLabel& pred,
-                        const uint32_t n,
-                        baldr::GraphReader& graphreader,
-                        const valhalla::Options& options);
+  std::bitset<768> CheckConnections(const uint32_t source,
+                                    const sif::BDEdgeLabel& pred,
+                                    const uint32_t n,
+                                    baldr::GraphReader& graphreader,
+                                    const valhalla::Options& options);
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
@@ -215,7 +216,8 @@ protected:
                    const EdgeMetadata& meta,
                    uint32_t& shortcuts,
                    const baldr::graph_tile_ptr& tile,
-                   const baldr::TimeInfo& time_info);
+                   const baldr::TimeInfo& time_info,
+                   const uint32_t connection_pruning_index);
 
   /**
    * Update status when a connection is found.
