@@ -787,9 +787,16 @@ TEST(UtilMidgard, ToFloat) {
   EXPECT_FLOAT_EQ(to_float("0.0"), 0.0f);
   EXPECT_FLOAT_EQ(to_float<double>("3.14159"), 3.14159);
   EXPECT_FLOAT_EQ(to_float("123.456extra"), 123.456f);
+  EXPECT_FLOAT_EQ(to_float("+1.1"), 1.1f);
+  EXPECT_FLOAT_EQ(to_float("+0"), 0);
+  EXPECT_FLOAT_EQ(to_float("-0"), 0);
+  EXPECT_FLOAT_EQ(to_float("-1"), -1);
 
   EXPECT_THROW(to_float("not_a_number"), std::invalid_argument);
   EXPECT_THROW(to_float(""), std::invalid_argument);
+  EXPECT_THROW(to_float("+"), std::invalid_argument);
+  EXPECT_THROW(to_float("++1.1"), std::invalid_argument);
+  EXPECT_THROW(to_float("+-1.1"), std::invalid_argument);
 }
 
 TEST(UtilMidgard, ToInt) {
@@ -799,9 +806,16 @@ TEST(UtilMidgard, ToInt) {
   EXPECT_EQ(to_int<int64_t>("9223372036854775807"), 9223372036854775807LL);
   EXPECT_EQ(to_int<uint32_t>("4294967295"), 4294967295U);
   EXPECT_EQ(to_int("123.456"), 123);
+  EXPECT_EQ(to_int("+1"), 1);
+  EXPECT_EQ(to_int("+0"), 0);
+  EXPECT_EQ(to_int("-0"), 0);
+  EXPECT_EQ(to_int("-1"), -1);
 
   EXPECT_THROW(to_int("not_a_number"), std::invalid_argument);
   EXPECT_THROW(to_int(""), std::invalid_argument);
+  EXPECT_THROW(to_int("+"), std::invalid_argument);
+  EXPECT_THROW(to_int("++1"), std::invalid_argument);
+  EXPECT_THROW(to_int("+-1"), std::invalid_argument);
 }
 
 } // namespace
