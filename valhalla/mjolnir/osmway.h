@@ -2156,6 +2156,15 @@ struct OSMWay {
    */
   void set_drive_on_right(const bool drive_on_right) {
     drive_on_right_ = drive_on_right;
+    has_driving_side_ = true;
+  }
+
+  /**
+   * Indicates if the drive on right tag is present.
+   * @return  Returns true if the drive on right tag is present.
+   */
+  bool has_driving_side() const {
+    return has_driving_side_;
   }
 
   /**
@@ -2645,7 +2654,7 @@ struct OSMWay {
   uint32_t toll_ : 1;
   uint32_t bridge_ : 1;
   uint32_t multiple_levels_ : 1;
-  uint32_t drive_on_right_ : 1;
+  uint32_t drive_on_right_ : 1; // Drive side override. Set if `has_driving_side_` is true.
   uint32_t bike_network_ : 4;
   uint32_t exit_ : 1;
   uint32_t tagged_speed_ : 1;
@@ -2708,7 +2717,8 @@ struct OSMWay {
   uint16_t bike_backward_ : 1;
   uint16_t lit_ : 1;
   uint16_t destination_only_hgv_ : 1;
-  uint16_t spare2_ : 2;
+  uint16_t has_driving_side_ : 1;
+  uint16_t spare_ : 1;
 
   uint16_t nodecount_;
 

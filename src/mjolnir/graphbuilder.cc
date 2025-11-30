@@ -608,8 +608,10 @@ void BuildTileSet(const std::string& ways_file,
             std::swap(source, target);
           }
 
-          if (!use_admin_db)
+          // Allow specific tag to override drive on right
+          if (w.has_driving_side()) {
             dor = w.drive_on_right();
+          }
 
           // Validate speed. Set speed limit and truck speed.
           uint32_t speed = w.speed();

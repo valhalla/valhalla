@@ -185,9 +185,7 @@ struct graph_parser {
     empty_relation_tags_ = lua_.Transform(OSMType::kRelation, 0, {});
 
     tag_handlers_["driving_side"] = [this]() {
-      if (!use_admin_db_) {
-        way_.set_drive_on_right(tag_.second == "right" ? true : false);
-      }
+      way_.set_drive_on_right(tag_.second == "right" ? true : false);
     };
     tag_handlers_["internal_intersection"] = [this]() {
       if (!infer_internal_intersections_) {
@@ -2559,8 +2557,6 @@ struct graph_parser {
 
     const auto& tracktype_exists = tags.find("tracktype");
     has_tracktype_tag_ = (tracktype_exists != tags.end());
-
-    way_.set_drive_on_right(true); // default
 
     for (const auto& kv : tags) {
       tag_ = {kv.first, kv.second};

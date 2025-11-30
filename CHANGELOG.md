@@ -13,6 +13,7 @@
    * CHANGED: Microoptimisation in EdgeInfo. [#5733](https://github.com/valhalla/valhalla/pull/5733)
    * CHANGED: Merge cost and tyr inline tests into single executable [#5735](https://github.com/valhalla/valhalla/pull/5735) 
    * ADDED: Add option `edge.hov_type` to trace attributes [#5741](https://github.com/valhalla/valhalla/pull/5741)
+   * ADDED: Ability to override driving side by `driving_side` tag without setting `use_admin_db` to `false` [#5748](https://github.com/valhalla/valhalla/pull/5748)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
