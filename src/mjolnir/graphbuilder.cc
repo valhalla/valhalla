@@ -564,15 +564,12 @@ void BuildTileSet(const std::string& ways_file,
         bool dor = false;
         std::vector<std::pair<std::string, bool>> default_languages;
 
-        if (use_admin_db) {
+        if (admin_db) {
           admin_index = (admin_polys.size() == 1) ? admin_polys.begin()->first
                                                   : GetMultiPolyId(admin_polys, node_ll, graphtile);
           dor = drive_on_right[admin_index];
           default_languages = GetMultiPolyIndexes(language_polys, node_ll);
 
-        } else {
-          admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
-                                           osmdata.node_names.name(node.state_iso_index()));
         }
 
         // Look for potential duplicates
