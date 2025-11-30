@@ -39,14 +39,16 @@ protected:
     };
 
     // generate the lls for the nodes in the map
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {-111.962238354, 49.003392362});
+    const auto layout =
+        gurka::detail::map_to_coordinates(ascii_map, 10, {-111.962238354, 49.003392362});
 
     // make the tiles
     std::string tile_dir = "test/data/route_incidents";
     map = gurka::buildtiles(layout, ways, {}, {}, tile_dir,
                             {
                                 {"mjolnir.traffic_extract", tile_dir + "/traffic.tar"},
-                                {"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
+                                {"mjolnir.admin",
+                                 {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                             });
 
     // stage up some live traffic data

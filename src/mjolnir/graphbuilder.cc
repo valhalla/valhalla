@@ -569,7 +569,6 @@ void BuildTileSet(const std::string& ways_file,
                                                   : GetMultiPolyId(admin_polys, node_ll, graphtile);
           dor = drive_on_right[admin_index];
           default_languages = GetMultiPolyIndexes(language_polys, node_ll);
-
         }
 
         // Look for potential duplicates
