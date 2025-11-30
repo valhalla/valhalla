@@ -25,8 +25,6 @@ struct OSMNode {
   uint64_t exit_to_index_ : 21;
   uint64_t named_intersection_ : 1;
 
-  uint64_t country_iso_index_ : 21;
-  uint64_t state_iso_index_ : 21;
   uint64_t traffic_signal_ : 1;
   uint64_t forward_signal_ : 1;
   uint64_t backward_signal_ : 1;
@@ -38,25 +36,21 @@ struct OSMNode {
   uint64_t backward_yield_ : 1;
   uint64_t minor_ : 1;
   uint64_t direction_ : 1;
-  uint64_t spare_ : 11;
-
-  uint32_t access_ : 12;
-  uint32_t type_ : 4;
-  uint32_t intersection_ : 1;
-  uint32_t non_link_edge_ : 1;
-  uint32_t link_edge_ : 1;
-  uint32_t shortlink_ : 1; // Link edge < kMaxInternalLength
-  uint32_t non_ferry_edge_ : 1;
-  uint32_t ferry_edge_ : 1;
-  uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
-  uint32_t urban_ : 1;
-  uint32_t tagged_access_ : 1; // Was access originally tagged?
-  uint32_t private_access_ : 1;
-  uint32_t cash_only_toll_ : 1;
-  uint32_t spare1_ : 5;
-
-  // linguistic information
-  uint32_t linguistic_info_index_;
+  uint64_t access_ : 12;
+  uint64_t type_ : 4;
+  uint64_t intersection_ : 1;
+  uint64_t non_link_edge_ : 1;
+  uint64_t link_edge_ : 1;
+  uint64_t shortlink_ : 1; // Link edge < kMaxInternalLength
+  uint64_t non_ferry_edge_ : 1;
+  uint64_t ferry_edge_ : 1;
+  uint64_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
+  uint64_t urban_ : 1;
+  uint64_t tagged_access_ : 1; // Was access originally tagged?
+  uint64_t private_access_ : 1;
+  uint64_t cash_only_toll_ : 1;
+  uint64_t linguistic_info_index_ : 21;
+  uint64_t spare_ : 5;
 
   // Lat,lng of the node at fixed 7digit precision
   uint32_t lng7_;
@@ -425,58 +419,6 @@ struct OSMNode {
   }
 
   /**
-   * Set the country iso code index
-   * @param country iso code Index into the 2 char Country ISO Code.
-   */
-  void set_country_iso_index(const uint32_t index) {
-    if (index > kMaxNodeNameIndex) {
-      throw std::runtime_error("OSMNode: exceeded maximum country iso index");
-    }
-    country_iso_index_ = index;
-  }
-
-  /**
-   * Get the country iso code.
-   * @return Returns the index into the 2 char Country ISO Code.
-   */
-  uint32_t country_iso_index() const {
-    return country_iso_index_;
-  }
-
-  /**
-   * Does the node have a 2 char code. Check if country_iso_index is non-zero
-   */
-  bool has_country_iso() const {
-    return country_iso_index_ > 0;
-  }
-
-  /**
-   * Set the country iso code index
-   * @param country iso code Index into the 2 char Country ISO Code.
-   */
-  void set_state_iso_index(const uint32_t index) {
-    if (index > kMaxNodeNameIndex) {
-      throw std::runtime_error("OSMNode: exceeded maximum state iso index");
-    }
-    state_iso_index_ = index;
-  }
-
-  /**
-   * Get the state iso code.
-   * @return Returns the index into the 2 char State ISO Code.
-   */
-  uint32_t state_iso_index() const {
-    return state_iso_index_;
-  }
-
-  /**
-   * Does the node have a 2 char code. Check if state_iso_index is non-zero
-   */
-  bool has_state_iso_index() const {
-    return state_iso_index_ > 0;
-  }
-
-  /**
    * Set the tagged_access flag.
    * @param  tagged_access   Was the access originally tagged? True if
    *         any tags like "access", "auto", "truck", "foot", etc were specified.
@@ -531,6 +473,9 @@ struct OSMNode {
    * @param  idx  Index for the linguistic info.
    */
   void set_linguistic_info_index(const uint32_t idx) {
+    if (idx > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum linguistic info index");
+    }
     linguistic_info_index_ = idx;
   }
 

@@ -2110,17 +2110,7 @@ struct graph_parser {
       // TODO: instead of checking this, we should delete these tag/values completely in lua
       // and save our CPUs the wasted time of iterating over them again for nothing
       auto hasTag = !tag.second.empty();
-      if (tag.first == "iso:3166_1" && !use_admin_db_ && hasTag) {
-        // Add the country iso code to the unique node names list and store its index in the OSM
-        // node
-        n.set_country_iso_index(osmdata_.node_names.index(tag.second));
-        ++osmdata_.node_name_count;
-      } else if ((tag.first == "state_iso_code" && !use_admin_db_) && hasTag) {
-        // Add the state iso code to the unique node names list and store its index in the OSM
-        // node
-        n.set_state_iso_index(osmdata_.node_names.index(tag.second));
-        ++osmdata_.node_name_count;
-      } else if (tag.first == "highway") {
+      if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals");
         n.set_stop_sign(tag.second == "stop");
         n.set_yield_sign(tag.second == "give_way");
