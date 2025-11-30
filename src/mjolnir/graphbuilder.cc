@@ -564,7 +564,7 @@ void BuildTileSet(const std::string& ways_file,
         bool dor = false;
         std::vector<std::pair<std::string, bool>> default_languages;
 
-        if (admin_db) {
+        if (use_admin_db) {
           admin_index = (admin_polys.size() == 1) ? admin_polys.begin()->first
                                                   : GetMultiPolyId(admin_polys, node_ll, graphtile);
           dor = drive_on_right[admin_index];
