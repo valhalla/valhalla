@@ -488,3 +488,42 @@ TEST(Standalone, AdminAlongEdge) {
   EXPECT_EQ(crossings[0]["begin_shape_index"].GetUint64(), 2);
   EXPECT_EQ(crossings[0]["end_shape_index"].GetUint64(), 3);
 }
+
+TEST(Standalone, DrivingSideOveride) {
+  constexpr double gridsize_metres = 100;
+
+  // No borders, just one admin
+  const std::string ascii_map = R"(
+                            A
+                            |
+                            |
+                            B
+                            |
+                            |
+                            C
+                            |
+                            |
+                            D
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "motorway"}, {"driving_side", "right"}}},
+      {"BC", {{"highway", "motorway"}, {"driving_side", "left"}}},
+      {"CD", {{"highway", "motorway"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-111.96, 50.0});
+  const auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_admin_driving_side",
+                        {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}}});
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
+
+  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+  auto leg = result.trip().routes(0).legs(0);
+  EXPECT_EQ(leg.admin(0).country_code(), "CA");
+  ASSERT_EQ(leg.node_size(), 3);
+  EXPECT_FALSE(leg.node(0).edge().drive_on_left()); // AB - "driving_side", "right"
+  EXPECT_TRUE(leg.node(1).edge().drive_on_left());  // BC - "driving_side": "left"
+  EXPECT_FALSE(leg.node(2).edge().drive_on_left()); // CD - default right
+}
