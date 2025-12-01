@@ -21,6 +21,9 @@
 namespace valhalla {
 namespace thor {
 
+constexpr int kMaxLocationCount = 768; // 96 bytes
+using location_bitset_t = std::bitset<kMaxLocationCount>;
+
 enum class MatrixExpansionType { reverse = 0, forward = 1 };
 constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
 constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
@@ -154,7 +157,8 @@ protected:
   std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;
-  std::array<std::vector<std::vector<std::bitset<768>>>, 2> connection_pruning_;
+  std::array<std::vector<std::vector<location_bitset_t>>, 2> connection_pruning_;
+  std::array<location_bitset_t, 2> complete_location_mask_;
 
   // A* heuristics for both trees and each location
   std::array<std::vector<AStarHeuristic>, 2> astar_heuristics_;
@@ -190,11 +194,11 @@ protected:
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
-  std::bitset<768> CheckConnections(const uint32_t source,
-                                    const sif::BDEdgeLabel& pred,
-                                    const uint32_t n,
-                                    baldr::GraphReader& graphreader,
-                                    const valhalla::Options& options);
+  location_bitset_t CheckConnections(const uint32_t source,
+                                     const sif::BDEdgeLabel& pred,
+                                     const uint32_t n,
+                                     baldr::GraphReader& graphreader,
+                                     const valhalla::Options& options);
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>

@@ -120,9 +120,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_iterations_(
           std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultMaxIterations),
                    static_cast<uint32_t>(1))),
-      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
-      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
-      sources_{new ReachedMap} {
+      access_mode_(kAutoAccess),
+      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
+      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -136,6 +136,7 @@ void CostMatrix::Clear() {
   if (check_reverse_connection_)
     sources_->clear();
 
+  complete_location_mask_ = {};
   // Clear all adjacency lists, edge labels, and edge status
   // Resize and shrink_to_fit so all capacity is reduced.
   auto label_reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
@@ -420,6 +421,9 @@ void CostMatrix::Initialize(
       adjacency_[is_fwd][i].reuse(min_heuristic, range, bucketsize, &edgelabel_[is_fwd][i]);
       // connection_pruning_[is_fwd][i]
     }
+    for (uint32_t i = 0; i < other_count; i++) {
+      complete_location_mask_[is_fwd][i] = true;
+    }
   }
 
   // Initialize best connection
@@ -697,10 +701,15 @@ bool CostMatrix::Expand(const uint32_t index,
                         kNoFlowMask);
   }
 
-  std::bitset<768> old_mask{};
+  location_bitset_t old_mask{};
   if (pred.connection_pruning_index() != kInvalidPruningIdx)
     old_mask = connection_pruning_[FORWARD][index][pred.connection_pruning_index()];
   auto pruning_mask = CheckConnections<expansion_direction>(index, pred, n, graphreader, options);
+
+  // if all locations were connected, don't bother further expanding from this edge
+  if (pruning_mask == complete_location_mask_[FORWARD])
+    return false;
+
   auto new_index = kInvalidPruningIdx;
   if (pruning_mask.any() && pruning_mask != old_mask) {
     connection_pruning_[FORWARD][index].push_back(pruning_mask);
@@ -836,13 +845,13 @@ bool CostMatrix::Expand(const uint32_t index,
 // Check if the edge on the forward search connects to a reached edge
 // on the reverse search trees.
 template <const MatrixExpansionType expansion_direction, const bool FORWARD>
-std::bitset<768> CostMatrix::CheckConnections(const uint32_t loc_idx,
-                                              const BDEdgeLabel& pred,
-                                              const uint32_t n,
-                                              GraphReader& graphreader,
-                                              const valhalla::Options& options) {
+location_bitset_t CostMatrix::CheckConnections(const uint32_t loc_idx,
+                                               const BDEdgeLabel& pred,
+                                               const uint32_t n,
+                                               GraphReader& graphreader,
+                                               const valhalla::Options& options) {
 
-  std::bitset<768> new_conn_pruning_mask{};
+  location_bitset_t new_conn_pruning_mask{};
   if (pred.connection_pruning_index() != kInvalidPruningIdx)
     new_conn_pruning_mask = connection_pruning_[FORWARD][loc_idx][pred.connection_pruning_index()];
 
