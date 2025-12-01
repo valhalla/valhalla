@@ -1167,7 +1167,14 @@ function filter_tags_generic(kv)
     kv["motorcycle_forward"] = "true"
   end
 
+  if (kv["oneway:bicycle"] == "no" and (kv["cycleway:left:oneway"] == "-1" or kv["cycleway:right:oneway"] == "-1")) then
+     kv["oneway:bicycle"] = "-1"
+     kv["bike_backward"] = "false"
+  end
+
   --check the oneway-ness and traversability against the direction of the geom
+  --no means that a way is bi-directional for cyclists.
+  --yes means that a way is oneway for cyclists, with allowed passage in its way direction.
   if ((kv["oneway"] == "yes" and kv["oneway:bicycle"] == "no") or kv["bicycle:backward"] == "yes" or kv["bicycle:backward"] == "no") then
     kv["bike_backward"] = "true"
   end
@@ -1660,6 +1667,14 @@ function filter_tags_generic(kv)
     if cycle_lane_right_opposite == "false" then
       cycle_lane_right_opposite = bike_reverse[kv["cycleway:right"]] or "false"
       cycle_lane_left_opposite = bike_reverse[kv["cycleway:left"]] or "false"
+    end
+
+    if cycle_lane_right_opposite == "false" and kv["cycleway:right:oneway"] == "-1" then
+      cycle_lane_right_opposite = "true"
+    end
+
+    if cycle_lane_left_opposite == "false" and kv["cycleway:left:oneway"] == "-1" then
+      cycle_lane_left_opposite = "true"
     end
 
     --Figure out which side of the road has what cyclelane
