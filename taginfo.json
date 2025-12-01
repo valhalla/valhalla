@@ -694,6 +694,14 @@
     },
     {
       "key": "cycleway:both",
+      "value": "separate",
+      "object_types": [
+        "way"
+      ],
+      "description": "Bike forward and backward overrides.  Sets bike forward and backward to true."
+    },
+    {
+      "key": "cycleway:both",
       "value": "track",
       "object_types": [
         "way"
@@ -759,6 +767,14 @@
     {
       "key": "cycleway:left",
       "value": "shared_lane",
+      "object_types": [
+        "way"
+      ],
+      "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+    },
+    {
+      "key": "cycleway:left",
+      "value": "separate",
       "object_types": [
         "way"
       ],
@@ -839,6 +855,14 @@
     {
       "key": "cycleway:right",
       "value": "shared_lane",
+      "object_types": [
+        "way"
+      ],
+      "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+    },
+    {
+      "key": "cycleway:right",
+      "value": "separate",
       "object_types": [
         "way"
       ],
@@ -3958,6 +3982,22 @@
         "way"
       ],
       "description": "Indicates the travel direction on the way can change."
+    },
+    {
+      "key": "cycleway:right:oneway",
+      "value": "-1",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides oneway flag.  Sets bike reverse flag to true for the cycleway lane on the right.  A value of -1 will flip the direction of the oneway for bicycles."
+    },
+    {
+      "key": "cycleway:left:oneway",
+      "value": "-1",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides oneway flag.  Sets bike reverse flag to true for the cycleway lane on the left.  A value of -1 will flip the direction of the oneway for bicycles."
     },
     {
       "key": "oneway:bicycle",
