@@ -64,7 +64,8 @@ TEST(Standalone, Separate) {
     EXPECT_NE(FD_edge, nullptr);
     EXPECT_NE(DF_edge, nullptr);
 
-    EXPECT_EQ(static_cast<uint8_t>(FD_edge->cyclelane()), static_cast<uint8_t>(CycleLane::kSeparated));
+    EXPECT_EQ(static_cast<uint8_t>(FD_edge->cyclelane()),
+              static_cast<uint8_t>(CycleLane::kSeparated));
     EXPECT_EQ(static_cast<uint8_t>(DF_edge->cyclelane()), static_cast<uint8_t>(CycleLane::kNone));
   }
 }
@@ -102,8 +103,7 @@ TEST(Standalone, Cycleway_Both) {
 
   constexpr double gridsize = 100;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {5.1079374, 52.0887174});
-  auto map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_cycleway_both", build_config);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_cycleway_both", build_config);
 
   auto result = gurka::do_action(valhalla::Options::route, map, {"H", "A"}, "bicycle");
   gurka::assert::raw::expect_path(result, {"HG", "GD", "DA"});
@@ -119,8 +119,10 @@ TEST(Standalone, Cycleway_Both) {
     EXPECT_NE(FC_edge, nullptr);
     EXPECT_NE(CF_edge, nullptr);
 
-    EXPECT_EQ(static_cast<uint8_t>(FC_edge->cyclelane()), static_cast<uint8_t>(CycleLane::kSeparated));
-    EXPECT_EQ(static_cast<uint8_t>(CF_edge->cyclelane()), static_cast<uint8_t>(CycleLane::kSeparated));
+    EXPECT_EQ(static_cast<uint8_t>(FC_edge->cyclelane()),
+              static_cast<uint8_t>(CycleLane::kSeparated));
+    EXPECT_EQ(static_cast<uint8_t>(CF_edge->cyclelane()),
+              static_cast<uint8_t>(CycleLane::kSeparated));
   }
 
   {
@@ -132,7 +134,8 @@ TEST(Standalone, Cycleway_Both) {
     EXPECT_NE(GD_edge, nullptr);
     EXPECT_NE(DG_edge, nullptr);
 
-    EXPECT_EQ(static_cast<uint8_t>(GD_edge->cyclelane()), static_cast<uint8_t>(CycleLane::kSeparated));
+    EXPECT_EQ(static_cast<uint8_t>(GD_edge->cyclelane()),
+              static_cast<uint8_t>(CycleLane::kSeparated));
     EXPECT_EQ(static_cast<uint8_t>(DG_edge->cyclelane()), static_cast<uint8_t>(CycleLane::kNone));
   }
 
@@ -145,7 +148,8 @@ TEST(Standalone, Cycleway_Both) {
     EXPECT_NE(BE_edge, nullptr);
     EXPECT_NE(EB_edge, nullptr);
 
-    EXPECT_EQ(static_cast<uint8_t>(BE_edge->cyclelane()), static_cast<uint8_t>(CycleLane::kSeparated));
+    EXPECT_EQ(static_cast<uint8_t>(BE_edge->cyclelane()),
+              static_cast<uint8_t>(CycleLane::kSeparated));
     EXPECT_EQ(static_cast<uint8_t>(EB_edge->cyclelane()), static_cast<uint8_t>(CycleLane::kNone));
   }
 }
@@ -164,8 +168,13 @@ TEST(Standalone, Cycleway_Right_Oneway) {
 	  )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}, {"cycleway:right", "track"}, {"oneway", "yes"},
-    		  {"cycleway:right:oneway", "-1"}, {"cycleway:right", "track"}, {"oneway:bicycle", "no"}}},
+      {"AB",
+       {{"highway", "residential"},
+        {"cycleway:right", "track"},
+        {"oneway", "yes"},
+        {"cycleway:right:oneway", "-1"},
+        {"cycleway:right", "track"},
+        {"oneway:bicycle", "no"}}},
   };
 
   constexpr double gridsize = 100;
@@ -176,14 +185,14 @@ TEST(Standalone, Cycleway_Right_Oneway) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto");
   gurka::assert::raw::expect_path(result, {"AB"});
 
-  try{
-	  result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "bicycle");
-	  FAIL();
+  try {
+    result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "bicycle");
+    FAIL();
   } catch (const std::exception&) { SUCCEED(); }
 
-  try{
-	  result = gurka::do_action(valhalla::Options::route, map, {"B", "A"}, "auto");
-	  FAIL();
+  try {
+    result = gurka::do_action(valhalla::Options::route, map, {"B", "A"}, "auto");
+    FAIL();
   } catch (const std::exception&) { SUCCEED(); }
 
   result = gurka::do_action(valhalla::Options::route, map, {"B", "A"}, "bicycle");
@@ -201,6 +210,7 @@ TEST(Standalone, Cycleway_Right_Oneway) {
     EXPECT_NE(BA_edge, nullptr);
 
     EXPECT_EQ(static_cast<uint8_t>(AB_edge->cyclelane()), static_cast<uint8_t>(CycleLane::kNone));
-    EXPECT_EQ(static_cast<uint8_t>(BA_edge->cyclelane()), static_cast<uint8_t>(CycleLane::kSeparated));
+    EXPECT_EQ(static_cast<uint8_t>(BA_edge->cyclelane()),
+              static_cast<uint8_t>(CycleLane::kSeparated));
   }
 }
