@@ -3989,7 +3989,7 @@
       "object_types": [
         "way"
       ],
-      "description": "Overrides oneway flag.  Sets bike reverse flag to true for the cycleway lane on the right.  A value of -1 will flip the direction of the oneway for bicycles."
+      "description": "Overrides oneway flag.  Sets bike reverse flag to true for the cycleway lane on the right."
     },
     {
       "key": "cycleway:left:oneway",
