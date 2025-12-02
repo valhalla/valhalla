@@ -21,6 +21,8 @@ namespace midgard {
 // compute an optimal generalization factor when creating contours.
 constexpr float kOptimalGeneralization = std::numeric_limits<float>::max();
 
+constexpr float NODATA_VALUE = static_cast<float>(std::numeric_limits<uint16_t>::max());
+
 /**
  * Class to store data in a gridded/tiled data structure. Contains methods
  * to mark each tile with data using a compare operator.

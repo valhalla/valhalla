@@ -222,7 +222,8 @@ void create_costing_options(Options& options, Costing::Type costing) {
 std::vector<valhalla::Location> ToPBFLocations(const std::vector<vb::Location>& locations,
                                                vb::GraphReader& graphreader,
                                                const std::shared_ptr<vs::DynamicCost>& costing) {
-  const auto projections = loki::Search(locations, graphreader, costing);
+  loki::Search search(graphreader);
+  const auto projections = search.search(locations, costing);
   std::vector<valhalla::Location> result;
   for (const auto& loc : locations) {
     valhalla::Location pbfLoc;
@@ -321,7 +322,8 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   locations.push_back({node_locations["1"]});
   locations.push_back({node_locations["2"]});
 
-  const auto projections = loki::Search(locations, *reader, mode_costing[static_cast<size_t>(mode)]);
+  loki::Search search(*reader);
+  const auto projections = search.search(locations, mode_costing[static_cast<size_t>(mode)]);
   valhalla::Location origin;
   {
     const auto& correlated = projections.at(locations[0]);
@@ -365,7 +367,8 @@ TEST(Astar, TestTrivialPathTriangle) {
   locations.push_back({node_locations["4"]});
   locations.push_back({node_locations["5"]});
 
-  const auto projections = loki::Search(locations, *reader, costs[static_cast<size_t>(mode)]);
+  loki::Search search(*reader);
+  const auto projections = search.search(locations, costs[static_cast<size_t>(mode)]);
   valhalla::Location origin;
   {
     const auto& correlated = projections.at(locations[0]);
@@ -400,7 +403,8 @@ void TestPartialDuration(vt::PathAlgorithm& astar) {
   locations.push_back({node_locations["1"]});
   locations.push_back({node_locations["3"]});
 
-  auto projections = loki::Search(locations, *reader, costs[static_cast<size_t>(mode)]);
+  loki::Search search(*reader);
+  auto projections = search.search(locations, costs[static_cast<size_t>(mode)]);
   valhalla::Location origin;
   {
     auto& correlated = projections.at(locations[0]);
@@ -1046,7 +1050,8 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   locations.push_back({node_locations["6"]});
   locations.push_back({node_locations["7"]});
 
-  const auto projections = loki::Search(locations, *reader, costs[int(mode)]);
+  loki::Search search(*reader);
+  const auto projections = search.search(locations, costs[int(mode)]);
 
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {
@@ -1280,7 +1285,8 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   locations.push_back({node_locations["n"]});
   locations.push_back({node_locations["i"]});
 
-  const auto projections = loki::Search(locations, *reader, costs[int(mode)]);
+  loki::Search search(*reader);
+  const auto projections = search.search(locations, costs[int(mode)]);
   valhalla::Location origin;
   {
     const auto& correlated = projections.at(locations[0]);
@@ -1463,7 +1469,8 @@ TEST(ComplexRestriction, WalkVias) {
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["7"]});
-  const auto projections = loki::Search(locations, *reader, costing);
+  loki::Search search(*reader);
+  const auto projections = search.search(locations, costing);
   const auto& correlated = projections.at(locations[0]);
 
   ASSERT_EQ(correlated.edges.size(), 2) << "Expected only 2 edges in snapping response";
@@ -1488,7 +1495,7 @@ TEST(ComplexRestriction, WalkVias) {
   {
     std::vector<valhalla::baldr::Location> via_locations;
     via_locations.push_back({node_locations["V"]});
-    const auto via_projections = loki::Search(via_locations, *reader, costing);
+    const auto via_projections = search.search(via_locations, costing);
     const auto& via_correlated = via_projections.at(via_locations[0]);
     ASSERT_EQ(via_correlated.edges.size(), 2) << "Should've found 2 edges for the via point";
 
@@ -1553,7 +1560,8 @@ TEST(Astar, BiDirTrivial) {
   set_hierarchy_limits(cost, true);
 
   // Loki
-  const auto projections = vk::Search(locations, graph_reader, cost);
+  vk::Search searcher(graph_reader);
+  const auto projections = searcher.search(locations, cost);
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {
     ASSERT_NO_THROW(
