@@ -14,6 +14,7 @@
    * CHANGED: Microoptimisation in EdgeInfo. [#5733](https://github.com/valhalla/valhalla/pull/5733)
    * CHANGED: Merge cost and tyr inline tests into single executable [#5735](https://github.com/valhalla/valhalla/pull/5735) 
    * ADDED: Add option `edge.hov_type` to trace attributes [#5741](https://github.com/valhalla/valhalla/pull/5741)
+   * CHANGED: renamed `GraphId::Is_Valid()` -> `GraphId::is_valid()` and `GraphId::Tile_Base` -> `GraphId::tile_base` [#5678](https://github.com/valhalla/valhalla/pull/5678)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**

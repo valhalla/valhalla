@@ -360,7 +360,7 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
 
     } else {
       opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
-      if (!opp_edge_id.Is_Valid()) {
+      if (!opp_edge_id.is_valid()) {
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid);

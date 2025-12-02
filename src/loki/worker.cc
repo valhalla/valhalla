@@ -151,7 +151,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
             // Check if a shortcut exists
             GraphId shortcut = reader->GetShortcut(edge.id);
-            if (shortcut.Is_Valid()) {
+            if (shortcut.is_valid()) {
               // Check if this shortcut has not been added
               auto shortcut_inserted = avoids.insert(shortcut);
               if (shortcut_inserted.second) {
