@@ -194,7 +194,8 @@ void search(valhalla::baldr::Location location,
   location.street_side_max_distance_ = 5000;
 
   const auto costing = create_costing();
-  const auto results = Search({location}, reader, costing);
+  Search search(reader);
+  const auto results = search.search({location}, costing);
   const auto& p = results.at(location);
 
   ASSERT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
@@ -233,7 +234,8 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
 
   const auto costing = create_costing();
 
-  const auto results = Search({location}, reader, costing);
+  Search search(reader);
+  const auto results = search.search({location}, costing);
   if (results.empty() && result_count == 0)
     return;
 

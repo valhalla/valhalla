@@ -33,7 +33,8 @@ TEST(TimeTracking, make) {
        }) {
     // get some loki results
     auto costing = sif::CostFactory().Create(Costing::none_);
-    auto found = loki::Search({baldr::Location(map.nodes.begin()->second)}, reader, costing);
+    loki::Search search(reader);
+    auto found = search.search({baldr::Location(map.nodes.begin()->second)}, costing);
     Location location;
     baldr::PathLocation::toPBF(found.begin()->second, &location, reader);
 
