@@ -82,7 +82,8 @@ TEST_F(ShortestTest, MotorbikeShortest) {
 
 TEST_F(ShortestTest, BikeShortest) {
   std::string costing = "bicycle";
-  doTests(costing, {"ABDE", "BHID", "ABDE"}, {{"/costing_options/" + costing + "/shortest", "1"}});
+  doTests(costing, {"ABDE", "BHID", "ABDE"}, {{"/costing_options/" + costing + "/shortest", "1"}},
+          {{"/costing_options/" + costing + "/use_roads", "0.25"}}); // use_roads default changed
 }
 
 TEST_F(ShortestTest, PedestrianShortest) {
