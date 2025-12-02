@@ -458,7 +458,7 @@ TEST(Search, test_search_cutoff) {
 
 } // namespace
 
-// Setup and tearown will be called only once for the entire suite121
+// Setup and tearown will be called only once for the entire suite
 class SearchTestSuiteEnv : public ::testing::Environment {
 public:
   void SetUp() override {
@@ -469,8 +469,4 @@ public:
   }
 };
 
-int main(int argc, char* argv[]) {
-  testing::AddGlobalTestEnvironment(new SearchTestSuiteEnv);
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+auto* const search_env_ = testing::AddGlobalTestEnvironment(new SearchTestSuiteEnv);

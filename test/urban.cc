@@ -100,9 +100,3 @@ TEST(Urban2, test_urban_excluded_by_default) {
 }
 
 } // namespace
-
-int main(int argc, char* argv[]) {
-  valhalla::midgard::logging::Configure({{"type", ""}});
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

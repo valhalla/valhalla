@@ -348,8 +348,3 @@ TEST_F(incident_loading, get) {
   got = incident_singleton_t::get({});
   ASSERT_FALSE(got);
 }
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

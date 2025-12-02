@@ -750,13 +750,3 @@ TEST(DateTime, DiffCaching) {
 }
 
 } // namespace
-
-int main(int argc, char* argv[]) {
-#ifndef _WIN32
-  // make this whole thing bail if it doesnt finish fast
-  alarm(20);
-#endif
-
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

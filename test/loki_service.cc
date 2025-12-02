@@ -601,9 +601,6 @@ public:
   }
 };
 
+auto* const loki_service_env_ = testing::AddGlobalTestEnvironment(new LokiServiceEnv);
+
 // Elevation service
-int main(int argc, char* argv[]) {
-  testing::AddGlobalTestEnvironment(new LokiServiceEnv);
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

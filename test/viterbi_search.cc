@@ -533,8 +533,3 @@ TEST(ViterbiSearch, TestTopKSearch) {
     test_viterbisearch_brute_force(columns, vs);
   }
 }
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

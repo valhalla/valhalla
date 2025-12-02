@@ -268,12 +268,6 @@ public:
   }
 };
 
-} // namespace
+auto* const harrisburg_env_ = testing::AddGlobalTestEnvironment(new HarrisburgTestSuiteEnv);
 
-int main(int argc, char* argv[]) {
-  // Disable the logging noise
-  logging::Configure({{"type", ""}});
-  testing::AddGlobalTestEnvironment(new HarrisburgTestSuiteEnv);
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+} // namespace

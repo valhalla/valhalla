@@ -121,9 +121,3 @@ TEST(TrivialPaths, test_trivial_paths) {
                {"lat":52.072862,"lon":5.124025}],"costing":"auto"})";
   try_path(reader, loki_worker, test_request5, 5);
 }
-
-int main(int argc, char* argv[]) {
-  // logging::Configure({{"type", ""}}); // silence logs
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
