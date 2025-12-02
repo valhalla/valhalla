@@ -45,6 +45,7 @@
    * CHANGED: lower penalty for u-turns without name consistency [#5696](https://github.com/valhalla/valhalla/pull/5696)
    * CHANGED: Speed up transit feed ingestion with faster stop time look up via stop id [#5134](https://github.com/valhalla/valhalla/pull/5134)
    * CHANGED: Adjust speed penalty and add dimensions length and weight to auto costing [#5627](https://github.com/valhalla/valhalla/pull/5627)
+   * ADDED: NODATA value to isochrone's geotiff output [#5685](https://github.com/valhalla/valhalla/pull/5685)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
