@@ -255,13 +255,18 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   EXPECT_EQ(edges[1]["speeds_non_faded"]["no_flow"].GetInt(), base);
 
   // current_flow fades to predicted flow because its next up from the speed types in the request
-  EXPECT_NEAR(edges[1]["speeds_faded"]["current_flow"].GetInt(), current * 0.5 + predicted * 0.5, 1);
+  float multiplier = 480.f / 3600.f;
+  float multiplier_inverse = 1.f - multiplier;
+  EXPECT_NEAR(edges[1]["speeds_faded"]["current_flow"].GetInt(),
+              current * multiplier_inverse + predicted * multiplier, 1);
   EXPECT_NEAR(edges[1]["speeds_faded"]["constrained_flow"].GetInt(),
-              current * 0.5 + constrained * 0.5, 1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["free_flow"].GetInt(), current * 0.5 + free * 0.5, 1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["predicted_flow"].GetInt(), current * 0.5 + predicted * 0.5,
-              1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["no_flow"].GetInt(), current * 0.5 + base * 0.5, 1);
+              current * multiplier_inverse + constrained * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["free_flow"].GetInt(),
+              current * multiplier_inverse + free * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["predicted_flow"].GetInt(),
+              current * multiplier_inverse + predicted * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["no_flow"].GetInt(),
+              current * multiplier_inverse + base * multiplier, 1);
 
   api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto",
                          {{"/shape_match", "edge_walk"},
