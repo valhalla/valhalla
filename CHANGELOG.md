@@ -1,5 +1,21 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+   * FIXED: remove `libgeotiff` from pkg-config file `Requires` [#5737](https://github.com/valhalla/valhalla/pull/5737) 
+* **Enhancement**
+   * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
+   * ADDED: optional libvalhalla_test install target [#5719](https://github.com/valhalla/valhalla/pull/5719)
+   * CHANGED: Get rid of temporary std::vector in GraphTile::GetRestrictions [#5688](https://github.com/valhalla/valhalla/pull/5688)
+   * CHANGED: Use std::from_chars instead of std::stoi/stof/stod [#5704](https://github.com/valhalla/valhalla/pull/5704)
+   * CHANGED: Avoid dynamic allocation in loki::Search [#5724](https://github.com/valhalla/valhalla/pull/5724)
+   * CHANGED: Get rid of temporary vector in GraphTile::GetAccessRestrictions [#5689](https://github.com/valhalla/valhalla/pull/5689)
+   * ADDED: more options for `valhalla_benchmark_loki` [#5730](https://github.com/valhalla/valhalla/pull/5730)
+   * CHANGED: Microoptimisation in EdgeInfo. [#5733](https://github.com/valhalla/valhalla/pull/5733)
+   * CHANGED: Merge cost and tyr inline tests into single executable [#5735](https://github.com/valhalla/valhalla/pull/5735) 
+   * ADDED: Add option `edge.hov_type` to trace attributes [#5741](https://github.com/valhalla/valhalla/pull/5741)
+
+## Release Date: 2025-11-14 Valhalla 3.6.1
+* **Removed**
    * REMOVED: ENABLE_GDAL define for **Linux-only** Python binding releases [#5642](https://github.com/valhalla/valhalla/pull/5642)
    * REMOVED: pyvalhalla-weekly PyPI package [#5673](https://github.com/valhalla/valhalla/pull/5673)
 * **Bug Fix**
@@ -9,6 +25,7 @@
    * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
    * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647)
    * UPGRADED: vcpkg to 0e39c10736341cc8135b560438229bbda3d3219a [#5654](https://github.com/valhalla/valhalla/pull/5654)
+   * ADDED: Add NodeJs bindings [#5621](https://github.com/valhalla/valhalla/pull/5621)
    * FIXED: returns GeoTIFF with Content-Type image/tiff header [#5665](https://github.com/valhalla/valhalla/pull/5665)
    * CHANGED: Improve logging using std::format [#5666](https://github.com/valhalla/valhalla/pull/5666)
    * CHANGED: Migrated from pybind11 to nanobind to release `abi3` wheels (Python version agnostic), also changes minimum version of PyPI packages to 3.12 [#5628](https://github.com/valhalla/valhalla/pull/5628)
@@ -22,6 +39,10 @@
    * CHANGED: make alternative_iterations_delta configurable [#5679](https://github.com/valhalla/valhalla/pull/5679)
    * ADDED: `flow_sources` expansion property [#5697](https://github.com/valhalla/valhalla/pull/5697)
    * CHANGED: Replace GDAL with libgeotiff, re-enable support for bindings [#5680](https://github.com/valhalla/valhalla/pull/5680)
+   * ADDED: Support for loading tiles from a remote tarball with optional HTTP basic auth [#5467](https://github.com/valhalla/valhalla/pull/5467)
+   * CHANGED: lower penalty for u-turns without name consistency [#5696](https://github.com/valhalla/valhalla/pull/5696)
+   * CHANGED: Speed up transit feed ingestion with faster stop time look up via stop id [#5134](https://github.com/valhalla/valhalla/pull/5134)
+   * CHANGED: Adjust speed penalty and add dimensions length and weight to auto costing [#5627](https://github.com/valhalla/valhalla/pull/5627)
    * ADDED: NODATA value to isochrone's geotiff output [#5685](https://github.com/valhalla/valhalla/pull/5685)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
@@ -197,7 +218,6 @@
    * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
    * CHANGED: added openssl as a linked library to all build configs when `ENABLE_DATA_TOOLS=ON` [#5626](https://github.com/valhalla/valhalla/pull/5626)
    * UPGRADED: C++17 to C++20 [#5575](https://github.com/valhalla/valhalla/pull/5575)
-   * ADDED: Add NodeJs bindings [#5621](https://github.com/valhalla/valhalla/pull/5621)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

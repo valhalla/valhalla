@@ -277,8 +277,9 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // Get cost
   uint8_t flow_sources;
   sif::Cost newcost =
-      pred.cost() + (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
-                             : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
+      pred.cost() + (FORWARD
+                         ? costing_->EdgeCost(meta.edge, meta.edge_id, tile, time_info, flow_sources)
+                         : costing_->EdgeCost(opp_edge, opp_edge_id, t2, time_info, flow_sources));
 
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
   // Separate out transition cost.
@@ -1012,8 +1013,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) *
-                (1.0f - edge.percent_along());
+    Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                          edge.percent_along(), 1.f);
 
     // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
@@ -1121,8 +1122,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
     uint8_t flow_sources;
-    Cost cost =
-        costing_->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();
+    Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources, 0.0f,
+                                          edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1435,27 +1436,27 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
     }
     const auto* edge = tile->directededge(edgeid);
     if (edge->end_restriction() & costing->access_mode()) {
-      auto restrictions = tile->GetRestrictions(true, edgeid, costing->access_mode());
-      if (restrictions.size() == 0) {
+      auto restrictions = tile->GetComplexRestrictions(true, edgeid, costing->access_mode());
+      if (restrictions.empty()) {
         // TODO Should we actually throw here? Or assert to gracefully continue in release?
         // This implies corrupt data or logic bug
         throw std::logic_error(
             "Found no restrictions in tile even though edge-label.on_complex_rest() == true");
         break;
       }
-      for (auto cr : restrictions) {
+      for (const auto& cr : restrictions) {
         // For each restriction `cr`, grab the end id PLUS vias PLUS beginning
         std::vector<GraphId> restriction_ids;
         // We must add beginning and ending edge as well, not just the vias,
         // to track the full restriction
-        restriction_ids.push_back(cr->to_graphid());
-        cr->WalkVias([&restriction_ids](const GraphId* id) {
+        restriction_ids.push_back(cr.to_graphid());
+        cr.WalkVias([&restriction_ids](const GraphId* id) {
           restriction_ids.push_back(*id);
           return WalkingVia::KeepWalking;
         });
         // We must add beginning and ending edge as well, not just the vias,
         // to track the full restriction
-        restriction_ids.push_back(cr->from_graphid());
+        restriction_ids.push_back(cr.from_graphid());
 
         // Now, lets see if this restriction matches part of our patch_path
         if (std::search(patch_path.cbegin(), patch_path.cend(), restriction_ids.crbegin(),
