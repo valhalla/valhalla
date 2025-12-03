@@ -402,6 +402,11 @@ message Options {
     flow_sources = 7;
   }
 
+  enum ReverseTimeTracking {
+    rtt_heuristic = 0;
+    rtt_disabled = 1;
+  }
+
   Units units = 1;                                                 // kilometers or miles
   oneof has_language {
     string language = 2;                                           // Based on IETF BCP 47 language tag string [default = "en-US"]
@@ -505,4 +510,5 @@ message Options {
   bool admin_crossings = 59;                                       // Include administrative boundary crossings
   bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
   repeated LinearFeatureCost cost_factor_lines = 61;               // User provided linear features to which apply special cost factors to
+  ReverseTimeTracking reverse_time_tracking = 62;                  // Which strategy to use on the reverse tree in time dependent bidirectional routing
 }
