@@ -172,7 +172,7 @@ protected:
     };
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {1.01, 1.01});
     // Add low length limit for exclude_polygons so it throws an error
-    avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoids",
+    avoid_map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_avoids",
                                   {{"service_limits.max_exclude_polygons_length", "10000"},
                                    {"mjolnir.shortcut_caching", "true"}});
   }
@@ -606,10 +606,6 @@ TEST_F(LargeAvoidTest, TestAvoidHugePolygonWithLevels) {
       {"BD", {{"highway", "corridor"}, {"level", "1"}}},
       {"DE", {{"highway", "corridor"}, {"level", "1"}}},
       {"EF", {{"highway", "corridor"}, {"level", "1"}}},
-      {"ab", {{"highway", "motorway"}}},
-      {"bd", {{"highway", "motorway"}}},
-      {"dc", {{"highway", "motorway"}}},
-      {"ca", {{"highway", "motorway"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 1000, {7.0, 52.0});
   auto avoid_map =
@@ -619,7 +615,7 @@ TEST_F(LargeAvoidTest, TestAvoidHugePolygonWithLevels) {
       {avoid_map.nodes["a"], avoid_map.nodes["b"], avoid_map.nodes["d"], avoid_map.nodes["c"],
        avoid_map.nodes["a"]},
   };
-  std::vector<std::vector<float>> levels = {{9999.f}};
+  std::vector<std::vector<float>> levels = {{2.f}};
 
   // build request manually for now
   auto lls = {avoid_map.nodes["x"], avoid_map.nodes["E"]};
@@ -633,6 +629,15 @@ TEST_F(LargeAvoidTest, TestAvoidHugePolygonWithLevels) {
   // with a polygon this large, it should miss edges in non-line-intersecting bins
   try {
     gurka::do_action(Options::route, avoid_map, req);
-    // FAIL() << "Expected to fail";
   } catch (const std::exception& e) { FAIL() << "Expected the route to succeed: " << e.what(); };
+
+  levels = {{1.f}};
+  value = build_exclude_level_polygons(rings, levels, allocator);
+  req = build_local_req(doc, allocator, lls, "pedestrian", value, "/exclude_polygons");
+  try {
+    gurka::do_action(Options::route, avoid_map, req);
+    FAIL() << "Expected to fail";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t";
+  };
 }
