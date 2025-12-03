@@ -428,15 +428,92 @@ bool write_stop_pair(
   const std::string currFeedPath = feed_trip.feed;
 
   const auto& currTrip = feed.get_trip(tile_tripId);
-  const auto& trip_calendar = feed.get_calendar_item(currTrip.service_id);
+  auto trip_calendar = feed.get_calendar_item(currTrip.service_id);
   auto trip_calDates = feed.get_calendar_dates(currTrip.service_id);
-  if (!gtfs::valid(currTrip) || !gtfs::valid(trip_calendar)) {
-    LOG_ERROR("Feed " + feed_trip.feed + ", trip ID" + tile_tripId +
-              " can't be found or has no calendar.txt entry, skipping...");
+  if (!gtfs::valid(currTrip)) {
+    LOG_ERROR("Feed " + feed_trip.feed + ", trip ID" + tile_tripId + " can't be found, skipping...");
     return false;
   }
 
+  if (!gtfs::valid(trip_calendar) && trip_calDates.first == trip_calDates.second) {
+    LOG_WARN("Feed " + feed_trip.feed + ", trip ID " + tile_tripId +
+             " has neither calendar.txt nor calendar_dates.txt entries, skipping...");
+    return false;
+  }
+
+  uint32_t service_start_date_local_pivot_sec = 0;
+  uint32_t service_end_date_local_pivot_sec = 0;
+
   uint8_t dow_mask = gtfs::availability(trip_calendar);
+
+  if (gtfs::valid(trip_calendar)) {
+    service_start_date_local_pivot_sec = to_local_pivot_sec(trip_calendar.start_date.get_raw_date());
+
+    // TODO: add a day worth of seconds - 1 to get the last second of that day
+    service_end_date_local_pivot_sec =
+        to_local_pivot_sec(trip_calendar.end_date.get_raw_date(), true);
+  } else {
+    trip_calendar = {}; // Make sure it's 0-initialized
+
+    // We'll be using only calendar_dates.txt then,
+    // so let's compute the date range from them.
+
+    uint32_t min_date = UINT32_MAX;
+    uint32_t max_date = 0;
+    for (auto cal_itr = trip_calDates.first; cal_itr != trip_calDates.second; ++cal_itr) {
+      uint32_t d = to_local_pivot_sec(cal_itr->date.get_raw_date());
+      if (d < min_date) {
+        min_date = d;
+      }
+      if (d > max_date) {
+        max_date = d;
+      }
+    }
+
+    service_start_date_local_pivot_sec = min_date;
+
+    // TODO: add a day worth of seconds - 1 to get the last second of that day
+    service_end_date_local_pivot_sec = max_date;
+
+    // Derive the DOW mask from Added calendar_dates
+    // so service_days_of_week is maximally informative
+    // and doesn't depend on quirks from different providers
+    for (auto cal_itr = trip_calDates.first; cal_itr != trip_calDates.second; ++cal_itr) {
+      if (cal_itr->exception_type != gtfs::CalendarDateException::Added) {
+        continue;
+      }
+      const auto& raw = cal_itr->date.get_raw_date(); // YYYYMMDD by GTFS spec
+      if (raw.size() == 8) {
+        std::string iso = raw.substr(0, 4) + "-" + raw.substr(4, 2) + "-" + raw.substr(6, 2);
+        auto dow = DateTime::day_of_week_mask(iso);
+        switch (dow) {
+          case kSunday:
+            dow_mask |= gtfs::Sunday;
+            break; // 0 maps to Sunday according to std::mktime and tm_wday
+          case kMonday:
+            dow_mask |= gtfs::Monday;
+            break;
+          case kTuesday:
+            dow_mask |= gtfs::Tuesday;
+            break;
+          case kWednesday:
+            dow_mask |= gtfs::Wednesday;
+            break;
+          case kThursday:
+            dow_mask |= gtfs::Thursday;
+            break;
+          case kFriday:
+            dow_mask |= gtfs::Friday;
+            break;
+          case kSaturday:
+            dow_mask |= gtfs::Saturday;
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
 
   auto currFrequencies = feed.get_frequencies(currTrip.trip_id);
 
@@ -515,10 +592,8 @@ bool write_stop_pair(
         stop_pair->set_shape_id(pbf_shape_it->second);
       }
 
-      stop_pair->set_service_start_date(to_local_pivot_sec(trip_calendar.start_date.get_raw_date()));
-      // TODO: add a day worth of seconds - 1 to get the last second of that day
-      stop_pair->set_service_end_date(
-          to_local_pivot_sec(trip_calendar.end_date.get_raw_date(), true));
+      stop_pair->set_service_start_date(service_start_date_local_pivot_sec);
+      stop_pair->set_service_end_date(service_end_date_local_pivot_sec);
 
       dangles = dangles || !origin_is_in_tile || !dest_is_in_tile;
       stop_pair->set_bikes_allowed(currTrip.bikes_allowed == gtfs::TripAccess::Yes);
