@@ -21,7 +21,7 @@
 namespace valhalla {
 namespace thor {
 
-enum class MatrixExpansionType { reverse = 0, forward = 1 };
+enum class MatrixExpansionType : uint8_t { reverse = 0, forward = 1 };
 constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
 constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
 
