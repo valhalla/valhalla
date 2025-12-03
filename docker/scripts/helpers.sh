@@ -15,6 +15,15 @@ if ! test -d "${CUSTOM_FILES}"; then
   mkdir "${CUSTOM_FILES}"
 fi
 
+# is it on a read-only FS?
+set +e +o pipefail
+FS_READONLY="False"
+findmnt -no OPTIONS -T "$CUSTOM_FILES" | grep -qw ro
+if [ $? -eq 0 ]; then
+  FS_READONLY="True"
+fi
+set -e -o pipefail
+
 # temp valhalla config location
 TMP_CONFIG_FILE="${CUSTOM_FILES}/valhalla_default.json"
 
