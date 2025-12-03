@@ -19,6 +19,10 @@ message Ring {
   repeated LatLng coords = 1;
 }
 
+message Levels {
+  repeated float levels = 1;
+}
+
 enum ShapeMatch {
   walk_or_snap = 0;
   edge_walk = 1;
@@ -489,8 +493,10 @@ message Options {
   }
   bool linear_references = 45;                                     // Include linear references for graph edges returned in certain responses.
   repeated Costing recostings = 46;                                // CostingType options to use to recost a path after it has been found
-  repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
-  bool prioritize_bidirectional = 48;                              // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
+  repeated Ring exclude_polygons = 47;                             // Rings/polygons to exclude entire areas during path finding
+  oneof has_prioritize_bidirectional {
+    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
+  }
   oneof has_expansion_action {
     Action expansion_action = 49;                                  // Meta action for /expansion endpoint
   }
@@ -511,4 +517,5 @@ message Options {
   bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
   repeated LinearFeatureCost cost_factor_lines = 61;               // User provided linear features to which apply special cost factors to
   ReverseTimeTracking reverse_time_tracking = 62;                  // Which strategy to use on the reverse tree in time dependent bidirectional routing
+  repeated Levels exclude_levels = 63;                             // Levels to exclude within the exclude_polygon at the same index
 }
