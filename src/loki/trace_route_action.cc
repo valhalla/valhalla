@@ -174,7 +174,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
 
     // Project first and last shape point onto nearest edge(s). Clear current locations list
     // and set the path locations
-    auto projections = loki::Search(locations, *reader, costing);
+    auto projections = search_.search(locations, costing);
     options.clear_locations();
     PathLocation::toPBF(projections.at(locations.front()), options.mutable_locations()->Add(),
                         *reader);
