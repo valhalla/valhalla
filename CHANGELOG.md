@@ -16,6 +16,7 @@
    * CHANGED: Merge cost and tyr inline tests into single executable [#5735](https://github.com/valhalla/valhalla/pull/5735) 
    * ADDED: Add option `edge.hov_type` to trace attributes [#5741](https://github.com/valhalla/valhalla/pull/5741)
    * ADDED: Proper time tracking in Bidirectional A* [#5640](https://github.com/valhalla/valhalla/pull/5640/)
+   * ADDED: `valhalla-dev` image [#5739](https://github.com/valhalla/valhalla/pull/5739)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**

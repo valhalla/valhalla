@@ -2,9 +2,10 @@
 
 # Valhalla Docker images
 
-We provide Docker images for various architectures of two images:
+We provide Docker images for various architectures of three images:
 - [**base image**](https://github.com/valhalla/valhalla/pkgs/container/valhalla): reflects the "plain" image, which contains the whole library & all executables, but no `docker-entrypoint` script
 - [**scripted image**](https://github.com/valhalla/valhalla/pkgs/container/valhalla-scripted): is based on the "base image" but lets the user configure the whole tile build parameters per environment variables (with sensible defaults) auto-magically, also removes some debugging executables
+- [**dev image**](https://github.com/valhalla/valhalla/pkgs/container/valhalla-dev): is based on the "base image" and additionally contains everything you need to develop your own applications that consume Valhalla's C++ libraries (most notably the test library as well as googletest)
 
 The "base image" is more catered towards individuals knowing how to configure a Valhalla tile build correctly and wanting to implement non-supported (in the "scripted image") use cases.
 
@@ -41,7 +42,7 @@ Then it's a simple
 ```shell script
 # optionally build the base image yourself before or download it by default
 # docker build -t ghcr.io/valhalla/valhalla:latest .
-docker build  -f docker/Dockerfile-scripted -t ghcr.io/valhalla/valhalla-scripted:latest .
+docker build  -f docker/Dockerfile -t ghcr.io/valhalla/valhalla-scripted:latest .
 ```
 
 The `--build-arg`s are:
