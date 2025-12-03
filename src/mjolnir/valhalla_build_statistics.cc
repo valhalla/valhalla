@@ -376,7 +376,7 @@ void build(const boost::property_tree::ptree& pt,
 
     // Point tiles to the set we need for current level
     auto level = tile_id.level();
-    if (TileHierarchy::levels().back().level + 1 == level) {
+    if (TileHierarchy::levels().back().level + 1u == level) {
       level = TileHierarchy::levels().back().level;
     }
 
@@ -412,8 +412,8 @@ void build(const boost::property_tree::ptree& pt,
         if (ar_modes) {
           // since only truck restrictions exist, we can still get all restrictions
           // later we may only want to get just the truck ones for stats.
-          auto res = tile->GetAccessRestrictions(idx, kAllAccess);
-          if (res.size() == 0) {
+          auto res = tile->GetAccessRestrictions(idx);
+          if (res.empty()) {
             LOG_ERROR(
                 "Directed edge marked as having access restriction but none found ; tile level = " +
                 std::to_string(tile_id.level()));

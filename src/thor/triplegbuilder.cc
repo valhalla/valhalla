@@ -34,6 +34,10 @@ using namespace valhalla::thor;
 
 namespace {
 
+// arbitrary time of week to obtain freeflow/constrained speeds from GraphTile::GetSpeed(...)
+constexpr uint64_t kFreeFlowSecondsOfWeek = 0;
+constexpr uint64_t kConstrainedSecondsOfWeek = 28800;
+
 using LinguisticMap = std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>;
 
 constexpr uint8_t kNotTagged = 0;
@@ -599,56 +603,56 @@ void AddSignInfo(const AttributesController& controller,
     for (const auto& sign : edge_signs) {
       switch (sign.type()) {
         case valhalla::baldr::Sign::Type::kExitNumber: {
-          if (controller.attributes.at(kEdgeSignExitNumber)) {
+          if (controller(kEdgeSignExitNumber)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_exit_numbers()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitBranch: {
-          if (controller.attributes.at(kEdgeSignExitBranch)) {
+          if (controller(kEdgeSignExitBranch)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_exit_onto_streets()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitToward: {
-          if (controller.attributes.at(kEdgeSignExitToward)) {
+          if (controller(kEdgeSignExitToward)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_exit_toward_locations()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitName: {
-          if (controller.attributes.at(kEdgeSignExitName)) {
+          if (controller(kEdgeSignExitName)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_exit_names()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuideBranch: {
-          if (controller.attributes.at(kEdgeSignGuideBranch)) {
+          if (controller(kEdgeSignGuideBranch)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_guide_onto_streets()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuideToward: {
-          if (controller.attributes.at(kEdgeSignGuideToward)) {
+          if (controller(kEdgeSignGuideToward)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_guide_toward_locations()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuidanceViewJunction: {
-          if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
+          if (controller(kEdgeSignGuidanceViewJunction)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_guidance_view_junctions()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuidanceViewSignboard: {
-          if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
+          if (controller(kEdgeSignGuidanceViewSignboard)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_guidance_view_signboards()->Add());
           }
@@ -863,7 +867,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   }
 
   // Add names to edge if requested
-  if (controller.attributes.at(kEdgeNames)) {
+  if (controller(kEdgeNames)) {
 
     auto edgeinfo = graphtile->edgeinfo(intersecting_de);
     auto names_and_types = edgeinfo.GetNamesAndTypes(true);
@@ -1073,7 +1077,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const uint32_t block_id,
                           const sif::TravelMode mode,
                           const uint8_t travel_type,
-                          const std::shared_ptr<sif::DynamicCost>& costing,
+                          const sif::cost_ptr_t& costing,
                           const DirectedEdge* directededge,
                           const bool drive_on_right,
                           TripLeg_Node* trip_node,
@@ -1162,7 +1166,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       for (const auto& sign : node_signs) {
         switch (sign.type()) {
           case valhalla::baldr::Sign::Type::kJunctionName: {
-            if (controller.attributes.at(kEdgeSignJunctionName)) {
+            if (controller(kEdgeSignJunctionName)) {
               PopulateSignElement(sign_index, sign, linguistics,
                                   trip_sign->mutable_junction_names()->Add());
             }
@@ -1206,7 +1210,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     } else {
       uint8_t flow_sources;
       speed = directededge->length() /
-              costing->EdgeCost(directededge, graphtile, time_info, flow_sources).secs *
+              costing->EdgeCost(directededge, edge, graphtile, time_info, flow_sources).secs *
               kMetersPerSectoKPH;
     }
     trip_edge->set_speed(speed);
@@ -1219,7 +1223,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   if (controller(kEdgeSpeedsFaded) || controller(kEdgeSpeedsNonFaded)) {
     // helper function to only get the speed from GetSpeed that we are interested in
     auto get_speed = [&](uint8_t flow_mask, bool faded,
-                         uint64_t second_of_week = kInvalidSecondsOfWeek) -> std::optional<uint32_t> {
+                         uint64_t second_of_week) -> std::optional<uint32_t> {
       uint8_t flow_sources = 0;
       uint64_t seconds_from_now = 0;
       uint8_t initial_flow_mask = flow_mask;
@@ -1230,6 +1234,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
           flow_mask = costing->flow_mask();
         }
         flow_mask |= kCurrentFlowMask;
+      } else if (initial_flow_mask == kCurrentFlowMask) {
+        second_of_week = 0;
+      }
+      if (initial_flow_mask == kConstrainedFlowMask) {
+        second_of_week =
+            kConstrainedSecondsOfWeek; // arbitrary time to land us within the constrained time window
+      } else if (initial_flow_mask == kFreeFlowMask) {
+        second_of_week = kFreeFlowSecondsOfWeek; // ... or within the free flow window
       }
       uint32_t speed = graphtile->GetSpeed(directededge, flow_mask, second_of_week, false,
                                            &flow_sources, seconds_from_now);
@@ -1252,17 +1264,17 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
         speeds->set_predicted_flow(speed.value());
       }
 
-      speed = get_speed(kConstrainedFlowMask, faded);
+      speed = get_speed(kConstrainedFlowMask, faded, time_info.second_of_week);
       if (speed.has_value() && directededge->constrained_flow_speed() > 0) {
         speeds->set_constrained_flow(speed.value());
       }
 
-      speed = get_speed(kFreeFlowMask, faded);
+      speed = get_speed(kFreeFlowMask, faded, time_info.second_of_week);
       if (speed.has_value() && directededge->free_flow_speed() > 0) {
         speeds->set_free_flow(speed.value());
       }
 
-      speed = get_speed(kNoFlowMask, faded);
+      speed = get_speed(kNoFlowMask, faded, time_info.second_of_week);
       if (speed.has_value()) {
         speeds->set_no_flow(speed.value());
       }
@@ -1290,6 +1302,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set traffic signal if requested
   if (controller(kEdgeTrafficSignal)) {
     trip_edge->set_traffic_signal(directededge->traffic_signal());
+  }
+
+  // Set hov type if requested
+  if (controller(kEdgeHovType)) {
+    trip_edge->set_hov_type(GetTripLegHovType(directededge->hov_type()));
   }
 
   if (controller(kEdgeLevels)) {
@@ -1344,10 +1361,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   if (directededge->access_restriction() && edge_itr->restriction_index != kInvalidRestriction) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        graphtile->GetAccessRestrictions(edge.id(), costing->access_mode());
-    trip_edge->mutable_restriction()->set_type(
-        static_cast<uint32_t>(restrictions[edge_itr->restriction_index].type()));
+    auto restriction = graphtile->GetAccessRestrictionAtIndex(edge.id(), costing->access_mode(),
+                                                              edge_itr->restriction_index);
+    assert(restriction != nullptr);
+    trip_edge->mutable_restriction()->set_type(static_cast<uint32_t>(restriction->type()));
   }
 
   trip_edge->set_has_time_restrictions(edge_itr->restriction_index != kInvalidRestriction);

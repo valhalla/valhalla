@@ -1,33 +1,33 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
+#include "exceptions.h"
 #include "gurka.h"
 #include "loki/polygon_search.h"
 #include "loki/worker.h"
 #include "midgard/pointll.h"
 #include "proto/options.pb.h"
 #include "sif/costfactory.h"
-#include "worker.h"
 
 #include <boost/format.hpp>
 #include <gtest/gtest.h>
 #include <test.h>
 
 using namespace valhalla;
-namespace vb = valhalla::baldr;
-namespace vm = valhalla::midgard;
-namespace vl = valhalla::loki;
+using namespace valhalla::baldr;
+using namespace valhalla::midgard;
+using namespace valhalla::loki;
 
-class LokiWorkerTest : public vl::loki_worker_t {
+class LokiWorkerTest : public loki_worker_t {
 public:
-  using vl::loki_worker_t::loki_worker_t;
-  using vl::loki_worker_t::parse_costing;
+  using loki_worker_t::loki_worker_t;
+  using loki_worker_t::parse_costing;
 };
 
 namespace {
 // register a few boost.geometry types
-using ring_bg_t = std::vector<vm::PointLL>;
+using ring_bg_t = std::vector<PointLL>;
 
-rapidjson::Value get_avoid_locs(const std::vector<vm::PointLL>& locs,
+rapidjson::Value get_avoid_locs(const std::vector<PointLL>& locs,
                                 rapidjson::MemoryPoolAllocator<>& allocator) {
   rapidjson::Value locs_j(rapidjson::kArrayType);
   for (auto& loc : locs) {
@@ -273,7 +273,7 @@ TEST_F(AvoidTest, ExcludeLevels) {
     };
 
     // should return the shortcut edge ID as well
-    auto avoid_edges = vl::edges_in_rings(options.first, *reader, options.second, 10000);
+    auto avoid_edges = edges_in_rings(options.first, *reader, options.second, 10000);
     ASSERT_EQ(avoid_edges.size(), param.second) << edge_names(avoid_edges);
   }
 }
@@ -465,7 +465,7 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
 
   // should return the shortcut edge ID as well
   size_t found_shortcuts = 0;
-  auto avoid_edges = vl::edges_in_rings(options, *reader, costing, 10000);
+  auto avoid_edges = edges_in_rings(options, *reader, costing, 10000);
   for (const auto& edge_id : avoid_edges) {
     if (reader->GetGraphTile(edge_id)->directededge(edge_id)->is_shortcut()) {
       found_shortcuts++;
@@ -479,7 +479,7 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
 
 TEST_P(AvoidTest, TestAvoidLocation) {
   // avoid the location on "High road"
-  std::vector<vm::PointLL> avoid_locs{avoid_map.nodes["x"]};
+  std::vector<PointLL> avoid_locs{avoid_map.nodes["x"]};
 
   // build request manually for now
   auto lls = {avoid_map.nodes["A"], avoid_map.nodes["B"]};

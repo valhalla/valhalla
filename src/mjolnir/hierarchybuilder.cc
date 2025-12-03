@@ -185,8 +185,9 @@ void FormTilesInNewLevel(GraphReader& reader,
       continue;
     }
 
-    // Copy the data version
+    // Copy the data version & checksum
     tilebuilder->header_builder().set_dataset_id(tile->header()->dataset_id());
+    tilebuilder->header_builder().set_checksum(tile->header()->checksum());
 
     // Copy node information and set the node lat,lon offsets within the new tile
     NodeInfo baseni = *(tile->node(base_node.id()));
@@ -271,7 +272,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       // the list of access restrictions in the new tile. Update the
       // edge index in the restriction to be the current directed edge Id
       if (directededge->access_restriction()) {
-        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id(), kAllAccess);
+        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id());
         for (const auto& res : restrictions) {
           tilebuilder->AddAccessRestriction(AccessRestriction(tilebuilder->directededges().size(),
                                                               res.type(), res.modes(), res.value(),
@@ -281,14 +282,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
       // Copy lane connectivity
       if (directededge->laneconnectivity()) {
-        auto laneconnectivity = tile->GetLaneConnectivity(base_edge_id.id());
-        if (laneconnectivity.size() == 0) {
-          LOG_ERROR("Base edge should have lane connectivity, but none found");
-        }
-        for (auto& lc : laneconnectivity) {
-          lc.set_to(tilebuilder->directededges().size());
-        }
-        tilebuilder->AddLaneConnectivity(laneconnectivity);
+        tilebuilder->CopyLaneConnectivityFromTile(tile, base_edge_id.id());
       }
 
       // Names can be different in the forward and backward direction

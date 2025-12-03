@@ -257,12 +257,13 @@ TEST(Standalone, HeadingNumber2CrossRoadAuto) {
               << "FAILED at step " << steps << ", intersection " << intersection;
 
           if (json["routes"][0]["legs"][0]["steps"][steps]["intersections"][intersection].HasMember(
-                  "bearing"))
+                  "bearing")) {
             // All bearings have the same direction which is 90
             EXPECT_EQ(json["routes"][0]["legs"][0]["steps"][steps]["intersections"][intersection]
                           ["bearing"][out_index]
                               .GetInt(),
                       90);
+          }
         }
 
         // Validate `in` edge indexes and headings.
@@ -275,12 +276,13 @@ TEST(Standalone, HeadingNumber2CrossRoadAuto) {
               << "FAILED at step " << steps << ", intersection " << intersection;
 
           if (json["routes"][0]["legs"][0]["steps"][steps]["intersections"][intersection].HasMember(
-                  "bearings"))
+                  "bearings")) {
             // All bearings have the same direction which is 270
             EXPECT_EQ(json["routes"][0]["legs"][0]["steps"][steps]["intersections"][intersection]
                           ["bearings"][in_index]
                               .GetInt(),
                       270);
+          }
         }
 
         EXPECT_EQ(expected_headings[index++], json["routes"][0]["legs"][0]["steps"][steps]
@@ -574,14 +576,15 @@ gurka::map VoiceInstructions::map = {};
 TEST_F(VoiceInstructions, VoiceInstructionsPresent) {
   auto json = json_request("A", "F");
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
+  ASSERT_TRUE(steps.Size() > 0);
   // Validate that each step (except the last one) has voiceInstructions with announcement,
   // ssmlAnnouncement and distanceAlongGeometry
-  for (int step = 0; step < steps.Size() - 1; ++step) {
+  for (uint32_t step = 0; step < steps.Size() - 1; ++step) {
     ASSERT_TRUE(steps[step].HasMember("voiceInstructions"));
     ASSERT_TRUE(steps[step]["voiceInstructions"].IsArray());
 
     EXPECT_GT(steps[step]["voiceInstructions"].Size(), 0);
-    for (int instr = 0; instr < steps[step]["voiceInstructions"].GetArray().Size(); ++instr) {
+    for (uint32_t instr = 0; instr < steps[step]["voiceInstructions"].GetArray().Size(); ++instr) {
       ASSERT_TRUE(steps[step]["voiceInstructions"][instr].HasMember("announcement"));
       ASSERT_TRUE(steps[step]["voiceInstructions"][instr].HasMember("ssmlAnnouncement"));
       ASSERT_TRUE(steps[step]["voiceInstructions"][instr].HasMember("distanceAlongGeometry"));
@@ -701,7 +704,7 @@ TEST_F(VoiceInstructions, DefaultVoiceLocalePresent) {
   auto json = json_request("A", "F");
   auto routes = json["routes"].GetArray();
   // Validate that each route has the default voiceLocale
-  for (int route = 0; route < routes.Size(); ++route) {
+  for (uint32_t route = 0; route < routes.Size(); ++route) {
     ASSERT_TRUE(routes[route].HasMember("voiceLocale"));
     EXPECT_STREQ(routes[route]["voiceLocale"].GetString(), "en-US");
   }
@@ -711,7 +714,7 @@ TEST_F(VoiceInstructions, VoiceLocalePresent) {
   auto json = json_request("A", "F", "de-DE");
   auto routes = json["routes"].GetArray();
   // Validate that each route has the voiceLocale from the options
-  for (int route = 0; route < routes.Size(); ++route) {
+  for (uint32_t route = 0; route < routes.Size(); ++route) {
     ASSERT_TRUE(routes[route].HasMember("voiceLocale"));
     EXPECT_STREQ(routes[route]["voiceLocale"].GetString(), "de-DE");
   }
@@ -765,13 +768,14 @@ TEST(Standalone, BannerInstructions) {
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
 
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
+  ASSERT_TRUE(steps.Size() > 0);
 
   // Validate that each step (except the last one) has bannerInstructions with primary
-  for (int step = 0; step < steps.Size() - 1; ++step) {
+  for (uint32_t step = 0; step < steps.Size() - 1; ++step) {
     ASSERT_TRUE(steps[step].HasMember("bannerInstructions"));
     ASSERT_TRUE(steps[step]["bannerInstructions"].IsArray());
     EXPECT_GT(steps[step]["bannerInstructions"].GetArray().Size(), 0);
-    for (int instr = 0; instr < steps[step]["bannerInstructions"].GetArray().Size(); ++instr) {
+    for (uint32_t instr = 0; instr < steps[step]["bannerInstructions"].GetArray().Size(); ++instr) {
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("distanceAlongGeometry"));
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("primary"));
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("type"));
@@ -863,7 +867,7 @@ TEST(Standalone, BannerInstructions) {
   ASSERT_TRUE(sub_0.HasMember("components"));
   ASSERT_TRUE(sub_0["components"].IsArray());
   EXPECT_EQ(sub_0["components"].GetArray().Size(), 2);
-  for (int component = 0; component < sub_0["components"].GetArray().Size(); ++component) {
+  for (uint32_t component = 0; component < sub_0["components"].GetArray().Size(); ++component) {
     EXPECT_STREQ(sub_0["components"][component]["type"].GetString(), "lane");
     ASSERT_TRUE(sub_0["components"][component]["directions"].IsArray());
   }
@@ -917,7 +921,7 @@ TEST(Standalone, BannerInstructions) {
   ASSERT_TRUE(sub_1.HasMember("components"));
   ASSERT_TRUE(sub_1["components"].IsArray());
   EXPECT_EQ(sub_1["components"].GetArray().Size(), 2);
-  for (int component = 0; component < sub_1["components"].GetArray().Size(); ++component) {
+  for (uint32_t component = 0; component < sub_1["components"].GetArray().Size(); ++component) {
     EXPECT_STREQ(sub_1["components"][component]["type"].GetString(), "lane");
     ASSERT_TRUE(sub_1["components"][component]["directions"].IsArray());
   }
@@ -978,13 +982,14 @@ TEST(Standalone, BannerInstructionsRoundabout) {
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
 
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
+  ASSERT_TRUE(steps.Size() > 0);
 
   // Validate that each step (except the last one) has bannerInstructions with primary
-  for (int step = 0; step < steps.Size() - 1; ++step) {
+  for (uint32_t step = 0; step < steps.Size() - 1; ++step) {
     ASSERT_TRUE(steps[step].HasMember("bannerInstructions"));
     ASSERT_TRUE(steps[step]["bannerInstructions"].IsArray());
     EXPECT_GT(steps[step]["bannerInstructions"].GetArray().Size(), 0);
-    for (int instr = 0; instr < steps[step]["bannerInstructions"].GetArray().Size(); ++instr) {
+    for (uint32_t instr = 0; instr < steps[step]["bannerInstructions"].GetArray().Size(); ++instr) {
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("distanceAlongGeometry"));
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("primary"));
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("type"));

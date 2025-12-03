@@ -1,0 +1,260 @@
+name: Build Node.js bindings
+
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+    tags:
+      - '*'
+  # on PRs we only build it if we touch the bindings themselves or the actor.h file (i.e. if we change the API used by bindings)
+  pull_request:
+    paths:
+      - "src/bindings/nodejs/**"
+      - valhalla/tyr/actor.h
+      - "**/CMakeLists.txt"
+    branches:
+      - master
+
+# Cancel CI runs on a branch when new commits were pushed
+# See https://stackoverflow.com/a/72408109/2582935
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_nodejs_bindings:
+    name: Build Node.js bindings (${{ matrix.os }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container }}
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: x64
+            runner: ubuntu-latest
+            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
+          - os: macos
+            arch: arm64
+            runner: macos-14
+            container: null
+    env:
+      # we have a few packages installed to the system as well as built from source
+      # we need to prioritize the ones built from source
+      LD_LIBRARY_PATH: ${{ matrix.os == 'linux' && '/usr/local/lib64:/usr/local/lib' || '' }}
+      # since we are running in a container, we need to set the ccache directory to folder accessible from GHA runner
+      CCACHE_DIR: ${{ matrix.os == 'linux' && '.ccache' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          fetch-tags: true
+      
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.os == 'macos' && '/Users/runner/Library/Caches/ccache' || '.ccache' }}
+          key: ccache-${{ matrix.os }}-${{ matrix.arch }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.os }}-${{ matrix.arch }}-
+
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos'
+        run: |
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install boost protobuf libspatialite libgeotiff libtiff luajit spatialite-tools dylibbundler
+      
+      # TODO: can we move this to manylinux image?
+      - name: Setup Python alias (Linux)
+        if: matrix.os == 'linux'
+        run: ln -s $(which python3.12) /usr/local/bin/python
+
+      - name: Build Valhalla with Node.js bindings
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
+          -DENABLE_NODE_BINDINGS=ON \
+          -DENABLE_SERVICES=OFF \
+          -DENABLE_TESTS=OFF \
+          -DVALHALLA_VERSION_MODIFIFER=$(git rev-parse --short HEAD) \
+          -DENABLE_SINGLE_FILES_WERROR=OFF
+          cmake --build build -j${{ matrix.os == 'macos' && '$(sysctl -n hw.logicalcpu)' || '$(nproc)' }}
+      
+      - name: Bundle
+        run: |
+          NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
+          OUTPUT_DIR="nodejs_dist"
+
+          python -m venv venv
+          source venv/bin/activate
+          pip install macholib==1.16.3
+          
+          VALHALLA_EXES="build/valhalla_build_tiles build/valhalla_build_admins build/valhalla_add_predicted_traffic build/valhalla_add_landmarks build/valhalla_ingest_transit build/valhalla_convert_transit"
+          python src/bindings/nodejs/scripts/bundle.py \
+            $NODE_FILE $VALHALLA_EXES \
+            $OUTPUT_DIR
+      
+      # we do this to preserve the executable permissions of the binaries (they are lost when we use `actions/upload-artifact`)
+      - name: Tar artifacts
+        run: tar -cvf nodejs_dist.tar nodejs_dist/
+      
+      - name: Upload Node.js binding artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}
+          path: nodejs_dist.tar
+  
+  package_nodejs_bindings:
+    name: Package Node.js bindings for NPM
+    runs-on: ubuntu-latest
+    needs: [build_nodejs_bindings]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            src/bindings/nodejs/
+            scripts/valhalla_*
+            valhalla/valhalla.h
+          sparse-checkout-cone-mode: false
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Download all binding artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Untar artifacts
+        run: |
+          for tar_file in artifacts/valhalla-nodejs-*/*.tar; do
+            echo "Extracting $tar_file..."
+            tar -xvf "$tar_file" -C "$(dirname "$tar_file")" --strip-components=1
+            rm "$tar_file"
+          done
+
+      - name: Create NPM package
+        run: ./src/bindings/nodejs/scripts/create-package.sh
+
+      - name: Upload NPM package
+        uses: actions/upload-artifact@v4
+        with:
+          name: valhalla-npm-package
+          path: valhalla-npm-package/*.tgz
+
+  verify_nodejs_package:
+    name: Verify NPM package (${{ matrix.os }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    needs: [package_nodejs_bindings]
+    container: ${{ matrix.container }}
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: x64
+            runner: ubuntu-latest
+            container: node:18
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            container: node:18
+          - os: macos
+            arch: arm64
+            runner: macos-14
+            container: null
+    steps:
+      - name: Install Node.js (macOS)
+        if: matrix.os == 'macos'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Checkout test files
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            src/bindings/nodejs/test/
+            test/data/utrecht_netherlands.osm.pbf
+          sparse-checkout-cone-mode: false
+
+      - name: Download NPM package
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-npm-package
+      
+      - name: Install package
+        run: npm install *.tgz
+
+      - name: Test package import (CommonJS)
+        run: node --test src/bindings/nodejs/test/test-commonjs.js
+      
+      - name: Test package import (ESM)
+        run: node --test src/bindings/nodejs/test/test-esm.mjs
+      
+      - name: Test Valhalla CLI
+        run: |
+          npx valhalla --version
+          npx valhalla --help
+          npx valhalla build_tiles -h
+          npx valhalla valhalla_build_tiles -h
+
+      - name: Integration test
+        run: |
+          echo "[INFO] Creating Valhalla config..."
+          mkdir -p valhalla_tiles
+          npx valhalla build_config --mjolnir-tile-dir valhalla_tiles --mjolnir-tile-extract valhalla_tiles.tar > valhalla.json
+
+          echo "[INFO] Building tiles from Utrecht OSM data..."
+          npx valhalla build_tiles -c valhalla.json test/data/utrecht_netherlands.osm.pbf >/dev/null 2>&1
+
+          echo "[INFO] Testing route generation with built tiles..."
+          export VALHALLA_CONFIG_FILE=$(pwd)/valhalla.json
+          node --test src/bindings/nodejs/test/test-integration.js
+
+  publish_npm:
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    needs: [verify_nodejs_package]
+    if: ${{ (startsWith(github.ref, 'refs/tags/') || (github.event_name == 'schedule')) && (github.repository_owner == 'valhalla') }}
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download NPM package
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-npm-package
+      
+      - name: Publish to NPM
+        run: |
+          echo "[INFO] Downloaded package:"
+          ls -lh *.tgz
+          
+          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]]; then
+            NPM_TAG="latest"
+          else
+            NPM_TAG="periodic"
+          fi
+          
+          echo "[INFO] Publishing to NPM with tag: ${NPM_TAG}..."
+          npm publish *.tgz --access public --tag ${NPM_TAG}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+

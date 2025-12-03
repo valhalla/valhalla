@@ -16,6 +16,7 @@
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::gurka;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 
 // config for the first three tests
@@ -65,7 +66,7 @@ void BuildPBF() {
   constexpr double gridsize = 100;
   landmark_map.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-.01, 0});
 
-  detail::build_pbf(landmark_map.nodes, ways, nodes, {}, pbf_filename, 0, false);
+  detail::build_pbf(landmark_map.nodes, ways, nodes, {}, pbf_filename, false);
 }
 
 void BuildPBFAddLandmarksToTiles() {
@@ -122,7 +123,7 @@ void BuildPBFAddLandmarksToTiles() {
   constexpr double gridsize = 5;
   landmark_map_tile_test.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {0, 0});
 
-  detail::build_pbf(landmark_map_tile_test.nodes, ways, nodes, {}, pbf_filename_tile_test, 0, false);
+  detail::build_pbf(landmark_map_tile_test.nodes, ways, nodes, {}, pbf_filename_tile_test, false);
 }
 
 void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
@@ -516,7 +517,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
 
   valhalla::gurka::map map{};
   map.nodes = gurka::detail::map_to_coordinates(ascii_map, 10, {0, 0});
-  detail::build_pbf(map.nodes, ways, nodes, {}, pbf, 0, false);
+  detail::build_pbf(map.nodes, ways, nodes, {}, pbf, false);
 
   map.config =
       test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},

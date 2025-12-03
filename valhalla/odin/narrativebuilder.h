@@ -547,12 +547,12 @@ protected:
    * @return the street names string for the specified street name list.
    */
   std::string FormStreetNames(const Maneuver& maneuver,
-                              const StreetNames& street_names,
+                              const baldr::StreetNames& street_names,
                               const std::vector<std::string>* empty_street_name_labels = nullptr,
                               bool enhance_empty_street_names = false,
                               uint32_t max_count = 0,
                               const std::string& delim = "/",
-                              const VerbalTextFormatter* verbal_formatter = nullptr);
+                              const baldr::VerbalTextFormatter* verbal_formatter = nullptr);
 
   /**
    * Returns the street names string for the specified street name list.
@@ -572,10 +572,10 @@ protected:
    *
    * @return the street names string for the specified street name list.
    */
-  std::string FormStreetNames(const StreetNames& street_names,
+  std::string FormStreetNames(const baldr::StreetNames& street_names,
                               uint32_t max_count = 0,
                               const std::string& delim = "/",
-                              const VerbalTextFormatter* verbal_formatter = nullptr);
+                              const baldr::VerbalTextFormatter* verbal_formatter = nullptr);
 
   /////////////////////////////////////////////////////////////////////////////
   /**
@@ -640,7 +640,7 @@ protected:
   /**
    * Combines a simple preposition and a definite article for certain languages.
    */
-  virtual void FormArticulatedPrepositions(std::string& instruction) {
+  virtual void FormArticulatedPrepositions(std::string& /*instruction*/) {
   }
 
   /**

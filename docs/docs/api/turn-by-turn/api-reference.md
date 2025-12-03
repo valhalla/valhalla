@@ -144,22 +144,23 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 ###### Other costing options
 The following options are available for `auto`, `bus`, `taxi`, and `truck` costing methods.
 
-| Vehicle Options | Description |
-| :-------------------------- | :----------- |
-| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 4.11 for truck. |
-| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 2.6 for truck. |
+| Vehicle Options | Description                                                                                                                                                                                                                                                             |
+| :-------------------------- |:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 4.11 for truck.                                                                                                                                                                               |
+| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 2.6 for truck.                                                                                                                                                                                 |
+| `length` | The length of the vehicle (in meters). Default 2.7 for car, bus, taxi and 21.64 for truck.                                                                                                                                                                              |
+| `weight` | The weight of the vehicle (in tons). Default 0.8 for car, bus, taxi and 21.77 for truck.                                                                                                                                                                                 |
 | `exclude_unpaved` | This value indicates whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
-| `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false. |
-| `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false. |
-| `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false. |
-| `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false. |
+| `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false.                                                                                                                                                                         |
+| `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false.                                                                                                                            |
+| `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false.                                                                                                                            |
+| `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false.                                                                                                     |
+| `speed_penalty_factor` | Penalty factor applied for edges when edge speed is faster than top speed. The default value is 0.05.                                                                                                                                                                   |
 
 The following options are available for `truck` costing.
 
 | Truck options | Description |
 | :-------------------------- | :----------- |
-| `length` | The length of the truck (in meters). Default 21.64. |
-| `weight` | The weight of the truck (in metric tons). Default 21.77. |
 | `axle_load` | The axle load of the truck (in metric tons). Default 9.07. |
 | `axle_count` | The axle count of the truck. Default 5. |
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
@@ -201,6 +202,7 @@ All of the options described above for autos also apply to motor_scooter costing
 | Motor_scooter options | Description |
 | :-------------------------- | :----------- |
 | `top_speed` | Top speed the motorized scooter can go. Used to avoid roads with higher speeds than this value. For `motor_scooter` this value must be between 20 and 120 KPH. The default value is 45 KPH (~28 MPH) |
+| `speed_penalty_factor` | Penalty factor applied for edges when edge speed is faster than top speed. The default value is 0.05. |
 | `use_primary` | A rider's propensity to use primary roads. This is a range of values from 0 to 1, where 0 attempts to avoid primary roads, and 1 indicates the rider is more comfortable riding on primary roads. Based on the `use_primary` factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path. The default value is 0.5. |
 | `use_hills` | A rider's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
@@ -367,7 +369,9 @@ For example a bus request with the result in Spanish using the OSRM (Open Source
 | `prioritize_bidirectional` | Prioritize `bidirectional a*` when `date_time.type = depart_at/current`. By default `time_dependent_forward a*` is used in these cases, but `bidirectional a*` is much faster. Currently it does not update the time (and speeds) when searching for the route path, but the ETA on that route is recalculated based on the time-dependent speeds |
 | `roundabout_exits` | A boolean indicating whether exit instructions at roundabouts should be added to the output or not. Default is true. |
 | `admin_crossings` | When present and `true`, the successful route summary will include the two keys `admins` and `admin_crossings`. `admins` is an array of administrative regions the route lies within. `admin_crossings` is an array of objects that contain `from_admin_index` and `to_admin_index`, which are indices into the `admins` array. They also contain `from_shape_index` and `to_shape_index`, which are start and end indices of the edge along which an administrative boundary is crossed. |
-| `turn_lanes` | When present and `true`, each maneuver in the route response can include a `lanes` array describing lane-level guidance. The lanes array details possible `directions`, as well as which lanes are `valid` or `active` for following the maneuver.
+| `turn_lanes` | When present and `true`, each maneuver in the route response can include a `lanes` array describing lane-level guidance. The lanes array details possible `directions`, as well as which lanes are `valid` or `active` for following the maneuver. |
+| `linear_cost_factors` | Customized cost factors that influence path finding, specified as an array of JSON objects. Objects can be either a GeoJSON linestring feature and a `"factor"` property or a plain object with a "shape" key, whose value needs to be an encoded polyline (with 6 digit precision), and a "factor" key whose value needs to be float. Valhalla will perform an edge walk (see [the map matching documentation](../map-matching/api-reference.md) for more info) to match the geometry onto edges and use those factors in costing. Edges with factors larger than 1 will be increasingly avoided, while edges with factors smaller than 1 increasingly favored. |
+| `reverse_time_tracking` (**BETA**) | Which time tracking strategy to use on the non-time aware expansion in the bidirectional routing algorithm: `disabled` will assume no time, `heuristic` will try a best guess based on the bee line distance between origin and destination. Default `heuristic` |
 
 [openlr]: https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
 

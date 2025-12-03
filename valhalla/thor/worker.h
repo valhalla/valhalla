@@ -3,6 +3,7 @@
 
 #include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/exceptions.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/proto/options.pb.h>
@@ -134,6 +135,9 @@ protected:
   hierarchy_limits_config_t hierarchy_limits_config_astar;
   hierarchy_limits_config_t hierarchy_limits_config_bidirectional_astar;
   hierarchy_limits_config_t hierarchy_limits_config_costmatrix;
+
+  double min_linear_cost_factor;
+  uint64_t max_linear_cost_edges;
 
 private:
   std::string service_name() const override {

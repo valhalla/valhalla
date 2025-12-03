@@ -211,12 +211,12 @@ TEST(Standalone, AdditionalSpeedAttributes) {
     traffic_speed->breakpoint1 = 255;
   });
   // set all historical speed buckets to 10 to simulate uniform historical traffic speeds for testing.
-  test::customize_historical_traffic(map.config, [&](DirectedEdge& e) {
+  test::customize_historical_traffic(map.config, [&](baldr::DirectedEdge& e) {
     e.set_constrained_flow_speed(constrained);
     e.set_free_flow_speed(free);
 
     // speeds for every 5 min bucket of the week
-    std::array<float, kBucketsPerWeek> historical;
+    std::array<float, baldr::kBucketsPerWeek> historical;
     historical.fill(predicted);
     return historical;
   });
@@ -255,13 +255,18 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   EXPECT_EQ(edges[1]["speeds_non_faded"]["no_flow"].GetInt(), base);
 
   // current_flow fades to predicted flow because its next up from the speed types in the request
-  EXPECT_NEAR(edges[1]["speeds_faded"]["current_flow"].GetInt(), current * 0.5 + predicted * 0.5, 1);
+  float multiplier = 480.f / 3600.f;
+  float multiplier_inverse = 1.f - multiplier;
+  EXPECT_NEAR(edges[1]["speeds_faded"]["current_flow"].GetInt(),
+              current * multiplier_inverse + predicted * multiplier, 1);
   EXPECT_NEAR(edges[1]["speeds_faded"]["constrained_flow"].GetInt(),
-              current * 0.5 + constrained * 0.5, 1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["free_flow"].GetInt(), current * 0.5 + free * 0.5, 1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["predicted_flow"].GetInt(), current * 0.5 + predicted * 0.5,
-              1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["no_flow"].GetInt(), current * 0.5 + base * 0.5, 1);
+              current * multiplier_inverse + constrained * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["free_flow"].GetInt(),
+              current * multiplier_inverse + free * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["predicted_flow"].GetInt(),
+              current * multiplier_inverse + predicted * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["no_flow"].GetInt(),
+              current * multiplier_inverse + base * multiplier, 1);
 
   api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto",
                          {{"/shape_match", "edge_walk"},
@@ -298,7 +303,7 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   }
 
   // reset historical traffic
-  test::customize_historical_traffic(map.config, [&](DirectedEdge& e) {
+  test::customize_historical_traffic(map.config, [&](baldr::DirectedEdge& e) {
     e.set_constrained_flow_speed(0);
     e.set_free_flow_speed(0);
 
@@ -307,8 +312,8 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   // invalidate traffic speed
   test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
                                                     valhalla::baldr::TrafficSpeed* traffic_speed) {
-    traffic_speed->overall_encoded_speed = UNKNOWN_TRAFFIC_SPEED_RAW;
-    traffic_speed->encoded_speed1 = UNKNOWN_TRAFFIC_SPEED_RAW;
+    traffic_speed->overall_encoded_speed = baldr::UNKNOWN_TRAFFIC_SPEED_RAW;
+    traffic_speed->encoded_speed1 = baldr::UNKNOWN_TRAFFIC_SPEED_RAW;
     traffic_speed->breakpoint1 = 0;
   });
 

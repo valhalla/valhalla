@@ -1,6 +1,9 @@
 #include "route_serializer_osrm.h"
+#include "baldr/admin.h"
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
+#include "baldr/turnlanes.h"
+#include "exceptions.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
@@ -16,7 +19,6 @@
 #include "route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
-#include "worker.h"
 
 #include <boost/variant/get.hpp>
 
@@ -2475,9 +2477,4 @@ TEST(RouteSerializerOsrm, testlaneIndications) {
 }
 
 } // namespace
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 #endif

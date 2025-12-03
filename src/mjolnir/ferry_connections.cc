@@ -1,5 +1,6 @@
 #include "mjolnir/ferry_connections.h"
 #include "baldr/graphconstants.h"
+#include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/node_expander.h"
 #include "mjolnir/osmdata.h"
@@ -7,6 +8,8 @@
 
 #include <queue>
 #include <unordered_map>
+
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace mjolnir {
@@ -338,7 +341,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes)) {
       bool inbound_path_found = false;
       bool outbound_path_found = false;
-      PointLL ll = (*nodes[node_itr.position()]).node.latlng();
+      [[maybe_unused]] const PointLL ll = (*nodes[node_itr.position()]).node.latlng();
 
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
@@ -425,6 +428,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
       // Log cases where reclassification fails
       if (!inbound_path_found && !outbound_path_found) {
         missed_both++;
+#ifdef LOGGING_LEVEL_WARN
       } else {
         if (!inbound_path_found) {
           LOG_WARN("Reclassification fails inbound to ferry at LL =" + std::to_string(ll.lat()) +
@@ -434,6 +438,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           LOG_WARN("Reclassification fails outbound from ferry at LL =" + std::to_string(ll.lat()) +
                    "," + std::to_string(ll.lng()));
         }
+#endif
       }
     }
 

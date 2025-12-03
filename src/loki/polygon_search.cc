@@ -13,12 +13,12 @@
 #include <optional>
 
 namespace bg = boost::geometry;
-namespace vm = valhalla::midgard;
-namespace vb = valhalla::baldr;
-namespace vl = valhalla::loki;
+using namespace valhalla::midgard;
+using namespace valhalla::baldr;
+using namespace valhalla::loki;
 
-BOOST_GEOMETRY_REGISTER_POINT_2D(vm::PointLL, double, bg::cs::geographic<bg::degree>, first, second)
-BOOST_GEOMETRY_REGISTER_RING(std::vector<vm::PointLL>)
+BOOST_GEOMETRY_REGISTER_POINT_2D(PointLL, double, bg::cs::geographic<bg::degree>, first, second)
+BOOST_GEOMETRY_REGISTER_RING(std::vector<PointLL>)
 
 namespace {
 
@@ -27,15 +27,14 @@ uint64_t to_value(uint32_t tileid, unsigned short bin) {
 }
 
 // register a few boost.geometry types
-using line_bg_t = bg::model::linestring<vm::PointLL>;
-using ring_bg_t = std::vector<vm::PointLL>;
-using namespace vb::json;
+using line_bg_t = bg::model::linestring<PointLL>;
+using ring_bg_t = std::vector<PointLL>;
 
 // map of tile for map of bin ids & their ring ids
 using bins_collector =
     std::unordered_map<uint32_t, std::unordered_map<unsigned short, std::vector<size_t>>>;
 static const auto Haversine = [] {
-  return bg::strategy::distance::haversine<float>(vm::kRadEarthMeters);
+  return bg::strategy::distance::haversine<float>(kRadEarthMeters);
 };
 
 void correct_ring(ring_bg_t& ring) {
@@ -47,7 +46,7 @@ void correct_ring(ring_bg_t& ring) {
   }
 
   // reverse ring if counter-clockwise
-  if (vm::polygon_area(ring) > 0) {
+  if (polygon_area(ring) > 0) {
     std::reverse(ring.begin(), ring.end());
   }
 }
@@ -146,10 +145,10 @@ void to_geojson(AABB2<PointLL>& bbox, rapidjson::writer_wrapper_t& writer, bool 
 namespace valhalla {
 namespace loki {
 
-std::unordered_set<vb::GraphId> edges_in_rings(const Options& options,
-                                               baldr::GraphReader& reader,
-                                               const std::shared_ptr<sif::DynamicCost>& costing,
-                                               float max_length) {
+std::unordered_set<GraphId> edges_in_rings(const Options& options,
+                                           baldr::GraphReader& reader,
+                                           const sif::cost_ptr_t& costing,
+                                           float max_length) {
   // protect for bogus input
   const auto& rings_pbf = options.exclude_polygons();
   if (rings_pbf.empty() || rings_pbf.Get(0).coords().empty() ||
@@ -181,11 +180,11 @@ std::unordered_set<vb::GraphId> edges_in_rings(const Options& options,
   }
 
   // Get the lowest level and tiles
-  const auto tiles = vb::TileHierarchy::levels().back().tiles;
-  const auto bin_level = vb::TileHierarchy::levels().back().level;
+  const auto tiles = TileHierarchy::levels().back().tiles;
+  const auto bin_level = TileHierarchy::levels().back().level;
 
   // keep track which tile's bins intersect which rings
-  std::unordered_set<vb::GraphId> avoid_edge_ids;
+  std::unordered_set<GraphId> avoid_edge_ids;
   std::vector<std::pair<uint32_t, unsigned short>> contained_bins;
   contained_bins.reserve(200); // TODO: approximate based on polygon size?
   bins_collector bins_intersected;

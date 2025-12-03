@@ -15,7 +15,6 @@
 
 #include <cstdint>
 #include <map>
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -80,8 +79,8 @@ protected:
   AStarHeuristic bicycle_astarheuristic_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> pedestrian_costing_;
-  std::shared_ptr<sif::DynamicCost> bicycle_costing_;
+  sif::cost_ptr_t pedestrian_costing_;
+  sif::cost_ptr_t bicycle_costing_;
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> edgelabels_;

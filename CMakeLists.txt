@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
@@ -8,12 +8,13 @@ set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(VALHALLA_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ language version to use (default is 17)")
+set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ language version to use (default is 20)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_HTTP "Enable the use of CURL" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
+option(ENABLE_NODE_BINDINGS "Enable Node.js bindings" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_COMPILER_WARNINGS "Build with compiler warnings" OFF)
@@ -27,7 +28,8 @@ option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for singl
 option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find the equivalent external package" OFF)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
-option(ENABLE_GDAL "Whether to include GDAL; currently only used for raster serialization of isotile grid" ON)
+option(ENABLE_GEOTIFF "Whether to include libgeotiff; currently only used for raster serialization of isotile grid" ON)
+option(INSTALL_TEST_LIB "Install Valhalla's own test lib" OFF)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -97,12 +99,12 @@ pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
 pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
 
 # cURL
-set(curl_targets "")
-if (ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+set(curl_target "")
+if (ENABLE_HTTP)
   pkg_check_modules(CURL REQUIRED IMPORTED_TARGET libcurl)
   if (CURL_FOUND)
-    set(curl_targets PkgConfig::CURL)
     target_compile_definitions(PkgConfig::CURL INTERFACE ENABLE_HTTP)
+    set(curl_target PkgConfig::CURL)
   else()
     message(FATAL_ERROR "ENABLE_HTTP=ON, but cURL not found...")
   endif()
@@ -206,15 +208,16 @@ endif()
 
 # unless you said you didnt want gdal we try to turn it on, if we cant we tell you
 # we don't need it to build tiles (yet)
-set(GDAL_TARGET "")
-if (ENABLE_GDAL AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDINGS))
-  find_package(GDAL QUIET)
-  if (GDAL_FOUND)
-    set(GDAL_TARGET GDAL::GDAL)
-    add_compile_definitions(ENABLE_GDAL)
-    message(STATUS "Gdal support is enabled")
+set(GTIFF_TARGETS "")
+if (ENABLE_GEOTIFF AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDINGS OR ENABLE_NODE_BINDINGS))
+  find_package(TIFF)
+  find_package(GeoTIFF)
+  if (GeoTIFF_FOUND AND TIFF_FOUND)
+    add_compile_definitions(ENABLE_GEOTIFF)
+    set(GTIFF_TARGETS TIFF::TIFF geotiff_library)
+    message(STATUS "libgeotiff support is enabled")
   else()
-    message(WARNING "Unable to enable gdal support")
+    message(WARNING "Unable to enable libgeotiff support")
   endif()
 endif()
 
@@ -244,6 +247,7 @@ if(ENABLE_DATA_TOOLS)
   pkg_check_modules(SpatiaLite REQUIRED IMPORTED_TARGET spatialite)
   pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
   pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
+  pkg_check_modules(OPENSSL REQUIRED IMPORTED_TARGET openssl)
 endif()
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
@@ -253,19 +257,8 @@ endif ()
 ## libvalhalla
 add_subdirectory(src)
 
-## Python bindings
-if(ENABLE_PYTHON_BINDINGS)
-  # python is fine for cmake as well
-  find_package(Python COMPONENTS Development Interpreter)
-  if (Python_FOUND)
-    add_subdirectory(src/bindings/python)
-    install(FILES COPYING CHANGELOG.md
-      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
-      COMPONENT python)
-  else()
-    set(ENABLE_PYTHON_BINDINGS OFF)
-    message(WARNING "Python development version not found, skipping Python bindings...")
-  endif()
+if(ENABLE_NODE_BINDINGS)
+  add_subdirectory(src/bindings/nodejs)
 endif()
 
 ## Executable targets
@@ -326,6 +319,21 @@ if(ENABLE_SERVICES)
     target_link_libraries(${program} valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
+endif()
+
+## Python bindings
+# needs to be after defining the tool targets above
+if(ENABLE_PYTHON_BINDINGS)
+  set(Python_FIND_STRATEGY LOCATION)
+  set(Python_FIND_REGISTRY NEVER)
+  set(Python_FIND_IMPLEMENTATIONS CPython)
+  set(Python_FIND_VIRTUALENV ONLY)
+  find_package(Python COMPONENTS Interpreter Development Development.Module Development.SABIModule)
+  add_subdirectory(src/bindings/python)
+  if (NOT Python_FOUND)
+    set(ENABLE_PYTHON_BINDINGS OFF)
+    message(WARNING "Python development version not found, skipping Python bindings...")
+  endif()
 endif()
 
 # add the scripts to the build folder as well

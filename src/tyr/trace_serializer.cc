@@ -18,7 +18,6 @@ namespace {
 constexpr size_t kConfidenceScoreIndex = 0;
 constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripLegIndex = 3;
 
 void serialize_admins(const TripLeg& trip_path, rapidjson::writer_wrapper_t& writer) {
   writer.start_array("admins");
@@ -92,7 +91,7 @@ void serialize_edges(const AttributesController& controller,
       }
       if (controller(kEdgeSpeedLimit) && (edge.speed_limit() > 0)) {
         if (edge.speed_limit() == kUnlimitedSpeedLimit) {
-          writer("speed_limit", std::string("unlimited"));
+          writer("speed_limit", "unlimited");
         } else {
           writer("speed_limit", serialize_speed(edge.speed_limit()));
         }
@@ -234,6 +233,9 @@ void serialize_edges(const AttributesController& controller,
       }
       if (controller(kEdgeTrafficSignal)) {
         writer("traffic_signal", edge.traffic_signal());
+      }
+      if (controller(kEdgeHovType)) {
+        writer("hov_type", to_string(static_cast<baldr::HOVEdgeType>(edge.hov_type())));
       }
       if (controller(kEdgeLevels)) {
         if (edge.levels_size()) {
@@ -441,13 +443,13 @@ void serialize_matched_points(const AttributesController& controller,
     if (controller(kMatchedType)) {
       switch (match_result.GetType()) {
         case meili::MatchResult::Type::kMatched:
-          writer("type", std::string("matched"));
+          writer("type", "matched");
           break;
         case meili::MatchResult::Type::kInterpolated:
-          writer("type", std::string("interpolated"));
+          writer("type", "interpolated");
           break;
         default:
-          writer("type", std::string("unmatched"));
+          writer("type", "unmatched");
           break;
       }
     }

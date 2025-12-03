@@ -206,7 +206,9 @@ nodelayout map_to_coordinates(const std::string& map,
         // TODO: Change the type to char instead of std::string so that its obvious
         if (!inserted.second) {
           throw std::logic_error(
-              "Duplicate node name in ascii map, only single char names are supported");
+              std::
+                  format("Duplicate node name in ascii map, only single char names are supported: {}",
+                         ch));
         }
       }
     }
@@ -224,7 +226,6 @@ inline void build_pbf(const nodelayout& node_locations,
                       const nodes& nodes,
                       const relations& relations,
                       const std::string& filename,
-                      const uint64_t initial_osm_id,
                       const bool strict) {
 
   const size_t initial_buffer_size = 10000;
@@ -255,19 +256,33 @@ inline void build_pbf(const nodelayout& node_locations,
     }
   }
 
-  std::unordered_map<std::string, int> node_id_map;
+  uint64_t osm_id = 0;
+  std::unordered_set<uint64_t> used_osm_ids;
+  auto get_node_id = [&](const std::string& node_name) {
+    auto found = nodes.find(node_name);
+    if (found != nodes.cend() && found->second.count("osm_id") > 0) {
+      return static_cast<uint64_t>(std::stoull(found->second.at("osm_id")));
+    }
+    while (!used_osm_ids.insert(++osm_id).second)
+      ;
+    return osm_id;
+  };
+
+  auto get_way_id = [&](const std::map<std::string, std::string>& tags) {
+    auto found = tags.find("osm_id");
+    if (found != tags.cend()) {
+      return static_cast<uint64_t>(std::stoull(found->second));
+    }
+    while (!used_osm_ids.insert(++osm_id).second)
+      ;
+    return osm_id;
+  };
+
   std::unordered_map<std::string, uint64_t> node_osm_id_map;
-  int id = 0;
-  for (auto& loc : node_locations) {
-    node_id_map[loc.first] = id++;
-  }
-  uint64_t osm_id = initial_osm_id;
   for (auto& loc : node_locations) {
     if (used_nodes.count(loc.first) > 0) {
-      node_osm_id_map[loc.first] = osm_id++;
-
+      node_osm_id_map[loc.first] = get_node_id(loc.first);
       std::vector<std::pair<std::string, std::string>> tags;
-
       if (nodes.count(loc.first) == 0) {
         tags.push_back({"name", loc.first});
       } else {
@@ -291,17 +306,10 @@ inline void build_pbf(const nodelayout& node_locations,
 
   std::unordered_map<std::string, uint64_t> way_osm_id_map;
   for (const auto& way : ways) {
-    // allow setting custom id
-    auto way_id = osm_id++;
-    auto found = way.second.find("osm_id");
-    if (found != way.second.cend()) {
-      way_id = std::stoull(found->second);
-    }
-
-    way_osm_id_map[way.first] = way_id;
-    std::vector<int> nodeids;
+    way_osm_id_map[way.first] = get_way_id(way.second);
+    std::vector<int64_t> nodeids;
     for (const auto& ch : way.first) {
-      nodeids.push_back(node_osm_id_map[std::string(1, ch)]);
+      nodeids.push_back(static_cast<int64_t>(node_osm_id_map[std::string(1, ch)]));
     }
     std::vector<std::pair<std::string, std::string>> tags;
     if (way.second.count("name") == 0) {
@@ -374,8 +382,9 @@ inline void build_pbf(const nodelayout& node_locations,
   objects.sort(object_order_type_unsigned_id_version{});
 
   // Write out the objects in sorted order
-  auto out = osmium::io::make_output_iterator(writer);
-  std::copy(objects.begin(), objects.end(), out);
+  for (const auto& obj : objects) {
+    writer(obj);
+  }
 
   // Explicitly close the writer. Will throw an exception if there is
   // a problem. If you wait for the destructor to close the writer, you
@@ -500,7 +509,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
       }
       // Now, see if the endnode for this edge is our end_node
       auto de_endnode = forward_directed_edge->endnode();
-      graph_tile_ptr reverse_tile = tile;
+      baldr::graph_tile_ptr reverse_tile = tile;
       auto de_endnode_coordinates =
           reader.GetGraphTile(de_endnode, reverse_tile)->get_node_ll(de_endnode);
 
@@ -513,13 +522,14 @@ findEdge(valhalla::baldr::GraphReader& reader,
             if (tile->edgeinfo(forward_directed_edge).wayid() == way_id) {
 
               // Skip any edges that are not drivable inbound.
-              if (!(forward_directed_edge->forwardaccess() & kVehicularAccess))
+              if (!(forward_directed_edge->forwardaccess() & baldr::kVehicularAccess))
                 continue;
 
               auto forward_edge_id = tile_id;
               forward_edge_id.set_id(i);
-              graph_tile_ptr reverse_tile = nullptr;
-              GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+              baldr::graph_tile_ptr reverse_tile = nullptr;
+              baldr::GraphId reverse_edge_id =
+                  reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
               auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
               return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                      reverse_directed_edge);
@@ -531,8 +541,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
             if (name == way_name) {
               auto forward_edge_id = tile_id;
               forward_edge_id.set_id(i);
-              graph_tile_ptr reverse_tile = nullptr;
-              GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+              baldr::graph_tile_ptr reverse_tile = nullptr;
+              baldr::GraphId reverse_edge_id =
+                  reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
               auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
               return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                      reverse_directed_edge);

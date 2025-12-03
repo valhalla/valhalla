@@ -66,7 +66,6 @@ void build_pbf(const nodelayout& node_locations,
                const nodes& nodes,
                const relations& relations,
                const std::string& filename,
-               const uint64_t initial_osm_id = 0,
                const bool strict = true);
 
 /**
@@ -91,6 +90,13 @@ std::string build_valhalla_request(const std::vector<std::string>& location_type
                                    const std::string& costing = "auto",
                                    const std::unordered_map<std::string, std::string>& options = {},
                                    const std::string& stop_type = "break");
+/**
+ *
+ * convert a list of node names to lat/lons.
+ */
+std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
+                                     const std::vector<std::string>& node_names);
+
 } // namespace detail
 
 /**

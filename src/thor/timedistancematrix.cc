@@ -37,7 +37,7 @@ float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) cons
   }
 
   // Convert max_matrix_distance to seconds based on the average speed
-  return max_matrix_distance / (average_speed_mph * kMPHtoMetersPerSec);
+  return max_matrix_distance / (average_speed_mph * midgard::kMPHtoMetersPerSec);
 }
 
 // Expand from a node in the forward direction
@@ -106,17 +106,19 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
     uint8_t restriction_idx = kInvalidRestriction;
+    uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
     const bool is_dest = dest_edges_.find(edgeid) != dest_edges_.cend();
     if (FORWARD) {
       if (!costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.local_time,
-                             nodeinfo->timezone(), restriction_idx) ||
+                             nodeinfo->timezone(), restriction_idx, destonly_restriction_mask) ||
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, nullptr,
                                offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
-                                    offset_time.local_time, nodeinfo->timezone(), restriction_idx) ||
+                                    offset_time.local_time, nodeinfo->timezone(), restriction_idx,
+                                    destonly_restriction_mask) ||
           (costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, false, nullptr,
                                 offset_time.local_time, nodeinfo->timezone()))) {
         continue;
@@ -125,8 +127,8 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 
     // Get cost and update distance
     uint8_t flow_sources;
-    auto newcost = FORWARD ? costing_->EdgeCost(directededge, tile, offset_time, flow_sources)
-                           : costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources);
+    auto newcost = FORWARD ? costing_->EdgeCost(directededge, edgeid, tile, offset_time, flow_sources)
+                           : costing_->EdgeCost(opp_edge, opp_edge_id, t2, offset_time, flow_sources);
     auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost =
         FORWARD ? costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter)
@@ -158,7 +160,8 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge), 0,
                                directededge->destonly() ||
                                    (costing_->is_hgv() && directededge->destonly_hgv()),
-                               directededge->forwardaccess() & kTruckAccess);
+                               directededge->forwardaccess() & kTruckAccess,
+                               destonly_restriction_mask);
     } else {
       edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
                                path_distance, restriction_idx,
@@ -169,7 +172,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                0,
                                opp_edge->destonly() ||
                                    (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                               opp_edge->forwardaccess() & kTruckAccess);
+                               opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
     }
 
     *es = {EdgeSet::kTemporary, idx};
@@ -264,8 +267,9 @@ bool TimeDistanceMatrix::ComputeMatrix(Api& request,
         for (auto& dest_id : destedge->second) {
           dest_edge_ids[dest_id] = pred.edgeid();
         }
-        if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred, time_info,
-                               matrix_locations)) {
+        if (UpdateDestinations<expansion_direction>(origin, destinations, destedge->second, edge,
+                                                    tile, graphreader, pred, time_info,
+                                                    matrix_locations)) {
           FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
                                  time_info.timezone_index, dest_edge_ids);
           break;
@@ -350,7 +354,9 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     const DirectedEdge* opp_dir_edge;
     if (FORWARD) {
       const auto percent_along = 1.0f - edge.percent_along();
-      cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) * percent_along;
+      cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                       edge.percent_along(), 1.0f);
+
       dist = static_cast<uint32_t>(directededge->length() * percent_along);
 
     } else {
@@ -359,8 +365,8 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
-      cost =
-          costing_->EdgeCost(opp_dir_edge, endtile, time_info, flow_sources) * edge.percent_along();
+      cost = costing_->PartialEdgeCost(opp_dir_edge, opp_edge_id, endtile, time_info, flow_sources,
+                                       0.0f, edge.percent_along());
       dist = static_cast<uint32_t>(directededge->length() * edge.percent_along());
     }
 
@@ -369,6 +375,8 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
 
+    auto destonly_restriction_mask =
+        costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
@@ -379,7 +387,8 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
                                InternalTurn::kNoTurn, 0,
                                directededge->destonly() ||
                                    (costing_->is_hgv() && directededge->destonly_hgv()),
-                               directededge->forwardaccess() & kTruckAccess);
+                               directededge->forwardaccess() & kTruckAccess,
+                               destonly_restriction_mask);
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
                                baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
@@ -387,7 +396,8 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
                                InternalTurn::kNoTurn, 0,
                                directededge->destonly() ||
                                    (costing_->is_hgv() && directededge->destonly_hgv()),
-                               directededge->forwardaccess() & kTruckAccess);
+                               directededge->forwardaccess() & kTruckAccess,
+                               destonly_restriction_mask);
     }
     edgelabels_.back().set_origin();
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -423,7 +433,7 @@ void TimeDistanceMatrix::InitDestinations(
       // REVERSE
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
-      float c = costing_->EdgeCost(directededge, tile).cost;
+      float c = costing_->EdgeCost(directededge, edgeid, tile).cost;
 
       // Keep the id and the partial distance for the remainder of the edge.
       Destination& d = destinations_.back();
@@ -449,12 +459,14 @@ void TimeDistanceMatrix::InitDestinations(
 
 // Update any destinations along the edge. Returns true if all destinations
 // have be settled or if the specified location count has been met or exceeded.
+template <const ExpansionType expansion_direction, const bool FORWARD>
 bool TimeDistanceMatrix::UpdateDestinations(
     const valhalla::Location& origin,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
     const graph_tile_ptr& tile,
+    baldr::GraphReader& reader,
     const EdgeLabel& pred,
     const TimeInfo& time_info,
     const uint32_t matrix_locations) {
@@ -509,8 +521,18 @@ bool TimeDistanceMatrix::UpdateDestinations(
     // Subtract the partial remaining cost and distance along the edge.
     uint8_t flow_sources;
     float remainder = dest_edge->second;
+    auto opp_edge_id = reader.GetOpposingEdgeId(pred.edgeid());
+    auto opp_tile = reader.GetGraphTile(opp_edge_id);
+    auto begin_node = reader.GetBeginNodeId(edge, opp_tile);
+    uint64_t timezone_index = opp_tile->node(begin_node)->timezone();
+
+    auto secs =
+        pred.predecessor() == kInvalidLabel ? 0.f : edgelabels_[pred.predecessor()].cost().secs;
+    auto offset_time =
+        FORWARD ? time_info.forward(secs, timezone_index) : time_info.reverse(secs, timezone_index);
     Cost newcost =
-        pred.cost() - (costing_->EdgeCost(edge, tile, time_info, flow_sources) * remainder);
+        pred.cost() -
+        (costing_->EdgeCost(edge, pred.edgeid(), tile, offset_time, flow_sources) * remainder);
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);

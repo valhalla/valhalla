@@ -133,7 +133,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
     try {
       auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
-      auto results = loki::Search(exclude_locations, *reader, costing);
+      auto results = search_.search(exclude_locations, costing);
       std::unordered_set<uint64_t> avoids;
       auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
       for (const auto& result : results) {
@@ -183,6 +183,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     : service_worker_t(config), config(config),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
+      search_(*reader),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
                            ? new connectivity_map_t(config.get_child("mjolnir"), reader)
                            : nullptr),
@@ -218,7 +219,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_exclude_polygons_length" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
         kv.first == "status" || kv.first == "allow_hard_exclusions" ||
-        kv.first == "hierarchy_limits") {
+        kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
+        kv.first == "max_linear_cost_edges") {
       continue;
     }
     if (kv.first != "trace") {

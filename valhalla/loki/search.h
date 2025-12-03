@@ -10,21 +10,39 @@ namespace valhalla {
 namespace loki {
 
 /**
- * Find an location within the route network given an input location
- * same tiled route data and a search strategy
- *
- * @param locations      the positions which need to be correlated to the route network
- * @param reader         and object used to access tiled route data TODO: switch this out for a
- * proper cache
- * @param costing        a costing object by which we can determine which portions of the graph are
- *                       accessible and therefor potential candidates
- * @return pathLocations the correlated data with in the tile that matches the inputs. If a
- * projection is not found, it will not have any entry in the returned value.
+ * Search class for finding locations within the route network
  */
-std::unordered_map<baldr::Location, baldr::PathLocation>
-Search(const std::vector<baldr::Location>& locations,
-       baldr::GraphReader& reader,
-       const std::shared_ptr<sif::DynamicCost>& costing);
+class Search {
+public:
+  /**
+   * Constructor
+   * @param reader  an object used to access tiled route data
+   */
+  explicit Search(baldr::GraphReader& reader);
+
+  /**
+   * Destructor
+   */
+  ~Search();
+
+  /**
+   * Find locations within the route network given input locations
+   *
+   * @param locations  the positions which need to be correlated to the route network
+   * @param costing    a costing object by which we can determine which portions of the graph are
+   *                   accessible and therefor potential candidates
+   * @return pathLocations the correlated data within the tile that matches the inputs. If a
+   * projection is not found, it will not have any entry in the returned value.
+   */
+  std::unordered_map<baldr::Location, baldr::PathLocation>
+  search(const std::vector<baldr::Location>& locations, const sif::cost_ptr_t& costing);
+
+private:
+  baldr::GraphReader& reader_;
+
+  struct bin_handler_t;
+  std::unique_ptr<bin_handler_t> handler_;
+};
 
 } // namespace loki
 } // namespace valhalla

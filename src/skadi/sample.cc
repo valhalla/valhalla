@@ -4,6 +4,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "valhalla/baldr/curl_tilegetter.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -174,8 +175,8 @@ public:
         fmt = format_t::RAW;
       }
 
-      auto lon = std::stoi(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
-      auto lat = std::stoi(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
+      auto lon = valhalla::midgard::to_int(m[4].str()) * (m[3] == "E" ? 1 : -1) + 180;
+      auto lat = valhalla::midgard::to_int(m[2].str()) * (m[1] == "N" ? 1 : -1) + 90;
       if (lon >= 0 && lon < 360 && lat >= 0 && lat < 180) {
         return std::make_pair(uint16_t(lat * 360 + lon), fmt);
       }
@@ -328,8 +329,12 @@ tile_data cache_t::source(uint16_t index) {
   // if we don't have anything maybe it's lazy loaded
   auto& item = cache[index];
   if (item.get_data() == nullptr) {
-    auto f = data_source + get_hgt_file_name(index);
-    item.init(f, format_t::RAW);
+    mutex.lock();
+    if (item.get_data() == nullptr) {
+      auto f = data_source + get_hgt_file_name(index);
+      item.init(f, format_t::RAW);
+    }
+    mutex.unlock();
   }
 
   // it wasn't in cache and when we tried to load it the file was of unknown type
@@ -419,10 +424,10 @@ sample::sample(const boost::property_tree::ptree& pt)
   url_ = pt.get<std::string>("additional_data.elevation_url", "");
 
   auto max_concurrent_users = pt.get<size_t>("mjolnir.max_concurrent_reader_users", 1);
-  remote_loader_ =
-      std::make_unique<baldr::curl_tile_getter_t>(max_concurrent_users,
-                                                  pt.get<std::string>("mjolnir.user_agent", ""),
-                                                  false);
+  remote_loader_ = std::make_unique<
+      baldr::curl_tile_getter_t>(max_concurrent_users, pt.get<std::string>("mjolnir.user_agent", ""),
+                                 false,
+                                 pt.get<std::string>("additional_data.elevation_url_user_pw", ""));
 
   // this line used only for testing, for more details check elevation_builder.cc
   remote_path_ = pt.get<std::string>("additional_data.elevation_dir", "");
@@ -445,10 +450,7 @@ template <class coord_t> double sample::get(const coord_t& coord, tile_data& til
 
   // the caller can pass a cached tile, so we only fetch one if its not the one they already have
   if (index != tile.get_index()) {
-    {
-      std::lock_guard<std::mutex> _(cache_lck);
-      tile = cache_->source(index);
-    }
+    tile = cache_->source(index);
     if (!tile) {
       if (!fetch(index))
         return get_no_data_value();
@@ -504,7 +506,6 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
   if (!filesystem_utils::save(fpath, raw_data))
     return false;
 
-  std::lock_guard<std::mutex> _(cache_lck);
   return cache_->insert(data->first, fpath.string(), data->second);
 }
 
@@ -541,7 +542,6 @@ template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
 }
 
 void sample::add_single_tile(const std::string& path) {
-  std::lock_guard<std::mutex> _(cache_lck);
   cache_->insert(0, path, format_t::RAW);
 }
 

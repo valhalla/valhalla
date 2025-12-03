@@ -29,6 +29,12 @@ inline TripLeg_SpeedType GetTripLegSpeedType(const baldr::SpeedType speed_type) 
   return kTripLegSpeedType[static_cast<int>(speed_type)];
 }
 
+// Associate HovTypes values to TripLeg proto
+constexpr TripLeg_HovType kTripLegHovType[] = {TripLeg_HovType_kHOV2, TripLeg_HovType_kHOV3};
+inline TripLeg_HovType GetTripLegHovType(const baldr::HOVEdgeType hov_type) {
+  return kTripLegHovType[static_cast<int>(hov_type)];
+}
+
 // Associate Surface values to TripLeg proto
 constexpr TripLeg_Surface kTripLegSurface[] =
     {TripLeg_Surface_kPavedSmooth, TripLeg_Surface_kPaved,     TripLeg_Surface_kPavedRough,
@@ -528,7 +534,7 @@ const std::string& MatrixAlgoToString(const valhalla::Matrix::Algorithm algo);
 // Get the string representing the incident-type
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type);
 // Get the string representing the incident-Impact
-const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact);
+std::string_view incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact);
 // Get the string representing the guidance view type
 const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_GuidanceView_Type type);
 
@@ -556,6 +562,8 @@ const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet 
 bool Options_ExpansionProperties_Enum_Parse(const std::string& prop, Options::ExpansionProperties* a);
 bool Options_ExpansionAction_Enum_Parse(const std::string& action, Options::Action* a);
 const std::string& Expansion_EdgeStatus_Enum_Name(const Expansion_EdgeStatus status);
+bool Options_ReverseTimeTracking_Enum_Parse(const std::string& strategy,
+                                            Options::ReverseTimeTracking* f);
 
 std::pair<std::string, std::string>
 travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver);

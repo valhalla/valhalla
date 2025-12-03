@@ -15,7 +15,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
-#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -78,7 +77,8 @@ public:
                                                   float,
                                                   uint32_t,
                                                   float,
-                                                  const Expansion_ExpansionType)>;
+                                                  const Expansion_ExpansionType,
+                                                  const uint8_t)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }
@@ -114,7 +114,7 @@ protected:
 
   // A child-class must implement this to learn about what nodes were expanded
   virtual void ExpandingNode(baldr::GraphReader&,
-                             graph_tile_ptr,
+                             baldr::graph_tile_ptr,
                              const baldr::NodeInfo*,
                              const sif::EdgeLabel&,
                              const sif::EdgeLabel*) = 0;
@@ -143,7 +143,7 @@ protected:
   std::unordered_set<uint32_t> processed_tiles_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+  sif::cost_ptr_t costing_;
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> bdedgelabels_;
@@ -231,8 +231,8 @@ protected:
                                const sif::MMEdgeLabel& pred,
                                const uint32_t pred_idx,
                                const bool from_transition,
-                               const std::shared_ptr<sif::DynamicCost>& pc,
-                               const std::shared_ptr<sif::DynamicCost>& tc,
+                               const sif::cost_ptr_t& pc,
+                               const sif::cost_ptr_t& tc,
                                const sif::mode_costing_t& mode_costing,
                                const baldr::TimeInfo& time_info);
 
@@ -244,7 +244,8 @@ protected:
    */
   void SetOriginLocations(baldr::GraphReader& graphreader,
                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                          const std::shared_ptr<sif::DynamicCost>& costing);
+                          const std::vector<baldr::TimeInfo>& time_infos,
+                          const sif::cost_ptr_t& costing);
 
   /**
    * Add edge(s) at each origin location to the adjacency list.
@@ -255,7 +256,7 @@ protected:
   void SetOriginLocationsMultiModal(
       baldr::GraphReader& graphreader,
       google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-      const std::shared_ptr<sif::DynamicCost>& costing);
+      const sif::cost_ptr_t& costing);
 
   /**
    * Add edge(s) at each destination location to the adjacency list.
@@ -265,7 +266,8 @@ protected:
    */
   void SetDestinationLocations(baldr::GraphReader& graphreader,
                                google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                               const std::shared_ptr<sif::DynamicCost>& costing);
+                               const std::vector<baldr::TimeInfo>& time_infos,
+                               const sif::cost_ptr_t& costing);
 
   /**
    * Convenience method to get the timezone index at a node.
@@ -274,7 +276,7 @@ protected:
    * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
    */
   int GetTimezone(baldr::GraphReader& graphreader, const baldr::GraphId& node) {
-    graph_tile_ptr tile = graphreader.GetGraphTile(node);
+    baldr::graph_tile_ptr tile = graphreader.GetGraphTile(node);
     return (tile == nullptr) ? 0 : tile->node(node)->timezone();
   }
 };

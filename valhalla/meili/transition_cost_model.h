@@ -89,8 +89,6 @@ private:
 
   // Cost for each degree in [0, 180]
   float turn_cost_table_[181];
-
-  bool match_on_restrictions_{false};
 };
 
 } // namespace meili

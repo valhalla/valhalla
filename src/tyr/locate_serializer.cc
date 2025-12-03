@@ -28,10 +28,10 @@ OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de)
   return OpenLR::LocationReferencePoint::OTHER;
 }
 
-void get_access_restrictions(const graph_tile_ptr& tile,
-                             rapidjson::writer_wrapper_t& writer,
-                             uint32_t edge_idx) {
-  for (const auto& res : tile->GetAccessRestrictions(edge_idx, kAllAccess)) {
+void serialize_access_restrictions(const graph_tile_ptr& tile,
+                                   rapidjson::writer_wrapper_t& writer,
+                                   uint32_t edge_idx) {
+  for (const auto& res : tile->GetAccessRestrictions(edge_idx)) {
     res.json(writer);
   }
 }
@@ -131,7 +131,7 @@ void serialize_edges(const PathLocation& location,
           // TODO: incidents
         }
         writer.start_array("access_restrictions");
-        get_access_restrictions(tile, writer, edge.id.id());
+        serialize_access_restrictions(tile, writer, edge.id.id());
         writer.end_array();
         // write live_speed
         writer.start_object("live_speed");
@@ -143,9 +143,8 @@ void serialize_edges(const PathLocation& location,
         writer("correlated_lat", edge.projected.lat());
         writer("correlated_lon", edge.projected.lng());
         writer("side_of_street", edge.sos == PathLocation::LEFT
-                                     ? std::string("left")
-                                     : (edge.sos == PathLocation::RIGHT ? std::string("right")
-                                                                        : std::string("neither")));
+                                     ? "left"
+                                     : (edge.sos == PathLocation::RIGHT ? "right" : "neither"));
 
         writer("linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info));
         writer.set_precision(5);
@@ -173,7 +172,7 @@ void serialize_edges(const PathLocation& location,
         // historical traffic information
         writer.start_array("predicted_speeds");
         if (directed_edge->has_predicted_speed()) {
-          for (auto sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
+          for (uint32_t sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
             writer(static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
           }
         }
@@ -185,9 +184,8 @@ void serialize_edges(const PathLocation& location,
         writer("correlated_lat", edge.projected.lat());
         writer("correlated_lon", edge.projected.lng());
         writer("side_of_street", edge.sos == PathLocation::LEFT
-                                     ? std::string("left")
-                                     : (edge.sos == PathLocation::RIGHT ? std::string("right")
-                                                                        : std::string("neither")));
+                                     ? "left"
+                                     : (edge.sos == PathLocation::RIGHT ? "right" : "neither"));
         writer.set_precision(5);
         writer("percent_along", edge.percent_along);
         writer.set_precision(tyr::kDefaultPrecision);

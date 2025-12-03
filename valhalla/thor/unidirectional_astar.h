@@ -14,7 +14,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -111,7 +110,7 @@ protected:
                           const baldr::NodeInfo* nodeinfo,
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
-                          const graph_tile_ptr& tile,
+                          const baldr::graph_tile_ptr& tile,
                           const baldr::TimeInfo& time_info,
                           const valhalla::Location& destination,
                           std::pair<int32_t, float>& best_path);
@@ -167,7 +166,7 @@ protected:
   AStarHeuristic astarheuristic_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+  sif::cost_ptr_t costing_;
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> edgelabels_;
@@ -176,7 +175,7 @@ protected:
   EdgeStatus edgestatus_;
 
   // Mark if edge is a destination
-  std::unordered_multimap<valhalla::baldr::GraphId, std::reference_wrapper<const valhalla::PathEdge>>
+  std::unordered_multimap<baldr::GraphId, std::reference_wrapper<const valhalla::PathEdge>>
       destinations_;
 
   // Access mode used by the costing method

@@ -147,8 +147,9 @@ int main(int argc, char* argv[]) {
   auto mode_costing = factory.CreateModeCosting(options, mode);
 
   // Find locations
-  const std::shared_ptr<DynamicCost>& cost = mode_costing[static_cast<uint32_t>(mode)];
-  const auto projections = Search(locations, reader, cost);
+  const cost_ptr_t& cost = mode_costing[static_cast<uint32_t>(mode)];
+  Search search(reader);
+  const auto projections = search.search(locations, cost);
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {
     try {
@@ -158,7 +159,7 @@ int main(int argc, char* argv[]) {
 
   // Find avoid locations
   std::vector<sif::AvoidEdge> avoid_edges;
-  const auto avoids = Search(exclude_locations, reader, cost);
+  const auto avoids = search.search(exclude_locations, cost);
   for (const auto& loc : exclude_locations) {
     for (auto& e : avoids.at(loc).edges) {
       avoid_edges.push_back({e.id, e.percent_along});
