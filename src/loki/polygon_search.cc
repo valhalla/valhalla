@@ -31,7 +31,7 @@ using line_bg_t = bg::model::linestring<PointLL>;
 using ring_bg_t = std::vector<PointLL>;
 
 // map of tile for map of bin ids & their ring ids
-using bins_collector =
+using bins_collector_t =
     std::unordered_map<uint32_t, std::unordered_map<unsigned short, std::vector<size_t>>>;
 static const auto Haversine = [] {
   return bg::strategy::distance::haversine<float>(kRadEarthMeters);
@@ -185,9 +185,10 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
 
   // keep track which tile's bins intersect which rings
   std::unordered_set<GraphId> avoid_edge_ids;
-  std::vector<std::pair<uint32_t, unsigned short>> contained_bins;
+  bins_collector_t contained_bins;
+  uint32_t contained_bin_count = 0;
   contained_bins.reserve(200); // TODO: approximate based on polygon size?
-  bins_collector bins_intersected;
+  bins_collector_t bins_intersected;
 
   // first pull out all *unique* bins which intersect the boundaries
   for (size_t ring_idx = 0; ring_idx < rings_bg.size(); ring_idx++) {
@@ -281,7 +282,8 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
         auto bin = bin_queue.front();
         bin_queue.pop();
         // settle this bin and add its neighbors
-        contained_bins.push_back(bin);
+        contained_bins[bin.first][bin.second].push_back(ring_idx);
+        contained_bin_count++;
 
         for (const auto& neighbor : tiles.GetNeighbors(bin.first, bin.second)) {
           auto neighbor_bbox = tiles.BinBBox(neighbor.first, neighbor.second);
@@ -300,12 +302,14 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     }
   }
 
-  for (const auto& bin : contained_bins) {
-    auto tile = reader.GetGraphTile({bin.first, bin_level, 0});
+  auto check_bins = [&](uint32_t tileid,
+                        const std::pair<unsigned short, std::vector<unsigned long>>& bin,
+                        bool intersect) {
+    auto tile = reader.GetGraphTile({tileid, bin_level, 0});
     if (!tile) {
-      continue;
+      return;
     }
-    for (const auto& edge_id : tile->GetBin(bin.second)) {
+    for (const auto& edge_id : tile->GetBin(bin.first)) {
       if (avoid_edge_ids.count(edge_id) != 0) {
         continue;
       }
@@ -327,77 +331,51 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
         continue;
       }
 
-      avoid_edge_ids.emplace(edge_id);
-      avoid_edge_ids.emplace(
-          opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
+      auto edge_info = tile->edgeinfo(edge);
+      bool exclude = false;
+      for (const auto& ring_loc : bin.second) {
+        bool intersects =
+            !intersect ? true
+                       : bg::intersects(rings_bg[ring_loc], line_bg_t(edge_info.shape().begin(),
+                                                                      edge_info.shape().end()));
+        // if the edge shape intersects the ring, check if the user passed
+        // levels
+        if (intersects) {
+          if (exclude_levels[ring_loc].size() > 0) {
+            // the user passed levels, so only exclude the edges if they run on
+            // (not across) that level
+            const auto& levels = edge_info.levels();
+            // the edge runs on this level (i.e. does not merely traverse it)
+            if (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second &&
+                exclude_levels[ring_loc].find(levels.first[0].first) !=
+                    exclude_levels[ring_loc].end()) {
+              exclude = true;
+            }
+          } else {
+            exclude = true;
+          }
+          if (intersects && exclude)
+            break;
+        }
+      }
+      if (exclude) {
+        avoid_edge_ids.emplace(edge_id);
+        avoid_edge_ids.emplace(
+            opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
+      }
+    }
+  };
+
+  for (const auto& [tileid, bins] : contained_bins) {
+    for (const auto& bin : bins) {
+      check_bins(tileid, bin, false);
     }
   }
 
-  LOG_DEBUG("Marked " + std::to_string(contained_bins.size()) + " bins as fully contained by a ring");
-  for (const auto& intersection : bins_intersected) {
-    auto tile = reader.GetGraphTile({intersection.first, bin_level, 0});
-    if (!tile) {
-      continue;
-    }
-    for (const auto& bin : intersection.second) {
-      // tile will be mutated most likely in the loop
-      reader.GetGraphTile({intersection.first, bin_level, 0}, tile);
-      for (const auto& edge_id : tile->GetBin(bin.first)) {
-        if (avoid_edge_ids.count(edge_id) != 0) {
-          continue;
-        }
-        // TODO: optimize the tile switching by enqueuing edges
-        // from other levels & tiles and process them after this big loop
-        if (edge_id.Tile_Base() != tile->header()->graphid().Tile_Base() &&
-            !reader.GetGraphTile(edge_id, tile)) {
-          continue;
-        }
-        const auto edge = tile->directededge(edge_id);
-        auto opp_tile = tile;
-        const baldr::DirectedEdge* opp_edge = nullptr;
-        baldr::GraphId opp_id;
-
-        // bail if we wouldnt be allowed on this edge anyway (or its opposing)
-        if (!costing->Allowed(edge, tile) &&
-            (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).Is_Valid() ||
-             !costing->Allowed(opp_edge, opp_tile))) {
-          continue;
-        }
-
-        // TODO: some logic to set percent_along for origin/destination edges
-        // careful: polygon can intersect a single edge multiple times
-        auto edge_info = tile->edgeinfo(edge);
-        bool include = false;
-        for (const auto& ring_loc : bin.second) {
-          bool intersects = bg::intersects(rings_bg[ring_loc], line_bg_t(edge_info.shape().begin(),
-                                                                         edge_info.shape().end()));
-          if (intersects) {
-            // if the edge shape intersects the ring, check if the user passed
-            // levels
-            if (exclude_levels[ring_loc].size() > 0) {
-              // the user passed levels, so only exclude the edges if they run on
-              // (not across) that level
-              const auto& levels = edge_info.levels();
-              // the edge runs on this level (i.e. does not merely traverse it)
-              if (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second) {
-                if (exclude_levels[ring_loc].find(levels.first[0].first) !=
-                    exclude_levels[ring_loc].end()) {
-                  include = true;
-                }
-              }
-            } else {
-              include = true;
-            }
-            if (intersects && include)
-              break;
-          }
-        }
-        if (include) {
-          avoid_edge_ids.emplace(edge_id);
-          avoid_edge_ids.emplace(
-              opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
-        }
-      }
+  LOG_DEBUG("Marked " + std::to_string(contained_bin_count) + " bins as fully contained by a ring");
+  for (const auto& [tileid, bins] : bins_intersected) {
+    for (const auto& bin : bins) {
+      check_bins(tileid, bin, true);
     }
   }
 

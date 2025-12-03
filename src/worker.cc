@@ -1026,10 +1026,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
           if (req_poly.IsArray() && req_poly.GetArray().Size() > 0) {
             parse_ring(pbf_ring, req_poly);
           } else if (req_poly.IsObject() &&
-                     !req_poly.GetObject().ObjectEmpty()) { // it's an object, so it better have
-                                                            // coordinates and maybe levels
+                     !req_poly.GetObject().ObjectEmpty()) { // it's a geojson feature, so it better
+                                                            // have coordinates and maybe levels
             // we only support one ring
-            auto coordinates = rapidjson::get_child_optional(req_poly, "/geometry/coordinates");
+            auto coordinates = rapidjson::get_child_optional(req_poly, "/geometry/coordinates/0");
             auto geom_type = rapidjson::get_child_optional(req_poly, "/geometry/type");
             if (coordinates && geom_type && *geom_type == "Polygon" && coordinates->IsArray()) {
               parse_ring(pbf_ring, *coordinates);

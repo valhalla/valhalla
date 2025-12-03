@@ -72,8 +72,10 @@ rapidjson::Value build_exclude_level_polygons(const std::vector<ring_bg_t>& ring
     rapidjson::Value properties_j(rapidjson::kObjectType);
     rapidjson::Value geometry_j(rapidjson::kObjectType);
 
-    // one ring per feature
+    // one ring per polygon
     rapidjson::Value ring_j(rapidjson::kArrayType);
+    // one polygon per feature
+    rapidjson::Value poly_j(rapidjson::kArrayType);
     for (const auto& coord : rings.at(i)) {
       rapidjson::Value coords(rapidjson::kArrayType);
       coords.PushBack(coord.lng(), alloc);
@@ -88,7 +90,8 @@ rapidjson::Value build_exclude_level_polygons(const std::vector<ring_bg_t>& ring
     }
 
     geometry_j.AddMember("type", "Polygon", alloc);
-    geometry_j.AddMember("coordinates", ring_j, alloc);
+    poly_j.PushBack(ring_j, alloc);
+    geometry_j.AddMember("coordinates", poly_j, alloc);
     properties_j.AddMember("levels", level_j, alloc);
     feature_j.AddMember("properties", properties_j, alloc);
     feature_j.AddMember("geometry", geometry_j, alloc);
@@ -505,3 +508,131 @@ INSTANTIATE_TEST_SUITE_P(AvoidPolyProfilesTest,
                                            "motor_scooter",
                                            "taxi",
                                            "bus"));
+
+class LargeAvoidTest : public ::testing::TestWithParam<std::string> {
+protected:
+  static std::string ascii_map;
+
+  static void SetUpTestSuite() {
+    // clang-format off
+    ascii_map = R"(
+a---------------------------------------------------------------------------------------------------------------------------------------------b
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |      
+|                                                                                                                                             |
+|                                                                                                                                             |                       
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                              A-x--B                                                                         |
+|                                                              |    |                                                                         |
+|                                                              |    |                                                                         |
+|                                                              C----D---E---F                                                                 |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |        
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+|                                                                                                                                             |
+c---------------------------------------------------------------------------------------------------------------------------------------------d        
+                                     )";
+    // clang-format on
+  }
+};
+
+std::string LargeAvoidTest::ascii_map = {};
+
+TEST_F(LargeAvoidTest, TestAvoidHugePolygon) {
+  const gurka::ways ways = {
+      {"AB", {{"highway", "tertiary"}, {"name", "High"}}},
+      {"CD", {{"highway", "tertiary"}, {"name", "Low"}}},
+      {"AC", {{"highway", "tertiary"}, {"name", "1st"}}},
+      {"BD", {{"highway", "tertiary"}, {"name", "2nd"}}},
+      {"DE", {{"highway", "tertiary"}, {"name", "2nd"}}},
+      {"EF", {{"highway", "tertiary"}, {"name", "2nd"}}},
+  };
+  // const gurka::nodes nodes = {
+  //     {"a", {{"amenity", "library"}}},
+  //     {"b", {{"amenity", "library"}}},
+  //     {"c", {{"amenity", "library"}}},
+  //     {"d", {{"amenity", "library"}}},
+  // };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 1000, {1.0, 1.0});
+  auto avoid_map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_avoid_huge",
+                        {{"service_limits.max_exclude_polygons_length", "1000000000"}});
+  std::vector<ring_bg_t> rings{
+      {avoid_map.nodes["a"], avoid_map.nodes["b"], avoid_map.nodes["d"], avoid_map.nodes["c"],
+       avoid_map.nodes["a"]},
+  };
+
+  // build request manually for now
+  auto lls = {avoid_map.nodes["x"], avoid_map.nodes["E"]};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto value = get_avoid_polys(rings, allocator);
+  auto req = build_local_req(doc, allocator, lls, "auto", value, "/exclude_polygons");
+
+  // with a polygon this large, it should miss edges in non-line-intersecting bins
+  try {
+    gurka::do_action(Options::route, avoid_map, req);
+    FAIL() << "Expected to fail";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
+TEST_F(LargeAvoidTest, TestAvoidHugePolygonWithLevels) {
+  const gurka::ways ways = {
+      {"AB", {{"highway", "corridor"}, {"level", "1"}}},
+      {"CD", {{"highway", "corridor"}, {"level", "1"}}},
+      {"AC", {{"highway", "corridor"}, {"level", "1"}}},
+      {"BD", {{"highway", "corridor"}, {"level", "1"}}},
+      {"DE", {{"highway", "corridor"}, {"level", "1"}}},
+      {"EF", {{"highway", "corridor"}, {"level", "1"}}},
+      {"ab", {{"highway", "motorway"}}},
+      {"bd", {{"highway", "motorway"}}},
+      {"dc", {{"highway", "motorway"}}},
+      {"ca", {{"highway", "motorway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 1000, {7.0, 52.0});
+  auto avoid_map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_avoids_huge_levels",
+                        {{"service_limits.max_exclude_polygons_length", "1000000000"}});
+  std::vector<ring_bg_t> rings{
+      {avoid_map.nodes["a"], avoid_map.nodes["b"], avoid_map.nodes["d"], avoid_map.nodes["c"],
+       avoid_map.nodes["a"]},
+  };
+  std::vector<std::vector<float>> levels = {{9999.f}};
+
+  // build request manually for now
+  auto lls = {avoid_map.nodes["x"], avoid_map.nodes["E"]};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto value = build_exclude_level_polygons(rings, levels, allocator);
+  auto req = build_local_req(doc, allocator, lls, "pedestrian", value, "/exclude_polygons");
+
+  // with a polygon this large, it should miss edges in non-line-intersecting bins
+  try {
+    gurka::do_action(Options::route, avoid_map, req);
+    // FAIL() << "Expected to fail";
+  } catch (const std::exception& e) { FAIL() << "Expected the route to succeed: " << e.what(); };
+}
