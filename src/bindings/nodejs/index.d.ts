@@ -49,6 +49,8 @@ export class Actor {
 
   status(query: Query): Promise<Response>;
   status(query: string): Promise<string>;
+
+  tile(query: Query | string): Promise<Buffer>;
 }
 
 export interface ConfigOptions {

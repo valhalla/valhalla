@@ -1,6 +1,6 @@
 # Valhalla locate service API reference
 
-Valhalla's locate service, is an open-source service that provides detailed information about streets and intersections close to an input point with some added matching criteria. This allows for tight integration in routing and navigation applications on web or mobile.
+Valhalla's locate service is an open-source service that provides detailed information about streets and intersections close to an input point with some added matching criteria. This allows for tight integration in routing and navigation applications on web or mobile.
 
 [View an interactive demo](https://valhalla.github.io/demos/locate)
 
