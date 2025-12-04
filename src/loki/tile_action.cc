@@ -158,11 +158,6 @@ public:
                    const volatile baldr::TrafficSpeed* forward_traffic,
                    const volatile baldr::TrafficSpeed* reverse_traffic,
                    const baldr::EdgeInfo& edge_info) {
-    // Must have at least one edge and valid geometry
-    if (geometry.size() < 2) {
-      return;
-    }
-
     assert(forward_edge || reverse_edge);
 
     const auto* edge = forward_edge ? forward_edge : reverse_edge;
@@ -787,10 +782,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
 
     // lambda to add VT line & nodes features
     auto process_single_line = [&](const linestring_t& line) {
-      if (line.size() < 2) {
-        return;
-      }
-
       // convert to vtzero points, removing consecutive duplicates
       std::vector<vtzero::point> tile_coords;
       tile_coords.reserve(line.size());
