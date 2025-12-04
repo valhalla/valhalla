@@ -19,7 +19,7 @@ We support the usual GET & POST with the common "Slippy Map"/XYZ request pattern
 
 ## Integration into MVT compatible clients/SDKs etc
 
-Most often software supporting MVT lets you specify a URL pattern expecting placeholders like `{z}/{x}/{y}?<query_params>`. For consistency's sake, we use our common `/?json=<post_json>` notation. Sadly that inteferes with placeholder parsing and the `<post_json>` usually has to be URL encoded for use in Maplibre/QGIS et al, e.g. `http://localhost:8002/?json=%7B%22tile%22%3A%7B%22z%22%3A{z}%2C%22x%22%3A{x}%2C%22y%22%3A{y}%7D%7D`. Note how x/y/z `{}` placeholders aren't encoded.
+Most often software supporting MVT lets you specify a URL pattern expecting placeholders like `{z}/{x}/{y}?<query_params>`. For consistency's sake, we use our common `/?json=<post_json>` notation. Sadly that inteferes with placeholder parsing and the `<post_json>` usually has to be URL encoded for use in Maplibre/QGIS et al, e.g. `http://localhost:8002/tile?json=%7B%22tile%22%3A%7B%22z%22%3A{z}%2C%22x%22%3A{x}%2C%22y%22%3A{y}%7D%7D`. Note how x/y/z `{}` placeholders aren't encoded.
 
 ### Error/status codes and messages
 
