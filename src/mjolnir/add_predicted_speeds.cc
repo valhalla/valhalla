@@ -2,6 +2,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -101,7 +102,7 @@ ParseTrafficFile(const std::vector<std::string>& filenames, TrafficStats& stat) 
             } break;
             case 1: {
               try {
-                traffic->second.free_flow_speed = std::stoi(t);
+                traffic->second.free_flow_speed = valhalla::midgard::to_int(t);
                 stat.free_flow_count++;
               } catch (std::exception& e) {
                 LOG_WARN("Invalid free flow speed in file: " + full_filename + " line number " +
@@ -111,7 +112,7 @@ ParseTrafficFile(const std::vector<std::string>& filenames, TrafficStats& stat) 
             } break;
             case 2: {
               try {
-                traffic->second.constrained_flow_speed = std::stoi(t);
+                traffic->second.constrained_flow_speed = valhalla::midgard::to_int(t);
                 stat.constrained_count++;
               } catch (std::exception& e) {
                 LOG_WARN("Invalid constrained flow speed in file: " + full_filename +

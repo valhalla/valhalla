@@ -1,11 +1,14 @@
 #include "baldr/graphtile.h"
+#include "baldr/complexrestriction.h"
 #include "config.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
+#include "mjolnir/complexrestrictionbuilder.h"
 
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <sstream>
 #include <vector>
 
 using namespace valhalla::baldr;
@@ -141,6 +144,183 @@ TEST(GraphTileVersion, VersionChecksum) {
 
   auto checksum = tile->header()->checksum();
   EXPECT_GT(checksum, 0);
+}
+
+struct RestrictionBuilder {
+  std::vector<char> data;
+
+  void add_restriction(GraphId from_id,
+                       GraphId to_id,
+                       uint16_t modes,
+                       const std::vector<GraphId>& vias = {}) {
+    valhalla::mjolnir::ComplexRestrictionBuilder builder;
+    builder.set_from_id(from_id);
+    builder.set_to_id(to_id);
+    builder.set_modes(modes);
+    if (!vias.empty()) {
+      builder.set_via_list(vias);
+    }
+
+    std::ostringstream oss;
+    oss << builder;
+    std::string serialized = oss.str();
+
+    data.insert(data.end(), serialized.begin(), serialized.end());
+  }
+};
+
+TEST(ComplexRestrictionView, EmptyView) {
+  std::vector<char> empty_data;
+  ComplexRestrictionView view(empty_data.data(), 0, GraphId(100, 0, 0), 0xFF, true);
+
+  EXPECT_TRUE(view.empty());
+  EXPECT_EQ(view.begin(), view.end());
+
+  int count = 0;
+  for (const auto& cr : view) {
+    (void)cr;
+    count++;
+  }
+  EXPECT_EQ(count, 0);
+}
+
+TEST(ComplexRestrictionView, NoMatchingRestrictions) {
+  RestrictionBuilder builder;
+  builder.add_restriction(GraphId(1, 0, 0), GraphId(2, 0, 0), 0x1);
+  builder.add_restriction(GraphId(3, 0, 0), GraphId(4, 0, 0), 0x2);
+  builder.add_restriction(GraphId(5, 0, 0), GraphId(6, 0, 0), 0x4);
+
+  // Looking for to_graphid = 100 (doesn't exist)
+  ComplexRestrictionView view(builder.data.data(), builder.data.size(), GraphId(100, 0, 0), 0xFF,
+                              true);
+
+  EXPECT_TRUE(view.empty());
+  EXPECT_EQ(view.begin(), view.end());
+}
+
+TEST(ComplexRestrictionView, ForwardRestrictions) {
+  RestrictionBuilder builder;
+  builder.add_restriction(GraphId(1, 0, 0), GraphId(100, 0, 0), 0x1); // matches
+  builder.add_restriction(GraphId(2, 0, 0), GraphId(200, 0, 0), 0x2); // doesn't match id
+  builder.add_restriction(GraphId(3, 0, 0), GraphId(100, 0, 0), 0x4); // matches
+  builder.add_restriction(GraphId(4, 0, 0), GraphId(100, 0, 0), 0x8); // doesn't match modes
+
+  // Looking for to_graphid = 100, modes = 0x5 (matches modes 0x1 and 0x4)
+  ComplexRestrictionView view(builder.data.data(), builder.data.size(), GraphId(100, 0, 0), 0x5,
+                              true);
+
+  EXPECT_FALSE(view.empty());
+
+  std::vector<const ComplexRestriction*> results;
+  for (const auto& cr : view) {
+    results.push_back(&cr);
+  }
+
+  ASSERT_EQ(results.size(), 2);
+  EXPECT_EQ(results[0]->to_graphid(), GraphId(100, 0, 0));
+  EXPECT_EQ(results[0]->from_graphid(), GraphId(1, 0, 0));
+  EXPECT_EQ(results[1]->to_graphid(), GraphId(100, 0, 0));
+  EXPECT_EQ(results[1]->from_graphid(), GraphId(3, 0, 0));
+}
+
+TEST(ComplexRestrictionView, ReverseRestrictions) {
+  RestrictionBuilder builder;
+  builder.add_restriction(GraphId(100, 0, 0), GraphId(1, 0, 0), 0x1); // matches
+  builder.add_restriction(GraphId(200, 0, 0), GraphId(2, 0, 0), 0x2); // doesn't match id
+  builder.add_restriction(GraphId(100, 0, 0), GraphId(3, 0, 0), 0x4); // matches
+
+  // Looking for from_graphid = 100 (reverse direction), modes = 0xFF
+  ComplexRestrictionView view(builder.data.data(), builder.data.size(), GraphId(100, 0, 0), 0xFF,
+                              false);
+
+  EXPECT_FALSE(view.empty());
+
+  std::vector<const ComplexRestriction*> results;
+  for (const auto& cr : view) {
+    results.push_back(&cr);
+  }
+
+  ASSERT_EQ(results.size(), 2);
+  EXPECT_EQ(results[0]->from_graphid(), GraphId(100, 0, 0));
+  EXPECT_EQ(results[1]->from_graphid(), GraphId(100, 0, 0));
+}
+
+TEST(ComplexRestrictionView, ViewInterfaceMethods) {
+  RestrictionBuilder builder;
+  builder.add_restriction(GraphId(1, 0, 0), GraphId(100, 0, 0), 0x1);
+  builder.add_restriction(GraphId(2, 0, 0), GraphId(100, 0, 0), 0x2);
+
+  ComplexRestrictionView view(builder.data.data(), builder.data.size(), GraphId(100, 0, 0), 0xFF,
+                              true);
+
+  EXPECT_FALSE(view.empty());
+  const auto& first = view.front();
+  EXPECT_EQ(first.from_graphid(), GraphId(1, 0, 0));
+  EXPECT_TRUE(static_cast<bool>(view));
+}
+
+TEST(ComplexRestrictionView, IteratorIncrement) {
+  RestrictionBuilder builder;
+  builder.add_restriction(GraphId(1, 0, 0), GraphId(100, 0, 0), 0x1);
+  builder.add_restriction(GraphId(2, 0, 0), GraphId(100, 0, 0), 0x2);
+  builder.add_restriction(GraphId(3, 0, 0), GraphId(100, 0, 0), 0x4);
+
+  ComplexRestrictionView view(builder.data.data(), builder.data.size(), GraphId(100, 0, 0), 0xFF,
+                              true);
+
+  auto it = view.begin();
+  ASSERT_NE(it, view.end());
+  EXPECT_EQ((*it).from_graphid(), GraphId(1, 0, 0));
+
+  ++it;
+  ASSERT_NE(it, view.end());
+  EXPECT_EQ((*it).from_graphid(), GraphId(2, 0, 0));
+
+  ++it;
+  ASSERT_NE(it, view.end());
+  EXPECT_EQ((*it).from_graphid(), GraphId(3, 0, 0));
+
+  ++it;
+  EXPECT_EQ(it, view.end());
+}
+
+TEST(ComplexRestrictionView, ModeFiltering) {
+  RestrictionBuilder builder;
+  builder.add_restriction(GraphId(1, 0, 0), GraphId(100, 0, 0), 0x1);  // mode 1
+  builder.add_restriction(GraphId(2, 0, 0), GraphId(100, 0, 0), 0x2);  // mode 2
+  builder.add_restriction(GraphId(3, 0, 0), GraphId(100, 0, 0), 0x4);  // mode 4
+  builder.add_restriction(GraphId(4, 0, 0), GraphId(100, 0, 0), 0x8);  // mode 8
+  builder.add_restriction(GraphId(5, 0, 0), GraphId(100, 0, 0), 0x1F); // modes 1,2,4,8,16
+
+  // Query for mode 0x1 (should match restrictions with modes 0x1 and 0x1F)
+  ComplexRestrictionView view1(builder.data.data(), builder.data.size(), GraphId(100, 0, 0), 0x1,
+                               true);
+  int count1 = 0;
+  for (const auto& cr : view1) {
+    (void)cr;
+    count1++;
+  }
+  EXPECT_EQ(count1, 2);
+
+  // Query for mode 0x2 (should match restrictions with modes 0x2 and 0x1F)
+  ComplexRestrictionView view2(builder.data.data(), builder.data.size(), GraphId(100, 0, 0), 0x2,
+                               true);
+  int count2 = 0;
+  for (const auto& cr : view2) {
+    (void)cr;
+    count2++;
+  }
+  EXPECT_EQ(count2, 2);
+
+  // Query for mode 0x3 (should match restrictions with modes 0x1, 0x2, and 0x1F)
+  ComplexRestrictionView view3(builder.data.data(), builder.data.size(), GraphId(100, 0, 0), 0x3,
+                               true);
+  int count3 = 0;
+  for (const auto& cr : view3) {
+    (void)cr;
+    count3++;
+  }
+  EXPECT_EQ(count3, 3);
 }
 
 } // namespace

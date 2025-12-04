@@ -1353,8 +1353,10 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Update access restrictions (update weight units)
         if (directededge.access_restriction()) {
-          auto restrictions =
-              tilebuilder->GetAccessRestrictions(nodeinfo.edge_index() + j, kAllAccess);
+          auto restrictions_span = tilebuilder->GetAccessRestrictions(nodeinfo.edge_index() + j);
+
+          std::vector<AccessRestriction> restrictions{restrictions_span.begin(),
+                                                      restrictions_span.end()};
 
           // Convert any US weight values from short ton (U.S. customary)
           // to metric and add to the tile's access restriction list

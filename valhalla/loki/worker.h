@@ -4,6 +4,7 @@
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/exceptions.h>
+#include <valhalla/loki/search.h>
 #include <valhalla/meili/candidate_search.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
@@ -70,6 +71,7 @@ protected:
   sif::CostFactory factory;
   sif::cost_ptr_t costing;
   std::shared_ptr<baldr::GraphReader> reader;
+  Search search_;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;
   std::unordered_set<Options::Action> actions;
   std::string action_str;

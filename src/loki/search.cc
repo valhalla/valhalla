@@ -124,7 +124,10 @@ struct candidate_t {
 
   GraphId edge_id;
   const DirectedEdge* edge{};
-  std::shared_ptr<const EdgeInfo> edge_info;
+
+  // not actually optional, EdgeInfo has no default constructor, but we need to be able to initialize
+  // it
+  std::optional<EdgeInfo> edge_info;
 
   graph_tile_ptr tile;
 
@@ -266,25 +269,15 @@ struct bin_handler_t {
   // TODO: dont use pointers as keys, its safe for now but fancy caching one day could be bad
   std::unordered_map<const DirectedEdge*, directed_reach> directed_reaches;
 
-  bin_handler_t(const std::vector<vb::Location>& locations,
-                vb::GraphReader& reader,
-                const cost_ptr_t& costing)
-      : reader(reader), costing(costing) {
-    // get the unique set of input locations and the max reachability of them all
-    std::unordered_set<vb::Location> uniq_locations(locations.begin(), locations.end());
-    pps.reserve(uniq_locations.size());
+  bin_handler_t(vb::GraphReader& reader) : reader(reader), max_reach_limit(0) {
+  }
+
+  void clear() {
+    pps.clear();
     max_reach_limit = 0;
-    for (const auto& loc : uniq_locations) {
-      pps.emplace_back(loc, reader);
-      max_reach_limit = std::max(max_reach_limit, loc.min_outbound_reach_);
-      max_reach_limit = std::max(max_reach_limit, loc.min_inbound_reach_);
-    }
-    // very annoying but it saves a lot of time to preallocate this instead of doing it in the loop
-    // in handle_bins
-    bin_candidates.resize(pps.size());
-    // TODO: make space for reach check in a more empirical way
-    auto reservation = std::max(max_reach_limit, static_cast<decltype(max_reach_limit)>(1));
-    directed_reaches.reserve(reservation * 1024);
+    bin_candidates.clear();
+    correlated_edges.clear();
+    directed_reaches.clear();
   }
 
   void correlate_node(const vb::Location& location,
@@ -574,8 +567,8 @@ struct bin_handler_t {
       // a trivial half plane test as maybe a single dot product and comparison?
 
       // get some shape of the edge
-      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
-      auto shape = edge_info->lazy_shape();
+      auto edge_info = tile->edgeinfo(edge);
+      auto shape = edge_info.lazy_shape();
       PointLL v;
       if (!shape.empty()) {
         v = shape.pop();
@@ -639,7 +632,7 @@ struct bin_handler_t {
         if (batch->empty()) {
           c_itr->edge = edge;
           c_itr->edge_id = edge_id;
-          c_itr->edge_info = edge_info;
+          c_itr->edge_info = std::move(edge_info);
           c_itr->tile = tile;
           batch->emplace_back(std::move(*c_itr));
           continue;
@@ -661,7 +654,7 @@ struct bin_handler_t {
         if (in_radius || better) {
           c_itr->edge = edge;
           c_itr->edge_id = edge_id;
-          c_itr->edge_info = edge_info;
+          c_itr->edge_info = std::move(edge_info);
           c_itr->tile = tile;
           // the last one wasnt in the radius so replace it with this one because its better or is
           // in the radius
@@ -710,15 +703,39 @@ struct bin_handler_t {
 
   // we keep the points sorted at each round such that unfinished ones
   // are at the front of the sorted list
-  void search() {
+  std::unordered_map<vb::Location, PathLocation> search(const std::vector<vb::Location>& locations,
+                                                        const cost_ptr_t& costing) {
+    clear();
+
+    this->costing = costing;
+
+    // get the unique set of input locations and the max reachability of them all
+    std::unordered_set<vb::Location> uniq_locations(locations.begin(), locations.end());
+    pps.reserve(uniq_locations.size());
+    max_reach_limit = 0;
+    for (const auto& loc : uniq_locations) {
+      pps.emplace_back(loc, reader);
+      max_reach_limit = std::max(max_reach_limit, loc.min_outbound_reach_);
+      max_reach_limit = std::max(max_reach_limit, loc.min_inbound_reach_);
+    }
+    // very annoying but it saves a lot of time to preallocate this instead of doing it in the loop
+    // in handle_bins
+    bin_candidates.resize(pps.size());
+    // TODO: make space for reach check in a more empirical way
+    auto reservation = std::max(max_reach_limit, static_cast<decltype(max_reach_limit)>(1));
+    directed_reaches.reserve(reservation * 1024);
+
     std::sort(pps.begin(), pps.end());
     while (pps.front().has_bin()) {
       auto range = find_best_range(pps);
       handle_bin(range.first, range.second);
       std::sort(pps.begin(), pps.end());
     }
+
+    return finalize();
   }
 
+private:
   // create the PathLocation corresponding to the best projection of the given candidate
   std::unordered_map<vb::Location, PathLocation> finalize() {
     // at this point we have candidates for each location so now we
@@ -826,8 +843,19 @@ struct bin_handler_t {
 namespace valhalla {
 namespace loki {
 
+struct Search::bin_handler_t : public ::bin_handler_t {
+  bin_handler_t(vb::GraphReader& reader) : ::bin_handler_t(reader) {
+  }
+};
+
+Search::Search(GraphReader& reader)
+    : reader_(reader), handler_(std::make_unique<bin_handler_t>(reader_)) {
+}
+
+Search::~Search() = default;
+
 std::unordered_map<vb::Location, PathLocation>
-Search(const std::vector<vb::Location>& locations, GraphReader& reader, const cost_ptr_t& costing) {
+Search::search(const std::vector<vb::Location>& locations, const cost_ptr_t& costing) {
   // we cannot continue without costing
   if (!costing)
     throw std::runtime_error("No costing was provided for edge candidate search");
@@ -836,12 +864,7 @@ Search(const std::vector<vb::Location>& locations, GraphReader& reader, const co
   if (locations.empty())
     return std::unordered_map<vb::Location, PathLocation>{};
 
-  // setup the unique list of locations
-  bin_handler_t handler(locations, reader, costing);
-  // search over the bins doing multiple locations per bin
-  handler.search();
-  // turn each locations candidate set into path locations
-  return handler.finalize();
+  return handler_->search(locations, costing);
 }
 
 } // namespace loki

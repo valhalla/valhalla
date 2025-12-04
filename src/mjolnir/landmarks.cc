@@ -5,6 +5,7 @@
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/sqlite3.h"
 #include "sif/nocost.h"
@@ -195,11 +196,11 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   auto populate_landmarks = [](void* data, int /*argc*/, char** argv, char** /*col_names*/) {
     std::vector<Landmark>* landmarks = static_cast<std::vector<Landmark>*>(data);
 
-    int64_t landmark_id = static_cast<int64_t>(std::stoi(argv[0]));
+    int64_t landmark_id = static_cast<int64_t>(valhalla::midgard::to_int(argv[0]));
     const char* landmark_name = argv[1];
-    int landmark_type = std::stoi(argv[2]);
-    double lng = std::stod(argv[3]);
-    double lat = std::stod(argv[4]);
+    int landmark_type = valhalla::midgard::to_int(argv[2]);
+    double lng = valhalla::midgard::to_float<double>(argv[3]);
+    double lat = valhalla::midgard::to_float<double>(argv[4]);
 
     landmarks->emplace_back(
         Landmark(landmark_id, landmark_name, static_cast<LandmarkType>(landmark_type), lng, lat));
@@ -308,6 +309,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
   LandmarkDatabase db(db_name, true);
   GraphReader reader(pt);
+  loki::Search search(reader);
   // create the sequence file
   std::string file_name = "landmark_dump_" + std::to_string(thread_number);
   midgard::sequence<std::pair<GraphId, uint64_t>> seq_file(file_name, true);
@@ -331,7 +333,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
         // call loki::Search to get nearby edges to each landmark
         std::unordered_map<valhalla::baldr::Location, PathLocation> result =
-            loki::Search({landmark_location}, reader, sif::CreateNoCost({}));
+            search.search({landmark_location}, sif::CreateNoCost({}));
 
         // we only have one landmark as input so the return size should be no more than one
         if (result.size() > 1) {

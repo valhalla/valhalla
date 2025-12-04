@@ -13,6 +13,7 @@
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
@@ -168,6 +169,7 @@ constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 // Default uturn costs
 constexpr float kTCUnfavorablePencilPointUturn = 15.f;
 constexpr float kTCUnfavorableUturn = 600.f;
+constexpr float kTCNameInconsistentUturn = 10.f;
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -596,19 +598,19 @@ public:
     if ((forward && (edge->end_restriction() & access_mask_)) ||
         (!forward && (edge->start_restriction() & access_mask_))) {
       // Get complex restrictions. Return false if no restrictions are found
-      auto restrictions = tile->GetRestrictions(forward, edgeid, access_mask_);
-      if (restrictions.size() == 0) {
+      auto restrictions = tile->GetComplexRestrictions(forward, edgeid, access_mask_);
+      if (restrictions.empty()) {
         return false;
       }
 
       // Iterate through the restrictions
       const EdgeLabel* first_pred = &pred;
       for (const auto& cr : restrictions) {
-        if (cr->type() == baldr::RestrictionType::kNoProbable ||
-            cr->type() == baldr::RestrictionType::kOnlyProbable) {
+        if (cr.type() == baldr::RestrictionType::kNoProbable ||
+            cr.type() == baldr::RestrictionType::kOnlyProbable) {
           // A complex restriction can not have a 0 probability set.  range is 1 to 100
           // restriction_probability_= 0 means ignore probable restrictions
-          if (restriction_probability_ == 0 || restriction_probability_ > cr->probability()) {
+          if (restriction_probability_ == 0 || restriction_probability_ > cr.probability()) {
             continue;
           }
         }
@@ -620,8 +622,8 @@ public:
         // Remember the edge_ids in restriction for later reset
         EdgeIdsInComplexRestriction edge_ids_in_complex_restriction;
 
-        cr->WalkVias([&match, &next_pred, next_predecessor,
-                      &edge_ids_in_complex_restriction](const baldr::GraphId* via) {
+        cr.WalkVias([&match, &next_pred, next_predecessor,
+                     &edge_ids_in_complex_restriction](const baldr::GraphId* via) {
           if (via->value != next_pred->edgeid().value) {
             // Pred diverged from restriction, exit early
             match = false;
@@ -637,18 +639,17 @@ public:
         edge_ids_in_complex_restriction.push_back(next_pred->edgeid());
 
         // Check against the start/end of the complex restriction
-        if (match && ((forward && next_pred->edgeid() == cr->from_graphid()) ||
-                      (!forward && next_pred->edgeid() == cr->to_graphid()))) {
+        if (match && ((forward && next_pred->edgeid() == cr.from_graphid()) ||
+                      (!forward && next_pred->edgeid() == cr.to_graphid()))) {
 
-          if (current_time && cr->has_dt()) {
+          if (current_time && cr.has_dt()) {
             // TODO Possibly a bug here. Shouldn't both kTimedDenied and kTimedAllowed
             //      be handled here? As is done in IsRestricted
-            if (baldr::DateTime::is_conditional_active(cr->dt_type(), cr->begin_hrs(),
-                                                       cr->begin_mins(), cr->end_hrs(),
-                                                       cr->end_mins(), cr->dow(), cr->begin_week(),
-                                                       cr->begin_month(), cr->begin_day_dow(),
-                                                       cr->end_week(), cr->end_month(),
-                                                       cr->end_day_dow(), current_time,
+            if (baldr::DateTime::is_conditional_active(cr.dt_type(), cr.begin_hrs(), cr.begin_mins(),
+                                                       cr.end_hrs(), cr.end_mins(), cr.dow(),
+                                                       cr.begin_week(), cr.begin_month(),
+                                                       cr.begin_day_dow(), cr.end_week(),
+                                                       cr.end_month(), cr.end_day_dow(), current_time,
                                                        baldr::DateTime::get_tz_db().from_index(
                                                            tz_index))) {
               // We triggered a complex restriction, so make sure we reset edge-status' for
@@ -660,7 +661,7 @@ public:
           }
           // TODO: If a user runs a non-time dependent route, we need to provide Maneuver Notes for
           // the timed restriction.
-          else if (!current_time && cr->has_dt()) {
+          else if (!current_time && cr.has_dt()) {
             return false;
           } else {
             // We triggered a complex restriction, so make sure we reset edge-status' for
@@ -709,11 +710,9 @@ public:
         allow_destination_only_)
       return 0;
 
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), access_mask_);
+    auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mask_);
 
-    for (size_t i = 0; i < restrictions.size(); ++i) {
-      const auto& restr = restrictions[i];
+    for (const auto& restr : restrictions) {
       if (restr.except_destination()) {
         destonly_access_restr_mask |=
             baldr::kAccessRestrictionMasks[static_cast<size_t>(restr.type())];
@@ -746,14 +745,12 @@ public:
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
 
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), access_mode);
+    auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
     bool time_allowed = false;
 
     uint8_t tmp_mask = 0;
-    for (size_t i = 0; i < restrictions.size(); ++i) {
-      const auto& restriction = restrictions[i];
+    for (const auto& [i, restriction] : midgard::enumerate(restrictions)) {
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
       if (!ignore_non_vehicular_restrictions_ &&
@@ -867,21 +864,25 @@ public:
 
     if (node->drive_on_right()) {
       // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
-      if (has_reverse ||
-          (penalize_internal_uturns && internal_turn == InternalTurn::kLeftTurn && has_left))
+      if (has_reverse && !edge->name_consistency(idx)) {
+        seconds += kTCNameInconsistentUturn;
+      } else if (has_reverse ||
+                 (penalize_internal_uturns && internal_turn == InternalTurn::kLeftTurn && has_left)) {
         seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
-               !edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
+        // Did we make a pencil point uturn?
+      } else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+                 !edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
       // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
-      if (has_reverse ||
-          (penalize_internal_uturns && internal_turn == InternalTurn::kRightTurn && has_right))
+      if (has_reverse && !edge->name_consistency(idx)) {
+        seconds += kTCNameInconsistentUturn;
+      } else if (has_reverse || (penalize_internal_uturns &&
+                                 internal_turn == InternalTurn::kRightTurn && has_right)) {
         seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
-               edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
+        // Did we make a pencil point uturn?
+      } else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+                 edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     }
   }
@@ -1143,8 +1144,9 @@ public:
       average_edge_speed =
           tile->GetSpeed(edge, flow_mask_ & (~baldr::kCurrentFlowMask), time_info.second_of_week);
     }
-    float speed_penalty =
-        (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
+    float speed_penalty = (average_edge_speed > top_speed_)
+                              ? (average_edge_speed - top_speed_) * speed_penalty_factor_
+                              : 0.0f;
 
     return speed_penalty;
   }
@@ -1159,6 +1161,25 @@ public:
 
   bool UseHierarchyLimits() {
     return use_hierarchy_limits;
+  }
+
+  /**
+   * Returns a rough time estimation in seconds given a distance in meters,
+   * based on top speed (default) or fixed speed (if set to a valid value).
+   *
+   * @param distance_meters the distance between two points for which to estimate
+   * the duration
+   * @param factor the factor to apply to the the duration estimated using either fixed or top speed
+   *
+   * @returns a time estimate in seconds
+   */
+  uint32_t BeeLineTimeEstimate(double distance_meters, double factor) {
+    // if fixed speed is present, the factor should be lowered compared to top speed,
+    // because the real average speed will be equal to fixed speed, but if top speed is used,
+    // it will be likely lower than that.
+    return fixed_speed_ == baldr::kDisableFixedSpeed
+               ? (distance_meters / (top_speed_ * midgard::kKPHtoMetersPerSec)) * factor
+               : distance_meters / (fixed_speed_ * midgard::kKPHtoMetersPerSec) * factor * 0.85;
   }
 
 protected:
@@ -1259,6 +1280,7 @@ protected:
   float service_factor_;       // Avoid service roads factor.
   float closure_factor_;       // Avoid closed edges factor.
   float unlit_factor_;         // Avoid unlit edges factor.
+  float speed_penalty_factor_; // Avoid faster edges than top speed factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -1277,6 +1299,12 @@ protected:
   float living_street_penalty_;    // Penalty (seconds) to use a living street
   float track_penalty_;            // Penalty (seconds) to use tracks
   float service_penalty_;          // Penalty (seconds) to use a generic service road
+
+  // Vehicle dimensions
+  float height_;
+  float width_;
+  float length_;
+  float weight_;
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
@@ -1411,6 +1439,8 @@ protected:
     service_factor_ = costing_options.service_factor();
     // Closure factor to use for closed edges
     closure_factor_ = costing_options.closure_factor();
+    // Speed penalty factor to use for edges that are faster than the top speed
+    speed_penalty_factor_ = costing_options.speed_penalty_factor();
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
@@ -1526,14 +1556,12 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> service_penalty_;
   ranged_default_t<float> service_factor_;
 
-  ranged_default_t<float> height_;
-  ranged_default_t<float> width_;
-
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;
   ranged_default_t<float> use_lit_;
 
   ranged_default_t<float> closure_factor_;
+  ranged_default_t<float> speed_penalty_factor_;
 
   bool exclude_unpaved_;
   bool exclude_bridges_;
@@ -1548,6 +1576,11 @@ struct BaseCostingOptionsConfig {
   bool include_hot_ = false;
   bool include_hov2_ = false;
   bool include_hov3_ = false;
+
+  ranged_default_t<float> height_;
+  ranged_default_t<float> width_;
+  ranged_default_t<float> length_;
+  ranged_default_t<float> weight_;
 };
 
 /**
