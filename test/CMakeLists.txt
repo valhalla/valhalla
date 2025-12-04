@@ -46,7 +46,8 @@ target_include_directories(valhalla_test SYSTEM PUBLIC
   ${unordered_dense_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   ${libosmium_include_dirs}
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
+  ${vtzero_include_dirs})
 target_link_libraries(valhalla_test
   valhalla gtest gtest_main gmock
   $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
@@ -341,6 +342,7 @@ endif()
 
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
+  add_dependencies(run-actor utrecht_tiles)
   add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-hierarchylimits utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)

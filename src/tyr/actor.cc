@@ -1,10 +1,14 @@
 #include "tyr/actor.h"
 #include "loki/worker.h"
+#include "midgard/logging.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+
+#include <sstream>
 
 using namespace valhalla;
 using namespace valhalla::loki;
@@ -82,6 +86,8 @@ std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
       return centroid("", interrupt, &api);
     case Options::status:
       return status("", interrupt, &api);
+    case Options::tile:
+      return tile("", interrupt, &api);
     default:
       throw valhalla_exception_t{106};
   }
@@ -365,6 +371,25 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
   // get the json
   auto json = tyr::serializeStatus(*api);
   return json;
+}
+
+std::string
+actor_t::tile(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
+  // set the interrupts
+  pimpl->set_interrupts(interrupt);
+  // if the caller doesn't want a copy we'll use this dummy
+  Api dummy;
+  if (!api) {
+    api = &dummy;
+  }
+  // parse the request
+  ParseApi(request_str, Options::tile, *api);
+  auto bytes = pimpl->loki_worker.render_tile(*api);
+  return bytes;
 }
 
 } // namespace tyr

@@ -68,6 +68,28 @@ test('actor', async(t) => {
     assert.equal(iso.features.length, 6);
   });
 
+  await t.test('tile', async () => {
+    // Utrecht center tile coordinates (52.08778°N, 5.13142°E at zoom 14)
+    const query = {
+      'tile': {
+        z: 14,
+        x: 8425,
+        y: 5405
+      }
+    };
+
+    const buf = await actor.tile(JSON.stringify(query));
+    
+    // Verify it's a Buffer
+    assert.ok(Buffer.isBuffer(buf), 'tile() should return a Buffer');
+    
+    // Verify reasonable size (at least 100 bytes, typically KB range for MVT)
+    assert.ok(
+      buf.length >= 100, 
+      `Tile buffer should be at least 100 bytes, got ${buf.length}`
+    );
+  });
+
   // we utilize NodeJS's thread pool to process requests in parallel, this test verifies there are no race conditions
   await t.test('100 parallel identical route requests', async () => {
     const query = {
