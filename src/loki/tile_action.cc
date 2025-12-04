@@ -651,7 +651,8 @@ private:
 };
 
 double lon_to_merc_x(const double lon) {
-  return kEarthRadiusMeters * lon * kPiD / 180.0;
+  constexpr double f = kEarthRadiusMeters * kPiD / 180.0;
+  return lon * f;
 }
 
 double lat_to_merc_y(const double lat) {
@@ -762,7 +763,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   unclipped_line.reserve(20);
   multi_linestring_t clipped_lines;
   baldr::graph_tile_ptr edge_tile;
-  // TODO: sort edge_ids
+  // TODO(nils): sort edge_ids
   for (const auto& edge_id : edge_ids) {
     const auto* edge = reader->directededge(edge_id, edge_tile);
 

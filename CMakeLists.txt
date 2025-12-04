@@ -129,7 +129,7 @@ set(rapidjson_include_dir ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include)
 set(unordered_dense_include_dir ${VALHALLA_SOURCE_DIR}/third_party/unordered_dense/include)
 set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
 set(libosmium_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
-set(vtzero_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/vtzero/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
+set(vtzero_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/vtzero/include ${VALHALLA_SOURCE_DIR}/third_party/vtzero/include)
 set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
 if (PREFER_EXTERNAL_DEPS)
   # date
