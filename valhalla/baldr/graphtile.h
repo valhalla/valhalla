@@ -713,12 +713,42 @@ public:
    * Convenience method to get the access restrictions for an edge given the
    * edge Id.
    * @param   edgeid  Directed edge Id.
-   * @param   access  Access.  Used to obtain the restrictions for the access
-   *                   that we are interested in (see graphconstants.h)
    * @return  Returns a list (vector) of AccessRestrictions.
    */
-  std::vector<AccessRestriction> GetAccessRestrictions(const uint32_t edgeid,
-                                                       const uint32_t access) const;
+  std::span<const AccessRestriction> GetAccessRestrictions(const uint32_t edgeid) const;
+
+  /**
+   * Convenience method to get the access restrictions for an edge given the
+   * edge Id.
+   * @param   edgeid  Directed edge Id.
+   * @param   access  Access.  Used to obtain the restrictions for the access
+   *                   that we are interested in (see graphconstants.h)
+   * @return  Returns a lazy filtered view of AccessRestrictions.
+   */
+  auto GetAccessRestrictions(const uint32_t edgeid, const uint32_t access) const {
+    auto all_restrictions = GetAccessRestrictions(edgeid);
+    return all_restrictions |
+           std::views::filter([access](const auto& r) { return r.modes() & access; });
+  }
+
+  /**
+   * Get a specific access restriction by index from the filtered results.
+   * @param   edgeid  Directed edge Id.
+   * @param   access  Access mode filter.
+   * @param   index   Index of the restriction in the filtered results.
+   * @return  Pointer to the AccessRestriction if found, nullptr otherwise.
+   */
+  const AccessRestriction* GetAccessRestrictionAtIndex(const uint32_t edgeid,
+                                                       const uint32_t access,
+                                                       const size_t index) const {
+    auto restrictions = GetAccessRestrictions(edgeid, access);
+    auto it = std::ranges::begin(restrictions);
+    auto end = std::ranges::end(restrictions);
+
+    for (size_t i = 0; i < index && it != end; ++i, ++it) {}
+
+    return (it != end) ? &(*it) : nullptr;
+  }
 
   /**
    * Get an iterable list of GraphIds given a bin in the tile
@@ -785,7 +815,9 @@ public:
     float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
-    if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
+    auto invalid_time = seconds == kInvalidSecondsOfWeek;
+    if (!invalid_time && (flow_mask & kCurrentFlowMask) && traffic_tile() &&
+        live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
@@ -821,7 +853,6 @@ public:
 
     // use predicted speed if a time was passed in, the predicted speed layer was requested, and if
     // the edge has predicted speed
-    auto invalid_time = seconds == kInvalidSecondsOfWeek;
     if (!invalid_time && (flow_mask & kPredictedFlowMask) && de->has_predicted_speed()) {
       seconds %= midgard::kSecondsPerWeek;
       uint32_t idx = de - directededges_;

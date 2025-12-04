@@ -1619,7 +1619,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   unclipped_line.reserve(20);
   multi_linestring_t clipped_lines;
   baldr::graph_tile_ptr edge_tile;
-  // TODO: sort edge_ids
+  // TODO(nils): sort edge_ids
   for (const auto& edge_id : edge_ids) {
     const auto* edge = reader->directededge(edge_id, edge_tile);
 
@@ -1643,10 +1643,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
 
     // lambda to add VT line & nodes features
     auto process_single_line = [&](const linestring_t& line) {
-      if (line.size() < 2) {
-        return;
-      }
-
       // convert to vtzero points, removing consecutive duplicates
       std::vector<vtzero::point> tile_coords;
       tile_coords.reserve(line.size());
