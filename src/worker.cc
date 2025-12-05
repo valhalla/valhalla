@@ -32,6 +32,8 @@ static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexc
       return worker::PBF_MIME;
     case Options::geotiff:
       return worker::TIFF_MIME;
+    case Options::mvt:
+      return worker::MVT_MIME;
     default:
       return worker::JSON_MIME;
   }
@@ -60,6 +62,8 @@ bool is_format_supported(Options::Action action, Options::Format format) {
 #else
       0,
 #endif
+      // mvt
+      (1 << Options::tile),
   };
   static_assert(std::size(kFormatActionSupport) == Options::Format_ARRAYSIZE,
                 "Please update format_action array to match Options::Action_ARRAYSIZE");
@@ -534,6 +538,38 @@ void parse_recostings(const rapidjson::Document& doc,
   }
 }
 
+// parse x/y/z from the request and validate
+void parse_xyz(const rapidjson::Document& doc, valhalla::Options& options) {
+  const auto vt_z =
+      rapidjson::get<uint32_t>(doc, "/tile/z",
+                               options.tile_xyz().has_z_case() ? options.tile_xyz().z() : UINT32_MAX);
+  bool throws = vt_z == UINT32_MAX || vt_z > 30;
+  if (!throws) {
+    options.mutable_tile_xyz()->set_z(vt_z);
+    const uint32_t max_coord = (1u << vt_z);
+
+    const auto vt_x =
+        rapidjson::get<uint32_t>(doc, "/tile/x",
+                                 options.tile_xyz().has_x_case() ? options.tile_xyz().x()
+                                                                 : UINT32_MAX);
+    const auto vt_y =
+        rapidjson::get<uint32_t>(doc, "/tile/y",
+                                 options.tile_xyz().has_y_case() ? options.tile_xyz().y()
+                                                                 : UINT32_MAX);
+    throws = vt_x == UINT32_MAX || vt_y == UINT32_MAX;
+    if (!throws) {
+      if (vt_x >= max_coord || vt_y >= max_coord) {
+        throws = true;
+      }
+      options.mutable_tile_xyz()->set_x(vt_x);
+      options.mutable_tile_xyz()->set_y(vt_y);
+    }
+  }
+  if (throws) {
+    throw valhalla_exception_t{174};
+  }
+}
+
 void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
   auto json_obj = json_feat.GetObject();
   for (const auto& coords_j : json_obj["geometry"].GetObject()["coordinates"].GetArray()) {
@@ -543,6 +579,7 @@ void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatu
   }
   line_feat->set_cost_factor(json_obj["properties"].GetObject()["factor"].GetFloat());
 }
+
 void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
   auto json_obj = json_feat.GetObject();
   auto shape = std::string(json_obj["shape"].GetString());
@@ -585,6 +622,16 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto& options = *api.mutable_options();
   if (Options::Action_IsValid(action))
     options.set_action(action);
+
+  // first the /tile parameters, so we can early exit
+  if (options.action() == Options::tile) {
+    parse_xyz(doc, options);
+    options.mutable_tile_options()->set_return_shortcuts(
+        rapidjson::get<bool>(doc, "/tile_options/return_shortcuts",
+                             options.tile_options().return_shortcuts()));
+    options.set_format(Options::mvt); // set explicitly for MIME type
+    return;
+  }
 
   // TODO: stop doing this after a sufficient amount of time has passed
   // move anything nested in deprecated directions_options up to the top level
@@ -652,6 +699,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   DirectionsType directions_type;
   if (dir_type && DirectionsType_Enum_Parse(*dir_type, &directions_type)) {
     options.set_directions_type(directions_type);
+  }
+
+  auto reverse_tt_strategy = rapidjson::get_optional<std::string>(doc, "/reverse_time_tracking");
+  Options::ReverseTimeTracking reverse_tt;
+  if (reverse_tt_strategy &&
+      Options_ReverseTimeTracking_Enum_Parse(*reverse_tt_strategy, &reverse_tt)) {
+    options.set_reverse_time_tracking(reverse_tt);
   }
 
   // costing defaults to none which is only valid for locate

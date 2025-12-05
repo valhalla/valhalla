@@ -111,7 +111,7 @@ public:
                      InstanceMethod("transitAvailable", &Actor::TransitAvailable),
                      InstanceMethod("expansion", &Actor::Expansion),
                      InstanceMethod("centroid", &Actor::Centroid),
-                     InstanceMethod("status", &Actor::Status)});
+                     InstanceMethod("status", &Actor::Status), InstanceMethod("tile", &Actor::Tile)});
 
     // we don't need to delete it, it will be handled by Node
     Napi::FunctionReference* constructor = new Napi::FunctionReference();
@@ -245,6 +245,63 @@ private:
     return CreateAsyncRequest(
         info, [](vt::actor_t* actor, const std::string& request) { return actor->status(request); },
         "Status");
+  }
+
+  Napi::Value Tile(const Napi::CallbackInfo& info) {
+    // Tile returns binary MVT data, so we need special handling
+    Napi::Env env = info.Env();
+
+    if (info.Length() < 1 || !info[0].IsString()) {
+      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    std::string request = info[0].As<Napi::String>().Utf8Value();
+
+    // Create a custom async worker that returns a Buffer instead of String
+    class TileAsyncWorker : public Napi::AsyncWorker {
+    public:
+      TileAsyncWorker(const Napi::Env& env,
+                      const boost::property_tree::ptree* config,
+                      const std::string& request)
+          : Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), config_(config),
+            request_(request) {
+      }
+
+      Napi::Promise GetPromise() {
+        return deferred_.Promise();
+      }
+
+    protected:
+      void Execute() override {
+        try {
+          auto* actor = GetThreadLocalActor(config_);
+          result_ = actor->tile(request_);
+        } catch (const std::exception& e) {
+          SetError(std::string("Tile error: ") + e.what());
+        } catch (...) { SetError("Tile error: unknown exception"); }
+      }
+
+      void OnOK() override {
+        // Return as Buffer to preserve binary data
+        auto buffer = Napi::Buffer<char>::Copy(Env(), result_.data(), result_.size());
+        deferred_.Resolve(buffer);
+      }
+
+      void OnError(const Napi::Error& e) override {
+        deferred_.Reject(e.Value());
+      }
+
+    private:
+      Napi::Promise::Deferred deferred_;
+      const boost::property_tree::ptree* config_;
+      std::string request_;
+      std::string result_;
+    };
+
+    auto* worker = new TileAsyncWorker(env, &config_, request);
+    worker->Queue();
+    return worker->GetPromise();
   }
 };
 

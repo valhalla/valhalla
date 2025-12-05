@@ -105,7 +105,15 @@ class Actor {
             return this.actor.status(query);
         }
         return JSON.parse(await this.actor.status(JSON.stringify(query)));
-    } 
+    }
+    
+    async tile(query) {
+        if (typeof query === 'string') {
+            return this.actor.tile(query);
+        }
+        // tile returns raw binary data (MVT), not JSON
+        return this.actor.tile(JSON.stringify(query));
+    }
 }
 
 async function getConfig(options = {}) {

@@ -1144,8 +1144,9 @@ public:
       average_edge_speed =
           tile->GetSpeed(edge, flow_mask_ & (~baldr::kCurrentFlowMask), time_info.second_of_week);
     }
-    float speed_penalty =
-        (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
+    float speed_penalty = (average_edge_speed > top_speed_)
+                              ? (average_edge_speed - top_speed_) * speed_penalty_factor_
+                              : 0.0f;
 
     return speed_penalty;
   }
@@ -1160,6 +1161,25 @@ public:
 
   bool UseHierarchyLimits() {
     return use_hierarchy_limits;
+  }
+
+  /**
+   * Returns a rough time estimation in seconds given a distance in meters,
+   * based on top speed (default) or fixed speed (if set to a valid value).
+   *
+   * @param distance_meters the distance between two points for which to estimate
+   * the duration
+   * @param factor the factor to apply to the the duration estimated using either fixed or top speed
+   *
+   * @returns a time estimate in seconds
+   */
+  uint32_t BeeLineTimeEstimate(double distance_meters, double factor) {
+    // if fixed speed is present, the factor should be lowered compared to top speed,
+    // because the real average speed will be equal to fixed speed, but if top speed is used,
+    // it will be likely lower than that.
+    return fixed_speed_ == baldr::kDisableFixedSpeed
+               ? (distance_meters / (top_speed_ * midgard::kKPHtoMetersPerSec)) * factor
+               : distance_meters / (fixed_speed_ * midgard::kKPHtoMetersPerSec) * factor * 0.85;
   }
 
 protected:
@@ -1260,6 +1280,7 @@ protected:
   float service_factor_;       // Avoid service roads factor.
   float closure_factor_;       // Avoid closed edges factor.
   float unlit_factor_;         // Avoid unlit edges factor.
+  float speed_penalty_factor_; // Avoid faster edges than top speed factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -1278,6 +1299,12 @@ protected:
   float living_street_penalty_;    // Penalty (seconds) to use a living street
   float track_penalty_;            // Penalty (seconds) to use tracks
   float service_penalty_;          // Penalty (seconds) to use a generic service road
+
+  // Vehicle dimensions
+  float height_;
+  float width_;
+  float length_;
+  float weight_;
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
@@ -1412,6 +1439,8 @@ protected:
     service_factor_ = costing_options.service_factor();
     // Closure factor to use for closed edges
     closure_factor_ = costing_options.closure_factor();
+    // Speed penalty factor to use for edges that are faster than the top speed
+    speed_penalty_factor_ = costing_options.speed_penalty_factor();
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
@@ -1527,14 +1556,12 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> service_penalty_;
   ranged_default_t<float> service_factor_;
 
-  ranged_default_t<float> height_;
-  ranged_default_t<float> width_;
-
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;
   ranged_default_t<float> use_lit_;
 
   ranged_default_t<float> closure_factor_;
+  ranged_default_t<float> speed_penalty_factor_;
 
   bool exclude_unpaved_;
   bool exclude_bridges_;
@@ -1549,6 +1576,11 @@ struct BaseCostingOptionsConfig {
   bool include_hot_ = false;
   bool include_hov2_ = false;
   bool include_hov3_ = false;
+
+  ranged_default_t<float> height_;
+  ranged_default_t<float> width_;
+  ranged_default_t<float> length_;
+  ranged_default_t<float> weight_;
 };
 
 /**

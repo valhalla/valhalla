@@ -236,9 +236,9 @@ if(BUILD_SHARED_LIBS)
     COMPONENT development)
 
   if(UNIX)
-    add_custom_target(${LIBVALHALLA_SO_LINK} ALL
+    add_custom_target(valhalla-symlink ALL
       COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
-    set_target_properties(${LIBVALHALLA_SO_LINK} PROPERTIES FOLDER "Library")
+    set_target_properties(valhalla-symlink PROPERTIES FOLDER "Library")
   endif()
 endif()
 

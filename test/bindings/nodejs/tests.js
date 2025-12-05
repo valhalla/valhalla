@@ -46,55 +46,77 @@ test('actor', async(t) => {
     assert.ok(hasCyrillic(route.trip.legs[0].maneuvers[0].instruction));
   });
 
-  // await t.test('isochrone', async () => {
-  //   const query = {
-  //     locations: [
-  //       { lat: 52.08813, lon: 5.03231 }
-  //     ],
-  //     costing: "pedestrian",
-  //     contours: [
-  //       { time: 1 },
-  //       { time: 5 },
-  //       { distance: 1 },
-  //       { distance: 5 }
-  //     ],
-  //     show_locations: true
-  //   };
+  await t.test('isochrone', async () => {
+    const query = {
+      locations: [
+        { lat: 52.08813, lon: 5.03231 }
+      ],
+      costing: "pedestrian",
+      contours: [
+        { time: 1 },
+        { time: 5 },
+        { distance: 1 },
+        { distance: 5 }
+      ],
+      show_locations: true
+    };
 
-  //   const result = await actor.isochrone(JSON.stringify(query));
-  //   const iso = JSON.parse(result);
+    const result = await actor.isochrone(JSON.stringify(query));
+    const iso = JSON.parse(result);
 
-  //   // 4 isochrones and 2 point layers
-  //   assert.equal(iso.features.length, 6);
-  // });
+    // 4 isochrones and 2 point layers
+    assert.equal(iso.features.length, 6);
+  });
 
-  // // we utilize NodeJS's thread pool to process requests in parallel, this test verifies there are no race conditions
-  // await t.test('100 parallel identical route requests', async () => {
-  //   const query = {
-  //     locations: [
-  //       { lat: 52.08813, lon: 5.03231 },
-  //       { lat: 52.09987, lon: 5.14913 }
-  //     ],
-  //     costing: "bicycle",
-  //     directions_options: { language: "en-US" }
-  //   };
+  await t.test('tile', async () => {
+    // Utrecht center tile coordinates (52.08778°N, 5.13142°E at zoom 14)
+    const query = {
+      'tile': {
+        z: 14,
+        x: 8425,
+        y: 5405
+      }
+    };
 
-  //   const queryString = JSON.stringify(query);
+    const buf = await actor.tile(JSON.stringify(query));
     
-  //   // Send 100 identical requests in parallel
-  //   const promises = Array.from({ length: 100 }, () => actor.route(queryString));
-  //   const results = await Promise.all(promises);
-
-  //   // Parse all results
-  //   const parsedResults = results.map(result => JSON.parse(result));
-
-  //   // Verify all results are the same by comparing with the first result
-  //   const firstResult = parsedResults[0];
+    // Verify it's a Buffer
+    assert.ok(Buffer.isBuffer(buf), 'tile() should return a Buffer');
     
-  //   for (let i = 1; i < parsedResults.length; i++) {
-  //     // Compare the entire result as JSON string for strict equality
-  //     assert.equal(JSON.stringify(parsedResults[i]), JSON.stringify(firstResult),
-  //       `Result ${i} differs from first result`);
-  //   }
-  // });
+    // Verify reasonable size (at least 100 bytes, typically KB range for MVT)
+    assert.ok(
+      buf.length >= 100, 
+      `Tile buffer should be at least 100 bytes, got ${buf.length}`
+    );
+  });
+
+  // we utilize NodeJS's thread pool to process requests in parallel, this test verifies there are no race conditions
+  await t.test('100 parallel identical route requests', async () => {
+    const query = {
+      locations: [
+        { lat: 52.08813, lon: 5.03231 },
+        { lat: 52.09987, lon: 5.14913 }
+      ],
+      costing: "bicycle",
+      directions_options: { language: "en-US" }
+    };
+
+    const queryString = JSON.stringify(query);
+    
+    // Send 100 identical requests in parallel
+    const promises = Array.from({ length: 100 }, () => actor.route(queryString));
+    const results = await Promise.all(promises);
+
+    // Parse all results
+    const parsedResults = results.map(result => JSON.parse(result));
+
+    // Verify all results are the same by comparing with the first result
+    const firstResult = parsedResults[0];
+    
+    for (let i = 1; i < parsedResults.length; i++) {
+      // Compare the entire result as JSON string for strict equality
+      assert.equal(JSON.stringify(parsedResults[i]), JSON.stringify(firstResult),
+        `Result ${i} differs from first result`);
+    }
+  });
 });
