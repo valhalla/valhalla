@@ -30,6 +30,7 @@ TEST(Standalone, avoid_service) {
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CE", "EF"});
 }
 
+namespace {
 void validate_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
@@ -38,6 +39,7 @@ void validate_path(const valhalla::Api& result, const std::vector<std::string>& 
 
 const std::vector<std::string>& costing = {"auto",       "taxi",          "bus",       "truck",
                                            "motorcycle", "motor_scooter", "pedestrian"};
+} // namespace
 
 class ServiceRoadsTest : public ::testing::Test {
 protected:
