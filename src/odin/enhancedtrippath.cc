@@ -26,12 +26,12 @@ constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
 
 #ifdef LOGGING_LEVEL_TRACE
-const std::string& TripLeg_TravelMode_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kDrive"},
-      {1, "kPedestrian"},
-      {2, "kBicycle"},
-      {3, "kTransit"},
+const std::string& TripLeg_TravelMode_Name(valhalla::TravelMode v) {
+  static const std::unordered_map<valhalla::TravelMode, std::string> values{
+      {valhalla::TravelMode::kDrive, "kDrive"},
+      {valhalla::TravelMode::kPedestrian, "kPedestrian"},
+      {valhalla::TravelMode::kBicycle, "kBicycle"},
+      {valhalla::TravelMode::kTransit, "kTransit"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -39,9 +39,13 @@ const std::string& TripLeg_TravelMode_Name(int v) {
   return f->second;
 }
 
-const std::string& TripLeg_VehicleType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kCar"}, {1, "kMotorcycle"}, {2, "kAutoBus"}, {3, "kTruck"}, {4, "kMotorScooter"},
+const std::string& TripLeg_VehicleType_Name(valhalla::VehicleType v) {
+  static const std::unordered_map<valhalla::VehicleType, std::string> values{
+      {valhalla::VehicleType::kCar, "kCar"},
+      {valhalla::VehicleType::kMotorcycle, "kMotorcycle"},
+      {valhalla::VehicleType::kAutoBus, "kAutoBus"},
+      {valhalla::VehicleType::kTruck, "kTruck"},
+      {valhalla::VehicleType::kMotorScooter, "kMotorScooter"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -49,22 +53,23 @@ const std::string& TripLeg_VehicleType_Name(int v) {
   return f->second;
 }
 
-const std::string& TripLeg_PedestrianType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{{0, "kFoot"},
-                                                           {1, "kWheelchair"},
-                                                           {2, "kBlind"}};
+const std::string& TripLeg_PedestrianType_Name(valhalla::PedestrianType v) {
+  static const std::unordered_map<valhalla::PedestrianType, std::string>
+      values{{valhalla::PedestrianType::kFoot, "kFoot"},
+             {valhalla::PedestrianType::kWheelchair, "kWheelchair"},
+             {valhalla::PedestrianType::kBlind, "kBlind"}};
   auto f = values.find(v);
   if (f == values.cend())
     throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
-const std::string& TripLeg_BicycleType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kRoad"},
-      {1, "kCross"},
-      {2, "kHybrid"},
-      {3, "kMountain"},
+const std::string& TripLeg_BicycleType_Name(valhalla::BicycleType v) {
+  static const std::unordered_map<valhalla::BicycleType, std::string> values{
+      {valhalla::BicycleType::kRoad, "kRoad"},
+      {valhalla::BicycleType::kCross, "kCross"},
+      {valhalla::BicycleType::kHybrid, "kHybrid"},
+      {valhalla::BicycleType::kMountain, "kMountain"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -72,10 +77,16 @@ const std::string& TripLeg_BicycleType_Name(int v) {
   return f->second;
 }
 
-const std::string& TripLeg_TransitType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kTram"},  {1, "kMetro"},    {2, "kRail"},    {3, "kBus"},
-      {4, "kFerry"}, {5, "kCableCar"}, {6, "kGondola"}, {7, "kFunicular"},
+const std::string& TripLeg_TransitType_Name(valhalla::TransitType v) {
+  static const std::unordered_map<valhalla::TransitType, std::string> values{
+      {valhalla::TransitType::kTram, "kTram"},
+      {valhalla::TransitType::kMetro, "kMetro"},
+      {valhalla::TransitType::kRail, "kRail"},
+      {valhalla::TransitType::kBus, "kBus"},
+      {valhalla::TransitType::kFerry, "kFerry"},
+      {valhalla::TransitType::kCableCar, "kCableCar"},
+      {valhalla::TransitType::kGondola, "kGondola"},
+      {valhalla::TransitType::kFunicular, "kFunicular"},
   };
   auto f = values.find(v);
   if (f == values.cend())
