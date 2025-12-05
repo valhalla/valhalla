@@ -298,6 +298,19 @@ const std::string& Options_Units_Enum_Name(const Options::Units unit) {
   return i == units.cend() ? empty_str : i->second;
 }
 
+bool Options_Units_Enum_Parse(const std::string& unit_str, Options::Units* unit) {
+  static const std::unordered_map<std::string, Options::Units> units{
+      {"kilometers", Options::kilometers},
+      {"miles", Options::miles},
+  };
+
+  auto i = units.find(unit_str);
+  if (i == units.cend())
+    return true;
+  *unit = i->second;
+  return false;
+}
+
 bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a) {
   static const std::unordered_map<std::string, FilterAction> actions{
       {"exclude", FilterAction::exclude},
@@ -330,6 +343,16 @@ bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t) {
     return false;
   *t = i->second;
   return true;
+}
+
+const std::string& DirectionsType_Enum_Name(const DirectionsType type) {
+  static const std::unordered_map<int, std::string> types{
+      {DirectionsType::none, "none"},
+      {DirectionsType::maneuvers, "maneuvers"},
+      {DirectionsType::instructions, "instructions"},
+  };
+  auto i = types.find(type);
+  return i == types.cend() ? empty_str : i->second;
 }
 
 bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p) {
