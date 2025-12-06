@@ -1173,6 +1173,7 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
                 (bin % kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
             PointLL center{minx + lng_offset, miny + lat_offset};
             DistanceApproximator<PointLL> approx(center);
+
             circle = baldr::DiscretizedBoundingCircle(approx, center, std::get<0>(bounding_circle),
                                                       std::get<1>(bounding_circle));
           }

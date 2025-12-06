@@ -22,6 +22,27 @@ template <typename T> inline T square(T v) {
   return v * v;
 }
 
+enum class CircleInBbox : uint8_t { OUTSIDE = 0, INTERSECTS = 1, INSIDE = 2 };
+
+CircleInBbox circle_intersects_bounds(const PointLL& center,
+                                      float radius,
+                                      const AABB2<valhalla::midgard::PointLL>& box) {
+
+  if (center.lng() - radius >= box.minx() && center.lng() + radius <= box.maxx() &&
+      center.lat() - radius >= box.miny() && center.lat() + radius <= box.maxy()) {
+    return CircleInBbox::INSIDE;
+  }
+
+  float closest_x = std::max(box.minx(), std::min(center.lng(), box.maxx()));
+  float closest_y = std::max(box.miny(), std::min(center.lat(), box.maxy()));
+
+  float dx = closest_x - center.lng();
+  float dy = closest_y - center.lat();
+  float distance_squared = square(dx) + square(dy);
+
+  return distance_squared <= square(radius) ? CircleInBbox::INTERSECTS : CircleInBbox::OUTSIDE;
+}
+
 bool search_filter(const DirectedEdge* edge,
                    const DynamicCost& costing,
                    const graph_tile_ptr& tile,
@@ -573,7 +594,7 @@ struct bin_handler_t {
       }
       c_itr = bin_candidates.begin();
 
-      // radius = 0 means no circle
+      //  means no circle
       if (circle.second != 0) {
         // go through all of the candidates relevant to this bin
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
@@ -979,5 +1000,99 @@ Search::search(const std::vector<vb::Location>& locations, const cost_ptr_t& cos
   return handler_->search(locations, costing);
 }
 
+void Search::edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
+                             std::unordered_set<baldr::GraphId>& edge_container) {
+
+  const auto& tiles = TileHierarchy::levels().back().tiles;
+
+  const auto intersection = tiles.Intersect(bounds);
+
+  graph_tile_ptr tile = nullptr;
+  for (const auto& [tileidx, bins] : intersection) {
+    GraphId tileid(tileidx, 2, 0);
+    tile = reader_.GetGraphTile(tileid);
+
+    if (!tile) {
+      continue;
+    }
+
+    bool has_bounding_circles = tile->header()->has_bounding_circles();
+
+    auto minx = tiles.TileBounds(tileidx).minx();
+    auto miny = tiles.TileBounds(tileidx).miny();
+    for (const auto bin : bins) {
+      // get the center of the current bin
+      auto lat_offset = (bin / kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+      auto lng_offset = (bin % kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+      PointLL bin_center(minx + lng_offset, miny + lat_offset);
+      auto bin_center_approximator = DistanceApproximator<PointLL>(bin_center);
+      tile = reader_.GetGraphTile(tileid);
+      auto edges = tile->GetBin(bin);
+      auto bounding_circles = tile->GetBoundingCircles(bin);
+      auto bounding_circle = bounding_circles.begin();
+      for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
+        auto edge_id = *edge_it;
+        tile = reader_.GetGraphTile(edge_id);
+
+        if (!tile)
+          continue;
+
+        std::pair<PointLL, uint16_t> circle({0, 0}, 0);
+        if (has_bounding_circles && bounding_circle->is_valid())
+          circle = bounding_circle->get(bin_center_approximator, bin_center);
+        double radius = circle.second;
+        if (radius != 0) {
+          // we have a circle
+          auto intersection = circle_intersects_bounds(circle.first, circle.second, bounds);
+          switch (intersection) {
+            case CircleInBbox::INSIDE:
+              edge_container.insert(edge_id);
+              continue;
+            case CircleInBbox::INTERSECTS: {
+              // dig deeper
+              auto shape = tile->edgeinfo(tile->directededge(edge_id.id())).lazy_shape();
+              if (!shape.empty()) {
+                auto v = shape.pop();
+                while (!shape.empty()) {
+                  const PointLL u = v;
+                  v = shape.pop();
+                  // if we find an intersecting segment, store the id and continue to the next circle
+                  if (bounds.Intersects(u, v)) {
+                    edge_container.insert(edge_id);
+                    continue;
+                  }
+                }
+              }
+              continue;
+            }
+            case CircleInBbox::OUTSIDE:
+              continue;
+            default:
+              throw std::runtime_error("unreachable");
+          }
+        } else {
+          // no circle, check the shape
+          auto shape = tile->edgeinfo(tile->directededge(edge_id.id())).lazy_shape();
+          if (!shape.empty()) {
+            auto v = shape.pop();
+            while (!shape.empty()) {
+              const PointLL u = v;
+              v = shape.pop();
+              // if we find an intersecting segment, store the id and continue to the next circle
+              if (bounds.Intersects(u, v)) {
+                edge_container.insert(edge_id);
+                continue;
+              }
+            }
+            LOG_ERROR("No circle found for edge {}, length (m): {}", std::to_string(edge_id),
+                      tile->directededge(edge_id.id())->length());
+          } else {
+            LOG_ERROR("Empty shape for edge ID {} ", std::to_string(edge_id));
+          }
+        }
+      }
+    }
+  }
+}
 } // namespace loki
 } // namespace valhalla
