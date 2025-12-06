@@ -111,6 +111,7 @@ protected:
   bool allow_hard_exclusions;
   float max_distance_disable_hierarchy_culling;
   size_t candidate_query_cache_size;
+  std::unordered_set<baldr::GraphId> bbox_intersection_;
 
   // for /tile requests
   static_assert(kDefaultMinZoomRoadClass.size() == static_cast<size_t>(baldr::RoadClass::kInvalid));
