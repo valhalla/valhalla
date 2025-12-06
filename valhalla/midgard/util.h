@@ -729,9 +729,18 @@ template <typename T = float,
           std::enable_if_t<to_float_detail::has_from_chars_for_float_v<T>, int> = 0>
 T to_float(std::string_view value) {
   static_assert(std::is_floating_point_v<T>, "T must be a floating-point type");
+  // `std::from_chars` does not support positive sign, so we need to handle it manually
+  const bool had_plus = value.starts_with('+');
+  if (had_plus) {
+    value.remove_prefix(1);
+  }
   T result;
   auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
   if (ec != std::errc()) {
+    throw std::invalid_argument("Invalid float value: " + std::string(value));
+  }
+  // needed to return nullopt for cases like "+-1"
+  if (had_plus && result < 0) {
     throw std::invalid_argument("Invalid float value: " + std::string(value));
   }
   return result;
@@ -751,6 +760,32 @@ T to_float(const std::string& value) {
 }
 
 /**
+ * Try to convert a string to an integer value.
+ * Uses std::from_chars for fast, locale-independent parsing.
+ * @tparam  T      Integer type (int, int64_t, uint32_t, etc.)
+ * @param   value  String representation of the integer
+ * @return  Returns std::optional<T> containing the parsed value, or std::nullopt on failure
+ */
+template <typename T = int> std::optional<T> try_to_int(std::string_view value) noexcept {
+  // `std::from_chars` does not support positive sign, so we need to handle it manually
+  const bool had_plus = value.starts_with('+');
+  if (had_plus) {
+    value.remove_prefix(1);
+  }
+  T result;
+  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+  if (ec != std::errc()) {
+    return std::nullopt;
+  }
+
+  // needed to return nullopt for cases like "+-1"
+  if (had_plus && result < 0) {
+    return std::nullopt;
+  }
+  return result;
+}
+
+/**
  * Convert a string to an integer value.
  * Uses std::from_chars for fast, locale-independent parsing.
  * @tparam  T      Integer type (int, int64_t, uint32_t, etc.)
@@ -759,28 +794,11 @@ T to_float(const std::string& value) {
  * @throws  std::invalid_argument if the string cannot be converted
  */
 template <typename T = int> T to_int(std::string_view value) {
-  T result;
-  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
-  if (ec != std::errc()) {
+  auto result = try_to_int<T>(value);
+  if (!result) {
     throw std::invalid_argument("Invalid int value: " + std::string(value));
   }
-  return result;
-}
-
-/**
- * Try to convert a string to an integer value.
- * Uses std::from_chars for fast, locale-independent parsing.
- * @tparam  T      Integer type (int, int64_t, uint32_t, etc.)
- * @param   value  String representation of the integer
- * @return  Returns std::optional<T> containing the parsed value, or std::nullopt on failure
- */
-template <typename T = int> std::optional<T> try_to_int(std::string_view value) noexcept {
-  T result;
-  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
-  if (ec != std::errc()) {
-    return std::nullopt;
-  }
-  return result;
+  return result.value();
 }
 
 } // namespace midgard

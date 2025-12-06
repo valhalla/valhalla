@@ -76,9 +76,6 @@ public:
   }
 
   std::unordered_map<StateId::Time, std::vector<Measurement>>
-  AppendMeasurements(const std::vector<baldr::Location>& measurements);
-
-  std::unordered_map<StateId::Time, std::vector<Measurement>>
   AppendMeasurements(const std::vector<Measurement>& measurements);
 
 private:
