@@ -22,14 +22,14 @@ template <typename T> inline T square(T v) {
   return v * v;
 }
 
-enum class CircleInBbox : uint8_t { OUTSIDE = 0, INTERSECTS = 1, INSIDE = 2 };
+enum class CircleInBbox : uint8_t { OUTSIDE = 0, INSIDE = 1, INTERSECTS = 2 };
 
 CircleInBbox circle_intersects_bounds(const PointLL& center,
-                                      float radius,
+                                      float radius_deg,
                                       const AABB2<valhalla::midgard::PointLL>& box) {
 
-  if (center.lng() - radius >= box.minx() && center.lng() + radius <= box.maxx() &&
-      center.lat() - radius >= box.miny() && center.lat() + radius <= box.maxy()) {
+  if (center.lng() - radius_deg >= box.minx() && center.lng() + radius_deg <= box.maxx() &&
+      center.lat() - radius_deg >= box.miny() && center.lat() + radius_deg <= box.maxy()) {
     return CircleInBbox::INSIDE;
   }
 
@@ -40,7 +40,7 @@ CircleInBbox circle_intersects_bounds(const PointLL& center,
   float dy = closest_y - center.lat();
   float distance_squared = square(dx) + square(dy);
 
-  return distance_squared <= square(radius) ? CircleInBbox::INTERSECTS : CircleInBbox::OUTSIDE;
+  return distance_squared <= square(radius_deg) ? CircleInBbox::INTERSECTS : CircleInBbox::OUTSIDE;
 }
 
 bool search_filter(const DirectedEdge* edge,
@@ -1043,8 +1043,11 @@ void Search::edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
         double radius = circle.second;
         if (radius != 0) {
           // we have a circle
-          auto intersection = circle_intersects_bounds(circle.first, circle.second, bounds);
+          float radius_deg = radius / kMetersPerDegreeLat;
+          auto intersection = circle_intersects_bounds(circle.first, radius_deg, bounds);
           switch (intersection) {
+            case CircleInBbox::OUTSIDE:
+              continue;
             case CircleInBbox::INSIDE:
               edge_container.insert(edge_id);
               continue;
@@ -1065,8 +1068,6 @@ void Search::edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
               }
               continue;
             }
-            case CircleInBbox::OUTSIDE:
-              continue;
             default:
               throw std::runtime_error("unreachable");
           }
@@ -1084,10 +1085,8 @@ void Search::edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
                 continue;
               }
             }
-            LOG_ERROR("No circle found for edge {}, length (m): {}", std::to_string(edge_id),
-                      tile->directededge(edge_id.id())->length());
           } else {
-            LOG_ERROR("Empty shape for edge ID {} ", std::to_string(edge_id));
+            LOG_DEBUG("Empty shape for edge ID {} ", std::to_string(edge_id));
           }
         }
       }
