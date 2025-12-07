@@ -123,6 +123,9 @@ void locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
       writer.set_precision(tyr::kCoordinatePrecision);
       writer("lat", corr_ll.lat());
       writer("lon", corr_ll.lng());
+      if (!location.name().empty()) {
+        writer("name", location.name());
+      }
     }
     writer.end_object();
   }
