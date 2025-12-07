@@ -1,6 +1,10 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: remove `libgeotiff` from pkg-config file `Requires` [#5737](https://github.com/valhalla/valhalla/pull/5737) 
+   * FIXED: Fix + prefix handling in to_int/to_float utilities [#5746](https://github.com/valhalla/valhalla/pull/5746)
+   * FIXED: Use a unique target name for generating symlinks. Fixes #5751. [#5752](https://github.com/valhalla/valhalla/pull/5752)
+   * FIXED: Resolve ambiguities with libc++-18. Fixes #5716. [#5754](https://github.com/valhalla/valhalla/pull/5754)
 * **Enhancement**
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
    * ADDED: optional libvalhalla_test install target [#5719](https://github.com/valhalla/valhalla/pull/5719)
@@ -13,7 +17,11 @@
    * ADDED: more options for `valhalla_benchmark_loki` [#5730](https://github.com/valhalla/valhalla/pull/5730)
    * CHANGED: Adjust speed penalty and add dimensions length and weight to auto costing [#5627](https://github.com/valhalla/valhalla/pull/5627)
    * CHANGED: Microoptimisation in EdgeInfo. [#5733](https://github.com/valhalla/valhalla/pull/5733)
+   * CHANGED: Merge cost and tyr inline tests into single executable [#5735](https://github.com/valhalla/valhalla/pull/5735) 
    * ADDED: Add option `edge.hov_type` to trace attributes [#5741](https://github.com/valhalla/valhalla/pull/5741)
+   * ADDED: Proper time tracking in Bidirectional A* [#5640](https://github.com/valhalla/valhalla/pull/5640/)
+   * CHANGED: Templatize CostMatrix connection check [#5729](https://github.com/valhalla/valhalla/pull/5729)
+   * ADDED: /tile endpoint to serve MVT (BETA) [#5663](https://github.com/valhalla/valhalla/pull/5663)
    * ADDED: `timed_predicted_speed` on `/locate` response if location had a date time set [#5714](https://github.com/valhalla/valhalla/pull/5714)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
