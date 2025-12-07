@@ -879,8 +879,12 @@ std::string loki_worker_t::render_tile(Api& request) {
     return tile.serialize();
   }
 
-  // time this whole method and save that statistic
-  auto _ = measure_scope_time(request);
+  // first look up in the cache dir
+  // TODO(nils): make_finally() and create tile file in destructor
+  if (std::filesystem::exists())
+
+    // time this whole method and save that statistic
+    auto _ = measure_scope_time(request);
 
   // get lat/lon bbox
   const auto bounds = tile_to_bbox(options.tile_xyz());
