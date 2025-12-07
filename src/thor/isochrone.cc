@@ -143,8 +143,8 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
   AABB2<PointLL> bounds(loc_bounds.minx() - dlon, loc_bounds.miny() - dlat, loc_bounds.maxx() + dlon,
                         loc_bounds.maxy() + dlat);
 
-  // Create isotile (gridded data)
-  isotile_.reset(new GriddedData<2>(bounds, grid_size, {max_minutes, max_km}));
+  // Create isotile (gridded data), initialize with nodata value for geotiffs
+  isotile_.reset(new GriddedData<2>(bounds, grid_size, {NODATA_VALUE, NODATA_VALUE}));
 
   // Find the center of the grid that the location lies within. Shift the
   // tilebounds so the location lies in the center of a tile.
