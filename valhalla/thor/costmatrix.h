@@ -23,7 +23,6 @@ namespace thor {
 
 constexpr int kMaxLocationCount = 768; // 96 bytes
 using location_bitset_t = std::bitset<kMaxLocationCount>;
-
 enum class MatrixExpansionType { reverse = 0, forward = 1 };
 constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
 constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
@@ -191,7 +190,6 @@ protected:
    * @param  options     the request options to check for the position along origin and destination
    *                     edges
    */
-
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   location_bitset_t CheckConnections(const uint32_t source,
@@ -222,6 +220,24 @@ protected:
                    const baldr::graph_tile_ptr& tile,
                    const baldr::TimeInfo& time_info,
                    const uint32_t connection_pruning_index);
+
+  /**
+
+  /**
+   * Check if the edge on the backward search connects to a reached edge
+   * on the reverse search tree.
+   * @param  target      target index.
+   * @param  pred        Edge label of the predecessor.
+   * @param  n           Iteration counter.
+   * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
+   */
+  void CheckReverseConnections(const uint32_t target,
+                               const sif::BDEdgeLabel& pred,
+                               const uint32_t n,
+                               baldr::GraphReader& graphreader,
+                               const valhalla::Options& options);
 
   /**
    * Update status when a connection is found.

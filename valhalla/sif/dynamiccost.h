@@ -1163,6 +1163,25 @@ public:
     return use_hierarchy_limits;
   }
 
+  /**
+   * Returns a rough time estimation in seconds given a distance in meters,
+   * based on top speed (default) or fixed speed (if set to a valid value).
+   *
+   * @param distance_meters the distance between two points for which to estimate
+   * the duration
+   * @param factor the factor to apply to the the duration estimated using either fixed or top speed
+   *
+   * @returns a time estimate in seconds
+   */
+  uint32_t BeeLineTimeEstimate(double distance_meters, double factor) {
+    // if fixed speed is present, the factor should be lowered compared to top speed,
+    // because the real average speed will be equal to fixed speed, but if top speed is used,
+    // it will be likely lower than that.
+    return fixed_speed_ == baldr::kDisableFixedSpeed
+               ? (distance_meters / (top_speed_ * midgard::kKPHtoMetersPerSec)) * factor
+               : distance_meters / (fixed_speed_ * midgard::kKPHtoMetersPerSec) * factor * 0.85;
+  }
+
 protected:
   /**
    * Returns the averaged factor for an edge fraction based on user provided custom factors
