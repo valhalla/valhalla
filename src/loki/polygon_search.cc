@@ -286,7 +286,6 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
         contained_bin_count++;
 
         for (const auto& neighbor : tiles.GetNeighbors(bin.first, bin.second)) {
-          auto neighbor_bbox = tiles.BinBBox(neighbor.first, neighbor.second);
           if (processed_bins.count(to_value(neighbor.first, neighbor.second)) > 0) {
             continue; // we have already looked at this bin
           }
