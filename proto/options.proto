@@ -98,6 +98,23 @@ message HierarchyLimits {
                                    // always allowed. Used for A*.
 }
 
+// for /tile requests
+message Tile {
+  oneof has_x {
+    uint32 x = 1;
+  }
+  oneof has_y {
+    uint32 y = 2;
+  }
+  oneof has_z {
+    uint32 z = 3;
+  }
+}
+
+message TileOptions {
+  bool return_shortcuts = 1;      // include shortcuts in /tile responses
+}
+
 message Costing {
   enum Type {
     none_ = 0;
@@ -369,6 +386,7 @@ message Options {
     osrm = 2;
     pbf = 3;
     geotiff = 4;
+    mvt = 5;  // we set this ourselves and throw if it's set by the user
   }
 
   enum Action {
@@ -385,6 +403,7 @@ message Options {
     expansion = 10;
     centroid = 11;
     status = 12;
+    tile = 13;
   }
 
   enum DateTimeType {
@@ -517,5 +536,7 @@ message Options {
   bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
   repeated LinearFeatureCost cost_factor_lines = 61;               // User provided linear features to which apply special cost factors to
   ReverseTimeTracking reverse_time_tracking = 62;                  // Which strategy to use on the reverse tree in time dependent bidirectional routing
-  repeated Levels exclude_levels = 63;                             // Levels to exclude within the exclude_polygon at the same index
+  Tile tile_xyz = 63;                                              // x, y, z for /tile requests
+  TileOptions tile_options = 64;                                   // additional /tile specific options
+  repeated Levels exclude_levels = 65;                             // Levels to exclude within the exclude_polygon at the same index
 }
