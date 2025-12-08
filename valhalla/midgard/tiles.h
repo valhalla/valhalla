@@ -4,10 +4,12 @@
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/ellipse.h>
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 namespace valhalla {
 namespace midgard {
