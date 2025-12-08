@@ -254,8 +254,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     }
   }
 
-  auto check_bins = [&](uint32_t tileid,
-                        const std::pair<unsigned short, std::vector<unsigned long>>& bin,
+  auto check_bins = [&](uint32_t tileid, const std::pair<unsigned short, std::vector<size_t>>& bin,
                         bool intersect) {
     auto tile = reader.GetGraphTile({tileid, bin_level, 0});
     if (!tile) {
