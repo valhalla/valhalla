@@ -44,7 +44,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
 
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
     const auto& edgeid = *it;
-    if (!edgeid.Is_Valid()) {
+    if (!edgeid.is_valid()) {
       continue;
     }
 
@@ -58,7 +58,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     auto opp_tile = tile;
     const baldr::DirectedEdge* opp_edge = nullptr;
     const auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid, opp_edge, opp_tile);
-    if (!opp_edgeid.Is_Valid()) {
+    if (!opp_edgeid.is_valid()) {
       continue;
     }
 
@@ -125,7 +125,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
       // 2. in routing.cc we will find a route to the node, ie not the candidate edge, which means
       //    the route may not end or begin with the candidates we store here, we will need to
       //    handle this case inside of FindMatchResult which expects a candidate to be used
-      if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
+      if (!snapped_node.is_valid() || visited_nodes.insert(snapped_node).second) {
         candidates.emplace_back(std::move(correlated));
       }
     }

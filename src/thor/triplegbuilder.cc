@@ -2211,7 +2211,7 @@ void TripLegBuilder::Build(
 
     // Add the intersecting edges at the node. Skip it if the node was an inner node (excluding start
     // node and end node) of a shortcut that was recovered.
-    if (startnode.Is_Valid() && !edge_itr->start_node_is_recovered) {
+    if (startnode.is_valid() && !edge_itr->start_node_is_recovered) {
       AddIntersectingEdges(controller, start_tile, node, directededge, prev_de, prior_opp_local_index,
                            graphreader, trip_node,
                            travel_type == PedestrianType::kBlind &&
