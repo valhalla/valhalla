@@ -4,6 +4,7 @@
    * FIXED: remove `libgeotiff` from pkg-config file `Requires` [#5737](https://github.com/valhalla/valhalla/pull/5737) 
    * FIXED: Fix + prefix handling in to_int/to_float utilities [#5746](https://github.com/valhalla/valhalla/pull/5746)
    * FIXED: Use a unique target name for generating symlinks. Fixes #5751. [#5752](https://github.com/valhalla/valhalla/pull/5752)
+   * FIXED: Resolve ambiguities with libc++-18. Fixes #5716. [#5754](https://github.com/valhalla/valhalla/pull/5754)
 * **Enhancement**
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
    * ADDED: optional libvalhalla_test install target [#5719](https://github.com/valhalla/valhalla/pull/5719)
@@ -18,6 +19,7 @@
    * ADDED: Bicycle improvements. use_roads updates and adds support for separate, cycleway:right:oneway, cycleway:left:oneway, and cycleway:both [#5750](https://github.com/valhalla/valhalla/pull/5750)
    * ADDED: Proper time tracking in Bidirectional A* [#5640](https://github.com/valhalla/valhalla/pull/5640/)
    * CHANGED: Templatize CostMatrix connection check [#5729](https://github.com/valhalla/valhalla/pull/5729)
+   * ADDED: /tile endpoint to serve MVT (BETA) [#5663](https://github.com/valhalla/valhalla/pull/5663)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
