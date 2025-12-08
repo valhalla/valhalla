@@ -311,8 +311,7 @@ TEST(AstarBss, test_Truck) {
 // on the pedestrian way.
 TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
   std::string request =
-      R"({"locations":[{"lat":48.864218,"lon":2.362034},{"lat":48.869068,"lon":2.362151}],"costing":"bikeshare",
-	       "costing_options":{"bicycle"   :{"use_roads":"0.25"}}})";
+      R"({"locations":[{"lat":48.864218,"lon":2.362034},{"lat":48.869068,"lon":2.362151}],"costing":"bikeshare"})";
   std::vector<TravelMode> expected_travel_modes{TravelMode::kPedestrian, TravelMode::kBicycle,
                                                 TravelMode::kPedestrian};
   std::vector<std::string> expected_route{"Rue Perrée",
