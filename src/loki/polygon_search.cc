@@ -62,8 +62,8 @@ ring_bg_t PBFToRing(const valhalla::Ring& ring_pbf) {
 
 #ifdef LOGGING_LEVEL_TRACE
 // serializes an edge to geojson
-std::string to_geojson(const std::unordered_set<vb::GraphId>& edge_ids, vb::GraphReader& reader) {
-  auto features = array({});
+std::string to_geojson(const std::unordered_set<GraphId>& edge_ids, GraphReader& reader) {
+  auto features = json::array({});
   for (const auto& edge_id : edge_ids) {
     auto tile = reader.GetGraphTile(edge_id);
     auto edge = tile->directededge(edge_id);
@@ -72,20 +72,19 @@ std::string to_geojson(const std::unordered_set<vb::GraphId>& edge_ids, vb::Grap
       std::reverse(shape.begin(), shape.end());
     }
 
-    auto coords = array({});
+    auto coords = json::array({});
     for (const auto& p : shape) {
-      coords->emplace_back(array({fixed_t{p.lng(), 6}, fixed_t{p.lat(), 6}}));
+      coords->emplace_back(json::array({json::fixed_t{p.lng(), 6}, json::fixed_t{p.lat(), 6}}));
     }
-    features->emplace_back(
-        map({{"type", std::string("Feature")},
-             {"properties",
-              map({{"shortcut", edge->is_shortcut() ? std::string("True") : std::string("False")},
-                   {"edge_id", edge_id.value}})},
-             {"geometry", map({{"type", std::string("LineString")}, {"coordinates", coords}})}}));
+    features->emplace_back(json::map(
+        {{"type", std::string("Feature")},
+         {"properties",
+          json::map({{"shortcut", edge->is_shortcut() ? std::string("True") : std::string("False")},
+                     {"edge_id", edge_id.value}})},
+         {"geometry", json::map({{"type", std::string("LineString")}, {"coordinates", coords}})}}));
   }
 
-  auto collection =
-      vb::json::map({{"type", std::string("FeatureCollection")}, {"features", features}});
+  auto collection = json::map({{"type", std::string("FeatureCollection")}, {"features", features}});
 
   std::stringstream ss;
   ss << *collection;
@@ -93,52 +92,6 @@ std::string to_geojson(const std::unordered_set<vb::GraphId>& edge_ids, vb::Grap
   return ss.str();
 }
 
-void to_geojson(AABB2<PointLL>& bbox, rapidjson::writer_wrapper_t& writer, bool start_bin = false) {
-  writer.start_object();
-  writer("type", "Feature");
-  writer.start_object("properties");
-  writer("start", start_bin);
-  writer.end_object();
-  writer.start_object("geometry");
-  writer("type", "Polygon");
-  writer.start_array("coordinates");
-  writer.start_array();
-
-  // 1
-  writer.start_array();
-  writer(bbox.minx());
-  writer(bbox.miny());
-  writer.end_array();
-
-  // 2
-  writer.start_array();
-  writer(bbox.minx());
-  writer(bbox.maxy());
-  writer.end_array();
-
-  // 3
-  writer.start_array();
-  writer(bbox.maxx());
-  writer(bbox.maxy());
-  writer.end_array();
-
-  // 4
-  writer.start_array();
-  writer(bbox.maxx());
-  writer(bbox.miny());
-  writer.end_array();
-
-  // 5
-  writer.start_array();
-  writer(bbox.minx());
-  writer(bbox.miny());
-  writer.end_array();
-
-  writer.end_array();
-  writer.end_array();  // coordinates
-  writer.end_object(); // geom
-  writer.end_object(); // feat
-}
 #endif // LOGGING_LEVEL_TRACE
 } // namespace
 
