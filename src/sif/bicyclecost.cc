@@ -32,7 +32,7 @@ constexpr float kDefaultBssCost = 120.0f;     // Seconds
 constexpr float kDefaultBssPenalty = 0.0f;    // Seconds
 
 // Other options
-constexpr float kDefaultUseRoad = 0.5f;           // Factor between 0 and 1
+constexpr float kDefaultUseRoad = 0.25f;          // Factor between 0 and 1
 constexpr float kDefaultAvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets = 0.5f;  // Factor between 0 and 1
 const std::string kDefaultBicycleType = "hybrid"; // Bicycle type
@@ -701,9 +701,6 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // stress) and the weighted grade penalty for the edge.
   float factor =
       1.0f + grade_penalty[edge->weighted_grade()] + (accommodation_factor * roadway_stress);
-
-  // Update factor based on edge use (increases impact of use_roads).
-  factor += edge->is_road() ? 0.5f - use_roads_ : -0.5f + use_roads_;
 
   // If surface is worse than the minimum we add a surface factor
   if (edge->surface() >= minimal_surface_penalized_) {
