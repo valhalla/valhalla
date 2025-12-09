@@ -116,9 +116,9 @@ files=$(echo $files | xargs)
 
 # be careful how to write the config (mostly for restart scenarios where env vars are true all of a sudden)
 if test -f "${CONFIG_FILE}"; then
-
-  if [[ "${update_existing_config}" == "True" ]]; then
-    echo "INFO: Found existing valhalla.json. Updating possibly missing entries."
+  echo "INFO: Found existing valhalla.json at $CONFIG_FILE"
+  if [[ "${update_existing_config}" == "True" && "$FS_READONLY" == "False" ]]; then
+    echo "INFO: Updating possibly missing entries."
 
     # create temporary default config
     valhalla_build_config > ${TMP_CONFIG_FILE}
@@ -147,17 +147,17 @@ if test -f "${CONFIG_FILE}"; then
     ' "${CONFIG_FILE}" | sponge "${CONFIG_FILE}"
 
     rm ${TMP_CONFIG_FILE}
-  fi
 
-  jq --arg d "${TILE_DIR}" '.mjolnir.tile_dir = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
-  jq --arg d "${TILE_TAR}" '.mjolnir.tile_extract = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
-  jq --arg d "${ADMIN_DB}" '.mjolnir.admin = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
-  jq --arg d "${TIMEZONE_DB}" '.mjolnir.timezone = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
-  jq --arg d "${ELEVATION_PATH}" '.additional_data.elevation = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
-  jq --arg d "${GTFS_DIR}" '.mjolnir.transit_feeds_dir = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
-  jq --arg d "${TRANSIT_DIR}" '.mjolnir.transit_dir = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
-  jq --arg d "${TRAFFIC_TAR}" '.mjolnir.traffic_extract = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
-  jq --arg d "${server_threads}" '.mjolnir.concurrency = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
+    jq --arg d "${TILE_DIR}" '.mjolnir.tile_dir = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
+    jq --arg d "${TILE_TAR}" '.mjolnir.tile_extract = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
+    jq --arg d "${ADMIN_DB}" '.mjolnir.admin = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
+    jq --arg d "${TIMEZONE_DB}" '.mjolnir.timezone = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
+    jq --arg d "${ELEVATION_PATH}" '.additional_data.elevation = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
+    jq --arg d "${GTFS_DIR}" '.mjolnir.transit_feeds_dir = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
+    jq --arg d "${TRANSIT_DIR}" '.mjolnir.transit_dir = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
+    jq --arg d "${TRAFFIC_TAR}" '.mjolnir.traffic_extract = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
+    jq --arg d "${server_threads}" '.mjolnir.concurrency = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"
+  fi
 else
   additional_data_elevation="--additional-data-elevation $ELEVATION_PATH"
   mjolnir_admin="--mjolnir-admin ${ADMIN_DB}"
@@ -237,7 +237,7 @@ fi
 # Use OSMSpeeds default_speeds
 
 updated_default_speed_config=False
-if [[ $use_default_speeds_config == "True" ]]; then
+if [[ "$do_build" == "True" && $use_default_speeds_config == "True" ]]; then
   if ! test -f "${DEFAULT_SPEEDS_CONFIG}"; then
     echo ""
     echo "======================================"

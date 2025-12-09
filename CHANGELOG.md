@@ -27,6 +27,7 @@
 * **Bug Fix**
    * FIXED: Pass time to `EdgeCost` for initial edges in Dijkstra [#5677](https://github.com/valhalla/valhalla/pull/5677)
    * FIXED: Handle access restriction tag values separated by semicolon [#5560](https://github.com/valhalla/valhalla/pull/5560)
+   * FIXED: usage of read-only filesystems to host the valhalla-scripted docker image as a service [#5675](https://github.com/valhalla/valhalla/pull/5675)
 * **Enhancement**
    * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
    * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647)

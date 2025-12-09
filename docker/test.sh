@@ -58,7 +58,7 @@ tileset_name="utrecht_tiles"
 docker run -d --name valhalla_full -p 8002:8002 -v $custom_file_folder:/custom_files \
         -e tileset_name=$tileset_name -e use_tiles_ignore_pbf=False -e build_elevation=False \
         -e build_admins=True -e build_time_zones=True -e build_tar=False \
-        -e server_threads=1 -e use_default_speeds_config=True ${valhalla_image}
+        -e server_threads=1 -e use_default_speeds_config=True -e update_existing_config=True ${valhalla_image}
 wait_for_docker
 
 # Make sure all files are there!
@@ -192,11 +192,18 @@ if [[ $(last_mod_tiles $tileset_name) != $mod_date_tiles2 || $(stat -c %y ${admi
   exit 1
 fi
 
+# test read-only filesystem
+echo "#### Test read-only docker filesystem: only running the service shouldn't write any data ####"
+docker rm -f valhalla_repeat
+docker run -d --name valhalla_ro_fs -p 8002:8002 -v $custom_file_folder:/custom_files:ro -e tileset_name=$tileset_name -e use_tiles_ignore_pbf=True -e build_elevation=False -e build_admins=True -e build_time_zones=True -e server_threads=1 ${valhalla_image}
+wait_for_docker
+eval $route_request 2>&1 > /dev/null
+
 echo "Final structure:"
 tree -L 3 -h "${custom_file_folder}"
 
 # cleanup
-docker rm -f valhalla_repeat
+docker rm -f valhalla_ro_fs
 rm -r ${custom_file_folder}
 
 exit 0
