@@ -562,6 +562,58 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
     if (temp_paths.empty())
       return false;
+
+    // break path infos up along optional locations
+    if (options.optional_locations_size() > 0) {
+      std::unordered_multimap<GraphId,
+                              std::pair<const valhalla::Location*, const valhalla::PathEdge*>>
+          optional_locations;
+      for (const auto& loc : options.optional_locations()) {
+        for (const PathEdge& pathedge : loc.correlation().edges()) {
+          optional_locations.insert({GraphId(pathedge.graph_id()), {&loc, &pathedge}});
+        }
+      }
+
+      std::vector<std::vector<std::tuple<size_t, float, const valhalla::Location*>>> splits;
+      size_t i = 0;
+      for (auto& temp_path : temp_paths) {
+        // if we find multiple edges along a path for an optional location, choose the closest one
+        std::unordered_map<const valhalla::Location*, float> distances;
+
+        size_t j = 0;
+        for (const PathInfo& pathinfo : temp_path) {
+          auto it = optional_locations.equal_range(pathinfo.edgeid);
+          // for each location along this edge
+          for (auto begin = it.first; begin != it.second; begin++) {
+            if (auto n = distances.find(begin->second.first); n != distances.end()) {
+              if (n->second <= begin->second.second->distance()) {
+                // there's already a match for this location along this path,
+                // and it's closer than this one, skip
+                continue;
+              } else {
+                // this one is closer, remove the other split
+                splits[j].erase(
+                    std::remove_if(splits[j].begin(), splits[j].end(), [&begin](const auto& split) {
+                      return std::get<2>(split) == begin->second.first;
+                    }));
+              }
+            }
+            // split the leg here
+            splits[j].push_back({j, begin->second.second->percent_along(), begin->second.first});
+            // save the distance
+            distances[begin->second.first] = begin->second.second->distance();
+          }
+          j++;
+        }
+        i++;
+      }
+
+      // make some new paths
+      i = 0;
+      for (i = 0; i < temp_paths.size(); ++i) {
+        auto& temp_path = temp_paths[i];
+      }
+    }
     for (auto& temp_path : temp_paths) {
       auto out_tz = reader->GetTimezoneFromEdge(temp_path.back().edgeid, tile);
       auto in_tz = reader->GetTimezoneFromEdge(temp_path.front().edgeid, tile);

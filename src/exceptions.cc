@@ -55,6 +55,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {135, {135, "Failed to parse trace", 400, HTTP_400, OSRM_INVALID_VALUE, "trace_parse_failed"}},
     {136, {136, "durations size not compatible with trace size", 400, HTTP_400, OSRM_INVALID_VALUE, "trace_duration_mismatch"}},
     {137, {137, "Failed to parse polygon", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},
+    {138, {138, "Failed to parse optional location", 400, HTTP_400, OSRM_INVALID_VALUE, "optional_location_parse_failed"}},
     {140, {140, "Action does not support multimodal costing", 400, HTTP_400, OSRM_INVALID_VALUE, "no_multimodal"}},
     {141, {141, "Arrive by for multimodal not implemented yet", 501, HTTP_501, OSRM_INVALID_VALUE, "no_arrive_by_multimodal"}},
     {142, {142, "Arrive by not implemented for isochrones", 501, HTTP_501, OSRM_INVALID_VALUE, "no_arrive_by_isochrones"}},

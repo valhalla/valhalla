@@ -42,6 +42,15 @@ static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexc
 
 namespace {
 
+constexpr std::string_view kLocationsNode = "locations";
+constexpr std::string_view kSourcesNode = "sources";
+constexpr std::string_view kTargetsNode = "targets";
+constexpr std::string_view kShapeNode = "shape";
+constexpr std::string_view kTraceNode = "trace";
+constexpr std::string_view kExcludeLocationsNode = "exclude_locations";
+constexpr std::string_view kAvoidLocationsNode = "avoid_locations";
+constexpr std::string_view kOptionalLocationsNode = "optional_locations";
+
 bool is_format_supported(Options::Action action, Options::Format format) {
   constexpr uint16_t kFormatActionSupport[] = {
       // json
@@ -90,7 +99,7 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
 
 bool add_date_to_locations(Options& options,
                            google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                           const std::string& node) {
+                           const std::string_view node) {
   if (options.has_date_time_case() && !locations.empty()) {
     auto dt = options.date_time_type();
     if (options.action() != Options::sources_to_targets) {
@@ -111,7 +120,7 @@ bool add_date_to_locations(Options& options,
           break;
       }
     } else {
-      if (node == (dt == Options::arrive_by ? "targets" : "sources")) {
+      if (node == (dt == Options::arrive_by ? kTargetsNode : kSourcesNode)) {
         for (auto& loc : locations) {
           loc.set_date_time(dt == Options::current ? "current" : options.date_time());
         }
@@ -168,7 +177,8 @@ void parse_location(valhalla::Location* location,
                     const rapidjson::Value& r_loc,
                     Api& request,
                     const boost::optional<bool>& ignore_closures,
-                    bool is_last_loc) {
+                    bool is_last_loc,
+                    std::string_view node) {
   auto lat = rapidjson::get_optional<double>(r_loc, "/lat");
   if (location->has_ll() && location->ll().has_lat_case()) {
     lat = location->ll().lat();
@@ -195,7 +205,9 @@ void parse_location(valhalla::Location* location,
 
   // trace attributes does not support legs or breaks at discontinuities
   auto stop_type_json = rapidjson::get_optional<std::string>(r_loc, "/type");
-  if (request.options().action() == Options::trace_attributes) {
+  if (node == kOptionalLocationsNode) {
+    location->set_type(valhalla::Location::kBreak); // for now just allow a break type here
+  } else if (request.options().action() == Options::trace_attributes) {
     location->set_type(valhalla::Location::kVia);
   } // other actions let you specify whatever type of stop you want
   else if (stop_type_json) {
@@ -386,25 +398,27 @@ void parse_location(valhalla::Location* location,
  */
 void parse_locations(const rapidjson::Document& doc,
                      Api& request,
-                     const std::string& node,
+                     const std::string_view node,
                      unsigned location_parse_error_code,
                      const boost::optional<bool>& ignore_closures,
                      bool& had_date_time) {
   auto& options = *request.mutable_options();
 
   google::protobuf::RepeatedPtrField<valhalla::Location>* locations = nullptr;
-  if (node == "locations") {
+  if (node == kLocationsNode) {
     locations = options.mutable_locations();
-  } else if (node == "shape") {
+  } else if (node == kShapeNode) {
     locations = options.mutable_shape();
-  } else if (node == "trace") {
+  } else if (node == kTraceNode) {
     locations = options.mutable_trace();
-  } else if (node == "sources") {
+  } else if (node == kSourcesNode) {
     locations = options.mutable_sources();
-  } else if (node == "targets") {
+  } else if (node == kTargetsNode) {
     locations = options.mutable_targets();
-  } else if (node == "exclude_locations" || node == "avoid_locations") {
+  } else if (node == kExcludeLocationsNode || node == kAvoidLocationsNode) {
     locations = options.mutable_exclude_locations();
+  } else if (node == kOptionalLocationsNode) {
+    locations = options.mutable_optional_locations();
   } else {
     return;
   }
@@ -413,15 +427,15 @@ void parse_locations(const rapidjson::Document& doc,
   bool loc_had_time = false;
   try {
     // should we parse json?
-    auto request_locations =
-        rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
+    std::string key("/" + std::string(node));
+    auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, key.c_str());
     if (request_locations) {
       int last_loc_idx = static_cast<int>(request_locations->Size()) - 1;
       for (const auto& r_loc : *request_locations) {
         auto* loc = locations->Add();
         auto loc_idx = locations->size() - 1;
         loc->mutable_correlation()->set_original_index(loc_idx);
-        parse_location(loc, r_loc, request, ignore_closures, loc_idx == last_loc_idx);
+        parse_location(loc, r_loc, request, ignore_closures, loc_idx == last_loc_idx, node);
         loc_had_time = loc_had_time || !loc->date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc->search_filter().exclude_closures();
@@ -433,7 +447,7 @@ void parse_locations(const rapidjson::Document& doc,
       for (auto& loc : *locations) {
         bool is_last_edge = i == locs_amount;
         loc.mutable_correlation()->set_original_index(i++);
-        parse_location(&loc, {}, request, ignore_closures, is_last_edge);
+        parse_location(&loc, {}, request, ignore_closures, is_last_edge, node);
         loc_had_time = loc_had_time || !loc.date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc.search_filter().exclude_closures();
@@ -444,8 +458,10 @@ void parse_locations(const rapidjson::Document& doc,
       return;
 
     // first and last locations get the default type of break no matter what
-    locations->Mutable(0)->set_type(valhalla::Location::kBreak);
-    locations->Mutable(locations->size() - 1)->set_type(valhalla::Location::kBreak);
+    if (node != kOptionalLocationsNode) {
+      locations->Mutable(0)->set_type(valhalla::Location::kBreak);
+      locations->Mutable(locations->size() - 1)->set_type(valhalla::Location::kBreak);
+    }
 
     // push the date time information down into the locations
     if (!loc_had_time) {
@@ -1002,13 +1018,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   parse_recostings(doc, "/recostings", options);
 
   // get the locations in there
-  parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
+  parse_locations(doc, api, kLocationsNode, 130, ignore_closures, had_date_time);
 
   // get the sources in there
-  parse_locations(doc, api, "sources", 131, ignore_closures, had_date_time);
+  parse_locations(doc, api, kSourcesNode, 131, ignore_closures, had_date_time);
 
   // get the targets in there
-  parse_locations(doc, api, "targets", 132, ignore_closures, had_date_time);
+  parse_locations(doc, api, kTargetsNode, 132, ignore_closures, had_date_time);
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (options.date_time_type() == Options::no_time && !had_date_time &&
@@ -1022,10 +1038,14 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // get the avoids in there
   // TODO: remove "avoid_locations/polygons" after some while
-  if (doc.HasMember("avoid_locations"))
-    parse_locations(doc, api, "avoid_locations", 133, ignore_closures, had_date_time);
+  if (doc.HasMember(kAvoidLocationsNode.data()))
+    parse_locations(doc, api, kAvoidLocationsNode, 133, ignore_closures, had_date_time);
   else
-    parse_locations(doc, api, "exclude_locations", 133, ignore_closures, had_date_time);
+    parse_locations(doc, api, kExcludeLocationsNode, 133, ignore_closures, had_date_time);
+
+  bool optional_had_dt;
+  if (doc.HasMember(kOptionalLocationsNode.data()))
+    parse_locations(doc, api, kOptionalLocationsNode, 138, true, optional_had_dt);
 
   // Get the matrix_loctions option and set if sources or targets size is one
   // (option is only supported with one to many or many to one matrix requests)

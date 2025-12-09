@@ -108,6 +108,11 @@ void loki_worker_t::route(Api& request) {
       locations.back().min_inbound_reach_ = 0;
     }
 
+    size_t cost_factor_locations_end = locations.size();
+    for (const auto& optional_location : options.optional_locations()) {
+      locations.push_back(PathLocation::fromPBF(optional_location));
+    }
+
     const auto projections = search_.search(locations, costing);
     for (size_t i = 0; i < locations_end; ++i) {
       const auto& correlated = projections.at(locations[i]);
@@ -137,6 +142,13 @@ void loki_worker_t::route(Api& request) {
       PathLocation::toPBF(correlated_end, end, *reader);
       ++i;
     }
+
+    // store the correlations for the optional locations
+    for (size_t i = 0; i < options.optional_locations_size(); ++i) {
+      const auto& correlated = projections.at(locations[cost_factor_locations_end + i]);
+      PathLocation::toPBF(correlated, options.mutable_optional_locations(i), *reader);
+    }
+
   } catch (const valhalla_exception_t& e) { throw e; } catch (const std::exception&) {
     throw valhalla_exception_t{171};
   }
