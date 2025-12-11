@@ -1,7 +1,8 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: Removed ability to set ISO:3166 country/state code per OSM Node [#5747](https://github.com/valhalla/valhalla/pull/5747)
 * **Bug Fix**
-   * FIXED: remove `libgeotiff` from pkg-config file `Requires` [#5737](https://github.com/valhalla/valhalla/pull/5737) 
+   * FIXED: remove `libgeotiff` from pkg-config file `Requires` [#5737](https://github.com/valhalla/valhalla/pull/5737)
    * FIXED: Fix + prefix handling in to_int/to_float utilities [#5746](https://github.com/valhalla/valhalla/pull/5746)
    * FIXED: Use a unique target name for generating symlinks. Fixes #5751. [#5752](https://github.com/valhalla/valhalla/pull/5752)
    * FIXED: Resolve ambiguities with libc++-18. Fixes #5716. [#5754](https://github.com/valhalla/valhalla/pull/5754)
@@ -14,7 +15,7 @@
    * CHANGED: Get rid of temporary vector in GraphTile::GetAccessRestrictions [#5689](https://github.com/valhalla/valhalla/pull/5689)
    * ADDED: more options for `valhalla_benchmark_loki` [#5730](https://github.com/valhalla/valhalla/pull/5730)
    * CHANGED: Microoptimisation in EdgeInfo. [#5733](https://github.com/valhalla/valhalla/pull/5733)
-   * CHANGED: Merge cost and tyr inline tests into single executable [#5735](https://github.com/valhalla/valhalla/pull/5735) 
+   * CHANGED: Merge cost and tyr inline tests into single executable [#5735](https://github.com/valhalla/valhalla/pull/5735)
    * ADDED: Add option `edge.hov_type` to trace attributes [#5741](https://github.com/valhalla/valhalla/pull/5741)
    * ADDED: Proper time tracking in Bidirectional A* [#5640](https://github.com/valhalla/valhalla/pull/5640/)
    * CHANGED: Templatize CostMatrix connection check [#5729](https://github.com/valhalla/valhalla/pull/5729)
