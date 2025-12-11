@@ -21,6 +21,7 @@
 #include <array>
 #include <climits>
 #include <cmath>
+#include <filesystem>
 #include <unordered_set>
 
 using namespace valhalla;
@@ -34,6 +35,51 @@ namespace {
  * This is the WGS84 ellipsoid semi-major axis.
  */
 constexpr double kEarthRadiusMeters = 6378137.0;
+constexpr std::string kMvtExt = ".mvt";
+
+/**
+ * Builds the path on the filesystem for a x/y/z MVT, analogous to
+ * GraphTiles with padded 1000's directory separators.
+ */
+std::filesystem::path
+mvt_local_path(const uint32_t z, const uint32_t x, const uint32_t y, const std::string& root) {
+  // number of cols & rows
+  size_t dim = 1ull << z;
+
+  // determine zero padded width for the full path
+  size_t max_index = (dim * dim) - 1;
+  size_t path_width = static_cast<size_t>(std::log10(max_index)) + 1;
+  const size_t remainder = path_width % 3;
+  if (remainder) {
+    path_width += 3 - remainder;
+  }
+  assert(path_width % 3 == 0);
+
+  // convert index to zero-padded decimal string
+  size_t tile_index = static_cast<size_t>(y) * dim + static_cast<size_t>(x);
+  std::ostringstream oss;
+  oss << std::setw(path_width) << std::setfill('0') << tile_index;
+  std::string path_no_sep = oss.str();
+
+  // split into groups of 3 digits
+  std::vector<std::string> groups;
+  size_t i = 0;
+  while (i < path_no_sep.size()) {
+    groups.push_back(path_no_sep.substr(i, 3));
+    i += 3;
+  }
+
+  std::filesystem::path tile_path = root;
+  tile_path /= std::to_string(z);
+
+  // append all groups but the last one, which is the filename
+  for (size_t i = 0; i < groups.size() - 1; ++i) {
+    tile_path /= groups[i];
+  }
+  tile_path /= groups.back() + kMvtExt;
+
+  return tile_path;
+}
 
 /**
  * Helper class to build the edges layer with pre-registered keys
@@ -654,10 +700,7 @@ double lat_to_merc_y(const double lat) {
   return kEarthRadiusMeters * std::log(std::tan(kPiD / 4.0 + lat * kPiD / 360.0));
 }
 
-midgard::AABB2<midgard::PointLL> tile_to_bbox(const valhalla::Tile& xyz) {
-  const auto x = xyz.x();
-  const auto y = xyz.y();
-  const auto z = xyz.z();
+midgard::AABB2<midgard::PointLL> tile_to_bbox(const uint32_t x, const uint32_t y, const uint32_t z) {
 
   const double n = std::pow(2.0, z);
 
@@ -875,19 +918,21 @@ std::string loki_worker_t::render_tile(Api& request) {
 
   vtzero::tile_builder tile;
   const auto z = options.tile_xyz().z();
-  if (z < min_zoom_) {
+  if (z < min_zoom_road_class_[0]) {
     return tile.serialize();
   }
 
-  // first look up in the cache dir
-  // TODO(nils): make_finally() and create tile file in destructor
-  if (std::filesystem::exists())
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request);
 
-    // time this whole method and save that statistic
-    auto _ = measure_scope_time(request);
+  // do we have it cached?
+  const auto x = options.tile_xyz().x();
+  const auto y = options.tile_xyz().y();
+  const auto tile_path = mvt_local_path(z, x, y, mvt_cache_dir_);
+  bool is_cached = std::filesystem::exists(tile_path);
 
   // get lat/lon bbox
-  const auto bounds = tile_to_bbox(options.tile_xyz());
+  const auto bounds = tile_to_bbox(x, y, z);
 
   // query edges in bbox, omits opposing edges
   // TODO(nils): can RangeQuery be updated to skip hierarchy levels?
