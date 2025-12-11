@@ -1231,11 +1231,9 @@ void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
       feature.add_property(key_edge_id_rev_, vtzero::encoded_property_value(reverse_edge_id.id()));
     set_attribute_values(kReverseEdgeAttributes, controller_, feature, *reverse_edge, edge_info,
                          nullptr);
-    if (forward_traffic) {
-      for (const auto& def : kReverseLiveSpeedAttributes) {
-        set_attribute_values(kReverseLiveSpeedAttributes, controller_, feature, *reverse_edge,
-                             edge_info, reverse_traffic);
-      }
+    if (reverse_traffic) {
+      set_attribute_values(kReverseLiveSpeedAttributes, controller_, feature, *reverse_edge,
+                           edge_info, reverse_traffic);
     }
   }
 
