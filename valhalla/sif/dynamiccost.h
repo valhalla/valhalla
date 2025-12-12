@@ -212,6 +212,16 @@ constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1
                                                        1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                        2.5f, 2.8f, 3.1f, 3.5f};
 
+constexpr std::string HardAvoidVignette = "ALL";
+
+// Convert Back Int Value to ISO String
+inline std::string ConvertIntToISO(uint64_t countryIsoCode) {
+  std::string iso;
+  iso.push_back(static_cast<char>((countryIsoCode >> 8) & 0xFF));
+  iso.push_back(static_cast<char>(countryIsoCode & 0xFF));
+  return iso;
+}
+
 /**
  * Base class for dynamic edge costing. This class defines the interface for
  * costing methods and includes a few base methods that define default behavior
@@ -798,6 +808,17 @@ public:
       if (!ModeSpecificAllowed(restriction)) {
         return false;
       }
+
+      // Special check for vignette restrictions
+      if (restriction.type() == baldr::AccessType::kVignette) {
+        auto countryIso = ConvertIntToISO(restriction.value());
+        std::transform(countryIso.begin(), countryIso.end(), countryIso.begin(), ::toupper);
+        for (auto v : exclude_country_vignettes_) {
+          if ((v == countryIso) || (v == HardAvoidVignette)) {
+            return false;
+          }
+        }
+      }
     }
     destonly_access_restr_mask = tmp_mask;
 
@@ -1353,6 +1374,9 @@ protected:
   // Is it truck?
   bool is_hgv_{false};
 
+  // List of country vignettes to exclude
+  std::vector<std::string> exclude_country_vignettes_;
+
   // User specified edges to cost based on user provided factors
   std::unordered_map<baldr::GraphId, custom_cost_t> linear_cost_edges_;
   double min_linear_cost_factor_;
@@ -1459,6 +1483,9 @@ protected:
     has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_highways_ ||
                     exclude_ferries_;
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
+    exclude_country_vignettes_ =
+        std::vector<std::string>(costing_options.exclude_country_vignettes().begin(),
+                                 costing_options.exclude_country_vignettes().end());
     default_hierarchy_limits = costing_options.hierarchy_limits_size() == 0;
   }
 
