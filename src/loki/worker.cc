@@ -201,6 +201,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
 
+  bbox_intersection_.reserve(1e6);
+
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
   for (const auto& kv : config.get_child("loki.actions")) {
@@ -464,6 +466,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
   // keep track of the metrics if the request is going back to the client
   if (!result.intermediate)
     enqueue_statistics(request);
+
+  for (const auto& stat : request.info().statistics()) {
+    LOG_INFO("{}: {}", stat.key(), stat.value());
+  }
 
   return result;
 }

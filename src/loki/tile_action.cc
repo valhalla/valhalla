@@ -3,6 +3,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "loki/node_search.h"
 #include "loki/worker.h"
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
@@ -865,6 +866,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     }
   }
 }
+
 } // anonymous namespace
 
 namespace valhalla {
@@ -887,9 +889,11 @@ std::string loki_worker_t::render_tile(Api& request) {
 
   // query edges in bbox, omits opposing edges
   // TODO(nils): can RangeQuery be updated to skip hierarchy levels?
-  const auto edge_ids = candidate_query_.RangeQuery(bounds);
+  // const auto edge_ids = candidate_query_.RangeQuery(bounds);
+  bbox_intersection_.clear();
+  search_.edges_in_bounds(bounds, bbox_intersection_);
 
-  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
+  build_layers(reader, tile, bounds, bbox_intersection_, min_zoom_road_class_, z,
                options.tile_options().return_shortcuts());
 
   return tile.serialize();

@@ -741,7 +741,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
 
   std::cerr << "[          ] " << Options_Action_Enum_Name(action)
             << " with mjolnir.tile_dir = " << map.config.get<std::string>("mjolnir.tile_dir")
-            << " with center " << center << " and zoom " << zoom;
+            << " with center " << center << " and zoom " << zoom << "\n";
 
   const auto& center_coords = detail::to_ll(map.nodes, center);
 
