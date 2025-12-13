@@ -262,12 +262,12 @@ struct bin_handler_t {
   cost_ptr_t costing;
   unsigned int max_reach_limit;
   std::vector<candidate_t> bin_candidates;
-  std::unordered_set<uint64_t> correlated_edges;
+  ankerl::unordered_dense::set<uint64_t> correlated_edges;
   Reach reach_finder;
 
   // keep track of edges whose reachability we've already computed
   // TODO: dont use pointers as keys, its safe for now but fancy caching one day could be bad
-  std::unordered_map<const DirectedEdge*, directed_reach> directed_reaches;
+  ankerl::unordered_dense::map<const DirectedEdge*, directed_reach> directed_reaches;
 
   bin_handler_t(vb::GraphReader& reader) : reader(reader), max_reach_limit(0) {
   }
