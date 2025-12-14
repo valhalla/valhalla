@@ -931,7 +931,7 @@ function filter_tags_generic(kv)
     forward = highway[kv["construction"]]
   end
   local ferry = kv["route"] == "ferry"
-  local rail = kv["route"] == "shuttle_train"
+  local rail = kv["route"] == "shuttle_train" or kv["route"] == "train"
   local access = any_in(access, kv["access"])
 
   kv["emergency_forward"] = "false"
@@ -1049,16 +1049,12 @@ function filter_tags_generic(kv)
       kv["motorroad_tag"] = "true"
     end
   -- its not a highway type that we know of
-  else
+  elseif ferry or rail then
     --if its a ferry and these tags dont show up we want to set them to true
-    local default_val = tostring(ferry)
+    local default_val = "true"
 
-    if ferry == false and rail == true then
-      default_val = tostring(rail)
-    end
-
-    -- expect access=private not be combined with other values
-    if ((ferry == false and rail == false) or kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
+    -- handle inverse access cases like access=no + foot=yes
+    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
       default_val = "false"
     end
 
@@ -1134,6 +1130,25 @@ function filter_tags_generic(kv)
     if kv["motorroad"] == "yes" then
       kv["motorroad_tag"] = "true"
     end
+  else
+    -- something we have no idea about
+    kv["auto_forward"] = "false"
+    kv["truck_forward"] = "false"
+    kv["bus_forward"] = "false"
+    kv["taxi_forward"] = "false"
+    kv["moped_forward"] = "false"
+    kv["motorcycle_forward"] = "false"
+    kv["pedestrian_forward"] = "false"
+    kv["bike_forward"] = "false"
+
+    kv["auto_backward"] = "false"
+    kv["truck_backward"] = "false"
+    kv["bus_backward"] = "false"
+    kv["taxi_backward"] = "false"
+    kv["moped_backward"] = "false"
+    kv["motorcycle_backward"] = "false"
+    kv["pedestrian_backward"] = "false"
+    kv["bike_backward"] = "false"
   end
 
   --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
