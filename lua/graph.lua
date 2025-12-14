@@ -931,7 +931,7 @@ function filter_tags_generic(kv)
     forward = highway[kv["construction"]]
   end
   local ferry = kv["route"] == "ferry"
-  local rail = kv["route"] == "shuttle_train" or kv["railway"] == "rail"
+  local rail = kv["route"] == "shuttle_train"
   local access = any_in(access, kv["access"])
 
   kv["emergency_forward"] = "false"
