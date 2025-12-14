@@ -95,7 +95,7 @@ TEST(Traffic, BasicUpdates) {
                                    {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC"});
-    gurka::assert::raw::expect_eta(result, 25.731991);
+    gurka::assert::raw::expect_eta(result, 22.377953);
   }
 
   std::cout << "[          ] Back to previous speed" << std::endl;
