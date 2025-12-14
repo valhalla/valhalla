@@ -20,6 +20,7 @@
    * CHANGED: Templatize CostMatrix connection check [#5729](https://github.com/valhalla/valhalla/pull/5729)
    * ADDED: /tile endpoint to serve MVT (BETA) [#5663](https://github.com/valhalla/valhalla/pull/5663)
    * ADDED: `valhalla-dev` image [#5739](https://github.com/valhalla/valhalla/pull/5739)
+   * CHANGED: Increase maximum supported OSM speed to 161 km/h (100 mph) [#5767](https://github.com/valhalla/valhalla/pull/5767)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
