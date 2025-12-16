@@ -390,7 +390,7 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
                                const OSMData& osmdata,
                                const bool forward,
                                GraphTileBuilder& graphtile,
-                               const std::string& countryIso) {
+                               const std::string& country_iso) {
   auto res = osmdata.access_restrictions.equal_range(wayid);
   if (res.first == osmdata.access_restrictions.end()) {
     return 0;
@@ -405,7 +405,7 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
         (!forward && direction == AccessRestrictionDirection::kBackward)) {
       auto value = r->second.value();
       if (r->second.type() == AccessType::kVignette) {
-        value = CountryISOCodeToValue(boost::to_upper_copy(countryIso));
+        value = CountryISOCodeToValue((country_iso.empty()) ? "" : country_iso);
       }
       AccessRestriction access_restriction(edgeid, r->second.type(), r->second.modes(), value,
                                            r->second.except_destination());
@@ -1071,15 +1071,10 @@ void BuildTileSet(const std::string& ways_file,
           // Add restrictions..For now only storing access restrictions for trucks
           // TODO - support more than one mode
           if (directededge.forwardaccess()) {
-            std::string countryIso = "";
-            try {
-              const Admin& admin = graphtile.admins_builder(admin_index);
-              countryIso = admin.country_iso();
-            } catch (...) {
-              LOG_ERROR("admin_index size is greater than admin count in Graphbuilder");
-            }
-            uint32_t ar_modes = AddAccessRestrictions(idx, w.way_id(), osmdata,
-                                                      directededge.forward(), graphtile, countryIso);
+            const Admin& admin = graphtile.admins_builder(admin_index);
+            uint32_t ar_modes =
+                AddAccessRestrictions(idx, w.way_id(), osmdata, directededge.forward(), graphtile,
+                                      admin.country_iso());
             if (ar_modes) {
               directededge.set_access_restriction(ar_modes);
             }
