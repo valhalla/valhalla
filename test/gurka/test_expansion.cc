@@ -306,4 +306,3 @@ INSTANTIATE_TEST_SUITE_P(ExpandPropsTest,
                                                                     "pred_edge_id", "expansion_type"},
                                            std::vector<std::string>{"edge_id", "cost"},
                                            std::vector<std::string>{}));
-                                           
