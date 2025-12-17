@@ -393,7 +393,7 @@ public:
   }
 
   virtual Cost BSSCost() const override {
-    return {kDefaultBssCost, kDefaultBssPenalty};
+    return bike_share_cost_;
   };
 
   // Hidden in source file so we don't need it to be protected
