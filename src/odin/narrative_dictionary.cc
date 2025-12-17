@@ -344,6 +344,10 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   LOG_TRACE("Populate park_vehicle_subset");
   // Populate park_vehicle_subset
   Load(park_vehicle_subset, narrative_pt.get_child(kParkVehicleKey));
+
+  LOG_TRACE("Populate lbike_share_verbal_subset");
+  // Populate bike_share_verbal_subset
+  Load(bike_share_verbal, narrative_pt.get_child(kBikeShareVerbalKey));
 }
 
 void NarrativeDictionary::Load(PhraseSet& phrase_handle,
