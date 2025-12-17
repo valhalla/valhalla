@@ -43,7 +43,7 @@ bool parse_common_args(const std::string& program,
   }
 
   if (result.count("version")) {
-    std::cout << std::string(program) << " " << VALHALLA_PRINT_VERSION << "\n";
+    std::cout << VALHALLA_PRINT_VERSION << "\n";
     return false;
   }
 
