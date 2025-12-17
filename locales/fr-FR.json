@@ -2319,6 +2319,20 @@
         ]
       }
     },
+    "bike_share_verbal": {
+      "phrases": {
+        "0": "Louez un vélo à la station de vélos en libre-service.",
+        "1": "Remettez le vélo à la station de vélos en libre-service."
+      },
+      "example_phrases": {
+        "0": [
+          "Rent a bike from bike share station."
+        ],
+        "1": [
+          "Return a bike at the bike share station."
+        ]
+      }
+    },
     "enter_building": {
       "phrases": {
         "0": "Entrez dans le bâtiment.",
