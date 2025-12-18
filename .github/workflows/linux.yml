@@ -92,7 +92,7 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: nbg1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache-2
@@ -116,7 +116,7 @@ jobs:
         if: always()
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: nbg1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache-2
@@ -168,7 +168,7 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: nbg1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache-2
@@ -193,7 +193,7 @@ jobs:
         if: always()
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: nbg1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache-2
@@ -253,7 +253,7 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: nbg1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache-2
@@ -275,7 +275,7 @@ jobs:
         if: always()
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: nbg1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache-2
