@@ -164,10 +164,10 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     std::unordered_set<uint64_t> processed_bins;
 
     bool found = false;
-    for (const auto& [tile_id, bin_map] : bins_intersected) {
+    for (const auto& [tile_id, bin_map] : line_intersected) {
       if (found)
         break;
-      for (const auto& [bin_id, _] : bin_map) {
+      for (const auto& bin_id : bin_map) {
         if (found)
           break;
         // go through all of them, go through its neighbors
