@@ -19,6 +19,9 @@
    * ADDED: Proper time tracking in Bidirectional A* [#5640](https://github.com/valhalla/valhalla/pull/5640/)
    * CHANGED: Templatize CostMatrix connection check [#5729](https://github.com/valhalla/valhalla/pull/5729)
    * ADDED: /tile endpoint to serve MVT (BETA) [#5663](https://github.com/valhalla/valhalla/pull/5663)
+   * ADDED: `valhalla-dev` image [#5739](https://github.com/valhalla/valhalla/pull/5739)
+   * CHANGED: --version program options to print _only_ the version string and omit the program name [#5769](https://github.com/valhalla/valhalla/pull/5769)
+   * CHANGED: upgraded tz submodule to 2025c [#5766](https://github.com/valhalla/valhalla/pull/5766)
    * CHANGED: renamed `GraphId::Is_Valid()` -> `GraphId::is_valid()` and `GraphId::Tile_Base` -> `GraphId::tile_base` [#5678](https://github.com/valhalla/valhalla/pull/5678)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
