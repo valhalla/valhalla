@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import public "common.proto";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
 
@@ -29,5 +30,6 @@ message Expansion {
   repeated ExpansionType expansion_type = 8;
   repeated Geometry geometries = 7;
   repeated uint32 flow_sources = 9 [packed=true];
+  repeated TravelMode modes = 10 [packed=true];
 }
 

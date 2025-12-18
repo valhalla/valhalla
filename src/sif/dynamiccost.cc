@@ -679,6 +679,10 @@ void ParseCosting(const rapidjson::Document& doc,
       costing->set_type(Costing::bikeshare); // Nothing to parse for this one
       break;
     }
+    case Costing::multimodal_drive: {
+      costing->set_type(Costing::multimodal_drive);
+      break;
+    }
     case Costing::transit: {
       sif::ParseTransitCostOptions(doc, key, costing);
       break;

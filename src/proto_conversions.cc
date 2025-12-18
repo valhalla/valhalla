@@ -216,12 +216,20 @@ bool Costing_Enum_Parse(const std::string& costing, Costing::Type* c) {
       {"none", Costing::none_},
       {"", Costing::none_},
       {"bikeshare", Costing::bikeshare},
+      {"multimodal_drive", Costing::multimodal_drive},
   };
   auto i = costings.find(costing);
   if (i == costings.cend())
     return false;
   *c = i->second;
   return true;
+}
+
+const std::string_view TravelMode_Enum_Name(const TravelMode mode) {
+  constexpr std::array<std::string_view, 4> modes{"drive", "pedestrian", "bicycle", "transit"};
+  if (static_cast<size_t>(mode) >= modes.size())
+    return "unknown";
+  return modes[static_cast<size_t>(mode)];
 }
 
 const std::string& Costing_Enum_Name(const Costing::Type costing) {
@@ -240,6 +248,7 @@ const std::string& Costing_Enum_Name(const Costing::Type costing) {
       // auto_data_fix is deprecated
       {Costing::none_, "none"},
       {Costing::bikeshare, "bikeshare"},
+      {Costing::multimodal_drive, "multimodal_drive"},
   };
   auto i = costings.find(costing);
   return i == costings.cend() ? empty_str : i->second;
@@ -365,15 +374,17 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
 
 bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
                                             Options::ExpansionProperties* a) {
-  static const std::unordered_map<std::string, Options::ExpansionProperties>
-      actions{{"cost", Options_ExpansionProperties_cost},
-              {"duration", Options_ExpansionProperties_duration},
-              {"distance", Options_ExpansionProperties_distance},
-              {"edge_status", Options_ExpansionProperties_edge_status},
-              {"edge_id", Options::ExpansionProperties::Options_ExpansionProperties_edge_id},
-              {"pred_edge_id", Options_ExpansionProperties_pred_edge_id},
-              {"expansion_type", Options_ExpansionProperties_expansion_type},
-              {"flow_sources", Options_ExpansionProperties_flow_sources}};
+  static const std::unordered_map<std::string, Options::ExpansionProperties> actions{
+      {"cost", Options_ExpansionProperties_cost},
+      {"duration", Options_ExpansionProperties_duration},
+      {"distance", Options_ExpansionProperties_distance},
+      {"edge_status", Options_ExpansionProperties_edge_status},
+      {"edge_id", Options::ExpansionProperties::Options_ExpansionProperties_edge_id},
+      {"pred_edge_id", Options_ExpansionProperties_pred_edge_id},
+      {"expansion_type", Options_ExpansionProperties_expansion_type},
+      {"flow_sources", Options_ExpansionProperties_flow_sources},
+      {"travel_mode", Options_ExpansionProperties_travel_mode},
+  };
   auto i = actions.find(prop);
   if (i == actions.cend())
     return false;

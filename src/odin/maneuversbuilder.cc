@@ -1570,6 +1570,11 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
       maneuver.set_begin_street_names(std::move(curr_edge_names));
     }
   }
+  if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kParking && prev_edge &&
+      (prev_edge->travel_mode() == TravelMode::kDrive) &&
+      maneuver.travel_mode() == TravelMode::kPedestrian) {
+    maneuver.set_type(valhalla::DirectionsLeg_Maneuver_Type_kParkVehicle);
+  }
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare && prev_edge &&
       (prev_edge->travel_mode() == TravelMode::kBicycle) &&
       maneuver.travel_mode() == TravelMode::kPedestrian) {
@@ -2156,6 +2161,9 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
     return false;
   }
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare) {
+    return false;
+  }
+  if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kParking) {
     return false;
   }
   /////////////////////////////////////////////////////////////////////////////

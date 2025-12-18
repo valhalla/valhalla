@@ -383,6 +383,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
            &timedep_reverse,
            &bidir_astar,
            &bss_astar,
+           &mmd,
        }) {
     alg->set_interrupt(interrupt);
   }
@@ -390,6 +391,10 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   // Have to use multimodal for transit based routing
   if (routetype == "multimodal" || routetype == "transit") {
     return &multi_modal_astar;
+  }
+
+  if (routetype == "multimodal_drive") {
+    return &mmd;
   }
 
   // Have to use bike share station algorithm

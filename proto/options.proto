@@ -129,6 +129,7 @@ message Costing {
     taxi = 9;
     auto_ = 10;
     bikeshare = 11;    // turns into pedestrian + bike
+    multimodal_drive = 12; // turns into pedestrian + drive (auto, bus, motor_scooter, motorcycle, truck)
   }
 
   message Options {
@@ -423,6 +424,7 @@ message Options {
     pred_edge_id = 5;
     expansion_type = 6;
     flow_sources = 7;
+    travel_mode = 8;
   }
 
   enum ReverseTimeTracking {

@@ -340,6 +340,12 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_matrix_distance": 200000.0,
           "max_matrix_location_pairs": 2500
         },
+        "multimodal_drive": {
+          "max_distance": 500000.0,
+          "max_locations": 50,
+          "max_matrix_distance": 200000.0,
+          "max_matrix_location_pairs": 2500
+        },
         "bus": {
           "max_distance": 5000000.0,
           "max_locations": 50,

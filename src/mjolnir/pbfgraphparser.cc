@@ -2179,6 +2179,10 @@ struct graph_parser {
         ref_katakana_ = tag.second;
       } else if (tag.first == "ref:pronunciation:jeita") {
         ref_jeita_ = tag.second;
+      } else if (tag.first == "amenity" && tag.second == "parking") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kParking);
       } else if (tag.first == "gate" && tag.second == "true") {
         osmdata_.edge_count += !intersection;
         intersection = true;
