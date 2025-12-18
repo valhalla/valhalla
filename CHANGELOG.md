@@ -164,6 +164,7 @@
    * ADDED: Sqlite3 RAII wrapper around sqlite3* and spatielite connection [#5206](https://github.com/valhalla/valhalla/pull/5206)
    * CHANGED: Improved SQL statements when building admins [#5219](https://github.com/valhalla/valhalla/pull/5219)
    * CHANGED: Replace `boost::geometry` by GEOS for operations with admin/tz polygons and clip them by tile bbox [#5204](https://github.com/valhalla/valhalla/pull/5204)
+   * ADDED: support for per-level polygon exclusion [#5233](https://github.com/valhalla/valhalla/pull/5233/)
    * UPDATED: bump cxxopts [#5243](https://github.com/valhalla/valhalla/pull/5243)
    * ADDED: Make iterations limit configurable in costmatrix [#5221](https://github.com/valhalla/valhalla/pull/5221)
    * ADDED: Enforce the order of includes via `clang-format` [#5230](https://github.com/valhalla/valhalla/pull/5230)
