@@ -137,10 +137,10 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: nbg1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           # actions/cache compatible properties: https://github.com/actions/cache
           path: /home/runner/.cache/ccache
           key: ccache-manylinux_2_28_${{  matrix.arch  }}
@@ -182,10 +182,10 @@ jobs:
         if: always()
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: nbg1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-manylinux_2_28_${{  matrix.arch  }}
 
@@ -234,10 +234,10 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: nbg1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           # actions/cache compatible properties: https://github.com/actions/cache
           key: ccache-osx-${{ env.VALHALLA_BRANCH }}
           restore-keys: |
@@ -269,10 +269,10 @@ jobs:
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: nbg1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           key: ccache-osx-${{ env.VALHALLA_BRANCH }}
           path: ~/Library/Caches/ccache
 
@@ -357,10 +357,10 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: vcpkg-restore
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: nbg1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           # actions/cache compatible properties: https://github.com/actions/cache
           key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
           path: |
@@ -404,10 +404,10 @@ jobs:
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: nbg1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
           path: |
             vcpkg/*

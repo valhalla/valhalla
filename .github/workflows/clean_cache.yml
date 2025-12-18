@@ -28,13 +28,13 @@ jobs:
           wget https://dl.min.io/client/mc/release/linux-amd64/mc
           chmod +x mc
           ./mc --help
-          ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          ./mc alias set hetzner https://nbg1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
 
       - name: Remove branch's cache objects
         shell: bash
         run: |
           # CAREFUL: only bash, not zsh compatible
-          all_objects=$(./mc ls --quiet --recursive hetzner/gha-cache | awk '{ print $6 }')
+          all_objects=$(./mc ls --quiet --recursive hetzner/gha-cache-2 | awk '{ print $6 }')
           filtered=""
           for line in $all_objects; do
             # will match (any_char)<branch_name>(-<any_number>)/cache.tzst, anything inside () being optional
@@ -44,7 +44,7 @@ jobs:
           done
 
           for entry in $filtered; do
-            ./mc rm --recursive --force hetzner/gha-cache/${entry} || echo "couldn't find $entry"
+            ./mc rm --recursive --force hetzner/gha-cache-2/${entry} || echo "couldn't find $entry"
           done
   clear_ccache:
     name: Clear ccache on branch
@@ -56,7 +56,7 @@ jobs:
           wget https://dl.min.io/client/mc/release/linux-amd64/mc
           chmod +x mc
           ./mc --help
-          ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          ./mc alias set hetzner https://nbg1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
 
       - name: Delete master caches
         run: |
@@ -67,10 +67,10 @@ jobs:
           else
             branch="${{ github.ref_name }}"
           fi
-          ./mc find hetzner/gha-cache --path "ccache-debug-linux-x86_64-${branch}*" --exec "./mc rm --force {}"
+          ./mc find hetzner/gha-cache-2 --path "ccache-debug-linux-x86_64-${branch}*" --exec "./mc rm --force {}"
           # the others hardly accumulate, can be done manually every now and then
           if [[ ${{ github.event.inputs.clear_all == 'true' }} ]]; then
-            ./mc find hetzner/gha-cache --path "ccache-release-linux-x86_64-${branch}*" --exec "./mc rm --force {}"
-            ./mc find hetzner/gha-cache --path "ccache-release-linux-aarch64-${branch}*" --exec "./mc rm --force {}"
-            ./mc find hetzner/gha-cache --path "ccache-osx-${branch}*" --exec "./mc rm --force {}"
+            ./mc find hetzner/gha-cache-2 --path "ccache-release-linux-x86_64-${branch}*" --exec "./mc rm --force {}"
+            ./mc find hetzner/gha-cache-2 --path "ccache-release-linux-aarch64-${branch}*" --exec "./mc rm --force {}"
+            ./mc find hetzner/gha-cache-2 --path "ccache-osx-${branch}*" --exec "./mc rm --force {}"
           fi
