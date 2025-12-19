@@ -922,6 +922,8 @@ std::string loki_worker_t::render_tile(Api& request) {
   //   do the same when z > min_zoom_road_class_.back()
   if (z < min_zoom_road_class_.front()) {
     return tile.serialize();
+  } else if (z > min_zoom_road_class_.back()) {
+    throw valhalla_exception_t{175, std::to_string(min_zoom_road_class_.back())};
   }
 
   // time this whole method and save that statistic

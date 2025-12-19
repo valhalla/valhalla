@@ -218,7 +218,19 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   test_tile(12, 5717, 10, 12, cache_count);
   test_tile(13, 7205, 14, 20, cache_count);
   test_tile(14, 7903, 17, 20, cache_count);
-
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
+
+  // make sure we fail the request when z exceeds what the server supports
+  EXPECT_THROW(
+      {
+        try {
+          test_tile(16, 7903, 17, 20, cache_count);
+        } catch (const valhalla_exception_t& e) {
+          EXPECT_EQ(e.code, 175);
+          EXPECT_STREQ(e.what(), "Exceeded max zoom level of: 14");
+          throw;
+        }
+      },
+      valhalla_exception_t);
 }
