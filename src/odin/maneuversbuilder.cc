@@ -1574,6 +1574,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
       (prev_edge->travel_mode() == TravelMode::kDrive) &&
       maneuver.travel_mode() == TravelMode::kPedestrian) {
     maneuver.set_type(valhalla::DirectionsLeg_Maneuver_Type_kParkVehicle);
+    maneuver.set_travel_mode(TravelMode::kDrive);
   }
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare && prev_edge &&
       (prev_edge->travel_mode() == TravelMode::kBicycle) &&

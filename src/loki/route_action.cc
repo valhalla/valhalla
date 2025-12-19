@@ -69,7 +69,8 @@ void loki_worker_t::route(Api& request) {
   auto connectivity_level = TileHierarchy::levels().back();
   uint32_t connectivity_radius = 0;
   // Validate walking distances (make sure they are in the accepted range)
-  if (costing_name == "multimodal" || costing_name == "transit") {
+  if (costing_name == "multimodal" || costing_name == "transit" ||
+      costing_name == "multimodal_drive") {
     auto& ped_opts = *options.mutable_costings()->find(Costing::pedestrian)->second.mutable_options();
     if (!ped_opts.has_transit_start_end_max_distance_case())
       ped_opts.set_transit_start_end_max_distance(min_transit_walking_dis);

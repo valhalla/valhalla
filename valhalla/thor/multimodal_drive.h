@@ -95,6 +95,9 @@ protected:
   // Destinations, id and cost
   std::map<uint64_t, sif::Cost> destinations_;
 
+  // Maximum distance for the walking part
+  uint32_t max_walking_distance{0};
+
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
    * @param  origll  Lat,lng of the origin.

@@ -68,8 +68,14 @@ void MultimodalDrive::Init(const midgard::PointLL& origll, const midgard::PointL
   // At the same time, we also want to get the factors as large as possible to optimize the
   // performance
   // TODO: Any better idea to normalize the A* heuristic cost?
+  float min_dist = origll.Distance(destll);
+  // clamp the max walking distance to the shortest possible distance for the route
+  float max_walk_dist = std::min(min_dist, static_cast<float>(max_walking_distance));
+  // In order to not overestimate the true cost, we assume the worst case, in which the user
+  // will walk as much as is allowed
   auto common_astar_cost =
-      std::min(pedestrian_costing_->AStarCostFactor(), drive_costing_->AStarCostFactor());
+      pedestrian_costing_->AStarCostFactor() * (max_walk_dist / min_dist) +
+      drive_costing_->AStarCostFactor() * ((min_dist - max_walk_dist) / min_dist);
 
   pedestrian_astarheuristic_.Init(destll, common_astar_cost);
   drive_astarheuristic_.Init(destll, common_astar_cost);
@@ -264,12 +270,17 @@ MultimodalDrive::GetBestPath(valhalla::Location& origin,
                              GraphReader& graphreader,
                              const sif::mode_costing_t& mode_costing,
                              const travel_mode_t mode,
-                             const Options&) {
+                             const Options& options) {
   // Set the mode and costing
   mode_ = mode;
   pedestrian_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kPedestrian)];
   drive_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kDrive)];
   travel_type_ = drive_costing_->travel_type();
+
+  // steal this parameter from transit costing, it's basically the same concept, just
+  // the naming doesn't quite fit
+  max_walking_distance =
+      options.costings().find(Costing::pedestrian)->second.options().transit_start_end_max_distance();
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   // Note: because we can correlate to more than one place for a given PathLocation
@@ -387,7 +398,7 @@ MultimodalDrive::GetBestPath(valhalla::Location& origin,
         }
         return {FormPath(graphreader, best_path.first)};
       } else {
-        LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_.size()));
+        LOG_ERROR("No convergence to destination after {} iterations ", edgelabels_.size());
         return {};
       }
     }

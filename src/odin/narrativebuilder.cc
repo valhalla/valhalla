@@ -4288,16 +4288,7 @@ std::string NarrativeBuilder::FormParkVehicleInstruction(Maneuver& /*maneuver*/)
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
-
-  // if (!maneuver.end_level_ref().empty()) {
-  //   end_level = maneuver.end_level_ref();
-  // }
-
-  // Set instruction to the determined tagged phrase
   instruction = dictionary_.park_vehicle_subset.phrases.at(std::to_string(phrase_id));
-  LOG_ERROR(instruction);
-
-  // Replace phrase tags with values
 
   return instruction;
 }
