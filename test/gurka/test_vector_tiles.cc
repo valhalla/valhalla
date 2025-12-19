@@ -212,12 +212,12 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   };
 
   uint32_t cache_count = 0;
-  test_tile(8, 3418, 3, 4, cache_count);
-  test_tile(10, 5002, 7, 12, cache_count);
-  test_tile(11, 5717, 10, 12, cache_count);
-  test_tile(12, 5717, 10, 12, cache_count);
-  test_tile(13, 7205, 14, 20, cache_count);
-  test_tile(14, 7903, 17, 20, cache_count);
+  test_tile(8, 3418, 3, 4, cache_count);    // only primary and upper
+  test_tile(10, 5002, 7, 12, cache_count);  // adds secondary
+  test_tile(11, 5717, 10, 12, cache_count); // adds tertiary & unclassified
+  test_tile(12, 5717, 10, 12, cache_count); // same as 11
+  test_tile(13, 7205, 14, 20, cache_count); // adds residential
+  test_tile(14, 7903, 17, 20, cache_count); // adds service/other
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
 
