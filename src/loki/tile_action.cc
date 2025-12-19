@@ -918,11 +918,10 @@ std::string loki_worker_t::render_tile(Api& request) {
 
   vtzero::tile_builder tile;
   const auto z = options.tile_xyz().z();
-  // TODO(nils): once we allow for overzooming by exposing MVT extent, we should probably
-  //   do the same when z > min_zoom_road_class_.back()
   if (z < min_zoom_road_class_.front()) {
     return tile.serialize();
   } else if (z > min_zoom_road_class_.back()) {
+    // throwing allows clients (mapblibre at least) to overzoom
     throw valhalla_exception_t{175, std::to_string(min_zoom_road_class_.back())};
   }
 
@@ -955,13 +954,22 @@ std::string loki_worker_t::render_tile(Api& request) {
   tile.serialize(tile_bytes);
 
   if (!is_cached && cache_allowed) {
+    // atomically create the file (at least works for multithreading)
+    auto tmp = tile_path;
+    tmp += ".tmp_" + std::to_string(getpid());
+
+    static std::mutex m;
+    std::lock_guard<std::mutex> lock(m);
+
     std::filesystem::create_directories(tile_path.parent_path());
-    std::ofstream out(tile_path.string(), std::ios::binary);
+    std::ofstream out(tmp.string(), std::ios::binary);
     out.write(tile_bytes.data(), static_cast<std::streamsize>(tile_bytes.size()));
     out.close();
     if (!out) {
       LOG_WARN("Couldnt cache tile {}", tile_path.string());
     }
+
+    std::filesystem::rename(tmp, tile_path);
   }
 
   return tile_bytes;
