@@ -90,6 +90,7 @@ protected:
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus pedestrian_edgestatus_;
   EdgeStatus drive_edgestatus_;
+  std::vector<HierarchyLimits> hierarchy_limits_;
 
   // Destinations, id and cost
   std::map<uint64_t, sif::Cost> destinations_;

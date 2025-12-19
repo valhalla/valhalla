@@ -1,5 +1,6 @@
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
+#include "sif/hierarchylimits.h"
 #include "thor/multimodal_drive.h"
 
 #include <algorithm>
@@ -72,6 +73,7 @@ void MultimodalDrive::Init(const midgard::PointLL& origll, const midgard::PointL
 
   pedestrian_astarheuristic_.Init(destll, common_astar_cost);
   drive_astarheuristic_.Init(destll, common_astar_cost);
+  hierarchy_limits_ = drive_costing_->GetHierarchyLimits();
 
   // Get the initial cost based on A* heuristic from origin
   float mincost = std::min(drive_astarheuristic_.Get(origll), pedestrian_astarheuristic_.Get(origll));
@@ -244,6 +246,11 @@ void MultimodalDrive::ExpandForward(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      if (current_costing->UseHierarchyLimits() &&
+          (!trans->up() &&
+           StopExpanding(hierarchy_limits_[trans->endnode().level()], pred.distance()))) {
+        continue;
+      }
       ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, from_parking, mode,
                     destination, best_path);
     }
@@ -383,6 +390,12 @@ MultimodalDrive::GetBestPath(valhalla::Location& origin,
         LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_.size()));
         return {};
       }
+    }
+    //
+    // Do not expand based on hierarchy level based on number of upward
+    // transitions and distance to the destination
+    if (StopExpanding(hierarchy_limits_[pred.endnode().level()], dist2dest)) {
+      continue;
     }
 
     // Expand forward from the end node of the predecessor edge.
