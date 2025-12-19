@@ -308,8 +308,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
   candidate_query_cache_size_ = config.get<size_t>("meili.grid.cache_size");
-  mvt_cache_dir_ = config.get<std::string>("loki.service_defaults.mvt_cache_dir");
-  if (!std::filesystem::exists(mvt_cache_dir_))
+  mvt_cache_dir_ = config.get<std::string>("loki.service_defaults.mvt_cache_dir", "");
+  if (!mvt_cache_dir_.empty() && !std::filesystem::exists(mvt_cache_dir_))
     std::filesystem::create_directory(mvt_cache_dir_);
   mvt_cache_min_zoom_ = config.get<uint32_t>("loki.service_defaults.mvt_cache_min_zoom");
 

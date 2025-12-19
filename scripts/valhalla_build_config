@@ -112,7 +112,7 @@ config = {
             "street_side_max_distance": 1000,
             "heading_tolerance": 60,
             "mvt_min_zoom_road_class": [7, 7, 8, 11, 11, 12, 13, 14],
-            "mvt_cache_dir": "/data/valhalla/mvt",
+            "mvt_cache_dir": Optional(str),
             "mvt_cache_min_zoom": 11,
         },
         "logging": {
@@ -456,7 +456,7 @@ help_text = {
             "street_side_max_distance": "The max distance in meters that the input coordinates or display ll can be from the edge centerline for them to be used for determining the side of street. Beyond this distance the side of street is set to none",
             "heading_tolerance": "When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading",
             "mvt_min_zoom_road_class": "Minimum zoom level for each road class (8 values: Motorway, Trunk, Primary, Secondary, Tertiary, Unclassified, Residential, Service/Other). Roads will only be rendered at or above their minimum zoom level.",
-            "mvt_cache_dir": "The cache directory for MVT tiles",
+            "mvt_cache_dir": "The cache directory for MVT tiles. If empty/omitted, we disable MVT caching",
             "mvt_cache_min_zoom": "The minimum zoom level which will be cached, the maximum will be determined by mvt_min_zoom_road_class",
         },
         "logging": {
