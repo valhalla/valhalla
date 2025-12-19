@@ -23,6 +23,7 @@
    * CHANGED: --version program options to print _only_ the version string and omit the program name [#5769](https://github.com/valhalla/valhalla/pull/5769)
    * CHANGED: upgraded tz submodule to 2025c [#5766](https://github.com/valhalla/valhalla/pull/5766)
    * FIXED: Omit debug symbols in docker image [#5777](https://github.com/valhalla/valhalla/pull/5777)
+   * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
