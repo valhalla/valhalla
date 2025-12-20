@@ -2,6 +2,7 @@
 #include "loki/utils.h"
 #include "loki/worker.h"
 #include "midgard/constants.h"
+#include "test.h"
 
 #include <valhalla/exceptions.h>
 
@@ -14,6 +15,29 @@
 
 using namespace valhalla;
 using namespace valhalla::midgard;
+
+TEST(VectorTilesBasic, ConfigFail) {
+  // zoom config with descending levels fails
+  auto config = test::make_config("/tmp");
+  auto& mvt_min_zoom_road_class = config.get_child("loki.service_defaults.mvt_min_zoom_road_class");
+  auto it = mvt_min_zoom_road_class.begin();
+  it->second.put_value(30);
+  EXPECT_THROW(loki::loki_worker_t loki_worker(config), std::runtime_error);
+
+  // the wrong number of zoom levels fails too
+  mvt_min_zoom_road_class.erase(it);
+  EXPECT_THROW(
+      {
+        try {
+          loki::loki_worker_t loki_worker(config);
+        } catch (const std::runtime_error& e) {
+          EXPECT_TRUE(
+              std::string(e.what()).starts_with("mvt_min_zoom_road_class out of bounds, expected"));
+          throw;
+        }
+      },
+      std::runtime_error);
+};
 
 TEST(VectorTilesBasic, TileRendering) {
   constexpr double gridsize = 100;
@@ -220,6 +244,9 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   test_tile(14, 7903, 17, 20, cache_count); // adds service/other
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
+
+  // execute the cache path
+  test_tile(8, 3418, 3, 4, cache_count);
 
   // make sure we fail the request when z exceeds what the server supports
   EXPECT_THROW(
