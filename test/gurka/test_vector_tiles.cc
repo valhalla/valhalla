@@ -246,7 +246,7 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   EXPECT_EQ(cache_count, 4);
 
   // execute the cache path
-  test_tile(8, 3418, 3, 4, cache_count);
+  test_tile(14, 7903, 17, 20, cache_count);
 
   // make sure we fail the request when z exceeds what the server supports
   EXPECT_THROW(
