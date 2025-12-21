@@ -11,6 +11,8 @@
 using namespace valhalla;
 using LiveTrafficCustomize = test::LiveTrafficCustomize;
 
+namespace {
+
 const std::vector<std::string>& costing = {"auto",  "taxi",          "bus",
                                            "truck", "motor_scooter", "motorcycle"};
 
@@ -53,6 +55,7 @@ void update_bidir_edges(baldr::GraphReader& reader,
 gurka::map map = {};
 const std::unordered_map<std::string, std::string> build_config{
     {"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}};
+} // namespace
 
 TEST(Standalone, CostingWithTraffic) {
   constexpr double gridsize_metres = 10;

@@ -1,3 +1,6 @@
+# Enable CTest support
+enable_testing()
+
 # GoogleTest builds with /MT(d) by default, which is incompatible with Valhalla's /MD(d) builds.
 #
 # /MD(d) links the C++ runtime dynamically, while /MT(d) links it statically.
