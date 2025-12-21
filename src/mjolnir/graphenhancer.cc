@@ -158,24 +158,36 @@ void GetTurnTypes(const DirectedEdge& directededge,
 
   // Get the tile at the end node. and find inbound heading of the candidate
   // edge to the end node.
-  if (tile->id() != directededge.endnode().Tile_Base()) {
-    lock.lock();
-    tile = reader.GetGraphTile(directededge.endnode());
-    lock.unlock();
-  }
+  // ALWAYS read from GraphReader to get the original unmodified tile data,
+  // even if it's the same tile we're currently enhancing. This prevents
+  // reading data that's being modified by the tilebuilder.
+  lock.lock();
+  tile = reader.GetGraphTile(directededge.endnode());
+  lock.unlock();
   const NodeInfo* node = tile->node(directededge.endnode());
 
   // Iterate through outbound edges and get turn degrees from the candidate
   // edge onto outbound drivable edges.
+  // Collect edges with their local indexes to ensure deterministic ordering
+  std::vector<std::pair<uint32_t, const DirectedEdge*>> outbound_edges;
   const auto* diredge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
     // Skip opposing directed edge and any edge that is not a road. Skip any
     // edges that are not drivable outbound.
     if (i == directededge.opp_local_idx() || !(diredge->forwardaccess() & kAutoAccess) ||
-        (directededge.restrictions() & (1 << diredge->localedgeidx())) != 0) {
+        (directededge.restrictions() & (1 << i)) != 0) {
       continue;
     }
+    outbound_edges.emplace_back(i, diredge);
+  }
 
+  // Sort by local index to ensure deterministic ordering
+  std::sort(outbound_edges.begin(), outbound_edges.end(),
+            [](const auto& a, const auto& b) { return a.first < b.first; });
+
+  // Process edges in sorted order
+  for (const auto& edge_pair : outbound_edges) {
+    const auto* diredge = edge_pair.second;
     // Get the heading of the outbound edge (unfortunately GraphEnhancer may
     // not have yet computed and stored headings for this node).
     auto shape = tile->edgeinfo(diredge).shape();
@@ -769,11 +781,12 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
 
   // Get the tile at the end node. and find inbound heading of the candidate
   // edge to the end node.
-  if (tile->id() != directededge.endnode().Tile_Base()) {
-    lock.lock();
-    tile = reader.GetGraphTile(directededge.endnode());
-    lock.unlock();
-  }
+  // ALWAYS read from GraphReader to get the original unmodified tile data,
+  // even if it's the same tile we're currently enhancing. This prevents
+  // reading data that's being modified by the tilebuilder.
+  lock.lock();
+  tile = reader.GetGraphTile(directededge.endnode());
+  lock.unlock();
   const NodeInfo* node = tile->node(directededge.endnode());
   diredge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
@@ -990,7 +1003,9 @@ void enhance(const boost::property_tree::ptree& pt,
              const boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue,
              std::mutex& lock,
-             std::promise<enhancer_stats>& result) {
+             std::promise<enhancer_stats>& result,
+             std::vector<graph_tile_builder_ptr>& completed_tiles,
+             std::mutex& tiles_lock) {
 
   auto less_than = [](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); };
   sequence<OSMAccess> access_tags(access_file, false);
@@ -1406,12 +1421,15 @@ void enhance(const boost::property_tree::ptree& pt,
     }
     tilebuilder->AddTurnLanes(turn_lanes);
 
-    // Write the new file
-    lock.lock();
-    tilebuilder->StoreTileData();
+    // Store the tile builder for later writing (don't write yet to avoid cross-tile race conditions)
+    tiles_lock.lock();
+    completed_tiles.push_back(std::move(tilebuilder));
+    tiles_lock.unlock();
+
     LOG_TRACE("GraphEnhancer completed tile " + std::to_string(tile_id));
 
     // Check if we need to clear the tile cache
+    lock.lock();
     if (reader.OverCommitted()) {
       reader.Trim();
     }
@@ -1458,13 +1476,18 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // An atomic object we can use to do the synchronization
   std::mutex lock;
 
+  // Vector to hold completed tiles (write them after all enhancements are done)
+  std::vector<graph_tile_builder_ptr> completed_tiles;
+  std::mutex tiles_lock;
+
   // Start the threads
   for (auto& thread : threads) {
     results.emplace_back();
     thread =
         std::make_shared<std::thread>(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
                                       std::cref(access_file), std::ref(hierarchy_properties),
-                                      std::ref(tilequeue), std::ref(lock), std::ref(results.back()));
+                                      std::ref(tilequeue), std::ref(lock), std::ref(results.back()),
+                                      std::ref(completed_tiles), std::ref(tiles_lock));
   }
 
   // Wait for them to finish up their work
@@ -1482,6 +1505,14 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
     } catch (std::exception& e) {
       // TODO: throw further up the chain?
     }
+  }
+
+  // Now write all the enhanced tiles to disk. This must happen AFTER all enhancements
+  // are complete to avoid race conditions where one thread reads a tile that another
+  // thread is modifying, which can lead to non-deterministic output.
+  LOG_INFO("Writing " + std::to_string(completed_tiles.size()) + " enhanced tiles to disk...");
+  for (auto& tilebuilder : completed_tiles) {
+    tilebuilder->StoreTileData();
   }
 
   LOG_INFO("Finished with max_density " + std::to_string(stats.max_density));
