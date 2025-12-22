@@ -44,7 +44,7 @@ public:
     Register(Costing::multimodal, CreateNoCost); // dummy so it behaves like the rest
     Register(Costing::none_, CreateNoCost);
     Register(Costing::bikeshare, CreateBikeShareCost);
-    Register(Costing::multimodal_drive, CreateAutoCost);
+    Register(Costing::auto_walk, CreateAutoCost);
   }
 
   /**
@@ -111,7 +111,7 @@ public:
         options.costing_type() == Costing::bikeshare) {
       // For multi-modal we set the initial mode to pedestrian. (TODO - allow other initial modes)
       mode = valhalla::sif::TravelMode::kPedestrian;
-    } else if (options.costing_type() == Costing::multimodal_drive) {
+    } else if (options.costing_type() == Costing::auto_walk) {
       mode = valhalla::sif::TravelMode::kDrive;
     }
     // this should never happen

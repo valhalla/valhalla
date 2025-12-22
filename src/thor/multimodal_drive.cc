@@ -68,15 +68,8 @@ void MultimodalDrive::Init(const midgard::PointLL& origll, const midgard::PointL
   // At the same time, we also want to get the factors as large as possible to optimize the
   // performance
   // TODO: Any better idea to normalize the A* heuristic cost?
-  float min_dist = origll.Distance(destll);
-  // clamp the max walking distance to the shortest possible distance for the route
-  float max_walk_dist = std::min(min_dist, static_cast<float>(max_walking_distance));
-  // In order to not overestimate the true cost, we assume the worst case, in which the user
-  // will walk as much as is allowed
   auto common_astar_cost =
-      pedestrian_costing_->AStarCostFactor() * (max_walk_dist / min_dist) +
-      drive_costing_->AStarCostFactor() * ((min_dist - max_walk_dist) / min_dist);
-
+      std::min(pedestrian_costing_->AStarCostFactor(), drive_costing_->AStarCostFactor());
   pedestrian_astarheuristic_.Init(destll, common_astar_cost);
   drive_astarheuristic_.Init(destll, common_astar_cost);
   hierarchy_limits_ = drive_costing_->GetHierarchyLimits();

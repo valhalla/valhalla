@@ -393,7 +393,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     return &multi_modal_astar;
   }
 
-  if (routetype == "multimodal_drive") {
+  if (routetype == "auto_walk") {
     return &mmd;
   }
 

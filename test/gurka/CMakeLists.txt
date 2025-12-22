@@ -38,5 +38,4 @@ if(ENABLE_DATA_TOOLS)
 
   add_dependencies(tests gurka)
   add_dependencies(check run-gurka)
-  add_dependencies(run-gurka_multimodal_drive utrecht_tiles)
 endif()
