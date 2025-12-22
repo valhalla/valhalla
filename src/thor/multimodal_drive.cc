@@ -236,7 +236,8 @@ void MultimodalDrive::ExpandForward(GraphReader& graphreader,
     }
   }
 
-  if (!from_parking && nodeinfo->type() == NodeType::kParking) {
+  if (!from_parking && nodeinfo->type() == NodeType::kParking &&
+      pred.distance() <= max_walking_distance) {
     auto other_mode = get_other_travel_mode(pred.mode());
     ExpandForward(graphreader, node, pred, pred_idx, from_transition, /*from_parking=*/true,
                   other_mode, destination, best_path);
@@ -262,10 +263,9 @@ MultimodalDrive::GetBestPath(valhalla::Location& origin,
                              valhalla::Location& destination,
                              GraphReader& graphreader,
                              const sif::mode_costing_t& mode_costing,
-                             const travel_mode_t mode,
+                             const travel_mode_t /*mode*/,
                              const Options& options) {
   // Set the mode and costing
-  mode_ = mode;
   pedestrian_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kPedestrian)];
   drive_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kDrive)];
   travel_type_ = drive_costing_->travel_type();
@@ -383,7 +383,7 @@ MultimodalDrive::GetBestPath(valhalla::Location& origin,
                               GraphId(pred.predecessor() == kInvalidLabel
                                           ? kInvalidGraphId
                                           : edgelabels_[pred.predecessor()].edgeid()),
-                              "multimodal_drive", Expansion_EdgeStatus_connected, pred.cost().secs,
+                              name(), Expansion_EdgeStatus_connected, pred.cost().secs,
                               pred.distance(), pred.cost().cost,
                               Expansion_ExpansionType::Expansion_ExpansionType_forward, kNoFlowMask,
                               pred.mode() == sif::TravelMode::kPedestrian ? TravelMode::kPedestrian

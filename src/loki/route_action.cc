@@ -110,7 +110,29 @@ void loki_worker_t::route(Api& request) {
       locations.back().min_inbound_reach_ = 0;
     }
 
-    const auto projections = search_.search(locations, costing);
+    std::unordered_map<baldr::Location, PathLocation> projections;
+
+    // in case of auto_walk costing, we 1) only allow two locations
+    // and 2) need two different costings for the start and end location.
+    // Search::search does not allow for multiple costings per location so instead
+    // we bite the bullet and call search twice, merging the results.
+    // TODO(chris): right now we hash location based purely on ll, but what if the user wants to start
+    // and end at the same location but with different costing? What does that even mean? Find the
+    // nearest parking and walk back to where I am? Seems like a plausible use case...
+    if (costing_name == "auto_walk") {
+      std::vector<baldr::Location> start_loc(locations.begin(), locations.begin() + 1);
+      auto start_projection = search_.search(start_loc, costing);
+      for (const auto& [loc, path_loc] : start_projection) {
+        projections.insert({loc, path_loc});
+      }
+      std::vector<baldr::Location> end_loc(locations.end() - 1, locations.end());
+      auto end_projection = search_.search(end_loc, costing);
+      for (const auto& [loc, path_loc] : end_projection) {
+        projections.insert({loc, path_loc});
+      }
+    } else {
+      projections = search_.search(locations, costing);
+    }
     for (size_t i = 0; i < locations_end; ++i) {
       const auto& correlated = projections.at(locations[i]);
       PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);
