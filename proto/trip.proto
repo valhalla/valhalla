@@ -226,6 +226,14 @@ message TripLeg {
     repeated float elevation = 57;
     bool country_crossing = 58;
     bool forward = 59;
+    oneof has_osmid {
+      uint64 osmid = 70;
+    }
+
+    oneof has_end_osmid {
+        uint64 end_osmid = 71;
+    }
+
     repeated ConditionalSpeedLimit conditional_speed_limits = 60;
     message Level {
       float start = 1;

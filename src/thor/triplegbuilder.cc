@@ -1459,6 +1459,17 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_way_id(edgeinfo.wayid());
   }
 
+  if (controller(kEdgeOsmId) && !edgeinfo.osm_node_ids().empty()) {
+    const auto& osm_ids = edgeinfo.osm_node_ids();
+    const bool forward = directededge->forward();
+
+    trip_edge->set_osmid(forward ? osm_ids.front() : osm_ids.back());
+
+    if (controller(kEdgeEndOsmId)) {
+      trip_edge->set_end_osmid(forward ? osm_ids.back() : osm_ids.front());
+    } 
+  }
+
   // Set weighted grade if requested
   if (controller(kEdgeWeightedGrade)) {
     trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);

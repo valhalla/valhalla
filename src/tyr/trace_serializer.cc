@@ -151,6 +151,10 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeWayId)) {
         writer("way_id", edge.way_id());
       }
+      if (controller(kEdgeOsmId)) { 
+          writer("node_id", edge.osmid());
+      } 
+      
       if (controller(kEdgeId)) {
         writer("id", edge.id());
       }
@@ -165,7 +169,7 @@ void serialize_edges(const AttributesController& controller,
       }
       if (controller(kEdgeBicycleType) && edge.travel_mode() == valhalla::kBicycle) {
         writer("bicycle_type", to_string(edge.bicycle_type()));
-      }
+      } 
       if (controller(kEdgeSurface)) {
         writer("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
       }
@@ -372,6 +376,9 @@ void serialize_edges(const AttributesController& controller,
           writer("elapsed_time", node.cost().elapsed_cost().seconds());
           writer("elapsed_cost", node.cost().elapsed_cost().cost());
         }
+         if (controller(kEdgeEndOsmId)) { 
+          writer("node_id", edge.end_osmid());
+        } 
         if (controller(kNodeAdminIndex)) {
           writer("admin_index", node.admin_index());
         }
