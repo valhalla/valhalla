@@ -214,7 +214,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "search_cutoff": 35000,
           "street_side_max_distance": 1000,
           "street_side_tolerance": 5,
-          "min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14]
+          "mvt_min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14],
+          "mvt_cache_min_zoom": 11
         },
         "use_connectivity": true
       },
