@@ -265,6 +265,59 @@ TEST(Isochrones, OriginEdge) {
   EXPECT_EQ(within(WaypointToBoostPoint("c"), polygon), false);
 }
 
+TEST(Isochrones, ContoursOutOfBounds) {
+  const std::string ascii_map = R"(
+          c----d
+         /
+      a-b--------------f
+    )";
+
+  const gurka::ways ways = {
+      {"ab", {{"highway", "primary"}}},
+      {"bc", {{"highway", "primary"}}},
+      {"cd", {{"highway", "primary"}}},
+      {"bf", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  {
+    auto map = gurka::buildtiles(layout, ways, {}, {},
+                                 VALHALLA_BUILD_DIR "test/data/isochrones/service_limits",
+                                 {
+                                     {"service_limits.isochrone.max_distance_contour", "400"},
+                                     {"service_limits.isochrone.max_time_contour", "200"},
+                                 });
+
+    // base case: within service limits, should succeed
+    {
+      auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
+                                     {{"/contours/0/distance", "399"}}, {});
+      result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
+                                {{"/contours/0/time", "199"}}, {});
+    }
+
+    // distance exceeds service limits
+    try {
+      auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
+                                     {{"/contours/0/distance", "500"}}, {});
+      FAIL() << "Expected to throw";
+    } catch (const valhalla_exception_t& e) {
+      EXPECT_EQ(e.message, "Exceeded max distance: 400");
+      EXPECT_EQ(e.code, 166);
+    } catch (...) { FAIL() << "Expected valhalla_exception_t"; }
+
+    // time exceeds service limits
+    try {
+      auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
+                                     {{"/contours/0/time", "220"}}, {});
+      FAIL() << "Expected to throw";
+    } catch (const valhalla_exception_t& e) {
+      EXPECT_EQ(e.message, "Exceeded max time: 200");
+      EXPECT_EQ(e.code, 151);
+    } catch (...) { FAIL() << "Expected valhalla_exception_t"; }
+  }
+}
+
 TEST(Isochrones, LongEdge) {
   const std::string ascii_map = R"(
           c----d
@@ -280,7 +333,8 @@ TEST(Isochrones, LongEdge) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/isochrones/long_edge");
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/isochrones/long_edge");
 
   std::string geojson;
   auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
