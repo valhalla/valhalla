@@ -15,6 +15,7 @@
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/multimodal.h>
+#include <valhalla/thor/multimodal_drive.h>
 #include <valhalla/thor/timedistancebssmatrix.h>
 #include <valhalla/thor/timedistancematrix.h>
 #include <valhalla/thor/unidirectional_astar.h>
@@ -109,6 +110,7 @@ protected:
   // Path algorithms (TODO - perhaps use a map?))
   BidirectionalAStar bidir_astar;
   AStarBSSAlgorithm bss_astar;
+  MultimodalDrive mmd;
   MultiModalPathAlgorithm multi_modal_astar;
   TimeDepForward timedep_forward;
   TimeDepReverse timedep_reverse;
