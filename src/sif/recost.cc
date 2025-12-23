@@ -35,7 +35,7 @@ void recost_forward(baldr::GraphReader& reader,
 
   // grab the first path edge
   baldr::GraphId edge_id = edge_cb();
-  if (!edge_id.Is_Valid()) {
+  if (!edge_id.is_valid()) {
     return;
   }
 
@@ -62,7 +62,7 @@ void recost_forward(baldr::GraphReader& reader,
   Cost cost{};
   double length = 0;
 
-  while (edge_id.Is_Valid()) {
+  while (edge_id.is_valid()) {
     // get the previous edges node
     node = edge ? reader.nodeinfo(edge->endnode(), tile) : nullptr;
     if (edge && !node) {
@@ -99,7 +99,7 @@ void recost_forward(baldr::GraphReader& reader,
     // evaluate time restrictions
     const auto next_id = edge_cb();
     if (predecessor != baldr::kInvalidLabel &&
-        (!costing.Allowed(edge, !next_id.Is_Valid(), label, tile, edge_id, localtime,
+        (!costing.Allowed(edge, !next_id.is_valid(), label, tile, edge_id, localtime,
                           offset_time.timezone_index, time_restrictions_TODO,
                           destonly_restriction_mask) &&
          !ignore_access)) {
@@ -116,7 +116,7 @@ void recost_forward(baldr::GraphReader& reader,
       source_pct = -1;
     }
 
-    if (!next_id.Is_Valid()) {
+    if (!next_id.is_valid()) {
       edge_pct -= 1.f - target_pct;
       // just to keep compatibility with the logic that handled trivial path in bidiastar
       edge_pct = std::max(0.f, edge_pct);

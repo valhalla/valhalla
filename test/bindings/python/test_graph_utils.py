@@ -3,22 +3,27 @@
 import copy
 import pickle
 import unittest
-from valhalla.utils.graph_utils import GraphId, get_tile_base_lon_lat, get_tile_id_from_lon_lat, get_tile_ids_from_bbox
+from valhalla.utils.graph_utils import (
+    GraphId,
+    get_tile_base_lon_lat,
+    get_tile_id_from_lon_lat,
+    get_tile_ids_from_bbox,
+)
 
 
 class TestBindings(unittest.TestCase):
     def test_constructors(self):
         g1 = GraphId()
-        self.assertFalse(g1.Is_Valid())
+        self.assertFalse(g1.is_valid())
 
         g2 = GraphId(674464002)
         g3 = GraphId("2/421920/20")
         g4 = GraphId(421920, 2, 20)
 
-        self.assertTrue(g2.Is_Valid())
+        self.assertTrue(g2.is_valid())
         # also tests operator==, __eq__
         self.assertTrue(g2 == g3 == g4)
-    
+
     def test_value(self):
         v_test = 674464002
         g = GraphId(v_test)
@@ -35,9 +40,13 @@ class TestBindings(unittest.TestCase):
         # operator+/operator+=, __add__, __iadd__
         gid_plus += 1
         self.assertNotEqual(gid_plus, gid_original)
-        self.assertEqual(gid_plus, GraphId(gid_original.tileid(), gid_original.level(), gid_original.id() + 1))
+        self.assertEqual(
+            gid_plus, GraphId(gid_original.tileid(), gid_original.level(), gid_original.id() + 1)
+        )
         gid_plus = gid_plus + 1
-        self.assertEqual(gid_plus, GraphId(gid_original.tileid(), gid_original.level(), gid_original.id() + 2))
+        self.assertEqual(
+            gid_plus, GraphId(gid_original.tileid(), gid_original.level(), gid_original.id() + 2)
+        )
 
         # operator bool, __bool__
         self.assertTrue(gid_original)
@@ -50,13 +59,13 @@ class TestBindings(unittest.TestCase):
         unpickled = pickle.loads(pickled)
 
         self.assertEqual(gid, unpickled)
-        
+
         # shallow copy support
         gid_cp = copy.copy(gid)
         self.assertEqual(gid, gid_cp)
         gid_cp += 1
         self.assertNotEqual(gid, gid_cp)
-        
+
         # deep copy support (should be same as shallow copy anyways)
         gid_cp = copy.deepcopy(gid)
         self.assertEqual(gid, gid_cp)
@@ -69,7 +78,9 @@ class TestBindings(unittest.TestCase):
 
         # happy paths
         self.assertEqual(get_tile_base_lon_lat(gid), test_pt)
-        self.assertEqual(get_tile_id_from_lon_lat(gid.level(), test_pt), GraphId(gid.tileid(), gid.level(), 0))
+        self.assertEqual(
+            get_tile_id_from_lon_lat(gid.level(), test_pt), GraphId(gid.tileid(), gid.level(), 0)
+        )
 
         # exceptions
         with self.assertRaises(ValueError) as exc:
@@ -83,10 +94,10 @@ class TestBindings(unittest.TestCase):
         with self.assertRaises(ValueError) as exc:
             get_tile_id_from_lon_lat(2, (90, 180))
             self.assertEqual(exc.msg, "Invalid coordinate, remember it's (lon, lat)")
-    
+
     def test_get_tile_ids_from_bbox(self):
         bbox = (0, 0, 2, 2)
-        
+
         # happy paths
         level_0 = get_tile_ids_from_bbox(*bbox, [0])
         self.assertEqual(len(level_0), 2)
@@ -110,7 +121,7 @@ class TestBindings(unittest.TestCase):
         with self.assertRaises(ValueError) as exc:
             get_tile_ids_from_bbox(*bbox, [4])
             self.assertNotEqual(exc.msg.find("We only support"))
-        
+
         with self.assertRaises(ValueError) as exc:
-            get_tile_ids_from_bbox(-90., -180., 90., 180.)
-            self.assertEqual(exc.msg, "Invalid coordinate, remember it's (lon, lat)")        
+            get_tile_ids_from_bbox(-90.0, -180.0, 90.0, 180.0)
+            self.assertEqual(exc.msg, "Invalid coordinate, remember it's (lon, lat)")
