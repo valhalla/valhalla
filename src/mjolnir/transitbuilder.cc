@@ -204,17 +204,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     // Copy existing directed edges from this node and update any signs using
     // the directed edge index
     size_t edge_index = tilebuilder_transit.directededges().size();
-
-    // Temporary - kill transit edges above some number so we allow
-    // transit connections. Should be based on kMaxEdgesPerNode
-    constexpr uint32_t kMaxTransitEdges = 120;
-    if (nb.edge_count() > kMaxTransitEdges) {
-      LOG_ERROR("More than 120 transit edges");
-    }
-
     // Reserve size for several connection edges
-    uint32_t ec = (nb.edge_count() < kMaxTransitEdges) ? nb.edge_count() : kMaxTransitEdges;
-    for (uint32_t i = 0, idx = nb.edge_index(); i < ec; i++, idx++) {
+    for (uint32_t i = 0, idx = nb.edge_index(); i < nb.edge_count(); i++, idx++) {
       tilebuilder_transit.directededges().emplace_back(std::move(currentedges[idx]));
     }
 
@@ -276,7 +267,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
         // TODO - this should use kMaxEdgesPerNode
         uint32_t n = tilebuilder_transit.directededges().size() - edge_index;
-        if (n < 127) {
+        if (n < kMaxEdgesPerNode) {
           tilebuilder_transit.directededges().emplace_back(std::move(directededge));
         } else {
           LOG_ERROR("Could not add transit connection edge!");
