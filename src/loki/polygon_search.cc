@@ -266,7 +266,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
       }
       // TODO: optimize the tile switching by enqueuing edges
       // from other levels & tiles and process them after this big loop
-      if (edge_id.Tile_Base() != tile->header()->graphid().Tile_Base() &&
+      if (edge_id.tile_base() != tile->header()->graphid().tile_base() &&
           !reader.GetGraphTile(edge_id, tile)) {
         continue;
       }
@@ -312,7 +312,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
       if (exclude) {
         avoid_edge_ids.emplace(edge_id);
         avoid_edge_ids.emplace(
-            opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
+            opp_id.is_valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
       }
     }
   };

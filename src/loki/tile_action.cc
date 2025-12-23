@@ -295,7 +295,7 @@ public:
       }
     }
 
-    if (reverse_edge && reverse_edge_id.Is_Valid()) {
+    if (reverse_edge && reverse_edge_id.is_valid()) {
       feature.add_property(key_edge_id_rev_, vtzero::encoded_property_value(reverse_edge_id.id()));
       feature.add_property(key_speed_rev_, vtzero::encoded_property_value(reverse_edge->speed()));
       feature.add_property(key_truck_speed_rev_,
