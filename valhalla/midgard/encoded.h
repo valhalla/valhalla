@@ -23,14 +23,31 @@ constexpr size_t DIGITS_PRECISION = 6;
 namespace valhalla {
 namespace midgard {
 
+// Move sign bit to the least significant bit, making negative numbers use fewer bits when encoded.
+template <typename T> inline auto zigzag_encode(T value) -> typename std::make_unsigned<T>::type {
+  static_assert(std::is_signed_v<T>, "zigzag_encode requires signed integer type");
+  using unsigned_t = typename std::make_unsigned<T>::type;
+  constexpr int shift_bits = sizeof(T) * 8 - 1;
+  return static_cast<unsigned_t>(value << 1) ^ static_cast<unsigned_t>(value >> shift_bits);
+}
+
+// Restore sign bit from least significant bit.
+template <typename T> inline auto zigzag_decode(T value) -> typename std::make_signed<T>::type {
+  static_assert(std::is_unsigned_v<T>, "zigzag_decode requires unsigned integer type");
+  using signed_t = typename std::make_signed<T>::type;
+  return static_cast<signed_t>(value >> 1) ^ (-static_cast<signed_t>(value & 1));
+}
+
 template <typename Point> class Shape7Decoder {
 public:
   Shape7Decoder(const char* begin, const size_t size, const double precision = DECODE_PRECISION)
       : begin(begin), end(begin + size), prec(precision) {
   }
   Point pop() noexcept(false) {
-    lat = next(lat);
-    lon = next(lon);
+    auto lat_diff = read_varint();
+    auto lon_diff = read_varint();
+    lat += zigzag_decode(lat_diff);
+    lon += zigzag_decode(lon_diff);
     return Point(double(lon) * prec, double(lat) * prec);
   }
   bool empty() const {
@@ -44,20 +61,19 @@ private:
   int32_t lon = 0;
   double prec;
 
-  int32_t next(const int32_t previous) noexcept(false) {
-    int32_t byte, shift = 0, result = 0;
+  uint32_t read_varint() noexcept(false) {
+    uint32_t byte, shift = 0, result = 0;
     do {
       if (empty()) {
         throw std::runtime_error("Bad encoded polyline");
       }
       // take the least significant 7 bits shifted into place
-      byte = int32_t(*begin++);
+      byte = static_cast<uint32_t>(*begin++);
       result |= (byte & 0x7f) << shift;
       shift += 7;
       // if the most significant bit is set there is more to this number
     } while (byte & 0x80);
-    // handle the bit flipping and add to previous since its an offset
-    return previous + ((result & 1 ? ~result : result) >> 1);
+    return result;
   }
 };
 
@@ -66,7 +82,8 @@ public:
   Int7Decoder(const char* begin, const size_t size) : begin(begin), end(begin + size) {
   }
   value_type pop() noexcept(false) {
-    value = next(value);
+    auto diff = read_varint();
+    value += zigzag_decode(diff);
     return value;
   }
   bool empty() const {
@@ -78,10 +95,9 @@ private:
   const char* end;
   value_type value = 0;
 
-  value_type next(const value_type previous) noexcept(false) {
-    using uvalue_t = typename std::make_unsigned<value_type>::type;
-    using svalue_t = typename std::make_signed<value_type>::type;
+  using uvalue_t = typename std::make_unsigned<value_type>::type;
 
+  uvalue_t read_varint() noexcept(false) {
     uvalue_t byte, shift = 0, result = 0;
     do {
       if (empty()) {
@@ -93,12 +109,7 @@ private:
       shift += 7;
       // if the most significant bit is set there is more to this number
     } while (byte & 0x80);
-
-    // Decode zigzag encoding back to signed difference
-    svalue_t diff = (result & 1) ? ~(result >> 1) : (result >> 1);
-
-    // Add offset to previous value
-    return previous + static_cast<value_type>(diff);
+    return result;
   }
 };
 
@@ -108,8 +119,10 @@ public:
       : begin(begin), end(begin + size), prec(precision) {
   }
   Point pop() noexcept(false) {
-    lat = next(lat);
-    lon = next(lon);
+    auto lat_diff = read_varint();
+    auto lon_diff = read_varint();
+    lat += zigzag_decode(lat_diff);
+    lon += zigzag_decode(lon_diff);
     return Point(double(lon) * prec, double(lat) * prec);
   }
   bool empty() const {
@@ -123,21 +136,20 @@ private:
   int32_t lon = 0;
   double prec;
 
-  int32_t next(const int32_t previous) noexcept(false) {
+  uint32_t read_varint() noexcept(false) {
     // grab each 5 bits and mask it in where it belongs using the shift
-    int byte, shift = 0, result = 0;
+    uint32_t byte, shift = 0, result = 0;
     do {
       if (empty()) {
         throw std::runtime_error("Bad encoded polyline");
       }
       // take the least significant 5 bits shifted into place
-      byte = int32_t(*begin++) - 63;
+      byte = uint32_t(*begin++) - 63;
       result |= (byte & 0x1f) << shift;
       shift += 5;
       // if the most significant bit is set there is more to this number
     } while (byte >= 0x20);
-    // handle the bit flipping and add to previous since its an offset
-    return previous + (result & 1 ? ~(result >> 1) : (result >> 1));
+    return result;
   }
 };
 
@@ -243,30 +255,27 @@ std::string encode(const container_t& points, const int precision = ENCODE_PRECI
   output.reserve(points.size() * 8);
 
   // handy lambda to turn an integer into an encoded string
-  auto serialize = [&output](int number) {
-    // move the bits left 1 position and flip all the bits if it was a negative number
-    number = number < 0 ? ~(*reinterpret_cast<unsigned int*>(&number) << 1) : (number << 1);
+  auto write_varint = [&output](uint32_t number) {
     // write 5 bit chunks of the number
     while (number >= 0x20) {
-      int nextValue = (0x20 | (number & 0x1f)) + 63;
+      auto nextValue = (0x20 | (number & 0x1f)) + 63;
       output.push_back(static_cast<char>(nextValue));
       number >>= 5;
     }
     // write the last chunk
-    number += 63;
-    output.push_back(static_cast<char>(number));
+    output.push_back(static_cast<char>(number + 63));
   };
 
-  // this is an offset encoding so we remember the last point we saw
-  int last_lon = 0, last_lat = 0;
+  // this is an diff encoding so we remember the last point we saw
+  int32_t last_lon = 0, last_lat = 0;
   // for each point
   for (const auto& p : points) {
     // shift the decimal point 5 places to the right and truncate
-    int lon = static_cast<int>(round(static_cast<double>(p.first) * precision));
-    int lat = static_cast<int>(round(static_cast<double>(p.second) * precision));
+    auto lon = static_cast<int32_t>(round(static_cast<double>(p.first) * precision));
+    auto lat = static_cast<int32_t>(round(static_cast<double>(p.second) * precision));
     // encode each coordinate, lat first for some reason
-    serialize(lat - last_lat);
-    serialize(lon - last_lon);
+    write_varint(zigzag_encode(lat - last_lat));
+    write_varint(zigzag_encode(lon - last_lon));
     // remember the last one we encountered
     last_lon = lon;
     last_lat = lat;
@@ -289,14 +298,10 @@ std::string encode7(const container_t& points, const int precision = ENCODE_PREC
   output.reserve(points.size() * 8);
 
   // handy lambda to turn an integer into an encoded string
-  auto serialize = [&output](int number) {
-    // get the sign bit down on the least significant end to
-    // make the most significant bits mostly zeros
-    number = number < 0 ? ~(*reinterpret_cast<unsigned int*>(&number) << 1) : number << 1;
+  auto write_varint = [&output](uint32_t number) {
     // we take 7 bits of this at a time
     while (number > 0x7f) {
-      // marking the most significant bit means there are more pieces to come
-      int nextValue = (0x80 | (number & 0x7f));
+      auto nextValue = (0x80 | (number & 0x7f));
       output.push_back(static_cast<char>(nextValue));
       number >>= 7;
     }
@@ -309,11 +314,11 @@ std::string encode7(const container_t& points, const int precision = ENCODE_PREC
   // for each point
   for (const auto& p : points) {
     // shift the decimal point x places to the right and truncate
-    int lon = static_cast<int>(round(static_cast<double>(p.first) * precision));
-    int lat = static_cast<int>(round(static_cast<double>(p.second) * precision));
+    auto lon = static_cast<int32_t>(round(static_cast<double>(p.first) * precision));
+    auto lat = static_cast<int32_t>(round(static_cast<double>(p.second) * precision));
     // encode each coordinate, lat first for some reason
-    serialize(lat - last_lat);
-    serialize(lon - last_lon);
+    write_varint(zigzag_encode(lat - last_lat));
+    write_varint(zigzag_encode(lon - last_lon));
     // remember the last one we encountered
     last_lon = lon;
     last_lat = lat;
@@ -329,32 +334,20 @@ template <class container_t> std::string encode7int(const container_t& values) {
   output.reserve(values.size() * 8);
 
   // handy lambda to turn an integer into an encoded string
-  auto serialize = [&output](value_t number) {
-    // Convert to unsigned for bitwise operations
-    uvalue_t unumber;
-    if constexpr (std::is_signed<value_t>::value) {
-      // For signed types, use zigzag encoding
-      unumber =
-          number < 0 ? ~(static_cast<uvalue_t>(number) << 1) : static_cast<uvalue_t>(number) << 1;
-    } else {
-      // For unsigned types, use zigzag encoding on the difference
-      // which could be negative when interpreted as signed
-      auto signed_number = static_cast<typename std::make_signed<value_t>::type>(number);
-      unumber = signed_number < 0 ? ~(static_cast<uvalue_t>(signed_number) << 1)
-                                  : static_cast<uvalue_t>(signed_number) << 1;
-    }
-    while (unumber > 0x7f) {
-      auto nextValue = static_cast<std::string::value_type>(0x80 | (unumber & 0x7f));
+  auto write_varint = [&output](uvalue_t number) {
+    while (number > 0x7f) {
+      auto nextValue = static_cast<std::string::value_type>(0x80 | (number & 0x7f));
       output.push_back(nextValue);
-      unumber >>= 7;
+      number >>= 7;
     }
-    output.push_back(static_cast<std::string::value_type>(unumber & 0x7f));
+    output.push_back(static_cast<std::string::value_type>(number & 0x7f));
   };
 
   // this is an offset encoding so we remember the last value we saw
   value_t last_value = 0;
   for (const auto& value : values) {
-    serialize(value - last_value);
+    auto diff = static_cast<typename std::make_signed<value_t>::type>(value - last_value);
+    write_varint(zigzag_encode(diff));
     last_value = value;
   }
   return output;
