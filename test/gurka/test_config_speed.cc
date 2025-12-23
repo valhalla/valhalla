@@ -1,6 +1,9 @@
 #include "gurka.h"
 #include "src/mjolnir/speed_assigner.h"
+
 #include <gtest/gtest.h>
+
+#include <filesystem>
 
 using namespace valhalla;
 
@@ -129,9 +132,9 @@ TEST(Standalone, DefaultSpeedConfig) {
     }
   }
 
-  if (!filesystem::create_directories("test/data"))
+  if (!std::filesystem::exists("test/data") && !std::filesystem::create_directories("test/data"))
     throw std::runtime_error("couldn't create directories");
-  filesystem::remove("test/data/speed_config.json");
+  std::filesystem::remove("test/data/speed_config.json");
 
   {
     std::ofstream speed_config("test/data/speed_config.json");
@@ -281,9 +284,9 @@ TEST(Standalone, SuburbanSpeedConfig) {
     }
   }
 
-  if (!filesystem::create_directories("test/data"))
+  if (!std::filesystem::exists("test/data") && !std::filesystem::create_directories("test/data"))
     throw std::runtime_error("couldn't create directories");
-  filesystem::remove("test/data/speed_config_suburban.json");
+  std::filesystem::remove("test/data/speed_config_suburban.json");
 
   {
     std::ofstream speed_config("test/data/speed_config_suburban.json");
@@ -368,7 +371,7 @@ public:
 };
 
 TEST(Standalone, AdminFallback) {
-  DirectedEdge edge{};
+  baldr::DirectedEdge edge{};
   edge.set_all_forward_access();
 
   {
@@ -626,7 +629,7 @@ TEST(Standalone, Malformed) {
 }
 
 TEST(Standalone, HandleNulls) {
-  DirectedEdge edge{};
+  baldr::DirectedEdge edge{};
   edge.set_all_forward_access();
 
   std::ofstream speed_config("test/data/speed_config.json");

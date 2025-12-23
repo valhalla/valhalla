@@ -1,28 +1,18 @@
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-#include <functional>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-
-#include "baldr/json.h"
-#include "baldr/rapidjson_utils.h"
-#include "midgard/logging.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/motorcyclecost.h"
-#include "sif/motorscootercost.h"
-#include "sif/pedestriancost.h"
-#include "tyr/actor.h"
-
+#include "loki/worker.h"
 #include "loki/polygon_search.h"
 #include "loki/search.h"
-#include "loki/worker.h"
+#include "midgard/logging.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <format>
+#include <functional>
+#include <stdexcept>
+#include <string>
+#include <unordered_set>
 
 using namespace valhalla;
-using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -31,7 +21,10 @@ using namespace valhalla::loki;
 namespace valhalla {
 namespace loki {
 void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
+                                    Api& request,
                                     std::optional<valhalla_exception_t> required_exception) {
+  bool has_302 = false, has_303 = false;
+
   if (locations->size()) {
     for (auto& location : *locations) {
       if (!location.has_minimum_reachability_case())
@@ -50,15 +43,35 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
       if (!location.has_node_snap_tolerance_case())
         location.set_node_snap_tolerance(default_node_snap_tolerance);
 
-      if (!location.has_search_cutoff_case())
-        location.set_search_cutoff(default_search_cutoff);
+      const bool has_level =
+          location.has_search_filter() && location.search_filter().level() != baldr::kMaxLevel;
 
+      if (!location.has_search_cutoff_case() && !has_level) {
+        // no level and no cutoff, provide regular default
+        location.set_search_cutoff(default_search_cutoff);
+      } else if (location.has_search_cutoff_case() && has_level) {
+        // level and cutoff, clamp value to limit candidate search in case of bogus level input
+        if (location.search_cutoff() > kMaxIndoorSearchCutoff) {
+          has_303 = true;
+          location.set_search_cutoff(kMaxIndoorSearchCutoff);
+        }
+      } else if (!location.has_search_cutoff_case() && has_level) {
+        // level and no cutoff, set special default
+        location.set_search_cutoff(kDefaultIndoorSearchCutoff);
+        has_302 = true;
+      }
+      // if there is a level search filter and
       if (!location.has_street_side_tolerance_case())
         location.set_street_side_tolerance(default_street_side_tolerance);
 
       if (!location.has_street_side_max_distance_case())
         location.set_street_side_max_distance(default_street_side_max_distance);
     }
+    if (has_302)
+      add_warning(request, 302, std::to_string(kDefaultIndoorSearchCutoff));
+    if (has_303)
+      add_warning(request, 303, std::to_string(kMaxIndoorSearchCutoff));
+
   } else if (required_exception) {
     throw *required_exception;
   }
@@ -69,6 +82,24 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   // using the costing we can determine what type of edge filtering to use
   if (!allow_none && options.costing_type() == Costing::none_) {
     throw valhalla_exception_t{124};
+  }
+
+  if (!allow_hard_exclusions) {
+    bool exclusion_detected = false;
+    for (auto& pair : options.costings()) {
+      auto opts = pair.second.options();
+      exclusion_detected = exclusion_detected || opts.exclude_bridges() || opts.exclude_tolls() ||
+                           opts.exclude_tunnels() || opts.exclude_highways() ||
+                           opts.exclude_ferries();
+      opts.set_exclude_bridges(false);
+      opts.set_exclude_tolls(false);
+      opts.set_exclude_tunnels(false);
+      opts.set_exclude_highways(false);
+      opts.set_exclude_ferries(false);
+    }
+    if (exclusion_detected) {
+      add_warning(api, 208);
+    }
   }
 
   const auto& costing_str = Costing_Enum_Name(options.costing_type());
@@ -85,8 +116,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   if (options.exclude_polygons_size()) {
-    const auto edges =
-        edges_in_rings(options.exclude_polygons(), *reader, costing, max_exclude_polygons_length);
+    const auto edges = edges_in_rings(options, *reader, costing, max_exclude_polygons_length);
     auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
     for (const auto& edge_id : edges) {
       auto* avoid = co.add_exclude_edges();
@@ -104,7 +134,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
     try {
       auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
-      auto results = loki::Search(exclude_locations, *reader, costing);
+      auto results = search_.search(exclude_locations, costing);
       std::unordered_set<uint64_t> avoids;
       auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
       for (const auto& result : results) {
@@ -154,6 +184,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     : service_worker_t(config), config(config),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
+      search_(*reader),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
                            ? new connectivity_map_t(config.get_child("mjolnir"), reader)
                            : nullptr),
@@ -163,7 +194,11 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       max_trace_shape(config.get<size_t>("service_limits.trace.max_shape")),
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
-      min_resample(config.get<float>("service_limits.skadi.min_resample")) {
+      min_resample(config.get<float>("service_limits.skadi.min_resample")),
+      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)),
+      candidate_query_(*reader,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -180,6 +215,24 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     throw std::runtime_error("The config actions for Loki are incorrectly loaded");
   }
 
+  // get /tile parameters
+  size_t i = 0;
+  const auto max_road_classes = min_zoom_road_class_.size();
+  for (const auto& zoom : config.get_child("loki.service_defaults.min_zoom_road_class")) {
+    if (i >= max_road_classes) {
+      break;
+    }
+    min_zoom_road_class_[i] = zoom.second.get_value<uint32_t>();
+    ++i;
+  }
+  if (i != max_road_classes) {
+    throw std::runtime_error(
+        std::format("min_zoom_road_class out of bounds, expected {} elements but got {}",
+                    max_road_classes, i));
+  }
+  // Compute overall minimum zoom level (minimum of all road class zooms)
+  min_zoom_ = *std::min_element(min_zoom_road_class_.begin(), min_zoom_road_class_.end());
+
   // Build max_locations and max_distance maps
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
@@ -187,7 +240,9 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
         kv.first == "max_exclude_polygons_length" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
-        kv.first == "status") {
+        kv.first == "status" || kv.first == "allow_hard_exclusions" ||
+        kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
+        kv.first == "max_linear_cost_edges") {
       continue;
     }
     if (kv.first != "trace") {
@@ -250,6 +305,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   // assign max_distance_disable_hierarchy_culling
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
+  allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
+  candidate_query_cache_size = config.get<size_t>("meili.grid.cache_size");
 
   // signal that the worker started successfully
   started();
@@ -259,6 +316,9 @@ void loki_worker_t::cleanup() {
   service_worker_t::cleanup();
   if (reader->OverCommitted()) {
     reader->Trim();
+  }
+  if (candidate_query_.size() > candidate_query_cache_size) {
+    candidate_query_.Clear();
   }
 }
 
@@ -385,6 +445,9 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         }
         result.messages.emplace_back(request.SerializeAsString());
         break;
+      case Options::tile:
+        result = to_response(render_tile(request), info, request);
+        break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
         throw valhalla_exception_t{107};
@@ -393,7 +456,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error(e, info, request);
   } catch (const std::exception& e) {
-    LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
+    LOG_ERROR("500::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error({199, std::string(e.what())}, info, request);
   }
 

@@ -1,24 +1,14 @@
 #ifndef __VALHALLA_THOR_SERVICE_H__
 #define __VALHALLA_THOR_SERVICE_H__
 
-#include <cstdint>
-#include <tuple>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/attributes_controller.h>
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/location.h>
+#include <valhalla/exceptions.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costfactory.h>
-#include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/astar_bss.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/centroid.h>
@@ -27,10 +17,13 @@
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/timedistancebssmatrix.h>
 #include <valhalla/thor/timedistancematrix.h>
-#include <valhalla/thor/triplegbuilder.h>
 #include <valhalla/thor/unidirectional_astar.h>
-#include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
+
+#include <boost/property_tree/ptree_fwd.hpp>
+
+#include <tuple>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -135,6 +128,16 @@ protected:
   meili::MapMatcherFactory matcher_factory;
   baldr::AttributesController controller;
   Centroid centroid_gen;
+
+  // Hierarchy limits
+  bool allow_hierarchy_limits_modifications;
+  // ignored if allow_hierarchy_limits_modifications is false
+  hierarchy_limits_config_t hierarchy_limits_config_astar;
+  hierarchy_limits_config_t hierarchy_limits_config_bidirectional_astar;
+  hierarchy_limits_config_t hierarchy_limits_config_costmatrix;
+
+  double min_linear_cost_factor;
+  uint64_t max_linear_cost_edges;
 
 private:
   std::string service_name() const override {

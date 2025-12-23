@@ -2,13 +2,13 @@
 #include "pixels.h"
 #include "test.h"
 
-#include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
+#include <unistd.h>
 
+#include <filesystem>
 #include <fstream>
 #include <thread>
-#include <unistd.h>
 
 using namespace valhalla;
 using namespace prime_server;
@@ -155,9 +155,8 @@ const std::vector<std::string> responses{
         "244,243,240,239,239,238,239,241,241,239,236,221,221,225,224]}"),
 };
 
-const auto cfg =
-    test::make_config(VALHALLA_BUILD_DIR "test" +
-                      std::string(1, filesystem::path::preferred_separator) + "skadi_service_tmp");
+std::filesystem::path cfg_path{VALHALLA_BUILD_DIR "test/skadi_service_tmp"};
+const auto cfg = test::make_config(cfg_path);
 
 void create_tile() {
   // its annoying to have to get actual data but its also very boring to test with fake data
@@ -174,8 +173,10 @@ void create_tile() {
 
   // a place to store it
   auto tile_dir = cfg.get<std::string>("additional_data.elevation");
-  if (!filesystem::is_directory(tile_dir) && !filesystem::create_directories(tile_dir))
-    throw std::runtime_error("Couldnt make directory to store elevation");
+  if (!std::filesystem::is_directory(tile_dir)) {
+    std::error_code ec;
+    std::filesystem::create_directories(tile_dir);
+  }
 
   // actually store it
   std::ofstream file(tile_dir + "/N40W077.hgt", std::ios::binary | std::ios::trunc);
@@ -189,7 +190,7 @@ zmq::context_t context;
 void start_service() {
   // need a place to drop our sockets
   auto run_dir = cfg.get<std::string>("mjolnir.tile_dir");
-  if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
+  if (!std::filesystem::is_directory(run_dir) && !std::filesystem::create_directories(run_dir))
     throw std::runtime_error("Couldnt make directory to run from");
 
   // server
@@ -240,9 +241,6 @@ TEST(SkadiService, test_requests) {
         return request != requests.cend();
       },
       1);
-
-  // make this whole thing bail if it doesnt finish fast
-  alarm(120);
 
   // request and receive
   client.batch();

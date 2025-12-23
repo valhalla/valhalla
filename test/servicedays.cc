@@ -1,10 +1,10 @@
-#include "test.h"
+#include "mjolnir/servicedays.h"
+#include "baldr/graphconstants.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <string>
-
-#include "baldr/graphconstants.h"
-#include "mjolnir/servicedays.h"
 
 using namespace std;
 using namespace valhalla::baldr;

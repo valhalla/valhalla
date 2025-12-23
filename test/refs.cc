@@ -1,8 +1,6 @@
-#include "baldr/signinfo.h"
-
 #include "mjolnir/graphbuilder.h"
 
-#include "test.h"
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::mjolnir;

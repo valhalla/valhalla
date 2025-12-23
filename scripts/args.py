@@ -8,10 +8,10 @@ half_arc_sec = (1.0 / 3600.0) * 0.5
 for x in range(0, 360):
     for y in range(0, 180):
         try:
-            tile_name = '%s%02d%s%03d.hgt' % (
-                'S' if y < 90 else 'N',
+            tile_name = "%s%02d%s%03d.hgt" % (
+                "S" if y < 90 else "N",
                 abs(y - 90),
-                'W' if x < 180 else 'E',
+                "W" if x < 180 else "E",
                 abs(x - 180),
             )
             print(
@@ -19,7 +19,7 @@ for x in range(0, 360):
                 (y - 90) - half_arc_sec,
                 (x - 179) + half_arc_sec,
                 (y - 89) + half_arc_sec,
-                'tiles/' + tile_name[0:3] + '/' + tile_name,
+                "tiles/" + tile_name[0:3] + "/" + tile_name,
             )
         except IOError:
             sys.exit(0)

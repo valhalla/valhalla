@@ -1,0 +1,107 @@
+[project]
+name = "pyvalhalla"
+dynamic = ["version"]
+requires-python = ">=3.9.0"
+authors = [{ name = "Nils Nolde" }, {name = "Kevin Kreiser"}]
+description = "High-level bindings to the Valhalla C++ library"
+readme = "README.md"
+license = "MIT"
+license-files = ["COPYING"]
+
+[project.urls]
+Homepage = "https://github.com/valhalla/valhalla"
+Documentation = "https://valhalla.github.io/valhalla/"
+Repository = "https://github.com/valhalla/valhalla"
+Issues = "https://github.com/valhalla/valhalla/issues"
+Changelog = "https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md"
+
+[project.scripts]
+valhalla_service = "valhalla._scripts:run"
+valhalla_build_tiles = "valhalla._scripts:run"
+valhalla_build_admins = "valhalla._scripts:run"
+valhalla_add_predicted_traffic = "valhalla._scripts:run"
+valhalla_add_landmarks = "valhalla._scripts:run"
+valhalla_ingest_transit = "valhalla._scripts:run"
+valhalla_convert_transit = "valhalla._scripts:run"
+
+[build-system]
+requires = [
+    "scikit-build-core>=0.11.0",
+    "wheel",
+    "setuptools_scm>=6.2",
+    "setuptools_scm_git_archive",
+    # instead of relying on system tools
+    "cmake",
+    "ninja",
+    "nanobind>=2.9.0",
+    "auditwheel"
+]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+# nanobind’s STABLE_ABI feature targets Python >= 3.12
+wheel.py-api = "cp312"
+# Ask setuptools-scm for the version at build time
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+# creates a valhalla directory in the wheel
+wheel.install-dir = "valhalla"
+# only installs the python cmake COMPONENT
+install.components = ["python"]
+sdist.include = ["pyproject.toml"]
+sdist.exclude = ["test", "test_requests"]
+
+# a few standard build flags for a scikit-build-core build
+[tool.scikit-build.cmake.define]
+ENABLE_PYTHON_BINDINGS = "ON"
+ENABLE_TESTS = "OFF"
+ENABLE_SINGLE_FILES_WERROR = "OFF"
+CMAKE_BUILD_TYPE = "Release"
+
+[tool.setuptools_scm]
+version_file = "src/bindings/python/valhalla/__version__.py"
+version_scheme = "no-guess-dev"
+# PyPI doesn't accept local hashed version strings, important for pyvalhalla-weekly
+local_scheme = "no-local-version"
+
+[tool.ruff]
+line-length = 105
+extend-exclude = [
+    "dist",
+    "wheelhouse",
+    "*build*",
+    "*.egg-info",
+]
+lint.ignore = ["E731", "F811"]
+
+[tool.cibuildwheel]
+# it's enough here to know it's importable, actual test is run on other CI
+# mostly to avoid building utrecht tiles within the bindings build
+test-command = "python -c \"from valhalla.utils.graph_utils import GraphId; g = GraphId(); assert g.Is_Valid() == False\""
+# find out current defaults: cibuildwheel --print-build-identifiers --platform linux
+build = "cp*"
+skip = "*musllinux*"
+archs = "native"
+manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
+manylinux-aarch64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
+
+[tool.cibuildwheel.windows]
+# this is v1.11.2
+before-all = "pip install \"delvewheel<=2.0.0\""
+repair-wheel-command = "delvewheel repair --analyze-existing-exes --add-path build/vcpkg_installed/x64-windows/bin {wheel} -w {dest_dir}"
+
+[tool.cibuildwheel.linux]
+# 1. patch auditwheel so that it allows to vendor libraries also linked to libpython
+# 2. configure and write the pyproject.toml
+before-build = """
+  python -m pip install -r src/bindings/python/requirements-build.txt
+  python src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1
+"""
+# e.g. geos is both installed to the system and built from source, need to prioritize the latter
+environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64" }
+
+[tool.cibuildwheel.macos]
+repair-wheel-command = [
+    'git status',
+    'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-listdeps {wheel}',
+    'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}'
+]

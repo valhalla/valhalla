@@ -169,7 +169,7 @@
 //#    include <wordexp.h>
 #  endif
 #  include <limits.h>
-#  include <string.h>
+#  include <cstring>
 #  if !USE_SHELL_API
 #    include <sys/stat.h>
 #    include <sys/fcntl.h>
@@ -2618,8 +2618,8 @@ operator<<(std::ostream& os, const time_zone& z)
         os.width(8);
         os << s.format_ << "   ";
         os << s.until_year_ << ' ' << s.until_date_;
-        os << "   " << s.until_utc_ << " UTC";
-        os << "   " << s.until_std_ << " STD";
+        date::operator<<(os << "   ", s.until_utc_) << " UTC";
+        date::operator<<(os << "   ", s.until_std_) << " STD";
         os << "   " << s.until_loc_;
         os << "   " << make_time(s.initial_save_);
         os << "   " << s.initial_abbrev_;
@@ -2646,7 +2646,7 @@ std::ostream&
 operator<<(std::ostream& os, const leap_second& x)
 {
     using namespace date;
-    return os << x.date_ << "  +";
+    return date::operator<<(os, x.date_) << "  +";
 }
 
 #endif  // !MISSING_LEAP_SECONDS

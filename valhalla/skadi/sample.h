@@ -1,15 +1,12 @@
 #ifndef __VALHALLA_SAMPLE_H__
 #define __VALHALLA_SAMPLE_H__
 
-#include <mutex>
-#include <shared_mutex>
+#include <valhalla/baldr/tilegetter.h>
+
+#include <boost/property_tree/ptree_fwd.hpp>
+
 #include <string>
-#include <unordered_set>
 #include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
-#include "valhalla/baldr/tilegetter.h"
 
 namespace valhalla {
 namespace skadi {
@@ -101,7 +98,6 @@ private:
    */
   void cache_initialisation(const std::string& source_path);
 
-  std::mutex cache_lck;
   std::string url_;
   std::unique_ptr<baldr::tile_getter_t> remote_loader_;
   // This parameter is used only in tests

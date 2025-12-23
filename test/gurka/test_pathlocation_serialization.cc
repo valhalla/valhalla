@@ -5,10 +5,10 @@
 // with the same properties.
 //
 
-#include <boost/property_tree/ptree.hpp>
-
 #include "baldr/pathlocation.h"
 #include "gurka.h"
+
+#include <gtest/gtest.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

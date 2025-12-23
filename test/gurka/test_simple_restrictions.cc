@@ -1,5 +1,7 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
+
 #include <random>
 
 using namespace valhalla;
@@ -9,7 +11,6 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 100;
 
     const std::string ascii_map = R"(
     A---1B----C

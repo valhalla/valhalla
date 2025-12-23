@@ -2,10 +2,7 @@
 #define VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMACCESS_H
 
 #include <cstdint>
-#include <string>
-#include <vector>
-
-#include <valhalla/baldr/graphconstants.h>
+#include <cstring>
 
 namespace valhalla {
 namespace mjolnir {

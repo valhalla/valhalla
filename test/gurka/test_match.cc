@@ -2,6 +2,7 @@
 #include "midgard/encoded.h"
 #include "midgard/util.h"
 #include "test.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -215,10 +216,10 @@ protected:
       traffic_speed->breakpoint1 = 255;
     });
 
-    test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+    test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
       e.set_constrained_flow_speed(25);
       e.set_free_flow_speed(75);
-      std::array<float, kBucketsPerWeek> historical;
+      std::array<float, baldr::kBucketsPerWeek> historical;
       historical.fill(7);
       for (size_t i = 0; i < historical.size(); ++i) {
         // TODO: if we are in morning or evening set a different speed and add another test
@@ -251,7 +252,7 @@ uint32_t TrafficBasedTest::current = 0, TrafficBasedTest::historical = 0,
          TrafficBasedTest::constrained = 0, TrafficBasedTest::freeflow = 0;
 
 uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
-  uint32_t kmh = invalid<uint32_t>();
+  uint32_t kmh = midgard::invalid<uint32_t>();
   const auto& nodes = api.trip().routes(0).legs(0).node();
   for (int i = 0; i < nodes.size() - 1; ++i) {
     const auto& node = nodes.Get(i);
@@ -262,8 +263,9 @@ uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_ed
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (is_valid(kmh) && compare_with_previous_edge)
+    if (midgard::is_valid(kmh) && compare_with_previous_edge) {
       EXPECT_EQ(kmh, new_kmh);
+    }
     kmh = new_kmh;
   }
   return kmh;

@@ -1,31 +1,17 @@
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <cxxopts.hpp>
-#include <fstream>
-#include <iostream>
-#include <queue>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
-
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-
+#include "argparse_utils.h"
 #include "baldr/attributes_controller.h"
-#include "baldr/connectivity_map.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
-#include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "loki/worker.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
-#include "odin/util.h"
+#include "proto/api.pb.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 #include "sif/costfactory.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/multimodal.h"
@@ -34,12 +20,18 @@
 #include "thor/unidirectional_astar.h"
 #include "worker.h"
 
-#include "proto/api.pb.h"
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
+#include <boost/format.hpp>
+#include <cxxopts.hpp>
 
-#include "argparse_utils.h"
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -47,7 +39,6 @@ using namespace valhalla::loki;
 using namespace valhalla::odin;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
-using namespace valhalla::meili;
 
 namespace {
 
@@ -136,7 +127,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
   auto t1 = std::chrono::high_resolution_clock::now();
   auto paths =
       pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
-  cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+  const cost_ptr_t& cost = mode_costing[static_cast<uint32_t>(mode)];
 
   // If bidirectional A*, disable use of destination only edges on the first pass.
   // If there is a failure, we allow them on the second pass.
@@ -200,8 +191,9 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
-    std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-    const auto projections = Search(locations, reader, cost);
+    const cost_ptr_t& cost = mode_costing[static_cast<uint32_t>(mode)];
+    Search search(reader);
+    const auto projections = search.search(locations, cost);
     std::vector<PathLocation> path_location;
     valhalla::Options options;
 
@@ -223,7 +215,8 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
     }
     std::vector<std::vector<PathInfo>> paths;
-    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, options, paths);
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, options, options.use_timestamps(),
+                                      false, paths);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
@@ -463,7 +456,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::string json_str, json_file;
   boost::property_tree::ptree config;
@@ -476,7 +469,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a command line test tool for shortest path routing.\n"
       "Use the -j option for specifying the locations and costing method and options.");
 
@@ -500,7 +493,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (iterations > 1) {

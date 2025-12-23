@@ -1,10 +1,7 @@
 #pragma once
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
-#include <cstdint>
-#include <iostream>
-#include <list>
 #include <string>
 #include <vector>
 

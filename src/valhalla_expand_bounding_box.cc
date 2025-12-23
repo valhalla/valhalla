@@ -1,19 +1,17 @@
-#include <string>
+#include "argparse_utils.h"
+#include "baldr/graphreader.h"
+#include "config.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
-#include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
-#include "config.h"
-#include "filesystem.h"
-
-#include "argparse_utils.h"
+#include <filesystem>
+#include <string>
 
 namespace bpt = boost::property_tree;
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::string bbox;
   boost::property_tree::ptree config;
@@ -22,7 +20,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "Finds all the nodes in the bounding box and then expands \n"
       "the bounding box by the shape of the edges that leave the nodes.\n\n");
 
@@ -35,7 +33,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (!result.count("bounding-box")) {

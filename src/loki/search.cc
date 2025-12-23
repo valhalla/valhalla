@@ -3,19 +3,18 @@
 #include "baldr/tilehierarchy.h"
 #include "loki/reach.h"
 #include "midgard/distanceapproximator.h"
-#include "midgard/linesegment2.h"
 #include "midgard/util.h"
 
 #include <algorithm>
 #include <cmath>
 #include <iterator>
-#include <list>
 #include <unordered_set>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
+namespace vb = valhalla::baldr;
 
 namespace {
 
@@ -23,30 +22,34 @@ template <typename T> inline T square(T v) {
   return v * v;
 }
 
-bool is_search_filter_triggered(const DirectedEdge* edge,
-                                const DynamicCost& costing,
-                                const graph_tile_ptr& tile,
-                                const Location::SearchFilter& search_filter) {
+bool search_filter(const DirectedEdge* edge,
+                   const DynamicCost& costing,
+                   const graph_tile_ptr& tile,
+                   const vb::Location::SearchFilter& filter) {
   // check if this edge matches any of the exclusion filters
   uint32_t road_class = static_cast<uint32_t>(edge->classification());
-  uint32_t min_road_class = static_cast<uint32_t>(search_filter.min_road_class_);
-  uint32_t max_road_class = static_cast<uint32_t>(search_filter.max_road_class_);
+  uint32_t min_road_class = static_cast<uint32_t>(filter.min_road_class_);
+  uint32_t max_road_class = static_cast<uint32_t>(filter.max_road_class_);
 
   // Note that min_ and max_road_class are integers where, by default, max_road_class
   // is 0 and min_road_class is 7. This filter rejects roads where the functional
   // road class is outside of the min to max range.
   return (road_class > min_road_class || road_class < max_road_class) ||
-         (search_filter.exclude_tunnel_ && edge->tunnel()) ||
-         (search_filter.exclude_bridge_ && edge->bridge()) ||
-         (search_filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
-         (search_filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
-          tile->IsClosed(edge));
+         (filter.exclude_tunnel_ && edge->tunnel()) || (filter.exclude_bridge_ && edge->bridge()) ||
+         (filter.exclude_toll_ && edge->toll()) ||
+         (filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
+         (filter.exclude_ferry_ && (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
+         (filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
+          tile->IsClosed(edge)) ||
+         (filter.level_ != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level_));
 }
 
-bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
+bool side_filter(const PathLocation::PathEdge& edge,
+                 const vb::Location& location,
+                 GraphReader& reader) {
   // nothing to filter if you dont want to filter or if there is no side of street
   if (edge.sos == PathLocation::SideOfStreet::NONE ||
-      location.preferred_side_ == Location::PreferredSide::EITHER)
+      location.preferred_side_ == vb::Location::PreferredSide::EITHER)
     return false;
 
   // need this for further checking of driving side and road class
@@ -58,7 +61,7 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
   // nothing to filter if it is a minor road
   // since motorway = 0 and service = 7, higher number means smaller road class
   uint32_t road_class = static_cast<uint32_t>(opp->classification());
-  if (road_class > location.street_side_cutoff_)
+  if (road_class > static_cast<uint32_t>(location.street_side_cutoff_))
     return false;
 
   // need the driving side for this edge
@@ -71,10 +74,10 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
   bool same = node->drive_on_right() == (edge.sos == PathLocation::SideOfStreet::RIGHT);
   // and then if you were asking for the same and it was the same OR if you were asking for opposite
   // and it was opposite THEN we dont filter
-  return same != (location.preferred_side_ == Location::PreferredSide::SAME);
+  return same != (location.preferred_side_ == vb::Location::PreferredSide::SAME);
 }
 
-bool heading_filter(const Location& location, float angle) {
+bool heading_filter(const vb::Location& location, float angle) {
   // no heading means we filter nothing
   if (!location.heading_) {
     return false;
@@ -90,7 +93,7 @@ bool heading_filter(const Location& location, float angle) {
          location.heading_tolerance_;
 }
 
-bool layer_filter(const Location& location, int8_t layer) {
+bool layer_filter(const vb::Location& location, int8_t layer) {
   // no layer - we do not filter
   if (!location.preferred_layer_) {
     return false;
@@ -121,7 +124,10 @@ struct candidate_t {
 
   GraphId edge_id;
   const DirectedEdge* edge{};
-  std::shared_ptr<const EdgeInfo> edge_info;
+
+  // not actually optional, EdgeInfo has no default constructor, but we need to be able to initialize
+  // it
+  std::optional<EdgeInfo> edge_info;
 
   graph_tile_ptr tile;
 
@@ -180,7 +186,7 @@ struct candidate_t {
 // interesting bin.  if has_bin() is false, then the best projection
 // is found.
 struct projector_wrapper {
-  projector_wrapper(const Location& location, GraphReader& reader)
+  projector_wrapper(const vb::Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_)), location(location),
         sq_radius(square(double(location.radius_))), project(location.latlng_) {
     // TODO: something more empirical based on radius
@@ -239,7 +245,7 @@ struct projector_wrapper {
 
   std::function<std::tuple<int32_t, unsigned short, double>()> binner;
   graph_tile_ptr cur_tile;
-  Location location;
+  vb::Location location;
   unsigned short bin_index = 0;
   double sq_radius;
   std::vector<candidate_t> unreachable;
@@ -252,39 +258,29 @@ struct projector_wrapper {
 
 struct bin_handler_t {
   std::vector<projector_wrapper> pps;
-  valhalla::baldr::GraphReader& reader;
-  std::shared_ptr<DynamicCost> costing;
+  vb::GraphReader& reader;
+  cost_ptr_t costing;
   unsigned int max_reach_limit;
   std::vector<candidate_t> bin_candidates;
-  std::unordered_set<uint64_t> correlated_edges;
+  ankerl::unordered_dense::set<uint64_t> correlated_edges;
   Reach reach_finder;
 
   // keep track of edges whose reachability we've already computed
   // TODO: dont use pointers as keys, its safe for now but fancy caching one day could be bad
-  std::unordered_map<const DirectedEdge*, directed_reach> directed_reaches;
+  ankerl::unordered_dense::map<const DirectedEdge*, directed_reach> directed_reaches;
 
-  bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
-                valhalla::baldr::GraphReader& reader,
-                const std::shared_ptr<DynamicCost>& costing)
-      : reader(reader), costing(costing) {
-    // get the unique set of input locations and the max reachability of them all
-    std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
-    pps.reserve(uniq_locations.size());
-    max_reach_limit = 0;
-    for (const auto& loc : uniq_locations) {
-      pps.emplace_back(loc, reader);
-      max_reach_limit = std::max(max_reach_limit, loc.min_outbound_reach_);
-      max_reach_limit = std::max(max_reach_limit, loc.min_inbound_reach_);
-    }
-    // very annoying but it saves a lot of time to preallocate this instead of doing it in the loop
-    // in handle_bins
-    bin_candidates.resize(pps.size());
-    // TODO: make space for reach check in a more empirical way
-    auto reservation = std::max(max_reach_limit, static_cast<decltype(max_reach_limit)>(1));
-    directed_reaches.reserve(reservation * 1024);
+  bin_handler_t(vb::GraphReader& reader) : reader(reader), max_reach_limit(0) {
   }
 
-  void correlate_node(const Location& location,
+  void clear() {
+    pps.clear();
+    max_reach_limit = 0;
+    bin_candidates.clear();
+    correlated_edges.clear();
+    directed_reaches.clear();
+  }
+
+  void correlate_node(const vb::Location& location,
                       const GraphId& found_node,
                       const candidate_t& candidate,
                       PathLocation& correlated,
@@ -321,8 +317,10 @@ struct bin_handler_t {
             tangent_angle(index, candidate.point, info.shape(),
                           GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
         auto layer = info.layer();
-        // do we want this edge
-        if (costing->Allowed(edge, tile, kDisallowShortcut)) {
+        // do we want this edge, note we have to re-evaluate the filter check because we may be
+        // seeing these edges a second time (filtered out before)
+        if (costing->Allowed(edge, tile, kDisallowShortcut) &&
+            !search_filter(edge, *costing, tile, location.search_filter_)) {
           auto reach = get_reach(id, edge);
           PathLocation::PathEdge
               path_edge{id,   0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound,
@@ -341,7 +339,8 @@ struct bin_handler_t {
         if (!other_edge)
           continue;
 
-        if (costing->Allowed(other_edge, other_tile, kDisallowShortcut)) {
+        if (costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
+            !search_filter(other_edge, *costing, other_tile, location.search_filter_)) {
           auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
           PathLocation::PathEdge path_edge{other_id,
@@ -374,7 +373,7 @@ struct bin_handler_t {
     crawl(found_node, true);
   }
 
-  void correlate_edge(const Location& location,
+  void correlate_edge(const vb::Location& location,
                       const candidate_t& candidate,
                       PathLocation& correlated,
                       std::vector<PathLocation::PathEdge>& filtered) {
@@ -418,12 +417,14 @@ struct bin_handler_t {
       auto reach = get_reach(candidate.edge_id, candidate.edge);
       PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
                                        distance,          side,         reach.outbound,
-                                       reach.inbound,     angle};
-      // correlate the edge we found
-      if (side_filter(path_edge, location, reader) || heading_filter(location, angle) ||
-          layer_filter(location, layer)) {
+                                       reach.inbound,     angle,        false};
+      // correlate the edge we found if its not filtered out
+      bool hard_filtered =
+          search_filter(candidate.edge, *costing, candidate.tile, location.search_filter_);
+      if (!hard_filtered && (side_filter(path_edge, location, reader) ||
+                             heading_filter(location, angle) || layer_filter(location, layer))) {
         filtered.push_back(std::move(path_edge));
-      } else if (correlated_edges.insert(candidate.edge_id).second) {
+      } else if (!hard_filtered && correlated_edges.insert(candidate.edge_id).second) {
         correlated.edges.push_back(std::move(path_edge));
       }
       // correlate its evil twin
@@ -431,12 +432,13 @@ struct bin_handler_t {
       graph_tile_ptr other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
-      if (other_edge && costing->Allowed(other_edge, other_tile, kDisallowShortcut)) {
+      if (other_edge && costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
+          !search_filter(other_edge, *costing, other_tile, location.search_filter_)) {
         auto opp_angle = std::fmod(angle + 180.f, 360.f);
         reach = get_reach(opposing_edge_id, other_edge);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
-                                               reach.inbound,    opp_angle};
+                                               reach.inbound,    opp_angle,        false};
         // angle is 180 degrees opposite of the one above
         if (side_filter(other_path_edge, location, reader) || heading_filter(location, opp_angle) ||
             layer_filter(location, layer)) {
@@ -515,14 +517,22 @@ struct bin_handler_t {
         continue;
       }
 
+      // lots of places below where we might like to know about the opp edge
+      const DirectedEdge* opp_edge = nullptr;
+      graph_tile_ptr opp_tile = tile;
+      GraphId opp_edgeid;
+
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
       if (!costing->Allowed(edge, tile, kDisallowShortcut)) {
-        // then we try its opposing edge
-        edge_id = reader.GetOpposingEdgeId(edge_id, edge, tile);
         // but if we couldnt get it or its filtered too then we move on
-        if (!edge_id.Is_Valid() || !costing->Allowed(edge, tile, kDisallowShortcut))
+        if (!(opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) ||
+            !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
           continue;
+        // if we will continue with the opposing edge lets swap it in
+        std::swap(edge, opp_edge);
+        std::swap(tile, opp_tile);
+        std::swap(edge_id, opp_edgeid);
       }
 
       // initialize candidates vector:
@@ -533,8 +543,12 @@ struct bin_handler_t {
       bool all_prefiltered = true;
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
+        // for traffic closures we may have only one direction disabled so we must also check opp
+        // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
-            is_search_filter_triggered(edge, *costing, tile, p_itr->location.search_filter_);
+            search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
+            (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
+            search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_);
         // set to false if even one candidate was not filtered
         all_prefiltered = all_prefiltered && c_itr->prefiltered;
       }
@@ -553,8 +567,8 @@ struct bin_handler_t {
       // a trivial half plane test as maybe a single dot product and comparison?
 
       // get some shape of the edge
-      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
-      auto shape = edge_info->lazy_shape();
+      auto edge_info = tile->edgeinfo(edge);
+      auto shape = edge_info.lazy_shape();
       PointLL v;
       if (!shape.empty()) {
         v = shape.pop();
@@ -596,12 +610,10 @@ struct bin_handler_t {
         // is this edge reachable in the right way
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
-        const DirectedEdge* opp_edge = nullptr;
-        graph_tile_ptr opp_tile = tile;
-        GraphId opp_edgeid;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-            costing->Allowed(opp_edge, opp_tile, kDisallowShortcut)) {
+            costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
+            !search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_)) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
           if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
               opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
@@ -620,7 +632,7 @@ struct bin_handler_t {
         if (batch->empty()) {
           c_itr->edge = edge;
           c_itr->edge_id = edge_id;
-          c_itr->edge_info = edge_info;
+          c_itr->edge_info = std::move(edge_info);
           c_itr->tile = tile;
           batch->emplace_back(std::move(*c_itr));
           continue;
@@ -642,7 +654,7 @@ struct bin_handler_t {
         if (in_radius || better) {
           c_itr->edge = edge;
           c_itr->edge_id = edge_id;
-          c_itr->edge_info = edge_info;
+          c_itr->edge_info = std::move(edge_info);
           c_itr->tile = tile;
           // the last one wasnt in the radius so replace it with this one because its better or is
           // in the radius
@@ -691,20 +703,44 @@ struct bin_handler_t {
 
   // we keep the points sorted at each round such that unfinished ones
   // are at the front of the sorted list
-  void search() {
+  std::unordered_map<vb::Location, PathLocation> search(const std::vector<vb::Location>& locations,
+                                                        const cost_ptr_t& costing) {
+    clear();
+
+    this->costing = costing;
+
+    // get the unique set of input locations and the max reachability of them all
+    std::unordered_set<vb::Location> uniq_locations(locations.begin(), locations.end());
+    pps.reserve(uniq_locations.size());
+    max_reach_limit = 0;
+    for (const auto& loc : uniq_locations) {
+      pps.emplace_back(loc, reader);
+      max_reach_limit = std::max(max_reach_limit, loc.min_outbound_reach_);
+      max_reach_limit = std::max(max_reach_limit, loc.min_inbound_reach_);
+    }
+    // very annoying but it saves a lot of time to preallocate this instead of doing it in the loop
+    // in handle_bins
+    bin_candidates.resize(pps.size());
+    // TODO: make space for reach check in a more empirical way
+    auto reservation = std::max(max_reach_limit, static_cast<decltype(max_reach_limit)>(1));
+    directed_reaches.reserve(reservation * 1024);
+
     std::sort(pps.begin(), pps.end());
     while (pps.front().has_bin()) {
       auto range = find_best_range(pps);
       handle_bin(range.first, range.second);
       std::sort(pps.begin(), pps.end());
     }
+
+    return finalize();
   }
 
+private:
   // create the PathLocation corresponding to the best projection of the given candidate
-  std::unordered_map<Location, PathLocation> finalize() {
+  std::unordered_map<vb::Location, PathLocation> finalize() {
     // at this point we have candidates for each location so now we
     // need to go get the actual correlated location with edge_id etc.
-    std::unordered_map<Location, PathLocation> searched;
+    std::unordered_map<vb::Location, PathLocation> searched;
     for (auto& pp : pps) {
       // remove non-sensical island candidates
       auto new_end = std::remove_if(pp.unreachable.begin(), pp.unreachable.end(),
@@ -753,8 +789,8 @@ struct bin_handler_t {
       // angle? for now we are just saying that they want it to exit at the
       // heading provided. this means that if it was node snapped we only
       // want the outbound edges
-      if ((pp.location.stoptype_ == Location::StopType::THROUGH ||
-           pp.location.stoptype_ == Location::StopType::BREAK_THROUGH) &&
+      if ((pp.location.stoptype_ == vb::Location::StopType::THROUGH ||
+           pp.location.stoptype_ == vb::Location::StopType::BREAK_THROUGH) &&
           pp.location.heading_) {
         // partition the ones we want to move to the end
         auto new_end =
@@ -807,24 +843,28 @@ struct bin_handler_t {
 namespace valhalla {
 namespace loki {
 
-std::unordered_map<valhalla::baldr::Location, PathLocation>
-Search(const std::vector<valhalla::baldr::Location>& locations,
-       GraphReader& reader,
-       const std::shared_ptr<DynamicCost>& costing) {
+struct Search::bin_handler_t : public ::bin_handler_t {
+  bin_handler_t(vb::GraphReader& reader) : ::bin_handler_t(reader) {
+  }
+};
+
+Search::Search(GraphReader& reader)
+    : reader_(reader), handler_(std::make_unique<bin_handler_t>(reader_)) {
+}
+
+Search::~Search() = default;
+
+std::unordered_map<vb::Location, PathLocation>
+Search::search(const std::vector<vb::Location>& locations, const cost_ptr_t& costing) {
   // we cannot continue without costing
   if (!costing)
     throw std::runtime_error("No costing was provided for edge candidate search");
 
   // trivially finished already
   if (locations.empty())
-    return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
+    return std::unordered_map<vb::Location, PathLocation>{};
 
-  // setup the unique list of locations
-  bin_handler_t handler(locations, reader, costing);
-  // search over the bins doing multiple locations per bin
-  handler.search();
-  // turn each locations candidate set into path locations
-  return handler.finalize();
+  return handler_->search(locations, costing);
 }
 
 } // namespace loki

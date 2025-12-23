@@ -1,9 +1,11 @@
 #pragma once
-#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/proto/api.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/expansion.pb.h>
 #include <valhalla/proto/incidents.pb.h>
 #include <valhalla/proto/matrix.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costconstants.h>
 
 namespace valhalla {
@@ -18,6 +20,19 @@ constexpr valhalla::RoadClass kTripLegRoadClass[] = {valhalla::RoadClass::kMotor
                                                      valhalla::RoadClass::kServiceOther};
 inline valhalla::RoadClass GetRoadClass(const baldr::RoadClass road_class) {
   return kTripLegRoadClass[static_cast<int>(road_class)];
+}
+
+// Associate SpeedType values to TripLeg proto
+constexpr TripLeg_SpeedType kTripLegSpeedType[] = {TripLeg_SpeedType_kTagged,
+                                                   TripLeg_SpeedType_kClassified};
+inline TripLeg_SpeedType GetTripLegSpeedType(const baldr::SpeedType speed_type) {
+  return kTripLegSpeedType[static_cast<int>(speed_type)];
+}
+
+// Associate HovTypes values to TripLeg proto
+constexpr TripLeg_HovType kTripLegHovType[] = {TripLeg_HovType_kHOV2, TripLeg_HovType_kHOV3};
+inline TripLeg_HovType GetTripLegHovType(const baldr::HOVEdgeType hov_type) {
+  return kTripLegHovType[static_cast<int>(hov_type)];
 }
 
 // Associate Surface values to TripLeg proto
@@ -41,14 +56,12 @@ inline VehicleType GetTripLegVehicleType(const uint8_t type) {
 }
 
 // Associate pedestrian types to TripLeg proto
-constexpr PedestrianType kTripLegPedestrianType[] = {
-    PedestrianType::kFoot,
-    PedestrianType::kWheelchair,
-};
+constexpr PedestrianType kTripLegPedestrianType[] = {PedestrianType::kFoot,
+                                                     PedestrianType::kWheelchair,
+                                                     PedestrianType::kBlind};
 inline PedestrianType GetTripLegPedestrianType(const uint8_t type) {
-  return (type <= static_cast<uint8_t>(sif::PedestrianType::kWheelchair))
-             ? kTripLegPedestrianType[type]
-             : kTripLegPedestrianType[0];
+  return (type <= static_cast<uint8_t>(sif::PedestrianType::kBlind)) ? kTripLegPedestrianType[type]
+                                                                     : kTripLegPedestrianType[0];
 }
 
 // Associate bicycle types to TripLeg proto
@@ -521,7 +534,7 @@ const std::string& MatrixAlgoToString(const valhalla::Matrix::Algorithm algo);
 // Get the string representing the incident-type
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type);
 // Get the string representing the incident-Impact
-const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact);
+std::string_view incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact);
 // Get the string representing the guidance view type
 const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_GuidanceView_Type type);
 
@@ -548,6 +561,9 @@ const std::string& Location_Type_Enum_Name(const Location::Type t);
 const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet s);
 bool Options_ExpansionProperties_Enum_Parse(const std::string& prop, Options::ExpansionProperties* a);
 bool Options_ExpansionAction_Enum_Parse(const std::string& action, Options::Action* a);
+const std::string& Expansion_EdgeStatus_Enum_Name(const Expansion_EdgeStatus status);
+bool Options_ReverseTimeTracking_Enum_Parse(const std::string& strategy,
+                                            Options::ReverseTimeTracking* f);
 
 std::pair<std::string, std::string>
 travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver);

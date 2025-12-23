@@ -2,21 +2,18 @@
 #ifndef MMP_MAP_MATCHER_H_
 #define MMP_MAP_MATCHER_H_
 
-#include <unordered_set>
-#include <vector>
-
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/meili/candidate_search.h>
 #include <valhalla/meili/config.h>
 #include <valhalla/meili/emission_cost_model.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/meili/measurement.h>
-#include <valhalla/meili/routing.h>
 #include <valhalla/meili/state.h>
 #include <valhalla/meili/topk_search.h>
 #include <valhalla/meili/transition_cost_model.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <vector>
 
 namespace valhalla {
 namespace meili {
@@ -78,10 +75,10 @@ public:
     graphreader_.SetInterrupt(interrupt_);
   }
 
-private:
   std::unordered_map<StateId::Time, std::vector<Measurement>>
   AppendMeasurements(const std::vector<Measurement>& measurements);
 
+private:
   StateId::Time AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
 
   void RemoveRedundancies(const std::vector<StateId>& result,

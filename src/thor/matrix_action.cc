@@ -1,9 +1,3 @@
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/pedestriancost.h"
-#include "thor/costmatrix.h"
-#include "thor/timedistancebssmatrix.h"
-#include "thor/timedistancematrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
@@ -112,6 +106,13 @@ std::string thor_worker_t::matrix(Api& request) {
   }
 
   auto* algo = get_matrix_algorithm(request, has_time, costing);
+  if (check_hierarchy_limits(mode_costing[int(mode)]->GetHierarchyLimits(), mode_costing[int(mode)],
+                             options.costings().find(options.costing_type())->second.options(),
+                             hierarchy_limits_config_costmatrix, allow_hierarchy_limits_modifications,
+                             mode_costing[int(mode)]->UseHierarchyLimits())) {
+    // maybe warn if we needed to change user provided hierarchy limits
+    add_warning(request, allow_hierarchy_limits_modifications ? 210 : 209);
+  }
   LOG_INFO("matrix::" + std::string(algo->name()));
 
   // TODO(nils): TDMatrix doesn't care about either destonly or no_thru

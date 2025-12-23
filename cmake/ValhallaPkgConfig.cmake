@@ -13,7 +13,6 @@ function(configure_valhalla_pc)
   set_variable_from_rel_or_absolute_path("libdir" "$\{prefix\}" "${CMAKE_INSTALL_LIBDIR}")
   set_variable_from_rel_or_absolute_path("includedir" "$\{prefix\}" "${CMAKE_INSTALL_INCLUDEDIR}")
   # Build strings of dependencies
-  set(LIBS "")
   set(REQUIRES "zlib")
   set(LIBS_PRIVATE "${CMAKE_THREAD_LIBS_INIT}")
   set(CFLAGS "-I$\{includedir\}/valhalla/third_party")
@@ -25,13 +24,16 @@ function(configure_valhalla_pc)
   endif()
   
   if(ENABLE_DATA_TOOLS)
-    list(APPEND REQUIRES spatialite sqlite3 luajit geos)
+    list(APPEND REQUIRES spatialite sqlite3 luajit geos openssl)
   endif()
-  if(ENABLE_HTTP OR ENABLE_PYTHON_BINDINGS)
+  if(ENABLE_HTTP)
     list(APPEND REQUIRES libcurl)
   endif()
   if(ENABLE_SERVICES)
     list(APPEND REQUIRES libprime_server)
+  endif()
+  if(ENABLE_GEOTIFF)
+    list(APPEND REQUIRES libtiff-4)
   endif()
   if(WIN32 AND NOT MINGW)
     list(APPEND LIBS_PRIVATE -lole32 -lshell32)
@@ -40,12 +42,11 @@ function(configure_valhalla_pc)
         list(APPEND LIBS_PRIVATE -lm)
     endif()
   endif()
-  list(JOIN LIBS " " LIBS)
   list(JOIN REQUIRES " " REQUIRES)
   list(JOIN LIBS_PRIVATE " " LIBS_PRIVATE)
 
   configure_file(
-    ${CMAKE_SOURCE_DIR}/libvalhalla.pc.in
-    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    ${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in
+    ${VALHALLA_BUILD_DIR}/libvalhalla.pc
     @ONLY)
 endfunction()

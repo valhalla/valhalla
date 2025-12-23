@@ -1,19 +1,29 @@
-
 #ifndef VALHALLA_MIDGARD_TILES_H_
 #define VALHALLA_MIDGARD_TILES_H_
 
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/ellipse.h>
+
+#include <array>
 #include <cstdint>
 #include <functional>
-#include <list>
 #include <unordered_map>
 #include <unordered_set>
-
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/ellipse.h>
+#include <utility>
 
 namespace valhalla {
 namespace midgard {
+
+enum class Neighbor : uint8_t {
+  kBottomLeft = 0,
+  kLeft = 1,
+  kTopLeft = 2,
+  kTop = 3,
+  kTopRight = 4,
+  kRight = 5,
+  kBottomRight = 6,
+  kBottom = 7,
+};
 
 /**
  * A class that provides a uniform (square) tiling system for a specified
@@ -123,7 +133,7 @@ public:
    * @param   y   y coordinate
    * @return  Returns the tile row. Returns -1 if outside the tile system bounds.
    */
-  int32_t Row(const float y) const {
+  int32_t Row(const typename coord_t::value_type y) const {
     // Return -1 if outside the tile system bounds
     if (y < tilebounds_.miny() || y > tilebounds_.maxy()) {
       return -1;
@@ -139,19 +149,18 @@ public:
    * @param   x   x coordinate
    * @return  Returns the tile column. Returns -1 if outside the tile system bounds.
    */
-  int32_t Col(const float x) const {
+  int32_t Col(const typename coord_t::value_type x) const {
     // Return -1 if outside the tile system bounds
     if (x < tilebounds_.minx() || x > tilebounds_.maxx()) {
       return -1;
     }
 
     // If equal to the max x return the largest column
-    if (x == tilebounds_.maxx()) {
+    const typename coord_t::value_type col = (x - tilebounds_.minx()) / tilesize_;
+    if (col >= ncolumns_) {
       return ncolumns_ - 1;
-    } else {
-      float col = (x - tilebounds_.minx()) / tilesize_;
-      return (col >= 0.0) ? static_cast<int32_t>(col) : static_cast<int32_t>(col - 1);
     }
+    return (col >= 0.0) ? static_cast<int32_t>(col) : static_cast<int32_t>(col - 1);
   }
 
   /**
@@ -305,6 +314,48 @@ public:
                                                            : tileid;
   }
 
+  std::pair<uint32_t, unsigned short> GetNeighbor(int global_x, int global_y, Neighbor which) const {
+    // starting at lower left, moving clockwise
+
+    // clang-format off
+    static short dx[8] = {-1, -1, -1, 0, 1, 1,  1, 0};
+    static short dy[8] = {-1, 0,   1, 1, 1, 0, -1, -1};
+    // clang-format on
+
+    // new global
+    int nx = wrapx_ && ((global_x == ncolumns_ * nsubdivisions_) || global_x == 0)
+                 ? global_x
+                 : global_x + dx[static_cast<uint8_t>(which)];
+    int ny = global_y + dy[static_cast<uint8_t>(which)];
+
+    // convert back to tile/bin ids
+    int new_tileid = (nx / nsubdivisions_) + (ny / nsubdivisions_) * ncolumns_;
+    int new_binid = (nx % nsubdivisions_) + (ny % nsubdivisions_) * nsubdivisions_;
+    return std::make_pair(new_tileid, new_binid);
+  }
+
+  std::array<std::pair<uint32_t, unsigned short>, 8> GetNeighbors(uint32_t tileid,
+                                                                  short binid) const {
+    std::array<std::pair<uint32_t, unsigned short>, 8> neighbors;
+
+    // tile coords
+    int tx = tileid % ncolumns_;
+    int ty = tileid / ncolumns_;
+
+    // bin coords within tile
+    int bx = binid % nsubdivisions_;
+    int by = binid / nsubdivisions_;
+
+    // global coords
+    int global_x = tx * nsubdivisions_ + bx;
+    int global_y = ty * nsubdivisions_ + by;
+
+    for (uint8_t i = 0; i < 8; ++i) {
+      neighbors[i] = GetNeighbor(global_x, global_y, static_cast<Neighbor>(i));
+    }
+
+    return neighbors;
+  }
   /**
    * Get the neighboring tileid above or north.
    * @param  tileid   Tile Id.
@@ -392,6 +443,11 @@ public:
    */
   std::function<std::tuple<int32_t, unsigned short, double>()>
   ClosestFirst(const coord_t& seed) const;
+
+  /**
+   * Returns the bounding box of a bin given its tile and bin ID within the tile
+   */
+  AABB2<coord_t> BinBBox(int32_t tile, unsigned short bin) const;
 
 protected:
   // Does the tile bounds wrap in the x direction (e.g. at longitude = 180)

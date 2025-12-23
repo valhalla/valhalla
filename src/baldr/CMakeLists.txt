@@ -2,9 +2,16 @@
 set(tz_db_files africa antarctica asia australasia backward etcetera europe
   northamerica southamerica leapseconds)
 
+# Select make command based on platform
+if(WIN32)
+  set(MAKE_CMD nmake)
+else()
+  set(MAKE_CMD make)
+endif()
+
 # Process the leap seconds file (it's in .gitignore of the tz repo)
 add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds
-COMMAND make leapseconds
+COMMAND ${MAKE_CMD} leapseconds
 WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/third_party/tz
 COMMENT "Compiling third_party/tz/leapseconds with awk"
 DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds.awk)
@@ -38,7 +45,7 @@ set(includes
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
      )
 
-set(system_includes 
+set(system_includes
   ${date_include_dir}
   $<$<BOOL:${WIN32}>:${dirent_include_dir}>
   ${rapidjson_include_dir})
@@ -65,6 +72,7 @@ set(sources
     pathlocation.cc
     predictedspeeds.cc
     tilehierarchy.cc
+    timedomain.cc
     turn.cc
     shortcut_recovery.h
     streetname.cc
@@ -128,5 +136,5 @@ valhalla_module(NAME baldr
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    ${curl_targets}
+    ${curl_target}
     PkgConfig::ZLIB)

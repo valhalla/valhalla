@@ -2,12 +2,12 @@
 #include "midgard/aabb2.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
+
+#include <gtest/gtest.h>
 
 #include <array>
+#include <list>
 #include <random>
-
-#include "test.h"
 
 using namespace valhalla::midgard;
 
@@ -57,6 +57,12 @@ TEST(Tiles, TestRowCol) {
   auto rc = tiles.GetRowColumn(tileid1);
   int32_t tileid2 = tiles.TileId(rc.second, rc.first);
   EXPECT_EQ(tileid1, tileid2) << "TileId does not match using row,col";
+
+  // https://github.com/valhalla/valhalla/issues/5360
+  std::vector<PointLL::first_type> xs = {179.9999986, 180., 180.001, -179.9999986, -180., -180.001};
+  for (const PointLL::first_type x : xs) {
+    EXPECT_LT(tiles.Col(x), tiles.ncolumns());
+  }
 }
 
 TEST(Tiles, TestTileBounds) {
@@ -567,6 +573,18 @@ TEST(Tiles, test_intersect_bbox_rounding) {
 
   auto bin_id = *bins.begin();
   EXPECT_EQ(bin_id, 0);
+}
+
+TEST(Tiles, float_roundoff_issue) {
+  AABB2<PointLL> world_box{-180, -90, 180, 90};
+  Tiles<PointLL> t(world_box, 0.25, 5);
+
+  PointLL ll(179.999978, -16.805363);
+  auto tile_id = t.TileId(ll);
+  EXPECT_EQ(tile_id, 421919);
+  auto base_ll = t.Base(tile_id);
+  EXPECT_EQ(base_ll.lat(), -17.0);
+  EXPECT_EQ(base_ll.lng(), 179.75);
 }
 
 } // namespace

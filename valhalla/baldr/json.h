@@ -1,16 +1,16 @@
 #ifndef VALHALLA_BALDR_JSON_H_
 #define VALHALLA_BALDR_JSON_H_
 
-#include <boost/variant.hpp>
+#include <boost/variant/static_visitor.hpp>
+#include <boost/variant/variant.hpp>
+
 #include <cctype>
-#include <cinttypes>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <iomanip>
-#include <list>
 #include <memory>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -224,11 +224,11 @@ inline std::ostream& operator<<(std::ostream& stream, const Jarray& json) {
 }
 
 inline MapPtr map(std::initializer_list<Jmap::value_type> list) {
-  return MapPtr(new Jmap(list));
+  return std::make_shared<Jmap>(list);
 }
 
 inline ArrayPtr array(std::initializer_list<Jarray::value_type> list) {
-  return ArrayPtr(new Jarray(list));
+  return std::make_shared<Jarray>(list);
 }
 
 } // namespace json

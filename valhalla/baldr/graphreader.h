@@ -1,27 +1,26 @@
 #pragma once
 
-#include <algorithm>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/tilegetter.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
+
+#include <boost/property_tree/ptree_fwd.hpp>
+
 #include <cstdint>
-#include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 
-#include <boost/property_tree/ptree.hpp>
-
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/tilegetter.h>
-#include <valhalla/baldr/tilehierarchy.h>
-
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/sequence.h>
-
-#include <valhalla/proto/incidents.pb.h>
-
 namespace valhalla {
+class IncidentsTile;
+namespace midgard {
+struct tar;
+}
+
 namespace baldr {
 
 struct tile_gone_error_t : public std::runtime_error {
@@ -158,7 +157,8 @@ protected:
   inline uint32_t get_index(const GraphId& graphid) const {
     auto offset = get_offset(graphid);
     // using max value to indicate invalid
-    return offset < cache_indices_.size() ? cache_indices_[offset] : midgard::invalid<uint32_t>();
+    return offset < cache_indices_.size() ? cache_indices_[offset]
+                                          : std::numeric_limits<uint32_t>::max();
   }
 
   // The actual cached GraphTile objects
@@ -908,12 +908,7 @@ public:
    * Returns the location of the tile extract
    * @return  Returns the tile extract file path.
    */
-  const std::string& tile_extract() const {
-    static std::string empty_str;
-    if (tile_extract_->tiles.empty())
-      return empty_str;
-    return tile_extract_->archive->tar_file;
-  }
+  const std::string& tile_extract() const;
 
   /**
    * Returns the tilesets location whether thats a tile_dir or a tile_extract. Purely url
@@ -993,6 +988,20 @@ protected:
   std::unique_ptr<tile_getter_t> tile_getter_;
   const size_t max_concurrent_users_;
   const std::string tile_url_;
+  const std::filesystem::path url_id_txt_path_;
+  const bool is_tar_url_;
+  const uint64_t url_id_txt_checksum_;
+
+  // for remote tar's we grab the index.bin when loading the remote_tar_offsets
+  // so we know all tiles' offset & size
+  struct remote_tile_position_t {
+    uint64_t offset;
+    uint64_t size;
+  };
+  using remote_tar_offsets_t = std::unordered_map<GraphId, remote_tile_position_t>;
+  remote_tar_offsets_t remote_tar_offsets_;
+  // loads the remote index.bin into remote_tar_offsets_
+  void load_remote_tar_offsets();
 
   std::mutex _404s_lock;
   std::unordered_set<GraphId> _404s;
@@ -1000,11 +1009,32 @@ protected:
   std::unique_ptr<TileCache> cache_;
 
   bool enable_incidents_;
+
+  /**
+   * Loads the tile_dir/id.txt URL & MD5 hash and validates whether the URLs match
+   *
+   * @param id_txt_path the filesystem::path to the id.txt
+   * @param tile_url    the tile url in the config to match to the one in id.txt
+   * @return the checksum on the 2nd line of id.txt
+   */
+  uint64_t load_id_txt_checksum(const std::filesystem::path& id_txt_path,
+                                const std::string& tile_url);
 };
 
-// Given the Location relation, return the full metadata
-const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
-                    const valhalla::IncidentsTile::Location& incident_location);
+class LimitedGraphReader {
+public:
+  LimitedGraphReader(GraphReader& reader) : reader_(reader) {
+  }
+
+  /**
+   * Get a pointer to a graph tile object given a GraphId.
+   * @param graphid  the graphid of the tile
+   * @return GraphTile* a pointer to the graph tile
+   */
+  virtual graph_tile_ptr GetGraphTile(const GraphId& graphid);
+
+protected:
+  GraphReader& reader_;
+};
 } // namespace baldr
 } // namespace valhalla

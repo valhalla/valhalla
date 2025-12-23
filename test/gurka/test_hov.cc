@@ -1,5 +1,7 @@
 #include "gurka.h"
 #include "test.h"
+
+#include <boost/format.hpp>
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -103,7 +105,7 @@ TEST(HOVTest, mistagged_hov) {
     auto edge_tuple = gurka::findEdgeByNodes(*reader, layout, "A", "B");
     const baldr::DirectedEdge* edge = std::get<1>(edge_tuple);
     ASSERT_EQ(edge->is_hov_only(), false);
-    ASSERT_TRUE(edge->forwardaccess() & kAutoAccess);
+    ASSERT_TRUE(edge->forwardaccess() & baldr::kAutoAccess);
   }
 }
 

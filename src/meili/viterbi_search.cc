@@ -7,7 +7,7 @@ namespace valhalla {
 namespace meili {
 
 StateLabel::StateLabel(double costsofar, const StateId& stateid, const StateId& predecessor)
-    : costsofar_(costsofar), stateid_(stateid), predecessor_(predecessor) {
+    : stateid_(stateid), predecessor_(predecessor), costsofar_(costsofar) {
   if (!stateid.IsValid()) {
     throw std::invalid_argument("expect valid stateid");
   }
@@ -252,7 +252,7 @@ template <bool Maximize> StateId NaiveViterbiSearch<Maximize>::SearchWinner(Stat
       winner = FindWinner(labels);
     }
     winner_by_time.push_back(winner);
-    history_.push_back(move(labels));
+    history_.push_back(std::move(labels));
   }
 
   return winner_by_time[target];

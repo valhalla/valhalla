@@ -1,6 +1,9 @@
 #include "gurka.h"
-#include "test/test.h"
+#include "mjolnir/util.h"
+
 #include <gtest/gtest.h>
+
+#include <filesystem>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -13,7 +16,7 @@ using namespace valhalla::mjolnir;
 
 valhalla::gurka::map BuildPBF(const std::string& workdir) {
   const std::string ascii_map = R"(
-               
+
                F        G         H                 P
                |        |         |                 |
                |        |/-----2--D--------L--------M-----4--R--------S
@@ -73,8 +76,8 @@ TEST(Standalone, TrafficSignals) {
 
   const std::string workdir = "test/data/gurka_traffic_signals";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -87,8 +90,7 @@ TEST(Standalone, TrafficSignals) {
 
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
 

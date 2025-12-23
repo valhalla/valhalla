@@ -1,6 +1,6 @@
+#include "baldr/graphreader.h"
 #include "test.h"
 
-#include "baldr/graphreader.h"
 #include <boost/property_tree/ptree.hpp>
 
 namespace vb = valhalla::baldr;
@@ -19,7 +19,7 @@ auto config_dir = test::make_config("test/data/utrecht_tiles");
 TEST(TarIndexer, TestTrafficTar) {
   // read the tile headers from tar & dir tiles and memcmp them
   TestGraphReader reader_tar(config_tar.get_child("mjolnir"));
-  GraphReader reader_dir(config_dir.get_child("mjolnir"));
+  vb::GraphReader reader_dir(config_dir.get_child("mjolnir"));
 
   for (const auto& tile_id : reader_dir.GetTileSet()) {
     auto dir_tile = reader_dir.GetGraphTile(tile_id);

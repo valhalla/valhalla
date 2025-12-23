@@ -1,18 +1,11 @@
-#include "thor/worker.h"
-#include <cstdint>
-
 #include "baldr/attributes_controller.h"
-#include "baldr/datetime.h"
-#include "baldr/json.h"
-#include "baldr/rapidjson_utils.h"
-#include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/pedestriancost.h"
-
 #include "proto/common.pb.h"
+#include "thor/route_matcher.h"
+#include "thor/triplegbuilder.h"
+#include "thor/worker.h"
+
+#include <cstdint>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -172,6 +165,148 @@ opposing) { loc.mutable_correlation()->mutable_edges()->SwapElements(i, loc.path
   }
 }*/
 
+/**
+ * Adds a shortcut to the cost factor edges given one
+ * of its constituents
+ */
+void add_partial_shortcut(baldr::GraphReader& reader,
+                          GraphId shortcut,
+                          valhalla::Costing_Options* options,
+                          valhalla::CostFactorEdge* cost_factor) {
+  GraphId edge = static_cast<GraphId>(cost_factor->id());
+  graph_tile_ptr tile = reader.GetGraphTile(shortcut);
+  // it's part of a shortcut
+  auto constituents = reader.RecoverShortcut(shortcut);
+  auto* shortcut_edge = tile->directededge(shortcut);
+
+  tile = reader.GetGraphTile(edge);
+  auto* current_edge = tile->directededge(edge);
+
+  // walk the base edges until we find ours
+  uint64_t accumulated_length = 0;
+  for (const auto& constituent : constituents) {
+    if (edge == constituent)
+      break;
+
+    tile = reader.GetGraphTile(constituent, tile);
+    if (!tile)
+      break;
+
+    auto* de = tile->directededge(constituent);
+    accumulated_length += de->length();
+  }
+  auto* e = options->add_cost_factor_edges();
+  e->set_id(shortcut);
+  e->set_factor(cost_factor->factor());
+  e->set_start(static_cast<double>(accumulated_length + (static_cast<double>(current_edge->length()) *
+                                                         cost_factor->start())) /
+               static_cast<double>(shortcut_edge->length()));
+  e->set_end(static_cast<double>(accumulated_length +
+                                 (static_cast<double>(current_edge->length()) * cost_factor->end())) /
+             static_cast<double>(shortcut_edge->length()));
+}
+
+/**
+ * Given one or more cost factor shapes, resolve them into single edges with an ID, a cost factor and
+ * a range by edge walking the graph to match each shape.
+ */
+void add_cost_factor_edges(const sif::mode_costing_t& costing,
+                           const sif::TravelMode& mode,
+                           baldr::GraphReader& reader,
+                           valhalla::Options& options,
+                           double min_allowed_factor,
+                           uint64_t max_allowed_edges) {
+  Costing_Options* costing_options =
+      options.mutable_costings()->find(options.costing_type())->second.mutable_options();
+
+  // keep track of how many edges we're adding
+  uint64_t edge_count = 0;
+
+  for (auto& line : *options.mutable_cost_factor_lines()) {
+    std::vector<std::vector<PathInfo>> legs;
+    if (!RouteMatcher::FormPath(costing, mode, reader, line, false, /* use_shortcuts=*/true, legs)) {
+      throw valhalla_exception_t{233};
+    }
+    for (const auto& leg : legs) {
+      for (size_t i = 0; i < leg.size(); ++i) {
+        if (edge_count > max_allowed_edges)
+          throw valhalla_exception_t{234};
+        auto& path_info = leg[i];
+        bool is_first = i == 0;
+        bool is_last = i == leg.size() - 1;
+        if (is_first && is_last) { // trivial path
+          edge_count++;
+          auto* e = costing_options->add_cost_factor_edges();
+          e->set_id(path_info.edgeid);
+          e->set_factor(line.cost_factor());
+          for (const auto& edge : line.locations(0).correlation().edges()) {
+            if (path_info.edgeid == edge.graph_id()) {
+              e->set_start(edge.percent_along());
+              break;
+            }
+          }
+          for (const auto& edge : line.locations(1).correlation().edges()) {
+            if (path_info.edgeid == edge.graph_id()) {
+              e->set_end(edge.percent_along());
+              break;
+            }
+          }
+          auto shortcut = reader.GetShortcut(path_info.edgeid);
+          if (shortcut.Is_Valid()) {
+            add_partial_shortcut(reader, shortcut, costing_options, e);
+          }
+        } else if (is_first || is_last) { // beginning or end edge
+          for (const auto& edge :
+               line.locations(static_cast<size_t>(is_last)).correlation().edges()) {
+            if (path_info.edgeid == edge.graph_id()) {
+              edge_count++;
+              auto* e = costing_options->add_cost_factor_edges();
+              e->set_id(path_info.edgeid);
+              // apply the minimum allowed value specified in the config
+              e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
+              e->set_start(is_first ? edge.percent_along() : 0.);
+              e->set_end(is_last ? edge.percent_along() : 1.);
+              auto shortcut = reader.GetShortcut(path_info.edgeid);
+              if (shortcut.Is_Valid()) {
+                add_partial_shortcut(reader, shortcut, costing_options, e);
+              }
+              break;
+            }
+          }
+        } else { // intermediate edges
+          edge_count++;
+          auto* e = costing_options->add_cost_factor_edges();
+          e->set_id(path_info.edgeid);
+          e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
+          e->set_start(0.);
+          e->set_end(1.);
+
+          // if it's a shortcut, also add all of its constituent edges
+          if (path_info.is_shortcut) {
+            auto constituents = reader.RecoverShortcut(path_info.edgeid);
+            for (const auto& constituent : constituents) {
+              edge_count++;
+              auto* e = costing_options->add_cost_factor_edges();
+              e->set_id(constituent);
+              e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
+              e->set_start(0);
+              e->set_end(1);
+            }
+          } else {
+            // if it's not a shortcut, it may be part of one
+            // TODO: this is an expensive operation, since we need to expand the graph
+            // a little, can't we persist this information somehow?
+            auto shortcut = reader.GetShortcut(path_info.edgeid);
+            if (shortcut.Is_Valid()) {
+              add_partial_shortcut(reader, shortcut, costing_options, e);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 } // namespace
 
 namespace valhalla {
@@ -219,6 +354,14 @@ void thor_worker_t::route(Api& request) {
   auto& options = *request.mutable_options();
   adjust_scores(options);
   controller = AttributesController(options);
+
+  if (!request.options().cost_factor_lines().empty()) {
+    // we parse costing twice in this case, once for edge walking,
+    // and then again once with the edge factors added
+    parse_costing(request);
+    add_cost_factor_edges(mode_costing, mode, *reader, *request.mutable_options(),
+                          min_linear_cost_factor, max_linear_cost_edges);
+  }
   auto costing = parse_costing(request);
 
   // get all the legs
@@ -305,6 +448,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   // If bidirectional A* disable use of destination-only edges on the
   // first pass. If there is a failure, we allow them on the second pass.
   // Other path algorithms can use destination-only edges on the first pass.
+  // TODO(nils): why not others with destonly pruning? it gets a 2nd pass as well
   cost->set_allow_destination_only(path_algorithm == &bidir_astar ? false : true);
 
   cost->set_pass(0);
@@ -358,15 +502,52 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   std::vector<thor::PathInfo> path;
   std::vector<std::string> algorithms;
   const Options& options = api.options();
+  const Costing_Options& costing_options =
+      options.costings().find(options.costing_type())->second.options();
   valhalla::Trip& trip = *api.mutable_trip();
   trip.mutable_routes()->Reserve(options.alternates() + 1);
 
   graph_tile_ptr tile = nullptr;
+
+  // get the user provided hierarchy limits and store one for each path algorithm
+  // because we may use them interchangeably
+  std::vector<HierarchyLimits> hierarchy_limits_bidir =
+      mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+  std::vector<HierarchyLimits> hierarchy_limits_unidir =
+      mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+
+  // check whether hierarchy limits were already checked for this algorithm
+  // on a multi-leg route
+  bool used_unidir = false;
+  bool used_bidir = false;
+  bool add_hierarchy_limits_warning = false;
+
   auto route_two_locations = [&](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
     thor::PathAlgorithm* path_algorithm =
         this->get_path_algorithm(costing, *origin, *destination, options);
     path_algorithm->Clear();
+
+    // once we know which algorithm will be used, set the hierarchy limits accordingly
+    bool is_bidir = path_algorithm == &bidir_astar;
+    auto& hierarchy_limits = is_bidir ? hierarchy_limits_bidir : hierarchy_limits_unidir;
+
+    // only check hierarchy limits if not already done for the current algorithm
+    add_hierarchy_limits_warning =
+        (!(is_bidir ? used_bidir : used_unidir) &&
+         check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
+                                costing_options,
+                                path_algorithm == &bidir_astar
+                                    ? hierarchy_limits_config_bidirectional_astar
+                                    : hierarchy_limits_config_astar,
+                                allow_hierarchy_limits_modifications,
+                                mode_costing[int(mode)]->UseHierarchyLimits())) ||
+        add_hierarchy_limits_warning;
+
+    // ..and mark hierarchy limits for this algorithm as checked
+    is_bidir ? (used_bidir = true) : (used_unidir = true);
+    mode_costing[static_cast<uint32_t>(mode)]->SetHierarchyLimits(hierarchy_limits);
+
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
@@ -529,6 +710,10 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     }
     ++origin;
   }
+
+  // maybe warn if we needed to change user provided hierarchy limits
+  if (add_hierarchy_limits_warning)
+    add_warning(api, allow_hierarchy_limits_modifications ? 210 : 209);
   // Reverse the legs because protobuf only has adding to the end
   std::reverse(route->mutable_legs()->begin(), route->mutable_legs()->end());
   // assign changed locations
@@ -543,8 +728,21 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   std::vector<thor::PathInfo> path;
   std::vector<std::string> algorithms;
   const Options& options = api.options();
+  const Costing_Options& costing_options =
+      options.costings().find(options.costing_type())->second.options();
   valhalla::Trip& trip = *api.mutable_trip();
   trip.mutable_routes()->Reserve(options.alternates() + 1);
+
+  // get the user provided hierarchy limits and store one for each path algorithm
+  // because we may use them interchangeably
+  auto hierarchy_limits_bidir = mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+  auto hierarchy_limits_unidir = mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+
+  // check whether hierarchy limits were already checked for this algorithm
+  // on a multi-leg route
+  bool used_unidir = false;
+  bool used_bidir = false;
+  bool add_hierarchy_limits_warning = false;
 
   graph_tile_ptr tile = nullptr;
   auto route_two_locations = [&, this](auto& origin, auto& destination) -> bool {
@@ -554,6 +752,25 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
+
+    // once we know which algorithm will be used, set the hierarchy limits accordingly
+    bool is_bidir = path_algorithm == &bidir_astar;
+    auto& hierarchy_limits = is_bidir ? hierarchy_limits_bidir : hierarchy_limits_unidir;
+
+    // only check hierarchy limits if not already done for the current algorithm
+    add_hierarchy_limits_warning =
+        (!(is_bidir ? used_bidir : used_unidir) &&
+         check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
+                                costing_options,
+                                path_algorithm == &bidir_astar
+                                    ? hierarchy_limits_config_bidirectional_astar
+                                    : hierarchy_limits_config_astar,
+                                allow_hierarchy_limits_modifications,
+                                mode_costing[static_cast<uint32_t>(mode)]->UseHierarchyLimits())) ||
+        add_hierarchy_limits_warning;
+    // ..and mark hierarchy limits for this algorithm as checked
+    is_bidir ? (used_bidir = true) : (used_unidir = true);
+    mode_costing[static_cast<uint32_t>(mode)]->SetHierarchyLimits(hierarchy_limits);
 
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
@@ -688,6 +905,10 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     }
     ++destination;
   }
+  // maybe warn if we needed to change user provided hierarchy limits
+  if (add_hierarchy_limits_warning)
+    add_warning(api, allow_hierarchy_limits_modifications ? 210 : 209);
+
   // assign changed locations
   *api.mutable_options()->mutable_locations() = std::move(correlated);
 }

@@ -3,12 +3,9 @@
 #include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/time_info.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
 #include "proto_conversions.h"
 
 #include <algorithm>
-#include <exception>
 #include <vector>
 
 using namespace valhalla::baldr;
@@ -52,6 +49,31 @@ float length_comparison(const float length, const bool exact_match) {
   }
   float tolerance = (t < kMinLengthTolerance) ? kMinLengthTolerance : (t > max_t) ? max_t : t;
   return length + tolerance;
+}
+
+// check if the intermediate shape points are also on the edge
+bool check_shape(const graph_tile_ptr& tile,
+                 const DirectedEdge* de,
+                 const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
+                 uint32_t from,
+                 uint32_t to) {
+  if (to - from == 1 && de->length() == 0) {
+    return true;
+  }
+  const auto edgeinfo = tile->edgeinfo(de);
+  const auto& edge_shape = edgeinfo.shape();
+  int32_t i = edge_shape.size() - (to - from);
+  if (i < 1 || (from > 0 && i != 1)) {
+    return false;
+  }
+  bool forward = de->forward();
+  for (uint32_t j = from + 1; j < to; i++, j++) {
+    const uint32_t shape_idx = forward ? i : edge_shape.size() - 1 - i;
+    if (!to_ll(shape.Get(j).ll()).ApproximatelyEqual(edge_shape[shape_idx])) {
+      return false;
+    }
+  }
+  return true;
 }
 
 // TODO: we need to stop relying on loki::Search to pre populate edge candidates for the first and
@@ -102,7 +124,7 @@ end_node_t GetEndEdges(GraphReader& reader, const valhalla::Location& destinatio
 // distance is approximately what it should be). Returns false if expansion from this
 // node fails (cannot find edges that match the trace - either in position or distance).
 bool expand_from_node(const mode_costing_t& mode_costing,
-                      const TravelMode& mode,
+                      const valhalla::sif::TravelMode& mode,
                       GraphReader& reader,
                       const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                       std::vector<std::pair<float, float>>& distances,
@@ -117,7 +139,8 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                       std::vector<PathInfo>& path_infos,
                       const bool from_transition,
                       GraphId& end_node,
-                      followed_edges_t& followed_edges) {
+                      followed_edges_t& followed_edges,
+                      const bool use_shortcuts) {
   // Done expanding when node equals stop node and the accumulated distance to that node
   // plus the partial last edge distance is approximately equal to the total distance
   auto n = end_nodes.find(node);
@@ -142,7 +165,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
 
     // Skip shortcuts and transit connection edges
     // TODO - later might allow transit connections for multi-modal
-    if (de->is_shortcut() || de->use() == Use::kTransitConnection) {
+    if ((!use_shortcuts && de->is_shortcut()) || de->use() == Use::kTransitConnection) {
       continue;
     }
 
@@ -165,7 +188,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
     // the current edge. Increment to the next shape point after the correlated index.
     size_t index = correlated_index + 1;
     float length = 0.0f;
-    while (index < shape.size()) {
+    while (index < static_cast<size_t>(shape.size())) {
       // Exclude edge if length along shape is longer than the edge length
       length += distances.at(index).first;
       if (length > de_length) {
@@ -174,7 +197,8 @@ bool expand_from_node(const mode_costing_t& mode_costing,
 
       // Found a match if shape equals directed edge LL within tolerance
       if (to_ll(shape.Get(index).ll()).ApproximatelyEqual(de_end_ll) &&
-          de->length() < length_comparison(length, true)) {
+          de->length() < length_comparison(length, true) &&
+          check_shape(tile, de, shape, correlated_index, index)) {
 
         // Figure out what time it is right now, the first iteration is a no-op
         auto offset_time_info = nodeinfo
@@ -184,17 +208,21 @@ bool expand_from_node(const mode_costing_t& mode_costing,
 
         // get the cost of traversing the node and the edge
         auto& costing = mode_costing[static_cast<int>(mode)];
-        auto transition_cost = costing->TransitionCost(de, nodeinfo, prev_edge_label);
+        auto reader_getter = [&reader]() { return LimitedGraphReader(reader); };
+        auto transition_cost =
+            costing->TransitionCost(de, nodeinfo, prev_edge_label, tile, reader_getter);
         uint8_t flow_sources;
         auto cost =
-            transition_cost + costing->EdgeCost(de, end_node_tile, offset_time_info, flow_sources);
+            transition_cost + costing->EdgeCost(de, edge_id, tile, offset_time_info, flow_sources);
         elapsed += cost;
         // overwrite time with timestamps
         if (use_timestamps)
           elapsed.secs = shape.Get(index).time() - shape.Get(0).time();
 
         // Add edge and update correlated index
-        path_infos.emplace_back(mode, elapsed, edge_id, 0, 0.f, -1, transition_cost);
+        path_infos.emplace_back(mode, elapsed, edge_id, /*trip_id=*/0, /*path_distance=*/0.f,
+                                /*path_distance=*/-1, transition_cost,
+                                /*start_node_is_recovered=*/false, de->is_shortcut());
 
         InternalTurn turn = nodeinfo
                                 ? costing->TurnType(prev_edge_label.opp_local_idx(), nodeinfo, de)
@@ -215,7 +243,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances, time_info, use_timestamps,
                              index, end_node_tile, de->endnode(), end_nodes, prev_edge_label, elapsed,
-                             path_infos, false, end_node, followed_edges)) {
+                             path_infos, false, end_node, followed_edges, use_shortcuts)) {
           return true;
         } else {
           // Match failed along this edge, pop the last entry off path_infos as well as what it
@@ -243,7 +271,8 @@ bool expand_from_node(const mode_costing_t& mode_costing,
       }
       if (expand_from_node(mode_costing, mode, reader, shape, distances, time_info, use_timestamps,
                            correlated_index, end_node_tile, trans->endnode(), end_nodes,
-                           prev_edge_label, elapsed, path_infos, true, end_node, followed_edges)) {
+                           prev_edge_label, elapsed, path_infos, true, end_node, followed_edges,
+                           use_shortcuts)) {
         return true;
       }
     }
@@ -251,8 +280,9 @@ bool expand_from_node(const mode_costing_t& mode_costing,
   return false;
 }
 
+template <typename Options>
 valhalla::baldr::TimeInfo init_time_info(valhalla::baldr::GraphReader& reader,
-                                         valhalla::Options& options,
+                                         Options& options,
                                          valhalla::baldr::DateTime::tz_sys_info_cache_t* tz_cache) {
   graph_tile_ptr tile = nullptr;
   const DirectedEdge* directededge = nullptr;
@@ -260,7 +290,6 @@ valhalla::baldr::TimeInfo init_time_info(valhalla::baldr::GraphReader& reader,
 
   // We support either the epoch timestamp that came with the trace point or
   // a local date time which we convert to epoch by finding the first timezone
-  auto time_info = TimeInfo::invalid();
   for (const auto& e : options.locations(0).correlation().edges()) {
     GraphId graphid(e.graph_id());
     if (!graphid.Is_Valid() || !reader.GetGraphTile(graphid, tile))
@@ -289,10 +318,13 @@ namespace valhalla {
 namespace thor {
 
 // For the route path using an edge walking method.
+template <typename Options>
 bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                             const sif::TravelMode& mode,
                             baldr::GraphReader& reader,
-                            valhalla::Options& options,
+                            Options& options,
+                            const bool use_timestamps,
+                            const bool use_shortcuts,
                             std::vector<std::vector<PathInfo>>& legs) {
   // TODO: build more than one leg based on location types
   legs.clear();
@@ -307,7 +339,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
   float total_distance = 0.0f;
   std::vector<std::pair<float, float>> distances;
   distances.push_back(std::make_pair(0.0f, 0.0f));
-  for (size_t i = 1; i < options.shape_size(); i++) {
+  for (size_t i = 1; i < static_cast<size_t>(options.shape_size()); i++) {
     float d = to_ll(options.shape(i).ll()).Distance(to_ll(options.shape(i - 1).ll()));
     total_distance += d;
     distances.push_back(std::make_pair(d, total_distance));
@@ -359,7 +391,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
     midgard::PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
 
     // Initialize indexes and shape
-    size_t index = 0;
+    size_t index = 1;
     float length = 0.0f;
     float de_remaining_length = de->length() * (1 - edge.percent_along());
     float de_length = length_comparison(de_remaining_length, true);
@@ -369,7 +401,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
     const NodeInfo* nodeinfo = nullptr;
 
     // Loop over shape to form path from matching edges
-    while (index < options.shape_size()) {
+    while (index < static_cast<size_t>(options.shape_size())) {
 
       // bail on this edge if the length of input we checked is already longer than the edge
       length += distances.at(index).first;
@@ -379,7 +411,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
       // Check if shape is within tolerance at the end node
       if (to_ll(options.shape(index).ll()).ApproximatelyEqual(de_end_ll) &&
-          de_remaining_length < length_comparison(length, true)) {
+          de_remaining_length < length_comparison(length, true) &&
+          check_shape(begin_edge_tile, de, options.shape(), 0, index)) {
 
         // Figure out what time it is right now, the first iteration is a no-op
         auto offset_time_info = nodeinfo
@@ -389,11 +422,12 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
         // Get the cost of traversing the edge
         uint8_t flow_sources;
-        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, offset_time_info,
-                                                                  flow_sources) *
-                   (1 - edge.percent_along());
+        elapsed +=
+            mode_costing[static_cast<int>(mode)]->PartialEdgeCost(de, graphid, begin_edge_tile,
+                                                                  offset_time_info, flow_sources,
+                                                                  edge.percent_along(), 1.0f);
         // overwrite time with timestamps
-        if (options.use_timestamps())
+        if (use_timestamps)
           elapsed.secs = options.shape(index).time() - options.shape(0).time();
 
         // Add begin edge
@@ -419,8 +453,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
         // Continue walking shape to find the end node
         GraphId end_node;
         if (expand_from_node(mode_costing, mode, reader, options.shape(), distances, time_info,
-                             options.use_timestamps(), index, end_node_tile, de->endnode(), end_nodes,
-                             prev_edge_label, elapsed, path_infos, false, end_node, followed_edges)) {
+                             use_timestamps, index, end_node_tile, de->endnode(), end_nodes,
+                             prev_edge_label, elapsed, path_infos, false, end_node, followed_edges,
+                             use_shortcuts)) {
           // Find the edge we stopped on at the destination, if we didnt find it the greedy algorithm
           // hit a local maximum (made the wrong choice), TODO: we could rollback and try more
           auto n = end_nodes.find(end_node);
@@ -472,13 +507,16 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           // get the cost of traversing the node and the remaining part of the edge
           auto& costing = mode_costing[static_cast<int>(mode)];
           nodeinfo = end_edge_tile->node(n->first);
-          auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label);
+          auto reader_getter = [&reader]() { return LimitedGraphReader(reader); };
+          auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label,
+                                                         end_edge_tile, reader_getter);
           uint8_t flow_sources;
-          elapsed += transition_cost +
-                     costing->EdgeCost(end_de, end_edge_tile, offset_time_info, flow_sources) *
-                         end_edge.percent_along();
+          elapsed +=
+              transition_cost + costing->PartialEdgeCost(end_de, end_edge_graphid, end_edge_tile,
+                                                         offset_time_info, flow_sources, 0.f,
+                                                         end_edge.percent_along());
           // overwrite time with timestamps
-          if (options.use_timestamps())
+          if (use_timestamps)
             elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 
           // Add end edge
@@ -492,20 +530,26 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
       index++;
     }
 
-    // Did not find the end of the origin edge. Check for trivial route on a single edge
-    for (const auto& end : end_nodes) {
-      if (end.second.first.graph_id() == edge.graph_id()) {
-        // Update the elapsed time based on edge cost
-        uint8_t flow_sources;
-        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, time_info,
-                                                                  flow_sources) *
-                   (end.second.first.percent_along() - edge.percent_along());
-        if (options.use_timestamps())
-          elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
+    // Look for trivial cases if we didn't bail based on checking more than the edge length
+    if (length <= de_length) {
+      // Did not find the end of the origin edge. Check for trivial route on a single edge
+      for (const auto& end : end_nodes) {
+        if (end.second.first.graph_id() == edge.graph_id()) {
+          // Update the elapsed time based on edge cost
+          uint8_t flow_sources;
+          elapsed +=
+              mode_costing[static_cast<int>(mode)]->PartialEdgeCost(de, GraphId(edge.graph_id()),
+                                                                    begin_edge_tile, time_info,
+                                                                    flow_sources,
+                                                                    edge.percent_along(),
+                                                                    end.second.first.percent_along());
+          if (use_timestamps)
+            elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 
-        // Add end edge
-        path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, 0.f, -1);
-        return true;
+          // Add end edge
+          path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, 0.f, -1);
+          return true;
+        }
       }
     }
   }
@@ -514,6 +558,21 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
   //  throw std::runtime_error("RouteMatcher::FormPath could not match to begin edge");
   return false;
 }
+template bool RouteMatcher::FormPath(const sif::mode_costing_t&,
+                                     const sif::TravelMode&,
+                                     baldr::GraphReader&,
+                                     valhalla::Options&,
+                                     const bool,
+                                     const bool,
+                                     std::vector<std::vector<PathInfo>>&);
+
+template bool RouteMatcher::FormPath(const sif::mode_costing_t&,
+                                     const sif::TravelMode&,
+                                     baldr::GraphReader&,
+                                     valhalla::LinearFeatureCost&,
+                                     const bool,
+                                     const bool,
+                                     std::vector<std::vector<PathInfo>>&);
 
 } // namespace thor
 } // namespace valhalla

@@ -1,10 +1,10 @@
+#include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
 #include "mjolnir/osmway.h"
 #include "mjolnir/uniquenames.h"
-#include <iostream>
 
-#include "test.h"
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::midgard;

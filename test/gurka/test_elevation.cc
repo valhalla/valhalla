@@ -1,17 +1,17 @@
+#include "baldr/json.h"
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "midgard/pointll.h"
+#include "mjolnir/util.h"
 #include "test.h"
 
-#include "baldr/json.h"
-#include "loki/worker.h"
-#include "midgard/pointll.h"
-
 #include <gtest/gtest.h>
-#include <prime_server/http_protocol.hpp>
-#include <prime_server/prime_server.hpp>
+
+#include <filesystem>
+#include <fstream>
 
 using namespace valhalla;
 using namespace valhalla::gurka;
-using namespace prime_server;
 
 const std::string workdir = "test/data/gurka_elevation";
 
@@ -99,7 +99,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
   layout.insert({"S", {-76.4944069, 40.6502916}});
 
   // create a fake elevation tile over the gurka map area
-  PointLL bottom_left(-77, 40), upper_right(-76, 41);
+  midgard::PointLL bottom_left(-77, 40), upper_right(-76, 41);
   auto corner_to_corner_dist = bottom_left.Distance(upper_right);
   // just a randomly chosen max height that will create reasonable changes in local elevation
   double max_height = 9000;
@@ -118,15 +118,15 @@ TEST(Standalone, ElevationCompareToSkadi) {
       double lon = (static_cast<double>(j) / 3601) - 77;
       double lat = (static_cast<double>(i) / 3601) + 40;
       // measure distance and use it to scale a max height range
-      auto dist_ratio = bottom_left.Distance(PointLL(lon, lat)) / corner_to_corner_dist;
+      auto dist_ratio = bottom_left.Distance(midgard::PointLL(lon, lat)) / corner_to_corner_dist;
       int16_t height = std::round(dist_ratio * max_height);
       // and set the height in the tile data (flipping to big endian to match the srtm spec)
       tile[i * 3601 + j] = ((height & 0xFF) << 8) | ((height >> 8) & 0xFF);
     }
   }
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -148,8 +148,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
   pt.put("additional_data.elevation", workdir);
 
   std::vector<std::string> input_files = {pbf_filename};
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   // try a bunch of routes
   for (const auto& waypoints : std::vector<std::vector<std::string>>{
@@ -220,7 +219,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
     result.Parse(route_json.c_str());
 
     for (size_t leg_index = 0; leg_index < waypoints.size() - 1; ++leg_index) {
-      auto s =
+      [[maybe_unused]] auto s =
           rapidjson::get_child_optional(result, ("/trip/legs/" + std::to_string(leg_index) + "/shape")
                                                     .c_str());
 

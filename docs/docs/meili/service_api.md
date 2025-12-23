@@ -7,8 +7,8 @@
 ## Request
 
 The service accepts a GeoJSON feature or geometry (of type
-[`MultiPoint`](http://geojson.org/geojson-spec.html#multipoint) or
-[`LineString`](http://geojson.org/geojson-spec.html#linestring)) in
+[`MultiPoint`](https://geojson.org/geojson-spec.html#multipoint) or
+[`LineString`](https://geojson.org/geojson-spec.html#linestring)) in
 the `POST` request body.
 
 URL Parameter            | Description                                                                                                                        | Default
@@ -21,7 +21,7 @@ URL Parameter            | Description                                          
   improve the matching accuracy and speed. If the mode is unknown, use
   the default `multimodal`, i.e. consider all types of roads,
   even a
-  [tree row](http://wiki.openstreetmap.org/wiki/Tag:natural%3Dtree_row).
+  [tree row](https://wiki.openstreetmap.org/wiki/Tag:natural%3Dtree_row).
 
 * When GPS accuracy information is unknown, specifying a large
   `search_radius` may slow down the matching procedure while a small
@@ -30,7 +30,7 @@ URL Parameter            | Description                                          
 ## Response
 
 The service returns matched routes of the sequence as a
-[GeoJSON `MultiLineString` feature](http://geojson.org/geojson-spec.html#multilinestring). Matched
+[GeoJSON `MultiLineString` feature](https://geojson.org/geojson-spec.html#multilinestring). Matched
 coordinates are saved in the property `matched_coordinates` as a JSON
 array. If a measurement is not matched to any road, then the
 corresponding matched coordinate is `null`.
@@ -43,7 +43,7 @@ corresponding matched coordinate is `null`.
 Example request:
 
 ```sh
-curl -X POST "http://localhost:8002?search_radius=35&mode=auto"
+curl -X POST "https://localhost:8002?search_radius=35&mode=auto"
 ```
 
 Example request body:

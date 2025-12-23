@@ -1,12 +1,10 @@
 #ifndef VALHALLA_MIDGARD_ELEVATION_ENCODING_H_
 #define VALHALLA_MIDGARD_ELEVATION_ENCODING_H_
 
+#include <algorithm>
 #include <cmath>
-#include <string>
-#include <type_traits>
+#include <cstdint>
 #include <vector>
-
-#include <valhalla/midgard/logging.h>
 
 namespace valhalla {
 namespace midgard {

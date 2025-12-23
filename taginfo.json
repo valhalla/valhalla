@@ -41,192 +41,11 @@
     },
     {
       "key": "access",
-      "value": "no",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Sets access flag to false"
-    },
-    {
-      "key": "access",
-      "value": "agricultural",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to false"
-    },
-    {
-      "key": "access",
-      "value": "discouraged",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to false"
-    },
-    {
-      "key": "access",
-      "value": "forestry",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to false"
-    },
-    {
-      "key": "access",
-      "value": "official",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to false"
-    },
-    {
-      "key": "access",
-      "value": "restricted",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "yes",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true; however, if access = private and (emergency = yes or service = emergency_access) then access flag is false."
-    },
-    {
-      "key": "access",
-      "value": "permit",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "residents",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "use_sidepath",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "dismount",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "customers",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "public",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "allowed",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access flag to true"
-    },
-    {
-      "key": "access",
-      "value": "emergency",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for emergency vehicles.  Emergency Routing is allowed."
-    },
-    {
-      "key": "access",
-      "value": "psv",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Sets access to false for all modes except for taxis and buses"
+      "description": "Sets access flag"
     },
     {
       "key": "admin_level",
@@ -426,13 +245,21 @@
       ],
       "description": "Set gate flag to true."
     },
+	  {
+      "key": "barrier",
+      "value": "sliding_beam",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set gate flag to true."
+    },
     {
       "key": "barrier",
       "value": "bollard",
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -440,7 +267,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -448,7 +275,47 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "kissing_gate",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "motorcycle_barrier",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "cycle_barrier",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "chain",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "bar",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -456,7 +323,39 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "barrier_board",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "fence",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+    {
+      "key": "barrier",
+      "value": "wall",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "debris",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -464,7 +363,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set sump_buster flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set sump_buster flag to true. Access for auto, hov and taxi is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -515,198 +414,18 @@
     },
     {
       "key": "bicycle",
-      "value": "yes",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "use_sidepath",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "no",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "dismount",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "lane",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "track",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "shared",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "shared_lane",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "sidepath",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "share_busway",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "none",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "allowed",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "permit",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "residents",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "official",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle",
-      "value": "crossing",
-      "object_types": [
-        "node"
-      ],
-      "description": "Allows access for all modes unless the mode override is set."
+      "description": "Overrides access flags for bicycle."
     },
     {
       "key": "bicycle:backward",
-      "value": "no",
       "object_types": [
         "way"
       ],
-      "description": "Sets the bike reverse flag to true.  Note from wiki: (when a road has a oneway cycleway next to it that must be used, and a cyclelane in the other direction)"
-    },
-    {
-      "key": "bicycle:backward",
-      "value": "yes",
-      "object_types": [
-        "way"
-      ],
-      "description": "Sets the bike reverse flag to true.  Note from wiki: (when cyclists are allowed to travel in both directions on a oneway street (but no lane is present))"
+      "description": "Sets the bike reverse flag.  Note from wiki: (when a road has a oneway cycleway next to it that must be used, and a cyclelane in the other direction)"
     },
     {
       "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
@@ -750,156 +469,11 @@
     },
     {
       "key": "bicycle_road",
-      "value": "yes",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "use_sidepath",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "no",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "dismount",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "lane",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "track",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "shared",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "shared_lane",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "sidepath",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "share_busway",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "none",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "allowed",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "bicycle_road",
-      "value": "official",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      "description": "Overrides access flags for bicycle."
     },
     {
       "key": "bollard",
@@ -940,75 +514,11 @@
     },
     {
       "key": "bus",
-      "value": "no",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for bus.  Bus Routing not allowed."
-    },
-    {
-      "key": "bus",
-      "value": "delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing not allowed."
-    },
-    {
-      "key": "bus",
-      "value": "yes",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "bus",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "bus",
-      "value": "urban",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "bus",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "bus",
-      "value": "restricted",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "bus",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
+      "description": "Overrides access flags for bus."
     },
     {
       "key": "bus:backward",
@@ -1129,318 +639,26 @@
       "description": "Allows access for all modes unless the mode override is set."
     },
     {
-      "key": "cyclestreet",
-      "value": "yes",
+      "key": "crossing",
+      "value": "traffic_signals",
       "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+        "node"
+      ]
     },
     {
       "key": "cyclestreet",
-      "value": "designated",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "use_sidepath",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "no",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "dismount",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "lane",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "track",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "shared",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "shared_lane",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "sidepath",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "share_busway",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "none",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "allowed",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cyclestreet",
-      "value": "official",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      "description": "Overrides access flags for bicycle."
     },
     {
       "key": "cycleway",
-      "value": "yes",
       "object_types": [
         "way"
       ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cycleway",
-      "value": "designated",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cycleway",
-      "value": "use_sidepath",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cycleway",
-      "value": "permissive",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cycleway",
-      "value": "destination",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cycleway",
-      "value": "dismount",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cycleway",
-      "value": "lane",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
-    },
-    {
-      "key": "cycleway",
-      "value": "buffered_lane",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
-    },
-    {
-      "key": "cycleway",
-      "value": "track",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
-    },
-    {
-      "key": "cycleway",
-      "value": "shared",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
-    },
-    {
-      "key": "cycleway",
-      "value": "shared_lane",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
-    },
-    {
-      "key": "cycleway",
-      "value": "sidepath",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cycleway",
-      "value": "share_busway",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
-    },
-    {
-      "key": "cycleway",
-      "value": "allowed",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cycleway",
-      "value": "private",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cycleway",
-      "value": "cyclestreet",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
-    },
-    {
-      "key": "cycleway",
-      "value": "crossing",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Allows access for all modes unless the mode override is set."
-    },
-    {
-      "key": "cycleway",
-      "value": "opposite",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides oneway flag.  Sets bike reverse flag to true."
-    },
-    {
-      "key": "cycleway",
-      "value": "opposite_lane",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides oneway flag.  Sets bike reverse flag to true.  Used to determine if the bike lane is shared, dedicated, or separated."
-    },
-    {
-      "key": "cycleway",
-      "value": "opposite_track",
-      "object_types": [
-        "way"
-      ],
-      "description": "Overrides oneway flag.  Sets bike reverse flag to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      "description": "Overrides access flags for bicycle."
     },
     {
       "key": "cycleway:both",
@@ -2094,209 +1312,11 @@
     },
     {
       "key": "foot",
-      "value": "no",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
-    },
-    {
-      "key": "foot",
-      "value": "agricultural",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
-    },
-    {
-      "key": "foot",
-      "value": "discouraged",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
-    },
-    {
-      "key": "foot",
-      "value": "forestry",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
-    },
-    {
-      "key": "foot",
-      "value": "official",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "restricted",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "yes",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "permit",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "residents",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "use_sidepath",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "customers",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "public",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "crossing",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed.  For nodes: Allows access for all modes unless the mode override is set."
-    },
-    {
-      "key": "foot",
-      "value": "sidewalk",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "allowed",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "passable",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot",
-      "value": "footway",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
-    },
-    {
-      "key": "foot:backward",
-      "value": "yes",
-      "object_types": [
-        "way"
-      ],
-      "description": "Sets the foot reverse flag to true."
+      "description": "Overrides access flags for pedestrian."
     },
     {
       "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
@@ -2364,24 +1384,15 @@
       "description": "Sets the hazmat flag to true."
     },
     {
+      "key": "hazmat:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Exemptions for local traffic for hazmat access restrictions."
+    },
+    {
       "key": "hazmat",
       "value": "yes",
-      "object_types": [
-        "way"
-      ],
-      "description": "Sets the hazmat flag to true."
-    },
-    {
-      "key": "hazmat",
-      "value": "no",
-      "object_types": [
-        "way"
-      ],
-      "description": "Sets the hazmat flag to false."
-    },
-    {
-      "key": "hazmat",
-      "value": "destination",
       "object_types": [
         "way"
       ],
@@ -2389,6 +1400,22 @@
     },
     {
       "key": "hazmat",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Sets the hazmat flag to false."
+    },
+    {
+      "key": "hazmat",
+      "value": "destination",
+      "object_types": [
+        "way"
+      ],
+      "description": "Sets the hazmat flag to true."
+    },
+    {
+      "key": "hazmat",
       "value": "delivery",
       "object_types": [
         "way"
@@ -2637,156 +1664,11 @@
     },
     {
       "key": "hgv",
-      "value": "designated",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is allowed. Sets the truck_route flag to true."
-    },
-    {
-      "key": "hgv",
-      "value": "yes",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "no",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "local",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is allowed. Sets the truck_route flag to true."
-    },
-    {
-      "key": "hgv",
-      "value": "agricultural",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "permit",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "residents",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "discouraged",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "unsuitable",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "agricultural;forestry",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "official",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "forestry",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "destination;delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
+      "description": "Overrides access flags for hgv."
     },
     {
       "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
@@ -3775,6 +2657,13 @@
       "description": "Maxaxleload for hgv."
     },
     {
+      "key": "maxaxleload:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Exemptions for local traffic for maxaxleload for hgv."
+    },
+    {
       "key": "maxaxles",
       "object_types": [
         "way"
@@ -3782,11 +2671,53 @@
       "description": "Maxaxles for hgv."
     },
     {
+      "key": "maxaxles:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Exemptions for local traffic for maxaxles for hgv."
+    },
+    {
       "key": "maxheight",
       "object_types": [
         "way"
       ],
       "description": "Maxheight for hgv."
+    },
+    {
+      "key": "maxheight:forward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight for hgv in forward direction."
+    },
+    {
+      "key": "maxheight:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic."
+    },
+    {
+      "key": "maxheight:forward:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic in forward direction."
+    },
+    {
+      "key": "maxheight:backward:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic in backward direction."
+    },
+    {
+      "key": "maxheight:backward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight for hgv in backward direction."
     },
     {
       "key": "maxheight:physical",
@@ -3801,6 +2732,41 @@
         "way"
       ],
       "description": "Maxlength for hgv."
+    },
+    {
+      "key": "maxlength:forward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxlength for hgv in forward direction."
+    },
+    {
+      "key": "maxlength:backward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxlength for hgv in backward direction."
+    },
+    {
+      "key": "maxlength:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic."
+    },
+    {
+      "key": "maxlength:forward:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic in forward direction."
+    },
+    {
+      "key": "maxlength:backward:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic in backward direction."
     },
     {
       "key": "maxspeed",
@@ -3838,6 +2804,20 @@
       "description": "Maxspeed for hgv."
     },
     {
+      "key": "maxspeed:hgv:forward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxspeed for hgv in forward direction."
+    },
+    {
+      "key": "maxspeed:hgv:backward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxspeed for hgv in backward direction."
+    },
+    {
       "key": "maxspeed:practical",
       "description": "Considered the average speed on a road (assume kph except where mph given)",
       "object_types": [
@@ -3852,11 +2832,39 @@
       "description": "Maxweight for hgv."
     },
     {
+      "key": "maxweight:forward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxweight for hgv in forward direction."
+    },
+    {
+      "key": "maxweight:backward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxweight for hgv in backward direction."
+    },
+    {
       "key": "maxwidth",
       "object_types": [
         "way"
       ],
       "description": "Maxwidth for hgv."
+    },
+    {
+      "key": "maxwidth:forward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxwidth for hgv in forward direction."
+    },
+    {
+      "key": "maxwidth:backward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxwidth for hgv in backward direction."
     },
     {
       "key": "maxwidth:physical",
@@ -3867,101 +2875,18 @@
     },
     {
       "key": "mofa",
-      "value": "yes",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "mofa",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "mofa",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "mofa",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "mofa",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "mofa",
-      "value": "delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "mofa",
-      "value": "dismount",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "mofa",
-      "value": "no",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
-    },
-    {
-      "key": "mofa",
-      "value": "unknown",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
-    },
-    {
-      "key": "mofa",
-      "value": "agricultural",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
+      "description": "Overrides access flags for motor scooter."
     },
     {
       "key": "mofa:backward",
-      "value": "yes",
       "object_types": [
         "way"
       ],
-      "description": "Sets the motor scooter reverse flag to true."
+      "description": "Sets the motor scooter reverse flag."
     },
     {
       "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
@@ -4013,119 +2938,18 @@
     },
     {
       "key": "moped",
-      "value": "yes",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "moped",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "moped",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "moped",
-      "value": "permit",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "moped",
-      "value": "residents",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "moped",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "moped",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "moped",
-      "value": "delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "moped",
-      "value": "dismount",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
-    },
-    {
-      "key": "moped",
-      "value": "no",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
-    },
-    {
-      "key": "moped",
-      "value": "unknown",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
-    },
-    {
-      "key": "moped",
-      "value": "agricultural",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
+      "description": "Overrides access flags for motor scooter."
     },
     {
       "key": "moped:backward",
-      "value": "yes",
       "object_types": [
         "way"
       ],
-      "description": "Sets the motor scooter reverse flag to true."
+      "description": "Sets the motor scooter reverse flag."
     },
     {
       "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
@@ -4177,174 +3001,11 @@
     },
     {
       "key": "motor_vehicle",
-      "value": "no",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for auto.  Auto Routing not allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "agricultural",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing not allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "discouraged",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing not allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "forestry",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing not allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "official",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing not allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "restricted",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "yes",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "permit",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "residents",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "use_sidepath",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "dismount",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "customers",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "public",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motor_vehicle",
-      "value": "allowed",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
+      "description": "Overrides access flags for auto."
     },
     {
       "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
@@ -4396,174 +3057,11 @@
     },
     {
       "key": "motorcar",
-      "value": "no",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for auto.  Auto Routing not allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "agricultural",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing not allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "discouraged",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing not allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "forestry",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing not allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "official",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing not allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "restricted",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "yes",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "permit",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "residents",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "use_sidepath",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "dismount",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "customers",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "public",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
-    },
-    {
-      "key": "motorcar",
-      "value": "allowed",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for auto.  Auto Routing allowed."
+      "description": "Overrides access flags for auto."
     },
     {
       "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
@@ -5406,14 +3904,6 @@
       "description": "This tag contains a phonetic guide to pronouncing the official name in a given language for a street for the right side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
     },
     {
-      "key": "access",
-      "value": "conditional",
-      "object_types": [
-        "way"
-      ],
-      "description": "Indicates the access on the way can change conditionally."
-    },
-    {
       "key": "oneway",
       "value": "-1",
       "object_types": [
@@ -5896,111 +4386,11 @@
     },
     {
       "key": "psv",
-      "value": "no",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for bus.  Bus Routing not allowed."
-    },
-    {
-      "key": "psv",
-      "value": "delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing not allowed."
-    },
-    {
-      "key": "psv",
-      "value": "yes",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "psv",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "psv",
-      "value": "urban",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "psv",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "psv",
-      "value": "restricted",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "psv",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "psv",
-      "value": "bus",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "psv",
-      "value": "taxi",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for taxi.  Taxi Routing allowed."
-    },
-    {
-      "key": "psv",
-      "value": "1",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
-    },
-    {
-      "key": "psv",
-      "value": "2",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for bus.  Bus Routing allowed."
+      "description": "Overrides access flags for bus."
     },
     {
       "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
@@ -7353,12 +5743,6 @@
       ]
     },
     {
-      "key": "seasonal",
-      "object_types": [
-        "way"
-      ]
-    },
-    {
       "key": "segregated",
       "value": "yes",
       "object_types": [
@@ -7585,92 +5969,19 @@
       ]
     },
     {
+      "key": "smoothness",
+      "description": "Road smoothness.  Note that surface and tracktype keys have a higher priority than smoothness.",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "taxi",
-      "value": "no",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for taxi.  taxi Routing not allowed."
-    },
-    {
-      "key": "taxi",
-      "value": "delivery",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for taxi.  taxi Routing not allowed."
-    },
-    {
-      "key": "taxi",
-      "value": "yes",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for taxi.  taxi Routing allowed."
-    },
-    {
-      "key": "taxi",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for taxi.  taxi Routing allowed."
-    },
-    {
-      "key": "taxi",
-      "value": "urban",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for taxi.  taxi Routing allowed."
-    },
-    {
-      "key": "taxi",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for taxi.  taxi Routing allowed."
-    },
-    {
-      "key": "taxi",
-      "value": "restricted",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for taxi.  taxi Routing allowed."
-    },
-    {
-      "key": "taxi",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for taxi.  taxi Routing allowed."
-    },
-    {
-      "key": "taxi:backward",
-      "value": "designated",
-      "object_types": [
-        "way"
-      ],
-      "description": "Sets the taxi reverse flag to true."
-    },
-    {
-      "key": "taxi:backward",
-      "value": "yes",
-      "object_types": [
-        "way"
-      ],
-      "description": "Sets the taxi reverse flag to true."
+      "description": "Overrides access flags for taxi."
     },
     {
       "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
@@ -8015,156 +6326,11 @@
     },
     {
       "key": "wheelchair",
-      "value": "no",
       "object_types": [
         "node",
         "way"
       ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "yes",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "designated",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "limited",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "official",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "destination",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "public",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "permissive",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "only",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "private",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "permit",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "residents",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "impassable",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "partial",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "bad",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "half",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
-    },
-    {
-      "key": "wheelchair",
-      "value": "assisted",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      "description": "Overrides access flags for wheelchair."
     },
     {
       "key": "lit",
@@ -8232,131 +6398,52 @@
     },
     {
       "key": "motor_vehicle:forward",
-      "value": "yes",
       "object_types": [
         "way"
       ],
-      "description": "Enables motor_vehicle access in the forward direction"
-    },
-    {
-      "key": "motor_vehicle:forward",
-      "value": "no",
-      "object_types": [
-        "way"
-      ],
-      "description": "Disables motor_vehicle access in the forward direction"
+      "description": "Sets motor_vehicle access in the forward direction"
     },
     {
       "key": "motor_vehicle:backward",
-      "value": "yes",
       "object_types": [
         "way"
       ],
-      "description": "Enables motor_vehicle access in the backward direction"
-    },
-    {
-      "key": "motor_vehicle:backward",
-      "value": "no",
-      "object_types": [
-        "way"
-      ],
-      "description": "Disables motor_vehicle access in the backward direction"
+      "description": "Sets motor_vehicle access in the backward direction"
     },
     {
       "key": "vehicle:forward",
-      "value": "yes",
       "object_types": [
         "way"
       ],
-      "description": "Enables vehicle access in the forward direction"
-    },
-    {
-      "key": "vehicle:forward",
-      "value": "no",
-      "object_types": [
-        "way"
-      ],
-      "description": "Disables vehicle access in the forward direction"
+      "description": "Sets vehicle access in the forward direction"
     },
     {
       "key": "vehicle:backward",
-      "value": "yes",
       "object_types": [
         "way"
       ],
-      "description": "Enables vehicle access in the backward direction"
-    },
-    {
-      "key": "vehicle:backward",
-      "value": "no",
-      "object_types": [
-        "way"
-      ],
-      "description": "Disables vehicle access in the backward direction"
+      "description": "Sets vehicle access in the backward direction"
     },
     {
       "key": "foot:forward",
-      "value": "yes",
       "object_types": [
         "way"
       ],
-      "description": "Enables foot access in the forward direction"
-    },
-    {
-      "key": "foot:forward",
-      "value": "no",
-      "object_types": [
-        "way"
-      ],
-      "description": "Disables foot access in the forward direction"
+      "description": "Sets foot access in the forward direction"
     },
     {
       "key": "foot:backward",
-      "value": "yes",
       "object_types": [
         "way"
       ],
-      "description": "Enables foot access in the backward direction"
-    },
-    {
-      "key": "foot:backward",
-      "value": "no",
-      "object_types": [
-        "way"
-      ],
-      "description": "Disables foot access in the backward direction"
+      "description": "Sets foot access in the backward direction"
     },
     {
       "key": "bicycle:forward",
-      "value": "yes",
       "object_types": [
         "way"
       ],
-      "description": "Enables bicycle access in the forward direction"
-    },
-    {
-      "key": "bicycle:forward",
-      "value": "no",
-      "object_types": [
-        "way"
-      ],
-      "description": "Disables bicycle access in the forward direction"
-    },
-    {
-      "key": "bicycle:backward",
-      "value": "yes",
-      "object_types": [
-        "way"
-      ],
-      "description": "Enables bicycle access in the backward direction"
-    },
-    {
-      "key": "bicycle:backward",
-      "value": "no",
-      "object_types": [
-        "way"
-      ],
-      "description": "Disables bicycle access in the backward direction"
+      "description": "Sets bicycle access in the forward direction"
     }
   ]
 }

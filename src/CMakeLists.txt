@@ -32,7 +32,7 @@ function(valhalla_module)
             ${MODULE_SOURCES}
             PROPERTIES
             COMPILE_FLAGS
-            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers")
+            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp")
   endif()
   list(APPEND MODULE_SOURCES ${MODULE_SOURCES_WITH_WARNINGS})
 
@@ -54,10 +54,13 @@ function(valhalla_module)
     PUBLIC
       $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
       $<$<BOOL:${MSVC}>:NOMINMAX>
+      $<$<BOOL:${VALHALLA_VERSION_MODIFIER}>:VALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER}>
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
     PRIVATE
-      $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
+      $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>
+      VALHALLA_SOURCE_DIR=${VALHALLA_SOURCE_DIR}
+      VALHALLA_BUILD_DIR=${VALHALLA_BUILD_DIR})
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
      PRIVATE
        ${VALHALLA_BINARY_DIR}
@@ -89,7 +92,7 @@ function(valhalla_module)
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${MODULE_NAME}"
     COMPONENT development)
 
-  if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
+  if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS OR ENABLE_NODE_BINDINGS)
     set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
   endif()
 
@@ -136,16 +139,16 @@ set(valhalla_hdrs
     ${VALHALLA_SOURCE_DIR}/valhalla/valhalla.h
     ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
     ${VALHALLA_SOURCE_DIR}/valhalla/config.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem_utils.h
     ${VALHALLA_SOURCE_DIR}/valhalla/proto_conversions.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/config.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/exceptions.h
     )
 
 set(valhalla_src
     config.cc
     worker.cc
-    filesystem.cc
     proto_conversions.cc
+    exceptions.cc
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
 
@@ -153,11 +156,6 @@ if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(proto_conversions.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif()
-
-if (ENABLE_SERVICES)
-  set(valhalla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
-  set(valhalla_src ${valhalla_src} tile_server.cc)
 endif()
 
 add_library(valhalla ${valhalla_src})
@@ -170,8 +168,10 @@ target_compile_definitions(valhalla
     $<$<BOOL:${MSVC}>:NOMINMAX>
     HAS_REMOTE_API=0
     AUTO_DOWNLOAD=0
+    $<$<BOOL:${VALHALLA_VERSION_MODIFIER}>:VALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER}>
   PRIVATE
-    ${libvalhalla_compile_definitions})
+    ${libvalhalla_compile_definitions}
+  )
 
 target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
 
@@ -186,12 +186,15 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
+  PRIVATE
+    ${libvalhalla_include_directories}
+)
+target_include_directories(valhalla SYSTEM PUBLIC
     ${rapidjson_include_dir}
     ${date_include_dir}
     ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
     $<$<BOOL:${WIN32}>:${dirent_include_dir}>
-  PRIVATE
-    ${libvalhalla_include_directories})
+)
 
 target_link_libraries(valhalla
   PUBLIC
@@ -208,11 +211,11 @@ set_target_properties(valhalla PROPERTIES
 # pkg-config installation
 if(PKG_CONFIG_FOUND)
   include(ValhallaPkgConfig)
-  
+
   configure_valhalla_pc()
 
   install(FILES
-    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    ${VALHALLA_BUILD_DIR}/libvalhalla.pc
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endif()
 
@@ -233,9 +236,9 @@ if(BUILD_SHARED_LIBS)
     COMPONENT development)
 
   if(UNIX)
-    add_custom_target(${LIBVALHALLA_SO_LINK} ALL
+    add_custom_target(valhalla-symlink ALL
       COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
-    set_target_properties(${LIBVALHALLA_SO_LINK} PROPERTIES FOLDER "Library")
+    set_target_properties(valhalla-symlink PROPERTIES FOLDER "Library")
   endif()
 endif()
 

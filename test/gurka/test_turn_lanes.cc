@@ -1,7 +1,8 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include <gtest/gtest.h>
-
 #include "odin/enhancedtrippath.h"
+
+#include <gtest/gtest.h>
 
 using namespace valhalla;
 

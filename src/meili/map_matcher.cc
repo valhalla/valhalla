@@ -1,14 +1,14 @@
-#include <cmath>
-
+#include "meili/map_matcher.h"
+#include "exceptions.h"
 #include "meili/emission_cost_model.h"
 #include "meili/geometry_helpers.h"
-#include "meili/map_matcher.h"
 #include "meili/routing.h"
 #include "meili/transition_cost_model.h"
 #include "midgard/distanceapproximator.h"
-#include "worker.h"
+#include "midgard/logging.h"
 
 #include <array>
+#include <cmath>
 
 namespace {
 
@@ -30,6 +30,7 @@ inline float ClockDistance(const Measurement& left, const Measurement& right) {
                                                          : right.epoch_time() - left.epoch_time();
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string print_result(const StateContainer& container,
                          const std::vector<StateId>& original_state_ids) {
   std::string result = R"({"type":"FeatureCollection","features":[)";
@@ -41,6 +42,7 @@ std::string print_result(const StateContainer& container,
   result += R"(]})";
   return result;
 }
+#endif
 
 struct Interpolation {
   midgard::PointLL projected;
@@ -93,7 +95,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
                                      float match_measurement_time,
                                      const midgard::PointLL& left_most_projected_point,
                                      const midgard::PointLL& right_most_projected_point) {
-  graph_tile_ptr tile;
+  baldr::graph_tile_ptr tile;
   midgard::projector_t projector(measurement.lnglat());
 
   // Route distance from each segment begin to the beginning segment
@@ -147,7 +149,8 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
 
     // Get the amount of time spent on this segment
     auto edge_percent = segment->target - segment->source;
-    auto route_time = mapmatcher.costing()->EdgeCost(directededge, tile).secs * edge_percent;
+    auto route_time =
+        mapmatcher.costing()->EdgeCost(directededge, segment->edgeid, tile).secs * edge_percent;
 
     Interpolation interp{projected_point, segment->edgeid, sq_distance, route_distance,
                          route_time,      offset,          segment};
@@ -343,7 +346,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   }
 
   // find which candidate was used for this state
-  graph_tile_ptr tile;
+  baldr::graph_tile_ptr tile;
   for (const auto& edge : state.candidate().edges) {
     // if it matches either end of the path coming into this state or the beginning of the
     // path leaving this state, then we are good to go and have found the match
@@ -449,6 +452,7 @@ std::vector<MatchResult> FindMatchResults(const MapMatcher& mapmatcher,
                                           const std::vector<StateId>& stateids,
                                           baldr::GraphReader& graph_reader) {
   std::vector<MatchResult> results;
+  results.reserve(stateids.size());
   for (StateId::Time time = 0; time < stateids.size(); time++) {
     results.push_back(FindMatchResult(mapmatcher, stateids, time, graph_reader));
   }

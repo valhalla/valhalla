@@ -1,18 +1,17 @@
-#include <cstdlib>
-#include <deque>
-#include <iostream>
-#include <vector>
+#include "argparse_utils.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "mjolnir/elevationbuilder.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/rapidjson_utils.h"
-#include "mjolnir/elevationbuilder.h"
-
-#include "argparse_utils.h"
+#include <cstdlib>
+#include <deque>
+#include <filesystem>
+#include <iostream>
+#include <vector>
 
 namespace opt = cxxopts;
 
@@ -27,7 +26,7 @@ std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
     return {};
 
   auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
-  if (!tile_dir || !filesystem::exists(*tile_dir)) {
+  if (!tile_dir || !std::filesystem::exists(*tile_dir)) {
     LOG_WARN("Tile storage directory does not exist");
     return {};
   }
@@ -62,7 +61,7 @@ std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
  * */
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> tiles;
   boost::property_tree::ptree config;
@@ -71,7 +70,7 @@ int main(int argc, char** argv) {
     // clang-format off
     opt::Options options(
         program,
-        std::string(program) + " " + VALHALLA_VERSION + "\n\n"
+        std::string(program) + " " + VALHALLA_PRINT_VERSION + "\n\n"
         "a tool for loading elevations for a provided tile. "
         "The service checks if required elevations stored locally if they are not "
         "it tries to establish connection to the remote storage (based on the information from configuration file)"
@@ -87,7 +86,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     const auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     if (!result.count("tiles")) {
@@ -95,8 +94,8 @@ int main(int argc, char** argv) {
       return EXIT_FAILURE;
     } else {
       for (const auto& tile : result["concurrency"].as<std::vector<std::string>>()) {
-        if (filesystem::exists(tile) && filesystem::is_regular_file(tile))
-          return true;
+        if (std::filesystem::exists(tile) && std::filesystem::is_regular_file(tile))
+          return EXIT_FAILURE;
       }
       std::cerr << "All tile files are invalid\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;

@@ -1,14 +1,15 @@
-#include "test.h"
-
 #include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"
+#include "test.h"
+#include "tile_server.h"
 #include "tyr/actor.h"
-#include "valhalla/tile_server.h"
+#include "worker.h"
 
-#include <prime_server/prime_server.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <prime_server/zmq_helpers.hpp>
 
 #include <filesystem>
-#include <ostream>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -19,25 +20,35 @@ using namespace valhalla;
 
 zmq::context_t context;
 const std::string tile_remote_address{"127.0.0.1:48004"};
+const std::string tile_source_dir = VALHALLA_BUILD_DIR "test/data/utrecht_tiles";
+const auto tar_path = tile_source_dir + "/tiles.tar";
+const std::string user_pw = "abcd:1234";
 
-std::string get_tile_url() {
+std::string get_tile_url(const bool is_tar) {
   std::ostringstream oss;
-  oss << tile_remote_address << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
-      << "?version=%version&access_token=%token";
+  if (is_tar) {
+    oss << tile_remote_address << "/route-tar/v1";
+  } else {
+    oss << tile_remote_address << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
+        << "?version=%version&access_token=%token";
+  }
+
   return oss.str();
 }
 
-boost::property_tree::ptree
-make_conf(const std::string& tile_dir, bool tile_url_gz, size_t curler_count) {
+boost::property_tree::ptree make_conf(const std::string& tile_dir,
+                                      const bool tile_url_gz,
+                                      const bool is_tar,
+                                      const std::string& upw) {
+
   auto conf = test::make_config(tile_dir, {{"mjolnir.user_agent", "MapboxNavigationNative"}});
 
-  conf.put("mjolnir.tile_url", get_tile_url());
+  conf.put("mjolnir.tile_url", get_tile_url(is_tar));
   if (tile_dir.empty()) {
     conf.erase("mjolnir.tile_dir");
   }
-
-  if (curler_count > 1) {
-    conf.put("mjolnir.max_concurrent_reader_users", curler_count);
+  if (!upw.empty()) {
+    conf.put("mjolnir.tile_url_user_pw", upw);
   }
 
   conf.put("mjolnir.tile_url_gz", tile_url_gz);
@@ -45,8 +56,11 @@ make_conf(const std::string& tile_dir, bool tile_url_gz, size_t curler_count) {
   return conf;
 }
 
-void test_route(const std::string& tile_dir, bool tile_url_gz) {
-  auto conf = make_conf(tile_dir, tile_url_gz, 1);
+void test_route(const std::string& tile_dir,
+                const bool tile_url_gz,
+                const bool is_tar,
+                const std::string& upw = "") {
+  auto conf = make_conf(tile_dir, tile_url_gz, is_tar, upw);
   tyr::actor_t actor(conf);
 
   auto route_json = actor.route(R"({"locations":[{"lat":52.09620,"lon": 5.11909,"type":"break"},
@@ -60,12 +74,25 @@ void test_route(const std::string& tile_dir, bool tile_url_gz) {
   EXPECT_NE(route_json.find("Lauwerstraat"), std::string::npos);
 }
 
-TEST(HttpTiles, test_no_cache_no_gz) {
-  test_route("", false);
+class HttpTilesNoCache : public ::testing::Test {
+protected:
+  void TearDown() override {
+    if (std::filesystem::exists(tile_source_dir + "/id.txt")) {
+      std::filesystem::remove(tile_source_dir + "/id.txt");
+    }
+  }
+};
+
+TEST(HttpTilesNoCache, test_tar_tiles_no_cache) {
+  test_route("", false, true);
 }
 
-TEST(HttpTiles, test_no_cache_gz) {
-  test_route("", true);
+TEST(HttpTilesNoCache, test_no_cache_no_gz) {
+  test_route("", false, false);
+}
+
+TEST(HttpTilesNoCache, test_no_cache_gz) {
+  test_route("", true, false);
 }
 
 class HttpTilesWithCache : public ::testing::Test {
@@ -78,12 +105,52 @@ protected:
   }
 };
 
+TEST_F(HttpTilesWithCache, test_tar_cache) {
+  test_route("url_tile_cache", false, true);
+}
+
+TEST_F(HttpTilesWithCache, test_tar_cache_outdated) {
+  // create a fake id.txt with a bogus checksum and let GetGraphTile fail
+  const std::string id_txt_path = "url_tile_cache/id.txt";
+  std::filesystem::create_directories("url_tile_cache");
+
+  std::ofstream id_txt_file(id_txt_path, std::ios::binary);
+  if (id_txt_file) {
+    id_txt_file << get_tile_url(true) << std::endl;
+    id_txt_file << 1234 << std::endl;
+  }
+  id_txt_file.close();
+
+  try {
+    test_route("url_tile_cache", false, true);
+    FAIL() << "Expected valhalla_exception_t";
+  } catch (const valhalla_exception_t& e) {
+    // a bit too generic IMO, at least there's an error log
+    EXPECT_THAT(e.what(),
+                ::testing::HasSubstr("Remote tar file has changed, service is unavailable"));
+    EXPECT_EQ(e.code, 446);
+  } catch (...) { FAIL() << "should've raised a valhalla_exception_t"; }
+}
+
+TEST_F(HttpTilesWithCache, test_tar_user_pw) {
+  // happy path
+  test_route("url_tile_cache", false, true, user_pw);
+
+  // wrong user:password should return a 401
+  try {
+    test_route("url_tile_cache", false, true, "obviously:wrong");
+    FAIL() << "Expected std::runtime_error";
+  } catch (const std::runtime_error& e) {
+    EXPECT_THAT(e.what(), ::testing::HasSubstr("HTTP status 401"));
+  }
+}
+
 TEST_F(HttpTilesWithCache, test_cache_no_gz) {
-  test_route("url_tile_cache", false);
+  test_route("url_tile_cache", false, false);
 }
 
 TEST_F(HttpTilesWithCache, test_cache_gz) {
-  test_route("url_tile_cache", true);
+  test_route("url_tile_cache", true, false);
 }
 
 struct TestTileDownloadData {
@@ -121,7 +188,7 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
 
   const auto non_existent_tile_id = params.get_nonexistent_tile_id();
 
-  curl_tile_getter_t tile_getter(curler_count, "", params.is_gzipped_tile);
+  curl_tile_getter_t tile_getter(curler_count, "", params.is_gzipped_tile, "");
   EXPECT_EQ(tile_getter.gzipped(), params.is_gzipped_tile);
 
   std::vector<std::thread> threads;
@@ -168,7 +235,7 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
 
   const auto non_existent_tile_id = params.get_nonexistent_tile_id();
 
-  curl_tile_getter_t tile_getter(curler_count, "", params.is_gzipped_tile);
+  curl_tile_getter_t tile_getter(curler_count, "", params.is_gzipped_tile, "");
   EXPECT_EQ(tile_getter.gzipped(), params.is_gzipped_tile);
 
   std::vector<std::thread> threads;
@@ -237,7 +304,7 @@ TEST(HttpTiles, test_interrupt) {
   const auto non_existent_tile_id = params.get_nonexistent_tile_id();
   std::unordered_set<std::string> canceled_uris{url_builder(0), url_builder(2)};
 
-  curl_tile_getter_t tile_getter(2, "", params.is_gzipped_tile);
+  curl_tile_getter_t tile_getter(2, "", params.is_gzipped_tile, "");
   std::string tile_uri;
   const curl_tile_getter_t::interrupt_t interrupt = [&tile_uri, &canceled_uris] {
     if (canceled_uris.find(tile_uri) != canceled_uris.end()) {
@@ -273,7 +340,8 @@ public:
     // start a file server for utrecht tiles
     valhalla::test_tile_server_t server;
     server.set_url(tile_remote_address);
-    server.start("test/data/utrecht_tiles", context);
+    server.set_user_pw(user_pw);
+    server.start(tile_source_dir, tar_path, context);
   }
 
   void TearDown() override {

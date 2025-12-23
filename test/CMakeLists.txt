@@ -1,52 +1,106 @@
+# GoogleTest builds with /MT(d) by default, which is incompatible with Valhalla's /MD(d) builds.
+#
+# /MD(d) links the C++ runtime dynamically, while /MT(d) links it statically.
+#
+# Force it to use the same CRT as Valhalla /MD(d). Technically Valhalla doesn't enforce /MD(d) but
+# it is the CMake default. It can be switched by MSVC_RUNTIME_LIBRARY, but GoogleTest is ignoring
+# this.
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+# don't install googletest
+# unless you want the test library
+set(INSTALL_GTEST ${INSTALL_TEST_LIB})
+
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
+
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
 set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
+enable_testing()
+include(GoogleTest)
+
 # common things that the tests need
-set(TEST_SRCS test.h test.cc)
+find_package(Threads)
+set(TEST_SRCS test.cc)
+set(TEST_HDRS test.h)
 if(ENABLE_DATA_TOOLS)
-  list(APPEND TEST_SRCS gurka/gurka.h gurka/gurka.cc)
+  list(APPEND TEST_SRCS gurka/gurka.cc)
+  list(APPEND TEST_HDRS gurka/gurka.h)
+endif()
+if(ENABLE_HTTP AND ENABLE_SERVICES)
+  list(APPEND TEST_SRCS tile_server.cc)
+  list(APPEND TEST_HDRS tile_server.h)
 endif()
 add_library(valhalla_test
   ${TEST_SRCS}
+  ${TEST_HDRS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
   )
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
-  ${VALHALLA_SOURCE_DIR}/test/gurka
-  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+  ${VALHALLA_SOURCE_DIR}/test/gurka)
+target_include_directories(valhalla_test SYSTEM PUBLIC
+  ${unordered_dense_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
-  ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
-  ${robinhoodhashing_include_dir}
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
-target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread PkgConfig::LZ4)
+  ${libosmium_include_dirs}
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
+  ${vtzero_include_dirs})
+target_link_libraries(valhalla_test
+  valhalla gtest gtest_main gmock
+  $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
+  ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
+target_compile_definitions(valhalla_test PUBLIC
+  VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
+  VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
 
 if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_test PkgConfig::GEOS)
 endif()
 
+if (ENABLE_GEOTIFF)
+  find_package(GDAL QUIET)
+  if (GDAL_FOUND)
+    target_link_libraries(valhalla_test GDAL::GDAL)
+  endif()
+endif()
+
+# optionally install the test library as well
+if (INSTALL_TEST_LIB)
+  install(TARGETS valhalla_test
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT development)
+
+  install(FILES ${TEST_HDRS}
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
+    COMPONENT development)
+endif()
+
+
+# stop if the user just wants the library
+if (NOT ENABLE_TESTS)
+  return()
+endif()
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
-  distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
-  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
-  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
+  distanceapproximator double_bucket_queue edgecollapser edgeinfo edgestatus ellipse encode
+  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll pointtileindex
   polyline2 predictedspeeds queue routing sample sequence sign signs statsd streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
-  verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile
-  incident_loading worker_nullptr_tiles tar_index curl_tilegetter)
+  verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression traffictile
+  incident_loading worker_nullptr_tiles curl_tilegetter filesystem_utils narrativebuilder util_odin)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar astar_bikeshare complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
-    graphtilebuilder graphreader isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
-    names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban
+  list(APPEND tests astar astar_bikeshare complexrestriction countryaccess graphbuilder graphparser
+    graphtilebuilder graphreader hierarchylimits isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
+    names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban tar_index
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
-  if(ENABLE_HTTP)
+  if(ENABLE_HTTP AND ENABLE_SERVICES)
     list(APPEND tests http_tiles)
     # TODO: fix https://github.com/valhalla/valhalla/issues/3740
     # list(APPEND tests http_tiles elevation_builder)
@@ -57,64 +111,15 @@ if(ENABLE_SERVICES)
   list(APPEND tests loki_service skadi_service)
 endif()
 
-## TODO: fix apple tests!
-if(NOT APPLE)
-  list(APPEND tests narrativebuilder util_odin)
-endif()
-
-# tests files that have warning,
-# any other file not int this list will be processed with the
-# "-Werror" flag
-# Avoid adding a test to this list
-set(tests_with_warnings
-  compression
-  countryaccess
-  encode
-  edgecollapser
-  edgeinfobuilder
-  filesystem
-  graphbuilder
-  graphparser
-  graphtilebuilder
-  gridded_data
-  logging
-  maneuversbuilder
-  mapmatch
-  narrativebuilder
-  node_search
-  polyline2
-  parse_request
-  routing
-  sample
-  search
-  sequence
-  statsd
-  traffictile
-  util_midgard
-  util_odin
-  utrecht
-  timedep_paths
-  vector2
-  viterbi_search
-  worker
-  )
-
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
   if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-    if (${test} IN_LIST tests_with_warnings)
-      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall")
-    else()
-      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-    endif()
+    set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
   endif()
 
 
   set_target_properties(${test} PROPERTIES FOLDER "Tests")
-  target_compile_definitions(${test} PRIVATE
-      VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
-      VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
   target_link_libraries(${test} valhalla_test)
   if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
@@ -124,25 +129,35 @@ foreach(test ${tests})
   endif()
 endforeach()
 
-set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
-foreach(test ${cost_tests})
-  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  set_target_properties(${test} PROPERTIES
-    FOLDER "Tests"
-    COMPILE_DEFINITIONS INLINE_TEST)
-  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  target_link_libraries(${test} valhalla_test)
-endforeach()
+## Cost tests
+set(cost_inline_test_sources
+  ${VALHALLA_SOURCE_DIR}/src/sif/autocost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/bicyclecost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/motorcyclecost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/motorscootercost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/pedestriancost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/transitcost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/truckcost.cc)
 
-set(tyr_tests route_serializer_osrm)
-foreach(test ${tyr_tests})
-  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
-  set_target_properties(${test} PROPERTIES
-    FOLDER "Tests"
-    COMPILE_DEFINITIONS INLINE_TEST)
-  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
-  target_link_libraries(${test} valhalla_test)
-endforeach()
+add_executable(cost_inline_tests EXCLUDE_FROM_ALL ${cost_inline_test_sources})
+set_target_properties(cost_inline_tests PROPERTIES
+  FOLDER "Tests"
+  COMPILE_DEFINITIONS INLINE_TEST)
+create_source_groups("Source Files" ${cost_inline_test_sources})
+target_link_libraries(cost_inline_tests valhalla_test)
+gtest_discover_tests(cost_inline_tests TEST_PREFIX "CostInline.")
+
+## Tyr tests
+set(tyr_inline_test_sources
+  ${VALHALLA_SOURCE_DIR}/src/tyr/route_serializer_osrm.cc)
+
+add_executable(tyr_inline_tests EXCLUDE_FROM_ALL ${tyr_inline_test_sources})
+set_target_properties(tyr_inline_tests PROPERTIES
+  FOLDER "Tests"
+  COMPILE_DEFINITIONS INLINE_TEST)
+create_source_groups("Source Files" ${tyr_inline_test_sources})
+target_link_libraries(tyr_inline_tests valhalla_test)
+gtest_discover_tests(tyr_inline_tests TEST_PREFIX "TyrInline.")
 
 ## Test-specific data, properties and dependencies
 target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
@@ -326,16 +341,9 @@ set (destination "${CMAKE_BINARY_DIR}/test/data/tile_src")
 #)
 
 ## Test run targets
-foreach(test ${tests} ${cost_tests} ${tyr_tests})
+foreach(test ${tests} ${cost_inline_tests} ${tyr_inline_tests})
   add_custom_command(OUTPUT ${test}.log
-    COMMAND
-      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-      /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/${test} >& ${CMAKE_CURRENT_BINARY_DIR}/${test}.log \
-      && echo [PASS] ${test} \
-      || ( exit=$? ; \
-           echo [FAIL] ${test} ; \
-           cat ${CMAKE_CURRENT_BINARY_DIR}/${test}.log ; \
-           exit $exit )"
+    COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/${test}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS ${test}
     VERBATIM)
@@ -351,7 +359,9 @@ endif()
 
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
+  add_dependencies(run-actor utrecht_tiles)
   add_dependencies(run-mapmatch utrecht_tiles)
+  add_dependencies(run-hierarchylimits utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
   add_dependencies(run-matrix_bss paris_bss_tiles)
@@ -370,9 +380,11 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
+  add_dependencies(run-graphtile utrecht_tiles)
   add_dependencies(run-graphbuilder build_timezones)
-  if(ENABLE_HTTP)
-    add_dependencies(run-http_tiles utrecht_tiles)
+  if(ENABLE_HTTP AND ENABLE_SERVICES)
+    # http_tiles needs the proper .tar file with index.bin
+    add_dependencies(run-http_tiles utrecht_tiles run-scripts)
   endif()
 endif()
 
@@ -380,28 +392,65 @@ if(ENABLE_SERVICES)
   add_dependencies(run-skadi_service test_directories)
 endif()
 
+# ENABLE_DATA_TOOLS is needed for utrecht_tiles
 if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
-  find_package(Python COMPONENTS Interpreter)
   add_custom_command(OUTPUT python_valhalla.log
     COMMAND
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
       PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python
       ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log"
+      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log && exit 1)"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
-      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_utrecht.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_graph_utils.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
-      python_valhalla
+      _valhalla
+      graph_utils
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
   set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")
   set(python_tests python_valhalla)
 endif()
 
+if(ENABLE_NODE_BINDINGS AND ENABLE_DATA_TOOLS)
+  find_program(NODE_EXECUTABLE NAMES node nodejs)
+  if(NOT NODE_EXECUTABLE)
+    message(WARNING "Node.js executable not found, Node.js tests will be skipped")
+  else()
+    # Dynamically find the ASan library path if sanitizer is enabled
+    # it is important to preload ASan this way when running `node`, so that ASan is able to set its interceptors even before any code was able to run
+    if(ENABLE_ADDRESS_SANITIZER)
+      execute_process(
+        COMMAND ${CMAKE_C_COMPILER} -print-file-name=libasan.so
+        OUTPUT_VARIABLE LIBASAN_PATH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      set(ASAN_PRELOAD "LD_PRELOAD=${LIBASAN_PATH}")
+    else()
+      set(ASAN_PRELOAD "")
+    endif()
+    add_custom_command(OUTPUT nodejs_valhalla.log
+      COMMAND
+        ${ASAN_PRELOAD}
+        NODE_PATH=${CMAKE_BINARY_DIR}/src/bindings/nodejs/lib
+        /bin/bash -cx "${NODE_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/tests.js > ${CMAKE_BINARY_DIR}/test/nodejs_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/nodejs_valhalla.log && exit 1)"
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      DEPENDS
+        ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/tests.js
+        ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/valhalla.json
+        utrecht_tiles
+        valhalla_node
+      VERBATIM)
+    add_custom_target(run-nodejs_valhalla DEPENDS nodejs_valhalla.log)
+    set_target_properties(run-nodejs_valhalla PROPERTIES FOLDER "Node.js Bindings")
+    set(nodejs_tests nodejs_valhalla)
+  endif()
+endif()
+
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${tyr_tests};${python_tests}")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${tyr_tests};${python_tests};${nodejs_tests}")
 
 add_custom_target(check DEPENDS ${test_targets})
 set_target_properties(check PROPERTIES FOLDER "Tests")
@@ -409,3 +458,4 @@ add_custom_target(tests DEPENDS ${tests} ${cost_tests} ${tyr_tests})
 set_target_properties(tests PROPERTIES FOLDER "Tests")
 add_subdirectory(gurka)
 add_subdirectory(scripts)
+

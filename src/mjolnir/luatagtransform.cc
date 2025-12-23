@@ -1,9 +1,17 @@
 #include "mjolnir/luatagtransform.h"
-
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
+
 #include <boost/format.hpp>
+#include <osmium/osm/tag.hpp>
+
 #include <stdexcept>
+
+extern "C" {
+#include <lauxlib.h>
+#include <lua.h>
+#include <lualib.h>
+}
 
 using namespace valhalla::mjolnir;
 
@@ -54,7 +62,7 @@ LuaTagTransform::~LuaTagTransform() {
   }
 }
 
-Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const Tags& maptags) {
+Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const osmium::TagList& maptags) {
 
   // grab the proper function out of the lua code
   Tags result;
@@ -69,8 +77,8 @@ Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const Tags& maptag
     int count = 0;
     lua_newtable(state_);
     for (const auto& tag : maptags) {
-      lua_pushstring(state_, tag.first.c_str());
-      lua_pushstring(state_, tag.second.c_str());
+      lua_pushstring(state_, tag.key());
+      lua_pushstring(state_, tag.value());
       lua_rawset(state_, -3);
       count++;
     }
@@ -87,7 +95,7 @@ Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const Tags& maptag
       // it's possible to give.
       throw std::runtime_error((boost::format("Failed to execute lua function "
                                               "for basic tag processing in %1% %2%: %3%") %
-                                to_string(type) % osmid % lua_error_message)
+                                ::to_string(type) % osmid % lua_error_message)
                                    .str());
     }
 

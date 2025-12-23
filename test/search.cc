@@ -1,20 +1,19 @@
 #include "loki/search.h"
-#include <cstdint>
-
-#include <boost/property_tree/ptree.hpp>
-#include <unordered_set>
-
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 #include "sif/nocost.h"
 
-#include "test.h"
+#include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
+
+#include <cstdint>
+#include <filesystem>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -50,8 +49,8 @@ std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01}
 std::pair<GraphId, PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {.2, .1});
 
 void clean_tiles() {
-  if (filesystem::is_directory(tile_dir)) {
-    filesystem::remove_all(tile_dir);
+  if (std::filesystem::is_directory(tile_dir)) {
+    std::filesystem::remove_all(tile_dir);
   }
 }
 
@@ -82,7 +81,7 @@ void make_tile() {
                       const uint32_t localedgeidx, const uint32_t opp_local_idx, const bool forward) {
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
                                      Use::kRoad, RoadClass::kMotorway, localedgeidx, false, false,
-                                     false, false, 0, 0, false);
+                                     false, false, 0, 0, false, RoadClass::kInvalid);
     edge_builder.set_opp_index(opp_local_idx); // How is this different from opp_local_idx
     edge_builder.set_opp_local_idx(opp_local_idx);
     edge_builder.set_localedgeidx(localedgeidx);
@@ -195,7 +194,8 @@ void search(valhalla::baldr::Location location,
   location.street_side_max_distance_ = 5000;
 
   const auto costing = create_costing();
-  const auto results = Search({location}, reader, costing);
+  Search search(reader);
+  const auto results = search.search({location}, costing);
   const auto& p = results.at(location);
 
   ASSERT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
@@ -234,7 +234,8 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
 
   const auto costing = create_costing();
 
-  const auto results = Search({location}, reader, costing);
+  Search search(reader);
+  const auto results = search.search({location}, costing);
   if (results.empty() && result_count == 0)
     return;
 

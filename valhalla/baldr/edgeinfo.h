@@ -1,17 +1,18 @@
 #ifndef VALHALLA_BALDR_EDGEINFO_H_
 #define VALHALLA_BALDR_EDGEINFO_H_
 
+#include <valhalla/baldr/conditional_speed_limit.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
+#include <valhalla/midgard/encoded.h>
+#include <valhalla/midgard/pointll.h>
+
 #include <cstdint>
 #include <map>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
-
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {
@@ -73,6 +74,26 @@ struct linguistic_text_header_t {
 };
 
 /**
+ * Decode the level information encoded as variable length, variable precision numbers.
+ *
+ * The first varint denotes the string size, to avoid the value 0 from being interpreted
+ * as a null character. The second varint denotes the precision to apply to all values
+ * except for the sentinel value used as a separator of continuous ranges.
+ *
+ *
+ * The returned array includes level values and sentinel values. Ex.:
+ *  "12;14" translates to {12, 1048575, 14}
+ *  "0-12;14" translates to {0, 12, 1048575, 14}
+ *
+ * @param encoded the encoded varint array
+ *
+ * @return a tuple that contains
+ *   a) the decoded levels array and
+ *   b) the precision used
+ */
+std::pair<std::vector<std::pair<float, float>>, uint32_t> decode_levels(const std::string& encoded);
+
+/**
  * Edge information not required in shortest path algorithm and is
  * common among the 2 directions.
  */
@@ -96,6 +117,15 @@ public:
    * Destructor
    */
   virtual ~EdgeInfo();
+
+  /**
+   * Calculate the size of a tagged value in bytes (including the tag byte and null terminator).
+   * This is used to properly determine the size of the last entry in the text list without
+   * including padding bytes.
+   * @param  ptr  Pointer to the start of the tagged value (including the tag byte)
+   * @return  Returns the size of the tagged value in bytes
+   */
+  static size_t TaggedValueSize(const char* ptr);
 
   /**
    * Gets the OSM way Id.
@@ -252,6 +282,12 @@ public:
   std::vector<int8_t> encoded_elevation(const uint32_t length, double& interval) const;
 
   /**
+   * Returns the list of conditional speed limits for the edge.
+   * @return Conditional speed limits for the edge.
+   */
+  std::vector<ConditionalSpeedLimit> conditional_speed_limits() const;
+
+  /**
    * Get layer index of the edge relatively to other edges(Z-level). Can be negative.
    * @see https://wiki.openstreetmap.org/wiki/Key:layer
    * @return layer index of the edge
@@ -259,24 +295,36 @@ public:
   int8_t layer() const;
 
   /**
-   * Get level of the edge.
+   * Get levels of the edge.
    * @see https://wiki.openstreetmap.org/wiki/Key:level
-   * @return layer index of the edge
+   * @return a pair where the first member is a vector of contiguous level ranges (inclusive) and
+   * the the second member is the max precision found on any of the level tokens.
    */
+  std::pair<std::vector<std::pair<float, float>>, uint32_t> levels() const;
 
-  std::string level() const;
+  /**
+   * Convenience method that checks whether the edge connects the passed level.
+   */
+  bool includes_level(float lvl) const;
+
   /**
    * Get layer:ref of the edge.
    * @see https://wiki.openstreetmap.org/wiki/Key:level:ref
    * @return layer index of the edge
    */
-  std::string level_ref() const;
+  std::vector<std::string> level_ref() const;
 
   /**
-   * Returns json representing this object
-   * @return json object
+   * Get the OSM node Ids along this edge if any were included in the data
+   * @return vector of osm node ids
    */
-  json::MapPtr json() const;
+  std::vector<uint64_t> osm_node_ids() const;
+
+  /**
+   * the json representation of the object
+   * @param writer The writer json object to represent the edge info
+   */
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
   // Operator EqualTo based on nodea and nodeb.
   bool operator==(const EdgeInfo& rhs) const;

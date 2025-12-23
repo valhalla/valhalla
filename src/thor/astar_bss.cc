@@ -1,9 +1,8 @@
 #include "thor/astar_bss.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
+
 #include <algorithm>
-#include <iostream> // TODO remove if not needed
-#include <map>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -148,17 +147,20 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing method),
     // or if a complex restriction exists.
     uint8_t has_time_restrictions = -1;
+    uint8_t destonly_restriction_mask = 0;
     const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (current_es->set() == EdgeSet::kPermanent ||
         !current_costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0,
-                                  has_time_restrictions) ||
+                                  has_time_restrictions, destonly_restriction_mask) ||
         current_costing->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
 
-    auto edge_cost = current_costing->EdgeCost(directededge, tile);
+    auto edge_cost = current_costing->EdgeCost(directededge, edgeid, tile);
     Cost normalized_edge_cost = {edge_cost.cost * current_costing->GetModeFactor(), edge_cost.secs};
-    auto transition_cost = current_costing->TransitionCost(directededge, nodeinfo, pred);
+    auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
+    auto transition_cost =
+        current_costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
 
     // Compute the cost to the end of this edge
     Cost newcost = pred.cost() + normalized_edge_cost + transition_cost;
@@ -221,7 +223,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, GraphId(), directededge, newcost, sortcost, dist, mode,
-                             transition_cost, false, true, false, InternalTurn::kNoTurn,
+                             transition_cost, false, false, false, InternalTurn::kNoTurn,
                              baldr::kInvalidRestriction);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
@@ -395,7 +397,8 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = pedestrian_costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+    Cost cost =
+        pedestrian_costing_->PartialEdgeCost(directededge, edgeid, tile, edge.percent_along(), 1.0f);
     float dist =
         pedestrian_astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
 
@@ -421,8 +424,9 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
             // remaining must be zero.
             GraphId id(destination_edge.graph_id());
             const DirectedEdge* dest_diredge = tile->directededge(id);
-            Cost dest_cost = pedestrian_costing_->EdgeCost(dest_diredge, tile) *
-                             (1.0f - destination_edge.percent_along());
+            Cost dest_cost =
+                pedestrian_costing_->PartialEdgeCost(dest_diredge, id, tile,
+                                                     destination_edge.percent_along(), 1.0f);
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
             cost.cost += destination_edge.distance();
@@ -446,7 +450,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     BDEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                           travel_mode_t::kPedestrian, baldr::kInvalidRestriction, true, false,
+                           travel_mode_t::kPedestrian, baldr::kInvalidRestriction, false, false,
                            sif::InternalTurn::kNoTurn);
     // Set the origin flag and path distance
     edge_label.set_origin();
@@ -496,7 +500,7 @@ void AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valhalla:
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     destinations_[edge.graph_id()] =
-        pedestrian_costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+        pedestrian_costing_->PartialEdgeCost(directededge, edgeid, tile, edge.percent_along(), 1.0f);
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
   }
@@ -513,7 +517,7 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
   // Work backwards from the destination
   std::vector<PathInfo> path;
   travel_mode_t old = travel_mode_t::kPedestrian;
-  int mode_change_count = 0;
+  [[maybe_unused]] int mode_change_count = 0;
 
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
@@ -540,6 +544,5 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
   std::reverse(path.begin(), path.end());
   return path;
 }
-
 } // namespace thor
 } // namespace valhalla

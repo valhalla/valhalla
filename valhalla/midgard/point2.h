@@ -1,16 +1,13 @@
 #pragma once
 
+#include <valhalla/midgard/util_core.h>
+
 #include <cmath>
-#include <cstdint>
 #include <cstring>
-#include <functional>
-#include <limits>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include <valhalla/midgard/util_core.h>
 
 namespace {
 constexpr float LL_EPSILON = .00002f;

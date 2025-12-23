@@ -1,8 +1,8 @@
 #include "baldr/graphreader.h"
+#include "gurka.h"
 #include "mjolnir/util.h"
 
-#include "gurka.h"
-#include "test/test.h"
+#include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -20,12 +20,12 @@ const std::string sqlite = {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite
 constexpr double gridsize = 100;
 
 void CreateWorkdir() {
-  if (filesystem::is_directory(workdir)) {
-    filesystem::remove_all(workdir);
+  if (std::filesystem::is_directory(workdir)) {
+    std::filesystem::remove_all(workdir);
   }
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 }
@@ -82,8 +82,7 @@ TEST_P(PhonemesWithLangsTest, Names) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -204,8 +203,7 @@ TEST_P(PhonemesWithLangsTest, Alts) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -338,8 +336,7 @@ TEST_P(PhonemesWithLangsTest, Official) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -470,8 +467,7 @@ TEST_P(PhonemesWithLangsTest, Tunnel) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -591,8 +587,7 @@ TEST_P(PhonemesWithLangsTest, NamesFB) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -694,8 +689,7 @@ TEST_P(PhonemesWithLangsTest, RefLR) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -789,8 +783,7 @@ TEST_P(PhonemesWithLangsTest, Destinations) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -811,7 +804,7 @@ TEST_P(PhonemesWithLangsTest, Destinations) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -848,8 +841,7 @@ TEST_P(PhonemesWithLangsTest, DestinationStreet) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -870,7 +862,7 @@ TEST_P(PhonemesWithLangsTest, DestinationStreet) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -907,8 +899,7 @@ TEST_P(PhonemesWithLangsTest, DestinationStreetTo) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -929,7 +920,7 @@ TEST_P(PhonemesWithLangsTest, DestinationStreetTo) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
@@ -972,8 +963,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFB) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -994,7 +984,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFB) {
     ASSERT_EQ(signs.size(), 1);
     ASSERT_EQ(linguistics.size(), 1);
 
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1025,7 +1015,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFB) {
       ASSERT_EQ(signs.size(), 1);
       ASSERT_EQ(linguistics.size(), 1);
 
-      for (const auto& sign : signs) {
+      for ([[maybe_unused]] const auto& _ : signs) {
         std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
             linguistics.find(sign_index);
         ASSERT_NE(iter, linguistics.end());
@@ -1066,8 +1056,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1088,7 +1077,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(linguistics.size(), 2);
 
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1127,7 +1116,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
       ASSERT_EQ(signs.size(), 2);
       ASSERT_EQ(linguistics.size(), 2);
 
-      for (const auto& sign : signs) {
+      for ([[maybe_unused]] const auto& _ : signs) {
         std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
             linguistics.find(sign_index);
         ASSERT_NE(iter, linguistics.end());
@@ -1184,8 +1173,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFBNoOptionalTag) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1206,7 +1194,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFBNoOptionalTag) {
     ASSERT_EQ(signs.size(), 1);
     ASSERT_EQ(linguistics.size(), 1);
 
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1237,7 +1225,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFBNoOptionalTag) {
       ASSERT_EQ(signs.size(), 1);
       ASSERT_EQ(linguistics.size(), 1);
 
-      for (const auto& sign : signs) {
+      for ([[maybe_unused]] const auto& _ : signs) {
 
         std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
             linguistics.find(sign_index);
@@ -1277,8 +1265,7 @@ TEST_P(PhonemesWithLangsTest, DestinationRef) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1299,7 +1286,7 @@ TEST_P(PhonemesWithLangsTest, DestinationRef) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1336,8 +1323,7 @@ TEST_P(PhonemesWithLangsTest, DestinationRefTo) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1358,7 +1344,7 @@ TEST_P(PhonemesWithLangsTest, DestinationRefTo) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1394,8 +1380,7 @@ TEST_P(PhonemesWithLangsTest, DestinationJunctionRef) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1416,7 +1401,7 @@ TEST_P(PhonemesWithLangsTest, DestinationJunctionRef) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1451,8 +1436,7 @@ TEST_P(PhonemesWithLangsTest, NodeRef) {
   detail::build_pbf(layout, ways, nodes, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1473,7 +1457,7 @@ TEST_P(PhonemesWithLangsTest, NodeRef) {
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
 
@@ -1513,8 +1497,7 @@ TEST_P(PhonemesWithLangsTest, NodeName) {
   detail::build_pbf(layout, ways, nodes, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1535,7 +1518,7 @@ TEST_P(PhonemesWithLangsTest, NodeName) {
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 2);
 
-  for (const auto& sign : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1583,8 +1566,7 @@ TEST_P(PhonemesWithLangsTest, NamesPart2) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1685,7 +1667,6 @@ TEST_P(PhonemesWithLangsTest, NamesPart2) {
 
 TEST_P(PhonemesWithLangsTest, OldDataDestination) {
   const auto& param_tag = std::get<0>(GetParam());
-  const auto& param_alphabet = std::get<1>(GetParam());
   CreateWorkdir();
 
   ways = {{"BC",
@@ -1700,8 +1681,7 @@ TEST_P(PhonemesWithLangsTest, OldDataDestination) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1722,7 +1702,7 @@ TEST_P(PhonemesWithLangsTest, OldDataDestination) {
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 2);
 
-  for (const auto& sign : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1749,8 +1729,6 @@ TEST_P(PhonemesWithLangsTest, OldDataDestination) {
 }
 
 TEST_P(PhonemesWithLangsTest, ForwardDestination) {
-  const auto& param_tag = std::get<0>(GetParam());
-  const auto& param_alphabet = std::get<1>(GetParam());
   CreateWorkdir();
 
   ways = {{"BC",
@@ -1764,8 +1742,7 @@ TEST_P(PhonemesWithLangsTest, ForwardDestination) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1785,7 +1762,7 @@ TEST_P(PhonemesWithLangsTest, ForwardDestination) {
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(linguistics.size(), 2);
 
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1815,7 +1792,6 @@ TEST_P(PhonemesWithLangsTest, ForwardDestination) {
     auto tile = graph_reader.GetGraphTile(node_id);
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
     std::vector<SignInfo> signs = tile->GetSigns(CB_edge_id.id(), linguistics);
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 0); // signs are only in the forward direction
     ASSERT_EQ(linguistics.size(), 0);
   }
@@ -1840,8 +1816,7 @@ TEST_P(PhonemesWithLangsTest, Junction) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1861,7 +1836,7 @@ TEST_P(PhonemesWithLangsTest, Junction) {
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 2);
 
-  for (const auto& sign : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1890,7 +1865,6 @@ TEST_P(PhonemesWithLangsTest, Junction) {
     auto tile = graph_reader.GetGraphTile(node_id);
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
     std::vector<SignInfo> signs = tile->GetSigns(CB_edge_id.id(), linguistics);
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(),
               0); // signs are only in the forward direction due to trunk_link and oneway
     ASSERT_EQ(linguistics.size(), 0);
@@ -1921,8 +1895,7 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -2082,8 +2055,7 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes2) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -2103,7 +2075,7 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes2) {
     ASSERT_EQ(signs.size(), 4);
     ASSERT_EQ(linguistics.size(), 4);
 
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -2156,7 +2128,7 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes2) {
     ASSERT_EQ(signs.size(), 4);
     ASSERT_EQ(linguistics.size(), 4);
 
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());

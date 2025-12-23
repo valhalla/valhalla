@@ -1,12 +1,12 @@
 #include "midgard/polyline2.h"
-#include <cstdint>
+#include "midgard/point2.h"
+#include "midgard/pointll.h"
+
+#include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
-
-#include "midgard/point2.h"
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla::midgard;
@@ -15,7 +15,7 @@ namespace {
 
 template <typename PrecisionT>
 void TryGeneralizeAndLength(Polyline2<PointXY<PrecisionT>>& pl, const float& gen, const float& res) {
-  uint32_t size = pl.Generalize(gen);
+  pl.Generalize(gen);
 
   std::vector<PointXY<PrecisionT>> pts = pl.pts();
 

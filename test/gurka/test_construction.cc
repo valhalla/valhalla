@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -141,8 +142,18 @@ protected:
 
 gurka::map ConstructionRoutingTest::map = {};
 
+TEST_F(ConstructionRoutingTest, IgnoreConstruction) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto",
+                                 {{"/costing_options/auto/ignore_construction", "1"},
+                                  {"/costing_options/auto/shortest", "1"}});
+
+  // road under construction "BC" should be used when ignore_construction=true
+  // we are using shortest=true as well, because the cost is higher for the construction road
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
+}
+
 TEST_P(ConstructionRoutingTest, CheckAvoidRoadsUnderConstruction) {
-  const auto costing = GetParam();
+  const auto& costing = GetParam();
 
   auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, costing);
   // road under construction "BC" should be avoided

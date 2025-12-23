@@ -1,21 +1,20 @@
 #ifndef VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
 #define VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/exceptions.h>
 #include <valhalla/proto_conversions.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrixalgorithm.h>
+#include <valhalla/thor/pathalgorithm.h>
+
+#include <cstdint>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -96,13 +95,12 @@ protected:
   float current_cost_threshold_;
 
   uint32_t max_reserved_labels_count_;
-  bool clear_reserved_memory_;
 
   // List of destinations
   std::vector<Destination> destinations_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+  sif::cost_ptr_t costing_;
 
   // List of edges that have potential destinations. Each "marked" edge
   // has a vector of indexes into the destinations vector
@@ -227,11 +225,14 @@ protected:
    *                           so that all supplied locations must be settled.
    * @return  Returns true if all destinations have been settled.
    */
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
   bool UpdateDestinations(const valhalla::Location& origin,
                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
-                          const graph_tile_ptr& tile,
+                          const baldr::graph_tile_ptr& tile,
+                          baldr::GraphReader& reader,
                           const sif::EdgeLabel& pred,
                           const baldr::TimeInfo& time_info,
                           const uint32_t matrix_locations);

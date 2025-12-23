@@ -1,17 +1,8 @@
 #include "gurka.h"
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
-#include <boost/geometry/multi/geometries/register/multi_polygon.hpp>
-#include <gtest/gtest.h>
-#include <valhalla/proto/options.pb.h>
-
-#include "baldr/graphconstants.h"
-#include "baldr/graphreader.h"
-#include "loki/polygon_search.h"
 #include "midgard/pointll.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "sif/costfactory.h"
-#include "worker.h"
+#include "proto/options.pb.h"
+
+#include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

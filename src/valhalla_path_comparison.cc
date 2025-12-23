@@ -1,17 +1,8 @@
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-#include <cxxopts.hpp>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "worker.h"
-
+#include "argparse_utils.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
-#include "baldr/tilehierarchy.h"
+#include "baldr/rapidjson_utils.h"
 #include "loki/search.h"
 #include "meili/map_matcher.h"
 #include "meili/map_matcher_factory.h"
@@ -20,8 +11,16 @@
 #include "sif/costfactory.h"
 #include "thor/pathinfo.h"
 #include "thor/route_matcher.h"
+#include "worker.h"
 
-#include "argparse_utils.h"
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::sif;
@@ -63,7 +62,9 @@ void print_edge(GraphReader& reader,
                          kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
-    Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
+
+    auto reader_getter = [&reader]() { return baldr::LimitedGraphReader(reader); };
+    Cost trans_cost = costing->TransitionCost(edge, node, pred_label, tile, reader_getter);
     trans_total += trans_cost;
     std::cout << "TransitionCost cost: " << trans_cost.cost;
     std::cout << " secs: " << trans_cost.secs << "\n";
@@ -74,7 +75,7 @@ void print_edge(GraphReader& reader,
   std::cout << "----------Edge----------\n";
   std::cout << "Edge GraphId: " << current_id << std::endl;
   std::cout << "Edge length: " << edge->length() << std::endl;
-  Cost edge_cost = costing->EdgeCost(edge, tile);
+  Cost edge_cost = costing->EdgeCost(edge, current_id, tile);
   edge_total += edge_cost;
   std::cout << "EdgeCost cost: " << edge_cost.cost << " secs: " << edge_cost.secs << "\n";
   std::cout << "------------------------\n\n";
@@ -84,7 +85,7 @@ void walk_edges(const std::string& shape,
                 GraphReader& reader,
                 const valhalla::sif::mode_costing_t& mode_costings,
                 valhalla::sif::TravelMode mode) {
-  auto cost = mode_costings[static_cast<uint32_t>(mode)];
+  const auto& cost = mode_costings[static_cast<uint32_t>(mode)];
 
   // Get shape
   std::vector<PointLL> shape_pts = decode<std::vector<PointLL>>(shape);
@@ -98,7 +99,8 @@ void walk_edges(const std::string& shape,
   locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape_pts, 30.f));
   locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape_pts, 30.f));
 
-  const auto projections = Search(locations, reader, cost);
+  Search search(reader);
+  const auto projections = search.search(locations, cost);
   std::vector<PathLocation> path_location;
   valhalla::Options options;
 
@@ -122,7 +124,8 @@ void walk_edges(const std::string& shape,
 
   std::vector<std::vector<PathInfo>> paths;
   std::vector<PathLocation> correlated;
-  bool rtn = RouteMatcher::FormPath(mode_costings, mode, reader, options, paths);
+  bool rtn = RouteMatcher::FormPath(mode_costings, mode, reader, options, options.use_timestamps(),
+                                    false, paths);
   if (!rtn) {
     std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << std::endl;
   }
@@ -161,7 +164,7 @@ std::string shape = "";
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 
@@ -169,7 +172,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a simple command line dev tool for comparing the cost between "
       "two routes.\n"
       "Use the -j option for specifying the locations or the -s option to enter an encoded shape.\n\n");
@@ -187,7 +190,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (result.count("json")) {
@@ -267,11 +270,6 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
-  if (!map_match) {
-    rapidjson::Document doc;
-    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
-  }
-
   // Construct costing
   valhalla::Costing::Type costing;
   if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
@@ -279,9 +277,15 @@ int main(int argc, char* argv[]) {
   } else {
     throw std::runtime_error("No costing method found");
   }
+
+  if (!map_match) {
+    rapidjson::Document doc;
+    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
+  }
+
   valhalla::sif::TravelMode mode;
   auto mode_costings = valhalla::sif::CostFactory{}.CreateModeCosting(request.options(), mode);
-  auto cost_ptr = mode_costings[static_cast<uint32_t>(mode)];
+  const auto& cost_ptr = mode_costings[static_cast<uint32_t>(mode)];
 
   // If a shape is entered use edge walking
   if (!map_match) {

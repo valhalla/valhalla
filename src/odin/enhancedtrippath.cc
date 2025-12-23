@@ -1,19 +1,17 @@
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
-
+#include "odin/enhancedtrippath.h"
+#include "baldr/edgeinfo.h"
 #include "baldr/turn.h"
 #include "baldr/turnlanes.h"
+#include "exceptions.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
-
-#include "worker.h"
-
-#include "odin/enhancedtrippath.h"
 #include "odin/util.h"
-
 #include "proto/common.pb.h"
 #include "proto/trip.pb.h"
+
+#include <cmath>
+#include <cstdlib>
+#include <iomanip>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -28,85 +26,6 @@ constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
 
 #ifdef LOGGING_LEVEL_TRACE
-const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
-  static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
-      values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kKatakana, "kKatakana"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kJeita, "kJeita"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "kNtSampa"}};
-  auto f = values.find(alphabet);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
-  return f->second;
-}
-
-const std::string& RoadClass_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
-      {4, "kTertiary"}, {5, "kUnclassified"}, {6, "kResidential"}, {7, "kServiceOther"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TripLeg_Traversability_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kNone"},
-      {1, "kForward"},
-      {2, "kward"},
-      {3, "kBoth"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TripLeg_Use_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kRoadUse"},
-      {1, "kRampUse"},
-      {2, "kTurnChannelUse"},
-      {3, "kUse"},
-      {4, "kDrivewayUse"},
-      {5, "kAlleyUse"},
-      {6, "kingAisleUse"},
-      {7, "kEmergencyAccessUse"},
-      {8, "kDriveThruUse"},
-      {9, "kCuldesacUse"},
-      {10, "kLivingStreetUse"},
-      {11, "kServiceRoadUse"},
-      {20, "kCyclewayUse"},
-      {21, "kMountainBikeUse"},
-      {24, "kSidewalkUse"},
-      {25, "kFootwayUse"},
-      {26, "kStepsUse"},
-      {27, "kPathUse"},
-      {28, "kPedestrianUse"},
-      {29, "kBridlewayUse"},
-      {30, "kRestAreaUse"},
-      {31, "kServiceAreaUse"},
-      {32, "kPedestrianCrossingUse"},
-      {33, "kElevatorUse"},
-      {34, "kEscalatorUse"},
-      {40, "kOtherUse"},
-      {41, "kFerryUse"},
-      {42, "kRailFerryUse"},
-      {43, "kConstructionUse"},
-      {50, "kRailUse"},
-      {51, "kBusUse"},
-      {52, "kEgressConnectionUse"},
-      {53, "kPlatformConnectionUse"},
-      {54, "kTransitConnectionUse"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
 const std::string& TripLeg_TravelMode_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kDrive"},
@@ -131,10 +50,9 @@ const std::string& TripLeg_VehicleType_Name(int v) {
 }
 
 const std::string& TripLeg_PedestrianType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kFoot"},
-      {1, "kWheelchair"},
-  };
+  static const std::unordered_map<int, std::string> values{{0, "kFoot"},
+                                                           {1, "kWheelchair"},
+                                                           {2, "kBlind"}};
   auto f = values.find(v);
   if (f == values.cend())
     throw std::runtime_error("Missing value in protobuf enum to string");
@@ -158,32 +76,6 @@ const std::string& TripLeg_TransitType_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kTram"},  {1, "kMetro"},    {2, "kRail"},    {3, "kBus"},
       {4, "kFerry"}, {5, "kCableCar"}, {6, "kGondola"}, {7, "kFunicular"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TripLeg_CycleLane_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kNoCycleLane"},
-      {1, "kShared"},
-      {2, "kDedicated"},
-      {3, "kSeparated"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TripLeg_Sidewalk_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kNoSidewalk"},
-      {1, "kLeft"},
-      {2, "kRight"},
-      {3, "kBothSides"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -525,19 +417,31 @@ std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() co
   return name_list;
 }
 
-std::string EnhancedTripLeg_Edge::GetLevelRef() const {
-  std::string level_ref;
+std::vector<std::string> EnhancedTripLeg_Edge::GetLevelRef() const {
+  std::vector<std::string> level_refs;
+  std::vector<std::string> levels;
+
+  // try to get level_refs, else create some from levels as fallback
   if (!tagged_value().empty()) {
     for (int t = 0; t < tagged_value().size(); ++t) {
       if (tagged_value().Get(t).type() == TaggedValue_Type_kLevelRef) {
-        level_ref = tagged_value().Get(t).value();
-        break;
-      } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevel) {
-        level_ref = "Level " + tagged_value().Get(t).value();
+        level_refs.emplace_back(tagged_value().Get(t).value());
+      } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevels) {
+        // parse varint encoded levels, we're only interested in single
+        // level values though
+        const auto& encoded = tagged_value().Get(t).value();
+        std::vector<std::pair<float, float>> decoded;
+        uint32_t precision;
+        std::tie(decoded, precision) = baldr::decode_levels(encoded);
+        if (decoded.size() == 1 && decoded[0].first == decoded[0].second) {
+          std::stringstream ss;
+          ss << std::fixed << std::setprecision(precision) << decoded[0].first;
+          levels.emplace_back("Level " + ss.str());
+        }
       }
     }
   }
-  return level_ref;
+  return level_refs.empty() ? levels : level_refs;
 }
 
 float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {

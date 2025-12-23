@@ -1,12 +1,12 @@
-#include <algorithm> // std::copy
-#include <optional>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include "loki/worker.h"
 #include "odin/worker.h"
 #include "test.h"
 #include "thor/worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <algorithm> // std::copy
+#include <optional>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -15,6 +15,7 @@
 namespace bpt = boost::property_tree;
 
 using namespace valhalla;
+namespace vb = valhalla::baldr;
 namespace vt = valhalla::thor;
 namespace vk = valhalla::loki;
 namespace vo = valhalla::odin;
@@ -27,13 +28,13 @@ namespace {
 // loki which leads to random results when you make changes to the way the tiles are built. so to
 // avoid that we set a radius here to get both sets of edges and let the algorithm take the cheaper
 // one. this only worked before by luck
-const auto conf =
-    test::make_config("test/data/paris_bss_tiles", {{"loki.service_defaults.radius", "10"}});
+const auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/paris_bss_tiles",
+                                    {{"loki.service_defaults.radius", "10"}});
 
 struct route_tester {
   route_tester()
-      : reader(std::make_shared<GraphReader>(conf.get_child("mjolnir"))), loki_worker(conf, reader),
-        thor_worker(conf, reader), odin_worker(conf) {
+      : reader(std::make_shared<vb::GraphReader>(conf.get_child("mjolnir"))),
+        loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
   }
   Api test(const std::string& request_json) {
     Api request;
@@ -44,7 +45,7 @@ struct route_tester {
     return request;
   }
 
-  std::shared_ptr<GraphReader> reader;
+  std::shared_ptr<vb::GraphReader> reader;
   vk::loki_worker_t loki_worker;
   vt::thor_worker_t thor_worker;
   vo::odin_worker_t odin_worker;

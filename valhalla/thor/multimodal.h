@@ -1,13 +1,6 @@
 #ifndef VALHALLA_THOR_MULTIMODAL_H_
 #define VALHALLA_THOR_MULTIMODAL_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -15,11 +8,17 @@
 #include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <map>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -91,9 +90,6 @@ protected:
   std::unordered_map<std::string, uint32_t> operators_;
   std::unordered_set<uint32_t> processed_tiles_;
 
-  // Hierarchy limits.
-  std::vector<sif::HierarchyLimits> hierarchy_limits_;
-
   // A* heuristic
   AStarHeuristic astarheuristic_;
 
@@ -114,7 +110,7 @@ protected:
    * @param  destll  Lat,lng of the destination.
    * @param  costing Dynamic costing method.
    */
-  void Init(const midgard::PointLL& destll, const std::shared_ptr<sif::DynamicCost>& costing);
+  void Init(const midgard::PointLL& destll, const sif::cost_ptr_t& costing);
 
   /**
    * Add edges at the origin to the adjacency list.
@@ -126,7 +122,7 @@ protected:
   void SetOrigin(baldr::GraphReader& graphreader,
                  valhalla::Location& origin,
                  const valhalla::Location& dest,
-                 const std::shared_ptr<sif::DynamicCost>& costing);
+                 const sif::cost_ptr_t& costing);
 
   /**
    * Set the destination edge(s).
@@ -137,7 +133,7 @@ protected:
    */
   uint32_t SetDestination(baldr::GraphReader& graphreader,
                           const valhalla::Location& dest,
-                          const std::shared_ptr<sif::DynamicCost>& costing);
+                          const sif::cost_ptr_t& costing);
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -159,7 +155,7 @@ protected:
                       const baldr::GraphId& node,
                       const sif::EdgeLabel& pred,
                       const uint32_t pred_idx,
-                      const std::shared_ptr<sif::DynamicCost>& costing,
+                      const sif::cost_ptr_t& costing,
                       EdgeStatus& edgestatus,
                       std::vector<sif::EdgeLabel>& edgelabels,
                       baldr::DoubleBucketQueue<sif::EdgeLabel>& adjlist,
@@ -183,8 +179,8 @@ protected:
                      const sif::MMEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
-                     const std::shared_ptr<sif::DynamicCost>& pc,
-                     const std::shared_ptr<sif::DynamicCost>& tc,
+                     const sif::cost_ptr_t& pc,
+                     const sif::cost_ptr_t& tc,
                      const sif::mode_costing_t& mode_costing,
                      const baldr::TimeInfo& time_info);
 
@@ -199,7 +195,7 @@ protected:
   bool CanReachDestination(const valhalla::Location& destination,
                            baldr::GraphReader& graphreader,
                            const sif::TravelMode dest_mode,
-                           const std::shared_ptr<sif::DynamicCost>& costing);
+                           const sif::cost_ptr_t& costing);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 using namespace valhalla;
+using namespace valhalla::baldr;
 
 const std::string tile_dir = "test/data/bidir_search";
 

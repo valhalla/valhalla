@@ -1,12 +1,13 @@
 #ifndef VALHALLA_BALDR_MERGE_H_
 #define VALHALLA_BALDR_MERGE_H_
 
-#include <cstdint>
-#include <deque>
-#include <utility>
 #include <valhalla/baldr/edgetracker.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+
+#include <cstdint>
+#include <deque>
+#include <utility>
 
 namespace valhalla {
 namespace baldr {

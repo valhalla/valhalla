@@ -1,10 +1,9 @@
 #ifndef VALHALLA_BALDR_DIRECTEDEDGE_H_
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/baldr/turn.h>
 
 namespace valhalla {
@@ -266,20 +265,6 @@ public:
    * @param  toll  True if this edge is part of a toll road, false if not.
    */
   void set_toll(const bool toll);
-
-  /**
-   * Does this edge have a seasonal access (e.g., closed in the winter)?
-   * @return  Returns true if this edge has seasonal access, false if not.
-   */
-  bool seasonal() const {
-    return seasonal_;
-  }
-
-  /**
-   * Sets the flag indicating this edge has seasonal access.
-   * @param  seasonal  True if this edge has seasonal access, false if not.
-   */
-  void set_seasonal(const bool seasonal);
 
   /**
    * Is this edge part of a private or no through road that allows access
@@ -743,12 +728,26 @@ public:
   }
 
   /**
+   * Return the name consistency mask (8 bits)
+   * @return  Returns the name consistency mask.
+   */
+  uint8_t name_consistency() const {
+    return name_consistency_;
+  }
+
+  /**
    * Set the name consistency given the other edge's local index. This is limited
    * to the first 8 local edge indexes.
    * @param  from  Local index of the from edge.
    * @param  c     Are names consistent between the 2 edges?
    */
   void set_name_consistency(const uint32_t from, const bool c);
+
+  /**
+   * Set the name consistency mask.
+   * @param  mask  Name consistency mask (8 bits).
+   */
+  void set_name_consistency(const uint8_t mask);
 
   /**
    * Is this edge unpaved or bad surface?
@@ -1086,6 +1085,15 @@ public:
   }
 
   /**
+   * We hijack the shortcut mask to move   ferry edges to lower
+   * hierarchies. Will be set during the graph build and re-set during the
+   * hierarchy builder.
+   * @param rc    the road class which should determine the edge's hierarchy
+   * @param reset whether is_shortcut_ should be set false
+   */
+  void set_hierarchy_roadclass(const baldr::RoadClass rc, const bool reset = false);
+
+  /**
    * Set the mask for whether this edge represents a shortcut between 2 nodes.
    * Shortcuts bypass nodes that only connect to lower levels in the hierarchy
    * (other than the 1-2 higher level edges that superseded by the shortcut).
@@ -1193,9 +1201,9 @@ public:
 
   /**
    * Create a json object representing this edge
-   * @return  Returns the json object
+   *  @param writer The writer json object to represent the object
    */
-  json::MapPtr json() const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // 1st 8-byte word
@@ -1251,7 +1259,7 @@ protected:
   uint64_t tunnel_ : 1;         // Is this edge part of a tunnel
   uint64_t bridge_ : 1;         // Is this edge part of a bridge?
   uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
-  uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
+  uint64_t spare1_ : 1;         // Used to be "seasonal", was never used, can be reclaimed
   uint64_t deadend_ : 1;        // Leads to a dead-end (no other drivable roads) TODO
   uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
   uint64_t stop_sign_ : 1;      // Stop sign at end of the directed edge

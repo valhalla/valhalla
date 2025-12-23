@@ -1,9 +1,7 @@
 #include "skadi/sample.h"
 #include "skadi/util.h"
 
-#include "midgard/util.h"
-
-#include "test.h"
+#include <gtest/gtest.h>
 
 using namespace valhalla;
 

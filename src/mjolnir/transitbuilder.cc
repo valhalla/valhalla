@@ -1,30 +1,26 @@
 #include "mjolnir/transitbuilder.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/logging.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "scoped_timer.h"
 
+#include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <filesystem>
 #include <fstream>
 #include <future>
-#include <iostream>
 #include <list>
 #include <mutex>
 #include <thread>
 #include <tuple>
-#include <unordered_map>
 #include <vector>
-
-#include <boost/algorithm/string.hpp>
-
-#include "baldr/datetime.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/tilehierarchy.h"
-#include "filesystem.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::baldr::DateTime;
 using namespace valhalla::mjolnir;
 
 namespace {
@@ -400,6 +396,7 @@ std::vector<OSMConnectionEdge> MakeConnections(const graph_tile_ptr& local_tile,
     if (!closest_edge) {
       LOG_WARN("Could not find connection point for in/egress near: " +
                std::to_string(egress_ll.second) + "," + std::to_string(egress_ll.first));
+      continue;
     }
 
     // TODO: if the point we found is further away than the tile edge then there could be a better
@@ -528,50 +525,41 @@ namespace mjolnir {
 
 // Add transit to the graph
 void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
-
-  auto t1 = std::chrono::high_resolution_clock::now();
   std::unordered_set<GraphId> tiles;
 
   // Bail if nothing
   auto hierarchy_properties = pt.get_child("mjolnir");
-  auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (!transit_dir || !filesystem::exists(*transit_dir) || !filesystem::is_directory(*transit_dir)) {
+  std::filesystem::path transit_dir{hierarchy_properties.get<std::string>("transit_dir", "")};
+
+  if (transit_dir.empty() || !std::filesystem::exists(transit_dir) ||
+      !std::filesystem::is_directory(transit_dir)) {
     LOG_INFO("Transit directory not found. Transit will not be added.");
     return;
   }
-
+  SCOPED_TIMER();
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
-  transit_dir->push_back(filesystem::path::preferred_separator);
   GraphReader reader(hierarchy_properties);
-  auto local_level = TileHierarchy::levels().back().level;
-  if (filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
-                               filesystem::path::preferred_separator)) {
-    filesystem::recursive_directory_iterator transit_file_itr(
-        *transit_dir + std::to_string(local_level + 1) + filesystem::path::preferred_separator),
-        end_file_itr;
+  const auto transit_level = std::to_string(TileHierarchy::GetTransitLevel().level);
+  transit_dir.append(transit_level);
+  if (std::filesystem::is_directory(transit_dir)) {
     // look at each file in the transit dir
-    for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+    for (const auto& dir_entry : std::filesystem::recursive_directory_iterator(transit_dir)) {
       // check if its a graph tile
-      if (filesystem::is_regular_file(transit_file_itr->path()) &&
-          transit_file_itr->path().string().find(".gph") ==
-              (transit_file_itr->path().string().size() - 4)) {
+      if (std::filesystem::is_regular_file(dir_entry.path()) &&
+          dir_entry.path().string().find(".gph") == (dir_entry.path().string().size() - 4)) {
         // turn the id from the level 3 transit tile into the level 2 tile under it
-        auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
+        auto graph_id = GraphTile::GetTileId(dir_entry.path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
         // if the level 2 tile exists
         if (reader.DoesTileExist(local_graph_id)) {
           // remember the id for the level 2 tile
           tiles.emplace(local_graph_id);
           // figure out the path in the new tileset for the transit tile
-          const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") +
-                                               filesystem::path::preferred_separator +
-                                               GraphTile::FileSuffix(graph_id);
-          filesystem::path root = destination_path;
-          root.replace_filename("");
-          filesystem::create_directories(root);
+          std::filesystem::path destination_path{pt.get<std::string>("mjolnir.tile_dir")};
+          destination_path.append(GraphTile::FileSuffix(graph_id));
+          std::filesystem::create_directories(destination_path.parent_path());
           // and copy over the the transit into the tileset we are building
-          std::ifstream in(transit_file_itr->path().string(),
-                           std::ios_base::in | std::ios_base::binary);
+          std::ifstream in(dir_entry.path(), std::ios_base::in | std::ios_base::binary);
           std::ofstream out(destination_path,
                             std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
 
@@ -620,8 +608,9 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(build, std::cref(pt.get_child("mjolnir")), std::ref(lock),
-                                     tile_start, tile_end, std::ref(results.back())));
+    threads[i] =
+        std::make_shared<std::thread>(build, std::cref(pt.get_child("mjolnir")), std::ref(lock),
+                                      tile_start, tile_end, std::ref(results.back()));
   }
 
   // Wait for them to finish up their work
@@ -647,10 +636,6 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   if (total_conn_edges) {
     LOG_INFO("Found " + std::to_string(total_conn_edges) + " connection edges");
   }
-
-  auto t2 = std::chrono::high_resolution_clock::now();
-  [[maybe_unused]] uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-  LOG_INFO("Finished - TransitBuilder took " + std::to_string(secs) + " secs");
 }
 
 } // namespace mjolnir

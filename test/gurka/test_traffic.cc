@@ -1,15 +1,16 @@
-#include "gurka.h"
-#include "test.h"
-
 #include "baldr/graphreader.h"
 #include "baldr/traffictile.h"
+#include "gurka.h"
+#include "test.h"
+#include "tyr/actor.h"
 
-#include <boost/property_tree/ptree.hpp>
+#ifndef _WIN32
+#include <sys/mman.h>
+#endif
+
+#include <sys/stat.h>
 
 #include <cmath>
-#include <sstream>
-#include <sys/mman.h>
-#include <sys/stat.h>
 
 using namespace valhalla;
 using LiveTrafficCustomize = test::LiveTrafficCustomize;
@@ -85,7 +86,7 @@ TEST(Traffic, BasicUpdates) {
     if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
       current->overall_encoded_speed = 0;
     } else {
-      current->overall_encoded_speed = UNKNOWN_TRAFFIC_SPEED_RAW - 1;
+      current->overall_encoded_speed = baldr::UNKNOWN_TRAFFIC_SPEED_RAW - 1;
     }
   };
   test::customize_live_traffic_data(map.config, cb_setter_max);
@@ -113,7 +114,6 @@ TEST(Traffic, BasicUpdates) {
                "it's noticed the changes in the live traffic file"
             << std::endl;
   {
-
     auto result = gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "auto",
                                    {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"BC", "CE", "DE"});
@@ -296,8 +296,6 @@ TEST(Traffic, CutGeoms) {
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
         baldr::GraphId tile_id(tile.header->tile_id);
         auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
-        baldr::TrafficSpeed* existing =
-            const_cast<valhalla::baldr::TrafficSpeed*>(tile.speeds + index);
         current->breakpoint1 = 255;
         if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
           current->overall_encoded_speed = 0;

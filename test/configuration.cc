@@ -1,7 +1,9 @@
-#include "test.h"
-#include <string>
-
 #include "config.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
+
+#include <string>
 
 namespace {
 

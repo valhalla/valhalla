@@ -1,18 +1,16 @@
 #ifndef VALHALLA_ODIN_NARRATIVEBUILDER_H_
 #define VALHALLA_ODIN_NARRATIVEBUILDER_H_
 
-#include <cstdint>
-#include <vector>
-
 #include <valhalla/baldr/verbal_text_formatter.h>
-
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/narrative_dictionary.h>
 #include <valhalla/odin/util.h>
 #include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
+
+#include <cstdint>
+#include <vector>
 
 namespace valhalla {
 namespace odin {
@@ -27,10 +25,10 @@ public:
   virtual ~NarrativeBuilder() = default;
 
   NarrativeBuilder(NarrativeBuilder&&) = default;
-  NarrativeBuilder& operator=(NarrativeBuilder&&) = default;
+  NarrativeBuilder& operator=(NarrativeBuilder&&) = delete;
 
   NarrativeBuilder(const NarrativeBuilder&) = default;
-  NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
+  NarrativeBuilder& operator=(const NarrativeBuilder&) = delete;
 
   void Build(std::list<Maneuver>& maneuvers);
 
@@ -421,6 +419,8 @@ protected:
 
   std::string FormExitBuildingInstruction(Maneuver& maneuver);
 
+  std::string FormGenericLevelChangeInstruction(Maneuver& maneuver);
+
   /////////////////////////////////////////////////////////////////////////////
   /**
    * Returns the transit stop count label based on the value of the specified
@@ -435,6 +435,8 @@ protected:
   std::string FormTransitPlatformCountLabel(
       size_t stop_count,
       const std::unordered_map<std::string, std::string>& transit_platform_count_labels);
+
+  std::string FormPassInstruction(Maneuver& maneuver);
 
   /**
    * Returns the plural category based on the value of the specified
@@ -545,12 +547,12 @@ protected:
    * @return the street names string for the specified street name list.
    */
   std::string FormStreetNames(const Maneuver& maneuver,
-                              const StreetNames& street_names,
+                              const baldr::StreetNames& street_names,
                               const std::vector<std::string>* empty_street_name_labels = nullptr,
                               bool enhance_empty_street_names = false,
                               uint32_t max_count = 0,
                               const std::string& delim = "/",
-                              const VerbalTextFormatter* verbal_formatter = nullptr);
+                              const baldr::VerbalTextFormatter* verbal_formatter = nullptr);
 
   /**
    * Returns the street names string for the specified street name list.
@@ -570,10 +572,10 @@ protected:
    *
    * @return the street names string for the specified street name list.
    */
-  std::string FormStreetNames(const StreetNames& street_names,
+  std::string FormStreetNames(const baldr::StreetNames& street_names,
                               uint32_t max_count = 0,
                               const std::string& delim = "/",
-                              const VerbalTextFormatter* verbal_formatter = nullptr);
+                              const baldr::VerbalTextFormatter* verbal_formatter = nullptr);
 
   /////////////////////////////////////////////////////////////////////////////
   /**
@@ -638,7 +640,7 @@ protected:
   /**
    * Combines a simple preposition and a definite article for certain languages.
    */
-  virtual void FormArticulatedPrepositions(std::string& instruction) {
+  virtual void FormArticulatedPrepositions(std::string& /*instruction*/) {
   }
 
   /**

@@ -1,27 +1,23 @@
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <cxxopts.hpp>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
-#include "baldr/pathlocation.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
-#include "odin/directionsbuilder.h"
-#include "odin/util.h"
 #include "sif/costfactory.h"
 #include "thor/costmatrix.h"
 #include "thor/optimizer.h"
 #include "thor/timedistancematrix.h"
 #include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -49,9 +45,9 @@ void LogResults(const bool optimize,
 
   if (log_details) {
     LOG_INFO("Results:");
-    uint32_t idx1 = 0;
-    uint32_t idx2 = 0;
-    for (uint32_t i = 0; i < matrix.times().size(); i++) {
+    int idx1 = 0;
+    int idx2 = 0;
+    for (int i = 0; i < matrix.times().size(); i++) {
       auto distance = matrix.distances().Get(i);
       LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) + ": Distance= " +
                std::to_string(distance) + " Time= " + GetFormattedTime(matrix.times().Get(i)) +
@@ -86,7 +82,7 @@ void LogResults(const bool optimize,
 
 // Main method for testing time and distance matrix methods
 int main(int argc, char* argv[]) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::string json_str;
   uint32_t iterations;
@@ -98,7 +94,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a command line test tool for time+distance matrix routing.\n"
       "Use the -j option for specifying source to target locations.");
 
@@ -121,7 +117,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (!result.count("json")) {
@@ -172,12 +168,13 @@ int main(int argc, char* argv[]) {
   std::unordered_map<std::string, float> max_matrix_distance;
   for (const auto& kv : config.get_child("service_limits")) {
     // Skip over any service limits that are not for a costing method
-    if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
-        kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
-        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
-        kv.first == "status" || kv.first == "max_timedep_distance_matrix" ||
-        kv.first == "max_distance_disable_hierarchy_culling") {
+    if (kv.first == "allow_hard_exclusions" || kv.first == "centroid" ||
+        kv.first == "hierarchy_limits" || kv.first == "isochrone" || kv.first == "max_alternates" ||
+        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "max_exclude_locations" ||
+        kv.first == "max_exclude_polygons_length" || kv.first == "max_radius" ||
+        kv.first == "max_reachability" || kv.first == "max_timedep_distance" ||
+        kv.first == "max_timedep_distance_matrix" || kv.first == "skadi" || kv.first == "status" ||
+        kv.first == "trace") {
       continue;
     }
     max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
@@ -198,7 +195,7 @@ int main(int argc, char* argv[]) {
 
   // If the sources and targets are equal we can run optimize
   if (optimize && options.sources_size() == options.targets_size()) {
-    for (uint32_t i = 0; i < options.sources_size(); ++i) {
+    for (int i = 0; i < options.sources_size(); ++i) {
       if (options.sources(i).ll().lat() != options.targets(i).ll().lat() ||
           options.sources(i).ll().lng() != options.targets(i).ll().lng()) {
         LOG_WARN("Targets differ from sources, skipping optimization...");
@@ -214,7 +211,12 @@ int main(int argc, char* argv[]) {
   }
 
   // Timing with CostMatrix
-  CostMatrix matrix;
+  CostMatrix matrix(config.get_child("thor"));
+  hierarchy_limits_config_t hl_config =
+      parse_hierarchy_limits_from_config(config, "costmatrix", false);
+  check_hierarchy_limits(mode_costing[int(mode)]->GetHierarchyLimits(), mode_costing[int(mode)],
+                         options.costings().find(options.costing_type())->second.options(), hl_config,
+                         true, mode_costing[int(mode)]->UseHierarchyLimits());
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
@@ -228,7 +230,7 @@ int main(int argc, char* argv[]) {
   LogResults(optimize, options, request.matrix(), log_details);
 
   // Run with TimeDistanceMatrix
-  TimeDistanceMatrix tdm;
+  TimeDistanceMatrix tdm(config.get_child("thor"));
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
     tdm.SourceToTarget(request, reader, mode_costing, mode, max_distance);

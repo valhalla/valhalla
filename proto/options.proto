@@ -19,6 +19,10 @@ message Ring {
   repeated LatLng coords = 1;
 }
 
+message Levels {
+  repeated float levels = 1;
+}
+
 enum ShapeMatch {
   walk_or_snap = 0;
   edge_walk = 1;
@@ -52,11 +56,11 @@ message PbfFieldSelector {
   bool directions = 3; // /route /trace_route /optimized_route /centroid
   bool status = 4;     // /status
   bool matrix = 5;     // sources_to_targets
+  bool isochrone = 6;
+  bool expansion = 9;
   // TODO: enable these once we have objects for them
-  // bool isochrone = 5;
   // bool locate = 7;
   // bool height = 8;
-  // bool expansion = 9;
 }
 
 message AvoidEdge {
@@ -66,6 +70,49 @@ message AvoidEdge {
   oneof has_percent_along {
     float percent_along = 2;
   }
+}
+
+message CostFactorEdge {
+  uint64 id = 1;    // the edge's graph id
+  double factor = 2; // the factor applied to the (partial) edge cost
+  double start = 3;  // the start fraction along the edge
+  double end = 4;    // the end fraction along the edge
+}
+
+/**
+ * Hierarchy limits controls expansion and transitions between hierarchy
+ * levels. It allows limiting expansion on hierarchy levels once
+ * some number of "upward" transitions have been made (e.g. from the local
+ * level to the arterial level). Expansion on a level is allowed within some
+ * distance from the destination location. This also allows control of where
+ * upward and downward transitions are allowed based on distance from the
+ * destination.
+ */
+message HierarchyLimits {
+ uint32 up_transition_count = 1;   // Keep track of # of upward transitions
+                                   // Internal use only, remember to clear on incoming requests
+ uint32 max_up_transitions = 2;    // Maximum number of upward transitions before
+                                   // expansion is stopped on a level.
+ float expand_within_dist = 3; // Distance (m) to destination within which
+                                   // expansion of a hierarchy level is
+                                   // always allowed. Used for A*.
+}
+
+// for /tile requests
+message Tile {
+  oneof has_x {
+    uint32 x = 1;
+  }
+  oneof has_y {
+    uint32 y = 2;
+  }
+  oneof has_z {
+    uint32 z = 3;
+  }
+}
+
+message TileOptions {
+  bool return_shortcuts = 1;      // include shortcuts in /tile responses
 }
 
 message Costing {
@@ -187,9 +234,7 @@ message Costing {
     oneof has_low_class_penalty {
       float low_class_penalty = 34;
     }
-    oneof has_hazmat {
-      bool hazmat = 35;
-    }
+    bool hazmat = 35;
     oneof has_weight {
       float weight = 36;
     }
@@ -208,12 +253,8 @@ message Costing {
     oneof has_cycling_speed {
       float cycling_speed = 41;
     }
-    oneof has_wheelchair {
-      bool wheelchair = 42;
-    }
-    oneof has_bicycle {
-      bool bicycle = 43;
-    }
+    bool wheelchair = 42;
+    bool bicycle = 43;
     oneof has_use_bus {
       float use_bus = 44;
     }
@@ -250,21 +291,13 @@ message Costing {
     oneof has_use_rail_ferry {
       float use_rail_ferry = 59;
     }
-    oneof has_ignore_restrictions {
-      bool ignore_restrictions = 60;
-    }
-    oneof has_ignore_oneways {
-      bool ignore_oneways = 61;
-    }
-    oneof has_ignore_access {
-      bool ignore_access = 62;
-    }
+    bool ignore_restrictions = 60;
+    bool ignore_oneways = 61;
+    bool ignore_access = 62;
     oneof has_ignore_closures {
       bool ignore_closures = 63;
     }
-    oneof has_shortest {
-      bool shortest = 64;
-    }
+    bool shortest = 64;
     oneof has_service_penalty {
       float service_penalty = 65;
     }
@@ -286,21 +319,11 @@ message Costing {
     oneof has_private_access_penalty {
       float private_access_penalty = 71;
     }
-    oneof has_exclude_unpaved {
-      bool exclude_unpaved = 72;
-    }
-    oneof has_include_hot {
-      bool include_hot = 73;
-    }
-    oneof has_include_hov2 {
-      bool include_hov2 = 74;
-    }
-    oneof has_include_hov3 {
-      bool include_hov3 = 75;
-    }
-    oneof has_exclude_cash_only_tolls {
-      bool exclude_cash_only_tolls = 76;
-    }
+    bool exclude_unpaved = 72;
+    bool include_hot = 73;
+    bool include_hov2 = 74;
+    bool include_hov3 = 75;
+    bool exclude_cash_only_tolls = 76;
     oneof has_restriction_probability {
       uint32 restriction_probability = 77;
     }
@@ -312,6 +335,22 @@ message Costing {
     uint32 axle_count = 81;
     float use_lit = 82;
     bool disable_hierarchy_pruning = 83;
+    bool ignore_non_vehicular_restrictions = 84;
+    oneof has_hgv_no_access_penalty {
+      float hgv_no_access_penalty = 85;
+    }
+    float use_truck_route = 86;
+    bool exclude_bridges = 87;
+    bool exclude_tunnels = 88;
+    bool exclude_tolls = 89;
+    bool exclude_highways = 90;
+    bool exclude_ferries = 91;
+    map<uint32, HierarchyLimits> hierarchy_limits = 92;
+    bool ignore_construction = 93;
+    repeated CostFactorEdge cost_factor_edges = 94;     // identified edges along user provided linear features, to which to apply special cost factors
+    oneof has_speed_penalty_factor {
+          float speed_penalty_factor = 95;
+        }
   }
 
   oneof has_options {
@@ -328,6 +367,12 @@ message Costing {
   }
 }
 
+message LinearFeatureCost {
+  repeated Location locations = 1;                               // In here we just store the first and last location correlation
+  repeated Location shape = 2;                                   // This is where the actual line geometry goes
+  double cost_factor = 3;
+}
+
 message Options {
 
   enum Units {
@@ -340,6 +385,8 @@ message Options {
     gpx = 1;
     osrm = 2;
     pbf = 3;
+    geotiff = 4;
+    mvt = 5;  // we set this ourselves and throw if it's set by the user
   }
 
   enum Action {
@@ -356,6 +403,7 @@ message Options {
     expansion = 10;
     centroid = 11;
     status = 12;
+    tile = 13;
   }
 
   enum DateTimeType {
@@ -373,6 +421,13 @@ message Options {
     edge_status = 3;
     edge_id = 4;
     pred_edge_id = 5;
+    expansion_type = 6;
+    flow_sources = 7;
+  }
+
+  enum ReverseTimeTracking {
+    rtt_heuristic = 0;
+    rtt_disabled = 1;
   }
 
   Units units = 1;                                                 // kilometers or miles
@@ -392,9 +447,7 @@ message Options {
   }
   Action action = 8;                                               // Action signifying the request type
   //deprecated = 9;
-  oneof has_range {
-    bool range = 10;                                               // Used in /height if the range between points should be serialized  [default = false]
-  }
+  bool range = 10;                                                 // Used in /height if the range between points should be serialized  [default = false]
   // verbose needs to stay oneof, so that matrix serializer can default to true
   oneof has_verbose {
     bool verbose = 11;                                             // Used in /locate & /status request to give back extensive information [default = false]
@@ -414,18 +467,14 @@ message Options {
     double resample_distance = 21;                                 // Resampling shape at regular intervals
   }
   repeated Contour contours = 22;                                  // List of isochrone contours
-  oneof has_polygons {
-    bool polygons = 23;                                            // Boolean value to determine whether to return geojson polygons or linestrings as the contours
-  }
+  bool polygons = 23;                                              // Boolean value to determine whether to return geojson polygons or linestrings as the contours
   oneof has_denoise {
     float denoise = 24;                                            // A floating point value from 0 to 1 which can be used to remove smaller contours (default 1.0)
   }
   oneof has_generalize {
     float generalize = 25;                                         // Meters used as the tolerance for Douglas-Peucker generalization
   }
-  oneof has_show_locations {
-    bool show_locations = 26;                                      // Add original locations to the isochrone geojson response
-  }
+  bool show_locations = 26;                                        // Add original locations to the isochrone geojson response
   repeated Location trace = 27;                                    // Trace points for map matching
   ShapeMatch shape_match = 28;                                     // The matching algorithm based on the type of input [default = walk_or_snap]
   //deprecated = 29;
@@ -443,9 +492,7 @@ message Options {
   oneof has_breakage_distance {
     float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
   }
-  oneof has_use_timestamps {
-    bool use_timestamps = 37;                                      // Use timestamps to compute elapsed time for trace_route and trace_attributes [default = false]
-  }
+  bool use_timestamps = 37;                                        // Use timestamps to compute elapsed time for trace_route and trace_attributes [default = false]
   oneof has_shape_format {
     ShapeFormat shape_format = 38;                                 // Shape format, defaults to polyline6 encoding for OSRM/height, and no_shape for matrix
   }
@@ -455,9 +502,7 @@ message Options {
   oneof has_interpolation_distance {
     float interpolation_distance = 40;                             // Map-matching interpolation distance beyond which trace points are merged
   }
-  oneof has_guidance_views {
-    bool guidance_views = 41;                                      // Whether to return guidance_views in the response
-  }
+  bool guidance_views = 41;                                        // Whether to return guidance_views in the response
   // 42 is reserved
   oneof has_height_precision {
     uint32 height_precision = 43;                                  // Number of digits precision for heights returned [default = 0]
@@ -465,20 +510,14 @@ message Options {
   oneof has_roundabout_exits {
     bool roundabout_exits = 44;                                    // Whether to announce roundabout exit maneuvers [default = true]
   }
-  oneof has_linear_references {
-    bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
-  }
+  bool linear_references = 45;                                     // Include linear references for graph edges returned in certain responses.
   repeated Costing recostings = 46;                                // CostingType options to use to recost a path after it has been found
-  repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
-  oneof has_prioritize_bidirectional {
-    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
-  }
+  repeated Ring exclude_polygons = 47;                             // Rings/polygons to exclude entire areas during path finding
+  bool prioritize_bidirectional = 48;                              // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
   oneof has_expansion_action {
     Action expansion_action = 49;                                  // Meta action for /expansion endpoint
   }
-  oneof has_skip_opposites {
-    bool skip_opposites = 50;                                      // Whether to return opposite edges encountered during expansion
-  }
+  bool skip_opposites = 50;                                        // Whether to return opposite edges encountered during expansion
   repeated ExpansionProperties expansion_properties = 51;          // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
   PbfFieldSelector pbf_field_selector = 52;                        // Which pbf fields to include in the pbf format response
   bool reverse = 53;                                               // should the isochrone expansion be done in the reverse direction, ignored for multimodal isochrones
@@ -488,4 +527,14 @@ message Options {
                                                                    // or when CostMatrix is the selected matrix mode.
   bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
   float elevation_interval = 56;                                   // Interval for sampling elevation along the route path.  [default = 0.0];
+  bool voice_instructions = 57;                                    // Whether to return voiceInstructions in the OSRM serializer response
+  bool dedupe = 58;                                                // Keep track of edges and override their properties during expansion,
+                                                                   // ensuring that each edge appears in the output only once. [default = false]
+  bool admin_crossings = 59;                                       // Include administrative boundary crossings
+  bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
+  repeated LinearFeatureCost cost_factor_lines = 61;               // User provided linear features to which apply special cost factors to
+  ReverseTimeTracking reverse_time_tracking = 62;                  // Which strategy to use on the reverse tree in time dependent bidirectional routing
+  Tile tile_xyz = 63;                                              // x, y, z for /tile requests
+  TileOptions tile_options = 64;                                   // additional /tile specific options
+  repeated Levels exclude_levels = 65;                             // Levels to exclude within the exclude_polygon at the same index
 }

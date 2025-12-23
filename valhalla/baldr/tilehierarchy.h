@@ -1,14 +1,13 @@
 #ifndef VALHALLA_MIDGARD_TILEHIERARCHY_H
 #define VALHALLA_MIDGARD_TILEHIERARCHY_H
 
-#include <cstdint>
-#include <map>
-#include <string>
-
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
+
+#include <cstdint>
+#include <string>
 
 namespace valhalla {
 namespace baldr {

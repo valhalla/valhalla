@@ -1,15 +1,15 @@
 #ifndef VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMWAY_H
 #define VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMWAY_H
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/mjolnir/osmlinguistic.h>
+#include <valhalla/mjolnir/uniquenames.h>
+
 #include <cstdint>
 #include <cstring>
 #include <map>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/mjolnir/osmlinguistic.h>
-#include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -121,6 +121,34 @@ struct OSMWay {
    */
   uint8_t truck_speed() const {
     return truck_speed_;
+  }
+
+  /**
+   * Sets the forward truck speed
+   * @param  truck_speed_forward Forward truck speed in KPH.
+   */
+  void set_truck_speed_forward(const float truck_speed_forward);
+
+  /**
+   * Gets the forward truck speed in KPH.
+   * @return  Returns forward truck speed.
+   */
+  uint8_t truck_speed_forward() const {
+    return truck_speed_forward_;
+  }
+
+  /**
+   * Sets the backward truck speed
+   * @param  truck_speed_backward Backward truck speed in KPH.
+   */
+  void set_truck_speed_backward(const float truck_speed_backward);
+
+  /**
+   * Gets the backward truck speed in KPH.
+   * @return  Returns backward truck speed.
+   */
+  uint8_t truck_speed_backward() const {
+    return truck_speed_backward_;
   }
 
   /**
@@ -2059,22 +2087,6 @@ struct OSMWay {
   }
 
   /**
-   * Set seasonal flag.
-   * @param  seasonal   Is this seasonal?
-   */
-  void set_seasonal(const bool seasonal) {
-    seasonal_ = seasonal;
-  }
-
-  /**
-   * Get the seasonal flag.
-   * @return  Returns seasonal flag.
-   */
-  bool seasonal() const {
-    return seasonal_;
-  }
-
-  /**
    * Set wheelchair flag.
    * @param  wheelchair   Is this wheelchair?
    */
@@ -2152,6 +2164,21 @@ struct OSMWay {
    */
   bool drive_on_right() const {
     return drive_on_right_;
+  }
+  /**
+   * Set multiple_levels flag.
+   * @param multiple_levels Is there a multiple levels?
+   */
+  void set_multiple_levels(const bool multiple_levels) {
+    multiple_levels_ = multiple_levels;
+  }
+
+  /**
+   * Get the multiple levels flag.
+   * @return Returns drive on right flag.
+   */
+  bool multiple_levels() const {
+    return multiple_levels_;
   }
 
   /**
@@ -2617,7 +2644,7 @@ struct OSMWay {
   uint32_t tunnel_ : 1;
   uint32_t toll_ : 1;
   uint32_t bridge_ : 1;
-  uint32_t seasonal_ : 1;
+  uint32_t multiple_levels_ : 1;
   uint32_t drive_on_right_ : 1;
   uint32_t bike_network_ : 4;
   uint32_t exit_ : 1;
@@ -2700,6 +2727,8 @@ struct OSMWay {
 
   // Truck speed in kilometers per hour
   uint8_t truck_speed_;
+  uint8_t truck_speed_forward_;
+  uint8_t truck_speed_backward_;
 
   // layer index(Z-level) of the way relatively to other levels
   int8_t layer_;

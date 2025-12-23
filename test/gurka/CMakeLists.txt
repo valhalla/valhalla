@@ -6,56 +6,16 @@ if(ENABLE_DATA_TOOLS)
   add_custom_target(run-gurka)
   set_target_properties(run-gurka PROPERTIES FOLDER "Tests")
 
-  # source files that have warning,
-  # any other file not int this list will be processed with the
-  # "-Werror" flag
-  # Avoid adding a filename to this list
-  set(TESTS_WITH_WARNINGS
-    test_access.cc
-    test_admin_sidewalk_crossing_override.cc
-    test_admin_uk_override.cc
-    test_elevation.cc
-    test_gtfs.cc
-    test_guidance_views.cc
-    test_guidance_views_signposts.cc
-    test_instructions_named_roundabout.cc
-    test_instructions_roundabout.cc
-    test_landmarks.cc
-    test_languages.cc
-    test_locate.cc
-    test_match.cc
-    test_multi_level_loki.cc
-    test_osrm_serializer.cc
-    test_pbf_api.cc
-    test_phonemes.cc
-    test_phonemes_w_langs.cc
-    test_precision.cc
-    test_recost.cc
-    test_simple_restrictions.cc
-    test_time_tracking.cc
-    test_traffic.cc
-    test_traffic_smoothing.cc
-    test_use_direction_on_ways.cc
-    test_use_lit.cc
-    )
-
   ## Add executable targets
   foreach(FULLFILENAME IN ITEMS ${TEST_FILES})
     file(RELATIVE_PATH FILENAME "${CMAKE_CURRENT_LIST_DIR}" ${FULLFILENAME})
     if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-      if (${FILENAME} IN_LIST TESTS_WITH_WARNINGS)
-        set_source_files_properties(${FILENAME} PROPERTIES COMPILE_FLAGS "-Wall")
-      else()
         set_source_files_properties(${FILENAME} PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-      endif()
     endif()
 
     string(REGEX REPLACE "test_(.*).cc" "gurka_\\1" TESTNAME ${FILENAME})
     add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${FILENAME})
     set_target_properties(${TESTNAME} PROPERTIES FOLDER "Tests")
-    target_compile_definitions(${TESTNAME} PRIVATE
-      VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
-      VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
     create_source_groups("Source Files" ${FILENAME})
     target_link_libraries(${TESTNAME} valhalla_test)
     if (LuaJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
@@ -66,14 +26,7 @@ if(ENABLE_DATA_TOOLS)
 
     ## Test run targets
     add_custom_command(OUTPUT ${TESTNAME}.log
-      COMMAND
-        LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-        /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} >& ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}.log \
-        && echo [PASS] ${TESTNAME} \
-        || ( exit=$? ; \
-             echo [FAIL] ${TESTNAME} ; \
-             cat ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}.log ; \
-             exit $exit )"
+      COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       DEPENDS ${TESTNAME}
       VERBATIM)

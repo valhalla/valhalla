@@ -1,23 +1,26 @@
-#include <boost/optional.hpp>
-#include <utility>
-
+#include "sif/dynamiccost.h"
 #include "baldr/graphconstants.h"
-#include "midgard/util.h"
+#include "baldr/rapidjson_utils.h"
+#include "exceptions.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
-#include "sif/dynamiccost.h"
+#include "sif/hierarchylimits.h"
 #include "sif/motorcyclecost.h"
 #include "sif/motorscootercost.h"
 #include "sif/nocost.h"
 #include "sif/pedestriancost.h"
 #include "sif/transitcost.h"
 #include "sif/truckcost.h"
-#include "worker.h"
+
+#include <boost/optional.hpp>
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace {
+
+constexpr double kMinCustomFactor = std::numeric_limits<double>::epsilon();
 
 uint8_t SpeedMask_Parse(const boost::optional<const rapidjson::Value&>& speed_types) {
   static const std::unordered_map<std::string, uint8_t> types{
@@ -108,11 +111,46 @@ constexpr float kDefaultClosureFactor = 9.0f;
 // non-closure end
 constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFactor, 10.0f};
 
-constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
-                                                        baldr::kMaxSpeedKph};
+// Default speed penalty factor (increase the cost of an edge if the edge speed is faster than the top
+// speed)
+constexpr float kDefaultSpeedPenaltyFactor = 0.05f;
+constexpr ranged_default_t<float> kSpeedPenaltyFactorRange{0.0f, kDefaultSpeedPenaltyFactor, 1.0f};
+
 constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
                                                       baldr::kMaxSpeedKph};
+
+// Default dimension
+constexpr float kDefaultHeight = 1.6f; // Meters (62.9921 inches)
+constexpr float kDefaultWidth = 1.9f;  // Meters (74.8031 inches)
+constexpr float kDefaultLength = 2.7f; // Meters (208,661 inches)
+constexpr float kDefaultWeight = 0.8f; // Metric Tons (6613,87 lbs)
 } // namespace
+
+/**
+ * When all ranges for a given edge are added, sort by range start
+ * and return the smallest factor found for this edge.
+ */
+double custom_cost_t::sort_and_find_smallest() {
+  if (ranges.empty())
+    return 1.;
+
+  std::sort(ranges.begin(), ranges.end(),
+            [](const cost_edge_t& a, const cost_edge_t& b) { return a.start < b.start; });
+
+  // keep track of how much of the edge is
+  // not covered by ranges
+  double uncovered = 1.;
+  double avg = 0.;
+  double min_factor = 1.;
+  for (const auto& range : ranges) {
+    uncovered -= range.end - range.start;
+    avg += (range.end - range.start) * range.factor;
+    min_factor = std::min(min_factor, range.factor);
+  }
+  avg += uncovered * 1.;
+  avg_factor = std::max(avg, kMinCustomFactor);
+  return std::max(min_factor, kMinCustomFactor);
+}
 
 /*
  * Assign default values for costing options in constructor. In case of different
@@ -137,9 +175,12 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
-      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false),
-      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
-                                                                                      false} {
+      closure_factor_{kClosureFactorRange}, speed_penalty_factor_{kSpeedPenaltyFactorRange},
+      exclude_unpaved_(false), exclude_bridges_(false), exclude_tunnels_(false),
+      exclude_tolls_(false), exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
+      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
+      include_hov3_{false}, height_{0.f, kDefaultHeight, 10.0f}, width_{0.f, kDefaultWidth, 10.0f},
+      length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -148,30 +189,60 @@ DynamicCost::DynamicCost(const Costing& costing,
                          bool penalize_uturns)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true),
       allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
-      closure_factor_(kDefaultClosureFactor), flow_mask_(kDefaultFlowMask),
-      shortest_(costing.options().shortest()),
+      closure_factor_(kDefaultClosureFactor), speed_penalty_factor_(kDefaultSpeedPenaltyFactor),
+      flow_mask_(kDefaultFlowMask), shortest_(costing.options().shortest()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
+      ignore_non_vehicular_restrictions_(costing.options().ignore_non_vehicular_restrictions()),
+      ignore_turn_restrictions_(costing.options().ignore_restrictions() ||
+                                costing.options().ignore_non_vehicular_restrictions()),
       ignore_oneways_(costing.options().ignore_oneways()),
       ignore_access_(costing.options().ignore_access()),
       ignore_closures_(costing.options().ignore_closures()),
+      ignore_construction_(costing.options().ignore_construction()),
       top_speed_(costing.options().top_speed()), fixed_speed_(costing.options().fixed_speed()),
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
-      penalize_uturns_(penalize_uturns) {
-  // Parse property tree to get hierarchy limits
-  // TODO - get the number of levels
-  uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
-  for (uint32_t level = 0; level < n_levels; level++) {
-    auto h = HierarchyLimits(level);
-    // Set max_up_transitions to kUnlimitedTransitions if disable_hierarchy_pruning
-    if (costing.options().disable_hierarchy_pruning()) {
-      h.max_up_transitions = kUnlimitedTransitions;
+      penalize_uturns_(penalize_uturns), is_hgv_(costing.type() == Costing::truck),
+      min_linear_cost_factor_(1.) {
+
+  // set user supplied hierarchy limits if present, fill the other
+  // required levels up with sentinel values (clamping to config supplied limits/defaults is handled
+  // by thor worker)
+  for (const auto& level : TileHierarchy::levels()) {
+    const auto& res = costing.options().hierarchy_limits().find(level.level);
+    if (res == costing.options().hierarchy_limits().end()) {
+      HierarchyLimits hl;
+      hl.set_expand_within_dist(kMaxDistance);
+      hl.set_max_up_transitions(kUnlimitedTransitions);
+      hl.set_up_transition_count(0);
+      hierarchy_limits_.push_back(hl);
+    } else {
+      hierarchy_limits_.push_back(res->second);
+      // for internal use only
+      hierarchy_limits_.back().set_up_transition_count(0);
     }
-    hierarchy_limits_.emplace_back(h);
   }
 
   // Add avoid edges to internal set
   for (auto& edge : costing.options().exclude_edges()) {
     user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
+  }
+
+  // add linear feature factors
+  for (auto& e : costing.options().cost_factor_edges()) {
+    // short-circuit the ones with factor 0 by putting them on the exclude pile
+    if (e.factor() == 0.) {
+      user_exclude_edges_.insert({static_cast<GraphId>(e.id()), e.start()});
+      break;
+    }
+    auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
+    cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
+  }
+
+  // once all cost factors are filled, sort by range, precompute overall average
+  // and store the overall minimum factor so it won't mess with the A* heuristic
+  for (auto& [edge, cost_factors] : linear_cost_edges_) {
+    min_linear_cost_factor_ =
+        std::min(min_linear_cost_factor_, cost_factors.sort_and_find_smallest());
   }
 }
 
@@ -189,15 +260,21 @@ bool DynamicCost::AllowMultiPass() const {
 // using them for the current route. Here we just call out to the derived classes costing function
 // with a time that tells the function that we aren't using time. This avoids having to worry about
 // default parameters and inheritance (which are a bad mix)
-Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge,
+                           const baldr::GraphId& edgeid,
+                           const graph_tile_ptr& tile) const {
   uint8_t flow_sources;
-  return EdgeCost(edge, tile, TimeInfo::invalid(), flow_sources);
+  return EdgeCost(edge, edgeid, tile, TimeInfo::invalid(), flow_sources);
 }
 
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCost(const DirectedEdge*, const NodeInfo*, const EdgeLabel&) const {
+Cost DynamicCost::TransitionCost(const DirectedEdge*,
+                                 const NodeInfo*,
+                                 const EdgeLabel&,
+                                 const graph_tile_ptr&,
+                                 const std::function<baldr::LimitedGraphReader()>&) const {
   return {0.0f, 0.0f};
 }
 
@@ -209,6 +286,9 @@ Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::NodeInfo*,
                                         const baldr::DirectedEdge*,
                                         const baldr::DirectedEdge*,
+                                        const graph_tile_ptr&,
+                                        const baldr::GraphId&,
+                                        const std::function<baldr::LimitedGraphReader()>&,
                                         const bool,
                                         const InternalTurn) const {
   return {0.0f, 0.0f};
@@ -263,6 +343,11 @@ std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
   return hierarchy_limits_;
 }
 
+// Sets hierarchy limits.
+void DynamicCost::SetHierarchyLimits(const std::vector<HierarchyLimits>& hierarchy_limits) {
+  hierarchy_limits_ = hierarchy_limits;
+}
+
 // Relax hierarchy limits.
 void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
   // since bidirectional A* does about half the expansion we can do half the relaxation here
@@ -270,7 +355,7 @@ void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
   const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f;
 
   for (auto& hierarchy : hierarchy_limits_) {
-    hierarchy.Relax(relax_factor, expansion_within_factor);
+    sif::RelaxHierarchyLimits(hierarchy, relax_factor, expansion_within_factor);
   }
 }
 
@@ -296,10 +381,6 @@ bool DynamicCost::wheelchair() const {
 
 // Get the bicycle required flag.
 bool DynamicCost::bicycle() const {
-  return false;
-}
-
-bool DynamicCost::is_hgv() const {
   return false;
 }
 
@@ -385,20 +466,46 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   }
 
   // various traversability flags
-  JSON_PBF_DEFAULT(co, false, json, "/ignore_restrictions", ignore_restrictions);
-  JSON_PBF_DEFAULT(co, false, json, "/ignore_oneways", ignore_oneways);
-  JSON_PBF_DEFAULT(co, false, json, "/ignore_access", ignore_access);
-  JSON_PBF_DEFAULT(co, false, json, "/ignore_closures", ignore_closures);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_restrictions", ignore_restrictions);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_oneways", ignore_oneways);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_access", ignore_access);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_closures", ignore_closures);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_construction", ignore_construction);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_non_vehicular_restrictions",
+                      ignore_non_vehicular_restrictions);
 
   // shortest
-  JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/shortest", shortest);
 
   // disable hierarchy pruning
   co->set_disable_hierarchy_pruning(
       rapidjson::get<bool>(json, "/disable_hierarchy_pruning", co->disable_hierarchy_pruning()));
 
-  // top speed
-  JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
+  // hierarchy limits
+  for (const auto& level : TileHierarchy::levels()) {
+    std::string hierarchy_limits_path = "/hierarchy_limits/" + std::to_string(level.level);
+
+    unsigned int max_up_transitions = rapidjson::get<decltype(
+        max_up_transitions)>(json, std::string(hierarchy_limits_path + "/max_up_transitions").c_str(),
+                             kUnlimitedTransitions);
+    float expand_within_distance =
+        rapidjson::get<decltype(expand_within_distance)>(json,
+                                                         std::string(hierarchy_limits_path +
+                                                                     "/expand_within_distance")
+                                                             .c_str(),
+                                                         kMaxDistance);
+
+    // don't set anything on the protobuf if the user sent nothing
+    if (max_up_transitions == kUnlimitedTransitions && expand_within_distance == kMaxDistance)
+      continue;
+
+    // set on protobuf
+    HierarchyLimits hierarchylimits;
+    hierarchylimits.set_max_up_transitions(max_up_transitions);
+    hierarchylimits.set_expand_within_dist(expand_within_distance);
+
+    co->mutable_hierarchy_limits()->insert({level.level, hierarchylimits});
+  }
 
   // destination only penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.dest_only_penalty_, json, "/destination_only_penalty",
@@ -453,10 +560,16 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
     JSON_PBF_RANGED_DEFAULT(co, cfg.use_rail_ferry_, json, "/use_rail_ferry", use_rail_ferry);
   }
 
-  JSON_PBF_DEFAULT(co, cfg.exclude_unpaved_, json, "/exclude_unpaved", exclude_unpaved);
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_unpaved_, json, "/exclude_unpaved", exclude_unpaved);
 
-  JSON_PBF_DEFAULT(co, cfg.exclude_cash_only_tolls_, json, "/exclude_cash_only_tolls",
-                   exclude_cash_only_tolls);
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_bridges_, json, "/exclude_bridges", exclude_bridges);
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_tunnels_, json, "/exclude_tunnels", exclude_tunnels);
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_tolls_, json, "/exclude_tolls", exclude_tolls);
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_highways_, json, "/exclude_highways", exclude_highways);
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_ferries_, json, "/exclude_ferries", exclude_ferries);
+
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_cash_only_tolls_, json, "/exclude_cash_only_tolls",
+                      exclude_cash_only_tolls);
 
   // service_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty);
@@ -477,28 +590,37 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // closure_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor);
 
-  // HOT/HOV
-  JSON_PBF_DEFAULT(co, cfg.include_hot_, json, "/include_hot", include_hot);
-  JSON_PBF_DEFAULT(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
-  JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
+  // speed_penalty_factor
+  JSON_PBF_RANGED_DEFAULT(co, cfg.speed_penalty_factor_, json, "/speed_penalty_factor",
+                          speed_penalty_factor);
 
-  co->set_fixed_speed(
-      kFixedSpeedRange(rapidjson::get<uint32_t>(json, "/fixed_speed", co->fixed_speed())));
+  // HOT/HOV
+  JSON_PBF_DEFAULT_V2(co, cfg.include_hot_, json, "/include_hot", include_hot);
+  JSON_PBF_DEFAULT_V2(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
+  JSON_PBF_DEFAULT_V2(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
+
+  JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
+
+  // Dimensions
+  JSON_PBF_RANGED_DEFAULT(co, cfg.height_, json, "/height", height);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.width_, json, "/width", width);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.length_, json, "/length", length);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.weight_, json, "/weight", weight);
 }
 
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& costing_options_key,
                   Options& options) {
-  // if specified, get the costing options in there
-  for (auto i = Costing::Type_MIN; i <= Costing::Type_MAX; i = Costing::Type(i + 1)) {
+  // get the needed costing options in there
+  for (const auto& costing_type : kCostingTypeMapping.at(options.costing_type())) {
     // Create the costing options key
-    const auto& costing_str = valhalla::Costing_Enum_Name(i);
+    const auto& costing_str = valhalla::Costing_Enum_Name(costing_type);
     if (costing_str.empty())
       continue;
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
-    auto& costing = (*options.mutable_costings())[i];
-    ParseCosting(doc, key, &costing, i);
+    auto& costing = (*options.mutable_costings())[costing_type];
+    ParseCosting(doc, key, &costing, costing_type);
   }
 }
 

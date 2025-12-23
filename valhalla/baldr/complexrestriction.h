@@ -1,16 +1,8 @@
 #ifndef VALHALLA_BALDR_COMPLEXRESTRICTION_H_
 #define VALHALLA_BALDR_COMPLEXRESTRICTION_H_
 
-#include <cstdint>
-#include <iostream>
-#include <ostream>
-#include <string>
-#include <vector>
-
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {

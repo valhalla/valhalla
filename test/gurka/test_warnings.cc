@@ -1,6 +1,6 @@
-#include "gurka.h"
+#include "valhalla/worker.h"
+
 #include <gtest/gtest.h>
-#include <vector>
 
 using namespace valhalla;
 

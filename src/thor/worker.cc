@@ -1,22 +1,15 @@
-#include <cstdint>
-#include <functional>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-#include "midgard/constants.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "thor/isochrone.h"
 #include "thor/worker.h"
-#include "tyr/actor.h"
+#include "midgard/logging.h"
+#include "thor/isochrone.h"
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <functional>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+
 using namespace valhalla;
-using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::meili;
@@ -74,7 +67,11 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
       time_distance_bss_matrix_(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
-      matcher_factory(config, reader), controller{} {
+      matcher_factory(config, reader), controller{},
+      allow_hierarchy_limits_modifications(
+          config.get<bool>("service_limits.hierarchy_limits.allow_modification", false)),
+      min_linear_cost_factor(config.get<double>("service_limits.min_linear_cost_factor", 1.0)),
+      max_linear_cost_edges(config.get<uint64_t>("service_limits.max_linear_cost_edges", 50000)) {
 
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)
@@ -85,7 +82,9 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
         kv.first == "max_exclude_polygons_length" || kv.first == "skadi" || kv.first == "trace" ||
         kv.first == "isochrone" || kv.first == "centroid" || kv.first == "status" ||
-        kv.first == "max_distance_disable_hierarchy_culling") {
+        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "allow_hard_exclusions" ||
+        kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
+        kv.first == "max_linear_cost_edges") {
       continue;
     }
 
@@ -101,10 +100,17 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
     source_to_target_algorithm = SELECT_OPTIMAL;
   }
 
-  costmatrix_allow_second_pass = config.get<bool>("thor.costmatrix_allow_second_pass", false);
+  costmatrix_allow_second_pass = config.get<bool>("thor.costmatrix.allow_second_pass", false);
 
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
+
+  hierarchy_limits_config_costmatrix =
+      parse_hierarchy_limits_from_config(config, "costmatrix", false);
+  hierarchy_limits_config_astar =
+      parse_hierarchy_limits_from_config(config, "unidirectional_astar", true);
+  hierarchy_limits_config_bidirectional_astar =
+      parse_hierarchy_limits_from_config(config, "bidirectional_astar", true);
 
   // signal that the worker started successfully
   started();
@@ -183,7 +189,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error(e, info, request);
   } catch (const std::exception& e) {
-    LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
+    LOG_ERROR("500::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error({499, std::string(e.what())}, info, request);
   }
 
@@ -228,6 +234,7 @@ std::string thor_worker_t::parse_costing(const Api& request) {
   auto costing = options.costing_type();
   auto costing_str = Costing_Enum_Name(costing);
   mode_costing = factory.CreateModeCosting(options, mode);
+
   return costing_str;
 }
 

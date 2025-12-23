@@ -1,16 +1,10 @@
-#include "test.h"
-
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
-#include "midgard/logging.h"
-#include "sif/autocost.h"
+#include "test.h"
 #include "thor/unidirectional_astar.h"
 #include "thor/worker.h"
 #include "worker.h"
+
+#include <string>
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -18,7 +12,6 @@ using namespace valhalla::sif;
 using namespace valhalla::loki;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-using namespace valhalla::tyr;
 
 namespace {
 // Maximum edge score - base this on costing type.
@@ -34,8 +27,6 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"pedestrian", 7200.0f}, {"transit", 14400.0f},       {"truck", 43200.0f},
     {"taxi", 43200.0f},
 };
-// a scale factor to apply to the score so that we bias towards closer results more
-constexpr float kDistanceScale = 10.f;
 
 const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 

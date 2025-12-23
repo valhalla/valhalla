@@ -1,12 +1,12 @@
 #ifndef VALHALLA_TYR_ACTOR_H_
 #define VALHALLA_TYR_ACTOR_H_
 
-#include <boost/property_tree/ptree.hpp>
-#include <memory>
-#include <unordered_map>
-
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
+
+#include <boost/property_tree/ptree_fwd.hpp>
+
+#include <memory>
 
 namespace valhalla {
 namespace tyr {
@@ -212,6 +212,15 @@ public:
   std::string status(const std::string& request_str,
                      const std::function<void()>* interrupt = nullptr,
                      Api* api = nullptr);
+
+  /**
+   * Perform the tile action and return MVT pbf responses, either with or without shortcuts. The
+   * request may either be in the form of a json string provided by the request_str parameter or
+   * contained in the api parameter as a deserialized protobuf object
+   */
+  std::string tile(const std::string& request_str,
+                   const std::function<void()>* interrupt = nullptr,
+                   Api* api = nullptr);
 
 protected:
   struct pimpl_t;

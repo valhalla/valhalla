@@ -1,7 +1,10 @@
 #ifndef VALHALLA_BALDR_GRAPHCONSTANTS_H_
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
+#include "valhalla/midgard/constants.h"
+
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <limits>
 #include <string>
@@ -99,20 +102,21 @@ constexpr uint8_t kMaxTrafficSpeed = 252; // ~157 MPH
 // clamped to this maximum value.
 constexpr uint32_t kMaxSpeedKph = std::max(kMaxTrafficSpeed, kMaxAssumedSpeed);
 
-constexpr uint32_t kMaxAssumedTruckSpeed = 90; // ~ 56 MPH
+constexpr uint32_t kMaxAssumedTruckSpeed = 120; // ~75 MPH
 
 // Minimum speed. This is a stop gap for dubious traffic data. While its possible
 // to measure a probe going this slow via stop and go traffic over a long enough
 // stretch, its unlikely to be good signal below this value
 constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
+constexpr uint32_t kMinValidSpeedKph = 1;
 
 // Default Fixed Speed. This is the default fixed speed that is assumed.
 // Unless otherwised specified no fixed speed will be assumed and speed will be
 // calculated from costing algorithm.
 constexpr uint32_t kDisableFixedSpeed = 0; // ~0 MPH
 
-inline bool valid_speed(float speed) {
-  return speed > kMinSpeedKph && speed < kMaxAssumedSpeed;
+inline bool valid_speed(uint32_t speed) {
+  return speed >= kMinValidSpeedKph;
 }
 
 // Maximum ferry speed
@@ -132,7 +136,8 @@ enum class RoadClass : uint8_t {
   kTertiary = 4,
   kUnclassified = 5,
   kResidential = 6,
-  kServiceOther = 7
+  kServiceOther = 7,
+  kInvalid = 8, // only 3 bits in DE for road class
 };
 inline RoadClass stringToRoadClass(const std::string& s) {
   static const std::unordered_map<std::string, RoadClass> stringToRoadClass =
@@ -208,6 +213,15 @@ constexpr uint32_t kMaxAddedTime = 255;
 // Elevation constants
 // this is the minimum we support, i.e. -500 m would result in "no elevation"
 constexpr float kNoElevationData = -500.0f;
+
+constexpr uint32_t kDefaultIndoorSearchCutoff = 300;
+constexpr uint32_t kMaxIndoorSearchCutoff = 1000;
+
+// (building) level constants
+// highest 3-byte value
+constexpr float kLevelRangeSeparator = 1048575.0f;
+constexpr float kMinLevel = std::numeric_limits<float>::min();
+constexpr float kMaxLevel = std::numeric_limits<float>::max();
 
 // Node types.
 enum class NodeType : uint8_t {
@@ -382,9 +396,12 @@ enum class TaggedValue : uint8_t { // must start at 1 due to nulls
   kLayer = 1,
   kLinguistic = 2,
   kBssInfo = 3,
-  kLevel = 4,
+  kLevel = 4, // deprecated in favor of kLevels
   kLevelRef = 5,
   kLandmark = 6,
+  kConditionalSpeedLimits = 7,
+  kLevels = 8,
+  kOSMNodeIds = 9,
   // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
   // see https://github.com/valhalla/valhalla/issues/3262
   kTunnel = static_cast<uint8_t>('1'),
@@ -739,8 +756,36 @@ enum class AccessType : uint8_t {
   kTimedAllowed = 6,
   kTimedDenied = 7,
   kDestinationAllowed = 8,
-  kMaxAxles = 9
+  kMaxAxles = 9,
 };
+
+constexpr unsigned int kHazmatMask = 1;
+constexpr unsigned int kMaxHeightMask = 2;
+constexpr unsigned int kMaxWidthMask = 4;
+constexpr unsigned int kMaxLengthMask = 8;
+constexpr unsigned int kMaxWeightMask = 16;
+constexpr unsigned int kMaxAxleLoadMask = 32;
+constexpr unsigned int kMaxAxlesMask = 64;
+
+// convert between the enum value and the corresponding mask
+constexpr std::array<uint8_t, 32> populate_access_restriction_masks() {
+  std::array<uint8_t, 32> masks{};
+  for (size_t i = 0; i < 32; ++i) {
+    masks[i] = 0;
+  }
+
+  masks[0] = kHazmatMask;
+  masks[1] = kMaxHeightMask;
+  masks[2] = kMaxWidthMask;
+  masks[3] = kMaxLengthMask;
+  masks[4] = kMaxWeightMask;
+  masks[5] = kMaxAxleLoadMask;
+  masks[9] = kMaxAxlesMask;
+
+  return masks;
+}
+constexpr std::array<uint8_t, 32> kAccessRestrictionMasks = populate_access_restriction_masks();
+constexpr uint8_t kInvalidAccessRestrictionMask = std::numeric_limits<uint8_t>::max();
 
 // Minimum meters offset from start/end of shape for finding heading
 constexpr float kMinMetersOffsetForHeading = 15.0f;
@@ -764,6 +809,7 @@ inline float GetOffsetForHeading(RoadClass road_class, Use use) {
     case Use::kPedestrian:
     case Use::kBridleway: {
       offset *= 0.5f;
+      break;
     }
     default:
       break;

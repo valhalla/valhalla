@@ -1,8 +1,11 @@
+#include "meili/map_matcher.h"
+
 #include <cassert>
 #include <vector>
 
-#include "meili/geometry_helpers.h"
-#include "meili/map_matcher.h"
+// `ValidateRoute` is only used in debug mode
+#ifndef NDEBUG
+
 #include "midgard/logging.h"
 
 namespace {
@@ -14,7 +17,7 @@ using namespace valhalla::meili;
 bool ValidateRoute(baldr::GraphReader& graphreader,
                    std::vector<EdgeSegment>::const_iterator segment_begin,
                    std::vector<EdgeSegment>::const_iterator segment_end,
-                   graph_tile_ptr& tile) {
+                   baldr::graph_tile_ptr& tile) {
   if (segment_begin == segment_end) {
     return true;
   }
@@ -47,6 +50,7 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
 }
 
 }; // namespace
+#endif
 
 namespace valhalla {
 namespace meili {
@@ -60,7 +64,7 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
                          int the_restriction_idx)
     : edgeid(the_edgeid), source(the_source), target(the_target),
       first_match_idx(the_first_match_idx), last_match_idx(the_last_match_idx),
-      discontinuity(disconnect), restriction_idx(the_restriction_idx) {
+      restriction_idx(the_restriction_idx), discontinuity(disconnect) {
   if (!edgeid.Is_Valid()) {
     throw std::invalid_argument("Invalid edgeid");
   }
@@ -204,7 +208,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   }
 
   std::vector<EdgeSegment> route;
-  graph_tile_ptr tile;
+  baldr::graph_tile_ptr tile;
 
   // Merge segments into route
   // std::deque<int> match_indices;

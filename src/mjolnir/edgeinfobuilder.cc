@@ -1,12 +1,15 @@
-#include <algorithm>
-#include <iostream>
-#include <ostream>
-
+#include "mjolnir/edgeinfobuilder.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "mjolnir/edgeinfobuilder.h"
+#include "midgard/pointll.h"
+
+#include <algorithm>
+#include <list>
+#include <ostream>
+
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
@@ -77,8 +80,10 @@ void EdgeInfoBuilder::AddNameInfo(const baldr::NameInfo& info) {
 template <class shape_container_t> void EdgeInfoBuilder::set_shape(const shape_container_t& shape) {
   encoded_shape_ = midgard::encode7<shape_container_t>(shape);
 }
-template void EdgeInfoBuilder::set_shape<std::vector<PointLL>>(const std::vector<PointLL>&);
-template void EdgeInfoBuilder::set_shape<std::list<PointLL>>(const std::list<PointLL>&);
+template void
+EdgeInfoBuilder::set_shape<std::vector<midgard::PointLL>>(const std::vector<midgard::PointLL>&);
+template void
+EdgeInfoBuilder::set_shape<std::list<midgard::PointLL>>(const std::list<midgard::PointLL>&);
 
 // Set the encoded shape string.
 void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {

@@ -1,13 +1,6 @@
 #ifndef VALHALLA_THOR_COSTMATRIX_H_
 #define VALHALLA_THOR_COSTMATRIX_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <set>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -15,14 +8,20 @@
 #include <valhalla/proto_conversions.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+#include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrixalgorithm.h>
-#include <valhalla/thor/pathinfo.h>
+#include <valhalla/thor/pathalgorithm.h>
+
+#include <cstdint>
+#include <memory>
+#include <set>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
 
-enum class MatrixExpansionType { reverse = 0, forward = 1 };
+enum class MatrixExpansionType : uint8_t { reverse = 0, forward = 1 };
 constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
 constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
 
@@ -122,7 +121,12 @@ public:
 protected:
   uint32_t max_reserved_labels_count_;
   uint32_t max_reserved_locations_count_;
-  bool check_reverse_connections_;
+  bool check_reverse_connection_;
+
+  // lower and upper bounds for the number of additional iterations per expansion once a connection
+  // has been found
+  uint32_t min_iterations_;
+  uint32_t max_iterations_;
 
   // Access mode used by the costing method
   uint32_t access_mode_;
@@ -131,7 +135,7 @@ protected:
   sif::TravelMode mode_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+  sif::cost_ptr_t costing_;
 
   // TODO(nils): instead of these array based structures, rather do this:
   // https://github.com/valhalla/valhalla/pull/4372#discussion_r1402163444
@@ -139,17 +143,20 @@ protected:
   std::array<uint32_t, 2> locs_count_;
   std::array<uint32_t, 2> locs_remaining_;
 
-  // The cost threshold being used for the currently executing query
-  float current_cost_threshold_;
+  // The path distance threshold being used for the currently executing query
+  float current_pathdist_threshold_;
 
   // Status
   std::array<std::vector<LocationStatus>, 2> locs_status_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each location
-  std::array<std::vector<std::vector<sif::HierarchyLimits>>, 2> hierarchy_limits_;
+  std::array<std::vector<std::vector<valhalla::HierarchyLimits>>, 2> hierarchy_limits_;
   std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;
+
+  // A* heuristics for both trees and each location
+  std::array<std::vector<AStarHeuristic>, 2> astar_heuristics_;
 
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
@@ -158,13 +165,6 @@ protected:
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
-
-  /**
-   * Get the cost threshold based on the current mode and the max arc-length distance
-   * for that mode.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   */
-  float GetCostThreshold(const float max_matrix_distance);
 
   /**
    * Form the initial time distance matrix given the sources
@@ -177,37 +177,30 @@ protected:
                   const valhalla::Matrix& matrix);
 
   /**
-   * Iterate the forward search from the source/origin location.
-   * @param  index        Index of the source location.
-   * @param  n            Iteration counter.
-   * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  time_info    The origin's timeinfo object
-   * @param  invariant    Whether time should be treated as invariant
-   */
-  void ForwardSearch(const uint32_t index,
-                     const uint32_t n,
-                     baldr::GraphReader& graphreader,
-                     const baldr::TimeInfo& time_info,
-                     const bool invariant);
-
-  /**
    * Check if the edge on the forward search connects to a reached edge
    * on the reverse search tree.
    * @param  source  Source index.
    * @param  pred    Edge label of the predecessor.
    * @param  n       Iteration counter.
    * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
    */
-  void CheckForwardConnections(const uint32_t source,
-                               const sif::BDEdgeLabel& pred,
-                               const uint32_t n,
-                               baldr::GraphReader& graphreader);
+
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
+  void CheckConnections(const uint32_t source,
+                        const sif::BDEdgeLabel& pred,
+                        const uint32_t n,
+                        baldr::GraphReader& graphreader,
+                        const valhalla::Options& options);
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   bool Expand(const uint32_t index,
               const uint32_t n,
               baldr::GraphReader& graphreader,
+              const valhalla::Options& options,
               const baldr::TimeInfo& time_info = baldr::TimeInfo::invalid(),
               const bool invariant = false);
 
@@ -221,73 +214,41 @@ protected:
                    const uint32_t pred_idx,
                    const EdgeMetadata& meta,
                    uint32_t& shortcuts,
-                   const graph_tile_ptr& tile,
+                   const baldr::graph_tile_ptr& tile,
                    const baldr::TimeInfo& time_info);
-
-  /**
-   * Check if the edge on the backward search connects to a reached edge
-   * on the reverse search tree.
-   * @param  target      target index.
-   * @param  pred        Edge label of the predecessor.
-   * @param  n           Iteration counter.
-   * @param  graphreader the graph reader instance
-   */
-  void CheckReverseConnections(const uint32_t target,
-                               const sif::BDEdgeLabel& pred,
-                               const uint32_t n,
-                               baldr::GraphReader& graphreader);
 
   /**
    * Update status when a connection is found.
    * @param  source  Source index
    * @param  target  Target index
    */
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   void UpdateStatus(const uint32_t source, const uint32_t target);
-
-  /**
-   * Iterate the backward search from the target/destination location.
-   * @param  index        Index of the target location.
-   * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  n            Iteration counter.
-   */
-  void BackwardSearch(const uint32_t index, baldr::GraphReader& graphreader, const uint32_t n);
 
   /**
    * Sets the source/origin locations. Search expands forward from these
    * locations.
    * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  sources       List of source/origin locations.
+   * @param  sources       List of source locations.
+   * @param  time_infos    Time info objects for sources
+   * @param  targets       List of target locations.
    */
   void SetSources(baldr::GraphReader& graphreader,
                   const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                  const std::vector<baldr::TimeInfo>& time_infos);
+                  const std::vector<baldr::TimeInfo>& time_infos,
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& targets);
 
   /**
    * Set the target/destination locations. Search expands backwards from
    * these locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  targets       List of target locations.
+   * @param  graphreader  Graph reader for accessing routing graph.
+   * @param  target       List of target locations.
+   * @param  source       List of source locations.
    */
   void SetTargets(baldr::GraphReader& graphreader,
-                  const google::protobuf::RepeatedPtrField<valhalla::Location>& targets);
-
-  /**
-   * Update destinations along an edge that has been settled (lowest cost path
-   * found to the end of edge).
-   * @param   origin_index  Index of the origin location.
-   * @param   locations     List of locations.
-   * @param   destinations  Vector of destination indexes along this edge.
-   * @param   edge          Directed edge
-   * @param   pred          Predecessor information in shortest path.
-   * @param   predindex     Predecessor index in EdgeLabels vector.
-   * @return  Returns true if all destinations have been settled.
-   */
-  bool UpdateDestinations(const uint32_t origin_index,
-                          const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                          std::vector<uint32_t>& destinations,
-                          const baldr::DirectedEdge* edge,
-                          const sif::BDEdgeLabel& pred,
-                          const uint32_t predindex);
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& sources);
 
   /**
    * If time awareness was requested for the CostMatrix algorithm, we need
@@ -303,14 +264,12 @@ protected:
    */
   std::string RecostFormPath(baldr::GraphReader& graphreader,
                              BestCandidate& connection,
-                             const valhalla::Location& source,
-                             const valhalla::Location& target,
+                             Api& request,
                              const uint32_t source_idx,
                              const uint32_t target_idx,
+                             const uint32_t connection_idx,
                              const baldr::TimeInfo& time_info,
-                             const bool invariant,
-                             const ShapeFormat shape_format);
-
+                             const bool invariant);
   /**
    * Sets the date_time on the origin locations.
    *
@@ -331,19 +290,18 @@ protected:
     return infos;
   };
 
-  void ModifyHierarchyLimits() {
-    // Distance threshold optimized for unidirectional search. For bidirectional case
-    // they can be lowered.
-    // Decrease distance thresholds only for arterial roads for now
-    for (size_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
-      if (hierarchy_limits_[MATRIX_FORW][source][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 2.f;
-    }
-    for (size_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
-      if (hierarchy_limits_[MATRIX_REV][target][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 2.f;
-    }
-  };
+  /**
+   * Get the minimum AStar heuristic for a given source/target, i.e. for a source we get
+   * the minimum heuristic of all targets for the forward expansion, so that we direct
+   * the search towards the closest target/source.
+   *
+   * @param loc_idx  either the source or target index
+   * @param node_ll  the current edge's end node's lat/lon
+   * @returns The heuristic for the closest target/source of the passed node
+   */
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
+  float GetAstarHeuristic(const uint32_t loc_idx, const midgard::PointLL& node_ll) const;
 
 private:
   class ReachedMap;

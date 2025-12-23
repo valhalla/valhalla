@@ -1,12 +1,12 @@
 #include "argparse_utils.h"
-#include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
 #include "mjolnir/landmarks.h"
+
 #include <cxxopts.hpp>
 
+#include <filesystem>
+
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 
@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "valhalla_add_landmarks is a program that adds landmarks to existing graph tiles via a SQLite"
       " database containing landmark POIs.\n"
       "\n\n");
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;

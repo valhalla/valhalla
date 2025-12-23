@@ -1,3 +1,6 @@
+#include "midgard/logging.h"
+#include "skadi/sample.h"
+
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
@@ -6,9 +9,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-
-#include "midgard/logging.h"
-#include "skadi/sample.h"
 
 void get_samples(valhalla::skadi::sample& sample,
                  const std::vector<std::pair<double, double>>& postings,

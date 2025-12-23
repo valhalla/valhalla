@@ -1,23 +1,14 @@
 #ifndef VALHALLA_THOR_ISOCHRONE_H_
 #define VALHALLA_THOR_ISOCHRONE_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
-#include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
 #include <valhalla/midgard/gridded_data.h>
-#include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/dijkstras.h>
-#include <valhalla/thor/edgestatus.h>
+
+#include <cstdint>
+#include <memory>
 
 namespace valhalla {
 namespace thor {
@@ -67,15 +58,15 @@ public:
    * @param callback the functor to call back when the Dijkstra makes progress
    *                             on a given edge
    */
-  void SetInnerExpansionCallback(const expansion_callback_t callback) {
-    inner_expansion_callback_ = callback;
+  void SetInnerExpansionCallback(expansion_callback_t&& callback) {
+    inner_expansion_callback_ = std::move(callback);
   }
 
 protected:
   // when we expand up to a node we color the cells of the grid that the edge that ends at the
   // node touches
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
-                             graph_tile_ptr tile,
+                             baldr::graph_tile_ptr tile,
                              const baldr::NodeInfo* node,
                              const sif::EdgeLabel& current,
                              const sif::EdgeLabel* previous) override;

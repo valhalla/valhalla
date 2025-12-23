@@ -1,5 +1,6 @@
 #include "gurka.h"
-#include <boost/format.hpp>
+#include "valhalla/worker.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;

@@ -1,22 +1,20 @@
 #ifndef __VALHALLA_LOKI_SERVICE_H__
 #define __VALHALLA_LOKI_SERVICE_H__
 
-#include <cstdint>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/exceptions.h>
+#include <valhalla/loki/search.h>
+#include <valhalla/meili/candidate_search.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/skadi/sample.h>
-#include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <vector>
 
 namespace valhalla {
 namespace loki {
@@ -44,11 +42,16 @@ public:
   std::string height(Api& request);
   std::string transit_available(Api& request);
   void status(Api& request) const;
+  std::string render_tile(Api& request);
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
+  static constexpr std::array kDefaultMinZoomRoadClass = {7u, 7u, 8u, 10u, 11u, 11u, 13u, 14u};
+  using ZoomConfig = std::array<uint32_t, kDefaultMinZoomRoadClass.size()>;
+
 protected:
   void parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
+                       Api& request,
                        std::optional<valhalla_exception_t> required_exception = valhalla_exception_t{
                            110});
   void parse_trace(Api& request);
@@ -68,6 +71,7 @@ protected:
   sif::CostFactory factory;
   sif::cost_ptr_t costing;
   std::shared_ptr<baldr::GraphReader> reader;
+  Search search_;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;
   std::unordered_set<Options::Action> actions;
   std::string action_str;
@@ -104,9 +108,15 @@ protected:
   float min_resample;
   unsigned int max_alternates;
   bool allow_verbose;
-
-  // add max_distance_disable_hierarchy_culling
+  bool allow_hard_exclusions;
   float max_distance_disable_hierarchy_culling;
+  size_t candidate_query_cache_size;
+
+  // for /tile requests
+  static_assert(kDefaultMinZoomRoadClass.size() == static_cast<size_t>(baldr::RoadClass::kInvalid));
+  ZoomConfig min_zoom_road_class_ = kDefaultMinZoomRoadClass;
+  uint32_t min_zoom_;
+  meili::CandidateGridQuery candidate_query_;
 
 private:
   std::string service_name() const override {

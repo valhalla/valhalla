@@ -1,7 +1,7 @@
 #include "baldr/nodetransition.h"
 #include "baldr/graphid.h"
 
-#include "test.h"
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::baldr;

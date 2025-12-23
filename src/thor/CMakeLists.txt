@@ -13,9 +13,7 @@ set(sources
   timedistancematrix.cc
   triplegbuilder.cc
   unidirectional_astar.cc
-  worker.cc)
-
-set(sources_with_warnings
+  worker.cc
   centroid.cc
   expansion_action.cc
   isochrone_action.cc
@@ -35,7 +33,6 @@ set(system_includes
 
 valhalla_module(NAME thor
   SOURCES ${sources}
-  SOURCES_WITH_WARNINGS ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
@@ -48,7 +45,7 @@ valhalla_module(NAME thor
       ${system_includes}
     PRIVATE
       ${rapidjson_include_dir}
-      ${robinhoodhashing_include_dir}
+      ${unordered_dense_include_dir}
 
   DEPENDS
     valhalla::proto

@@ -1,12 +1,11 @@
-#include <filesystem>
-
-#include <gtest/gtest.h>
-
-#include "baldr/admin.h"
 #include "gurka.h"
 #include "mjolnir/adminbuilder.h"
-#include "mjolnir/pbfgraphparser.h"
-#include "test/test.h"
+#include "mjolnir/util.h"
+
+#include <gtest/gtest.h>
+#include <sqlite3.h>
+
+#include <filesystem>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -230,7 +229,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
   auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
   auto pbf_filename = workdir + "/map.pbf";
-  detail::build_pbf(node_layout, ways, nodes, relations, pbf_filename, 0, false);
+  detail::build_pbf(node_layout, ways, nodes, relations, pbf_filename, false);
 
   valhalla::gurka::map result;
   result.nodes = node_layout;
@@ -338,7 +337,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   // nodes that span the two countries.
   //======================================================================
   build_tile_set(admin_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
 

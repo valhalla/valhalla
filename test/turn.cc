@@ -1,10 +1,6 @@
-#include <cstdint>
-
 #include "baldr/turn.h"
 
-#include <string>
-
-#include "test.h"
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::baldr;

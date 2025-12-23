@@ -1,17 +1,14 @@
 #ifndef VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_H_
 #define VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_H_
 
-#include <regex>
-#include <string>
-
 #include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/sign.h>
 
+#include <regex>
+#include <string>
+
 namespace valhalla {
 namespace baldr {
-
-// Regular expression to find numbers
-const std::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");
 
 /**
  * The generic verbal text formatter class that prepares strings for use with

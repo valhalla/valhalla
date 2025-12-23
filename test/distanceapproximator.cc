@@ -1,9 +1,8 @@
 #include "midgard/distanceapproximator.h"
-
 #include "midgard/constants.h"
 #include "midgard/pointll.h"
 
-#include "test.h"
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::midgard;
