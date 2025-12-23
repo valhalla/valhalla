@@ -5,6 +5,7 @@
    * FIXED: Fix + prefix handling in to_int/to_float utilities [#5746](https://github.com/valhalla/valhalla/pull/5746)
    * FIXED: Use a unique target name for generating symlinks. Fixes #5751. [#5752](https://github.com/valhalla/valhalla/pull/5752)
    * FIXED: Resolve ambiguities with libc++-18. Fixes #5716. [#5754](https://github.com/valhalla/valhalla/pull/5754)
+   * FIXED: Access handling for unknown OSM Way types like `"disused:route=ferry"` [#5768](https://github.com/valhalla/valhalla/pull/5768)
    * FIXED: Add error code for isochrone requests exceeding distance contour limit [#5781](https://github.com/valhalla/valhalla/pull/5781)
 * **Enhancement**
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
@@ -23,6 +24,7 @@
    * ADDED: `valhalla-dev` image [#5739](https://github.com/valhalla/valhalla/pull/5739)
    * CHANGED: --version program options to print _only_ the version string and omit the program name [#5769](https://github.com/valhalla/valhalla/pull/5769)
    * CHANGED: upgraded tz submodule to 2025c [#5766](https://github.com/valhalla/valhalla/pull/5766)
+   * FIXED: Omit debug symbols in docker image [#5777](https://github.com/valhalla/valhalla/pull/5777)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
