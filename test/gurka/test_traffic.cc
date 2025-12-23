@@ -988,8 +988,8 @@ TEST_F(WaypointsOnClosuresTest, IgnoreDepartPointAtClosure) {
       baldr::GraphId tile_id(tile.header->tile_id);
       auto BC = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "C"));
       auto CB = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "B"));
-      bool should_close = (BC.Tile_Base() == tile_id && BC.id() == index) ||
-                          (CB.Tile_Base() == tile_id && CB.id() == index);
+      bool should_close = (BC.tile_base() == tile_id && BC.id() == index) ||
+                          (CB.tile_base() == tile_id && CB.id() == index);
       SetLiveSpeed(current, should_close ? 0 : default_speed);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
@@ -1006,8 +1006,8 @@ TEST_F(WaypointsOnClosuresTest, IgnoreDepartPointAtClosure) {
       baldr::GraphId tile_id(tile.header->tile_id);
       auto BC = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "C"));
       auto CB = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "B"));
-      bool should_close = (BC.Tile_Base() == tile_id && BC.id() == index) ||
-                          (CB.Tile_Base() == tile_id && CB.id() == index);
+      bool should_close = (BC.tile_base() == tile_id && BC.id() == index) ||
+                          (CB.tile_base() == tile_id && CB.id() == index);
       SetLiveSpeed(current, should_close ? 0 : default_speed);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);

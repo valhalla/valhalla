@@ -64,7 +64,7 @@ TEST(Shortcuts, LoopWithoutShortcut) {
   auto loopEdge = std::get<0>(gurka::findEdgeByNodes(graph_reader, layout, "A", "B"));
   auto shortcut = graph_reader.GetShortcut(loopEdge);
 
-  EXPECT_FALSE(shortcut.Is_Valid()) << "Shortcuts found. Check the map.";
+  EXPECT_FALSE(shortcut.is_valid()) << "Shortcuts found. Check the map.";
 }
 
 TEST(Shortcuts, ShortcutSpeed) {

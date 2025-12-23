@@ -252,7 +252,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
             }
           }
           auto shortcut = reader.GetShortcut(path_info.edgeid);
-          if (shortcut.Is_Valid()) {
+          if (shortcut.is_valid()) {
             add_partial_shortcut(reader, shortcut, costing_options, e);
           }
         } else if (is_first || is_last) { // beginning or end edge
@@ -267,7 +267,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
               e->set_start(is_first ? edge.percent_along() : 0.);
               e->set_end(is_last ? edge.percent_along() : 1.);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
-              if (shortcut.Is_Valid()) {
+              if (shortcut.is_valid()) {
                 add_partial_shortcut(reader, shortcut, costing_options, e);
               }
               break;
@@ -297,7 +297,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
             // TODO: this is an expensive operation, since we need to expand the graph
             // a little, can't we persist this information somehow?
             auto shortcut = reader.GetShortcut(path_info.edgeid);
-            if (shortcut.Is_Valid()) {
+            if (shortcut.is_valid()) {
               add_partial_shortcut(reader, shortcut, costing_options, e);
             }
           }
@@ -553,7 +553,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    if (is_through_point(*destination) && first_edge.Is_Valid()) {
+    if (is_through_point(*destination) && first_edge.is_valid()) {
       remove_path_edges(*destination,
                         [&first_edge](const auto& edge) { return edge.graph_id() != first_edge; });
     }
@@ -774,7 +774,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    if (is_through_point(*origin) && last_edge.Is_Valid()) {
+    if (is_through_point(*origin) && last_edge.is_valid()) {
       remove_path_edges(*origin,
                         [&last_edge](const auto& edge) { return edge.graph_id() != last_edge; });
     }

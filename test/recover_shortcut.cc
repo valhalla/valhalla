@@ -152,9 +152,9 @@ TEST(GetShortcut, check_false_negatives) {
         for (const auto& edge_of_shortcut : edges_of_shortcut) {
           // Resolve the shortcut that the edge belongs to, this must always be valid
           auto shortcut_id = reader.GetShortcut(edge_of_shortcut);
-          EXPECT_TRUE(shortcut_id.Is_Valid());
+          EXPECT_TRUE(shortcut_id.is_valid());
 
-          if (shortcut_id.Is_Valid()) {
+          if (shortcut_id.is_valid()) {
             // The resolved shortcut must always the same as the one we recovered in the first place
             auto directed_shortcut = reader.directededge(shortcut_id);
             EXPECT_TRUE(directed_shortcut->is_shortcut());
@@ -183,7 +183,7 @@ TEST(GetShortcut, check_false_positives) {
         auto shortcut_id = reader.GetShortcut(edge_id);
 
         // Edges that don't belong to any shortcut will lead to invalid shortcut ID and this is fine
-        if (!shortcut_id.Is_Valid()) {
+        if (!shortcut_id.is_valid()) {
           continue;
         }
 

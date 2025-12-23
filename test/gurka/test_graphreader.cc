@@ -35,132 +35,132 @@ TEST(GraphReader, ModifyTilePointerByReference) {
     {
       baldr::graph_tile_ptr tile;
       reader.GetGraphTile(begin_node_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
       reader.GetGraphTile(begin_node_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.GetOpposingEdgeId(edge_id, tile);
-      ASSERT_EQ(opp_edge_id.Tile_Base(), tile->id());
+      ASSERT_EQ(opp_edge_id.tile_base(), tile->id());
       reader.GetOpposingEdgeId(edge_id, tile);
-      ASSERT_EQ(opp_edge_id.Tile_Base(), tile->id());
+      ASSERT_EQ(opp_edge_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       const baldr::DirectedEdge* actual_op_edge;
       reader.GetOpposingEdgeId(edge_id, actual_op_edge, tile);
-      ASSERT_EQ(opp_edge_id.Tile_Base(), tile->id());
+      ASSERT_EQ(opp_edge_id.tile_base(), tile->id());
       ASSERT_EQ(opp_edge, actual_op_edge);
       reader.GetOpposingEdgeId(edge_id, tile);
-      ASSERT_EQ(opp_edge_id.Tile_Base(), tile->id());
+      ASSERT_EQ(opp_edge_id.tile_base(), tile->id());
       ASSERT_EQ(opp_edge, actual_op_edge);
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.GetOpposingEdge(edge_id, tile);
-      ASSERT_EQ(opp_edge_id.Tile_Base(), tile->id());
+      ASSERT_EQ(opp_edge_id.tile_base(), tile->id());
       reader.GetOpposingEdge(edge_id, tile);
-      ASSERT_EQ(opp_edge_id.Tile_Base(), tile->id());
+      ASSERT_EQ(opp_edge_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.GetOpposingEdge(edge, tile);
-      ASSERT_EQ(opp_edge_id.Tile_Base(), tile->id());
+      ASSERT_EQ(opp_edge_id.tile_base(), tile->id());
       reader.GetOpposingEdge(edge, tile);
-      ASSERT_EQ(opp_edge_id.Tile_Base(), tile->id());
+      ASSERT_EQ(opp_edge_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.GetEndNode(edge, tile);
-      ASSERT_EQ(end_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(end_node_id.tile_base(), tile->id());
       reader.GetEndNode(edge, tile);
-      ASSERT_EQ(end_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(end_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.GetBeginNodeId(edge, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
       reader.GetBeginNodeId(edge, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.AreEdgesConnectedForward(edge_id, opp_edge_id, tile);
-      ASSERT_EQ(end_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(end_node_id.tile_base(), tile->id());
       reader.AreEdgesConnectedForward(edge_id, opp_edge_id, tile);
-      ASSERT_EQ(end_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(end_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.nodeinfo(begin_node_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
       reader.nodeinfo(begin_node_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.directededge(edge_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
       reader.directededge(edge_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.GetDirectedEdgeNodes(edge_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
       reader.GetDirectedEdgeNodes(edge_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.edge_endnode(edge_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
       reader.edge_endnode(edge_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.edge_startnode(edge_id, tile);
-      ASSERT_EQ(end_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(end_node_id.tile_base(), tile->id());
       reader.edge_startnode(edge_id, tile);
-      ASSERT_EQ(end_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(end_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.edgeinfo(edge_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
       reader.edgeinfo(edge_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.GetTimezone(begin_node_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
       reader.GetTimezone(begin_node_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
     }
 
     {
       baldr::graph_tile_ptr tile;
       reader.GetIncidents(begin_node_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
       reader.GetIncidents(begin_node_id, tile);
-      ASSERT_EQ(begin_node_id.Tile_Base(), tile->id());
+      ASSERT_EQ(begin_node_id.tile_base(), tile->id());
     }
 
     // swap left and right

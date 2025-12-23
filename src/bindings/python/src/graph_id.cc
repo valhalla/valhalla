@@ -43,14 +43,14 @@ void init_graphid(nb::module_& m) {
       .def("tileid", &vb::GraphId::tileid)
       .def("level", &vb::GraphId::level)
       .def("id", &vb::GraphId::id)
-      .def("Is_Valid", &vb::GraphId::Is_Valid)
-      .def("Tile_Base", &vb::GraphId::Tile_Base)
+      .def("is_valid", &vb::GraphId::is_valid)
+      .def("tile_base", &vb::GraphId::tile_base)
       .def("tile_value", &vb::GraphId::tile_value)
       .def(nb::self + uint64_t())              // operator+(uint64_t)
       .def(nb::self += uint32_t())             // operator+=(uint32_t)
       .def(nb::self == nb::self)               // operator==(const GraphId&)
       .def(nb::self != nb::self)               // operator!=(const GraphId&)
-      .def("__bool__", &vb::GraphId::Is_Valid) // operator bool
+      .def("__bool__", &vb::GraphId::is_valid) // operator bool
       .def("__repr__",
            [](const vb::GraphId& graph_id) { return "<GraphId(" + std::to_string(graph_id) + ")>"; })
       // pickling support auto-provides copy/deepcopy support

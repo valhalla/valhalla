@@ -131,7 +131,7 @@ public:
   }
 
 private:
-  // Must be mutually exclusive, i.e. nodeid.Is_Valid() XOR dest != kInvalidDestination
+  // Must be mutually exclusive, i.e. nodeid.is_valid() XOR dest != kInvalidDestination
   baldr::GraphId nodeid_;
   uint16_t dest_;
 

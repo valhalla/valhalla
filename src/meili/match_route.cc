@@ -65,7 +65,7 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
     : edgeid(the_edgeid), source(the_source), target(the_target),
       first_match_idx(the_first_match_idx), last_match_idx(the_last_match_idx),
       restriction_idx(the_restriction_idx), discontinuity(disconnect) {
-  if (!edgeid.Is_Valid()) {
+  if (!edgeid.is_valid()) {
     throw std::invalid_argument("Invalid edgeid");
   }
 
@@ -116,7 +116,7 @@ bool MergeRoute(const State& source,
   // TODO: why doesnt routing.cc return trivial routes? move this logic there
   // This is route where the source and target are the same location so we make a trivial route
   if (segments.empty()) {
-    assert(target_result.edgeid.Is_Valid());
+    assert(target_result.edgeid.is_valid());
     segments.emplace_back(target_result.edgeid, target_result.distance_along,
                           target_result.distance_along);
   }
@@ -220,7 +220,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
     const MatchResult& match = match_results[curr_idx];
 
     // unmatched or interpolated
-    if (!match.edgeid.Is_Valid() || !match.HasState()) {
+    if (!match.edgeid.is_valid() || !match.HasState()) {
       continue;
     }
 
