@@ -376,7 +376,7 @@ void serialize_edges(const AttributesController& controller,
           writer("elapsed_time", node.cost().elapsed_cost().seconds());
           writer("elapsed_cost", node.cost().elapsed_cost().cost());
         }
-         if (controller(kEdgeEndOsmId)) { 
+        if (controller(kEdgeEndOsmId)) { 
           writer("node_id", edge.end_osmid());
         } 
         if (controller(kNodeAdminIndex)) {
