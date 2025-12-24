@@ -231,7 +231,7 @@ message TripLeg {
     }
 
     oneof has_end_osmid {
-        uint64 end_osmid = 71;
+      uint64 end_osmid = 71;
     }
 
     repeated ConditionalSpeedLimit conditional_speed_limits = 60;
