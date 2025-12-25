@@ -79,6 +79,7 @@ protected:
   void CreateDestinationManeuver(Maneuver& maneuver);
 
   void CreateStartManeuver(Maneuver& maneuver);
+  void AddBssManeuver(Maneuver& maneuver, const DirectionsLeg_Maneuver_Type& type, int node_index);
 
   void InitializeManeuver(Maneuver& maneuver, int node_index);
 
@@ -87,6 +88,8 @@ protected:
   void FinalizeManeuver(Maneuver& maneuver, int node_index);
 
   void SetManeuverType(Maneuver& maneuver, bool none_type_allowed = true);
+  void UpdateBssManeuver(Maneuver& maneuver, int node_index);
+  float bike_share_cost(valhalla::Costing_Type costing_type, int node_index) const;
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver,
                                         EnhancedTripLeg_Edge* prev_edge,
@@ -94,6 +97,8 @@ protected:
 
   DirectionsLeg_Maneuver_CardinalDirection DetermineCardinalDirection(uint32_t heading);
 
+  bool CanRentBikeAtBikeShare(int node_index);
+  bool CanReturnBikeAtBikeShare(int node_index);
   bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_index);
 
   bool IncludeUnnamedPrevEdge(int node_index,
