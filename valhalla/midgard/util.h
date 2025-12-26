@@ -526,8 +526,8 @@ polygon_t to_boundary(const std::unordered_set<uint32_t>& region, const Tiles<Po
  * both loki and in meili
  * */
 struct projector_t {
-  projector_t(const PointLL& ll)
-      : lon_scale(cos(ll.lat() * kRadPerDegD)), lat(ll.lat()), lng(ll.lng()), approx(ll) {
+  projector_t(const PointLL& ll) : lat(ll.lat()), lng(ll.lng()), approx(ll) {
+    lon_scale = approx.GetLngScale();
   }
 
   // non default constructible and move only type
@@ -676,7 +676,13 @@ template <typename numeric_t> bool is_valid(numeric_t value) {
 }
 
 /**
- * Enumerate over a range, providing both index and value.
+ * Find the bounding circle for a container of lat,lng vertices.
+ * @return  Returns a vector with the center lat,lng and radius (meters).
+ */
+template <class container_t>
+std::tuple<PointLL, double> get_bounding_circle(const container_t& shape);
+
+/* Enumerate over a range, providing both index and value.
  * This is a C++20-compatible alternative to C++23's std::views::enumerate.
  *
  * @param range The range to enumerate over

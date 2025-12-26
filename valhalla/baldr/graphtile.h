@@ -3,6 +3,7 @@
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/admininfo.h>
+#include <valhalla/baldr/boundingcircle.h>
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>
@@ -766,6 +767,21 @@ public:
   std::span<GraphId> GetBin(size_t index) const;
 
   /**
+   * Get an iterable list of bounding circles given a bin in the tile
+   * @param  column the bin's column
+   * @param  row the bin's row
+   * @return iterable container of bounding circles that intersect the bin
+   */
+  std::span<DiscretizedBoundingCircle> GetBoundingCircles(size_t column, size_t row) const;
+
+  /**
+   * Get an iterable list of bounding circles given a bin in the tile
+   * @param  index the bin's index in the row major array
+   * @return iterable container of bounding circles that intersect the bin
+   */
+  std::span<DiscretizedBoundingCircle> GetBoundingCircles(size_t index) const;
+
+  /**
    * Get lane connections ending on this edge.
    * @param  idx  GraphId of the directed edge.
    * @return  Returns a list of lane connections ending on this edge.
@@ -1027,6 +1043,10 @@ protected:
   // List of edge graph ids. The list is broken up in bins which have
   // indices in the tile header.
   GraphId* edge_bins_{};
+
+  // List of edge bounding circles. The list is broken up in bins which
+  // share the same indices as the edge bins
+  DiscretizedBoundingCircle* bounding_circles_{};
 
   // Lane connectivity data.
   LaneConnectivity* lane_connectivity_{};
