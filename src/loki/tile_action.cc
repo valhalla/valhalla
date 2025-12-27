@@ -932,12 +932,15 @@ std::string loki_worker_t::render_tile(Api& request) {
   const auto x = options.tile_xyz().x();
   const auto y = options.tile_xyz().y();
   const auto tile_path = detail::mvt_local_path(z, x, y, mvt_cache_dir_);
-  bool is_cached = std::filesystem::exists(tile_path);
   bool cache_allowed = (z >= mvt_cache_min_zoom_) && !mvt_cache_dir_.empty();
 
-  if (is_cached && cache_allowed) {
-    std::ifstream tile_file(tile_path, std::ios::binary);
-    return std::string(std::istreambuf_iterator<char>(tile_file), std::istreambuf_iterator<char>());
+  bool is_cached = false;
+  if (cache_allowed) {
+    is_cached = std::filesystem::exists(tile_path);
+    if (is_cached) {
+      std::ifstream tile_file(tile_path, std::ios::binary);
+      return std::string(std::istreambuf_iterator<char>(tile_file), std::istreambuf_iterator<char>());
+    }
   }
 
   // get lat/lon bbox
@@ -953,15 +956,17 @@ std::string loki_worker_t::render_tile(Api& request) {
   std::string tile_bytes;
   tile.serialize(tile_bytes);
 
-  if (!is_cached && cache_allowed) {
-    // atomically create the file (at least works for multithreading)
+  if (cache_allowed && is_cached) {
+    // atomically create the file
     auto tmp = tile_path;
     tmp += ".tmp_" + std::to_string(getpid());
-
-    static std::mutex m;
-    std::lock_guard<std::mutex> lock(m);
-
-    std::filesystem::create_directories(tile_path.parent_path());
+    try {
+      std::filesystem::create_directories(tile_path.parent_path());
+    } catch (const std::filesystem::filesystem_error& e) {
+      if (e.code() != std::errc::file_exists) {
+        throw;
+      }
+    }
     std::ofstream out(tmp.string(), std::ios::binary);
     out.write(tile_bytes.data(), static_cast<std::streamsize>(tile_bytes.size()));
     out.close();
