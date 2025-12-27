@@ -323,7 +323,7 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
 
     } else {
       opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, endtile);
-      if (!opp_edge_id.Is_Valid()) {
+      if (!opp_edge_id.is_valid()) {
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid, endtile);
