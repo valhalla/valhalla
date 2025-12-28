@@ -24,6 +24,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <random>
 #include <unordered_set>
 
 using namespace valhalla;
@@ -37,6 +38,28 @@ namespace {
  * This is the WGS84 ellipsoid semi-major axis.
  */
 constexpr double kEarthRadiusMeters = 6378137.0;
+
+/**
+ * Make temp file name, mkstemp is POSIX & not implemented on Win
+ *
+ * @param template_name expects to end on XXXXXX (6 x "X")
+ */
+std::string make_temp_name(std::string template_name) {
+  auto pos = template_name.rfind("XXXXXX");
+
+  std::random_device rd;
+  std::mt19937_64 rng((static_cast<uint64_t>(rd()) << 32) ^ static_cast<uint64_t>(rd()));
+
+  static const char table[] = "abcdefghijklmnopqrstuvwxyz"
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                              "0123456789";
+  std::uniform_int_distribution<size_t> dist(0, sizeof(table) - 2);
+
+  for (int i = 0; i < 6; ++i)
+    template_name[pos + i] = table[dist(rng)];
+
+  return template_name;
+}
 
 /**
  * Helper class to build the edges layer with pre-registered keys
@@ -947,7 +970,6 @@ std::string loki_worker_t::render_tile(Api& request) {
   const auto bounds = tile_to_bbox(x, y, z);
 
   // query edges in bbox, omits opposing edges
-  // TODO(nils): can RangeQuery be updated to skip hierarchy levels?
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
   build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
@@ -956,12 +978,12 @@ std::string loki_worker_t::render_tile(Api& request) {
   std::string tile_bytes;
   tile.serialize(tile_bytes);
 
-  if (cache_allowed && is_cached) {
+  if (cache_allowed && !is_cached) {
     // atomically create the file
     auto tmp = tile_path;
-    tmp += ".tmp_" + std::to_string(getpid());
+    tmp += make_temp_name("_XXXXXX.tmp");
     try {
-      std::filesystem::create_directories(tile_path.parent_path());
+      std::filesystem::create_directories(tmp.parent_path());
     } catch (const std::filesystem::filesystem_error& e) {
       if (e.code() != std::errc::file_exists) {
         throw;
