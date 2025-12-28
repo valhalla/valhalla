@@ -100,6 +100,12 @@ std::string serializeStatus(Api& request) {
   }
   status_doc.AddMember("available_actions", actions_list, alloc);
 
+  rapidjson::Value zoom_list(rapidjson::kArrayType);
+  for (const auto& z : request.status().mvt_zoom_levels()) {
+    zoom_list.GetArray().PushBack(rapidjson::Value{}.SetUint(z), alloc);
+  }
+  status_doc.AddMember("mvt_zoom_levels", zoom_list, alloc);
+
   if (request.status().has_has_tiles_case())
     status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()),
                          alloc);

@@ -28,4 +28,5 @@ message Status {
   oneof has_osm_changeset {
     uint64 osm_changeset = 10;
   }
+  repeated uint32 mvt_zoom_levels = 11;
 }
