@@ -2311,11 +2311,11 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "Jätka: <LEVEL>."
       },
       "example_phrases": {
         "0": [
-          "Continue to Level 2."
+          "Jätka 2. tasandile/korrusele."
         ]
       }
     },
