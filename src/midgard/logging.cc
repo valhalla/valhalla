@@ -46,7 +46,9 @@ std::string TimeStamp() {
   assert(ret == static_cast<int>(sizeof(buffer) - 1));
 
   // Remove trailing null terminator added by snprintf.
-  return std::string(buffer).pop_back();
+  std::string result(buffer);
+  result.pop_back();
+  return result;
 }
 
 // the Log levels we support
