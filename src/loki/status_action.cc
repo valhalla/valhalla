@@ -50,6 +50,10 @@ void loki_worker_t::status(Api& request) const {
     auto* action_pbf = status->mutable_available_actions()->Add();
     *action_pbf = Options_Action_Enum_Name(action);
   }
+  for (const auto& z : min_zoom_road_class_) {
+    auto* z_pbf = status->mutable_mvt_zoom_levels()->Add();
+    *z_pbf = z;
+  }
 
   // only return more info if explicitly asked for (can be very expensive)
   if (!request.options().verbose() || !allow_verbose)

@@ -32,6 +32,7 @@
    * ADDED: `timed_predicted_speed` on `/locate` response if location had a date time set [#5714](https://github.com/valhalla/valhalla/pull/5714)
    * CHANGED: renamed `GraphId::Is_Valid()` -> `GraphId::is_valid()` and `GraphId::Tile_Base` -> `GraphId::tile_base` [#5678](https://github.com/valhalla/valhalla/pull/5678)
    * UPDATED: translations from transifex [#5792](https://github.com/valhalla/valhalla/pull/5792)
+   * ADDED: `mvt_zoom_levels` to `/status` responses exposing the config `loki.service_defaults.min_zoom_road_class` [#5788](https://github.com/valhalla/valhalla/pull/5788)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
