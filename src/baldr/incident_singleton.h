@@ -9,6 +9,7 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <ctime>
@@ -31,7 +32,7 @@ protected:
     std::condition_variable signal; // how the watcher tells the main thread its done its first load
     std::mutex mutex;               // for locking on cache operations
     // the actual cache where tiles are stored
-    std::unordered_map<uint64_t, std::shared_ptr<const valhalla::IncidentsTile>> cache;
+    std::unordered_map<uint64_t, std::atomic<std::shared_ptr<const valhalla::IncidentsTile>>> cache;
   };
   // we use a shared_ptr to wrap the state between the watcher thread and the main threads singleton
   // instance. this gives the responsibility to the last living thread to deallocate the state object.
@@ -144,15 +145,16 @@ protected:
       // actually make a spot in the cache synchronously
       try {
         std::unique_lock<std::mutex> lock(state->mutex);
-        found = state->cache.insert({tile_id, {}}).first;
+        found = state->cache.try_emplace(tile_id).first;
       } // if anything went wrong we have to catch it so that the mutex is unlocked
       catch (...) {
         LOG_ERROR("Incident watcher failed to add incident tile to cache");
       }
     }
     // atomically store the tile shared_ptr, could be actually nullptr when there are no incidents
-    std::atomic_store_explicit(&found->second, tile, std::memory_order_release);
-    LOG_DEBUG("Incident watcher " + std::string(tile ? "loaded " : "unloaded ") +
+    found->second.store(std::move(tile), std::memory_order_release);
+    LOG_DEBUG("Incident watcher " +
+              std::string(found->second.load(std::memory_order_acquire) ? "loaded " : "unloaded ") +
               std::to_string(tile_id));
     return true;
   }
@@ -225,7 +227,7 @@ protected:
     state->lock_free.store(!tileset.empty());
     state->cache.reserve(tileset.size());
     for (const auto& tile_id : tileset) {
-      state->cache[tile_id] = {};
+      state->cache.try_emplace(tile_id);
     }
 
     // some setup for continuous operation
@@ -302,7 +304,7 @@ protected:
       // no locking is needed because we don't realloc here we just null out some values
       for (auto entry = state->cache.begin(); entry != state->cache.end(); ++entry) {
         auto found = seen.find(entry->first);
-        if (found == seen.cend() && entry->second) {
+        if (found == seen.cend() && entry->second.load(std::memory_order_acquire)) {
           update_count += update_tile(state, valhalla::baldr::GraphId(entry->first), nullptr, &entry);
         }
       }
@@ -357,7 +359,7 @@ public:
     if (found == singleton.state->cache.cend()) {
       return {};
     }
-    auto tile = std::atomic_load_explicit(&found->second, std::memory_order_acquire);
+    auto tile = found->second.load(std::memory_order_acquire);
     return tile;
   }
 };
