@@ -38,7 +38,7 @@ TEST(ComplexRestriction, WalkViasBuilder) {
 TEST(ComplexRestriction, WriteRead) {
   // Test building a ComplexRestriction and reading back values
   ComplexRestriction r;
-  EXPECT_FALSE(r.from_graphid().Is_Valid())
+  EXPECT_FALSE(r.from_graphid().is_valid())
       << "ComplexRestriction from Id should be invalid with default constructor";
 
   // Test set method (complex restriction builder) and get methods

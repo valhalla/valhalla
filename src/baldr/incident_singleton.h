@@ -281,7 +281,7 @@ protected:
             // if this looks like a tile
             valhalla::baldr::GraphId tile_id;
             if (i->is_regular_file() &&
-                (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid()) {
+                (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).is_valid()) {
               // and if the tile was updated since the last time we scanned we load it
               seen.insert(tile_id);
               try {
