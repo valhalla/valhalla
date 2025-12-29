@@ -1,6 +1,7 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
+#include <array>
 #include <cassert>
 #include <chrono>
 #include <ctime>
@@ -38,16 +39,11 @@ std::string TimeStamp() {
   std::chrono::duration<double> fractional_seconds =
       (tp - std::chrono::system_clock::from_time_t(tt)) + std::chrono::seconds(gmt.tm_sec);
   // format the string
-  std::string buffer("year/mo/dy hr:mn:sc.xxxxxx0");
-  [[maybe_unused]] int ret =
-      snprintf(&buffer.front(), buffer.length(), "%04d/%02d/%02d %02d:%02d:%09.6f",
-               gmt.tm_year + 1900, gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min,
-               fractional_seconds.count());
-  assert(ret == static_cast<int>(buffer.length()) - 1);
-
-  // Remove trailing null terminator added by snprintf.
-  buffer.pop_back();
-  return buffer;
+  std::array<char, 64> buffer{};
+  int ret = snprintf(buffer.data(), buffer.size(), "%04d/%02d/%02d %02d:%02d:%09.6f",
+                     gmt.tm_year + 1900, gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min,
+                     fractional_seconds.count());
+  return std::string(buffer.data(), ret > 0 ? static_cast<size_t>(ret) : 0);
 }
 
 // the Log levels we support
