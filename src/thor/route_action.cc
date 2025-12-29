@@ -383,7 +383,6 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
            &timedep_reverse,
            &bidir_astar,
            &bss_astar,
-           &mmd,
        }) {
     alg->set_interrupt(interrupt);
   }
@@ -393,8 +392,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     return &multi_modal_astar;
   }
 
-  if (routetype == "auto_walk") {
-    return &mmd;
+  if (routetype == "auto_pedestrian") {
+    return &bss_astar;
   }
 
   // Have to use bike share station algorithm

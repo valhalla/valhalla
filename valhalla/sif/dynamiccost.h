@@ -151,7 +151,7 @@ const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingType
     {Costing::taxi, {Costing::taxi}},
     {Costing::auto_, {Costing::auto_}},
     {Costing::bikeshare, {Costing::bikeshare, Costing::pedestrian, Costing::bicycle}},
-    {Costing::auto_walk, {Costing::auto_walk, Costing::pedestrian, Costing::auto_}},
+    {Costing::auto_pedestrian, {Costing::auto_pedestrian, Costing::pedestrian, Costing::auto_}},
 };
 
 const sif::Cost kNoCost(0.0f, 0.0f);

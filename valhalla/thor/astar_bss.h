@@ -72,15 +72,18 @@ public:
 
 protected:
   sif::TravelMode mode_; // Current travel mode
-  uint8_t travel_type_;  // Current travel type
+
+  sif::TravelMode start_mode_; // Start travel mode
+  sif::TravelMode other_mode_; // Not the start travel mode
+  sif::TravelMode end_mode_;   // End travel mode
 
   // A* heuristic
-  AStarHeuristic pedestrian_astarheuristic_;
-  AStarHeuristic bicycle_astarheuristic_;
+  AStarHeuristic start_astarheuristic_;
+  AStarHeuristic end_astarheuristic_;
 
   // Current costing mode
-  sif::cost_ptr_t pedestrian_costing_;
-  sif::cost_ptr_t bicycle_costing_;
+  sif::cost_ptr_t start_costing_;
+  sif::cost_ptr_t other_costing_;
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> edgelabels_;
@@ -88,12 +91,18 @@ protected:
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
 
-  // Edge status. Mark edges that are in adjacency list or settled.
-  EdgeStatus pedestrian_edgestatus_;
-  EdgeStatus bicycle_edgestatus_;
+  // Edge status per costing
+  std::array<EdgeStatus, 2> edge_status_;
+  std::vector<HierarchyLimits> hierarchy_limits_;
 
   // Destinations, id and cost
   std::map<uint64_t, sif::Cost> destinations_;
+
+  // where mode transitions are possible
+  baldr::NodeType mode_transition_;
+
+  // Maximum distance for the walking part
+  uint32_t max_walking_distance{0};
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
@@ -107,20 +116,22 @@ protected:
    * from the end node of any transition edge (so no transition edges are added
    * to the adjacency list or EdgeLabel list). Does not expand transition
    * edges if from_transition is false.
-   * @param  graphreader  Graph tile reader.
-   * @param  node         Graph Id of the node being expanded.
-   * @param  pred         Predecessor edge label (for costing).
-   * @param  pred_idx     Predecessor index into the EdgeLabel list.
-   * @param  from_transition True if this method is called from a transition
-   *                         edge.
-   * @param   dest        Location information of the destination.
+   * @param  graphreader       Graph tile reader.
+   * @param  node              Graph Id of the node being expanded.
+   * @param  pred              Predecessor edge label (for costing).
+   * @param  pred_idx          Predecessor index into the EdgeLabel list.
+   * @param  from_transition   True if this method is called from a transition
+   *                           edge.
+   * @param  from_mode_change  True if this method is called from a mode change
+   * @param  dest              Location information of the destination.
+   * @param  best_path         Current best path as a pair of {distance,cost}
    */
   void ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
                      const sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
-                     const bool from_bss,
+                     const bool from_mode_change,
                      const sif::TravelMode mode,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);

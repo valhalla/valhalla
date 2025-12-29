@@ -32,7 +32,7 @@ TEST(Standalone, ParseParking) {
   EXPECT_EQ(nodeinfo->access(), 2047)
       << "Expected vehicular and pedestrian access , got " << nodeinfo->access();
 
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto_walk", {});
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto_pedestrian", {});
 
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 4);
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).type(),

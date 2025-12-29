@@ -85,7 +85,7 @@ struct expansion_properties_t {
                          const valhalla::TravelMode mode)
       : prev_edgeid(prev_edgeid), status(status), duration(duration), shape(std::move(shape)),
         distance(distance), cost(cost), expansion_type(expansion_type), flow_sources(flow_sources),
-        mode(mode){};
+        mode(mode) {};
 
   // check if status is higher or same – as we will keep track of the latest one
   static bool is_latest_status(Expansion_EdgeStatus current, Expansion_EdgeStatus candidate) {
@@ -175,7 +175,6 @@ std::string thor_worker_t::expansion(Api& request) {
            &timedep_reverse,
            &bidir_astar,
            &bss_astar,
-           &mmd,
        }) {
     alg->set_track_expansion(track_expansion);
   }

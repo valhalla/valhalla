@@ -12,7 +12,7 @@ TEST(Standalone, Utrecht) {
 
   std::string request =
       R"({"locations": [{"lat": 52.105031, "lon": 5.077844}, {"lat": 52.0942903,
-      "lon": 5.1300778}], "costing": "auto_walk", "format": "pbf"})";
+      "lon": 5.1300778}], "costing": "auto_pedestrian", "format": "pbf"})";
   auto r = actor.route(request);
   valhalla::Api response;
 

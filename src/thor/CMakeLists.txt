@@ -8,7 +8,6 @@ set(sources
   dijkstras.cc
   matrix_action.cc
   multimodal.cc
-  multimodal_drive.cc
   route_action.cc
   timedistancebssmatrix.cc
   timedistancematrix.cc
