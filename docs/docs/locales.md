@@ -46,8 +46,7 @@ Czech `aliases` entry example:
 4. Do not translate the JSON keys or phrase tags. An example using the ramp instruction:
 ![Alt text](images/do_not_translate.png)
 
-5. Please translate the JSON values. As needed, reorder the phrase words and tags - the tags must remain in the phrase. An example using the ramp instruction:
-![Alt text](images/translate.png)
+5. Please translate the JSON values. As needed, reorder the phrase words and tags - the tags must remain in the phrase. **Do not update `example_phrases`!** We want it stay English.
 
 6. Run `make check` to verify the tests pass OR move on to step#7 and we can help verify.
 
