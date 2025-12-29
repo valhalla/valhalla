@@ -37,18 +37,17 @@ std::string TimeStamp() {
   get_gmtime(&tt, &gmt);
   std::chrono::duration<double> fractional_seconds =
       (tp - std::chrono::system_clock::from_time_t(tt)) + std::chrono::seconds(gmt.tm_sec);
-  // format the string
-  char buffer[64]; // year/mo/dy hr:mn:sc.xxxxxx0
+  // format the string 
+  // try to suppress warging truncated format string
+  char buffer[64]; // year/mo/dy hr:mn:sc.xxxxxx0 
   [[maybe_unused]] int ret =
       snprintf(buffer, sizeof(buffer), "%04d/%02d/%02d %02d:%02d:%09.6f",
                gmt.tm_year + 1900, gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min,
                fractional_seconds.count());
   assert(ret == static_cast<int>(sizeof(buffer) - 1));
 
-  // Remove trailing null terminator added by snprintf.
-  std::string result(buffer);
-  result.pop_back();
-  return result;
+  // conversion to string and return
+  return std::string(std::string_view(buffer));
 }
 
 // the Log levels we support
