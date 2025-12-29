@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: Fix `truncate error` in `midgard/loggin.cc` [#5789](https://github.com/valhalla/valhalla/pull/5789)
    * FIXED: remove `libgeotiff` from pkg-config file `Requires` [#5737](https://github.com/valhalla/valhalla/pull/5737) 
    * FIXED: Fix + prefix handling in to_int/to_float utilities [#5746](https://github.com/valhalla/valhalla/pull/5746)
    * FIXED: Use a unique target name for generating symlinks. Fixes #5751. [#5752](https://github.com/valhalla/valhalla/pull/5752)
