@@ -76,8 +76,8 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
   float range = kBucketCount * bucketsize;
   adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
   std::for_each(edge_status_.begin(), edge_status_.end(), [](auto& status) { status.clear(); });
-  hierarchy_limits_ =
-      (start_mode_ == end_mode_ ? start_costing_ : other_costing_)->GetHierarchyLimits();
+  hierarchy_limits_[0] = start_costing_->GetHierarchyLimits();
+  hierarchy_limits_[1] = other_costing_->GetHierarchyLimits();
 }
 
 // Expand from the node along the forward search path. Immediately expands
@@ -232,11 +232,12 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
   }
   // Handle transitions - expand from the end node of each transition
   if (!from_transition && nodeinfo->transition_count() > 0) {
+    auto& hierarchy_limits = hierarchy_limits_[static_cast<size_t>(current_mode != start_mode_)];
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (current_costing->UseHierarchyLimits() &&
           (!trans->up() &&
-           StopExpanding(hierarchy_limits_[trans->endnode().level()], pred.distance()))) {
+           StopExpanding(hierarchy_limits[trans->endnode().level()], pred.distance()))) {
         continue;
       }
       ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, from_mode_change,

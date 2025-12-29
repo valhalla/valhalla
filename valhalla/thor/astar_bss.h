@@ -93,7 +93,7 @@ protected:
 
   // Edge status per costing
   std::array<EdgeStatus, 2> edge_status_;
-  std::vector<HierarchyLimits> hierarchy_limits_;
+  std::array<std::vector<HierarchyLimits>, 2> hierarchy_limits_;
 
   // Destinations, id and cost
   std::map<uint64_t, sif::Cost> destinations_;
