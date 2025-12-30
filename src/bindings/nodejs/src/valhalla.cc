@@ -32,6 +32,18 @@ vt::actor_t* GetThreadLocalActor(const boost::property_tree::ptree* config) {
   return it->second.get();
 }
 
+bool IsPbfFormat(const std::string& request) {
+  try {
+    boost::property_tree::ptree pt;
+    std::stringstream stream(request);
+    rapidjson::read_json(stream, pt);
+    auto format = pt.get_optional<std::string>("format");
+    return format && *format == "pbf";
+  } catch (...) {
+    return false;
+  }
+}
+
 const boost::property_tree::ptree configure(const std::string& config) {
   boost::property_tree::ptree pt;
   try {
@@ -60,9 +72,11 @@ public:
                       const boost::property_tree::ptree* config,
                       ActorMethodFunction method,
                       const std::string& request,
-                      const std::string& method_name)
+                      const std::string& method_name,
+                      bool return_binary = false)
       : Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), config_(config),
-        method_(method), request_(request), method_name_(method_name) {
+        method_(method), request_(request), method_name_(method_name),
+        return_binary_(return_binary) {
   }
 
   Napi::Promise GetPromise() {
@@ -80,7 +94,12 @@ protected:
   }
 
   void OnOK() override {
-    deferred_.Resolve(Napi::String::New(Env(), result_));
+    if (return_binary_) {
+      auto buffer = Napi::Buffer<char>::Copy(Env(), result_.data(), result_.size());
+      deferred_.Resolve(buffer);
+    } else {
+      deferred_.Resolve(Napi::String::New(Env(), result_));
+    }
   }
 
   void OnError(const Napi::Error& e) override {
@@ -94,6 +113,7 @@ private:
   std::string request_;
   std::string method_name_;
   std::string result_;
+  bool return_binary_;
 };
 
 class Actor : public Napi::ObjectWrap<Actor> {
@@ -157,14 +177,31 @@ private:
 
     std::string request = info[0].As<Napi::String>().Utf8Value();
 
-    // we don't need to delete it, it will be handled by Node
     auto* worker = new ValhallaAsyncWorker(env, &config_, method, request, method_name);
     worker->Queue();
     return worker->GetPromise();
   }
 
+  Napi::Value CreateAsyncRequestWithFormat(const Napi::CallbackInfo& info,
+                                          ValhallaAsyncWorker::ActorMethodFunction method,
+                                          const std::string& method_name) {
+    Napi::Env env = info.Env();
+
+    if (info.Length() < 1 || !info[0].IsString()) {
+      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    std::string request = info[0].As<Napi::String>().Utf8Value();
+    bool return_binary = IsPbfFormat(request);
+
+    auto* worker = new ValhallaAsyncWorker(env, &config_, method, request, method_name, return_binary);
+    worker->Queue();
+    return worker->GetPromise();
+  }
+
   Napi::Value Route(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(
+    return CreateAsyncRequestWithFormat(
         info, [](vt::actor_t* actor, const std::string& request) { return actor->route(request); },
         "Route");
   }
@@ -176,7 +213,7 @@ private:
   }
 
   Napi::Value Matrix(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(
+    return CreateAsyncRequestWithFormat(
         info, [](vt::actor_t* actor, const std::string& request) { return actor->matrix(request); },
         "Matrix");
   }
@@ -191,21 +228,21 @@ private:
   }
 
   Napi::Value Isochrone(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(
+    return CreateAsyncRequestWithFormat(
         info,
         [](vt::actor_t* actor, const std::string& request) { return actor->isochrone(request); },
         "Isochrone");
   }
 
   Napi::Value TraceRoute(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(
+    return CreateAsyncRequestWithFormat(
         info,
         [](vt::actor_t* actor, const std::string& request) { return actor->trace_route(request); },
         "TraceRoute");
   }
 
   Napi::Value TraceAttributes(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(
+    return CreateAsyncRequestWithFormat(
         info,
         [](vt::actor_t* actor, const std::string& request) {
           return actor->trace_attributes(request);
@@ -229,7 +266,7 @@ private:
   }
 
   Napi::Value Expansion(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(
+    return CreateAsyncRequestWithFormat(
         info,
         [](vt::actor_t* actor, const std::string& request) { return actor->expansion(request); },
         "Expansion");

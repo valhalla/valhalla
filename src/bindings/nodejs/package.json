@@ -14,6 +14,15 @@
       "types": "./index.d.ts"
     }
   },
+  "files": [
+    "index.js",
+    "index.mjs",
+    "index.d.ts",
+    "lib/",
+    "bin/",
+    "proto/",
+    "README.md"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

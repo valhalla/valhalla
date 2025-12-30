@@ -26,7 +26,11 @@ class Actor {
         if (typeof query === 'string') {
             return this.actor.route(query);
         }
-        return JSON.parse(await this.actor.route(JSON.stringify(query)));
+        const result = await this.actor.route(JSON.stringify(query));
+        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
+            return result;
+        }
+        return JSON.parse(result);
     }
 
     async locate(query) {
@@ -40,7 +44,11 @@ class Actor {
         if (typeof query === 'string') {
             return this.actor.matrix(query);
         }
-        return JSON.parse(await this.actor.matrix(JSON.stringify(query)));
+        const result = await this.actor.matrix(JSON.stringify(query));
+        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
+            return result;
+        }
+        return JSON.parse(result);
     }
 
     async optimizedRoute(query) {
@@ -54,21 +62,33 @@ class Actor {
         if (typeof query === 'string') {
             return this.actor.isochrone(query);
         }
-        return JSON.parse(await this.actor.isochrone(JSON.stringify(query)));
+        const result = await this.actor.isochrone(JSON.stringify(query));
+        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
+            return result;
+        }
+        return JSON.parse(result);
     }
 
     async traceRoute(query) {
         if (typeof query === 'string') {
             return this.actor.traceRoute(query);
         }
-        return JSON.parse(await this.actor.traceRoute(JSON.stringify(query)));
+        const result = await this.actor.traceRoute(JSON.stringify(query));
+        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
+            return result;
+        }
+        return JSON.parse(result);
     }
     
     async traceAttributes(query) {
         if (typeof query === 'string') {
             return this.actor.traceAttributes(query);
         }
-        return JSON.parse(await this.actor.traceAttributes(JSON.stringify(query)));
+        const result = await this.actor.traceAttributes(JSON.stringify(query));
+        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
+            return result;
+        }
+        return JSON.parse(result);
     }
 
     async height(query) {
@@ -89,7 +109,11 @@ class Actor {
         if (typeof query === 'string') {
             return this.actor.expansion(query);
         }
-        return JSON.parse(await this.actor.expansion(JSON.stringify(query)));
+        const result = await this.actor.expansion(JSON.stringify(query));
+        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
+            return result;
+        }
+        return JSON.parse(result);
     }
 
     async centroid(query) {
