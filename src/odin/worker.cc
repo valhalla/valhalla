@@ -32,7 +32,7 @@ std::string odin_worker_t::narrate(Api& request) const {
   // get some annotated directions
   try {
     odin::DirectionsBuilder().Build(request, markup_formatter_);
-  } catch (...) { throw valhalla_exception_t{202}; }
+  } catch (const std::exception& e) { throw valhalla_exception_t{202, e.what()}; }
 
   // serialize those to the proper format
   return tyr::serializeDirections(request);

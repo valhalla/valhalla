@@ -69,7 +69,8 @@ void loki_worker_t::route(Api& request) {
   auto connectivity_level = TileHierarchy::levels().back();
   uint32_t connectivity_radius = 0;
   // Validate walking distances (make sure they are in the accepted range)
-  if (costing_name == "multimodal" || costing_name == "transit") {
+  if (costing_name == "multimodal" || costing_name == "transit" ||
+      costing_name == "auto_pedestrian") {
     auto& ped_opts = *options.mutable_costings()->find(Costing::pedestrian)->second.mutable_options();
     if (!ped_opts.has_transit_start_end_max_distance_case())
       ped_opts.set_transit_start_end_max_distance(min_transit_walking_dis);
@@ -89,7 +90,9 @@ void loki_worker_t::route(Api& request) {
       throw valhalla_exception_t{156, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " +
                                           std::to_string(max_transit_walking_dis) + " (Meters)"};
     }
-    connectivity_level = TileHierarchy::GetTransitLevel();
+    if (costing_name != "auto_pedestrian") {
+      connectivity_level = TileHierarchy::GetTransitLevel();
+    }
     connectivity_radius = ped_opts.transit_start_end_max_distance();
   }
 
@@ -108,7 +111,29 @@ void loki_worker_t::route(Api& request) {
       locations.back().min_inbound_reach_ = 0;
     }
 
-    const auto projections = search_.search(locations, costing);
+    std::unordered_map<baldr::Location, PathLocation> projections;
+
+    // in case of auto_walk costing, we 1) only allow two locations
+    // and 2) need two different costings for the start and end location.
+    // Search::search does not allow for multiple costings per location so instead
+    // we bite the bullet and call search twice, merging the results.
+    // TODO(chris): right now we hash location based purely on ll, but what if the user wants to start
+    // and end at the same location but with different costing? What does that even mean? Find the
+    // nearest parking and walk back to where I am? Seems like a plausible use case...
+    if (costing_name == "auto_pedestrian") {
+      std::vector<baldr::Location> start_loc(locations.begin(), locations.begin() + 1);
+      auto start_projection = search_.search(start_loc, costing);
+      for (const auto& [loc, path_loc] : start_projection) {
+        projections.insert({loc, path_loc});
+      }
+      std::vector<baldr::Location> end_loc(locations.end() - 1, locations.end());
+      auto end_projection = search_.search(end_loc, costing);
+      for (const auto& [loc, path_loc] : end_projection) {
+        projections.insert({loc, path_loc});
+      }
+    } else {
+      projections = search_.search(locations, costing);
+    }
     for (size_t i = 0; i < locations_end; ++i) {
       const auto& correlated = projections.at(locations[i]);
       PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);
