@@ -77,4 +77,3 @@ foreach(PROTO_FILE ${PROTO_FILES})
 endforeach()
 
 message(STATUS "Node.js bindings configured successfully")
-message(STATUS "Proto files will be copied to ${CMAKE_CURRENT_BINARY_DIR}/proto")
