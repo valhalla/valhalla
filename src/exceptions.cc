@@ -84,6 +84,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {172, {172, "Exceeded breakage distance for all pairs", 400, HTTP_400, OSRM_BREAKAGE_EXCEEDED, "too_large_breakage_distance"}},
     {173, {173, "Failed to parse line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},
     {174, {174, "Invalid tile coordinates", 400, HTTP_400, OSRM_INVALID_VALUE, "tile_coords_invalid"}},
+    {175, {175, "Exceeded max zoom level of", 400, HTTP_400, OSRM_INVALID_VALUE, "tile_zoom_invalid"}},
     {199, {199, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},

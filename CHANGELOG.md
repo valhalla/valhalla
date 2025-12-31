@@ -30,8 +30,8 @@
    * CHANGED: upgraded tz submodule to 2025c [#5766](https://github.com/valhalla/valhalla/pull/5766)
    * FIXED: Omit debug symbols in docker image [#5777](https://github.com/valhalla/valhalla/pull/5777)
    * ADDED: `timed_predicted_speed` on `/locate` response if location had a date time set [#5714](https://github.com/valhalla/valhalla/pull/5714)
-   * CHANGED: renamed `GraphId::Is_Valid()` -> `GraphId::is_valid()` and `GraphId::Tile_Base` -> `GraphId::tile_base` [#5678](https://github.com/valhalla/valhalla/pull/5678)
-   * UPDATED: translations from transifex [#5792](https://github.com/valhalla/valhalla/pull/5792)
+   * CHANGED: renamed `GraphId::Is_Valid()` -> `GraphId::is_valid()` and `GraphId::Tile_Base` -> `GraphId::tile_base` [#5678](https://github.com/valhalla/valhalla/pull/5678)   * UPDATED: translations from transifex [#5792](https://github.com/valhalla/valhalla/pull/5792)
+   * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
