@@ -68,7 +68,8 @@
       "street_side_tolerance": 5,
       "street_side_max_distance": 1000,
       "heading_tolerance": 60,
-      "min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14]
+      "mvt_min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14],
+      "mvt_cache_min_zoom": 11
     },
     "logging": {
       "type": "std_out",

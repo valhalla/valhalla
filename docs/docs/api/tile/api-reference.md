@@ -12,7 +12,7 @@ We support the usual GET & POST with the common "Slippy Map"/XYZ request pattern
 
 | Option | Description |
 | :------------------ | :----------- |
-| `tile.z` | The zoom level, max 30. Which zoom levels render which road classes depends on the `loki.service_defaults.min_zoom_road_class` server configuration. |
+| `tile.z` | The zoom level, max 30. Which zoom levels render which road classes depends on the `loki.service_defaults.mvt_min_zoom_road_class` server configuration. |
 | `tile.x` | The "slippy map" X coordinate. |
 | `tile.y` | The "slippy map" Y coordinate. |
 | `tile_options.return_shortcuts` |  Whether the response contains shortcut edges. Default `false`. |

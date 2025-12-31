@@ -218,20 +218,21 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   // get /tile parameters
   size_t i = 0;
   const auto max_road_classes = min_zoom_road_class_.size();
-  for (const auto& zoom : config.get_child("loki.service_defaults.min_zoom_road_class")) {
+  for (const auto& zoom : config.get_child("loki.service_defaults.mvt_min_zoom_road_class")) {
     if (i >= max_road_classes) {
       break;
     }
     min_zoom_road_class_[i] = zoom.second.get_value<uint32_t>();
+    if (i > 0 && min_zoom_road_class_[i] < min_zoom_road_class_[i - 1]) {
+      throw std::runtime_error("mvt_min_zoom_road_class doesn't accept descending zoom levels");
+    }
     ++i;
   }
   if (i != max_road_classes) {
     throw std::runtime_error(
-        std::format("min_zoom_road_class out of bounds, expected {} elements but got {}",
+        std::format("mvt_min_zoom_road_class out of bounds, expected {} elements but got {}",
                     max_road_classes, i));
   }
-  // Compute overall minimum zoom level (minimum of all road class zooms)
-  min_zoom_ = *std::min_element(min_zoom_road_class_.begin(), min_zoom_road_class_.end());
 
   // Build max_locations and max_distance maps
   for (const auto& kv : config.get_child("service_limits")) {
@@ -306,7 +307,11 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
-  candidate_query_cache_size = config.get<size_t>("meili.grid.cache_size");
+  candidate_query_cache_size_ = config.get<size_t>("meili.grid.cache_size");
+  mvt_cache_dir_ = config.get<std::string>("loki.service_defaults.mvt_cache_dir", "");
+  if (!mvt_cache_dir_.empty() && !std::filesystem::exists(mvt_cache_dir_))
+    std::filesystem::create_directory(mvt_cache_dir_);
+  mvt_cache_min_zoom_ = config.get<uint32_t>("loki.service_defaults.mvt_cache_min_zoom");
 
   // signal that the worker started successfully
   started();
@@ -317,7 +322,7 @@ void loki_worker_t::cleanup() {
   if (reader->OverCommitted()) {
     reader->Trim();
   }
-  if (candidate_query_.size() > candidate_query_cache_size) {
+  if (candidate_query_.size() > candidate_query_cache_size_) {
     candidate_query_.Clear();
   }
 }
