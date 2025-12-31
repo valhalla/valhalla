@@ -13,7 +13,7 @@ class Actor {
     constructor(config) {
         if (typeof config !== 'string') {
             config = JSON.stringify(config);
-        } 
+        }
         this.actor = new valhalla.Actor(config);
     }
 
@@ -22,120 +22,89 @@ class Actor {
         return new Actor(config);
     }
 
-    async route(query) {
-        if (typeof query === 'string') {
-            return this.actor.route(query);
+    async _callActor(method, query) {
+        let request = query;
+        let returnBinary = false;
+
+        if (typeof query !== 'string') {
+            request = JSON.stringify(query);
+            if (query.format === 'pbf' || query.format === 'osmc') {
+                returnBinary = true;
+            }
+        } else {
+            try {
+                const parsed = JSON.parse(query);
+                if (parsed.format === 'pbf' || parsed.format === 'osmc') {
+                    returnBinary = true;
+                }
+            } catch (e) {
+                // If it's not valid JSON, let the C++ actor handle the error
+            }
         }
-        const result = await this.actor.route(JSON.stringify(query));
-        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
-            return result;
+
+        const result = await this.actor[method](request, returnBinary);
+
+        if (returnBinary) {
+            return result; // It's a Buffer
         }
+
+        // It's a JSON string, parse it to Object
         return JSON.parse(result);
+    }
+
+    async route(query) {
+        return this._callActor('route', query);
     }
 
     async locate(query) {
-        if (typeof query === 'string') {
-            return this.actor.locate(query);
-        }
-        return JSON.parse(await this.actor.locate(JSON.stringify(query)));
+        return this._callActor('locate', query);
     }
 
     async matrix(query) {
-        if (typeof query === 'string') {
-            return this.actor.matrix(query);
-        }
-        const result = await this.actor.matrix(JSON.stringify(query));
-        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
-            return result;
-        }
-        return JSON.parse(result);
+        return this._callActor('matrix', query);
     }
 
     async optimizedRoute(query) {
-        if (typeof query === 'string') {
-            return this.actor.optimizedRoute(query);
-        }
-        return JSON.parse(await this.actor.optimizedRoute(JSON.stringify(query)));
+        return this._callActor('optimizedRoute', query);
     }
-    
+
     async isochrone(query) {
-        if (typeof query === 'string') {
-            return this.actor.isochrone(query);
-        }
-        const result = await this.actor.isochrone(JSON.stringify(query));
-        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
-            return result;
-        }
-        return JSON.parse(result);
+        return this._callActor('isochrone', query);
     }
 
     async traceRoute(query) {
-        if (typeof query === 'string') {
-            return this.actor.traceRoute(query);
-        }
-        const result = await this.actor.traceRoute(JSON.stringify(query));
-        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
-            return result;
-        }
-        return JSON.parse(result);
+        return this._callActor('traceRoute', query);
     }
-    
+
     async traceAttributes(query) {
-        if (typeof query === 'string') {
-            return this.actor.traceAttributes(query);
-        }
-        const result = await this.actor.traceAttributes(JSON.stringify(query));
-        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
-            return result;
-        }
-        return JSON.parse(result);
+        return this._callActor('traceAttributes', query);
     }
 
     async height(query) {
-        if (typeof query === 'string') {
-            return this.actor.height(query);
-        }
-        return JSON.parse(await this.actor.height(JSON.stringify(query)));
+        return this._callActor('height', query);
     }
 
     async transitAvailable(query) {
-        if (typeof query === 'string') {
-            return this.actor.transitAvailable(query);
-        }
-        return JSON.parse(await this.actor.transitAvailable(JSON.stringify(query)));
+        return this._callActor('transitAvailable', query);
     }
 
     async expansion(query) {
-        if (typeof query === 'string') {
-            return this.actor.expansion(query);
-        }
-        const result = await this.actor.expansion(JSON.stringify(query));
-        if (query.format === 'pbf' || Buffer.isBuffer(result)) {
-            return result;
-        }
-        return JSON.parse(result);
+        return this._callActor('expansion', query);
     }
 
     async centroid(query) {
-        if (typeof query === 'string') {
-            return this.actor.centroid(query);
-        }
-        return JSON.parse(await this.actor.centroid(JSON.stringify(query)));
+        return this._callActor('centroid', query);
     }
-    
-    
+
     async status(query) {
-        if (typeof query === 'string') {
-            return this.actor.status(query);
-        }
-        return JSON.parse(await this.actor.status(JSON.stringify(query)));
+        return this._callActor('status', query);
     }
-    
+
     async tile(query) {
+        // Tile always returns binary (MVT)
         if (typeof query === 'string') {
             return this.actor.tile(query);
         }
-        // tile returns raw binary data (MVT), not JSON
         return this.actor.tile(JSON.stringify(query));
     }
 }
