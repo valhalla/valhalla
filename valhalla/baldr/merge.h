@@ -123,7 +123,7 @@ void merge(TileSet& tiles,
           // invalid if the end node tile is null (as in a regional extract)
           auto end_nodes = reader.GetDirectedEdgeNodes(tile, edge);
           path p(segment(end_nodes.first, edge_id, end_nodes.second));
-          if (p.m_start.Is_Valid()) {
+          if (p.m_start.is_valid()) {
             func(p);
           }
         }

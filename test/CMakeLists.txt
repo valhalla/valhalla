@@ -67,6 +67,23 @@ if (ENABLE_GEOTIFF)
   endif()
 endif()
 
+# optionally install the test library as well
+if (INSTALL_TEST_LIB)
+  install(TARGETS valhalla_test
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT development)
+
+  install(FILES ${TEST_HDRS}
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
+    COMPONENT development)
+endif()
+
+
+# stop if the user just wants the library
+if (NOT ENABLE_TESTS)
+  return()
+endif()
+
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgeinfo edgestatus ellipse encode
@@ -441,15 +458,4 @@ add_custom_target(tests DEPENDS ${tests} ${cost_tests} ${tyr_tests})
 set_target_properties(tests PROPERTIES FOLDER "Tests")
 add_subdirectory(gurka)
 add_subdirectory(scripts)
-
-# optionally install the test library as well
-if (INSTALL_TEST_LIB)
-  install(TARGETS valhalla_test
-    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT development)
-
-  install(FILES ${TEST_HDRS}
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
-    COMPONENT development)
-endif()
 
