@@ -56,7 +56,8 @@
       "transit_available",
       "expansion",
       "centroid",
-      "status"
+      "status",
+      "tile"
     ],
     "use_connectivity": true,
     "service_defaults": {
@@ -66,7 +67,9 @@
       "node_snap_tolerance": 5,
       "street_side_tolerance": 5,
       "street_side_max_distance": 1000,
-      "heading_tolerance": 60
+      "heading_tolerance": 60,
+      "mvt_min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14],
+      "mvt_cache_min_zoom": 11
     },
     "logging": {
       "type": "std_out",
@@ -311,6 +314,8 @@
     "max_timedep_distance": 500000,
     "max_alternates": 2,
     "max_exclude_polygons_length": 10000,
+    "min_linear_cost_factor": 1,
+    "max_linear_cost_edges": 50000,
     "max_distance_disable_hierarchy_culling": 0,
     "hierarchy_limits": {
       "allow_modification": false,

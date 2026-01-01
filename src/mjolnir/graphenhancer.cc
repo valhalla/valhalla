@@ -158,7 +158,7 @@ void GetTurnTypes(const DirectedEdge& directededge,
 
   // Get the tile at the end node. and find inbound heading of the candidate
   // edge to the end node.
-  if (tile->id() != directededge.endnode().Tile_Base()) {
+  if (tile->id() != directededge.endnode().tile_base()) {
     lock.lock();
     tile = reader.GetGraphTile(directededge.endnode());
     lock.unlock();
@@ -491,11 +491,11 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdge& directed
     const GraphId expandnode = *expandset.cbegin();
     expandset.erase(expandset.begin());
     visitedset.insert(expandnode);
-    if (expandnode.Tile_Base() != prior_tile) {
+    if (expandnode.tile_base() != prior_tile) {
       lock.lock();
       tile = reader.GetGraphTile(expandnode);
       lock.unlock();
-      prior_tile = expandnode.Tile_Base();
+      prior_tile = expandnode.tile_base();
     }
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
@@ -561,11 +561,11 @@ bool IsNotThruEdge(GraphReader& reader,
     // item.
     const GraphId expandnode = expandset[expand_pos++];
     visitedset.insert(expandnode);
-    if (expandnode.Tile_Base() != prior_tile) {
+    if (expandnode.tile_base() != prior_tile) {
       lock.lock();
       tile = reader.GetGraphTile(expandnode);
       lock.unlock();
-      prior_tile = expandnode.Tile_Base();
+      prior_tile = expandnode.tile_base();
     }
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
@@ -636,7 +636,7 @@ void SetStopYieldSignInfo(const graph_tile_ptr& start_tile,
   // Get the tile at the startnode
   graph_tile_ptr tile = start_tile;
   // Get the tile at the end node
-  if (tile->id() != directededge.endnode().Tile_Base()) {
+  if (tile->id() != directededge.endnode().tile_base()) {
     lock.lock();
     tile = reader.GetGraphTile(directededge.endnode());
     lock.unlock();
@@ -769,7 +769,7 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
 
   // Get the tile at the end node. and find inbound heading of the candidate
   // edge to the end node.
-  if (tile->id() != directededge.endnode().Tile_Base()) {
+  if (tile->id() != directededge.endnode().tile_base()) {
     lock.lock();
     tile = reader.GetGraphTile(directededge.endnode());
     lock.unlock();
@@ -1113,7 +1113,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Get the tile at the end node
         graph_tile_ptr endnodetile;
-        if (tile->id() == directededge.endnode().Tile_Base()) {
+        if (tile->id() == directededge.endnode().tile_base()) {
           endnodetile = tile;
         } else {
           lock.lock();
@@ -1175,7 +1175,7 @@ void enhance(const boost::property_tree::ptree& pt,
         // Get the tile at the end node
         graph_tile_ptr endnodetile;
         const Admin* admin = nullptr;
-        if (tile->id() == directededge.endnode().Tile_Base()) {
+        if (tile->id() == directededge.endnode().tile_base()) {
           end_admin_index = tile->node(directededge.endnode().id())->admin_index();
           admin = tile->admin(end_admin_index);
         } else {
@@ -1353,8 +1353,10 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Update access restrictions (update weight units)
         if (directededge.access_restriction()) {
-          auto restrictions =
-              tilebuilder->GetAccessRestrictions(nodeinfo.edge_index() + j, kAllAccess);
+          auto restrictions_span = tilebuilder->GetAccessRestrictions(nodeinfo.edge_index() + j);
+
+          std::vector<AccessRestriction> restrictions{restrictions_span.begin(),
+                                                      restrictions_span.end()};
 
           // Convert any US weight values from short ton (U.S. customary)
           // to metric and add to the tile's access restriction list

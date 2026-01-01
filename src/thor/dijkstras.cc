@@ -186,15 +186,16 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     auto reader_getter = [&]() { return baldr::LimitedGraphReader(graphreader); };
     if (FORWARD) {
       transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
-      newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time, flow_sources) +
+      newcost = pred.cost() +
+                costing_->EdgeCost(directededge, edgeid, tile, offset_time, flow_sources) +
                 transition_cost;
     } else {
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                           opp_pred_edge, t2, pred.edgeid(), reader_getter,
                                           pred.has_measured_speed(), pred.internal_turn());
-      newcost =
-          pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources) + transition_cost;
+      newcost = pred.cost() + costing_->EdgeCost(opp_edge, oppedgeid, t2, offset_time, flow_sources) +
+                transition_cost;
     }
     uint32_t path_dist = pred.path_distance() + directededge->length();
 
@@ -442,7 +443,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
   uint32_t operator_id = pred.transit_operator();
   if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
     // Get the transfer penalty when changing stations
-    if (mode_ == travel_mode_t::kPedestrian && prior_stop.Is_Valid() && has_transit) {
+    if (mode_ == travel_mode_t::kPedestrian && prior_stop.is_valid() && has_transit) {
       transfer_cost = tc->TransferCost();
     }
 
@@ -598,7 +599,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
         continue;
       }
 
-      Cost c = pc->EdgeCost(directededge, tile);
+      Cost c = pc->EdgeCost(directededge, edgeid, tile);
       c.cost *= pc->GetModeFactor();
       newcost += c;
     }
@@ -627,7 +628,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 
     // Test if exceeding maximum transfer walking distance
     // TODO: transfer distance != walking distance! (one more label member?)
-    if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().Is_Valid() &&
+    if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().is_valid() &&
         walking_distance > max_transfer_distance_) {
       continue;
     }
@@ -790,14 +791,15 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Get the opposing directed edge, continue if we cannot get it
       graph_tile_ptr opp_tile = nullptr;
       GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_tile);
-      if (!opp_edge_id.Is_Valid()) {
+      if (!opp_edge_id.is_valid()) {
         continue;
       }
 
       // Get cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, time_info, flow_sources) *
-                  (1.0f - edge.percent_along());
+      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                            edge.percent_along(), 1.f);
+
       // Get path distance
       auto path_dist = directededge->length() * (1 - edge.percent_along());
 
@@ -886,8 +888,8 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       uint8_t flow_sources;
-      Cost cost =
-          costing->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();
+      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources, 0.f,
+                                            edge.percent_along());
       // Get the path distance
       auto path_dist = directededge->length() * edge.percent_along();
 
@@ -976,8 +978,7 @@ void Dijkstras::SetOriginLocationsMultiModal(
       }
 
       // Get cost
-      Cost cost = costing->EdgeCost(directededge, endtile) * (1.0f - edge.percent_along());
-
+      Cost cost = costing->PartialEdgeCost(directededge, edgeid, tile, edge.percent_along(), 1.0f);
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       cost.cost += edge.distance();

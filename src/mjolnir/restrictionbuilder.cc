@@ -38,7 +38,7 @@ GraphId GetOpposingEdge(GraphReader& reader,
                         const DirectedEdge* edge) {
   GraphId end_node = edge->endnode();
   auto end_node_tile = tile;
-  if (end_node_tile->id() != end_node.Tile_Base()) {
+  if (end_node_tile->id() != end_node.tile_base()) {
     lock.lock();
     end_node_tile = reader.GetGraphTile(end_node);
     lock.unlock();
@@ -174,7 +174,7 @@ bool ExpandFromNode(GraphReader& reader,
   }
 
   auto tile = prev_tile;
-  if (tile->id() != current_node.Tile_Base()) {
+  if (tile->id() != current_node.tile_base()) {
     lock.lock();
     tile = reader.GetGraphTile(current_node);
     lock.unlock();
@@ -194,7 +194,7 @@ bool ExpandFromNode(GraphReader& reader,
     const NodeTransition* trans = tile->transition(node_info->transition_index() + k);
 
     graph_tile_ptr trans_tile = tile;
-    if (trans_tile->id() != trans->endnode().Tile_Base()) {
+    if (trans_tile->id() != trans->endnode().tile_base()) {
       lock.lock();
       trans_tile = reader.GetGraphTile(trans->endnode());
       lock.unlock();
@@ -285,10 +285,10 @@ void HandleOnlyRestrictionProperties(const std::vector<Result>& results,
   std::unordered_map<GraphId, std::vector<GraphId>> part_of_restriction;
   for (const auto& res : results) {
     for (const auto& restriction : res.restrictions) {
-      restrictions[restriction.to_graphid().Tile_Base()].push_back(&restriction);
+      restrictions[restriction.to_graphid().tile_base()].push_back(&restriction);
     }
     for (const auto& edge_id : res.part_of_restriction) {
-      part_of_restriction[edge_id.Tile_Base()].push_back(edge_id);
+      part_of_restriction[edge_id.tile_base()].push_back(edge_id);
     }
   }
 
@@ -452,7 +452,7 @@ void build(const std::string& complex_restriction_from_file,
                 if ((restriction.type() >= RestrictionType::kOnlyRightTurn &&
                      restriction.type() <= RestrictionType::kOnlyStraightOn) ||
                     restriction.type() == RestrictionType::kOnlyProbable) {
-                  if (to.Tile_Base() == tile_id) {
+                  if (to.tile_base() == tile_id) {
                     DirectedEdge& edge = tilebuilder.directededge_builder(to.id());
                     edge.complex_restriction(true);
                   } else {
@@ -482,14 +482,14 @@ void build(const std::string& complex_restriction_from_file,
                 }
               };
 
-              if (tmp_ids.size() > 1 && tmp_ids.back().Tile_Base() == tile_id) {
+              if (tmp_ids.size() > 1 && tmp_ids.back().tile_base() == tile_id) {
                 if ((restriction.type() >= RestrictionType::kOnlyRightTurn &&
                      restriction.type() <= RestrictionType::kOnlyStraightOn) ||
                     restriction.type() == RestrictionType::kOnlyProbable) {
                   while (tmp_ids.size() > 1) {
                     auto last_edge_id = tmp_ids.front();
                     auto last_tile = tile;
-                    if (last_tile->id() != last_edge_id.Tile_Base()) {
+                    if (last_tile->id() != last_edge_id.tile_base()) {
                       lock.lock();
                       last_tile = reader.GetGraphTile(last_edge_id);
                       lock.unlock();
@@ -497,7 +497,7 @@ void build(const std::string& complex_restriction_from_file,
                     auto last_de = last_tile->directededge(last_edge_id);
                     auto end_node = last_de->endnode();
                     auto end_node_tile = last_tile;
-                    if (end_node_tile->id() != end_node.Tile_Base()) {
+                    if (end_node_tile->id() != end_node.tile_base()) {
                       lock.lock();
                       end_node_tile = reader.GetGraphTile(end_node);
                       lock.unlock();
@@ -596,7 +596,7 @@ void build(const std::string& complex_restriction_from_file,
                 tmp_ids =
                     GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), true);
 
-                if (tmp_ids.size() > 1 && tmp_ids.back().Tile_Base() == tile_id) {
+                if (tmp_ids.size() > 1 && tmp_ids.back().tile_base() == tile_id) {
                   auto addForwardRestriction = [&](const std::vector<GraphId>& tmp_ids) {
                     std::vector<GraphId> vias(tmp_ids.begin() + 1, tmp_ids.end() - 1);
 
@@ -628,7 +628,7 @@ void build(const std::string& complex_restriction_from_file,
                       forward_tmp_cr.emplace(from, complex_restriction);
 
                       // happens if we got while processing only_* restriction
-                      if (complex_restriction.to_graphid().Tile_Base() != tile_id) {
+                      if (complex_restriction.to_graphid().tile_base() != tile_id) {
                         stats.restrictions.push_back(std::move(complex_restriction));
                       } else {
                         DirectedEdge& edge = tilebuilder.directededge_builder(to.id());
@@ -650,7 +650,7 @@ void build(const std::string& complex_restriction_from_file,
                       GraphId pre_last_edge_id = *std::next(tmp_ids.rbegin());
 
                       auto pre_last_tile = tile;
-                      if (pre_last_edge_id.Tile_Base() != pre_last_tile->id()) {
+                      if (pre_last_edge_id.tile_base() != pre_last_tile->id()) {
                         lock.lock();
                         pre_last_tile = reader.GetGraphTile(pre_last_edge_id);
                         lock.unlock();
@@ -659,7 +659,7 @@ void build(const std::string& complex_restriction_from_file,
 
                       auto end_node = pre_last_edge->endnode();
                       auto next_tile = pre_last_tile;
-                      if (end_node.Tile_Base() != next_tile->id()) {
+                      if (end_node.tile_base() != next_tile->id()) {
                         lock.lock();
                         next_tile = reader.GetGraphTile(end_node);
                         lock.unlock();

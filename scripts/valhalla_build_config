@@ -100,6 +100,7 @@ config = {
             "expansion",
             "centroid",
             "status",
+            "tile",
         ],
         "use_connectivity": True,
         "service_defaults": {
@@ -110,6 +111,9 @@ config = {
             "street_side_tolerance": 5,
             "street_side_max_distance": 1000,
             "heading_tolerance": 60,
+            "mvt_min_zoom_road_class": [7, 7, 8, 11, 11, 12, 13, 14],
+            "mvt_cache_dir": Optional(str),
+            "mvt_cache_min_zoom": 11,
         },
         "logging": {
             "type": "std_out",
@@ -333,6 +337,8 @@ config = {
         "max_timedep_distance_matrix": 0,
         "max_alternates": 2,
         "max_exclude_polygons_length": 10000,
+        "min_linear_cost_factor": 1,
+        "max_linear_cost_edges": 50000,
         "max_distance_disable_hierarchy_culling": 0,
         "hierarchy_limits": {
             "allow_modification": False,
@@ -439,7 +445,7 @@ help_text = {
         "elevation_url_user_pw": 'User & password for HTTP basic auth in the form of "user:password"',
     },
     "loki": {
-        "actions": "Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status",
+        "actions": "Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status, tile",
         "use_connectivity": "a boolean value to know whether or not to construct the connectivity maps",
         "service_defaults": {
             "radius": "Default radius to apply to incoming locations should one not be supplied",
@@ -449,6 +455,9 @@ help_text = {
             "street_side_tolerance": "If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel",
             "street_side_max_distance": "The max distance in meters that the input coordinates or display ll can be from the edge centerline for them to be used for determining the side of street. Beyond this distance the side of street is set to none",
             "heading_tolerance": "When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading",
+            "mvt_min_zoom_road_class": "Minimum zoom level for each road class (8 values: Motorway, Trunk, Primary, Secondary, Tertiary, Unclassified, Residential, Service/Other). Roads will only be rendered at or above their minimum zoom level.",
+            "mvt_cache_dir": "The cache directory for MVT tiles. If empty/omitted, we disable MVT caching",
+            "mvt_cache_min_zoom": "The minimum zoom level which will be cached, the maximum will be determined by mvt_min_zoom_road_class",
         },
         "logging": {
             "__note__": (
@@ -708,6 +717,8 @@ help_text = {
         "max_timedep_distance_matrix": "Maximum b-line distance between 2 most distant locations in meters to allow a time-dependent matrix",
         "max_alternates": "Maximum number of alternate routes to allow in a request",
         "max_exclude_polygons_length": "Maximum total perimeter of all exclude_polygons in meters",
+        "min_linear_cost_factor": "Minimum allowed factor admissible for linear feature cost factors. Beware: low values approaching zero will render the A* heuristic unusable",
+        "max_linear_cost_edges": "Maximum total number of linear cost edges",
         "max_distance_disable_hierarchy_culling": "Maximum search distance allowed with hierarchy culling disabled",
         "hierarchy_limits": {
             "allow_modification": "Whether hierarchy limits can be modified via the request",

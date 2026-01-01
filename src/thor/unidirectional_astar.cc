@@ -208,8 +208,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
   // Compute the cost to the end of this edge
   uint8_t flow_sources;
-  auto edge_cost = FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
-                           : costing_->EdgeCost(opp_edge, endtile, time_info, flow_sources);
+  auto edge_cost = FORWARD
+                       ? costing_->EdgeCost(meta.edge, meta.edge_id, tile, time_info, flow_sources)
+                       : costing_->EdgeCost(opp_edge, opp_edge_id, endtile, time_info, flow_sources);
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
 
   sif::Cost transition_cost =
@@ -775,7 +776,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     } else {
       // Get the opposing directed edge, continue if we cannot get it
       opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
-      if (!opp_edge_id.Is_Valid()) {
+      if (!opp_edge_id.is_valid()) {
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
@@ -783,21 +784,22 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     }
 
     uint8_t flow_sources;
-    auto edge_cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources);
-
     auto add_label = [&](const valhalla::PathEdge* dest_path_edge) {
-      auto percent_traversed = !dest_path_edge ? 1.0f
-                                               : (FORWARD ? dest_path_edge->percent_along()
-                                                          : 1.0f - dest_path_edge->percent_along());
+      auto start =
+          FORWARD ? edge.percent_along() : (dest_path_edge ? dest_path_edge->percent_along() : 0.0f);
+      auto end =
+          FORWARD ? (dest_path_edge ? dest_path_edge->percent_along() : 1.0f) : edge.percent_along();
 
-      percent_traversed -= FORWARD ? percent_along : 1.0f - percent_along;
+      auto percent_traversed = end - start;
 
       if (percent_traversed < 0) {
         // not trivial
         return;
       }
 
-      auto cost = edge_cost * percent_traversed;
+      Cost cost =
+          costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources, start, end);
+
       cost.cost += edge.distance() + (dest_path_edge ? dest_path_edge->distance() : 0.0f);
 
       auto dist = 0.0f;

@@ -18,7 +18,7 @@ void Reach::enqueue(const baldr::GraphId& node_id,
                     const sif::cost_ptr_t& costing,
                     graph_tile_ptr tile) {
   // skip nodes which are done or invalid
-  if (!node_id.Is_Valid() || done_.find(node_id) != done_.cend())
+  if (!node_id.is_valid() || done_.find(node_id) != done_.cend())
     return;
   // if the node isnt accessible bail
   if (!reader.GetGraphTile(node_id, tile))

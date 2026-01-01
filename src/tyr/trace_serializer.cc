@@ -234,6 +234,9 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeTrafficSignal)) {
         writer("traffic_signal", edge.traffic_signal());
       }
+      if (controller(kEdgeHovType)) {
+        writer("hov_type", to_string(static_cast<baldr::HOVEdgeType>(edge.hov_type())));
+      }
       if (controller(kEdgeLevels)) {
         if (edge.levels_size()) {
           writer.start_array("levels");
@@ -454,7 +457,7 @@ void serialize_matched_points(const AttributesController& controller,
     // TODO: need to keep track of the index of the edge in the global set of edges a given
     // TODO: match result belongs/correlated to
     // Process matched point edge index
-    if (controller(kMatchedEdgeIndex) && match_result.edgeid.Is_Valid()) {
+    if (controller(kMatchedEdgeIndex) && match_result.edgeid.is_valid()) {
       writer("edge_index", static_cast<uint64_t>(match_result.edge_index));
     }
 

@@ -6,7 +6,7 @@ namespace baldr {
 
 // the json representation of the Id
 void GraphId::json(rapidjson::writer_wrapper_t& writer) const {
-  if (Is_Valid()) {
+  if (is_valid()) {
     writer("level", static_cast<uint64_t>(level()));
     writer("tile_id", static_cast<uint64_t>(tileid()));
     writer("id", static_cast<uint64_t>(id()));

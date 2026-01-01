@@ -751,6 +751,33 @@ TEST(Standalone, AccessFerry) {
   }
 }
 
+TEST(Standalone, DisusedFerry) {
+  const std::string ascii_map = R"(
+    A---B---C---D
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BC",
+       {
+           {"disused:route", "ferry"},
+           {"motor_vehicle", "yes"},
+           {"vehicle", "yes"},
+           {"foot", "yes"},
+       }},
+      {"CD", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {5.1079374, 52.0887174});
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_access_disused_ferry", build_config);
+
+  // Route should fail for all costings due to disused ferry
+  for (auto& c : costing) {
+    EXPECT_ANY_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "D"}, c)) << c;
+  }
+}
+
 class CombinedRestrictionTagValues : public ::testing::Test {
 protected:
   static gurka::nodelayout layout;

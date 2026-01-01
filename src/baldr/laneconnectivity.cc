@@ -1,4 +1,5 @@
 #include "baldr/laneconnectivity.h"
+#include "midgard/util.h"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -55,7 +56,7 @@ LaneConnectivityLanes::LaneConnectivityLanes(const std::string& lanes) : value_(
   boost::split(tokens, lanes, boost::is_any_of("|"));
   uint8_t n = 1;
   for (const auto& t : tokens) {
-    set_lane(n++, std::stoi(t));
+    set_lane(n++, midgard::to_int(t));
   }
 }
 
