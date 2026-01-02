@@ -28,13 +28,13 @@ class Actor {
 
         if (typeof query !== 'string') {
             request = JSON.stringify(query);
-            if (query.format === 'pbf' || query.format === 'osmc') {
+            if (query.format === 'pbf') {
                 returnBinary = true;
             }
         } else {
             try {
                 const parsed = JSON.parse(query);
-                if (parsed.format === 'pbf' || parsed.format === 'osmc') {
+                if (parsed.format === 'pbf') {
                     returnBinary = true;
                 }
             } catch (e) {
