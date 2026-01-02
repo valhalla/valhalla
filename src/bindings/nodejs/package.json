@@ -21,6 +21,9 @@
     "lib/",
     "bin/",
     "proto/",
+    "darwin/",
+    "linux/",
+    "valhalla_*",
     "README.md"
   ],
   "scripts": {
