@@ -43,7 +43,16 @@ std::string TimeStamp() {
   int ret = snprintf(buffer.data(), buffer.size(), "%04d/%02d/%02d %02d:%02d:%09.6f",
                      gmt.tm_year + 1900, gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min,
                      fractional_seconds.count());
-  return std::string(buffer.data(), ret > 0 ? static_cast<size_t>(ret) : 0);
+  if (ret < 0) {
+    // Encoding or formatting error
+    return std::string();
+  }
+  std::size_t len = static_cast<std::size_t>(ret);
+  if (len >= buffer.size()) {
+    // Output was truncated; cap length to the buffer capacity minus null terminator
+    len = buffer.size() - 1;
+  }
+  return std::string(buffer.data(), len);
 }
 
 // the Log levels we support
