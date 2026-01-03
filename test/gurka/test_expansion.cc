@@ -219,11 +219,11 @@ TEST_P(ExpansionTest, RoutingNoOpposites) {
 }
 
 TEST_P(ExpansionTest, Matrix) {
-  check_results("sources_to_targets", {"E", "H"}, false, 54, GetParam());
+  check_results("sources_to_targets", {"E", "H"}, false, 18, GetParam());
 }
 
 TEST_P(ExpansionTest, MatrixNoOpposites) {
-  check_results("sources_to_targets", {"E", "H"}, true, 24, GetParam());
+  check_results("sources_to_targets", {"E", "H"}, true, 9, GetParam());
 }
 
 TEST_P(ExpansionTest, IsochroneDedupe) {
@@ -247,11 +247,11 @@ TEST_P(ExpansionTest, RoutingNoOppositesDedupe) {
 }
 
 TEST_P(ExpansionTest, MatrixDedupe) {
-  check_results("sources_to_targets", {"E", "H"}, false, 11, GetParam(), true);
+  check_results("sources_to_targets", {"E", "H"}, false, 9, GetParam(), true);
 }
 
 TEST_P(ExpansionTest, MatrixNoOppositesDedupe) {
-  check_results("sources_to_targets", {"E", "H"}, true, 6, GetParam(), true);
+  check_results("sources_to_targets", {"E", "H"}, true, 5, GetParam(), true);
 }
 
 TEST_F(ExpansionTest, UnsupportedAction) {

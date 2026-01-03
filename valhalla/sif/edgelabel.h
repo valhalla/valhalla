@@ -16,6 +16,7 @@ constexpr uint32_t kInitialEdgeLabelCountAstar = 2000000;
 constexpr uint32_t kInitialEdgeLabelCountBidirAstar = 1000000;
 constexpr uint32_t kInitialEdgeLabelCountDijkstras = 4000000;
 constexpr uint32_t kInitialEdgeLabelCountBidirDijkstra = 2000000;
+constexpr uint32_t kInvalidPruningIdx = 0x1FFFF;
 
 /**
  * Labeling information for shortest path and graph expansion algorithms.
@@ -639,7 +640,7 @@ public:
                   hgv_access,
                   destonly_access_restr_mask),
         transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
-        not_thru_pruning_(not_thru_pruning), distance_(dist) {
+        not_thru_pruning_(not_thru_pruning), distance_(dist), conn_pruning_idx_(kInvalidPruningIdx) {
   }
 
   /**
@@ -683,7 +684,8 @@ public:
               const uint8_t path_id = 0,
               const bool destonly = false,
               const bool hgv_access = false,
-              const uint8_t destonly_access_restr_mask = 0)
+              const uint8_t destonly_access_restr_mask = 0,
+              const uint64_t connection_pruning_mask = kInvalidPruningIdx)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -700,7 +702,8 @@ public:
                   hgv_access,
                   destonly_access_restr_mask),
         transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
-        not_thru_pruning_(not_thru_pruning), distance_(0.0f) {
+        not_thru_pruning_(not_thru_pruning), distance_(0.0f),
+        conn_pruning_idx_(connection_pruning_mask) {
   }
 
   /**
@@ -755,7 +758,8 @@ public:
                   destonly,
                   hgv_access,
                   destonly_access_restr_mask),
-        transition_cost_({}), not_thru_pruning_(!edge->not_thru()), distance_(dist) {
+        transition_cost_({}), not_thru_pruning_(!edge->not_thru()), distance_(dist),
+        conn_pruning_idx_(kInvalidPruningIdx) {
     opp_edgeid_ = {};
   }
 
@@ -847,6 +851,15 @@ public:
     path_distance_ = distance;
   }
 
+  uint64_t connection_pruning_index() const {
+    return conn_pruning_idx_;
+  }
+
+  void set_connection_pruning_index(uint64_t mask) {
+    assert(mask <= kInvalidPruningIdx);
+    conn_pruning_idx_ = mask;
+  }
+
 protected:
   // Was originally used for reverse search path to remove extra time where paths intersected
   // but its now used everywhere to measure the difference in time along the edge vs at the node
@@ -854,7 +867,8 @@ protected:
 
   // Graph Id of the opposing edge.
   // not_thru_pruning_: Is not thru pruning enabled?
-  uint64_t opp_edgeid_ : 63; // Could be 46 (to provide more spare)
+  uint64_t opp_edgeid_ : 46; // Could be 46 (to provide more spare)
+  uint64_t conn_pruning_idx_ : 17;
   // TODO: Move not_thru_prunin to the base class - EdgeLabel so that we can
   // consolidate all pruning related properties at 1 place
   uint64_t not_thru_pruning_ : 1;
