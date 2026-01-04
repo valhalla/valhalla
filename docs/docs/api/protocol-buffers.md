@@ -27,7 +27,13 @@ The message we use for the entire transaction is the `Api` message, whose defini
 
 ## Response
 
-As with the request/input, the response/output will again be the `Api` message but will have more parts of it filled out. Depending on which API you are calling different parts of the response object will be filled out. Route-like responses will have `Trip` and `Directions` objects filled out whereas non-route APIs will have different parts of the message filled out. Not all APIs support protobuf output. Those that don't, will return JSON as they do today. Currently, the following APIs support protobuf as output: `route, trace_route, optimized_route, centroid, trace_attributes, status` 
+As with the request/input, the response/output will again be the `Api` message but will have more parts of it filled out. Depending on which API you are calling different parts of the response object will be filled out. Route-like responses will have `Trip` and `Directions` objects filled out whereas non-route APIs will have different parts of the message filled out. Not all APIs support protobuf output. Those that don't, will return JSON as they do today. Currently, the following APIs support protobuf as output: `route`, `matrix`, `isochrone`, `expansion`, `trace_route`, `trace_attributes`, `optimized_route`, `centroid`, `status`
+
+## Node.js Bindings
+
+The Node.js bindings (`@valhallajs/valhallajs`) support protobuf format for all compatible APIs. When you specify `format: 'pbf'` in your request, the bindings will return a Node.js `Buffer` containing the serialized protobuf data instead of a parsed JSON object.
+
+For more information, see the [Node.js bindings README](https://github.com/valhalla/valhalla/blob/master/src/bindings/nodejs/README.md#protocol-buffer-support).
 
 ## Future Work
 

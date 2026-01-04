@@ -129,6 +129,7 @@ jobs:
             src/bindings/nodejs/
             scripts/valhalla_*
             valhalla/valhalla.h
+            proto/
           sparse-checkout-cone-mode: false
           fetch-depth: 0
           fetch-tags: true
