@@ -1029,7 +1029,7 @@ static constexpr EdgeAttribute kSharedEdgeAttributes[] = {
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed*) {
-          return vtzero::encoded_property_value(e.indoor());
+          return vtzero::encoded_property_value(e.unpaved());
         },
     },
     {
