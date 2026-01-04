@@ -13,8 +13,8 @@ describe('Valhalla Integration Tests', () => {
 
     const routeRequest = {
       locations: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 }, // Utrecht Central Station
+        { lat: 52.09085032726166, lon: 5.121582587112782 }  // Dom Tower
       ],
       costing: "auto",
       directions_options: {
@@ -43,11 +43,11 @@ describe('Valhalla Integration Tests', () => {
 
     const expansionRequest = {
       locations: [
-        { lat: 51.572386, lon: -0.139549 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 }
       ],
       costing: "auto",
       action: "isochrone",
-      contours: [{ "time": 60 }],
+      contours: [{ time: 15 }],
       format: "pbf"
     };
 
@@ -65,11 +65,10 @@ describe('Valhalla Integration Tests', () => {
 
     const isochroneRequest = {
       locations: [
-        { lat: 51.572386, lon: -0.139549 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 }
       ],
       costing: "auto",
-      action: "isochrone",
-      contours: [{ "time": 60 }],
+      contours: [{ time: 15 }],
       format: "pbf"
     };
 
@@ -87,11 +86,11 @@ describe('Valhalla Integration Tests', () => {
 
     const expansionRequest = {
       locations: [
-        { lat: 51.572386, lon: -0.139549 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 }
       ],
       costing: "auto",
       action: "isochrone",
-      contours: [{ "time": 60 }],
+      contours: [{ time: 15 }],
       format: "json"
     };
 
@@ -109,11 +108,10 @@ describe('Valhalla Integration Tests', () => {
 
     const isochroneRequest = {
       locations: [
-        { lat: 51.572386, lon: -0.139549 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 }
       ],
       costing: "auto",
-      action: "isochrone",
-      contours: [{ "time": 60 }],
+      contours: [{ time: 15 }],
       format: "json"
     };
 
@@ -131,8 +129,8 @@ describe('Valhalla Integration Tests', () => {
 
     const routeRequest = {
       locations: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 },
+        { lat: 52.09085032726166, lon: 5.121582587112782 }
       ],
       costing: "auto",
       format: "pbf"
@@ -152,8 +150,8 @@ describe('Valhalla Integration Tests', () => {
 
     const routeRequest = {
       locations: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 },
+        { lat: 52.09085032726166, lon: 5.121582587112782 }
       ],
       costing: "auto",
       format: "json"
@@ -174,12 +172,12 @@ describe('Valhalla Integration Tests', () => {
 
     const matrixRequest = {
       sources: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 },
+        { lat: 52.09085032726166, lon: 5.121582587112782 }
       ],
       targets: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 },
+        { lat: 52.09085032726166, lon: 5.121582587112782 }
       ],
       costing: "auto",
       format: "pbf"
@@ -199,12 +197,12 @@ describe('Valhalla Integration Tests', () => {
 
     const matrixRequest = {
       sources: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 },
+        { lat: 52.09085032726166, lon: 5.121582587112782 }
       ],
       targets: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 },
+        { lat: 52.09085032726166, lon: 5.121582587112782 }
       ],
       costing: "auto",
       format: "json"
@@ -225,9 +223,9 @@ describe('Valhalla Integration Tests', () => {
 
     const traceRouteRequest = {
       shape: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.571000, lon: -0.138500 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 },
+        { lat: 52.090000, lon: 5.115000 },
+        { lat: 52.09085032726166, lon: 5.121582587112782 }
       ],
       costing: "auto",
       shape_match: "map_snap",
@@ -248,9 +246,9 @@ describe('Valhalla Integration Tests', () => {
 
     const traceRouteRequest = {
       shape: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.571000, lon: -0.138500 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 },
+        { lat: 52.090000, lon: 5.115000 },
+        { lat: 52.09085032726166, lon: 5.121582587112782 }
       ],
       costing: "auto",
       shape_match: "map_snap",
@@ -272,9 +270,9 @@ describe('Valhalla Integration Tests', () => {
 
     const traceAttributesRequest = {
       shape: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.571000, lon: -0.138500 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 },
+        { lat: 52.090000, lon: 5.115000 },
+        { lat: 52.09085032726166, lon: 5.121582587112782 }
       ],
       costing: "auto",
       shape_match: "map_snap",
@@ -295,9 +293,9 @@ describe('Valhalla Integration Tests', () => {
 
     const traceAttributesRequest = {
       shape: [
-        { lat: 51.572386, lon: -0.139549 },
-        { lat: 51.571000, lon: -0.138500 },
-        { lat: 51.570000, lon: -0.138000 }
+        { lat: 52.08957210411523, lon: 5.1103487316804985 },
+        { lat: 52.090000, lon: 5.115000 },
+        { lat: 52.09085032726166, lon: 5.121582587112782 }
       ],
       costing: "auto",
       shape_match: "map_snap",
