@@ -4,14 +4,17 @@ const valhalla = require('@valhallajs/valhallajs');
 
 describe('Valhalla Integration Tests', () => {
   test('should generate routes using built tiles', async () => {
-    const configFile = process.env.VALHALLA_CONFIG_FILE;  
+    const configFile = process.env.VALHALLA_CONFIG_FILE;
+    if (!configFile) {
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
+    }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
     assert.ok(actor, 'Actor should be initialized');
 
     const routeRequest = {
       locations: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 }, // Utrecht Central Station
-        { lat: 52.09085032726166, lon: 5.121582587112782 }  // Dom Tower
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       costing: "auto",
       directions_options: {
@@ -34,16 +37,17 @@ describe('Valhalla Integration Tests', () => {
   test('expansion with pbf format returns Buffer', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
-    
+
     const expansionRequest = {
       locations: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 }
+        { lat: 51.572386, lon: -0.139549 }
       ],
       costing: "auto",
+      action: "isochrone",
+      contours: [{ "time": 60 }],
       format: "pbf"
     };
 
@@ -55,17 +59,17 @@ describe('Valhalla Integration Tests', () => {
   test('isochrone with pbf format returns Buffer', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
-    
+
     const isochroneRequest = {
       locations: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 }
+        { lat: 51.572386, lon: -0.139549 }
       ],
       costing: "auto",
-      contours: [15],
+      action: "isochrone",
+      contours: [{ "time": 60 }],
       format: "pbf"
     };
 
@@ -77,16 +81,17 @@ describe('Valhalla Integration Tests', () => {
   test('expansion with json format returns object', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
 
     const expansionRequest = {
       locations: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 }
+        { lat: 51.572386, lon: -0.139549 }
       ],
       costing: "auto",
+      action: "isochrone",
+      contours: [{ "time": 60 }],
       format: "json"
     };
 
@@ -95,18 +100,39 @@ describe('Valhalla Integration Tests', () => {
     assert.ok(!Buffer.isBuffer(result), 'JSON format should not return a Buffer');
   });
 
+  test('isochrone with json format returns object', async () => {
+    const configFile = process.env.VALHALLA_CONFIG_FILE;
+    if (!configFile) {
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
+    }
+    const actor = await valhalla.Actor.fromConfigFile(configFile);
+
+    const isochroneRequest = {
+      locations: [
+        { lat: 51.572386, lon: -0.139549 }
+      ],
+      costing: "auto",
+      action: "isochrone",
+      contours: [{ "time": 60 }],
+      format: "json"
+    };
+
+    const result = await actor.isochrone(isochroneRequest);
+    assert.ok(typeof result === 'object', 'JSON format should return an object');
+    assert.ok(!Buffer.isBuffer(result), 'JSON format should not return a Buffer');
+  });
+
   test('route with pbf format returns Buffer', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
 
     const routeRequest = {
       locations: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 },
-        { lat: 52.09085032726166, lon: 5.121582587112782 }
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       costing: "auto",
       format: "pbf"
@@ -120,15 +146,14 @@ describe('Valhalla Integration Tests', () => {
   test('route with json format returns object', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
 
     const routeRequest = {
       locations: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 },
-        { lat: 52.09085032726166, lon: 5.121582587112782 }
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       costing: "auto",
       format: "json"
@@ -143,19 +168,18 @@ describe('Valhalla Integration Tests', () => {
   test('matrix with pbf format returns Buffer', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
 
     const matrixRequest = {
       sources: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 },
-        { lat: 52.09085032726166, lon: 5.121582587112782 }
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       targets: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 },
-        { lat: 52.09085032726166, lon: 5.121582587112782 }
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       costing: "auto",
       format: "pbf"
@@ -169,19 +193,18 @@ describe('Valhalla Integration Tests', () => {
   test('matrix with json format returns object', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
 
     const matrixRequest = {
       sources: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 },
-        { lat: 52.09085032726166, lon: 5.121582587112782 }
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       targets: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 },
-        { lat: 52.09085032726166, lon: 5.121582587112782 }
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       costing: "auto",
       format: "json"
@@ -196,16 +219,15 @@ describe('Valhalla Integration Tests', () => {
   test('traceRoute with pbf format returns Buffer', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
 
     const traceRouteRequest = {
       shape: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 },
-        { lat: 52.09021121394876, lon: 5.112590313619295 },
-        { lat: 52.09085032726166, lon: 5.121582587112782 }
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.571000, lon: -0.138500 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       costing: "auto",
       shape_match: "map_snap",
@@ -220,16 +242,15 @@ describe('Valhalla Integration Tests', () => {
   test('traceRoute with json format returns object', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
 
     const traceRouteRequest = {
       shape: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 },
-        { lat: 52.09021121394876, lon: 5.112590313619295 },
-        { lat: 52.09085032726166, lon: 5.121582587112782 }
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.571000, lon: -0.138500 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       costing: "auto",
       shape_match: "map_snap",
@@ -245,16 +266,15 @@ describe('Valhalla Integration Tests', () => {
   test('traceAttributes with pbf format returns Buffer', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
 
     const traceAttributesRequest = {
       shape: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 },
-        { lat: 52.09021121394876, lon: 5.112590313619295 },
-        { lat: 52.09085032726166, lon: 5.121582587112782 }
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.571000, lon: -0.138500 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       costing: "auto",
       shape_match: "map_snap",
@@ -269,16 +289,15 @@ describe('Valhalla Integration Tests', () => {
   test('traceAttributes with json format returns object', async () => {
     const configFile = process.env.VALHALLA_CONFIG_FILE;
     if (!configFile) {
-      // Skip test if no config file available
-      return;
+      throw new Error('VALHALLA_CONFIG_FILE environment variable is required');
     }
     const actor = await valhalla.Actor.fromConfigFile(configFile);
 
     const traceAttributesRequest = {
       shape: [
-        { lat: 52.08957210411523, lon: 5.1103487316804985 },
-        { lat: 52.09021121394876, lon: 5.112590313619295 },
-        { lat: 52.09085032726166, lon: 5.121582587112782 }
+        { lat: 51.572386, lon: -0.139549 },
+        { lat: 51.571000, lon: -0.138500 },
+        { lat: 51.570000, lon: -0.138000 }
       ],
       costing: "auto",
       shape_match: "map_snap",
@@ -288,7 +307,7 @@ describe('Valhalla Integration Tests', () => {
     const result = await actor.traceAttributes(traceAttributesRequest);
     assert.ok(typeof result === 'object', 'JSON format should return an object');
     assert.ok(!Buffer.isBuffer(result), 'JSON format should not return a Buffer');
-    assert.ok(result.trip, 'Result should contain trip');
+    assert.ok(result.edges, 'Result should contain edges');
   });
 });
 
