@@ -19,6 +19,10 @@ message Ring {
   repeated LatLng coords = 1;
 }
 
+message Levels {
+  repeated float levels = 1;
+}
+
 enum ShapeMatch {
   walk_or_snap = 0;
   edge_walk = 1;
@@ -508,7 +512,7 @@ message Options {
   }
   bool linear_references = 45;                                     // Include linear references for graph edges returned in certain responses.
   repeated Costing recostings = 46;                                // CostingType options to use to recost a path after it has been found
-  repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
+  repeated Ring exclude_polygons = 47;                             // Rings/polygons to exclude entire areas during path finding
   bool prioritize_bidirectional = 48;                              // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
   oneof has_expansion_action {
     Action expansion_action = 49;                                  // Meta action for /expansion endpoint
@@ -532,4 +536,5 @@ message Options {
   ReverseTimeTracking reverse_time_tracking = 62;                  // Which strategy to use on the reverse tree in time dependent bidirectional routing
   Tile tile_xyz = 63;                                              // x, y, z for /tile requests
   TileOptions tile_options = 64;                                   // additional /tile specific options
+  repeated Levels exclude_levels = 65;                             // Levels to exclude within the exclude_polygon at the same index
 }

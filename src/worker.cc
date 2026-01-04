@@ -1061,29 +1061,74 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // get the avoid polygons in there
-  auto rings_req =
+  auto exclude_polygons =
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
-  if (rings_req) {
-    if (!rings_req->IsArray()) {
+  if (exclude_polygons) {
+    if (!(exclude_polygons->IsArray() || exclude_polygons->IsObject())) {
       add_warning(api, 204);
     } else {
+      // it has to be either an array of rings
+      // or an array of objects
       auto* rings_pbf = options.mutable_exclude_polygons();
+      auto* levels_pbf = options.mutable_exclude_levels();
+
+      auto exclude_polygons_array_ptr = exclude_polygons;
+
+      // if it's not an array, make sure it's a GeoJSON FeatureCollection
+      if (!exclude_polygons->IsArray()) {
+        auto fc = rapidjson::get_optional<std::string>(doc, "/exclude_polygons/type");
+        auto features = rapidjson::get_child_optional(doc, "/exclude_polygons/features");
+        if (fc && *fc == "FeatureCollection" && features) {
+          exclude_polygons_array_ptr = features;
+        }
+      }
       try {
-        for (const auto& req_poly : rings_req->GetArray()) {
-          if (!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) {
+        for (const auto& req_poly : exclude_polygons_array_ptr->GetArray()) {
+          // either it's a ring or an object, in any case it can't be empty
+          if ((req_poly.IsArray() && req_poly.GetArray().Empty()) ||
+              (req_poly.IsObject() && req_poly.GetObject().ObjectEmpty())) {
             continue;
           }
-          auto* ring = rings_pbf->Add();
-          parse_ring(ring, req_poly);
+          auto* pbf_ring = rings_pbf->Add();
+          auto* pbf_levels = levels_pbf->Add();
+          if (req_poly.IsArray() && req_poly.GetArray().Size() > 0) {
+            parse_ring(pbf_ring, req_poly);
+          } else if (req_poly.IsObject() &&
+                     !req_poly.GetObject().ObjectEmpty()) { // it's a geojson feature, so it better
+                                                            // have coordinates and maybe levels
+            // we only support one ring
+            auto coordinates = rapidjson::get_child_optional(req_poly, "/geometry/coordinates/0");
+            auto geom_type = rapidjson::get_child_optional(req_poly, "/geometry/type");
+            if (coordinates && geom_type && *geom_type == "Polygon" && coordinates->IsArray()) {
+              parse_ring(pbf_ring, *coordinates);
+            } else {
+              throw std::runtime_error("Expected object to have coordinates member");
+            }
+            auto levels = rapidjson::get_child_optional(req_poly, "/properties/levels");
+            if (levels && levels->IsArray()) {
+              // parse the levels
+              for (const auto& level : levels->GetArray()) {
+                if (level.IsFloat()) {
+                  pbf_levels->add_levels(level.GetFloat());
+                }
+              }
+            }
+          }
         }
-      } catch (...) { throw valhalla_exception_t{137}; }
+      } catch (const std::exception& e) { throw valhalla_exception_t{137, e.what()}; } catch (...) {
+        throw valhalla_exception_t{137};
+      }
     }
   } // if it was there in the pbf already
   else if (options.exclude_polygons_size()) {
     for (auto& ring : *options.mutable_exclude_polygons()) {
       parse_ring(&ring, rapidjson::Value{});
     }
+    if (options.exclude_levels_size() > 0 &&
+        options.exclude_levels_size() != options.exclude_polygons_size())
+      throw std::runtime_error(
+          "Expected number of exclude levels and number of exclude polygons to be equal");
   }
 
   // does the user want to apply custom costs to linear features?
