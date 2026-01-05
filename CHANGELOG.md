@@ -32,6 +32,7 @@
    * ADDED: `timed_predicted_speed` on `/locate` response if location had a date time set [#5714](https://github.com/valhalla/valhalla/pull/5714)
    * CHANGED: renamed `GraphId::Is_Valid()` -> `GraphId::is_valid()` and `GraphId::Tile_Base` -> `GraphId::tile_base` [#5678](https://github.com/valhalla/valhalla/pull/5678)   * UPDATED: translations from transifex [#5792](https://github.com/valhalla/valhalla/pull/5792)
    * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
+   * FIXED: de-duplicate BSS connection edges [#5799](https://github.com/valhalla/valhalla/pull/5799)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
