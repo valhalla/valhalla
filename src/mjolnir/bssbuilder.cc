@@ -335,7 +335,7 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
       return std::string(1, static_cast<std::string::value_type>(tag));
     };
 
-    for (int j = 0; j < new_connection_counts[i]; j++) {
+    for (size_t j = 0; j < new_connection_counts[i]; j++) {
       auto& bss_to_waynode = *(it + j);
       bss_to_waynode.bss_node_id = new_bss_node_graphid;
       bss_to_waynode.tagged_values.push_back(encode_tag(TaggedValue::kBssInfo) +
