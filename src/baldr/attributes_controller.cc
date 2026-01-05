@@ -292,6 +292,8 @@ AttributesController::AttributesController(const Options& options, bool is_stric
       break;
     }
     case (FilterAction::exclude): {
+      if (is_strict_filter)
+        set_all(true);
       for (const auto& filter_attribute : options.filter_attributes()) {
         try {
           attributes.at(filter_attribute) = false;

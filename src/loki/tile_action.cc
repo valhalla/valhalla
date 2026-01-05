@@ -18,6 +18,7 @@
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <vtzero/builder.hpp>
+#include <vtzero/property_mapper.hpp>
 
 #include <algorithm>
 #include <array>
@@ -40,6 +41,8 @@ namespace {
  * This is the WGS84 ellipsoid semi-major axis.
  */
 constexpr double kEarthRadiusMeters = 6378137.0;
+constexpr std::string_view kEdgeLayerName = "edges";
+constexpr std::string_view kNodeLayerName = "nodes";
 
 class EdgesLayerBuilder;
 struct EdgeAttribute {
@@ -80,6 +83,9 @@ std::string make_temp_name(std::string template_name) {
  */
 class EdgesLayerBuilder {
 public:
+  // it's a public layer, vtzero::property_mapper needs a mutable instance
+  vtzero::layer_builder layer;
+
   explicit EdgesLayerBuilder(vtzero::tile_builder& tile,
                              const baldr::AttributesController& controller);
 
@@ -102,7 +108,7 @@ public:
   void init_attribute_keys(const EdgeAttribute (&arr)[N], const AttributesController& controller) {
     for (const auto& def : arr) {
       if (controller(def.attribute_flag))
-        this->*(def.key_member) = layer_.add_key_without_dup_check(def.key_name);
+        this->*(def.key_member) = layer.add_key_without_dup_check(def.key_name);
     }
   }
 
@@ -223,8 +229,7 @@ public:
   vtzero::index_value key_live_congestion3_rev_;
 
 private:
-  vtzero::layer_builder layer_;
-  const baldr::AttributesController controller_;
+  const baldr::AttributesController& controller_;
 };
 
 static constexpr EdgeAttribute kForwardEdgeAttributes[] = {
@@ -1192,10 +1197,10 @@ static constexpr EdgeAttribute kSharedEdgeAttributes[] = {
 
 EdgesLayerBuilder::EdgesLayerBuilder(vtzero::tile_builder& tile,
                                      const baldr::AttributesController& controller)
-    : layer_(tile, "edges"), controller_(controller) {
-  key_tile_level_ = layer_.add_key_without_dup_check("tile_level");
-  key_tile_id_ = layer_.add_key_without_dup_check("tile_id");
-  key_road_class_ = layer_.add_key_without_dup_check("road_class");
+    : layer(tile, kEdgeLayerName.data()), controller_(controller) {
+  key_tile_level_ = layer.add_key_without_dup_check("tile_level");
+  key_tile_id_ = layer.add_key_without_dup_check("tile_id");
+  key_road_class_ = layer.add_key_without_dup_check("road_class");
 
   init_attribute_keys(kSharedEdgeAttributes, controller);
   init_attribute_keys(kForwardEdgeAttributes, controller);
@@ -1205,8 +1210,8 @@ EdgesLayerBuilder::EdgesLayerBuilder(vtzero::tile_builder& tile,
 
   // edge ids don't need all those attributes
   if (controller(kEdgeId)) {
-    key_edge_id_fwd_ = layer_.add_key_without_dup_check("edge_id:forward");
-    key_edge_id_rev_ = layer_.add_key_without_dup_check("edge_id:backward");
+    key_edge_id_fwd_ = layer.add_key_without_dup_check("edge_id:forward");
+    key_edge_id_rev_ = layer.add_key_without_dup_check("edge_id:backward");
   }
 }
 
@@ -1229,7 +1234,7 @@ void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
   const GraphId& edge_id = forward_edge ? forward_edge_id : reverse_edge_id;
 
   // Create linestring feature for this edge
-  vtzero::linestring_feature_builder feature{layer_};
+  vtzero::linestring_feature_builder feature{layer};
   feature.set_id(static_cast<uint64_t>(edge_id));
   feature.add_linestring_from_container(geometry);
 
@@ -1281,6 +1286,8 @@ struct NodeAttribute {
  */
 class NodesLayerBuilder {
 public:
+  vtzero::layer_builder layer;
+
   NodesLayerBuilder(vtzero::tile_builder& tile, const baldr::AttributesController& controller);
 
   void add_feature(const vtzero::point& position,
@@ -1318,7 +1325,6 @@ public:
   vtzero::index_value key_iso_3166_2_;
 
 private:
-  vtzero::layer_builder layer_;
   const baldr::AttributesController controller_;
 };
 
@@ -1474,24 +1480,24 @@ static constexpr NodeAttribute kNodeAttributes[] = {
 
 NodesLayerBuilder::NodesLayerBuilder(vtzero::tile_builder& tile,
                                      const baldr::AttributesController& controller)
-    : layer_(tile, "nodes"), controller_(controller) {
+    : layer(tile, kNodeLayerName.data()), controller_(controller) {
   // Pre-add keys for node properties
-  key_tile_level_ = layer_.add_key_without_dup_check("tile_level");
-  key_tile_id_ = layer_.add_key_without_dup_check("tile_id");
-  key_node_id_ = layer_.add_key_without_dup_check("node_id");
-  key_node_type_ = layer_.add_key_without_dup_check("type");
-  key_traffic_signal_ = layer_.add_key_without_dup_check("traffic_signal");
+  key_tile_level_ = layer.add_key_without_dup_check("tile_level");
+  key_tile_id_ = layer.add_key_without_dup_check("tile_id");
+  key_node_id_ = layer.add_key_without_dup_check("node_id");
+  key_node_type_ = layer.add_key_without_dup_check("type");
+  key_traffic_signal_ = layer.add_key_without_dup_check("traffic_signal");
 
   for (const auto& def : kNodeAttributes) {
     if (controller(def.attribute_flag)) {
-      this->*(def.key_member) = layer_.add_key_without_dup_check(def.key_name);
+      this->*(def.key_member) = layer.add_key_without_dup_check(def.key_name);
     }
   }
 
   if (controller(kAdminCountryCode))
-    key_iso_3166_1_ = layer_.add_key_without_dup_check("iso_3166_1");
+    key_iso_3166_1_ = layer.add_key_without_dup_check("iso_3166_1");
   if (controller(kAdminStateCode))
-    key_iso_3166_2_ = layer_.add_key_without_dup_check("iso_3166_2");
+    key_iso_3166_2_ = layer.add_key_without_dup_check("iso_3166_2");
 }
 
 void NodesLayerBuilder::add_feature(const vtzero::point& position,
@@ -1499,7 +1505,7 @@ void NodesLayerBuilder::add_feature(const vtzero::point& position,
                                     const baldr::NodeInfo& node,
                                     const baldr::AdminInfo& admin_info) {
   // Create point feature
-  vtzero::point_feature_builder node_feature{layer_};
+  vtzero::point_feature_builder node_feature{layer};
   node_feature.set_id(static_cast<uint64_t>(node_id));
   node_feature.add_point(position);
 
@@ -1588,6 +1594,33 @@ std::pair<int32_t, int32_t> ll_to_tile_coords(const midgard::PointLL node_ll,
   int32_t tile_y = static_cast<int32_t>(std::round(norm_y * projection.tile_extent));
 
   return {tile_x, tile_y};
+}
+
+void filter_layer(const char* name,
+                  vtzero::layer& full_layer,
+                  vtzero::layer_builder& filtered_layer,
+                  bool return_shortcuts) {
+  while (auto full_feat = full_layer.next_feature()) {
+    // TODO: make shortcuts their own layer, this is annoying
+    if (!return_shortcuts) {
+      bool is_not_shortcut = full_feat.for_each_property([&](const vtzero::property& p) {
+        return !(p.key().compare(vtzero::data_view{baldr::kEdgeShortcut.data()}) == 0);
+      });
+      if (!is_not_shortcut) {
+        continue;
+      }
+    }
+
+    // create new feature and copy all attributes via a mapper
+    vtzero::geometry_feature_builder filtered_feat{filtered_layer};
+    filtered_feat.copy_id(full_feat);
+    filtered_feat.set_geometry(full_feat.geometry());
+
+    vtzero::property_mapper props_mapper{full_layer, filtered_layer};
+    filtered_feat.copy_properties(full_feat, props_mapper);
+
+    filtered_feat.commit();
+  }
 }
 
 void build_nodes_layer(NodesLayerBuilder& nodes_builder,
@@ -1810,19 +1843,47 @@ std::string loki_worker_t::render_tile(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
+  // disable all attributes by default, but respect filters & verbose
+  auto controller = baldr::AttributesController(options, true);
+  bool only_base_props = (options.filter_action() == valhalla::no_action && !options.verbose());
+  if (only_base_props)
+    controller.set_all(false);
+  else if (options.verbose())
+    controller.set_all(true);
+
   // do we have it cached?
   const auto x = options.tile_xyz().x();
   const auto y = options.tile_xyz().y();
   const auto tile_path = detail::mvt_local_path(z, x, y, mvt_cache_dir_);
   bool cache_allowed = (z >= mvt_cache_min_zoom_) && !mvt_cache_dir_.empty();
-
   bool is_cached = false;
   if (cache_allowed) {
     is_cached = std::filesystem::exists(tile_path);
     if (is_cached) {
       std::ifstream tile_file(tile_path, std::ios::binary);
-      return std::string(std::istreambuf_iterator<char>(tile_file), std::istreambuf_iterator<char>());
+      std::string buffer{std::istreambuf_iterator<char>(tile_file), std::istreambuf_iterator<char>()};
+      // we only have cached tiles with all attributes
+      if (options.verbose()) {
+        return buffer;
+      }
+      // if the layers should be filtered, we need to clone the relevant attributes
+      vtzero::vector_tile tile_full{buffer};
+      tile_full.for_each_layer([&](vtzero::layer&& full_layer) {
+        if (full_layer.name().data() == kEdgeLayerName.data()) {
+          EdgesLayerBuilder filtered_edge_layer{tile, controller};
+          filter_layer(kEdgeLayerName.data(), full_layer, filtered_edge_layer.layer,
+                       options.tile_options().return_shortcuts());
+        } else if (full_layer.name().data() == kNodeLayerName.data()) {
+          NodesLayerBuilder filtered_node_layer{tile, controller};
+          filter_layer(kNodeLayerName.data(), full_layer, filtered_node_layer.layer, true);
+        }
+        return true;
+      });
+
+      return tile.serialize();
     }
+    // if we're caching, we need the full attributes
+    controller.set_all(true);
   }
 
   // get lat/lon bbox
@@ -1831,14 +1892,7 @@ std::string loki_worker_t::render_tile(Api& request) {
   // query edges in bbox, omits opposing edges
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
-  // disable all attributes by default
-  auto controller = baldr::AttributesController(options, true);
-  if (options.filter_action() == valhalla::no_action && !options.verbose())
-    controller.set_all(false);
-  else if (options.verbose()) {
-    controller.set_all(true);
-  }
-
+  // build the full layers if cache is allowed, else whatever is in the controller
   build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
                options.tile_options().return_shortcuts(), controller);
 
@@ -1866,6 +1920,34 @@ std::string loki_worker_t::render_tile(Api& request) {
     std::filesystem::rename(tmp, tile_path);
   }
 
+  if (options.verbose()) {
+    return tile_bytes;
+  } else if (cache_allowed) {
+    // only apply filter to the tile if we have a full tile (due to caching) but the request
+    // wants a filtered tile
+
+    // need a fresh controller, the other one might have been changed if it was cacheable
+    baldr::AttributesController fresh_controller{options, true};
+
+    vtzero::vector_tile tile_full{tile_bytes};
+    vtzero::tile_builder filtered_tile;
+
+    tile_full.for_each_layer([&](vtzero::layer&& full_layer) {
+      if (full_layer.name().data() == kEdgeLayerName.data()) {
+        EdgesLayerBuilder filtered_edge_layer{filtered_tile, fresh_controller};
+        filter_layer(kEdgeLayerName.data(), full_layer, filtered_edge_layer.layer,
+                     options.tile_options().return_shortcuts());
+      } else if (full_layer.name().data() == kNodeLayerName.data()) {
+        NodesLayerBuilder filtered_node_layer{filtered_tile, fresh_controller};
+        filter_layer(kNodeLayerName.data(), full_layer, filtered_node_layer.layer, true);
+      }
+      return true;
+    });
+
+    return filtered_tile.serialize();
+  }
+
+  // we can only land here if cache isn't allowed, verbose=false and/or a filter is in the request
   return tile_bytes;
 }
 } // namespace loki

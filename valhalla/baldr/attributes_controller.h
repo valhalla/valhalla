@@ -277,7 +277,7 @@ struct AttributesController {
   /**
    * Apply attribute filters from the request to the AttributesController. These filters
    * allow including or excluding specific attributes from the response in route,
-   * trace_route, and trace_attributes actions.
+   * trace_route, trace_attributes and tile actions.
    * @param options             request options
    * @param is_strict_filter    whether or not the include/exclude option is strict
    */
