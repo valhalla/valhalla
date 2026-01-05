@@ -778,6 +778,54 @@ TEST(Standalone, DisusedFerry) {
   }
 }
 
+TEST(Standalone, HighwayPedestrian) {
+  const std::string ascii_map = R"(
+    A---B---C---D
+       / \
+      /   \
+     G     E---F
+      \
+       \
+        J
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "service"}}},
+      {"BC", {{"highway", "pedestrian"}}},
+      {"CD", {{"highway", "service"}}},
+
+      {"BE", {{"highway", "pedestrian"}, {"vehicle", "yes"}}}, // all allowed
+      {"EF", {{"highway", "service"}}},
+
+      // strange way to allow all except bicycles
+      {"BG", {{"highway", "pedestrian"}, {"vehicle", "no"}, {"motor_vehicle", "yes"}}},
+      {"GJ", {{"highway", "service"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {5.1079374, 52.0887174});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_access_highway_pedestrian",
+                               build_config);
+
+  for (auto& c : costing) {
+    // All except pedestrian costing should fail due to highway=pedestrian
+    if (c == "pedestrian") {
+      EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "D"}, c)) << c;
+    } else {
+      EXPECT_ANY_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "D"}, c)) << c;
+    }
+
+    // highway:pedestrian + vehicle=yes enables all costings
+    EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "F"}, c)) << c;
+
+    // highway:pedestrian + vehicle=no + motor_vehicle=yes enabless all except bicycles
+    if (c != "bicycle") {
+      EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "J"}, c)) << c;
+    } else {
+      EXPECT_ANY_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "J"}, c)) << c;
+    }
+  }
+}
+
 class CombinedRestrictionTagValues : public ::testing::Test {
 protected:
   static gurka::nodelayout layout;
