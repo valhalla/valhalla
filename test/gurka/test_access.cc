@@ -784,6 +784,9 @@ TEST(Standalone, HighwayPedestrian) {
        / \
       /   \
      G     E---F
+      \
+       \
+        J
   )";
 
   const gurka::ways ways = {
@@ -796,6 +799,7 @@ TEST(Standalone, HighwayPedestrian) {
 
       // strange way to allow all except bicycles
       {"BG", {{"highway", "pedestrian"}, {"vehicle", "no"}, {"motor_vehicle", "yes"}}},
+      {"GJ", {{"highway", "service"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {5.1079374, 52.0887174});
@@ -814,10 +818,10 @@ TEST(Standalone, HighwayPedestrian) {
     EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "F"}, c)) << c;
 
     // highway:pedestrian + vehicle=no + motor_vehicle=yes enabless all except bicycles
-    if (c != "bike") {
-      EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "G"}, c)) << c;
+    if (c != "bicycle") {
+      EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "J"}, c)) << c;
     } else {
-      EXPECT_ANY_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "G"}, c)) << c;
+      EXPECT_ANY_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "J"}, c)) << c;
     }
   }
 }
