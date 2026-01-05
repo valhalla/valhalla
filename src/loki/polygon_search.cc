@@ -139,7 +139,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
   // keep track which tile's bins intersect which rings
   std::unordered_set<GraphId> avoid_edge_ids;
   bins_collector_t contained_bins;
-  uint32_t contained_bin_count = 0;
+  [[maybe_unused]] uint32_t contained_bin_count = 0;
   contained_bins.reserve(200); // TODO: approximate based on polygon size?
   bins_collector_t bins_intersected;
 
