@@ -3160,6 +3160,13 @@
       ]
     },
     {
+      "key": "vehicle",
+      "object_types": [
+        "way"
+      ],
+      "description": "Sets access for all vehicles (bicycle + motor_vehicle)."
+    },
+    {
       "description": "Sets the hiking difficulty for cycle and pedestrian passes",
       "value": "difficult_alpine_hiking",
       "key": "mtb:description",
