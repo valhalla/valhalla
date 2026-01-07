@@ -319,7 +319,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
           maneuvers.front().set_time(maneuvers.front().time() - node->GetBssInfo().rent_cost());
         }
         maneuvers.emplace_front();
-        AddBssManeuver(maneuvers.front(), DirectionsLeg_Maneuver_Type_kTypeRentBikeAtBikeShare, i);
+        AddBssManeuver(maneuvers.front(), DirectionsLeg_Maneuver_Type_kRentBikeAtBikeShare, i);
       }
       if (CanReturnBikeAtBikeShare(i)) {
         // ReturnBikeAtBikeShare current maneuver
@@ -328,7 +328,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
           maneuvers.front().set_time(maneuvers.front().time() - node->GetBssInfo().return_cost());
         }
         maneuvers.emplace_front();
-        AddBssManeuver(maneuvers.front(), DirectionsLeg_Maneuver_Type_kTypeReturnBikeAtBikeShare, i);
+        AddBssManeuver(maneuvers.front(), DirectionsLeg_Maneuver_Type_kReturnBikeAtBikeShare, i);
       }
       // Initialize new maneuver
       maneuvers.emplace_front();
@@ -483,10 +483,10 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       }
       // Do not combine
       // if current or next maneuver is Bss rent or return
-      else if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kTypeReturnBikeAtBikeShare) ||
-               (curr_man->type() == DirectionsLeg_Maneuver_Type_kTypeRentBikeAtBikeShare) ||
-               (next_man->type() == DirectionsLeg_Maneuver_Type_kTypeReturnBikeAtBikeShare) ||
-               (next_man->type() == DirectionsLeg_Maneuver_Type_kTypeRentBikeAtBikeShare)) {
+      else if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kReturnBikeAtBikeShare) ||
+               (curr_man->type() == DirectionsLeg_Maneuver_Type_kRentBikeAtBikeShare) ||
+               (next_man->type() == DirectionsLeg_Maneuver_Type_kReturnBikeAtBikeShare) ||
+               (next_man->type() == DirectionsLeg_Maneuver_Type_kRentBikeAtBikeShare)) {
         LOG_TRACE("+++ Do Not Combine: if Rent or Return BikeShare +++");
         // Update with no combine
         prev_man = curr_man;
@@ -1672,24 +1672,18 @@ void ManeuversBuilder::UpdateBssManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_bss_info(bss_info);
   }
 
-  if (maneuver.type() != DirectionsLeg_Maneuver_Type_kTypeRentBikeAtBikeShare &&
-      maneuver.type() != DirectionsLeg_Maneuver_Type_kTypeReturnBikeAtBikeShare) {
+  if (maneuver.type() != DirectionsLeg_Maneuver_Type_kRentBikeAtBikeShare &&
+      maneuver.type() != DirectionsLeg_Maneuver_Type_kReturnBikeAtBikeShare) {
     return;
   }
 
   auto duration = 0.0f;
-  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kTypeRentBikeAtBikeShare) {
-    maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare);
-    if (node->HasBssInfo()) {
+  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRentBikeAtBikeShare && node->HasBssInfo()) {
         duration = node->GetBssInfo().rent_cost();
-    }
   }
 
-  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kTypeReturnBikeAtBikeShare) {
-    maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare);
-    if (node->HasBssInfo()) {
+  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kReturnBikeAtBikeShare && node->HasBssInfo()) {
         duration = node->GetBssInfo().return_cost();
-    }
   }
   maneuver.set_time(duration);
   maneuver.set_length(0);
