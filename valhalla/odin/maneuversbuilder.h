@@ -89,7 +89,6 @@ protected:
 
   void SetManeuverType(Maneuver& maneuver, bool none_type_allowed = true);
   void UpdateBssManeuver(Maneuver& maneuver, int node_index);
-  float bike_share_cost(valhalla::Costing_Type costing_type, int node_index) const;
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver,
                                         EnhancedTripLeg_Edge* prev_edge,
