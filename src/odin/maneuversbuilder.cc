@@ -204,22 +204,6 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   return maneuvers;
 }
 
-float ManeuversBuilder::bike_share_cost(valhalla::Costing_Type costing_type, int node_index) const {
-  auto bike_share_cost_it = options_.costings().find(costing_type);
-  if (bike_share_cost_it != options_.costings().end()) {
-    return bike_share_cost_it->second.options().bike_share_cost();
-  }
-  auto node = trip_path_->GetEnhancedNode(node_index);
-  if (node->HasBssInfo()) {
-    auto bss_info = node->GetBssInfo();
-    if (costing_type == valhalla::Costing_Type::Costing_Type_bicycle) {
-      return bss_info.rent_cost();
-    }
-    return bss_info.return_cost();
-  }
-  return 0.0f;
-}
-
 std::list<Maneuver> ManeuversBuilder::Produce() {
   std::list<Maneuver> maneuvers;
 
@@ -330,15 +314,19 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
       FinalizeManeuver(maneuvers.front(), i);
       if (CanRentBikeAtBikeShare(i)) {
         // RentBikeAtBikeShare current maneuver
-        auto rent_cost = bike_share_cost(valhalla::Costing_Type::Costing_Type_bicycle, i);
-        maneuvers.front().set_time(maneuvers.front().time() - rent_cost);
+        auto node = trip_path_->GetEnhancedNode(i);
+        if (node->HasBssInfo()) {
+          maneuvers.front().set_time(maneuvers.front().time() - node->GetBssInfo().rent_cost());
+        }
         maneuvers.emplace_front();
         AddBssManeuver(maneuvers.front(), DirectionsLeg_Maneuver_Type_kTypeRentBikeAtBikeShare, i);
       }
       if (CanReturnBikeAtBikeShare(i)) {
         // ReturnBikeAtBikeShare current maneuver
-        auto return_cost = bike_share_cost(valhalla::Costing_Type::Costing_Type_pedestrian, i);
-        maneuvers.front().set_time(maneuvers.front().time() - return_cost);
+        auto node = trip_path_->GetEnhancedNode(i);
+        if (node->HasBssInfo()) {
+          maneuvers.front().set_time(maneuvers.front().time() - node->GetBssInfo().return_cost());
+        }
         maneuvers.emplace_front();
         AddBssManeuver(maneuvers.front(), DirectionsLeg_Maneuver_Type_kTypeReturnBikeAtBikeShare, i);
       }
@@ -1692,12 +1680,16 @@ void ManeuversBuilder::UpdateBssManeuver(Maneuver& maneuver, int node_index) {
   auto duration = 0.0f;
   if (maneuver.type() == DirectionsLeg_Maneuver_Type_kTypeRentBikeAtBikeShare) {
     maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare);
-    duration = bike_share_cost(valhalla::Costing_Type::Costing_Type_bicycle, node_index);
+    if (node->HasBssInfo()) {
+        duration = node->GetBssInfo().rent_cost();
+    }
   }
 
   if (maneuver.type() == DirectionsLeg_Maneuver_Type_kTypeReturnBikeAtBikeShare) {
     maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare);
-    duration = bike_share_cost(valhalla::Costing_Type::Costing_Type_pedestrian, node_index);
+    if (node->HasBssInfo()) {
+        duration = node->GetBssInfo().return_cost();
+    }
   }
   maneuver.set_time(duration);
   maneuver.set_length(0);
