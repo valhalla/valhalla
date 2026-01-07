@@ -84,14 +84,14 @@ message DirectionsLeg {
       kBuildingEnter = 42;
       kBuildingExit = 43;
       kLevelChange = 44;
-      kTypeRentBikeAtBikeShare = 45;
-      kTypeReturnBikeAtBikeShare = 46;
+      kRentBikeAtBikeShare = 45;
+      kReturnBikeAtBikeShare = 46;
     }
 
     enum BssManeuverType{
       kNoneAction = 0;
-      kRentBikeAtBikeShare = 1;
-      kReturnBikeAtBikeShare = 2;
+      reserved 1, 2;
+      reserved "kRentBikeAtBikeShare", "kReturnBikeAtBikeShare";
     }
 
     Type type = 1;                                        // Maneuver type
@@ -129,7 +129,7 @@ message DirectionsLeg {
     uint32 turn_degree = 33;                              // Turn degree of maneuver
     bool has_time_restrictions = 34;                      // Whether edge has any time restrictions or not
     repeated GuidanceView guidance_views = 35;            // List of guidance views
-    BssManeuverType bss_maneuver_type = 36;
+    BssManeuverType bss_maneuver_type = 36 [deprecated = true];
     string verbal_succinct_transition_instruction = 37;   // verbal succinct transition instruction
     BikeShareStationInfo bss_info = 38;                   // Bike Share Station Info
     bool portions_highway = 39;                           // has portions highway
