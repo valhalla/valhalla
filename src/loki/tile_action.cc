@@ -7,6 +7,7 @@
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "utils.h"
 #include "valhalla/exceptions.h"
 
 #include <boost/geometry.hpp>
@@ -21,6 +22,9 @@
 #include <array>
 #include <climits>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <random>
 #include <unordered_set>
 
 using namespace valhalla;
@@ -34,6 +38,28 @@ namespace {
  * This is the WGS84 ellipsoid semi-major axis.
  */
 constexpr double kEarthRadiusMeters = 6378137.0;
+
+/**
+ * Make temp file name, mkstemp is POSIX & not implemented on Win
+ *
+ * @param template_name expects to end on XXXXXX (6 x "X")
+ */
+std::string make_temp_name(std::string template_name) {
+  auto pos = template_name.rfind("XXXXXX");
+
+  std::random_device rd;
+  std::mt19937_64 rng((static_cast<uint64_t>(rd()) << 32) ^ static_cast<uint64_t>(rd()));
+
+  static const char table[] = "abcdefghijklmnopqrstuvwxyz"
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                              "0123456789";
+  std::uniform_int_distribution<size_t> dist(0, sizeof(table) - 2);
+
+  for (int i = 0; i < 6; ++i)
+    template_name[pos + i] = table[dist(rng)];
+
+  return template_name;
+}
 
 /**
  * Helper class to build the edges layer with pre-registered keys
@@ -295,7 +321,7 @@ public:
       }
     }
 
-    if (reverse_edge && reverse_edge_id.Is_Valid()) {
+    if (reverse_edge && reverse_edge_id.is_valid()) {
       feature.add_property(key_edge_id_rev_, vtzero::encoded_property_value(reverse_edge_id.id()));
       feature.add_property(key_speed_rev_, vtzero::encoded_property_value(reverse_edge->speed()));
       feature.add_property(key_truck_speed_rev_,
@@ -654,10 +680,7 @@ double lat_to_merc_y(const double lat) {
   return kEarthRadiusMeters * std::log(std::tan(kPiD / 4.0 + lat * kPiD / 360.0));
 }
 
-midgard::AABB2<midgard::PointLL> tile_to_bbox(const valhalla::Tile& xyz) {
-  const auto x = xyz.x();
-  const auto y = xyz.y();
-  const auto z = xyz.z();
+midgard::AABB2<midgard::PointLL> tile_to_bbox(const uint32_t x, const uint32_t y, const uint32_t z) {
 
   const double n = std::pow(2.0, z);
 
@@ -870,30 +893,113 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
 namespace valhalla {
 namespace loki {
 
+namespace detail {
+std::filesystem::path
+mvt_local_path(const uint32_t z, const uint32_t x, const uint32_t y, const std::string& root) {
+  static std::string kMvtExt = ".mvt";
+  // number of cols & rows
+  size_t dim = 1ull << z;
+
+  // determine zero padded width for the full path
+  size_t max_index = (dim * dim) - 1;
+  size_t path_width = static_cast<size_t>(std::log10(max_index)) + 1;
+  const size_t remainder = path_width % 3;
+  if (remainder) {
+    path_width += 3 - remainder;
+  }
+  assert(path_width % 3 == 0);
+
+  // convert index to zero-padded decimal string
+  size_t tile_index = static_cast<size_t>(y) * dim + static_cast<size_t>(x);
+  std::ostringstream oss;
+  oss << std::setw(path_width) << std::setfill('0') << tile_index;
+  std::string path_no_sep = oss.str();
+
+  // split into groups of 3 digits
+  std::vector<std::string> groups;
+  size_t i = 0;
+  while (i < path_no_sep.size()) {
+    groups.push_back(path_no_sep.substr(i, 3));
+    i += 3;
+  }
+
+  std::filesystem::path tile_path = root;
+  tile_path /= std::to_string(z);
+
+  // append all groups but the last one, which is the filename
+  for (size_t i = 0; i < groups.size() - 1; ++i) {
+    tile_path /= groups[i];
+  }
+  tile_path /= groups.back() + kMvtExt;
+
+  return tile_path;
+}
+} // namespace detail
+
 std::string loki_worker_t::render_tile(Api& request) {
   const auto& options = request.options();
 
   vtzero::tile_builder tile;
   const auto z = options.tile_xyz().z();
-  if (z < min_zoom_) {
+  if (z < min_zoom_road_class_.front()) {
     return tile.serialize();
+  } else if (z > min_zoom_road_class_.back()) {
+    // throwing allows clients (mapblibre at least) to overzoom
+    throw valhalla_exception_t{175, std::to_string(min_zoom_road_class_.back())};
   }
 
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
+  // do we have it cached?
+  const auto x = options.tile_xyz().x();
+  const auto y = options.tile_xyz().y();
+  const auto tile_path = detail::mvt_local_path(z, x, y, mvt_cache_dir_);
+  bool cache_allowed = (z >= mvt_cache_min_zoom_) && !mvt_cache_dir_.empty();
+
+  bool is_cached = false;
+  if (cache_allowed) {
+    is_cached = std::filesystem::exists(tile_path);
+    if (is_cached) {
+      std::ifstream tile_file(tile_path, std::ios::binary);
+      return std::string(std::istreambuf_iterator<char>(tile_file), std::istreambuf_iterator<char>());
+    }
+  }
+
   // get lat/lon bbox
-  const auto bounds = tile_to_bbox(options.tile_xyz());
+  const auto bounds = tile_to_bbox(x, y, z);
 
   // query edges in bbox, omits opposing edges
-  // TODO(nils): can RangeQuery be updated to skip hierarchy levels?
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
   build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
                options.tile_options().return_shortcuts());
 
-  return tile.serialize();
-}
+  std::string tile_bytes;
+  tile.serialize(tile_bytes);
 
+  if (cache_allowed && !is_cached) {
+    // atomically create the file
+    auto tmp = tile_path;
+    tmp += make_temp_name("_XXXXXX.tmp");
+    try {
+      std::filesystem::create_directories(tmp.parent_path());
+    } catch (const std::filesystem::filesystem_error& e) {
+      if (e.code() != std::errc::file_exists) {
+        throw;
+      }
+    }
+    std::ofstream out(tmp.string(), std::ios::binary);
+    out.write(tile_bytes.data(), static_cast<std::streamsize>(tile_bytes.size()));
+    out.close();
+    if (!out) {
+      LOG_WARN("Couldnt cache tile {}", tile_path.string());
+    }
+
+    std::filesystem::rename(tmp, tile_path);
+  }
+
+  return tile_bytes;
+}
 } // namespace loki
 } // namespace valhalla

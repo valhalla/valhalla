@@ -113,7 +113,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
     const auto& edge_info = prev_tile->edgeinfo(de);
 
     auto tile = prev_tile;
-    if (tile->id() != de->endnode().Tile_Base()) {
+    if (tile->id() != de->endnode().tile_base()) {
       tile = reader.GetGraphTile(de->endnode());
     }
 
@@ -205,7 +205,7 @@ bool ExpandFromNode(GraphReader& reader,
                     bool validate) {
 
   auto tile = prev_tile;
-  if (tile->id() != current_node.Tile_Base()) {
+  if (tile->id() != current_node.tile_base()) {
     tile = reader.GetGraphTile(current_node);
   }
 
@@ -973,7 +973,7 @@ void UpdateOpposingIndexAndTransitions(GraphReader& reader) {
 
         // Get the tile at the end node
         graph_tile_ptr endnodetile;
-        if (tile->id() == edge->endnode().Tile_Base()) {
+        if (tile->id() == edge->endnode().tile_base()) {
           endnodetile = tile;
         } else {
           endnodetile = reader.GetGraphTile(edge->endnode());

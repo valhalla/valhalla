@@ -1801,7 +1801,7 @@ TEST(BiDiAstar, test_clear_reserved_memory) {
   boost::property_tree::ptree config = test::make_config("");
   config.put("thor.clear_reserved_memory", true);
 
-  BiAstarTest astar;
+  BiAstarTest astar(config);
   astar.Clear();
 }
 
@@ -1809,7 +1809,7 @@ TEST(BiDiAstar, test_max_reserved_labels_count) {
   boost::property_tree::ptree config = test::make_config("");
   config.put("thor.max_reserved_labels_count_bidir_astar", 10);
 
-  BiAstarTest astar;
+  BiAstarTest astar(config);
   astar.Clear();
 }
 

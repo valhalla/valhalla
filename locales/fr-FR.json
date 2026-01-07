@@ -1077,30 +1077,30 @@
       ],
       "example_phrases": {
         "0": [
-          "Gardez la gauche à la fourche.",
-          "Gardez la route à la fourche.",
-          "Gardez la droite à la fourche."
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
         ],
         "1": [
-          "Gardez la droite pour prendre la sortie 62."
+          "Keep right to take exit 62."
         ],
         "2": [
-          "Gardez la droite pour prendre Interstate 8 95 South."
+          "Keep right to take Interstate 8 95 South."
         ],
         "3": [
-          "Gardez la droite pour prendre la sortie 62 dans Interstate 8 95 South."
+          "Keep right to take exit 62 onto Interstate 8 95 South."
         ],
         "4": [
-          "Gardez la droite vers Annapolis."
+          "Keep right toward Annapolis."
         ],
         "5": [
-          "Gardez la droite pour prendre la sortie 62 vers Annapolis."
+          "Keep right to take exit 62 toward Annapolis."
         ],
         "6": [
-          "Gardez la droite pour prendre Interstate 8 95 South vers Annapolis."
+          "Keep right to take Interstate 8 95 South toward Annapolis."
         ],
         "7": [
-          "Gardez la droite pour prendre la sortie 62 dans Interstate 8 95 South vers Annapolis."
+          "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."
         ]
       }
     },
@@ -1235,12 +1235,12 @@
       ],
       "example_phrases": {
         "0": [
-          "Continuez pendant 300 pieds.",
-          "Continuez pendant 9 miles."
+          "Continue for 300 feet.",
+          "Continue for 9 miles."
         ],
         "1": [
-          "Continuez sur Pennsylvania 7 43 pendant 6.2 miles.",
-          "Continuez sur Main Street, Vermont 30 pendant 1 dixième de mile."
+          "Continue on Pennsylvania 7 43 for 6.2 miles.",
+          "Continue on Main Street, Vermont 30 for 1 tenth of a mile."
         ]
       }
     },
@@ -1464,22 +1464,22 @@
       ],
       "example_phrases": {
         "0": [
-          "Tournez à tout de suite à gauche."
+          "Tournez tout de suite à gauche."
         ],
         "1": [
-          "Tournez à tout de suite à droite dans Flatbush Avenue."
+          "Tournez tout de suite à droite dans Flatbush Avenue."
         ],
         "2": [
-          "Tournez à tout de suite à gauche dans North Bond Street/US 1 Business/MD 924. Continuez sur MD 924."
+          "Tournez tout de suite à gauche dans North Bond Street/US 1 Business/MD 924. Continuez sur MD 924."
         ],
         "3": [
-          "Tournez à tout de suite à droite pour rester sur Sunstone Drive."
+          "Tournez tout de suite à droite pour rester sur Sunstone Drive."
         ],
         "4": [
-          "Make a sharp right at Mannenbashi East."
+          "Tournez tout de suite à droite à Mannenbashi East."
         ],
         "5": [
-          "Make a sharp left toward Baltimore."
+          "Tournez tout de suite à gauche vers Baltimore."
         ]
       }
     },
@@ -1507,7 +1507,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Tournez à tout de suite à gauche."
+          "Tournez tout de suite à gauche."
         ],
         "1": [
           "Tournez à tout de suite à droite dans Flatbush Avenue."
@@ -1519,10 +1519,10 @@
           "Tournez à tout de suite à droite pour rester sur Sunstone Drive."
         ],
         "4": [
-          "Make a sharp right at Mannenbashi East."
+          "Tournez tout de suite à droite à Mannenbashi East."
         ],
         "5": [
-          "Make a sharp left toward Baltimore."
+          "Tournez tout de suite à gauche vers Baltimore."
         ]
       }
     },
@@ -1667,29 +1667,29 @@
       ],
       "example_phrases": {
         "0": [
-          "Head east.",
-          "Head north."
+          "Allez vers l'est.",
+          "Allez vers le nord."
         ],
         "1": [
-          "Head east for a half mile.",
-          "Head north for 1 kilometer."
+          "Allez vers l'est pendant un demi-mile.",
+          "Allez vers le nord pendant 1 kilomètre."
         ],
         "2": [
-          "Head southwest on 5th Avenue."
+          "Allez au sud ouest sur la 5ième Avenue."
         ],
         "3": [
-          "Head southwest on 5th Avenue for 1 tenth of a mile."
+          "Allez au sud ouest sur la 5ième Avenue sur une dizaine de miles"
         ],
         "4": [
-          "Head south on North Prince Street, U.S. 2 22."
+          "Allez du sud au nord sur Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Drive east.",
-          "Drive north."
+          "Conduisez vers l'est.",
+          "Conduisez vers le nord."
         ],
         "6": [
-          "Drive east for a half mile.",
-          "Drive north for 1 kilometer."
+          "Conduisez vers l'est pendant un demi mile.",
+          "Conduisez vers le nord sur 1 kilomètre"
         ],
         "7": [
           "Drive southwest on 5th Avenue."
@@ -1718,11 +1718,11 @@
           "Walk south on North Prince Street, U.S. 2 22."
         ],
         "15": [
-          "Bike east.",
-          "Bike north."
+          "Pédalez vers l'est.",
+          "Pédalez vers le nord."
         ],
         "16": [
-          "Bike east for a half mile.",
+          "Pédalez vers le l'est pendant un demi mile.",
           "Bike north for 1 kilometer."
         ],
         "17": [
@@ -1852,7 +1852,7 @@
       "station_label": "Station",
       "example_phrases": {
         "0": [
-          "Changez à station."
+          "Changez à la station."
         ],
         "1": [
           "Changez à Embarcadero Station."
@@ -1871,7 +1871,7 @@
       "station_label": "Station",
       "example_phrases": {
         "0": [
-          "Changez à station."
+          "Changez à la station."
         ],
         "1": [
           "Changez à Embarcadero Station."
@@ -2311,11 +2311,11 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "Continuer à <LEVEL>."
       },
       "example_phrases": {
         "0": [
-          "Continue to Level 2."
+          "Continuer au niveau 2."
         ]
       }
     },

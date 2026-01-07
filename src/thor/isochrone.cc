@@ -223,7 +223,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   }
 
   // Get the DirectedEdge because we'll need its shape
-  graph_tile_ptr tile = graphreader.GetGraphTile(pred.edgeid().Tile_Base());
+  graph_tile_ptr tile = graphreader.GetGraphTile(pred.edgeid().tile_base());
   const DirectedEdge* edge = tile->directededge(pred.edgeid());
 
   // Transit lines and ferries can't really be "reached" you really just

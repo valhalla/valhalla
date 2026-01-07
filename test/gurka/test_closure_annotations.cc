@@ -38,7 +38,7 @@ void close_partial_dir_edge_from(baldr::GraphReader& reader,
                                  const gurka::map& map) {
   baldr::GraphId tile_id(tile.header->tile_id);
   auto edge = std::get<0>(gurka::findEdge(reader, map.nodes, edge_name, end_node));
-  if (edge.Tile_Base() == tile_id && edge.id() == index) {
+  if (edge.tile_base() == tile_id && edge.id() == index) {
     uint8_t breakpoint1 = static_cast<uint8_t>(255 * percent_along);
     SetLiveSpeedFrom(current, 0, breakpoint1);
   }
@@ -54,7 +54,7 @@ void close_partial_dir_edge_upto(baldr::GraphReader& reader,
                                  const gurka::map& map) {
   baldr::GraphId tile_id(tile.header->tile_id);
   auto edge = std::get<0>(gurka::findEdge(reader, map.nodes, edge_name, end_node));
-  if (edge.Tile_Base() == tile_id && edge.id() == index) {
+  if (edge.tile_base() == tile_id && edge.id() == index) {
     uint8_t breakpoint1 = static_cast<uint8_t>(255 * percent_along);
     SetLiveSpeedUpto(current, 0, breakpoint1);
   }
@@ -69,7 +69,7 @@ void close_dir_edge(baldr::GraphReader& reader,
                     const gurka::map& map) {
   baldr::GraphId tile_id(tile.header->tile_id);
   auto edge = std::get<0>(gurka::findEdge(reader, map.nodes, edge_name, end_node));
-  if (edge.Tile_Base() == tile_id && edge.id() == index) {
+  if (edge.tile_base() == tile_id && edge.id() == index) {
     SetLiveSpeed(current, 0);
   }
 }

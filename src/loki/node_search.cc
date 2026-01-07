@@ -17,7 +17,7 @@ struct tile_cache {
   }
 
   inline tile_cache& operator()(vb::GraphId id) {
-    const auto id_base = id.Tile_Base();
+    const auto id_base = id.tile_base();
     if (m_last_tile_id != id_base) {
       lookup(id_base);
     }
@@ -233,7 +233,7 @@ struct node_collector {
   void add_edge(vb::GraphId edge_id) {
     const auto tile_id = m_cache.tile_id();
 
-    if (edge_id.Tile_Base() == tile_id) {
+    if (edge_id.tile_base() == tile_id) {
       // we want _both_ nodes attached to this edge. the end node is easy
       // because the ID is available from the edge itself.
       const auto& edge = m_cache.edge(edge_id);
@@ -257,7 +257,7 @@ struct node_collector {
   void add_node_with_opposite(vb::GraphId node_id, uint32_t opp_index) {
     const auto tile_id = m_cache.tile_id();
 
-    if (node_id.Tile_Base() == tile_id) {
+    if (node_id.tile_base() == tile_id) {
       const auto& node = m_cache.node(node_id);
 
       // node is in this tile, so add it to the collection
@@ -283,7 +283,7 @@ struct node_collector {
   void add_node(vb::GraphId node_id) {
     const auto tile_id = m_cache.tile_id();
 
-    if (node_id.Tile_Base() == tile_id) {
+    if (node_id.tile_base() == tile_id) {
       // node is in this tile, so add it to the collection
       m_nodes.push_back(node_id, m_cache.node_ll(node_id));
     }

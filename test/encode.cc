@@ -666,6 +666,47 @@ TEST(Encode, Int7_SmallerTypes) {
   test_int7_roundtrip<uint16_t>({0, 1, UINT16_MAX, 42}, "uint16_t");
   test_int7_roundtrip<int16_t>({INT16_MIN, -1, 0, 1, INT16_MAX}, "int16_t");
 }
+
+TEST(ZigZag, EncodeDecode32) {
+  ASSERT_EQ(zigzag_encode(int32_t(0)), 0);
+  ASSERT_EQ(zigzag_encode(int32_t(-1)), 1);
+  ASSERT_EQ(zigzag_encode(int32_t(1)), 2);
+  ASSERT_EQ(zigzag_encode(int32_t(-2)), 3);
+  ASSERT_EQ(zigzag_encode(int32_t(2)), 4);
+  ASSERT_EQ(zigzag_encode(int32_t(-3)), 5);
+  ASSERT_EQ(zigzag_encode(INT32_MIN), UINT32_MAX);
+  ASSERT_EQ(zigzag_encode(INT32_MAX), UINT32_MAX - 1);
+
+  ASSERT_EQ(zigzag_decode(uint32_t(0)), 0);
+  ASSERT_EQ(zigzag_decode(uint32_t(1)), -1);
+  ASSERT_EQ(zigzag_decode(uint32_t(2)), 1);
+  ASSERT_EQ(zigzag_decode(uint32_t(3)), -2);
+  ASSERT_EQ(zigzag_decode(uint32_t(4)), 2);
+  ASSERT_EQ(zigzag_decode(uint32_t(5)), -3);
+  ASSERT_EQ(zigzag_decode(UINT32_MAX), INT32_MIN);
+  ASSERT_EQ(zigzag_decode(UINT32_MAX - 1), INT32_MAX);
+}
+
+TEST(ZigZag, EncodeDecode64) {
+  ASSERT_EQ(zigzag_encode(int64_t(0)), 0);
+  ASSERT_EQ(zigzag_encode(int64_t(-1)), 1);
+  ASSERT_EQ(zigzag_encode(int64_t(1)), 2);
+  ASSERT_EQ(zigzag_encode(int64_t(-2)), 3);
+  ASSERT_EQ(zigzag_encode(int64_t(2)), 4);
+  ASSERT_EQ(zigzag_encode(int64_t(-3)), 5);
+  ASSERT_EQ(zigzag_encode(INT64_MIN), UINT64_MAX);
+  ASSERT_EQ(zigzag_encode(INT64_MAX), UINT64_MAX - 1);
+
+  ASSERT_EQ(zigzag_decode(uint64_t(0)), 0);
+  ASSERT_EQ(zigzag_decode(uint64_t(1)), -1);
+  ASSERT_EQ(zigzag_decode(uint64_t(2)), 1);
+  ASSERT_EQ(zigzag_decode(uint64_t(3)), -2);
+  ASSERT_EQ(zigzag_decode(uint64_t(4)), 2);
+  ASSERT_EQ(zigzag_decode(uint64_t(5)), -3);
+  ASSERT_EQ(zigzag_decode(UINT64_MAX), INT64_MIN);
+  ASSERT_EQ(zigzag_decode(UINT64_MAX - 1), INT64_MAX);
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
