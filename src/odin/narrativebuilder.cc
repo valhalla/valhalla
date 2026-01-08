@@ -4335,7 +4335,7 @@ std::string NarrativeBuilder::FormEnterBuildingInstruction(Maneuver& maneuver) {
 
 std::string NarrativeBuilder::FormBikeShareInstruction(Maneuver& maneuver) {
   if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRentBikeAtBikeShare) {
-      return dictionary_.bike_share_verbal.phrases.at(std::to_string(kBikeShareRentIndex));
+    return dictionary_.bike_share_verbal.phrases.at(std::to_string(kBikeShareRentIndex));
   }
   return dictionary_.bike_share_verbal.phrases.at(std::to_string(kBikeShareReturnIndex));
 }

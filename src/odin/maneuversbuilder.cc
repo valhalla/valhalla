@@ -1679,11 +1679,11 @@ void ManeuversBuilder::UpdateBssManeuver(Maneuver& maneuver, int node_index) {
 
   auto duration = 0.0f;
   if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRentBikeAtBikeShare && node->HasBssInfo()) {
-        duration = node->GetBssInfo().rent_cost();
+    duration = node->GetBssInfo().rent_cost();
   }
 
   if (maneuver.type() == DirectionsLeg_Maneuver_Type_kReturnBikeAtBikeShare && node->HasBssInfo()) {
-        duration = node->GetBssInfo().return_cost();
+    duration = node->GetBssInfo().return_cost();
   }
   maneuver.set_time(duration);
   maneuver.set_length(0);

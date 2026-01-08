@@ -86,7 +86,7 @@ void test_request(const std::string& request,
     }
     size_t idx = -1;
     for (const auto& m : d.maneuver()) {
-        ++idx;
+      ++idx;
       auto search = expected_bss_ref.find(idx);
       if (search != expected_bss_ref.end()) {
         EXPECT_EQ(m.bss_info().ref(), search->second)
@@ -164,8 +164,8 @@ TEST(AstarBss, test_With_Mode_Changes) {
                                                         {10, "3008"},
                                                         {11, "3008"}};
 
-  test_request(request, expected_travel_modes, expected_route,
-               expected_maneuver_types, expected_bss_ref);
+  test_request(request, expected_travel_modes, expected_route, expected_maneuver_types,
+               expected_bss_ref);
 }
 
 /*
@@ -258,8 +258,8 @@ TEST(AstarBss, test_With_Mode_Changes_2) {
                                                         {11, "3008"},
                                                         {12, "3008"}};
 
-  test_request(request, expected_travel_modes, expected_route,
-               expected_maneuver_types, expected_bss_ref);
+  test_request(request, expected_travel_modes, expected_route, expected_maneuver_types,
+               expected_bss_ref);
 }
 
 // When pedestrian is chosen as travel_mode, the departure edge must NOT be a bss connections edge
@@ -364,8 +364,8 @@ TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
   std::string expected_shape =
       "e~le|A_ldoCyD~IoAtCkArC]z@kBpEeAsAdArAjBqE\\{@jAsCad@ai@yAgBo@iCuF_Ua@_B[uAyQgz@i@cCwAt@mg@bXyt@b`@yCvAyBqH{EgLiCvEoD|G{\\`r@wFqHoPqTy@gAyAkBe@o@i@q@{D_CeB{@wCfC{XfVt@jCjA~Dn@xB?lBcA|BV\\f@r@wBlE";
 
-  test_request(request, expected_travel_modes, expected_route,
-               expected_maneuver_types, expected_bss_ref, expected_shape);
+  test_request(request, expected_travel_modes, expected_route, expected_maneuver_types,
+               expected_bss_ref, expected_shape);
 }
 
 class AstarBSSTest : public thor::AStarBSSAlgorithm {
