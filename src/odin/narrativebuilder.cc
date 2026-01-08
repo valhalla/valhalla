@@ -513,6 +513,12 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       case DirectionsLeg_Maneuver_Type_kLevelChange:
         maneuver.set_instruction(FormGenericLevelChangeInstruction(maneuver));
         break;
+      case DirectionsLeg_Maneuver_Type_kRentBikeAtBikeShare:
+        maneuver.set_instruction(FormBikeShareInstruction(maneuver));
+        break;
+      case DirectionsLeg_Maneuver_Type_kReturnBikeAtBikeShare:
+        maneuver.set_instruction(FormBikeShareInstruction(maneuver));
+        break;
       case DirectionsLeg_Maneuver_Type_kContinue:
       default: {
         if (maneuver.has_node_type()) {
@@ -539,8 +545,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         break;
       }
     }
-    maneuver.set_instruction(FormBssManeuverType(maneuver.bss_maneuver_type()) +
-                             maneuver.instruction());
 
     // Update previous maneuver
     prev_maneuver = &maneuver;
@@ -4329,6 +4333,13 @@ std::string NarrativeBuilder::FormEnterBuildingInstruction(Maneuver& maneuver) {
   return instruction;
 }
 
+std::string NarrativeBuilder::FormBikeShareInstruction(Maneuver& maneuver) {
+  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRentBikeAtBikeShare) {
+    return dictionary_.bike_share_verbal.phrases.at(std::to_string(kBikeShareRentIndex));
+  }
+  return dictionary_.bike_share_verbal.phrases.at(std::to_string(kBikeShareReturnIndex));
+}
+
 std::string NarrativeBuilder::FormExitBuildingInstruction(Maneuver& maneuver) {
   // "0": "Exit the building.",
   // "1": "Exit the building, and continue on <STREET_NAMES>."
@@ -4926,17 +4937,5 @@ std::string NarrativeBuilder_ruRU::GetPluralCategory(size_t count) {
   return kPluralCategoryOtherKey;
 }
 
-std::string NarrativeBuilder::FormBssManeuverType(DirectionsLeg_Maneuver_BssManeuverType type) {
-  switch (type) {
-    case DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare: {
-      return "Then rent a bike at BSS. ";
-    }
-    case DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare: {
-      return "Then return the bike to BSS. ";
-    }
-    default:
-      return "";
-  }
-}
 } // namespace odin
 } // namespace valhalla
