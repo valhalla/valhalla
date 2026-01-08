@@ -88,12 +88,6 @@ message DirectionsLeg {
       kReturnBikeAtBikeShare = 46;
     }
 
-    enum BssManeuverType{
-      kNoneAction = 0;
-      reserved 1, 2;
-      reserved "kRentBikeAtBikeShare", "kReturnBikeAtBikeShare";
-    }
-
     Type type = 1;                                        // Maneuver type
     string text_instruction = 2;                          // text instruction
     repeated StreetName street_name = 3;                  // street names
@@ -129,7 +123,8 @@ message DirectionsLeg {
     uint32 turn_degree = 33;                              // Turn degree of maneuver
     bool has_time_restrictions = 34;                      // Whether edge has any time restrictions or not
     repeated GuidanceView guidance_views = 35;            // List of guidance views
-    BssManeuverType bss_maneuver_type = 36 [deprecated = true];
+    reserved 36;
+    reserved "bss_maneuver_type";
     string verbal_succinct_transition_instruction = 37;   // verbal succinct transition instruction
     BikeShareStationInfo bss_info = 38;                   // Bike Share Station Info
     bool portions_highway = 39;                           // has portions highway

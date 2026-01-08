@@ -51,8 +51,6 @@ struct route_tester {
   vo::odin_worker_t odin_worker;
 };
 
-using BssManeuverType = valhalla::DirectionsLeg_Maneuver_BssManeuverType;
-
 void test_request(const std::string& request,
                   const std::vector<TravelMode>& expected_travel_modes,
                   const std::vector<std::string>& expected_route,
