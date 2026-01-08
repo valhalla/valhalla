@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+* Add Rent and Return bike share maneuvers. [#5770](https://github.com/valhalla/valhalla/pull/5770)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
