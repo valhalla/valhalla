@@ -61,8 +61,10 @@ gurka::map TaggedValues::map = {};
 std::string TaggedValues::ascii_map = {};
 gurka::nodelayout TaggedValues::layout = {};
 
+namespace {
 Api api;
 rapidjson::Document d;
+} // namespace
 
 /*************************************************************/
 

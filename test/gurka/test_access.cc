@@ -9,11 +9,13 @@
 
 using namespace valhalla;
 
+namespace {
 const std::unordered_map<std::string, std::string> build_config{
     {"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}};
 
 const std::vector<std::string>& costing = {"auto",    "taxi",          "bus",        "truck",
                                            "bicycle", "motor_scooter", "motorcycle", "pedestrian"};
+} // namespace
 
 TEST(Standalone, AccessPsvWay) {
   constexpr double gridsize_metres = 10;
@@ -521,11 +523,13 @@ TEST_F(MtbAccess, CheckMtbAccess) {
   gurka::assert::raw::expect_path(result, {"AB", "BC"});
 }
 
+namespace {
 void validate_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, expected_names);
 }
+} // namespace
 
 TEST(Standalone, NodeAccess) {
   const std::string ascii_map = R"(

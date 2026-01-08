@@ -46,8 +46,11 @@ protected:
   }
 };
 gurka::map AdminTest::map = {};
+
+namespace {
 Api api;
 rapidjson::Document d;
+} // namespace
 
 /*************************************************************/
 

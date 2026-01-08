@@ -9,6 +9,7 @@
 
 using namespace valhalla;
 
+namespace {
 std::string encode_shape(const std::vector<std::string>& nodes, valhalla::gurka::nodelayout& layout) {
   std::vector<midgard::PointLL> shape;
   shape.reserve(nodes.size());
@@ -17,6 +18,8 @@ std::string encode_shape(const std::vector<std::string>& nodes, valhalla::gurka:
   }
   return midgard::encode<std::vector<midgard::PointLL>>(shape, 1e6);
 }
+} // namespace
+
 std::tuple<baldr::GraphId, const baldr::DirectedEdge*> get_shortcut(baldr::GraphReader& reader,
                                                                     gurka::nodelayout& nodes,
                                                                     const std::string& begin_node,
