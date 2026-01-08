@@ -21,7 +21,9 @@
 namespace valhalla {
 namespace thor {
 
-enum class MatrixExpansionType : uint8_t { reverse = 0, forward = 1 };
+constexpr int kMaxLocationCount = 768; // 96 bytes
+using location_bitset_t = std::bitset<kMaxLocationCount>;
+enum class MatrixExpansionType { reverse = 0, forward = 1 };
 constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
 constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
 
@@ -154,6 +156,8 @@ protected:
   std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;
+  std::array<std::vector<std::vector<location_bitset_t>>, 2> connection_pruning_;
+  std::array<location_bitset_t, 2> complete_location_mask_;
 
   // A* heuristics for both trees and each location
   std::array<std::vector<AStarHeuristic>, 2> astar_heuristics_;
@@ -186,14 +190,13 @@ protected:
    * @param  options     the request options to check for the position along origin and destination
    *                     edges
    */
-
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
-  void CheckConnections(const uint32_t source,
-                        const sif::BDEdgeLabel& pred,
-                        const uint32_t n,
-                        baldr::GraphReader& graphreader,
-                        const valhalla::Options& options);
+  location_bitset_t CheckConnections(const uint32_t source,
+                                     const sif::BDEdgeLabel& pred,
+                                     const uint32_t n,
+                                     baldr::GraphReader& graphreader,
+                                     const valhalla::Options& options);
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
@@ -215,7 +218,26 @@ protected:
                    const EdgeMetadata& meta,
                    uint32_t& shortcuts,
                    const baldr::graph_tile_ptr& tile,
-                   const baldr::TimeInfo& time_info);
+                   const baldr::TimeInfo& time_info,
+                   const uint32_t connection_pruning_index);
+
+  /**
+
+  /**
+   * Check if the edge on the backward search connects to a reached edge
+   * on the reverse search tree.
+   * @param  target      target index.
+   * @param  pred        Edge label of the predecessor.
+   * @param  n           Iteration counter.
+   * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
+   */
+  void CheckReverseConnections(const uint32_t target,
+                               const sif::BDEdgeLabel& pred,
+                               const uint32_t n,
+                               baldr::GraphReader& graphreader,
+                               const valhalla::Options& options);
 
   /**
    * Update status when a connection is found.
