@@ -60,8 +60,7 @@ Maneuver::Maneuver()
       building_enter_(false), building_exit_(false), has_level_changes_(false), end_level_ref_(""),
       transit_connection_(false), travel_mode_(TravelMode::kDrive), rail_(false), bus_(false),
       vehicle_type_(VehicleType::kCar), pedestrian_type_(PedestrianType::kFoot),
-      bicycle_type_(BicycleType::kRoad), transit_type_(TransitType::kRail),
-      bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
+      bicycle_type_(BicycleType::kRoad), transit_type_(TransitType::kRail) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -1066,14 +1065,6 @@ const std::vector<DirectionsLeg_GuidanceView>& Maneuver::guidance_views() const 
 
 std::vector<DirectionsLeg_GuidanceView>* Maneuver::mutable_guidance_views() {
   return &guidance_views_;
-}
-
-DirectionsLeg_Maneuver_BssManeuverType Maneuver::bss_maneuver_type() const {
-  return bss_maneuver_type_;
-}
-
-void Maneuver::set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType type) {
-  bss_maneuver_type_ = type;
 }
 
 bool Maneuver::has_long_street_name() const {
