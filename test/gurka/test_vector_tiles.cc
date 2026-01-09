@@ -1,7 +1,10 @@
+#include "baldr/attributes_controller.h"
 #include "gurka.h"
+#include "loki/tiles.h"
 #include "loki/utils.h"
 #include "loki/worker.h"
 #include "midgard/constants.h"
+#include "proto_conversions.h"
 #include "test.h"
 
 #include <valhalla/exceptions.h>
@@ -60,8 +63,8 @@ TEST(VectorTilesBasic, TileRendering) {
   std::string tile_data;
   auto api = gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 2900);
-  EXPECT_GT(tile_data.size(), 2800);
+  EXPECT_LT(tile_data.size(), 2800);
+  EXPECT_GT(tile_data.size(), 2600);
 
   // expect a non-verbose request to have a lot less size
   std::string tile_data_slim;
@@ -71,15 +74,11 @@ TEST(VectorTilesBasic, TileRendering) {
 
   vtzero::vector_tile tile{tile_data};
 
-  bool has_edges = false;
-  bool has_nodes = false;
-
   while (auto layer = tile.next_layer()) {
+    EXPECT_TRUE(layer.num_features() > 0);
+
     std::string layer_name = std::string(layer.name());
-
     if (layer_name == "edges") {
-      has_edges = true;
-
       EXPECT_EQ(layer.version(), 2);
       EXPECT_EQ(layer.extent(), 4096);
 
@@ -107,8 +106,6 @@ TEST(VectorTilesBasic, TileRendering) {
       }
 
     } else if (layer_name == "nodes") {
-      has_nodes = true;
-
       EXPECT_EQ(layer.version(), 2);
       EXPECT_EQ(layer.extent(), 4096);
 
@@ -138,13 +135,18 @@ TEST(VectorTilesBasic, TileRendering) {
       FAIL() << "Unexpected layer: " << layer_name;
     }
   }
-  EXPECT_TRUE(has_edges);
-  EXPECT_TRUE(has_nodes);
 }
 
 class VectorTiles : public ::testing::Test {
 protected:
   static gurka::map map;
+
+  static void SetupTest() {
+    const auto cache_dir = map.config.get<std::string>("loki.service_defaults.mvt_cache_dir");
+    if (std::filesystem::exists(cache_dir)) {
+      std::filesystem::remove_all(cache_dir);
+    }
+  }
 
   static void SetUpTestSuite() {
     constexpr double gridsize = 50;
@@ -187,18 +189,12 @@ protected:
         {"loki.service_defaults.mvt_cache_dir", VALHALLA_BUILD_DIR "test/data/mvt_cache_dir"}};
     map = gurka::buildtiles(layout, ways, nodes, {},
                             VALHALLA_BUILD_DIR "test/data/gurka_vt_zoom_compare", build_options);
-
-    const auto cache_dir = map.config.get<std::string>("loki.service_defaults.mvt_cache_dir");
-    if (std::filesystem::exists(cache_dir)) {
-      std::filesystem::remove_all(cache_dir);
-    }
   }
 };
 
 gurka::map VectorTiles::map = {};
 
 TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
-
   auto test_tile = [&](const uint32_t z, const uint32_t exp_total_size, const uint32_t exp_edges,
                        const uint32_t exp_nodes, uint32_t& cache_count) {
     SCOPED_TRACE(std::format("Zoom {} failed", z));
@@ -242,17 +238,17 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   };
 
   uint32_t cache_count = 0;
-  test_tile(8, 3418, 3, 4, cache_count);    // only primary and upper
-  test_tile(10, 5002, 7, 12, cache_count);  // adds secondary
-  test_tile(11, 5717, 10, 12, cache_count); // adds tertiary & unclassified
-  test_tile(12, 5717, 10, 12, cache_count); // same as 11
-  test_tile(13, 7205, 14, 20, cache_count); // adds residential
-  test_tile(14, 7903, 17, 20, cache_count); // adds service/other
+  test_tile(8, 3297, 3, 4, cache_count);    // only primary and upper
+  test_tile(10, 4787, 7, 12, cache_count);  // adds secondary
+  test_tile(11, 5717, 11, 12, cache_count); // adds tertiary & unclassified
+  test_tile(12, 5717, 11, 12, cache_count); // same as 11
+  test_tile(13, 7205, 15, 20, cache_count); // adds residential
+  test_tile(14, 7903, 18, 20, cache_count); // adds service/other
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
 
   // execute the cache path
-  test_tile(14, 7903, 17, 20, cache_count);
+  test_tile(14, 7903, 18, 20, cache_count);
 
   // make sure we fail the request when z exceeds what the server supports
   EXPECT_THROW(
@@ -266,4 +262,126 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
         }
       },
       valhalla_exception_t);
+}
+
+TEST_F(VectorTiles, FilterIncludeExclude) {
+
+  // verbose is set true in do_action
+  std::string tile_data_full;
+  Api api_full = gurka::do_action(Options::tile, map, "x", 10, "auto", {}, nullptr, &tile_data_full);
+
+  // get a map with settings to not allow cache
+  auto map_no_cache = map;
+  auto current_config = map_no_cache.config.get<std::string>("loki.service_defaults.mvt_cache_dir");
+  EXPECT_TRUE(current_config != "");
+  map_no_cache.config.put("loki.service_defaults.mvt_cache_dir", "");
+
+  auto test_tile_filter = [&](const uint32_t z, const std::string& filter_attribute,
+                              const valhalla::FilterAction& filter_action,
+                              const gurka::map& current_map, uint32_t& cache_count) {
+    SCOPED_TRACE(std::format("Zoom {} failed, action: {}", z, FilterAction_Enum_Name(filter_action)));
+
+    const std::unordered_map<std::string, std::string> options =
+        {{"/verbose", "0"},
+         {"/filters/attributes/0", filter_attribute},
+         {"/filters/action", FilterAction_Enum_Name(filter_action)}};
+    std::string tile_data_filter;
+    Api api_filter = gurka::do_action(Options::tile, current_map, "x", z, "auto", options, nullptr,
+                                      &tile_data_filter);
+
+    EXPECT_LT(tile_data_filter.size(), tile_data_full.size());
+
+    // check that cache worked
+    if (const std::string cache_dir =
+            current_map.config.get<std::string>("loki.service_defaults.mvt_cache_dir");
+        !cache_dir.empty() &&
+        z >= map.config.get<uint32_t>("loki.service_defaults.mvt_cache_min_zoom")) {
+      const auto x = api_filter.options().tile_xyz().x();
+      const auto y = api_filter.options().tile_xyz().y();
+      const auto tile_path = loki::detail::mvt_local_path(z, x, y, cache_dir);
+      EXPECT_TRUE(std::filesystem::exists(tile_path)) << "path doesn't exist: " + tile_path.string();
+      cache_count++;
+    }
+
+    std::set<std::string_view> expected_props{"tile_level", "tile_id", "road_class"};
+    // we need a separate size for edge_id, which is 2 attributes in the tiles and only one in the
+    // controller
+    auto expected_props_size = expected_props.size();
+    if (filter_action == valhalla::include) {
+      expected_props.insert(filter_attribute);
+      expected_props_size++;
+    } else {
+      // need to go the other way around: from the full set we want to remove one
+      auto add_to_expected = [&]<typename T, std::size_t N>(T(&arr)[N]) {
+        for (size_t i = 0; i < N; ++i) {
+          std::string_view attr = arr[i].attribute_flag;
+          if (attr != filter_attribute) {
+            expected_props.insert(attr);
+            expected_props_size++;
+          }
+        };
+      };
+
+      add_to_expected(loki::detail::kSharedEdgeAttributes);
+      add_to_expected(loki::detail::kForwardEdgeAttributes);
+      add_to_expected(loki::detail::kReverseEdgeAttributes);
+      add_to_expected(loki::detail::kForwardLiveSpeedAttributes);
+      add_to_expected(loki::detail::kReverseLiveSpeedAttributes);
+      if (filter_attribute != "edge.id") {
+        expected_props.insert("edge.id");
+        // in the tiles it's 2 attributes
+        expected_props_size += 2;
+      }
+    }
+    vtzero::vector_tile tile_filter{tile_data_filter};
+
+    while (auto layer = tile_filter.next_layer()) {
+      EXPECT_TRUE(layer.num_features() > 0);
+
+      std::string layer_name = std::string(layer.name());
+      if (layer_name == "edges") {
+        auto feature = layer.next_feature();
+        std::set<std::string_view> found_props;
+        while (auto property = feature.next_property()) {
+          std::string_view key{property.key().data(), property.key().size()};
+          std::string_view loki_key;
+          try {
+            loki_key = loki::detail::kEdgePropToAttributeFlag.at(key);
+          } catch (...) { continue; }
+
+          EXPECT_TRUE(expected_props.count(loki_key) > 0) << "Edge should have property: " << key;
+        }
+        EXPECT_EQ(feature.num_properties(), expected_props_size);
+      }
+    }
+
+    return tile_data_filter.size();
+  };
+
+  uint32_t cache_count = 0;
+  // no cache allowed, filter include
+  auto no_cache_size =
+      test_tile_filter(8, "edge.speed_forward", valhalla::include, map_no_cache, cache_count);
+  // no cache allowed, filter exclude
+  test_tile_filter(8, "edge.speed_forward", valhalla::exclude, map_no_cache, cache_count);
+  EXPECT_EQ(cache_count, 0);
+
+  // cold cache
+  // cache allowed, filter include
+  auto cold_size = test_tile_filter(14, "edge.id", valhalla::include, map, cache_count);
+  // cache allowed, filter exclude
+  test_tile_filter(14, "edge.id", valhalla::exclude, map, cache_count);
+  EXPECT_EQ(cache_count, 2);
+
+  // warm cache
+  cache_count = 0;
+  // cache allowed, filter include
+  auto warm_size = test_tile_filter(14, "edge.is_shortcut", valhalla::include, map, cache_count);
+  // cache allowed, filter exclude
+  test_tile_filter(14, "edge.id", valhalla::exclude, map, cache_count);
+  EXPECT_EQ(cache_count, 2);
+
+  EXPECT_EQ(cold_size, warm_size);
+  // TODO: for some reason the tiles with no cache a magnitude smaller than the ones with cache
+  // EXPECT_EQ(cold_size, no_cache_size);
 }

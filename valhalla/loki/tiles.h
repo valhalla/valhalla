@@ -1037,7 +1037,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
     },
     {
         "destonly_hgv",
-        baldr::kEdgeDestinationOnly,
+        baldr::kEdgeDestinationOnlyHGV,
         &EdgesLayerBuilder::key_destonly_hgv_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1579,6 +1579,12 @@ static const std::unordered_map<std::string_view, std::string_view> kEdgePropToA
     {"edge_id:forward", baldr::kEdgeId},
     {"edge_id:backward", baldr::kEdgeId},
 };
+
+constexpr size_t kNumMVTEdgeAttrs = std::size(loki::detail::kForwardEdgeAttributes) +
+                                    std::size(loki::detail::kReverseEdgeAttributes) +
+                                    std::size(loki::detail::kForwardLiveSpeedAttributes) +
+                                    std::size(loki::detail::kReverseLiveSpeedAttributes) +
+                                    std::size(loki::detail::kSharedEdgeAttributes);
 } // namespace detail
 
 } // namespace valhalla::loki

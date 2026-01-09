@@ -124,7 +124,7 @@ void filter_tile(const std::string& tile_bytes,
       if (key_str == "edge_id:forward") {
         std::cout << std::endl;
       }
-      // mandatory fields are not part of AttributeController
+      // mandatory fields are not part of AttributeController and that throws
       try {
         attrs_allowed[i] = controller(loki::detail::kEdgePropToAttributeFlag.at(key_str));
       } catch (const std::exception& e) { attrs_allowed[i] = true; }
