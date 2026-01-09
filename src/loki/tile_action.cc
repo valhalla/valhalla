@@ -342,7 +342,6 @@ EdgesLayerBuilder::EdgesLayerBuilder(vtzero::tile_builder& tile,
                                      const baldr::AttributesController& controller)
     : layer(tile, kEdgeLayerName.data()), controller_(controller) {
   key_tile_level_ = layer.add_key_without_dup_check("tile_level");
-  key_tile_id_ = layer.add_key_without_dup_check("tile_id");
   key_road_class_ = layer.add_key_without_dup_check("road_class");
 
   init_attribute_keys(loki::detail::kSharedEdgeAttributes, controller);
@@ -383,7 +382,6 @@ void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
 
   // Add shared tile properties (same for both directions)
   feature.add_property(key_tile_level_, vtzero::encoded_property_value(edge_id.level()));
-  feature.add_property(key_tile_id_, vtzero::encoded_property_value(edge_id.tileid()));
   feature.add_property(key_road_class_,
                        vtzero::encoded_property_value(static_cast<uint32_t>(edge->classification())));
 
@@ -420,7 +418,6 @@ NodesLayerBuilder::NodesLayerBuilder(vtzero::tile_builder& tile,
     : layer(tile, kNodeLayerName.data()), controller_(controller) {
   // Pre-add keys for node properties
   key_tile_level_ = layer.add_key_without_dup_check("tile_level");
-  key_tile_id_ = layer.add_key_without_dup_check("tile_id");
   key_node_id_ = layer.add_key_without_dup_check("node_id");
   key_node_type_ = layer.add_key_without_dup_check("type");
   key_traffic_signal_ = layer.add_key_without_dup_check("traffic_signal");
@@ -448,7 +445,6 @@ void NodesLayerBuilder::add_feature(const vtzero::point& position,
 
   // Add tile properties (same structure as edges layer)
   node_feature.add_property(key_tile_level_, vtzero::encoded_property_value(node_id.level()));
-  node_feature.add_property(key_tile_id_, vtzero::encoded_property_value(node_id.tileid()));
   node_feature.add_property(key_node_id_, vtzero::encoded_property_value(node_id.id()));
   node_feature.add_property(key_node_type_,
                             vtzero::encoded_property_value(static_cast<uint32_t>(node.type())));

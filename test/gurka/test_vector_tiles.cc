@@ -90,10 +90,16 @@ TEST(VectorTilesBasic, TileRendering) {
 
       EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::LINESTRING);
 
-      std::set<std::string> expected_props =
-          {"tile_level",       "tile_id",         "road_class",          "use",
-           "length",           "edge_id:forward", "speed:forward",       "access:auto:forward",
-           "edge_id:backward", "speed:backward",  "access:auto:backward"};
+      std::set<std::string> expected_props = {"tile_level",
+                                              "road_class",
+                                              "use",
+                                              "length",
+                                              "edge_id:forward",
+                                              "speed:forward",
+                                              "access:auto:forward",
+                                              "edge_id:backward",
+                                              "speed:backward",
+                                              "access:auto:backward"};
       std::set<std::string> found_props;
       while (auto property = feature.next_property()) {
         std::string key = std::string(property.key());
@@ -117,10 +123,9 @@ TEST(VectorTilesBasic, TileRendering) {
       EXPECT_GT(feature.id(), 0) << "Node feature ID should be positive";
       EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::POINT) << "Node should be a point";
 
-      std::set<std::string> expected_props = {"tile_level",        "tile_id",
-                                              "node_id",           "type",
-                                              "tagged_access",     "access:auto",
-                                              "access:pedestrian", "access:bicycle"};
+      std::set<std::string> expected_props = {"tile_level",    "node_id",     "type",
+                                              "tagged_access", "access:auto", "access:pedestrian",
+                                              "access:bicycle"};
       std::set<std::string> found_props;
 
       while (auto property = feature.next_property()) {
@@ -303,7 +308,7 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
       cache_count++;
     }
 
-    std::set<std::string_view> expected_props{"tile_level", "tile_id", "road_class"};
+    std::set<std::string_view> expected_props{"tile_level", "road_class"};
     // we need a separate size for edge_id, which is 2 attributes in the tiles and only one in the
     // controller
     auto expected_props_size = expected_props.size();

@@ -73,7 +73,6 @@ public:
 
   // Pre-registered keys
   vtzero::index_value key_tile_level_;
-  vtzero::index_value key_tile_id_;
   vtzero::index_value key_edge_id_fwd_;
   vtzero::index_value key_edge_id_rev_;
   vtzero::index_value key_road_class_;
@@ -207,7 +206,6 @@ public:
                    const baldr::AdminInfo& admin_info);
 
   vtzero::index_value key_tile_level_;
-  vtzero::index_value key_tile_id_;
   vtzero::index_value key_node_id_;
   vtzero::index_value key_node_type_;
   vtzero::index_value key_traffic_signal_;
