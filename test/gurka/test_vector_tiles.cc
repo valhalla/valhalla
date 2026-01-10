@@ -1,7 +1,6 @@
 #include "baldr/attributes_controller.h"
 #include "gurka.h"
 #include "loki/tiles.h"
-#include "loki/utils.h"
 #include "loki/worker.h"
 #include "midgard/constants.h"
 #include "proto_conversions.h"

@@ -240,6 +240,23 @@ private:
 };
 
 namespace detail {
+/**
+ * Make temp file name, mkstemp is POSIX & not implemented on Win
+ *
+ * @param template_name expects to end on XXXXXX (6 x "X")
+ */
+std::string make_temp_name(std::string template_name);
+
+/**
+ * Make the disk path for a given MVT tile.
+ *
+ * @param z the zoom level
+ * @param x the x coordinate
+ * @param y the y coordinate
+ * @param root the MVT cache dir root
+ */
+std::filesystem::path
+mvt_local_path(const uint32_t z, const uint32_t x, const uint32_t y, const std::string& root);
 
 static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
     {
