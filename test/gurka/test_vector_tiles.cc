@@ -19,6 +19,12 @@
 using namespace valhalla;
 using namespace valhalla::midgard;
 
+constexpr size_t kNumMVTEdgeAttrs = std::size(loki::detail::kForwardEdgeAttributes) +
+                                    std::size(loki::detail::kReverseEdgeAttributes) +
+                                    std::size(loki::detail::kForwardLiveSpeedAttributes) +
+                                    std::size(loki::detail::kReverseLiveSpeedAttributes) +
+                                    std::size(loki::detail::kSharedEdgeAttributes);
+
 TEST(VectorTilesBasic, ConfigFail) {
   // zoom config with descending levels fails
   auto config = test::make_config("/tmp");
@@ -146,7 +152,7 @@ class VectorTiles : public ::testing::Test {
 protected:
   static gurka::map map;
 
-  static void SetupTest() {
+  void SetUp() override {
     const auto cache_dir = map.config.get<std::string>("loki.service_defaults.mvt_cache_dir");
     if (std::filesystem::exists(cache_dir)) {
       std::filesystem::remove_all(cache_dir);
@@ -244,16 +250,16 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
 
   uint32_t cache_count = 0;
   test_tile(8, 3297, 3, 4, cache_count);    // only primary and upper
-  test_tile(10, 4787, 7, 12, cache_count);  // adds secondary
-  test_tile(11, 5717, 11, 12, cache_count); // adds tertiary & unclassified
-  test_tile(12, 5717, 11, 12, cache_count); // same as 11
-  test_tile(13, 7205, 15, 20, cache_count); // adds residential
-  test_tile(14, 7903, 18, 20, cache_count); // adds service/other
+  test_tile(10, 4673, 7, 12, cache_count);  // adds secondary
+  test_tile(11, 5584, 11, 12, cache_count); // adds tertiary & unclassified
+  test_tile(12, 5599, 11, 12, cache_count); // same as 11
+  test_tile(13, 7053, 15, 20, cache_count); // adds residential
+  test_tile(14, 7737, 18, 20, cache_count); // adds service/other
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
 
   // execute the cache path
-  test_tile(14, 7903, 18, 20, cache_count);
+  test_tile(14, 7737, 18, 20, cache_count);
 
   // make sure we fail the request when z exceeds what the server supports
   EXPECT_THROW(
@@ -270,6 +276,12 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
 }
 
 TEST_F(VectorTiles, FilterIncludeExclude) {
+
+  // edge_id:forward/backward are not defined in EdgeAttributeTile arrays
+  assert(std::size(loki::detail::kEdgePropToAttributeFlag) == (kNumMVTEdgeAttrs + 2));
+  // same for iso_3166_1/2 not existing in NodeAttributeTile array
+  assert(std::size(loki::detail::kNodePropToAttributeFlag) ==
+         (std::size(loki::detail::kNodeAttributes) + 2));
 
   // verbose is set true in do_action
   std::string tile_data_full;
@@ -308,34 +320,57 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
       cache_count++;
     }
 
-    std::set<std::string_view> expected_props{"tile_level", "road_class"};
-    // we need a separate size for edge_id, which is 2 attributes in the tiles and only one in the
-    // controller
-    auto expected_props_size = expected_props.size();
+    std::set<std::string_view> expected_edge_props{"tile_level", "road_class"};
+    std::set<std::string_view> expected_node_props{"tile_level", "node_id", "type", "traffic_signal"};
+    uint32_t edge_props_size = expected_edge_props.size();
+    uint32_t node_props_size = expected_node_props.size();
+    // we need a separate size because of edge_id, which is 2 attributes in the tiles
+    // and only one in the controller
     if (filter_action == valhalla::include) {
-      expected_props.insert(filter_attribute);
-      expected_props_size++;
+      if (filter_attribute.starts_with("edge")) {
+        expected_edge_props.insert(filter_attribute);
+        edge_props_size++;
+      } else if (filter_attribute.starts_with("node") || filter_attribute.starts_with("admin")) {
+        expected_node_props.insert(filter_attribute);
+        node_props_size++;
+      }
     } else {
       // need to go the other way around: from the full set we want to remove one
-      auto add_to_expected = [&]<typename T, std::size_t N>(T(&arr)[N]) {
-        for (size_t i = 0; i < N; ++i) {
-          std::string_view attr = arr[i].attribute_flag;
-          if (attr != filter_attribute) {
-            expected_props.insert(attr);
-            expected_props_size++;
-          }
-        };
-      };
+      auto add_to_expected =
+          [&]<typename T, std::size_t N>(T(&arr)[N], std::set<std::string_view>& expected_props) {
+            uint32_t found = 0;
+            for (size_t i = 0; i < N; ++i) {
+              std::string_view attr = arr[i].attribute_flag;
+              if (attr != filter_attribute) {
+                expected_props.insert(attr);
+                found++;
+              }
+            };
+            return found;
+          };
 
-      add_to_expected(loki::detail::kSharedEdgeAttributes);
-      add_to_expected(loki::detail::kForwardEdgeAttributes);
-      add_to_expected(loki::detail::kReverseEdgeAttributes);
-      add_to_expected(loki::detail::kForwardLiveSpeedAttributes);
-      add_to_expected(loki::detail::kReverseLiveSpeedAttributes);
+      edge_props_size += add_to_expected(loki::detail::kSharedEdgeAttributes, expected_edge_props);
+      edge_props_size += add_to_expected(loki::detail::kForwardEdgeAttributes, expected_edge_props);
+      edge_props_size += add_to_expected(loki::detail::kReverseEdgeAttributes, expected_edge_props);
+      edge_props_size +=
+          add_to_expected(loki::detail::kForwardLiveSpeedAttributes, expected_edge_props);
+      edge_props_size +=
+          add_to_expected(loki::detail::kReverseLiveSpeedAttributes, expected_edge_props);
+      node_props_size += add_to_expected(loki::detail::kNodeAttributes, expected_node_props);
+
+      // need to add a few manually, bcs they're not part of the above maps
       if (filter_attribute != "edge.id") {
-        expected_props.insert("edge.id");
+        expected_edge_props.insert("edge.id");
         // in the tiles it's 2 attributes
-        expected_props_size += 2;
+        edge_props_size += 2;
+      }
+      if (filter_attribute != "admin.country_code") {
+        expected_node_props.insert("admin.country_code");
+        node_props_size++;
+      }
+      if (filter_attribute != "admin.state_code") {
+        expected_node_props.insert("admin.state_code");
+        node_props_size++;
       }
     }
     vtzero::vector_tile tile_filter{tile_data_filter};
@@ -344,19 +379,37 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
       EXPECT_TRUE(layer.num_features() > 0);
 
       std::string layer_name = std::string(layer.name());
+      auto feature = layer.next_feature();
       if (layer_name == "edges") {
-        auto feature = layer.next_feature();
-        std::set<std::string_view> found_props;
         while (auto property = feature.next_property()) {
           std::string_view key{property.key().data(), property.key().size()};
           std::string_view loki_key;
           try {
             loki_key = loki::detail::kEdgePropToAttributeFlag.at(key);
-          } catch (...) { continue; }
+          } catch (...) {
+            EXPECT_TRUE(expected_edge_props.count(key) > 0) << "Edge should have property: " << key;
+            continue;
+          }
 
-          EXPECT_TRUE(expected_props.count(loki_key) > 0) << "Edge should have property: " << key;
+          EXPECT_TRUE(expected_edge_props.count(loki_key) > 0)
+              << "Edge should have property: " << key;
         }
-        EXPECT_EQ(feature.num_properties(), expected_props_size);
+        EXPECT_EQ(feature.num_properties(), edge_props_size);
+      } else if (layer_name == "nodes") {
+        while (auto property = feature.next_property()) {
+          std::string_view key{property.key().data(), property.key().size()};
+          std::string_view loki_key;
+          try {
+            loki_key = loki::detail::kNodePropToAttributeFlag.at(key);
+          } catch (...) {
+            EXPECT_TRUE(expected_node_props.count(key) > 0) << "Node should have property: " << key;
+            continue;
+          }
+
+          EXPECT_TRUE(expected_node_props.count(loki_key) > 0)
+              << "Node should have property: " << key;
+        }
+        EXPECT_EQ(feature.num_properties(), node_props_size);
       }
     }
 
@@ -367,24 +420,30 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
   // no cache allowed, filter include
   auto no_cache_size =
       test_tile_filter(8, "edge.speed_forward", valhalla::include, map_no_cache, cache_count);
+  test_tile_filter(8, "node.time_zone", valhalla::include, map_no_cache, cache_count);
   // no cache allowed, filter exclude
   test_tile_filter(8, "edge.speed_forward", valhalla::exclude, map_no_cache, cache_count);
+  test_tile_filter(8, "node.time_zone", valhalla::exclude, map_no_cache, cache_count);
   EXPECT_EQ(cache_count, 0);
 
   // cold cache
   // cache allowed, filter include
   auto cold_size = test_tile_filter(14, "edge.id", valhalla::include, map, cache_count);
+  test_tile_filter(14, "node.private_access", valhalla::include, map, cache_count);
   // cache allowed, filter exclude
   test_tile_filter(14, "edge.id", valhalla::exclude, map, cache_count);
-  EXPECT_EQ(cache_count, 2);
+  test_tile_filter(14, "node.private_access", valhalla::exclude, map, cache_count);
+  EXPECT_EQ(cache_count, 4);
 
   // warm cache
   cache_count = 0;
   // cache allowed, filter include
   auto warm_size = test_tile_filter(14, "edge.is_shortcut", valhalla::include, map, cache_count);
+  test_tile_filter(14, "node.access_auto", valhalla::include, map, cache_count);
   // cache allowed, filter exclude
   test_tile_filter(14, "edge.id", valhalla::exclude, map, cache_count);
-  EXPECT_EQ(cache_count, 2);
+  test_tile_filter(14, "admin.country_code", valhalla::exclude, map, cache_count);
+  EXPECT_EQ(cache_count, 4);
 
   EXPECT_EQ(cold_size, warm_size);
   // TODO: for some reason the tiles with no cache a magnitude smaller than the ones with cache

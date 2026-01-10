@@ -8,6 +8,7 @@
 
 #include <vtzero/builder.hpp>
 
+#include <cassert>
 #include <random>
 #include <string_view>
 #include <unordered_map>
@@ -182,7 +183,7 @@ private:
 };
 
 class NodesLayerBuilder;
-struct NodeAttribute {
+struct NodeAttributeTile {
   const char* key_name;
   std::string_view attribute_flag;
   vtzero::index_value NodesLayerBuilder::*key_member;
@@ -228,7 +229,6 @@ public:
   vtzero::index_value key_cash_only_toll_;
   vtzero::index_value key_mode_change_;
   vtzero::index_value key_named_intersection_;
-  vtzero::index_value key_is_transit_;
   vtzero::index_value key_timezone_;
   vtzero::index_value key_iso_3166_1_;
   vtzero::index_value key_iso_3166_2_;
@@ -1317,7 +1317,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
     },
 };
 
-static constexpr NodeAttribute kNodeAttributes[] = {
+static constexpr NodeAttributeTile kNodeAttributes[] = {
     {
         "drive_on_right",
         baldr::kNodeDriveOnRight,
@@ -1361,12 +1361,6 @@ static constexpr NodeAttribute kNodeAttributes[] = {
         [](const baldr::NodeInfo& ni) {
           return vtzero::encoded_property_value(ni.named_intersection());
         },
-    },
-    {
-        "is_transit",
-        baldr::kNodeNamedIntersection,
-        &NodesLayerBuilder::key_is_transit_,
-        [](const baldr::NodeInfo& ni) { return vtzero::encoded_property_value(ni.is_transit()); },
     },
     {
         "timezone",
@@ -1572,17 +1566,39 @@ static const std::unordered_map<std::string_view, std::string_view> kEdgePropToA
     {"osm_id", baldr::kEdgeOsmId},
     {"speed_limit", baldr::kEdgeSpeedLimit},
     {"layer", baldr::kEdgeLayer},
-    // // Additional keys (added directly, not via EdgeAttributeTile)
-    // {"road_class", baldr::kEdgeRoadClass},
+    // additional keys, they're added directly, not via EdgeAttributeTile
     {"edge_id:forward", baldr::kEdgeId},
     {"edge_id:backward", baldr::kEdgeId},
 };
 
-constexpr size_t kNumMVTEdgeAttrs = std::size(loki::detail::kForwardEdgeAttributes) +
-                                    std::size(loki::detail::kReverseEdgeAttributes) +
-                                    std::size(loki::detail::kForwardLiveSpeedAttributes) +
-                                    std::size(loki::detail::kReverseLiveSpeedAttributes) +
-                                    std::size(loki::detail::kSharedEdgeAttributes);
+// map from MVT prop name to controller attribute flag for node properties
+static const std::unordered_map<std::string_view, std::string_view> kNodePropToAttributeFlag = {
+    {"drive_on_right", baldr::kNodeDriveOnRight},
+    {"elevation", baldr::kNodeElevation},
+    {"tagged_access", baldr::kNodeTaggedAccess},
+    {"private_access", baldr::kNodePrivateAccess},
+    {"cash_only_toll", baldr::kNodeCashOnlyToll},
+    {"mode_change_allowed", baldr::kNodeModeChangeAllowed},
+    {"named_intersection", baldr::kNodeNamedIntersection},
+    {"timezone", baldr::kNodeTimeZone},
+    {"access:auto", baldr::kNodeAccessAuto},
+    {"access:pedestrian", baldr::kNodeAccessPedestrian},
+    {"access:bicycle", baldr::kNodeAccessBicycle},
+    {"access:truck", baldr::kNodeAccessTruck},
+    {"access:emergency", baldr::kNodeAccessEmergency},
+    {"access:taxi", baldr::kNodeAccessTaxi},
+    {"access:bus", baldr::kNodeAccessBus},
+    {"access:hov", baldr::kNodeAccessHov},
+    {"access:wheelchair", baldr::kNodeAccessWheelchair},
+    {"access:moped", baldr::kNodeAccessMoped},
+    {"access:motorcycle", baldr::kNodeAccessMotorcycle},
+    // additional keys, they're added directly, not via NodeAttribute
+    {"iso_3166_1", baldr::kAdminCountryCode},
+    {"iso_3166_2", baldr::kAdminStateCode},
+};
+
+// Note: kNodePropToAttributeFlag should have size == kNodeAttributes.size() + 2 (for iso_3166_1/2)
+
 } // namespace detail
 
 } // namespace valhalla::loki

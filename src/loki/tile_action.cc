@@ -111,62 +111,64 @@ void filter_tile(const std::string& tile_bytes,
 
   vtzero::vector_tile tile_full{tile_bytes};
 
-  auto build_filtered_layer = [&](vtzero::layer& full_layer, vtzero::layer_builder& filtered_layer) {
-    vtzero::property_mapper props_mapper{full_layer, filtered_layer};
+  auto build_filtered_layer =
+      [&](vtzero::layer& full_layer, vtzero::layer_builder& filtered_layer,
+          const std::unordered_map<std::string_view, std::string_view>& prop_map) {
+        vtzero::property_mapper props_mapper{full_layer, filtered_layer};
 
-    // pre-compute enabled attributes
-    uint32_t shortcut_key_idx = UINT32_MAX;
-    const auto& key_table = full_layer.key_table();
-    std::vector<bool> attrs_allowed(key_table.size(), false);
-    for (uint32_t i = 0; i < key_table.size(); ++i) {
-      auto key = full_layer.key(vtzero::index_value{i});
-      const std::string_view key_str{key.data(), key.size()};
-      if (key_str == "edge_id:forward") {
-        std::cout << std::endl;
-      }
-      // mandatory fields are not part of AttributeController and that throws
-      try {
-        attrs_allowed[i] = controller(loki::detail::kEdgePropToAttributeFlag.at(key_str));
-      } catch (const std::exception& e) { attrs_allowed[i] = true; }
+        // pre-compute enabled attributes
+        uint32_t shortcut_key_idx = UINT32_MAX;
+        const auto& key_table = full_layer.key_table();
+        std::vector<bool> attrs_allowed(key_table.size(), false);
+        for (uint32_t i = 0; i < key_table.size(); ++i) {
+          auto key = full_layer.key(vtzero::index_value{i});
+          const std::string_view key_str{key.data(), key.size()};
+          // mandatory fields are not part of AttributeController and that throws
+          try {
+            attrs_allowed[i] = controller(prop_map.at(key_str));
+          } catch (const std::exception& e) { attrs_allowed[i] = true; }
 
-      // on the full layer, shortcuts will always be enabled
-      // if return_shortcuts=false, we'll discard shortcut features
-      if (key_str == "shortcut") {
-        shortcut_key_idx = i;
-      }
-    }
-
-    while (auto full_feat = full_layer.next_feature()) {
-      vtzero::geometry_feature_builder filtered_feat{filtered_layer};
-      filtered_feat.copy_id(full_feat);
-      filtered_feat.set_geometry(full_feat.geometry());
-
-      // Use index-based iteration with pre-computed filter
-      bool add_feat = full_feat.for_each_property_indexes([&](const vtzero::index_value_pair& idxs) {
-        // TODO: make shortcuts their own layer, this is annoying
-        if (!return_shortcuts && shortcut_key_idx == idxs.key().value()) {
-          return false;
-        } else if (attrs_allowed[idxs.key().value()]) {
-          filtered_feat.add_property(props_mapper(idxs));
+          // on the full layer, shortcuts will always be enabled
+          // if return_shortcuts=false, we'll discard shortcut features
+          if (key_str == "shortcut") {
+            shortcut_key_idx = i;
+          }
         }
-        return true;
-      });
 
-      if (add_feat) [[likely]]
-        filtered_feat.commit();
-      else [[unlikely]]
-        filtered_feat.rollback();
-    }
-  };
+        while (auto full_feat = full_layer.next_feature()) {
+          vtzero::geometry_feature_builder filtered_feat{filtered_layer};
+          filtered_feat.copy_id(full_feat);
+          filtered_feat.set_geometry(full_feat.geometry());
+
+          // Use index-based iteration with pre-computed filter
+          bool add_feat =
+              full_feat.for_each_property_indexes([&](const vtzero::index_value_pair& idxs) {
+                // TODO: make shortcuts their own layer, this is annoying
+                if (!return_shortcuts && shortcut_key_idx == idxs.key().value()) {
+                  return false;
+                } else if (attrs_allowed[idxs.key().value()]) {
+                  filtered_feat.add_property(props_mapper(idxs));
+                }
+                return true;
+              });
+
+          if (add_feat) [[likely]]
+            filtered_feat.commit();
+          else [[unlikely]]
+            filtered_feat.rollback();
+        }
+      };
 
   tile_full.for_each_layer([&](vtzero::layer&& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
     if (layer_name == kEdgeLayerName) {
       EdgesLayerBuilder filtered_edge_layer{filtered_tile, controller};
-      build_filtered_layer(full_layer, filtered_edge_layer.layer);
+      build_filtered_layer(full_layer, filtered_edge_layer.layer,
+                           loki::detail::kEdgePropToAttributeFlag);
     } else if (layer_name == kNodeLayerName) {
       NodesLayerBuilder filtered_node_layer{filtered_tile, controller};
-      build_filtered_layer(full_layer, filtered_node_layer.layer);
+      build_filtered_layer(full_layer, filtered_node_layer.layer,
+                           loki::detail::kNodePropToAttributeFlag);
     }
     return true;
   });
