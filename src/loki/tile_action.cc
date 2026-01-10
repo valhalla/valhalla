@@ -125,7 +125,9 @@ void filter_tile(const std::string& tile_bytes,
           const std::string_view key_str{key.data(), key.size()};
           // mandatory fields are not part of AttributeController and that throws
           try {
-            attrs_allowed[i] = controller(prop_map.at(key_str));
+            if (const auto it = prop_map.find(key_str); it != prop_map.end()) {
+              attrs_allowed[i] = controller(it->second);
+            }
           } catch (const std::exception& e) { attrs_allowed[i] = true; }
 
           // on the full layer, shortcuts will always be enabled
@@ -144,7 +146,11 @@ void filter_tile(const std::string& tile_bytes,
           bool add_feat =
               full_feat.for_each_property_indexes([&](const vtzero::index_value_pair& idxs) {
                 // TODO: make shortcuts their own layer, this is annoying
-                if (!return_shortcuts && shortcut_key_idx == idxs.key().value()) {
+                // feature is a shortcut
+                // const bool is_shortcut = shortcut_key_idx == idxs.key().value() &&
+                // (idxs.value().value())
+                if (!return_shortcuts && shortcut_key_idx == idxs.key().value() &&
+                    idxs.value().value()) {
                   return false;
                 } else if (attrs_allowed[idxs.key().value()]) {
                   filtered_feat.add_property(props_mapper(idxs));
@@ -577,6 +583,28 @@ std::string loki_worker_t::render_tile(Api& request) {
 }
 
 namespace detail {
+/**
+ * Make temp file name, mkstemp is POSIX & not implemented on Win
+ *
+ * @param template_name expects to end on XXXXXX (6 x "X")
+ */
+std::string make_temp_name(std::string template_name) {
+  auto pos = template_name.rfind("XXXXXX");
+
+  std::random_device rd;
+  std::mt19937_64 rng((static_cast<uint64_t>(rd()) << 32) ^ static_cast<uint64_t>(rd()));
+
+  static const char table[] = "abcdefghijklmnopqrstuvwxyz"
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                              "0123456789";
+  std::uniform_int_distribution<size_t> dist(0, sizeof(table) - 2);
+
+  for (int i = 0; i < 6; ++i)
+    template_name[pos + i] = table[dist(rng)];
+
+  return template_name;
+}
+
 std::filesystem::path
 mvt_local_path(const uint32_t z, const uint32_t x, const uint32_t y, const std::string& root) {
   static std::string kMvtExt = ".mvt";

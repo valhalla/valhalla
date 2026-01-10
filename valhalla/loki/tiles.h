@@ -241,28 +241,6 @@ private:
 
 namespace detail {
 
-/**
- * Make temp file name, mkstemp is POSIX & not implemented on Win
- *
- * @param template_name expects to end on XXXXXX (6 x "X")
- */
-std::string make_temp_name(std::string template_name) {
-  auto pos = template_name.rfind("XXXXXX");
-
-  std::random_device rd;
-  std::mt19937_64 rng((static_cast<uint64_t>(rd()) << 32) ^ static_cast<uint64_t>(rd()));
-
-  static const char table[] = "abcdefghijklmnopqrstuvwxyz"
-                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                              "0123456789";
-  std::uniform_int_distribution<size_t> dist(0, sizeof(table) - 2);
-
-  for (int i = 0; i < 6; ++i)
-    template_name[pos + i] = table[dist(rng)];
-
-  return template_name;
-}
-
 static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
     {
         "speed:forward",
@@ -473,7 +451,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         "live_speed:forward:speed1",
         baldr::kEdgeLiveSpeed1Fwd,
         &EdgesLayerBuilder::key_live_speed1_fwd_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_speed(0));
@@ -483,7 +461,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         "live_speed:forward:speed2",
         baldr::kEdgeLiveSpeed2Fwd,
         &EdgesLayerBuilder::key_live_speed2_fwd_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_speed(1));
@@ -493,7 +471,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         "live_speed:forward:speed3",
         baldr::kEdgeLiveSpeed3Fwd,
         &EdgesLayerBuilder::key_live_speed3_fwd_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_speed(2));
@@ -503,7 +481,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         "live_speed:forward:breakpoint1",
         baldr::kEdgeLiveSpeedBreakpoint1Fwd,
         &EdgesLayerBuilder::key_live_breakpoint1_fwd_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->breakpoint1);
@@ -513,7 +491,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         "live_speed:forward:breakpoint2",
         baldr::kEdgeLiveSpeedBreakpoint2Fwd,
         &EdgesLayerBuilder::key_live_breakpoint2_fwd_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->breakpoint2);
@@ -523,7 +501,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         "live_speed:forward:congestion1",
         baldr::kEdgeLiveSpeedCongestion1Fwd,
         &EdgesLayerBuilder::key_live_congestion1_fwd_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->congestion1);
@@ -533,7 +511,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         "live_speed:forward:congestion2",
         baldr::kEdgeLiveSpeedCongestion2Fwd,
         &EdgesLayerBuilder::key_live_congestion2_fwd_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->congestion2);
@@ -543,7 +521,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         "live_speed:forward:congestion3",
         baldr::kEdgeLiveSpeedCongestion3Fwd,
         &EdgesLayerBuilder::key_live_congestion3_fwd_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->congestion3);
