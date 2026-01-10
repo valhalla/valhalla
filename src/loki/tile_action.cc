@@ -146,11 +146,7 @@ void filter_tile(const std::string& tile_bytes,
           bool add_feat =
               full_feat.for_each_property_indexes([&](const vtzero::index_value_pair& idxs) {
                 // TODO: make shortcuts their own layer, this is annoying
-                // feature is a shortcut
-                // const bool is_shortcut = shortcut_key_idx == idxs.key().value() &&
-                // (idxs.value().value())
-                if (!return_shortcuts && shortcut_key_idx == idxs.key().value() &&
-                    idxs.value().value()) {
+                if (!return_shortcuts && shortcut_key_idx == idxs.key().value()) {
                   return false;
                 } else if (attrs_allowed[idxs.key().value()]) {
                   filtered_feat.add_property(props_mapper(idxs));
