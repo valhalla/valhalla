@@ -23,7 +23,6 @@ struct EdgeAttributeTile {
 
   using value_func_t = vtzero::encoded_property_value (*)(const baldr::DirectedEdge&,
                                                           const baldr::EdgeInfo&,
-
                                                           const volatile baldr::TrafficSpeed*);
   value_func_t value_func;
 };
@@ -268,7 +267,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_speed_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.speed()));
         },
@@ -279,7 +277,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_deadend_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.deadend()));
         },
@@ -290,7 +287,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_lanecount_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.lanecount()));
         },
@@ -301,7 +297,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_truck_speed_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.truck_speed()));
         },
@@ -312,7 +307,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_traffic_signal_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.traffic_signal()));
         },
@@ -323,7 +317,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_stop_sign_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.stop_sign()));
         },
@@ -334,7 +327,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_yield_sign_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.yield_sign()));
         },
@@ -345,7 +337,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_auto_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kAutoAccess)));
@@ -357,7 +348,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_pedestrian_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kPedestrianAccess)));
@@ -369,7 +359,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_bicycle_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kBicycleAccess)));
@@ -381,7 +370,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_truck_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kTruckAccess)));
@@ -393,7 +381,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_emergency_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kEmergencyAccess)));
@@ -405,7 +392,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_taxi_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kTaxiAccess)));
@@ -417,7 +403,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_bus_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kBusAccess)));
@@ -429,7 +414,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_hov_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kHOVAccess)));
@@ -441,7 +425,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_wheelchair_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kWheelchairAccess)));
@@ -453,7 +436,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_moped_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kMopedAccess)));
@@ -465,7 +447,6 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_motorcycle_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess() & baldr::kMotorcycleAccess)));
@@ -481,7 +462,6 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         &EdgesLayerBuilder::key_live_speed_fwd_,
         [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_overall_speed());
         },
@@ -492,7 +472,6 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         &EdgesLayerBuilder::key_live_speed1_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_speed(0));
         },
@@ -503,7 +482,6 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         &EdgesLayerBuilder::key_live_speed2_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_speed(1));
         },
@@ -514,7 +492,6 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         &EdgesLayerBuilder::key_live_speed3_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_speed(2));
         },
@@ -525,7 +502,6 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         &EdgesLayerBuilder::key_live_breakpoint1_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->breakpoint1);
         },
@@ -536,7 +512,6 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         &EdgesLayerBuilder::key_live_breakpoint2_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->breakpoint2);
         },
@@ -547,7 +522,6 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         &EdgesLayerBuilder::key_live_congestion1_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->congestion1);
         },
@@ -558,7 +532,6 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         &EdgesLayerBuilder::key_live_congestion2_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->congestion2);
         },
@@ -569,7 +542,6 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         &EdgesLayerBuilder::key_live_congestion3_fwd_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->congestion3);
         },
@@ -583,7 +555,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_speed_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.speed()));
         },
@@ -594,7 +565,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_deadend_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.deadend()));
         },
@@ -605,7 +575,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_lanecount_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.lanecount()));
         },
@@ -616,7 +585,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_truck_speed_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.truck_speed()));
         },
@@ -627,7 +595,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_traffic_signal_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.traffic_signal()));
         },
@@ -638,7 +605,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_stop_sign_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.stop_sign()));
         },
@@ -649,7 +615,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_yield_sign_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.yield_sign()));
         },
@@ -660,7 +625,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_auto_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kAutoAccess)));
@@ -672,7 +636,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_pedestrian_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kPedestrianAccess)));
@@ -684,7 +647,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_bicycle_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kBicycleAccess)));
@@ -696,7 +658,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_truck_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kTruckAccess)));
@@ -708,7 +669,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_emergency_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kEmergencyAccess)));
@@ -720,7 +680,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_taxi_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kTaxiAccess)));
@@ -732,7 +691,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_bus_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kBusAccess)));
@@ -744,7 +702,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_hov_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kHOVAccess)));
@@ -756,7 +713,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_wheelchair_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kWheelchairAccess)));
@@ -768,7 +724,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_moped_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kMopedAccess)));
@@ -780,7 +735,6 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         &EdgesLayerBuilder::key_access_motorcycle_rev_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(
               static_cast<uint32_t>(static_cast<bool>(e.reverseaccess() & baldr::kMotorcycleAccess)));
@@ -794,9 +748,8 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         "live_speed:backward",
         baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_speed_rev_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_overall_speed());
         },
@@ -805,9 +758,8 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         "live_speed:backward:speed1",
         baldr::kEdgeLiveSpeed1Bwd,
         &EdgesLayerBuilder::key_live_speed1_rev_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_speed(0));
         },
@@ -816,9 +768,8 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         "live_speed:backward:speed2",
         baldr::kEdgeLiveSpeed2Bwd,
         &EdgesLayerBuilder::key_live_speed2_rev_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_speed(1));
         },
@@ -827,9 +778,8 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         "live_speed:backward:speed3",
         baldr::kEdgeLiveSpeed3Bwd,
         &EdgesLayerBuilder::key_live_speed3_rev_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->get_speed(2));
         },
@@ -838,9 +788,8 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         "live_speed:backward:breakpoint1",
         baldr::kEdgeLiveSpeedBreakpoint1Bwd,
         &EdgesLayerBuilder::key_live_breakpoint1_rev_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->breakpoint1);
         },
@@ -849,9 +798,8 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         "live_speed:backward:breakpoint2",
         baldr::kEdgeLiveSpeedBreakpoint2Bwd,
         &EdgesLayerBuilder::key_live_breakpoint2_rev_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->breakpoint2);
         },
@@ -860,9 +808,8 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         "live_speed:backward:congestion1",
         baldr::kEdgeLiveSpeedCongestion1Bwd,
         &EdgesLayerBuilder::key_live_congestion1_rev_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->congestion1);
         },
@@ -871,9 +818,8 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         "live_speed:backward:congestion2",
         baldr::kEdgeLiveSpeedCongestion2Bwd,
         &EdgesLayerBuilder::key_live_congestion2_rev_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->congestion2);
         },
@@ -882,9 +828,8 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         "live_speed:backward:congestion3",
         baldr::kEdgeLiveSpeedCongestion3Bwd,
         &EdgesLayerBuilder::key_live_congestion3_rev_,
-        [](const baldr::DirectedEdge& e,
+        [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed* live_speed) {
           return vtzero::encoded_property_value(live_speed->congestion3);
         },
@@ -898,7 +843,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_use_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.use()));
         },
@@ -909,7 +853,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_tunnel_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.tunnel());
         },
@@ -920,7 +863,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_bridge_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.bridge());
         },
@@ -931,7 +873,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_roundabout_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.roundabout());
         },
@@ -942,7 +883,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_is_shortcut_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.is_shortcut());
         },
@@ -953,7 +893,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_leaves_tile_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.leaves_tile());
         },
@@ -964,7 +903,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_length_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.length());
         },
@@ -975,7 +913,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_weighted_grade_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.weighted_grade());
         },
@@ -986,7 +923,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_max_up_slope_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.max_up_slope());
         },
@@ -997,7 +933,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_max_down_slope_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.max_down_slope());
         },
@@ -1008,7 +943,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_curvature_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.curvature());
         },
@@ -1019,7 +953,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_toll_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) { return vtzero::encoded_property_value(e.toll()); },
     },
     {
@@ -1028,7 +961,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_destonly_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.destonly());
         },
@@ -1039,7 +971,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_destonly_hgv_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.destonly_hgv());
         },
@@ -1050,7 +981,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_indoor_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.indoor());
         },
@@ -1061,7 +991,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_hov_type_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.hov_type()));
         },
@@ -1072,7 +1001,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_cyclelane_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.cyclelane()));
         },
@@ -1083,7 +1011,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_bike_network_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.bike_network());
         },
@@ -1094,7 +1021,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_truck_route_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.truck_route());
         },
@@ -1105,7 +1031,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_speed_type_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.speed_type()));
         },
@@ -1116,7 +1041,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_ctry_crossing_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.ctry_crossing());
         },
@@ -1127,7 +1051,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_sac_scale_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.sac_scale()));
         },
@@ -1138,7 +1061,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_unpaved_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.unpaved());
         },
@@ -1149,7 +1071,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_surface_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(static_cast<uint32_t>(e.surface()));
         },
@@ -1160,7 +1081,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_link_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) { return vtzero::encoded_property_value(e.link()); },
     },
     {
@@ -1169,7 +1089,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_internal_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.internal());
         },
@@ -1180,7 +1099,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_shoulder_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.shoulder());
         },
@@ -1191,7 +1109,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_dismount_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.dismount());
         },
@@ -1202,7 +1119,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_use_sidepath_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.use_sidepath());
         },
@@ -1213,7 +1129,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_density_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.density());
         },
@@ -1224,7 +1139,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_sidewalk_left_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.sidewalk_left());
         },
@@ -1235,7 +1149,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_sidewalk_right_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.sidewalk_right());
         },
@@ -1246,7 +1159,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_bss_connection_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.bss_connection());
         },
@@ -1257,7 +1169,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_lit_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) { return vtzero::encoded_property_value(e.lit()); },
     },
     {
@@ -1266,7 +1177,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_not_thru_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.not_thru());
         },
@@ -1277,7 +1187,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_part_of_complex_restriction_,
         [](const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(e.part_of_complex_restriction());
         },
@@ -1288,7 +1197,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_osm_way_id_,
         [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo& ei,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(ei.wayid());
         },
@@ -1299,7 +1207,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_speed_limit_,
         [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo& ei,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(ei.speed_limit());
         },
@@ -1310,7 +1217,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         &EdgesLayerBuilder::key_layer_,
         [](const baldr::DirectedEdge&,
            const baldr::EdgeInfo& ei,
-
            const volatile baldr::TrafficSpeed*) {
           return vtzero::encoded_property_value(ei.layer());
         },
