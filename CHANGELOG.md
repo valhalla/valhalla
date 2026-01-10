@@ -10,7 +10,6 @@
    * FIXED: Add error code for isochrone requests exceeding distance contour limit [#5781](https://github.com/valhalla/valhalla/pull/5781)
 * **Enhancement**
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
-   * ADDED: /tile endpoint to serve MVT (BETA) [#5663](https://github.com/valhalla/valhalla/pull/5663)
    * ADDED: optional libvalhalla_test install target [#5719](https://github.com/valhalla/valhalla/pull/5719)
    * CHANGED: Get rid of temporary std::vector in GraphTile::GetRestrictions [#5688](https://github.com/valhalla/valhalla/pull/5688)
    * CHANGED: lower penalty for u-turns without name consistency [#5696](https://github.com/valhalla/valhalla/pull/5696)
@@ -35,6 +34,7 @@
    * UPDATED: translations from transifex [#5792](https://github.com/valhalla/valhalla/pull/5792)
    * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
    * ADDED: NodeJS bindings support PBF outputs [#5794](https://github.com/valhalla/valhalla/pull/5794)
+   * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
