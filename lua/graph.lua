@@ -164,6 +164,9 @@ motor_vehicle = {
 ["residents"] = "true"
 }
 
+-- Fully equal to motor_vehicle for now. Expand if fine tuning is needed.
+vehicle = motor_vehicle
+
 moped = {
 ["yes"] = "true",
 ["designated"] = "true",
@@ -949,7 +952,8 @@ function filter_tags_generic(kv)
     end
   end
 
-  local motor_vehicle_access = any_in(motor_vehicle, kv["motor_vehicle"])
+  local vehicle_access = any_in(vehicle, kv["vehicle"])
+  local motor_vehicle_access = any_in(motor_vehicle, kv["motor_vehicle"]) or vehicle_access
   if forward then
     for k,v in pairs(forward) do
       kv[k] = v
@@ -975,7 +979,7 @@ function filter_tags_generic(kv)
       kv["motorcycle_backward"] = "false"
       kv["pedestrian_backward"] = "false"
       kv["bike_backward"] = "false"
-    elseif kv["smoothness"] == "impassable" or kv["vehicle"] == "no" then --don't change ped access.
+    elseif kv["smoothness"] == "impassable" then --don't change ped access.
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
       kv["bus_forward"] = "false"
@@ -1024,7 +1028,8 @@ function filter_tags_generic(kv)
     kv["bike_tag"] = any_in(bicycle, kv["bicycle"]) or
                      any_in(cycleway, kv["cycleway"]) or
                      any_in(bicycle, kv["bicycle_road"]) or
-                     bicycle[kv["cyclestreet"]]
+                     bicycle[kv["cyclestreet"]] or
+                     vehicle_access
     kv["bike_forward"] = kv["bike_tag"] or kv["bike_forward"]
 
     --check for moped forward overrides
@@ -1059,7 +1064,7 @@ function filter_tags_generic(kv)
     end
 
     local ped_val = default_val
-    if kv["smoothness"] == "impassable" or kv["vehicle"] == "no" then --don't change ped access.
+    if kv["smoothness"] == "impassable" then --don't change ped access.
       default_val = "false"
     end
 
@@ -1097,7 +1102,8 @@ function filter_tags_generic(kv)
     kv["bike_tag"] = any_in(bicycle, kv["bicycle"]) or
                      any_in(cycleway, kv["cycleway"]) or
                      any_in(bicycle, kv["bicycle_road"]) or
-                     bicycle[kv["cyclestreet"]]
+                     bicycle[kv["cyclestreet"]] or
+                     vehicle_access
     kv["bike_forward"] = kv["bike_tag"] or default_val
 
     --check for moped forward overrides
@@ -1737,6 +1743,7 @@ function filter_tags_generic(kv)
   kv["private"] = any_in(private, kv["access"]) or
                   any_in(private, kv["motor_vehicle"]) or
                   any_in(private, kv["motorcar"]) or
+                  any_in(private, kv["vehicle"]) or
                   "false"
   kv["private_hgv"] = any_in(private, kv["hgv"]) or kv["private"] or "false"
   kv["no_thru_traffic"] = any_in(no_thru_traffic, kv["access"]) or "false"
