@@ -1,3 +1,6 @@
+#ifndef __VALHALLA_LOKI_TILES_H__
+#define __VALHALLA_LOKI_TILES_H__
+
 #include "baldr/admininfo.h"
 #include "baldr/attributes_controller.h"
 #include "baldr/datetime.h"
@@ -1502,9 +1505,8 @@ static const std::unordered_map<std::string_view, std::string_view> kNodePropToA
     {"iso_3166_1", baldr::kAdminCountryCode},
     {"iso_3166_2", baldr::kAdminStateCode},
 };
-
-// Note: kNodePropToAttributeFlag should have size == kNodeAttributes.size() + 2 (for iso_3166_1/2)
-
 } // namespace detail
 
 } // namespace valhalla::loki
+
+#endif // __VALHALLA_LOKI_TILES_H__
