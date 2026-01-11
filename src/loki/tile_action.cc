@@ -9,7 +9,6 @@
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "utils.h"
 #include "valhalla/exceptions.h"
 
 #include <boost/geometry.hpp>
@@ -125,9 +124,7 @@ void filter_tile(const std::string& tile_bytes,
           const std::string_view key_str{key.data(), key.size()};
           // mandatory fields are not part of AttributeController and that throws
           try {
-            if (const auto it = prop_map.find(key_str); it != prop_map.end()) {
-              attrs_allowed[i] = controller(it->second);
-            }
+            attrs_allowed[i] = controller(prop_map.at(key_str));
           } catch (const std::exception& e) { attrs_allowed[i] = true; }
 
           // on the full layer, shortcuts will always be enabled
@@ -488,13 +485,16 @@ std::string loki_worker_t::render_tile(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
+  // respect "allow_verbose" config
+  const bool return_verbose = options.verbose() && allow_verbose;
+
   // creates controller, disables all attributes by default, but respect filters & verbose
-  auto get_controller = [&options]() {
+  auto get_controller = [&options, &return_verbose]() {
     auto controller = baldr::AttributesController(options, true);
-    bool only_base_props = (options.filter_action() == valhalla::no_action && !options.verbose());
+    bool only_base_props = (options.filter_action() == valhalla::no_action && (!return_verbose));
     if (only_base_props)
       controller.set_all(false);
-    else if (options.verbose())
+    else if (return_verbose)
       controller.set_all(true);
 
     return controller;
@@ -514,7 +514,7 @@ std::string loki_worker_t::render_tile(Api& request) {
       std::ifstream tile_file(tile_path, std::ios::binary);
       std::string buffer{std::istreambuf_iterator<char>(tile_file), std::istreambuf_iterator<char>()};
       // we only have cached tiles with all attributes
-      if (options.verbose()) {
+      if (return_verbose) {
         return buffer;
       }
       filter_tile(buffer, tile, controller, return_shortcuts);
@@ -559,7 +559,7 @@ std::string loki_worker_t::render_tile(Api& request) {
     std::filesystem::rename(tmp, tile_path);
   }
 
-  if (options.verbose()) {
+  if (return_verbose) {
     return tile_bytes;
   } else if (cache_allowed) {
     // only apply filter to the tile if we have a full tile (due to caching) but the request
