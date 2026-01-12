@@ -39,7 +39,8 @@ public:
   vtzero::layer_builder layer;
 
   explicit EdgesLayerBuilder(vtzero::tile_builder& tile,
-                             const baldr::AttributesController& controller);
+                             const baldr::AttributesController& controller,
+                             const char* name);
 
   template <std::size_t N>
   void set_attribute_values(const EdgeAttributeTile (&arr)[N],

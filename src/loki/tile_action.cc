@@ -41,6 +41,7 @@ namespace {
  */
 constexpr double kEarthRadiusMeters = 6378137.0;
 constexpr std::string_view kEdgeLayerName = "edges";
+constexpr std::string_view kShortcutLayerName = "shortcuts";
 constexpr std::string_view kNodeLayerName = "nodes";
 
 double lon_to_merc_x(const double lon) {
@@ -150,13 +151,18 @@ void filter_tile(const std::string& tile_bytes,
   tile_full.for_each_layer([&](vtzero::layer&& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
     if (layer_name == kEdgeLayerName) {
-      EdgesLayerBuilder filtered_edge_layer{filtered_tile, controller};
+      EdgesLayerBuilder filtered_edge_layer{filtered_tile, controller, kEdgeLayerName.data()};
       build_filtered_layer(full_layer, filtered_edge_layer.layer,
                            loki::detail::kEdgePropToAttributeFlag);
     } else if (layer_name == kNodeLayerName) {
       NodesLayerBuilder filtered_node_layer{filtered_tile, controller};
       build_filtered_layer(full_layer, filtered_node_layer.layer,
                            loki::detail::kNodePropToAttributeFlag);
+    } else if (layer_name == kShortcutLayerName) {
+      EdgesLayerBuilder filtered_shortcuts_layer{filtered_tile, controller,
+                                                 kShortcutLayerName.data()};
+      build_filtered_layer(full_layer, filtered_shortcuts_layer.layer,
+                           loki::detail::kEdgePropToAttributeFlag);
     }
     return true;
   });
@@ -202,7 +208,8 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                        point_t(projection.tile_extent + projection.tile_buffer,
                                projection.tile_extent + projection.tile_buffer));
 
-  EdgesLayerBuilder edges_builder(tile, controller);
+  EdgesLayerBuilder edges_builder(tile, controller, kEdgeLayerName.data());
+  EdgesLayerBuilder shortcuts_builder(tile, controller, kShortcutLayerName.data());
   NodesLayerBuilder nodes_builder(tile, controller);
 
   std::unordered_set<GraphId> unique_nodes;
@@ -214,11 +221,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   // TODO(nils): sort edge_ids
   for (const auto& edge_id : edge_ids) {
     const auto* edge = reader->directededge(edge_id, edge_tile);
-
-    // no shortcuts if not requested
-    if (edge->is_shortcut()) {
-      continue;
-    }
 
     // filter road classes by zoom
     auto road_class = edge->classification();
@@ -270,8 +272,15 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       const volatile baldr::TrafficSpeed* reverse_traffic =
           opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
-      edges_builder.add_feature(tile_coords, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
-                                reverse_traffic, edge_info);
+      if (edge->is_shortcut()) {
+        shortcuts_builder.add_feature(tile_coords, edge_id, edge, opp_edge_id, opp_edge,
+                                      forward_traffic, reverse_traffic, edge_info);
+        // no need to add the nodes for shortcuts
+        return;
+      } else {
+        edges_builder.add_feature(tile_coords, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
+                                  reverse_traffic, edge_info);
+      }
 
       // adding nodes only works if we have the opposing tile
       if (opp_tile) {
@@ -324,8 +333,9 @@ namespace valhalla {
 namespace loki {
 
 EdgesLayerBuilder::EdgesLayerBuilder(vtzero::tile_builder& tile,
-                                     const baldr::AttributesController& controller)
-    : layer(tile, kEdgeLayerName.data()), controller_(controller) {
+                                     const baldr::AttributesController& controller,
+                                     const char* name)
+    : layer(tile, name), controller_(controller) {
   key_tile_level_ = layer.add_key_without_dup_check("tile_level");
   key_road_class_ = layer.add_key_without_dup_check("road_class");
 

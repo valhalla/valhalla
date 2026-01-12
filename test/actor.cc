@@ -89,13 +89,13 @@ TEST(Actor, Tile) {
   auto tile_data = actor.tile(request);
   actor.cleanup();
 
-  // should be 700-800kb
   EXPECT_GT(tile_data.size(), 100000);
   EXPECT_LT(tile_data.size(), 150000);
 
   vtzero::vector_tile tile{tile_data};
 
   bool has_edges = false;
+  bool has_shortcuts = false;
   bool has_nodes = false;
 
   while (auto layer = tile.next_layer()) {
@@ -104,6 +104,9 @@ TEST(Actor, Tile) {
     if (layer_name == "edges") {
       has_edges = true;
       EXPECT_EQ(layer.num_features(), 2278);
+    } else if (layer_name == "shortcuts") {
+      has_shortcuts = true;
+      EXPECT_EQ(layer.num_features(), 39);
     } else if (layer_name == "nodes") {
       has_nodes = true;
       EXPECT_EQ(layer.num_features(), 1741);
@@ -113,6 +116,7 @@ TEST(Actor, Tile) {
   }
 
   EXPECT_TRUE(has_edges);
+  EXPECT_TRUE(has_shortcuts);
   EXPECT_TRUE(has_nodes);
 }
 
