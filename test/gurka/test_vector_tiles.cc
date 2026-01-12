@@ -417,7 +417,7 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
 
   uint32_t cache_count = 0;
   // no cache allowed, filter include
-  auto no_cache_size =
+  [[maybe_unused]] auto no_cache_size =
       test_tile_filter(8, "edge.speed_forward", valhalla::include, map_no_cache, cache_count);
   test_tile_filter(8, "node.time_zone", valhalla::include, map_no_cache, cache_count);
   // no cache allowed, filter exclude
