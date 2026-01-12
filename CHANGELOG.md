@@ -35,6 +35,7 @@
    * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
    * ADDED: NodeJS bindings support PBF outputs [#5794](https://github.com/valhalla/valhalla/pull/5794)
    * ADDED: Handle `vehicle` tags for OSM Ways [#5802](https://github.com/valhalla/valhalla/pull/5802)
+   * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**

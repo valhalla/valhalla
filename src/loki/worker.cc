@@ -1,4 +1,5 @@
 #include "loki/worker.h"
+#include "exceptions.h"
 #include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
