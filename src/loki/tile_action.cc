@@ -111,8 +111,9 @@ void filter_tile(const std::string& tile_bytes,
   vtzero::vector_tile tile_full{tile_bytes};
 
   auto build_filtered_layer =
-      [&](vtzero::layer& full_layer, vtzero::layer_builder& filtered_layer,
+      [&](vtzero::layer& full_layer,
           const std::unordered_map<std::string_view, std::string_view>& prop_map) {
+        vtzero::layer_builder filtered_layer{filtered_tile, full_layer};
         vtzero::property_mapper props_mapper{full_layer, filtered_layer};
 
         // pre-compute enabled attributes
@@ -160,15 +161,10 @@ void filter_tile(const std::string& tile_bytes,
 
   tile_full.for_each_layer([&](vtzero::layer&& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
-    if (layer_name == kEdgeLayerName) {
-      EdgesLayerBuilder filtered_edge_layer{filtered_tile, controller};
-      build_filtered_layer(full_layer, filtered_edge_layer.layer,
-                           loki::detail::kEdgePropToAttributeFlag);
-    } else if (layer_name == kNodeLayerName) {
-      NodesLayerBuilder filtered_node_layer{filtered_tile, controller};
-      build_filtered_layer(full_layer, filtered_node_layer.layer,
-                           loki::detail::kNodePropToAttributeFlag);
-    }
+    const auto& prop_map = layer_name == kNodeLayerName ? loki::detail::kNodePropToAttributeFlag
+                                                        : loki::detail::kEdgePropToAttributeFlag;
+    build_filtered_layer(full_layer, prop_map);
+
     return true;
   });
 }
