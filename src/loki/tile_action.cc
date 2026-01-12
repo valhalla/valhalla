@@ -7,6 +7,7 @@
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "midgard/polyline2.h"
 #include "utils.h"
 #include "valhalla/exceptions.h"
 
@@ -33,6 +34,17 @@ using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
 namespace {
+
+// approx tolerance in meters at equator
+constexpr double PeuckerEpsilons[] = {626'172, // z0
+                                      313'086, 156'543, 78'271,
+                                      39'135, // z4
+                                      19'567,  4'891,   2'445,  1'222,
+                                      611, // z9
+                                      152,     76,      38,     19,
+                                      5, // z14
+                                      2,       1};
+
 /**
  * Earth radius in meters for EPSG:3857 Web Mercator projection.
  * This is the WGS84 ellipsoid semi-major axis.
@@ -759,12 +771,13 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                   const std::unordered_set<baldr::GraphId>& edge_ids,
                   const loki_worker_t::ZoomConfig& min_zoom_road_class,
                   uint32_t z,
-                  bool return_shortcuts) {
+                  valhalla::Options options) {
   using point_t = boost::geometry::model::d2::point_xy<double>;
   using linestring_t = boost::geometry::model::linestring<point_t>;
   using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
   using box_t = boost::geometry::model::box<point_t>;
-
+  const bool return_shortcuts = options.tile_options().return_shortcuts();
+  const float generalize = options.has_generalize_case() ? options.generalize() : 1.f;
   const TileProjection projection{bounds};
 
   // create clip box with buffer to handle edges that cross boundaries
@@ -802,6 +815,10 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     if (!edge->forward()) {
       std::reverse(shape.begin(), shape.end());
     }
+
+    // scale the epsilon with generalize query parameter
+    if (const auto gen_factor = PeuckerEpsilons[z] * static_cast<double>(generalize); gen_factor > 1.)
+      Polyline2<PointLL>::Generalize(shape, gen_factor);
 
     // lambda to add VT line & nodes features
     auto process_single_line = [&](const linestring_t& line) {
@@ -972,8 +989,7 @@ std::string loki_worker_t::render_tile(Api& request) {
   // query edges in bbox, omits opposing edges
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
-  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
-               options.tile_options().return_shortcuts());
+  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z, options);
 
   std::string tile_bytes;
   tile.serialize(tile_bytes);
