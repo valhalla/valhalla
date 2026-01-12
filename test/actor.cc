@@ -116,52 +116,53 @@ TEST(Actor, Tile) {
   EXPECT_TRUE(has_nodes);
 }
 
-TEST(Actor, TileReturnShortcuts) {
-  // Use Utrecht tiles for this test
-  const auto utrecht_conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
-  tyr::actor_t actor(utrecht_conf);
+// TEST(Actor, TileReturnShortcuts) {
+//   // Use Utrecht tiles for this test
+//   const auto utrecht_conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+//   tyr::actor_t actor(utrecht_conf);
 
-  // Request the same tile without shortcuts (default)
-  std::string request_no_shortcuts =
-      R"({"tile": {"z": 14,"x": 8425,"y": 5405}, "tile_options": {"return_shortcuts": false}})";
-  auto tile_data_no_shortcuts = actor.tile(request_no_shortcuts);
-  actor.cleanup();
+//   // Request the same tile without shortcuts (default)
+//   std::string request_no_shortcuts =
+//       R"({"tile": {"z": 14,"x": 8425,"y": 5405}, "tile_options": {"return_shortcuts": false}})";
+//   auto tile_data_no_shortcuts = actor.tile(request_no_shortcuts);
+//   actor.cleanup();
 
-  // Request the same tile with shortcuts
-  std::string request_with_shortcuts =
-      R"({"tile": {"z": 14,"x": 8425,"y": 5405}, "tile_options": {"return_shortcuts": true}})";
-  auto tile_data_with_shortcuts = actor.tile(request_with_shortcuts);
-  actor.cleanup();
+//   // Request the same tile with shortcuts
+//   std::string request_with_shortcuts =
+//       R"({"tile": {"z": 14,"x": 8425,"y": 5405}, "tile_options": {"return_shortcuts": true}})";
+//   auto tile_data_with_shortcuts = actor.tile(request_with_shortcuts);
+//   actor.cleanup();
 
-  // Both should return valid data
-  ASSERT_FALSE(tile_data_no_shortcuts.empty()) << "Tile data without shortcuts should not be empty";
-  ASSERT_FALSE(tile_data_with_shortcuts.empty()) << "Tile data with shortcuts should not be empty";
+//   // Both should return valid data
+//   ASSERT_FALSE(tile_data_no_shortcuts.empty()) << "Tile data without shortcuts should not be
+//   empty"; ASSERT_FALSE(tile_data_with_shortcuts.empty()) << "Tile data with shortcuts should not be
+//   empty";
 
-  // Parse both tiles
-  vtzero::vector_tile tile_no_shortcuts{tile_data_no_shortcuts};
-  vtzero::vector_tile tile_with_shortcuts{tile_data_with_shortcuts};
+//   // Parse both tiles
+//   vtzero::vector_tile tile_no_shortcuts{tile_data_no_shortcuts};
+//   vtzero::vector_tile tile_with_shortcuts{tile_data_with_shortcuts};
 
-  // Count features in edges layer for both tiles
-  uint32_t features_no_shortcuts = 0;
-  uint32_t features_with_shortcuts = 0;
+//   // Count features in edges layer for both tiles
+//   uint32_t features_no_shortcuts = 0;
+//   uint32_t features_with_shortcuts = 0;
 
-  while (auto layer = tile_no_shortcuts.next_layer()) {
-    if (std::string(layer.name()) == "edges") {
-      features_no_shortcuts = layer.num_features();
-      break;
-    }
-  }
+//   while (auto layer = tile_no_shortcuts.next_layer()) {
+//     if (std::string(layer.name()) == "edges") {
+//       features_no_shortcuts = layer.num_features();
+//       break;
+//     }
+//   }
 
-  while (auto layer = tile_with_shortcuts.next_layer()) {
-    if (std::string(layer.name()) == "edges") {
-      features_with_shortcuts = layer.num_features();
-      break;
-    }
-  }
+//   while (auto layer = tile_with_shortcuts.next_layer()) {
+//     if (std::string(layer.name()) == "edges") {
+//       features_with_shortcuts = layer.num_features();
+//       break;
+//     }
+//   }
 
-  ASSERT_EQ(features_with_shortcuts, 2317);
-  ASSERT_EQ(features_no_shortcuts, 2278);
-}
+//   ASSERT_EQ(features_with_shortcuts, 2317);
+//   ASSERT_EQ(features_no_shortcuts, 2278);
+// }
 
 // TODO: test the rest of them
 

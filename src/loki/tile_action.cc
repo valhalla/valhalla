@@ -105,8 +105,7 @@ std::pair<int32_t, int32_t> ll_to_tile_coords(const midgard::PointLL node_ll,
 
 void filter_tile(const std::string& tile_bytes,
                  vtzero::tile_builder& filtered_tile,
-                 const baldr::AttributesController& controller,
-                 const bool return_shortcuts) {
+                 const baldr::AttributesController& controller) {
 
   vtzero::vector_tile tile_full{tile_bytes};
 
@@ -116,7 +115,6 @@ void filter_tile(const std::string& tile_bytes,
         vtzero::property_mapper props_mapper{full_layer, filtered_layer};
 
         // pre-compute enabled attributes
-        uint32_t shortcut_key_idx = UINT32_MAX;
         const auto& key_table = full_layer.key_table();
         std::vector<bool> attrs_allowed(key_table.size(), false);
         for (uint32_t i = 0; i < key_table.size(); ++i) {
@@ -126,12 +124,6 @@ void filter_tile(const std::string& tile_bytes,
           try {
             attrs_allowed[i] = controller(prop_map.at(key_str));
           } catch (const std::exception& e) { attrs_allowed[i] = true; }
-
-          // on the full layer, shortcuts will always be enabled
-          // if return_shortcuts=false, we'll discard shortcut features
-          if (key_str == "shortcut") {
-            shortcut_key_idx = i;
-          }
         }
 
         while (auto full_feat = full_layer.next_feature()) {
@@ -142,10 +134,7 @@ void filter_tile(const std::string& tile_bytes,
           // Use index-based iteration with pre-computed filter
           bool add_feat =
               full_feat.for_each_property_indexes([&](const vtzero::index_value_pair& idxs) {
-                // TODO: make shortcuts their own layer, this is annoying
-                if (!return_shortcuts && shortcut_key_idx == idxs.key().value()) {
-                  return false;
-                } else if (attrs_allowed[idxs.key().value()]) {
+                if (attrs_allowed[idxs.key().value()]) {
                   filtered_feat.add_property(props_mapper(idxs));
                 }
                 return true;
@@ -200,7 +189,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                   const std::unordered_set<baldr::GraphId>& edge_ids,
                   const loki_worker_t::ZoomConfig& min_zoom_road_class,
                   uint32_t z,
-                  bool return_shortcuts,
                   const baldr::AttributesController& controller) {
   using point_t = boost::geometry::model::d2::point_xy<double>;
   using linestring_t = boost::geometry::model::linestring<point_t>;
@@ -228,13 +216,9 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     const auto* edge = reader->directededge(edge_id, edge_tile);
 
     // no shortcuts if not requested
-    if (!return_shortcuts && edge->is_shortcut()) {
+    if (edge->is_shortcut()) {
       continue;
     }
-
-    // if (edge->is_shortcut())  {
-    //   std::cout << std::endl;
-    // }
 
     // filter road classes by zoom
     auto road_class = edge->classification();
@@ -507,7 +491,6 @@ std::string loki_worker_t::render_tile(Api& request) {
   const auto tile_path = detail::mvt_local_path(z, x, y, mvt_cache_dir_);
   bool cache_allowed = (z >= mvt_cache_min_zoom_) && !mvt_cache_dir_.empty();
   bool is_cached = false;
-  bool return_shortcuts = options.tile_options().return_shortcuts();
   if (cache_allowed) {
     is_cached = std::filesystem::exists(tile_path);
     if (is_cached) {
@@ -517,13 +500,12 @@ std::string loki_worker_t::render_tile(Api& request) {
       if (return_verbose) {
         return buffer;
       }
-      filter_tile(buffer, tile, controller, return_shortcuts);
+      filter_tile(buffer, tile, controller);
 
       return tile.serialize();
     }
     // if we're caching, we need the full attributes
     controller.set_all(true);
-    return_shortcuts = true;
   }
 
   // get lat/lon bbox
@@ -533,7 +515,7 @@ std::string loki_worker_t::render_tile(Api& request) {
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
   // build the full layers if cache is allowed, else whatever is in the controller
-  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z, return_shortcuts, controller);
+  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z, controller);
 
   std::string tile_bytes;
   tile.serialize(tile_bytes);
@@ -568,8 +550,7 @@ std::string loki_worker_t::render_tile(Api& request) {
     vtzero::tile_builder filtered_tile;
 
     // need a fresh controller, the other one might have been changed if it was cacheable
-    filter_tile(tile_bytes, filtered_tile, get_controller(),
-                options.tile_options().return_shortcuts());
+    filter_tile(tile_bytes, filtered_tile, get_controller());
 
     return filtered_tile.serialize();
   }

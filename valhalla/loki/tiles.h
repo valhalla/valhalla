@@ -85,7 +85,6 @@ public:
   vtzero::index_value key_tunnel_;
   vtzero::index_value key_bridge_;
   vtzero::index_value key_roundabout_;
-  vtzero::index_value key_is_shortcut_;
   vtzero::index_value key_leaves_tile_;
   // Shared edge properties
   vtzero::index_value key_length_;
@@ -876,16 +875,6 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         },
     },
     {
-        "shortcut",
-        baldr::kEdgeShortcut,
-        &EdgesLayerBuilder::key_is_shortcut_,
-        [](const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          return vtzero::encoded_property_value(e.is_shortcut());
-        },
-    },
-    {
         "leaves_tile",
         baldr::kEdgeLeavesTile,
         &EdgesLayerBuilder::key_leaves_tile_,
@@ -1435,7 +1424,6 @@ static const std::unordered_map<std::string_view, std::string_view> kEdgePropToA
     {"tunnel", baldr::kEdgeTunnel},
     {"bridge", baldr::kEdgeBridge},
     {"roundabout", baldr::kEdgeRoundabout},
-    {"shortcut", baldr::kEdgeShortcut},
     {"leaves_tile", baldr::kEdgeLeavesTile},
     {"length", baldr::kEdgeLength},
     {"weighted_grade", baldr::kEdgeWeightedGrade},

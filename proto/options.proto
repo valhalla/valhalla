@@ -111,10 +111,6 @@ message Tile {
   }
 }
 
-message TileOptions {
-  bool return_shortcuts = 1;      // include shortcuts in /tile responses
-}
-
 message Costing {
   enum Type {
     none_ = 0;
@@ -535,6 +531,6 @@ message Options {
   repeated LinearFeatureCost cost_factor_lines = 61;               // User provided linear features to which apply special cost factors to
   ReverseTimeTracking reverse_time_tracking = 62;                  // Which strategy to use on the reverse tree in time dependent bidirectional routing
   Tile tile_xyz = 63;                                              // x, y, z for /tile requests
-  TileOptions tile_options = 64;                                   // additional /tile specific options
+  // TileOptions tile_options = 64;                                // DEPRECATED: additional /tile specific options
   repeated Levels exclude_levels = 65;                             // Levels to exclude within the exclude_polygon at the same index
 }
