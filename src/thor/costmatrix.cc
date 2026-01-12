@@ -120,9 +120,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_iterations_(
           std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultMaxIterations),
                    static_cast<uint32_t>(1))),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -499,7 +499,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     // edges while still expanding on the next level since we can still transition down to
     // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
     // edge superseded by a shortcut.
-    if (StopExpanding(hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1], pred.distance())) {
+    if (StopExpanding(hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1],
+                      pred.path_distance())) {
       shortcuts |= meta.edge->shortcut();
     } else {
       return false;
@@ -694,7 +695,7 @@ bool CostMatrix::Expand(const uint32_t index,
   // number of upward transitions has been exceeded on this hierarchy level.
   if ((pred.not_thru() && pred.not_thru_pruning()) ||
       (!ignore_hierarchy_limits_ &&
-       StopExpanding(hierarchy_limits_[FORWARD][index][node.level()], pred.distance()))) {
+       StopExpanding(hierarchy_limits_[FORWARD][index][node.level()], pred.path_distance()))) {
     return false;
   }
 
@@ -772,7 +773,7 @@ bool CostMatrix::Expand(const uint32_t index,
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() && !ignore_hierarchy_limits_ &&
-           StopExpanding(hierarchy_limits[trans->endnode().level()], pred.distance())) ||
+           StopExpanding(hierarchy_limits[trans->endnode().level()], pred.path_distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
