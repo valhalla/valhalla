@@ -777,7 +777,8 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
   using box_t = boost::geometry::model::box<point_t>;
   const bool return_shortcuts = options.tile_options().return_shortcuts();
-  const float generalize = options.has_generalize_case() ? options.generalize() : 1.f;
+  // we use generalize as a scaling factor to our default generalization, i.e. [0.f, 1.f] range
+  const float generalize = options.has_generalize_case() ? std::min(options.generalize(), 1.f) : 1.f;
   const TileProjection projection{bounds};
 
   // create clip box with buffer to handle edges that cross boundaries

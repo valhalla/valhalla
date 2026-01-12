@@ -21,9 +21,9 @@ namespace {
 // handler only counting vertices in a linestring
 struct linestring_handler_t {
   uint32_t count = 0;
-  void linestring_begin(uint32_t count) {
+  void linestring_begin(uint32_t /*count*/) {
   }
-  void linestring_point(vtzero::point point) noexcept {
+  void linestring_point(vtzero::point /*point*/) noexcept {
     count++;
   }
   void linestring_end() const noexcept {

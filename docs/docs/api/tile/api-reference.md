@@ -16,6 +16,7 @@ We support the usual GET & POST with the common "Slippy Map"/XYZ request pattern
 | `tile.x` | The "slippy map" X coordinate. |
 | `tile.y` | The "slippy map" Y coordinate. |
 | `tile_options.return_shortcuts` |  Whether the response contains shortcut edges. Default `false`. |
+| `generalize` | A factor which scales the default (Douglas-Peucker) generalization in the range [0.0, 1.0], where 0.0 disables generalization and 1.0 applies full generalization. Default is 1.0 |
 
 ## Integration into MVT compatible clients/SDKs etc
 
