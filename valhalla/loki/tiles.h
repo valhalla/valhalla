@@ -41,8 +41,7 @@ public:
   explicit EdgesLayerBuilder(vtzero::tile_builder& tile,
                              const baldr::AttributesController& controller);
 
-  template <std::size_t N>
-  void set_attribute_values(const EdgeAttributeTile (&arr)[N],
+  void set_attribute_values(std::span<const EdgeAttributeTile> arr,
                             const baldr::AttributesController& controller,
                             vtzero::linestring_feature_builder& feature,
                             const baldr::DirectedEdge& edge,
@@ -56,8 +55,7 @@ public:
     }
   }
 
-  template <std::size_t N>
-  void init_attribute_keys(const EdgeAttributeTile (&arr)[N],
+  void init_attribute_keys(std::span<const EdgeAttributeTile> arr,
                            const baldr::AttributesController& controller) {
     for (const auto& def : arr) {
       if (controller(def.attribute_flag))
