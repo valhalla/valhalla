@@ -33,12 +33,10 @@ struct EdgeAttributeTile {
 /**
  * Helper class to build the edges layer with pre-registered keys
  */
-class EdgesLayerBuilder {
+class EdgesLayerBuilder : vtzero::layer_builder {
 public:
-  // it's a public layer, vtzero::property_mapper needs a mutable instance
-  vtzero::layer_builder layer;
-
   explicit EdgesLayerBuilder(vtzero::tile_builder& tile,
+                             const char* name,
                              const baldr::AttributesController& controller);
 
   void set_attribute_values(std::span<const EdgeAttributeTile> arr,
@@ -59,7 +57,7 @@ public:
                            const baldr::AttributesController& controller) {
     for (const auto& def : arr) {
       if (controller(def.attribute_flag))
-        this->*(def.key_member) = layer.add_key_without_dup_check(def.key_name);
+        this->*(def.key_member) = add_key_without_dup_check(def.key_name);
     }
   }
 
@@ -195,11 +193,11 @@ struct NodeAttributeTile {
 /**
  * Helper class to build the nodes layer with pre-registered keys
  */
-class NodesLayerBuilder {
+class NodesLayerBuilder : vtzero::layer_builder {
 public:
-  vtzero::layer_builder layer;
-
-  NodesLayerBuilder(vtzero::tile_builder& tile, const baldr::AttributesController& controller);
+  NodesLayerBuilder(vtzero::tile_builder& tile,
+                    const char* name,
+                    const baldr::AttributesController& controller);
 
   void add_feature(const vtzero::point& position,
                    baldr::GraphId node_id,

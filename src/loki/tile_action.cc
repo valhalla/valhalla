@@ -210,8 +210,8 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                        point_t(projection.tile_extent + projection.tile_buffer,
                                projection.tile_extent + projection.tile_buffer));
 
-  EdgesLayerBuilder edges_builder(tile, controller);
-  NodesLayerBuilder nodes_builder(tile, controller);
+  EdgesLayerBuilder edges_builder(tile, kEdgeLayerName.data(), controller);
+  NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
 
   std::unordered_set<GraphId> unique_nodes;
   unique_nodes.reserve(edge_ids.size());
@@ -336,10 +336,11 @@ namespace valhalla {
 namespace loki {
 
 EdgesLayerBuilder::EdgesLayerBuilder(vtzero::tile_builder& tile,
+                                     const char* name,
                                      const baldr::AttributesController& controller)
-    : layer(tile, kEdgeLayerName.data()), controller_(controller) {
-  key_tile_level_ = layer.add_key_without_dup_check("tile_level");
-  key_road_class_ = layer.add_key_without_dup_check("road_class");
+    : vtzero::layer_builder(tile, name), controller_(controller) {
+  key_tile_level_ = add_key_without_dup_check("tile_level");
+  key_road_class_ = add_key_without_dup_check("road_class");
 
   init_attribute_keys(loki::detail::kSharedEdgeAttributes, controller);
   init_attribute_keys(loki::detail::kForwardEdgeAttributes, controller);
@@ -349,8 +350,8 @@ EdgesLayerBuilder::EdgesLayerBuilder(vtzero::tile_builder& tile,
 
   // edge ids don't need all those attributes
   if (controller(kEdgeId)) {
-    key_edge_id_fwd_ = layer.add_key_without_dup_check("edge_id:forward");
-    key_edge_id_rev_ = layer.add_key_without_dup_check("edge_id:backward");
+    key_edge_id_fwd_ = add_key_without_dup_check("edge_id:forward");
+    key_edge_id_rev_ = add_key_without_dup_check("edge_id:backward");
   }
 }
 
@@ -373,7 +374,7 @@ void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
   const GraphId& edge_id = forward_edge ? forward_edge_id : reverse_edge_id;
 
   // Create linestring feature for this edge
-  vtzero::linestring_feature_builder feature{layer};
+  vtzero::linestring_feature_builder feature{*this};
   feature.set_id(static_cast<uint64_t>(edge_id));
   feature.add_linestring_from_container(geometry);
 
@@ -411,24 +412,25 @@ void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
 }
 
 NodesLayerBuilder::NodesLayerBuilder(vtzero::tile_builder& tile,
+                                     const char* name,
                                      const baldr::AttributesController& controller)
-    : layer(tile, kNodeLayerName.data()), controller_(controller) {
+    : vtzero::layer_builder(tile, name), controller_(controller) {
   // Pre-add keys for node properties
-  key_tile_level_ = layer.add_key_without_dup_check("tile_level");
-  key_node_id_ = layer.add_key_without_dup_check("node_id");
-  key_node_type_ = layer.add_key_without_dup_check("type");
-  key_traffic_signal_ = layer.add_key_without_dup_check("traffic_signal");
+  key_tile_level_ = add_key_without_dup_check("tile_level");
+  key_node_id_ = add_key_without_dup_check("node_id");
+  key_node_type_ = add_key_without_dup_check("type");
+  key_traffic_signal_ = add_key_without_dup_check("traffic_signal");
 
   for (const auto& def : loki::detail::kNodeAttributes) {
     if (controller(def.attribute_flag)) {
-      this->*(def.key_member) = layer.add_key_without_dup_check(def.key_name);
+      this->*(def.key_member) = add_key_without_dup_check(def.key_name);
     }
   }
 
   if (controller(kAdminCountryCode))
-    key_iso_3166_1_ = layer.add_key_without_dup_check("iso_3166_1");
+    key_iso_3166_1_ = add_key_without_dup_check("iso_3166_1");
   if (controller(kAdminStateCode))
-    key_iso_3166_2_ = layer.add_key_without_dup_check("iso_3166_2");
+    key_iso_3166_2_ = add_key_without_dup_check("iso_3166_2");
 }
 
 void NodesLayerBuilder::add_feature(const vtzero::point& position,
@@ -436,7 +438,7 @@ void NodesLayerBuilder::add_feature(const vtzero::point& position,
                                     const baldr::NodeInfo& node,
                                     const baldr::AdminInfo& admin_info) {
   // Create point feature
-  vtzero::point_feature_builder node_feature{layer};
+  vtzero::point_feature_builder node_feature{*this};
   node_feature.set_id(static_cast<uint64_t>(node_id));
   node_feature.add_point(position);
 
