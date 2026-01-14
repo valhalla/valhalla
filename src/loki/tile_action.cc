@@ -7,8 +7,6 @@
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "midgard/polyline2.h"
-#include "midgard/vector2.h"
 #include "utils.h"
 #include "valhalla/exceptions.h"
 
@@ -34,24 +32,7 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
-namespace valhalla::midgard {
-// let ADL pick up this overload
-inline vtzero::point create_vtzero_point(const Point2i& p) noexcept {
-  return {p.x(), p.y()};
-}
-} // namespace valhalla::midgard
-
 namespace {
-
-// approx tolerance in meters at equator
-constexpr double PeuckerEpsilons[] = {626'172, // z0
-                                      313'086, 156'543, 78'271,
-                                      39'135, // z4
-                                      19'567,  4'891,   2'445,  1'222,
-                                      611, // z9
-                                      152,     76,      38,     19,
-                                      5, // z14
-                                      2,       1};
 
 /**
  * Earth radius in meters for EPSG:3857 Web Mercator projection.
@@ -196,7 +177,7 @@ public:
     key_live_congestion3_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion3");
   }
 
-  void add_feature(const std::vector<Point2i>& geometry,
+  void add_feature(const std::vector<vtzero::point>& geometry,
                    baldr::GraphId forward_edge_id,
                    const baldr::DirectedEdge* forward_edge,
                    baldr::GraphId reverse_edge_id,
@@ -779,14 +760,11 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                   const std::unordered_set<baldr::GraphId>& edge_ids,
                   const loki_worker_t::ZoomConfig& min_zoom_road_class,
                   uint32_t z,
-                  valhalla::Options options) {
+                  bool return_shortcuts) {
   using point_t = boost::geometry::model::d2::point_xy<double>;
   using linestring_t = boost::geometry::model::linestring<point_t>;
   using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
   using box_t = boost::geometry::model::box<point_t>;
-  const bool return_shortcuts = options.tile_options().return_shortcuts();
-  // we use generalize as a scaling factor to our default generalization, i.e. [0.f, 1.f] range
-  const float generalize = options.has_generalize_case() ? std::min(options.generalize(), 1.f) : 1.f;
   const TileProjection projection{bounds};
 
   // create clip box with buffer to handle edges that cross boundaries
@@ -828,7 +806,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     // lambda to add VT line & nodes features
     auto process_single_line = [&](const linestring_t& line) {
       // convert to vtzero points, removing consecutive duplicates
-      std::vector<Point2i> tile_coords;
+      std::vector<vtzero::point> tile_coords;
       tile_coords.reserve(line.size());
 
       int32_t last_x = INT32_MIN;
@@ -853,11 +831,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
         return;
       }
 
-      // scale the epsilon with generalize query parameter
-      if (const auto gen_factor = PeuckerEpsilons[z] * static_cast<double>(generalize);
-          gen_factor > 1.)
-        Polyline2<Point2i>::Generalize(tile_coords, static_cast<int32_t>(gen_factor));
-
       // Check for opposing edge
       baldr::graph_tile_ptr opp_tile = edge_tile;
       const DirectedEdge* opp_edge = nullptr;
@@ -881,7 +854,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       }
     };
 
-    // TODO(nils): remove boost geometry altogether and use AABB2<Point2i>::Clip instead
     unclipped_line.clear();
     bool line_leaves_bbox = false;
     for (const auto& ll : shape) {
@@ -1000,7 +972,8 @@ std::string loki_worker_t::render_tile(Api& request) {
   // query edges in bbox, omits opposing edges
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
-  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z, options);
+  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
+               options.tile_options().return_shortcuts());
 
   std::string tile_bytes;
   tile.serialize(tile_bytes);
