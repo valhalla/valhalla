@@ -1,4 +1,5 @@
 #include "mjolnir/adminbuilder.h"
+#include "midgard/boost_geom_helper.h"
 #include "midgard/logging.h"
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/pbfadminparser.h"
@@ -15,12 +16,6 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-
-BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
-                                 double,
-                                 boost::geometry::cs::geographic<boost::geometry::degree>,
-                                 first,
-                                 second);
 
 namespace bg {
 using ring_t = boost::geometry::model::ring<valhalla::midgard::PointLL>;

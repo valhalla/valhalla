@@ -3,12 +3,13 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "exceptions.h"
 #include "loki/worker.h"
 #include "meili/candidate_search.h"
+#include "midgard/boost_geom_helper.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "utils.h"
-#include "valhalla/exceptions.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -32,7 +33,18 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
+namespace valhalla::midgard {
+// let ADL pick up this overload
+inline vtzero::point create_vtzero_point(const Point2i& p) noexcept {
+  return {p.x(), p.y()};
+}
+} // namespace valhalla::midgard
+
 namespace {
+
+using mvt_linestring_t = std::vector<Point2i>;
+using mvt_multilinestring_t = std::vector<mvt_linestring_t>;
+using mvt_box_t = AABB2<Point2i>;
 
 /**
  * Earth radius in meters for EPSG:3857 Web Mercator projection.
@@ -177,7 +189,7 @@ public:
     key_live_congestion3_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion3");
   }
 
-  void add_feature(const std::vector<vtzero::point>& geometry,
+  void add_feature(const mvt_linestring_t& geometry,
                    baldr::GraphId forward_edge_id,
                    const baldr::DirectedEdge* forward_edge,
                    baldr::GraphId reverse_edge_id,
@@ -716,11 +728,10 @@ struct TileProjection {
   double tile_merc_width;
   double tile_merc_height;
   int32_t tile_extent = 4096;
-  int32_t tile_buffer = 128;
+  int32_t tile_buffer = 64;
 };
 
-std::pair<int32_t, int32_t> ll_to_tile_coords(const midgard::PointLL node_ll,
-                                              const TileProjection& projection) {
+Point2i ll_to_tile_coords(const midgard::PointLL node_ll, const TileProjection& projection) {
   double merc_x = lon_to_merc_x(node_ll.lng());
   double merc_y = lat_to_merc_y(node_ll.lat());
 
@@ -761,25 +772,21 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                   const loki_worker_t::ZoomConfig& min_zoom_road_class,
                   uint32_t z,
                   bool return_shortcuts) {
-  using point_t = boost::geometry::model::d2::point_xy<double>;
-  using linestring_t = boost::geometry::model::linestring<point_t>;
-  using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
-  using box_t = boost::geometry::model::box<point_t>;
   const TileProjection projection{bounds};
 
   // create clip box with buffer to handle edges that cross boundaries
-  const box_t clip_box(point_t(-projection.tile_buffer, -projection.tile_buffer),
-                       point_t(projection.tile_extent + projection.tile_buffer,
-                               projection.tile_extent + projection.tile_buffer));
+  const mvt_box_t clip_box(Point2i(-projection.tile_buffer, -projection.tile_buffer),
+                           Point2i(projection.tile_extent + projection.tile_buffer,
+                                   projection.tile_extent + projection.tile_buffer));
 
   EdgesLayerBuilder edges_builder(tile);
   NodesLayerBuilder nodes_builder(tile);
 
   std::unordered_set<GraphId> unique_nodes;
   unique_nodes.reserve(edge_ids.size());
-  linestring_t unclipped_line;
+  mvt_linestring_t unclipped_line;
   unclipped_line.reserve(20);
-  multi_linestring_t clipped_lines;
+  mvt_multilinestring_t clipped_lines;
   baldr::graph_tile_ptr edge_tile;
   // TODO(nils): sort edge_ids
   for (const auto& edge_id : edge_ids) {
@@ -791,9 +798,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     }
 
     // filter road classes by zoom
-    auto road_class = edge->classification();
-    uint32_t road_class_idx = static_cast<uint32_t>(road_class);
-    if (z < min_zoom_road_class[road_class_idx]) {
+    if (z < min_zoom_road_class[static_cast<uint32_t>(edge->classification())]) {
       continue;
     }
 
@@ -803,31 +808,29 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       std::reverse(shape.begin(), shape.end());
     }
 
-    // lambda to add VT line & nodes features
-    auto process_single_line = [&](const linestring_t& line) {
-      // convert to vtzero points, removing consecutive duplicates
-      std::vector<vtzero::point> tile_coords;
-      tile_coords.reserve(line.size());
+    // first convert shape to MVT coords
+    unclipped_line.clear();
+    bool line_leaves_bbox = false;
+    Point2i last_pt{INT32_MIN, INT32_MIN};
+    for (const auto& ll : shape) {
+      const auto pt = ll_to_tile_coords(ll, projection);
 
-      int32_t last_x = INT32_MIN;
-      int32_t last_y = INT32_MIN;
-
-      for (const auto& pt : line) {
-        int32_t x = static_cast<int32_t>(std::round(pt.x()));
-        int32_t y = static_cast<int32_t>(std::round(pt.y()));
-
-        // Skip consecutive duplicate points (can happen after rounding)
-        if (x == last_x && y == last_y) {
-          continue;
-        }
-
-        tile_coords.emplace_back(x, y);
-        last_x = x;
-        last_y = y;
+      // deduplicate points in integer space
+      if (pt == last_pt) {
+        continue;
       }
 
-      // Must have at least 2 unique points to create a valid linestring
-      if (tile_coords.size() < 2) {
+      // only in this case we need an intersection with the clip_box
+      line_leaves_bbox = pt.x() > clip_box.maxx() || pt.y() > clip_box.maxy() ||
+                         pt.x() < clip_box.minx() || pt.y() < clip_box.miny();
+
+      unclipped_line.emplace_back(pt);
+      last_pt = pt;
+    }
+
+    // lambda to add VT line & nodes features
+    auto process_single_line = [&](const mvt_linestring_t& line) {
+      if (line.size() < 2) {
         return;
       }
 
@@ -840,7 +843,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       const volatile baldr::TrafficSpeed* reverse_traffic =
           opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
-      edges_builder.add_feature(tile_coords, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
+      edges_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
                                 reverse_traffic, edge_info);
 
       // adding nodes only works if we have the opposing tile
@@ -853,20 +856,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
         }
       }
     };
-
-    unclipped_line.clear();
-    bool line_leaves_bbox = false;
-    for (const auto& ll : shape) {
-      const auto [tile_x, tile_y] = ll_to_tile_coords(ll, projection);
-
-      // only in this case we need an intersection with the clip_box
-      line_leaves_bbox = tile_x > clip_box.max_corner().x() || tile_y > clip_box.max_corner().y() ||
-                         tile_x < clip_box.min_corner().x() || tile_y < clip_box.min_corner().y();
-
-      // TODO(nils): is there a point promoting int32 to double? could just register a custom boost
-      // geometry type for vtzero points
-      boost::geometry::append(unclipped_line, point_t(tile_x, tile_y));
-    }
 
     if (!line_leaves_bbox) {
       process_single_line(unclipped_line);

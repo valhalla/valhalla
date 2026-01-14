@@ -1,5 +1,6 @@
 #include "baldr/json.h"
 #include "loki/polygon_search.h"
+#include "midgard/boost_geom_helper.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -7,8 +8,6 @@
 #include "valhalla/worker.h"
 
 #include <boost/geometry.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
-#include <boost/geometry/geometries/register/ring.hpp>
 
 #include <optional>
 
@@ -16,9 +15,6 @@ namespace bg = boost::geometry;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
-
-BOOST_GEOMETRY_REGISTER_POINT_2D(PointLL, double, bg::cs::geographic<bg::degree>, first, second)
-BOOST_GEOMETRY_REGISTER_RING(std::vector<PointLL>)
 
 namespace {
 
