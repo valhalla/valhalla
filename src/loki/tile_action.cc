@@ -881,6 +881,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       }
     };
 
+    // TODO(nils): remove boost geometry altogether and use AABB2<Point2i>::Clip instead
     unclipped_line.clear();
     bool line_leaves_bbox = false;
     for (const auto& ll : shape) {
