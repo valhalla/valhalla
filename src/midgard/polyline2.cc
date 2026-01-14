@@ -351,7 +351,6 @@ template double Polyline2<PointXY<double>>::Length(const std::vector<PointXY<dou
 template int32_t Polyline2<PointXY<int32_t>>::Length(const std::vector<PointXY<int32_t>>&);
 template float Polyline2<PointXY<float>>::Length(const std::list<PointXY<float>>&);
 template double Polyline2<PointXY<double>>::Length(const std::list<PointXY<double>>&);
-template int32_t Polyline2<PointXY<int32_t>>::Length(const std::list<PointXY<int32_t>>&);
 template float Polyline2<GeoPoint<float>>::Length(const std::vector<GeoPoint<float>>&);
 template double Polyline2<GeoPoint<double>>::Length(const std::vector<GeoPoint<double>>&);
 template float Polyline2<GeoPoint<float>>::Length(const std::list<GeoPoint<float>>&);
