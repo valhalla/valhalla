@@ -204,6 +204,7 @@ public:
 
 using Point2 = PointXY<float>;
 using Point2d = PointXY<double>;
+using Point2i = PointXY<int32_t>;
 
 } // namespace midgard
 } // namespace valhalla

@@ -129,6 +129,7 @@ void PointTileIndex::remove_point(size_t idx) {
 // Explicit instantiation
 template PointTileIndex::PointTileIndex(double, const std::vector<PointXY<float>>&);
 template PointTileIndex::PointTileIndex(double, const std::vector<PointXY<double>>&);
+template PointTileIndex::PointTileIndex(double, const std::vector<PointXY<int32_t>>&);
 template PointTileIndex::PointTileIndex(double, const std::list<PointXY<float>>&);
 template PointTileIndex::PointTileIndex(double, const std::list<PointXY<double>>&);
 template PointTileIndex::PointTileIndex(double, const std::vector<GeoPoint<float>>&);

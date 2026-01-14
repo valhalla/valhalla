@@ -213,6 +213,7 @@ bool LineSegment2<coord_t>::ClipToPolygon(const std::vector<coord_t>& poly,
 // explicit instantiations
 template class LineSegment2<PointXY<float>>;
 template class LineSegment2<PointXY<double>>;
+template class LineSegment2<PointXY<int32_t>>;
 template class LineSegment2<GeoPoint<float>>;
 template class LineSegment2<GeoPoint<double>>;
 

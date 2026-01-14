@@ -8,6 +8,7 @@
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/polyline2.h"
+#include "midgard/vector2.h"
 #include "utils.h"
 #include "valhalla/exceptions.h"
 
@@ -32,6 +33,13 @@ using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
+
+namespace valhalla::midgard {
+// let ADL pick up this overload
+inline vtzero::point create_vtzero_point(const Point2i& p) noexcept {
+  return {p.x(), p.y()};
+}
+} // namespace valhalla::midgard
 
 namespace {
 
@@ -188,7 +196,7 @@ public:
     key_live_congestion3_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion3");
   }
 
-  void add_feature(const std::vector<vtzero::point>& geometry,
+  void add_feature(const std::vector<Point2i>& geometry,
                    baldr::GraphId forward_edge_id,
                    const baldr::DirectedEdge* forward_edge,
                    baldr::GraphId reverse_edge_id,
@@ -817,14 +825,10 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       std::reverse(shape.begin(), shape.end());
     }
 
-    // scale the epsilon with generalize query parameter
-    if (const auto gen_factor = PeuckerEpsilons[z] * static_cast<double>(generalize); gen_factor > 1.)
-      Polyline2<PointLL>::Generalize(shape, gen_factor);
-
     // lambda to add VT line & nodes features
     auto process_single_line = [&](const linestring_t& line) {
       // convert to vtzero points, removing consecutive duplicates
-      std::vector<vtzero::point> tile_coords;
+      std::vector<Point2i> tile_coords;
       tile_coords.reserve(line.size());
 
       int32_t last_x = INT32_MIN;
@@ -848,6 +852,11 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       if (tile_coords.size() < 2) {
         return;
       }
+
+      // scale the epsilon with generalize query parameter
+      if (const auto gen_factor = PeuckerEpsilons[z] * static_cast<double>(generalize);
+          gen_factor > 1.)
+        Polyline2<Point2i>::Generalize(tile_coords, static_cast<int32_t>(gen_factor));
 
       // Check for opposing edge
       baldr::graph_tile_ptr opp_tile = edge_tile;

@@ -342,13 +342,16 @@ Polyline2<coord_t>::HausdorffDistance(const container_t& l1, const container_t& 
 // Explicit instantiation
 template class Polyline2<PointXY<float>>;
 template class Polyline2<PointXY<double>>;
+template class Polyline2<PointXY<int32_t>>;
 template class Polyline2<GeoPoint<float>>;
 template class Polyline2<GeoPoint<double>>;
 
 template float Polyline2<PointXY<float>>::Length(const std::vector<PointXY<float>>&);
 template double Polyline2<PointXY<double>>::Length(const std::vector<PointXY<double>>&);
+template int32_t Polyline2<PointXY<int32_t>>::Length(const std::vector<PointXY<int32_t>>&);
 template float Polyline2<PointXY<float>>::Length(const std::list<PointXY<float>>&);
 template double Polyline2<PointXY<double>>::Length(const std::list<PointXY<double>>&);
+template int32_t Polyline2<PointXY<int32_t>>::Length(const std::list<PointXY<int32_t>>&);
 template float Polyline2<GeoPoint<float>>::Length(const std::vector<GeoPoint<float>>&);
 template double Polyline2<GeoPoint<double>>::Length(const std::vector<GeoPoint<double>>&);
 template float Polyline2<GeoPoint<float>>::Length(const std::list<GeoPoint<float>>&);
@@ -362,6 +365,10 @@ template void Polyline2<PointXY<double>>::Generalize(std::vector<PointXY<double>
                                                      double,
                                                      const std::unordered_set<size_t>&,
                                                      bool);
+template void Polyline2<PointXY<int32_t>>::Generalize(std::vector<PointXY<int32_t>>&,
+                                                      int32_t,
+                                                      const std::unordered_set<size_t>&,
+                                                      bool);
 template void Polyline2<PointXY<float>>::Generalize(std::list<PointXY<float>>&,
                                                     float,
                                                     const std::unordered_set<size_t>&,

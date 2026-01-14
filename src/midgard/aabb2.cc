@@ -47,7 +47,8 @@ template <class coord_t> AABB2<coord_t> AABB2<coord_t>::Intersection(const AABB2
   // If the bounding boxes do not intersect a bounding box with
   // no area is returned (all min,max values are 0).
   if (!Intersects(bbox)) {
-    return {0.0f, 0.0f, 0.0f, 0.0f};
+    typename coord_t::value_type t = 0;
+    return {t, t, t, t};
   }
   return {std::max(minx(), bbox.minx()), std::max(miny(), bbox.miny()), std::min(maxx(), bbox.maxx()),
           std::min(maxy(), bbox.maxy())};
@@ -205,6 +206,7 @@ coord_t AABB2<coord_t>::ClipIntersection(const ClipEdge bdry,
 // Explicit instantiation
 template class AABB2<PointXY<float>>;
 template class AABB2<PointXY<double>>;
+template class AABB2<PointXY<int32_t>>;
 template class AABB2<GeoPoint<float>>;
 template class AABB2<GeoPoint<double>>;
 

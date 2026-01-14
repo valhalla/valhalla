@@ -142,6 +142,7 @@ template class VectorXY<float>;
 template class PointXY<float>;
 template class VectorXY<double>;
 template class PointXY<double>;
+template class PointXY<int32_t>;
 template bool PointXY<float>::WithinPolygon(const std::vector<PointXY<float>>&) const;
 template bool PointXY<float>::WithinPolygon(const std::list<PointXY<float>>&) const;
 template bool PointXY<double>::WithinPolygon(const std::vector<PointXY<double>>&) const;
