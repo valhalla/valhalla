@@ -350,8 +350,8 @@ EdgesLayerBuilder::EdgesLayerBuilder(vtzero::tile_builder& tile,
 
   // edge ids don't need all those attributes
   if (controller(kEdgeId)) {
-    key_edge_id_fwd_ = add_key_without_dup_check("edge_id:forward");
-    key_edge_id_rev_ = add_key_without_dup_check("edge_id:backward");
+    key_edge_id_fwd_ = add_key_without_dup_check("edge_id:fwd");
+    key_edge_id_rev_ = add_key_without_dup_check("edge_id:bwd");
   }
 }
 

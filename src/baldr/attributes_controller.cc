@@ -150,6 +150,7 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeAccessMopedFwd, false},
     {kEdgeAccessMotorcycleFwd, false},
     {kEdgeLiveSpeedFwd, false},
+    // the next live speed ones are not actually settable, kEdgeLiveSpeedFwd controls them
     {kEdgeLiveSpeed1Fwd, false},
     {kEdgeLiveSpeed2Fwd, false},
     {kEdgeLiveSpeed3Fwd, false},
@@ -178,12 +179,12 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeAccessMopedBwd, false},
     {kEdgeAccessMotorcycleBwd, false},
     {kEdgeLiveSpeedBwd, false},
+    // the next live speed ones are not actually user-settable, kEdgeLiveSpeedBwd controls them
     {kEdgeLiveSpeed1Bwd, false},
     {kEdgeLiveSpeed2Bwd, false},
     {kEdgeLiveSpeed3Bwd, false},
     {kEdgeLiveSpeedBreakpoint1Bwd, false},
     {kEdgeLiveSpeedBreakpoint2Bwd, false},
-    {kEdgeLiveSpeedBreakpoint3Bwd, false},
     {kEdgeLiveSpeedCongestion1Bwd, false},
     {kEdgeLiveSpeedCongestion2Bwd, false},
     {kEdgeLiveSpeedCongestion3Bwd, false},
@@ -303,6 +304,28 @@ AttributesController::AttributesController(const Options& options, bool is_stric
     }
     default:
       break;
+  }
+
+  // batch-enable live attributes
+  if (attributes.at(kEdgeLiveSpeedFwd)) {
+    attributes.at(kEdgeLiveSpeed1Fwd) = true;
+    attributes.at(kEdgeLiveSpeed2Fwd) = true;
+    attributes.at(kEdgeLiveSpeed3Fwd) = true;
+    attributes.at(kEdgeLiveSpeedBreakpoint1Fwd) = true;
+    attributes.at(kEdgeLiveSpeedBreakpoint2Fwd) = true;
+    attributes.at(kEdgeLiveSpeedCongestion1Fwd) = true;
+    attributes.at(kEdgeLiveSpeedCongestion2Fwd) = true;
+    attributes.at(kEdgeLiveSpeedCongestion3Fwd) = true;
+  }
+  if (attributes.at(kEdgeLiveSpeedBwd)) {
+    attributes.at(kEdgeLiveSpeed1Bwd) = true;
+    attributes.at(kEdgeLiveSpeed2Bwd) = true;
+    attributes.at(kEdgeLiveSpeed3Bwd) = true;
+    attributes.at(kEdgeLiveSpeedBreakpoint1Bwd) = true;
+    attributes.at(kEdgeLiveSpeedBreakpoint2Bwd) = true;
+    attributes.at(kEdgeLiveSpeedCongestion1Bwd) = true;
+    attributes.at(kEdgeLiveSpeedCongestion2Bwd) = true;
+    attributes.at(kEdgeLiveSpeedCongestion3Bwd) = true;
   }
 
   // Set the edge elevation attributes based on elevation interval being set

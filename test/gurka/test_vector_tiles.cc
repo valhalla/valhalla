@@ -1,4 +1,5 @@
 #include "baldr/attributes_controller.h"
+#include "exceptions.h"
 #include "gurka.h"
 #include "loki/tiles.h"
 #include "loki/worker.h"
@@ -6,14 +7,13 @@
 #include "proto_conversions.h"
 #include "test.h"
 
-#include <valhalla/exceptions.h>
-
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 #include <vtzero/vector_tile.hpp>
 
 #include <format>
 #include <set>
+#include <span>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -68,8 +68,8 @@ TEST(VectorTilesBasic, TileRendering) {
   std::string tile_data;
   auto api = gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 2800);
-  EXPECT_GT(tile_data.size(), 2600);
+  EXPECT_LT(tile_data.size(), 2400);
+  EXPECT_GT(tile_data.size(), 2300);
 
   // expect a non-verbose request to have a lot less size
   std::string tile_data_slim;
@@ -95,16 +95,10 @@ TEST(VectorTilesBasic, TileRendering) {
 
       EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::LINESTRING);
 
-      std::set<std::string> expected_props = {"tile_level",
-                                              "road_class",
-                                              "use",
-                                              "length",
-                                              "edge_id:forward",
-                                              "speed:forward",
-                                              "access:auto:forward",
-                                              "edge_id:backward",
-                                              "speed:backward",
-                                              "access:auto:backward"};
+      std::set<std::string> expected_props = {"tile_level",      "road_class",  "use",
+                                              "length",          "edge_id:fwd", "speed:fwd",
+                                              "access:auto:fwd", "edge_id:bwd", "speed:bwd",
+                                              "access:auto:bwd"};
       std::set<std::string> found_props;
       while (auto property = feature.next_property()) {
         std::string key = std::string(property.key());
@@ -248,17 +242,17 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   };
 
   uint32_t cache_count = 0;
-  test_tile(8, 3297, 3, 4, cache_count);    // only primary and upper
-  test_tile(10, 4673, 7, 12, cache_count);  // adds secondary
-  test_tile(11, 5584, 11, 12, cache_count); // adds tertiary & unclassified
-  test_tile(12, 5599, 11, 12, cache_count); // same as 11
-  test_tile(13, 7053, 15, 20, cache_count); // adds residential
-  test_tile(14, 7737, 18, 20, cache_count); // adds service/other
+  test_tile(8, 2952, 3, 4, cache_count);    // only primary and upper
+  test_tile(10, 4390, 7, 12, cache_count);  // adds secondary
+  test_tile(11, 5297, 11, 12, cache_count); // adds tertiary & unclassified
+  test_tile(12, 5312, 11, 12, cache_count); // same as 11
+  test_tile(13, 6766, 15, 20, cache_count); // adds residential
+  test_tile(14, 7450, 18, 20, cache_count); // adds service/other
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
 
   // execute the cache path
-  test_tile(14, 7737, 18, 20, cache_count);
+  test_tile(14, 7450, 18, 20, cache_count);
 
   // make sure we fail the request when z exceeds what the server supports
   EXPECT_THROW(
@@ -428,7 +422,7 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
   // cold cache
   // cache allowed, filter include
   auto cold_size = test_tile_filter(14, "edge.id", valhalla::include, map, cache_count);
-  test_tile_filter(14, "node.private_access", valhalla::include, map, cache_count);
+  test_tile_filter(14, "edge.live_speed_forward", valhalla::include, map, cache_count);
   // cache allowed, filter exclude
   test_tile_filter(14, "edge.id", valhalla::exclude, map, cache_count);
   test_tile_filter(14, "node.private_access", valhalla::exclude, map, cache_count);
@@ -437,7 +431,7 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
   // warm cache
   cache_count = 0;
   // cache allowed, filter include
-  auto warm_size = test_tile_filter(14, "edge.is_shortcut", valhalla::include, map, cache_count);
+  auto warm_size = test_tile_filter(14, "edge.id", valhalla::include, map, cache_count);
   test_tile_filter(14, "node.access_auto", valhalla::include, map, cache_count);
   // cache allowed, filter exclude
   test_tile_filter(14, "edge.id", valhalla::exclude, map, cache_count);
