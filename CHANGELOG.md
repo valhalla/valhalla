@@ -3,7 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
 
-## Release Date: 2025-12-04 Valhalla 3.6.2
+## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
 * **Bug Fix**
    * FIXED: remove `libgeotiff` from pkg-config file `Requires` [#5737](https://github.com/valhalla/valhalla/pull/5737) 
