@@ -189,8 +189,9 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    const std::unordered_map<std::string, std::string> build_options = {
-        {"loki.service_defaults.mvt_cache_dir", VALHALLA_BUILD_DIR "test/data/mvt_cache_dir"}};
+    const std::unordered_map<std::string, std::string> build_options =
+        {{"loki.service_defaults.mvt_cache_dir", VALHALLA_BUILD_DIR "test/data/mvt_cache_dir"},
+         {"loki.service_defaults.mvt_cache_min_zoom", "8"}};
     map = gurka::buildtiles(layout, ways, nodes, {},
                             VALHALLA_BUILD_DIR "test/data/gurka_vt_zoom_compare", build_options);
   }
@@ -367,6 +368,8 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
       }
     }
     vtzero::vector_tile tile_filter{tile_data_filter};
+
+    EXPECT_EQ(tile_filter.count_layers(), 2);
 
     while (auto layer = tile_filter.next_layer()) {
       EXPECT_TRUE(layer.num_features() > 0);
