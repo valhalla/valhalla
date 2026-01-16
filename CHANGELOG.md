@@ -1,6 +1,11 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2026-01-15 Valhalla 3.6.2
+* **Removed**
+* **Bug Fix**
    * FIXED: remove `libgeotiff` from pkg-config file `Requires` [#5737](https://github.com/valhalla/valhalla/pull/5737) 
    * FIXED: Fix + prefix handling in to_int/to_float utilities [#5746](https://github.com/valhalla/valhalla/pull/5746)
    * FIXED: Use a unique target name for generating symlinks. Fixes #5751. [#5752](https://github.com/valhalla/valhalla/pull/5752)
@@ -36,6 +41,7 @@
    * ADDED: NodeJS bindings support PBF outputs [#5794](https://github.com/valhalla/valhalla/pull/5794)
    * ADDED: Handle `vehicle` tags for OSM Ways [#5802](https://github.com/valhalla/valhalla/pull/5802)
    * ADDED: Geometry generalization for `edges` layer of `/tile` endpoint (#5809)(https://github.com/valhalla/valhalla/pull/5809)
+   * ADDED: Clean up boost::geometry usage [#5818](https://github.com/valhalla/valhalla/pull/5818)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
