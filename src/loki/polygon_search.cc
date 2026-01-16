@@ -16,7 +16,6 @@
 #include <queue>
 
 using namespace valhalla::midgard;
-using namespace valhalla::midgard::bg;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
@@ -33,7 +32,7 @@ static const auto Haversine = [] {
   return boost::geometry::strategy::distance::haversine<float>(kRadEarthMeters);
 };
 
-void correct_ring(ring_ll_t& ring) {
+void correct_ring(bg::ring_ll_t& ring) {
   // close open rings
   bool is_open =
       (ring.begin()->lat() != ring.rbegin()->lat() || ring.begin()->lng() != ring.rbegin()->lng());
@@ -47,8 +46,8 @@ void correct_ring(ring_ll_t& ring) {
   }
 }
 
-ring_ll_t PBFToRing(const valhalla::Ring& ring_pbf) {
-  ring_ll_t new_ring;
+bg::ring_ll_t PBFToRing(const valhalla::Ring& ring_pbf) {
+  bg::ring_ll_t new_ring;
   new_ring.reserve(ring_pbf.coords().size());
   for (const auto& coord : ring_pbf.coords()) {
     new_ring.push_back({coord.lng(), coord.lat()});
@@ -119,7 +118,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
 
   // convert to bg object and check length restriction
   double rings_length = 0;
-  std::vector<ring_ll_t> rings_bg;
+  std::vector<bg::ring_ll_t> rings_bg;
   rings_bg.reserve(rings_pbf.size());
   for (const auto& ring_pbf : rings_pbf) {
     rings_length +=
@@ -282,11 +281,11 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
       auto edge_info = tile->edgeinfo(edge);
       bool exclude = false;
       for (const auto& ring_loc : bin.second) {
-        bool intersects = !intersect
-                              ? true
-                              : boost::geometry::intersects(rings_bg[ring_loc],
-                                                            linestring_ll_t(edge_info.shape().begin(),
-                                                                            edge_info.shape().end()));
+        bool intersects =
+            !intersect ? true
+                       : boost::geometry::intersects(rings_bg[ring_loc],
+                                                     bg::linestring_ll_t(edge_info.shape().begin(),
+                                                                         edge_info.shape().end()));
         // if the edge shape intersects the ring, check if the user passed
         // levels
         if (intersects) {

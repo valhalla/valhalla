@@ -42,6 +42,7 @@
    * ADDED: Handle `vehicle` tags for OSM Ways [#5802](https://github.com/valhalla/valhalla/pull/5802)
    * ADDED: Geometry generalization for `edges` layer of `/tile` endpoint (#5809)(https://github.com/valhalla/valhalla/pull/5809)
    * ADDED: Clean up boost::geometry usage [#5818](https://github.com/valhalla/valhalla/pull/5818)
+   * ADDED: Clean up boost::geometry types [#5818](https://github.com/valhalla/valhalla/pull/5818)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
