@@ -44,7 +44,7 @@ def decode_compressed_speeds(encoded: str) -> NDArray[np.int16]:
     """Decode base64 string to 200 coefficients.
 
     Args:
-        encoded: Base64-encoded string (400 characters)
+        encoded: Base64-encoded string (536 characters)
 
     Returns:
         Array of 200 int16 coefficients

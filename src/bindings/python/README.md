@@ -94,16 +94,19 @@ route = actor.route({"locations": [...]})
 Access to low-level graph data structures for advanced use cases:
 
 ```python
-from valhalla.utils.graph_utils import GraphId, get_edge_shape
+from valhalla.utils.graph_utils import GraphId, GraphUtils
 
 # Create a GraphId from its string representation or numeric value
 edge_id = GraphId("2/421920/20")  # format: "level/tileid/id"
 # or
 edge_id = GraphId(674464020)
 
-# Get the polyline geometry for an edge
+# Initialize GraphUtils with config (reuse for multiple queries)
 config = "/path/to/valhalla.json"  # or inline JSON string
-shape = get_edge_shape(edge_id, config)
+graph = GraphUtils(config)
+
+# Get the polyline geometry for an edge
+shape = graph.get_edge_shape(edge_id)
 
 # shape is a list of (lon, lat) tuples
 print(f"Edge has {len(shape)} coordinate points")

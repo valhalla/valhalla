@@ -82,7 +82,7 @@ void init_predicted_speeds(nb::module_& m) {
       nb::arg("encoded"),
       "Decode base64 string to 200 coefficients.\n\n"
       "Args:\n"
-      "    encoded: Base64-encoded string (400 characters)\n\n"
+      "    encoded: Base64-encoded string (536 characters)\n\n"
       "Returns:\n"
       "    Array of 200 int16 coefficients\n\n"
       "Raises:\n"
