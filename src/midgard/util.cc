@@ -1,4 +1,5 @@
 #include "midgard/util.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
@@ -386,6 +387,7 @@ template std::list<PointLL>
 resample_spherical_polyline<std::list<PointLL>>(const std::list<PointLL>&, double, bool);
 template std::list<Point2>
 resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double, bool);
+template bg::ring_ll_t resample_spherical_polyline<bg::ring_ll_t>(const bg::ring_ll_t&, double, bool);
 
 /* Resample a polyline at uniform intervals using more accurate spherical interpolation between
  * points. The length and number of samples is specified. The interval is computed based on
@@ -659,6 +661,7 @@ template PointLL::first_type polygon_area(const std::list<PointLL>&);
 template PointLL::first_type polygon_area(const std::vector<PointLL>&);
 template Point2::first_type polygon_area(const std::list<Point2>&);
 template Point2::first_type polygon_area(const std::vector<Point2>&);
+template PointLL::first_type polygon_area(const bg::ring_ll_t&);
 
 std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& segments,
                                            std::vector<float>& accuracies,
