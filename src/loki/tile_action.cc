@@ -5,16 +5,14 @@
 #include "baldr/tilehierarchy.h"
 #include "loki/worker.h"
 #include "meili/candidate_search.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "utils.h"
 #include "valhalla/exceptions.h"
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/geometries/linestring.hpp>
-#include <boost/geometry/geometries/multi_linestring.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/algorithms/append.hpp>
+#include <boost/geometry/algorithms/intersection.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <vtzero/builder.hpp>
 
@@ -760,16 +758,11 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                   const loki_worker_t::ZoomConfig& min_zoom_road_class,
                   uint32_t z,
                   bool return_shortcuts) {
-  using point_t = boost::geometry::model::d2::point_xy<double>;
-  using linestring_t = boost::geometry::model::linestring<point_t>;
-  using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
-  using box_t = boost::geometry::model::box<point_t>;
-
   const TileProjection projection{bounds};
 
   // create clip box with buffer to handle edges that cross boundaries
-  const box_t clip_box(point_t(-projection.tile_buffer, -projection.tile_buffer),
-                       point_t(projection.tile_extent + projection.tile_buffer,
+  const AABB2 clip_box(Point2d(-projection.tile_buffer, -projection.tile_buffer),
+                       Point2d(projection.tile_extent + projection.tile_buffer,
                                projection.tile_extent + projection.tile_buffer));
 
   EdgesLayerBuilder edges_builder(tile);
@@ -777,9 +770,9 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
 
   std::unordered_set<GraphId> unique_nodes;
   unique_nodes.reserve(edge_ids.size());
-  linestring_t unclipped_line;
+  bg::linestring_2d_t unclipped_line;
   unclipped_line.reserve(20);
-  multi_linestring_t clipped_lines;
+  bg::multilinestring_2d_t clipped_lines;
   baldr::graph_tile_ptr edge_tile;
   // TODO(nils): sort edge_ids
   for (const auto& edge_id : edge_ids) {
@@ -804,7 +797,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     }
 
     // lambda to add VT line & nodes features
-    auto process_single_line = [&](const linestring_t& line) {
+    auto process_single_line = [&](const bg::linestring_2d_t& line) {
       // convert to vtzero points, removing consecutive duplicates
       std::vector<vtzero::point> tile_coords;
       tile_coords.reserve(line.size());
@@ -860,12 +853,10 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       const auto [tile_x, tile_y] = ll_to_tile_coords(ll, projection);
 
       // only in this case we need an intersection with the clip_box
-      line_leaves_bbox = tile_x > clip_box.max_corner().x() || tile_y > clip_box.max_corner().y() ||
-                         tile_x < clip_box.min_corner().x() || tile_y < clip_box.min_corner().y();
+      line_leaves_bbox = tile_x > clip_box.maxx() || tile_y > clip_box.maxy() ||
+                         tile_x < clip_box.minx() || tile_y < clip_box.miny();
 
-      // TODO(nils): is there a point promoting int32 to double? could just register a custom boost
-      // geometry type for vtzero points
-      boost::geometry::append(unclipped_line, point_t(tile_x, tile_y));
+      boost::geometry::append(unclipped_line, decltype(unclipped_line)::value_type(tile_x, tile_y));
     }
 
     if (!line_leaves_bbox) {
