@@ -6,6 +6,7 @@ This folder contains the Python bindings to [Valhalla routing engine](https://gi
 
 > [!NOTE]
 > `pyvalhalla(-weekly)` packages are currently only published for:
+>
 > - `linux-x86_x64`
 > - `linux-aarch64`
 > - `win-amd64`
@@ -28,12 +29,11 @@ cd valhalla
 pip install .
 ```
 
-
 In case you need to do a source installation (from `sdist`), follow the [build instructions](https://valhalla.github.io/valhalla/building/) for your platform to install the needed dependencies. Then a simple `pip install pyvalhalla` should work fine for Linux/OSX. On Windows one needs to install C++ developer tools, see also below in the developer notes for external `vcpkg` usage to resolve dependencies.
 
 > [!TIP]
 > **For developers**: `pip install -e` (editable build) will by default build into a temp directory, so everytime it's invoked it'll rebuild all of libvalhalla. Use the following command to enable real incremental builds:
-> 
+>
 > ```shell
 > pip install -e . --no-build-isolation \
 >   -Cbuild-dir=build_python (or other build dir) \
@@ -44,9 +44,9 @@ In case you need to do a source installation (from `sdist`), follow the [build i
 >   -Ccmake.define.VCPKG_TARGET_TRIPLET=x64-windows
 >   -Ccmake.define.VCPKG_OVERLAY_PORTS=overlay-ports-vcpkg
 > ```
-> 
+>
 > Similarly for building a wheel:
-> 
+>
 > ```shell
 > pip wheel . -w dist --no-build-isolation \
 >   -Cbuild-dir=build_python (or other build dir) \
@@ -119,8 +119,6 @@ geojson = {
     }
 }
 ```
-
-See `src/bindings/python/EXAMPLE_get_edge_shape.py` for more comprehensive examples, including using `get_edge_shape` with the expansion API.
 
 #### Speed Compression Utilities
 
