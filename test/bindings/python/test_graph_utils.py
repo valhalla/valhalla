@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import copy
+import json
+import os
 import pickle
 import unittest
 from valhalla.utils.graph_utils import (
@@ -8,6 +10,7 @@ from valhalla.utils.graph_utils import (
     get_tile_base_lon_lat,
     get_tile_id_from_lon_lat,
     get_tile_ids_from_bbox,
+    get_edge_shape,
 )
 
 
@@ -125,3 +128,24 @@ class TestBindings(unittest.TestCase):
         with self.assertRaises(ValueError) as exc:
             get_tile_ids_from_bbox(-90.0, -180.0, 90.0, 180.0)
             self.assertEqual(exc.msg, "Invalid coordinate, remember it's (lon, lat)")
+
+    def test_get_edge_shape(self):
+        """Test get_edge_shape function."""
+        # Create a minimal config JSON
+        config = json.dumps({
+            "mjolnir": {
+                "tile_dir": os.path.join(os.path.dirname(__file__), "test_tiles")
+            }
+        })
+
+        # Test with an invalid edge ID (expect RuntimeError since tiles don't exist)
+        edge_id = GraphId(674464002)
+        with self.assertRaises(RuntimeError):
+            get_edge_shape(edge_id, config)
+
+        # Test with invalid config
+        with self.assertRaises(RuntimeError):
+            get_edge_shape(edge_id, "invalid json {]")
+
+        # Note: A full integration test would require building actual tiles with Gurka
+        # For now, this test verifies the function exists and has correct error handling

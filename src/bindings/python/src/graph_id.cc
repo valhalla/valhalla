@@ -1,14 +1,22 @@
 #include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "graph_utils_module.h"
 #include "midgard/aabb2.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "midgard/util.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
+
+#include <fstream>
+#include <sstream>
 
 namespace nb = nanobind;
 namespace vb = valhalla::baldr;
@@ -112,5 +120,146 @@ void init_graphid(nb::module_& m) {
       },
       nb::arg("minx"), nb::arg("miny"), nb::arg("maxx"), nb::arg("maxy"),
       nb::arg("levels") = std::vector<uint32_t>{});
+
+  // GraphUtils class - manages GraphReader for efficient edge access
+  nb::class_<vb::GraphReader>(m, "GraphUtils")
+      .def(
+          "__init__",
+          [](vb::GraphReader* self, const std::string& config) {
+            // Parse the config - handle both file paths and JSON strings
+            boost::property_tree::ptree pt;
+            try {
+              std::ifstream file(config);
+              if (file.good()) {
+                rapidjson::read_json(file, pt);
+              } else {
+                std::istringstream stream(config);
+                rapidjson::read_json(stream, pt);
+              }
+            } catch (...) { throw std::runtime_error("Failed to parse config JSON"); }
+
+            // Configure logging like Actor does (suppress WARN/INFO messages)
+            auto logging_subtree = pt.get_child_optional("mjolnir.logging");
+            if (logging_subtree) {
+              auto logging_config =
+                  vm::ToMap<const boost::property_tree::ptree&,
+                            std::unordered_map<std::string, std::string>>(logging_subtree.get());
+              vm::logging::Configure(logging_config);
+            }
+
+            // Create GraphReader with mjolnir subtree
+            new (self) vb::GraphReader(pt.get_child("mjolnir"));
+          },
+          nb::arg("config"),
+          "Initialize GraphUtils with Valhalla configuration.\n\n"
+          "Args:\n"
+          "    config: Valhalla configuration as JSON string or path to config file")
+      .def(
+          "get_edge_shape",
+          [](vb::GraphReader& self, const vb::GraphId& edge_id) {
+            // Get the tile containing this edge
+            auto tile = self.GetGraphTile(edge_id);
+            if (!tile) {
+              throw std::runtime_error("Tile not found for edge " + std::to_string(edge_id));
+            }
+
+            // Get the directed edge
+            const auto* directed_edge = tile->directededge(edge_id);
+            if (!directed_edge) {
+              throw std::runtime_error("Edge not found: " + std::to_string(edge_id));
+            }
+
+            // Get the edge info and shape
+            auto edge_info = tile->edgeinfo(directed_edge);
+            auto shape = edge_info.shape();
+
+            // Reverse the shape if the edge is not forward
+            if (!directed_edge->forward()) {
+              std::reverse(shape.begin(), shape.end());
+            }
+
+            // Convert to list of (lon, lat) tuples
+            std::vector<nb::tuple> result;
+            result.reserve(shape.size());
+            for (const auto& pt : shape) {
+              result.push_back(nb::make_tuple(pt.lng(), pt.lat()));
+            }
+
+            return result;
+          },
+          nb::arg("edge_id"),
+          "Get the shape (polyline) for an edge as a list of (lon, lat) tuples.\n\n"
+          "Args:\n"
+          "    edge_id: GraphId of the edge\n\n"
+          "Returns:\n"
+          "    List of (lon, lat) tuples representing the edge geometry");
+
+  // Standalone get_edge_shape function for convenience
+  m.def(
+      "get_edge_shape",
+      [](const vb::GraphId& edge_id, const std::string& config) {
+        // Create temporary GraphReader
+        boost::property_tree::ptree pt;
+        try {
+          std::ifstream file(config);
+          if (file.good()) {
+            rapidjson::read_json(file, pt);
+          } else {
+            std::istringstream stream(config);
+            rapidjson::read_json(stream, pt);
+          }
+        } catch (...) {
+          throw std::runtime_error("Failed to parse config JSON");
+        }
+
+        // Configure logging like Actor does (suppress WARN/INFO messages)
+        auto logging_subtree = pt.get_child_optional("mjolnir.logging");
+        if (logging_subtree) {
+          auto logging_config =
+              vm::ToMap<const boost::property_tree::ptree&,
+                        std::unordered_map<std::string, std::string>>(logging_subtree.get());
+          vm::logging::Configure(logging_config);
+        }
+
+        // Create GraphReader
+        vb::GraphReader reader(pt.get_child("mjolnir"));
+
+        // Get the tile containing this edge
+        auto tile = reader.GetGraphTile(edge_id);
+        if (!tile) {
+          throw std::runtime_error("Tile not found for edge " + std::to_string(edge_id));
+        }
+
+        // Get the directed edge
+        const auto* directed_edge = tile->directededge(edge_id);
+        if (!directed_edge) {
+          throw std::runtime_error("Edge not found: " + std::to_string(edge_id));
+        }
+
+        // Get the edge info and shape
+        auto edge_info = tile->edgeinfo(directed_edge);
+        auto shape = edge_info.shape();
+
+        // Reverse the shape if the edge is not forward
+        if (!directed_edge->forward()) {
+          std::reverse(shape.begin(), shape.end());
+        }
+
+        // Convert to list of (lon, lat) tuples
+        std::vector<nb::tuple> result;
+        result.reserve(shape.size());
+        for (const auto& pt : shape) {
+          result.push_back(nb::make_tuple(pt.lng(), pt.lat()));
+        }
+
+        return result;
+      },
+      nb::arg("edge_id"), nb::arg("config"),
+      "Get the shape (polyline) for an edge as a list of (lon, lat) tuples.\n\n"
+      "Args:\n"
+      "    edge_id: GraphId of the edge\n"
+      "    config: Valhalla configuration as JSON string or path to config file\n\n"
+      "Returns:\n"
+      "    List of (lon, lat) tuples representing the edge geometry");
 }
 } // namespace pyvalhalla

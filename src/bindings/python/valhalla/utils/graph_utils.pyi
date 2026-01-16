@@ -93,3 +93,25 @@ def get_tile_ids_from_bbox(
     :returns: The list of tile GraphIds which intersect the bounding box
     :raises ValueError: When the level(s) or coord are invalid.
     """
+
+class GraphUtils:
+    """Utility class for accessing Valhalla graph data structures.
+
+    Manages a GraphReader for efficient access to tiles and edges.
+    Initialize once and reuse for multiple edge queries.
+    """
+
+    def __init__(self, config: str) -> None:
+        """Initialize GraphUtils with Valhalla configuration.
+
+        :param config: Valhalla configuration as JSON string or path to config file
+        :raises RuntimeError: When config is invalid
+        """
+
+    def get_edge_shape(self, edge_id: GraphId) -> List[Tuple[float, float]]:
+        """Get the shape (polyline) for an edge as a list of (lon, lat) tuples.
+
+        :param edge_id: GraphId of the edge
+        :returns: List of (lon, lat) tuples representing the edge geometry
+        :raises RuntimeError: When the tile or edge is not found
+        """

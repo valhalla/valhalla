@@ -40,6 +40,8 @@
    * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
    * ADDED: NodeJS bindings support PBF outputs [#5794](https://github.com/valhalla/valhalla/pull/5794)
    * ADDED: Handle `vehicle` tags for OSM Ways [#5802](https://github.com/valhalla/valhalla/pull/5802)
+   * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#XXXX](https://github.com/valhalla/valhalla/pull/XXXX)
+   * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#XXXX](https://github.com/valhalla/valhalla/pull/XXXX)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**

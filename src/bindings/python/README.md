@@ -89,6 +89,70 @@ actor = Actor(config)
 route = actor.route({"locations": [...]})
 ```
 
+#### Graph Utilities
+
+Access to low-level graph data structures for advanced use cases:
+
+```python
+from valhalla.utils.graph_utils import GraphId, get_edge_shape
+
+# Create a GraphId from its string representation or numeric value
+edge_id = GraphId("2/421920/20")  # format: "level/tileid/id"
+# or
+edge_id = GraphId(674464020)
+
+# Get the polyline geometry for an edge
+config = "/path/to/valhalla.json"  # or inline JSON string
+shape = get_edge_shape(edge_id, config)
+
+# shape is a list of (lon, lat) tuples
+print(f"Edge has {len(shape)} coordinate points")
+for lon, lat in shape:
+    print(f"  ({lon:.6f}, {lat:.6f})")
+
+# Convert to GeoJSON LineString
+geojson = {
+    "type": "Feature",
+    "geometry": {
+        "type": "LineString",
+        "coordinates": [[lon, lat] for lon, lat in shape]
+    }
+}
+```
+
+See `src/bindings/python/EXAMPLE_get_edge_shape.py` for more comprehensive examples, including using `get_edge_shape` with the expansion API.
+
+#### Speed Compression Utilities
+
+Valhalla uses DCT-2 (Discrete Cosine Transform) to compress historical speed profiles. These utilities allow you to work with compressed speed data:
+
+```python
+import numpy as np
+from valhalla.utils.predicted_speeds import (
+    compress_speed_buckets,
+    decompress_speed_bucket,
+    encode_compressed_speeds,
+    decode_compressed_speeds,
+    BUCKETS_PER_WEEK,
+    COEFFICIENT_COUNT,
+)
+
+# Compress 2016 speed buckets (7 days × 288 five-minute intervals)
+speeds = np.full(BUCKETS_PER_WEEK, 50.0, dtype=np.float32)  # 50 KPH constant
+coefficients = compress_speed_buckets(speeds)
+
+# Decompress a specific bucket (e.g., Monday 10:00 AM)
+bucket_idx = 120  # (24 hours × 12 buckets/hour) × 0 days + 10 × 12
+speed = decompress_speed_bucket(coefficients, bucket_idx)
+
+# Encode coefficients for storage/transmission
+encoded = encode_compressed_speeds(coefficients)
+print(f"Compressed to {len(encoded)} characters")
+
+# Decode from string
+coefficients_restored = decode_compressed_speeds(encoded)
+```
+
 #### Valhalla executables
 
 To access the C++ (native) executables, there are 2 options:
