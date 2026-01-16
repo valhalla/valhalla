@@ -34,7 +34,11 @@
    * UPDATED: translations from transifex [#5792](https://github.com/valhalla/valhalla/pull/5792)
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
    * CHANGED: renamed `GraphId::Is_Valid()` -> `GraphId::is_valid()` and `GraphId::Tile_Base` -> `GraphId::tile_base` [#5678](https://github.com/valhalla/valhalla/pull/5678)   * UPDATED: translations from transifex [#5792](https://github.com/valhalla/valhalla/pull/5792)
+   * CHANGED: renamed `GraphId::Is_Valid()` -> `GraphId::is_valid()` and `GraphId::Tile_Base` -> `GraphId::tile_base` [#5678](https://github.com/valhalla/valhalla/pull/5678)
+   * UPDATED: translations from transifex [#5792](https://github.com/valhalla/valhalla/pull/5792)
    * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
+   * ADDED: NodeJS bindings support PBF outputs [#5794](https://github.com/valhalla/valhalla/pull/5794)
+   * ADDED: Handle `vehicle` tags for OSM Ways [#5802](https://github.com/valhalla/valhalla/pull/5802)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
