@@ -150,10 +150,7 @@ void init_graphid(nb::module_& m) {
             // Create GraphReader with mjolnir subtree
             new (self) vb::GraphReader(pt.get_child("mjolnir"));
           },
-          nb::arg("config"),
-          "Initialize GraphUtils with Valhalla configuration.\n\n"
-          "Args:\n"
-          "    config: Valhalla configuration as JSON string or path to config file")
+          nb::arg("config"))
       .def(
           "get_edge_shape",
           [](vb::GraphReader& self, const vb::GraphId& edge_id) {
@@ -187,11 +184,6 @@ void init_graphid(nb::module_& m) {
 
             return result;
           },
-          nb::arg("edge_id"),
-          "Get the shape (polyline) for an edge as a list of (lon, lat) tuples.\n\n"
-          "Args:\n"
-          "    edge_id: GraphId of the edge\n\n"
-          "Returns:\n"
-          "    List of (lon, lat) tuples representing the edge geometry");
+          nb::arg("edge_id"));
 }
 } // namespace pyvalhalla

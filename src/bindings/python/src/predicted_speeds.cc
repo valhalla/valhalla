@@ -1,5 +1,4 @@
 #include "baldr/predictedspeeds.h"
-#include "predicted_speeds_module.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
@@ -87,6 +86,11 @@ void init_predicted_speeds(nb::module_& m) {
       "    Array of 200 int16 coefficients\n\n"
       "Raises:\n"
       "    RuntimeError: If decoded size is incorrect");
+}
+
+NB_MODULE(predicted_speeds, m) {
+  init_predicted_speeds(m);
+  m.doc() = "Valhalla DCT-2 speed compression utilities";
 }
 
 } // namespace pyvalhalla

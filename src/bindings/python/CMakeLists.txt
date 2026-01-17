@@ -31,7 +31,6 @@ nanobind_add_module(predicted_speeds
   NB_STATIC
   STABLE_ABI
   LTO
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/predicted_speeds_main.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/predicted_speeds.cc)
 
 foreach(tgt IN ITEMS _valhalla graph_utils predicted_speeds)
