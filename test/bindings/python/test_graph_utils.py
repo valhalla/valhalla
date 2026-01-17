@@ -2,9 +2,10 @@
 
 import copy
 import json
-import os
 import pickle
 import unittest
+from pathlib import Path
+
 from valhalla.utils.graph_utils import (
     GraphId,
     GraphUtils,
@@ -15,28 +16,38 @@ from valhalla.utils.graph_utils import (
 
 
 class TestBindings(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tiles_path = Path('test/data/utrecht_tiles')
+        cls.utrecht_lon, cls.utrecht_lat = 5.03231, 52.08813
+        cls.level = 2  # Local roads level
+        cls.utrecht_bbox = (5.0, 52.0, 6.0, 53.0)
+
+        # Compute tile GraphId from Utrecht coordinates
+        cls.utrecht_tile_gid = get_tile_id_from_lon_lat(cls.level, (cls.utrecht_lon, cls.utrecht_lat))
+        cls.utrecht_base_coords = get_tile_base_lon_lat(cls.utrecht_tile_gid)
+        cls.utrecht_test_gid = GraphId(cls.utrecht_tile_gid.tileid(), cls.level, 20)
+
     def test_constructors(self):
         g1 = GraphId()
         self.assertFalse(g1.is_valid())
 
-        g2 = GraphId(674464002)
-        g3 = GraphId("2/421920/20")
-        g4 = GraphId(421920, 2, 20)
+        g2 = GraphId(self.utrecht_test_gid.value)
+        g3 = GraphId(f"{self.level}/{self.utrecht_tile_gid.tileid()}/20")
+        g4 = GraphId(self.utrecht_tile_gid.tileid(), self.level, 20)
 
         self.assertTrue(g2.is_valid())
         # also tests operator==, __eq__
         self.assertTrue(g2 == g3 == g4)
 
     def test_value(self):
-        v_test = 674464002
-        g = GraphId(v_test)
-        self.assertEqual(v_test, g.value)
+        g = GraphId(self.utrecht_test_gid.value)
+        self.assertEqual(self.utrecht_test_gid.value, g.value)
         with self.assertRaises(AttributeError):
             g.value = 0
 
     def test_operators(self):
-        v_test = 674464002
-        gid_original = GraphId(v_test)
+        gid_original = GraphId(self.utrecht_test_gid.value)
         # need to copy explicitly
         gid_plus = copy.copy(gid_original)
 
@@ -56,7 +67,7 @@ class TestBindings(unittest.TestCase):
         self.assertFalse(GraphId())
 
     def test_pickling(self):
-        gid = GraphId(674464002)
+        gid = GraphId(self.utrecht_test_gid.value)
 
         pickled = pickle.dumps(gid)
         unpickled = pickle.loads(pickled)
@@ -76,18 +87,19 @@ class TestBindings(unittest.TestCase):
         self.assertNotEqual(gid, gid_cp)
 
     def test_get_tile_base_lon_lat_and_reverse(self):
-        gid = GraphId(674464002)
-        test_pt = (-180.0, -16.75)
+        # Independent verification: Utrecht tile 818660 at level 2 maps to (5.0, 52.0)
+        utrecht_tile_gid = GraphId(818660, 2, 0)
+        utrecht_base_pt = (5.0, 52.0)
 
-        # happy paths
-        self.assertEqual(get_tile_base_lon_lat(gid), test_pt)
+        self.assertEqual(get_tile_base_lon_lat(utrecht_tile_gid), utrecht_base_pt)
         self.assertEqual(
-            get_tile_id_from_lon_lat(gid.level(), test_pt), GraphId(gid.tileid(), gid.level(), 0)
+            get_tile_id_from_lon_lat(utrecht_tile_gid.level(), utrecht_base_pt),
+            GraphId(utrecht_tile_gid.tileid(), utrecht_tile_gid.level(), 0)
         )
 
         # exceptions
         with self.assertRaises(ValueError) as exc:
-            get_tile_id_from_lon_lat(5, test_pt)
+            get_tile_id_from_lon_lat(5, utrecht_base_pt)
             self.assertNotEqual(exc.msg.find("We only support"))
 
         with self.assertRaises(ValueError) as exc:
@@ -99,30 +111,27 @@ class TestBindings(unittest.TestCase):
             self.assertEqual(exc.msg, "Invalid coordinate, remember it's (lon, lat)")
 
     def test_get_tile_ids_from_bbox(self):
-        bbox = (0, 0, 2, 2)
+        level_0 = get_tile_ids_from_bbox(*self.utrecht_bbox, [0])
+        self.assertEqual(len(level_0), 1)
 
-        # happy paths
-        level_0 = get_tile_ids_from_bbox(*bbox, [0])
-        self.assertEqual(len(level_0), 2)
+        level_1 = get_tile_ids_from_bbox(*self.utrecht_bbox, [1])
+        self.assertEqual(len(level_1), 4)
 
-        level_1 = get_tile_ids_from_bbox(*bbox, [1])
-        self.assertEqual(len(level_1), 9)
+        level_2 = get_tile_ids_from_bbox(*self.utrecht_bbox, [2])
+        self.assertEqual(len(level_2), 25)
 
-        level_2 = get_tile_ids_from_bbox(*bbox, [2])
-        self.assertEqual(len(level_2), 81)
-
-        all_levels = get_tile_ids_from_bbox(*bbox)
+        all_levels = get_tile_ids_from_bbox(*self.utrecht_bbox)
         self.assertEqual(len(level_0) + len(level_1) + len(level_2), len(all_levels))
 
-        all_levels = get_tile_ids_from_bbox(*bbox, [0, 1, 2])
+        all_levels = get_tile_ids_from_bbox(*self.utrecht_bbox, [0, 1, 2])
         self.assertEqual(len(level_0) + len(level_1) + len(level_2), len(all_levels))
 
-        all_levels = get_tile_ids_from_bbox(*bbox, [])
+        all_levels = get_tile_ids_from_bbox(*self.utrecht_bbox, [])
         self.assertEqual(len(level_0) + len(level_1) + len(level_2), len(all_levels))
 
         # exceptions
         with self.assertRaises(ValueError) as exc:
-            get_tile_ids_from_bbox(*bbox, [4])
+            get_tile_ids_from_bbox(*self.utrecht_bbox, [4])
             self.assertNotEqual(exc.msg.find("We only support"))
 
         with self.assertRaises(ValueError) as exc:
@@ -130,23 +139,51 @@ class TestBindings(unittest.TestCase):
             self.assertEqual(exc.msg, "Invalid coordinate, remember it's (lon, lat)")
 
     def test_get_edge_shape(self):
-        """Test GraphUtils.get_edge_shape method."""
-        # Create a minimal config JSON
-        config = json.dumps({
-            "mjolnir": {
-                "tile_dir": os.path.join(os.path.dirname(__file__), "test_tiles")
-            }
-        })
-
-        # Test with invalid config
+        """Test GraphUtils.get_edge_shape with real Utrecht tiles."""
         with self.assertRaises(RuntimeError):
             GraphUtils("invalid json {]")
 
-        # Test with valid config but invalid edge ID (tiles don't exist)
+        config = json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}})
         graph = GraphUtils(config)
-        edge_id = GraphId(674464002)
-        with self.assertRaises(RuntimeError):
-            graph.get_edge_shape(edge_id)
 
-        # Note: A full integration test would require building actual tiles with Gurka
-        # For now, this test verifies the class exists and has correct error handling
+        fake_edge_id = GraphId(999999, 2, 0)
+        with self.assertRaises(RuntimeError) as exc:
+            graph.get_edge_shape(fake_edge_id)
+        self.assertIn("Tile not found", str(exc.exception))
+
+        tile_gid = get_tile_id_from_lon_lat(self.level, (self.utrecht_lon, self.utrecht_lat))
+
+        # Find first valid edge (following test/minbb.cc pattern)
+        edge_found = False
+        for edge_idx in range(20):
+            try:
+                edge_id = GraphId(tile_gid.tileid(), self.level, edge_idx)
+                shape = graph.get_edge_shape(edge_id)
+
+                self.assertIsInstance(shape, list)
+                self.assertGreater(len(shape), 0, "Edge shape should have points")
+
+                for point in shape:
+                    self.assertIsInstance(point, tuple)
+                    self.assertEqual(len(point), 2)
+                    lon, lat = point
+                    self.assertIsInstance(lon, float)
+                    self.assertIsInstance(lat, float)
+
+                    self.assertGreater(lon, 4.0, "Longitude should be east of 4°E")
+                    self.assertLess(lon, 6.0, "Longitude should be west of 6°E")
+                    self.assertGreater(lat, 51.0, "Latitude should be north of 51°N")
+                    self.assertLess(lat, 53.0, "Latitude should be south of 53°N")
+
+                edge_found = True
+                break
+
+            except RuntimeError:
+                continue
+
+        self.assertTrue(edge_found, "Should find at least one valid edge in Utrecht tile")
+
+        invalid_edge_id = GraphId(tile_gid.tileid(), self.level, 999999)
+        with self.assertRaises(RuntimeError):
+            graph.get_edge_shape(invalid_edge_id)
+

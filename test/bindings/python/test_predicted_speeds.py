@@ -1,12 +1,15 @@
+# -*- coding: utf-8 -*-
+
 import unittest
+
 import numpy as np
 from valhalla.utils.predicted_speeds import (
-    compress_speed_buckets,
-    decompress_speed_bucket,
-    encode_compressed_speeds,
-    decode_compressed_speeds,
     BUCKETS_PER_WEEK,
     COEFFICIENT_COUNT,
+    compress_speed_buckets,
+    decode_compressed_speeds,
+    decompress_speed_bucket,
+    encode_compressed_speeds,
 )
 
 

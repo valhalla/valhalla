@@ -44,9 +44,7 @@ In case you need to do a source installation (from `sdist`), follow the [build i
 >   -Ccmake.define.VCPKG_TARGET_TRIPLET=x64-windows
 >   -Ccmake.define.VCPKG_OVERLAY_PORTS=overlay-ports-vcpkg
 > ```
->
 > Similarly for building a wheel:
->
 > ```shell
 > pip wheel . -w dist --no-build-isolation \
 >   -Cbuild-dir=build_python (or other build dir) \
