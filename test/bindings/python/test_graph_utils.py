@@ -6,7 +6,7 @@ import pickle
 import unittest
 from pathlib import Path
 
-from valhalla.utils.graph_utils import (
+from valhalla.utils import (
     GraphId,
     GraphUtils,
     get_tile_base_lon_lat,
@@ -140,7 +140,7 @@ class TestBindings(unittest.TestCase):
 
     def test_get_edge_shape(self):
         """Test GraphUtils.get_edge_shape with real Utrecht tiles."""
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises((RuntimeError, FileNotFoundError)):
             GraphUtils("invalid json {]")
 
         config = json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}})
@@ -186,4 +186,85 @@ class TestBindings(unittest.TestCase):
         invalid_edge_id = GraphId(tile_gid.tileid(), self.level, 999999)
         with self.assertRaises(RuntimeError):
             graph.get_edge_shape(invalid_edge_id)
+
+    def test_graphutils_dict_config(self):
+        """Test GraphUtils initialization with dict config."""
+        config_dict = {"mjolnir": {"tile_dir": str(self.tiles_path)}}
+        graph = GraphUtils(config_dict)
+
+        # Should be able to query edge shapes
+        tile_gid = get_tile_id_from_lon_lat(self.level, (self.utrecht_lon, self.utrecht_lat))
+        edge_id = GraphId(tile_gid.tileid(), self.level, 0)
+
+        # Just verify we can create the object and call methods
+        try:
+            shape = graph.get_edge_shape(edge_id)
+            self.assertIsInstance(shape, list)
+        except RuntimeError:
+            # Edge might not exist, but GraphUtils should be initialized
+            pass
+
+    def test_graphutils_path_config(self):
+        """Test GraphUtils initialization with Path object."""
+        # Use path relative to this test file
+        config_path = Path(__file__).parent / "valhalla.json"
+        graph = GraphUtils(config_path)
+
+        # Should be able to query edge shapes
+        tile_gid = get_tile_id_from_lon_lat(self.level, (self.utrecht_lon, self.utrecht_lat))
+        edge_id = GraphId(tile_gid.tileid(), self.level, 0)
+
+        try:
+            shape = graph.get_edge_shape(edge_id)
+            self.assertIsInstance(shape, list)
+        except RuntimeError:
+            pass
+
+    def test_graphutils_file_path_string(self):
+        """Test GraphUtils initialization with file path string."""
+        # Use path relative to this test file
+        config_path = str(Path(__file__).parent / "valhalla.json")
+        graph = GraphUtils(config_path)
+
+        # Should be able to query edge shapes
+        tile_gid = get_tile_id_from_lon_lat(self.level, (self.utrecht_lon, self.utrecht_lat))
+        edge_id = GraphId(tile_gid.tileid(), self.level, 0)
+
+        try:
+            shape = graph.get_edge_shape(edge_id)
+            self.assertIsInstance(shape, list)
+        except RuntimeError:
+            pass
+
+    def test_graphutils_invalid_config_type(self):
+        """Test GraphUtils raises error for invalid config types."""
+        with self.assertRaises(AttributeError):
+            GraphUtils(12345)
+
+        with self.assertRaises(AttributeError):
+            GraphUtils([1, 2, 3])
+
+        with self.assertRaises(AttributeError):
+            GraphUtils(None)
+
+    def test_graphutils_missing_tile_data(self):
+        """Test GraphUtils raises error when tile data doesn't exist."""
+        config = {
+            "mjolnir": {
+                "tile_extract": "/nonexistent/tiles.tar",
+                "tile_dir": "/nonexistent/tiles",
+            }
+        }
+
+        with self.assertRaises(FileNotFoundError) as exc:
+            GraphUtils(config)
+        self.assertIn("Can't load graph", str(exc.exception))
+
+    def test_graphutils_missing_mjolnir_config(self):
+        """Test GraphUtils raises error when mjolnir config is missing."""
+        config = {"loki": {"actions": ["route"]}}
+
+        with self.assertRaises(AttributeError) as exc:
+            GraphUtils(config)
+        self.assertIn("mjolnir.tile_extract and mjolnir.tile_dir are missing", str(exc.exception))
 

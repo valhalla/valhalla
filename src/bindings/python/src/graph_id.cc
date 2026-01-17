@@ -122,7 +122,7 @@ void init_graphid(nb::module_& m) {
       nb::arg("levels") = std::vector<uint32_t>{});
 
   // GraphUtils class - manages GraphReader for efficient edge access
-  nb::class_<vb::GraphReader>(m, "GraphUtils")
+  nb::class_<vb::GraphReader>(m, "_GraphUtils")
       .def(
           "__init__",
           [](vb::GraphReader* self, const std::string& config) {
