@@ -59,9 +59,7 @@ def get_config(
     return config
 
 
-def parse_and_validate_config(
-    config: Union[Path, str, dict]
-) -> Tuple[str, TypingOptional[str]]:
+def parse_and_validate_config(config: Union[Path, str, dict]) -> Tuple[str, TypingOptional[str]]:
     """Parse and validate Valhalla configuration.
 
     Accepts configuration as Path, str (file path or JSON), or dict.
