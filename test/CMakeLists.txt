@@ -403,11 +403,14 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_config.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_graph_utils.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_predicted_speeds.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
       _valhalla
-      graph_utils
+      _graph_utils
+      predicted_speeds
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
   set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")

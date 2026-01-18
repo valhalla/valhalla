@@ -21,10 +21,14 @@ nanobind_add_module(_valhalla
   STABLE_ABI
   LTO
   ${CMAKE_CURRENT_SOURCE_DIR}/src/_valhalla.cc)
+# Note: LTO disabled for _graph_utils to work around GCC 14 ICE on ARM64
+# The graph_id.cc file includes heavy baldr/graphreader.h templates that
+# trigger "lto1: internal compiler error: in get_token" during LTO phase.
+# See: https://github.com/actions/runner/issues/2508
+# See: https://www.mail-archive.com/ptxdist@pengutronix.de/msg24413.html
 nanobind_add_module(_graph_utils
   NB_STATIC
   STABLE_ABI
-  LTO
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_utils.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_id.cc)
 nanobind_add_module(predicted_speeds

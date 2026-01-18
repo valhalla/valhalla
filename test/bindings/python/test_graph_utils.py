@@ -18,7 +18,7 @@ from valhalla.utils import (
 class TestBindings(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.tiles_path = Path('test/data/utrecht_tiles')
+        cls.tiles_path = Path("test/data/utrecht_tiles")
         cls.utrecht_lon, cls.utrecht_lat = 5.03231, 52.08813
         cls.level = 2  # Local roads level
 
@@ -264,4 +264,3 @@ class TestBindings(unittest.TestCase):
         with self.assertRaises(AttributeError) as exc:
             GraphUtils(config)
         self.assertIn("mjolnir.tile_extract and mjolnir.tile_dir are missing", str(exc.exception))
-
