@@ -7,7 +7,7 @@ from .graph_utils import (
     get_tile_id_from_lon_lat,
     get_tile_ids_from_bbox,
 )
-from ._predicted_speeds import (
+from .predicted_speeds import (
     BUCKETS_PER_WEEK,
     COEFFICIENT_COUNT,
     SPEED_BUCKET_SIZE_MINUTES,

@@ -60,7 +60,7 @@ void init_predicted_speeds(nb::module_& m) {
       nb::arg("encoded"));
 }
 
-NB_MODULE(_predicted_speeds, m) {
+NB_MODULE(predicted_speeds, m) {
   init_predicted_speeds(m);
   m.doc() = "Valhalla DCT-2 speed compression utilities";
 }

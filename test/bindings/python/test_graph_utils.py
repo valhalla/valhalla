@@ -21,33 +21,29 @@ class TestBindings(unittest.TestCase):
         cls.tiles_path = Path('test/data/utrecht_tiles')
         cls.utrecht_lon, cls.utrecht_lat = 5.03231, 52.08813
         cls.level = 2  # Local roads level
-        cls.utrecht_bbox = (5.0, 52.0, 6.0, 53.0)
-
-        # Compute tile GraphId from Utrecht coordinates
-        cls.utrecht_tile_gid = get_tile_id_from_lon_lat(cls.level, (cls.utrecht_lon, cls.utrecht_lat))
-        cls.utrecht_base_coords = get_tile_base_lon_lat(cls.utrecht_tile_gid)
-        cls.utrecht_test_gid = GraphId(cls.utrecht_tile_gid.tileid(), cls.level, 20)
 
     def test_constructors(self):
         g1 = GraphId()
         self.assertFalse(g1.is_valid())
 
-        g2 = GraphId(self.utrecht_test_gid.value)
-        g3 = GraphId(f"{self.level}/{self.utrecht_tile_gid.tileid()}/20")
-        g4 = GraphId(self.utrecht_tile_gid.tileid(), self.level, 20)
+        g2 = GraphId(674464002)
+        g3 = GraphId("2/421920/20")
+        g4 = GraphId(421920, 2, 20)
 
         self.assertTrue(g2.is_valid())
         # also tests operator==, __eq__
         self.assertTrue(g2 == g3 == g4)
 
     def test_value(self):
-        g = GraphId(self.utrecht_test_gid.value)
-        self.assertEqual(self.utrecht_test_gid.value, g.value)
+        v_test = 674464002
+        g = GraphId(v_test)
+        self.assertEqual(v_test, g.value)
         with self.assertRaises(AttributeError):
             g.value = 0
 
     def test_operators(self):
-        gid_original = GraphId(self.utrecht_test_gid.value)
+        v_test = 674464002
+        gid_original = GraphId(v_test)
         # need to copy explicitly
         gid_plus = copy.copy(gid_original)
 
@@ -67,7 +63,7 @@ class TestBindings(unittest.TestCase):
         self.assertFalse(GraphId())
 
     def test_pickling(self):
-        gid = GraphId(self.utrecht_test_gid.value)
+        gid = GraphId(674464002)
 
         pickled = pickle.dumps(gid)
         unpickled = pickle.loads(pickled)
@@ -100,43 +96,46 @@ class TestBindings(unittest.TestCase):
         # exceptions
         with self.assertRaises(ValueError) as exc:
             get_tile_id_from_lon_lat(5, utrecht_base_pt)
-            self.assertNotEqual(exc.msg.find("We only support"))
+        self.assertIn("We only support", str(exc.exception))
 
         with self.assertRaises(ValueError) as exc:
             get_tile_id_from_lon_lat(2, (0, 1, 2))
-            self.assertEqual(exc.msg, "Invalid coordinate size, must be 2")
+        self.assertIn("Invalid coordinate size, must be 2", str(exc.exception))
 
         with self.assertRaises(ValueError) as exc:
             get_tile_id_from_lon_lat(2, (90, 180))
-            self.assertEqual(exc.msg, "Invalid coordinate, remember it's (lon, lat)")
+        self.assertIn("Invalid coordinate, remember it's (lon, lat)", str(exc.exception))
 
     def test_get_tile_ids_from_bbox(self):
-        level_0 = get_tile_ids_from_bbox(*self.utrecht_bbox, [0])
-        self.assertEqual(len(level_0), 1)
+        bbox = (0, 0, 2, 2)
 
-        level_1 = get_tile_ids_from_bbox(*self.utrecht_bbox, [1])
-        self.assertEqual(len(level_1), 4)
+        # happy paths
+        level_0 = get_tile_ids_from_bbox(*bbox, [0])
+        self.assertEqual(len(level_0), 2)
 
-        level_2 = get_tile_ids_from_bbox(*self.utrecht_bbox, [2])
-        self.assertEqual(len(level_2), 25)
+        level_1 = get_tile_ids_from_bbox(*bbox, [1])
+        self.assertEqual(len(level_1), 9)
 
-        all_levels = get_tile_ids_from_bbox(*self.utrecht_bbox)
+        level_2 = get_tile_ids_from_bbox(*bbox, [2])
+        self.assertEqual(len(level_2), 81)
+
+        all_levels = get_tile_ids_from_bbox(*bbox)
         self.assertEqual(len(level_0) + len(level_1) + len(level_2), len(all_levels))
 
-        all_levels = get_tile_ids_from_bbox(*self.utrecht_bbox, [0, 1, 2])
+        all_levels = get_tile_ids_from_bbox(*bbox, [0, 1, 2])
         self.assertEqual(len(level_0) + len(level_1) + len(level_2), len(all_levels))
 
-        all_levels = get_tile_ids_from_bbox(*self.utrecht_bbox, [])
+        all_levels = get_tile_ids_from_bbox(*bbox, [])
         self.assertEqual(len(level_0) + len(level_1) + len(level_2), len(all_levels))
 
         # exceptions
         with self.assertRaises(ValueError) as exc:
-            get_tile_ids_from_bbox(*self.utrecht_bbox, [4])
-            self.assertNotEqual(exc.msg.find("We only support"))
+            get_tile_ids_from_bbox(*bbox, [4])
+        self.assertIn("We only support", str(exc.exception))
 
         with self.assertRaises(ValueError) as exc:
             get_tile_ids_from_bbox(-90.0, -180.0, 90.0, 180.0)
-            self.assertEqual(exc.msg, "Invalid coordinate, remember it's (lon, lat)")
+        self.assertIn("Invalid coordinate, remember it's (lon, lat)", str(exc.exception))
 
     def test_get_edge_shape(self):
         """Test GraphUtils.get_edge_shape with real Utrecht tiles."""
