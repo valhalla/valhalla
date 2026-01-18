@@ -83,19 +83,17 @@ class TestBindings(unittest.TestCase):
         self.assertNotEqual(gid, gid_cp)
 
     def test_get_tile_base_lon_lat_and_reverse(self):
-        # Independent verification: Utrecht tile 818660 at level 2 maps to (5.0, 52.0)
-        utrecht_tile_gid = GraphId(818660, 2, 0)
-        utrecht_base_pt = (5.0, 52.0)
+        gid = GraphId(674464002)
+        test_pt = (-180.0, -16.75)
 
-        self.assertEqual(get_tile_base_lon_lat(utrecht_tile_gid), utrecht_base_pt)
+        self.assertEqual(get_tile_base_lon_lat(gid), test_pt)
         self.assertEqual(
-            get_tile_id_from_lon_lat(utrecht_tile_gid.level(), utrecht_base_pt),
-            GraphId(utrecht_tile_gid.tileid(), utrecht_tile_gid.level(), 0)
+            get_tile_id_from_lon_lat(gid.level(), test_pt), GraphId(gid.tileid(), gid.level(), 0)
         )
 
         # exceptions
         with self.assertRaises(ValueError) as exc:
-            get_tile_id_from_lon_lat(5, utrecht_base_pt)
+            get_tile_id_from_lon_lat(5, test_pt)
         self.assertIn("We only support", str(exc.exception))
 
         with self.assertRaises(ValueError) as exc:
