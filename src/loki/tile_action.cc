@@ -34,6 +34,8 @@ using namespace valhalla::loki;
 namespace {
 
 // approx tolerance in meters at equator
+// formula: meters_per_pixel = 40,075,016 / (256 px * tiles_at_z)
+// note, that > z10, there's a visual factor included: higher zooms render with thicker stroke
 constexpr double PeuckerEpsilons[] = {626'172, // z0
                                       313'086, 156'543, 78'271,
                                       39'135, // z4
