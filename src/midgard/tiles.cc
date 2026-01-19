@@ -1,4 +1,5 @@
 #include "midgard/tiles.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/ellipse.h"
 #include "midgard/polyline2.h"
@@ -507,6 +508,8 @@ template class std::unordered_map<int32_t, std::unordered_set<unsigned short>>
 Tiles<Point2>::Intersect(const std::vector<Point2>&) const;
 template class std::unordered_map<int32_t, std::unordered_set<unsigned short>>
 Tiles<PointLL>::Intersect(const std::vector<PointLL>&) const;
+template class std::unordered_map<int32_t, std::unordered_set<unsigned short>>
+Tiles<PointLL>::Intersect(const bg::ring_ll_t&) const;
 
 } // namespace midgard
 } // namespace valhalla
