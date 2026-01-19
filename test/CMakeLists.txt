@@ -404,52 +404,56 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
   # Find ASan runtime library for LD_PRELOAD (if sanitizers are enabled)
   # This approach avoids false positives from NumPy's internal allocations by preloading
   # the ASan runtime before Python starts, allowing ASan to intercept all allocations.
-  # Based on nanobind's nanobind_sanitizer_preload_env() (PR #1000).
-  # https://github.com/wjakob/nanobind/pull/1000/files
+  # On Linux, both libasan and the C++ standard library must be preloaded together.
+  # See: https://github.com/wjakob/nanobind/blob/master/docs/lowlevel.rst#sanitizing-python-sessions
   set(ASAN_PRELOAD_ENV "")
   if(ENABLE_SANITIZERS)
+    # Step 1: Find ASan library (try Clang naming, then GCC naming on Linux)
     if(APPLE)
-      set(san_libname "libclang_rt.asan_osx_dynamic.dylib")
+      set(san_candidates "libclang_rt.asan_osx_dynamic.dylib")
     else()
-      # Linux: try both Clang and GCC naming conventions
-      set(san_libname "libclang_rt.asan.so")
+      set(san_candidates "libclang_rt.asan.so" "libasan.so")
     endif()
 
-    # Ask the compiler for the library path
-    execute_process(
-      COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${san_libname}
-      RESULT_VARIABLE san_success
-      OUTPUT_VARIABLE san_libpath
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
+    foreach(san_libname ${san_candidates})
+      execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${san_libname}
+        OUTPUT_VARIABLE san_libpath
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      # Check if we got a real path (not just the input echoed back)
+      if(san_libpath AND NOT san_libpath STREQUAL san_libname)
+        break()  # Found it
+      endif()
+    endforeach()
 
-    # Check if we got a real path (not just echoing back the input)
-    if(san_success EQUAL 0 AND san_libpath AND NOT san_libpath STREQUAL san_libname)
-      # Set platform-specific environment variable
-      if(APPLE)
-        set(ASAN_PRELOAD_ENV "DYLD_INSERT_LIBRARIES=${san_libpath}")
+    if(san_libpath AND NOT san_libpath STREQUAL san_libname)
+      # Step 2: On Linux, also find C++ standard library (libstdc++ or libc++)
+      if(NOT APPLE)
+        foreach(cxx_libname "libstdc++.so" "libc++.so")
+          execute_process(
+            COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${cxx_libname}
+            OUTPUT_VARIABLE cxx_libpath
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+          )
+          if(cxx_libpath AND NOT cxx_libpath STREQUAL cxx_libname)
+            break()  # Found it
+          endif()
+        endforeach()
+
+        if(cxx_libpath AND NOT cxx_libpath STREQUAL cxx_libname)
+          set(ASAN_PRELOAD_ENV "LD_PRELOAD=${san_libpath}:${cxx_libpath}")
+        else()
+          message(WARNING "Could not find libstdc++.so or libc++.so. Python tests may fail with __cxa_throw errors.")
+          set(ASAN_PRELOAD_ENV "LD_PRELOAD=${san_libpath}")
+        endif()
       else()
-        set(ASAN_PRELOAD_ENV "LD_PRELOAD=${san_libpath}")
+        # macOS: Only ASan library needed
+        set(ASAN_PRELOAD_ENV "DYLD_INSERT_LIBRARIES=${san_libpath}")
       endif()
       message(STATUS "Python tests will use sanitizer preload: ${ASAN_PRELOAD_ENV}")
     else()
-      # Try GCC naming convention as fallback (Linux only)
-      if(NOT APPLE)
-        execute_process(
-          COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libasan.so
-          RESULT_VARIABLE san_success_gcc
-          OUTPUT_VARIABLE san_libpath_gcc
-          OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        if(san_success_gcc EQUAL 0 AND san_libpath_gcc AND NOT san_libpath_gcc STREQUAL "libasan.so")
-          set(ASAN_PRELOAD_ENV "LD_PRELOAD=${san_libpath_gcc}")
-          message(STATUS "Python tests will use sanitizer preload (GCC): ${ASAN_PRELOAD_ENV}")
-        else()
-          message(WARNING "Sanitizers enabled but ASan runtime not found. Python tests may fail.")
-        endif()
-      else()
-        message(WARNING "Sanitizers enabled but ASan runtime not found. Python tests may fail.")
-      endif()
+      message(WARNING "Sanitizers enabled but ASan runtime not found. Python tests may fail.")
     endif()
   endif()
 
@@ -468,7 +472,12 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
 
   # Call Python with exports in a single bash command (simpler than wrapper script)
   add_custom_command(OUTPUT python_valhalla.log
-    COMMAND /bin/bash -cx "${PYTHON_TEST_EXPORTS} ${TEST_PYTHON_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log && exit 1)"
+    COMMAND /bin/bash -cx "\
+      ${PYTHON_TEST_EXPORTS} \
+      ${TEST_PYTHON_EXECUTABLE} -m unittest discover \
+        -s ${VALHALLA_SOURCE_DIR}/test/bindings/python \
+        -v \
+      2>&1 | tee ${CMAKE_BINARY_DIR}/test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py
