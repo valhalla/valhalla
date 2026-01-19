@@ -17,14 +17,12 @@
 
 namespace valhalla::midgard::bg {
 
-// Point2d
 using linestring_2d_t = boost::geometry::model::linestring<valhalla::midgard::Point2d>;
 using multilinestring_2d_t = boost::geometry::model::multi_linestring<linestring_2d_t>;
 using ring_2d_t = boost::geometry::model::ring<valhalla::midgard::Point2d>;
 using polygon_2d_t = boost::geometry::model::polygon<valhalla::midgard::Point2d>;
 using multipolygon_2d_t = boost::geometry::model::multi_polygon<polygon_2d_t>;
 
-// PointLL
 using linestring_ll_t = boost::geometry::model::linestring<valhalla::midgard::PointLL>;
 using multilinestring_ll_t = boost::geometry::model::multi_linestring<linestring_ll_t>;
 using ring_ll_t = boost::geometry::model::ring<valhalla::midgard::PointLL>;
