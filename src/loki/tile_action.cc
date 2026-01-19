@@ -13,6 +13,7 @@
 #include "valhalla/exceptions.h"
 
 #include <boost/geometry/algorithms/append.hpp>
+#include <boost/geometry/algorithms/equals.hpp>
 #include <boost/geometry/algorithms/intersection.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <vtzero/builder.hpp>
@@ -784,6 +785,10 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   const bg::box_2i_t clip_box(bg::point_2i_t(-projection.tile_buffer, -projection.tile_buffer),
                               bg::point_2i_t(projection.tile_extent + projection.tile_buffer,
                                              projection.tile_extent + projection.tile_buffer));
+  const auto min_x = clip_box.min_corner().get<0>();
+  const auto max_x = clip_box.max_corner().get<0>();
+  const auto min_y = clip_box.min_corner().get<1>();
+  const auto max_y = clip_box.max_corner().get<1>();
 
   EdgesLayerBuilder edges_builder(tile);
   NodesLayerBuilder nodes_builder(tile);
@@ -833,30 +838,22 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     // convert to tile-local coords for the rest of the operations
     std::vector<vtzero::point> tile_coords;
     tile_coords.reserve(unclipped_line.size());
-
-    int32_t last_x = INT32_MIN;
-    int32_t last_y = INT32_MIN;
-
+    bg::point_2i_t last_pt{INT32_MIN, INT32_MIN};
     bool line_leaves_bbox = false;
     for (const auto& pt : unclipped_line) {
       const auto& tile_coord = ll_to_tile_coords(pt, projection);
-      auto x = boost::geometry::get<0>(tile_coord);
-      auto y = boost::geometry::get<1>(tile_coord);
-
       // Skip consecutive duplicate points (can happen after rounding)
-      if (x == last_x && y == last_y) {
+      if (boost::geometry::equals(tile_coord, last_pt)) {
         continue;
       }
+      const auto x = tile_coord.get<0>();
+      const auto y = tile_coord.get<1>();
 
       // only in this case we need an intersection with the clip_box
-      line_leaves_bbox = x > boost::geometry::get<boost::geometry::max_corner, 0>(clip_box) ||
-                         x < boost::geometry::get<boost::geometry::min_corner, 0>(clip_box) ||
-                         y > boost::geometry::get<boost::geometry::max_corner, 1>(clip_box) ||
-                         y < boost::geometry::get<boost::geometry::min_corner, 1>(clip_box);
+      line_leaves_bbox = x < min_x || x > max_x || y < min_y || y > max_y;
 
       tile_coords.emplace_back(x, y);
-      last_x = x;
-      last_y = y;
+      last_pt = tile_coord;
     }
 
     // Must have at least 2 unique points to create a valid linestring
