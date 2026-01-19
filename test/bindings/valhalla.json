@@ -323,6 +323,11 @@
         "max_allowed_up_transitions": {
           "1": 400,
           "2": 100
+        },
+        "max_expand_within_distance": {
+          "0": 100000000.0,
+          "1": 20000,
+          "2": 5000
         }
       },
       "unidirectional_astar": {

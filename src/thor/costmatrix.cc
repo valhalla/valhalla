@@ -499,7 +499,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     // edges while still expanding on the next level since we can still transition down to
     // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
     // edge superseded by a shortcut.
-    if (StopExpanding(hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1])) {
+    if (StopExpanding(hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1],
+                      pred.path_distance())) {
       shortcuts |= meta.edge->shortcut();
     } else {
       return false;
@@ -693,7 +694,8 @@ bool CostMatrix::Expand(const uint32_t index,
   // Prune path if predecessor is not a through edge or if the maximum
   // number of upward transitions has been exceeded on this hierarchy level.
   if ((pred.not_thru() && pred.not_thru_pruning()) ||
-      (!ignore_hierarchy_limits_ && StopExpanding(hierarchy_limits_[FORWARD][index][node.level()]))) {
+      (!ignore_hierarchy_limits_ &&
+       StopExpanding(hierarchy_limits_[FORWARD][index][node.level()], pred.path_distance()))) {
     return false;
   }
 
@@ -771,7 +773,7 @@ bool CostMatrix::Expand(const uint32_t index,
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() && !ignore_hierarchy_limits_ &&
-           StopExpanding(hierarchy_limits[trans->endnode().level()])) ||
+           StopExpanding(hierarchy_limits[trans->endnode().level()], pred.path_distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
