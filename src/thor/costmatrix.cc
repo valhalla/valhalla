@@ -858,6 +858,7 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
     // Update any opposing locations whose threshold has been reached
     if (best_connection_[idx].max_iterations > 0 && n > best_connection_[idx].max_iterations) {
       best_connection_[idx].found = true;
+      UpdateStatus<expansion_direction>(loc_idx, opp_loc_idx);
       continue;
     }
 
@@ -942,10 +943,6 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
                                  edgelabel_[!FORWARD][opp_loc_idx].size(),
                              max_iterations_, min_iterations_);
       }
-
-      // Update status and update threshold if this is the last location
-      // to find for this source or target
-      UpdateStatus<expansion_direction>(loc_idx, opp_loc_idx);
     } else {
       // at this point, the found connection might still be somewhat trivial:
       // the connecting edge might be an initial edge for either the given source or target
@@ -975,10 +972,6 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
                                    edgelabel_[!FORWARD][opp_loc_idx].size(),
                                max_iterations_, min_iterations_);
         }
-
-        // Update status and update threshold if this is the last location
-        // to find for this source or target
-        UpdateStatus<expansion_direction>(loc_idx, opp_loc_idx);
       }
     }
 
