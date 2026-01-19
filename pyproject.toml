@@ -7,7 +7,9 @@ description = "High-level bindings to the Valhalla C++ library"
 readme = "README.md"
 license = "MIT"
 license-files = ["COPYING"]
-dependencies = ["numpy>=2.0.0,<3.0.0"]
+
+[project.optional-dependencies]
+typing = ["numpy>=2.0.0,<3.0.0"]  # only needed for .pyi typing
 
 [project.urls]
 Homepage = "https://github.com/valhalla/valhalla"
