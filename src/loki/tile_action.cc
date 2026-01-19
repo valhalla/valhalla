@@ -794,8 +794,9 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   unclipped_line.reserve(20);
   bg::multilinestring_2d_t clipped_lines;
   baldr::graph_tile_ptr edge_tile;
-  // TODO(nils): sort edge_ids
+  // TODO(nils): sort edge_ids for better cache coherence
   for (const auto& edge_id : edge_ids) {
+    // TODO(nils): create another array for tile level to quickly discard edges on lower zooms
     const auto* edge = reader->directededge(edge_id, edge_tile);
 
     // no shortcuts if not requested
@@ -820,7 +821,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     unclipped_line.clear();
     for (const auto& ll : shape) {
       auto tile_x = lon_to_merc_x(ll.lng());
-      auto tile_y = lon_to_merc_x(ll.lat());
+      auto tile_y = lat_to_merc_y(ll.lat());
 
       boost::geometry::append(unclipped_line, decltype(unclipped_line)::value_type(tile_x, tile_y));
     }
@@ -849,8 +850,8 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
 
       // only in this case we need an intersection with the clip_box
       line_leaves_bbox = x > boost::geometry::get<boost::geometry::max_corner, 0>(clip_box) ||
-                         y > boost::geometry::get<boost::geometry::max_corner, 1>(clip_box) ||
                          x < boost::geometry::get<boost::geometry::min_corner, 0>(clip_box) ||
+                         y > boost::geometry::get<boost::geometry::max_corner, 1>(clip_box) ||
                          y < boost::geometry::get<boost::geometry::min_corner, 1>(clip_box);
 
       tile_coords.emplace_back(x, y);
@@ -860,7 +861,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
 
     // Must have at least 2 unique points to create a valid linestring
     if (tile_coords.size() < 2) {
-      return;
+      continue;
     }
 
     // lambda to add VT line & nodes features
