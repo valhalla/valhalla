@@ -33,6 +33,7 @@ custom_files/
 
 # python
 .venv
+venv
 
 # clangd
 .cache/

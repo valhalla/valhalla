@@ -394,20 +394,101 @@ endif()
 
 # ENABLE_DATA_TOOLS is needed for utrecht_tiles
 if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
+  # Prefer .venv Python if available (better compatibility with DYLD_INSERT_LIBRARIES on macOS)
+  set(TEST_PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
+  if(EXISTS "${VALHALLA_SOURCE_DIR}/.venv/bin/python3")
+    set(TEST_PYTHON_EXECUTABLE "${VALHALLA_SOURCE_DIR}/.venv/bin/python3")
+    message(STATUS "Using .venv Python for tests: ${TEST_PYTHON_EXECUTABLE}")
+  endif()
+
+  # Find ASan runtime library for LD_PRELOAD (if sanitizers are enabled)
+  # This approach avoids false positives from NumPy's internal allocations by preloading
+  # the ASan runtime before Python starts, allowing ASan to intercept all allocations.
+  # On Linux, both libasan and the C++ standard library must be preloaded together.
+  # See: https://github.com/wjakob/nanobind/blob/master/docs/lowlevel.rst#sanitizing-python-sessions
+  set(ASAN_PRELOAD_ENV "")
+  if(ENABLE_SANITIZERS)
+    # Step 1: Find ASan library (try Clang naming, then GCC naming on Linux)
+    if(APPLE)
+      set(san_candidates "libclang_rt.asan_osx_dynamic.dylib")
+    else()
+      set(san_candidates "libclang_rt.asan.so" "libasan.so")
+    endif()
+
+    foreach(san_libname ${san_candidates})
+      execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${san_libname}
+        OUTPUT_VARIABLE san_libpath
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      # Check if we got a real path (not just the input echoed back)
+      if(san_libpath AND NOT san_libpath STREQUAL san_libname)
+        break()  # Found it
+      endif()
+    endforeach()
+
+    if(san_libpath AND NOT san_libpath STREQUAL san_libname)
+      # Step 2: On Linux, also find C++ standard library (libstdc++ or libc++)
+      if(NOT APPLE)
+        foreach(cxx_libname "libstdc++.so" "libc++.so")
+          execute_process(
+            COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${cxx_libname}
+            OUTPUT_VARIABLE cxx_libpath
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+          )
+          if(cxx_libpath AND NOT cxx_libpath STREQUAL cxx_libname)
+            break()  # Found it
+          endif()
+        endforeach()
+
+        if(cxx_libpath AND NOT cxx_libpath STREQUAL cxx_libname)
+          set(ASAN_PRELOAD_ENV "LD_PRELOAD=${san_libpath}:${cxx_libpath}")
+        else()
+          message(WARNING "Could not find libstdc++.so or libc++.so. Python tests may fail with __cxa_throw errors.")
+          set(ASAN_PRELOAD_ENV "LD_PRELOAD=${san_libpath}")
+        endif()
+      else()
+        # macOS: Only ASan library needed
+        set(ASAN_PRELOAD_ENV "DYLD_INSERT_LIBRARIES=${san_libpath}")
+      endif()
+      message(STATUS "Python tests will use sanitizer preload: ${ASAN_PRELOAD_ENV}")
+    else()
+      message(WARNING "Sanitizers enabled but ASan runtime not found. Python tests may fail.")
+    endif()
+  endif()
+
+  # Build environment variables into bash export statements
+  # We use bash for output redirection/error handling, so we export variables within bash
+  set(PYTHON_TEST_EXPORTS "export LOCPATH=${VALHALLA_SOURCE_DIR}/locales; export PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python;")
+
+  # Add sanitizer-specific options only when sanitizers are enabled
+  if(ENABLE_SANITIZERS)
+    set(PYTHON_TEST_EXPORTS "${PYTHON_TEST_EXPORTS} export ASAN_OPTIONS=detect_leaks=0:symbolize=1;")
+    # Add preload if library was found
+    if(ASAN_PRELOAD_ENV)
+      set(PYTHON_TEST_EXPORTS "${PYTHON_TEST_EXPORTS} export ${ASAN_PRELOAD_ENV};")
+    endif()
+  endif()
+
+  # Call Python with exports in a single bash command (simpler than wrapper script)
   add_custom_command(OUTPUT python_valhalla.log
-    COMMAND
-      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-      PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python
-      ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log && exit 1)"
+    COMMAND /bin/bash -cx "\
+      ${PYTHON_TEST_EXPORTS} \
+      ${TEST_PYTHON_EXECUTABLE} -m unittest discover \
+        -s ${VALHALLA_SOURCE_DIR}/test/bindings/python \
+        -v \
+      2>&1 | tee ${CMAKE_BINARY_DIR}/test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_config.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_graph_utils.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_predicted_speeds.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
       _valhalla
-      graph_utils
+      _graph_utils
+      predicted_speeds
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
   set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")
