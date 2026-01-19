@@ -153,6 +153,7 @@ config = {
                     "1": 400,
                     "2": 100,
                 },
+                "expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000},
             },
         },
         "bidirectional_astar": {
@@ -347,6 +348,7 @@ config = {
                     "1": 400,
                     "2": 100,
                 },
+                "max_expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000},
             },
             "unidirectional_astar": {
                 "max_allowed_up_transitions": {
@@ -505,7 +507,12 @@ help_text = {
                 "max_up_transitions": {
                     "1": "The default maximum up transitions for level 1 in CostMatrix",
                     "2": "The default maximum up transitions for level 2 in CostMatrix",
-                }
+                },
+                "expand_within_distance": {
+                    "0": "The default distance within which expansion is allowed from the origin/destination on level 0 in costmatrix",
+                    "1": "The default distance within which expansion is allowed from the origin/destination on level 1 in costmatrix",
+                    "2": "The default distance within which expansion is allowed from the origin/destination on level 2 in costmatrix",
+                },
             },
         },
         "bidirectional_astar": {
