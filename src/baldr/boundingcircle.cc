@@ -85,7 +85,7 @@ DiscretizedBoundingCircle::DiscretizedBoundingCircle(
 
 std::pair<midgard::PointLL, uint16_t>
 DiscretizedBoundingCircle::get(const midgard::DistanceApproximator<midgard::PointLL>& approx,
-                               const midgard::PointLL& bin_center) {
+                               const midgard::PointLL& bin_center) const {
 
   auto y_offset_meters =
       ((static_cast<double>(y_offset) / static_cast<double>(1 << kCoordinateBits)) *

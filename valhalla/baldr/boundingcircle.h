@@ -58,7 +58,7 @@ struct DiscretizedBoundingCircle {
    */
   std::pair<midgard::PointLL, uint16_t>
   get(const midgard::DistanceApproximator<midgard::PointLL>& approx,
-      const midgard::PointLL& bin_center);
+      const midgard::PointLL& bin_center) const;
 
   bool operator==(const DiscretizedBoundingCircle& rhs) const {
     return y_offset == rhs.y_offset && x_offset == rhs.x_offset && radius_index == rhs.radius_index;
