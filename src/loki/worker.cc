@@ -200,7 +200,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
 
-  bbox_intersection_.reserve(1e6);
+  bbox_intersection_.reserve(1e5); // TODO: how much memory should we reserve for this?
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
