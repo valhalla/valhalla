@@ -37,7 +37,7 @@ struct DiscretizedBoundingCircle {
    * to the bin (i.e. this edge cannot be possibly be intersecting the bin)
    */
   DiscretizedBoundingCircle()
-      : y_offset(kMaxOffsetValue), x_offset(kMaxOffsetValue), radius_index(0){};
+      : y_offset(kMaxOffsetValue), x_offset(kMaxOffsetValue), radius_index(0) {};
 
   /**
    * Constructor.
@@ -65,6 +65,7 @@ struct DiscretizedBoundingCircle {
   }
 
   inline bool is_valid() const {
+    // impossible combination of maximum possible offsets but smallest possible radius
     return !(x_offset == kMaxOffsetValue && y_offset == kMaxOffsetValue && radius_index == 0);
   }
 
