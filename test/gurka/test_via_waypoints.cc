@@ -31,8 +31,11 @@ protected:
   }
 };
 gurka::map IntermediateLocations::map = {};
+
+namespace {
 Api api;
 rapidjson::Document d;
+} // namespace
 
 /*************************************************************/
 

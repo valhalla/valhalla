@@ -884,12 +884,14 @@ TEST_P(ExcludeClosuresOnWaypoints, ConflictingOptions) {
   }
 }
 
+namespace {
 std::vector<std::string> buildParams() {
   // Return the different costings we want to test closures against
   return {
       "auto", "motorcycle", "motor_scooter", "bus", "truck", "taxi",
   };
 }
+} // namespace
 
 INSTANTIATE_TEST_SUITE_P(SearchFilter,
                          ExcludeClosuresOnWaypoints,

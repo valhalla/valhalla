@@ -15,6 +15,7 @@ using namespace valhalla::baldr;
 using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
+namespace {
 valhalla::gurka::map BuildPBF(const std::string& workdir) {
   const std::string ascii_map = R"(
       A----B----C
@@ -235,6 +236,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
   result.nodes = layout;
   return result;
 }
+} // namespace
 
 TEST(Standalone, PhonemesWithAltandDirection) {
 

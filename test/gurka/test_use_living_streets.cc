@@ -5,6 +5,7 @@
 
 using namespace valhalla;
 
+namespace {
 const std::vector<std::string>& costing = {"auto",  "taxi",          "bus",        "bicycle",
                                            "truck", "motor_scooter", "motorcycle", "pedestrian"};
 
@@ -122,3 +123,4 @@ TEST(LivingStreetStandaloneTest, test_living_streets_cheapest_route) {
                                  {{"/costing_options/auto/use_living_streets", "0"}}),
                 {"AB", "BE", "EF"});
 }
+} // namespace
