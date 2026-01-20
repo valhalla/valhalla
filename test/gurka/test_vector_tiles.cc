@@ -1,9 +1,12 @@
 #include "gurka.h"
+#include "loki/utils.h"
 #include "loki/worker.h"
 #include "midgard/constants.h"
+#include "test.h"
 
 #include <valhalla/exceptions.h>
 
+#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 #include <vtzero/vector_tile.hpp>
 
@@ -13,7 +16,30 @@
 using namespace valhalla;
 using namespace valhalla::midgard;
 
-TEST(VectorTiles, BasicTileRendering) {
+TEST(VectorTilesBasic, ConfigFail) {
+  // zoom config with descending levels fails
+  auto config = test::make_config("/tmp");
+  auto& mvt_min_zoom_road_class = config.get_child("loki.service_defaults.mvt_min_zoom_road_class");
+  auto it = mvt_min_zoom_road_class.begin();
+  it->second.put_value(30);
+  EXPECT_THROW(loki::loki_worker_t loki_worker(config), std::runtime_error);
+
+  // the wrong number of zoom levels fails too
+  mvt_min_zoom_road_class.erase(it);
+  EXPECT_THROW(
+      {
+        try {
+          loki::loki_worker_t loki_worker(config);
+        } catch (const std::runtime_error& e) {
+          EXPECT_TRUE(
+              std::string(e.what()).starts_with("mvt_min_zoom_road_class out of bounds, expected"));
+          throw;
+        }
+      },
+      std::runtime_error);
+};
+
+TEST(VectorTilesBasic, TileRendering) {
   constexpr double gridsize = 100;
 
   const std::string ascii_map = R"(
@@ -110,46 +136,77 @@ TEST(VectorTiles, BasicTileRendering) {
   EXPECT_TRUE(has_nodes);
 }
 
-TEST(VectorTiles, BasicTileRenderingOnDifferentZoomLevels) {
-  constexpr double gridsize = 500;
+class VectorTiles : public ::testing::Test {
+protected:
+  static gurka::map map;
 
-  const std::string ascii_map = R"(
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 50;
+    const std::string ascii_map = R"(
+    x
       A---B---C---D
       |   |   |   |
       E---F---G---H
       |   |   |   |
       I---J---K---L
-  )";
+    )";
 
-  const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}, {"name", "Main Street"}}},
-      {"BC", {{"highway", "primary"}, {"name", "Main Street"}}},
-      {"CD", {{"highway", "primary"}, {"name", "Main Street"}}},
-      {"AE", {{"highway", "primary"}, {"name", "First Avenue"}}},
-      {"BF", {{"highway", "primary"}, {"name", "Second Avenue"}}},
-      {"CG", {{"highway", "primary"}, {"name", "Third Avenue"}}},
-      {"DH", {{"highway", "primary"}, {"name", "Fourth Avenue"}}},
-      {"EF", {{"highway", "primary"}, {"name", "Oak Street"}}},
-      {"FG", {{"highway", "primary"}, {"name", "Oak Street"}}},
-      {"GH", {{"highway", "primary"}, {"name", "Oak Street"}}},
-      {"EI", {{"highway", "secondary"}, {"name", "Pine Avenue"}}},
-      {"FJ", {{"highway", "secondary"}, {"name", "Elm Avenue"}}},
-      {"GK", {{"highway", "secondary"}, {"name", "Maple Avenue"}}},
-      {"HL", {{"highway", "secondary"}, {"name", "Cedar Avenue"}}},
-      {"IJ", {{"highway", "secondary"}, {"name", "South Street"}}},
-      {"JK", {{"highway", "secondary"}, {"name", "South Street"}}},
-      {"KL", {{"highway", "secondary"}, {"name", "South Street"}}},
-  };
+    const gurka::ways ways = {
+        {"AB", {{"highway", "primary"}, {"name", "Main Street"}}},
+        {"BC", {{"highway", "primary"}, {"name", "Main Street"}}},
+        {"CD", {{"highway", "primary"}, {"name", "Main Street"}}},
+        {"AE", {{"highway", "secondary"}, {"name", "First Avenue"}}},
+        {"BF", {{"highway", "secondary"}, {"name", "Second Avenue"}}},
+        {"CG", {{"highway", "secondary"}, {"name", "Third Avenue"}}},
+        {"DH", {{"highway", "secondary"}, {"name", "Fourth Avenue"}}},
+        {"EF", {{"highway", "tertiary"}, {"name", "Oak Street"}}},
+        {"FG", {{"highway", "tertiary"}, {"name", "Oak Street"}}},
+        {"GH", {{"highway", "tertiary"}, {"name", "Oak Street"}}},
+        {"EI", {{"highway", "residential"}, {"name", "Pine Avenue"}}},
+        {"FJ", {{"highway", "residential"}, {"name", "Elm Avenue"}}},
+        {"GK", {{"highway", "residential"}, {"name", "Maple Avenue"}}},
+        {"HL", {{"highway", "residential"}, {"name", "Cedar Avenue"}}},
+        {"IJ", {{"highway", "service"}, {"name", "South Street"}}},
+        {"JK", {{"highway", "service"}, {"name", "South Street"}}},
+        {"KL", {{"highway", "service"}, {"name", "South Street"}}},
+    };
 
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {2.315260, 48.869168});
-  auto map =
-      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_vt_zoom_compare");
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {2.315260, 48.869168});
+    // just an anchor from which to determine xy of the /tile request
+    const gurka::nodes nodes = {
+        {"x", {{"bla", "bla"}}},
+    };
+    const std::unordered_map<std::string, std::string> build_options = {
+        {"loki.service_defaults.mvt_cache_dir", VALHALLA_BUILD_DIR "test/data/mvt_cache_dir"}};
+    map = gurka::buildtiles(layout, ways, nodes, {},
+                            VALHALLA_BUILD_DIR "test/data/gurka_vt_zoom_compare", build_options);
+
+    const auto cache_dir = map.config.get<std::string>("loki.service_defaults.mvt_cache_dir");
+    if (std::filesystem::exists(cache_dir)) {
+      std::filesystem::remove_all(cache_dir);
+    }
+  }
+};
+
+gurka::map VectorTiles::map = {};
+
+TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
 
   auto test_tile = [&](const uint32_t z, const uint32_t exp_total_size, const uint32_t exp_edges,
-                       const uint32_t exp_nodes) {
+                       const uint32_t exp_nodes, uint32_t& cache_count) {
     SCOPED_TRACE(std::format("Zoom {} failed", z));
     std::string tile_data;
-    std::ignore = gurka::do_action(Options::tile, map, "F", z, "auto", {}, nullptr, &tile_data);
+    Api api = gurka::do_action(Options::tile, map, "x", z, "auto", {}, nullptr, &tile_data);
+    const auto x = api.options().tile_xyz().x();
+    const auto y = api.options().tile_xyz().y();
+
+    // check that cache worked
+    if (z >= map.config.get<uint32_t>("loki.service_defaults.mvt_cache_min_zoom")) {
+      const auto cache_dir = map.config.get<std::string>("loki.service_defaults.mvt_cache_dir");
+      const auto tile_path = loki::detail::mvt_local_path(z, x, y, cache_dir);
+      EXPECT_TRUE(std::filesystem::exists(tile_path)) << "path doesn't exist: " + tile_path.string();
+      cache_count++;
+    }
 
     // with some buffer due to arch-dependent float interpretation
     uint32_t buffer = (exp_total_size * 0.02);
@@ -177,6 +234,29 @@ TEST(VectorTiles, BasicTileRenderingOnDifferentZoomLevels) {
     EXPECT_EQ(nodes, exp_nodes);
   };
 
-  test_tile(8, 5369, 10, 8);
-  test_tile(12, 6621, 14, 12);
+  uint32_t cache_count = 0;
+  test_tile(8, 3418, 3, 4, cache_count);    // only primary and upper
+  test_tile(10, 5002, 7, 12, cache_count);  // adds secondary
+  test_tile(11, 5717, 10, 12, cache_count); // adds tertiary & unclassified
+  test_tile(12, 5717, 10, 12, cache_count); // same as 11
+  test_tile(13, 7205, 14, 20, cache_count); // adds residential
+  test_tile(14, 7903, 17, 20, cache_count); // adds service/other
+  // per default we only cache from z11 on
+  EXPECT_EQ(cache_count, 4);
+
+  // execute the cache path
+  test_tile(14, 7903, 17, 20, cache_count);
+
+  // make sure we fail the request when z exceeds what the server supports
+  EXPECT_THROW(
+      {
+        try {
+          test_tile(16, 7903, 17, 20, cache_count);
+        } catch (const valhalla_exception_t& e) {
+          EXPECT_EQ(e.code, 175);
+          EXPECT_STREQ(e.what(), "Exceeded max zoom level of: 14");
+          throw;
+        }
+      },
+      valhalla_exception_t);
 }

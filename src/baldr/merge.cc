@@ -59,7 +59,7 @@ struct edges {
   edges(const graph_tile_ptr& tile, GraphId node_id) {
     auto* node_info = tile->node(node_id);
     auto edge_idx = node_info->edge_index();
-    m_begin = const_iterator(tile->directededge(edge_idx), node_id.Tile_Base() + uint64_t(edge_idx));
+    m_begin = const_iterator(tile->directededge(edge_idx), node_id.tile_base() + uint64_t(edge_idx));
     m_end = m_begin + node_info->edge_count();
   }
 
@@ -188,11 +188,11 @@ void edge_collapser::explore(GraphId node_id) {
   // if either edge has been marked or is invalid (was not allowed in the
   // edge between method) then don't explore down either of them.
   GraphId e1 = edge_between(node_id, nodes.first);
-  if (!e1.Is_Valid() || m_tracker.get(e1)) {
+  if (!e1.is_valid() || m_tracker.get(e1)) {
     return;
   }
   GraphId e2 = edge_between(node_id, nodes.second);
-  if (!e2.Is_Valid() || m_tracker.get(e2)) {
+  if (!e2.is_valid() || m_tracker.get(e2)) {
     return;
   }
 
@@ -217,13 +217,13 @@ bool edge_collapser::explore(GraphId prev, GraphId cur, path& forward, path& rev
   GraphId maybe_next;
   do {
     auto e1 = edge_between(prev, cur);
-    if (!e1.Is_Valid()) {
+    if (!e1.is_valid()) {
       return false;
     }
     forward.push_back(segment(prev, e1, cur));
     m_tracker.set(e1);
     auto e2 = edge_between(cur, prev);
-    if (!e2.Is_Valid()) {
+    if (!e2.is_valid()) {
       return false;
     }
     reverse.push_front(segment(cur, e2, prev));
@@ -236,13 +236,13 @@ bool edge_collapser::explore(GraphId prev, GraphId cur, path& forward, path& rev
       if (cur == original_node_id) {
         // Loop is detected - add last edge and return true to indicate a loop
         auto e1 = edge_between(prev, cur);
-        if (!e1.Is_Valid()) {
+        if (!e1.is_valid()) {
           return false;
         }
         forward.push_back(segment(prev, e1, cur));
         m_tracker.set(e1);
         auto e2 = edge_between(cur, prev);
-        if (!e2.Is_Valid()) {
+        if (!e2.is_valid()) {
           return false;
         }
         reverse.push_front(segment(cur, e2, prev));

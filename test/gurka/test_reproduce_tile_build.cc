@@ -173,7 +173,7 @@ struct ReproducibleBuild : ::testing::Test {
       const auto diff_positions = std::mismatch(first_raw_tile.begin(), first_raw_tile.end(),
                                                 second_raw_tile.begin(), second_raw_tile.end());
       if (diff_positions.first != first_raw_tile.end())
-        FAIL() << "Tile{" << GraphTile::FileSuffix(tile_id.Tile_Base())
+        FAIL() << "Tile{" << GraphTile::FileSuffix(tile_id.tile_base())
                << "} mismatch at byte position "
                << std::distance(first_raw_tile.begin(), diff_positions.first);
     }

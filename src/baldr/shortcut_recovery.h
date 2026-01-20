@@ -64,12 +64,12 @@ protected:
           // its cheaper to get the opposing without crawling the graph
           auto opp_tile = tile;
           auto opp_id = reader->GetOpposingEdgeId(shortcut_id, opp_tile);
-          if (!opp_id.Is_Valid())
+          if (!opp_id.is_valid())
             continue; // dont store edges which arent in our tileset
 
           for (auto& id : opp_recovered) {
             id = reader->GetOpposingEdgeId(id, opp_tile);
-            if (!id.Is_Valid()) {
+            if (!id.is_valid()) {
               opp_recovered = {opp_id};
               break;
             }

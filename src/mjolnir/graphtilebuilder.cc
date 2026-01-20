@@ -1386,7 +1386,7 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
 
 void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
   // check the edge id makes sense
-  if (header_builder_.graphid().Tile_Base() != edge_id.Tile_Base()) {
+  if (header_builder_.graphid().tile_base() != edge_id.tile_base()) {
     throw std::runtime_error(
         "Can't add landmark: tile id or hierarchy level doesn't match with the current builder");
   }

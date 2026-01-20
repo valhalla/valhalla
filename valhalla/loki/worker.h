@@ -46,8 +46,7 @@ public:
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
-  static constexpr std::array kDefaultMinZoomRoadClass = {7u, 7u, 8u, 10u, 11u, 11u, 13u, 14u};
-  using ZoomConfig = std::array<uint32_t, kDefaultMinZoomRoadClass.size()>;
+  using ZoomConfig = std::array<uint32_t, static_cast<size_t>(baldr::RoadClass::kInvalid)>;
 
 protected:
   void parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
@@ -110,14 +109,13 @@ protected:
   bool allow_verbose;
   bool allow_hard_exclusions;
   float max_distance_disable_hierarchy_culling;
-  size_t candidate_query_cache_size;
   std::unordered_set<baldr::GraphId> bbox_intersection_;
 
   // for /tile requests
-  static_assert(kDefaultMinZoomRoadClass.size() == static_cast<size_t>(baldr::RoadClass::kInvalid));
-  ZoomConfig min_zoom_road_class_ = kDefaultMinZoomRoadClass;
-  uint32_t min_zoom_;
   meili::CandidateGridQuery candidate_query_;
+  ZoomConfig min_zoom_road_class_;
+  std::string mvt_cache_dir_;
+  uint32_t mvt_cache_min_zoom_;
 
 private:
   std::string service_name() const override {

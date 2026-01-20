@@ -89,9 +89,9 @@ TEST(Actor, Tile) {
   auto tile_data = actor.tile(request);
   actor.cleanup();
 
-  // should be 700-800kb
-  EXPECT_GT(tile_data.size(), 700000);
-  EXPECT_LT(tile_data.size(), 800000);
+  // should be 600-700kb
+  EXPECT_GT(tile_data.size(), 600000);
+  EXPECT_LT(tile_data.size(), 700000);
 
   vtzero::vector_tile tile{tile_data};
 
@@ -103,10 +103,10 @@ TEST(Actor, Tile) {
 
     if (layer_name == "edges") {
       has_edges = true;
-      EXPECT_EQ(layer.num_features(), 2281);
+      EXPECT_EQ(layer.num_features(), 1978);
     } else if (layer_name == "nodes") {
       has_nodes = true;
-      EXPECT_EQ(layer.num_features(), 1744);
+      EXPECT_EQ(layer.num_features(), 1611);
     } else {
       FAIL() << "Unexpected layer: " << layer_name;
     }
@@ -159,8 +159,8 @@ TEST(Actor, TileReturnShortcuts) {
     }
   }
 
-  ASSERT_EQ(features_with_shortcuts, 2320);
-  ASSERT_EQ(features_no_shortcuts, 2281);
+  ASSERT_EQ(features_with_shortcuts, 2015);
+  ASSERT_EQ(features_no_shortcuts, 1978);
 }
 
 // TODO: test the rest of them

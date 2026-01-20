@@ -376,7 +376,7 @@ if (WIN32)
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 endif()
 
-if(ENABLE_TESTS)
+if(ENABLE_TESTS OR INSTALL_TEST_LIB)
   add_subdirectory(test)
 endif()
 
