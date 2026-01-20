@@ -511,30 +511,12 @@ public:
   }
 
   /**
-   * Get the offset to the given bounding circle bin in the 5x5 grid.
-   * @param  column of the grid
-   * @param  row of the grid
-   * @return the begin and end offset in the list of bounding circles
-   */
-  std::pair<uint32_t, uint32_t> bounding_circle_offset(size_t column, size_t row) const {
-    return bounding_circle_offset(row * kBinsDim + column);
-  }
-
-  /**
    * Get the offset to the given bin in the 5x5 grid, the bins contain
    * graphids for all the edges that intersect the bin
    * @param  index of the bin within row major grid array
    * @return the begin and end offset in the list of edge ids
    */
   std::pair<uint32_t, uint32_t> bin_offset(size_t index) const;
-
-  /**
-   * Get the offset to the given bin in the 5x5 grid, the bins contain
-   * graphids for all the edges that intersect the bin
-   * @param  index of the bin within row major grid array
-   * @return the begin and end offset in the list of edge ids
-   */
-  std::pair<uint32_t, uint32_t> bounding_circle_offset(size_t index) const;
 
   /**
    * Sets the edge bin offsets

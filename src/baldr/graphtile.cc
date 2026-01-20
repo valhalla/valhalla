@@ -379,8 +379,7 @@ void GraphTile::Initialize(const GraphId& graphid) {
   // Set a pointer to the edge bin list
   edge_bins_ = reinterpret_cast<GraphId*>(ptr);
 
-  // Sneak in bounding circles; end of the last bin is first
-  // ptr += header_->bin_offset(kBinCount - 1).second * sizeof(GraphId);
+  // We store the bounding circles offset in the header
   bounding_circles_ =
       reinterpret_cast<DiscretizedBoundingCircle*>(tile_ptr + header_->bounding_circle_offset());
 

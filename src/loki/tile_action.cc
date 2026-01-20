@@ -965,7 +965,6 @@ std::string loki_worker_t::render_tile(Api& request) {
   // query edges in bbox, omits opposing edges
   // TODO(nils): can RangeQuery be updated to skip hierarchy levels?
   // const auto edge_ids = candidate_query_.RangeQuery(bounds);
-  bbox_intersection_.clear();
   search_.edges_in_bounds(bounds, bbox_intersection_);
 
   build_layers(reader, tile, bounds, bbox_intersection_, min_zoom_road_class_, z,
