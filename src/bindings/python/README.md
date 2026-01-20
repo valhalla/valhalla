@@ -28,7 +28,6 @@ cd valhalla
 pip install .
 ```
 
-
 In case you need to do a source installation (from `sdist`), follow the [build instructions](https://valhalla.github.io/valhalla/building/) for your platform to install the needed dependencies. Then a simple `pip install pyvalhalla` should work fine for Linux/OSX. On Windows one needs to install C++ developer tools, see also below in the developer notes for external `vcpkg` usage to resolve dependencies.
 
 > [!TIP]
@@ -59,6 +58,10 @@ In case you need to do a source installation (from `sdist`), follow the [build i
 > ```
 >
 > Both commands have to repeated for each build.
+
+#### Typing support
+
+We (try to) include full typing support for pyvalhalla. If you're using `mypy` with strict typing policies, you'll need to install pyvalhalla appropriately with `pip install pyvalhalla[typing]`.
 
 ### Usage
 
