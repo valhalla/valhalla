@@ -13,7 +13,7 @@
    * FIXED: Access handling for unknown OSM Way types like `"disused:route=ferry"` [#5768](https://github.com/valhalla/valhalla/pull/5768)
    * FIXED: `DirectedEdge index out of bounds` in transit tiles [#5782](https://github.com/valhalla/valhalla/pull/5782)
    * FIXED: Add error code for isochrone requests exceeding distance contour limit [#5781](https://github.com/valhalla/valhalla/pull/5781)
-   * FIXED: Add numpy as optional runtime dependency for Python bindings [#5822](https://github.com/valhalla/valhalla/pull/5822)
+   * FIXED: Add numpy as optional runtime dependency for Python bindings [#5823](https://github.com/valhalla/valhalla/pull/5823)
 * **Enhancement**
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
    * ADDED: optional libvalhalla_test install target [#5719](https://github.com/valhalla/valhalla/pull/5719)
