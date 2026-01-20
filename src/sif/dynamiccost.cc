@@ -571,6 +571,8 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT_V2(co, cfg.exclude_cash_only_tolls_, json, "/exclude_cash_only_tolls",
                       exclude_cash_only_tolls);
 
+  JSON_PBF_DEFAULT_V2(co, cfg.prefer_curvy_roads_, json, "/prefer_curvy_roads", prefer_curvy_roads);
+
   // service_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty);
 

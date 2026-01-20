@@ -508,6 +508,11 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   float sec = edge->length() * kSpeedFactor[final_speed];
 
   if (shortest_) {
+    auto cost = edge->length();
+    if (prefer_curvy_roads_) {
+      // prefer curvy roads
+      auto cost = edge->length() / std::max(static_cast<uint32_t>(1), edge->curvature());
+    }
     return Cost(edge->length(), sec);
   }
 
@@ -559,6 +564,11 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
+
+  if (prefer_curvy_roads_) {
+      // prefer curvy roads
+      return Cost(((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor)/std::max(static_cast<uint32_t>(1), edge->curvature()), sec);
+    }
 
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
