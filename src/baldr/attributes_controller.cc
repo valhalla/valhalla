@@ -86,7 +86,7 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeId, true},
     {kEdgeWayId, true},
     {kEdgeBeginOsmNodeId, true},
-    {kEdgeEndOsmNodeId, true}, 
+    {kEdgeEndOsmNodeId, true},
     {kEdgeWeightedGrade, true},
     {kEdgeMaxUpwardGrade, true},
     {kEdgeMaxDownwardGrade, true},
