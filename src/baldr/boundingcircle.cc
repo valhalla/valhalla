@@ -41,11 +41,11 @@ DiscretizedBoundingCircle::DiscretizedBoundingCircle(
   // and resize the radius accordingly so that the bounding circle is
   // still guaranteed to cover the edge shape
   double discretized_y_offset =
-      ((static_cast<double>(y_offset_increments) / static_cast<double>(1 << kCoordinateBits)) *
+      ((static_cast<double>(y_offset_increments) / static_cast<double>(kMaxOffsetValue)) *
        kMaxOffsetMeters * 2) -
       kMaxOffsetMeters;
   double discretized_x_offset =
-      ((static_cast<double>(x_offset_increments) / static_cast<double>(1 << kCoordinateBits)) *
+      ((static_cast<double>(x_offset_increments) / static_cast<double>(kMaxOffsetValue)) *
        kMaxOffsetMeters * 2) -
       kMaxOffsetMeters;
 
@@ -114,17 +114,15 @@ DiscretizedBoundingCircle::get(const midgard::DistanceApproximator<midgard::Poin
   //                 +-------------+
   //
   // So when we turn our stored offset back to meter offsets from the center, we have to shift the
-  // range back again, so that the stored value 0 becomes -max_offset meters, 4096 becomes 0 meters,
-  // and 8192 becomes +max_offset meters
-  auto y_offset_meters =
-      ((static_cast<double>(y_offset_) / static_cast<double>(1 << kCoordinateBits)) *
-       kMaxOffsetMeters * 2) -
-      kMaxOffsetMeters;
+  // range back again, so that the stored value 0 becomes -max_offset meters, 4095 becomes 0 meters,
+  // and 8191 becomes +max_offset meters
+  auto y_offset_meters = ((static_cast<double>(y_offset_) / static_cast<double>(kMaxOffsetValue)) *
+                          kMaxOffsetMeters * 2) -
+                         kMaxOffsetMeters;
 
-  auto x_offset_meters =
-      ((static_cast<double>(x_offset_) / static_cast<double>(1 << kCoordinateBits)) *
-       kMaxOffsetMeters * 2) -
-      kMaxOffsetMeters;
+  auto x_offset_meters = ((static_cast<double>(x_offset_) / static_cast<double>(kMaxOffsetValue)) *
+                          kMaxOffsetMeters * 2) -
+                         kMaxOffsetMeters;
   midgard::PointLL center{(x_offset_meters / (approx.GetMetersPerLngDegree())) + bin_center.lng(),
                           y_offset_meters / midgard::kMetersPerDegreeLat + bin_center.lat()};
 
