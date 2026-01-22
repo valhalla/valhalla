@@ -105,8 +105,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
 
-  hierarchy_limits_config_costmatrix =
-      parse_hierarchy_limits_from_config(config, "costmatrix", false);
+  hierarchy_limits_config_costmatrix = parse_hierarchy_limits_from_config(config, "costmatrix", true);
   hierarchy_limits_config_astar =
       parse_hierarchy_limits_from_config(config, "unidirectional_astar", true);
   hierarchy_limits_config_bidirectional_astar =

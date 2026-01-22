@@ -28,7 +28,7 @@ void update_traffic_on_edges(baldr::GraphReader& reader,
     baldr::GraphId tile_id(tile.header->tile_id);
     auto edge =
         std::get<0>(gurka::findEdge(reader, closure_map.nodes, edge_name, std::string(1, node)));
-    if (edge.Tile_Base() == tile_id && edge.id() == index) {
+    if (edge.tile_base() == tile_id && edge.id() == index) {
       current->breakpoint1 = 255;
       current->overall_encoded_speed = speed >> 1;
       current->encoded_speed1 = speed >> 1;
