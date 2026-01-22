@@ -48,7 +48,7 @@ struct DiscretizedBoundingCircle {
    * to the bin (i.e. this edge cannot be possibly be intersecting the bin)
    */
   constexpr DiscretizedBoundingCircle()
-      : y_offset_(kMaxOffsetValue), x_offset_(kMaxOffsetValue), radius_index_(0) {};
+      : y_offset_(kMaxOffsetValue), x_offset_(kMaxOffsetValue), radius_index_(0){};
 
   /**
    * Constructor.
