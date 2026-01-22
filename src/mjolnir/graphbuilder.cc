@@ -725,6 +725,13 @@ void BuildTileSet(const std::string& ways_file,
             }
           }
 
+          // Check if this way is part of a scenic route
+          bool scenic = false;
+          auto scenic_route = osmdata.scenic_routes.find(w.way_id());
+          if (scenic_route != osmdata.scenic_routes.end()) {
+            scenic = true;
+          }
+
           // Check if refs occur in both directions for this way. If so, a separate EdgeInfo needs to
           // be stored. This usually indicates a single carriageway with different directional
           // indicators.
@@ -942,7 +949,7 @@ void BuildTileSet(const std::string& ways_file,
                                  n, has_signal, has_stop, has_yield,
                                  ((has_stop || has_yield) ? node.minor() : false), restrictions,
                                  bike_network, edge.attributes.reclass_ferry,
-                                 static_cast<RoadClass>(edge.attributes.importance_hierarchy));
+                                 static_cast<RoadClass>(edge.attributes.importance_hierarchy), scenic);
 
           DirectedEdge& directededge = graphtile.directededges().emplace_back(de);
           // temporarily set the leaves tile flag to indicate when we need to search the access.bin

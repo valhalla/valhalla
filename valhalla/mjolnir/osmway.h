@@ -2327,6 +2327,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the scenic route flag.
+   * @param  scenic  Is this part of a scenic route?
+   */
+  void set_scenic(const bool scenic) {
+    scenic_ = scenic;
+  }
+
+  /**
+   * Get the scenic route flag.
+   * @return  Returns scenic route flag.
+   */
+  bool scenic() const {
+    return scenic_;
+  }
+
+  /**
    * Sets the road class.
    * @param  roadclass  Road Class/highway type.
    */
@@ -2655,6 +2671,7 @@ struct OSMWay {
   uint32_t forward_tagged_lanes_ : 1;
   uint32_t backward_tagged_lanes_ : 1;
   uint32_t truck_route_ : 1;
+  uint32_t scenic_ : 1;        // Is this part of a scenic route?
   uint32_t sidewalk_right_ : 1;
   uint32_t sidewalk_left_ : 1;
   uint32_t sac_scale_ : 3;

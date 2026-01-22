@@ -276,6 +276,11 @@ void DirectedEdge::set_truck_route(const bool truck_route) {
   truck_route_ = truck_route;
 }
 
+// Sets scenic route flag.
+void DirectedEdge::set_scenic(const bool scenic) {
+  scenic_ = scenic;
+}
+
 // Sets the number of lanes
 void DirectedEdge::set_lanecount(const uint32_t lanecount) {
   // Make sure we don't exceed max lane count. Also make sure lane count

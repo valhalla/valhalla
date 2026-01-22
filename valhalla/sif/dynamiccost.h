@@ -1343,6 +1343,7 @@ protected:
   bool default_hierarchy_limits{true};
   bool use_hierarchy_limits{true};
   bool prefer_curvy_roads_{false};
+  bool prefer_scenic_roads_{false};
 
   bool exclude_cash_only_tolls_{false};
 
@@ -1452,6 +1453,7 @@ protected:
         fixed_speed_ == baldr::kDisableFixedSpeed ? costing_options.top_speed() : fixed_speed_;
 
     prefer_curvy_roads_ = costing_options.prefer_curvy_roads();
+    prefer_scenic_roads_ = costing_options.prefer_scenic_roads();
 
     exclude_unpaved_ = costing_options.exclude_unpaved();
     exclude_bridges_ = costing_options.exclude_bridges();
@@ -1574,6 +1576,7 @@ struct BaseCostingOptionsConfig {
   bool exclude_ferries_;
   bool has_excludes_;
   bool prefer_curvy_roads_ = false;
+  bool prefer_scenic_roads_ = false;
 
   bool exclude_cash_only_tolls_ = false;
 

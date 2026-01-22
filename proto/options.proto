@@ -352,6 +352,7 @@ message Costing {
           float speed_penalty_factor = 95;
         }
     bool prefer_curvy_roads = 96;
+    bool prefer_scenic_roads = 97;
   }
 
   oneof has_options {

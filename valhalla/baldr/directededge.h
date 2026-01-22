@@ -526,6 +526,20 @@ public:
   void set_truck_route(const bool truck_route);
 
   /**
+   * Is this edge part of a scenic route?
+   * @return  Returns true if the edge is part of a scenic route, false otherwise.
+   */
+  bool scenic() const {
+    return scenic_;
+  }
+
+  /**
+   * Set the scenic route flag for this directed edge.
+   * @param  scenic  Scenic route flag. True if edge is part of a scenic route.
+   */
+  void set_scenic(const bool scenic);
+
+  /**
    * Get the number of lanes for this directed edge.
    * @return  Returns the number of lanes for this directed edge.
    */
@@ -1268,7 +1282,8 @@ protected:
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
   uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
-  uint64_t spare4_ : 3;
+  uint64_t scenic_ : 1;         // Is this edge part of a scenic route?
+  uint64_t spare4_ : 2;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

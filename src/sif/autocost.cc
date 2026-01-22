@@ -509,11 +509,14 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   if (shortest_) {
     auto cost = edge->length();
-    if (prefer_curvy_roads_) {
+    if (prefer_curvy_roads_ && edge->curvature() > 5) {
       // prefer curvy roads
-      auto cost = edge->length() / std::max(static_cast<uint32_t>(1), edge->curvature());
+      cost /= (edge->curvature() * 10);
     }
-    return Cost(edge->length(), sec);
+    if (prefer_scenic_roads_ && edge->scenic()) {
+      cost *= 0.1f;
+    }
+    return Cost(cost, sec);
   }
 
   // base factor is either ferry, rail ferry or density based
@@ -565,14 +568,22 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= closure_factor_;
   }
 
-  if (prefer_curvy_roads_) {
+
+   // Disable time factor if we're biasing towards curvy or scenic roads.
+  auto cost = (prefer_curvy_roads_ || prefer_scenic_roads_) ? edge->length() * factor : (sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor;
+
+  if (prefer_scenic_roads_ && edge->scenic()) {
+    cost *= 0.1f; // 90% reduction in cost for scenic routes
+  }
+
+  if (prefer_curvy_roads_ && edge->curvature() > 5) {
       // prefer curvy roads
-      return Cost(((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor)/std::max(static_cast<uint32_t>(1), edge->curvature()), sec);
+      cost /= (edge->curvature() * 10);
     }
 
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
-  return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
+  return Cost(cost, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor

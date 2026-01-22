@@ -573,6 +573,8 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
   JSON_PBF_DEFAULT_V2(co, cfg.prefer_curvy_roads_, json, "/prefer_curvy_roads", prefer_curvy_roads);
 
+  JSON_PBF_DEFAULT_V2(co, cfg.prefer_scenic_roads_, json, "/prefer_scenic_roads", prefer_scenic_roads);
+
   // service_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty);
 
