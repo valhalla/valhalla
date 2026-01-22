@@ -1167,8 +1167,7 @@ struct graph_parser {
     tag_handlers_["vignette"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kVignette);
-      restriction.set_modes(kAutoAccess | kTruckAccess | kTaxiAccess | kBusAccess |
-                            kMotorcycleAccess);
+      restriction.set_modes(kVehicularAccess);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };

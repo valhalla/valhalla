@@ -36,17 +36,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// Convert country ISO code to a uint64_t value
-uint64_t CountryISOCodeToValue(const std::string& countryIso) {
-  uint64_t value = 0;
-  if (countryIso.size() == 2) {
-    value = (static_cast<uint64_t>(countryIso[0]) << 8) | static_cast<uint64_t>(countryIso[1]);
-  } else {
-    LOG_DEBUG("Country ISO is not valid. Must be 2 characters.");
-  }
-  return value;
-}
-
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
  * we also need to then update the edges that pointed to them
@@ -405,7 +394,7 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
         (!forward && direction == AccessRestrictionDirection::kBackward)) {
       auto value = r->second.value();
       if (r->second.type() == AccessType::kVignette) {
-        value = CountryISOCodeToValue((country_iso.empty()) ? "" : country_iso);
+        value = valhalla::midgard::country_iso_code_to_int(country_iso);
       }
       AccessRestriction access_restriction(edgeid, r->second.type(), r->second.modes(), value,
                                            r->second.except_destination());
