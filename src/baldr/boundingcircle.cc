@@ -106,7 +106,7 @@ DiscretizedBoundingCircle::get(const midgard::DistanceApproximator<midgard::Poin
   //
   //                 +-------------+
   //                 |             |
-  //        0        |    4096     |       8192
+  //        0        |     4095    |       8191
   //        |–––––––-|------o––––––|-------->
   //                 |             |
   //                 |             |
