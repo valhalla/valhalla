@@ -859,6 +859,7 @@ std::string decode64(const std::string& encoded) {
   decoded.erase(decoded.end() - pad_chars, decoded.end());
   return decoded;
 }
+
 template <class container_t>
 std::tuple<PointLL, double> get_bounding_circle(const container_t& shape) {
   if (shape.empty()) {

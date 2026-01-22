@@ -40,9 +40,9 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
     auto b_circle = b_circles.begin();
 
     while (a_circle != a_circles.end() && b_circle != b_circles.end()) {
-      EXPECT_EQ(a_circle->get_y_offset(), b_circle->get_y_offset());
-      EXPECT_EQ(a_circle->get_x_offset(), b_circle->get_x_offset());
-      EXPECT_EQ(a_circle->get_radius_index(), b_circle->get_radius_index());
+      EXPECT_EQ(a_circle->y_offset(), b_circle->y_offset());
+      EXPECT_EQ(a_circle->x_offset(), b_circle->x_offset());
+      EXPECT_EQ(a_circle->radius_index(), b_circle->radius_index());
       a_circle++;
       b_circle++;
     }

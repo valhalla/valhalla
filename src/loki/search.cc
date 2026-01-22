@@ -594,7 +594,7 @@ struct bin_handler_t {
       }
       c_itr = bin_candidates.begin();
 
-      //  means no circle
+      //  0 radius means no circle
       if (circle.second != 0) {
         // go through all of the candidates relevant to this bin
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
