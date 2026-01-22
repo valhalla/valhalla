@@ -83,7 +83,7 @@ message PathEdge {
   float heading = 13;
 
   message BoundingCircle {
-    int32 radius = 1; 
+    uint32 radius = 1; 
     LatLng latlng = 2;
   } 
   
