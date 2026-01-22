@@ -4,6 +4,7 @@
 #include <valhalla/midgard/pointll.h>
 
 #include <cstdint>
+#include <ostream>
 #include <string>
 
 namespace valhalla {
