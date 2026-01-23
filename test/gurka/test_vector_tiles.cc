@@ -60,14 +60,15 @@ TEST(VectorTilesBasic, ConfigFail) {
 TEST(VectorTilesBasic, TileGeneralization) {
   const std::string ascii_map = R"(
       x
-      A0  34  78
-        12  56  9B
+      A 1 3 5
+
+       0 2 4
   )";
   const gurka::ways ways = {
-      {"A0123456789B", {{"highway", "motorway"}}},
+      {"A01234", {{"highway", "motorway"}}},
   };
-  // huge grid size bcs of zoom 8
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  // at z8 it's 38m default generalization
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 25);
   auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_vt_basic");
 
   auto test_vertex_count = [&](const std::unordered_map<std::string, std::string>& options,
@@ -92,7 +93,7 @@ TEST(VectorTilesBasic, TileGeneralization) {
   // by default we expect full generalization
   test_vertex_count({}, 2);
   // with very low generalize, i.e. full resolution aka no generalize
-  test_vertex_count({{"/generalize", "0.0001"}}, 12);
+  test_vertex_count({{"/generalize", "0.01"}}, 6);
 }
 
 TEST(VectorTilesBasic, TileRendering) {

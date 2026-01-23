@@ -35,16 +35,30 @@ using namespace valhalla::loki;
 namespace {
 
 // approx tolerance in meters at equator
-// formula: meters_per_pixel = 40,075,016 / (256 px * tiles_at_z)
-// note, that > z10, there's a visual factor included: higher zooms render with thicker stroke
-constexpr double PeuckerEpsilons[] = {626'172, // z0
-                                      313'086, 156'543, 78'271,
-                                      39'135, // z4
-                                      19'567,  4'891,   2'445,  1'222,
-                                      611, // z9
-                                      152,     76,      38,     19,
-                                      5, // z14
-                                      2,       1};
+// reflects the maximum zoom we allow for, based on tippecanoe calculations with "detail = 12" (i.e.
+// 4096 pixels/tile)
+// "generalize" parameter can be used to scale
+// clang-format off
+constexpr double PeuckerEpsilons[] = {
+  9'781, // z0
+  4'891,
+  2'445,
+  1'223,
+  611, // z4
+  306,
+  153,
+  76,
+  38,
+  19, // z9
+  10,
+  5,
+  2,
+  1,
+  0.6, // z14
+  0.3,
+  0.15
+};
+// clang-format on
 
 /**
  * Earth radius in meters for EPSG:3857 Web Mercator projection.
@@ -778,9 +792,8 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                   uint32_t z,
                   valhalla::Options options) {
   const bool return_shortcuts = options.tile_options().return_shortcuts();
-  // we use generalize as a scaling factor to our default generalization, i.e. [0.f, 1.f] range
-  const double generalize =
-      options.has_generalize_case() ? std::min(static_cast<double>(options.generalize()), 1.) : 1.;
+  // we use generalize as a scaling factor to our default generalization
+  const double generalize = options.has_generalize_case() ? options.generalize() : 4.;
   const TileProjection projection{bounds};
 
   // create clip box with buffer to handle edges that cross boundaries
@@ -834,7 +847,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     }
 
     // scale the epsilon with generalize query parameter
-    if (const auto gen_factor = PeuckerEpsilons[z] * generalize; gen_factor > 1.)
+    if (const auto gen_factor = PeuckerEpsilons[z] * generalize; generalize > 0. && gen_factor > 0.5)
       Polyline2<Point2d>::Generalize(unclipped_line, gen_factor);
 
     // convert to tile-local coords for the rest of the operations
