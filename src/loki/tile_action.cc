@@ -274,8 +274,9 @@ public:
                            vtzero::encoded_property_value(forward_edge->stop_sign()));
       feature.add_property(key_yield_sign_fwd_,
                            vtzero::encoded_property_value(forward_edge->yield_sign()));
-      feature.add_property(key_deadend_fwd_, vtzero::encoded_property_value(edge->deadend()));
-      feature.add_property(key_lanecount_fwd_, vtzero::encoded_property_value(edge->deadend()));
+      feature.add_property(key_deadend_fwd_, vtzero::encoded_property_value(forward_edge->deadend()));
+      feature.add_property(key_lanecount_fwd_,
+                           vtzero::encoded_property_value(forward_edge->deadend()));
 
       // Forward access properties
       uint32_t fwd_access = forward_edge->forwardaccess();
@@ -345,11 +346,12 @@ public:
                            vtzero::encoded_property_value(reverse_edge->stop_sign()));
       feature.add_property(key_yield_sign_rev_,
                            vtzero::encoded_property_value(reverse_edge->yield_sign()));
-      feature.add_property(key_deadend_rev_, vtzero::encoded_property_value(edge->deadend()));
-      feature.add_property(key_lanecount_rev_, vtzero::encoded_property_value(edge->deadend()));
+      feature.add_property(key_deadend_rev_, vtzero::encoded_property_value(reverse_edge->deadend()));
+      feature.add_property(key_lanecount_rev_,
+                           vtzero::encoded_property_value(reverse_edge->deadend()));
 
       // Reverse access properties
-      uint32_t rev_access = reverse_edge->reverseaccess();
+      uint32_t rev_access = reverse_edge->forwardaccess();
       feature.add_property(key_access_auto_rev_, vtzero::encoded_property_value(
                                                      static_cast<bool>(rev_access & kAutoAccess)));
       feature.add_property(key_access_pedestrian_rev_,
