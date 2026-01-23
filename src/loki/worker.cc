@@ -200,6 +200,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
 
+  bbox_intersection_.reserve(1e5); // TODO: how much memory should we reserve for this?
+
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
   for (const auto& kv : config.get_child("loki.actions")) {
@@ -307,7 +309,6 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
-  candidate_query_cache_size_ = config.get<size_t>("meili.grid.cache_size");
   mvt_cache_dir_ = config.get<std::string>("loki.service_defaults.mvt_cache_dir", "");
   if (!mvt_cache_dir_.empty() && !std::filesystem::exists(mvt_cache_dir_))
     std::filesystem::create_directory(mvt_cache_dir_);
@@ -322,9 +323,7 @@ void loki_worker_t::cleanup() {
   if (reader->OverCommitted()) {
     reader->Trim();
   }
-  if (candidate_query_.size() > candidate_query_cache_size_) {
-    candidate_query_.Clear();
-  }
+  bbox_intersection_.clear();
 }
 
 void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {

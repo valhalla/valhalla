@@ -3,6 +3,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "loki/node_search.h"
 #include "loki/worker.h"
 #include "meili/candidate_search.h"
 #include "midgard/boost_geom_types.h"
@@ -881,6 +882,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     }
   }
 }
+
 } // anonymous namespace
 
 namespace valhalla {
@@ -963,9 +965,9 @@ std::string loki_worker_t::render_tile(Api& request) {
   const auto bounds = tile_to_bbox(x, y, z);
 
   // query edges in bbox, omits opposing edges
-  const auto edge_ids = candidate_query_.RangeQuery(bounds);
+  search_.edges_in_bounds(bounds, bbox_intersection_);
 
-  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
+  build_layers(reader, tile, bounds, bbox_intersection_, min_zoom_road_class_, z,
                options.tile_options().return_shortcuts());
 
   std::string tile_bytes;

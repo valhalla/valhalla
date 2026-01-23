@@ -148,6 +148,12 @@ void serialize_edges(const PathLocation& path_location,
                                      ? "left"
                                      : (edge.sos == PathLocation::RIGHT ? "right" : "neither"));
 
+        writer.start_object("bounding_circle");
+        writer("lat", edge.bounding_circle.first.lat());
+        writer("lon", edge.bounding_circle.first.lng());
+        writer("radius", static_cast<uint64_t>(edge.bounding_circle.second));
+        writer.end_object();
+
         writer("linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info));
         writer.set_precision(5);
         writer("percent_along", edge.percent_along);

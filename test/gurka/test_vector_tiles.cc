@@ -49,19 +49,19 @@ TEST(VectorTilesBasic, TileRendering) {
   )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}, {"name", "Main Street"}}},
-      {"BC", {{"highway", "primary"}, {"name", "Main Street"}}},
-      {"BD", {{"highway", "secondary"}, {"name", "Side Street"}}},
+      {"AB", {{"highway", "primary"}, {"name", "Main Street"}, {"osm_id", "10"}}},
+      {"BC", {{"highway", "primary"}, {"name", "Main Street"}, {"osm_id", "11"}}},
+      {"BD", {{"highway", "secondary"}, {"name", "Side Street"}, {"osm_id", "12"}}},
   };
 
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {2.315260, 48.869168});
   auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_vt_basic");
 
   std::string tile_data;
   auto api = gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 2850);
-  EXPECT_GT(tile_data.size(), 2750);
+  EXPECT_GT(tile_data.size(), 3500);
+  EXPECT_LT(tile_data.size(), 3600);
 
   vtzero::vector_tile tile{tile_data};
 
@@ -77,7 +77,7 @@ TEST(VectorTilesBasic, TileRendering) {
       EXPECT_EQ(layer.version(), 2);
       EXPECT_EQ(layer.extent(), 4096);
 
-      EXPECT_EQ(layer.num_features(), 1);
+      EXPECT_EQ(layer.num_features(), 3);
 
       auto feature = layer.next_feature();
       EXPECT_TRUE(feature.has_id());
@@ -106,7 +106,7 @@ TEST(VectorTilesBasic, TileRendering) {
       EXPECT_EQ(layer.version(), 2);
       EXPECT_EQ(layer.extent(), 4096);
 
-      EXPECT_EQ(layer.num_features(), 2);
+      EXPECT_EQ(layer.num_features(), 5);
 
       auto feature = layer.next_feature();
 
@@ -171,12 +171,11 @@ protected:
         {"KL", {{"highway", "service"}, {"name", "South Street"}}},
     };
 
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {2.315260, 48.869168});
     // just an anchor from which to determine xy of the /tile request
     const gurka::nodes nodes = {
         {"x", {{"bla", "bla"}}},
     };
-
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     const std::unordered_map<std::string, std::string> build_options = {
         {"loki.service_defaults.mvt_cache_dir", VALHALLA_BUILD_DIR "test/data/mvt_cache_dir"}};
     map = gurka::buildtiles(layout, ways, nodes, {},

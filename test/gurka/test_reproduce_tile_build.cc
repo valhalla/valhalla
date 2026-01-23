@@ -26,13 +26,26 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
                        sizeof(GraphTileHeader)),
             0);
 
-  // check bins
+  // check bins and circles
   for (size_t bin_index = 0; bin_index < kBinCount; ++bin_index) {
     ASSERT_EQ(ah->bin_offset(bin_index), bh->bin_offset(bin_index));
     auto a_bin = a.GetBin(bin_index);
     auto b_bin = b.GetBin(bin_index);
     auto a_pos = a_bin.begin();
     auto b_pos = b_bin.begin();
+
+    auto a_circles = a.GetBoundingCircles(bin_index);
+    auto b_circles = b.GetBoundingCircles(bin_index);
+    auto a_circle = a_circles.begin();
+    auto b_circle = b_circles.begin();
+
+    while (a_circle != a_circles.end() && b_circle != b_circles.end()) {
+      EXPECT_EQ(a_circle->y_offset(), b_circle->y_offset());
+      EXPECT_EQ(a_circle->x_offset(), b_circle->x_offset());
+      EXPECT_EQ(a_circle->radius_index(), b_circle->radius_index());
+      a_circle++;
+      b_circle++;
+    }
 
     while (true) {
       const auto diff = std::mismatch(a_pos, a_bin.end(), b_pos, b_bin.end());
@@ -73,6 +86,8 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
   ASSERT_EQ(ah->signcount(), bh->signcount());
   ASSERT_EQ(ah->speed_quality(), bh->speed_quality());
   ASSERT_EQ(ah->stopcount(), bh->stopcount());
+  ASSERT_EQ(ah->bounding_circle_offset(), bh->bounding_circle_offset());
+  ASSERT_EQ(ah->has_bounding_circles(), bh->has_bounding_circles());
   ASSERT_EQ(ah->textlist_offset(), bh->textlist_offset());
   ASSERT_EQ(ah->schedulecount(), bh->schedulecount());
   ASSERT_EQ(ah->version(), bh->version());

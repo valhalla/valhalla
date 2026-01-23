@@ -37,6 +37,9 @@ public:
   std::unordered_map<baldr::Location, baldr::PathLocation>
   search(const std::vector<baldr::Location>& locations, const sif::cost_ptr_t& costing);
 
+  void edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
+                       std::unordered_set<baldr::GraphId>& edge_container);
+
 private:
   baldr::GraphReader& reader_;
 

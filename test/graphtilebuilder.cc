@@ -32,10 +32,13 @@ public:
 void assert_tile_equalish(const GraphTile& a,
                           const GraphTile& b,
                           size_t difference,
-                          const std::array<std::vector<GraphId>, kBinCount>& bins,
+                          const bins_t& bins,
+                          const bool bounding_circles,
                           const std::string& /*msg*/) {
+  bool padded = difference % 8 == 0 ? false : true;
+
   // expected size
-  ASSERT_EQ(a.header()->end_offset() + difference, b.header()->end_offset());
+  ASSERT_EQ(a.header()->end_offset() + difference + (padded ? 4 : 0), b.header()->end_offset());
 
   // check the first chunk after the header
   ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + sizeof(GraphTileHeader),
@@ -48,46 +51,60 @@ void assert_tile_equalish(const GraphTile& a,
   // check the stuff after the bins
   ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + a.header()->edgeinfo_offset(),
                    reinterpret_cast<const char*>(b.header()) + b.header()->edgeinfo_offset(),
-                   b.header()->end_offset() - b.header()->edgeinfo_offset()),
+                   a.header()->end_offset() - a.header()->edgeinfo_offset()),
             0);
 
   // if the header is as expected
   const auto *ah = a.header(), *bh = b.header();
-  if (ah->access_restriction_count() == bh->access_restriction_count() &&
-      ah->admincount() == bh->admincount() &&
-      ah->complex_restriction_forward_offset() + difference ==
-          bh->complex_restriction_forward_offset() &&
-      ah->complex_restriction_reverse_offset() + difference ==
-          bh->complex_restriction_reverse_offset() &&
-      ah->date_created() == bh->date_created() && ah->density() == bh->density() &&
-      ah->departurecount() == bh->departurecount() &&
-      ah->directededgecount() == bh->directededgecount() &&
-      ah->edgeinfo_offset() + difference == bh->edgeinfo_offset() &&
-      ah->exit_quality() == bh->exit_quality() && ah->graphid() == bh->graphid() &&
-      ah->name_quality() == bh->name_quality() && ah->nodecount() == bh->nodecount() &&
-      ah->routecount() == bh->routecount() && ah->signcount() == bh->signcount() &&
-      ah->speed_quality() == bh->speed_quality() && ah->stopcount() == bh->stopcount() &&
-      ah->textlist_offset() + difference == bh->textlist_offset() &&
-      ah->schedulecount() == bh->schedulecount() && ah->version() == bh->version()) {
-    // make sure the edges' shape and names match
-    for (size_t i = 0; i < ah->directededgecount(); ++i) {
-      auto a_info = a.edgeinfo(a.directededge(i));
-      auto b_info = b.edgeinfo(b.directededge(i));
-      ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
-      ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
-      for (size_t j = 0; j < a_info.GetNames().size(); ++j)
-        ASSERT_EQ(a_info.GetNames()[j], b_info.GetNames()[j]);
-    }
-    // check that the bins contain what was just added to them
-    for (size_t i = 0; i < bins.size(); ++i) {
-      auto bin = b.GetBin(i % kBinsDim, i / kBinsDim);
-      auto offset = bin.size() - bins[i].size();
-      for (size_t j = 0; j < bins[i].size(); ++j) {
-        ASSERT_EQ(bin[j + offset], bins[i][j]);
+  EXPECT_EQ(ah->access_restriction_count(), bh->access_restriction_count());
+  EXPECT_EQ(ah->admincount(), bh->admincount());
+  EXPECT_EQ(ah->complex_restriction_forward_offset() + difference,
+            bh->complex_restriction_forward_offset());
+  EXPECT_EQ(ah->complex_restriction_reverse_offset() + difference,
+            bh->complex_restriction_reverse_offset());
+  EXPECT_EQ(ah->date_created(), bh->date_created());
+  EXPECT_EQ(ah->density(), bh->density());
+  EXPECT_EQ(ah->departurecount(), bh->departurecount());
+  EXPECT_EQ(ah->directededgecount(), bh->directededgecount());
+  EXPECT_EQ(ah->edgeinfo_offset() + difference, bh->edgeinfo_offset());
+  EXPECT_EQ(ah->exit_quality(), bh->exit_quality());
+  EXPECT_EQ(ah->graphid(), bh->graphid());
+  EXPECT_EQ(ah->name_quality(), bh->name_quality());
+  EXPECT_EQ(ah->nodecount(), bh->nodecount());
+  EXPECT_EQ(ah->routecount(), bh->routecount());
+  EXPECT_EQ(ah->signcount(), bh->signcount());
+  EXPECT_EQ(ah->speed_quality(), bh->speed_quality());
+  EXPECT_EQ(ah->stopcount(), bh->stopcount());
+  EXPECT_EQ(ah->textlist_offset() + difference, bh->textlist_offset());
+  EXPECT_EQ(ah->schedulecount(), bh->schedulecount());
+  EXPECT_EQ(ah->version(), bh->version());
+  // make sure the edges' shape and names match
+  for (size_t i = 0; i < ah->directededgecount(); ++i) {
+    auto a_info = a.edgeinfo(a.directededge(i));
+    auto b_info = b.edgeinfo(b.directededge(i));
+    ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
+    ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
+    for (size_t j = 0; j < a_info.GetNames().size(); ++j)
+      ASSERT_EQ(a_info.GetNames()[j], b_info.GetNames()[j]);
+  }
+
+  ASSERT_EQ(b.header()->has_bounding_circles(), bounding_circles);
+
+  // check that the bins contain what was just added to them
+  for (size_t i = 0; i < bins.size(); ++i) {
+    auto bin = b.GetBin(i % kBinsDim, i / kBinsDim);
+    auto circle_bin = b.GetBoundingCircles(i % kBinsDim, i / kBinsDim);
+
+    ASSERT_EQ(circle_bin.begin() == circle_bin.end(), !bounding_circles);
+    EXPECT_EQ(circle_bin.size(), bounding_circles ? bin.size() : 0);
+    auto offset = bin.size() - bins[i].size();
+    for (size_t j = 0; j < bins[i].size(); ++j) {
+      ASSERT_EQ(bin[j + offset], bins[i][j].first);
+      if (bounding_circles) {
+        ASSERT_EQ(circle_bin[j + offset], bins[i][j].second)
+            << "Bounding circle mismatch at bin " << i << ", circle " << j;
       }
     }
-  } else {
-    FAIL() << "not equal";
   }
 }
 
@@ -201,7 +218,10 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   }
 }
 
-TEST(GraphTileBuilder, TestAddBins) {
+class AddBinTest : public ::testing::TestWithParam<bool> {};
+
+TEST_P(AddBinTest, TestAddBins) {
+  bool build_bounding_circles = GetParam();
 
   // if you update the tile format you must regenerate test tiles. after your tile format change,
   // run valhalla_build_tiles on a reasonable sized extract. when its done do the following:
@@ -217,7 +237,7 @@ TEST(GraphTileBuilder, TestAddBins) {
   // this will grab the 2 smallest tiles from you new tile set and make them the new test tiles
   // note the names of the new tiles and update the list with path and index in the list just below
   for (const auto& test_tile :
-       std::list<std::pair<std::string, size_t>>{{"744/881.gph", 744881}, {"744/885.gph", 744885}}) {
+       std::list<std::pair<std::string, size_t>>{{"501/522.gph", 501522}, {"501/523.gph", 501523}}) {
 
     // load a tile
     GraphId id(test_tile.second, 2, 0);
@@ -227,56 +247,56 @@ TEST(GraphTileBuilder, TestAddBins) {
 
     // alter the config to point to another dir
     std::string bin_dir = "test/data/bin_tiles/bin";
+    bin_dir += (build_bounding_circles ? "_circles" : "_no_circles");
 
     // send blank bins
-    std::array<std::vector<GraphId>, kBinCount> bins;
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
+    bins_t bins;
+    GraphTileBuilder::AddBins(bin_dir, t, bins, build_bounding_circles);
 
     // check the new tile is the same as the old one
     {
       ifstream o;
       o.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-      o.open(VALHALLA_SOURCE_DIR "test/data/bin_tiles/no_bin/2/000/" + test_tile.first,
-             std::ios::binary);
+      o.open(no_bin_dir + "/2/000/" + test_tile.first, std::ios::binary);
       std::string obytes((std::istreambuf_iterator<char>(o)), std::istreambuf_iterator<char>());
       ifstream n;
       n.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-      n.open("test/data/bin_tiles/bin/2/000/" + test_tile.first, std::ios::binary);
+      n.open(bin_dir + "/2/000/" + test_tile.first, std::ios::binary);
       std::string nbytes((std::istreambuf_iterator<char>(n)), std::istreambuf_iterator<char>());
-      EXPECT_EQ(obytes, nbytes) << "Old tile and new tile should be the same if not adding any bins";
+      EXPECT_EQ(obytes, nbytes) << "Old tile and new tile should be the same if not adding any bins ";
     }
 
-    // send fake bins, we'll throw one in each bin
+    // send fake bins and circles, we'll throw one in each bin
     for (auto& bin : bins)
-      bin.emplace_back(test_tile.second, 2, 0);
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
-    auto increase = bins.size() * sizeof(GraphId);
+      bin.push_back(std::make_pair(GraphId(test_tile.second, 2, 0), DiscretizedBoundingCircle()));
+    GraphTileBuilder::AddBins(bin_dir, t, bins, build_bounding_circles);
+    auto increase = bins.size() * (sizeof(GraphId) +
+                                   (build_bounding_circles ? sizeof(DiscretizedBoundingCircle) : 0));
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
+    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins, build_bounding_circles,
                          "New tiles edgeinfo or names arent matching up: 1");
 
     // append some more
     for (auto& bin : bins)
-      bin.emplace_back(test_tile.second, 2, 1);
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
-    increase = bins.size() * sizeof(GraphId) * 2;
+      bin.push_back(std::make_pair(GraphId(test_tile.second, 2, 1), DiscretizedBoundingCircle()));
+    GraphTileBuilder::AddBins(bin_dir, t, bins, build_bounding_circles);
+    increase += bins.size() *
+                (sizeof(GraphId) + (build_bounding_circles ? sizeof(DiscretizedBoundingCircle) : 0));
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
+    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins, build_bounding_circles,
                          "New tiles edgeinfo or names arent matching up: 2");
 
     // check that appending works
     t = GraphTile::Create(bin_dir, id);
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
-    for (auto& bin : bins)
-      bin.insert(bin.end(), bin.begin(), bin.end());
-
+    GraphTileBuilder::AddBins(bin_dir, t, bins, build_bounding_circles);
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
+    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins, build_bounding_circles,
                          "New tiles edgeinfo or names arent matching up: 3");
   }
 }
+INSTANTIATE_TEST_SUITE_P(With_Without_BoundingCircles, AddBinTest, testing::Values(false, true));
 
 struct fake_tile : public GraphTile {
 public:
@@ -331,7 +351,7 @@ TEST(GraphTileBuilder, TestBinEdges) {
   auto info = fake->edgeinfo(fake->directededge(0));
   EXPECT_EQ(info.encoded_shape(), encoded_shape7);
   GraphTileBuilder::tweeners_t tweeners;
-  auto bins = GraphTileBuilder::BinEdges(fake, tweeners);
+  auto bins = GraphTileBuilder::BinEdges(fake, tweeners, true);
   EXPECT_EQ(tweeners.size(), 1) << "This edge leaves a tile for 1 other tile and comes back.";
 }
 

@@ -109,9 +109,9 @@ protected:
   bool allow_verbose;
   bool allow_hard_exclusions;
   float max_distance_disable_hierarchy_culling;
+  std::unordered_set<baldr::GraphId> bbox_intersection_;
 
   // for /tile requests
-  size_t candidate_query_cache_size_;
   meili::CandidateGridQuery candidate_query_;
   ZoomConfig min_zoom_road_class_;
   std::string mvt_cache_dir_;
