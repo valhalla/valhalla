@@ -222,10 +222,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       continue;
     }
 
-    // if (edge->is_shortcut())  {
-    //   std::cout << std::endl;
-    // }
-
     // filter road classes by zoom
     auto road_class = edge->classification();
     uint32_t road_class_idx = static_cast<uint32_t>(road_class);

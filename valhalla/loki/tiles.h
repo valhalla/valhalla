@@ -50,7 +50,6 @@ public:
                             const volatile baldr::TrafficSpeed* live_speed) {
     for (const auto& def : arr) {
       if (controller(def.attribute_flag)) {
-        const auto key = this->*(def.key_member);
         def.prop_func(this, def.key_member, feature, edge, edge_info, live_speed);
       }
     }
