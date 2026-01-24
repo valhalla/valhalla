@@ -8,6 +8,9 @@ readme = "README.md"
 license = "MIT"
 license-files = ["COPYING"]
 
+[project.optional-dependencies]
+typing = ["numpy>=2.0.0,<3.0.0"]  # only needed for .pyi typing
+
 [project.urls]
 Homepage = "https://github.com/valhalla/valhalla"
 Documentation = "https://valhalla.github.io/valhalla/"

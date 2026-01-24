@@ -1,6 +1,13 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: access for backward edges in MVT contains data from the correct edge [#5834](https://github.com/valhalla/valhalla/pull/5834) 
+   * FIXED: use correct edge for directional attributes in MVT [#5836](https://github.com/valhalla/valhalla/pull/5836) 
+* **Enhancement**
+
+## Release Date: 2026-01-15 Valhalla 3.6.2
+* **Removed**
+* **Bug Fix**
    * FIXED: remove `libgeotiff` from pkg-config file `Requires` [#5737](https://github.com/valhalla/valhalla/pull/5737) 
    * FIXED: Fix + prefix handling in to_int/to_float utilities [#5746](https://github.com/valhalla/valhalla/pull/5746)
    * FIXED: Use a unique target name for generating symlinks. Fixes #5751. [#5752](https://github.com/valhalla/valhalla/pull/5752)
@@ -8,6 +15,7 @@
    * FIXED: Access handling for unknown OSM Way types like `"disused:route=ferry"` [#5768](https://github.com/valhalla/valhalla/pull/5768)
    * FIXED: `DirectedEdge index out of bounds` in transit tiles [#5782](https://github.com/valhalla/valhalla/pull/5782)
    * FIXED: Add error code for isochrone requests exceeding distance contour limit [#5781](https://github.com/valhalla/valhalla/pull/5781)
+   * FIXED: Add numpy as optional runtime dependency for Python bindings [#5823](https://github.com/valhalla/valhalla/pull/5823)
 * **Enhancement**
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
    * ADDED: optional libvalhalla_test install target [#5719](https://github.com/valhalla/valhalla/pull/5719)
@@ -35,6 +43,11 @@
    * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
    * ADDED: NodeJS bindings support PBF outputs [#5794](https://github.com/valhalla/valhalla/pull/5794)
    * ADDED: Handle `vehicle` tags for OSM Ways [#5802](https://github.com/valhalla/valhalla/pull/5802)
+   * ADDED: Clean up boost::geometry types [#5818](https://github.com/valhalla/valhalla/pull/5818)
+   * CHANGED: Distance-based hierarchy limits in CostMatrix [#5812](https://github.com/valhalla/valhalla/pull/5812)
+   * CHANGED: Move location update in CostMatrix [#5813](https://github.com/valhalla/valhalla/pull/5813)
+   * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
+   * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1

@@ -138,27 +138,8 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeSignalFwd, false},
     {kEdgeStopSignFwd, false},
     {kEdgeYieldFwd, false},
-    {kEdgeAccessAutoFwd, false},
-    {kEdgeAccessPedestrianFwd, false},
-    {kEdgeAccessBicycleFwd, false},
-    {kEdgeAccessTruckFwd, false},
-    {kEdgeAccessEmergencyFwd, false},
-    {kEdgeAccessTaxiFwd, false},
-    {kEdgeAccessBusFwd, false},
-    {kEdgeAccessHovFwd, false},
-    {kEdgeAccessWheelchairFwd, false},
-    {kEdgeAccessMopedFwd, false},
-    {kEdgeAccessMotorcycleFwd, false},
+    {kEdgeAccessFwd, false},
     {kEdgeLiveSpeedFwd, false},
-    // the next live speed ones are not actually settable, kEdgeLiveSpeedFwd controls them
-    {kEdgeLiveSpeed1Fwd, false},
-    {kEdgeLiveSpeed2Fwd, false},
-    {kEdgeLiveSpeed3Fwd, false},
-    {kEdgeLiveSpeedBreakpoint1Fwd, false},
-    {kEdgeLiveSpeedBreakpoint2Fwd, false},
-    {kEdgeLiveSpeedCongestion1Fwd, false},
-    {kEdgeLiveSpeedCongestion2Fwd, false},
-    {kEdgeLiveSpeedCongestion3Fwd, false},
 
     {kEdgeSpeedBwd, false},
     {kEdgeDeadendBwd, false},
@@ -167,27 +148,8 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeSignalBwd, false},
     {kEdgeStopSignBwd, false},
     {kEdgeYieldBwd, false},
-    {kEdgeAccessAutoBwd, false},
-    {kEdgeAccessPedestrianBwd, false},
-    {kEdgeAccessBicycleBwd, false},
-    {kEdgeAccessTruckBwd, false},
-    {kEdgeAccessEmergencyBwd, false},
-    {kEdgeAccessTaxiBwd, false},
-    {kEdgeAccessBusBwd, false},
-    {kEdgeAccessHovBwd, false},
-    {kEdgeAccessWheelchairBwd, false},
-    {kEdgeAccessMopedBwd, false},
-    {kEdgeAccessMotorcycleBwd, false},
+    {kEdgeAccessBwd, false},
     {kEdgeLiveSpeedBwd, false},
-    // the next live speed ones are not actually user-settable, kEdgeLiveSpeedBwd controls them
-    {kEdgeLiveSpeed1Bwd, false},
-    {kEdgeLiveSpeed2Bwd, false},
-    {kEdgeLiveSpeed3Bwd, false},
-    {kEdgeLiveSpeedBreakpoint1Bwd, false},
-    {kEdgeLiveSpeedBreakpoint2Bwd, false},
-    {kEdgeLiveSpeedCongestion1Bwd, false},
-    {kEdgeLiveSpeedCongestion2Bwd, false},
-    {kEdgeLiveSpeedCongestion3Bwd, false},
 
     // Node keys
     {kIncidents, false},
@@ -232,17 +194,7 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kNodeModeChangeAllowed, false},
     {kNodeNamedIntersection, false},
     {kNodeIsTransit, false},
-    {kNodeAccessAuto, false},
-    {kNodeAccessPedestrian, false},
-    {kNodeAccessBicycle, false},
-    {kNodeAccessTruck, false},
-    {kNodeAccessEmergency, false},
-    {kNodeAccessTaxi, false},
-    {kNodeAccessBus, false},
-    {kNodeAccessHov, false},
-    {kNodeAccessWheelchair, false},
-    {kNodeAccessMoped, false},
-    {kNodeAccessMotorcycle, false},
+    {kNodeAccess, false},
 
     // Top level: admin list, full shape, and shape bounding box keys
     {kOsmChangeset, true},
@@ -304,28 +256,6 @@ AttributesController::AttributesController(const Options& options, bool is_stric
     }
     default:
       break;
-  }
-
-  // batch-enable live attributes
-  if (attributes.at(kEdgeLiveSpeedFwd)) {
-    attributes.at(kEdgeLiveSpeed1Fwd) = true;
-    attributes.at(kEdgeLiveSpeed2Fwd) = true;
-    attributes.at(kEdgeLiveSpeed3Fwd) = true;
-    attributes.at(kEdgeLiveSpeedBreakpoint1Fwd) = true;
-    attributes.at(kEdgeLiveSpeedBreakpoint2Fwd) = true;
-    attributes.at(kEdgeLiveSpeedCongestion1Fwd) = true;
-    attributes.at(kEdgeLiveSpeedCongestion2Fwd) = true;
-    attributes.at(kEdgeLiveSpeedCongestion3Fwd) = true;
-  }
-  if (attributes.at(kEdgeLiveSpeedBwd)) {
-    attributes.at(kEdgeLiveSpeed1Bwd) = true;
-    attributes.at(kEdgeLiveSpeed2Bwd) = true;
-    attributes.at(kEdgeLiveSpeed3Bwd) = true;
-    attributes.at(kEdgeLiveSpeedBreakpoint1Bwd) = true;
-    attributes.at(kEdgeLiveSpeedBreakpoint2Bwd) = true;
-    attributes.at(kEdgeLiveSpeedCongestion1Bwd) = true;
-    attributes.at(kEdgeLiveSpeedCongestion2Bwd) = true;
-    attributes.at(kEdgeLiveSpeedCongestion3Bwd) = true;
   }
 
   // Set the edge elevation attributes based on elevation interval being set

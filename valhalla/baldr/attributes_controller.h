@@ -111,26 +111,8 @@ constexpr std::string_view kEdgeTruckSpeedFwd = "edge.truck_speed_forward";
 constexpr std::string_view kEdgeSignalFwd = "edge.traffic_signal_forward";
 constexpr std::string_view kEdgeStopSignFwd = "edge.stop_sign_forward";
 constexpr std::string_view kEdgeYieldFwd = "edge.yield_sign";
-constexpr std::string_view kEdgeAccessAutoFwd = "edge.access_auto_forward";
-constexpr std::string_view kEdgeAccessPedestrianFwd = "edge.access_pedestrian_forward";
-constexpr std::string_view kEdgeAccessBicycleFwd = "edge.access_bicycle_forward";
-constexpr std::string_view kEdgeAccessTruckFwd = "edge.access_truck_forward";
-constexpr std::string_view kEdgeAccessEmergencyFwd = "edge.access_emergency_forward";
-constexpr std::string_view kEdgeAccessTaxiFwd = "edge.access_taxi_forward";
-constexpr std::string_view kEdgeAccessBusFwd = "edge.access_bus_forward";
-constexpr std::string_view kEdgeAccessHovFwd = "edge.access_hov_forward";
-constexpr std::string_view kEdgeAccessWheelchairFwd = "edge.access_wheelchair_forward";
-constexpr std::string_view kEdgeAccessMopedFwd = "edge.access_moped_forward";
-constexpr std::string_view kEdgeAccessMotorcycleFwd = "edge.access_motorcycle_forward";
+constexpr std::string_view kEdgeAccessFwd = "edge.access_forward";
 constexpr std::string_view kEdgeLiveSpeedFwd = "edge.live_speed_forward";
-constexpr std::string_view kEdgeLiveSpeed1Fwd = "edge.live_speed_forward_speed1";
-constexpr std::string_view kEdgeLiveSpeed2Fwd = "edge.live_speed_forward_speed2";
-constexpr std::string_view kEdgeLiveSpeed3Fwd = "edge.live_speed_forward_speed3";
-constexpr std::string_view kEdgeLiveSpeedBreakpoint1Fwd = "edge.live_speed_forward_breakpoint1";
-constexpr std::string_view kEdgeLiveSpeedBreakpoint2Fwd = "edge.live_speed_forward_breakpoint2";
-constexpr std::string_view kEdgeLiveSpeedCongestion1Fwd = "edge.live_speed_forward_congestion1";
-constexpr std::string_view kEdgeLiveSpeedCongestion2Fwd = "edge.live_speed_forward_congestion2";
-constexpr std::string_view kEdgeLiveSpeedCongestion3Fwd = "edge.live_speed_forward_congestion3";
 
 constexpr std::string_view kEdgeSpeedBwd = "edge.speed_backward";
 constexpr std::string_view kEdgeDeadendBwd = "edge.deadend_backward";
@@ -139,27 +121,8 @@ constexpr std::string_view kEdgeTruckSpeedBwd = "edge.truck_speed_backward";
 constexpr std::string_view kEdgeSignalBwd = "edge.traffic_signal_backward";
 constexpr std::string_view kEdgeStopSignBwd = "edge.stop_sign_backward";
 constexpr std::string_view kEdgeYieldBwd = "edge.yield_sign_backward";
-constexpr std::string_view kEdgeAccessAutoBwd = "edge.access_auto_backward";
-constexpr std::string_view kEdgeAccessPedestrianBwd = "edge.access_pedestrian_backward";
-constexpr std::string_view kEdgeAccessBicycleBwd = "edge.access_bicycle_backward";
-constexpr std::string_view kEdgeAccessTruckBwd = "edge.access_truck_backward";
-constexpr std::string_view kEdgeAccessEmergencyBwd = "edge.access_emergency_backward";
-constexpr std::string_view kEdgeAccessTaxiBwd = "edge.access_taxi_backward";
-constexpr std::string_view kEdgeAccessBusBwd = "edge.access_bus_backward";
-constexpr std::string_view kEdgeAccessHovBwd = "edge.access_hov_backward";
-constexpr std::string_view kEdgeAccessWheelchairBwd = "edge.access_wheelchair_backward";
-constexpr std::string_view kEdgeAccessMopedBwd = "edge.access_moped_backward";
-constexpr std::string_view kEdgeAccessMotorcycleBwd = "edge.access_motorcycle_backward";
+constexpr std::string_view kEdgeAccessBwd = "edge.access_backward";
 constexpr std::string_view kEdgeLiveSpeedBwd = "edge.live_speed_backward";
-constexpr std::string_view kEdgeLiveSpeed1Bwd = "edge.live_speed_backward_speed1";
-constexpr std::string_view kEdgeLiveSpeed2Bwd = "edge.live_speed_backward_speed2";
-constexpr std::string_view kEdgeLiveSpeed3Bwd = "edge.live_speed_backward_speed3";
-constexpr std::string_view kEdgeLiveSpeedBreakpoint1Bwd = "edge.live_speed_backward_breakpoint1";
-constexpr std::string_view kEdgeLiveSpeedBreakpoint2Bwd = "edge.live_speed_backward_breakpoint2";
-constexpr std::string_view kEdgeLiveSpeedBreakpoint3Bwd = "edge.live_speed_backward_breakpoint3";
-constexpr std::string_view kEdgeLiveSpeedCongestion1Bwd = "edge.live_speed_backward_congestion1";
-constexpr std::string_view kEdgeLiveSpeedCongestion2Bwd = "edge.live_speed_backward_congestion2";
-constexpr std::string_view kEdgeLiveSpeedCongestion3Bwd = "edge.live_speed_backward_congestion3";
 
 // Node keys
 constexpr std::string_view kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
@@ -214,17 +177,7 @@ constexpr std::string_view kNodeNamedIntersection = "node.named_intersection";
 constexpr std::string_view kNodeIsTransit = "node.is_transit";
 
 // Node access
-constexpr std::string_view kNodeAccessAuto = "node.access_auto";
-constexpr std::string_view kNodeAccessPedestrian = "node.access_pedestrian";
-constexpr std::string_view kNodeAccessBicycle = "node.access_bicycle";
-constexpr std::string_view kNodeAccessTruck = "node.access_truck";
-constexpr std::string_view kNodeAccessEmergency = "node.access_emergency";
-constexpr std::string_view kNodeAccessTaxi = "node.access_taxi";
-constexpr std::string_view kNodeAccessBus = "node.access_bus";
-constexpr std::string_view kNodeAccessHov = "node.access_hov";
-constexpr std::string_view kNodeAccessWheelchair = "node.access_wheelchair";
-constexpr std::string_view kNodeAccessMoped = "node.access_moped";
-constexpr std::string_view kNodeAccessMotorcycle = "node.access_motorcycle";
+constexpr std::string_view kNodeAccess = "node.access";
 
 // Top level: osm changeset, admin list, and full shape keys
 constexpr std::string_view kOsmChangeset = "osm_changeset";

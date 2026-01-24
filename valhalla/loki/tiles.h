@@ -135,29 +135,9 @@ public:
   vtzero::index_value key_yield_sign_fwd_;
   vtzero::index_value key_yield_sign_rev_;
   // Access properties (forward)
-  vtzero::index_value key_access_auto_fwd_;
-  vtzero::index_value key_access_pedestrian_fwd_;
-  vtzero::index_value key_access_bicycle_fwd_;
-  vtzero::index_value key_access_truck_fwd_;
-  vtzero::index_value key_access_emergency_fwd_;
-  vtzero::index_value key_access_taxi_fwd_;
-  vtzero::index_value key_access_bus_fwd_;
-  vtzero::index_value key_access_hov_fwd_;
-  vtzero::index_value key_access_wheelchair_fwd_;
-  vtzero::index_value key_access_moped_fwd_;
-  vtzero::index_value key_access_motorcycle_fwd_;
+  vtzero::index_value key_access_fwd_;
   // Access properties (reverse)
-  vtzero::index_value key_access_auto_rev_;
-  vtzero::index_value key_access_pedestrian_rev_;
-  vtzero::index_value key_access_bicycle_rev_;
-  vtzero::index_value key_access_truck_rev_;
-  vtzero::index_value key_access_emergency_rev_;
-  vtzero::index_value key_access_taxi_rev_;
-  vtzero::index_value key_access_bus_rev_;
-  vtzero::index_value key_access_hov_rev_;
-  vtzero::index_value key_access_wheelchair_rev_;
-  vtzero::index_value key_access_moped_rev_;
-  vtzero::index_value key_access_motorcycle_rev_;
+  vtzero::index_value key_access_rev_;
   // Traffic speed keys (forward)
   vtzero::index_value key_live_speed_fwd_;
   vtzero::index_value key_live_speed1_fwd_;
@@ -359,9 +339,9 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         },
     },
     {
-        "access:auto:fwd",
-        baldr::kEdgeAccessAutoFwd,
-        &EdgesLayerBuilder::key_access_auto_fwd_,
+        "access:fwd",
+        baldr::kEdgeAccessFwd,
+        &EdgesLayerBuilder::key_access_fwd_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
            vtzero::linestring_feature_builder& feature,
@@ -369,158 +349,7 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed*) {
           feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kAutoAccess)));
-        },
-    },
-    {
-        "access:pedestrian:fwd",
-        baldr::kEdgeAccessPedestrianFwd,
-        &EdgesLayerBuilder::key_access_pedestrian_fwd_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kPedestrianAccess)));
-        },
-    },
-    {
-        "access:bicycle:fwd",
-        baldr::kEdgeAccessBicycleFwd,
-        &EdgesLayerBuilder::key_access_bicycle_fwd_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kBicycleAccess)));
-        },
-    },
-    {
-        "access:truck:fwd",
-        baldr::kEdgeAccessTruckFwd,
-        &EdgesLayerBuilder::key_access_truck_fwd_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kTruckAccess)));
-        },
-    },
-    {
-        "access:emergency:fwd",
-        baldr::kEdgeAccessEmergencyFwd,
-        &EdgesLayerBuilder::key_access_emergency_fwd_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kEmergencyAccess)));
-        },
-    },
-    {
-        "access:taxi:fwd",
-        baldr::kEdgeAccessTaxiFwd,
-        &EdgesLayerBuilder::key_access_taxi_fwd_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kTaxiAccess)));
-        },
-    },
-    {
-        "access:bus:fwd",
-        baldr::kEdgeAccessBusFwd,
-        &EdgesLayerBuilder::key_access_bus_fwd_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kBusAccess)));
-        },
-    },
-    {
-        "access:hov:fwd",
-        baldr::kEdgeAccessHovFwd,
-        &EdgesLayerBuilder::key_access_hov_fwd_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kHOVAccess)));
-        },
-    },
-    {
-        "access:wheelchair:fwd",
-        baldr::kEdgeAccessWheelchairFwd,
-        &EdgesLayerBuilder::key_access_wheelchair_fwd_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kWheelchairAccess)));
-        },
-    },
-    {
-        "access:moped:fwd",
-        baldr::kEdgeAccessMopedFwd,
-        &EdgesLayerBuilder::key_access_moped_fwd_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kMopedAccess)));
-        },
-    },
-    {
-        "access:motorcycle:fwd",
-        baldr::kEdgeAccessMotorcycleFwd,
-        &EdgesLayerBuilder::key_access_motorcycle_fwd_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.forwardaccess() & baldr::kMotorcycleAccess)));
+                               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess())));
         },
     },
 };
@@ -560,7 +389,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
     // kept for conceptual consistency sake
     {
         "live_speed:fwd:speed1",
-        baldr::kEdgeLiveSpeed1Fwd,
+        baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_speed1_fwd_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -571,7 +400,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
     },
     {
         "live_speed:fwd:speed2",
-        baldr::kEdgeLiveSpeed2Fwd,
+        baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_speed2_fwd_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -582,7 +411,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
     },
     {
         "live_speed:fwd:speed3",
-        baldr::kEdgeLiveSpeed3Fwd,
+        baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_speed3_fwd_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -593,7 +422,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
     },
     {
         "live_speed:fwd:bp1",
-        baldr::kEdgeLiveSpeedBreakpoint1Fwd,
+        baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_breakpoint1_fwd_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -604,7 +433,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
     },
     {
         "live_speed:fwd:bp2",
-        baldr::kEdgeLiveSpeedBreakpoint2Fwd,
+        baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_breakpoint2_fwd_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -615,7 +444,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
     },
     {
         "live_speed:fwd:congestion1",
-        baldr::kEdgeLiveSpeedCongestion1Fwd,
+        baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_congestion1_fwd_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -626,7 +455,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
     },
     {
         "live_speed:fwd:congestion2",
-        baldr::kEdgeLiveSpeedCongestion2Fwd,
+        baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_congestion2_fwd_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -637,7 +466,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
     },
     {
         "live_speed:fwd:congestion3",
-        baldr::kEdgeLiveSpeedCongestion3Fwd,
+        baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_congestion3_fwd_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -750,9 +579,9 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         },
     },
     {
-        "access:auto:bwd",
-        baldr::kEdgeAccessAutoBwd,
-        &EdgesLayerBuilder::key_access_auto_rev_,
+        "access:bwd",
+        baldr::kEdgeAccessBwd,
+        &EdgesLayerBuilder::key_access_rev_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
            vtzero::linestring_feature_builder& feature,
@@ -760,158 +589,7 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed*) {
           feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kAutoAccess)));
-        },
-    },
-    {
-        "access:pedestrian:bwd",
-        baldr::kEdgeAccessPedestrianBwd,
-        &EdgesLayerBuilder::key_access_pedestrian_rev_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kPedestrianAccess)));
-        },
-    },
-    {
-        "access:bicycle:bwd",
-        baldr::kEdgeAccessBicycleBwd,
-        &EdgesLayerBuilder::key_access_bicycle_rev_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kBicycleAccess)));
-        },
-    },
-    {
-        "access:truck:bwd",
-        baldr::kEdgeAccessTruckBwd,
-        &EdgesLayerBuilder::key_access_truck_rev_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kTruckAccess)));
-        },
-    },
-    {
-        "access:emergency:bwd",
-        baldr::kEdgeAccessEmergencyBwd,
-        &EdgesLayerBuilder::key_access_emergency_rev_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kEmergencyAccess)));
-        },
-    },
-    {
-        "access:taxi:bwd",
-        baldr::kEdgeAccessTaxiBwd,
-        &EdgesLayerBuilder::key_access_taxi_rev_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kTaxiAccess)));
-        },
-    },
-    {
-        "access:bus:bwd",
-        baldr::kEdgeAccessBusBwd,
-        &EdgesLayerBuilder::key_access_bus_rev_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kBusAccess)));
-        },
-    },
-    {
-        "access:hov:bwd",
-        baldr::kEdgeAccessHovBwd,
-        &EdgesLayerBuilder::key_access_hov_rev_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kHOVAccess)));
-        },
-    },
-    {
-        "access:wheelchair:bwd",
-        baldr::kEdgeAccessWheelchairBwd,
-        &EdgesLayerBuilder::key_access_wheelchair_rev_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kWheelchairAccess)));
-        },
-    },
-    {
-        "access:moped:bwd",
-        baldr::kEdgeAccessMopedBwd,
-        &EdgesLayerBuilder::key_access_moped_rev_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kMopedAccess)));
-        },
-    },
-    {
-        "access:motorcycle:bwd",
-        baldr::kEdgeAccessMotorcycleBwd,
-        &EdgesLayerBuilder::key_access_motorcycle_rev_,
-        [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
-           vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
-           const baldr::EdgeInfo&,
-           const volatile baldr::TrafficSpeed*) {
-          feature.add_property(layer_builder->*(key_member),
-                               static_cast<uint32_t>(
-                                   static_cast<bool>(e.reverseaccess() & baldr::kMotorcycleAccess)));
+                               static_cast<uint32_t>(static_cast<bool>(e.forwardaccess())));
         },
     },
 };
@@ -950,7 +628,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
     },
     {
         "live_speed:bwd:speed1",
-        baldr::kEdgeLiveSpeed1Bwd,
+        baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_speed1_rev_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -961,7 +639,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
     },
     {
         "live_speed:bwd:speed2",
-        baldr::kEdgeLiveSpeed2Bwd,
+        baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_speed2_rev_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -972,7 +650,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
     },
     {
         "live_speed:bwd:speed3",
-        baldr::kEdgeLiveSpeed3Bwd,
+        baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_speed3_rev_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -983,7 +661,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
     },
     {
         "live_speed:bwd:bp1",
-        baldr::kEdgeLiveSpeedBreakpoint1Bwd,
+        baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_breakpoint1_rev_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -994,7 +672,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
     },
     {
         "live_speed:bwd:bp2",
-        baldr::kEdgeLiveSpeedBreakpoint2Bwd,
+        baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_breakpoint2_rev_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -1005,7 +683,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
     },
     {
         "live_speed:bwd:congestion1",
-        baldr::kEdgeLiveSpeedCongestion1Bwd,
+        baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_congestion1_rev_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -1016,7 +694,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
     },
     {
         "live_speed:bwd:congestion2",
-        baldr::kEdgeLiveSpeedCongestion2Bwd,
+        baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_congestion2_rev_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -1027,7 +705,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
     },
     {
         "live_speed:bwd:congestion3",
-        baldr::kEdgeLiveSpeedCongestion3Bwd,
+        baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_congestion3_rev_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
@@ -1106,8 +784,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed*) {
           feature.add_property(layer_builder->*(key_member),
-                               vtzero::encoded_property_value(
-                                   static_cast<uint32_t>(e.is_shortcut())));
+                               vtzero::encoded_property_value(static_cast<bool>(e.is_shortcut())));
         },
     },
     {
@@ -1658,96 +1335,11 @@ static constexpr NodeAttributeTile kNodeAttributes[] = {
         },
     },
     {
-        "access:auto",
-        baldr::kNodeAccessAuto,
+        "access",
+        baldr::kNodeAccess,
         &NodesLayerBuilder::key_access_auto_,
         [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & baldr::kAutoAccess));
-        },
-    },
-    {
-        "access:pedestrian",
-        baldr::kNodeAccessPedestrian,
-        &NodesLayerBuilder::key_access_pedestrian_,
-        [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(
-              static_cast<bool>(ni.access() & baldr::kPedestrianAccess));
-        },
-    },
-    {
-        "access:bicycle",
-        baldr::kNodeAccessBicycle,
-        &NodesLayerBuilder::key_access_bicycle_,
-        [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(
-              static_cast<bool>(ni.access() & baldr::kBicycleAccess));
-        },
-    },
-    {
-        "access:truck",
-        baldr::kNodeAccessTruck,
-        &NodesLayerBuilder::key_access_truck_,
-        [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & baldr::kTruckAccess));
-        },
-    },
-    {
-        "access:emergency",
-        baldr::kNodeAccessEmergency,
-        &NodesLayerBuilder::key_access_emergency_,
-        [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(
-              static_cast<bool>(ni.access() & baldr::kEmergencyAccess));
-        },
-    },
-    {
-        "access:taxi",
-        baldr::kNodeAccessTaxi,
-        &NodesLayerBuilder::key_access_taxi_,
-        [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & baldr::kTaxiAccess));
-        },
-    },
-    {
-        "access:bus",
-        baldr::kNodeAccessBus,
-        &NodesLayerBuilder::key_access_bus_,
-        [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & baldr::kBusAccess));
-        },
-    },
-    {
-        "access:hov",
-        baldr::kNodeAccessHov,
-        &NodesLayerBuilder::key_access_hov_,
-        [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & baldr::kHOVAccess));
-        },
-    },
-    {
-        "access:wheelchair",
-        baldr::kNodeAccessWheelchair,
-        &NodesLayerBuilder::key_access_wheelchair_,
-        [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(
-              static_cast<bool>(ni.access() & baldr::kWheelchairAccess));
-        },
-    },
-    {
-        "access:moped",
-        baldr::kNodeAccessMoped,
-        &NodesLayerBuilder::key_access_moped_,
-        [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(static_cast<bool>(ni.access() & baldr::kMopedAccess));
-        },
-    },
-    {
-        "access:motorcycle",
-        baldr::kNodeAccessMotorcycle,
-        &NodesLayerBuilder::key_access_motorcycle_,
-        [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(
-              static_cast<bool>(ni.access() & baldr::kMotorcycleAccess));
+          return vtzero::encoded_property_value(static_cast<bool>(ni.access()));
         },
     },
 };
@@ -1762,27 +1354,17 @@ static const std::unordered_map<std::string_view, std::string_view> kEdgePropToA
     {"traffic_signal:fwd", baldr::kEdgeSignalFwd},
     {"stop_sign:fwd", baldr::kEdgeStopSignFwd},
     {"yield_sign:fwd", baldr::kEdgeYieldFwd},
-    {"access:auto:fwd", baldr::kEdgeAccessAutoFwd},
-    {"access:pedestrian:fwd", baldr::kEdgeAccessPedestrianFwd},
-    {"access:bicycle:fwd", baldr::kEdgeAccessBicycleFwd},
-    {"access:truck:fwd", baldr::kEdgeAccessTruckFwd},
-    {"access:emergency:fwd", baldr::kEdgeAccessEmergencyFwd},
-    {"access:taxi:fwd", baldr::kEdgeAccessTaxiFwd},
-    {"access:bus:fwd", baldr::kEdgeAccessBusFwd},
-    {"access:hov:fwd", baldr::kEdgeAccessHovFwd},
-    {"access:wheelchair:fwd", baldr::kEdgeAccessWheelchairFwd},
-    {"access:moped:fwd", baldr::kEdgeAccessMopedFwd},
-    {"access:motorcycle:fwd", baldr::kEdgeAccessMotorcycleFwd},
+    {"access:fwd", baldr::kEdgeAccessFwd},
     // Forward live speed
     {"live_speed:fwd", baldr::kEdgeLiveSpeedFwd},
-    {"live_speed:fwd:speed1", baldr::kEdgeLiveSpeed1Fwd},
-    {"live_speed:fwd:speed2", baldr::kEdgeLiveSpeed2Fwd},
-    {"live_speed:fwd:speed3", baldr::kEdgeLiveSpeed3Fwd},
-    {"live_speed:fwd:bp1", baldr::kEdgeLiveSpeedBreakpoint1Fwd},
-    {"live_speed:fwd:bp2", baldr::kEdgeLiveSpeedBreakpoint2Fwd},
-    {"live_speed:fwd:congestion1", baldr::kEdgeLiveSpeedCongestion1Fwd},
-    {"live_speed:fwd:congestion2", baldr::kEdgeLiveSpeedCongestion2Fwd},
-    {"live_speed:fwd:congestion3", baldr::kEdgeLiveSpeedCongestion3Fwd},
+    {"live_speed:fwd:speed1", baldr::kEdgeLiveSpeedFwd},
+    {"live_speed:fwd:speed2", baldr::kEdgeLiveSpeedFwd},
+    {"live_speed:fwd:speed3", baldr::kEdgeLiveSpeedFwd},
+    {"live_speed:fwd:bp1", baldr::kEdgeLiveSpeedFwd},
+    {"live_speed:fwd:bp2", baldr::kEdgeLiveSpeedFwd},
+    {"live_speed:fwd:congestion1", baldr::kEdgeLiveSpeedFwd},
+    {"live_speed:fwd:congestion2", baldr::kEdgeLiveSpeedFwd},
+    {"live_speed:fwd:congestion3", baldr::kEdgeLiveSpeedFwd},
     // Reverse edge attributes
     {"speed:bwd", baldr::kEdgeSpeedBwd},
     {"deadend:bwd", baldr::kEdgeDeadendBwd},
@@ -1791,27 +1373,17 @@ static const std::unordered_map<std::string_view, std::string_view> kEdgePropToA
     {"traffic_signal:bwd", baldr::kEdgeSignalBwd},
     {"stop_sign:bwd", baldr::kEdgeStopSignBwd},
     {"yield_sign:bwd", baldr::kEdgeYieldBwd},
-    {"access:auto:bwd", baldr::kEdgeAccessAutoBwd},
-    {"access:pedestrian:bwd", baldr::kEdgeAccessPedestrianBwd},
-    {"access:bicycle:bwd", baldr::kEdgeAccessBicycleBwd},
-    {"access:truck:bwd", baldr::kEdgeAccessTruckBwd},
-    {"access:emergency:bwd", baldr::kEdgeAccessEmergencyBwd},
-    {"access:taxi:bwd", baldr::kEdgeAccessTaxiBwd},
-    {"access:bus:bwd", baldr::kEdgeAccessBusBwd},
-    {"access:hov:bwd", baldr::kEdgeAccessHovBwd},
-    {"access:wheelchair:bwd", baldr::kEdgeAccessWheelchairBwd},
-    {"access:moped:bwd", baldr::kEdgeAccessMopedBwd},
-    {"access:motorcycle:bwd", baldr::kEdgeAccessMotorcycleBwd},
+    {"access:bwd", baldr::kEdgeAccessBwd},
     // Reverse live speed
     {"live_speed:bwd", baldr::kEdgeLiveSpeedBwd},
-    {"live_speed:bwd:speed1", baldr::kEdgeLiveSpeed1Bwd},
-    {"live_speed:bwd:speed2", baldr::kEdgeLiveSpeed2Bwd},
-    {"live_speed:bwd:speed3", baldr::kEdgeLiveSpeed3Bwd},
-    {"live_speed:bwd:bp1", baldr::kEdgeLiveSpeedBreakpoint1Bwd},
-    {"live_speed:bwd:bp2", baldr::kEdgeLiveSpeedBreakpoint2Bwd},
-    {"live_speed:bwd:congestion1", baldr::kEdgeLiveSpeedCongestion1Bwd},
-    {"live_speed:bwd:congestion2", baldr::kEdgeLiveSpeedCongestion2Bwd},
-    {"live_speed:bwd:congestion3", baldr::kEdgeLiveSpeedCongestion3Bwd},
+    {"live_speed:bwd:speed1", baldr::kEdgeLiveSpeedBwd},
+    {"live_speed:bwd:speed2", baldr::kEdgeLiveSpeedBwd},
+    {"live_speed:bwd:speed3", baldr::kEdgeLiveSpeedBwd},
+    {"live_speed:bwd:bp1", baldr::kEdgeLiveSpeedBwd},
+    {"live_speed:bwd:bp2", baldr::kEdgeLiveSpeedBwd},
+    {"live_speed:bwd:congestion1", baldr::kEdgeLiveSpeedBwd},
+    {"live_speed:bwd:congestion2", baldr::kEdgeLiveSpeedBwd},
+    {"live_speed:bwd:congestion3", baldr::kEdgeLiveSpeedBwd},
     // Shared edge attributes
     {"use", baldr::kEdgeUse},
     {"tunnel", baldr::kEdgeTunnel},
@@ -1867,17 +1439,7 @@ static const std::unordered_map<std::string_view, std::string_view> kNodePropToA
     {"mode_change_allowed", baldr::kNodeModeChangeAllowed},
     {"named_intersection", baldr::kNodeNamedIntersection},
     {"timezone", baldr::kNodeTimeZone},
-    {"access:auto", baldr::kNodeAccessAuto},
-    {"access:pedestrian", baldr::kNodeAccessPedestrian},
-    {"access:bicycle", baldr::kNodeAccessBicycle},
-    {"access:truck", baldr::kNodeAccessTruck},
-    {"access:emergency", baldr::kNodeAccessEmergency},
-    {"access:taxi", baldr::kNodeAccessTaxi},
-    {"access:bus", baldr::kNodeAccessBus},
-    {"access:hov", baldr::kNodeAccessHov},
-    {"access:wheelchair", baldr::kNodeAccessWheelchair},
-    {"access:moped", baldr::kNodeAccessMoped},
-    {"access:motorcycle", baldr::kNodeAccessMotorcycle},
+    {"access", baldr::kNodeAccess},
     // additional keys, they're added directly, not via NodeAttribute
     {"iso_3166_1", baldr::kAdminCountryCode},
     {"iso_3166_2", baldr::kAdminStateCode},

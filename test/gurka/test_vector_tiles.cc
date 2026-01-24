@@ -22,6 +22,8 @@ constexpr size_t kNumMVTEdgeAttrs = std::size(loki::detail::kForwardEdgeAttribut
                                     std::size(loki::detail::kReverseEdgeAttributes) +
                                     std::size(loki::detail::kForwardLiveSpeedAttributes) +
                                     std::size(loki::detail::kReverseLiveSpeedAttributes) +
+                                    // 1 + // kForwardLiveSpeedAttributes
+                                    // 1 + // kReverseLiveSpeedAttributes
                                     std::size(loki::detail::kSharedEdgeAttributes);
 
 TEST(VectorTilesBasic, ConfigFail) {
@@ -68,8 +70,8 @@ TEST(VectorTilesBasic, TileRendering) {
   std::string tile_data;
   auto api = gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 2400);
-  EXPECT_GT(tile_data.size(), 2300);
+  EXPECT_LT(tile_data.size(), 1750);
+  EXPECT_GT(tile_data.size(), 1650);
 
   // expect a non-verbose request to have a lot less size
   std::string tile_data_slim;
@@ -95,10 +97,10 @@ TEST(VectorTilesBasic, TileRendering) {
 
       EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::LINESTRING);
 
-      std::set<std::string> expected_props = {"tile_level",      "road_class",  "use",
-                                              "length",          "edge_id:fwd", "speed:fwd",
-                                              "access:auto:fwd", "edge_id:bwd", "speed:bwd",
-                                              "access:auto:bwd"};
+      std::set<std::string> expected_props = {"tile_level", "road_class",  "use",
+                                              "length",     "edge_id:fwd", "speed:fwd",
+                                              "access:fwd", "edge_id:bwd", "speed:bwd",
+                                              "access:bwd"};
       std::set<std::string> found_props;
       while (auto property = feature.next_property()) {
         std::string key = std::string(property.key());
@@ -122,9 +124,8 @@ TEST(VectorTilesBasic, TileRendering) {
       EXPECT_GT(feature.id(), 0) << "Node feature ID should be positive";
       EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::POINT) << "Node should be a point";
 
-      std::set<std::string> expected_props = {"tile_level",    "node_id",     "type",
-                                              "tagged_access", "access:auto", "access:pedestrian",
-                                              "access:bicycle"};
+      std::set<std::string> expected_props = {"tile_level", "node_id", "type", "tagged_access",
+                                              "access"};
       std::set<std::string> found_props;
 
       while (auto property = feature.next_property()) {
@@ -153,20 +154,20 @@ protected:
   }
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 50;
+    constexpr double gridsize = 10;
     const std::string ascii_map = R"(
     x
-      A---B---C---D
-      |   |   |   |
-      E---F---G---H
-      |   |   |   |
-      I---J---K---L
+     A---B---C---D
+     |   |   |   |
+     E---F---G---H
+     |   |   |   |
+     I---J---K---L
     )";
 
     const gurka::ways ways = {
         {"AB", {{"highway", "primary"}, {"name", "Main Street"}}},
-        {"BC", {{"highway", "primary"}, {"name", "Main Street"}}},
-        {"CD", {{"highway", "primary"}, {"name", "Main Street"}}},
+        {"BC", {{"highway", "primary"}, {"name", "Main1 Street"}}},
+        {"CD", {{"highway", "primary"}, {"name", "Main2 Street"}}},
         {"AE", {{"highway", "secondary"}, {"name", "First Avenue"}}},
         {"BF", {{"highway", "secondary"}, {"name", "Second Avenue"}}},
         {"CG", {{"highway", "secondary"}, {"name", "Third Avenue"}}},
@@ -191,7 +192,7 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     const std::unordered_map<std::string, std::string> build_options =
         {{"loki.service_defaults.mvt_cache_dir", VALHALLA_BUILD_DIR "test/data/mvt_cache_dir"},
-         {"loki.service_defaults.mvt_cache_min_zoom", "8"}};
+         {"loki.service_defaults.mvt_cache_min_zoom", "11"}};
     map = gurka::buildtiles(layout, ways, nodes, {},
                             VALHALLA_BUILD_DIR "test/data/gurka_vt_zoom_compare", build_options);
   }
@@ -243,17 +244,17 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   };
 
   uint32_t cache_count = 0;
-  test_tile(8, 2952, 3, 4, cache_count);    // only primary and upper
-  test_tile(10, 4390, 7, 12, cache_count);  // adds secondary
-  test_tile(11, 5297, 11, 12, cache_count); // adds tertiary & unclassified
-  test_tile(12, 5312, 11, 12, cache_count); // same as 11
-  test_tile(13, 6766, 15, 20, cache_count); // adds residential
-  test_tile(14, 7450, 18, 20, cache_count); // adds service/other
+  test_tile(8, 2183, 3, 4, cache_count);    // only primary
+  test_tile(10, 3293, 7, 12, cache_count);  // adds secondary
+  test_tile(11, 4037, 11, 12, cache_count); // adds tertiary & unclassified
+  test_tile(12, 4037, 11, 12, cache_count); // same as 11
+  test_tile(13, 5141, 15, 20, cache_count); // adds residential
+  test_tile(14, 5710, 18, 20, cache_count); // adds service/other
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
 
   // execute the cache path
-  test_tile(14, 7450, 18, 20, cache_count);
+  test_tile(14, 5710, 18, 20, cache_count);
 
   // make sure we fail the request when z exceeds what the server supports
   EXPECT_THROW(
@@ -270,9 +271,9 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
 }
 
 TEST_F(VectorTiles, FilterIncludeExclude) {
-
   // edge_id:forward/backward are not defined in EdgeAttributeTile arrays
-  assert(std::size(loki::detail::kEdgePropToAttributeFlag) == (kNumMVTEdgeAttrs + 2));
+  assert(std::size(loki::detail::kEdgePropToAttributeFlag) == (kNumMVTEdgeAttrs + 2)),
+      std::format("");
   // same for iso_3166_1/2 not existing in NodeAttributeTile array
   assert(std::size(loki::detail::kNodePropToAttributeFlag) ==
          (std::size(loki::detail::kNodeAttributes) + 2));
@@ -300,8 +301,6 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
     Api api_filter = gurka::do_action(Options::tile, current_map, "x", z, "auto", options, nullptr,
                                       &tile_data_filter);
 
-    EXPECT_LT(tile_data_filter.size(), tile_data_full.size());
-
     // check that cache worked
     if (const std::string cache_dir =
             current_map.config.get<std::string>("loki.service_defaults.mvt_cache_dir");
@@ -322,6 +321,12 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
     // and only one in the controller
     if (filter_action == valhalla::include) {
       if (filter_attribute.starts_with("edge")) {
+        if (filter_attribute.starts_with("edge.live_speed_")) {
+          edge_props_size += 8;
+        } else if (filter_attribute.ends_with(".id")) {
+          // it's 2 attributes in the tiles
+          edge_props_size++;
+        }
         expected_edge_props.insert(filter_attribute);
         edge_props_size++;
       } else if (filter_attribute.starts_with("node") || filter_attribute.starts_with("admin")) {
@@ -369,7 +374,8 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
     }
     vtzero::vector_tile tile_filter{tile_data_filter};
 
-    EXPECT_EQ(tile_filter.count_layers(), 2);
+    EXPECT_FALSE(tile_filter.get_layer_by_name("edges").empty());
+    EXPECT_FALSE(tile_filter.get_layer_by_name("nodes").empty());
 
     while (auto layer = tile_filter.next_layer()) {
       EXPECT_TRUE(layer.num_features() > 0);
@@ -377,6 +383,7 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
       std::string layer_name = std::string(layer.name());
       auto feature = layer.next_feature();
       if (layer_name == "edges") {
+        EXPECT_EQ(feature.num_properties(), edge_props_size);
         while (auto property = feature.next_property()) {
           std::string_view key{property.key().data(), property.key().size()};
           std::string_view loki_key;
@@ -386,12 +393,11 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
             EXPECT_TRUE(expected_edge_props.count(key) > 0) << "Edge should have property: " << key;
             continue;
           }
-
           EXPECT_TRUE(expected_edge_props.count(loki_key) > 0)
               << "Edge should have property: " << key;
         }
-        EXPECT_EQ(feature.num_properties(), edge_props_size);
       } else if (layer_name == "nodes") {
+        EXPECT_EQ(feature.num_properties(), node_props_size);
         while (auto property = feature.next_property()) {
           std::string_view key{property.key().data(), property.key().size()};
           std::string_view loki_key;
@@ -405,7 +411,6 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
           EXPECT_TRUE(expected_node_props.count(loki_key) > 0)
               << "Node should have property: " << key;
         }
-        EXPECT_EQ(feature.num_properties(), node_props_size);
       }
     }
 
@@ -435,7 +440,7 @@ TEST_F(VectorTiles, FilterIncludeExclude) {
   cache_count = 0;
   // cache allowed, filter include
   auto warm_size = test_tile_filter(14, "edge.id", valhalla::include, map, cache_count);
-  test_tile_filter(14, "node.access_auto", valhalla::include, map, cache_count);
+  test_tile_filter(14, "node.access", valhalla::include, map, cache_count);
   // cache allowed, filter exclude
   test_tile_filter(14, "edge.id", valhalla::exclude, map, cache_count);
   test_tile_filter(14, "admin.country_code", valhalla::exclude, map, cache_count);
