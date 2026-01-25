@@ -4,6 +4,7 @@
    * FIXED: access for backward edges in MVT contains data from the correct edge [#5834](https://github.com/valhalla/valhalla/pull/5834) 
    * FIXED: use correct edge for directional attributes in MVT [#5836](https://github.com/valhalla/valhalla/pull/5836) 
 * **Enhancement**
+   * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
@@ -48,7 +49,6 @@
    * CHANGED: Move location update in CostMatrix [#5813](https://github.com/valhalla/valhalla/pull/5813)
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
-   * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
