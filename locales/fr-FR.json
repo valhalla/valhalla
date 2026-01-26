@@ -2326,10 +2326,10 @@
       },
       "example_phrases": {
         "0": [
-          "Louez un vélo à la station de vélos en libre-service."
+          "Rent a bike from bike share station."
         ],
         "1": [
-          "Remettez le vélo à la station de vélos en libre-service."
+          "Return a bike at the bike share station."
         ]
       }
     },
