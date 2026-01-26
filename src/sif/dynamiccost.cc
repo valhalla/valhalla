@@ -459,6 +459,22 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   if (speed_types || !co->has_flow_mask_case())
     co->set_flow_mask(SpeedMask_Parse(speed_types));
 
+  // exclude country vignettes list to avoid countries with vignettes (e.g. Austria, Switzerland)
+  // parse from JSON array and set on costing options protobuf.
+  auto exclude_vignettes_node = rapidjson::get_child_optional(json, "/exclude_country_vignettes");
+
+  if (exclude_vignettes_node) {
+    const auto& child = exclude_vignettes_node.get();
+    if (child.IsArray()) {
+      for (const auto& item : child.GetArray()) {
+        if (item.IsString()) {
+          std::string vignette = item.GetString();
+          co->add_exclude_country_vignettes(vignette);
+        }
+      }
+    }
+  }
+
   // named costing
   auto name = rapidjson::get_optional<std::string>(json, "/name");
   if (name) {

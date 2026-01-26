@@ -212,6 +212,9 @@ constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1
                                                        1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                        2.5f, 2.8f, 3.1f, 3.5f};
 
+// Assign a highest value for "ALL"
+constexpr uint64_t Hard_Avoid_Vignette = 0xFFFF;
+
 /**
  * Base class for dynamic edge costing. This class defines the interface for
  * costing methods and includes a few base methods that define default behavior
@@ -798,6 +801,14 @@ public:
       if (!ModeSpecificAllowed(restriction)) {
         return false;
       }
+
+      // Special check for vignette restrictions
+      if (restriction.type() == baldr::AccessType::kVignette) {
+        if ((exclude_country_vignettes_.count(Hard_Avoid_Vignette) > 0) ||
+           (exclude_country_vignettes_.count(restriction.value()) > 0)) {
+          return false;
+        }
+      }
     }
     destonly_access_restr_mask = tmp_mask;
 
@@ -1353,6 +1364,9 @@ protected:
   // Is it truck?
   bool is_hgv_{false};
 
+  // List of country vignettes to exclude
+  std::unordered_set<uint64_t> exclude_country_vignettes_;
+
   // User specified edges to cost based on user provided factors
   std::unordered_map<baldr::GraphId, custom_cost_t> linear_cost_edges_;
   double min_linear_cost_factor_;
@@ -1459,6 +1473,17 @@ protected:
     has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_highways_ ||
                     exclude_ferries_;
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
+    exclude_country_vignettes_.clear();
+    for (const auto& vignette_str : costing_options.exclude_country_vignettes()) {
+      if(vignette_str == "ALL")
+      {
+        exclude_country_vignettes_.insert(Hard_Avoid_Vignette);  
+      }
+      else
+      {
+        exclude_country_vignettes_.insert(valhalla::midgard::country_iso_code_to_int(vignette_str));
+      }
+    }
     default_hierarchy_limits = costing_options.hierarchy_limits_size() == 0;
   }
 

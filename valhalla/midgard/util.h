@@ -14,6 +14,7 @@
 #include <optional>
 #include <ostream>
 #include <ranges>
+#include <cassert>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -794,6 +795,17 @@ template <typename T = int> T to_int(std::string_view value) {
   }
   return result.value();
 }
+
+// Convert country ISO code to a uint64_t value
+inline uint64_t country_iso_code_to_int(const std::string& country_iso) {
+  assert(country_iso.size() == 2 && "Country ISO must be exactly 2 characters");
+  return (country_iso.size() == 2)
+    ? static_cast<uint64_t>(
+        (static_cast<uint64_t>(country_iso[0]) << 8) |
+         static_cast<uint64_t>(country_iso[1]))
+    : static_cast<uint64_t>(0);
+}
+
 
 } // namespace midgard
 } // namespace valhalla
