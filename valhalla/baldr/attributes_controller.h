@@ -110,7 +110,7 @@ constexpr std::string_view kEdgeLaneCountFwd = "edge.lanecount_forward";
 constexpr std::string_view kEdgeTruckSpeedFwd = "edge.truck_speed_forward";
 constexpr std::string_view kEdgeSignalFwd = "edge.traffic_signal_forward";
 constexpr std::string_view kEdgeStopSignFwd = "edge.stop_sign_forward";
-constexpr std::string_view kEdgeYieldFwd = "edge.yield_sign";
+constexpr std::string_view kEdgeYieldFwd = "edge.yield_sign_forward";
 constexpr std::string_view kEdgeAccessFwd = "edge.access_forward";
 constexpr std::string_view kEdgeLiveSpeedFwd = "edge.live_speed_forward";
 
