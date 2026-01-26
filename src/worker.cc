@@ -18,12 +18,27 @@
 #include <cpp-statsd-client/StatsdClient.hpp>
 
 #include <sstream>
-#include <unordered_map>
 
 using namespace valhalla;
 #ifdef ENABLE_SERVICES
 using namespace prime_server;
-#endif
+
+// returns the correct MIME type for a given format
+static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexcept {
+  switch (fmt) {
+    case Options::gpx:
+      return worker::GPX_MIME;
+    case Options::pbf:
+      return worker::PBF_MIME;
+    case Options::geotiff:
+      return worker::TIFF_MIME;
+    case Options::mvt:
+      return worker::MVT_MIME;
+    default:
+      return worker::JSON_MIME;
+  }
+};
+#endif // ENABLE_SERVICES
 
 namespace {
 
@@ -42,11 +57,13 @@ bool is_format_supported(Options::Action action, Options::Format format) {
           (1 << Options::centroid) | (1 << Options::trace_attributes) | (1 << Options::status) |
           (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion),
   // geotiff
-#ifdef ENABLE_GDAL
+#ifdef ENABLE_GEOTIFF
       (1 << Options::isochrone),
 #else
       0,
 #endif
+      // mvt
+      (1 << Options::tile),
   };
   static_assert(std::size(kFormatActionSupport) == Options::Format_ARRAYSIZE,
                 "Please update format_action array to match Options::Action_ARRAYSIZE");
@@ -521,6 +538,63 @@ void parse_recostings(const rapidjson::Document& doc,
   }
 }
 
+// parse x/y/z from the request and validate
+void parse_xyz(const rapidjson::Document& doc, valhalla::Options& options) {
+  const auto vt_z =
+      rapidjson::get<uint32_t>(doc, "/tile/z",
+                               options.tile_xyz().has_z_case() ? options.tile_xyz().z() : UINT32_MAX);
+  bool throws = vt_z == UINT32_MAX || vt_z > 30;
+  if (!throws) {
+    options.mutable_tile_xyz()->set_z(vt_z);
+    const uint32_t max_coord = (1u << vt_z);
+
+    const auto vt_x =
+        rapidjson::get<uint32_t>(doc, "/tile/x",
+                                 options.tile_xyz().has_x_case() ? options.tile_xyz().x()
+                                                                 : UINT32_MAX);
+    const auto vt_y =
+        rapidjson::get<uint32_t>(doc, "/tile/y",
+                                 options.tile_xyz().has_y_case() ? options.tile_xyz().y()
+                                                                 : UINT32_MAX);
+    throws = vt_x == UINT32_MAX || vt_y == UINT32_MAX;
+    if (!throws) {
+      if (vt_x >= max_coord || vt_y >= max_coord) {
+        throws = true;
+      }
+      options.mutable_tile_xyz()->set_x(vt_x);
+      options.mutable_tile_xyz()->set_y(vt_y);
+    }
+  }
+  if (throws) {
+    throw valhalla_exception_t{174};
+  }
+}
+
+void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
+  auto json_obj = json_feat.GetObject();
+  for (const auto& coords_j : json_obj["geometry"].GetObject()["coordinates"].GetArray()) {
+    auto* shape_pt = line_feat->add_shape();
+    shape_pt->mutable_ll()->set_lng(coords_j.GetArray()[0].GetFloat());
+    shape_pt->mutable_ll()->set_lat(coords_j.GetArray()[1].GetFloat());
+  }
+  line_feat->set_cost_factor(json_obj["properties"].GetObject()["factor"].GetFloat());
+}
+
+void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
+  auto json_obj = json_feat.GetObject();
+  auto shape = std::string(json_obj["shape"].GetString());
+  auto lazy_shape = midgard::Shape5Decoder<midgard::PointLL>(shape.data(), shape.size());
+
+  while (!lazy_shape.empty()) {
+    midgard::PointLL ll = lazy_shape.pop();
+    auto* shape_pt = line_feat->add_shape();
+    shape_pt->mutable_ll()->set_lng(ll.lng());
+    shape_pt->mutable_ll()->set_lat(ll.lat());
+  }
+
+  line_feat->set_cost_factor(json_obj["factor"].GetFloat());
+}
+
 /**
  * This function takes a json document and parses it into an options (request pbf) object.
  * The implementation is such that if you passed an already filled out options object the
@@ -548,6 +622,16 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto& options = *api.mutable_options();
   if (Options::Action_IsValid(action))
     options.set_action(action);
+
+  // first the /tile parameters, so we can early exit
+  if (options.action() == Options::tile) {
+    parse_xyz(doc, options);
+    options.mutable_tile_options()->set_return_shortcuts(
+        rapidjson::get<bool>(doc, "/tile_options/return_shortcuts",
+                             options.tile_options().return_shortcuts()));
+    options.set_format(Options::mvt); // set explicitly for MIME type
+    return;
+  }
 
   // TODO: stop doing this after a sufficient amount of time has passed
   // move anything nested in deprecated directions_options up to the top level
@@ -615,6 +699,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   DirectionsType directions_type;
   if (dir_type && DirectionsType_Enum_Parse(*dir_type, &directions_type)) {
     options.set_directions_type(directions_type);
+  }
+
+  auto reverse_tt_strategy = rapidjson::get_optional<std::string>(doc, "/reverse_time_tracking");
+  Options::ReverseTimeTracking reverse_tt;
+  if (reverse_tt_strategy &&
+      Options_ReverseTimeTracking_Enum_Parse(*reverse_tt_strategy, &reverse_tt)) {
+    options.set_reverse_time_tracking(reverse_tt);
   }
 
   // costing defaults to none which is only valid for locate
@@ -948,28 +1039,96 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // get the avoid polygons in there
-  auto rings_req =
+  auto exclude_polygons =
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
-  if (rings_req) {
-    if (!rings_req->IsArray()) {
+  if (exclude_polygons) {
+    if (!(exclude_polygons->IsArray() || exclude_polygons->IsObject())) {
       add_warning(api, 204);
     } else {
+      // it has to be either an array of rings
+      // or an array of objects
       auto* rings_pbf = options.mutable_exclude_polygons();
+      auto* levels_pbf = options.mutable_exclude_levels();
+
+      auto exclude_polygons_array_ptr = exclude_polygons;
+
+      // if it's not an array, make sure it's a GeoJSON FeatureCollection
+      if (!exclude_polygons->IsArray()) {
+        auto fc = rapidjson::get_optional<std::string>(doc, "/exclude_polygons/type");
+        auto features = rapidjson::get_child_optional(doc, "/exclude_polygons/features");
+        if (fc && *fc == "FeatureCollection" && features) {
+          exclude_polygons_array_ptr = features;
+        }
+      }
       try {
-        for (const auto& req_poly : rings_req->GetArray()) {
-          if (!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) {
+        for (const auto& req_poly : exclude_polygons_array_ptr->GetArray()) {
+          // either it's a ring or an object, in any case it can't be empty
+          if ((req_poly.IsArray() && req_poly.GetArray().Empty()) ||
+              (req_poly.IsObject() && req_poly.GetObject().ObjectEmpty())) {
             continue;
           }
-          auto* ring = rings_pbf->Add();
-          parse_ring(ring, req_poly);
+          auto* pbf_ring = rings_pbf->Add();
+          auto* pbf_levels = levels_pbf->Add();
+          if (req_poly.IsArray() && req_poly.GetArray().Size() > 0) {
+            parse_ring(pbf_ring, req_poly);
+          } else if (req_poly.IsObject() &&
+                     !req_poly.GetObject().ObjectEmpty()) { // it's a geojson feature, so it better
+                                                            // have coordinates and maybe levels
+            // we only support one ring
+            auto coordinates = rapidjson::get_child_optional(req_poly, "/geometry/coordinates/0");
+            auto geom_type = rapidjson::get_child_optional(req_poly, "/geometry/type");
+            if (coordinates && geom_type && *geom_type == "Polygon" && coordinates->IsArray()) {
+              parse_ring(pbf_ring, *coordinates);
+            } else {
+              throw std::runtime_error("Expected object to have coordinates member");
+            }
+            auto levels = rapidjson::get_child_optional(req_poly, "/properties/levels");
+            if (levels && levels->IsArray()) {
+              // parse the levels
+              for (const auto& level : levels->GetArray()) {
+                if (level.IsFloat()) {
+                  pbf_levels->add_levels(level.GetFloat());
+                }
+              }
+            }
+          }
         }
-      } catch (...) { throw valhalla_exception_t{137}; }
+      } catch (const std::exception& e) { throw valhalla_exception_t{137, e.what()}; } catch (...) {
+        throw valhalla_exception_t{137};
+      }
     }
   } // if it was there in the pbf already
   else if (options.exclude_polygons_size()) {
     for (auto& ring : *options.mutable_exclude_polygons()) {
       parse_ring(&ring, rapidjson::Value{});
+    }
+    if (options.exclude_levels_size() > 0 &&
+        options.exclude_levels_size() != options.exclude_polygons_size())
+      throw std::runtime_error(
+          "Expected number of exclude levels and number of exclude polygons to be equal");
+  }
+
+  // does the user want to apply custom costs to linear features?
+  auto linear_feats = rapidjson::get_child_optional(doc, "/linear_cost_factors");
+
+  if (linear_feats) {
+    if (!linear_feats->IsArray()) {
+      add_warning(api, 212);
+    } else {
+      try {
+        for (const auto& linear_feat : linear_feats->GetArray()) {
+          auto is_geojson = linear_feat.GetObject().HasMember("type");
+          auto* l = options.mutable_cost_factor_lines()->Add();
+
+          // either GeoJSON
+          if (is_geojson) {
+            parse_line_geojson(linear_feat, l);
+          } else { // or an encoded polyline and a cost factor
+            parse_line(linear_feat, l);
+          }
+        }
+      } catch (const std::exception& e) { throw valhalla_exception_t{173, std::string(e.what())}; }
     }
   }
 
@@ -1421,10 +1580,8 @@ worker_t::result_t
 to_response(const std::string& data, http_request_info_t& request_info, const Api& request) {
   // try to get all the proper headers
   auto fmt = request.options().format();
-  const auto& mime = fmt == Options::json || fmt == Options::osrm
-                         ? worker::JSON_MIME
-                         : (fmt == Options::pbf ? worker::PBF_MIME : worker::GPX_MIME);
-  headers_t headers{CORS, mime};
+
+  headers_t headers{CORS, fmt_to_mime(fmt)};
   if (fmt == Options::gpx)
     headers.insert(ATTACHMENT);
 

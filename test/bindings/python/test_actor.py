@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 from tempfile import NamedTemporaryFile
 import unittest
-from valhalla import Actor, get_config, VALHALLA_PYTHON_PACKAGE, VALHALLA_PRINT_VERSION
+from valhalla import Actor, get_config, VALHALLA_PRINT_VERSION
 
 
 PWD = Path(os.path.dirname(os.path.abspath(__file__)))
@@ -30,13 +30,12 @@ class TestBindings(unittest.TestCase):
         cls.actor = Actor(str(PWD.joinpath('valhalla.json')))
 
     def test_version_python_package_constant(self):
-        self.assertIn("pyvalhalla", VALHALLA_PYTHON_PACKAGE)
 
         # The CMake build of course doesn't have the setuptools-scm generated __version__.py
         try:
             from valhalla import __version__
             from valhalla.__version__ import __version_tuple__
-        except ModuleNotFoundError:
+        except (ModuleNotFoundError, ImportError):
             return
         
         self.assertEqual(".".join([str(x) for x in __version_tuple__[:3]]), VALHALLA_PRINT_VERSION)
@@ -44,10 +43,6 @@ class TestBindings(unittest.TestCase):
         version_modifier = VALHALLA_PRINT_VERSION[VALHALLA_PRINT_VERSION.find("-"):]
         if version_modifier:
             self.assertIn(version_modifier, __version__)
-        else:
-            # for releases there should always be a version modifier,
-            # as they're guaranteed to be run by CI
-            self.assertNotEqual("pyvalhalla", VALHALLA_PYTHON_PACKAGE)
 
     def test_config(self):
         config = get_config(self.extract_path, self.tiles_path)
@@ -119,6 +114,34 @@ class TestBindings(unittest.TestCase):
 
         iso = self.actor.isochrone(query)
         self.assertEqual(len(iso['features']), 6)  # 4 isochrones and the 2 point layers
+
+    def test_tile(self):
+        # Utrecht center tile coordinates (52.08778°N, 5.13142°E at zoom 14)
+        query = {
+            "tile": {
+                "z": 14,
+                "x": 8425,
+                "y": 5405
+            }
+        }
+
+        tile_data = self.actor.tile(query)
+        
+        # Verify it's bytes (MVT binary data)
+        self.assertIsInstance(tile_data, bytes, 'tile() should return bytes')
+        
+        # Verify reasonable size (at least 100 bytes, typically KB range for MVT)
+        self.assertGreaterEqual(
+            len(tile_data), 
+            100,
+            f'Tile data should be at least 100 bytes, got {len(tile_data)}'
+        )
+
+        # Test the str API (JSON string input)
+        tile_data_str = self.actor.tile(json.dumps(query))
+        self.assertIsInstance(tile_data_str, bytes)
+        # Both should return the same data
+        self.assertEqual(tile_data, tile_data_str)
 
     def test_change_config(self):
         with NamedTemporaryFile('w+') as tmp:

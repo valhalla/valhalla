@@ -870,7 +870,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Get the end node. Skip this directed edge if the Valhalla tile is
       // not valid (or empty)
       GraphId end_platform_graphid(transitedge.dest_pbf_graphid);
-      if (!end_platform_graphid.Is_Valid()) {
+      if (!end_platform_graphid.is_valid()) {
         LOG_ERROR("Unstitched stop pair detected with origin near " +
                   std::to_string(platform_ll.lat()) + ',' + std::to_string(platform_ll.lng()));
         continue;
@@ -879,7 +879,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Find the lat,lng of the end stop
       PointLL endll;
       std::string endstopname;
-      if (end_platform_graphid.Tile_Base() == tileid) {
+      if (end_platform_graphid.tile_base() == tileid) {
         // End stop is in the same pbf transit tile
         const Transit_Node& endplatform = tile_pbf.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
@@ -1002,7 +1002,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     if (reader.OverCommitted()) {
       reader.Trim();
     }
-    GraphId tile_id = tile_start->Tile_Base();
+    GraphId tile_id = tile_start->tile_base();
 
     // Get transit pbf tile
     const std::string transit_dir = pt.get<std::string>("transit_dir");

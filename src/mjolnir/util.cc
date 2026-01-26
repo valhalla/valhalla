@@ -40,15 +40,12 @@ const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
 const std::string tile_manifest_file = "tile_manifest.json";
 const std::string access_file = "access.bin";
-const std::string pronunciation_file = "pronunciation.bin";
 const std::string bss_nodes_file = "bss_nodes.bin";
 const std::string linguistic_node_file = "linguistics_node.bin";
 const std::string cr_from_file = "complex_from_restrictions.bin";
 const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
-const std::string intersections_file = "intersections.bin";
-const std::string shapes_file = "shapes.bin";
 
 uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& tile_dir) {
   std::sort(paths.begin(), paths.end());
@@ -458,7 +455,7 @@ std::string remove_double_quotes(const std::string& s) {
  * @return value between 0 and 15 representing the average curviness of the input shape. lower
  *         values indicate less curvy shapes and higher values indicate curvier shapes
  */
-uint32_t compute_curvature(const std::list<PointLL>& shape) {
+uint32_t compute_curvature(const std::vector<PointLL>& shape) {
   // Edges with just 2 shape points have no curvature.
   // TODO - perhaps a post-process to "average" curvature along adjacent edges
   // and smooth curvature on connected edges may be desirable?

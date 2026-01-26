@@ -4,6 +4,7 @@
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
+#include "sif/dynamiccost.h"
 
 #include <gtest/gtest.h>
 
@@ -26,7 +27,7 @@ TEST(UtilMidgard, TestRangedDefaultT) {
   std::uniform_real_distribution<float> testDistributor(lower - 40, upper + 40);
 
   for (unsigned i = 0; i < 100; ++i) {
-    ranged_default_t<float> testRange{lower, defaultDistributor(generator), upper};
+    valhalla::sif::ranged_default_t<float> testRange{lower, defaultDistributor(generator), upper};
 
     float testVal = testDistributor(generator);
 
@@ -256,34 +257,6 @@ TEST(UtilMidgard, TestResampleNaN) {
     throw std::runtime_error(
         "uniform_resample_spherical_polyline does not yield expected vertex count");
   }
-}
-
-TEST(UtilMidgard, TestIterable) {
-  int a[] = {1, 2, 3, 4, 5};
-  char b[] = {'a', 'b', 'c', 'd', 'e'};
-  std::string c[] = {"one", "two", "three", "four", "five"};
-  const size_t d[] = {11, 12, 13, 14, 15};
-
-  int sum = 0;
-  for (const auto& i : iterable_t<int>(a, 5))
-    sum += i;
-  EXPECT_EQ(sum, 15) << "integer array sum failed";
-
-  std::string concatenated;
-  for (const auto& i : iterable_t<char>(b, 5))
-    concatenated.push_back(i);
-  EXPECT_EQ(concatenated, "abcde") << "char concatenation failed";
-
-  concatenated = "";
-  for (const auto& i : iterable_t<std::string>(c, 5))
-    concatenated.append(i);
-  EXPECT_EQ(concatenated, "onetwothreefourfive") << "string concatenation failed";
-
-  size_t cumulative_product = 1;
-  iterable_t<const size_t> iterable(d, 5);
-  for (iterable_t<const size_t>::iterator i = iterable.begin(); i != iterable.end(); ++i)
-    cumulative_product *= *i;
-  EXPECT_EQ(cumulative_product, 360360) << "cumulative product failed";
 }
 
 TEST(UtilMidgard, TestTrimPolyline) {
@@ -779,6 +752,70 @@ TEST(UtilMidgard, PolygonArea) {
     float area = polygon_area(a);
     EXPECT_NEAR(area, 1, 1e-7);
   }
+}
+
+TEST(UtilMidgard, Enumerate) {
+  std::vector<int> values = {10, 20, 30, 40, 50};
+
+  size_t expected_index = 0;
+  for (const auto& [i, value] : enumerate(values)) {
+    EXPECT_EQ(i, expected_index);
+    EXPECT_EQ(value, values[expected_index]);
+    ++expected_index;
+  }
+  EXPECT_EQ(expected_index, values.size());
+
+  // Test with filtered range (lazy evaluation)
+  auto filtered = values | std::views::filter([](int x) { return x > 20; });
+  std::vector<std::pair<size_t, int>> enumerated_results;
+  for (const auto& [i, value] : enumerate(filtered)) {
+    enumerated_results.emplace_back(i, value);
+  }
+
+  ASSERT_EQ(enumerated_results.size(), 3);
+  EXPECT_EQ(enumerated_results[0].first, 0);
+  EXPECT_EQ(enumerated_results[0].second, 30);
+  EXPECT_EQ(enumerated_results[1].first, 1);
+  EXPECT_EQ(enumerated_results[1].second, 40);
+  EXPECT_EQ(enumerated_results[2].first, 2);
+  EXPECT_EQ(enumerated_results[2].second, 50);
+}
+
+TEST(UtilMidgard, ToFloat) {
+  EXPECT_FLOAT_EQ(to_float("123.456"), 123.456f);
+  EXPECT_FLOAT_EQ(to_float("-42.5"), -42.5f);
+  EXPECT_FLOAT_EQ(to_float("0.0"), 0.0f);
+  EXPECT_FLOAT_EQ(to_float<double>("3.14159"), 3.14159);
+  EXPECT_FLOAT_EQ(to_float("123.456extra"), 123.456f);
+  EXPECT_FLOAT_EQ(to_float("+1.1"), 1.1f);
+  EXPECT_FLOAT_EQ(to_float("+0"), 0);
+  EXPECT_FLOAT_EQ(to_float("-0"), 0);
+  EXPECT_FLOAT_EQ(to_float("-1"), -1);
+
+  EXPECT_THROW(to_float("not_a_number"), std::invalid_argument);
+  EXPECT_THROW(to_float(""), std::invalid_argument);
+  EXPECT_THROW(to_float("+"), std::invalid_argument);
+  EXPECT_THROW(to_float("++1.1"), std::invalid_argument);
+  EXPECT_THROW(to_float("+-1.1"), std::invalid_argument);
+}
+
+TEST(UtilMidgard, ToInt) {
+  EXPECT_EQ(to_int("123"), 123);
+  EXPECT_EQ(to_int("-456"), -456);
+  EXPECT_EQ(to_int("0"), 0);
+  EXPECT_EQ(to_int<int64_t>("9223372036854775807"), 9223372036854775807LL);
+  EXPECT_EQ(to_int<uint32_t>("4294967295"), 4294967295U);
+  EXPECT_EQ(to_int("123.456"), 123);
+  EXPECT_EQ(to_int("+1"), 1);
+  EXPECT_EQ(to_int("+0"), 0);
+  EXPECT_EQ(to_int("-0"), 0);
+  EXPECT_EQ(to_int("-1"), -1);
+
+  EXPECT_THROW(to_int("not_a_number"), std::invalid_argument);
+  EXPECT_THROW(to_int(""), std::invalid_argument);
+  EXPECT_THROW(to_int("+"), std::invalid_argument);
+  EXPECT_THROW(to_int("++1"), std::invalid_argument);
+  EXPECT_THROW(to_int("+-1"), std::invalid_argument);
 }
 
 } // namespace

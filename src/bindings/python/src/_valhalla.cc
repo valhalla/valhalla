@@ -5,11 +5,13 @@
 #include "tyr/actor.h"
 
 #include <boost/property_tree/ptree.hpp>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/string.h>
 
 #include <string>
 
 namespace vt = valhalla::tyr;
+namespace nb = nanobind;
 namespace {
 
 // configuring multiple times is wasteful/ineffectual but not harmful
@@ -33,16 +35,18 @@ const boost::property_tree::ptree configure(const std::string& config) {
 }
 } // namespace
 
-namespace py = pybind11;
-
-PYBIND11_MODULE(_valhalla, m) {
+NB_MODULE(_valhalla, m) {
   // Add these constants in C++ to avoid creating another shim python module, as they
   // are needed at runtime of the python library and need to be set during the build
   m.attr("VALHALLA_PRINT_VERSION") = VALHALLA_PRINT_VERSION;
-  m.attr("VALHALLA_PYTHON_PACKAGE") = VALHALLA_STRINGIZE(VALHALLA_PYTHON_PACKAGE);
 
-  py::class_<vt::actor_t>(m, "_Actor", "Valhalla Actor class")
-      .def(py::init<>([](std::string config) { return vt::actor_t(configure(config), true); }))
+  nb::class_<vt::actor_t>(m, "_Actor", "Valhalla Actor class")
+      .def(
+          "__init__",
+          [](vt::actor_t* self, const std::string& config) {
+            new (self) vt::actor_t(configure(config), true);
+          },
+          nb::arg("config"))
       .def(
           "route", [](vt::actor_t& self, std::string& req) { return self.route(req); },
           "Calculates a route.")
@@ -81,5 +85,12 @@ PYBIND11_MODULE(_valhalla, m) {
           "Returns routes from all the input locations to the minimum cost meeting point of those paths.")
       .def(
           "status", [](vt::actor_t& self, std::string& req) { return self.status(req); },
-          "Returns nothing or optionally details about Valhalla's configuration.");
+          "Returns nothing or optionally details about Valhalla's configuration.")
+      .def(
+          "tile",
+          [](vt::actor_t& self, std::string& req) -> nb::bytes {
+            auto result = self.tile(req);
+            return nb::bytes(result.c_str(), result.size());
+          },
+          "Returns a vector tile (MVT binary data) with a bounding box feature for the given z/x/y tile coordinates.");
 }

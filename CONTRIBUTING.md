@@ -15,7 +15,7 @@ There are many ways to make meaningful contributions to the project:
 
 We appreciate the community picking up and fixing bugs or even implementing new features. There are a few things to follow/be aware of when working on Valhalla:
 
-- we currently use the C++17 standard
+- we currently use the C++20 standard
 - we use [`pre-commit`](https://pre-commit.com/) to make sure commits are formatted & linted: run `./scripts/format.sh` once and it'll be installed
 - [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html)/[`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/) is used to format/lint the C++ code, [`black`](https://black.readthedocs.io/en/stable/index.html) & [`flake8`](https://flake8.pycqa.org/en/latest/) format/lint Python code
 - [`ASan`](https://clang.llvm.org/docs/AddressSanitizer.html) is run in CI, but without its integrated leak sanitizer due to platform issues
@@ -89,7 +89,7 @@ To use this, add your executable(s) code, they will be picked up automatically b
 
 Valhalla currently supports almost 30 languages with > 95% translation coverage. If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. We're using [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) to manage translations and try to download all improvements before each release.
 
-You can find more information in the [dedicated README](https://github.com/valhalla/valhalla/blob/master/README.md).
+You can find more information in the [dedicated doc](https://github.com/valhalla/valhalla/blob/master/docs/docs/locales.md).
 
 ## Documentation contributions
 

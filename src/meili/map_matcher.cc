@@ -149,7 +149,8 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
 
     // Get the amount of time spent on this segment
     auto edge_percent = segment->target - segment->source;
-    auto route_time = mapmatcher.costing()->EdgeCost(directededge, tile).secs * edge_percent;
+    auto route_time =
+        mapmatcher.costing()->EdgeCost(directededge, segment->edgeid, tile).secs * edge_percent;
 
     Interpolation interp{projected_point, segment->edgeid, sq_distance, route_distance,
                          route_time,      offset,          segment};
@@ -218,14 +219,14 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
 
     // shift the point at which we are allowed to start interpolating from to the right
     // so that its on the interpolation point this way the next interpolation happens after
-    if (interp.edgeid.Is_Valid()) {
+    if (interp.edgeid.is_valid()) {
       left_most_segment = interp.segment;
       left_most_offset = interp.edge_distance;
       left_most_projection = interp.projected;
     }
 
     // if it was able to do the interpolation
-    if (interp.edgeid.Is_Valid()) {
+    if (interp.edgeid.is_valid()) {
       // keep the interpolated match result
       results.push_back(CreateMatchResult(measurement, interp));
     } // couldnt interpolate this point
@@ -261,7 +262,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   // Because of node routing in meili we must loop back over the previous path. In most cases the loop
   // is a single iteration but in rare cases (node to node trivial routes) we need to explore states
   // that are older than the immediate previous state
-  for (StateId::Time t = time; t > 0 && !prev_edge.Is_Valid(); --t) {
+  for (StateId::Time t = time; t > 0 && !prev_edge.is_valid(); --t) {
     // If there is no path from t - 1
     const auto& prev_state_id = stateids[t - 1];
     if (!prev_state_id.IsValid()) {
@@ -282,7 +283,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     if (rbegin == rend)
       break;
     node_id = rbegin->nodeid();
-    while (rbegin != rend && !prev_edge.Is_Valid()) {
+    while (rbegin != rend && !prev_edge.is_valid()) {
       const auto& label = *rbegin;
       prev_edge = label.edgeid();
       rbegin++;
@@ -294,7 +295,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   // Because of node routing in meili we must loop over the next sets of paths. In most cases the loop
   // is a single iteration but in rare cases (node to node trivial routes) we need to explore states
   // that are newer than the immediate next state
-  for (StateId::Time t = time; t + 1 < stateids.size() && !next_edge.Is_Valid(); ++t) {
+  for (StateId::Time t = time; t + 1 < stateids.size() && !next_edge.is_valid(); ++t) {
     // If there is no path to t + 1
     const auto& next_state_id = stateids[t + 1];
     if (!next_state_id.IsValid()) {
@@ -318,9 +319,9 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
       break;
     while (rbegin != rend) {
       const auto& label = *rbegin;
-      if (label.nodeid().Is_Valid())
+      if (label.nodeid().is_valid())
         node_id = label.nodeid();
-      if (label.edgeid().Is_Valid())
+      if (label.edgeid().is_valid())
         next_edge = label.edgeid();
       rbegin++;
     }
@@ -332,9 +333,9 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   // case we dont really care what edge we use to go from the node to itself so just use any one that
   // was a candidate on it
   const auto& state = mapmatcher.state_container().state(state_id);
-  if (!prev_edge.Is_Valid() && !next_edge.Is_Valid()) {
+  if (!prev_edge.is_valid() && !next_edge.is_valid()) {
     // it wasnt a trivial node route
-    if (!node_id.Is_Valid()) {
+    if (!node_id.is_valid()) {
       return CreateMatchResult(measurement, state_id);
     }
     assert(!state.candidate().edges.empty());

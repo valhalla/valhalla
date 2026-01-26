@@ -20,7 +20,7 @@
 #include "mjolnir/util.h"
 #include "scoped_timer.h"
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -39,7 +39,6 @@ namespace {
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
  * we also need to then update the edges that pointed to them
- *
  */
 std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
   LOG_INFO("Sorting graph...");
@@ -451,13 +450,31 @@ void BuildTileSet(const std::string& ways_file,
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
-  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
-    std::list<PointLL> shape;
+  auto keep_all_nodes = pt.get<bool>("keep_all_osm_node_ids", false);
+  auto graph_nodes_only = pt.get<bool>("keep_osm_node_ids", false);
+  std::vector<PointLL> shape;
+  std::vector<uint64_t> osm_node_ids;
+  std::string encoded_node_ids(1, static_cast<std::string::value_type>(TaggedValue::kOSMNodeIds));
+  const auto edge_shape = [&way_nodes, &shape, &osm_node_ids, &encoded_node_ids, keep_all_nodes,
+                           graph_nodes_only](size_t idx, const size_t count) {
+    shape.reserve(count);
+    shape.clear();
+    osm_node_ids.reserve(graph_nodes_only ? 2 : count);
+    osm_node_ids.clear();
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
       shape.emplace_back(node.latlng());
+      if (keep_all_nodes || (graph_nodes_only && (i == 0 || i == count - 1))) {
+        osm_node_ids.push_back(node.osmid_);
+      }
     }
-    return shape;
+    if (!osm_node_ids.empty()) {
+      // chop off the old buffer, encode the new one, then finally insert the encoded length
+      encoded_node_ids.resize(1);
+      encoded_node_ids += encode7int(osm_node_ids);
+      // prepend the length in bytes of the encoded value so we know how much to read later
+      encoded_node_ids.insert(1, encode7int(std::vector{encoded_node_ids.size() - 1}));
+    }
   };
 
   // For each tile in the task
@@ -486,7 +503,7 @@ void BuildTileSet(const std::string& ways_file,
 
     try {
       // What actually writes the tile
-      GraphId tile_id = tile.first.Tile_Base();
+      GraphId tile_id = tile.first.tile_base();
       GraphTileBuilder graphtile(tile_dir, tile_id, false);
 
       // Information about tile creation
@@ -528,7 +545,7 @@ void BuildTileSet(const std::string& ways_file,
       //                                      ? nodes.end() - node_itr
       //                                      : std::next(tile_start)->second - tile_start->second));
 
-      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_id) {
+      while (node_itr != nodes.end() && (*node_itr).graph_id.tile_base() == tile_id) {
         // amalgamate all the node duplicates into one and the edges that connect to it
         // this moves the iterator for you
         auto bundle = collect_node_edges(node_itr, nodes, edges);
@@ -764,8 +781,8 @@ void BuildTileSet(const std::string& ways_file,
               !graphtile.HasEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
                                      (*nodes[target]).graph_id, edge_info_offset)) {
 
-            // add the info
-            auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+            // collect the shape (and osm node ids if enabled) from the sequence data
+            edge_shape(edge.llindex_, edge.attributes.llcount);
 
             bool diff_names = false;
             OSMLinguistic::DiffType type = OSMLinguistic::DiffType::kRight;
@@ -867,6 +884,12 @@ void BuildTileSet(const std::string& ways_file,
               value.append(reinterpret_cast<const std::string::value_type*>(&it->second),
                            sizeof(ConditionalSpeedLimit));
               tagged_values.push_back(std::move(value));
+            }
+
+            // Append osm node ids as tagged values
+            if (!osm_node_ids.empty()) {
+              // not moving here because we want to re-use the string on the next iteration
+              tagged_values.push_back(encoded_node_ids);
             }
 
             // Update bike_network type
@@ -1002,7 +1025,7 @@ void BuildTileSet(const std::string& ways_file,
                 v.emplace_back(idx, lc.from_way_id, osmdata.name_offset_map.name(lc.to_lanes_index),
                                osmdata.name_offset_map.name(lc.from_lanes_index));
               }
-              graphtile.AddLaneConnectivity(v);
+              graphtile.AddLaneConnectivity(std::move(v));
               directededge.set_laneconnectivity(true);
             }
           } catch (std::exception& e) {
@@ -2116,13 +2139,13 @@ bool GraphBuilder::CreateSignInfoList(
         boost::algorithm::to_lower(tmp);
 
         // remove the "To" For example:  US 11;To I 81;Carlisle;Harrisburg
-        if (boost::starts_with(tmp, "to ")) {
+        if (tmp.starts_with("to ")) {
           exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0,
                                  exit_to.substr(3));
           continue;
         }
         // remove the "Toward" For example:  US 11;Toward I 81;Carlisle;Harrisburg
-        if (boost::starts_with(tmp, "toward ")) {
+        if (tmp.starts_with("toward ")) {
           exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0,
                                  exit_to.substr(7));
           continue;

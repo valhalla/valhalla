@@ -137,7 +137,8 @@ void thor_worker_t::route_match(Api& request) {
   std::vector<std::vector<PathInfo>> legs;
 
   // if the shape walking succeeds
-  if (RouteMatcher::FormPath(mode_costing, mode, *reader, options, legs)) {
+  if (RouteMatcher::FormPath(mode_costing, mode, *reader, options, options.use_timestamps(), false,
+                             legs)) {
     // the origin is the first location for sure
     auto origin = options.mutable_shape()->begin();
     // build each leg of the route
@@ -203,7 +204,7 @@ thor_worker_t::map_match(Api& request) {
       for (size_t i = 0; i < result.results.size(); ++i) {
         // Get the match
         const auto& match = result.results[i];
-        if (!match.edgeid.Is_Valid()) {
+        if (!match.edgeid.is_valid()) {
           continue;
         }
 

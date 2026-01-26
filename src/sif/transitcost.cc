@@ -171,6 +171,7 @@ public:
    * @return
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge*,
+                        const baldr::GraphId&,
                         const graph_tile_ptr&,
                         const baldr::TimeInfo&,
                         uint8_t&) const override {
@@ -794,10 +795,5 @@ TEST(TransitCost, testTransitCostParams) {
   }
 }
 } // namespace
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

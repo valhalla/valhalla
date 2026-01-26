@@ -8,6 +8,7 @@
 #include <valhalla/meili/grid_range_query.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/sif/dynamiccost.h>
 
 #include <cmath>
@@ -63,14 +64,14 @@ public:
     grid_cache_.clear();
   }
 
+  std::unordered_set<baldr::GraphId> RangeQuery(const midgard::AABB2<midgard::PointLL>& range) const;
+
 private:
   // Get a grid for a specified bin within a tile. Tile support for
   // graph tiles and bins is provided to go between bin Ids and tile Ids.
   const grid_t* GetGrid(const int32_t bin_id,
                         const midgard::Tiles<midgard::PointLL>& tiles,
                         const midgard::Tiles<midgard::PointLL>& bins) const;
-
-  std::unordered_set<baldr::GraphId> RangeQuery(const midgard::AABB2<midgard::PointLL>& range) const;
 
   uint32_t bin_level_;
 

@@ -66,16 +66,22 @@ jobs:
 
   release_build:
     name: Release build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [lint_format]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       
       - name: Install deps
-        run: ./scripts/install-linux-deps.sh >& /dev/null
+        run: |
+          ./scripts/install-linux-deps.sh
+          python -m pip install requests shapely numpy
       
       - name: Get timestamp & ccache dir
         run: |
@@ -86,10 +92,10 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
           restore-keys: |
@@ -99,9 +105,9 @@ jobs:
       - name: Build Valhalla
         run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE \
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DENABLE_NODE_BINDINGS=On -DLOGGING_LEVEL=TRACE \
             -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON \
-            -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
+            -DENABLE_SINGLE_FILES_WERROR=Off
           make -C build -j$(nproc)
           make -C build -j$(nproc) utrecht_tiles
           make -C build -j$(nproc) tests gurka
@@ -110,16 +116,16 @@ jobs:
         if: always()
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
 
       - name: Run tests
         run: |
-          ASAN_OPTIONS="detect_leaks=0" make -C build -j$(nproc) check
+          ASAN_OPTIONS="detect_leaks=0:symbolize=1" make -C build -j$(nproc) check
           # remove the huge trace logs
           rm -f build/test/*.log
       
@@ -143,9 +149,15 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       
       - name: Install deps
-        run: ./scripts/install-linux-deps.sh
+        run: |
+          ./scripts/install-linux-deps.sh
+          python -m pip install requests shapely numpy
 
       - name: Get timestamp & ccache dir
         run: |
@@ -156,10 +168,10 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}
           restore-keys: |
@@ -171,7 +183,7 @@ jobs:
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
             -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-            -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_GDAL=On \
+            -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_NODE_BINDINGS=On \
             -DBUILD_SHARED_LIBS=On
           make -C build -j$(nproc)
           make -C build -j$(nproc) utrecht_tiles
@@ -181,10 +193,10 @@ jobs:
         if: always()
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}
       
@@ -215,16 +227,22 @@ jobs:
 
   arm_build:
     name: ARM build
-    runs-on: ubuntu-22.04-arm
+    runs-on: ubuntu-24.04-arm
     needs: [lint_format]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12' 
       
       - name: Install deps
-        run: ./scripts/install-linux-deps.sh
+        run: |
+          ./scripts/install-linux-deps.sh
+          python -m pip install requests shapely numpy
 
       - name: Get timestamp & ccache dir
         run: |
@@ -235,10 +253,10 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
           restore-keys: |
@@ -248,7 +266,7 @@ jobs:
       - name: Build Valhalla
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
-            -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
+            -DENABLE_SINGLE_FILES_WERROR=Off
           make -C build -j$(nproc)
           # make -C build -j$(nproc) utrecht_tiles
           make -C build -j$(nproc) gurka
@@ -257,10 +275,10 @@ jobs:
         if: always()
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
       

@@ -66,7 +66,7 @@ std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& 
 }
 
 // Get the string representing the incident-Impact
-const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact) {
+std::string_view incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact) {
   switch (impact) {
     case valhalla::IncidentsTile::Metadata::UNKNOWN:
       return "unknown";
@@ -124,6 +124,7 @@ bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
       {"expansion", Options::expansion},
       {"centroid", Options::centroid},
       {"status", Options::status},
+      {"tile", Options::tile},
   };
   auto i = actions.find(action);
   if (i == actions.cend())
@@ -158,6 +159,7 @@ const std::string& Options_Action_Enum_Name(const Options::Action action) {
       {Options::expansion, "expansion"},
       {Options::centroid, "centroid"},
       {Options::status, "status"},
+      {Options::tile, "tile"},
   };
   auto i = actions.find(action);
   return i == actions.cend() ? empty_str : i->second;
@@ -370,7 +372,8 @@ bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
               {"edge_status", Options_ExpansionProperties_edge_status},
               {"edge_id", Options::ExpansionProperties::Options_ExpansionProperties_edge_id},
               {"pred_edge_id", Options_ExpansionProperties_pred_edge_id},
-              {"expansion_type", Options_ExpansionProperties_expansion_type}};
+              {"expansion_type", Options_ExpansionProperties_expansion_type},
+              {"flow_sources", Options_ExpansionProperties_flow_sources}};
   auto i = actions.find(prop);
   if (i == actions.cend())
     return false;
@@ -446,5 +449,18 @@ const std::string& Expansion_EdgeStatus_Enum_Name(const Expansion_EdgeStatus sta
   };
   auto i = statuses.find(status);
   return i == statuses.cend() ? empty_str : i->second;
+}
+
+bool Options_ReverseTimeTracking_Enum_Parse(const std::string& strategy,
+                                            Options::ReverseTimeTracking* f) {
+  static const std::unordered_map<std::string, Options::ReverseTimeTracking> strategies{
+      {"disabled", Options::rtt_disabled},
+      {"heuristic", Options::rtt_heuristic},
+  };
+  auto i = strategies.find(strategy);
+  if (i == strategies.cend())
+    return false;
+  *f = i->second;
+  return true;
 }
 } // namespace valhalla

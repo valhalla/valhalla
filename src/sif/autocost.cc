@@ -69,17 +69,11 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
-// Default auto attributes
-constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
-constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
-
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
-constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
-constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
@@ -241,6 +235,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
@@ -295,9 +290,13 @@ public:
    * cost to the destination. So a time based estimate based on speed should
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
+   *
+   * The speed factor is multiplied with the minimum user provided cost factor to
+   * avoid overestimating real cost. Unless a user passes linear features with custom cost
+   * factors, this value will always be 1.
    */
   virtual float AStarCostFactor() const override {
-    return kSpeedFactor[top_speed_];
+    return kSpeedFactor[top_speed_] * static_cast<float>(min_linear_cost_factor_);
   }
 
   /**
@@ -360,6 +359,8 @@ public:
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
   float width_;  // Vehicle width in meters
+  float length_; // Vehicle length in meters
+  float weight_; // Vehicle weight in metric tons
 };
 
 // Constructor
@@ -411,6 +412,8 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // Get the vehicle attributes
   height_ = costing_options.height();
   width_ = costing_options.width();
+  length_ = costing_options.length();
+  weight_ = costing_options.weight();
 }
 
 // Check if access is allowed on the specified edge.
@@ -476,6 +479,10 @@ bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) 
       return height_ <= static_cast<float>(restriction.value() * 0.01);
     case AccessType::kMaxWidth:
       return width_ <= static_cast<float>(restriction.value() * 0.01);
+    case AccessType::kMaxLength:
+      return length_ <= static_cast<float>(restriction.value() * 0.01);
+    case AccessType::kMaxWeight:
+      return weight_ <= static_cast<float>(restriction.value() * 0.01);
     default:
       return true;
   };
@@ -486,6 +493,7 @@ bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) 
 
 // Get the cost to traverse the edge in seconds
 Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const {
@@ -545,10 +553,13 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
   }
 
+  factor *= EdgeFactor(edgeid);
+
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
+
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
@@ -706,8 +717,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
   JSON_PBF_RANGED_DEFAULT(co, kUseDistanceRange, json, "/use_distance", use_distance);
-  JSON_PBF_RANGED_DEFAULT(co, kAutoHeightRange, json, "/height", height);
-  JSON_PBF_RANGED_DEFAULT(co, kAutoWidthRange, json, "/width", width);
   JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
                           restriction_probability);
   JSON_PBF_DEFAULT_V2(co, false, json, "/include_hot", include_hot);
@@ -956,6 +965,7 @@ public:
    * @return  Returns the cost to traverse the edge.
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
@@ -990,6 +1000,8 @@ public:
       // Add a penalty for traversing a closed edge
       factor *= closure_factor_;
     }
+
+    factor *= EdgeFactor(edgeid);
 
     return Cost(sec * factor, sec);
   }
@@ -1085,10 +1097,12 @@ public:
   using AutoCost::flow_mask_;
   using AutoCost::gate_cost_;
   using AutoCost::height_;
+  using AutoCost::length_;
   using AutoCost::maneuver_penalty_;
   using AutoCost::service_factor_;
   using AutoCost::service_penalty_;
   using AutoCost::toll_booth_cost_;
+  using AutoCost::weight_;
   using AutoCost::width_;
 };
 
@@ -1250,6 +1264,20 @@ TEST(AutoCost, testAutoCostParams) {
     EXPECT_THAT(tester->width_, test::IsBetween(defaults.width_.min, defaults.width_.max));
   }
 
+  // length_
+  distributor = make_distributor_from_range(defaults.length_);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("length", distributor(generator));
+    EXPECT_THAT(tester->length_, test::IsBetween(defaults.length_.min, defaults.length_.max));
+  }
+
+  // weight_
+  distributor = make_distributor_from_range(defaults.weight_);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("weight", distributor(generator));
+    EXPECT_THAT(tester->weight_, test::IsBetween(defaults.weight_.min, defaults.weight_.max));
+  }
+
   // flow_mask_
   using tc = std::tuple<std::string, std::string, uint8_t>;
   std::vector<tc>
@@ -1301,10 +1329,5 @@ TEST(AutoCost, testAutoCostParams) {
   }
 }
 } // namespace
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

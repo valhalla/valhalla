@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <list>
 #include <set>
 #include <stdexcept>
@@ -42,7 +43,7 @@ std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restriction
     offset += cr->SizeOf();
   }
   return builders;
-};
+}
 
 } // namespace
 
@@ -219,11 +220,24 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   for (auto ni = name_info.begin(); ni != name_info.end(); ++ni) {
     // compute the width of the entry by looking at the next offset or the end if its the last one
     auto next = std::next(ni);
-    auto width = next != name_info.end() ? (next->name_offset_ - ni->name_offset_)
-                                         : (textlist_size_ - ni->name_offset_);
+
+    size_t width;
+
+    if (next != name_info.end()) {
+      // Non-last entry: use the next entry's offset
+      width = next->name_offset_ - ni->name_offset_;
+      // Last entry: for tagged values, use TaggedValueSize to avoid including padding bytes
+      // that were added for alignment. For non-tagged values just read to the end.
+    } else if (ni->tagged_) {
+      width = EdgeInfo::TaggedValueSize(textlist_ + ni->name_offset_);
+      // Last entry is just text so use the text list ptr as its the next thing in the tile
+    } else {
+      width = textlist_size_ - ni->name_offset_;
+    }
 
     // Keep the bytes for this entry....remove null terminating char as it is added in StoreTileData
     textlistbuilder_.emplace_back(textlist_ + ni->name_offset_, width - 1);
+
     // Remember what offset they had
     text_offset_map_.emplace(textlistbuilder_.back(), ni->name_offset_);
     // Keep track of how large it is for storing it back to disk later
@@ -562,9 +576,10 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
         bool linguistic_on_node =
             sign.type() == Sign::Type::kJunctionName || (sign.type() == Sign::Type::kTollName);
         uint32_t count = (sign.linguistic_start_index() + sign.linguistic_count()) - 1;
-        uint32_t offset =
+        uint32_t sign_offset =
             AddName(process_linguistic_header(sign.linguistic_start_index(), count, linguistics, i));
-        signs_builder_.emplace_back(idx, Sign::Type::kLinguistic, linguistic_on_node, true, offset);
+        signs_builder_.emplace_back(idx, Sign::Type::kLinguistic, linguistic_on_node, true,
+                                    sign_offset);
       }
     }
   }
@@ -584,9 +599,28 @@ void GraphTileBuilder::AddSigns(const uint32_t idx, const std::vector<SignInfo>&
 }
 
 // Add lane connectivity
-void GraphTileBuilder::AddLaneConnectivity(const std::vector<baldr::LaneConnectivity>& lc) {
-  lane_connectivity_builder_.insert(lane_connectivity_builder_.end(), lc.begin(), lc.end());
-  lane_connectivity_offset_ += sizeof(baldr::LaneConnectivity) * lc.size();
+void GraphTileBuilder::AddLaneConnectivity(std::vector<baldr::LaneConnectivity>&& lc) {
+  size_t size = lc.size();
+
+  lane_connectivity_builder_.reserve(lane_connectivity_builder_.size() + size);
+  lane_connectivity_builder_.insert(lane_connectivity_builder_.end(),
+                                    std::make_move_iterator(lc.begin()),
+                                    std::make_move_iterator(lc.end()));
+  lane_connectivity_offset_ += sizeof(baldr::LaneConnectivity) * size;
+}
+
+void GraphTileBuilder::CopyLaneConnectivityFromTile(const baldr::graph_tile_ptr& tile,
+                                                    uint32_t edge_id) {
+  auto laneconnectivity_span = tile->GetLaneConnectivity(edge_id);
+  auto laneconnectivity = std::vector<baldr::LaneConnectivity>(laneconnectivity_span.begin(),
+                                                               laneconnectivity_span.end());
+  if (laneconnectivity.size() == 0) {
+    LOG_ERROR("Base edge should have lane connectivity, but none found");
+  }
+  for (auto& lc : laneconnectivity) {
+    lc.set_to(directededges().size());
+  }
+  AddLaneConnectivity(std::move(laneconnectivity));
 }
 
 // Add forward complex restriction.
@@ -1179,14 +1213,15 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
     file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
     // a bunch of stuff between header and bins
     const auto* begin = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
-    const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin());
+    const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).data());
     file.write(begin, end - begin);
     // the updated bins
     for (const auto& bin : bins) {
       file.write(reinterpret_cast<const char*>(bin.data()), bin.size() * sizeof(GraphId));
     }
     // the rest of the stuff after bins
-    begin = reinterpret_cast<const char*>(tile->GetBin(kBinsDim - 1, kBinsDim - 1).end());
+    auto last_bin = tile->GetBin(kBinsDim - 1, kBinsDim - 1);
+    begin = reinterpret_cast<const char*>(last_bin.data() + last_bin.size());
     end = reinterpret_cast<const char*>(tile->header()) + tile->header()->end_offset();
     file.write(begin, end - begin);
   } // failed
@@ -1281,7 +1316,7 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
 
 void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
   // check the edge id makes sense
-  if (header_builder_.graphid().Tile_Base() != edge_id.Tile_Base()) {
+  if (header_builder_.graphid().tile_base() != edge_id.tile_base()) {
     throw std::runtime_error(
         "Can't add landmark: tile id or hierarchy level doesn't match with the current builder");
   }

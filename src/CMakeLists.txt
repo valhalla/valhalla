@@ -92,7 +92,7 @@ function(valhalla_module)
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${MODULE_NAME}"
     COMPONENT development)
 
-  if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
+  if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS OR ENABLE_NODE_BINDINGS)
     set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
   endif()
 
@@ -158,11 +158,6 @@ if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   set_source_files_properties(proto_conversions.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif()
 
-if (ENABLE_SERVICES)
-  set(valhalla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
-  set(valhalla_src ${valhalla_src} tile_server.cc)
-endif()
-
 add_library(valhalla ${valhalla_src})
 set_target_properties(valhalla PROPERTIES FOLDER "Library")
 create_source_groups("Source Files" ${valhalla_src})
@@ -220,7 +215,7 @@ if(PKG_CONFIG_FOUND)
   configure_valhalla_pc()
 
   install(FILES
-    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    ${VALHALLA_BUILD_DIR}/libvalhalla.pc
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endif()
 
@@ -241,9 +236,9 @@ if(BUILD_SHARED_LIBS)
     COMPONENT development)
 
   if(UNIX)
-    add_custom_target(${LIBVALHALLA_SO_LINK} ALL
+    add_custom_target(valhalla-symlink ALL
       COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
-    set_target_properties(${LIBVALHALLA_SO_LINK} PROPERTIES FOLDER "Library")
+    set_target_properties(valhalla-symlink PROPERTIES FOLDER "Library")
   endif()
 endif()
 

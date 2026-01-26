@@ -26,7 +26,9 @@
 #include <valhalla/baldr/turnlanes.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
+
+#include <ranges>
+#include <span>
 
 #ifndef ENABLE_THREAD_SAFE_TILE_REF_COUNT
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
@@ -35,10 +37,96 @@
 #include <cstdint>
 #include <filesystem>
 #include <iterator>
+#include <list>
 #include <memory>
 
 namespace valhalla {
 namespace baldr {
+
+class ComplexRestrictionView : public std::ranges::view_interface<ComplexRestrictionView> {
+public:
+  class iterator {
+  public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ComplexRestriction;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const ComplexRestriction*;
+    using reference = const ComplexRestriction&;
+
+    iterator() = default;
+
+    iterator(const char* data, size_t size, GraphId id, uint64_t modes, bool forward)
+        : data_(data), size_(size), id_(id), modes_(modes), forward_(forward), offset_(0) {
+      // advance to the next restriction that matches the id and modes
+      advance_to_next();
+    }
+
+    const ComplexRestriction& operator*() const {
+      return *reinterpret_cast<const ComplexRestriction*>(data_ + offset_);
+    }
+
+    iterator& operator++() {
+      const auto* cr = reinterpret_cast<const ComplexRestriction*>(data_ + offset_);
+      offset_ += cr->SizeOf();
+      advance_to_next();
+      return *this;
+    }
+
+    iterator operator++(int) {
+      iterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    friend bool operator==(const iterator& a, const iterator& b) {
+      return a.data_ == b.data_ && a.offset_ == b.offset_;
+    }
+
+  private:
+    friend class ComplexRestrictionView;
+
+    void advance_to_next() {
+      while (offset_ < size_) {
+        const auto* cr = reinterpret_cast<const ComplexRestriction*>(data_ + offset_);
+        if ((forward_ ? cr->to_graphid() : cr->from_graphid()) == id_ && (cr->modes() & modes_)) {
+          return;
+        }
+        offset_ += cr->SizeOf();
+      }
+    }
+
+    const char* data_ = nullptr;
+    size_t size_ = 0;
+    GraphId id_;
+    uint64_t modes_ = 0;
+    bool forward_ = false;
+    size_t offset_ = 0;
+  };
+
+  ComplexRestrictionView() = default;
+
+  ComplexRestrictionView(const char* data, size_t size, GraphId id, uint64_t modes, bool forward)
+      : data_(data), size_(size), id_(id), modes_(modes), forward_(forward) {
+  }
+
+  iterator begin() const {
+    return iterator(data_, size_, id_, modes_, forward_);
+  }
+
+  iterator end() const {
+    iterator it;
+    it.offset_ = size_;
+    it.data_ = data_;
+    return it;
+  }
+
+private:
+  const char* data_ = nullptr;
+  size_t size_ = 0;
+  GraphId id_;
+  uint64_t modes_ = 0;
+  bool forward_ = false;
+};
 
 const std::string SUFFIX_NON_COMPRESSED = ".gph";
 const std::string SUFFIX_COMPRESSED = ".gph.gz";
@@ -90,13 +178,22 @@ public:
    * @param  tile_url URL of tile
    * @param  graphid Tile Id
    * @param  tile_getter object that will handle tile downloading
-   * @return whether or not the tile could be cached to disk
+   * @param  tile_dir the directory to cache graph tiles
+   * @param  range_offset HTTP range offsete in case of a tar URL
+   * @param  range_size HTTP range offsete in case of a tar URL
+   * @param  id_txt_path the file path to the tile_dir's id.txt
+   * @param  id_creation_time the timestamp according to the id.txt
+   * @return the graph tile or nullptr
    */
 
   static graph_tile_ptr CacheTileURL(const std::string& tile_url,
                                      const GraphId& graphid,
                                      tile_getter_t* tile_getter,
-                                     const std::string& cache_location);
+                                     const std::string& tile_dir,
+                                     uint64_t range_offset = 0,
+                                     uint64_t range_size = 0,
+                                     const std::filesystem::path& id_txt_path = "",
+                                     uint64_t id_checksum = 0);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -159,7 +256,7 @@ public:
    * @return  Returns a pointer to the node.
    */
   const NodeInfo* node(const GraphId& node) const {
-    assert(node.Tile_Base() == header_->graphid().Tile_Base());
+    assert(node.tile_base() == header_->graphid().tile_base());
     if (node.id() < header_->nodecount()) {
       return &nodes_[node.id()];
     }
@@ -191,7 +288,7 @@ public:
    * @param  nodeid  GraphId of the node.
    */
   midgard::PointLL get_node_ll(const GraphId& nodeid) const {
-    assert(nodeid.Tile_Base() == header_->graphid().Tile_Base());
+    assert(nodeid.tile_base() == header_->graphid().tile_base());
     return node(nodeid)->latlng(base_ll_);
   }
 
@@ -201,7 +298,7 @@ public:
    * @return  Returns a pointer to the edge.
    */
   const DirectedEdge* directededge(const GraphId& edge) const {
-    assert(edge.Tile_Base() == header_->graphid().Tile_Base());
+    assert(edge.tile_base() == header_->graphid().tile_base());
     if (edge.id() < header_->directededgecount()) {
       return &directededges_[edge.id()];
     }
@@ -232,7 +329,7 @@ public:
    * @return  Returns a pointer to the edge extension.
    */
   const DirectedEdgeExt* ext_directededge(const GraphId& edge) const {
-    assert(edge.Tile_Base() == header_->graphid().Tile_Base());
+    assert(edge.tile_base() == header_->graphid().tile_base());
 
     // Testing against directededgecount since the number of directed edges
     // should be the same as the number of directed edge extensions
@@ -268,14 +365,14 @@ public:
    * @param  node  Node from which the edges leave
    * @return returns an iterable collection of directed edges
    */
-  midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const NodeInfo* node) const;
+  std::span<const DirectedEdge> GetDirectedEdges(const NodeInfo* node) const;
 
   /**
    * Get an iterable set of directed edges from a node in this tile
    * @param  node  GraphId of the node from which the edges leave
    * @return returns an iterable collection of directed edges
    */
-  midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const GraphId& node) const;
+  std::span<const DirectedEdge> GetDirectedEdges(const GraphId& node) const;
 
   /**
    * Get an iterable set of directed edges from a node in this tile
@@ -285,21 +382,21 @@ public:
    * @param  idx  Index of the node within the current tile
    * @return returns an iterable collection of directed edges
    */
-  midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
+  std::span<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
 
   /**
    * Get an iterable set of directed edges extensions from a node in this tile
    * @param  node  Node from which the edges leave
    * @return returns an iterable collection of directed edges extensions
    */
-  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const NodeInfo* node) const;
+  std::span<const DirectedEdgeExt> GetDirectedEdgeExts(const NodeInfo* node) const;
 
   /**
    * Get an iterable set of directed edges extensions from a node in this tile
    * @param  node  GraphId of the node from which the edges leave
    * @return returns an iterable collection of directed edges extensions
    */
-  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const GraphId& node) const;
+  std::span<const DirectedEdgeExt> GetDirectedEdgeExts(const GraphId& node) const;
 
   /**
    * Get an iterable set of directed edges extensions from a node in this tile
@@ -309,7 +406,7 @@ public:
    * @param  idx  Index of the node within the current tile
    * @return returns an iterable collection of directed edges extensions
    */
-  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const size_t idx) const;
+  std::span<const DirectedEdgeExt> GetDirectedEdgeExts(const size_t idx) const;
 
   /**
    * Convenience method to get opposing edge Id given a directed edge.
@@ -341,14 +438,14 @@ public:
    * @param  node  Node from which the transitions leave
    * @return returns an iterable collection of node transitions
    */
-  midgard::iterable_t<const NodeTransition> GetNodeTransitions(const NodeInfo* node) const {
+  std::span<const NodeTransition> GetNodeTransitions(const NodeInfo* node) const {
     if (node < nodes_ || node >= nodes_ + header_->nodecount()) {
       throw std::logic_error(
           std::string(__FILE__) + ":" + std::to_string(__LINE__) +
           " GraphTile NodeInfo out of bounds: " + std::to_string(header_->graphid()));
     }
     const auto* trans = transitions_ + node->transition_index();
-    return midgard::iterable_t<const NodeTransition>{trans, node->transition_count()};
+    return std::span<const NodeTransition>{trans, node->transition_count()};
   }
 
   /**
@@ -356,7 +453,7 @@ public:
    * @param  node  GraphId of the node from which the transitions leave
    * @return returns an iterable collection of node transitions
    */
-  midgard::iterable_t<const NodeTransition> GetNodeTransitions(const GraphId& node) const {
+  std::span<const NodeTransition> GetNodeTransitions(const GraphId& node) const {
     if (node.id() >= header_->nodecount()) {
       throw std::logic_error(
           std::string(__FILE__) + ":" + std::to_string(__LINE__) +
@@ -372,25 +469,24 @@ public:
    * Get an iterable set of nodes in this tile
    * @return returns an iterable collection of nodes
    */
-  midgard::iterable_t<const NodeInfo> GetNodes() const {
-    return midgard::iterable_t<const NodeInfo>{nodes_, header_->nodecount()};
+  std::span<const NodeInfo> GetNodes() const {
+    return std::span<const NodeInfo>{nodes_, header_->nodecount()};
   }
 
   /**
    * Get an iterable set of edges in this tile
    * @return returns an iterable collection of edges
    */
-  midgard::iterable_t<const DirectedEdge> GetDirectedEdges() const {
-    return midgard::iterable_t<const DirectedEdge>{directededges_, header_->directededgecount()};
+  std::span<const DirectedEdge> GetDirectedEdges() const {
+    return std::span<const DirectedEdge>{directededges_, header_->directededgecount()};
   }
 
   /**
    * Get an iterable set of edge extensions in this tile
    * @return returns an iterable collection of edge extensions
    */
-  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts() const {
-    return midgard::iterable_t<const DirectedEdgeExt>{ext_directededges_,
-                                                      header_->directededgecount()};
+  std::span<const DirectedEdgeExt> GetDirectedEdgeExts() const {
+    return std::span<const DirectedEdgeExt>{ext_directededges_, header_->directededgecount()};
   }
 
   /**
@@ -404,11 +500,11 @@ public:
    * @param   forward - do we want the restrictions in reverse order?
    * @param   id - edge id
    * @param   modes - access modes
-   * @return  Returns the vector of complex restrictions in the order requested
+   * @return  Returns a view of complex restrictions in the order requested
    *          based on the id and modes.
    */
-  std::vector<ComplexRestriction*>
-  GetRestrictions(const bool forward, const GraphId id, const uint64_t modes) const;
+  ComplexRestrictionView
+  GetComplexRestrictions(const bool forward, const GraphId id, const uint64_t modes) const;
 
   /**
    * Convenience method to get the directed edges originating at a node.
@@ -579,6 +675,33 @@ public:
   const TransitRoute* GetTransitRoute(const uint32_t idx) const;
 
   /**
+   * Get an operator Id from a map of operator strings or add it to the map.
+   * @param routeid The route ID to look up
+   * @param operators Map of operator names to IDs (will be modified if new operator found)
+   * @return The operator ID, or 0 if there is no operator for the route.
+   */
+  uint32_t GetTransitOperatorId(uint32_t routeid,
+                                std::unordered_map<std::string, uint32_t>& operators) const {
+    const TransitRoute* transit_route = GetTransitRoute(routeid);
+
+    // Test if the transit operator changed
+    if (transit_route && transit_route->op_by_onestop_id_offset()) {
+      // Get the operator name and look up in the operators map
+      std::string operator_name = GetName(transit_route->op_by_onestop_id_offset());
+      auto operator_itr = operators.find(operator_name);
+      if (operator_itr == operators.end()) {
+        // Operator not found - add to the map
+        const uint32_t id = operators.size() + 1;
+        operators[operator_name] = id;
+        return id;
+      } else {
+        return operator_itr->second;
+      }
+    }
+    return 0;
+  }
+
+  /**
    * Get the transit schedule given its schedule index.
    * @param   idx     Schedule index within the tile.
    * @return  Returns a pointer to the transit schedule information. Returns
@@ -590,12 +713,42 @@ public:
    * Convenience method to get the access restrictions for an edge given the
    * edge Id.
    * @param   edgeid  Directed edge Id.
-   * @param   access  Access.  Used to obtain the restrictions for the access
-   *                   that we are interested in (see graphconstants.h)
    * @return  Returns a list (vector) of AccessRestrictions.
    */
-  std::vector<AccessRestriction> GetAccessRestrictions(const uint32_t edgeid,
-                                                       const uint32_t access) const;
+  std::span<const AccessRestriction> GetAccessRestrictions(const uint32_t edgeid) const;
+
+  /**
+   * Convenience method to get the access restrictions for an edge given the
+   * edge Id.
+   * @param   edgeid  Directed edge Id.
+   * @param   access  Access.  Used to obtain the restrictions for the access
+   *                   that we are interested in (see graphconstants.h)
+   * @return  Returns a lazy filtered view of AccessRestrictions.
+   */
+  auto GetAccessRestrictions(const uint32_t edgeid, const uint32_t access) const {
+    auto all_restrictions = GetAccessRestrictions(edgeid);
+    return all_restrictions |
+           std::views::filter([access](const auto& r) { return r.modes() & access; });
+  }
+
+  /**
+   * Get a specific access restriction by index from the filtered results.
+   * @param   edgeid  Directed edge Id.
+   * @param   access  Access mode filter.
+   * @param   index   Index of the restriction in the filtered results.
+   * @return  Pointer to the AccessRestriction if found, nullptr otherwise.
+   */
+  const AccessRestriction* GetAccessRestrictionAtIndex(const uint32_t edgeid,
+                                                       const uint32_t access,
+                                                       const size_t index) const {
+    auto restrictions = GetAccessRestrictions(edgeid, access);
+    auto it = std::ranges::begin(restrictions);
+    auto end = std::ranges::end(restrictions);
+
+    for (size_t i = 0; i < index && it != end; ++i, ++it) {}
+
+    return (it != end) ? &(*it) : nullptr;
+  }
 
   /**
    * Get an iterable list of GraphIds given a bin in the tile
@@ -603,21 +756,21 @@ public:
    * @param  row the bin's row
    * @return iterable container of graphids contained in the bin
    */
-  midgard::iterable_t<GraphId> GetBin(size_t column, size_t row) const;
+  std::span<GraphId> GetBin(size_t column, size_t row) const;
 
   /**
    * Get an iterable list of GraphIds given a bin in the tile
    * @param  index the bin's index in the row major array
    * @return iterable container of graphids contained in the bin
    */
-  midgard::iterable_t<GraphId> GetBin(size_t index) const;
+  std::span<GraphId> GetBin(size_t index) const;
 
   /**
    * Get lane connections ending on this edge.
    * @param  idx  GraphId of the directed edge.
    * @return  Returns a list of lane connections ending on this edge.
    */
-  std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
+  std::span<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
 
   /**
    * Convenience method for use with costing to get the speed for an edge given the directed
@@ -662,7 +815,9 @@ public:
     float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
-    if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
+    auto invalid_time = seconds == kInvalidSecondsOfWeek;
+    if (!invalid_time && (flow_mask & kCurrentFlowMask) && traffic_tile() &&
+        live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
@@ -698,7 +853,6 @@ public:
 
     // use predicted speed if a time was passed in, the predicted speed layer was requested, and if
     // the edge has predicted speed
-    auto invalid_time = seconds == kInvalidSecondsOfWeek;
     if (!invalid_time && (flow_mask & kPredictedFlowMask) && de->has_predicted_speed()) {
       seconds %= midgard::kSecondsPerWeek;
       uint32_t idx = de - directededges_;

@@ -4,6 +4,7 @@
 #include "baldr/nodetransition.h"
 #include "baldr/pathlocation.h"
 #include "midgard/distanceapproximator.h"
+#include "midgard/util.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 
@@ -29,7 +30,7 @@ void LabelSet::put(const baldr::GraphId& nodeid,
                    const baldr::DirectedEdge* edge,
                    const sif::TravelMode mode,
                    int restriction_idx) {
-  if (!nodeid.Is_Valid()) {
+  if (!nodeid.is_valid()) {
     throw std::runtime_error("invalid nodeid");
   }
 
@@ -104,7 +105,7 @@ uint32_t LabelSet::pop() {
   // Mark the popped label as permanent (optimal)
   if (idx != baldr::kInvalidLabel) {
     const auto& label = labels_[idx];
-    if (label.nodeid().Is_Valid()) {
+    if (label.nodeid().is_valid()) {
       const auto it = node_status_.find(label.nodeid());
 
       // When these logic errors happen, go check LabelSet::put
@@ -165,7 +166,7 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           uint8_t& restriction_idx,
                           uint8_t& destonly_access_restr_mask) {
   bool valid_pred =
-      (!pred_edgelabel.edgeid().Is_Valid() && costing->Allowed(edge, tile, sif::kDisallowShortcut)) ||
+      (!pred_edgelabel.edgeid().is_valid() && costing->Allowed(edge, tile, sif::kDisallowShortcut)) ||
       edgeid == pred_edgelabel.edgeid();
   bool restricted = !costing->Allowed(edge, false, pred_edgelabel, tile, edgeid, 0, 0,
                                       restriction_idx, destonly_access_restr_mask);
@@ -192,7 +193,7 @@ void set_origin(baldr::GraphReader& reader,
     if (edge.begin_node()) {
       auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
       const auto nodeid = edge_nodes.first;
-      if (nodeid.Is_Valid()) {
+      if (nodeid.is_valid()) {
         // If both origin and destination are nodes, then always check
         // the origin node but won't check the destination node
         const auto nodeinfo = reader.nodeinfo(nodeid, tile);
@@ -204,7 +205,7 @@ void set_origin(baldr::GraphReader& reader,
     } else if (edge.end_node()) {
       auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
       const auto nodeid = edge_nodes.second;
-      if (nodeid.Is_Valid()) {
+      if (nodeid.is_valid()) {
         // If both origin and destination are nodes, then always check
         // the origin node but won't check the destination node
         const auto nodeinfo = reader.nodeinfo(nodeid, tile);
@@ -237,14 +238,14 @@ void set_destinations(baldr::GraphReader& reader,
       if (edge.begin_node()) {
         auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
         const auto nodeid = edge_nodes.first;
-        if (!nodeid.Is_Valid()) {
+        if (!nodeid.is_valid()) {
           continue;
         }
         node_dests[nodeid].insert(dest);
       } else if (edge.end_node()) {
         auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
         const auto nodeid = edge_nodes.second;
-        if (!nodeid.Is_Valid()) {
+        if (!nodeid.is_valid()) {
           continue;
         }
         node_dests[nodeid].insert(dest);
@@ -394,7 +395,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
     // Get the inbound edge heading (clamped to range [0,360])
     const auto inbound_hdg =
-        label.edgeid().Is_Valid() ? get_inbound_edgelabel_heading(reader, label, nodeinfo) : 0;
+        label.edgeid().is_valid() ? get_inbound_edgelabel_heading(reader, label, nodeinfo) : 0;
 
     // Expand from end node in forward direction.
     baldr::GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
@@ -416,7 +417,7 @@ find_shortest_path(baldr::GraphReader& reader,
       // Get outbound heading (clamped to range [0,360]) and add to turn
       // cost based on turn degree
       float turn_cost = label.turn_cost();
-      if (label.edgeid().Is_Valid()) {
+      if (label.edgeid().is_valid()) {
         const auto outbound_hdg = get_outbound_edge_heading(tile, directededge, nodeinfo);
         turn_cost += turn_cost_table[midgard::get_turn_degree180(inbound_hdg, outbound_hdg)];
       }
@@ -432,8 +433,8 @@ find_shortest_path(baldr::GraphReader& reader,
               // Override cost portion to be distance. Heuristic cost from a
               // destination to itself must be 0, so sortcost = cost
               sif::Cost cost(label.cost().cost + directededge->length() * edge.percent_along,
-                             label.cost().secs +
-                                 costing->EdgeCost(directededge, tile).secs * edge.percent_along);
+                             label.cost().secs + costing->EdgeCost(directededge, edgeid, tile).secs *
+                                                     edge.percent_along);
               // We only add the labels if we are under the limits for
               // distance and for time or time limit is 0
               if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -452,7 +453,7 @@ find_shortest_path(baldr::GraphReader& reader,
         // Get cost - use EdgeCost to get time along the edge. Override
         // cost portion to be distance. Add heuristic to get sort cost.
         sif::Cost cost(label.cost().cost + directededge->length(),
-                       label.cost().secs + costing->EdgeCost(directededge, tile).secs);
+                       label.cost().secs + costing->EdgeCost(directededge, edgeid, tile).secs);
         // We only add the labels if we are under the limits for distance
         // and for time or time limit is 0
         if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -491,7 +492,7 @@ find_shortest_path(baldr::GraphReader& reader,
     // labels are added.
     label = labelset->label(label_idx);
     // Check if we are looking for a node destination on this label
-    if (label.nodeid().Is_Valid()) {
+    if (label.nodeid().is_valid()) {
       // If this node is a destination, path to destinations at this
       // node is found: remember them and remove this node from the
       // destination list
@@ -562,7 +563,7 @@ find_shortest_path(baldr::GraphReader& reader,
         // If this location doesnt allow uturns AND this is the opposing
         // edge of the edge label coming into the location THEN skip it
         // because it would be a uturn
-        if (!allows_immediate_uturn && label.edgeid().Is_Valid() &&
+        if (!allows_immediate_uturn && label.edgeid().is_valid() &&
             label.edgeid() != origin_edge.id &&
             label.opp_local_idx() == directed_edge->localedgeidx()) {
           continue;
@@ -580,8 +581,9 @@ find_shortest_path(baldr::GraphReader& reader,
               // from a destination to itself must be 0
               float segment_percentage = (destination_edge.percent_along - origin_edge.percent_along);
               sif::Cost cost(label.cost().cost + directed_edge->length() * segment_percentage,
-                             label.cost().secs + costing->EdgeCost(directed_edge, start_tile).secs *
-                                                     segment_percentage);
+                             label.cost().secs +
+                                 costing->EdgeCost(directed_edge, origin_edge.id, start_tile).secs *
+                                     segment_percentage);
               // We only add the labels if we are under the limits for
               // distance and for time or time limit is 0
               if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -598,7 +600,8 @@ find_shortest_path(baldr::GraphReader& reader,
         // destination to itself must be 0
         float f = (1.0f - origin_edge.percent_along);
         sif::Cost cost(label.cost().cost + directed_edge->length() * f,
-                       label.cost().secs + costing->EdgeCost(directed_edge, start_tile).secs * f);
+                       label.cost().secs +
+                           costing->EdgeCost(directed_edge, origin_edge.id, start_tile).secs * f);
         // We only add the labels if we are under the limits for distance
         // and for time or time limit is 0
         if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {

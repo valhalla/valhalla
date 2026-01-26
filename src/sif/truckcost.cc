@@ -92,11 +92,7 @@ constexpr float kSurfaceFactor[] = {
 
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kLowClassPenaltyRange{0.f, kDefaultLowClassPenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kTruckWeightRange{0.f, kDefaultTruckWeight, 100.0f};
 constexpr ranged_default_t<float> kTruckAxleLoadRange{0.f, kDefaultTruckAxleLoad, 40.0f};
-constexpr ranged_default_t<float> kTruckHeightRange{0.f, kDefaultTruckHeight, 10.0f};
-constexpr ranged_default_t<float> kTruckWidthRange{0.f, kDefaultTruckWidth, 10.0f};
-constexpr ranged_default_t<float> kTruckLengthRange{0.f, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0.f, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<uint32_t> kAxleCountRange{2, kDefaultAxleCount, 20};
 constexpr ranged_default_t<float> kUseHighwaysRange{0.f, kDefaultUseHighways, 1.0f};
@@ -110,6 +106,10 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   cfg.service_penalty_.def = kDefaultServicePenalty;
   cfg.use_tracks_.def = kDefaultUseTracks;
   cfg.use_living_streets_.def = kDefaultUseLivingStreets;
+  cfg.height_.def = kDefaultTruckHeight;
+  cfg.width_.def = kDefaultTruckWidth;
+  cfg.length_.def = kDefaultTruckLength;
+  cfg.weight_.def = kDefaultTruckWeight;
   return cfg;
 }
 
@@ -234,6 +234,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
@@ -499,6 +500,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 // Get the cost to traverse the edge in seconds
 Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
+                         const baldr::GraphId& edgeid,
                          const graph_tile_ptr& tile,
                          const baldr::TimeInfo& time_info,
                          uint8_t& flow_sources) const {
@@ -555,6 +557,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
+  factor *= EdgeFactor(edgeid);
 
   return {sec * factor, sec};
 }
@@ -716,7 +719,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TruckCost::AStarCostFactor() const {
-  return kSpeedFactor[top_speed_];
+  return kSpeedFactor[top_speed_] * min_linear_cost_factor_;
 }
 
 // Returns the current travel type.
@@ -737,11 +740,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kLowClassPenaltyRange, json, "/low_class_penalty", low_class_penalty);
   JSON_PBF_DEFAULT_V2(co, false, json, "/hazmat", hazmat);
-  JSON_PBF_RANGED_DEFAULT(co, kTruckWeightRange, json, "/weight", weight);
   JSON_PBF_RANGED_DEFAULT(co, kTruckAxleLoadRange, json, "/axle_load", axle_load);
-  JSON_PBF_RANGED_DEFAULT(co, kTruckHeightRange, json, "/height", height);
-  JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
-  JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT_V2(co, kAxleCountRange, json, "/axle_count", axle_count);
@@ -914,13 +913,6 @@ TEST(TruckCost, testTruckCostParams) {
                 test::IsBetween(defaults.service_factor_.min, defaults.service_factor_.max));
   }
 
-  // weight_
-  distributor.reset(make_distributor_from_range(kTruckWeightRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_truckcost_from_json("weight", (*distributor)(generator)));
-    EXPECT_THAT(ctorTester->weight_, test::IsBetween(kTruckWeightRange.min, kTruckWeightRange.max));
-  }
-
   // axle_load_
   distributor.reset(make_distributor_from_range(kTruckAxleLoadRange));
   for (unsigned i = 0; i < testIterations; ++i) {
@@ -928,33 +920,7 @@ TEST(TruckCost, testTruckCostParams) {
     EXPECT_THAT(ctorTester->axle_load_,
                 test::IsBetween(kTruckAxleLoadRange.min, kTruckAxleLoadRange.max));
   }
-
-  // height_
-  distributor.reset(make_distributor_from_range(kTruckHeightRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_truckcost_from_json("height", (*distributor)(generator)));
-    EXPECT_THAT(ctorTester->height_, test::IsBetween(kTruckHeightRange.min, kTruckHeightRange.max));
-  }
-
-  // width_
-  distributor.reset(make_distributor_from_range(kTruckWidthRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_truckcost_from_json("width", (*distributor)(generator)));
-    EXPECT_THAT(ctorTester->width_, test::IsBetween(kTruckWidthRange.min, kTruckWidthRange.max));
-  }
-
-  // length_
-  distributor.reset(make_distributor_from_range(kTruckLengthRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_truckcost_from_json("length", (*distributor)(generator)));
-    EXPECT_THAT(ctorTester->length_, test::IsBetween(kTruckLengthRange.min, kTruckLengthRange.max));
-  }
 }
 } // namespace
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

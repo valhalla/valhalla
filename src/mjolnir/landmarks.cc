@@ -5,6 +5,7 @@
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/sqlite3.h"
 #include "sif/nocost.h"
@@ -36,10 +37,10 @@ constexpr double kLandmarkQueryBuffer = .000001;
 
 // sort a sequence file to put the edges in the same tile together
 bool sort_seq_file(const std::pair<GraphId, uint64_t>& a, const std::pair<GraphId, uint64_t>& b) {
-  if (a.first.Tile_Base() == b.first.Tile_Base()) {
+  if (a.first.tile_base() == b.first.tile_base()) {
     return a.first.id() < b.first.id();
   }
-  return a.first.Tile_Base() < b.first.Tile_Base();
+  return a.first.tile_base() < b.first.tile_base();
 }
 } // namespace
 
@@ -195,11 +196,11 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   auto populate_landmarks = [](void* data, int /*argc*/, char** argv, char** /*col_names*/) {
     std::vector<Landmark>* landmarks = static_cast<std::vector<Landmark>*>(data);
 
-    int64_t landmark_id = static_cast<int64_t>(std::stoi(argv[0]));
+    int64_t landmark_id = static_cast<int64_t>(valhalla::midgard::to_int(argv[0]));
     const char* landmark_name = argv[1];
-    int landmark_type = std::stoi(argv[2]);
-    double lng = std::stod(argv[3]);
-    double lat = std::stod(argv[4]);
+    int landmark_type = valhalla::midgard::to_int(argv[2]);
+    double lng = valhalla::midgard::to_float<double>(argv[3]);
+    double lat = valhalla::midgard::to_float<double>(argv[4]);
 
     landmarks->emplace_back(
         Landmark(landmark_id, landmark_name, static_cast<LandmarkType>(landmark_type), lng, lat));
@@ -308,6 +309,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
   LandmarkDatabase db(db_name, true);
   GraphReader reader(pt);
+  loki::Search search(reader);
   // create the sequence file
   std::string file_name = "landmark_dump_" + std::to_string(thread_number);
   midgard::sequence<std::pair<GraphId, uint64_t>> seq_file(file_name, true);
@@ -331,7 +333,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
         // call loki::Search to get nearby edges to each landmark
         std::unordered_map<valhalla::baldr::Location, PathLocation> result =
-            loki::Search({landmark_location}, reader, sif::CreateNoCost({}));
+            search.search({landmark_location}, sif::CreateNoCost({}));
 
         // we only have one landmark as input so the return size should be no more than one
         if (result.size() > 1) {
@@ -380,8 +382,8 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
   // every i'th thread works on every i'th tile
   for (auto it = seq_file.begin(); it != seq_file.end(); ++it) {
     // if the current tile is not the same as the last one, increase counter by one
-    if ((*it).first.Tile_Base() != last_tile) {
-      last_tile = (*it).first.Tile_Base();
+    if ((*it).first.tile_base() != last_tile) {
+      last_tile = (*it).first.tile_base();
       tile_count++;
     }
     // decide whether this tile is a "every i'th tile". if not, the thread should skip it
@@ -393,14 +395,14 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
 
     // if this pair is on a new tile, then store the previous tile and move to the new tile
     if (!tile_builder_ptr ||
-        tile_builder_ptr->header_builder().graphid().Tile_Base() != (*it).first.Tile_Base()) {
+        tile_builder_ptr->header_builder().graphid().tile_base() != (*it).first.tile_base()) {
       // store the previously updated tile
       if (tile_builder_ptr) {
         tile_builder_ptr->StoreTileData();
         updated_tiles++;
       }
       // reset the tile builder to this new tile
-      tile_builder_ptr = std::make_unique<GraphTileBuilder>(tile_dir, (*it).first.Tile_Base(), true);
+      tile_builder_ptr = std::make_unique<GraphTileBuilder>(tile_dir, (*it).first.tile_base(), true);
     }
 
     // retrieve the landmark to be added

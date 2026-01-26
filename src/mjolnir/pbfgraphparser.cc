@@ -15,7 +15,9 @@
 #include "proto/common.pb.h"
 #include "scoped_timer.h"
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
 
@@ -40,17 +42,14 @@ constexpr size_t kWaysChunksPerLua = 8;
 constexpr char kExceptDestinationRestrictionFlag = '~';
 
 // Convenience method to get a number from a string. Uses try/catch in case
-// stoi throws an exception
-int get_number(const std::string& tag, const std::string& value) { // NOLINT
-  int num = -1;
-  try {
-    num = stoi(value);
-  } catch (const std::invalid_argument& arg) {
-    LOG_DEBUG("invalid_argument thrown for " + tag + " value: " + value);
-  } catch (const std::out_of_range& oor) {
-    LOG_DEBUG("out_of_range exception thrown for " + tag + " value: " + value);
+// to_int throws an exception
+int get_number(std::string_view tag, const std::string& value) { // NOLINT
+  const auto num = try_to_int(value);
+  if (!num.has_value()) {
+    LOG_DEBUG("Cannot parse int for {} value: {}", tag, value);
+    return -1;
   }
-  return num;
+  return num.value();
 }
 
 void set_access_restriction_value(OSMAccessRestriction& restriction,
@@ -202,12 +201,12 @@ struct graph_parser {
     };
 
     tag_handlers_["layer"] = [this]() {
-      auto layer = static_cast<int8_t>(std::stoi(tag_.second));
+      auto layer = static_cast<int8_t>(to_int(tag_.second));
       way_.set_layer(layer);
     };
 
     tag_handlers_["road_class"] = [this]() {
-      RoadClass roadclass = (RoadClass)std::stoi(tag_.second);
+      RoadClass roadclass = (RoadClass)to_int(tag_.second);
       switch (roadclass) {
 
         case RoadClass::kMotorway:
@@ -373,7 +372,7 @@ struct graph_parser {
     };
 
     tag_handlers_["use"] = [this]() {
-      Use use = (Use)std::stoi(tag_.second);
+      Use use = (Use)to_int(tag_.second);
       switch (use) {
         case Use::kCycleway:
           way_.set_use(Use::kCycleway);
@@ -898,7 +897,7 @@ struct graph_parser {
           // this way has an unlimited speed limit (german autobahn)
           max_speed_ = kUnlimitedSpeedLimit;
         } else {
-          max_speed_ = std::stof(tag_.second);
+          max_speed_ = to_float(tag_.second);
         }
         way_.set_tagged_speed(true);
         has_max_speed_ = true;
@@ -908,7 +907,7 @@ struct graph_parser {
     };
     tag_handlers_["average_speed"] = [this]() {
       try {
-        average_speed_ = std::stof(tag_.second);
+        average_speed_ = to_float(tag_.second);
         has_average_speed_ = true;
         way_.set_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
@@ -917,7 +916,7 @@ struct graph_parser {
     };
     tag_handlers_["advisory_speed"] = [this]() {
       try {
-        advisory_speed_ = std::stof(tag_.second);
+        advisory_speed_ = to_float(tag_.second);
         has_advisory_speed_ = true;
         way_.set_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
@@ -926,7 +925,7 @@ struct graph_parser {
     };
     tag_handlers_["forward_speed"] = [this]() {
       try {
-        way_.set_forward_speed(std::stof(tag_.second));
+        way_.set_forward_speed(to_float(tag_.second));
         way_.set_forward_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
@@ -934,7 +933,7 @@ struct graph_parser {
     };
     tag_handlers_["backward_speed"] = [this]() {
       try {
-        way_.set_backward_speed(std::stof(tag_.second));
+        way_.set_backward_speed(to_float(tag_.second));
         way_.set_backward_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
@@ -942,21 +941,21 @@ struct graph_parser {
     };
     tag_handlers_["maxspeed:hgv"] = [this]() {
       try {
-        way_.set_truck_speed(std::stof(tag_.second));
+        way_.set_truck_speed(to_float(tag_.second));
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
     tag_handlers_["maxspeed:hgv:forward"] = [this]() {
       try {
-        way_.set_truck_speed_forward(std::stof(tag_.second));
+        way_.set_truck_speed_forward(to_float(tag_.second));
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
     tag_handlers_["maxspeed:hgv:backward"] = [this]() {
       try {
-        way_.set_truck_speed_backward(std::stof(tag_.second));
+        way_.set_truck_speed_backward(to_float(tag_.second));
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
@@ -973,7 +972,7 @@ struct graph_parser {
         speed = kUnlimitedSpeedLimit;
       } else {
         try {
-          const float parsed = std::stof(tokens.at(0));
+          const float parsed = to_float(tokens.at(0));
           if (parsed > kMaxAssumedSpeed) {
             // LOG_WARN("Ignoring maxspeed:conditional that exceedes max for way id: " +
             //          std::to_string(osmid_));
@@ -1036,7 +1035,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxHeight);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1046,7 +1045,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1056,7 +1055,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1065,7 +1064,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxWidth);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1075,7 +1074,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1085,65 +1084,65 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxlength"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxlength_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxlength_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxweight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxweight_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxweight_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1152,7 +1151,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxAxleLoad);
       restriction.set_modes(kTruckAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1160,7 +1159,7 @@ struct graph_parser {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxAxles);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val); });
+                                   [](const std::string& val) { return to_float(val); });
       restriction.set_modes(kTruckAccess);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1180,7 +1179,7 @@ struct graph_parser {
     };
     tag_handlers_["default_speed"] = [this]() {
       try {
-        default_speed_ = std::stof(tag_.second);
+        default_speed_ = to_float(tag_.second);
         has_default_speed_ = true;
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
@@ -1573,7 +1572,7 @@ struct graph_parser {
       way_.set_shoulder_left(tag_.second == "true" ? true : false);
     };
     tag_handlers_["cycle_lane_right"] = [this]() {
-      CycleLane cyclelane_right = (CycleLane)std::stoi(tag_.second);
+      CycleLane cyclelane_right = (CycleLane)to_int(tag_.second);
       switch (cyclelane_right) {
         case CycleLane::kDedicated:
           way_.set_cyclelane_right(CycleLane::kDedicated);
@@ -1591,7 +1590,7 @@ struct graph_parser {
       }
     };
     tag_handlers_["cycle_lane_left"] = [this]() {
-      CycleLane cyclelane_left = (CycleLane)std::stoi(tag_.second);
+      CycleLane cyclelane_left = (CycleLane)to_int(tag_.second);
       switch (cyclelane_left) {
         case CycleLane::kDedicated:
           way_.set_cyclelane_left(CycleLane::kDedicated);
@@ -1615,22 +1614,22 @@ struct graph_parser {
       way_.set_cyclelane_left_opposite(tag_.second == "true" ? true : false);
     };
     tag_handlers_["lanes"] = [this]() {
-      way_.set_lanes(std::stoi(tag_.second));
+      way_.set_lanes(to_int(tag_.second));
       way_.set_tagged_lanes(true);
     };
     tag_handlers_["forward_lanes"] = [this]() {
-      way_.set_forward_lanes(std::stoi(tag_.second));
+      way_.set_forward_lanes(to_int(tag_.second));
       way_.set_forward_tagged_lanes(true);
     };
     tag_handlers_["backward_lanes"] = [this]() {
-      way_.set_backward_lanes(std::stoi(tag_.second));
+      way_.set_backward_lanes(to_int(tag_.second));
       way_.set_backward_tagged_lanes(true);
     };
     tag_handlers_["tunnel"] = [this]() { way_.set_tunnel(tag_.second == "true" ? true : false); };
     tag_handlers_["toll"] = [this]() { way_.set_toll(tag_.second == "true" ? true : false); };
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
     tag_handlers_["indoor"] = [this]() { way_.set_indoor(tag_.second == "yes" ? true : false); };
-    tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
+    tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(to_int(tag_.second)); };
     //    tag_handlers_["bike_national_ref"] = [this]() {
     //      if (!tag_.second.empty())
     //        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
@@ -2218,18 +2217,18 @@ struct graph_parser {
         intersection = true;
         n.set_type(NodeType::kElevator);
       } else if (tag.first == "access_mask") {
-        n.set_access(std::stoi(tag.second));
+        n.set_access(to_int(tag.second));
       } else if (tag.first == "tagged_access") {
-        n.set_tagged_access(std::stoi(tag.second));
+        n.set_tagged_access(to_int(tag.second));
       } else if (tag.first == "private") {
         n.set_private_access(tag.second == "true");
       } else if (!is_lang_pronunciation) {
-        if (boost::algorithm::starts_with(tag.first, "name:") &&
+        if (tag.first.starts_with("name:") &&
             (is_highway_junction || maybe_named_junction || is_toll_node) && hasTag) {
           ProcessNameTag(tag_, name_w_lang_, language_);
           ++osmdata_.node_name_count;
           named_junction = maybe_named_junction;
-        } else if (boost::algorithm::starts_with(tag.first, "ref:")) {
+        } else if (tag.first.starts_with("ref:")) {
           ProcessNameTag(tag_, ref_w_lang_, ref_language_);
           ++osmdata_.node_ref_count;
         }
@@ -2249,9 +2248,9 @@ struct graph_parser {
               alphabet = PronunciationAlphabet::kJeita;
           }
         }
-        if (boost::algorithm::starts_with(t, "name:")) {
+        if (t.starts_with("name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kNodeName, alphabet, &linguistics);
-        } else if (boost::algorithm::starts_with(t, "ref:")) {
+        } else if (t.starts_with("ref:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kNodeRef, alphabet, &linguistics);
         }
       }
@@ -2398,7 +2397,7 @@ struct graph_parser {
       // Throw away use if include_driveways_ is false
       Tags::const_iterator use;
       if (!include_driveways_ && (use = tags.find("use")) != tags.end() &&
-          static_cast<Use>(std::stoi(use->second)) == Use::kDriveway) {
+          static_cast<Use>(to_int(use->second)) == Use::kDriveway) {
 
         // only private use.
         Tags::const_iterator priv;
@@ -2408,12 +2407,12 @@ struct graph_parser {
       }
       // Throw away constructions if include_construction_ is false
       if (!include_construction_ && (use = tags.find("use")) != tags.end() &&
-          static_cast<Use>(std::stoi(use->second)) == Use::kConstruction) {
+          static_cast<Use>(to_int(use->second)) == Use::kConstruction) {
         return;
       }
       // Throw away platforms if include_platforms_ is false
       if (!include_platforms_ && (use = tags.find("use")) != tags.end() &&
-          static_cast<Use>(std::stoi(use->second)) == Use::kPlatform) {
+          static_cast<Use>(to_int(use->second)) == Use::kPlatform) {
         return;
       }
     } catch (const std::invalid_argument& arg) {
@@ -2584,21 +2583,21 @@ struct graph_parser {
 
       }
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (boost::algorithm::starts_with(tag_.first, "access:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "bicycle:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "motorcycle:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "pedestrian:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "hgv:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "moped:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "mofa:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "psv:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "taxi:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "bus:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "hov:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "emergency:conditional")) {
+      else if (tag_.first.starts_with("access:conditional") ||
+               tag_.first.starts_with("motorcar:conditional") ||
+               tag_.first.starts_with("motor_vehicle:conditional") ||
+               tag_.first.starts_with("bicycle:conditional") ||
+               tag_.first.starts_with("motorcycle:conditional") ||
+               tag_.first.starts_with("foot:conditional") ||
+               tag_.first.starts_with("pedestrian:conditional") ||
+               tag_.first.starts_with("hgv:conditional") ||
+               tag_.first.starts_with("moped:conditional") ||
+               tag_.first.starts_with("mofa:conditional") ||
+               tag_.first.starts_with("psv:conditional") ||
+               tag_.first.starts_with("taxi:conditional") ||
+               tag_.first.starts_with("bus:conditional") ||
+               tag_.first.starts_with("hov:conditional") ||
+               tag_.first.starts_with("emergency:conditional")) {
 
         std::vector<std::string> tokens = GetTagTokens(tag_.second, '@');
         std::string tmp = tokens.at(0);
@@ -2616,39 +2615,39 @@ struct graph_parser {
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (boost::algorithm::starts_with(tag_.first, "access:conditional")) {
+          if (tag_.first.starts_with("access:conditional")) {
             mode = kAllAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
+          } else if (tag_.first.starts_with("motor_vehicle:conditional")) {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
-          } else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional")) {
+          } else if (tag_.first.starts_with("motorcar:conditional")) {
             if (type == AccessType::kTimedAllowed) {
               mode = kAutoAccess | kHOVAccess | kTaxiAccess;
             } else {
               mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                       kHOVAccess);
             }
-          } else if (boost::algorithm::starts_with(tag_.first, "bicycle:conditional")) {
+          } else if (tag_.first.starts_with("bicycle:conditional")) {
             mode = kBicycleAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
-                     boost::algorithm::starts_with(tag_.first, "pedestrian:conditional")) {
+          } else if (tag_.first.starts_with("foot:conditional") ||
+                     tag_.first.starts_with("pedestrian:conditional")) {
             mode = (kPedestrianAccess | kWheelchairAccess);
-          } else if (boost::algorithm::starts_with(tag_.first, "hgv:conditional")) {
+          } else if (tag_.first.starts_with("hgv:conditional")) {
             mode = kTruckAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "moped:conditional") ||
-                     boost::algorithm::starts_with(tag_.first, "mofa:conditional")) {
+          } else if (tag_.first.starts_with("moped:conditional") ||
+                     tag_.first.starts_with("mofa:conditional")) {
             mode = kMopedAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "motorcycle:conditional")) {
+          } else if (tag_.first.starts_with("motorcycle:conditional")) {
             mode = kMotorcycleAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "psv:conditional")) {
+          } else if (tag_.first.starts_with("psv:conditional")) {
             mode = (kTaxiAccess | kBusAccess);
-          } else if (boost::algorithm::starts_with(tag_.first, "taxi:conditional")) {
+          } else if (tag_.first.starts_with("taxi:conditional")) {
             mode = kTaxiAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "bus:conditional")) {
+          } else if (tag_.first.starts_with("bus:conditional")) {
             mode = kBusAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "hov:conditional")) {
+          } else if (tag_.first.starts_with("hov:conditional")) {
             mode = kHOVAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "emergency:conditional")) {
+          } else if (tag_.first.starts_with("emergency:conditional")) {
             mode = kEmergencyAccess;
           }
           std::string tmp = tokens.at(1);
@@ -2668,63 +2667,63 @@ struct graph_parser {
           }
         }
       } else if (!is_lang_pronunciation) {
-        if (boost::algorithm::starts_with(tag_.first, "name:left:")) {
+        if (tag_.first.starts_with("name:left:")) {
           ProcessLeftRightNameTag(tag_, name_left_w_lang_, lang_left_);
-        } else if (boost::algorithm::starts_with(tag_.first, "name:right:")) {
+        } else if (tag_.first.starts_with("name:right:")) {
           ProcessLeftRightNameTag(tag_, name_right_w_lang_, lang_right_);
-        } else if (boost::algorithm::starts_with(tag_.first, "name:forward:")) {
+        } else if (tag_.first.starts_with("name:forward:")) {
           ProcessLeftRightNameTag(tag_, name_forward_w_lang_, lang_forward_);
-        } else if (boost::algorithm::starts_with(tag_.first, "name:backward:")) {
+        } else if (tag_.first.starts_with("name:backward:")) {
           ProcessLeftRightNameTag(tag_, name_backward_w_lang_, lang_backward_);
-        } else if (boost::algorithm::starts_with(tag_.first, "name:")) {
+        } else if (tag_.first.starts_with("name:")) {
           ProcessNameTag(tag_, name_w_lang_, language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "official_name:left:")) {
+        } else if (tag_.first.starts_with("official_name:left:")) {
           ProcessLeftRightNameTag(tag_, official_name_left_w_lang_, official_lang_left_);
-        } else if (boost::algorithm::starts_with(tag_.first, "official_name:right:")) {
+        } else if (tag_.first.starts_with("official_name:right:")) {
           ProcessLeftRightNameTag(tag_, official_name_right_w_lang_, official_lang_right_);
-        } else if (boost::algorithm::starts_with(tag_.first, "official_name:")) {
+        } else if (tag_.first.starts_with("official_name:")) {
           ProcessNameTag(tag_, official_name_w_lang_, official_language_);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(tag_.first, "alt_name:left:")) {
+        } else if (allow_alt_name_ && tag_.first.starts_with("alt_name:left:")) {
           ProcessLeftRightNameTag(tag_, alt_name_left_w_lang_, alt_lang_left_);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(tag_.first, "alt_name:right:")) {
+        } else if (allow_alt_name_ && tag_.first.starts_with("alt_name:right:")) {
           ProcessLeftRightNameTag(tag_, alt_name_right_w_lang_, alt_lang_right_);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(tag_.first, "alt_name:")) {
+        } else if (allow_alt_name_ && tag_.first.starts_with("alt_name:")) {
           ProcessNameTag(tag_, alt_name_w_lang_, alt_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "ref:left:")) {
+        } else if (tag_.first.starts_with("ref:left:")) {
           ProcessLeftRightNameTag(tag_, ref_left_w_lang_, ref_lang_left_);
-        } else if (boost::algorithm::starts_with(tag_.first, "ref:right:")) {
+        } else if (tag_.first.starts_with("ref:right:")) {
           ProcessLeftRightNameTag(tag_, ref_right_w_lang_, ref_lang_right_);
-        } else if (boost::algorithm::starts_with(tag_.first, "ref:")) {
+        } else if (tag_.first.starts_with("ref:")) {
           ProcessNameTag(tag_, ref_w_lang_, ref_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "int_ref:left:")) {
+        } else if (tag_.first.starts_with("int_ref:left:")) {
           ProcessLeftRightNameTag(tag_, int_ref_left_w_lang_, int_ref_lang_left_);
-        } else if (boost::algorithm::starts_with(tag_.first, "int_ref:right:")) {
+        } else if (tag_.first.starts_with("int_ref:right:")) {
           ProcessLeftRightNameTag(tag_, int_ref_right_w_lang_, int_ref_lang_right_);
-        } else if (boost::algorithm::starts_with(tag_.first, "int_ref:")) {
+        } else if (tag_.first.starts_with("int_ref:")) {
           ProcessNameTag(tag_, int_ref_w_lang_, int_ref_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "tunnel:name:left:")) {
+        } else if (tag_.first.starts_with("tunnel:name:left:")) {
           ProcessLeftRightNameTag(tag_, tunnel_name_left_w_lang_, tunnel_lang_left_);
-        } else if (boost::algorithm::starts_with(tag_.first, "tunnel:name:right:")) {
+        } else if (tag_.first.starts_with("tunnel:name:right:")) {
           ProcessLeftRightNameTag(tag_, tunnel_name_right_w_lang_, tunnel_lang_right_);
-        } else if (boost::algorithm::starts_with(tag_.first, "tunnel:name:")) {
+        } else if (tag_.first.starts_with("tunnel:name:")) {
           ProcessNameTag(tag_, tunnel_name_w_lang_, tunnel_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:backward:")) {
+        } else if (tag_.first.starts_with("destination:backward:")) {
           ProcessNameTag(tag_, destination_backward_w_lang_, destination_backward_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:forward:")) {
+        } else if (tag_.first.starts_with("destination:forward:")) {
           ProcessNameTag(tag_, destination_forward_w_lang_, destination_forward_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:to:")) {
+        } else if (tag_.first.starts_with("destination:ref:to:")) {
           ProcessNameTag(tag_, destination_ref_to_w_lang_, destination_ref_to_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:")) {
+        } else if (tag_.first.starts_with("destination:ref:")) {
           ProcessNameTag(tag_, destination_ref_w_lang_, destination_ref_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:to:")) {
+        } else if (tag_.first.starts_with("destination:street:to:")) {
           ProcessNameTag(tag_, destination_street_to_w_lang_, destination_street_to_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:")) {
+        } else if (tag_.first.starts_with("destination:street:")) {
           ProcessNameTag(tag_, destination_street_w_lang_, destination_street_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:")) {
+        } else if (tag_.first.starts_with("destination:")) {
           ProcessNameTag(tag_, destination_w_lang_, destination_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "junction:ref:")) {
+        } else if (tag_.first.starts_with("junction:ref:")) {
           ProcessNameTag(tag_, junction_ref_w_lang_, junction_ref_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "junction:name:")) {
+        } else if (tag_.first.starts_with("junction:name:")) {
           ProcessNameTag(tag_, junction_name_w_lang_, junction_name_language_);
         }
       } else { // is_lang_pronunciation = true
@@ -2744,63 +2743,63 @@ struct graph_parser {
           }
         }
 
-        if (boost::algorithm::starts_with(t, "name:left:")) {
+        if (t.starts_with("name:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameLeft, alphabet);
-        } else if (boost::algorithm::starts_with(t, "name:right:")) {
+        } else if (t.starts_with("name:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameRight, alphabet);
-        } else if (boost::algorithm::starts_with(t, "name:forward:")) {
+        } else if (t.starts_with("name:forward:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameForward, alphabet);
-        } else if (boost::algorithm::starts_with(t, "name:backward:")) {
+        } else if (t.starts_with("name:backward:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameBackward, alphabet);
-        } else if (boost::algorithm::starts_with(t, "name:")) {
+        } else if (t.starts_with("name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kName, alphabet);
-        } else if (boost::algorithm::starts_with(t, "official_name:left:")) {
+        } else if (t.starts_with("official_name:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kOfficialNameLeft, alphabet);
-        } else if (boost::algorithm::starts_with(t, "official_name:right:")) {
+        } else if (t.starts_with("official_name:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kOfficialNameRight, alphabet);
-        } else if (boost::algorithm::starts_with(t, "official_name:")) {
+        } else if (t.starts_with("official_name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kOfficialName, alphabet);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:left:")) {
+        } else if (allow_alt_name_ && t.starts_with("alt_name:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kAltNameLeft, alphabet);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:right:")) {
+        } else if (allow_alt_name_ && t.starts_with("alt_name:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kAltNameRight, alphabet);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:")) {
+        } else if (allow_alt_name_ && t.starts_with("alt_name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kAltName, alphabet);
-        } else if (boost::algorithm::starts_with(t, "ref:left:")) {
+        } else if (t.starts_with("ref:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kRefLeft, alphabet);
-        } else if (boost::algorithm::starts_with(t, "ref:right:")) {
+        } else if (t.starts_with("ref:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kRefRight, alphabet);
-        } else if (boost::algorithm::starts_with(t, "ref:")) {
+        } else if (t.starts_with("ref:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kRef, alphabet);
-        } else if (boost::algorithm::starts_with(t, "int_ref:left:")) {
+        } else if (t.starts_with("int_ref:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kIntRefLeft, alphabet);
-        } else if (boost::algorithm::starts_with(t, "int_ref:right:")) {
+        } else if (t.starts_with("int_ref:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kIntRefRight, alphabet);
-        } else if (boost::algorithm::starts_with(t, "int_ref:")) {
+        } else if (t.starts_with("int_ref:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kIntRef, alphabet);
-        } else if (boost::algorithm::starts_with(t, "tunnel:name:left:")) {
+        } else if (t.starts_with("tunnel:name:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kTunnelNameLeft, alphabet);
-        } else if (boost::algorithm::starts_with(t, "tunnel:name:right:")) {
+        } else if (t.starts_with("tunnel:name:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kTunnelNameRight, alphabet);
-        } else if (boost::algorithm::starts_with(t, "tunnel:name:")) {
+        } else if (t.starts_with("tunnel:name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kTunnelName, alphabet);
-        } else if (boost::algorithm::starts_with(t, "destination:forward:")) {
+        } else if (t.starts_with("destination:forward:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationForward, alphabet);
-        } else if (boost::algorithm::starts_with(t, "destination:backward:")) {
+        } else if (t.starts_with("destination:backward:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationBackward, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:to:")) {
+        } else if (tag_.first.starts_with("destination:ref:to:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationRefTo, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:")) {
+        } else if (tag_.first.starts_with("destination:ref:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationRef, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:to:")) {
+        } else if (tag_.first.starts_with("destination:street:to:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationStreetTo, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:")) {
+        } else if (tag_.first.starts_with("destination:street:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationStreet, alphabet);
-        } else if (boost::algorithm::starts_with(t, "destination:")) {
+        } else if (t.starts_with("destination:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kDestination, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "junction:ref:")) {
+        } else if (tag_.first.starts_with("junction:ref:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kJunctionRef, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "junction:name:")) {
+        } else if (tag_.first.starts_with("junction:name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kJunctionName, alphabet);
         }
       }
@@ -2922,7 +2921,7 @@ struct graph_parser {
       int scale = get_number("mtb:scale", mtb_scale->second);
       if (scale >= 0) {
         // Set surface based on scale
-        uint32_t scale = stoi(mtb_scale->second);
+        uint32_t scale = to_int(mtb_scale->second);
         if (scale == 0) {
           way_.set_surface(Surface::kDirt);
         } else if (scale == 1) {
@@ -2949,7 +2948,7 @@ struct graph_parser {
       int scale = get_number("mtb:uphill:scale", mtb_uphill_scale->second);
       if (scale >= 0) {
         // Set surface based on scale (if no scale exists)
-        uint32_t scale = stoi(mtb_uphill_scale->second);
+        uint32_t scale = to_int(mtb_uphill_scale->second);
         if (!has_mtb_scale) {
           if (scale < 2) {
             way_.set_surface(Surface::kGravel);
@@ -3864,7 +3863,7 @@ struct graph_parser {
         // probability=73
         std::vector<std::string> prob_tok = GetTagTokens(tag.second, '=');
         if (prob_tok.size() == 2) {
-          const auto& p = stoi(prob_tok.at(1));
+          const auto& p = to_int(prob_tok.at(1));
           if (p > 0) {
             isProbable = true;
             restriction.set_probability(p);
@@ -3912,7 +3911,7 @@ struct graph_parser {
           modes |= (kPedestrianAccess | kWheelchairAccess);
         }
 
-        RestrictionType type = (RestrictionType)std::stoi(tag.second);
+        RestrictionType type = (RestrictionType)to_int(tag.second);
 
         switch (type) {
 
@@ -3967,7 +3966,7 @@ struct graph_parser {
         isConditional = true;
         day_end = tag.second;
       } else if (tag.first == "bike_network_mask") {
-        bike_network_mask = std::stoi(tag.second);
+        bike_network_mask = to_int(tag.second);
       } else if (tag.first == "to:lanes") {
         to_lanes = tag.second;
       } else if (tag.first == "from:lanes") {
@@ -4478,10 +4477,9 @@ struct graph_parser {
       }
     }
 
-    if (boost::algorithm::starts_with(t, "tunnel:name:"))
+    if (t.starts_with("tunnel:name:"))
       t = t.substr(7);
-    else if (boost::algorithm::starts_with(t, "junction:name:") ||
-             boost::algorithm::starts_with(t, "junction:ref:"))
+    else if (t.starts_with("junction:name:") || t.starts_with("junction:ref:"))
       t = t.substr(9);
     else {
       found = t.find(":lang:");
@@ -4538,7 +4536,7 @@ struct graph_parser {
         has_pronunciation_tags_ = true;
       }
 
-      if (boost::algorithm::starts_with(t, "tunnel:name:"))
+      if (t.starts_with("tunnel:name:"))
         t = t.substr(7);
     }
 

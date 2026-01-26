@@ -2,6 +2,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "just_gtfs/just_gtfs.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/logging.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/ingest_transit.h"
@@ -9,9 +10,7 @@
 #include "proto/transit.pb.h"
 #include "test.h"
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/algorithms/within.hpp>
 #include <gtest/gtest.h>
 
 using namespace gtfs;
@@ -20,8 +19,6 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using boost::geometry::within;
-using point_type = boost::geometry::model::d2::point_xy<double>;
-using polygon_type = boost::geometry::model::polygon<point_type>;
 using rp = rapidjson::Pointer;
 
 // since writing GTFS feeds with C++ is sooo annoying, we'll have some var templates, e.g.
@@ -681,17 +678,7 @@ TEST(GtfsExample, MakeProto) {
   std::vector<float> first_origin_dist_traveled;
   std::vector<float> last_dest_dist_traveled;
 
-  // get the full shape length
-  float shape_length = 0;
-
   auto layout = create_layout();
-  const std::vector<PointLL> transit_lls{layout["1"], layout["a"], layout["b"],
-                                         layout["2"], layout["c"], layout["3"]};
-  for (uint32_t segment = 0; segment < transit_lls.size() - 1; segment++) {
-    auto currOrigin = transit_lls[segment];
-    auto currDest = transit_lls[segment + 1];
-    shape_length += currOrigin.Distance(currDest);
-  }
 
   size_t shapes = 0;
   // for each pbf.
@@ -1074,11 +1061,6 @@ TEST(GtfsExample, route_trip4) {
 
 TEST(GtfsExample, isochrones) {
 
-  auto WaypointToBoostPoint = [&](const std::string& waypoint) {
-    auto point = map.nodes[waypoint];
-    return point_type(point.x(), point.y());
-  };
-
   std::string res_string;
   valhalla::Api res =
       gurka::do_action(valhalla::Options::isochrone, map, {"g"}, "multimodal",
@@ -1089,17 +1071,17 @@ TEST(GtfsExample, isochrones) {
                        {}, &res_string);
 
   std::vector<PointLL> iso_polygon = polygon_from_geojson(res_string);
-  polygon_type polygon;
+  bg::polygon_ll_t polygon;
   for (const auto& p : iso_polygon) {
-    boost::geometry::append(polygon.outer(), point_type(p.x(), p.y()));
+    boost::geometry::append(polygon.outer(), p);
   }
 
-  EXPECT_EQ(within(WaypointToBoostPoint("D"), polygon), true);
-  EXPECT_EQ(within(WaypointToBoostPoint("2"), polygon), true);
-  EXPECT_EQ(within(WaypointToBoostPoint("E"), polygon), true);
-  EXPECT_EQ(within(WaypointToBoostPoint("4"), polygon), true);
-  EXPECT_EQ(within(WaypointToBoostPoint("F"), polygon), true);
-  EXPECT_EQ(within(WaypointToBoostPoint("1"), polygon), false);
+  EXPECT_EQ(within(map.nodes["D"], polygon), true);
+  EXPECT_EQ(within(map.nodes["2"], polygon), true);
+  EXPECT_EQ(within(map.nodes["E"], polygon), true);
+  EXPECT_EQ(within(map.nodes["4"], polygon), true);
+  EXPECT_EQ(within(map.nodes["F"], polygon), true);
+  EXPECT_EQ(within(map.nodes["1"], polygon), false);
 }
 
 TEST(GtfsExample, status) {

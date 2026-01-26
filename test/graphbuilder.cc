@@ -48,7 +48,29 @@ TEST(GraphBuilder, TestConstructEdges) {
   ptree config;
   config.put("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
-  OSMData osm_data{0};
+  OSMData osm_data{0,  /* pbf_checksum_ */
+                   0,  /* max_changeset_id_ */
+                   0,  /* osm_node_count */
+                   0,  /* osm_way_count */
+                   0,  /* osm_way_node_count */
+                   0,  /* node_count */
+                   0,  /* edge_count */
+                   0,  /* node_ref_count */
+                   0,  /* node_name_count */
+                   0,  /* node_exit_to_count */
+                   0,  /* node_linguistic_count */
+                   {}, /* restrictions */
+                   {}, /* via_set */
+                   {}, /* access_restrictions */
+                   {}, /* bike_relations */
+                   {}, /* way_ref */
+                   {}, /* way_ref_rev */
+                   {}, /* node_names */
+                   {}, /* name_offset_map */
+                   {}, /* lane_connectivity_map */
+                   {}, /* pronunciations */
+                   {}, /* langs */
+                   {} /* conditional_speeds */};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
@@ -73,7 +95,29 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
   ptree config;
   config.put<std::string>("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
-  OSMData osm_data{0};
+  OSMData osm_data{0,  /* pbf_checksum_ */
+                   0,  /* max_changeset_id_ */
+                   0,  /* osm_node_count */
+                   0,  /* osm_way_count */
+                   0,  /* osm_way_node_count */
+                   0,  /* node_count */
+                   0,  /* edge_count */
+                   0,  /* node_ref_count */
+                   0,  /* node_name_count */
+                   0,  /* node_exit_to_count */
+                   0,  /* node_linguistic_count */
+                   {}, /* restrictions */
+                   {}, /* via_set */
+                   {}, /* access_restrictions */
+                   {}, /* bike_relations */
+                   {}, /* way_ref */
+                   {}, /* way_ref_rev */
+                   {}, /* node_names */
+                   {}, /* name_offset_map */
+                   {}, /* lane_connectivity_map */
+                   {}, /* pronunciations */
+                   {}, /* langs */
+                   {} /* conditional_speeds */};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);

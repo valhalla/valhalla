@@ -3,11 +3,13 @@
 #include "baldr/curl_tilegetter.h"
 #include "baldr/sign.h"
 #include "baldr/tilehierarchy.h"
+#include "exceptions.h"
 #include "filesystem_utils.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
+#include "midgard/util.h"
 
 #include <chrono>
 #include <cmath>
@@ -90,7 +92,7 @@ graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
 graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
                                  const GraphId& graphid,
                                  std::unique_ptr<const GraphMemory>&& traffic_memory) {
-  if (!graphid.Is_Valid()) {
+  if (!graphid.is_valid()) {
     LOG_ERROR("Failed to build GraphTile. Error: GraphId is invalid");
     return nullptr;
   }
@@ -107,7 +109,7 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
 
   // Open to the end of the file so we can immediately get size
   std::filesystem::path file_location{tile_dir};
-  file_location /= FileSuffix(graphid.Tile_Base());
+  file_location /= FileSuffix(graphid.tile_base());
 
   // first try to open uncompressed, then try compressed file
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
@@ -210,7 +212,7 @@ void store(const std::string& cache_location,
            const std::vector<char>& raw_data) {
   if (!cache_location.empty()) {
     auto suffix =
-        valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(),
+        valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
                                                (tile_getter->gzipped()
                                                     ? valhalla::baldr::SUFFIX_COMPRESSED
                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
@@ -224,20 +226,62 @@ void store(const std::string& cache_location,
 graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        const GraphId& graphid,
                                        tile_getter_t* tile_getter,
-                                       const std::string& cache_location) {
+                                       const std::string& tile_dir,
+                                       uint64_t range_offset,
+                                       uint64_t range_size,
+                                       const std::filesystem::path& id_txt_path,
+                                       uint64_t id_checksum) {
   // Don't bother with invalid ids
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
+  if (!graphid.is_valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
   }
 
-  auto fname = valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(),
-                                                      valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
-  auto result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
+  LOG_INFO("Downloading tile " + std::to_string(graphid) + " from " + tile_url);
+
+  tile_getter_t::GET_response_t result;
+  if (range_size == 0) {
+    // requesting plain tiles
+    auto fname =
+        valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
+                                               valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
+    result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
+  } else {
+    // or HTTP range on a tar
+    result = tile_getter->get(tile_url, range_offset, range_size);
+  }
+
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
     return nullptr;
   }
+
+  // inspect the header for the checksum
+  // it's a POD type and thus trivially copyable
+  GraphTileHeader header;
+  std::memcpy(&header, result.bytes_.data(), sizeof(header));
+  auto tile_checksum = header.checksum();
+  if (tile_checksum == 0) {
+    // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
+    LOG_WARN(
+        "Remote tile is missing the checksum attribute, please update the tile building valhalla instance");
+  }
+  if (!tile_dir.empty()) {
+    if (id_checksum == 0) {
+      // this is the first tile in a fresh tile_dir
+      static std::mutex mutex;
+      std::lock_guard lock{mutex};
+      std::ofstream id_txt_file(id_txt_path, std::ios::binary);
+      if (id_txt_file) {
+        id_txt_file << tile_url << std::endl;
+        id_txt_file << tile_checksum << std::endl;
+      }
+    } else if (tile_checksum != id_checksum) {
+      LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
+      throw valhalla_exception_t(446);
+    }
+  }
+
   // try to cache it on disk so we dont have to keep fetching it from url
-  store(cache_location, graphid, tile_getter, result.bytes_);
+  store(tile_dir, graphid, tile_getter, result.bytes_);
 
   // turn the memory into a tile
   if (tile_getter->gzipped()) {
@@ -601,18 +645,18 @@ AABB2<PointLL> GraphTile::BoundingBox() const {
   return tiles.TileBounds(header_->graphid().tileid());
 }
 
-iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const NodeInfo* node) const {
+std::span<const DirectedEdge> GraphTile::GetDirectedEdges(const NodeInfo* node) const {
   if (node < nodes_ || node >= nodes_ + header_->nodecount()) {
     throw std::logic_error(
         std::string(__FILE__) + ":" + std::to_string(__LINE__) +
         " GraphTile NodeInfo out of bounds: " + std::to_string(header_->graphid()));
   }
   const auto* edge = directededges_ + node->edge_index();
-  return iterable_t<const DirectedEdge>{edge, node->edge_count()};
+  return std::span<const DirectedEdge>{edge, node->edge_count()};
 }
 
-iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) const {
-  if (node.Tile_Base() != header_->graphid() || node.id() >= header_->nodecount()) {
+std::span<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) const {
+  if (node.tile_base() != header_->graphid() || node.id() >= header_->nodecount()) {
     throw std::logic_error(
         std::string(__FILE__) + ":" + std::to_string(__LINE__) +
         " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
@@ -623,7 +667,7 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) 
   return GetDirectedEdges(nodeinfo);
 }
 
-iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) const {
+std::span<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) const {
   if (idx >= header_->nodecount()) {
     throw std::logic_error(
         std::string(__FILE__) + ":" + std::to_string(__LINE__) +
@@ -633,21 +677,21 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) con
   }
   const auto& nodeinfo = nodes_[idx];
   const auto* edge = directededge(nodeinfo.edge_index());
-  return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
+  return std::span<const DirectedEdge>{edge, nodeinfo.edge_count()};
 }
 
-iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const NodeInfo* node) const {
+std::span<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const NodeInfo* node) const {
   if (node < nodes_ || node >= nodes_ + header_->nodecount()) {
     throw std::logic_error(
         std::string(__FILE__) + ":" + std::to_string(__LINE__) +
         " GraphTile NodeInfo out of bounds: " + std::to_string(header_->graphid()));
   }
   const auto* edge_ext = ext_directededges_ + node->edge_index();
-  return iterable_t<const DirectedEdgeExt>{edge_ext, node->edge_count()};
+  return std::span<const DirectedEdgeExt>{edge_ext, node->edge_count()};
 }
 
-iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const GraphId& node) const {
-  if (node.Tile_Base() != header_->graphid() || node.id() >= header_->nodecount()) {
+std::span<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const GraphId& node) const {
+  if (node.tile_base() != header_->graphid() || node.id() >= header_->nodecount()) {
     throw std::logic_error(
         std::string(__FILE__) + ":" + std::to_string(__LINE__) +
         " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
@@ -658,7 +702,7 @@ iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const GraphId& 
   return GetDirectedEdgeExts(nodeinfo);
 }
 
-iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const size_t idx) const {
+std::span<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const size_t idx) const {
   if (idx >= header_->nodecount()) {
     throw std::logic_error(
         std::string(__FILE__) + ":" + std::to_string(__LINE__) +
@@ -668,7 +712,7 @@ iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const size_t id
   }
   const auto& nodeinfo = nodes_[idx];
   const auto* edge_ext = ext_directededge(nodeinfo.edge_index());
-  return iterable_t<const DirectedEdgeExt>{edge_ext, nodeinfo.edge_count()};
+  return std::span<const DirectedEdgeExt>{edge_ext, nodeinfo.edge_count()};
 }
 
 EdgeInfo GraphTile::edgeinfo(const DirectedEdge* edge) const {
@@ -677,30 +721,15 @@ EdgeInfo GraphTile::edgeinfo(const DirectedEdge* edge) const {
 
 // Get the complex restrictions in the forward or reverse order based on
 // the id and modes.
-std::vector<ComplexRestriction*>
-GraphTile::GetRestrictions(const bool forward, const GraphId id, const uint64_t modes) const {
-  size_t offset = 0;
-  std::vector<ComplexRestriction*> cr_vector;
+ComplexRestrictionView
+GraphTile::GetComplexRestrictions(const bool forward, const GraphId id, const uint64_t modes) const {
   if (forward) {
-    while (offset < complex_restriction_forward_size_) {
-      ComplexRestriction* cr =
-          reinterpret_cast<ComplexRestriction*>(complex_restriction_forward_ + offset);
-      if (cr->to_graphid() == id && (cr->modes() & modes)) {
-        cr_vector.push_back(cr);
-      }
-      offset += cr->SizeOf();
-    }
+    return ComplexRestrictionView(complex_restriction_forward_, complex_restriction_forward_size_, id,
+                                  modes, true);
   } else {
-    while (offset < complex_restriction_reverse_size_) {
-      ComplexRestriction* cr =
-          reinterpret_cast<ComplexRestriction*>(complex_restriction_reverse_ + offset);
-      if (cr->from_graphid() == id && (cr->modes() & modes)) {
-        cr_vector.push_back(cr);
-      }
-      offset += cr->SizeOf();
-    }
+    return ComplexRestrictionView(complex_restriction_reverse_, complex_restriction_reverse_size_, id,
+                                  modes, false);
   }
-  return cr_vector;
 }
 
 // Get the directed edges outbound from the specified node index.
@@ -942,12 +971,11 @@ std::vector<SignInfo> GraphTile::GetSigns(
 }
 
 // Get lane connections ending on this edge.
-std::vector<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx) const {
+std::span<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx) const {
   uint32_t count = lane_connectivity_size_ / sizeof(LaneConnectivity);
-  std::vector<LaneConnectivity> lcs;
   if (count == 0) {
     LOG_ERROR("No lane connections found for idx = " + std::to_string(idx));
-    return lcs;
+    return {};
   }
 
   // Lane connections are sorted by edge index.
@@ -972,14 +1000,11 @@ std::vector<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx)
     }
   }
 
-  // Add Lane connections
-  for (; found < count && lane_connectivity_[found].to() == idx; ++found) {
-    lcs.emplace_back(lane_connectivity_[found]);
+  const auto start = found;
+  while (found < count && lane_connectivity_[found].to() == idx) {
+    ++found;
   }
-  if (lcs.size() == 0) {
-    LOG_ERROR("No lane connections found for idx = " + std::to_string(idx));
-  }
-  return lcs;
+  return std::span<LaneConnectivity>(lane_connectivity_ + start, lane_connectivity_ + found);
 }
 
 // Get the next departure given the directed line Id and the current
@@ -1191,13 +1216,11 @@ const TransitSchedule* GraphTile::GetTransitSchedule(const uint32_t idx) const {
 }
 
 // Get the access restriction given its directed edge index
-std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t idx,
-                                                                const uint32_t access) const {
+std::span<const AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t idx) const {
 
-  std::vector<AccessRestriction> restrictions;
   uint32_t count = header_->access_restriction_count();
   if (count == 0) {
-    return restrictions;
+    return {};
   }
 
   // Access restriction are sorted by edge Id.
@@ -1222,25 +1245,21 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
     }
   }
 
-  // Add restrictions for only the access that we are interested in
-  for (; found < count && access_restrictions_[found].edgeindex() == idx; ++found) {
-    if (access_restrictions_[found].modes() & access) {
-      restrictions.emplace_back(access_restrictions_[found]);
-    }
+  const auto start = found;
+  while (found < count && access_restrictions_[found].edgeindex() == idx) {
+    ++found;
   }
-
-  return restrictions;
+  return std::span<AccessRestriction>(access_restrictions_ + start, access_restrictions_ + found);
 }
-
 // Get the array of graphids for this bin
-midgard::iterable_t<GraphId> GraphTile::GetBin(size_t column, size_t row) const {
+std::span<GraphId> GraphTile::GetBin(size_t column, size_t row) const {
   auto offsets = header_->bin_offset(column, row);
-  return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
+  return std::span<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
 }
 
-midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
+std::span<GraphId> GraphTile::GetBin(size_t index) const {
   auto offsets = header_->bin_offset(index);
-  return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
+  return std::span<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
 }
 
 // Get turn lanes for this edge.
