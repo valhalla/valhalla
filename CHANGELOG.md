@@ -48,6 +48,7 @@
    * CHANGED: Move location update in CostMatrix [#5813](https://github.com/valhalla/valhalla/pull/5813)
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
+   * CHANGED: sort edge ids for cache friendliness before iterating over all tiles in tile_action.cc [#5839](https://github.com/valhalla/valhalla/pull/5839)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
