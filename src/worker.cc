@@ -653,6 +653,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
+  // if specified, get the generalize value in there
+  auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
+  if (generalize) {
+    options.set_generalize(*generalize);
+  }
+
   // first the /tile parameters, so we can early exit
   if (options.action() == Options::tile) {
     parse_xyz(doc, options);
@@ -1204,12 +1210,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get<float>(doc, "/denoise", options.has_denoise_case() ? options.denoise() : 1.0);
   options.set_denoise(std::max(std::min(denoise, 1.f), 0.f));
 
-  // if specified, get the generalize value in there
-  auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
-  if (generalize) {
-    options.set_generalize(*generalize);
-  }
-
   // if specified, get the show_locations boolean in there
   options.set_show_locations(rapidjson::get<bool>(doc, "/show_locations", options.show_locations()));
 
@@ -1296,7 +1296,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 }
 
 } // namespace
-
 namespace valhalla {
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& request) {

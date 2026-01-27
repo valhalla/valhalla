@@ -18,6 +18,7 @@ We support the usual GET & POST with the common "Slippy Map"/XYZ request pattern
 | `tile_options.return_shortcuts` |  Whether the response contains shortcut edges. Default `false`. |
 | `filters` |  By default, the tiles only contain a small subset of attributes. Use `filters` to include more attributes:<ul><li>`attributes`: an array of edge/node attributes to include/exclude, see below for a list</li><li>`action`: either `include` or `exclude`. If `include`, we'll add the provided attributes to the default attributes. If `exclude`, we'll remove the provided attributes from the full list.</li></ul> |
 | `verbose` | If `true`, it'll enable _all_ attributes, regardless of `filters`. Default `false`. Note, that the service setting `service_limits.status.allow_verbose` applies here too. |
+| `generalize` | A factor which scales the default (Douglas-Peucker) generalization, akin to tippecanoe's `simplification` argument. 1.0 returns the highest possible resolution, values > 1.0 more aggressively generalize the line features. Default is 4.0 |
 
 ## Attribute filters
 

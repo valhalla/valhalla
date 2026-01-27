@@ -89,9 +89,9 @@ TEST(Actor, Tile) {
   auto tile_data = actor.tile(request);
   actor.cleanup();
 
-  // should be 700-800kb
-  EXPECT_GT(tile_data.size(), 100000);
-  EXPECT_LT(tile_data.size(), 150000);
+  // should be 115 - 125 KB
+  EXPECT_GT(tile_data.size(), 115000);
+  EXPECT_LT(tile_data.size(), 125000);
 
   vtzero::vector_tile tile{tile_data};
 
@@ -103,10 +103,10 @@ TEST(Actor, Tile) {
 
     if (layer_name == "edges") {
       has_edges = true;
-      EXPECT_EQ(layer.num_features(), 2278);
+      EXPECT_EQ(layer.num_features(), 2199);
     } else if (layer_name == "nodes") {
       has_nodes = true;
-      EXPECT_EQ(layer.num_features(), 1741);
+      EXPECT_EQ(layer.num_features(), 1739);
     } else {
       FAIL() << "Unexpected layer: " << layer_name;
     }
@@ -134,8 +134,8 @@ TEST(Actor, TileReturnShortcuts) {
   actor.cleanup();
 
   // Both should return valid data
-  ASSERT_FALSE(tile_data_no_shortcuts.empty()) << "Tile data without shortcuts should not be empty";
-  ASSERT_FALSE(tile_data_with_shortcuts.empty()) << "Tile data with shortcuts should not be empty";
+  EXPECT_FALSE(tile_data_no_shortcuts.empty()) << "Tile data without shortcuts should not be empty";
+  EXPECT_FALSE(tile_data_with_shortcuts.empty()) << "Tile data with shortcuts should not be empty";
 
   // Parse both tiles
   vtzero::vector_tile tile_no_shortcuts{tile_data_no_shortcuts};
@@ -159,8 +159,8 @@ TEST(Actor, TileReturnShortcuts) {
     }
   }
 
-  ASSERT_EQ(features_with_shortcuts, 2317);
-  ASSERT_EQ(features_no_shortcuts, 2278);
+  EXPECT_EQ(features_with_shortcuts, 2233);
+  EXPECT_EQ(features_no_shortcuts, 2199);
 }
 
 // TODO: test the rest of them
