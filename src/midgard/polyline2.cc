@@ -372,6 +372,10 @@ template void Polyline2<PointXY<double>>::Generalize(std::list<PointXY<double>>&
                                                      double,
                                                      const std::unordered_set<size_t>&,
                                                      bool);
+template void Polyline2<PointXY<double>>::Generalize(bg::linestring_2d_t&,
+                                                     double,
+                                                     const std::unordered_set<size_t>&,
+                                                     bool);
 template void Polyline2<GeoPoint<float>>::Generalize(std::vector<GeoPoint<float>>&,
                                                      float,
                                                      const std::unordered_set<size_t>&,

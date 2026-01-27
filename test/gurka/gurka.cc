@@ -745,7 +745,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
 
   const auto& center_coords = detail::to_ll(map.nodes, center);
 
-  // Calculate which tile contains this point at zoom 14
+  // Calculate which tile contains this point at zoom
   // Using standard slippy map tile formula
   double n = std::pow(2.0, zoom);
   uint32_t x = static_cast<uint32_t>((center_coords.lng() + 180.0) / 360.0 * n);

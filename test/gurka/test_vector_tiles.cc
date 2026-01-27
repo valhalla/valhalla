@@ -16,6 +16,24 @@
 using namespace valhalla;
 using namespace valhalla::midgard;
 
+namespace {
+
+// handler only counting vertices in a linestring
+struct linestring_handler_t {
+  uint32_t count = 0;
+  void linestring_begin(uint32_t /*count*/) {
+  }
+  void linestring_point(vtzero::point /*point*/) noexcept {
+    count++;
+  }
+  void linestring_end() const noexcept {
+  }
+  uint32_t result() {
+    return count;
+  }
+};
+} // namespace
+
 TEST(VectorTilesBasic, ConfigFail) {
   // zoom config with descending levels fails
   auto config = test::make_config("/tmp");
@@ -38,6 +56,45 @@ TEST(VectorTilesBasic, ConfigFail) {
       },
       std::runtime_error);
 };
+
+TEST(VectorTilesBasic, TileGeneralization) {
+  const std::string ascii_map = R"(
+      x
+      A 1 3 5
+
+       0 2 4
+  )";
+  const gurka::ways ways = {
+      {"A01234", {{"highway", "motorway"}}},
+  };
+  // at z8 it's 38m default generalization
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 25);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_vt_basic");
+
+  auto test_vertex_count = [&](const std::unordered_map<std::string, std::string>& options,
+                               const uint32_t expected_count) {
+    // by default we expect full generalization
+    std::string tile_data;
+    auto api = gurka::do_action(Options::tile, map, "x", 8, "auto", options, nullptr, &tile_data);
+
+    vtzero::vector_tile tile{tile_data};
+    auto layer = tile.get_layer_by_name("edges");
+    EXPECT_EQ(layer.num_features(), 1);
+
+    layer.for_each_feature([&](const vtzero::feature&& feat) {
+      auto handler = linestring_handler_t{};
+      vtzero::decode_linestring_geometry(feat.geometry(), handler);
+      EXPECT_EQ(handler.count, expected_count);
+
+      return true;
+    });
+  };
+
+  // by default we expect full generalization
+  test_vertex_count({}, 2);
+  // with very low generalize, i.e. full resolution aka no generalize
+  test_vertex_count({{"/generalize", "0.01"}}, 6);
+}
 
 TEST(VectorTilesBasic, TileRendering) {
   constexpr double gridsize = 100;
