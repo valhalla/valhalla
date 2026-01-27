@@ -124,7 +124,6 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeLit, false},
     {kEdgeNotThru, false},
     {kEdgePartComplexRestriction, false},
-    {kEdgeOsmId, false},
     {kEdgeLayer, false},
     {kEdgeShortcut, false},
     {kEdgeLeavesTile, false},

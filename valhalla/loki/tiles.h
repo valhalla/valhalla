@@ -1236,7 +1236,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
     },
     {
         "osm_id",
-        baldr::kEdgeOsmId,
+        baldr::kEdgeWayId,
         &EdgesLayerBuilder::key_osm_way_id_,
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
@@ -1420,7 +1420,7 @@ static const std::unordered_map<std::string_view, std::string_view> kEdgePropToA
     {"lit", baldr::kEdgeLit},
     {"not_thru", baldr::kEdgeNotThru},
     {"part_of_complex_restriction", baldr::kEdgePartComplexRestriction},
-    {"osm_id", baldr::kEdgeOsmId},
+    {"osm_id", baldr::kEdgeWayId},
     {"speed_limit", baldr::kEdgeSpeedLimit},
     {"layer", baldr::kEdgeLayer},
     // additional keys, they're added directly, not via EdgeAttributeTile

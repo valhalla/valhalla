@@ -97,7 +97,6 @@ constexpr std::string_view kEdgeBSSConnection = "edge.bss_connection";
 constexpr std::string_view kEdgeLit = "edge.lit";
 constexpr std::string_view kEdgeNotThru = "edge.not_thru";
 constexpr std::string_view kEdgePartComplexRestriction = "edge.part_of_complex_restriction";
-constexpr std::string_view kEdgeOsmId = "edge.osm_id";
 constexpr std::string_view kEdgeLayer = "edge.layer";
 constexpr std::string_view kEdgeShortcut = "edge.is_shortcut";
 constexpr std::string_view kEdgeLeavesTile = "edge.leaves_tile";
