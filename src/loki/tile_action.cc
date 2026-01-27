@@ -776,7 +776,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   unclipped_line.reserve(20);
   bg::multilinestring_2d_t clipped_lines;
   baldr::graph_tile_ptr edge_tile;
-  // TODO(nils): sort edge_ids
   for (const auto& edge_id : edge_ids) {
     const auto* edge = reader->directededge(edge_id, edge_tile);
 
@@ -964,6 +963,8 @@ std::string loki_worker_t::render_tile(Api& request) {
 
   // query edges in bbox, omits opposing edges
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
+  // sort for cache friendliness
+  std::sort(edge_ids.begin(), edge_ids.end(), GraphId::cache_comparator);
 
   build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
                options.tile_options().return_shortcuts());
