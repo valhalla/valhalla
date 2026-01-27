@@ -756,7 +756,7 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
 void build_layers(const std::shared_ptr<GraphReader>& reader,
                   vtzero::tile_builder& tile,
                   const midgard::AABB2<midgard::PointLL>& bounds,
-                  const std::unordered_set<baldr::GraphId>& edge_ids,
+                  const std::vector<baldr::GraphId>& edge_ids,
                   const loki_worker_t::ZoomConfig& min_zoom_road_class,
                   uint32_t z,
                   bool return_shortcuts) {
@@ -964,9 +964,12 @@ std::string loki_worker_t::render_tile(Api& request) {
   // query edges in bbox, omits opposing edges
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
   // sort for cache friendliness
-  std::sort(edge_ids.begin(), edge_ids.end(), GraphId::cache_comparator);
+  std::vector<GraphId> sorted_ids;
+  sorted_ids.reserve(edge_ids.size());
+  sorted_ids.assign(edge_ids.begin(), edge_ids.end());
+  std::sort(sorted_ids.begin(), sorted_ids.end(), GraphId::cache_comparator);
 
-  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z,
+  build_layers(reader, tile, bounds, sorted_ids, min_zoom_road_class_, z,
                options.tile_options().return_shortcuts());
 
   std::string tile_bytes;
