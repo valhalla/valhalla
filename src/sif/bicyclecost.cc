@@ -433,6 +433,50 @@ public:
   // grade (relative value from 0-15)
   float grade_penalty[16];
 
+  bool apply_destination_only_penalty_to_trails_ = false;
+
+  template <typename predecessor_t>
+  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                 const baldr::DirectedEdge* edge,
+                                 const predecessor_t* pred,
+                                 const uint32_t idx) const {
+    sif::Cost c;
+    c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
+    c += gate_cost_ * (node->type() == baldr::NodeType::kGate) * (!node->tagged_access());
+    c += private_access_cost_ *
+         (node->type() == baldr::NodeType::kGate || node->type() == baldr::NodeType::kBollard) *
+         node->private_access();
+    c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
+    c += toll_booth_cost_ * (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
+    c += ferry_transition_cost_ * (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
+    c += rail_ferry_transition_cost_ *
+         (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
+
+    const bool is_destonly = (is_hgv() && edge->destonly_hgv()) || (!is_hgv() && edge->destonly());
+    if (is_destonly && !pred->destonly()) {
+      const auto use = edge->use();
+      const bool is_trail_use = use == baldr::Use::kTrack || use == baldr::Use::kCycleway ||
+                                use == baldr::Use::kMountainBike || use == baldr::Use::kPath ||
+                                use == baldr::Use::kFootway || use == baldr::Use::kPedestrian ||
+                                use == baldr::Use::kBridleway || use == baldr::Use::kSidewalk ||
+                                use == baldr::Use::kPedestrianCrossing || use == baldr::Use::kParkingAisle;
+      c.cost += destination_only_penalty_ * (apply_destination_only_penalty_to_trails_ || !is_trail_use);
+    }
+
+    c.cost += alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
+    c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
+    c.cost += living_street_penalty_ *
+              (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
+    c.cost += track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
+
+    c.cost += service_penalty_ *
+              (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) *
+              !edge->internal();
+
+    c.cost *= !shortest_;
+    return c;
+  }
+
 protected:
   /**
    * Function to be used in location searching which will
@@ -498,6 +542,8 @@ BicycleCost::BicycleCost(const Costing& costing)
   // Willingness to use roads. Make sure this is within range [0, 1].
   use_roads_ = costing_options.use_roads();
   avoid_roads_ = 1.0f - use_roads_;
+  apply_destination_only_penalty_to_trails_ =
+      costing_options.apply_destination_only_penalty_to_trails();
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
@@ -888,6 +934,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kAvoidBadSurfacesRange, json, "/avoid_bad_surfaces",
                           avoid_bad_surfaces);
   JSON_PBF_DEFAULT(co, kDefaultBicycleType, json, "/bicycle_type", transport_type);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/apply_destination_only_penalty_to_trails",
+                      apply_destination_only_penalty_to_trails);
 
   // convert string to enum, set ranges and defaults based on enum
   BicycleType type;
