@@ -4,6 +4,7 @@
    * FIXED: access for backward edges in MVT contains data from the correct edge [#5834](https://github.com/valhalla/valhalla/pull/5834) 
    * FIXED: use correct edge for directional attributes in MVT [#5836](https://github.com/valhalla/valhalla/pull/5836)
    * FIXED: Add numpy as optional runtime dependency for Python bindings [#5823](https://github.com/valhalla/valhalla/pull/5823)
+   * FIXED: MVT clipping bug where parts of edge were being dropped which crossed tile boundaries [#5843](https://github.com/valhalla/valhalla/pull/5843)
 * **Enhancement**
    * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
