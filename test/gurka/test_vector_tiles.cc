@@ -97,12 +97,15 @@ TEST(VectorTilesBasic, TileGeneralization) {
 }
 
 TEST(VectorTilesBasic, TileRendering) {
-  constexpr double gridsize = 100;
-
+  // make the vertical road cross the level 14 tile.
+  constexpr double gridsize = 1000;
   const std::string ascii_map = R"(
-      A---B---C
-          |
-          D
+x
+A-B-C
+  |
+  |
+  |
+  D
   )";
 
   const gurka::ways ways = {
@@ -115,10 +118,10 @@ TEST(VectorTilesBasic, TileRendering) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_vt_basic");
 
   std::string tile_data;
-  auto api = gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
+  auto api = gurka::do_action(Options::tile, map, "x", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 2850);
-  EXPECT_GT(tile_data.size(), 2750);
+  EXPECT_LT(tile_data.size(), 3400);
+  EXPECT_GT(tile_data.size(), 3300);
 
   vtzero::vector_tile tile{tile_data};
 
@@ -134,7 +137,7 @@ TEST(VectorTilesBasic, TileRendering) {
       EXPECT_EQ(layer.version(), 2);
       EXPECT_EQ(layer.extent(), 4096);
 
-      EXPECT_EQ(layer.num_features(), 1);
+      EXPECT_EQ(layer.num_features(), 3);
 
       auto feature = layer.next_feature();
       EXPECT_TRUE(feature.has_id());
@@ -163,7 +166,7 @@ TEST(VectorTilesBasic, TileRendering) {
       EXPECT_EQ(layer.version(), 2);
       EXPECT_EQ(layer.extent(), 4096);
 
-      EXPECT_EQ(layer.num_features(), 2);
+      EXPECT_EQ(layer.num_features(), 3);
 
       auto feature = layer.next_feature();
 
