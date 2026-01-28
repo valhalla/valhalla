@@ -352,8 +352,40 @@ message TripLeg {
   repeated LevelChange level_changes = 15;
 }
 
+
+
 message TripRoute {
+  message MatchedPoint {
+    enum MatchType {
+     kUnmatched = 0;
+     kInterpolated = 1; 
+     kMatched = 2;
+    }
+    MatchType type = 1;
+    oneof has_edge_index {
+      uint32 edge_index = 2;
+    }
+
+    bool begins_discontinuity = 3;
+    bool ends_discontinuity = 4;
+
+    oneof has_distance_along_edge {
+      double distance_along_edge = 5;
+    }
+
+    oneof has_distance_from_trace_point {
+      double distance_from_trace_point = 6;
+    }
+
+    oneof has_latlng {
+      LatLng latlng = 7;
+    }
+  }
   repeated TripLeg legs = 1;
+  repeated MatchedPoint matched_points = 2;
+  float confidence_score = 3;
+  float raw_score = 4;
+  bool is_best = 5;
 }
 
 message Trip {

@@ -584,6 +584,71 @@ void append_trace_info(
     serialize_shape_attributes(controller, trip_path, writer);
   }
 }
+
+/**
+ * If a pbf response is requested, we simply add the missing stuff to the trip
+ */
+void fill_trace_attributes(
+    Api& request,
+    const AttributesController& controller,
+    std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
+
+  size_t i = 0;
+  for (const auto& map_match_result : map_match_results) {
+    auto* route = request.mutable_trip()->mutable_routes(i++);
+    if (controller(kConfidenceScore)) {
+      route->set_confidence_score(std::get<kConfidenceScoreIndex>(map_match_result));
+    }
+
+    if (controller(kRawScore)) {
+      route->set_raw_score(std::get<kRawScoreIndex>(map_match_result));
+    }
+
+    for (const auto& match : std::get<kMatchResultsIndex>(map_match_result)) {
+      auto* p = route->add_matched_points();
+      if (controller(kMatchedPoint)) {
+        p->mutable_latlng()->set_lng(match.lnglat.lng());
+        p->mutable_latlng()->set_lat(match.lnglat.lat());
+      }
+
+      if (controller(kMatchedType)) {
+        switch (match.GetType()) {
+          case meili::MatchResult::Type::kMatched:
+            p->set_type(valhalla::TripRoute_MatchedPoint_MatchType_kMatched);
+            break;
+          case meili::MatchResult::Type::kInterpolated:
+            p->set_type(valhalla::TripRoute_MatchedPoint_MatchType_kInterpolated);
+            break;
+          default:
+            p->set_type(valhalla::TripRoute_MatchedPoint_MatchType_kUnmatched);
+            break;
+        }
+      }
+
+      if (controller(kMatchedEdgeIndex) && match.edgeid.is_valid()) {
+        p->set_edge_index(match.edge_index);
+      }
+      if (controller(kMatchedDistanceAlongEdge) &&
+          (match.GetType() != meili::MatchResult::Type::kUnmatched)) {
+        p->set_distance_along_edge(match.distance_along);
+      }
+
+      if (controller(kMatchedBeginRouteDiscontinuity)) {
+        p->set_begins_discontinuity(match.begins_discontinuity);
+      }
+
+      if (controller(kMatchedEndRouteDiscontinuity)) {
+        p->set_ends_discontinuity(match.ends_discontinuity);
+      }
+
+      // Process matched point distance from trace point
+      if (controller(kMatchedDistanceFromTracePoint) &&
+          (match.GetType() != meili::MatchResult::Type::kUnmatched)) {
+        p->set_distance_from_trace_point(match.distance_from);
+      }
+    }
+  }
+}
 } // namespace
 
 namespace valhalla {
@@ -595,8 +660,10 @@ std::string serializeTraceAttributes(
     std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
 
   // If its pbf format just return the trip
-  if (request.options().format() == Options_Format_pbf)
+  if (request.options().format() == Options_Format_pbf) {
+    fill_trace_attributes(request, controller, map_match_results);
     return serializePbf(request);
+  }
 
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);
