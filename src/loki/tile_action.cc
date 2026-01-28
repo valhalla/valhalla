@@ -223,7 +223,7 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
 void build_layers(const std::shared_ptr<GraphReader>& reader,
                   vtzero::tile_builder& tile,
                   const midgard::AABB2<midgard::PointLL>& bounds,
-                  const std::unordered_set<baldr::GraphId>& edge_ids,
+                  const std::vector<baldr::GraphId>& edge_ids,
                   const loki_worker_t::ZoomConfig& min_zoom_road_class,
                   uint32_t z,
                   const bool return_shortcuts,
@@ -249,7 +249,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   unclipped_line.reserve(20);
   bg::multilinestring_2d_t clipped_lines;
   baldr::graph_tile_ptr edge_tile;
-  // TODO(nils): sort edge_ids for better cache coherence
   for (const auto& edge_id : edge_ids) {
     // TODO(nils): create another array for tile level to quickly discard edges on lower zooms
     const auto* edge = reader->directededge(edge_id, edge_tile);
@@ -550,12 +549,17 @@ std::string loki_worker_t::render_tile(Api& request) {
 
   // query edges in bbox, omits opposing edges
   const auto edge_ids = candidate_query_.RangeQuery(bounds);
+  // sort for cache friendliness
+  std::vector<GraphId> sorted_ids;
+  sorted_ids.reserve(edge_ids.size());
+  sorted_ids.assign(edge_ids.begin(), edge_ids.end());
+  std::sort(sorted_ids.begin(), sorted_ids.end(), GraphId::cache_comparator);
 
   // we use generalize as a scaling factor to our default generalization
   const double generalize = options.has_generalize_case() ? options.generalize() : 4.;
   // build the full layers if cache is allowed, else whatever is in the controller
-  build_layers(reader, tile, bounds, edge_ids, min_zoom_road_class_, z, return_shortcuts, generalize,
-               controller);
+  build_layers(reader, tile, bounds, sorted_ids, min_zoom_road_class_, z, return_shortcuts,
+               generalize, controller);
 
   std::string tile_bytes;
   tile.serialize(tile_bytes);
