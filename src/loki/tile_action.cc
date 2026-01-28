@@ -917,7 +917,10 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     }
 
     clipped_mvt_lines.clear();
+    // intersect with line with extended tile bbox and remove degenerate lines
     boost::geometry::intersection(clip_box, unclipped_mvt_line, clipped_mvt_lines);
+    std::erase_if(clipped_mvt_lines,
+                  [](const auto& ls) { return ls.size() < 2 || (ls.size() == 2 && ls[0] == ls[1]); });
 
     // skip if no clipped segments, i.e. edge is completely outside tile
     if (clipped_mvt_lines.empty()) {
