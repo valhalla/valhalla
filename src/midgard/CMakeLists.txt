@@ -25,6 +25,5 @@ valhalla_module(NAME midgard
       $<$<BOOL:${WIN32}>:${dirent_include_dir}>
     PRIVATE
       ${unordered_dense_include_dir}
-      ${vtzero_include_dirs}
   DEPENDS
     Boost::boost)
