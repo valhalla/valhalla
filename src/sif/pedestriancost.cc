@@ -26,11 +26,12 @@ namespace {
 
 // Base transition costs
 // TODO - can we define these in dynamiccost.h and override here if they differ?
-constexpr float kDefaultGatePenalty = 10.0f;           // Seconds
-constexpr float kDefaultPrivateAccessPenalty = 600.0f; // Seconds
-constexpr float kDefaultBssCost = 120.0f;              // Seconds
-constexpr float kDefaultBssPenalty = 0.0f;             // Seconds
-constexpr float kDefaultServicePenalty = 0.0f;         // Seconds
+constexpr float kDefaultGatePenalty = 10.0f;             // Seconds
+constexpr float kDefaultPrivateAccessPenalty = 600.0f;   // Seconds
+constexpr float kDefaultBssCost = 120.0f;                // Seconds
+constexpr float kDefaultBssPenalty = 0.0f;               // Seconds
+constexpr float kDefaultServicePenalty = 0.0f;           // Seconds
+constexpr float kDefaultDestinationOnlyPenalty = 120.0f; // Seconds
 
 // Maximum route distances
 constexpr uint32_t kMaxDistanceFoot = 100000;      // 100 km
@@ -154,6 +155,7 @@ constexpr float kSacScaleCostFactor[] = {
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
+  cfg.dest_only_penalty_.def = kDefaultDestinationOnlyPenalty;
   cfg.gate_penalty_.def = kDefaultGatePenalty;
   cfg.private_access_penalty_.def = kDefaultPrivateAccessPenalty;
   cfg.disable_toll_booth_ = true;
@@ -539,6 +541,8 @@ public:
   // a bike share station connection
   bool project_on_bss_connection = 0;
 
+  bool apply_destination_only_penalty_to_trails_ = false;
+
   /**
    * Override the base transition cost to not add maneuver penalties onto transit edges.
    * Base transition cost that all costing methods use. Includes costs for
@@ -575,7 +579,17 @@ public:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
+    if (edge->destonly() && !pred->destonly()) {
+      const auto use = edge->use();
+      const bool is_pedestrian_or_trail_use =
+          use == baldr::Use::kTrack || use == baldr::Use::kParkingAisle ||
+          use == baldr::Use::kSidewalk || use == baldr::Use::kFootway || use == baldr::Use::kPath ||
+          use == baldr::Use::kPedestrian || use == baldr::Use::kBridleway ||
+          use == baldr::Use::kPedestrianCrossing || use == baldr::Use::kCycleway ||
+          use == baldr::Use::kMountainBike;
+      c.cost += destination_only_penalty_ *
+                (apply_destination_only_penalty_to_trails_ || !is_pedestrian_or_trail_use);
+    }
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost +=
@@ -643,6 +657,8 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   driveway_factor_ = costing_options.driveway_factor();
   transit_start_end_max_distance_ = costing_options.transit_start_end_max_distance();
   transit_transfer_max_distance_ = costing_options.transit_transfer_max_distance();
+  apply_destination_only_penalty_to_trails_ =
+      costing_options.apply_destination_only_penalty_to_trails();
 
   // Set the speed factor (to avoid division in costing)
   speedfactor_ = (kSecPerHour * 0.001f) / speed_;
@@ -917,6 +933,8 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kBSSPenaltyRange, json, "/bss_rent_penalty", bike_share_penalty);
   JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills);
   JSON_PBF_RANGED_DEFAULT(co, kElevatorPenaltyRange, json, "/elevator_penalty", elevator_penalty);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/apply_destination_only_penalty_to_trails",
+                      apply_destination_only_penalty_to_trails);
 }
 
 cost_ptr_t CreatePedestrianCost(const Costing& costing_options) {

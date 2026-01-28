@@ -5,6 +5,7 @@
    * FIXED: use correct edge for directional attributes in MVT [#5836](https://github.com/valhalla/valhalla/pull/5836)
    * FIXED: Add numpy as optional runtime dependency for Python bindings [#5823](https://github.com/valhalla/valhalla/pull/5823)
 * **Enhancement**
+   * ADDED: `apply_destination_only_penalty_to_trails` parameter to bicycle and pedestrian costing options [#5643](https://github.com/valhalla/valhalla/issues/5643)
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: Clean up boost::geometry types [#5818](https://github.com/valhalla/valhalla/pull/5818)
