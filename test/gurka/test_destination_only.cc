@@ -3,6 +3,7 @@
 #include "valhalla/worker.h"
 
 #include <gtest/gtest.h>
+
 #include <sstream>
 
 using namespace valhalla;
@@ -90,12 +91,9 @@ TEST(Standalone, DestinationOnlyPedestrianDefaultPenalty) {
   )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}}},
-      {"BC", {{"highway", "residential"}}},
-      {"CD", {{"highway", "residential"}}},
-      {"AE", {{"highway", "residential"}}},
-      {"EF", {{"highway", "residential"}}},
-      {"FD", {{"highway", "residential"}}},
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}}, {"AE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}}, {"FD", {{"highway", "residential"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
@@ -137,8 +135,8 @@ TEST(Standalone, DestinationOnlyPedestrianParkingAisle) {
 
   const auto layout =
       gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_destination_only_parking_aisle",
-                               {});
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_destination_only_parking_aisle", {});
 
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
@@ -156,18 +154,17 @@ TEST(Standalone, DestinationOnlyPedestrianParkingAisle) {
       std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "E")),
   };
 
-  test::customize_edges(map.config,
-                        [&shortcut_edgeids, &detour_edgeids](const baldr::GraphId& edgeid,
-                                                             baldr::DirectedEdge& edge) {
-                          if (std::find(shortcut_edgeids.begin(), shortcut_edgeids.end(), edgeid) !=
-                              shortcut_edgeids.end()) {
-                            edge.set_dest_only(true);
-                            edge.set_length(10);
-                          } else if (std::find(detour_edgeids.begin(), detour_edgeids.end(), edgeid) !=
-                                     detour_edgeids.end()) {
-                            edge.set_length(100);
-                          }
-                        });
+  test::customize_edges(map.config, [&shortcut_edgeids, &detour_edgeids](const baldr::GraphId& edgeid,
+                                                                         baldr::DirectedEdge& edge) {
+    if (std::find(shortcut_edgeids.begin(), shortcut_edgeids.end(), edgeid) !=
+        shortcut_edgeids.end()) {
+      edge.set_dest_only(true);
+      edge.set_length(10);
+    } else if (std::find(detour_edgeids.begin(), detour_edgeids.end(), edgeid) !=
+               detour_edgeids.end()) {
+      edge.set_length(100);
+    }
+  });
 
   {
     auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "pedestrian");
@@ -192,18 +189,15 @@ TEST(Standalone, DestinationOnlyBicycleCycleway) {
   )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}}},
-      {"CD", {{"highway", "residential"}}},
-      {"BX", {{"highway", "cycleway"}}},
-      {"XC", {{"highway", "cycleway"}}},
-      {"BE", {{"highway", "residential"}}},
-      {"EC", {{"highway", "residential"}}},
+      {"AB", {{"highway", "residential"}}}, {"CD", {{"highway", "residential"}}},
+      {"BX", {{"highway", "cycleway"}}},    {"XC", {{"highway", "cycleway"}}},
+      {"BE", {{"highway", "residential"}}}, {"EC", {{"highway", "residential"}}},
   };
 
   const auto layout =
       gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_destination_only_bicycle_cycleway",
-                               {});
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               "test/data/gurka_destination_only_bicycle_cycleway", {});
 
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
@@ -221,18 +215,17 @@ TEST(Standalone, DestinationOnlyBicycleCycleway) {
       std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "E")),
   };
 
-  test::customize_edges(map.config,
-                        [&shortcut_edgeids, &detour_edgeids](const baldr::GraphId& edgeid,
-                                                             baldr::DirectedEdge& edge) {
-                          if (std::find(shortcut_edgeids.begin(), shortcut_edgeids.end(), edgeid) !=
-                              shortcut_edgeids.end()) {
-                            edge.set_dest_only(true);
-                            edge.set_length(10);
-                          } else if (std::find(detour_edgeids.begin(), detour_edgeids.end(), edgeid) !=
-                                     detour_edgeids.end()) {
-                            edge.set_length(100);
-                          }
-                        });
+  test::customize_edges(map.config, [&shortcut_edgeids, &detour_edgeids](const baldr::GraphId& edgeid,
+                                                                         baldr::DirectedEdge& edge) {
+    if (std::find(shortcut_edgeids.begin(), shortcut_edgeids.end(), edgeid) !=
+        shortcut_edgeids.end()) {
+      edge.set_dest_only(true);
+      edge.set_length(10);
+    } else if (std::find(detour_edgeids.begin(), detour_edgeids.end(), edgeid) !=
+               detour_edgeids.end()) {
+      edge.set_length(100);
+    }
+  });
 
   {
     auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "bicycle");

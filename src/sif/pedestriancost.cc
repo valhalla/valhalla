@@ -26,11 +26,11 @@ namespace {
 
 // Base transition costs
 // TODO - can we define these in dynamiccost.h and override here if they differ?
-constexpr float kDefaultGatePenalty = 10.0f;           // Seconds
-constexpr float kDefaultPrivateAccessPenalty = 600.0f; // Seconds
-constexpr float kDefaultBssCost = 120.0f;              // Seconds
-constexpr float kDefaultBssPenalty = 0.0f;             // Seconds
-constexpr float kDefaultServicePenalty = 0.0f;         // Seconds
+constexpr float kDefaultGatePenalty = 10.0f;             // Seconds
+constexpr float kDefaultPrivateAccessPenalty = 600.0f;   // Seconds
+constexpr float kDefaultBssCost = 120.0f;                // Seconds
+constexpr float kDefaultBssPenalty = 0.0f;               // Seconds
+constexpr float kDefaultServicePenalty = 0.0f;           // Seconds
 constexpr float kDefaultDestinationOnlyPenalty = 120.0f; // Seconds
 
 // Maximum route distances
@@ -582,10 +582,11 @@ public:
     if (edge->destonly() && !pred->destonly()) {
       const auto use = edge->use();
       const bool is_pedestrian_or_trail_use =
-          use == baldr::Use::kTrack || use == baldr::Use::kParkingAisle || use == baldr::Use::kSidewalk ||
-          use == baldr::Use::kFootway || use == baldr::Use::kPath || use == baldr::Use::kPedestrian ||
-          use == baldr::Use::kBridleway || use == baldr::Use::kPedestrianCrossing ||
-          use == baldr::Use::kCycleway || use == baldr::Use::kMountainBike;
+          use == baldr::Use::kTrack || use == baldr::Use::kParkingAisle ||
+          use == baldr::Use::kSidewalk || use == baldr::Use::kFootway || use == baldr::Use::kPath ||
+          use == baldr::Use::kPedestrian || use == baldr::Use::kBridleway ||
+          use == baldr::Use::kPedestrianCrossing || use == baldr::Use::kCycleway ||
+          use == baldr::Use::kMountainBike;
       c.cost += destination_only_penalty_ *
                 (apply_destination_only_penalty_to_trails_ || !is_pedestrian_or_trail_use);
     }
@@ -656,7 +657,8 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   driveway_factor_ = costing_options.driveway_factor();
   transit_start_end_max_distance_ = costing_options.transit_start_end_max_distance();
   transit_transfer_max_distance_ = costing_options.transit_transfer_max_distance();
-  apply_destination_only_penalty_to_trails_ = costing_options.apply_destination_only_penalty_to_trails();
+  apply_destination_only_penalty_to_trails_ =
+      costing_options.apply_destination_only_penalty_to_trails();
 
   // Set the speed factor (to avoid division in costing)
   speedfactor_ = (kSecPerHour * 0.001f) / speed_;

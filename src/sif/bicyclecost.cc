@@ -447,8 +447,10 @@ public:
          (node->type() == baldr::NodeType::kGate || node->type() == baldr::NodeType::kBollard) *
          node->private_access();
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
-    c += toll_booth_cost_ * (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
-    c += ferry_transition_cost_ * (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
+    c += toll_booth_cost_ *
+         (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
+    c += ferry_transition_cost_ *
+         (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
     c += rail_ferry_transition_cost_ *
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
@@ -459,15 +461,19 @@ public:
                                 use == baldr::Use::kMountainBike || use == baldr::Use::kPath ||
                                 use == baldr::Use::kFootway || use == baldr::Use::kPedestrian ||
                                 use == baldr::Use::kBridleway || use == baldr::Use::kSidewalk ||
-                                use == baldr::Use::kPedestrianCrossing || use == baldr::Use::kParkingAisle;
-      c.cost += destination_only_penalty_ * (apply_destination_only_penalty_to_trails_ || !is_trail_use);
+                                use == baldr::Use::kPedestrianCrossing ||
+                                use == baldr::Use::kParkingAisle;
+      c.cost +=
+          destination_only_penalty_ * (apply_destination_only_penalty_to_trails_ || !is_trail_use);
     }
 
-    c.cost += alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
+    c.cost +=
+        alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
     c.cost += living_street_penalty_ *
               (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
-    c.cost += track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
+    c.cost +=
+        track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
 
     c.cost += service_penalty_ *
               (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) *
