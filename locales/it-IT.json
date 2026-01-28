@@ -2319,6 +2319,20 @@
         ]
       }
     },
+    "bike_share_verbal": {
+      "phrases": {
+        "0": "Noleggia una bici dalla stazione del bike sharing.",
+        "1": "Riconsegna la bici alla stazione di bike sharing."
+      },
+      "example_phrases": {
+        "0": [
+          "Rent a bike from bike share station."
+        ],
+        "1": [
+          "Riconsegna la bici alla stazione di bike sharing."
+        ]
+      }
+    },
     "enter_building": {
       "phrases": {
         "0": "Enter the building.",
