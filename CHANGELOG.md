@@ -14,6 +14,7 @@
    * CHANGED: Move location update in CostMatrix [#5813](https://github.com/valhalla/valhalla/pull/5813)
    * ADDED: Geometry generalization for `edges` layer of `/tile` endpoint (#5809)(https://github.com/valhalla/valhalla/pull/5809)
    * ADDED: sort operator for GraphId which is ideal for mmap & edge_id loop cache [#5839](https://github.com/valhalla/valhalla/pull/5839)
+   * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**

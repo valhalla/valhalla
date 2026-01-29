@@ -193,8 +193,6 @@ void filter_tile(const std::string& tile_bytes,
       prop_map = loki::detail::kEdgePropToAttributeFlag;
     }
 
-    build_filtered_layer(full_layer, prop_map);
-
     return true;
   });
 }
@@ -202,10 +200,6 @@ void filter_tile(const std::string& tile_bytes,
 void build_nodes_layer(NodesLayerBuilder& nodes_builder,
                        const baldr::graph_tile_ptr& graph_tile,
                        const baldr::GraphId& node_id,
-                       const TileProjection& projection) {
-  const auto& node = *graph_tile->node(node_id);
-  const auto& node_ll = node.latlng(graph_tile->header()->base_ll());
-  const auto& admin_info = graph_tile->admininfo(node.admin_index());
 
   // Convert to tile coordinates
   const auto x = lon_to_merc_x(node_ll.x());
@@ -218,12 +212,12 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
   // Only render nodes that are within the tile (including buffer)
   if (tile_x < -projection.tile_buffer || tile_x > projection.tile_extent + projection.tile_buffer ||
       tile_y < -projection.tile_buffer || tile_y > projection.tile_extent + projection.tile_buffer) {
-    return;
+  return;
   }
 
   // Add feature using the builder
   nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
-}
+} // namespace
 
 void build_layers(const std::shared_ptr<GraphReader>& reader,
                   vtzero::tile_builder& tile,
@@ -548,129 +542,125 @@ std::string loki_worker_t::render_tile(Api& request) {
     }
     // if we're caching, we need the full attributes
     controller.set_all(true);
-  }
 
-  // get lat/lon bbox
-  const auto bounds = tile_to_bbox(x, y, z);
+    // query edges in bbox, omits opposing edges
+    const auto edge_ids = candidate_query_.RangeQuery(bounds);
+    // sort for cache friendliness
+    std::vector<GraphId> sorted_ids;
+    sorted_ids.reserve(edge_ids.size());
+    sorted_ids.assign(edge_ids.begin(), edge_ids.end());
+    std::sort(sorted_ids.begin(), sorted_ids.end(), GraphId::cache_comparator);
 
-  // query edges in bbox, omits opposing edges
-  const auto edge_ids = candidate_query_.RangeQuery(bounds);
-  // sort for cache friendliness
-  std::vector<GraphId> sorted_ids;
-  sorted_ids.reserve(edge_ids.size());
-  sorted_ids.assign(edge_ids.begin(), edge_ids.end());
-  std::sort(sorted_ids.begin(), sorted_ids.end(), GraphId::cache_comparator);
+    // we use generalize as a scaling factor to our default generalization
+    const double generalize = options.has_generalize_case() ? options.generalize() : 4.;
+    // build the full layers if cache is allowed, else whatever is in the controller
+    build_layers(reader, tile, bounds, sorted_ids, min_zoom_road_class_, z, generalize, controller);
 
-  // we use generalize as a scaling factor to our default generalization
-  const double generalize = options.has_generalize_case() ? options.generalize() : 4.;
-  // build the full layers if cache is allowed, else whatever is in the controller
-  build_layers(reader, tile, bounds, sorted_ids, min_zoom_road_class_, z, generalize, controller);
+    std::string tile_bytes;
+    tile.serialize(tile_bytes);
 
-  std::string tile_bytes;
-  tile.serialize(tile_bytes);
-
-  if (cache_allowed && !is_cached) {
-    // atomically create the file
-    auto tmp = tile_path;
-    tmp += loki::detail::make_temp_name("_XXXXXX.tmp");
-    try {
-      std::filesystem::create_directories(tmp.parent_path());
-    } catch (const std::filesystem::filesystem_error& e) {
-      if (e.code() != std::errc::file_exists) {
-        throw;
+    if (cache_allowed && !is_cached) {
+      // atomically create the file
+      auto tmp = tile_path;
+      tmp += loki::detail::make_temp_name("_XXXXXX.tmp");
+      try {
+        std::filesystem::create_directories(tmp.parent_path());
+      } catch (const std::filesystem::filesystem_error& e) {
+        if (e.code() != std::errc::file_exists) {
+          throw;
+        }
       }
-    }
-    std::ofstream out(tmp.string(), std::ios::binary);
-    out.write(tile_bytes.data(), static_cast<std::streamsize>(tile_bytes.size()));
-    out.close();
-    if (!out) {
-      LOG_WARN("Couldnt cache tile {}", tile_path.string());
+      std::ofstream out(tmp.string(), std::ios::binary);
+      out.write(tile_bytes.data(), static_cast<std::streamsize>(tile_bytes.size()));
+      out.close();
+      if (!out) {
+        LOG_WARN("Couldnt cache tile {}", tile_path.string());
+      }
+
+      std::filesystem::rename(tmp, tile_path);
     }
 
-    std::filesystem::rename(tmp, tile_path);
-  }
+    if (return_verbose) {
+      return tile_bytes;
+    } else if (cache_allowed) {
+      // only apply filter to the tile if we have a full tile (due to caching) but the request
+      // wants a filtered tile
 
-  if (return_verbose) {
+      vtzero::tile_builder filtered_tile;
+
+      // need a fresh controller, the other one might have been changed if it was cacheable
+      filter_tile(tile_bytes, filtered_tile, get_controller());
+
+      return filtered_tile.serialize();
+    }
+
+    // we can only land here if cache isn't allowed, verbose=false and/or a filter is in the request
     return tile_bytes;
-  } else if (cache_allowed) {
-    // only apply filter to the tile if we have a full tile (due to caching) but the request
-    // wants a filtered tile
-
-    vtzero::tile_builder filtered_tile;
-
-    // need a fresh controller, the other one might have been changed if it was cacheable
-    filter_tile(tile_bytes, filtered_tile, get_controller());
-
-    return filtered_tile.serialize();
   }
 
-  // we can only land here if cache isn't allowed, verbose=false and/or a filter is in the request
-  return tile_bytes;
-}
+  namespace detail {
+  /**
+   * Make temp file name, mkstemp is POSIX & not implemented on Win
+   *
+   * @param template_name expects to end on XXXXXX (6 x "X")
+   */
+  std::string make_temp_name(std::string template_name) {
+    auto pos = template_name.rfind("XXXXXX");
 
-namespace detail {
-/**
- * Make temp file name, mkstemp is POSIX & not implemented on Win
- *
- * @param template_name expects to end on XXXXXX (6 x "X")
- */
-std::string make_temp_name(std::string template_name) {
-  auto pos = template_name.rfind("XXXXXX");
+    std::random_device rd;
+    std::mt19937_64 rng((static_cast<uint64_t>(rd()) << 32) ^ static_cast<uint64_t>(rd()));
 
-  std::random_device rd;
-  std::mt19937_64 rng((static_cast<uint64_t>(rd()) << 32) ^ static_cast<uint64_t>(rd()));
+    static const char table[] = "abcdefghijklmnopqrstuvwxyz"
+                                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                "0123456789";
+    std::uniform_int_distribution<size_t> dist(0, sizeof(table) - 2);
 
-  static const char table[] = "abcdefghijklmnopqrstuvwxyz"
-                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                              "0123456789";
-  std::uniform_int_distribution<size_t> dist(0, sizeof(table) - 2);
+    for (int i = 0; i < 6; ++i)
+      template_name[pos + i] = table[dist(rng)];
 
-  for (int i = 0; i < 6; ++i)
-    template_name[pos + i] = table[dist(rng)];
-
-  return template_name;
-}
-
-std::filesystem::path
-mvt_local_path(const uint32_t z, const uint32_t x, const uint32_t y, const std::string& root) {
-  static std::string kMvtExt = ".mvt";
-  // number of cols & rows
-  size_t dim = 1ull << z;
-
-  // determine zero padded width for the full path
-  size_t max_index = (dim * dim) - 1;
-  size_t path_width = static_cast<size_t>(std::log10(max_index)) + 1;
-  const size_t remainder = path_width % 3;
-  if (remainder) {
-    path_width += 3 - remainder;
-  }
-  assert(path_width % 3 == 0);
-
-  // convert index to zero-padded decimal string
-  size_t tile_index = static_cast<size_t>(y) * dim + static_cast<size_t>(x);
-  std::ostringstream oss;
-  oss << std::setw(path_width) << std::setfill('0') << tile_index;
-  std::string path_no_sep = oss.str();
-
-  // split into groups of 3 digits
-  std::vector<std::string> groups;
-  size_t i = 0;
-  while (i < path_no_sep.size()) {
-    groups.push_back(path_no_sep.substr(i, 3));
-    i += 3;
+    return template_name;
   }
 
-  std::filesystem::path tile_path = root;
-  tile_path /= std::to_string(z);
+  std::filesystem::path
+  mvt_local_path(const uint32_t z, const uint32_t x, const uint32_t y, const std::string& root) {
+    static std::string kMvtExt = ".mvt";
+    // number of cols & rows
+    size_t dim = 1ull << z;
 
-  // append all groups but the last one, which is the filename
-  for (size_t i = 0; i < groups.size() - 1; ++i) {
-    tile_path /= groups[i];
+    // determine zero padded width for the full path
+    size_t max_index = (dim * dim) - 1;
+    size_t path_width = static_cast<size_t>(std::log10(max_index)) + 1;
+    const size_t remainder = path_width % 3;
+    if (remainder) {
+      path_width += 3 - remainder;
+    }
+    assert(path_width % 3 == 0);
+
+    // convert index to zero-padded decimal string
+    size_t tile_index = static_cast<size_t>(y) * dim + static_cast<size_t>(x);
+    std::ostringstream oss;
+    oss << std::setw(path_width) << std::setfill('0') << tile_index;
+    std::string path_no_sep = oss.str();
+
+    // split into groups of 3 digits
+    std::vector<std::string> groups;
+    size_t i = 0;
+    while (i < path_no_sep.size()) {
+      groups.push_back(path_no_sep.substr(i, 3));
+      i += 3;
+    }
+
+    std::filesystem::path tile_path = root;
+    tile_path /= std::to_string(z);
+
+    // append all groups but the last one, which is the filename
+    for (size_t i = 0; i < groups.size() - 1; ++i) {
+      tile_path /= groups[i];
+    }
+    tile_path /= groups.back() + kMvtExt;
+
+    return tile_path;
   }
-  tile_path /= groups.back() + kMvtExt;
-
-  return tile_path;
-}
-} // namespace detail
+  } // namespace detail
 } // namespace loki
-} // namespace valhalla
+} // namespace loki
