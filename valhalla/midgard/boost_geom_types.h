@@ -29,10 +29,6 @@ using ring_ll_t = boost::geometry::model::ring<valhalla::midgard::PointLL>;
 using polygon_ll_t = boost::geometry::model::polygon<valhalla::midgard::PointLL>;
 using multipolygon_ll_t = boost::geometry::model::multi_polygon<polygon_ll_t>;
 
-// Point with integer coords
-using point_2i_t = boost::geometry::model::point<int32_t, 2, boost::geometry::cs::cartesian>;
-using box_2i_t = boost::geometry::model::box<point_2i_t>;
-
 } // namespace valhalla::midgard::bg
 
 // register a few common types
