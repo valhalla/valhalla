@@ -662,9 +662,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // first the /tile parameters, so we can early exit
   if (options.action() == Options::tile) {
     parse_xyz(doc, options);
-    options.mutable_tile_options()->set_return_shortcuts(
-        rapidjson::get<bool>(doc, "/tile_options/return_shortcuts",
-                             options.tile_options().return_shortcuts()));
     options.set_format(Options::mvt); // set explicitly for MIME type
     return;
   }

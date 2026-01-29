@@ -8,14 +8,13 @@ The default logic for the OpenStreetMap tags, keys, and values used when routing
 
 ## Request options
 
-We support the usual GET & POST with the common "Slippy Map"/XYZ request pattern. However, we expect x/y/z to be wrapped in a `"tile"` object. Extra tile-specific options can be added with a `tile_options` object. Typically one uses some SDK/clients to request tiles like [Maplibre](https://maplibre.org/) or QGIS.
+We support the usual GET & POST with the common "Slippy Map"/XYZ request pattern. However, we expect x/y/z to be wrapped in a `"tile"` object. Typically one uses some SDK/clients to request tiles like [Maplibre](https://maplibre.org/) or QGIS.
 
 | Option | Description |
 | :------------------ | :----------- |
 | `tile.z` | The zoom level, max 30. Which zoom levels render which road classes depends on the `loki.service_defaults.mvt_min_zoom_road_class` server configuration. |
 | `tile.x` | The "slippy map" X coordinate. |
 | `tile.y` | The "slippy map" Y coordinate. |
-| `tile_options.return_shortcuts` |  Whether the response contains shortcut edges. Default `false`. |
 | `filters` |  By default, the tiles only contain a small subset of attributes. Use `filters` to include more attributes:<ul><li>`attributes`: an array of edge/node attributes to include/exclude, see below for a list</li><li>`action`: either `include` or `exclude`. If `include`, we'll add the provided attributes to the default attributes. If `exclude`, we'll remove the provided attributes from the full list.</li></ul> |
 | `verbose` | If `true`, it'll enable _all_ attributes, regardless of `filters`. Default `false`. Note, that the service setting `service_limits.status.allow_verbose` applies here too. |
 | `generalize` | A factor which scales the default (Douglas-Peucker) generalization, akin to tippecanoe's `simplification` argument. 1.0 returns the highest possible resolution, values > 1.0 more aggressively generalize the line features. Default is 4.0 |
