@@ -79,7 +79,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      -1, -1, -1,
                      (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
                      -1, -1}},
-                   // Unused with latest admins, present for backwards compatability with older
+                   // Unused with latest admins, present for backwards compatibility with older
                    // admins db
                    {"England",
                     {-1, -1, -1, -1, -1,
@@ -149,7 +149,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      -1,
                      (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
                      -1, -1}},
-                   // Unused with latest admins, present for backwards compatability with older
+                   // Unused with latest admins, present for backwards compatibility with older
                    // admins db
                    {"Northern Ireland",
                     {-1, -1, -1, -1, -1,
@@ -185,7 +185,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      -1}},
                    {"Russia",
                     {-1, -1, -1, -1, -1, -1, (baldr::kMopedAccess | baldr::kBicycleAccess), -1, -1}},
-                   // Unused with latest admins, present for backwards compatability with older
+                   // Unused with latest admins, present for backwards compatibility with older
                    // admins db
                    {"Alba / Scotland",
                     {-1, -1, -1, -1, -1,
@@ -248,7 +248,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
                       baldr::kMopedAccess),
                      -1}},
-                   // Unused with latest admins, present for backwards compatability with older
+                   // Unused with latest admins, present for backwards compatibility with older
                    // admins db
                    {"Cymru / Wales",
                     {-1, -1, -1, -1, -1,
@@ -256,7 +256,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
                      -1, -1}}};
 
-// Wales present twice at both admin levels to support backwards compatability with older admins db.
+// Wales present twice at both admin levels to support backwards compatibility with older admins db.
 const std::unordered_map<std::string, std::pair<uint8_t, std::string>>
     kSupportedLanguages{{"Cymru / Wales", {2, "cy;en"}},
                         {"Cymru / Wales", {4, "cy;en"}},
