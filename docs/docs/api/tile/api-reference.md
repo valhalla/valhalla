@@ -16,7 +16,79 @@ We support the usual GET & POST with the common "Slippy Map"/XYZ request pattern
 | `tile.x` | The "slippy map" X coordinate. |
 | `tile.y` | The "slippy map" Y coordinate. |
 | `tile_options.return_shortcuts` |  Whether the response contains shortcut edges. Default `false`. |
+| `filters` |  By default, the tiles only contain a small subset of attributes. Use `filters` to include more attributes:<ul><li>`attributes`: an array of edge/node attributes to include/exclude, see below for a list</li><li>`action`: either `include` or `exclude`. If `include`, we'll add the provided attributes to the default attributes. If `exclude`, we'll remove the provided attributes from the full list.</li></ul> |
+| `verbose` | If `true`, it'll enable _all_ attributes, regardless of `filters`. Default `false`. Note, that the service setting `service_limits.status.allow_verbose` applies here too. |
 | `generalize` | A factor which scales the default (Douglas-Peucker) generalization, akin to tippecanoe's `simplification` argument. 1.0 returns the highest possible resolution, values > 1.0 more aggressively generalize the line features. Default is 4.0 |
+
+## Attribute filters
+
+While we're re-using the same code as for `trace_attributes`, we don't support the full list for the tile endpoint and added some which are not implemented for `trace_attributes`. If not specified otherwise, the meaning of the attribute values is either trivial or available at https://valhalla.github.io/valhalla/api/map-matching/api-reference/#edge-items. `access` attributes are returning the numeric representation of a bit mask which needs to be decoded, see https://github.com/valhalla/valhalla/blob/c5151e19f65c3b498aa606a9cc9d6d274fba11bc/valhalla/baldr/graphconstants.h#L37-L47, e.g. a value of 1033 (`0b10000001001`) indicates `auto`, `truck` and `motorcycle` access etc.
+
+Note that `forward`/`backward` refer to the direction drawn in OSM and can be replaced in `<direction>`:
+
+```
+// bidirectional attributes
+edge.use  // see https://github.com/valhalla/demos/blob/aab1cd6d118703529c0f32e240271592b02e7f82/tile/index.html#L275-L311
+edge.tunnel
+edge.bridge
+edge.roundabout
+edge.is_shortcut
+edge.leaves_tile
+edge.length
+edge.weighted_grade
+edge.max_upward_grade
+edge.max_downward_grade
+edge.curvature
+edge.destination_only
+edge.destination_only_hgv
+edge.indoor
+edge.hov_type  // see https://github.com/valhalla/demos/blob/aab1cd6d118703529c0f32e240271592b02e7f82/tile/index.html#L275-L311
+edge.cycle_lane  // see https://github.com/valhalla/demos/blob/aab1cd6d118703529c0f32e240271592b02e7f82/tile/index.html#L275-L311
+edge.bicycle_network
+edge.truck_route
+edge.speed_type  // see https://github.com/valhalla/demos/blob/aab1cd6d118703529c0f32e240271592b02e7f82/tile/index.html#L275-L311
+edge.country_crossing
+edge.sac_scale  // see https://github.com/valhalla/demos/blob/aab1cd6d118703529c0f32e240271592b02e7f82/tile/index.html#L275-L311
+edge.unpaved
+edge.surface  // see https://github.com/valhalla/demos/blob/aab1cd6d118703529c0f32e240271592b02e7f82/tile/index.html#L275-L311
+edge.ramp
+edge.internal_intersection
+edge.shoulder
+edge.dismount
+edge.use_sidepath
+edge.density
+edge.sidewalk_left
+edge.sidewalk_right
+edge.bss_connection
+edge.lit
+edge.not_thru
+edge.part_of_complex_restriction
+edge.osm_id
+edge.speed_limit
+edge.layer
+
+// directional attributes
+edge.speed_<direction>
+edge.deadend_<direction>
+edge.lanecount_<direction>
+edge.truck_speed_<direction>
+edge.traffic_signal_<direction>
+edge.stop_sign_<direction>
+edge.yield_sign_<direction>
+edge.access_<direction>
+edge.live_speed_<direction>
+
+// node attributes
+node.drive_on_right
+node.elevation
+node.tagged_access
+node.private_access
+node.cash_only_toll
+node.mode_change_allowed
+node.named_intersection
+node.timezone
+node.access
+```
 
 ## Integration into MVT compatible clients/SDKs etc
 
@@ -24,7 +96,7 @@ Most often software supporting MVT lets you specify a URL pattern expecting plac
 
 See an example `style.json` [here](https://github.com/valhalla/valhalla/blob/master/docs/docs/api/tile/default_style.json).
 
-### Error/status codes and messages
+## Error/status codes and messages
 
 | Status Code | Status | Description |
 | :--------- | :---------- | :---------- |
