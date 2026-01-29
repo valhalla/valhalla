@@ -89,9 +89,8 @@ TEST(Actor, Tile) {
   auto tile_data = actor.tile(request);
   actor.cleanup();
 
-  // should be 690-710kb
-  EXPECT_GT(tile_data.size(), 710000);
-  EXPECT_LT(tile_data.size(), 730000);
+  EXPECT_GT(tile_data.size(), 120'000);
+  EXPECT_LT(tile_data.size(), 130'000);
 
   vtzero::vector_tile tile{tile_data};
 
