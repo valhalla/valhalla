@@ -147,7 +147,7 @@ void filter_tile(const std::string& tile_bytes,
   const bool exclude_edge_layer = layers_mask & loki::kExcludeEdgeLayerMask;
   const bool exclude_node_layer = layers_mask & loki::kExcludeNodeLayerMask;
 
-  auto build_filtered_layer = [&](vtzero::layer&& full_layer) {
+  auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
     if (layer_name == kNodeLayerName && exclude_node_layer ||
         layer_name == kEdgeLayerName && exclude_edge_layer) {
