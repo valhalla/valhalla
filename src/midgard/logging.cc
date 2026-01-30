@@ -1,9 +1,7 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
-#include <cassert>
 #include <chrono>
-#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -19,7 +17,7 @@ namespace {
 
 // append current timestamp formatted as: "year-mo-dy hr:mn:sc.xxxxxxxxx"
 void append_timestamp(std::string& buffer) {
-  std::format_to(std::back_inserter(buffer), "{0:%F} {0:%T}", std::chrono::utc_clock::now());
+  std::format_to(std::back_inserter(buffer), "{0:%F} {0:%T}", std::chrono::system_clock::now());
 }
 
 // the Log levels we support
