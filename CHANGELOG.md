@@ -1,5 +1,6 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: `tile_options.return_shortcuts` request parameter [#5849](https://github.com/valhalla/valhalla/pull/5849)
 * **Bug Fix**
    * FIXED: access for backward edges in MVT contains data from the correct edge [#5834](https://github.com/valhalla/valhalla/pull/5834)
    * FIXED: use correct edge for directional attributes in MVT [#5836](https://github.com/valhalla/valhalla/pull/5836)
@@ -7,6 +8,7 @@
    * FIXED: MVT clipping bug where parts of edge were being dropped which crossed tile boundaries [#5843](https://github.com/valhalla/valhalla/pull/5843)
    * FIXED: Removed UK country-specific admin overrides / UK countries will return correct admin data [#5847](https://github.com/valhalla/valhalla/pull/5847)
 * **Enhancement**
+   * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: Clean up boost::geometry types [#5818](https://github.com/valhalla/valhalla/pull/5818)
@@ -15,6 +17,8 @@
    * ADDED: Geometry generalization for `edges` layer of `/tile` endpoint (#5809)(https://github.com/valhalla/valhalla/pull/5809)
    * ADDED: sort operator for GraphId which is ideal for mmap & edge_id loop cache [#5839](https://github.com/valhalla/valhalla/pull/5839)
    * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
+   * ADDED: `shortcuts` layer and removed shortcuts from `edges` layer [#5849](https://github.com/valhalla/valhalla/pull/5849)
+   * ADDED: `tile_options/exclude_layers` to exclude MVT layers per request [#5855](https://github.com/valhalla/valhalla/pull/5855)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
