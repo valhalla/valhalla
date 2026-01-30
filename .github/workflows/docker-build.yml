@@ -164,7 +164,7 @@ jobs:
           docker manifest push ghcr.io/valhalla/${{ matrix.image }}:${{ needs.extract_image_tag.outputs.tag }}
 
   test-image:
-    # if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
     strategy:
       matrix:
         include:
