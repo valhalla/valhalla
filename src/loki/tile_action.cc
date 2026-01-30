@@ -78,9 +78,6 @@ constexpr double PeuckerEpsilons[] = {
  * This is the WGS84 ellipsoid semi-major axis.
  */
 constexpr double kEarthRadiusMeters = 6378137.0;
-constexpr std::string_view kEdgeLayerName = "edges";
-constexpr std::string_view kNodeLayerName = "nodes";
-constexpr std::string_view kShortcutsLayerName = "shortcuts";
 
 double lon_to_merc_x(const double lon) {
   return kEarthRadiusMeters * lon * kPiD / 180.0;
@@ -141,58 +138,60 @@ vtzero::point merc_to_tile_coords(const midgard::Point2d merc_xy, const TileProj
 
 void filter_tile(const std::string& tile_bytes,
                  vtzero::tile_builder& filtered_tile,
-                 const baldr::AttributesController& controller) {
+                 const baldr::AttributesController& controller,
+                 const uint32_t layers_mask) {
 
   vtzero::vector_tile tile_full{tile_bytes};
 
-  auto build_filtered_layer =
-      [&](vtzero::layer& full_layer,
-          const std::unordered_map<std::string_view, std::string_view>& prop_map) {
-        vtzero::layer_builder filtered_layer{filtered_tile, full_layer};
-        vtzero::property_mapper props_mapper{full_layer, filtered_layer};
+  const bool exclude_edge_layer = layers_mask & loki::kExcludeEdgeLayerMask;
+  const bool exclude_shortcut_layer = layers_mask & loki::kExcludeShortcutLayerMask;
+  const bool exclude_node_layer = layers_mask & loki::kExcludeNodeLayerMask;
 
-        // pre-compute enabled attributes
-        const auto& key_table = full_layer.key_table();
-        std::vector<bool> attrs_allowed(key_table.size(), false);
-        for (uint32_t i = 0; i < key_table.size(); ++i) {
-          auto key = full_layer.key(vtzero::index_value{i});
-          const std::string_view key_str{key.data(), key.size()};
-          // mandatory fields are not part of AttributeController and that throws
-          try {
-            attrs_allowed[i] = controller(prop_map.at(key_str));
-          } catch (const std::exception& e) { attrs_allowed[i] = true; }
-        }
-
-        while (const auto full_feat = full_layer.next_feature()) {
-          vtzero::geometry_feature_builder filtered_feat{filtered_layer};
-          filtered_feat.copy_id(full_feat);
-          filtered_feat.set_geometry(full_feat.geometry());
-
-          // filter attributes
-          bool add_feat =
-              full_feat.for_each_property_indexes([&](const vtzero::index_value_pair&& idxs) {
-                if (attrs_allowed[idxs.key().value()]) {
-                  filtered_feat.add_property(props_mapper(idxs));
-                }
-                return true;
-              });
-          if (add_feat) [[likely]]
-            filtered_feat.commit();
-          else [[unlikely]]
-            filtered_feat.rollback();
-        }
-      };
-
-  tile_full.for_each_layer([&](vtzero::layer&& full_layer) {
+  auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
-    std::unordered_map<std::string_view, std::string_view> prop_map;
-    if (layer_name == kNodeLayerName) {
-      prop_map = loki::detail::kNodePropToAttributeFlag;
-    } else {
-      // edges and shortcuts get the same
-      prop_map = loki::detail::kEdgePropToAttributeFlag;
+    if ((layer_name == loki::kNodeLayerName && exclude_node_layer) ||
+        (layer_name == loki::kEdgeLayerName && exclude_edge_layer) ||
+        (layer_name == loki::kShortcutLayerName && exclude_shortcut_layer)) {
+      return;
     }
 
+    vtzero::layer_builder filtered_layer{filtered_tile, full_layer};
+    vtzero::property_mapper props_mapper{full_layer, filtered_layer};
+
+    // pre-compute enabled attributes
+    const auto& prop_map = layer_name == kNodeLayerName ? loki::detail::kNodePropToAttributeFlag
+                                                        : loki::detail::kEdgePropToAttributeFlag;
+    const auto& key_table = full_layer.key_table();
+    std::vector<bool> attrs_allowed(key_table.size(), false);
+    for (uint32_t i = 0; i < key_table.size(); ++i) {
+      auto key = full_layer.key(vtzero::index_value{i});
+      const std::string_view key_str{key.data(), key.size()};
+      // mandatory fields are not part of AttributeController and that throws
+      try {
+        attrs_allowed[i] = controller(prop_map.at(key_str));
+      } catch (const std::exception& e) { attrs_allowed[i] = true; }
+    }
+
+    while (auto full_feat = full_layer.next_feature()) {
+      vtzero::geometry_feature_builder filtered_feat{filtered_layer};
+      filtered_feat.copy_id(full_feat);
+      filtered_feat.set_geometry(full_feat.geometry());
+
+      // filter attributes and treat shortcuts
+      bool add_feat = full_feat.for_each_property_indexes([&](const vtzero::index_value_pair& idxs) {
+        if (attrs_allowed[idxs.key().value()]) {
+          filtered_feat.add_property(props_mapper(idxs));
+        }
+        return true;
+      });
+      if (add_feat) [[likely]]
+        filtered_feat.commit();
+      else [[unlikely]]
+        filtered_feat.rollback();
+    }
+  };
+  tile_full.for_each_layer([&](vtzero::layer&& full_layer) {
+    build_filtered_layer(full_layer);
     return true;
   });
 }
@@ -200,6 +199,10 @@ void filter_tile(const std::string& tile_bytes,
 void build_nodes_layer(NodesLayerBuilder& nodes_builder,
                        const baldr::graph_tile_ptr& graph_tile,
                        const baldr::GraphId& node_id,
+                       const TileProjection& projection) {
+  const auto& node = *graph_tile->node(node_id);
+  const auto& node_ll = node.latlng(graph_tile->header()->base_ll());
+  const auto& admin_info = graph_tile->admininfo(node.admin_index());
 
   // Convert to tile coordinates
   const auto x = lon_to_merc_x(node_ll.x());
@@ -212,12 +215,12 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
   // Only render nodes that are within the tile (including buffer)
   if (tile_x < -projection.tile_buffer || tile_x > projection.tile_extent + projection.tile_buffer ||
       tile_y < -projection.tile_buffer || tile_y > projection.tile_extent + projection.tile_buffer) {
-  return;
+    return;
   }
 
   // Add feature using the builder
   nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
-} // namespace
+}
 
 void build_layers(const std::shared_ptr<GraphReader>& reader,
                   vtzero::tile_builder& tile,
@@ -239,7 +242,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   const auto max_y = clip_box.max_corner().y;
 
   EdgesLayerBuilder edges_builder(tile, kEdgeLayerName.data(), controller);
-  EdgesLayerBuilder shortcuts_builder(tile, kShortcutsLayerName.data(), controller);
+  EdgesLayerBuilder shortcuts_builder(tile, kShortcutLayerName.data(), controller);
   NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
 
   std::unordered_set<GraphId> unique_nodes;
@@ -527,140 +530,145 @@ std::string loki_worker_t::render_tile(Api& request) {
   const auto tile_path = detail::mvt_local_path(z, x, y, mvt_cache_dir_);
   bool cache_allowed = (z >= mvt_cache_min_zoom_) && !mvt_cache_dir_.empty();
   bool is_cached = false;
+  uint32_t exclude_layer_mask = options.tile_options().exclude_layer_mask();
   if (cache_allowed) {
     is_cached = std::filesystem::exists(tile_path);
     if (is_cached) {
       std::ifstream tile_file(tile_path, std::ios::binary);
       std::string buffer{std::istreambuf_iterator<char>(tile_file), std::istreambuf_iterator<char>()};
       // we only have cached tiles with all attributes
-      if (return_verbose) {
+      if (return_verbose && !exclude_layer_mask) {
         return buffer;
       }
-      filter_tile(buffer, tile, controller);
+      filter_tile(buffer, tile, controller, exclude_layer_mask);
 
       return tile.serialize();
     }
     // if we're caching, we need the full attributes
     controller.set_all(true);
+  }
 
-    // query edges in bbox, omits opposing edges
-    const auto edge_ids = candidate_query_.RangeQuery(bounds);
-    // sort for cache friendliness
-    std::vector<GraphId> sorted_ids;
-    sorted_ids.reserve(edge_ids.size());
-    sorted_ids.assign(edge_ids.begin(), edge_ids.end());
-    std::sort(sorted_ids.begin(), sorted_ids.end(), GraphId::cache_comparator);
+  // get lat/lon bbox
+  const auto bounds = tile_to_bbox(x, y, z);
 
-    // we use generalize as a scaling factor to our default generalization
-    const double generalize = options.has_generalize_case() ? options.generalize() : 4.;
-    // build the full layers if cache is allowed, else whatever is in the controller
-    build_layers(reader, tile, bounds, sorted_ids, min_zoom_road_class_, z, generalize, controller);
+  // query edges in bbox, omits opposing edges
+  const auto edge_ids = candidate_query_.RangeQuery(bounds);
+  // sort for cache friendliness
+  std::vector<GraphId> sorted_ids;
+  sorted_ids.reserve(edge_ids.size());
+  sorted_ids.assign(edge_ids.begin(), edge_ids.end());
+  std::sort(sorted_ids.begin(), sorted_ids.end(), GraphId::cache_comparator);
 
-    std::string tile_bytes;
-    tile.serialize(tile_bytes);
+  // we use generalize as a scaling factor to our default generalization
+  const double generalize = options.has_generalize_case() ? options.generalize() : 4.;
+  // build the full layers if cache is allowed, else whatever is in the controller
+  build_layers(reader, tile, bounds, sorted_ids, min_zoom_road_class_, z, generalize, controller);
 
-    if (cache_allowed && !is_cached) {
-      // atomically create the file
-      auto tmp = tile_path;
-      tmp += loki::detail::make_temp_name("_XXXXXX.tmp");
-      try {
-        std::filesystem::create_directories(tmp.parent_path());
-      } catch (const std::filesystem::filesystem_error& e) {
-        if (e.code() != std::errc::file_exists) {
-          throw;
-        }
+  std::string tile_bytes;
+  tile.serialize(tile_bytes);
+
+  if (cache_allowed && !is_cached) {
+    // atomically create the file
+    auto tmp = tile_path;
+    tmp += loki::detail::make_temp_name("_XXXXXX.tmp");
+    try {
+      std::filesystem::create_directories(tmp.parent_path());
+    } catch (const std::filesystem::filesystem_error& e) {
+      if (e.code() != std::errc::file_exists) {
+        throw;
       }
-      std::ofstream out(tmp.string(), std::ios::binary);
-      out.write(tile_bytes.data(), static_cast<std::streamsize>(tile_bytes.size()));
-      out.close();
-      if (!out) {
-        LOG_WARN("Couldnt cache tile {}", tile_path.string());
-      }
-
-      std::filesystem::rename(tmp, tile_path);
+    }
+    std::ofstream out(tmp.string(), std::ios::binary);
+    out.write(tile_bytes.data(), static_cast<std::streamsize>(tile_bytes.size()));
+    out.close();
+    if (!out) {
+      LOG_WARN("Couldnt cache tile {}", tile_path.string());
     }
 
-    if (return_verbose) {
-      return tile_bytes;
-    } else if (cache_allowed) {
-      // only apply filter to the tile if we have a full tile (due to caching) but the request
-      // wants a filtered tile
+    std::filesystem::rename(tmp, tile_path);
+  }
 
-      vtzero::tile_builder filtered_tile;
-
-      // need a fresh controller, the other one might have been changed if it was cacheable
-      filter_tile(tile_bytes, filtered_tile, get_controller());
-
-      return filtered_tile.serialize();
-    }
-
-    // we can only land here if cache isn't allowed, verbose=false and/or a filter is in the request
+  if (return_verbose && !exclude_layer_mask) {
     return tile_bytes;
+  } else if (cache_allowed || exclude_layer_mask) {
+    // only apply filter to the tile if we have a full tile (due to caching) but the request
+    // wants a filtered tile
+
+    vtzero::tile_builder filtered_tile;
+
+    // need a fresh controller, the other one might have been changed if it was cacheable
+    filter_tile(tile_bytes, filtered_tile, get_controller(), exclude_layer_mask);
+
+    return filtered_tile.serialize();
   }
 
-  namespace detail {
-  /**
-   * Make temp file name, mkstemp is POSIX & not implemented on Win
-   *
-   * @param template_name expects to end on XXXXXX (6 x "X")
-   */
-  std::string make_temp_name(std::string template_name) {
-    auto pos = template_name.rfind("XXXXXX");
+  // we can only land here if cache isn't allowed, verbose=false and/or a filter is in the request
+  return tile_bytes;
+}
 
-    std::random_device rd;
-    std::mt19937_64 rng((static_cast<uint64_t>(rd()) << 32) ^ static_cast<uint64_t>(rd()));
+namespace detail {
+/**
+ * Make temp file name, mkstemp is POSIX & not implemented on Win
+ *
+ * @param template_name expects to end on XXXXXX (6 x "X")
+ */
+std::string make_temp_name(std::string template_name) {
+  auto pos = template_name.rfind("XXXXXX");
 
-    static const char table[] = "abcdefghijklmnopqrstuvwxyz"
-                                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                                "0123456789";
-    std::uniform_int_distribution<size_t> dist(0, sizeof(table) - 2);
+  std::random_device rd;
+  std::mt19937_64 rng((static_cast<uint64_t>(rd()) << 32) ^ static_cast<uint64_t>(rd()));
 
-    for (int i = 0; i < 6; ++i)
-      template_name[pos + i] = table[dist(rng)];
+  static const char table[] = "abcdefghijklmnopqrstuvwxyz"
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                              "0123456789";
+  std::uniform_int_distribution<size_t> dist(0, sizeof(table) - 2);
 
-    return template_name;
+  for (int i = 0; i < 6; ++i)
+    template_name[pos + i] = table[dist(rng)];
+
+  return template_name;
+}
+
+std::filesystem::path
+mvt_local_path(const uint32_t z, const uint32_t x, const uint32_t y, const std::string& root) {
+  static std::string kMvtExt = ".mvt";
+  // number of cols & rows
+  size_t dim = 1ull << z;
+
+  // determine zero padded width for the full path
+  size_t max_index = (dim * dim) - 1;
+  size_t path_width = static_cast<size_t>(std::log10(max_index)) + 1;
+  const size_t remainder = path_width % 3;
+  if (remainder) {
+    path_width += 3 - remainder;
+  }
+  assert(path_width % 3 == 0);
+
+  // convert index to zero-padded decimal string
+  size_t tile_index = static_cast<size_t>(y) * dim + static_cast<size_t>(x);
+  std::ostringstream oss;
+  oss << std::setw(path_width) << std::setfill('0') << tile_index;
+  std::string path_no_sep = oss.str();
+
+  // split into groups of 3 digits
+  std::vector<std::string> groups;
+  size_t i = 0;
+  while (i < path_no_sep.size()) {
+    groups.push_back(path_no_sep.substr(i, 3));
+    i += 3;
   }
 
-  std::filesystem::path
-  mvt_local_path(const uint32_t z, const uint32_t x, const uint32_t y, const std::string& root) {
-    static std::string kMvtExt = ".mvt";
-    // number of cols & rows
-    size_t dim = 1ull << z;
+  std::filesystem::path tile_path = root;
+  tile_path /= std::to_string(z);
 
-    // determine zero padded width for the full path
-    size_t max_index = (dim * dim) - 1;
-    size_t path_width = static_cast<size_t>(std::log10(max_index)) + 1;
-    const size_t remainder = path_width % 3;
-    if (remainder) {
-      path_width += 3 - remainder;
-    }
-    assert(path_width % 3 == 0);
-
-    // convert index to zero-padded decimal string
-    size_t tile_index = static_cast<size_t>(y) * dim + static_cast<size_t>(x);
-    std::ostringstream oss;
-    oss << std::setw(path_width) << std::setfill('0') << tile_index;
-    std::string path_no_sep = oss.str();
-
-    // split into groups of 3 digits
-    std::vector<std::string> groups;
-    size_t i = 0;
-    while (i < path_no_sep.size()) {
-      groups.push_back(path_no_sep.substr(i, 3));
-      i += 3;
-    }
-
-    std::filesystem::path tile_path = root;
-    tile_path /= std::to_string(z);
-
-    // append all groups but the last one, which is the filename
-    for (size_t i = 0; i < groups.size() - 1; ++i) {
-      tile_path /= groups[i];
-    }
-    tile_path /= groups.back() + kMvtExt;
-
-    return tile_path;
+  // append all groups but the last one, which is the filename
+  for (size_t i = 0; i < groups.size() - 1; ++i) {
+    tile_path /= groups[i];
   }
-  } // namespace detail
+  tile_path /= groups.back() + kMvtExt;
+
+  return tile_path;
+}
+} // namespace detail
 } // namespace loki
-} // namespace loki
+} // namespace valhalla
