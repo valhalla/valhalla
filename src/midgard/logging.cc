@@ -18,7 +18,7 @@
 namespace {
 
 // append current timestamp formatted as: "year-mo-dy hr:mn:sc.xxxxxxxxx"
-void AppendTimeStamp(std::string& buffer) {
+void append_timestamp(std::string& buffer) {
   std::format_to(std::back_inserter(buffer), "{0:%F} {0:%T}", std::chrono::utc_clock::now());
 }
 
@@ -121,7 +121,7 @@ public:
 #else
     std::string output;
     output.reserve(message.length() + 64);
-    AppendTimeStamp(output);
+    append_timestamp(output);
     output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
@@ -151,7 +151,7 @@ class StdErrLogger : public StdOutLogger {
 #else
     std::string output;
     output.reserve(message.length() + 64);
-    AppendTimeStamp(output);
+    append_timestamp(output);
     output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
@@ -230,7 +230,7 @@ public:
 
     std::string output;
     output.reserve(message.length() + 64);
-    AppendTimeStamp(output);
+    append_timestamp(output);
     output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
