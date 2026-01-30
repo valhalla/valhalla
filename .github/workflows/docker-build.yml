@@ -164,14 +164,14 @@ jobs:
           docker manifest push ghcr.io/valhalla/${{ matrix.image }}:${{ needs.extract_image_tag.outputs.tag }}
 
   test-image:
-    if: github.ref == 'refs/heads/master'
+    # if: github.ref == 'refs/heads/master'
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
           - os: ubuntu-24.04-arm
     runs-on: ${{ matrix.os }}
-    needs: [create-manifests]
+    needs: [create-manifests, extract_image_tag]
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -188,7 +188,7 @@ jobs:
 
       - name: Test latest scripted image
         run: |
-          docker pull ghcr.io/valhalla/valhalla-scripted:test
+          docker pull ghcr.io/valhalla/valhalla-scripted:${{  needs.extract_image_tag.outputs.tag  }}
           sudo apt-get update > /dev/null
           sudo apt-get install -y moreutils tree > /dev/null
-          sudo /bin/bash -c "./docker/test.sh ghcr.io/valhalla/valhalla-scripted:test"
+          sudo /bin/bash -c "./docker/test.sh ghcr.io/valhalla/valhalla-scripted:${{  needs.extract_image_tag.outputs.tag  }}"
