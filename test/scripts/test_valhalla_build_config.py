@@ -132,7 +132,7 @@ class TestMergeJson(unittest.TestCase):
         new = {"key": "new_value", "nested": {"inner": "new_inner"}}
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         self.assertEqual(result["key"], "old_value")
         self.assertEqual(result["nested"]["inner"], "old_inner")
@@ -145,7 +145,7 @@ class TestMergeJson(unittest.TestCase):
         new = {"existing": "new_value", "new_key": "new_value", "nested": {"inner": "value"}}
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         self.assertEqual(result["existing"], "value")  # preserved
         self.assertEqual(result["new_key"], "new_value")  # added
@@ -154,24 +154,24 @@ class TestMergeJson(unittest.TestCase):
         self.assertIn("nested", report.added)
 
     def test_merge_keeps_old_keys_by_default(self):
-        """Test that keys only in old are kept when remove_old=False."""
+        """Test that keys only in old are kept when remove_keys=None."""
         old = {"keep_me": "value", "shared": "old"}
         new = {"shared": "new"}
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         self.assertIn("keep_me", result)
         self.assertEqual(result["keep_me"], "value")
         self.assertEqual(len(report.removed), 0)
 
-    def test_merge_removes_old_keys_with_flag(self):
-        """Test that keys only in old are removed when remove_old=True."""
+    def test_merge_removes_all_old_keys_with_empty_list(self):
+        """Test that keys only in old are removed when remove_keys=[]."""
         old = {"remove_me": "value", "shared": "old"}
         new = {"shared": "new"}
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=True)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=[])
 
         self.assertNotIn("remove_me", result)
         self.assertIn("remove_me", report.removed)
@@ -196,7 +196,7 @@ class TestMergeJson(unittest.TestCase):
         }
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         self.assertEqual(result["level1"]["level2"]["old_value"], 100)  # preserved
         self.assertEqual(result["level1"]["level2"]["new_only"], "added")  # added
@@ -209,7 +209,7 @@ class TestMergeJson(unittest.TestCase):
         new = {"a_second": 20, "m_third": 30, "z_first": 10, "new_last": 40}
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         keys = list(result.keys())
         # Old keys should come first in their original order
@@ -223,7 +223,7 @@ class TestMergeJson(unittest.TestCase):
         new = {"existing": "new", "added1": "v1", "added2": {"nested": "v2"}}
         report = valhalla_build_config.MergeReport()
 
-        valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         self.assertEqual(len(report.added), 2)
         self.assertIn("added1", report.added)
@@ -235,7 +235,7 @@ class TestMergeJson(unittest.TestCase):
         new = {"keep": "new"}
         report = valhalla_build_config.MergeReport()
 
-        valhalla_build_config.merge_json(old, new, report, remove_old=True)
+        valhalla_build_config.merge_json(old, new, report, remove_keys=[])
 
         self.assertEqual(len(report.removed), 2)
         self.assertIn("remove1", report.removed)
@@ -247,7 +247,7 @@ class TestMergeJson(unittest.TestCase):
         new = {"key1": "value1", "key2": {"nested": "value2"}}
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         self.assertEqual(result, new)
         self.assertEqual(len(report.added), 2)
@@ -258,13 +258,13 @@ class TestMergeJson(unittest.TestCase):
         new = {}
         report = valhalla_build_config.MergeReport()
 
-        # Without remove_old, all old keys are kept
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        # Without remove_keys, all old keys are kept
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
         self.assertEqual(result, old)
 
-        # With remove_old, all old keys are removed
+        # With remove_keys=[], all old keys are removed
         report2 = valhalla_build_config.MergeReport()
-        result2 = valhalla_build_config.merge_json(old, new, report2, remove_old=True)
+        result2 = valhalla_build_config.merge_json(old, new, report2, remove_keys=[])
         self.assertEqual(result2, {})
         self.assertEqual(len(report2.removed), 2)
 
@@ -274,7 +274,7 @@ class TestMergeJson(unittest.TestCase):
         new = {"key": "scalar"}
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         # Old value (dict) is preserved since new is not a dict
         self.assertEqual(result["key"], {"nested": "value"})
@@ -285,7 +285,7 @@ class TestMergeJson(unittest.TestCase):
         new = {"key": {"nested": "value"}}
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         # New value (dict) is used since we can't merge scalar into dict
         self.assertEqual(result["key"], {"nested": "value"})
@@ -296,7 +296,7 @@ class TestMergeJson(unittest.TestCase):
         new = {"actions": ["route", "locate", "height"]}
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         # Old list is preserved
         self.assertEqual(result["actions"], ["route", "locate", "custom"])
@@ -327,7 +327,7 @@ class TestMergeJson(unittest.TestCase):
         }
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(old, new, report, remove_old=False)
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=None)
 
         # Old values preserved
         self.assertEqual(result["mjolnir"]["tile_dir"], "/custom/path/tiles")
@@ -344,6 +344,110 @@ class TestMergeJson(unittest.TestCase):
         # Check report
         self.assertIn("mjolnir.new_setting", report.added)
         self.assertIn("thor", report.added)
+
+    def test_merge_removes_specific_keys_only(self):
+        """Test that only specified keys are removed when remove_keys has values."""
+        old = {
+            "keep_me": "value",
+            "remove_me": "value",
+            "also_keep": "value",
+            "nested": {
+                "keep": "inner",
+                "remove": "inner",
+            },
+        }
+        # nested must exist in new for us to recurse into it and selectively remove children
+        new = {"shared": "new", "nested": {"keep": "new_inner"}}
+        report = valhalla_build_config.MergeReport()
+
+        result = valhalla_build_config.merge_json(
+            old, new, report, remove_keys=["remove_me", "nested.remove"]
+        )
+
+        self.assertIn("keep_me", result)
+        self.assertNotIn("remove_me", result)
+        self.assertIn("also_keep", result)
+        self.assertIn("nested", result)
+        self.assertIn("keep", result["nested"])
+        self.assertNotIn("remove", result["nested"])
+        self.assertIn("remove_me", report.removed)
+        self.assertIn("nested.remove", report.removed)
+
+    def test_merge_removes_nested_subtree(self):
+        """Test that specifying a parent key removes all children."""
+        old = {
+            "keep": "value",
+            "remove_subtree": {
+                "child1": "value1",
+                "child2": {"grandchild": "value2"},
+            },
+        }
+        new = {"shared": "new"}
+        report = valhalla_build_config.MergeReport()
+
+        result = valhalla_build_config.merge_json(
+            old, new, report, remove_keys=["remove_subtree"]
+        )
+
+        self.assertIn("keep", result)
+        self.assertNotIn("remove_subtree", result)
+        self.assertIn("remove_subtree", report.removed)
+
+    def test_merge_remove_keys_does_not_affect_existing_in_new(self):
+        """Test that remove_keys only affects keys not in new config."""
+        old = {"both": "old_value", "old_only": "value"}
+        new = {"both": "new_value"}
+        report = valhalla_build_config.MergeReport()
+
+        # Even if we specify "both" in remove_keys, it should be preserved
+        # because it exists in both old and new (old value is kept)
+        result = valhalla_build_config.merge_json(
+            old, new, report, remove_keys=["both", "old_only"]
+        )
+
+        self.assertIn("both", result)
+        self.assertEqual(result["both"], "old_value")  # preserved from old
+        self.assertNotIn("old_only", result)
+        self.assertIn("old_only", report.removed)
+
+
+class TestShouldRemoveKey(unittest.TestCase):
+    """Test suite for should_remove_key function."""
+
+    def test_none_removes_nothing(self):
+        """Test that None means don't remove anything."""
+        self.assertFalse(valhalla_build_config.should_remove_key("any.key", None))
+
+    def test_empty_list_removes_all(self):
+        """Test that empty list means remove all."""
+        self.assertTrue(valhalla_build_config.should_remove_key("any.key", []))
+
+    def test_exact_match(self):
+        """Test exact key path match."""
+        self.assertTrue(
+            valhalla_build_config.should_remove_key("mjolnir.logging", ["mjolnir.logging"])
+        )
+
+    def test_child_of_specified_path(self):
+        """Test that children of specified paths are removed."""
+        self.assertTrue(
+            valhalla_build_config.should_remove_key(
+                "mjolnir.logging.type", ["mjolnir.logging"]
+            )
+        )
+
+    def test_no_match(self):
+        """Test that unrelated keys are not removed."""
+        self.assertFalse(
+            valhalla_build_config.should_remove_key("loki.service", ["mjolnir.logging"])
+        )
+
+    def test_partial_match_not_removed(self):
+        """Test that partial matches (not children) are not removed."""
+        # "mjolnir.log" is not a child of "mjolnir.logging"
+        self.assertFalse(
+            valhalla_build_config.should_remove_key("mjolnir.log", ["mjolnir.logging"])
+        )
 
 
 if __name__ == "__main__":

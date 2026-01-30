@@ -29,12 +29,37 @@ class MergeReport:
             print("\nNo differences found.", file=sys.stderr)
 
 
-def merge_json(old: Any, new: Any, report: MergeReport, remove_old: bool, path: str = "") -> Any:
+def should_remove_key(key_path: str, remove_keys: list[str] | None) -> bool:
+    """
+    Check if a key should be removed based on the remove_keys list.
+
+    If remove_keys is None, don't remove anything.
+    If remove_keys is empty list, remove all old keys.
+    If remove_keys has values, only remove keys that match or are children of those paths.
+    """
+    if remove_keys is None:
+        return False
+    if not remove_keys:
+        # Empty list means remove all
+        return True
+    # Check if key_path matches or is a child of any specified path
+    for remove_path in remove_keys:
+        if key_path == remove_path or key_path.startswith(remove_path + "."):
+            return True
+    return False
+
+
+def merge_json(
+    old: Any, new: Any, report: MergeReport, remove_keys: list[str] | None, path: str = ""
+) -> Any:
     """
     Recursively merge two JSON values.
 
     Existing values in 'old' are preserved.
-    Keys only in 'old' are kept unless remove_old is True.
+    Keys only in 'old' are kept unless they should be removed based on remove_keys:
+    - None: keep all old keys
+    - []: remove all old keys not in new
+    - ['path.to.key', ...]: remove only specified keys (and their children)
     """
     # If new is not a dict, keep old value (preserve existing)
     if not isinstance(new, dict):
@@ -52,9 +77,9 @@ def merge_json(old: Any, new: Any, report: MergeReport, remove_old: bool, path: 
         key_path = f"{path}.{key}" if path else key
         if key in new:
             # Key exists in both - recursively merge
-            result[key] = merge_json(old[key], new[key], report, remove_old, key_path)
-        elif remove_old:
-            # Key only in old and remove_old is set - drop it
+            result[key] = merge_json(old[key], new[key], report, remove_keys, key_path)
+        elif should_remove_key(key_path, remove_keys):
+            # Key only in old and should be removed - drop it
             report.removed.append(key_path)
         else:
             # Key only in old - keep it
@@ -918,16 +943,18 @@ parser.add_argument(
     help="Output file path (default: stdout)",
 )
 parser.add_argument(
-    "-R",
+    "-r",
     "--remove-old",
-    action="store_true",
-    help="When merging, remove keys that don't exist in the new config.",
+    nargs="*",
+    metavar="KEY",
+    help="When merging, remove old keys. Without arguments, removes all keys not in new config. "
+    "With arguments (JSON dot notation, e.g. 'mjolnir.logging'), removes only those keys.",
 )
 parser.add_argument(
-    "-r",
-    "--report",
+    "-d",
+    "--dry-run",
     action="store_true",
-    help="When merging, print which keys were added and/or removed.",
+    help="When merging, only print the report of changes without outputting the config.",
 )
 
 # entry point to program
@@ -953,7 +980,17 @@ if __name__ == "__main__":
             sys.exit(1)
 
         report = MergeReport()
+        # args.remove_old is None if not specified, [] if specified without args, or a list of keys
         output_config = merge_json(existing_config, config, report, args.remove_old)
+
+    # dry-run mode: only print report, no output
+    if args.dry_run:
+        if report:
+            report.print_report()
+        elif not args.merge_config:
+            print("Error: --dry-run requires --merge-config", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
 
     # format output
     output_json = json.dumps(output_config, indent=2)
@@ -966,7 +1003,3 @@ if __name__ == "__main__":
         print(f"Config written to: {args.output}", file=sys.stderr)
     else:
         print(output_json)
-
-    # print merge report if requested
-    if args.report and report:
-        report.print_report()
