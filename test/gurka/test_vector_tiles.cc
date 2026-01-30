@@ -259,6 +259,23 @@ protected:
 
 gurka::map VectorTiles::map = {};
 
+TEST_F(VectorTiles, LayerExclude) {
+  auto test_tile = [](std::string_view exclude_layer_name) {
+    SCOPED_TRACE(std::format("{} failed", exclude_layer_name));
+    std::unordered_map<std::string, std::string> options = {
+        {"/tile_options/exclude_layers/-", std::string(exclude_layer_name)},
+    };
+    std::string tile_data;
+    Api api = gurka::do_action(Options::tile, map, "x", 14, "auto", options, nullptr, &tile_data);
+
+    vtzero::vector_tile tile{tile_data};
+    EXPECT_FALSE(tile.get_layer_by_name(exclude_layer_name.data()).valid());
+  };
+
+  test_tile(valhalla::loki::kEdgeLayerName);
+  test_tile(valhalla::loki::kNodeLayerName);
+}
+
 TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   auto test_tile = [&](const uint32_t z, const uint32_t exp_total_size, const uint32_t exp_edges,
                        const uint32_t exp_nodes, uint32_t& cache_count) {
