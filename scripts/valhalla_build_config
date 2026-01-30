@@ -1,7 +1,73 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from dataclasses import dataclass, field
 import json
-from typing import List, Union
+from pathlib import Path
+import sys
+from typing import Any, List, Union
+
+
+@dataclass
+class MergeReport:
+    """Tracks changes during merge."""
+
+    added: list[str] = field(default_factory=list)
+    removed: list[str] = field(default_factory=list)
+
+    def print_report(self):
+        if self.added:
+            print("\nAdded (from new config):", file=sys.stderr)
+            for path in sorted(self.added):
+                print(f"  + {path}", file=sys.stderr)
+
+        if self.removed:
+            print("\nRemoved (not in new config):", file=sys.stderr)
+            for path in sorted(self.removed):
+                print(f"  - {path}", file=sys.stderr)
+
+        if not (self.added or self.removed):
+            print("\nNo differences found.", file=sys.stderr)
+
+
+def merge_json(old: Any, new: Any, report: MergeReport, remove_old: bool, path: str = "") -> Any:
+    """
+    Recursively merge two JSON values.
+
+    Existing values in 'old' are preserved.
+    Keys only in 'old' are kept unless remove_old is True.
+    """
+    # If new is not a dict, keep old value (preserve existing)
+    if not isinstance(new, dict):
+        return old
+
+    # If old is not a dict but new is, use new (can't merge)
+    if not isinstance(old, dict):
+        return new
+
+    # Both are dicts - merge recursively, preserving old key order
+    result = {}
+
+    # First, process keys from old (preserves original order)
+    for key in old:
+        key_path = f"{path}.{key}" if path else key
+        if key in new:
+            # Key exists in both - recursively merge
+            result[key] = merge_json(old[key], new[key], report, remove_old, key_path)
+        elif remove_old:
+            # Key only in old and remove_old is set - drop it
+            report.removed.append(key_path)
+        else:
+            # Key only in old - keep it
+            result[key] = old[key]
+
+    # Then, add new keys that don't exist in old (at the end)
+    for key in new:
+        if key not in old:
+            key_path = f"{path}.{key}" if path else key
+            result[key] = new[key]
+            report.added.append(key_path)
+
+    return result
 
 
 def strtobool(value):
@@ -838,6 +904,32 @@ parser = ArgumentParser(
 )
 add_leaf_args("", config, leaves, parser, help_text)
 
+# merge-related arguments
+parser.add_argument(
+    "-m",
+    "--merge-config",
+    type=Path,
+    help="Path to existing config file to merge with. Existing values are preserved, new keys are added.",
+)
+parser.add_argument(
+    "-o",
+    "--output",
+    type=Path,
+    help="Output file path (default: stdout)",
+)
+parser.add_argument(
+    "-R",
+    "--remove-old",
+    action="store_true",
+    help="When merging, remove keys that don't exist in the new config.",
+)
+parser.add_argument(
+    "-r",
+    "--report",
+    action="store_true",
+    help="When merging, print which keys were added and/or removed.",
+)
+
 # entry point to program
 if __name__ == "__main__":
     # TODO: add argument to set base path and use in all other path based values
@@ -846,5 +938,35 @@ if __name__ == "__main__":
     # encapsulate to test easier
     override_config(args.__dict__, leaves, config)
 
-    # show the config
-    print(json.dumps(config, sort_keys=True, indent=2, separators=(",", ": ")))
+    # if merging with existing config
+    output_config = config
+    report = None
+    if args.merge_config:
+        try:
+            with args.merge_config.open("r") as f:
+                existing_config = json.load(f)
+        except FileNotFoundError:
+            print(f"Error: Config file not found: {args.merge_config}", file=sys.stderr)
+            sys.exit(1)
+        except json.JSONDecodeError as e:
+            print(f"Error: Invalid JSON in config: {e}", file=sys.stderr)
+            sys.exit(1)
+
+        report = MergeReport()
+        output_config = merge_json(existing_config, config, report, args.remove_old)
+
+    # format output
+    output_json = json.dumps(output_config, indent=2)
+
+    # write output
+    if args.output:
+        with args.output.open("w") as f:
+            f.write(output_json)
+            f.write("\n")
+        print(f"Config written to: {args.output}", file=sys.stderr)
+    else:
+        print(output_json)
+
+    # print merge report if requested
+    if args.report and report:
+        report.print_report()
