@@ -31,6 +31,7 @@ constexpr float kDefaultPrivateAccessPenalty = 600.0f; // Seconds
 constexpr float kDefaultBssCost = 120.0f;              // Seconds
 constexpr float kDefaultBssPenalty = 0.0f;             // Seconds
 constexpr float kDefaultServicePenalty = 0.0f;         // Seconds
+constexpr float kDefaultDestOnlyPenalty = 0.0f;        // Seconds
 
 // Maximum route distances
 constexpr uint32_t kMaxDistanceFoot = 100000;      // 100 km
@@ -162,6 +163,7 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   cfg.use_ferry_.def = kDefaultUseFerry;
   cfg.use_living_streets_.def = kDefaultUseLivingStreets;
   cfg.use_lit_.def = kDefaultUseLit;
+  cfg.dest_only_penalty_.def = kDefaultDestOnlyPenalty;
   return cfg;
 }
 
@@ -1044,6 +1046,15 @@ TEST(PedestrianCost, testPedestrianCostParams) {
                 test::IsBetween(defaults.country_crossing_penalty_.min,
                                 defaults.country_crossing_penalty_.max +
                                     defaults.country_crossing_cost_.def));
+  }
+
+  // destination_only_penalty_
+  real_distributor.reset(make_distributor_from_range(defaults.dest_only_penalty_));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_pedestriancost_from_json("destination_only_penalty",
+                                                   (*real_distributor)(generator), "foot"));
+    EXPECT_THAT(ctorTester->destination_only_penalty_,
+                test::IsBetween(defaults.dest_only_penalty_.min, defaults.dest_only_penalty_.max));
   }
 
   // Wheelchair tests
