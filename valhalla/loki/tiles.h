@@ -955,7 +955,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         [](EdgesLayerBuilder* layer_builder,
            vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
            vtzero::linestring_feature_builder& feature,
-           const baldr::DirectedEdge& e,
+           const baldr::DirectedEdge&,
            const baldr::EdgeInfo& ei,
            const volatile baldr::TrafficSpeed*) {
           feature.add_property(layer_builder->*(key_member), ei.bike_network());
