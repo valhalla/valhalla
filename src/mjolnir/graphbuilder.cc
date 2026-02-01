@@ -479,7 +479,7 @@ void BuildTileSet(const std::string& ways_file,
 
   // For each tile in the task
   bool added = false;
-  DataQuality stats;
+  DataQuality stats(pt.get<std::string>("data_quality_dir", ""));
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
@@ -1395,12 +1395,12 @@ void BuildLocalTiles(const unsigned int thread_count,
       // Add statistics and log issues on this thread
       const auto& stat = result.get_future().get();
       stats.AddStatistics(stat);
-      stat.LogIssues();
     } // If we couldnt write a tile for whatever reason we fail the whole job
     catch (std::exception& e) {
       throw e;
     }
   }
+  stats.LogIssues();
 }
 
 } // namespace
@@ -1498,7 +1498,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   }
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
-  DataQuality stats;
+  DataQuality stats(pt.get<std::string>("mjolnir.data_quality_dir", ""));
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
