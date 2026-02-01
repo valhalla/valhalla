@@ -1,7 +1,10 @@
 #include "gurka.h"
+#include "test.h"
 #include "valhalla/worker.h"
 
 #include <gtest/gtest.h>
+
+#include <sstream>
 
 using namespace valhalla;
 
@@ -77,6 +80,165 @@ TEST(Standalone, DestinationOnlyHGV) {
   {
     auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"I"}, "auto");
     EXPECT_EQ(result.matrix().distances(0), 2800);
+  }
+}
+
+TEST(Standalone, DestinationOnlyPedestrianDefaultPenalty) {
+  const std::string ascii_map = R"(
+      A----B----C----D
+      |              |
+      E--------------F
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}}, {"AE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}}, {"FD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_destination_only_pedestrian");
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  std::vector<baldr::GraphId> destonly_edgeids = {
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "B", "C")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "B")),
+  };
+
+  test::customize_edges(map.config,
+                        [&destonly_edgeids](const baldr::GraphId& edgeid, baldr::DirectedEdge& edge) {
+                          if (std::find(destonly_edgeids.begin(), destonly_edgeids.end(), edgeid) !=
+                              destonly_edgeids.end()) {
+                            edge.set_dest_only(true);
+                          }
+                        });
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
+}
+
+TEST(Standalone, DestinationOnlyPedestrianParkingAisle) {
+  constexpr double gridsize_metres = 100;
+  const std::string ascii_map = R"(
+    A---B---C---D
+        X   E
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"BX", {{"highway", "service"}, {"service", "parking_aisle"}}},
+      {"XC", {{"highway", "service"}, {"service", "parking_aisle"}}},
+      {"BE", {{"highway", "residential"}}},
+      {"EC", {{"highway", "residential"}}},
+  };
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_destination_only_parking_aisle", {});
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  std::vector<baldr::GraphId> shortcut_edgeids = {
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "B", "X")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "X", "B")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "X", "C")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "X")),
+  };
+
+  std::vector<baldr::GraphId> detour_edgeids = {
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "B", "E")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "E", "B")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "E", "C")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "E")),
+  };
+
+  test::customize_edges(map.config, [&shortcut_edgeids, &detour_edgeids](const baldr::GraphId& edgeid,
+                                                                         baldr::DirectedEdge& edge) {
+    if (std::find(shortcut_edgeids.begin(), shortcut_edgeids.end(), edgeid) !=
+        shortcut_edgeids.end()) {
+      edge.set_dest_only(true);
+      edge.set_length(10);
+    } else if (std::find(detour_edgeids.begin(), detour_edgeids.end(), edgeid) !=
+               detour_edgeids.end()) {
+      edge.set_length(100);
+    }
+  });
+
+  {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "pedestrian");
+    gurka::assert::raw::expect_path(result, {"AB", "BX", "XC", "CD"});
+  }
+  {
+    std::ostringstream ss;
+    ss << R"({"locations":[{"lon":)" << layout.at("A").lng() << R"(,"lat":)" << layout.at("A").lat()
+       << R"(,"type":"break"},{"lon":)" << layout.at("D").lng() << R"(,"lat":)"
+       << layout.at("D").lat()
+       << R"(,"type":"break"}],"costing":"pedestrian","costing_options":{"pedestrian":{"destination_only_penalty":600,"apply_destination_only_penalty_to_trails":true}},"verbose":true,"shape_match":"map_snap"})";
+    auto result = gurka::do_action(valhalla::Options::route, map, ss.str());
+    gurka::assert::raw::expect_path(result, {"AB", "BE", "EC", "CD"});
+  }
+}
+
+TEST(Standalone, DestinationOnlyBicycleCycleway) {
+  constexpr double gridsize_metres = 100;
+  const std::string ascii_map = R"(
+    A---B---C---D
+        X   E
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}}, {"CD", {{"highway", "residential"}}},
+      {"BX", {{"highway", "cycleway"}}},    {"XC", {{"highway", "cycleway"}}},
+      {"BE", {{"highway", "residential"}}}, {"EC", {{"highway", "residential"}}},
+  };
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               "test/data/gurka_destination_only_bicycle_cycleway", {});
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  std::vector<baldr::GraphId> shortcut_edgeids = {
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "B", "X")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "X", "B")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "X", "C")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "X")),
+  };
+
+  std::vector<baldr::GraphId> detour_edgeids = {
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "B", "E")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "E", "B")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "E", "C")),
+      std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "E")),
+  };
+
+  test::customize_edges(map.config, [&shortcut_edgeids, &detour_edgeids](const baldr::GraphId& edgeid,
+                                                                         baldr::DirectedEdge& edge) {
+    if (std::find(shortcut_edgeids.begin(), shortcut_edgeids.end(), edgeid) !=
+        shortcut_edgeids.end()) {
+      edge.set_dest_only(true);
+      edge.set_length(10);
+    } else if (std::find(detour_edgeids.begin(), detour_edgeids.end(), edgeid) !=
+               detour_edgeids.end()) {
+      edge.set_length(100);
+    }
+  });
+
+  {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "bicycle");
+    gurka::assert::raw::expect_path(result, {"AB", "BX", "XC", "CD"});
+  }
+  {
+    std::ostringstream ss;
+    ss << R"({"locations":[{"lon":)" << layout.at("A").lng() << R"(,"lat":)" << layout.at("A").lat()
+       << R"(,"type":"break"},{"lon":)" << layout.at("D").lng() << R"(,"lat":)"
+       << layout.at("D").lat()
+       << R"(,"type":"break"}],"costing":"bicycle","costing_options":{"bicycle":{"destination_only_penalty":600,"apply_destination_only_penalty_to_trails":true}},"verbose":true,"shape_match":"map_snap"})";
+    auto result = gurka::do_action(valhalla::Options::route, map, ss.str());
+    gurka::assert::raw::expect_path(result, {"AB", "BE", "EC", "CD"});
   }
 }
 
