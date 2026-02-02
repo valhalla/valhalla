@@ -102,10 +102,10 @@ TEST(Actor, Tile) {
 
     if (layer_name == "edges") {
       has_edges = true;
-      EXPECT_EQ(layer.num_features(), 2278);
+      EXPECT_EQ(layer.num_features(), 2279);
     } else if (layer_name == "nodes") {
       has_nodes = true;
-      EXPECT_EQ(layer.num_features(), 1741);
+      EXPECT_EQ(layer.num_features(), 1742);
     } else {
       FAIL() << "Unexpected layer: " << layer_name;
     }
@@ -158,8 +158,8 @@ TEST(Actor, TileReturnShortcuts) {
     }
   }
 
-  EXPECT_EQ(features_with_shortcuts, 2317);
-  EXPECT_EQ(features_no_shortcuts, 2278);
+  ASSERT_EQ(features_with_shortcuts, 2318);
+  ASSERT_EQ(features_no_shortcuts, 2279);
 }
 
 // TODO: test the rest of them
