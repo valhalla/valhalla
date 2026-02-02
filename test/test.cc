@@ -363,7 +363,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
                 "max_allowed_up_transitions": {
                     "1": 400,
                     "2": 100
-                }
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
             },
             "unidirectional_astar": {
                 "max_allowed_up_transitions": {

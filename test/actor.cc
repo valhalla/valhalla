@@ -89,9 +89,8 @@ TEST(Actor, Tile) {
   auto tile_data = actor.tile(request);
   actor.cleanup();
 
-  // should be 700-800kb
-  EXPECT_GT(tile_data.size(), 700000);
-  EXPECT_LT(tile_data.size(), 800000);
+  EXPECT_GT(tile_data.size(), 120'000);
+  EXPECT_LT(tile_data.size(), 130'000);
 
   vtzero::vector_tile tile{tile_data};
 
@@ -134,8 +133,8 @@ TEST(Actor, TileReturnShortcuts) {
   actor.cleanup();
 
   // Both should return valid data
-  ASSERT_FALSE(tile_data_no_shortcuts.empty()) << "Tile data without shortcuts should not be empty";
-  ASSERT_FALSE(tile_data_with_shortcuts.empty()) << "Tile data with shortcuts should not be empty";
+  EXPECT_FALSE(tile_data_no_shortcuts.empty()) << "Tile data without shortcuts should not be empty";
+  EXPECT_FALSE(tile_data_with_shortcuts.empty()) << "Tile data with shortcuts should not be empty";
 
   // Parse both tiles
   vtzero::vector_tile tile_no_shortcuts{tile_data_no_shortcuts};

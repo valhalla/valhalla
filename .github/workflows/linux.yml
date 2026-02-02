@@ -81,7 +81,7 @@ jobs:
       - name: Install deps
         run: |
           ./scripts/install-linux-deps.sh
-          python -m pip install requests shapely
+          python -m pip install requests shapely numpy
       
       - name: Get timestamp & ccache dir
         run: |
@@ -125,7 +125,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ASAN_OPTIONS="detect_leaks=0" make -C build -j$(nproc) check
+          ASAN_OPTIONS="detect_leaks=0:symbolize=1" make -C build -j$(nproc) check
           # remove the huge trace logs
           rm -f build/test/*.log
       
@@ -157,7 +157,7 @@ jobs:
       - name: Install deps
         run: |
           ./scripts/install-linux-deps.sh
-          python -m pip install requests shapely
+          python -m pip install requests shapely numpy
 
       - name: Get timestamp & ccache dir
         run: |
@@ -242,7 +242,7 @@ jobs:
       - name: Install deps
         run: |
           ./scripts/install-linux-deps.sh
-          python -m pip install requests shapely
+          python -m pip install requests shapely numpy
 
       - name: Get timestamp & ccache dir
         run: |

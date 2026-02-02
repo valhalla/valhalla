@@ -16,7 +16,6 @@ set(sources
   search.cc
   tile_action.cc
   trace_route_action.cc
-  utils.h
   worker.cc)
 
 set(system_includes
