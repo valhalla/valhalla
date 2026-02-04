@@ -518,6 +518,13 @@ void serialize_shape_attributes(const AttributesController& controller,
     }
     writer.end_array();
   }
+  if (controller(kShapeAttributesCongestion)) {
+    writer.start_array("speed");
+    for (const auto& congestion : trip_path.shape_attributes().congestion()) {
+      writer(congestion);
+    }
+    writer.end_array();
+  }
   writer.end_object();
 }
 
