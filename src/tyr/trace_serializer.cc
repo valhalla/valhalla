@@ -151,7 +151,8 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeWayId)) {
         writer("way_id", edge.way_id());
       }
-      if (controller(kEdgeBeginOsmNodeId)) {
+      if (controller(kEdgeBeginOsmNodeId) && edge.has_begin_osm_node_id_case()) {
+
         writer("node_id", edge.begin_osm_node_id());
       }
 
@@ -376,7 +377,7 @@ void serialize_edges(const AttributesController& controller,
           writer("elapsed_time", node.cost().elapsed_cost().seconds());
           writer("elapsed_cost", node.cost().elapsed_cost().cost());
         }
-        if (controller(kEdgeEndOsmNodeId)) {
+        if (controller(kEdgeEndOsmNodeId) && edge.has_end_osm_node_id_case()) {
           writer("node_id", edge.end_osm_node_id());
         }
         if (controller(kNodeAdminIndex)) {
