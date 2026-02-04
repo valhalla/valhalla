@@ -4,10 +4,12 @@
 #include "baldr/tilehierarchy.h"
 #include "graph_utils_module.h"
 #include "midgard/aabb2.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 
+#include <boost/geometry/algorithms/within.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
@@ -16,6 +18,7 @@
 #include <nanobind/stl/vector.h>
 
 #include <fstream>
+#include <queue>
 #include <sstream>
 
 namespace nb = nanobind;
@@ -120,6 +123,116 @@ void init_graphid(nb::module_& m) {
       },
       nb::arg("minx"), nb::arg("miny"), nb::arg("maxx"), nb::arg("maxy"),
       nb::arg("levels") = std::vector<uint32_t>{});
+
+  m.def(
+      "get_tile_ids_from_ring",
+      [](const std::vector<nb::tuple>& ring_coords, std::vector<uint32_t> levels) {
+        if (ring_coords.size() < 3) {
+          throw nb::value_error("Ring must have at least 3 coordinates");
+        }
+
+        if (!levels.size()) {
+          levels.push_back(0);
+          levels.push_back(1);
+          levels.push_back(2);
+        }
+
+        // build a boost geometry ring from the coordinate tuples
+        vm::bg::ring_ll_t ring;
+        ring.reserve(ring_coords.size() + 1);
+        for (const auto& coord : ring_coords) {
+          if (nb::len(coord) != 2) {
+            throw nb::value_error("Each coordinate must have 2 elements (lon, lat)");
+          }
+          auto x = nb::cast<double>(coord[0]);
+          auto y = nb::cast<double>(coord[1]);
+          check_coord(x, y, x, y);
+          ring.push_back({x, y});
+        }
+
+        // close open rings
+        if (ring.front().lng() != ring.back().lng() || ring.front().lat() != ring.back().lat()) {
+          ring.push_back(ring.front());
+        }
+        // reverse if counter-clockwise
+        if (vm::polygon_area(ring) > 0) {
+          std::reverse(ring.begin(), ring.end());
+        }
+
+        std::vector<vb::GraphId> result;
+        for (const auto level : levels) {
+          check_level(level);
+          const auto& tiles = vb::TileHierarchy::get_tiling(static_cast<uint8_t>(level));
+
+          // find tiles whose bins intersect the ring boundary
+          auto intersected = tiles.Intersect(ring);
+          std::unordered_set<int32_t> boundary_tiles;
+          boundary_tiles.reserve(intersected.size());
+          for (const auto& [tile_id, bins] : intersected) {
+            boundary_tiles.insert(tile_id);
+          }
+
+          // find a starting tile adjacent to a boundary tile that is fully inside
+          std::optional<int32_t> start_tile;
+          for (const auto bt : boundary_tiles) {
+            if (start_tile)
+              break;
+            for (int32_t neighbor : {tiles.RightNeighbor(bt), tiles.LeftNeighbor(bt),
+                                     tiles.TopNeighbor(bt), tiles.BottomNeighbor(bt)}) {
+              // if bt is on the edge of the tiling, skip
+              if (neighbor == bt)
+                continue;
+              // if neighbor is a boundary tile, skip
+              else if (boundary_tiles.count(neighbor))
+                continue;
+              // if neighbor is inside the ring, we found our start tile
+              else if (boost::geometry::within(tiles.Center(neighbor), ring)) {
+                start_tile = neighbor;
+                break;
+              }
+            }
+          }
+
+          // then flood fill to find tiles completely inside the ring
+          std::unordered_set<int32_t> contained_tiles;
+          if (start_tile) {
+            std::queue<int32_t> queue;
+            queue.push(*start_tile);
+            contained_tiles.insert(*start_tile);
+            size_t n = 0;
+
+            while (!queue.empty() && n++ < 3e5) {
+              auto current = queue.front();
+              queue.pop();
+              for (int32_t neighbor : {tiles.RightNeighbor(current), tiles.LeftNeighbor(current),
+                                       tiles.TopNeighbor(current), tiles.BottomNeighbor(current)}) {
+                // if bt is on the edge of the tiling, skip
+                if (neighbor == current)
+                  continue;
+                // if neighbor is a boundary tile, skip
+                else if (boundary_tiles.count(neighbor))
+                  continue;
+                // if neighbor is already contained, skip
+                else if (contained_tiles.count(neighbor))
+                  continue;
+                contained_tiles.insert(neighbor);
+                queue.push(neighbor);
+              }
+            }
+          }
+
+          result.reserve(result.size() + boundary_tiles.size() + contained_tiles.size());
+          for (const auto tile_id : boundary_tiles) {
+            result.emplace_back(static_cast<uint32_t>(tile_id), level, 0);
+          }
+          for (const auto tile_id : contained_tiles) {
+            result.emplace_back(static_cast<uint32_t>(tile_id), level, 0);
+          }
+        }
+
+        return result;
+      },
+      nb::arg("ring_coords"), nb::arg("levels") = std::vector<uint32_t>{});
 
   // GraphUtils class - manages GraphReader for efficient edge access
   nb::class_<vb::GraphReader>(m, "_GraphUtils")

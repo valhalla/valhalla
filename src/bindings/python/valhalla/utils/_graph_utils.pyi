@@ -96,6 +96,23 @@ def get_tile_ids_from_bbox(
     :raises ValueError: When the level(s) or coord are invalid.
     """
 
+def get_tile_ids_from_ring(
+    coords: List[Tuple[float, float]],
+    levels: Optional[List[int]] = [0, 1, 2],
+) -> List[GraphId]:
+    """Returns all tile GraphIds for the specified levels (default: all),
+    which intersect or are contained within the polygon ring.
+
+    The ring is automatically closed if the last coordinate does not match the first.
+    Winding order (CW/CCW) is handled automatically.
+
+    :param coords: List of (lon, lat) tuples forming a closed ring (polygon boundary).
+                   Must have at least 3 coordinates.
+    :param levels: The hierarchy levels for which to find tiles.
+    :returns: The list of tile GraphIds which intersect or are inside the ring.
+    :raises ValueError: When the level(s), coords, or ring size are invalid.
+    """
+
 class _GraphUtils:
     """C++ binding for GraphUtils (internal use - prefer GraphUtils wrapper).
 
