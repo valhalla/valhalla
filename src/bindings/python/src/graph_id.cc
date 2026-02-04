@@ -201,7 +201,8 @@ void init_graphid(nb::module_& m) {
             contained_tiles.insert(*start_tile);
             size_t n = 0;
 
-            while (!queue.empty() && n++ < 3e5) {
+            // don't bail on planetwide polygon (>1.1 Mio tiles)
+            while (!queue.empty() && n++ < 1.2e6) {
               auto current = queue.front();
               queue.pop();
               for (int32_t neighbor : {tiles.RightNeighbor(current), tiles.LeftNeighbor(current),
