@@ -164,7 +164,7 @@ void init_graphid(nb::module_& m) {
           check_level(level);
           const auto& tiles = vb::TileHierarchy::get_tiling(static_cast<uint8_t>(level));
 
-          // find tiles whose bins intersect the ring boundary
+          // find tiles intersecting (crossing) the ring
           auto intersected = tiles.Intersect(ring);
           std::unordered_set<int32_t> boundary_tiles;
           boundary_tiles.reserve(intersected.size());
