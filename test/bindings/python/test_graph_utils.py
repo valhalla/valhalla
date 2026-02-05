@@ -83,6 +83,11 @@ class TestBindings(unittest.TestCase):
         gid_cp += 1
         self.assertNotEqual(gid, gid_cp)
 
+    def test_graph_id_fspath(self):
+        graph_id = GraphId(1, 1, 0)
+        path = Path(graph_id)
+        self.assertEqual(path, Path("1/000/001.gph"))
+
     def test_get_tile_base_lon_lat_and_reverse(self):
         gid = GraphId(674464002)
         test_pt = (-180.0, -16.75)

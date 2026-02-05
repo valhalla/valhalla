@@ -1,5 +1,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "graph_utils_module.h"
@@ -63,6 +64,8 @@ void init_graphid(nb::module_& m) {
       .def(nb::self != nb::self)               // operator!=(const GraphId&)
       .def("__bool__", &vb::GraphId::is_valid) // operator bool
       .def("__str__", [](const vb::GraphId& graph_id) { return std::to_string(graph_id); })
+      .def("__fspath__",
+           [](const vb::GraphId& graph_id) { return vb::GraphTile::FileSuffix(graph_id); })
       .def("__repr__",
            [](const vb::GraphId& graph_id) { return "<GraphId(" + std::to_string(graph_id) + ")>"; })
       // pickling support auto-provides copy/deepcopy support
