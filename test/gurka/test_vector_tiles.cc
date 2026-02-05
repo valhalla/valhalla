@@ -259,6 +259,40 @@ protected:
 
 gurka::map VectorTiles::map = {};
 
+TEST_F(VectorTiles, LayerExclude) {
+  auto test_tile = [](std::string_view exclude_layer_name, const bool expect_layer_present = true) {
+    SCOPED_TRACE(std::format("{} failed", exclude_layer_name));
+    std::unordered_map<std::string, std::string> options = {
+        {"/tile_options/exclude_layers/-", std::string(exclude_layer_name)},
+    };
+    std::string tile_data;
+    Api api = gurka::do_action(Options::tile, map, "x", 14, "auto", options, nullptr, &tile_data);
+
+    vtzero::vector_tile tile{tile_data};
+    tile.for_each_layer([&](const vtzero::layer&& layer) {
+      std::cout << "Layer name: " << std::string_view(layer.name().data(), layer.name().size())
+                << std::endl;
+      return true;
+    });
+    EXPECT_FALSE(tile.get_layer_by_name(exclude_layer_name.data()).valid());
+    if (expect_layer_present) {
+      ASSERT_EQ(tile.count_layers(), 1);
+    } else {
+      ASSERT_EQ(tile.count_layers(), 2);
+      ASSERT_EQ(api.info().warnings().size(), 1);
+      EXPECT_EQ(api.info().warnings(0).code(), 212);
+      EXPECT_STREQ(api.info().warnings(0).description().c_str(),
+                   std::format("Invalid layer name in exclude_layers array: {}", exclude_layer_name)
+                       .c_str());
+    }
+  };
+
+  test_tile("edges");
+  test_tile("nodes");
+  test_tile("non_existing_layer", false); // should be ignored, but not cause an error
+  test_tile("0", false);                  // should be ignored, but not cause an error
+}
+
 TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   auto test_tile = [&](const uint32_t z, const uint32_t exp_total_size, const uint32_t exp_edges,
                        const uint32_t exp_nodes, uint32_t& cache_count) {
