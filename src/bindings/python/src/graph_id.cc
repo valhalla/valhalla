@@ -203,6 +203,7 @@ void init_graphid(nb::module_& m) {
               continue;
             }
             // in the same row, walk through the columns and add inner tiles
+            result.reserve(result.size() + col_distance - 1);
             for (auto const add_col : std::views::iota(1, col_distance)) {
               result.emplace_back(*curr_tile + add_col, level, 0);
             }
