@@ -178,7 +178,7 @@ void init_graphid(nb::module_& m) {
           // row by row
           std::sort(boundary_tiles.begin(), boundary_tiles.end());
 
-          // start at the lower-left corner and walk the grid to collect inner tiles
+          // start at the lower-left tile & row and walk the grid to collect inner tiles
           auto curr_tile = boundary_tiles.begin();
           auto curr_row = *curr_tile / tiles.ncolumns();
           curr_tile++;
