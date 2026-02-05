@@ -152,10 +152,8 @@ void serialize_edges(const AttributesController& controller,
         writer("way_id", edge.way_id());
       }
       if (controller(kEdgeBeginOsmNodeId) && edge.has_begin_osm_node_id_case()) {
-
         writer("node_id", edge.begin_osm_node_id());
       }
-
       if (controller(kEdgeId)) {
         writer("id", edge.id());
       }
