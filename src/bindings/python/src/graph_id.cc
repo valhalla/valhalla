@@ -10,7 +10,6 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 
-#include <boost/geometry/algorithms/within.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
@@ -19,7 +18,6 @@
 #include <nanobind/stl/vector.h>
 
 #include <fstream>
-#include <queue>
 #include <sstream>
 
 namespace nb = nanobind;
@@ -142,7 +140,7 @@ void init_graphid(nb::module_& m) {
         }
 
         // build a boost geometry ring from the coordinate tuples
-        vm::bg::ring_ll_t ring;
+        std::vector<vm::PointLL> ring;
         ring.reserve(ring_coords.size() + 1);
         for (const auto& coord : ring_coords) {
           if (nb::len(coord) != 2) {
