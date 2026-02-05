@@ -101,10 +101,9 @@ def get_tile_ids_from_ring(
     levels: Optional[List[int]] = [0, 1, 2],
 ) -> List[GraphId]:
     """Returns all tile GraphIds for the specified levels (default: all),
-    which intersect or are contained within the polygon ring.
-
-    The ring is automatically closed if the last coordinate does not match the first.
-    Winding order (CW/CCW) is handled automatically.
+    which intersect or are contained within the polygon ring. The ring is
+    assumed and coerced to be an outer ring. It's automatically closed if
+    the last coordinate does not match the first.
 
     :param coords: List of (lon, lat) tuples forming a closed ring (polygon boundary).
                    Must have at least 3 coordinates.
