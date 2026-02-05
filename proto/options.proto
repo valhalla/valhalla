@@ -112,8 +112,8 @@ message Tile {
 }
 
 message TileOptions {
-  bool return_shortcuts = 1;      // include shortcuts in /tile responses
-  uint32 exclude_layer_mask = 2;  // which layers to exclude, defaults to 0
+  bool return_shortcuts = 1;               // include shortcuts in /tile responses
+  repeated string exclude_layers = 2;      // which layers to exclude, default none
 }
 
 message Costing {

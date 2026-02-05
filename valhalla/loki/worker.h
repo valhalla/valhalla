@@ -18,11 +18,6 @@
 
 namespace valhalla {
 namespace loki {
-constexpr std::string_view kEdgeLayerName = "edges";
-constexpr std::string_view kNodeLayerName = "nodes";
-
-constexpr uint8_t kExcludeEdgeLayerMask = 1;
-constexpr uint8_t kExcludeNodeLayerMask = 2;
 
 #ifdef ENABLE_SERVICES
 void run_service(const boost::property_tree::ptree& config);
