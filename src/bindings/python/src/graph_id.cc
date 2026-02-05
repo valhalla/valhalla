@@ -166,68 +166,46 @@ void init_graphid(nb::module_& m) {
 
           // find tiles intersecting (crossing) the ring
           auto intersected = tiles.Intersect(ring);
-          std::unordered_set<int32_t> boundary_tiles;
+          std::vector<int32_t> boundary_tiles;
           boundary_tiles.reserve(intersected.size());
+          result.reserve(result.size() + intersected.size());
           for (const auto& [tile_id, bins] : intersected) {
-            boundary_tiles.insert(tile_id);
+            boundary_tiles.push_back(tile_id);
+            result.push_back(vb::GraphId{static_cast<uint32_t>(tile_id), level, 0});
           }
 
-          // find a starting tile adjacent to a boundary tile that is fully inside
-          std::optional<int32_t> start_tile;
-          for (const auto bt : boundary_tiles) {
-            if (start_tile)
+          // sort the tiles according to their index, so we can easily traverse them
+          // row by row
+          std::sort(boundary_tiles.begin(), boundary_tiles.end());
+
+          // start at the lower-left corner and walk the grid to collect inner tiles
+          auto curr_tile = boundary_tiles.begin();
+          auto curr_row = *curr_tile / tiles.ncolumns();
+          curr_tile++;
+          for (; curr_tile != boundary_tiles.end(); ++curr_tile) {
+            // last tile must a boundary tile, breaking also makes sure we have a next tile to look at
+            if (*curr_tile == boundary_tiles.back()) {
               break;
-            for (int32_t neighbor : {tiles.RightNeighbor(bt), tiles.LeftNeighbor(bt),
-                                     tiles.TopNeighbor(bt), tiles.BottomNeighbor(bt)}) {
-              // if bt is on the edge of the tiling, skip
-              if (neighbor == bt)
-                continue;
-              // if neighbor is a boundary tile, skip
-              else if (boundary_tiles.count(neighbor))
-                continue;
-              // if neighbor is inside the ring, we found our start tile
-              else if (boost::geometry::within(tiles.Center(neighbor), ring)) {
-                start_tile = neighbor;
-                break;
-              }
             }
-          }
 
-          // then flood fill to find tiles completely inside the ring
-          std::unordered_set<int32_t> contained_tiles;
-          if (start_tile) {
-            std::queue<int32_t> queue;
-            queue.push(*start_tile);
-            contained_tiles.insert(*start_tile);
-            size_t n = 0;
+            const auto next_tile = *(curr_tile + 1);
 
-            // don't bail on planetwide polygon (>1.1 Mio tiles)
-            while (!queue.empty() && n++ < 1.2e6) {
-              auto current = queue.front();
-              queue.pop();
-              for (int32_t neighbor : {tiles.RightNeighbor(current), tiles.LeftNeighbor(current),
-                                       tiles.TopNeighbor(current), tiles.BottomNeighbor(current)}) {
-                // if bt is on the edge of the tiling, skip
-                if (neighbor == current)
-                  continue;
-                // if neighbor is a boundary tile, skip
-                else if (boundary_tiles.count(neighbor))
-                  continue;
-                // if neighbor is already contained, skip
-                else if (contained_tiles.count(neighbor))
-                  continue;
-                contained_tiles.insert(neighbor);
-                queue.push(neighbor);
-              }
+            // we're about to move to the next row, reset and do it
+            if (const auto next_row = next_tile / tiles.ncolumns(); next_row > curr_row) {
+              curr_row = next_row;
+              continue;
             }
-          }
 
-          result.reserve(result.size() + boundary_tiles.size() + contained_tiles.size());
-          for (const auto tile_id : boundary_tiles) {
-            result.emplace_back(static_cast<uint32_t>(tile_id), level, 0);
-          }
-          for (const auto tile_id : contained_tiles) {
-            result.emplace_back(static_cast<uint32_t>(tile_id), level, 0);
+            const auto col_distance =
+                (next_tile % tiles.ncolumns()) - (*curr_tile % tiles.ncolumns());
+            // the next tile is also a boundary tile, nothing to do
+            if (col_distance <= 1) {
+              continue;
+            }
+            // in the same row, walk through the columns and add inner tiles
+            for (auto const add_col : std::views::iota(1, col_distance)) {
+              result.emplace_back(*curr_tile + add_col, level, 0);
+            }
           }
         }
 
