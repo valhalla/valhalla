@@ -262,7 +262,7 @@ TEST_F(LinearFeatureTest, simple_low_factor) {
 
   // make sure there is no shortcut here
   auto shortcut = get_shortcut(reader, map.nodes, "U", "V");
-  EXPECT_FALSE(std::get<0>(shortcut).Is_Valid());
+  EXPECT_FALSE(std::get<0>(shortcut).is_valid());
   // finally check the route
   gurka::assert::raw::expect_path(request, {"Relevant Ave", "UV", "VW", "WX", "XY", "TY"});
 }

@@ -213,7 +213,9 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "radius": 0,
           "search_cutoff": 35000,
           "street_side_max_distance": 1000,
-          "street_side_tolerance": 5
+          "street_side_tolerance": 5,
+          "mvt_min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14],
+          "mvt_cache_min_zoom": 11
         },
         "use_connectivity": true
       },
@@ -355,7 +357,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
                 "max_allowed_up_transitions": {
                     "1": 400,
                     "2": 100
-                }
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
             },
             "unidirectional_astar": {
                 "max_allowed_up_transitions": {

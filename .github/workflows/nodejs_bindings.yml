@@ -90,7 +90,7 @@ jobs:
           -DENABLE_NODE_BINDINGS=ON \
           -DENABLE_SERVICES=OFF \
           -DENABLE_TESTS=OFF \
-          -DVALHALLA_VERSION_MODIFIFER=$(git rev-parse --short HEAD) \
+          -DVALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD) \
           -DENABLE_SINGLE_FILES_WERROR=OFF
           cmake --build build -j${{ matrix.os == 'macos' && '$(sysctl -n hw.logicalcpu)' || '$(nproc)' }}
       
@@ -129,6 +129,7 @@ jobs:
             src/bindings/nodejs/
             scripts/valhalla_*
             valhalla/valhalla.h
+            proto/
           sparse-checkout-cone-mode: false
           fetch-depth: 0
           fetch-tags: true
@@ -187,6 +188,7 @@ jobs:
         with:
           sparse-checkout: |
             src/bindings/nodejs/test/
+            src/bindings/nodejs/examples/
             test/data/utrecht_netherlands.osm.pbf
           sparse-checkout-cone-mode: false
 

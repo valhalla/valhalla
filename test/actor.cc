@@ -2,6 +2,7 @@
 #include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <vtzero/vector_tile.hpp>
 
 #include <functional>
 #include <string>
@@ -77,6 +78,90 @@ TEST(Actor, TraceAttributes) {
   EXPECT_THROW(actor.trace_attributes(request, &interrupt), test_exception_t);
 }
 
+TEST(Actor, Tile) {
+  const auto utrecht_conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+  tyr::actor_t actor(utrecht_conf);
+
+  // Request a tile for Utrecht center (52.08778°N, 5.13142°E)
+  // At zoom 14, this is tile 14/8425/5405
+  std::string request = R"({"tile": {"z": 14,"x": 8425,"y": 5405}})";
+
+  auto tile_data = actor.tile(request);
+  actor.cleanup();
+
+  EXPECT_GT(tile_data.size(), 120'000);
+  EXPECT_LT(tile_data.size(), 130'000);
+
+  vtzero::vector_tile tile{tile_data};
+
+  bool has_edges = false;
+  bool has_nodes = false;
+
+  while (auto layer = tile.next_layer()) {
+    std::string layer_name = std::string(layer.name());
+
+    if (layer_name == "edges") {
+      has_edges = true;
+      EXPECT_EQ(layer.num_features(), 2278);
+    } else if (layer_name == "nodes") {
+      has_nodes = true;
+      EXPECT_EQ(layer.num_features(), 1741);
+    } else {
+      FAIL() << "Unexpected layer: " << layer_name;
+    }
+  }
+
+  EXPECT_TRUE(has_edges);
+  EXPECT_TRUE(has_nodes);
+}
+
+TEST(Actor, TileReturnShortcuts) {
+  // Use Utrecht tiles for this test
+  const auto utrecht_conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+  tyr::actor_t actor(utrecht_conf);
+
+  // Request the same tile without shortcuts (default)
+  std::string request_no_shortcuts =
+      R"({"tile": {"z": 14,"x": 8425,"y": 5405}, "tile_options": {"return_shortcuts": false}})";
+  auto tile_data_no_shortcuts = actor.tile(request_no_shortcuts);
+  actor.cleanup();
+
+  // Request the same tile with shortcuts
+  std::string request_with_shortcuts =
+      R"({"tile": {"z": 14,"x": 8425,"y": 5405}, "tile_options": {"return_shortcuts": true}})";
+  auto tile_data_with_shortcuts = actor.tile(request_with_shortcuts);
+  actor.cleanup();
+
+  // Both should return valid data
+  EXPECT_FALSE(tile_data_no_shortcuts.empty()) << "Tile data without shortcuts should not be empty";
+  EXPECT_FALSE(tile_data_with_shortcuts.empty()) << "Tile data with shortcuts should not be empty";
+
+  // Parse both tiles
+  vtzero::vector_tile tile_no_shortcuts{tile_data_no_shortcuts};
+  vtzero::vector_tile tile_with_shortcuts{tile_data_with_shortcuts};
+
+  // Count features in edges layer for both tiles
+  uint32_t features_no_shortcuts = 0;
+  uint32_t features_with_shortcuts = 0;
+
+  while (auto layer = tile_no_shortcuts.next_layer()) {
+    if (std::string(layer.name()) == "edges") {
+      features_no_shortcuts = layer.num_features();
+      break;
+    }
+  }
+
+  while (auto layer = tile_with_shortcuts.next_layer()) {
+    if (std::string(layer.name()) == "edges") {
+      features_with_shortcuts = layer.num_features();
+      break;
+    }
+  }
+
+  EXPECT_EQ(features_with_shortcuts, 2317);
+  EXPECT_EQ(features_no_shortcuts, 2278);
+}
+
 // TODO: test the rest of them
 
 TEST(Actor, SupportedFormats) {
@@ -114,6 +199,13 @@ TEST(Actor, SupportedFormats) {
   isochrone_options.set_costing_type(Costing_Type::Costing_Type_auto_);
   isochrone_options.mutable_locations()->Add()->CopyFrom(loc1);
 
+  // for tile
+  Options tile_options;
+  auto* xyz = tile_options.mutable_tile_xyz();
+  xyz->set_x(8425);
+  xyz->set_y(5405);
+  xyz->set_z(14);
+
   const struct {
     Options::Action action;
     std::string (tyr::actor_t::*action_fn)(const std::string& request_str,
@@ -133,6 +225,7 @@ TEST(Actor, SupportedFormats) {
       {Options::expansion, &tyr::actor_t::expansion, options},
       {Options::centroid, &tyr::actor_t::centroid, options},
       {Options::status, &tyr::actor_t::status, options},
+      {Options::tile, &tyr::actor_t::tile, tile_options},
   };
   ASSERT_EQ(std::size(tests), Options::Action_ARRAYSIZE - 1) // -1 for `Options::no_action`
       << "Please add missing action to this test";

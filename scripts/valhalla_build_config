@@ -32,6 +32,7 @@ config = {
         "tile_url_gz": Optional(bool),
         "tile_url_user_pw": Optional(str),
         "concurrency": Optional(int),
+        "data_quality_dir": Optional(str),
         "tile_dir": "/data/valhalla",
         "tile_extract": "/data/valhalla/tiles.tar",
         "traffic_extract": "/data/valhalla/traffic.tar",
@@ -100,6 +101,7 @@ config = {
             "expansion",
             "centroid",
             "status",
+            "tile",
         ],
         "use_connectivity": True,
         "service_defaults": {
@@ -110,6 +112,9 @@ config = {
             "street_side_tolerance": 5,
             "street_side_max_distance": 1000,
             "heading_tolerance": 60,
+            "mvt_min_zoom_road_class": [7, 7, 8, 11, 11, 12, 13, 14],
+            "mvt_cache_dir": Optional(str),
+            "mvt_cache_min_zoom": 11,
         },
         "logging": {
             "type": "std_out",
@@ -149,6 +154,7 @@ config = {
                     "1": 400,
                     "2": 100,
                 },
+                "expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000},
             },
         },
         "bidirectional_astar": {
@@ -343,6 +349,7 @@ config = {
                     "1": 400,
                     "2": 100,
                 },
+                "max_expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000},
             },
             "unidirectional_astar": {
                 "max_allowed_up_transitions": {
@@ -382,6 +389,7 @@ help_text = {
         "tile_url_gz": "Whether or not to request for compressed tiles",
         "tile_url_user_pw": 'User & password for HTTP basic auth in the form of "user:password"',
         "concurrency": "How many threads to use in the concurrent parts of tile building",
+        "data_quality_dir": "The directory where we output files regarding data quality issues, e.g. duplicateways.txt",
         "tile_dir": "Location to read/write tiles to/from",
         "tile_extract": "Location to read tiles from tar",
         "traffic_extract": "Location to read traffic from tar",
@@ -441,7 +449,7 @@ help_text = {
         "elevation_url_user_pw": 'User & password for HTTP basic auth in the form of "user:password"',
     },
     "loki": {
-        "actions": "Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status",
+        "actions": "Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status, tile",
         "use_connectivity": "a boolean value to know whether or not to construct the connectivity maps",
         "service_defaults": {
             "radius": "Default radius to apply to incoming locations should one not be supplied",
@@ -451,6 +459,9 @@ help_text = {
             "street_side_tolerance": "If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel",
             "street_side_max_distance": "The max distance in meters that the input coordinates or display ll can be from the edge centerline for them to be used for determining the side of street. Beyond this distance the side of street is set to none",
             "heading_tolerance": "When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading",
+            "mvt_min_zoom_road_class": "Minimum zoom level for each road class (8 values: Motorway, Trunk, Primary, Secondary, Tertiary, Unclassified, Residential, Service/Other). Roads will only be rendered at or above their minimum zoom level.",
+            "mvt_cache_dir": "The cache directory for MVT tiles. If empty/omitted, we disable MVT caching",
+            "mvt_cache_min_zoom": "The minimum zoom level which will be cached, the maximum will be determined by mvt_min_zoom_road_class",
         },
         "logging": {
             "__note__": (
@@ -498,7 +509,12 @@ help_text = {
                 "max_up_transitions": {
                     "1": "The default maximum up transitions for level 1 in CostMatrix",
                     "2": "The default maximum up transitions for level 2 in CostMatrix",
-                }
+                },
+                "expand_within_distance": {
+                    "0": "The default distance within which expansion is allowed from the origin/destination on level 0 in costmatrix",
+                    "1": "The default distance within which expansion is allowed from the origin/destination on level 1 in costmatrix",
+                    "2": "The default distance within which expansion is allowed from the origin/destination on level 2 in costmatrix",
+                },
             },
         },
         "bidirectional_astar": {
