@@ -183,6 +183,8 @@ void init_graphid(nb::module_& m) {
           // start at the lower-left tile & row and walk the grid to collect inner tiles
           auto curr_tile = boundary_tiles.begin();
           auto curr_row = *curr_tile / tiles.ncolumns();
+          // we'll flip this when we cross a boundary tile
+          bool inside = true;
           curr_tile++;
           for (; curr_tile != boundary_tiles.end(); ++curr_tile) {
             // last tile must a boundary tile, breaking also makes sure we have a next tile to look at
@@ -195,13 +197,20 @@ void init_graphid(nb::module_& m) {
             // we're about to move to the next row, reset and do it
             if (const auto next_row = next_tile / tiles.ncolumns(); next_row > curr_row) {
               curr_row = next_row;
+              inside = true;
               continue;
             }
 
             const auto col_distance =
                 (next_tile % tiles.ncolumns()) - (*curr_tile % tiles.ncolumns());
-            // the next tile is also a boundary tile, nothing to do
+            // the next tile is an adjacent boundary tile, so we're crossing into or out of the
+            // polygon
             if (col_distance <= 1) {
+              inside = !inside;
+              continue;
+            }
+            // skip gaps that are outside the polygon (handles concave shapes like U/W)
+            if (!inside) {
               continue;
             }
             // in the same row, walk through the columns and add inner tiles
@@ -209,6 +218,8 @@ void init_graphid(nb::module_& m) {
             for (auto const add_col : std::views::iota(1, col_distance)) {
               result.emplace_back(*curr_tile + add_col, level, 0);
             }
+            // moving now outside of the polygon
+            inside = false;
           }
         }
 
