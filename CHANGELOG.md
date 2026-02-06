@@ -32,7 +32,6 @@
    * FIXED: `DirectedEdge index out of bounds` in transit tiles [#5782](https://github.com/valhalla/valhalla/pull/5782)
    * FIXED: Add error code for isochrone requests exceeding distance contour limit [#5781](https://github.com/valhalla/valhalla/pull/5781)
 * **Enhancement**
-   * ADDED: Expose start/end OSM nodeids in trace_attributes using EdgeInfo osmnodeids [#5783](https://github.com/valhalla/valhalla/pull/5783)
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
    * ADDED: optional libvalhalla_test install target [#5719](https://github.com/valhalla/valhalla/pull/5719)
    * CHANGED: Get rid of temporary std::vector in GraphTile::GetRestrictions [#5688](https://github.com/valhalla/valhalla/pull/5688)
@@ -59,6 +58,7 @@
    * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
    * ADDED: NodeJS bindings support PBF outputs [#5794](https://github.com/valhalla/valhalla/pull/5794)
    * ADDED: Handle `vehicle` tags for OSM Ways [#5802](https://github.com/valhalla/valhalla/pull/5802)
+   * ADDED: Expose start/end OSM nodeids in trace_attributes using EdgeInfo osmnodeids [#5783](https://github.com/valhalla/valhalla/pull/5783)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
