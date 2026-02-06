@@ -153,6 +153,14 @@ matched.begin_route_discontinuity
 matched.end_route_discontinuity
 matched.distance_along_edge
 matched.distance_from_trace_point
+
+// Shape attributes 
+shape_attributes.time
+shape_attributes.length
+shape_attributes.speed
+shape_attributes.speed_limit
+shape_attributes.closure
+shape_attributes.congestion
 ```
 
 ## Outputs of the Map Matching service
@@ -174,6 +182,7 @@ The `trace_attributes` results contains a list of edges and, optionally, the fol
 | `elevation` | Optional elevation data along the matched path, sampled at the specified `elevation_interval` in the requested units (meters or feet). Only present if the `elevation_interval` request option was set to a non-zero value. |
 | `shape` | The [encoded polyline](../../decoding.md) of the matched path. |
 | `matched_points` | List of match results when using the `map_snap` shape match algorithm. There is a one-to-one correspondence with the input set of latitude, longitude coordinates and this list of match results. See the list of [matched point items](#matched-point-items) for details. |
+| `shape_attributes` | A list of shape attributes, each a list of attributes per shape segment. `closures` are an exception: they are serialized as objects containing a `begin_shape_index` and an `end_shape_index` |
 | `units` | The specified units with the request, in either kilometers or miles. |
 | `warnings`  | A warnings array. This array may contain descriptive text about notices of deprecated request parameters, clamped values etc. |
 
