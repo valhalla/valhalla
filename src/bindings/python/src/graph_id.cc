@@ -164,22 +164,22 @@ void init_graphid(nb::module_& m) {
         // point-in-polygon test using ray casting (to the right from pt)
         auto point_in_ring = [&ring](const vm::PointLL& test_pt) {
           bool inside = false;
-          // first connect the last with the first point, then walk through the edges of the ring
+          // first connect the last with the first point, then walk through the segments of the ring
           for (size_t i = 0, j = ring.size() - 1; i < ring.size(); j = i++) {
-            const auto& edge_start = ring[j];
-            const auto& edge_end = ring[i];
+            const auto& segment_start = ring[j];
+            const auto& segment_end = ring[i];
 
-            // does this edge cross the ray's latitude?
+            // does this segment cross the ray's latitude?
             bool crossing_lat =
-                (edge_end.lat() > test_pt.lat()) != (edge_start.lat() > test_pt.lat());
+                (segment_end.lat() > test_pt.lat()) != (segment_start.lat() > test_pt.lat());
             if (!crossing_lat) {
               continue;
             }
 
-            // longitude where the edge crosses the ray's latitude
-            double crossing_lng = edge_start.lng() + (edge_end.lng() - edge_start.lng()) *
-                                                         (test_pt.lat() - edge_start.lat()) /
-                                                         (edge_end.lat() - edge_start.lat());
+            // longitude where the segment crosses the ray's latitude
+            double crossing_lng = segment_start.lng() + (segment_end.lng() - segment_start.lng()) *
+                                                            (test_pt.lat() - segment_start.lat()) /
+                                                            (segment_end.lat() - segment_start.lat());
             // does the crossing point fall to the right of the point, flip inside state if so
             if (test_pt.lng() < crossing_lng) {
               inside = !inside;
