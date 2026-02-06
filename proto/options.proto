@@ -112,7 +112,7 @@ message Tile {
 }
 
 message TileOptions {
-  uint32 exclude_layer_mask = 1;  // which layers to exclude, defaults to 0
+  repeated string exclude_layers = 1;      // which layers to exclude, default none
 }
 
 message Costing {

@@ -42,27 +42,24 @@ static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexc
 
 namespace {
 
-uint8_t layer_mask_parse(const boost::optional<rapidjson::Value&>& exclude_layers) {
-  static const std::unordered_map<std::string_view, uint8_t> layer_types{
-      {loki::kEdgeLayerName, loki::kExcludeEdgeLayerMask},
-      {loki::kShortcutLayerName, loki::kExcludeShortcutLayerMask},
-      {loki::kNodeLayerName, loki::kExcludeNodeLayerMask},
-  };
+// Parses exclude_layers from JSON and adds them to the request's tile options
+void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
+  static const std::unordered_set<std::string_view> kSupportedLayers = {valhalla::kEdgeLayerName,
+                                                                        valhalla::kNodeLayerName,
+                                                                        valhalla::kShortcutLayerName};
 
-  uint8_t exclude_mask = 0;
   if (exclude_layers.has_value() && exclude_layers->IsArray()) {
     for (const auto& lyr : exclude_layers->GetArray()) {
       if (lyr.IsString()) {
-        auto i = layer_types.find(lyr.GetString());
-        if (i != layer_types.cend()) {
-          exclude_mask |= i->second;
+        const auto& lyr_name = lyr.GetString();
+        if (kSupportedLayers.contains(lyr_name)) {
+          request.mutable_options()->mutable_tile_options()->add_exclude_layers(lyr_name);
+          continue;
         }
       }
+      add_warning(request, 212, lyr.IsString() ? lyr.GetString() : "not a string");
     }
   }
-
-  // empty or missing input array doesn't exclude anything
-  return exclude_mask;
 }
 
 bool is_format_supported(Options::Action action, Options::Format format) {
@@ -685,8 +682,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // first the /tile parameters, so we can early exit
   if (options.action() == Options::tile) {
     parse_xyz(doc, options);
-    options.mutable_tile_options()->set_exclude_layer_mask(
-        layer_mask_parse(get_child_optional(doc, "/tile_options/exclude_layers")));
+    parse_exclude_layers(get_child_optional(doc, "/tile_options/exclude_layers"), api);
     options.set_format(Options::mvt); // set explicitly for MIME type
     return;
   }

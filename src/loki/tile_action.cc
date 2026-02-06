@@ -11,6 +11,7 @@
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/polyline2.h"
+#include "proto_conversions.h"
 #include "valhalla/exceptions.h"
 
 #include <boost/geometry/algorithms/append.hpp>
@@ -139,19 +140,19 @@ vtzero::point merc_to_tile_coords(const midgard::Point2d merc_xy, const TileProj
 void filter_tile(const std::string& tile_bytes,
                  vtzero::tile_builder& filtered_tile,
                  const baldr::AttributesController& controller,
-                 const uint32_t layers_mask) {
+                 const std::unordered_set<std::string_view>& exclude_layers) {
 
   vtzero::vector_tile tile_full{tile_bytes};
 
-  const bool exclude_edge_layer = layers_mask & loki::kExcludeEdgeLayerMask;
-  const bool exclude_shortcut_layer = layers_mask & loki::kExcludeShortcutLayerMask;
-  const bool exclude_node_layer = layers_mask & loki::kExcludeNodeLayerMask;
+  const bool exclude_edge_layer = exclude_layers.contains(kEdgeLayerName);
+  const bool exclude_node_layer = exclude_layers.contains(kNodeLayerName);
+  const bool exclude_shortcut_layer = exclude_layers.contains(kShortcutLayerName);
 
   auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
-    if ((layer_name == loki::kNodeLayerName && exclude_node_layer) ||
-        (layer_name == loki::kEdgeLayerName && exclude_edge_layer) ||
-        (layer_name == loki::kShortcutLayerName && exclude_shortcut_layer)) {
+    if ((layer_name == kNodeLayerName && exclude_node_layer) ||
+        (layer_name == kEdgeLayerName && exclude_edge_layer) ||
+        (layer_name == kShortcutLayerName && exclude_shortcut_layer)) {
       return;
     }
 
@@ -190,6 +191,7 @@ void filter_tile(const std::string& tile_bytes,
         filtered_feat.rollback();
     }
   };
+
   tile_full.for_each_layer([&](vtzero::layer&& full_layer) {
     build_filtered_layer(full_layer);
     return true;
@@ -524,23 +526,25 @@ std::string loki_worker_t::render_tile(Api& request) {
   };
   auto controller = get_controller();
 
+  std::unordered_set<std::string_view> exclude_layers(options.tile_options().exclude_layers().begin(),
+                                                      options.tile_options().exclude_layers().end());
+
   // do we have it cached?
   const auto x = options.tile_xyz().x();
   const auto y = options.tile_xyz().y();
   const auto tile_path = detail::mvt_local_path(z, x, y, mvt_cache_dir_);
   bool cache_allowed = (z >= mvt_cache_min_zoom_) && !mvt_cache_dir_.empty();
   bool is_cached = false;
-  uint32_t exclude_layer_mask = options.tile_options().exclude_layer_mask();
   if (cache_allowed) {
     is_cached = std::filesystem::exists(tile_path);
     if (is_cached) {
       std::ifstream tile_file(tile_path, std::ios::binary);
       std::string buffer{std::istreambuf_iterator<char>(tile_file), std::istreambuf_iterator<char>()};
       // we only have cached tiles with all attributes
-      if (return_verbose && !exclude_layer_mask) {
+      if (return_verbose && exclude_layers.empty()) {
         return buffer;
       }
-      filter_tile(buffer, tile, controller, exclude_layer_mask);
+      filter_tile(buffer, tile, controller, exclude_layers);
 
       return tile.serialize();
     }
@@ -588,16 +592,16 @@ std::string loki_worker_t::render_tile(Api& request) {
     std::filesystem::rename(tmp, tile_path);
   }
 
-  if (return_verbose && !exclude_layer_mask) {
+  if (return_verbose && exclude_layers.empty()) {
     return tile_bytes;
-  } else if (cache_allowed || exclude_layer_mask) {
+  } else if (cache_allowed || !exclude_layers.empty()) {
     // only apply filter to the tile if we have a full tile (due to caching) but the request
     // wants a filtered tile
 
     vtzero::tile_builder filtered_tile;
 
     // need a fresh controller, the other one might have been changed if it was cacheable
-    filter_tile(tile_bytes, filtered_tile, get_controller(), exclude_layer_mask);
+    filter_tile(tile_bytes, filtered_tile, get_controller(), exclude_layers);
 
     return filtered_tile.serialize();
   }

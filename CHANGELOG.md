@@ -7,6 +7,9 @@
    * FIXED: Add numpy as optional runtime dependency for Python bindings [#5823](https://github.com/valhalla/valhalla/pull/5823)
    * FIXED: MVT clipping bug where parts of edge were being dropped which crossed tile boundaries [#5843](https://github.com/valhalla/valhalla/pull/5843)
    * FIXED: Removed UK country-specific admin overrides / UK countries will return correct admin data [#5847](https://github.com/valhalla/valhalla/pull/5847)
+   * FIXED: replace `shutting_seconds` with `shutdown_seconds` [#5854](https://github.com/valhalla/valhalla/pull/5854)
+   * FIXED: MVT attributes were erroneously cast to uint32_t for booleans and others [#5861](https://github.com/valhalla/valhalla/pull/5861)
+   * FIXED: small bug in valhalla_add_landmarks [#5859](https://github.com/valhalla/valhalla/pull/5859)
 * **Enhancement**
    * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
@@ -18,7 +21,10 @@
    * ADDED: sort operator for GraphId which is ideal for mmap & edge_id loop cache [#5839](https://github.com/valhalla/valhalla/pull/5839)
    * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
    * ADDED: `shortcuts` layer and removed shortcuts from `edges` layer [#5849](https://github.com/valhalla/valhalla/pull/5849)
-   * ADDED: `tile_options/exclude_layers` to exclude MVT layers per request [#5855](https://github.com/valhalla/valhalla/pull/5855)
+   * CHANGED: Timestamp log format changed from year/mo/dy hr:mn:sc.micros to year-mo-dy hr:mn:sc.nanosecnd [#5856](https://github.com/valhalla/valhalla/pull/5856)
+   * CHANGED: Added `mjolnir.data_quality_dir` as optional config to control the directory for e.g. duplicateways.txt
+   * CHANGED: extended `valhalla_build_config` script to optionally merge config with an existing one [#5857](https://github.com/valhalla/valhalla/pull/5857)
+   * ADDED: `tile_options.exclude_layers` to exclude MVT layers per request [#5855](https://github.com/valhalla/valhalla/pull/5855)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
