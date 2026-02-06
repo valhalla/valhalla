@@ -10,6 +10,7 @@
    * FIXED: MVT attributes were erroneously cast to uint32_t for booleans and others [#5861](https://github.com/valhalla/valhalla/pull/5861)
    * FIXED: small bug in valhalla_add_landmarks [#5859](https://github.com/valhalla/valhalla/pull/5859)
 * **Enhancement**
+   * ADDED: Rent and Return bike share maneuvers. [#5770](https://github.com/valhalla/valhalla/pull/5770)
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: Clean up boost::geometry types [#5818](https://github.com/valhalla/valhalla/pull/5818)

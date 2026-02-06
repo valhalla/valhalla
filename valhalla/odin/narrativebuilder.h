@@ -419,6 +419,8 @@ protected:
 
   std::string FormExitBuildingInstruction(Maneuver& maneuver);
 
+  std::string FormBikeShareInstruction(Maneuver& maneuver);
+
   std::string FormGenericLevelChangeInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
@@ -636,7 +638,6 @@ protected:
    */
   bool IsWithinVerbalMultiCueBounds(Maneuver& maneuver);
 
-  std::string FormBssManeuverType(DirectionsLeg_Maneuver_BssManeuverType);
   /**
    * Combines a simple preposition and a definite article for certain languages.
    */
