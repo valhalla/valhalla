@@ -11,6 +11,7 @@
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/polyline2.h"
+#include "proto_conversions.h"
 #include "valhalla/exceptions.h"
 
 #include <boost/geometry/algorithms/append.hpp>
@@ -78,8 +79,6 @@ constexpr double PeuckerEpsilons[] = {
  * This is the WGS84 ellipsoid semi-major axis.
  */
 constexpr double kEarthRadiusMeters = 6378137.0;
-constexpr std::string_view kEdgeLayerName = "edges";
-constexpr std::string_view kNodeLayerName = "nodes";
 
 double lon_to_merc_x(const double lon) {
   return kEarthRadiusMeters * lon * kPiD / 180.0;
@@ -141,66 +140,71 @@ vtzero::point merc_to_tile_coords(const midgard::Point2d merc_xy, const TileProj
 void filter_tile(const std::string& tile_bytes,
                  vtzero::tile_builder& filtered_tile,
                  const baldr::AttributesController& controller,
-                 const bool return_shortcuts) {
+                 const bool return_shortcuts,
+                 const std::unordered_set<std::string_view>& exclude_layers) {
 
   vtzero::vector_tile tile_full{tile_bytes};
 
-  auto build_filtered_layer =
-      [&](vtzero::layer& full_layer,
-          const std::unordered_map<std::string_view, std::string_view>& prop_map) {
-        vtzero::layer_builder filtered_layer{filtered_tile, full_layer};
-        vtzero::property_mapper props_mapper{full_layer, filtered_layer};
+  const bool exclude_edge_layer = exclude_layers.contains(kEdgeLayerName);
+  const bool exclude_node_layer = exclude_layers.contains(kNodeLayerName);
 
-        // pre-compute enabled attributes
-        uint32_t shortcut_key_idx = UINT32_MAX;
-        const auto& key_table = full_layer.key_table();
-        std::vector<bool> attrs_allowed(key_table.size(), false);
-        for (uint32_t i = 0; i < key_table.size(); ++i) {
-          auto key = full_layer.key(vtzero::index_value{i});
-          const std::string_view key_str{key.data(), key.size()};
-          // mandatory fields are not part of AttributeController and that throws
-          try {
-            attrs_allowed[i] = controller(prop_map.at(key_str));
-          } catch (const std::exception& e) { attrs_allowed[i] = true; }
-
-          // on the full layer, shortcuts will always be enabled
-          // if return_shortcuts=false, we'll discard shortcut features
-          // TODO: make shortcuts their own layer, this is annoying
-          if (key_str == "shortcut") {
-            shortcut_key_idx = i;
-          }
-        }
-
-        while (auto full_feat = full_layer.next_feature()) {
-          vtzero::geometry_feature_builder filtered_feat{filtered_layer};
-          filtered_feat.copy_id(full_feat);
-          filtered_feat.set_geometry(full_feat.geometry());
-
-          // filter attributes and treat shortcuts
-          bool add_feat =
-              full_feat.for_each_property_indexes([&](const vtzero::index_value_pair& idxs) {
-                if (attrs_allowed[idxs.key().value()]) {
-                  filtered_feat.add_property(props_mapper(idxs));
-                }
-                // TODO: make shortcuts their own layer, this is annoying
-                if (!return_shortcuts && shortcut_key_idx == idxs.key().value()) {
-                  return !full_layer.value(idxs.value().value()).bool_value();
-                }
-                return true;
-              });
-          if (add_feat) [[likely]]
-            filtered_feat.commit();
-          else [[unlikely]]
-            filtered_feat.rollback();
-        }
-      };
-
-  tile_full.for_each_layer([&](vtzero::layer&& full_layer) {
+  auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
+    if ((layer_name == kNodeLayerName && exclude_node_layer) ||
+        (layer_name == kEdgeLayerName && exclude_edge_layer)) {
+      return;
+    }
+
+    vtzero::layer_builder filtered_layer{filtered_tile, full_layer};
+    vtzero::property_mapper props_mapper{full_layer, filtered_layer};
+
+    // pre-compute enabled attributes
     const auto& prop_map = layer_name == kNodeLayerName ? loki::detail::kNodePropToAttributeFlag
                                                         : loki::detail::kEdgePropToAttributeFlag;
-    build_filtered_layer(full_layer, prop_map);
+    uint32_t shortcut_key_idx = UINT32_MAX;
+    const auto& key_table = full_layer.key_table();
+    std::vector<bool> attrs_allowed(key_table.size(), false);
+    for (uint32_t i = 0; i < key_table.size(); ++i) {
+      auto key = full_layer.key(vtzero::index_value{i});
+      const std::string_view key_str{key.data(), key.size()};
+      // mandatory fields are not part of AttributeController and that throws
+      try {
+        attrs_allowed[i] = controller(prop_map.at(key_str));
+      } catch (const std::exception& e) { attrs_allowed[i] = true; }
 
+      // on the full layer, shortcuts will always be enabled
+      // if return_shortcuts=false, we'll discard shortcut features
+      // TODO: make shortcuts their own layer, this is annoying
+      if (key_str == "shortcut") {
+        shortcut_key_idx = i;
+      }
+    }
+
+    while (auto full_feat = full_layer.next_feature()) {
+      vtzero::geometry_feature_builder filtered_feat{filtered_layer};
+      filtered_feat.copy_id(full_feat);
+      filtered_feat.set_geometry(full_feat.geometry());
+
+      // filter attributes and treat shortcuts
+      bool add_feat = full_feat.for_each_property_indexes([&](const vtzero::index_value_pair& idxs) {
+        if (attrs_allowed[idxs.key().value()]) {
+          filtered_feat.add_property(props_mapper(idxs));
+        }
+        // TODO: make shortcuts their own layer, this is annoying
+        if (!return_shortcuts && shortcut_key_idx == idxs.key().value()) {
+          return !full_layer.value(idxs.value().value()).bool_value();
+        }
+        return true;
+      });
+      if (add_feat) [[likely]]
+        filtered_feat.commit();
+      else [[unlikely]]
+        filtered_feat.rollback();
+    }
+  };
+
+  tile_full.for_each_layer([&](vtzero::layer&& full_layer) {
+    build_filtered_layer(full_layer);
     return true;
   });
 }
@@ -533,6 +537,9 @@ std::string loki_worker_t::render_tile(Api& request) {
   };
   auto controller = get_controller();
 
+  std::unordered_set<std::string_view> exclude_layers(options.tile_options().exclude_layers().begin(),
+                                                      options.tile_options().exclude_layers().end());
+
   // do we have it cached?
   const auto x = options.tile_xyz().x();
   const auto y = options.tile_xyz().y();
@@ -546,10 +553,10 @@ std::string loki_worker_t::render_tile(Api& request) {
       std::ifstream tile_file(tile_path, std::ios::binary);
       std::string buffer{std::istreambuf_iterator<char>(tile_file), std::istreambuf_iterator<char>()};
       // we only have cached tiles with all attributes
-      if (return_verbose) {
+      if (return_verbose && exclude_layers.empty()) {
         return buffer;
       }
-      filter_tile(buffer, tile, controller, return_shortcuts);
+      filter_tile(buffer, tile, controller, return_shortcuts, exclude_layers);
 
       return tile.serialize();
     }
@@ -599,9 +606,9 @@ std::string loki_worker_t::render_tile(Api& request) {
     std::filesystem::rename(tmp, tile_path);
   }
 
-  if (return_verbose) {
+  if (return_verbose && exclude_layers.empty()) {
     return tile_bytes;
-  } else if (cache_allowed) {
+  } else if (cache_allowed || !exclude_layers.empty()) {
     // only apply filter to the tile if we have a full tile (due to caching) but the request
     // wants a filtered tile
 
@@ -609,7 +616,7 @@ std::string loki_worker_t::render_tile(Api& request) {
 
     // need a fresh controller, the other one might have been changed if it was cacheable
     filter_tile(tile_bytes, filtered_tile, get_controller(),
-                options.tile_options().return_shortcuts());
+                options.tile_options().return_shortcuts(), exclude_layers);
 
     return filtered_tile.serialize();
   }
