@@ -161,26 +161,27 @@ void init_graphid(nb::module_& m) {
           std::reverse(ring.begin(), ring.end());
         }
 
-        // point-in-polygon test using ray casting
-        auto point_in_ring = [](const vm::PointLL& pt, const std::vector<vm::PointLL>& poly) {
+        // point-in-polygon test using ray casting (to the right from pt)
+        auto point_in_ring = [&ring](const vm::PointLL& test_pt) {
           bool inside = false;
           // first connect the last with the first point, then walk through the edges of the ring
-          for (size_t i = 0, j = poly.size() - 1; i < poly.size(); j = i++) {
-            const auto& edge_start = poly[j];
-            const auto& edge_end = poly[i];
+          for (size_t i = 0, j = ring.size() - 1; i < ring.size(); j = i++) {
+            const auto& edge_start = ring[j];
+            const auto& edge_end = ring[i];
 
             // does this edge cross the ray's latitude?
-            bool crossing_lat = (edge_end.lat() > pt.lat()) != (edge_start.lat() > pt.lat());
+            bool crossing_lat =
+                (edge_end.lat() > test_pt.lat()) != (edge_start.lat() > test_pt.lat());
             if (!crossing_lat) {
               continue;
             }
 
             // longitude where the edge crosses the ray's latitude
             double crossing_lng = edge_start.lng() + (edge_end.lng() - edge_start.lng()) *
-                                                         (pt.lat() - edge_start.lat()) /
+                                                         (test_pt.lat() - edge_start.lat()) /
                                                          (edge_end.lat() - edge_start.lat());
             // does the crossing point fall to the right of the point, flip inside state if so
-            if (pt.lng() < crossing_lng) {
+            if (test_pt.lng() < crossing_lng) {
               inside = !inside;
             }
           }
@@ -232,7 +233,7 @@ void init_graphid(nb::module_& m) {
               continue;
             }
             // skip gaps that are outside the polygon (handles concave shapes like U/W)
-            if (!point_in_ring(tiles.Center(*curr_tile + col_distance / 2), ring)) {
+            if (!point_in_ring(tiles.Center(*curr_tile + col_distance / 2))) {
               continue;
             }
             // in the same row, walk through the columns and add inner tiles
