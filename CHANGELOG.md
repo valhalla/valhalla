@@ -20,6 +20,7 @@
    * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
    * CHANGED: Timestamp log format changed from year/mo/dy hr:mn:sc.micros to year-mo-dy hr:mn:sc.nanosecnd [#5856](https://github.com/valhalla/valhalla/pull/5856)
    * CHANGED: Added `mjolnir.data_quality_dir` as optional config to control the directory for e.g. duplicateways.txt
+   * ADDED: Expose start/end OSM nodeids in trace_attributes using EdgeInfo osmnodeids [#5783](https://github.com/valhalla/valhalla/pull/5783)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
@@ -58,7 +59,6 @@
    * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
    * ADDED: NodeJS bindings support PBF outputs [#5794](https://github.com/valhalla/valhalla/pull/5794)
    * ADDED: Handle `vehicle` tags for OSM Ways [#5802](https://github.com/valhalla/valhalla/pull/5802)
-   * ADDED: Expose start/end OSM nodeids in trace_attributes using EdgeInfo osmnodeids [#5783](https://github.com/valhalla/valhalla/pull/5783)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
