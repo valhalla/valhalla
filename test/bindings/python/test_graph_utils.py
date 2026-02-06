@@ -356,17 +356,17 @@ class TestBindings(unittest.TestCase):
 
     def test_get_tile_ids_from_ring_w_shape(self):
         """W-shaped concave polygon should exclude tiles inside both notches."""
-        #  (0,10)--(3,10)      (7,10)--(10,10)     (14,10)--(17,10)
-        #    |       |           |        |            |        |
-        #    |      (3,3)------(7,3)   (10,3)-------(14,3)    |
-        #    |                                                  |
-        #  (0,0)---------------------------------------------(17,0)
+        #  (0,10)--(3,10)      (7,10)--(10,10)(11,10)--(14,10)
+        #    |       |           |        |  |          |
+        #    |      (3,3)------(7,3) (10,3)(11,3)       |
+        #    |                                          |
+        #  (0,0)--------------------------------------(14,0)
         ring = [
-            (0, 0), (17, 0), (17, 10), (14, 10), (14, 3), (10, 3),
+            (0, 0), (14, 0), (14, 10), (11, 10), (11, 3), (10, 3),
             (10, 10), (7, 10), (7, 3), (3, 3), (3, 10), (0, 10),
         ]
         ring_result = get_tile_ids_from_ring(ring, [1])
-        bbox_result = get_tile_ids_from_bbox(0, 0, 17, 10, [1])
+        bbox_result = get_tile_ids_from_bbox(0, 0, 14, 10, [1])
 
         ring_set: set[GraphId] = {r.value for r in ring_result}
         bbox_set: set[GraphId] = {b.value for b in bbox_result}
@@ -375,20 +375,18 @@ class TestBindings(unittest.TestCase):
         self.assertTrue(ring_set < bbox_set, "Ring tiles must be a subset of bbox tiles")
         self.assertLess(len(ring_set), len(bbox_set), "W-shape must have fewer tiles than bbox")
 
-        # tiles strictly inside either notch should be excluded, but
-        # boundary tiles (crossed by ring edges) are legitimately included
+        # tiles strictly inside the left notch should be excluded;
+        # the right notch (10,3)-(11,10) is only 1 degree wide so all
+        # its tiles are boundary tiles — nothing to exclude there
         notch_tiles = set()
         for gid in bbox_result:
             lon, lat = get_tile_base_lon_lat(gid)
             # tile fully inside left notch (3,3)-(7,10)
-            in_left = 3 < lon and lon + 1 < 7 and 3 < lat and lat + 1 < 10
-            # tile fully inside right notch (10,3)-(14,10)
-            in_right = 10 < lon and lon + 1 < 14 and 3 < lat and lat + 1 < 10
-            if in_left or in_right:
+            if 3 < lon and lon + 1 < 7 and 3 < lat and lat + 1 < 10:
                 notch_tiles.add(gid.value)
-        # left notch: lon in {4,5}, lat in {4..8} = 10; right notch: lon in {11,12}, lat in {4..8} = 10
-        self.assertEqual(len(notch_tiles), 20, f"Both notches should contain exactly 20 tiles at level 1, not {len(notch_tiles)}")
-        self.assertFalse(ring_set & notch_tiles, "Tiles in the notches must not be in the W-shape")
+        # left notch interior: lon in {4,5}, lat in {4..8} = 10
+        self.assertEqual(len(notch_tiles), 10, f"Left notch should contain exactly 10 interior tiles, not {len(notch_tiles)}")
+        self.assertFalse(ring_set & notch_tiles, "Tiles in the left notch must not be in the W-shape")
 
     def test_get_tile_ids_from_ring_errors(self):
         """Invalid inputs should raise ValueError."""

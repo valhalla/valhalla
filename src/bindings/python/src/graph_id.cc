@@ -161,6 +161,33 @@ void init_graphid(nb::module_& m) {
           std::reverse(ring.begin(), ring.end());
         }
 
+        // point-in-polygon test using ray casting
+        auto point_in_ring = [](const vm::PointLL& pt, const std::vector<vm::PointLL>& poly) {
+          bool inside = false;
+          // first connect the last with the first point, then walk through the edges of the ring
+          for (size_t i = 0, j = poly.size() - 1; i < poly.size(); j = i++) {
+            const auto& edge_start = poly[j];
+            const auto& edge_end = poly[i];
+
+            // does this edge cross the ray's latitude?
+            bool crossing_lat = (edge_end.lat() > pt.lat()) != (edge_start.lat() > pt.lat());
+            if (!crossing_lat) {
+              continue;
+            }
+
+            // longitude where the edge crosses the ray's latitude
+            double crossing_lng = edge_start.lng() + (edge_end.lng() - edge_start.lng()) *
+                                                         (pt.lat() - edge_start.lat()) /
+                                                         (edge_end.lat() - edge_start.lat());
+            // does the crossing point fall to the right of the point, flip inside state if so
+            if (pt.lng() < crossing_lng) {
+              inside = !inside;
+            }
+          }
+          // if the number of ray-polygon_edges crossings is odd, the point is inside the ring
+          return inside;
+        };
+
         std::vector<vb::GraphId> result;
         for (const auto level : levels) {
           check_level(level);
@@ -183,8 +210,6 @@ void init_graphid(nb::module_& m) {
           // start at the lower-left tile & row and walk the grid to collect inner tiles
           auto curr_tile = boundary_tiles.begin();
           auto curr_row = *curr_tile / tiles.ncolumns();
-          // we'll flip this when we cross a boundary tile
-          bool inside = true;
           curr_tile++;
           for (; curr_tile != boundary_tiles.end(); ++curr_tile) {
             // last tile must a boundary tile, breaking also makes sure we have a next tile to look at
@@ -197,20 +222,17 @@ void init_graphid(nb::module_& m) {
             // we're about to move to the next row, reset and do it
             if (const auto next_row = next_tile / tiles.ncolumns(); next_row > curr_row) {
               curr_row = next_row;
-              inside = true;
               continue;
             }
 
             const auto col_distance =
                 (next_tile % tiles.ncolumns()) - (*curr_tile % tiles.ncolumns());
-            // the next tile is an adjacent boundary tile, so we're crossing into or out of the
-            // polygon
-            if (col_distance <= 1) {
-              inside = !inside;
+            // the next tile is also a boundary tile
+            if (col_distance == 1) {
               continue;
             }
             // skip gaps that are outside the polygon (handles concave shapes like U/W)
-            if (!inside) {
+            if (!point_in_ring(tiles.Center(*curr_tile + col_distance / 2), ring)) {
               continue;
             }
             // in the same row, walk through the columns and add inner tiles
@@ -218,8 +240,6 @@ void init_graphid(nb::module_& m) {
             for (auto const add_col : std::views::iota(1, col_distance)) {
               result.emplace_back(*curr_tile + add_col, level, 0);
             }
-            // moving now outside of the polygon
-            inside = false;
           }
         }
 
