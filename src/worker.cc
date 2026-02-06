@@ -42,6 +42,25 @@ static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexc
 
 namespace {
 
+// Parses exclude_layers from JSON and adds them to the request's tile options
+void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
+  static const std::unordered_set<std::string_view> kSupportedLayers = {valhalla::kEdgeLayerName,
+                                                                        valhalla::kNodeLayerName};
+
+  if (exclude_layers.has_value() && exclude_layers->IsArray()) {
+    for (const auto& lyr : exclude_layers->GetArray()) {
+      if (lyr.IsString()) {
+        const auto& lyr_name = lyr.GetString();
+        if (kSupportedLayers.contains(lyr_name)) {
+          request.mutable_options()->mutable_tile_options()->add_exclude_layers(lyr_name);
+          continue;
+        }
+      }
+      add_warning(request, 212, lyr.IsString() ? lyr.GetString() : "not a string");
+    }
+  }
+}
+
 bool is_format_supported(Options::Action action, Options::Format format) {
   constexpr uint16_t kFormatActionSupport[] = {
       // json
@@ -623,9 +642,46 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (Options::Action_IsValid(action))
     options.set_action(action);
 
+  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
+  if (options.action() == Options::sources_to_targets) {
+    options.set_verbose(
+        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
+  } else {
+    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  }
+
+  // if specified, get the filter_action value in there
+  auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
+  FilterAction filter_action;
+  if (filter_action_str && valhalla::FilterAction_Enum_Parse(*filter_action_str, &filter_action)) {
+    options.set_filter_action(filter_action);
+  }
+
+  // if specified, get the filter_attributes value in there
+  auto filter_attributes_json =
+      rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
+  if (filter_attributes_json) {
+    for (const auto& filter_attribute : *filter_attributes_json) {
+      std::string attribute = filter_attribute.GetString();
+      // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
+      // compatibility
+      if (attribute == "edge.tagged_names") {
+        attribute = baldr::kEdgeTaggedValues;
+      }
+      options.add_filter_attributes(attribute);
+    }
+  }
+
+  // if specified, get the generalize value in there
+  auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
+  if (generalize) {
+    options.set_generalize(*generalize);
+  }
+
   // first the /tile parameters, so we can early exit
   if (options.action() == Options::tile) {
     parse_xyz(doc, options);
+    parse_exclude_layers(get_child_optional(doc, "/tile_options/exclude_layers"), api);
     options.mutable_tile_options()->set_return_shortcuts(
         rapidjson::get<bool>(doc, "/tile_options/return_shortcuts",
                              options.tile_options().return_shortcuts()));
@@ -990,14 +1046,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_height_precision(*height_precision);
   }
 
-  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
-  if (options.action() == Options::sources_to_targets) {
-    options.set_verbose(
-        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
-  } else {
-    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
-  }
-
   // parse any named costings for re-costing a given path
   parse_recostings(doc, "/recostings", options);
 
@@ -1182,12 +1230,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get<float>(doc, "/denoise", options.has_denoise_case() ? options.denoise() : 1.0);
   options.set_denoise(std::max(std::min(denoise, 1.f), 0.f));
 
-  // if specified, get the generalize value in there
-  auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
-  if (generalize) {
-    options.set_generalize(*generalize);
-  }
-
   // if specified, get the show_locations boolean in there
   options.set_show_locations(rapidjson::get<bool>(doc, "/show_locations", options.show_locations()));
 
@@ -1234,28 +1276,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_interpolation_distance(*interpolation_distance);
   }
 
-  // if specified, get the filter_action value in there
-  auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
-  FilterAction filter_action;
-  if (filter_action_str && valhalla::FilterAction_Enum_Parse(*filter_action_str, &filter_action)) {
-    options.set_filter_action(filter_action);
-  }
-
-  // if specified, get the filter_attributes value in there
-  auto filter_attributes_json =
-      rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
-  if (filter_attributes_json) {
-    for (const auto& filter_attribute : *filter_attributes_json) {
-      std::string attribute = filter_attribute.GetString();
-      // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
-      // compatibility
-      if (attribute == "edge.tagged_names") {
-        attribute = baldr::kEdgeTaggedValues;
-      }
-      options.add_filter_attributes(attribute);
-    }
-  }
-
   // add warning for deprecated best_paths
   if (rapidjson::get_optional<uint32_t>(doc, "/best_paths")) {
     add_warning(api, 103);
@@ -1296,7 +1316,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 }
 
 } // namespace
-
 namespace valhalla {
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& request) {

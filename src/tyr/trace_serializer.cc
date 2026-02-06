@@ -518,6 +518,31 @@ void serialize_shape_attributes(const AttributesController& controller,
     }
     writer.end_array();
   }
+  if (controller(kShapeAttributesCongestion)) {
+    writer.start_array("congestion");
+    for (const auto& congestion : trip_path.shape_attributes().congestion()) {
+      writer(congestion);
+    }
+    writer.end_array();
+  }
+  if (controller(kShapeAttributesClosure)) {
+    writer.start_array("closure");
+    for (const auto& closure : trip_path.closures()) {
+      writer.start_object();
+      writer("begin_shape_index", static_cast<uint64_t>(closure.begin_shape_index()));
+      writer("end_shape_index", static_cast<uint64_t>(closure.end_shape_index()));
+      writer.end_object();
+    }
+    writer.end_array();
+  }
+  if (controller(kShapeAttributesSpeedLimit)) {
+    writer.start_array("speed_limit");
+    for (const auto& speed_limit : trip_path.shape_attributes().speed_limit()) {
+      // already in kph
+      writer(speed_limit);
+    }
+    writer.end_array();
+  }
   writer.end_object();
 }
 
