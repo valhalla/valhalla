@@ -20,9 +20,10 @@
    * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
    * ADDED: `tile_options/exclude_layers` to exclude MVT layers per request [#5855](https://github.com/valhalla/valhalla/pull/5855)
    * CHANGED: Timestamp log format changed from year/mo/dy hr:mn:sc.micros to year-mo-dy hr:mn:sc.nanosecnd [#5856](https://github.com/valhalla/valhalla/pull/5856)
-   * CHANGED: Added `mjolnir.data_quality_dir` as optional config to control the directory for e.g. duplicateways.txt
+   * CHANGED: Added `mjolnir.data_quality_dir` as optional config to control the directory for e.g. duplicateways.txt [#5860](https://github.com/valhalla/valhalla/pull/5860)
    * CHANGED: extended `valhalla_build_config` script to optionally merge config with an existing one [#5857](https://github.com/valhalla/valhalla/pull/5857)
    * ADDED: congestion in shape attributes [#5865](https://github.com/valhalla/valhalla/pull/5865)
+   * ADDED: `get_tile_ids_from_ring` to query by polygon in the Python bindings [#5866](https://github.com/valhalla/valhalla/pull/5866)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
