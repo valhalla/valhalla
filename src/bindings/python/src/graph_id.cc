@@ -128,7 +128,8 @@ void init_graphid(nb::module_& m) {
 
   m.def(
       "get_tile_ids_from_ring",
-      [](const std::vector<nb::tuple>& ring_coords, std::vector<uint32_t> levels) {
+      [](const std::vector<nb::tuple>& ring_coords,
+         std::vector<uint32_t> levels) -> std::vector<vb::GraphId> {
         if (ring_coords.size() < 3) {
           throw nb::value_error("Ring must have at least 3 coordinates");
         }
@@ -246,7 +247,8 @@ void init_graphid(nb::module_& m) {
 
         return result;
       },
-      nb::arg("ring_coords"), nb::arg("levels") = std::vector<uint32_t>{});
+      nb::arg("ring_coords"), nb::arg("levels") = std::vector<uint32_t>{},
+      nb::call_guard<nb::gil_scoped_release>());
 
   // GraphUtils class - manages GraphReader for efficient edge access
   nb::class_<vb::GraphReader>(m, "_GraphUtils")
