@@ -140,18 +140,19 @@ vtzero::point merc_to_tile_coords(const midgard::Point2d merc_xy, const TileProj
 void filter_tile(const std::string& tile_bytes,
                  vtzero::tile_builder& filtered_tile,
                  const baldr::AttributesController& controller,
-                 const bool return_shortcuts,
                  const std::unordered_set<std::string_view>& exclude_layers) {
 
   vtzero::vector_tile tile_full{tile_bytes};
 
   const bool exclude_edge_layer = exclude_layers.contains(kEdgeLayerName);
   const bool exclude_node_layer = exclude_layers.contains(kNodeLayerName);
+  const bool exclude_shortcut_layer = exclude_layers.contains(kShortcutLayerName);
 
   auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
     if ((layer_name == kNodeLayerName && exclude_node_layer) ||
-        (layer_name == kEdgeLayerName && exclude_edge_layer)) {
+        (layer_name == kEdgeLayerName && exclude_edge_layer) ||
+        (layer_name == kShortcutLayerName && exclude_shortcut_layer)) {
       return;
     }
 
@@ -161,7 +162,6 @@ void filter_tile(const std::string& tile_bytes,
     // pre-compute enabled attributes
     const auto& prop_map = layer_name == kNodeLayerName ? loki::detail::kNodePropToAttributeFlag
                                                         : loki::detail::kEdgePropToAttributeFlag;
-    uint32_t shortcut_key_idx = UINT32_MAX;
     const auto& key_table = full_layer.key_table();
     std::vector<bool> attrs_allowed(key_table.size(), false);
     for (uint32_t i = 0; i < key_table.size(); ++i) {
@@ -171,13 +171,6 @@ void filter_tile(const std::string& tile_bytes,
       try {
         attrs_allowed[i] = controller(prop_map.at(key_str));
       } catch (const std::exception& e) { attrs_allowed[i] = true; }
-
-      // on the full layer, shortcuts will always be enabled
-      // if return_shortcuts=false, we'll discard shortcut features
-      // TODO: make shortcuts their own layer, this is annoying
-      if (key_str == "shortcut") {
-        shortcut_key_idx = i;
-      }
     }
 
     while (auto full_feat = full_layer.next_feature()) {
@@ -189,10 +182,6 @@ void filter_tile(const std::string& tile_bytes,
       bool add_feat = full_feat.for_each_property_indexes([&](const vtzero::index_value_pair& idxs) {
         if (attrs_allowed[idxs.key().value()]) {
           filtered_feat.add_property(props_mapper(idxs));
-        }
-        // TODO: make shortcuts their own layer, this is annoying
-        if (!return_shortcuts && shortcut_key_idx == idxs.key().value()) {
-          return !full_layer.value(idxs.value().value()).bool_value();
         }
         return true;
       });
@@ -241,7 +230,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                   const std::vector<baldr::GraphId>& edge_ids,
                   const loki_worker_t::ZoomConfig& min_zoom_road_class,
                   uint32_t z,
-                  const bool return_shortcuts,
                   const double generalize,
                   const baldr::AttributesController& controller) {
   const TileProjection projection{bounds};
@@ -256,6 +244,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   const auto max_y = clip_box.max_corner().y;
 
   EdgesLayerBuilder edges_builder(tile, kEdgeLayerName.data(), controller);
+  EdgesLayerBuilder shortcuts_builder(tile, kShortcutLayerName.data(), controller);
   NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
 
   std::unordered_set<GraphId> unique_nodes;
@@ -267,11 +256,6 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   for (const auto& edge_id : edge_ids) {
     // TODO(nils): create another array for tile level to quickly discard edges on lower zooms
     const auto* edge = reader->directededge(edge_id, edge_tile);
-
-    // no shortcuts if not requested
-    if (!return_shortcuts && edge->is_shortcut()) {
-      continue;
-    }
 
     // filter road classes by zoom
     auto road_class = edge->classification();
@@ -336,11 +320,16 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       const volatile baldr::TrafficSpeed* reverse_traffic =
           opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
-      edges_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
-                                reverse_traffic, edge_info);
+      if (edge->is_shortcut()) {
+        shortcuts_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
+                                      reverse_traffic, edge_info);
+      } else {
+        edges_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
+                                  reverse_traffic, edge_info);
+      }
 
-      // adding nodes only works if we have the opposing tile
-      if (opp_tile) {
+      // adding nodes only works if we have the opposing tile, skip for shortcuts
+      if (!edge->is_shortcut() && opp_tile) {
         if (const auto& it = unique_nodes.insert(edge->endnode()); it.second) {
           build_nodes_layer(nodes_builder, opp_tile, *it.first, projection);
         }
@@ -546,7 +535,6 @@ std::string loki_worker_t::render_tile(Api& request) {
   const auto tile_path = detail::mvt_local_path(z, x, y, mvt_cache_dir_);
   bool cache_allowed = (z >= mvt_cache_min_zoom_) && !mvt_cache_dir_.empty();
   bool is_cached = false;
-  bool return_shortcuts = options.tile_options().return_shortcuts();
   if (cache_allowed) {
     is_cached = std::filesystem::exists(tile_path);
     if (is_cached) {
@@ -556,13 +544,12 @@ std::string loki_worker_t::render_tile(Api& request) {
       if (return_verbose && exclude_layers.empty()) {
         return buffer;
       }
-      filter_tile(buffer, tile, controller, return_shortcuts, exclude_layers);
+      filter_tile(buffer, tile, controller, exclude_layers);
 
       return tile.serialize();
     }
     // if we're caching, we need the full attributes
     controller.set_all(true);
-    return_shortcuts = true;
   }
 
   // get lat/lon bbox
@@ -579,8 +566,7 @@ std::string loki_worker_t::render_tile(Api& request) {
   // we use generalize as a scaling factor to our default generalization
   const double generalize = options.has_generalize_case() ? options.generalize() : 4.;
   // build the full layers if cache is allowed, else whatever is in the controller
-  build_layers(reader, tile, bounds, sorted_ids, min_zoom_road_class_, z, return_shortcuts,
-               generalize, controller);
+  build_layers(reader, tile, bounds, sorted_ids, min_zoom_road_class_, z, generalize, controller);
 
   std::string tile_bytes;
   tile.serialize(tile_bytes);
@@ -615,8 +601,7 @@ std::string loki_worker_t::render_tile(Api& request) {
     vtzero::tile_builder filtered_tile;
 
     // need a fresh controller, the other one might have been changed if it was cacheable
-    filter_tile(tile_bytes, filtered_tile, get_controller(),
-                options.tile_options().return_shortcuts(), exclude_layers);
+    filter_tile(tile_bytes, filtered_tile, get_controller(), exclude_layers);
 
     return filtered_tile.serialize();
   }

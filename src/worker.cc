@@ -45,7 +45,8 @@ namespace {
 // Parses exclude_layers from JSON and adds them to the request's tile options
 void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
   static const std::unordered_set<std::string_view> kSupportedLayers = {valhalla::kEdgeLayerName,
-                                                                        valhalla::kNodeLayerName};
+                                                                        valhalla::kNodeLayerName,
+                                                                        valhalla::kShortcutLayerName};
 
   if (exclude_layers.has_value() && exclude_layers->IsArray()) {
     for (const auto& lyr : exclude_layers->GetArray()) {
@@ -682,9 +683,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (options.action() == Options::tile) {
     parse_xyz(doc, options);
     parse_exclude_layers(get_child_optional(doc, "/tile_options/exclude_layers"), api);
-    options.mutable_tile_options()->set_return_shortcuts(
-        rapidjson::get<bool>(doc, "/tile_options/return_shortcuts",
-                             options.tile_options().return_shortcuts()));
     options.set_format(Options::mvt); // set explicitly for MIME type
     return;
   }

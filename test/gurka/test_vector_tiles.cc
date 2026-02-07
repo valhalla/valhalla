@@ -129,8 +129,8 @@ A-B-C
   std::string tile_data;
   auto api = gurka::do_action(Options::tile, map, "x", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 2200);
-  EXPECT_GT(tile_data.size(), 2100);
+  EXPECT_LT(tile_data.size(), 3550);
+  EXPECT_GT(tile_data.size(), 3450);
 
   // expect a non-verbose request to have a lot less size
   std::string tile_data_slim;
@@ -144,11 +144,11 @@ A-B-C
     EXPECT_TRUE(layer.num_features() > 0);
 
     std::string layer_name = std::string(layer.name());
-    if (layer_name == "edges") {
+    if (layer_name == "edges" || layer_name == "shortcuts") {
       EXPECT_EQ(layer.version(), 2);
       EXPECT_EQ(layer.extent(), 4096);
 
-      EXPECT_EQ(layer.num_features(), 3);
+      EXPECT_EQ(layer.num_features(), layer_name == "shortcuts" ? 1 : 3);
 
       auto feature = layer.next_feature();
       EXPECT_TRUE(feature.has_id());
@@ -225,12 +225,12 @@ protected:
 
     const gurka::ways ways = {
         {"AB", {{"highway", "primary"}, {"name", "Main Street"}}},
-        {"BC", {{"highway", "primary"}, {"name", "Main1 Street"}}},
-        {"CD", {{"highway", "primary"}, {"name", "Main2 Street"}}},
-        {"AE", {{"highway", "secondary"}, {"name", "First Avenue"}}},
-        {"BF", {{"highway", "secondary"}, {"name", "Second Avenue"}}},
-        {"CG", {{"highway", "secondary"}, {"name", "Third Avenue"}}},
-        {"DH", {{"highway", "secondary"}, {"name", "Fourth Avenue"}}},
+        {"BC", {{"highway", "primary"}, {"name", "Main Street"}}},
+        {"CD", {{"highway", "primary"}, {"name", "Main Street"}}},
+        {"AE", {{"highway", "residential"}, {"name", "First Avenue"}}},
+        {"BF", {{"highway", "residential"}, {"name", "Second Avenue"}}},
+        {"CG", {{"highway", "residential"}, {"name", "Third Avenue"}}},
+        {"DH", {{"highway", "residential"}, {"name", "Fourth Avenue"}}},
         {"EF", {{"highway", "tertiary"}, {"name", "Oak Street"}}},
         {"FG", {{"highway", "tertiary"}, {"name", "Oak Street"}}},
         {"GH", {{"highway", "tertiary"}, {"name", "Oak Street"}}},
@@ -276,9 +276,9 @@ TEST_F(VectorTiles, LayerExclude) {
     });
     EXPECT_FALSE(tile.get_layer_by_name(exclude_layer_name.data()).valid());
     if (expect_layer_present) {
-      ASSERT_EQ(tile.count_layers(), 1);
-    } else {
       ASSERT_EQ(tile.count_layers(), 2);
+    } else {
+      ASSERT_EQ(tile.count_layers(), 3);
       ASSERT_EQ(api.info().warnings().size(), 1);
       EXPECT_EQ(api.info().warnings(0).code(), 212);
       EXPECT_STREQ(api.info().warnings(0).description().c_str(),
@@ -289,13 +289,15 @@ TEST_F(VectorTiles, LayerExclude) {
 
   test_tile("edges");
   test_tile("nodes");
+  test_tile("shortcuts");
   test_tile("non_existing_layer", false); // should be ignored, but not cause an error
   test_tile("0", false);                  // should be ignored, but not cause an error
 }
 
 TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   auto test_tile = [&](const uint32_t z, const uint32_t exp_total_size, const uint32_t exp_edges,
-                       const uint32_t exp_nodes, uint32_t& cache_count) {
+                       const uint32_t exp_nodes, const uint32_t exp_shortcuts,
+                       uint32_t& cache_count) {
     SCOPED_TRACE(std::format("Zoom {} failed", z));
     std::string tile_data;
     Api api = gurka::do_action(Options::tile, map, "x", z, "auto", {}, nullptr, &tile_data);
@@ -317,14 +319,27 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
 
     vtzero::vector_tile tile{tile_data};
     uint32_t edges = 0;
+    uint32_t shortcuts = 0;
     uint32_t nodes = 0;
 
     while (auto layer = tile.next_layer()) {
       std::string layer_name = std::string(layer.name());
-      if (layer_name == "edges") {
+      if (layer_name == "shortcuts") {
+        shortcuts = layer.num_features();
+        // make sure the feature has "shortcut = true" property
+        while (const auto& feat = layer.next_feature()) {
+          bool missed_shortcut = feat.for_each_property([](const vtzero::property& prop) {
+            const std::string_view prop_str{prop.key().data(), prop.key().size()};
+            if (prop_str == "shortcut") {
+              EXPECT_TRUE(prop.value().bool_value());
+              return false;
+            }
+            return true;
+          });
+          EXPECT_FALSE(missed_shortcut);
+        };
+      } else if (layer_name == "edges") {
         edges = layer.num_features();
-        EXPECT_EQ(layer.version(), 2);
-        EXPECT_EQ(layer.extent(), 4096);
       } else if (layer_name == "nodes") {
         nodes = layer.num_features();
       } else {
@@ -333,27 +348,28 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
     }
 
     EXPECT_EQ(edges, exp_edges);
+    EXPECT_EQ(shortcuts, exp_shortcuts);
     EXPECT_EQ(nodes, exp_nodes);
   };
 
   uint32_t cache_count = 0;
-  test_tile(8, 2183, 3, 4, cache_count);    // only primary
-  test_tile(10, 3293, 7, 12, cache_count);  // adds secondary
-  test_tile(11, 4037, 11, 12, cache_count); // adds tertiary & unclassified
-  test_tile(12, 4037, 11, 12, cache_count); // same as 11
-  test_tile(13, 5141, 15, 20, cache_count); // adds residential
-  test_tile(14, 5710, 18, 20, cache_count); // adds service/other
+  test_tile(8, 3554, 3, 4, 1, cache_count);    // only primary & shortcut
+  test_tile(10, 3554, 3, 4, 1, cache_count);   // same as 8, adds nothing
+  test_tile(11, 4464, 6, 8, 2, cache_count);   // adds tertiary & shortcut
+  test_tile(12, 4464, 6, 8, 2, cache_count);   // same as 11, adds nothing
+  test_tile(13, 6528, 14, 20, 2, cache_count); // adds residential
+  test_tile(14, 7099, 17, 20, 2, cache_count); // adds service/other
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
 
   // execute the cache path
-  test_tile(14, 5710, 18, 20, cache_count);
+  test_tile(14, 7099, 17, 20, 2, cache_count);
 
   // make sure we fail the request when z exceeds what the server supports
   EXPECT_THROW(
       {
         try {
-          test_tile(16, 7903, 17, 20, cache_count);
+          test_tile(16, 7903, 17, 20, 2, cache_count);
         } catch (const valhalla_exception_t& e) {
           EXPECT_EQ(e.code, 175);
           EXPECT_STREQ(e.what(), "Exceeded max zoom level of: 14");
