@@ -87,6 +87,8 @@ def get_tile_ids_from_bbox(
     """Returns all tiles GraphIds for the specified levels (default: all),
     which intersect the bbox.
 
+    This function releases the GIL, useful for multithreading.
+
     :param minx: The bbox's minimum longitude.
     :param miny: The bbox's minimum latitude.
     :param maxx: The bbox's maximum longitude.
@@ -112,6 +114,8 @@ class _GraphUtils:
 
     def get_edge_shape(self, edge_id: GraphId) -> List[Tuple[float, float]]:
         """Get the shape (polyline) for an edge as a list of (lon, lat) tuples.
+
+        This function releases the GIL, useful for multithreading.
 
         :param edge_id: GraphId of the edge
         :returns: List of (lon, lat) tuples representing the edge geometry
