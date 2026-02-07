@@ -112,8 +112,8 @@ message Tile {
 }
 
 message TileOptions {
-  reserved = 1;
-  reserved return_shortcuts;               // deprecated: include shortcuts in /tile responses
+  reserved 1;
+  reserved "return_shortcuts";               // deprecated: include shortcuts in /tile responses
   repeated string exclude_layers = 2;      // which layers to exclude, default none
 }
 
