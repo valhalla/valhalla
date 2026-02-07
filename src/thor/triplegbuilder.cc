@@ -1309,6 +1309,16 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_hov_type(GetTripLegHovType(directededge->hov_type()));
   }
 
+  // Set scenic flag if requested
+  if (directededge->scenic() && controller(kEdgeScenic)) {
+    trip_edge->set_scenic(true);
+  }
+
+  // Set curvature if requested
+  if (controller(kEdgeCurvature)) {
+    trip_edge->set_curvature(directededge->curvature());
+  }
+
   if (controller(kEdgeLevels)) {
     trip_edge->set_level_precision(std::max(static_cast<uint32_t>(1), levels.second));
     for (const auto& level : levels.first) {
@@ -1911,6 +1921,8 @@ void TripLegBuilder::Build(
   bool has_toll = false;
   bool has_ferry = false;
   bool has_highway = false;
+  bool has_scenic = false;
+  double scenic_distance = 0.0;
 
   // loop over the edges to build the trip leg
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
@@ -1932,6 +1944,9 @@ void TripLegBuilder::Build(
     }
     if (directededge->classification() == baldr::RoadClass::kMotorway) {
       has_highway = true;
+    }
+    if (directededge->scenic()) {
+      has_scenic = true;
     }
 
     // Set node attributes - only set if they are true since they are optional
@@ -2146,6 +2161,13 @@ void TripLegBuilder::Build(
     auto previous_total_distance = total_distance;
     total_distance += directededge->length() * (trim_end_pct - trim_start_pct);
 
+    // Accumulate scenic distance if this edge is scenic
+    if (directededge->scenic()) {
+      // Calculate the actual scenic distance accounting for edge trimming
+      float edge_length_km = directededge->length() * kKmPerMeter * (trim_end_pct - trim_start_pct);
+      scenic_distance += edge_length_km;
+    }
+
     // If we are at a node or if we hit the edge index that matches our through location edge index,
     // we need to reset to the shape index then increment the iterator
     if (intermediate_itr != trip_path.mutable_location()->end() &&
@@ -2287,6 +2309,8 @@ void TripLegBuilder::Build(
   summary->set_has_toll(has_toll);
   summary->set_has_ferry(has_ferry);
   summary->set_has_highway(has_highway);
+  summary->set_has_scenic(has_scenic);
+  summary->set_scenic_length(scenic_distance);
 
   // Add that extra costing information if requested
   AccumulateRecostingInfoForward(options, start_pct, end_pct, forward_time_info, invariant,

@@ -1,5 +1,6 @@
 #include "odin/directionsbuilder.h"
 #include "exceptions.h"
+#include "midgard/constants.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuversbuilder.h"
 #include "odin/markup_formatter.h"
@@ -433,10 +434,17 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
   }
   trip_directions.mutable_summary()->set_has_time_restrictions(has_time_restrictions);
 
-  // Populate toll, highway, ferry tags
+  // Populate toll, highway, ferry, scenic tags
   trip_directions.mutable_summary()->set_has_toll(etp->summary().has_toll());
   trip_directions.mutable_summary()->set_has_highway(etp->summary().has_highway());
   trip_directions.mutable_summary()->set_has_ferry(etp->summary().has_ferry());
+  trip_directions.mutable_summary()->set_has_scenic(etp->summary().has_scenic());
+  // Convert scenic_length to the requested units (stored in km, convert to miles if needed)
+  float scenic_length = etp->summary().scenic_length();
+  if (options.units() == Options::miles) {
+    scenic_length *= midgard::kMilePerKm;
+  }
+  trip_directions.mutable_summary()->set_scenic_length(scenic_length);
 }
 
 } // namespace odin

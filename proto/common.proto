@@ -408,6 +408,8 @@ message Summary {
   bool has_toll = 5;
   bool has_ferry = 6;
   bool has_highway = 7;
+  bool has_scenic = 8;       // Does the route contain any scenic road segments?
+  float scenic_length = 9;  // Total length of scenic road segments (kilometers or miles based on units)
 }
 
 message LevelChange {
