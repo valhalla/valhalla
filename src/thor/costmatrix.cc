@@ -120,9 +120,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_iterations_(
           std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultMaxIterations),
                    static_cast<uint32_t>(1))),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -1229,7 +1229,7 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
                                        const bool invariant) {
   // no need to look at source == target or missing connectivity
   if ((!has_time_ && request.options().shape_format() == no_shape && !request.options().verbose()) ||
-      connection.cost.secs == 0.f || connection.distance == kMaxCost) {
+      connection.distance == kMaxCost) {
     return "";
   }
 
