@@ -9,6 +9,10 @@
 #include <valhalla/sif/costconstants.h>
 
 namespace valhalla {
+// Layer names for vector tiles
+constexpr std::string_view kEdgeLayerName = "edges";
+constexpr std::string_view kNodeLayerName = "nodes";
+
 // Associate RoadClass values to TripLeg proto
 constexpr valhalla::RoadClass kTripLegRoadClass[] = {valhalla::RoadClass::kMotorway,
                                                      valhalla::RoadClass::kTrunk,

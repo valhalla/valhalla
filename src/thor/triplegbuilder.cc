@@ -334,6 +334,10 @@ void SetShapeAttributes(const AttributesController& controller,
     leg.mutable_shape_attributes()->mutable_speed_limit()->Reserve(
         leg.shape_attributes().speed_limit_size() + shape.size() + cuts.size());
   }
+  if (controller(kShapeAttributesCongestion)) {
+    leg.mutable_shape_attributes()->mutable_speed()->Reserve(
+        leg.shape_attributes().congestion_size() + shape.size() + cuts.size());
+  }
 
   // Set the shape attributes
   for (auto i = shape_begin + 1; i < shape.size(); ++i) {
@@ -386,6 +390,10 @@ void SetShapeAttributes(const AttributesController& controller,
     if (controller(kShapeAttributesLength)) {
       // convert length to decimeters and then round to an integer
       leg.mutable_shape_attributes()->add_length((distance * kDecimeterPerMeter) + 0.5);
+    }
+    if (controller(kShapeAttributesCongestion)) {
+      // convert length to decimeters and then round to an integer
+      leg.mutable_shape_attributes()->add_congestion(cut_itr->congestion);
     }
 
     // Set shape attributes speed per shape point if requested

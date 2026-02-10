@@ -42,6 +42,25 @@ static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexc
 
 namespace {
 
+// Parses exclude_layers from JSON and adds them to the request's tile options
+void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
+  static const std::unordered_set<std::string_view> kSupportedLayers = {valhalla::kEdgeLayerName,
+                                                                        valhalla::kNodeLayerName};
+
+  if (exclude_layers.has_value() && exclude_layers->IsArray()) {
+    for (const auto& lyr : exclude_layers->GetArray()) {
+      if (lyr.IsString()) {
+        const auto& lyr_name = lyr.GetString();
+        if (kSupportedLayers.contains(lyr_name)) {
+          request.mutable_options()->mutable_tile_options()->add_exclude_layers(lyr_name);
+          continue;
+        }
+      }
+      add_warning(request, 212, lyr.IsString() ? lyr.GetString() : "not a string");
+    }
+  }
+}
+
 bool is_format_supported(Options::Action action, Options::Format format) {
   constexpr uint16_t kFormatActionSupport[] = {
       // json
@@ -662,6 +681,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // first the /tile parameters, so we can early exit
   if (options.action() == Options::tile) {
     parse_xyz(doc, options);
+    parse_exclude_layers(get_child_optional(doc, "/tile_options/exclude_layers"), api);
     options.mutable_tile_options()->set_return_shortcuts(
         rapidjson::get<bool>(doc, "/tile_options/return_shortcuts",
                              options.tile_options().return_shortcuts()));
