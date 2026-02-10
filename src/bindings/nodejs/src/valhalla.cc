@@ -13,6 +13,9 @@
 #include <unordered_map>
 #include <utility>
 
+// Defined in graph_id.cc
+Napi::Object InitGraphId(Napi::Env env, Napi::Object exports);
+
 namespace vt = valhalla::tyr;
 
 namespace {
@@ -289,6 +292,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
               Napi::String::New(env, VALHALLA_PRINT_VERSION));
 
   Actor::Init(env, exports);
+  InitGraphId(env, exports);
   return exports;
 }
 

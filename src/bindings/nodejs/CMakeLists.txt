@@ -30,7 +30,10 @@ message(STATUS "Using Node.js headers version ${NODE_VERSION}")
 message(STATUS "Node.js include directory: ${NODE_INCLUDE_DIR}")
 
 
-add_library(valhalla_node SHARED ${CMAKE_CURRENT_SOURCE_DIR}/src/valhalla.cc)
+add_library(valhalla_node SHARED
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/valhalla.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_id.cc
+)
 
 
 set_target_properties(valhalla_node PROPERTIES
