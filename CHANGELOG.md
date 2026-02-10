@@ -9,6 +9,7 @@
    * FIXED: replace `shutting_seconds` with `shutdown_seconds` [#5854](https://github.com/valhalla/valhalla/pull/5854)
    * FIXED: MVT attributes were erroneously cast to uint32_t for booleans and others [#5861](https://github.com/valhalla/valhalla/pull/5861)
    * FIXED: small bug in valhalla_add_landmarks [#5859](https://github.com/valhalla/valhalla/pull/5859)
+   * FIXED: replace dry-run with report arg in `valhalla_build_config` [#5875](https://github.com/valhalla/valhalla/pull/5875)
 * **Enhancement**
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
@@ -23,6 +24,7 @@
    * CHANGED: Added `mjolnir.data_quality_dir` as optional config to control the directory for e.g. duplicateways.txt
    * CHANGED: extended `valhalla_build_config` script to optionally merge config with an existing one [#5857](https://github.com/valhalla/valhalla/pull/5857)
    * ADDED: congestion in shape attributes [#5865](https://github.com/valhalla/valhalla/pull/5865)
+   * CHANGED: release GIL for Actor methods, `get_edge_shape` & `get_tile_ids_from_bbox` [#5868](https://github.com/valhalla/valhalla/pull/5868)
    * CHANGED: don't throw a 442 error when matrix found no results [#5871](https://github.com/valhalla/valhalla/pull/5871)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
