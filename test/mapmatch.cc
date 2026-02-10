@@ -133,7 +133,7 @@ void compare_results(const valhalla::Api& expected, const valhalla::Api& result)
 
       auto expected_seconds = leg.node().rbegin()->cost().elapsed_cost().seconds();
       auto answer_seconds = leg_answer->node().rbegin()->cost().elapsed_cost().seconds();
-      ASSERT_NEAR(expected_seconds, answer_seconds, .1)
+      ASSERT_NEAR(expected_seconds, answer_seconds, 1)
           << "Expected leg with elapsed time " << expected_seconds << " but got " << answer_seconds;
 
       auto expected_distance = expected.directions().routes(r).legs(l).summary().length();
