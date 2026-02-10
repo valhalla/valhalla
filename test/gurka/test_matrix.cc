@@ -44,7 +44,7 @@ void check_matrix_empty(const rapidjson::Document& result) {
       for (const auto metric : {"distance", "time"}) {
         EXPECT_TRUE(v.HasMember(metric));
         EXPECT_TRUE(v.GetObject()[metric].IsNull())
-            << "Expected null, got " << v.GetObject()[metric].GetFloat();
+            << "Expected null, got " << v.GetObject()[metric].GetType();
       }
     }
   }
