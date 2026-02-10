@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_ASTAR_BSS_H
-#define VALHALLA_THOR_ASTAR_BSS_H
+#ifndef VALHALLA_THOR_MULTIMODAL_ASTAR_H
+#define VALHALLA_THOR_MULTIMODAL_ASTAR_H
 
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
@@ -167,4 +167,4 @@ protected:
 } // namespace thor
 } // namespace valhalla
 
-#endif // VALHALLA_THOR_ASTAR_BSS_H
+#endif // VALHALLA_THOR_MULTIMODAL_ASTAR_H
