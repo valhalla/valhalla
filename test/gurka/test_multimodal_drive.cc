@@ -34,13 +34,18 @@ TEST(Standalone, SimpleRoute) {
 
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto_pedestrian", {});
 
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 4);
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).type(),
-            DirectionsLeg_Maneuver::kParkVehicle);
+  gurka::assert::raw::
+      expect_maneuvers(result,
+                       {
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kStart,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kParkVehicle,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kDestination,
+                       });
 
   // travel mode changes along the route
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).travel_mode(), TravelMode::kDrive);
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).travel_mode(), TravelMode::kPedestrian);
+  auto& leg = result.directions().routes(0).legs(0);
+  EXPECT_EQ(leg.maneuver(0).travel_mode(), TravelMode::kDrive);
+  EXPECT_EQ(leg.maneuver(leg.maneuver_size() - 1).travel_mode(), TravelMode::kPedestrian);
 }
 
 TEST(Standalone, ChooseOptimalPath) {
@@ -51,15 +56,20 @@ TEST(Standalone, ChooseOptimalPath) {
       A--------------B-----------C-----------D
                      |           |
                      |           |
-                     |           |
-                     |           |
-                     E-1------2--F
+                     |     Z     |
+                     |     |     |
+                     E-1---X     |
+                           |     |
+                           Y--2--F
+                           |
+                           U
   )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}}},   {"BC", {{"highway", "residential"}}},
-      {"CD", {{"highway", "residential"}}},   {"BE", {{"highway", "residential"}}},
-      {"E12F", {{"highway", "residential"}}}, {"FC", {{"highway", "residential"}}},
+      {"AB", {{"highway", "residential"}}},     {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},     {"BE", {{"highway", "residential"}}},
+      {"E1XY2F", {{"highway", "residential"}}}, {"FC", {{"highway", "residential"}}},
+      {"XZ", {{"highway", "residential"}}},     {"YU", {{"highway", "residential"}}},
   };
 
   // create two parking nodes
@@ -84,21 +94,24 @@ TEST(Standalone, ChooseOptimalPath) {
 
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto_pedestrian", {});
 
+  gurka::assert::raw::
+      expect_maneuvers(result,
+                       {
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kStart,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kRight,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kLeft,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kRight,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kLeft,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kParkVehicle,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kLeft,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kRight,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kDestination,
+                       });
   auto& leg = result.directions().routes(0).legs(0);
-  EXPECT_EQ(leg.maneuver_size(), 6);
-  bool has_parking_maneuver = false;
-  for (const auto& man : leg.maneuver()) {
-    if (man.type() == valhalla::DirectionsLeg_Maneuver_Type_kParkVehicle) {
-      has_parking_maneuver = true;
-      break;
-    } else {
-      std::cerr << "Man Type: " << man.type();
-    }
-  }
-  EXPECT_TRUE(has_parking_maneuver);
 
   // travel mode changes along the route
   EXPECT_EQ(leg.maneuver(0).travel_mode(), TravelMode::kDrive);
   EXPECT_EQ(leg.maneuver(leg.maneuver_size() - 1).travel_mode(), TravelMode::kPedestrian);
-  gurka::assert::raw::expect_path(result, {"AB", "BE", "E12F", "E12F", "E12F", "FC", "CD"});
+  gurka::assert::raw::expect_path(result, {"AB", "BE", "E1XY2F", "E1XY2F", "E1XY2F", "E1XY2F",
+                                           "E1XY2F", "FC", "CD"});
 }
