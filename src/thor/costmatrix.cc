@@ -1229,7 +1229,7 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
                                        const bool invariant) {
   // no need to look at source == target or missing connectivity
   if ((!has_time_ && request.options().shape_format() == no_shape && !request.options().verbose()) ||
-      connection.cost.secs == 0.f || connection.distance == kMaxCost) {
+      connection.distance == kMaxCost) {
     return "";
   }
 

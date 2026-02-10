@@ -1066,9 +1066,10 @@ TEST_P(TestConnectionCheck, VerboseResponse) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_verbose_response",
-                                     {{"service_limits.max_timedep_distance_matrix", "50000"},
-                                      {"thor.costmatrix.check_reverse_connection", GetParam()}});
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/matrix_verbose_response",
+                        {{"service_limits.max_timedep_distance_matrix", "50000"},
+                         {"thor.costmatrix.check_reverse_connection", GetParam()}});
   {
     rapidjson::Document res_doc;
     std::string res;
@@ -1083,27 +1084,24 @@ TEST_P(TestConnectionCheck, VerboseResponse) {
 
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j) {
-        bool key_should_exist = true;
-        if (i == j)
-          key_should_exist = false;
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "begin_heading"),
-                  key_should_exist);
+                  true);
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "end_heading"),
-                  key_should_exist);
+                  true);
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "begin_lat"),
-                  key_should_exist);
+                  true);
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "begin_lon"),
-                  key_should_exist);
+                  true);
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "end_lat"),
-                  key_should_exist);
+                  true);
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "end_lon"),
-                  key_should_exist);
+                  true);
       }
     }
     EXPECT_EQ(res_doc["sources_to_targets"]
@@ -1160,27 +1158,24 @@ TEST_P(TestConnectionCheck, VerboseResponse) {
 
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j) {
-        bool key_should_exist = true;
-        if (i == j)
-          key_should_exist = false;
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "begin_heading"),
-                  key_should_exist);
+                  true);
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "end_heading"),
-                  key_should_exist);
+                  true);
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "begin_lat"),
-                  key_should_exist);
+                  true);
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "begin_lon"),
-                  key_should_exist);
+                  true);
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "end_lat"),
-                  key_should_exist);
+                  true);
         EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
                       "end_lon"),
-                  key_should_exist);
+                  true);
       }
     }
     size_t a, b;
