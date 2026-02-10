@@ -2,7 +2,7 @@
 #include "midgard/logging.h"
 #include "proto_conversions.h"
 #include "sif/hierarchylimits.h"
-#include "thor/astar_bss.h"
+#include "thor/multimodal_astar.h"
 
 #include <algorithm>
 
@@ -15,7 +15,7 @@ namespace thor {
 constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
 
 // Default constructor
-AStarBSSAlgorithm::AStarBSSAlgorithm(const boost::property_tree::ptree& config)
+MultimodalAStar::MultimodalAStar(const boost::property_tree::ptree& config)
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count_astar",
                                          kInitialEdgeLabelCountAstar),
                     config.get<bool>("clear_reserved_memory", false)) {
@@ -23,11 +23,11 @@ AStarBSSAlgorithm::AStarBSSAlgorithm(const boost::property_tree::ptree& config)
 }
 
 // Destructor
-AStarBSSAlgorithm::~AStarBSSAlgorithm() {
+MultimodalAStar::~MultimodalAStar() {
 }
 
 // Clear the temporary information generated during path construction.
-void AStarBSSAlgorithm::Clear() {
+void MultimodalAStar::Clear() {
   // Reduce edge labels capacity if it's more than limit
   auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
   if (edgelabels_.size() > reservation) {
@@ -47,7 +47,7 @@ void AStarBSSAlgorithm::Clear() {
 }
 
 // Initialize prior to finding best path
-void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::PointLL& destll) {
+void MultimodalAStar::Init(const midgard::PointLL& origll, const midgard::PointLL& destll) {
   LOG_TRACE("Orig LL = " + std::to_string(origll.lat()) + "," + std::to_string(origll.lng()));
   LOG_TRACE("Dest LL = " + std::to_string(destll.lat()) + "," + std::to_string(destll.lng()));
 
@@ -84,15 +84,15 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
 // from the end node of any transition edge (so no transition edges are added
 // to the adjacency list or EdgeLabel list). Does not expand transition
 // edges if from_transition is false.
-void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
-                                      const GraphId& node,
-                                      const BDEdgeLabel& pred,
-                                      const uint32_t pred_idx,
-                                      const bool from_transition,
-                                      const bool from_mode_change,
-                                      const sif::travel_mode_t current_mode,
-                                      const valhalla::Location& destination,
-                                      std::pair<int32_t, float>& best_path) {
+void MultimodalAStar::ExpandForward(GraphReader& graphreader,
+                                    const GraphId& node,
+                                    const BDEdgeLabel& pred,
+                                    const uint32_t pred_idx,
+                                    const bool from_transition,
+                                    const bool from_mode_change,
+                                    const sif::travel_mode_t current_mode,
+                                    const valhalla::Location& destination,
+                                    std::pair<int32_t, float>& best_path) {
   const auto& current_costing = (current_mode == start_mode_ ? start_costing_ : other_costing_);
   const auto& current_heuristic =
       (current_mode == start_mode_ ? start_astarheuristic_ : end_astarheuristic_);
@@ -248,12 +248,12 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
 
 // Calculate best path. This method is single mode, not time-dependent.
 std::vector<std::vector<PathInfo>>
-AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
-                               valhalla::Location& destination,
-                               GraphReader& graphreader,
-                               const sif::mode_costing_t& mode_costing,
-                               const travel_mode_t mode,
-                               const Options& options) {
+MultimodalAStar::GetBestPath(valhalla::Location& origin,
+                             valhalla::Location& destination,
+                             GraphReader& graphreader,
+                             const sif::mode_costing_t& mode_costing,
+                             const travel_mode_t mode,
+                             const Options& options) {
 
   auto costing = options.costing_type();
   start_mode_ = mode;
@@ -402,9 +402,9 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
 }
 
 // Add an edge at the origin to the adjacency list
-void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
-                                  valhalla::Location& origin,
-                                  const valhalla::Location& destination) {
+void MultimodalAStar::SetOrigin(GraphReader& graphreader,
+                                valhalla::Location& origin,
+                                const valhalla::Location& destination) {
 
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
@@ -533,7 +533,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
 }
 
 // Add a destination edge
-void AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+void MultimodalAStar::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
 
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
@@ -570,8 +570,8 @@ void AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valhalla:
 }
 
 // Form the path from the adjacency list.
-std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreader,
-                                                  const uint32_t dest) {
+std::vector<PathInfo> MultimodalAStar::FormPath(baldr::GraphReader& graphreader,
+                                                const uint32_t dest) {
   // Metrics to track
   LOG_DEBUG("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_.size()));

@@ -339,13 +339,13 @@ TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
                expected_bss_ref, expected_shape);
 }
 
-class AstarBSSTest : public thor::AStarBSSAlgorithm {
+class AstarBSSTest : public thor::MultimodalAStar {
 public:
-  explicit AstarBSSTest(const boost::property_tree::ptree& config = {}) : AStarBSSAlgorithm(config) {
+  explicit AstarBSSTest(const boost::property_tree::ptree& config = {}) : MultimodalAStar(config) {
   }
 
   void Clear() {
-    AStarBSSAlgorithm::Clear();
+    MultimodalAStar::Clear();
     if (clear_reserved_memory_) {
       EXPECT_EQ(edgelabels_.capacity(), 0);
     } else {

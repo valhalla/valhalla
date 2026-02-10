@@ -9,12 +9,12 @@
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costfactory.h>
-#include <valhalla/thor/astar_bss.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/centroid.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/isochrone.h>
-#include <valhalla/thor/multimodal.h>
+#include <valhalla/thor/multimodal_astar.h>
+#include <valhalla/thor/multimodal_transit.h>
 #include <valhalla/thor/timedistancebssmatrix.h>
 #include <valhalla/thor/timedistancematrix.h>
 #include <valhalla/thor/unidirectional_astar.h>
@@ -112,7 +112,7 @@ protected:
 
   // Path algorithms (TODO - perhaps use a map?))
   BidirectionalAStar bidir_astar;
-  AStarBSSAlgorithm bss_astar;
+  MultimodalAStar bss_astar;
   MultiModalPathAlgorithm multi_modal_astar;
   TimeDepForward timedep_forward;
   TimeDepReverse timedep_reverse;

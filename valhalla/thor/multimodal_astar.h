@@ -22,21 +22,21 @@ namespace valhalla {
 namespace thor {
 
 /**
- * Bla, bla, bla
- *
+ * MultimodalAStar is a unidirectional path algorithm that allows expansion
+ * with two costings.
  */
-class AStarBSSAlgorithm : public PathAlgorithm {
+class MultimodalAStar : public PathAlgorithm {
 public:
   /**
    * Constructor.
    * @param config A config object of key, value pairs
    */
-  explicit AStarBSSAlgorithm(const boost::property_tree::ptree& config = {});
+  explicit MultimodalAStar(const boost::property_tree::ptree& config = {});
 
   /**
    * Destructor
    */
-  virtual ~AStarBSSAlgorithm();
+  virtual ~MultimodalAStar();
 
   /**
    * Form path between and origin and destination location using the supplied
@@ -62,7 +62,7 @@ public:
    * @return the name of the algorithm
    */
   virtual const char* name() const override {
-    return "a*_bike_share_station";
+    return "multimodal_a*";
   }
 
   /**
