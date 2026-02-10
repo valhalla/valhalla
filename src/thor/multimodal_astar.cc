@@ -92,7 +92,8 @@ void MultimodalAStar::ExpandForward(GraphReader& graphreader,
                                     const bool from_mode_change,
                                     const sif::travel_mode_t current_mode,
                                     const valhalla::Location& destination,
-                                    std::pair<int32_t, float>& best_path) {
+                                    std::pair<int32_t, float>& best_path,
+                                    size_t mode_transition_count) {
   const auto& current_costing = (current_mode == start_mode_ ? start_costing_ : other_costing_);
   const auto& current_heuristic =
       (current_mode == start_mode_ ? start_astarheuristic_ : end_astarheuristic_);
@@ -121,7 +122,12 @@ void MultimodalAStar::ExpandForward(GraphReader& graphreader,
     // transition down to that level. If using a shortcut, set the shortcuts mask.
     // Skip if this is a regular edge superseded by a shortcut.
     if (meta.edge->is_shortcut()) {
-      if (pred.distance() < 10000.0f || meta.edge->length() > max_shortcut_length) {
+      auto& hierarchy_limits = hierarchy_limits_[static_cast<size_t>(current_mode != start_mode_)];
+      if (current_costing->UseHierarchyLimits() &&
+              StopExpanding(hierarchy_limits[meta.edge_id.level()], pred.distance()) ||
+          // this preserves the previous logic in place for using shortcuts in bikeshare mode
+          // for backwards compatibility
+          (pred.distance() < 10000.0f || meta.edge->length() > max_shortcut_length)) {
         continue;
       }
       shortcuts |= meta.edge->shortcut();
@@ -224,11 +230,10 @@ void MultimodalAStar::ExpandForward(GraphReader& graphreader,
   if (!from_mode_change && nodeinfo->type() == mode_transition_ &&
       // this greatly reduces the expansion on larger routes by avoiding pedestrian
       // mode changes further away than the user is willing to walk
-      (!(end_mode_ == travel_mode_t::kPedestrian && end_mode_ != start_mode_) ||
-       pred.distance() <= max_walking_distance)) {
+      (pred.distance() <= max_walking_distance_) && mode_transition_count < max_transitions_) {
     auto new_mode = current_mode == start_mode_ ? other_mode_ : start_mode_;
     ExpandForward(graphreader, node, pred, pred_idx, from_transition, /*from_mode_change=*/true,
-                  new_mode, destination, best_path);
+                  new_mode, destination, best_path, mode_transition_count + 1);
   }
   // Handle transitions - expand from the end node of each transition
   if (!from_transition && nodeinfo->transition_count() > 0) {
@@ -241,7 +246,7 @@ void MultimodalAStar::ExpandForward(GraphReader& graphreader,
         continue;
       }
       ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, from_mode_change,
-                    current_mode, destination, best_path);
+                    current_mode, destination, best_path, mode_transition_count);
     }
   }
 }
@@ -264,6 +269,8 @@ MultimodalAStar::GetBestPath(valhalla::Location& origin,
       end_mode_ = travel_mode_t::kPedestrian;
       other_mode_ = travel_mode_t::kBicycle;
       mode_transition_ = baldr::NodeType::kBikeShare;
+      max_walking_distance_ = std::numeric_limits<uint32_t>::max();
+      max_transitions_ = 2;
       break;
     case Costing::auto_pedestrian:
       end_mode_ = travel_mode_t::kPedestrian;
@@ -271,10 +278,11 @@ MultimodalAStar::GetBestPath(valhalla::Location& origin,
       mode_transition_ = baldr::NodeType::kParking;
       // in order to not break bikeshare mode, only enable
       // this for auto_pedestrian for now
-      max_walking_distance = options.costings()
-                                 .find(Costing::pedestrian)
-                                 ->second.options()
-                                 .transit_start_end_max_distance();
+      max_walking_distance_ = options.costings()
+                                  .find(Costing::pedestrian)
+                                  ->second.options()
+                                  .transit_start_end_max_distance();
+      max_transitions_ = 2;
       break;
     default:
       throw std::runtime_error("Costing not handled by this algorithm: " +
@@ -399,7 +407,7 @@ MultimodalAStar::GetBestPath(valhalla::Location& origin,
 
     // Expand forward from the end node of the predecessor edge.
     ExpandForward(graphreader, pred.endnode(), pred, predindex, false, false, pred.mode(),
-                  destination, best_path);
+                  destination, best_path, 0);
   }
   return {}; // Should never get here
 }

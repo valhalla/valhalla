@@ -102,7 +102,8 @@ protected:
   baldr::NodeType mode_transition_;
 
   // Maximum distance for the walking part
-  uint32_t max_walking_distance{0};
+  uint32_t max_walking_distance_{0};
+  size_t max_transitions_{0};
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
@@ -134,7 +135,8 @@ protected:
                      const bool from_mode_change,
                      const sif::TravelMode mode,
                      const valhalla::Location& dest,
-                     std::pair<int32_t, float>& best_path);
+                     std::pair<int32_t, float>& best_path,
+                     size_t mode_transition_count);
 
   /**
    * Add edges at the origin to the adjacency list.
