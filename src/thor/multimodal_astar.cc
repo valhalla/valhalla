@@ -269,14 +269,17 @@ MultimodalAStar::GetBestPath(valhalla::Location& origin,
       end_mode_ = travel_mode_t::kPedestrian;
       other_mode_ = travel_mode_t::kPedestrian;
       mode_transition_ = baldr::NodeType::kParking;
+      // in order to not break bikeshare mode, only enable
+      // this for auto_pedestrian for now
+      max_walking_distance = options.costings()
+                                 .find(Costing::pedestrian)
+                                 ->second.options()
+                                 .transit_start_end_max_distance();
       break;
     default:
       throw std::runtime_error("Costing not handled by this algorithm: " +
                                Costing_Enum_Name(costing));
   }
-
-  max_walking_distance =
-      options.costings().find(Costing::pedestrian)->second.options().transit_start_end_max_distance();
 
   // Set the mode and costing
   start_costing_ = mode_costing[static_cast<uint32_t>(start_mode_)];
