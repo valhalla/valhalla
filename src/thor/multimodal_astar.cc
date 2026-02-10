@@ -123,8 +123,8 @@ void MultimodalAStar::ExpandForward(GraphReader& graphreader,
     // Skip if this is a regular edge superseded by a shortcut.
     if (meta.edge->is_shortcut()) {
       auto& hierarchy_limits = hierarchy_limits_[static_cast<size_t>(current_mode != start_mode_)];
-      if (current_costing->UseHierarchyLimits() &&
-              StopExpanding(hierarchy_limits[meta.edge_id.level()], pred.distance()) ||
+      if ((current_costing->UseHierarchyLimits() &&
+           StopExpanding(hierarchy_limits[meta.edge_id.level()], pred.distance())) ||
           // this preserves the previous logic in place for using shortcuts in bikeshare mode
           // for backwards compatibility
           (pred.distance() < 10000.0f || meta.edge->length() > max_shortcut_length)) {
