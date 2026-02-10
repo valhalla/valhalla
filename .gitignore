@@ -49,4 +49,3 @@ src/bindings/python/valhalla/__version__.py
 **/*.egg-info
 dist
 wheelhouse
-duplicateways.txt
