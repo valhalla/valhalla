@@ -36,6 +36,20 @@ void update_traffic_on_edges(baldr::GraphReader& reader,
   }
 }
 
+void check_matrix_empty(const rapidjson::Document& result) {
+
+  for (const auto& origin_row : result.GetObject()["sources_to_targets"].GetArray()) {
+    auto origin_td = origin_row.GetArray();
+    for (const auto& v : origin_td) {
+      for (const auto metric : {"distance", "time"}) {
+        EXPECT_TRUE(v.HasMember(metric));
+        EXPECT_TRUE(v.GetObject()[metric].IsNull())
+            << "Expected null, got " << v.GetObject()[metric].GetType();
+      }
+    }
+  }
+}
+
 void check_matrix(const rapidjson::Document& result,
                   const std::vector<float>& exp_times,
                   bool valid_traffic,
@@ -544,11 +558,16 @@ TEST(StandAlone, CostMatrixDeadends) {
     check_matrix(res_doc, {0.8f}, false, "distance", Matrix::CostMatrix);
   }
 
-  // throw if no connection can be found at all
-  try {
-    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"C"}, {"A"}, "auto");
-    FAIL() << "No connection found should have thrown";
-  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); }
+  // empty result if no connection can be found at all
+  {
+    rapidjson::Document res_doc;
+    std::string res;
+    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"C"}, {"A"}, "auto",
+                                   {}, nullptr, &res);
+
+    res_doc.Parse(res.c_str());
+    check_matrix_empty(res_doc);
+  }
 }
 
 TEST(StandAlone, CostMatrixShapes) {
