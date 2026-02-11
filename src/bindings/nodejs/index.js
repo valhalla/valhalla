@@ -165,6 +165,7 @@ async function getConfig(options = {}) {
 }
 
 const GraphId = valhalla.GraphId;
+const getTileIdsFromBbox = valhalla.getTileIdsFromBbox;
 const getTileIdsFromRing = valhalla.getTileIdsFromRing;
 
-module.exports = { Actor, GraphId, getConfig, getTileIdsFromRing, VALHALLA_VERSION: valhalla.VALHALLA_VERSION };
+module.exports = { Actor, GraphId, getConfig, getTileIdsFromBbox, getTileIdsFromRing, VALHALLA_VERSION: valhalla.VALHALLA_VERSION };

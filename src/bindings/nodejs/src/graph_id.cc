@@ -1,5 +1,6 @@
 #include "baldr/graphid.h"
 #include "baldr/tilehierarchy.h"
+#include "midgard/aabb2.h"
 #include "midgard/pointll.h"
 #include "tile_id_utils.h"
 
@@ -166,6 +167,58 @@ private:
   }
 };
 
+Napi::Value GetTileIdsFromBbox(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  // getTileIdsFromBbox(minx, miny, maxx, maxy, levels?)
+  if (info.Length() < 4 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() ||
+      !info[3].IsNumber()) {
+    Napi::TypeError::New(env, "Expected four numbers (minx, miny, maxx, maxy)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  try {
+    double minx = info[0].As<Napi::Number>().DoubleValue();
+    double miny = info[1].As<Napi::Number>().DoubleValue();
+    double maxx = info[2].As<Napi::Number>().DoubleValue();
+    double maxy = info[3].As<Napi::Number>().DoubleValue();
+    valhalla::bindings::check_coord(minx, miny, maxx, maxy);
+
+    std::vector<uint32_t> levels;
+    if (info.Length() > 4 && info[4].IsArray()) {
+      Napi::Array levels_arr = info[4].As<Napi::Array>();
+      levels.reserve(levels_arr.Length());
+      for (uint32_t i = 0; i < levels_arr.Length(); i++) {
+        levels.push_back(levels_arr.Get(i).As<Napi::Number>().Uint32Value());
+      }
+    }
+    if (levels.empty()) {
+      levels = valhalla::bindings::default_levels();
+    }
+
+    const vm::AABB2<vm::PointLL> bbox{minx, miny, maxx, maxy};
+    std::vector<vb::GraphId> tile_ids;
+    for (const auto level : levels) {
+      valhalla::bindings::check_level(level);
+      const auto level_tile_ids = vb::TileHierarchy::levels().at(level).tiles.TileList(bbox);
+      tile_ids.reserve(tile_ids.size() + level_tile_ids.size());
+      for (const auto tid : level_tile_ids) {
+        tile_ids.emplace_back(vb::GraphId{static_cast<uint32_t>(tid), level, 0});
+      }
+    }
+
+    Napi::Array result = Napi::Array::New(env, tile_ids.size());
+    for (size_t i = 0; i < tile_ids.size(); i++) {
+      result.Set(static_cast<uint32_t>(i), GraphIdWrapper::NewInstance(env, tile_ids[i]));
+    }
+    return result;
+  } catch (const std::exception& e) {
+    Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+}
+
 Napi::Value GetTileIdsFromRing(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -227,6 +280,8 @@ Napi::Value GetTileIdsFromRing(const Napi::CallbackInfo& info) {
 // Init function called from the main module
 Napi::Object InitGraphId(Napi::Env env, Napi::Object exports) {
   GraphIdWrapper::Init(env, exports);
+  exports.Set("getTileIdsFromBbox",
+              Napi::Function::New(env, GetTileIdsFromBbox, "getTileIdsFromBbox"));
   exports.Set("getTileIdsFromRing",
               Napi::Function::New(env, GetTileIdsFromRing, "getTileIdsFromRing"));
   return exports;

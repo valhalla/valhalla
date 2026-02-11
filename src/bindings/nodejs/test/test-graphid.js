@@ -1,6 +1,6 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert');
-const { GraphId, getTileIdsFromRing } = require('@valhallajs/valhallajs');
+const { GraphId, getTileIdsFromBbox, getTileIdsFromRing } = require('@valhallajs/valhallajs');
 
 describe('GraphId', () => {
   test('should export GraphId class', () => {
@@ -163,6 +163,38 @@ describe('GraphId', () => {
       const restored = new GraphId(original.value);
       assert.strictEqual(restored.equals(original), true);
     });
+  });
+});
+
+describe('getTileIdsFromBbox', () => {
+  test('should export getTileIdsFromBbox function', () => {
+    assert.strictEqual(typeof getTileIdsFromBbox, 'function');
+  });
+
+  test('returns GraphId array for a bbox', () => {
+    const result = getTileIdsFromBbox(13.3, 52.4, 13.5, 52.6);
+    assert.ok(Array.isArray(result));
+    assert.ok(result.length > 0);
+    for (const gid of result) {
+      assert.strictEqual(gid.is_valid(), true);
+      assert.strictEqual(gid.id(), 0);
+    }
+  });
+
+  test('respects the levels parameter', () => {
+    const result = getTileIdsFromBbox(13.3, 52.4, 13.5, 52.6, [2]);
+    assert.ok(result.length > 0);
+    for (const gid of result) {
+      assert.strictEqual(gid.level(), 2);
+    }
+  });
+
+  test('throws on invalid coordinates', () => {
+    assert.throws(() => getTileIdsFromBbox(200, 0, 201, 1), Error);
+  });
+
+  test('throws on missing arguments', () => {
+    assert.throws(() => getTileIdsFromBbox(1, 2), TypeError);
   });
 });
 
