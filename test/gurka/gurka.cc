@@ -101,6 +101,12 @@ std::string build_valhalla_request(const std::vector<std::string>& location_type
 
   // we do this last so that options are additive/overwrite
   for (const auto& kv : options) {
+    // handle arrays, e.g. /array_type/- as key will add the value to the back
+    if (auto parent = kv.first.substr(0, kv.first.rfind("/-"));
+        (parent != kv.first) && !rapidjson::Pointer(parent).Get(doc)) {
+      rapidjson::Pointer(parent).Set(doc, rapidjson::kArrayType);
+    }
+
     rapidjson::Pointer(kv.first).Set(doc, kv.second);
   }
 
@@ -745,7 +751,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
 
   const auto& center_coords = detail::to_ll(map.nodes, center);
 
-  // Calculate which tile contains this point at zoom 14
+  // Calculate which tile contains this point at zoom
   // Using standard slippy map tile formula
   double n = std::pow(2.0, zoom);
   uint32_t x = static_cast<uint32_t>((center_coords.lng() + 180.0) / 360.0 * n);

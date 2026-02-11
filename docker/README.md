@@ -42,7 +42,7 @@ Then it's a simple
 ```shell script
 # optionally build the base image yourself before or download it by default
 # docker build -t ghcr.io/valhalla/valhalla:latest .
-docker build  -f docker/Dockerfile -t ghcr.io/valhalla/valhalla-scripted:latest .
+docker build  -f docker/Dockerfile-scripted -t ghcr.io/valhalla/valhalla-scripted:latest .
 ```
 
 The `--build-arg`s are:
@@ -143,7 +143,7 @@ In the case where you have a pre-built `valhalla_tiles.tar` package from another
 If you want to verify that the image is working correctly, there's a small test script in `./tests`.
 
 ```shell script
-./tests/test.sh
+./docker/test.sh
 ```
 
 > [!TIP]

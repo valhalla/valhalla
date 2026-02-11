@@ -147,6 +147,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {209, R"(Customized hierarchy limits are not allowed on this server, using default hierarchy limits)"},
   {210, R"(Provided hierarchy limits exceeded maximum allowed values, using max allowed hierarchy limits)"},
   {211, R"(This action doesn't support requested format, using json instead)"},
+  {212, R"(Invalid layer name in exclude_layers array: )"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
