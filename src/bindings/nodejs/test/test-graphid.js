@@ -1,6 +1,6 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert');
-const { GraphId, getTileIdFromLonLat, getTileIdsFromBbox, getTileIdsFromRing } = require('@valhallajs/valhallajs');
+const { GraphId, getTileBaseLonLat, getTileIdFromLonLat, getTileIdsFromBbox, getTileIdsFromRing } = require('@valhallajs/valhallajs');
 
 describe('GraphId', () => {
   test('should export GraphId class', () => {
@@ -163,6 +163,36 @@ describe('GraphId', () => {
       const restored = new GraphId(original.value);
       assert.strictEqual(restored.equals(original), true);
     });
+  });
+});
+
+describe('getTileBaseLonLat', () => {
+  test('should export getTileBaseLonLat function', () => {
+    assert.strictEqual(typeof getTileBaseLonLat, 'function');
+  });
+
+  test('returns [lon, lat] array for a valid GraphId', () => {
+    const gid = getTileIdFromLonLat(2, [13.4, 52.5]);
+    const result = getTileBaseLonLat(gid);
+    assert.ok(Array.isArray(result));
+    assert.strictEqual(result.length, 2);
+    assert.strictEqual(typeof result[0], 'number');
+    assert.strictEqual(typeof result[1], 'number');
+  });
+
+  test('base lon/lat is within reasonable range', () => {
+    const gid = getTileIdFromLonLat(2, [13.4, 52.5]);
+    const [lon, lat] = getTileBaseLonLat(gid);
+    // base should be at or below the queried point
+    assert.ok(lon <= 13.4);
+    assert.ok(lat <= 52.5);
+    // and reasonably close (within one tile width)
+    assert.ok(lon > 12.0);
+    assert.ok(lat > 51.0);
+  });
+
+  test('throws on non-GraphId argument', () => {
+    assert.throws(() => getTileBaseLonLat('not a graphid'), TypeError);
   });
 });
 

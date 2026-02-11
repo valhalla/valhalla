@@ -167,6 +167,30 @@ private:
   }
 };
 
+Napi::Value GetTileBaseLonLat(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() < 1 || !info[0].IsObject()) {
+    Napi::TypeError::New(env, "Expected a GraphId").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  try {
+    GraphIdWrapper* wrapper = Napi::ObjectWrap<GraphIdWrapper>::Unwrap(info[0].As<Napi::Object>());
+    auto gid = wrapper->graphId();
+    const auto& tiles_at_level = vb::TileHierarchy::levels().at(gid.level());
+    const auto pt = tiles_at_level.tiles.Base(gid.tileid());
+
+    Napi::Array result = Napi::Array::New(env, 2);
+    result.Set(static_cast<uint32_t>(0), Napi::Number::New(env, pt.x()));
+    result.Set(static_cast<uint32_t>(1), Napi::Number::New(env, pt.y()));
+    return result;
+  } catch (const std::exception& e) {
+    Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+}
+
 Napi::Value GetTileIdFromLonLat(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -311,6 +335,7 @@ Napi::Value GetTileIdsFromRing(const Napi::CallbackInfo& info) {
 // Init function called from the main module
 Napi::Object InitGraphId(Napi::Env env, Napi::Object exports) {
   GraphIdWrapper::Init(env, exports);
+  exports.Set("getTileBaseLonLat", Napi::Function::New(env, GetTileBaseLonLat, "getTileBaseLonLat"));
   exports.Set("getTileIdFromLonLat",
               Napi::Function::New(env, GetTileIdFromLonLat, "getTileIdFromLonLat"));
   exports.Set("getTileIdsFromBbox",

@@ -116,6 +116,13 @@ export class GraphId {
 }
 
 /**
+ * Get the base (lower-left corner) lon/lat of a tile.
+ * @param graphId - A GraphId identifying the tile
+ * @returns [lon, lat] coordinate pair of the tile's base corner
+ */
+export function getTileBaseLonLat(graphId: GraphId): [number, number];
+
+/**
  * Get the tile GraphId for a given coordinate and hierarchy level.
  * @param level - Hierarchy level
  * @param coord - [lon, lat] coordinate pair
