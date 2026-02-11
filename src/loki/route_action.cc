@@ -72,23 +72,33 @@ void loki_worker_t::route(Api& request) {
   if (costing_name == "multimodal" || costing_name == "transit" ||
       costing_name == "auto_pedestrian") {
     auto& ped_opts = *options.mutable_costings()->find(Costing::pedestrian)->second.mutable_options();
-    if (!ped_opts.has_transit_start_end_max_distance_case())
-      ped_opts.set_transit_start_end_max_distance(min_transit_walking_dis);
-    auto transit_start_end_max_distance = ped_opts.transit_start_end_max_distance();
+
+    // "transit_start_end_max_distance" is deprecated
+    // but we will still allow it for some time
+    if (ped_opts.has_transit_transfer_max_distance_case()) {
+      ped_opts.set_multimodal_start_end_max_distance(ped_opts.transit_start_end_max_distance());
+    }
+
+    // we have renamed this parameter
+    if (!ped_opts.has_multimodal_start_end_max_distance_case())
+      ped_opts.set_multimodal_start_end_max_distance(min_multimodal_walking_dist);
+    auto multimodal_start_end_max_distance = ped_opts.multimodal_start_end_max_distance();
 
     if (!ped_opts.has_transit_transfer_max_distance_case())
-      ped_opts.set_transit_transfer_max_distance(min_transit_walking_dis);
+      ped_opts.set_transit_transfer_max_distance(min_multimodal_walking_dist);
     auto transit_transfer_max_distance = ped_opts.transit_transfer_max_distance();
 
-    if (transit_start_end_max_distance < min_transit_walking_dis ||
-        transit_start_end_max_distance > max_transit_walking_dis) {
-      throw valhalla_exception_t{155, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " +
-                                          std::to_string(max_transit_walking_dis) + " (Meters)"};
+    if (multimodal_start_end_max_distance < min_multimodal_walking_dist ||
+        multimodal_start_end_max_distance > max_multimodal_walking_dist) {
+      throw valhalla_exception_t{155, " Min: " + std::to_string(min_multimodal_walking_dist) +
+                                          " Max: " + std::to_string(max_multimodal_walking_dist) +
+                                          " (Meters)"};
     }
-    if (transit_transfer_max_distance < min_transit_walking_dis ||
-        transit_transfer_max_distance > max_transit_walking_dis) {
-      throw valhalla_exception_t{156, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " +
-                                          std::to_string(max_transit_walking_dis) + " (Meters)"};
+    if (transit_transfer_max_distance < min_multimodal_walking_dist ||
+        transit_transfer_max_distance > max_multimodal_walking_dist) {
+      throw valhalla_exception_t{156, " Min: " + std::to_string(min_multimodal_walking_dist) +
+                                          " Max: " + std::to_string(max_multimodal_walking_dist) +
+                                          " (Meters)"};
     }
     if (costing_name != "auto_pedestrian") {
       connectivity_level = TileHierarchy::GetTransitLevel();

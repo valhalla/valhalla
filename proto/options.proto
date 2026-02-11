@@ -213,7 +213,7 @@ message Costing {
       float driveway_penalty = 26;
     }
     oneof has_transit_start_end_max_distance {
-      uint32 transit_start_end_max_distance = 27;
+      uint32 transit_start_end_max_distance = 27; // deprecated in favor of multimodal_start_end_max_distance
     }
     oneof has_transit_transfer_max_distance {
       uint32 transit_transfer_max_distance = 28;
@@ -353,6 +353,9 @@ message Costing {
     oneof has_speed_penalty_factor {
           float speed_penalty_factor = 95;
         }
+    oneof has_multimodal_start_end_max_distance {
+      uint32 multimodal_start_end_max_distance = 96;
+    }
   }
 
   oneof has_options {
