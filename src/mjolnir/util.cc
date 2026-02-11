@@ -308,8 +308,7 @@ uint32_t GetStopImpact(uint32_t from,
     // Track whether any other drivable edge exists at this node (in either direction).
     // This detects real intersections even on one-way streets where the cross-street
     // only has forward access from this node.
-    if (i != to && i != from &&
-        ((edge->reverseaccess() | edge->forwardaccess()) & kAutoAccess)) {
+    if (i != to && i != from && ((edge->reverseaccess() | edge->forwardaccess()) & kAutoAccess)) {
       found_other_edge = true;
     }
 
@@ -324,7 +323,7 @@ uint32_t GetStopImpact(uint32_t from,
   // traffic). Return 0 so we don't add phantom transition costs.
   // Don't apply this to U-turns (from == to), as dead-end U-turns should retain their cost.
   if (!found_other_edge && from != to) {
-   return 0;
+    return 0;
   }
 
   // kUnclassified,  kResidential, and kServiceOther are grouped
