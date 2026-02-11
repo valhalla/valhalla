@@ -80,4 +80,39 @@ export interface ConfigOptions {
 export function getConfig(options?: ConfigOptions): Promise<ValhallaConfig>;
 
 
+export class GraphId {
+  /** Default constructor (creates invalid GraphId) */
+  constructor();
+  /** Construct from raw numeric value */
+  constructor(value: number);
+  /** Construct from string "level/tileid/id" */
+  constructor(value: string);
+  /** Construct from components */
+  constructor(tileid: number, level: number, id: number);
+
+  /** Raw numeric value */
+  readonly value: number;
+
+  /** Get the tile ID */
+  tileid(): number;
+  /** Get the hierarchy level */
+  level(): number;
+  /** Get the identifier within the level */
+  id(): number;
+  /** Check if this GraphId is valid */
+  is_valid(): boolean;
+  /** Get a GraphId with only tileid and level (id zeroed) */
+  tile_base(): GraphId;
+  /** Get the 32-bit tile value (level + tileid) */
+  tile_value(): number;
+  /** Create a new GraphId with the id advanced by offset */
+  add(offset: number): GraphId;
+  /** Check equality with another GraphId */
+  equals(other: GraphId): boolean;
+  /** String representation: "level/tileid/id" */
+  toString(): string;
+  /** JSON representation */
+  toJSON(): { level: number; tileid: number; id: number; value: number };
+}
+
 export const VALHALLA_VERSION: string;

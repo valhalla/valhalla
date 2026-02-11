@@ -415,7 +415,7 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
                                    {pbf_filename_tile_test}));
 
   // add landmarks from db to tiles
-  AddLandmarks(landmark_map_tile_test.config);
+  AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
 
   // check data
   GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
@@ -451,9 +451,9 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
                                    {pbf_filename_tile_test}));
 
   // add landmarks from db to tiles
-  AddLandmarks(landmark_map_tile_test.config);
+  AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
   // add again, but this will result in errors
-  AddLandmarks(landmark_map_tile_test.config);
+  AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
 
   // check data (cannot reach here yet)
   GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
@@ -529,7 +529,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
   // build landmark database and import landmarks to it
   EXPECT_TRUE(BuildLandmarkFromPBF(map.config.get_child("mjolnir"), {pbf}));
   // add landmarks to graphtile from the landmark database
-  AddLandmarks(map.config);
+  AddLandmarks(map.config.get_child("mjolnir"));
 
   // get routing result from point a to g
   auto result = gurka::do_action(valhalla::Options::route, map, {"a", "g"}, "auto");

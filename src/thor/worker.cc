@@ -105,8 +105,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
 
-  hierarchy_limits_config_costmatrix =
-      parse_hierarchy_limits_from_config(config, "costmatrix", false);
+  hierarchy_limits_config_costmatrix = parse_hierarchy_limits_from_config(config, "costmatrix", true);
   hierarchy_limits_config_astar =
       parse_hierarchy_limits_from_config(config, "unidirectional_astar", true);
   hierarchy_limits_config_bidirectional_astar =
@@ -203,7 +202,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
 void run_service(const boost::property_tree::ptree& config) {
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
-                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+                        config.get<unsigned int>("httpd.service.shutdown_seconds", 1));
 
   // gets requests from thor proxy
   auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
