@@ -58,7 +58,7 @@ void writeExpansionProgress(Expansion* expansion,
   if (exp_props.count(Options_ExpansionProperties_flow_sources))
     expansion->add_flow_sources(static_cast<uint32_t>(flow_sources));
   if (exp_props.count(Options_ExpansionProperties_travel_mode))
-    expansion->add_modes(mode);
+    expansion->add_travel_modes(mode);
 }
 
 struct expansion_properties_t {
@@ -85,7 +85,7 @@ struct expansion_properties_t {
                          const valhalla::TravelMode mode)
       : prev_edgeid(prev_edgeid), status(status), duration(duration), shape(std::move(shape)),
         distance(distance), cost(cost), expansion_type(expansion_type), flow_sources(flow_sources),
-        mode(mode){};
+        mode(mode) {};
 
   // check if status is higher or same – as we will keep track of the latest one
   static bool is_latest_status(Expansion_EdgeStatus current, Expansion_EdgeStatus candidate) {
