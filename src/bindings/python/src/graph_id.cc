@@ -124,7 +124,7 @@ void init_graphid(nb::module_& m) {
         return tile_ids;
       },
       nb::arg("minx"), nb::arg("miny"), nb::arg("maxx"), nb::arg("maxy"),
-      nb::arg("levels") = std::vector<uint32_t>{});
+      nb::arg("levels") = std::vector<uint32_t>{}, nb::call_guard<nb::gil_scoped_release>());
 
   m.def(
       "get_tile_ids_from_ring",
@@ -282,7 +282,8 @@ void init_graphid(nb::module_& m) {
           nb::arg("config"))
       .def(
           "get_edge_shape",
-          [](vb::GraphReader& self, const vb::GraphId& edge_id) {
+          [](vb::GraphReader& self,
+             const vb::GraphId& edge_id) -> std::vector<std::tuple<double, double>> {
             // Get the tile containing this edge
             auto tile = self.GetGraphTile(edge_id);
             if (!tile) {
@@ -305,14 +306,14 @@ void init_graphid(nb::module_& m) {
             }
 
             // Convert to list of (lon, lat) tuples
-            std::vector<nb::tuple> result;
+            std::vector<std::tuple<double, double>> result;
             result.reserve(shape.size());
             for (const auto& pt : shape) {
-              result.push_back(nb::make_tuple(pt.lng(), pt.lat()));
+              result.emplace_back(pt.lng(), pt.lat());
             }
 
             return result;
           },
-          nb::arg("edge_id"));
+          nb::arg("edge_id"), nb::call_guard<nb::gil_scoped_release>());
 }
 } // namespace pyvalhalla
