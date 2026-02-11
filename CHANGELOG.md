@@ -10,6 +10,7 @@
    * FIXED: MVT attributes were erroneously cast to uint32_t for booleans and others [#5861](https://github.com/valhalla/valhalla/pull/5861)
    * FIXED: small bug in valhalla_add_landmarks [#5859](https://github.com/valhalla/valhalla/pull/5859)
    * FIXED: replace dry-run with report arg in `valhalla_build_config` [#5875](https://github.com/valhalla/valhalla/pull/5875)
+   * FIXED: de-duplicate BSS connection edges [#5799](https://github.com/valhalla/valhalla/pull/5799)
 * **Enhancement**
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
@@ -66,7 +67,6 @@
    * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
    * ADDED: NodeJS bindings support PBF outputs [#5794](https://github.com/valhalla/valhalla/pull/5794)
    * ADDED: Handle `vehicle` tags for OSM Ways [#5802](https://github.com/valhalla/valhalla/pull/5802)
-   * FIXED: de-duplicate BSS connection edges [#5799](https://github.com/valhalla/valhalla/pull/5799)
 
 ## Release Date: 2025-11-14 Valhalla 3.6.1
 * **Removed**
