@@ -1,6 +1,6 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert');
-const { GraphId } = require('@valhallajs/valhallajs');
+const { GraphId, getTileIdsFromRing } = require('@valhallajs/valhallajs');
 
 describe('GraphId', () => {
   test('should export GraphId class', () => {
@@ -163,5 +163,55 @@ describe('GraphId', () => {
       const restored = new GraphId(original.value);
       assert.strictEqual(restored.equals(original), true);
     });
+  });
+});
+
+describe('getTileIdsFromRing', () => {
+  test('should export getTileIdsFromRing function', () => {
+    assert.strictEqual(typeof getTileIdsFromRing, 'function');
+  });
+
+  test('returns GraphId array for a simple polygon', () => {
+    // small polygon around Berlin
+    const ring = [
+      [13.3, 52.4],
+      [13.5, 52.4],
+      [13.5, 52.6],
+      [13.3, 52.6],
+    ];
+    const result = getTileIdsFromRing(ring);
+    assert.ok(Array.isArray(result));
+    assert.ok(result.length > 0);
+    // all results should be valid GraphId instances
+    for (const gid of result) {
+      assert.strictEqual(gid.is_valid(), true);
+      assert.strictEqual(gid.id(), 0); // tile-base ids have id=0
+    }
+  });
+
+  test('respects the levels parameter', () => {
+    const ring = [
+      [13.3, 52.4],
+      [13.5, 52.4],
+      [13.5, 52.6],
+      [13.3, 52.6],
+    ];
+    const result = getTileIdsFromRing(ring, [2]);
+    assert.ok(result.length > 0);
+    for (const gid of result) {
+      assert.strictEqual(gid.level(), 2);
+    }
+  });
+
+  test('throws on too few coordinates', () => {
+    assert.throws(() => getTileIdsFromRing([[0, 0], [1, 1]]), Error);
+  });
+
+  test('throws on invalid coordinates', () => {
+    assert.throws(() => getTileIdsFromRing([[200, 0], [0, 0], [0, 1]]), Error);
+  });
+
+  test('throws on non-array input', () => {
+    assert.throws(() => getTileIdsFromRing('not an array'), TypeError);
   });
 });

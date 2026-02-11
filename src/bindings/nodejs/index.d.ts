@@ -115,4 +115,12 @@ export class GraphId {
   toJSON(): { level: number; tileid: number; id: number; value: number };
 }
 
+/**
+ * Get all tile GraphIds whose tiles intersect or are inside a polygon ring.
+ * @param ringCoords - Array of [lon, lat] coordinate pairs forming a polygon ring
+ * @param levels - Optional array of hierarchy levels (defaults to [0, 1, 2])
+ * @returns Array of tile-base GraphIds
+ */
+export function getTileIdsFromRing(ringCoords: [number, number][], levels?: number[]): GraphId[];
+
 export const VALHALLA_VERSION: string;
