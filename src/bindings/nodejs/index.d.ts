@@ -116,6 +116,14 @@ export class GraphId {
 }
 
 /**
+ * Get the tile GraphId for a given coordinate and hierarchy level.
+ * @param level - Hierarchy level
+ * @param coord - [lon, lat] coordinate pair
+ * @returns The tile-base GraphId containing the coordinate
+ */
+export function getTileIdFromLonLat(level: number, coord: [number, number]): GraphId;
+
+/**
  * Get all tile GraphIds whose tiles intersect a bounding box.
  * @param minx - Minimum longitude
  * @param miny - Minimum latitude

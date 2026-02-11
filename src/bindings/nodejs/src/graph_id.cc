@@ -167,6 +167,37 @@ private:
   }
 };
 
+Napi::Value GetTileIdFromLonLat(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  // getTileIdFromLonLat(level, [lon, lat])
+  if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsArray()) {
+    Napi::TypeError::New(env, "Expected (level, [lon, lat])").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  try {
+    uint32_t level = info[0].As<Napi::Number>().Uint32Value();
+    valhalla::bindings::check_level(level);
+
+    Napi::Array coord = info[1].As<Napi::Array>();
+    if (coord.Length() != 2) {
+      Napi::TypeError::New(env, "Coordinate must have 2 elements (lon, lat)")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    double x = coord.Get(static_cast<uint32_t>(0)).As<Napi::Number>().DoubleValue();
+    double y = coord.Get(static_cast<uint32_t>(1)).As<Napi::Number>().DoubleValue();
+    valhalla::bindings::check_coord(x, y, x, y);
+
+    auto gid = vb::TileHierarchy::GetGraphId(vm::PointLL{x, y}, static_cast<uint8_t>(level));
+    return GraphIdWrapper::NewInstance(env, gid);
+  } catch (const std::exception& e) {
+    Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+}
+
 Napi::Value GetTileIdsFromBbox(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -280,6 +311,8 @@ Napi::Value GetTileIdsFromRing(const Napi::CallbackInfo& info) {
 // Init function called from the main module
 Napi::Object InitGraphId(Napi::Env env, Napi::Object exports) {
   GraphIdWrapper::Init(env, exports);
+  exports.Set("getTileIdFromLonLat",
+              Napi::Function::New(env, GetTileIdFromLonLat, "getTileIdFromLonLat"));
   exports.Set("getTileIdsFromBbox",
               Napi::Function::New(env, GetTileIdsFromBbox, "getTileIdsFromBbox"));
   exports.Set("getTileIdsFromRing",

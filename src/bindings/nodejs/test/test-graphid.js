@@ -1,6 +1,6 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert');
-const { GraphId, getTileIdsFromBbox, getTileIdsFromRing } = require('@valhallajs/valhallajs');
+const { GraphId, getTileIdFromLonLat, getTileIdsFromBbox, getTileIdsFromRing } = require('@valhallajs/valhallajs');
 
 describe('GraphId', () => {
   test('should export GraphId class', () => {
@@ -163,6 +163,38 @@ describe('GraphId', () => {
       const restored = new GraphId(original.value);
       assert.strictEqual(restored.equals(original), true);
     });
+  });
+});
+
+describe('getTileIdFromLonLat', () => {
+  test('should export getTileIdFromLonLat function', () => {
+    assert.strictEqual(typeof getTileIdFromLonLat, 'function');
+  });
+
+  test('returns a valid GraphId for a coordinate', () => {
+    const gid = getTileIdFromLonLat(2, [13.4, 52.5]);
+    assert.strictEqual(gid.is_valid(), true);
+    assert.strictEqual(gid.level(), 2);
+    assert.strictEqual(gid.id(), 0);
+  });
+
+  test('returns different tiles for different levels', () => {
+    const gid0 = getTileIdFromLonLat(0, [13.4, 52.5]);
+    const gid2 = getTileIdFromLonLat(2, [13.4, 52.5]);
+    assert.strictEqual(gid0.level(), 0);
+    assert.strictEqual(gid2.level(), 2);
+  });
+
+  test('throws on invalid level', () => {
+    assert.throws(() => getTileIdFromLonLat(99, [13.4, 52.5]), Error);
+  });
+
+  test('throws on invalid coordinates', () => {
+    assert.throws(() => getTileIdFromLonLat(2, [200, 0]), Error);
+  });
+
+  test('throws on wrong argument types', () => {
+    assert.throws(() => getTileIdFromLonLat(2, 'not an array'), TypeError);
   });
 });
 
