@@ -66,12 +66,9 @@ TEST_F(StopImpact, RealIntersection) {
                E        G
   )";
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}}},
-      {"BC", {{"highway", "primary"}}},
-      {"BD", {{"highway", "cycleway"}}},
-      {"BE", {{"highway", "cycleway"}}},
-      {"CF", {{"highway", "residential"}}},
-      {"CG", {{"highway", "residential"}}},
+      {"AB", {{"highway", "primary"}}},     {"BC", {{"highway", "primary"}}},
+      {"BD", {{"highway", "cycleway"}}},    {"BE", {{"highway", "cycleway"}}},
+      {"CF", {{"highway", "residential"}}}, {"CG", {{"highway", "residential"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_stopimpact_intersection");
@@ -99,7 +96,8 @@ TEST_F(StopImpact, RealIntersectionSameRoadClass) {
       {"BE", {{"highway", "residential"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_stopimpact_intersection_same_roadclass");
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               "test/data/gurka_stopimpact_intersection_same_roadclass");
 
   GraphReader reader(map.config.get_child("mjolnir"));
 
@@ -119,8 +117,7 @@ TEST_F(StopImpact, OneWayCrossStreet) {
       {"BD", {{"highway", "residential"}, {"oneway", "yes"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_stopimpact_oneway_cross");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_stopimpact_oneway_cross");
 
   GraphReader reader(map.config.get_child("mjolnir"));
 
