@@ -10,6 +10,7 @@
    * FIXED: MVT attributes were erroneously cast to uint32_t for booleans and others [#5861](https://github.com/valhalla/valhalla/pull/5861)
    * FIXED: small bug in valhalla_add_landmarks [#5859](https://github.com/valhalla/valhalla/pull/5859)
    * FIXED: replace dry-run with report arg in `valhalla_build_config` [#5875](https://github.com/valhalla/valhalla/pull/5875)
+   * FIXED: Respect future hierarchy level during graph filtering [#5878](https://github.com/valhalla/valhalla/pull/5878)
 * **Enhancement**
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
