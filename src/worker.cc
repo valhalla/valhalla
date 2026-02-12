@@ -686,6 +686,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_closures", true);
   }
 
+  // Force bicycle costing when request specifies bicycle
+  if (costing_str == "bicycle") {
+    costing_str = "bicycle";
+    rapidjson::SetValueByPointer(doc, "/costing", "bicycle");
+  }
+
   // set the costing based on the name given and parse its costing options
   Costing::Type costing;
   if (!valhalla::Costing_Enum_Parse(costing_str, &costing))
