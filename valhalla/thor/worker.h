@@ -112,8 +112,8 @@ protected:
 
   // Path algorithms (TODO - perhaps use a map?))
   BidirectionalAStar bidir_astar;
-  MultimodalAStar bss_astar;
-  MultiModalPathAlgorithm multi_modal_astar;
+  MultimodalAStar multimodal_astar;
+  MultiModalPathAlgorithm multi_modal_transit;
   TimeDepForward timedep_forward;
   TimeDepReverse timedep_reverse;
 

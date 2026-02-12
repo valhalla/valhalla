@@ -103,7 +103,7 @@ protected:
 
   // Maximum distance for the walking part
   uint32_t max_walking_distance_{0};
-  size_t max_transitions_{0};
+  size_t max_mode_transitions_{0};
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.

@@ -131,6 +131,9 @@ void loki_worker_t::route(Api& request) {
     // and end at the same location but with different costing? What does that even mean? Find the
     // nearest parking and walk back to where I am? Seems like a plausible use case...
     if (costing_name == "auto_pedestrian") {
+      if (locations.size() > 2) {
+        throw valhalla_exception_t{150, "for auto_pedestrian: " + std::to_string(locations.size())};
+      }
       std::vector<baldr::Location> start_loc(locations.begin(), locations.begin() + 1);
       auto start_projection = search_.search(start_loc, costing);
       for (const auto& [loc, path_loc] : start_projection) {

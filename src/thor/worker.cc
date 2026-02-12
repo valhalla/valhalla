@@ -60,8 +60,8 @@ namespace thor {
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : service_worker_t(config), mode(valhalla::sif::TravelMode::kPedestrian),
-      bidir_astar(config.get_child("thor")), bss_astar(config.get_child("thor")),
-      multi_modal_astar(config.get_child("thor")), timedep_forward(config.get_child("thor")),
+      bidir_astar(config.get_child("thor")), multimodal_astar(config.get_child("thor")),
+      multi_modal_transit(config.get_child("thor")), timedep_forward(config.get_child("thor")),
       timedep_reverse(config.get_child("thor")), costmatrix_(config.get_child("thor")),
       time_distance_matrix_(config.get_child("thor")),
       time_distance_bss_matrix_(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
@@ -318,8 +318,8 @@ void thor_worker_t::cleanup() {
   bidir_astar.Clear();
   timedep_forward.Clear();
   timedep_reverse.Clear();
-  multi_modal_astar.Clear();
-  bss_astar.Clear();
+  multi_modal_transit.Clear();
+  multimodal_astar.Clear();
   trace.clear();
   costmatrix_.Clear();
   time_distance_matrix_.Clear();

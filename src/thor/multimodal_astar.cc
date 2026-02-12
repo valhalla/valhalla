@@ -230,7 +230,7 @@ void MultimodalAStar::ExpandForward(GraphReader& graphreader,
   if (!from_mode_change && nodeinfo->type() == mode_transition_ &&
       // this greatly reduces the expansion on larger routes by avoiding pedestrian
       // mode changes further away than the user is willing to walk
-      (pred.distance() <= max_walking_distance_) && mode_transition_count < max_transitions_) {
+      (pred.distance() <= max_walking_distance_) && mode_transition_count < max_mode_transitions_) {
     auto new_mode = current_mode == start_mode_ ? other_mode_ : start_mode_;
     ExpandForward(graphreader, node, pred, pred_idx, from_transition, /*from_mode_change=*/true,
                   new_mode, destination, best_path, mode_transition_count + 1);
@@ -270,7 +270,7 @@ MultimodalAStar::GetBestPath(valhalla::Location& origin,
       other_mode_ = travel_mode_t::kBicycle;
       mode_transition_ = baldr::NodeType::kBikeShare;
       max_walking_distance_ = std::numeric_limits<uint32_t>::max();
-      max_transitions_ = 2;
+      max_mode_transitions_ = 2;
       break;
     case Costing::auto_pedestrian:
       end_mode_ = travel_mode_t::kPedestrian;
@@ -282,7 +282,7 @@ MultimodalAStar::GetBestPath(valhalla::Location& origin,
                                   .find(Costing::pedestrian)
                                   ->second.options()
                                   .transit_start_end_max_distance();
-      max_transitions_ = 2;
+      max_mode_transitions_ = 2;
       break;
     default:
       throw std::runtime_error("Costing not handled by this algorithm: " +

@@ -85,7 +85,7 @@ struct expansion_properties_t {
                          const valhalla::TravelMode mode)
       : prev_edgeid(prev_edgeid), status(status), duration(duration), shape(std::move(shape)),
         distance(distance), cost(cost), expansion_type(expansion_type), flow_sources(flow_sources),
-        mode(mode){};
+        mode(mode) {};
 
   // check if status is higher or same – as we will keep track of the latest one
   static bool is_latest_status(Expansion_EdgeStatus current, Expansion_EdgeStatus candidate) {
@@ -170,11 +170,11 @@ std::string thor_worker_t::expansion(Api& request) {
 
   // tell all the algorithms how to track expansion
   for (auto* alg : std::vector<PathAlgorithm*>{
-           &multi_modal_astar,
+           &multi_modal_transit,
            &timedep_forward,
            &timedep_reverse,
            &bidir_astar,
-           &bss_astar,
+           &multimodal_astar,
        }) {
     alg->set_track_expansion(track_expansion);
   }
@@ -208,8 +208,8 @@ std::string thor_worker_t::expansion(Api& request) {
   }
 
   // tell all the algorithms to stop tracking the expansion
-  for (auto* alg : std::vector<PathAlgorithm*>{&multi_modal_astar, &timedep_forward, &timedep_reverse,
-                                               &bidir_astar, &bss_astar}) {
+  for (auto* alg : std::vector<PathAlgorithm*>{&multi_modal_transit, &timedep_forward,
+                                               &timedep_reverse, &bidir_astar, &multimodal_astar}) {
     alg->set_track_expansion(nullptr);
   }
   costmatrix_.set_track_expansion(nullptr);
