@@ -812,6 +812,12 @@ help_text = {
             "max_matrix_distance": "Maximum b-line distance between 2 most distant locations in meters for a matrix",
             "max_matrix_location_pairs": "Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500",
         },
+        "auto_pedestrian": {
+            "max_distance": "Maximum b-line distance between all locations in meters",
+            "max_locations": "Maximum number of input locations",
+            "max_matrix_distance": "Maximum b-line distance between 2 most distant locations in meters for a matrix",
+            "max_matrix_location_pairs": "Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500",
+        },
         "centroid": {
             "max_distance": "Maximum b-line distance between any pair of locations in meters",
             "max_locations": "Maximum number of input locations, 127 is a hard limit and cannot be increased in config",
