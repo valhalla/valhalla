@@ -220,6 +220,7 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kShapeAttributesSpeed, false},
     {kShapeAttributesSpeedLimit, false},
     {kShapeAttributesClosure, false},
+    {kShapeAttributesCongestion, false},
 };
 
 const std::unordered_set<std::string_view> AttributesController::kDefaultEnabledCategories =

@@ -206,6 +206,7 @@ constexpr std::string_view kShapeAttributesLength = "shape_attributes.length";
 constexpr std::string_view kShapeAttributesSpeed = "shape_attributes.speed";
 constexpr std::string_view kShapeAttributesSpeedLimit = "shape_attributes.speed_limit";
 constexpr std::string_view kShapeAttributesClosure = "shape_attributes.closure";
+constexpr std::string_view kShapeAttributesCongestion = "shape_attributes.congestion";
 
 // Categories
 constexpr std::string_view kNodeCategory = "node.";
