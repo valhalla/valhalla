@@ -9,10 +9,10 @@ set -o errexit -o pipefail -o nounset
 VALHALLA_VERSION=$(valhalla_service --version | tr -d '\n')
 
 echo ""
-echo "===================="
-echo "= Valhalla version ="
-echo "===================="
-echo "Valhalla version: ${VALHALLA_VERSION}"
+echo "============"
+echo "= Valhalla ="
+echo "============"
+echo "Version: ${VALHALLA_VERSION}"
 echo ""
 
 do_build_tar() {
