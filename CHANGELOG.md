@@ -13,6 +13,7 @@
    * FIXED: Respect future hierarchy level during graph filtering [#5878](https://github.com/valhalla/valhalla/pull/5878)
    * FIXED: UK had drive on right incorrectly set after admin changes [#5882](https://github.com/valhalla/valhalla/pull/5882)
 * **Enhancement**
+   * ADDED: docker-entrypoint logs Valhalla version on container start [#5884](https://github.com/valhalla/valhalla/pull/5884)
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: Clean up boost::geometry types [#5818](https://github.com/valhalla/valhalla/pull/5818)
