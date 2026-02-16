@@ -25,8 +25,14 @@ We appreciate the community picking up and fixing bugs or even implementing new 
 Before opening a PR we'd ask you to format & lint the code:
 
 ```bash
-# installs the pre-commit hook
+# NOTE: This works on x86_64 Linux, but not much else
 ./scripts/format.sh
+# If you're developing on Apple Silicon, an ARM-based Linux box,
+# or anything else that doesn't have support for the formatting tools,
+# You can run it in docker like this (note the --platform flag!):
+docker run --rm --platform linux/amd64 -v "$(pwd)":/data -w /data python:latest bash -c "apt-get update && apt-get install -y sudo && ./scripts/format.sh && git status"
+
+# Run the pre-commit hooks
 pre-commit run --all-files
 
 # optionally run clang-tidy
