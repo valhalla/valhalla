@@ -400,6 +400,52 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
   return modes;
 }
 
+// Computes speeds for ferries that have "duration" tag. Regardless of number of edges this ferry
+// will be split into, all of them should have the same speed.
+std::unordered_map<uint64_t, uint32_t> FerrySpeeds(sequence<OSMWay>& ways,
+                                                   sequence<OSMWayNode>& way_nodes) {
+  std::unordered_map<uint64_t, uint32_t> ferry_speeds;
+  size_t way_node_index = 0;
+  for (size_t way_index = 0; way_index < ways.size(); ++way_index) {
+    const auto& way = *ways[way_index];
+    if (way.ferry() && way.duration()) {
+      PointLL prev;
+      // Iterate through the way nodes until we find the first node of this way.
+      while (way_node_index < way_nodes.size()) {
+        const OSMWayNode way_node = (*way_nodes[way_node_index]);
+        if (way_node.way_index < way_index) {
+          // Ferries are rare. As there are at least 2 nodes per way, we can jump by more than 1.
+          const auto current_way_index = (*way_nodes[way_node_index]).way_index;
+          way_node_index += (way_index - current_way_index - 1) * 2 + 1;
+        } else {
+          prev = way_node.node.latlng();
+          way_node_index += 1;
+          break;
+        }
+      }
+
+      double length = 0.0;
+      while (way_node_index < way_nodes.size()) {
+        const OSMWayNode way_node = (*way_nodes[way_node_index]);
+        if (way_node.way_index == way_index) {
+          const auto curr = (*way_nodes[way_node_index]).node.latlng();
+          length += prev.Distance(curr);
+          prev = curr;
+          way_node_index += 1;
+        } else {
+          break;
+        }
+      }
+
+      // convert to kph
+      const auto speed = static_cast<uint32_t>((length * 3.6) / way.duration());
+      ferry_speeds.emplace(way.way_id(), (speed == 0) ? 1 : speed);
+    }
+  }
+
+  return ferry_speeds;
+}
+
 void BuildTileSet(const std::string& ways_file,
                   const std::string& way_nodes_file,
                   const std::string& nodes_file,
@@ -484,6 +530,8 @@ void BuildTileSet(const std::string& ways_file,
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
   std::unordered_map<uint32_t, std::pair<double, uint32_t>> geo_attribute_cache;
+
+  const std::unordered_map<uint64_t, uint32_t> ferry_speeds = FerrySpeeds(ways, way_nodes);
 
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> pronunciationMap;
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> langMap;
@@ -930,9 +978,7 @@ void BuildTileSet(const std::string& ways_file,
 
           // ferry speed override.  duration is set on the way
           if (w.ferry() && w.duration()) {
-            // convert to kph
-            uint32_t spd = static_cast<uint32_t>((std::get<0>(found->second) * 3.6) / w.duration());
-            speed = (spd == 0) ? 1 : spd;
+            speed = ferry_speeds.at(w.way_id());
           }
 
           // Add a directed edge and get a reference to it
