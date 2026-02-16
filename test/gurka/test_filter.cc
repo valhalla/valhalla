@@ -109,7 +109,7 @@ TEST(Standalone, FerryEdges) {
     EXPECT_EQ(std::get<3>(big)->speed(), 6);
     EXPECT_EQ(std::get<3>(big)->length(), 5800);
 
-    // without filtering, DE is a separate ferry edge with 1h duration
+    // Smaller edge should have the same speed.
     const auto small = gurka::findEdge(reader, layout, "DEF", "D");
     EXPECT_EQ(std::get<1>(small)->speed(), 6);
     EXPECT_EQ(std::get<1>(small)->length(), 400);
@@ -130,14 +130,12 @@ TEST(Standalone, FerryEdges) {
     EXPECT_EQ(std::get<3>(big)->speed(), 6);
     EXPECT_EQ(std::get<3>(big)->length(), 6199);
 
-    // without filtering, DE is a separate ferry edge with 1h duration
+    // Small and big edges got merged.
     const auto small = gurka::findEdge(reader, layout, "DEF", "D");
     EXPECT_EQ(std::get<1>(small)->speed(), 6);
     EXPECT_EQ(std::get<1>(small)->length(), 6199);
     EXPECT_EQ(std::get<3>(small)->speed(), 6);
     EXPECT_EQ(std::get<3>(small)->length(), 6199);
-
-    // equal edge id, they got merged
     EXPECT_EQ(std::get<0>(big), std::get<2>(small));
     EXPECT_EQ(std::get<2>(big), std::get<0>(small));
   }
