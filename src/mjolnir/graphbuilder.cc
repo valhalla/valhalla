@@ -427,14 +427,14 @@ std::unordered_map<uint64_t, uint32_t> FerrySpeeds(sequence<OSMWay>& ways,
       double length = 0.0;
       while (way_node_index < way_nodes.size()) {
         const OSMWayNode way_node = (*way_nodes[way_node_index]);
-        if (way_node.way_index == way_index) {
-          const auto curr = (*way_nodes[way_node_index]).node.latlng();
-          length += prev.Distance(curr);
-          prev = curr;
-          way_node_index += 1;
-        } else {
+        if (way_node.way_index != way_index) {
           break;
         }
+
+        const auto curr = way_node.node.latlng();
+        length += prev.Distance(curr);
+        prev = curr;
+        way_node_index += 1;
       }
 
       // convert to kph
