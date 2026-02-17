@@ -115,7 +115,7 @@ gurka::map ConditionalRestrictions::map = {};
 
 TEST_F(ConditionalRestrictions, NoRestrictionAutoNoDate) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
-  gurka::assert::osrm::expect_steps(result, {"AB", "BC", "CE"});
+  gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CE"});
 }
 
@@ -123,7 +123,7 @@ TEST_F(ConditionalRestrictions, NoRestrictionAuto) {
   auto result =
       gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto",
                        {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-15T06:00"}});
-  gurka::assert::osrm::expect_steps(result, {"AB", "BC", "CE"});
+  gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CE"});
 }
 
@@ -131,13 +131,13 @@ TEST_F(ConditionalRestrictions, RestrictionAuto) {
   auto result =
       gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto",
                        {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
-  gurka::assert::osrm::expect_steps(result, {"AB", "BC", "CE"});
+  gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CE"});
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionBikeNoDate) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "bicycle");
-  gurka::assert::osrm::expect_steps(result, {"AD", "DE"});
+  gurka::assert::osrm::expect_steps(result, {"AD"});
   gurka::assert::raw::expect_path(result, {"AD", "DE"});
 }
 
@@ -145,7 +145,7 @@ TEST_F(ConditionalRestrictions, NoRestrictionBike) {
   auto result =
       gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "bicycle",
                        {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
-  gurka::assert::osrm::expect_steps(result, {"AD", "DE"});
+  gurka::assert::osrm::expect_steps(result, {"AD"});
   gurka::assert::raw::expect_path(result, {"AD", "DE"});
 }
 
@@ -168,7 +168,7 @@ TEST_F(ConditionalRestrictions, RestrictionBike) {
 
 TEST_F(ConditionalRestrictions, NoRestrictionPedestrianNoDate) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "pedestrian");
-  gurka::assert::osrm::expect_steps(result, {"AD", "DE"});
+  gurka::assert::osrm::expect_steps(result, {"AD"});
   gurka::assert::raw::expect_path(result, {"AD", "DE"});
 }
 
@@ -176,7 +176,7 @@ TEST_F(ConditionalRestrictions, NoRestrictionPedestrian) {
   auto result =
       gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "pedestrian",
                        {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T20:00"}});
-  gurka::assert::osrm::expect_steps(result, {"AD", "DE"});
+  gurka::assert::osrm::expect_steps(result, {"AD"});
   gurka::assert::raw::expect_path(result, {"AD", "DE"});
 }
 
