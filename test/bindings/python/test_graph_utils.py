@@ -12,6 +12,7 @@ from valhalla.utils import (
     get_tile_base_lon_lat,
     get_tile_id_from_lon_lat,
     get_tile_ids_from_bbox,
+    get_tile_ids_from_ring,
 )
 
 
@@ -81,6 +82,11 @@ class TestBindings(unittest.TestCase):
         self.assertEqual(gid, gid_cp)
         gid_cp += 1
         self.assertNotEqual(gid, gid_cp)
+
+    def test_graph_id_fspath(self):
+        graph_id = GraphId(1, 1, 0)
+        path = Path(graph_id)
+        self.assertEqual(path, Path("1/000/001.gph"))
 
     def test_get_tile_base_lon_lat_and_reverse(self):
         gid = GraphId(674464002)
@@ -264,3 +270,137 @@ class TestBindings(unittest.TestCase):
         with self.assertRaises(AttributeError) as exc:
             GraphUtils(config)
         self.assertIn("mjolnir.tile_extract and mjolnir.tile_dir are missing", str(exc.exception))
+
+    def test_get_tile_ids_from_ring_rectangle(self):
+        """Rectangle ring should match bbox results.
+        """
+        ring = [(0.5, 0.5), (2.5, 0.5), (2.5, 2.5), (0.5, 2.5)]
+        ring_result = get_tile_ids_from_ring(ring, [1])
+        bbox_result = get_tile_ids_from_bbox(0.5, 0.5, 2.5, 2.5, [1])
+
+        self.assertEqual(len(ring_result), 9)
+        self.assertEqual(
+            {r.value for r in ring_result},
+            {b.value for b in bbox_result},
+        )
+
+    def test_get_tile_ids_from_ring_triangle(self):
+        """Triangle should return fewer tiles than its bounding box.
+        """
+        ring = [(2, 3), (14, 3), (8, 9)]
+        ring_result = get_tile_ids_from_ring(ring, [0])
+        bbox_result = get_tile_ids_from_bbox(2, 3, 14, 9, [0])
+
+        ring_set = {r.value for r in ring_result}
+        bbox_set = {b.value for b in bbox_result}
+
+        self.assertTrue(ring_set)
+        self.assertTrue(ring_set <= bbox_set, "Ring tiles must be a subset of bbox tiles")
+        self.assertLess(len(ring_set), len(bbox_set), "Triangle must have fewer tiles than bbox")
+        self.assertTrue(all(r.level() == 0 for r in ring_result))
+
+    def test_get_tile_ids_from_ring_diamond(self):
+        """Diamond tests flood fill of interior tiles."""
+        ring = [(4, 0), (8, 4), (4, 8), (0, 4)]
+        ring_result = get_tile_ids_from_ring(ring, [1])
+        bbox_result = get_tile_ids_from_bbox(0, 0, 8, 8, [1])
+
+        ring_set = {r.value for r in ring_result}
+        bbox_set = {b.value for b in bbox_result}
+
+        self.assertTrue(ring_set)
+        self.assertTrue(ring_set <= bbox_set)
+        self.assertLess(len(ring_set), len(bbox_set))
+        self.assertGreater(len(ring_set), 20, "Diamond should contain a decent number of tiles")
+
+    def test_get_tile_ids_from_ring_orientation(self):
+        """CW and CCW winding order should produce identical results."""
+        cw = [(1, 1), (3, 1), (3, 3), (1, 3)]
+        ccw = [(1, 1), (1, 3), (3, 3), (3, 1)]
+
+        cw_result = get_tile_ids_from_ring(cw, [1])
+        ccw_result = get_tile_ids_from_ring(ccw, [1])
+
+        self.assertEqual(
+            {r.value for r in cw_result},
+            {r.value for r in ccw_result}, 
+        ) 
+
+    def test_get_tile_ids_from_ring_auto_close(self):
+        """Open ring (last != first) should be auto-closed."""
+        open_ring = [(0, 0), (4, 0), (2, 3)]
+        closed_ring = [(0, 0), (4, 0), (2, 3), (0, 0)]
+
+        open_result = get_tile_ids_from_ring(open_ring, [1])
+        closed_result = get_tile_ids_from_ring(closed_ring, [1])
+
+        self.assertEqual(
+            {r.value for r in open_result},
+            {r.value for r in closed_result},
+        )
+
+    def test_get_tile_ids_from_ring_default_levels(self):
+        """No levels specified should return tiles at all 3 levels (0, 1, 2)."""
+        ring = [(0, 0), (2, 0), (1, 2)]
+
+        result_default = get_tile_ids_from_ring(ring)
+        result_explicit = get_tile_ids_from_ring(ring, [0, 1, 2])
+
+        levels_found = {r.level() for r in result_default}
+        self.assertEqual(levels_found, {0, 1, 2})
+
+        self.assertEqual(
+            {r.value for r in result_default},
+            {r.value for r in result_explicit},
+        )
+
+    def test_get_tile_ids_from_ring_w_shape(self):
+        """W-shaped concave polygon should exclude tiles inside both notches."""
+        #  (0,10)--(3,10)      (7,10)--(10,10)(11,10)--(14,10)
+        #    |       |           |        |  |          |
+        #    |      (3,3)------(7,3) (10,3)(11,3)       |
+        #    |                                          |
+        #  (0,0)--------------------------------------(14,0)
+        ring = [
+            (0, 0), (14, 0), (14, 10), (11, 10), (11, 3), (10, 3),
+            (10, 10), (7, 10), (7, 3), (3, 3), (3, 10), (0, 10),
+        ]
+        ring_result = get_tile_ids_from_ring(ring, [1])
+        bbox_result = get_tile_ids_from_bbox(0, 0, 14, 10, [1])
+
+        ring_set: set[GraphId] = {r.value for r in ring_result}
+        bbox_set: set[GraphId] = {b.value for b in bbox_result}
+
+        self.assertTrue(len(ring_set) > 0, "Ring should contain tiles")
+        self.assertTrue(ring_set < bbox_set, "Ring tiles must be a subset of bbox tiles")
+        self.assertLess(len(ring_set), len(bbox_set), "W-shape must have fewer tiles than bbox")
+
+        # tiles strictly inside the left notch should be excluded;
+        # the right notch (10,3)-(11,10) is only 1 degree wide so all
+        # its tiles are boundary tiles — nothing to exclude there
+        notch_tiles = set()
+        for gid in bbox_result:
+            lon, lat = get_tile_base_lon_lat(gid)
+            # tile fully inside left notch (3,3)-(7,10)
+            if 3 < lon and lon + 1 < 7 and 3 < lat and lat + 1 < 10:
+                notch_tiles.add(gid.value)
+        # left notch interior: lon in {4,5}, lat in {4..8} = 10
+        self.assertEqual(len(notch_tiles), 10, f"Left notch should contain exactly 10 interior tiles, not {len(notch_tiles)}")
+        self.assertFalse(ring_set & notch_tiles, "Tiles in the left notch must not be in the W-shape")
+
+    def test_get_tile_ids_from_ring_errors(self):
+        """Invalid inputs should raise ValueError."""
+        # too few coordinates
+        with self.assertRaises(ValueError) as exc:
+            get_tile_ids_from_ring([(0, 0), (1, 1)])
+        self.assertIn("at least 3", str(exc.exception))
+
+        # invalid level
+        with self.assertRaises(ValueError) as exc:
+            get_tile_ids_from_ring([(0, 0), (1, 0), (0.5, 1)], [5])
+        self.assertIn("We only support", str(exc.exception))
+
+        # invalid coordinate (lat/lon swapped)
+        with self.assertRaises(ValueError) as exc:
+            get_tile_ids_from_ring([(0, 0), (0, 91), (1, 91)])
+        self.assertIn("Invalid coordinate", str(exc.exception))
