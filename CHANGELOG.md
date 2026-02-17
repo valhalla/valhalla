@@ -28,7 +28,6 @@
    * CHANGED: Added `mjolnir.data_quality_dir` as optional config to control the directory for e.g. duplicateways.txt [#5860](https://github.com/valhalla/valhalla/pull/5860)
    * CHANGED: extended `valhalla_build_config` script to optionally merge config with an existing one [#5857](https://github.com/valhalla/valhalla/pull/5857)
    * ADDED: congestion in shape attributes [#5865](https://github.com/valhalla/valhalla/pull/5865)
-   * ADDED: `get_tile_ids_from_ring` to query by polygon in the Python bindings [#5866](https://github.com/valhalla/valhalla/pull/5866)
    * CHANGED: release GIL for Actor methods, `get_edge_shape` & `get_tile_ids_from_bbox` [#5868](https://github.com/valhalla/valhalla/pull/5868)
    * CHANGED: don't throw a 442 error when matrix found no results [#5871](https://github.com/valhalla/valhalla/pull/5871)
    * ADDED: added `GraphId` binding for the nodejs package [#5874](https://github.com/valhalla/valhalla/pull/5874)
@@ -36,6 +35,7 @@
    * ADDED: docker-entrypoint logs Valhalla version on container start [#5884](https://github.com/valhalla/valhalla/pull/5884)
    * ADDED: Expose start/end OSM nodeids in trace_attributes using EdgeInfo osmnodeids [#5783](https://github.com/valhalla/valhalla/pull/5783)
    * CHANGED: added `shortcuts` layer and removed shortcuts from `edges` layer [#5849](https://github.com/valhalla/valhalla/pull/5849)
+   * ADDED: `get_tile_ids_from_ring` to query by polygon in the Python bindings [#5866](https://github.com/valhalla/valhalla/pull/5866)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
