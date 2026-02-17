@@ -55,9 +55,9 @@ void test_iso_shape_equality(const rapidjson::GenericArray<false, rapidjson::Val
   }
 
 #if defined(__aarch64__) || defined(__arm64__)
-   EXPECT_TRUE(test::shape_equality(actual, expected, 200));
+  EXPECT_TRUE(test::shape_equality(actual, expected, 200));
 #else
-   EXPECT_TRUE(test::shape_equality(actual, expected, 41));
+  EXPECT_TRUE(test::shape_equality(actual, expected, 41));
 #endif
 }
 
