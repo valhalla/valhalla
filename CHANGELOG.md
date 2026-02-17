@@ -11,6 +11,7 @@
    * FIXED: small bug in valhalla_add_landmarks [#5859](https://github.com/valhalla/valhalla/pull/5859)
    * FIXED: replace dry-run with report arg in `valhalla_build_config` [#5875](https://github.com/valhalla/valhalla/pull/5875)
    * FIXED: Respect future hierarchy level during graph filtering [#5878](https://github.com/valhalla/valhalla/pull/5878)
+   * FIXED: UK had drive on right incorrectly set after admin changes [#5882](https://github.com/valhalla/valhalla/pull/5882)
    * FIXED: set stop impact to 0 where there are only 2 edges at the 'intersection' [#5877](https://github.com/valhalla/valhalla/pull/5877)
 * **Enhancement**
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
@@ -30,6 +31,7 @@
    * CHANGED: don't throw a 442 error when matrix found no results [#5871](https://github.com/valhalla/valhalla/pull/5871)
    * ADDED: added `GraphId` binding for the nodejs package [#5874](https://github.com/valhalla/valhalla/pull/5874)
    * CHANGED: return trivial shape when source == target in CostMatrix [#5872](https://github.com/valhalla/valhalla/pull/5872)
+   * ADDED: docker-entrypoint logs Valhalla version on container start [#5884](https://github.com/valhalla/valhalla/pull/5884)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
