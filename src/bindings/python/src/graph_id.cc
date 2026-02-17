@@ -5,6 +5,7 @@
 #include "baldr/tilehierarchy.h"
 #include "graph_utils_module.h"
 #include "midgard/aabb2.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"

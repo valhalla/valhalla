@@ -121,6 +121,8 @@ edge.country_crossing
 edge.forward
 edge.traffic_signal
 edge.hov_type
+edge.begin_osm_node_id
+edge.end_osm_node_id
 
 // Node filter keys
 node.intersecting_edge.begin_heading
@@ -244,6 +246,7 @@ Each `edge` may include:
 | `forward` | True if the edge is traversed forwards and False if it is traversed backwards with respect to the reference shape/geometry (ie. the direction in which it was digitized). |
 | `traffic_signal` | True if the edge contains a traffic signal in its direction. |
 | `hov_type` | The type (if any) of HOV lane along this edge.
+| `node_id` | OpenStreetMap node identifier at the beginning of the edge. Present only if available in the underlying graph data and edge.begin_osm_node_id is requested. |
 
 #### Sign items
 
@@ -269,6 +272,7 @@ Each `end_node` may include:
 | `traffic_signal` | A boolean value indicating whether the node is a traffic signal (`true` or `false`) |
 | `fork` | True if this node is a fork. |
 | `time_zone` | Time zone string for this node. |
+| `node_id` | OpenStreetMap node identifier at the end of the edge. Present only if available in the underlying graph data and edge.end_osm_node_id is requested. |
 
 #### Intersecting edge items
 
