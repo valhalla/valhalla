@@ -423,6 +423,7 @@ std::unordered_map<uint64_t, uint32_t> ComputeFerrySpeeds(const std::string& way
           const auto current_way_index = (*way_nodes[way_node_index]).way_index;
           way_node_index += (way_index - current_way_index - 1) * 2 + 1;
         } else {
+          // First iteration of the "compute length" loop as we anyway have this node.
           prev = way_node.node.latlng();
           way_node_index += 1;
           break;
