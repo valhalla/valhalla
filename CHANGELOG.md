@@ -30,7 +30,8 @@
    * CHANGED: don't throw a 442 error when matrix found no results [#5871](https://github.com/valhalla/valhalla/pull/5871)
    * ADDED: added `GraphId` binding for the nodejs package [#5874](https://github.com/valhalla/valhalla/pull/5874)
    * CHANGED: return trivial shape when source == target in CostMatrix [#5872](https://github.com/valhalla/valhalla/pull/5872)
-    * ADDED: Expose start/end OSM nodeids in trace_attributes using EdgeInfo osmnodeids [#5783](https://github.com/valhalla/valhalla/pull/5783)
+   * ADDED: docker-entrypoint logs Valhalla version on container start [#5884](https://github.com/valhalla/valhalla/pull/5884)
+   * ADDED: Expose start/end OSM nodeids in trace_attributes using EdgeInfo osmnodeids [#5783](https://github.com/valhalla/valhalla/pull/5783)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
