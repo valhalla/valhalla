@@ -43,6 +43,7 @@
    * FIXED: `DirectedEdge index out of bounds` in transit tiles [#5782](https://github.com/valhalla/valhalla/pull/5782)
    * FIXED: Add error code for isochrone requests exceeding distance contour limit [#5781](https://github.com/valhalla/valhalla/pull/5781)
 * **Enhancement**
+   * ADDED: valhalla_ingest_traffic uses calendar_dates.txt if calendar.txt is missing [#5705](https://github.com/valhalla/valhalla/pull/5705)
    * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
    * ADDED: optional libvalhalla_test install target [#5719](https://github.com/valhalla/valhalla/pull/5719)
    * CHANGED: Get rid of temporary std::vector in GraphTile::GetRestrictions [#5688](https://github.com/valhalla/valhalla/pull/5688)
