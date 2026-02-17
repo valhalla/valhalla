@@ -200,11 +200,8 @@ jobs:
       - name: Install package
         run: npm install *.tgz
 
-      - name: Test package import (CommonJS)
-        run: node --test src/bindings/nodejs/test/test-commonjs.js
-      
-      - name: Test package import (ESM)
-        run: node --test src/bindings/nodejs/test/test-esm.mjs
+      - name: Run unit tests
+        run: node --test src/bindings/nodejs/test/test-commonjs.js src/bindings/nodejs/test/test-esm.mjs src/bindings/nodejs/test/test-graphid.js
       
       - name: Test Valhalla CLI
         run: |

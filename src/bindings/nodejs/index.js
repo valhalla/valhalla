@@ -164,4 +164,6 @@ async function getConfig(options = {}) {
     });
 }
 
-module.exports = { Actor, getConfig, VALHALLA_VERSION: valhalla.VALHALLA_VERSION };
+const GraphId = valhalla.GraphId;
+
+module.exports = { Actor, GraphId, getConfig, VALHALLA_VERSION: valhalla.VALHALLA_VERSION };
