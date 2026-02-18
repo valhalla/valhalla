@@ -1,10 +1,16 @@
 #include "baldr/graphid.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/aabb2.h"
+#include "midgard/pointll.h"
+#include "tile_id_utils.h"
 
 #include <napi.h>
 
 #include <string>
+#include <vector>
 
 namespace vb = valhalla::baldr;
+namespace vm = valhalla::midgard;
 
 static Napi::FunctionReference graphid_constructor;
 
@@ -161,8 +167,180 @@ private:
   }
 };
 
+Napi::Value GetTileBaseLonLat(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() < 1 || !info[0].IsObject()) {
+    Napi::TypeError::New(env, "Expected a GraphId").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  try {
+    GraphIdWrapper* wrapper = Napi::ObjectWrap<GraphIdWrapper>::Unwrap(info[0].As<Napi::Object>());
+    auto gid = wrapper->graphId();
+    const auto& tiles_at_level = vb::TileHierarchy::levels().at(gid.level());
+    const auto pt = tiles_at_level.tiles.Base(gid.tileid());
+
+    Napi::Array result = Napi::Array::New(env, 2);
+    result.Set(static_cast<uint32_t>(0), Napi::Number::New(env, pt.x()));
+    result.Set(static_cast<uint32_t>(1), Napi::Number::New(env, pt.y()));
+    return result;
+  } catch (const std::exception& e) {
+    Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+}
+
+Napi::Value GetTileIdFromLonLat(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  // getTileIdFromLonLat(level, [lon, lat])
+  if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsArray()) {
+    Napi::TypeError::New(env, "Expected (level, [lon, lat])").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  try {
+    uint32_t level = info[0].As<Napi::Number>().Uint32Value();
+    valhalla::bindings::check_level(level);
+
+    Napi::Array coord = info[1].As<Napi::Array>();
+    if (coord.Length() != 2) {
+      Napi::TypeError::New(env, "Coordinate must have 2 elements (lon, lat)")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    double x = coord.Get(static_cast<uint32_t>(0)).As<Napi::Number>().DoubleValue();
+    double y = coord.Get(static_cast<uint32_t>(1)).As<Napi::Number>().DoubleValue();
+    valhalla::bindings::check_coord(x, y, x, y);
+
+    auto gid = vb::TileHierarchy::GetGraphId(vm::PointLL{x, y}, static_cast<uint8_t>(level));
+    return GraphIdWrapper::NewInstance(env, gid);
+  } catch (const std::exception& e) {
+    Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+}
+
+Napi::Value GetTileIdsFromBbox(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  // getTileIdsFromBbox(minx, miny, maxx, maxy, levels?)
+  if (info.Length() < 4 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() ||
+      !info[3].IsNumber()) {
+    Napi::TypeError::New(env, "Expected four numbers (minx, miny, maxx, maxy)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  try {
+    double minx = info[0].As<Napi::Number>().DoubleValue();
+    double miny = info[1].As<Napi::Number>().DoubleValue();
+    double maxx = info[2].As<Napi::Number>().DoubleValue();
+    double maxy = info[3].As<Napi::Number>().DoubleValue();
+    valhalla::bindings::check_coord(minx, miny, maxx, maxy);
+
+    std::vector<uint32_t> levels;
+    if (info.Length() > 4 && info[4].IsArray()) {
+      Napi::Array levels_arr = info[4].As<Napi::Array>();
+      levels.reserve(levels_arr.Length());
+      for (uint32_t i = 0; i < levels_arr.Length(); i++) {
+        levels.push_back(levels_arr.Get(i).As<Napi::Number>().Uint32Value());
+      }
+    }
+    if (levels.empty()) {
+      levels = valhalla::bindings::default_levels();
+    }
+
+    const vm::AABB2<vm::PointLL> bbox{minx, miny, maxx, maxy};
+    std::vector<vb::GraphId> tile_ids;
+    for (const auto level : levels) {
+      valhalla::bindings::check_level(level);
+      const auto level_tile_ids = vb::TileHierarchy::levels().at(level).tiles.TileList(bbox);
+      tile_ids.reserve(tile_ids.size() + level_tile_ids.size());
+      for (const auto tid : level_tile_ids) {
+        tile_ids.emplace_back(vb::GraphId{static_cast<uint32_t>(tid), level, 0});
+      }
+    }
+
+    Napi::Array result = Napi::Array::New(env, tile_ids.size());
+    for (size_t i = 0; i < tile_ids.size(); i++) {
+      result.Set(static_cast<uint32_t>(i), GraphIdWrapper::NewInstance(env, tile_ids[i]));
+    }
+    return result;
+  } catch (const std::exception& e) {
+    Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+}
+
+Napi::Value GetTileIdsFromRing(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() < 1 || !info[0].IsArray()) {
+    Napi::TypeError::New(env, "Expected an array of [lon, lat] coordinates")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  try {
+    Napi::Array ring_arr = info[0].As<Napi::Array>();
+
+    // parse JS coordinate arrays into PointLL
+    std::vector<vm::PointLL> ring;
+    ring.reserve(ring_arr.Length());
+    for (uint32_t i = 0; i < ring_arr.Length(); i++) {
+      Napi::Value elem = ring_arr[i];
+      if (!elem.IsArray()) {
+        Napi::TypeError::New(env, "Each coordinate must be an array of [lon, lat]")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      Napi::Array coord = elem.As<Napi::Array>();
+      if (coord.Length() != 2) {
+        Napi::TypeError::New(env, "Each coordinate must have 2 elements (lon, lat)")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      double x = coord.Get(static_cast<uint32_t>(0)).As<Napi::Number>().DoubleValue();
+      double y = coord.Get(static_cast<uint32_t>(1)).As<Napi::Number>().DoubleValue();
+      valhalla::bindings::check_coord(x, y, x, y);
+      ring.push_back({x, y});
+    }
+
+    // parse optional levels array
+    std::vector<uint32_t> levels;
+    if (info.Length() > 1 && info[1].IsArray()) {
+      Napi::Array levels_arr = info[1].As<Napi::Array>();
+      levels.reserve(levels_arr.Length());
+      for (uint32_t i = 0; i < levels_arr.Length(); i++) {
+        levels.push_back(levels_arr.Get(i).As<Napi::Number>().Uint32Value());
+      }
+    }
+
+    auto tile_ids = valhalla::bindings::get_tile_ids_from_ring(std::move(ring), std::move(levels));
+
+    // convert result to JS array of GraphId objects
+    Napi::Array result = Napi::Array::New(env, tile_ids.size());
+    for (size_t i = 0; i < tile_ids.size(); i++) {
+      result.Set(static_cast<uint32_t>(i), GraphIdWrapper::NewInstance(env, tile_ids[i]));
+    }
+    return result;
+  } catch (const std::exception& e) {
+    Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+}
+
 // Init function called from the main module
 Napi::Object InitGraphId(Napi::Env env, Napi::Object exports) {
   GraphIdWrapper::Init(env, exports);
+  exports.Set("getTileBaseLonLat", Napi::Function::New(env, GetTileBaseLonLat, "getTileBaseLonLat"));
+  exports.Set("getTileIdFromLonLat",
+              Napi::Function::New(env, GetTileIdFromLonLat, "getTileIdFromLonLat"));
+  exports.Set("getTileIdsFromBbox",
+              Napi::Function::New(env, GetTileIdsFromBbox, "getTileIdsFromBbox"));
+  exports.Set("getTileIdsFromRing",
+              Napi::Function::New(env, GetTileIdsFromRing, "getTileIdsFromRing"));
   return exports;
 }

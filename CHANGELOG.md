@@ -36,6 +36,7 @@
    * ADDED: Expose start/end OSM nodeids in trace_attributes using EdgeInfo osmnodeids [#5783](https://github.com/valhalla/valhalla/pull/5783)
    * CHANGED: added `shortcuts` layer and removed shortcuts from `edges` layer [#5849](https://github.com/valhalla/valhalla/pull/5849)
    * ADDED: `get_tile_ids_from_ring` to query by polygon in the Python bindings [#5866](https://github.com/valhalla/valhalla/pull/5866)
+   * ADDED: `GraphId` convenience functions (as in Python bindings) to nodeJS bindings [#5880](https://github.com/valhalla/valhalla/pull/5880)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
