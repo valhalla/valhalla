@@ -373,12 +373,10 @@ message TripRoute {
     oneof has_edge_index {
       uint32 edge_index = 2;
     }
-
     // Whether or not there is a discontinuity starting from this point.
     bool begins_discontinuity = 3;
     // Whether or not a discontinuity ends at this point.
     bool ends_discontinuity = 4;
-
     // Percentage distance along the edge for this matched point. For example, if the matched point
     // is halfway along the edge then the value would be 0.5.
     // N.B.: `distance_along_edge` refers to the "uncapped" edge, so to get the distance between
@@ -389,12 +387,11 @@ message TripRoute {
     oneof has_distance_along_edge {
       double distance_along_edge = 5;
     }
-
     // The distance in meters from the trace point to the matched point.
     oneof has_distance_from_trace_point {
       double distance_from_trace_point = 6;
     }
-
+    // Matched point coordinate.
     oneof has_latlng {
       LatLng latlng = 7;
     }
