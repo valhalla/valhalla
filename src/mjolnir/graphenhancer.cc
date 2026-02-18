@@ -524,7 +524,8 @@ bool IsNotThruEdge(GraphReader& reader,
                    const GraphId& startnode,
                    DirectedEdge& directededge) {
   // Add the end node to the expand list
-  std::unordered_set<GraphId> visitedset; // Set of visited nodes
+  ankerl::unordered_dense::set<GraphId> visitedset; // Set of visited nodes
+  visitedset.reserve(kMaxNoThruTries);
   std::vector<GraphId> expandset; // Set of nodes to expand - uses a vector for cache friendliness
 
   // Pre-reserve space in the expandset.  Most of the time, we'll
