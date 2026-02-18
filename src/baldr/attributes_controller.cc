@@ -85,6 +85,8 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeTransitRouteInfoOperatorUrl, true},
     {kEdgeId, true},
     {kEdgeWayId, true},
+    {kEdgeBeginOsmNodeId, true},
+    {kEdgeEndOsmNodeId, true},
     {kEdgeWeightedGrade, true},
     {kEdgeMaxUpwardGrade, true},
     {kEdgeMaxDownwardGrade, true},

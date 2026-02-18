@@ -1,5 +1,6 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: `tile_options.return_shortcuts` request parameter [#5849](https://github.com/valhalla/valhalla/pull/5849)
 * **Bug Fix**
    * FIXED: access for backward edges in MVT contains data from the correct edge [#5834](https://github.com/valhalla/valhalla/pull/5834)
    * FIXED: use correct edge for directional attributes in MVT [#5836](https://github.com/valhalla/valhalla/pull/5836)
@@ -22,9 +23,9 @@
    * ADDED: Geometry generalization for `edges` layer of `/tile` endpoint (#5809)(https://github.com/valhalla/valhalla/pull/5809)
    * ADDED: sort operator for GraphId which is ideal for mmap & edge_id loop cache [#5839](https://github.com/valhalla/valhalla/pull/5839)
    * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
-   * ADDED: `tile_options/exclude_layers` to exclude MVT layers per request [#5855](https://github.com/valhalla/valhalla/pull/5855)
+   * ADDED: `tile_options.exclude_layers` to exclude MVT layers per request [#5855](https://github.com/valhalla/valhalla/pull/5855)
    * CHANGED: Timestamp log format changed from year/mo/dy hr:mn:sc.micros to year-mo-dy hr:mn:sc.nanosecnd [#5856](https://github.com/valhalla/valhalla/pull/5856)
-   * CHANGED: Added `mjolnir.data_quality_dir` as optional config to control the directory for e.g. duplicateways.txt
+   * CHANGED: Added `mjolnir.data_quality_dir` as optional config to control the directory for e.g. duplicateways.txt [#5860](https://github.com/valhalla/valhalla/pull/5860)
    * CHANGED: extended `valhalla_build_config` script to optionally merge config with an existing one [#5857](https://github.com/valhalla/valhalla/pull/5857)
    * ADDED: congestion in shape attributes [#5865](https://github.com/valhalla/valhalla/pull/5865)
    * CHANGED: release GIL for Actor methods, `get_edge_shape` & `get_tile_ids_from_bbox` [#5868](https://github.com/valhalla/valhalla/pull/5868)
@@ -32,6 +33,10 @@
    * ADDED: added `GraphId` binding for the nodejs package [#5874](https://github.com/valhalla/valhalla/pull/5874)
    * CHANGED: return trivial shape when source == target in CostMatrix [#5872](https://github.com/valhalla/valhalla/pull/5872)
    * ADDED: docker-entrypoint logs Valhalla version on container start [#5884](https://github.com/valhalla/valhalla/pull/5884)
+   * ADDED: Expose start/end OSM nodeids in trace_attributes using EdgeInfo osmnodeids [#5783](https://github.com/valhalla/valhalla/pull/5783)
+   * CHANGED: added `shortcuts` layer and removed shortcuts from `edges` layer [#5849](https://github.com/valhalla/valhalla/pull/5849)
+   * ADDED: `get_tile_ids_from_ring` to query by polygon in the Python bindings [#5866](https://github.com/valhalla/valhalla/pull/5866)
+   * ADDED: `GraphId` convenience functions (as in Python bindings) to nodeJS bindings [#5880](https://github.com/valhalla/valhalla/pull/5880)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
