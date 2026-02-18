@@ -690,9 +690,12 @@ std::string serializeTraceAttributes(
     const AttributesController& controller,
     std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
 
+  // todo: These properties should be filled *before* this function is called and then used instead
+  // of `map_match_results`.
+  fill_trace_attributes(request, controller, map_match_results);
+
   // If its pbf format just return the trip
   if (request.options().format() == Options_Format_pbf) {
-    fill_trace_attributes(request, controller, map_match_results);
     return serializePbf(request);
   }
 
