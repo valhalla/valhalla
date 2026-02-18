@@ -953,10 +953,10 @@ parser.add_argument(
     "With arguments (JSON dot notation, e.g. 'mjolnir.logging'), removes only those keys.",
 )
 parser.add_argument(
-    "-d",
-    "--dry-run",
+    "-p",
+    "--report",
     action="store_true",
-    help="When merging, only print the report of changes without outputting the config.",
+    help="When merging, print the merge report.",
 )
 
 # entry point to program
@@ -985,14 +985,11 @@ if __name__ == "__main__":
         # args.remove_old is None if not specified, [] if specified without args, or a list of keys
         output_config = merge_json(existing_config, config, report, args.remove_old)
 
-    # dry-run mode: only print report, no output
-    if args.dry_run:
+    if args.report:
         if report:
             report.print_report()
         elif not args.merge_config:
-            print("Error: --dry-run requires --merge-config", file=sys.stderr)
-            sys.exit(1)
-        sys.exit(0)
+            print("Warn: --report requires --merge-config", file=sys.stderr)
 
     # format output
     output_json = json.dumps(output_config, indent=2)
