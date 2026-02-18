@@ -9,6 +9,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
+#include "tile_id_utils.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <nanobind/nanobind.h>
@@ -24,23 +25,10 @@ namespace nb = nanobind;
 namespace vb = valhalla::baldr;
 namespace vm = valhalla::midgard;
 
+using valhalla::bindings::check_coord;
+using valhalla::bindings::check_level;
+
 namespace pyvalhalla {
-
-// road levels + transit
-const uint32_t MAX_LEVEL = vb::TileHierarchy::levels().back().level + 1;
-
-auto check_level = [](const uint32_t level) {
-  if (level >= MAX_LEVEL) {
-    std::string msg = "We only support " + std::to_string(MAX_LEVEL) + " hierarchy levels.";
-    throw nb::value_error(msg.data());
-  }
-};
-
-auto check_coord = [](const double minx, const double miny, const double maxx, const double maxy) {
-  if (minx < -180. || maxx > 180. || miny < -90. || maxy > 90.) {
-    throw nb::value_error("Invalid coordinate, remember it's (lon, lat)");
-  }
-};
 
 void init_graphid(nb::module_& m) {
   nb::class_<vb::GraphId>(m, "GraphId")
@@ -130,19 +118,9 @@ void init_graphid(nb::module_& m) {
       "get_tile_ids_from_ring",
       [](const std::vector<nb::tuple>& ring_coords,
          std::vector<uint32_t> levels) -> std::vector<vb::GraphId> {
-        if (ring_coords.size() < 3) {
-          throw nb::value_error("Ring must have at least 3 coordinates");
-        }
-
-        if (!levels.size()) {
-          levels.push_back(0);
-          levels.push_back(1);
-          levels.push_back(2);
-        }
-
-        // build a boost geometry ring from the coordinate tuples
+        // parse binding-specific coordinate tuples into PointLL
         std::vector<vm::PointLL> ring;
-        ring.reserve(ring_coords.size() + 1);
+        ring.reserve(ring_coords.size());
         for (const auto& coord : ring_coords) {
           if (nb::len(coord) != 2) {
             throw nb::value_error("Each coordinate must have 2 elements (lon, lat)");
@@ -153,99 +131,7 @@ void init_graphid(nb::module_& m) {
           ring.push_back({x, y});
         }
 
-        // close open rings
-        if (ring.front().lng() != ring.back().lng() || ring.front().lat() != ring.back().lat()) {
-          ring.push_back(ring.front());
-        }
-        // reverse if counter-clockwise
-        if (vm::polygon_area(ring) > 0) {
-          std::reverse(ring.begin(), ring.end());
-        }
-
-        // point-in-polygon test using ray casting (to the right from pt)
-        auto point_in_ring = [&ring](const vm::PointLL& test_pt) {
-          bool inside = false;
-          // first connect the last with the first point, then walk through the segments of the ring
-          for (size_t i = 0, j = ring.size() - 1; i < ring.size(); j = i++) {
-            const auto& segment_start = ring[j];
-            const auto& segment_end = ring[i];
-
-            // does this segment cross the ray's latitude?
-            bool crossing_lat =
-                (segment_end.lat() > test_pt.lat()) != (segment_start.lat() > test_pt.lat());
-            if (!crossing_lat) {
-              continue;
-            }
-
-            // longitude where the segment crosses the ray's latitude
-            double crossing_lng = segment_start.lng() + (segment_end.lng() - segment_start.lng()) *
-                                                            (test_pt.lat() - segment_start.lat()) /
-                                                            (segment_end.lat() - segment_start.lat());
-            // does the crossing point fall to the right of the point, flip inside state if so
-            if (test_pt.lng() < crossing_lng) {
-              inside = !inside;
-            }
-          }
-          // if the number of ray-polygon_edges crossings is odd, the point is inside the ring
-          return inside;
-        };
-
-        std::vector<vb::GraphId> result;
-        for (const auto level : levels) {
-          check_level(level);
-          const auto& tiles = vb::TileHierarchy::get_tiling(static_cast<uint8_t>(level));
-
-          // find tiles intersecting (crossing) the ring
-          auto intersected = tiles.Intersect(ring);
-          std::vector<int32_t> boundary_tiles;
-          boundary_tiles.reserve(intersected.size());
-          result.reserve(result.size() + intersected.size());
-          for (const auto& [tile_id, bins] : intersected) {
-            boundary_tiles.push_back(tile_id);
-            result.push_back(vb::GraphId{static_cast<uint32_t>(tile_id), level, 0});
-          }
-
-          // sort the tiles according to their index, so we can easily traverse them
-          // row by row
-          std::sort(boundary_tiles.begin(), boundary_tiles.end());
-
-          // start at the lower-left tile & row and walk the grid to collect inner tiles
-          auto curr_tile = boundary_tiles.begin();
-          auto curr_row = *curr_tile / tiles.ncolumns();
-          curr_tile++;
-          for (; curr_tile != boundary_tiles.end(); ++curr_tile) {
-            // last tile must a boundary tile, breaking also makes sure we have a next tile to look at
-            if (*curr_tile == boundary_tiles.back()) {
-              break;
-            }
-
-            const auto next_tile = *(curr_tile + 1);
-
-            // we're about to move to the next row, reset and do it
-            if (const auto next_row = next_tile / tiles.ncolumns(); next_row > curr_row) {
-              curr_row = next_row;
-              continue;
-            }
-
-            const auto col_distance =
-                (next_tile % tiles.ncolumns()) - (*curr_tile % tiles.ncolumns());
-            // the next tile is also a boundary tile
-            if (col_distance == 1) {
-              continue;
-            }
-            // skip gaps that are outside the polygon (handles concave shapes like U/W)
-            if (!point_in_ring(tiles.Center(*curr_tile + col_distance / 2))) {
-              continue;
-            }
-            // in the same row, walk through the columns and add inner tiles
-            result.reserve(result.size() + col_distance - 1);
-            for (auto const add_col : std::views::iota(1, col_distance)) {
-              result.emplace_back(*curr_tile + add_col, level, 0);
-            }
-          }
-        }
-
-        return result;
+        return valhalla::bindings::get_tile_ids_from_ring(std::move(ring), std::move(levels));
       },
       nb::arg("ring_coords"), nb::arg("levels") = std::vector<uint32_t>{},
       nb::call_guard<nb::gil_scoped_release>());

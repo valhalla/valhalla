@@ -41,7 +41,8 @@ foreach(tgt IN ITEMS _valhalla _graph_utils predicted_speeds)
   # force abi3.so extension
   nanobind_extension_abi3(${tgt})
 
-  target_link_libraries(${tgt} PRIVATE 
+  target_include_directories(${tgt} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../shared)
+  target_link_libraries(${tgt} PRIVATE
     valhalla
     Python::SABIModule
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
