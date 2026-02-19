@@ -3,7 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
 
-## Release Date: 2026-02-18 Valhalla 3.6.3
+## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
    * REMOVED: `tile_options.return_shortcuts` request parameter [#5849](https://github.com/valhalla/valhalla/pull/5849)
 * **Bug Fix**
