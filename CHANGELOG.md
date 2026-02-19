@@ -191,6 +191,7 @@
    * ADDED: include level change info in `/route` response [#4942](https://github.com/valhalla/valhalla/pull/4942)
    * ADDED: steps maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)
    * ADDED: instruction improvements for node-based elevators [#4988](https://github.com/valhalla/valhalla/pull/4988)
+   * ADDED: Support the HTTP Accept-Language header as a fallback for instruction generation [#4965](https://github.com/valhalla/valhalla/pull/4965)
    * ADDED: customizable hierarchy limits [#5010](https://github.com/valhalla/valhalla/pull/5010)
    * ADDED: increased precision in route lengths [#5020](https://github.com/valhalla/valhalla/pull/5020)
    * ADDED: Add maneuver bearings in route json response [#5024](https://github.com/valhalla/valhalla/pull/5024)
