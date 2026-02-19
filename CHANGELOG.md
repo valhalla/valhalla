@@ -42,6 +42,7 @@
    * CHANGED: added `shortcuts` layer and removed shortcuts from `edges` layer [#5849](https://github.com/valhalla/valhalla/pull/5849)
    * ADDED: `get_tile_ids_from_ring` to query by polygon in the Python bindings [#5866](https://github.com/valhalla/valhalla/pull/5866)
    * ADDED: `GraphId` convenience functions (as in Python bindings) to nodeJS bindings [#5880](https://github.com/valhalla/valhalla/pull/5880)
+   * CHANGED: Write tiles via temp file and then rename to avoid locking mutex [#5888](https://github.com/valhalla/valhalla/pull/5888)
 
 ## Release Date: 2026-01-15 Valhalla 3.6.2
 * **Removed**
