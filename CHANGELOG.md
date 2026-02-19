@@ -1,5 +1,10 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2026-02-19 Valhalla 3.6.3
+* **Removed**
    * REMOVED: `tile_options.return_shortcuts` request parameter [#5849](https://github.com/valhalla/valhalla/pull/5849)
 * **Bug Fix**
    * FIXED: access for backward edges in MVT contains data from the correct edge [#5834](https://github.com/valhalla/valhalla/pull/5834)
