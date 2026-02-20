@@ -101,6 +101,12 @@ std::string build_valhalla_request(const std::vector<std::string>& location_type
 
   // we do this last so that options are additive/overwrite
   for (const auto& kv : options) {
+    // handle single element arrays, e.g. /array_type/- will add value to back
+    if (auto parent = kv.first.substr(0, kv.first.rfind("/-"));
+        (parent != kv.first) && !rapidjson::Pointer(parent).Get(doc)) {
+      rapidjson::Pointer(parent).Set(doc, rapidjson::kArrayType);
+    }
+
     rapidjson::Pointer(kv.first).Set(doc, kv.second);
   }
 
@@ -494,7 +500,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
          const bool is_shortcut) {
   // if the tile was specified use it otherwise scan everything
   auto tileset =
-      tile_id.Is_Valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
+      tile_id.is_valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
 
   // Iterate over all the tiles, there wont be many in unit tests..
   const auto& end_node_coordinates = nodes.at(end_node);
@@ -745,7 +751,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
 
   const auto& center_coords = detail::to_ll(map.nodes, center);
 
-  // Calculate which tile contains this point at zoom 14
+  // Calculate which tile contains this point at zoom
   // Using standard slippy map tile formula
   double n = std::pow(2.0, zoom);
   uint32_t x = static_cast<uint32_t>((center_coords.lng() + 180.0) / 360.0 * n);

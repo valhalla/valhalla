@@ -13,7 +13,9 @@
 #include <iostream>
 #include <list>
 #include <set>
+#include <sstream>
 #include <stdexcept>
+#include <thread>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -268,9 +270,18 @@ void GraphTileBuilder::StoreTileData() {
     std::filesystem::create_directories(filename.parent_path());
   }
 
+  // Tiles are rewritten multiple times during building. Since threads may read tiles while they're
+  // being written, we use atomic "write to temp file + rename" to avoid partial reads.
+  std::filesystem::path tmp_filename = filename;
+  {
+    std::ostringstream suffix;
+    suffix << "_" << std::this_thread::get_id() << ".tmp";
+    tmp_filename += suffix.str();
+  }
+
   // Open file and truncate
   std::stringstream in_mem;
-  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  std::ofstream file(tmp_filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Write the nodes
     header_builder_.set_nodecount(nodes_builder_.size());
@@ -432,6 +443,8 @@ void GraphTileBuilder::StoreTileData() {
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
     file << in_mem.rdbuf();
     file.close();
+
+    std::filesystem::rename(tmp_filename, filename);
   } else {
     throw std::runtime_error("Failed to open file " + filename.string());
   }
@@ -1316,7 +1329,7 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
 
 void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
   // check the edge id makes sense
-  if (header_builder_.graphid().Tile_Base() != edge_id.Tile_Base()) {
+  if (header_builder_.graphid().tile_base() != edge_id.tile_base()) {
     throw std::runtime_error(
         "Can't add landmark: tile id or hierarchy level doesn't match with the current builder");
   }

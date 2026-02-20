@@ -37,10 +37,10 @@ constexpr double kLandmarkQueryBuffer = .000001;
 
 // sort a sequence file to put the edges in the same tile together
 bool sort_seq_file(const std::pair<GraphId, uint64_t>& a, const std::pair<GraphId, uint64_t>& b) {
-  if (a.first.Tile_Base() == b.first.Tile_Base()) {
+  if (a.first.tile_base() == b.first.tile_base()) {
     return a.first.id() < b.first.id();
   }
-  return a.first.Tile_Base() < b.first.Tile_Base();
+  return a.first.tile_base() < b.first.tile_base();
 }
 } // namespace
 
@@ -382,8 +382,8 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
   // every i'th thread works on every i'th tile
   for (auto it = seq_file.begin(); it != seq_file.end(); ++it) {
     // if the current tile is not the same as the last one, increase counter by one
-    if ((*it).first.Tile_Base() != last_tile) {
-      last_tile = (*it).first.Tile_Base();
+    if ((*it).first.tile_base() != last_tile) {
+      last_tile = (*it).first.tile_base();
       tile_count++;
     }
     // decide whether this tile is a "every i'th tile". if not, the thread should skip it
@@ -395,14 +395,14 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
 
     // if this pair is on a new tile, then store the previous tile and move to the new tile
     if (!tile_builder_ptr ||
-        tile_builder_ptr->header_builder().graphid().Tile_Base() != (*it).first.Tile_Base()) {
+        tile_builder_ptr->header_builder().graphid().tile_base() != (*it).first.tile_base()) {
       // store the previously updated tile
       if (tile_builder_ptr) {
         tile_builder_ptr->StoreTileData();
         updated_tiles++;
       }
       // reset the tile builder to this new tile
-      tile_builder_ptr = std::make_unique<GraphTileBuilder>(tile_dir, (*it).first.Tile_Base(), true);
+      tile_builder_ptr = std::make_unique<GraphTileBuilder>(tile_dir, (*it).first.tile_base(), true);
     }
 
     // retrieve the landmark to be added
@@ -442,12 +442,11 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
 bool AddLandmarks(const boost::property_tree::ptree& pt) {
   LOG_INFO("Starting adding landmarks to tiles...");
 
-  const size_t num_threads =
-      pt.get<size_t>("mjolnir.concurrency", std::thread::hardware_concurrency());
-  const std::string db_name = pt.get_child("mjolnir").get<std::string>("landmarks_db", "");
+  const size_t num_threads = pt.get<size_t>("concurrency", std::thread::hardware_concurrency());
+  const std::string db_name = pt.get<std::string>("landmarks", "");
 
   // get tile access
-  baldr::GraphReader reader(pt.get_child("mjolnir"));
+  baldr::GraphReader reader(pt);
 
   // get all tile ids and sort the tiles in descending order by size to balance the threads
   // TODO: it is possible in a global tileset that we have coverage only at level 2 for some places
@@ -466,9 +465,9 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
   std::vector<std::promise<std::string>> sequence_file_names(num_threads);
   for (size_t i = 0; i < num_threads; ++i) {
-    threads[i] = std::make_shared<std::thread>(FindLandmarkEdges, std::cref(pt.get_child("mjolnir")),
-                                               std::cref(vec_tileset), i, num_threads,
-                                               std::ref(sequence_file_names[i]));
+    threads[i] =
+        std::make_shared<std::thread>(FindLandmarkEdges, std::cref(pt), std::cref(vec_tileset), i,
+                                      num_threads, std::ref(sequence_file_names[i]));
   }
 
   // join all the threads and collect the sequence file names

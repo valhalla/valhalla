@@ -22,7 +22,7 @@ TEST(TileHierarchy, Parse) {
   EXPECT_EQ(TileHierarchy::levels()[2].level, 2);
   GraphId id = TileHierarchy::GetGraphId(PointLL(0, 0), 34);
 
-  EXPECT_FALSE(id.Is_Valid()) << "GraphId should be invalid as the level doesn't exist";
+  EXPECT_FALSE(id.is_valid()) << "GraphId should be invalid as the level doesn't exist";
 
   // there are 1440 cols and 720 rows, this spot lands on col 414 and row 522
   id = TileHierarchy::GetGraphId(PointLL(-76.5, 40.5), 2);

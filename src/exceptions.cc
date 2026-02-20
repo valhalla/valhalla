@@ -76,6 +76,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {163, {163, "Invalid date_type", 400, HTTP_400, OSRM_INVALID_VALUE, "wrong_date_type"}},
     {164, {164, "Invalid shape format", 400, HTTP_400, OSRM_INVALID_VALUE, "wrong_shape_format"}},
     {165, {165, "Date and time required for destination for date_type of invariant", 400, HTTP_400, OSRM_INVALID_OPTIONS, "missing_invariant_date"}},
+    {166, {166, "Exceeded max distance", 400, HTTP_400, OSRM_INVALID_VALUE, "too_large_distance"}},
     {167, {167, "Exceeded maximum circumference for exclude_polygons", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "too_large_polygon"}},
     {168, {168, "Invalid expansion property type", 400, HTTP_400, OSRM_INVALID_OPTIONS, "invalid_expansion_property"}},
     {170, {170, "Locations are in unconnected regions. Go check/edit the map at osm.org", 400, HTTP_400, OSRM_NO_ROUTE, "impossible_route"}},
@@ -83,6 +84,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {172, {172, "Exceeded breakage distance for all pairs", 400, HTTP_400, OSRM_BREAKAGE_EXCEEDED, "too_large_breakage_distance"}},
     {173, {173, "Failed to parse line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},
     {174, {174, "Invalid tile coordinates", 400, HTTP_400, OSRM_INVALID_VALUE, "tile_coords_invalid"}},
+    {175, {175, "Exceeded max zoom level of", 400, HTTP_400, OSRM_INVALID_VALUE, "tile_zoom_invalid"}},
     {199, {199, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},
@@ -145,6 +147,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {209, R"(Customized hierarchy limits are not allowed on this server, using default hierarchy limits)"},
   {210, R"(Provided hierarchy limits exceeded maximum allowed values, using max allowed hierarchy limits)"},
   {211, R"(This action doesn't support requested format, using json instead)"},
+  {212, R"(Invalid layer name in exclude_layers array: )"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},

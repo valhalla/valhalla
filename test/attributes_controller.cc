@@ -34,6 +34,7 @@ TEST(AttrController, TestArgCtor) {
 void TryCategoryAttributeEnabled(const AttributesController& controller,
                                  std::string_view category,
                                  bool expected_response) {
+  SCOPED_TRACE("Failed on " + std::string(category));
   // If category_attribute_enabled does not equal expected response then throw error
   EXPECT_EQ(controller.category_attribute_enabled(category), expected_response);
 }

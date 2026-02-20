@@ -185,7 +185,7 @@ TEST(Traffic, CutGeoms) {
             R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.congestion","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
       "action":"include"}})",
         nullptr, &api);
 
@@ -197,6 +197,7 @@ TEST(Traffic, CutGeoms) {
     EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().congestion_size(), shapes.size() - 1);
   }
 
   // then we add one portion of the edge having traffic
@@ -261,6 +262,7 @@ TEST(Traffic, CutGeoms) {
     EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().congestion_size(), 0);
 
     EXPECT_TRUE(map.nodes["C"].ApproximatelyEqual(shapes[0]));
     auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 127 / 255.0);
@@ -323,7 +325,7 @@ TEST(Traffic, CutGeoms) {
             R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.congestion","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
       "action":"include"}})",
         nullptr, &api);
 
@@ -335,6 +337,7 @@ TEST(Traffic, CutGeoms) {
     EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().congestion_size(), shapes.size() - 1);
 
     {
       auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 100 / 255.0);
@@ -988,8 +991,8 @@ TEST_F(WaypointsOnClosuresTest, IgnoreDepartPointAtClosure) {
       baldr::GraphId tile_id(tile.header->tile_id);
       auto BC = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "C"));
       auto CB = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "B"));
-      bool should_close = (BC.Tile_Base() == tile_id && BC.id() == index) ||
-                          (CB.Tile_Base() == tile_id && CB.id() == index);
+      bool should_close = (BC.tile_base() == tile_id && BC.id() == index) ||
+                          (CB.tile_base() == tile_id && CB.id() == index);
       SetLiveSpeed(current, should_close ? 0 : default_speed);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
@@ -1006,8 +1009,8 @@ TEST_F(WaypointsOnClosuresTest, IgnoreDepartPointAtClosure) {
       baldr::GraphId tile_id(tile.header->tile_id);
       auto BC = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "C"));
       auto CB = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "B"));
-      bool should_close = (BC.Tile_Base() == tile_id && BC.id() == index) ||
-                          (CB.Tile_Base() == tile_id && CB.id() == index);
+      bool should_close = (BC.tile_base() == tile_id && BC.id() == index) ||
+                          (CB.tile_base() == tile_id && CB.id() == index);
       SetLiveSpeed(current, should_close ? 0 : default_speed);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
