@@ -18,6 +18,7 @@ bool validate_alternate_by_sharing(std::vector<std::unordered_set<baldr::GraphId
                                    const std::vector<PathInfo>& candidate_path,
                                    float at_most_shared);
 
-bool validate_alternate_by_local_optimality(const std::vector<PathInfo>& candidate_path);
+bool validate_alternate_by_local_optimality(const std::vector<PathInfo>& optimal_path,
+                                            const std::vector<PathInfo>& candidate_path);
 } // namespace thor
 } // namespace valhalla

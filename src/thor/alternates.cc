@@ -18,8 +18,8 @@ float kAtMostLonger = 1.25f; // stretch threshold
 // Alternative route shouldn't contain unreasonable detours. We should skip an alternative
 // if it has a detour longer than 2 x cost of the corresponding path in the optimal route.
 float kAtMostLongerDetour = 2.f;
-float kAtMostShared = 0.75f; // sharing threshold
-// float kAtLeastOptimal = 0.2f; // local optimality threshold
+float kAtMostShared = 0.75f;  // sharing threshold
+float kAtLeastOptimal = 0.2f; // local optimality threshold
 } // namespace
 
 namespace valhalla {
@@ -191,8 +191,39 @@ bool validate_alternate_by_sharing(std::vector<std::unordered_set<GraphId>>& sha
   return true;
 }
 
-bool validate_alternate_by_local_optimality(const std::vector<PathInfo>&) {
-  // [TODO] NOT IMPLEMENTED
+// Local Optimality. The diverging segment of an alternate path should be
+// near-optimal for that segment. If the candidate's unique segment is more
+// than (1 + kAtLeastOptimal) times the cost of the optimal path's segment,
+// reject the alternate.
+bool validate_alternate_by_local_optimality(const std::vector<PathInfo>& optimal_path,
+                                            const std::vector<PathInfo>& candidate_path) {
+  const auto unique_segments = find_diff_segment(optimal_path, candidate_path);
+  const auto& unique_optimal_segment = unique_segments.first;
+  const auto& unique_candidate_segment = unique_segments.second;
+
+  // If paths are identical, accept
+  if (unique_optimal_segment.first == optimal_path.size() &&
+      unique_candidate_segment.first == candidate_path.size()) {
+    return true;
+  }
+
+  // If optimal path is a subpath of candidate (no diverging segment in optimal),
+  // we can't compare - defer to other validation
+  if (unique_optimal_segment.first == optimal_path.size()) {
+    return true;
+  }
+
+  const auto optimal_segment_cost =
+      get_segment_cost(optimal_path, unique_optimal_segment.first, unique_optimal_segment.second);
+  const auto candidate_segment_cost = get_segment_cost(candidate_path, unique_candidate_segment.first,
+                                                       unique_candidate_segment.second);
+
+  // Check if candidate's diverging segment is within local optimality threshold
+  if (candidate_segment_cost.cost > (1.f + kAtLeastOptimal) * optimal_segment_cost.cost) {
+    LOG_DEBUG("Candidate alternate rejected by local optimality");
+    return false;
+  }
+
   return true;
 }
 } // namespace thor
