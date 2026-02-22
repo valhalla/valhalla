@@ -2111,6 +2111,7 @@ std::string serialize(valhalla::Api& api) {
   // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
   std::string status("Ok");
   json->emplace("code", status);
+  json->emplace("version", VALHALLA_VERSION);
   switch (options.action()) {
     case valhalla::Options::trace_route:
       json->emplace("tracepoints", osrm::waypoints(options.shape(), true));

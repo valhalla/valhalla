@@ -5,7 +5,7 @@
 #include "odin/enhancedtrippath.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"
-
+#include "valhalla/config.h"
 #include <vector>
 
 using namespace valhalla;
@@ -679,15 +679,18 @@ namespace valhalla_serializers {
 std::string serialize(Api& api) {
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);
-
+  
   // for each route
   for (int i = 0; i < api.directions().routes_size(); ++i) {
     if (i == 1) {
       writer.start_array("alternates");
     }
 
-    // the route itself
     writer.start_object();
+       
+    writer("version", VALHALLA_PRINT_VERSION);
+
+    // the route itself
     writer.start_object("trip");
 
     // the locations in the trip

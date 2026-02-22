@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * ADDED: Include `version` field in Valhalla and OSRM route JSON responses (#1940)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
