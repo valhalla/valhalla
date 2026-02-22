@@ -19,12 +19,12 @@
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
-#include <fstream>
 #include <future>
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <set>
+#include <shared_mutex>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -36,6 +36,12 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
+
+// The GTFS files Valhalla actually needs for transit ingestion
+const auto kValhallaGtfsFiles =
+    gtfs::GtfsFile::Agencies | gtfs::GtfsFile::Stops | gtfs::GtfsFile::Routes |
+    gtfs::GtfsFile::Trips | gtfs::GtfsFile::StopTimes | gtfs::GtfsFile::Calendar |
+    gtfs::GtfsFile::CalendarDates | gtfs::GtfsFile::Shapes | gtfs::GtfsFile::Frequencies;
 
 struct feed_object_t {
   gtfs::Id id;
@@ -79,19 +85,34 @@ struct tile_transit_info_t {
 struct feed_cache_t {
   std::unordered_map<std::string, gtfs::Feed> cache;
   std::filesystem::path gtfs_dir;
+  mutable std::shared_mutex mtx;
 
   feed_cache_t(const std::string& gtfs_dir) : gtfs_dir(gtfs_dir) {
   }
 
+  // Thread-safe read access: multiple threads can read simultaneously
   const gtfs::Feed& operator()(const feed_object_t& feed_object) {
+    // First try with a shared (read) lock
+    {
+      std::shared_lock<std::shared_mutex> read_lock(mtx);
+      auto found = cache.find(feed_object.feed);
+      if (found != cache.end()) {
+        return found->second;
+      }
+    }
+
+    // Cache miss: acquire exclusive (write) lock to load the feed
+    std::unique_lock<std::shared_mutex> write_lock(mtx);
+    // Double-check after acquiring write lock (another thread may have loaded it)
     auto found = cache.find(feed_object.feed);
     if (found != cache.end()) {
       return found->second;
     }
 
+    LOG_INFO("Loading GTFS feed into shared cache: " + feed_object.feed);
     auto inserted =
         cache.insert({feed_object.feed, gtfs::Feed((gtfs_dir / feed_object.feed).string())});
-    inserted.first->second.read_feed();
+    inserted.first->second.read_feed(kValhallaGtfsFiles);
     return inserted.first->second;
   }
 };
@@ -129,12 +150,25 @@ std::filesystem::path get_tile_path(const std::filesystem::path& tile_base_dir,
 };
 
 // converts service start/end dates of the form (yyyymmdd) into epoch seconds
+// uses a thread_local cache to avoid redundant parsing of the same dates
 uint32_t to_local_pivot_sec(const std::string& dt, bool end_of_day = false) {
+  // Thread-local cache: same dates are parsed many times across trips sharing a service
+  thread_local std::unordered_map<std::string, uint32_t> date_cache;
+
+  // Create a key that includes the end_of_day flag
+  const auto cache_key = dt + (end_of_day ? "_e" : "_s");
+  auto it = date_cache.find(cache_key);
+  if (it != date_cache.end()) {
+    return it->second;
+  }
+
   date::local_seconds tp;
   std::istringstream in{dt};
   in >> date::parse("%Y%m%d", tp);
   auto epoch = static_cast<uint32_t>((tp - DateTime::pivot_date_).count());
   epoch += end_of_day ? kSecondsPerDay - 1 : 0;
+
+  date_cache[cache_key] = epoch;
   return epoch;
 };
 
@@ -173,7 +207,10 @@ select_transit_tiles(const std::filesystem::path& gtfs_path) {
 
       LOG_INFO("Loading " + feed_name);
       gtfs::Feed feed(feed_path.string());
-      auto read_result = feed.read_feed();
+      // Only read the files needed for tile selection (not fares, transfers, etc.)
+      auto read_result = feed.read_feed(gtfs::GtfsFile::Agencies | gtfs::GtfsFile::Stops |
+                                        gtfs::GtfsFile::StopTimes | gtfs::GtfsFile::Trips |
+                                        gtfs::GtfsFile::Routes | gtfs::GtfsFile::Shapes);
       if (read_result.code != gtfs::ResultCode::OK) {
         LOG_ERROR("Couldn't find a required file for feed " + feed_path.filename().string() + ": " +
                   read_result.message);
@@ -671,12 +708,12 @@ void write_shapes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
 }
 
 // pre-processes feed data and writes to the pbfs (calls the 'write' functions)
-void ingest_tiles(const std::filesystem::path& gtfs_dir,
-                  const std::filesystem::path& transit_dir,
+void ingest_tiles(const std::filesystem::path& transit_dir,
                   const uint32_t pbf_trip_limit,
                   std::priority_queue<tile_transit_info_t>& queue,
                   unique_transit_t& uniques,
-                  std::promise<std::list<GraphId>>& promise) {
+                  std::promise<std::list<GraphId>>& promise,
+                  feed_cache_t& feeds) {
 
   std::list<GraphId> dangling;
 
@@ -698,8 +735,7 @@ void ingest_tiles(const std::filesystem::path& gtfs_dir,
     const auto tile_path = get_tile_path(transit_dir, current.graphid);
     auto current_path = tile_path;
 
-    // collect all the feeds in this tile
-    feed_cache_t feeds(gtfs_dir.string());
+    // pre-load all feeds needed for this tile (shared cache handles dedup)
     for (const auto& route : current.routes) {
       feeds(route.first);
     }
@@ -885,16 +921,16 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
 
   // schedule some work
   unique_transit_t uniques;
+  feed_cache_t shared_feeds(gtfs_dir.string());
   std::vector<std::shared_ptr<std::thread>> threads(thread_count);
   std::vector<std::promise<std::list<GraphId>>> promises(threads.size());
 
   auto pbf_trip_limit = pt.get<uint32_t>("mjolnir.transit_pbf_limit");
 
   for (size_t i = 0; i < threads.size(); ++i) {
-    threads[i] =
-        std::make_shared<std::thread>(ingest_tiles, std::cref(gtfs_dir), std::cref(transit_dir),
-                                      pbf_trip_limit, std::ref(tiles), std::ref(uniques),
-                                      std::ref(promises[i]));
+    threads[i] = std::make_shared<std::thread>(ingest_tiles, std::cref(transit_dir), pbf_trip_limit,
+                                               std::ref(tiles), std::ref(uniques),
+                                               std::ref(promises[i]), std::ref(shared_feeds));
   }
 
   // let the threads finish and get the dangling list
@@ -955,15 +991,21 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
 }
 
 Transit read_pbf(const std::filesystem::path& file_name, std::mutex& lock) {
+  // Get file size under lock
   lock.lock();
-  std::fstream file(file_name, std::ios::in | std::ios::binary);
-  if (!file) {
-    lock.unlock();
+  auto file_size = std::filesystem::file_size(file_name);
+  lock.unlock();
+  if (file_size == 0) {
     throw std::runtime_error("Couldn't load " + file_name.string());
   }
-  std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+  // Memory-map the file for zero-copy reading
+  valhalla::midgard::mem_map<char> buffer;
+  lock.lock();
+  buffer.map(file_name.string(), file_size, POSIX_MADV_SEQUENTIAL, true /* readonly */);
   lock.unlock();
-  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
+
+  google::protobuf::io::ArrayInputStream as(buffer.get(), buffer.size());
   google::protobuf::io::CodedInputStream cs(
       static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
@@ -980,12 +1022,16 @@ Transit read_pbf(const std::filesystem::path& file_name, std::mutex& lock) {
 }
 
 Transit read_pbf(const std::filesystem::path& file_name) {
-  std::fstream file(file_name, std::ios::in | std::ios::binary);
-  if (!file) {
+  auto file_size = std::filesystem::file_size(file_name);
+  if (file_size == 0) {
     throw std::runtime_error("Couldn't load " + file_name.string());
   }
-  std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
+
+  // Memory-map the file for zero-copy reading
+  valhalla::midgard::mem_map<char> buffer;
+  buffer.map(file_name.string(), file_size, POSIX_MADV_SEQUENTIAL, true /* readonly */);
+
+  google::protobuf::io::ArrayInputStream as(buffer.get(), buffer.size());
   google::protobuf::io::CodedInputStream cs(
       static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
