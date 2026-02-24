@@ -165,5 +165,9 @@ async function getConfig(options = {}) {
 }
 
 const GraphId = valhalla.GraphId;
+const getTileBaseLonLat = valhalla.getTileBaseLonLat;
+const getTileIdFromLonLat = valhalla.getTileIdFromLonLat;
+const getTileIdsFromBbox = valhalla.getTileIdsFromBbox;
+const getTileIdsFromRing = valhalla.getTileIdsFromRing;
 
-module.exports = { Actor, GraphId, getConfig, VALHALLA_VERSION: valhalla.VALHALLA_VERSION };
+module.exports = { Actor, GraphId, getConfig, getTileBaseLonLat, getTileIdFromLonLat, getTileIdsFromBbox, getTileIdsFromRing, VALHALLA_VERSION: valhalla.VALHALLA_VERSION };

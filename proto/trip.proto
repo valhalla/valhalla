@@ -226,6 +226,14 @@ message TripLeg {
     repeated float elevation = 57;
     bool country_crossing = 58;
     bool forward = 59;
+    oneof has_begin_osm_node_id {
+      uint64 begin_osm_node_id = 70;
+    }
+
+    oneof has_end_osm_node_id {
+      uint64 end_osm_node_id = 71;
+    }
+
     repeated ConditionalSpeedLimit conditional_speed_limits = 60;
     message Level {
       float start = 1;
@@ -354,7 +362,51 @@ message TripLeg {
 }
 
 message TripRoute {
+  message MatchedPoint {
+    enum MatchType {
+      kUnmatched = 0;
+      kInterpolated = 1;
+      kMatched = 2;
+    }
+    MatchType type = 1;
+    // The index of the edge in the list of edges that this matched point is associated with.
+    oneof has_edge_index {
+      uint32 edge_index = 2;
+    }
+    // Whether or not there is a discontinuity starting from this point.
+    bool begins_discontinuity = 3;
+    // Whether or not a discontinuity ends at this point.
+    bool ends_discontinuity = 4;
+    // Percentage distance along the edge for this matched point. For example, if the matched point
+    // is halfway along the edge then the value would be 0.5.
+    // N.B.: `distance_along_edge` refers to the "uncapped" edge, so to get the distance between
+    // two matched points along the route, the edge length should be restored using
+    // `source_along_edge` and `target_along_edge` of the corresponding edges.
+    // For the first and last matchings in the response this value should be equal to
+    // `source_along_edge` and `target__along_edge` of the corresponding edges.
+    oneof has_distance_along_edge {
+      double distance_along_edge = 5;
+    }
+    // The distance in meters from the trace point to the matched point.
+    oneof has_distance_from_trace_point {
+      double distance_from_trace_point = 6;
+    }
+    // Matched point coordinate.
+    oneof has_latlng {
+      LatLng latlng = 7;
+    }
+  }
+
   repeated TripLeg legs = 1;
+  // Each point corresponds to a trace point in the original request.
+  repeated MatchedPoint matched_points = 2;
+  // Relative quality measure for this map matching alternative. Value of 1.0 for the best match,
+  // lower values indicate how much worse this alternative is compared to the best match.
+  float confidence_score = 3;
+  // Total accumulated cost from the map matching algorithm. Lower values indicate better match
+  // quality based on GPS accuracy and route consistency.
+  float raw_score = 4;
+  bool is_best = 5;
 }
 
 message Trip {

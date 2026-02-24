@@ -1,12 +1,15 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "graph_utils_module.h"
 #include "midgard/aabb2.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
+#include "tile_id_utils.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <nanobind/nanobind.h>
@@ -22,23 +25,10 @@ namespace nb = nanobind;
 namespace vb = valhalla::baldr;
 namespace vm = valhalla::midgard;
 
+using valhalla::bindings::check_coord;
+using valhalla::bindings::check_level;
+
 namespace pyvalhalla {
-
-// road levels + transit
-const uint32_t MAX_LEVEL = vb::TileHierarchy::levels().back().level + 1;
-
-auto check_level = [](const uint32_t level) {
-  if (level >= MAX_LEVEL) {
-    std::string msg = "We only support " + std::to_string(MAX_LEVEL) + " hierarchy levels.";
-    throw nb::value_error(msg.data());
-  }
-};
-
-auto check_coord = [](const double minx, const double miny, const double maxx, const double maxy) {
-  if (minx < -180. || maxx > 180. || miny < -90. || maxy > 90.) {
-    throw nb::value_error("Invalid coordinate, remember it's (lon, lat)");
-  }
-};
 
 void init_graphid(nb::module_& m) {
   nb::class_<vb::GraphId>(m, "GraphId")
@@ -59,6 +49,9 @@ void init_graphid(nb::module_& m) {
       .def(nb::self == nb::self)               // operator==(const GraphId&)
       .def(nb::self != nb::self)               // operator!=(const GraphId&)
       .def("__bool__", &vb::GraphId::is_valid) // operator bool
+      .def("__str__", [](const vb::GraphId& graph_id) { return std::to_string(graph_id); })
+      .def("__fspath__",
+           [](const vb::GraphId& graph_id) { return vb::GraphTile::FileSuffix(graph_id); })
       .def("__repr__",
            [](const vb::GraphId& graph_id) { return "<GraphId(" + std::to_string(graph_id) + ")>"; })
       // pickling support auto-provides copy/deepcopy support
@@ -120,6 +113,28 @@ void init_graphid(nb::module_& m) {
       },
       nb::arg("minx"), nb::arg("miny"), nb::arg("maxx"), nb::arg("maxy"),
       nb::arg("levels") = std::vector<uint32_t>{}, nb::call_guard<nb::gil_scoped_release>());
+
+  m.def(
+      "get_tile_ids_from_ring",
+      [](const std::vector<nb::tuple>& ring_coords,
+         std::vector<uint32_t> levels) -> std::vector<vb::GraphId> {
+        // parse binding-specific coordinate tuples into PointLL
+        std::vector<vm::PointLL> ring;
+        ring.reserve(ring_coords.size());
+        for (const auto& coord : ring_coords) {
+          if (nb::len(coord) != 2) {
+            throw nb::value_error("Each coordinate must have 2 elements (lon, lat)");
+          }
+          auto x = nb::cast<double>(coord[0]);
+          auto y = nb::cast<double>(coord[1]);
+          check_coord(x, y, x, y);
+          ring.push_back({x, y});
+        }
+
+        return valhalla::bindings::get_tile_ids_from_ring(std::move(ring), std::move(levels));
+      },
+      nb::arg("ring_coords"), nb::arg("levels") = std::vector<uint32_t>{},
+      nb::call_guard<nb::gil_scoped_release>());
 
   // GraphUtils class - manages GraphReader for efficient edge access
   nb::class_<vb::GraphReader>(m, "_GraphUtils")
