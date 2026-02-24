@@ -334,6 +334,10 @@ void SetShapeAttributes(const AttributesController& controller,
     leg.mutable_shape_attributes()->mutable_speed_limit()->Reserve(
         leg.shape_attributes().speed_limit_size() + shape.size() + cuts.size());
   }
+  if (controller(kShapeAttributesCongestion)) {
+    leg.mutable_shape_attributes()->mutable_speed()->Reserve(
+        leg.shape_attributes().congestion_size() + shape.size() + cuts.size());
+  }
 
   // Set the shape attributes
   for (auto i = shape_begin + 1; i < shape.size(); ++i) {
@@ -386,6 +390,10 @@ void SetShapeAttributes(const AttributesController& controller,
     if (controller(kShapeAttributesLength)) {
       // convert length to decimeters and then round to an integer
       leg.mutable_shape_attributes()->add_length((distance * kDecimeterPerMeter) + 0.5);
+    }
+    if (controller(kShapeAttributesCongestion)) {
+      // convert length to decimeters and then round to an integer
+      leg.mutable_shape_attributes()->add_congestion(cut_itr->congestion);
     }
 
     // Set shape attributes speed per shape point if requested
@@ -1469,6 +1477,20 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set way id (base data id) if requested
   if (controller(kEdgeWayId)) {
     trip_edge->set_way_id(edgeinfo.wayid());
+  }
+
+  if ((controller(kEdgeBeginOsmNodeId) || controller(kEdgeEndOsmNodeId)) &&
+      !edgeinfo.osm_node_ids().empty()) {
+    const auto& osm_ids = edgeinfo.osm_node_ids();
+    const bool forward = directededge->forward();
+
+    if (controller(kEdgeBeginOsmNodeId)) {
+      trip_edge->set_begin_osm_node_id(forward ? osm_ids.front() : osm_ids.back());
+    }
+
+    if (controller(kEdgeEndOsmNodeId)) {
+      trip_edge->set_end_osm_node_id(forward ? osm_ids.back() : osm_ids.front());
+    }
   }
 
   // Set weighted grade if requested

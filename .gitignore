@@ -35,6 +35,10 @@ custom_files/
 .venv
 venv
 
+# nodejs
+node_modules/
+*.node
+
 # clangd
 .cache/
 

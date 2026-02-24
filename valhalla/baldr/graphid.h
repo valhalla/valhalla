@@ -215,6 +215,17 @@ public:
     return value < rhs.value;
   }
 
+  /**
+   * cache-friendly comparison operator.
+   */
+  static bool cache_comparator(const GraphId a, const GraphId b) {
+    if (a.level() != b.level())
+      return a.level() < b.level();
+    if (a.tileid() != b.tileid())
+      return a.tileid() < b.tileid();
+    return a.id() < b.id();
+  }
+
   // Operator EqualTo.
   bool operator==(const GraphId& rhs) const {
     return value == rhs.value;

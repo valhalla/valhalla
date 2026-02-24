@@ -442,12 +442,11 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
 bool AddLandmarks(const boost::property_tree::ptree& pt) {
   LOG_INFO("Starting adding landmarks to tiles...");
 
-  const size_t num_threads =
-      pt.get<size_t>("mjolnir.concurrency", std::thread::hardware_concurrency());
-  const std::string db_name = pt.get_child("mjolnir").get<std::string>("landmarks_db", "");
+  const size_t num_threads = pt.get<size_t>("concurrency", std::thread::hardware_concurrency());
+  const std::string db_name = pt.get<std::string>("landmarks", "");
 
   // get tile access
-  baldr::GraphReader reader(pt.get_child("mjolnir"));
+  baldr::GraphReader reader(pt);
 
   // get all tile ids and sort the tiles in descending order by size to balance the threads
   // TODO: it is possible in a global tileset that we have coverage only at level 2 for some places
@@ -466,9 +465,9 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
   std::vector<std::promise<std::string>> sequence_file_names(num_threads);
   for (size_t i = 0; i < num_threads; ++i) {
-    threads[i] = std::make_shared<std::thread>(FindLandmarkEdges, std::cref(pt.get_child("mjolnir")),
-                                               std::cref(vec_tileset), i, num_threads,
-                                               std::ref(sequence_file_names[i]));
+    threads[i] =
+        std::make_shared<std::thread>(FindLandmarkEdges, std::cref(pt), std::cref(vec_tileset), i,
+                                      num_threads, std::ref(sequence_file_names[i]));
   }
 
   // join all the threads and collect the sequence file names

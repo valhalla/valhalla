@@ -457,15 +457,7 @@ std::vector<baldr::GraphId> edges_in_bbox(const vm::AABB2<vm::PointLL>& bbox,
 
   // erase the duplicates by sorting
   {
-    std::sort(edge_ids.begin(), edge_ids.end(), [](const auto a, const auto b) {
-      // This ordering means when we iterate over this list, it'll be
-      // cache friendly, in-memory-order
-      if (a.level() == b.level())
-        return a.tileid() < b.tileid();
-      if (a.tileid() == b.tileid())
-        return a.id() < b.id();
-      return a.level() < b.level();
-    });
+    std::sort(edge_ids.begin(), edge_ids.end(), baldr::GraphId::cache_comparator);
     auto uniq_end = std::unique(edge_ids.begin(), edge_ids.end());
     edge_ids.erase(uniq_end, edge_ids.end());
   }

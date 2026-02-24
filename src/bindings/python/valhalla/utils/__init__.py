@@ -6,6 +6,7 @@ from .graph_utils import (
     get_tile_base_lon_lat,
     get_tile_id_from_lon_lat,
     get_tile_ids_from_bbox,
+    get_tile_ids_from_ring,
 )
 from .predicted_speeds import (
     BUCKETS_PER_WEEK,
@@ -25,6 +26,7 @@ __all__ = [
     "get_tile_base_lon_lat",
     "get_tile_id_from_lon_lat",
     "get_tile_ids_from_bbox",
+    "get_tile_ids_from_ring",
     # predicted_speeds
     "compress_speed_buckets",
     "decompress_speed_bucket",
