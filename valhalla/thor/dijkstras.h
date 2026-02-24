@@ -78,7 +78,8 @@ public:
                                                   uint32_t,
                                                   float,
                                                   const Expansion_ExpansionType,
-                                                  const uint8_t)>;
+                                                  const uint8_t,
+                                                  const TravelMode)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }

@@ -570,6 +570,7 @@ const std::string& Expansion_EdgeStatus_Enum_Name(const Expansion_EdgeStatus sta
 bool Options_ReverseTimeTracking_Enum_Parse(const std::string& strategy,
                                             Options::ReverseTimeTracking* f);
 
+const std::string_view TravelMode_Enum_Name(const TravelMode mode);
 std::pair<std::string, std::string>
 travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver);
 

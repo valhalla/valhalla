@@ -3,6 +3,7 @@
    * REMOVED: Removed ability to set ISO:3166 country/state code per OSM Node [#5747](https://github.com/valhalla/valhalla/pull/5747)
 * **Bug Fix**
 * **Enhancement**
+   * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
