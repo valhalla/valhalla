@@ -2311,11 +2311,11 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "Jätka: <LEVEL>."
       },
       "example_phrases": {
         "0": [
-          "Continue to Level 2."
+          "Jätka 2. tasandile/korrusele."
         ]
       }
     },
@@ -2356,6 +2356,16 @@
         ],
         "1": [
           "Exit the building, and continue on the walkway."
+        ]
+      }
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      },
+      "example_phrases": {
+        "0": [
+          "Park your vehicle."
         ]
       }
     }

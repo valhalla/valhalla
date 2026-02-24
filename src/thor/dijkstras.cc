@@ -361,7 +361,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
       expansion_callback_(graphreader, pred.edgeid(), prev_pred, "dijkstras",
                           Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
                           pred.cost().cost, static_cast<Expansion_ExpansionType>(expansion_direction),
-                          kNoFlowMask);
+                          kNoFlowMask, TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
     }
   }
 }
@@ -443,7 +443,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
   uint32_t operator_id = pred.transit_operator();
   if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
     // Get the transfer penalty when changing stations
-    if (mode_ == travel_mode_t::kPedestrian && prior_stop.Is_Valid() && has_transit) {
+    if (mode_ == travel_mode_t::kPedestrian && prior_stop.is_valid() && has_transit) {
       transfer_cost = tc->TransferCost();
     }
 
@@ -628,7 +628,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 
     // Test if exceeding maximum transfer walking distance
     // TODO: transfer distance != walking distance! (one more label member?)
-    if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().Is_Valid() &&
+    if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().is_valid() &&
         walking_distance > max_transfer_distance_) {
       continue;
     }
@@ -736,7 +736,8 @@ void Dijkstras::ComputeMultiModal(
         expansion_callback_(graphreader, pred.edgeid(), pred_edge, "multimodal",
                             valhalla::Expansion_EdgeStatus_reached, pred.cost().secs,
                             pred.path_distance(), pred.cost().cost,
-                            valhalla::Expansion_ExpansionType_forward, kNoFlowMask);
+                            valhalla::Expansion_ExpansionType_forward, kNoFlowMask,
+                            TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
       }
       // Expand from the end node of the predecessor edge.
       ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,
@@ -791,7 +792,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Get the opposing directed edge, continue if we cannot get it
       graph_tile_ptr opp_tile = nullptr;
       GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_tile);
-      if (!opp_edge_id.Is_Valid()) {
+      if (!opp_edge_id.is_valid()) {
         continue;
       }
 

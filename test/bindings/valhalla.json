@@ -56,7 +56,8 @@
       "transit_available",
       "expansion",
       "centroid",
-      "status"
+      "status",
+      "tile"
     ],
     "use_connectivity": true,
     "service_defaults": {
@@ -66,7 +67,9 @@
       "node_snap_tolerance": 5,
       "street_side_tolerance": 5,
       "street_side_max_distance": 1000,
-      "heading_tolerance": 60
+      "heading_tolerance": 60,
+      "mvt_min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14],
+      "mvt_cache_min_zoom": 11
     },
     "logging": {
       "type": "std_out",
@@ -234,8 +237,8 @@
       "max_locations": 50,
       "max_matrix_distance": 200000.0,
       "max_matrix_location_pairs": 2500,
-      "min_transit_walking_distance": 1,
-      "max_transit_walking_distance": 10000
+      "min_multimodal_walking_distance": 1,
+      "max_multimodal_walking_distance": 10000
     },
     "motor_scooter": {
       "max_distance": 500000.0,
@@ -320,6 +323,11 @@
         "max_allowed_up_transitions": {
           "1": 400,
           "2": 100
+        },
+        "max_expand_within_distance": {
+          "0": 100000000.0,
+          "1": 20000,
+          "2": 5000
         }
       },
       "unidirectional_astar": {

@@ -9,6 +9,11 @@
 #include <valhalla/sif/costconstants.h>
 
 namespace valhalla {
+// Layer names for vector tiles
+constexpr std::string_view kEdgeLayerName = "edges";
+constexpr std::string_view kNodeLayerName = "nodes";
+constexpr std::string_view kShortcutLayerName = "shortcuts";
+
 // Associate RoadClass values to TripLeg proto
 constexpr valhalla::RoadClass kTripLegRoadClass[] = {valhalla::RoadClass::kMotorway,
                                                      valhalla::RoadClass::kTrunk,
@@ -27,6 +32,12 @@ constexpr TripLeg_SpeedType kTripLegSpeedType[] = {TripLeg_SpeedType_kTagged,
                                                    TripLeg_SpeedType_kClassified};
 inline TripLeg_SpeedType GetTripLegSpeedType(const baldr::SpeedType speed_type) {
   return kTripLegSpeedType[static_cast<int>(speed_type)];
+}
+
+// Associate HovTypes values to TripLeg proto
+constexpr TripLeg_HovType kTripLegHovType[] = {TripLeg_HovType_kHOV2, TripLeg_HovType_kHOV3};
+inline TripLeg_HovType GetTripLegHovType(const baldr::HOVEdgeType hov_type) {
+  return kTripLegHovType[static_cast<int>(hov_type)];
 }
 
 // Associate Surface values to TripLeg proto
@@ -556,7 +567,10 @@ const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet 
 bool Options_ExpansionProperties_Enum_Parse(const std::string& prop, Options::ExpansionProperties* a);
 bool Options_ExpansionAction_Enum_Parse(const std::string& action, Options::Action* a);
 const std::string& Expansion_EdgeStatus_Enum_Name(const Expansion_EdgeStatus status);
+bool Options_ReverseTimeTracking_Enum_Parse(const std::string& strategy,
+                                            Options::ReverseTimeTracking* f);
 
+const std::string_view TravelMode_Enum_Name(const TravelMode mode);
 std::pair<std::string, std::string>
 travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver);
 

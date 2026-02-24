@@ -78,6 +78,7 @@ nav:
       - Elevation API: api/elevation/api-reference.md
       - Expansion API: api/expansion/api-reference.md
       - Status API: api/status/api-reference.md
+      - Tile API: api/tile/api-reference.md
   - Internal topics:
       - "Why tiles?": mjolnir/why_tiles.md
       - route_overview.md

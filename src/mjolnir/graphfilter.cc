@@ -57,6 +57,12 @@ bool CanAggregate(const DirectedEdge* de) {
   return true;
 }
 
+// Links and ferry-connecting edges hijack the road class for hierarchy purposes and that should be
+// respected while aggregating to prevent merging edges that are not on the same hierarchy level.
+RoadClass get_hierarchy_rc(const DirectedEdge* de) {
+  return de->is_shortcut() ? static_cast<RoadClass>(de->shortcut()) : de->classification();
+}
+
 // ExpandFromNode and ExpandFromNodeInner is reused code from restriction builder with some slight
 // modifications. We are using recursion for graph traversal. We have to make sure we don't loop back
 // to ourselves, walk in the correct direction, have not already visited a node, etc. Once we meet our
@@ -113,7 +119,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
     const auto& edge_info = prev_tile->edgeinfo(de);
 
     auto tile = prev_tile;
-    if (tile->id() != de->endnode().Tile_Base()) {
+    if (tile->id() != de->endnode().tile_base()) {
       tile = reader.GetGraphTile(de->endnode());
     }
 
@@ -125,7 +131,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
           (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
 
         // If this edge has special attributes, then we can't aggregate
-        if (!CanAggregate(de) || de->classification() != rc) {
+        if (!CanAggregate(de) || get_hierarchy_rc(de) != rc) {
           way_id = 0;
           return false;
         }
@@ -205,7 +211,7 @@ bool ExpandFromNode(GraphReader& reader,
                     bool validate) {
 
   auto tile = prev_tile;
-  if (tile->id() != current_node.Tile_Base()) {
+  if (tile->id() != current_node.tile_base()) {
     tile = reader.GetGraphTile(current_node);
   }
 
@@ -334,7 +340,7 @@ void FilterTiles(GraphReader& reader,
             std::reverse(shape.begin(), shape.end());
           }
           auto heading = std::round(
-              PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(directededge->classification(),
+              PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(get_hierarchy_rc(directededge),
                                                                        directededge->use())));
           headings.push_back(heading);
 
@@ -369,7 +375,7 @@ void FilterTiles(GraphReader& reader,
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id());
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                                res.type(), res.modes(), res.value(),
@@ -401,7 +407,7 @@ void FilterTiles(GraphReader& reader,
                                     edgeinfo.GetTypes(), added, diff_names);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());
-        classification.push_back(directededge->classification());
+        classification.push_back(get_hierarchy_rc(directededge));
         endnode.push_back(directededge->endnode());
 
         if (directededge->endnode().tile_value() != tile->header()->graphid().tile_value()) {
@@ -525,7 +531,7 @@ void GetAggregatedData(GraphReader& reader,
 
   // walk in the correct direction.
   uint64_t wayid = tile->edgeinfo(directededge).wayid();
-  if (Aggregate(id, reader, shape, en, from_node, wayid, isos, directededge->classification(),
+  if (Aggregate(id, reader, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
                 isForward, false)) {
     aggregated++; // count the current edge
     // flip the shape back for storing in edgeinfo
@@ -586,7 +592,7 @@ void ValidateData(GraphReader& reader,
 
       // walk in the correct direction.
       uint64_t wayid = edgeinfo.wayid();
-      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, directededge->classification(),
+      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
                      isForward, true)) {
         // LOG_WARN("ValidateData - failed to validate node.  Will not aggregate.");
         // for debugging only
@@ -748,7 +754,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id());
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                                res.type(), res.modes(), res.value(),
@@ -973,7 +979,7 @@ void UpdateOpposingIndexAndTransitions(GraphReader& reader) {
 
         // Get the tile at the end node
         graph_tile_ptr endnodetile;
-        if (tile->id() == edge->endnode().Tile_Base()) {
+        if (tile->id() == edge->endnode().tile_base()) {
           endnodetile = tile;
         } else {
           endnodetile = reader.GetGraphTile(edge->endnode());

@@ -151,6 +151,9 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeWayId)) {
         writer("way_id", edge.way_id());
       }
+      if (controller(kEdgeBeginOsmNodeId) && edge.has_begin_osm_node_id_case()) {
+        writer("node_id", edge.begin_osm_node_id());
+      }
       if (controller(kEdgeId)) {
         writer("id", edge.id());
       }
@@ -233,6 +236,9 @@ void serialize_edges(const AttributesController& controller,
       }
       if (controller(kEdgeTrafficSignal)) {
         writer("traffic_signal", edge.traffic_signal());
+      }
+      if (controller(kEdgeHovType)) {
+        writer("hov_type", to_string(static_cast<baldr::HOVEdgeType>(edge.hov_type())));
       }
       if (controller(kEdgeLevels)) {
         if (edge.levels_size()) {
@@ -369,6 +375,9 @@ void serialize_edges(const AttributesController& controller,
           writer("elapsed_time", node.cost().elapsed_cost().seconds());
           writer("elapsed_cost", node.cost().elapsed_cost().cost());
         }
+        if (controller(kEdgeEndOsmNodeId) && edge.has_end_osm_node_id_case()) {
+          writer("node_id", edge.end_osm_node_id());
+        }
         if (controller(kNodeAdminIndex)) {
           writer("admin_index", node.admin_index());
         }
@@ -454,7 +463,7 @@ void serialize_matched_points(const AttributesController& controller,
     // TODO: need to keep track of the index of the edge in the global set of edges a given
     // TODO: match result belongs/correlated to
     // Process matched point edge index
-    if (controller(kMatchedEdgeIndex) && match_result.edgeid.Is_Valid()) {
+    if (controller(kMatchedEdgeIndex) && match_result.edgeid.is_valid()) {
       writer("edge_index", static_cast<uint64_t>(match_result.edge_index));
     }
 
@@ -512,6 +521,31 @@ void serialize_shape_attributes(const AttributesController& controller,
     for (const auto& speed : trip_path.shape_attributes().speed()) {
       // dm/s to km/h
       writer(speed * kDecimeterPerSectoKPH);
+    }
+    writer.end_array();
+  }
+  if (controller(kShapeAttributesCongestion)) {
+    writer.start_array("congestion");
+    for (const auto& congestion : trip_path.shape_attributes().congestion()) {
+      writer(congestion);
+    }
+    writer.end_array();
+  }
+  if (controller(kShapeAttributesClosure)) {
+    writer.start_array("closure");
+    for (const auto& closure : trip_path.closures()) {
+      writer.start_object();
+      writer("begin_shape_index", static_cast<uint64_t>(closure.begin_shape_index()));
+      writer("end_shape_index", static_cast<uint64_t>(closure.end_shape_index()));
+      writer.end_object();
+    }
+    writer.end_array();
+  }
+  if (controller(kShapeAttributesSpeedLimit)) {
+    writer.start_array("speed_limit");
+    for (const auto& speed_limit : trip_path.shape_attributes().speed_limit()) {
+      // already in kph
+      writer(speed_limit);
     }
     writer.end_array();
   }
@@ -581,6 +615,71 @@ void append_trace_info(
     serialize_shape_attributes(controller, trip_path, writer);
   }
 }
+
+/**
+ * If a pbf response is requested, we simply add the missing stuff to the trip
+ */
+void fill_trace_attributes(
+    Api& request,
+    const AttributesController& controller,
+    std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
+
+  size_t i = 0;
+  for (const auto& map_match_result : map_match_results) {
+    auto* route = request.mutable_trip()->mutable_routes(i++);
+    if (controller(kConfidenceScore)) {
+      route->set_confidence_score(std::get<kConfidenceScoreIndex>(map_match_result));
+    }
+
+    if (controller(kRawScore)) {
+      route->set_raw_score(std::get<kRawScoreIndex>(map_match_result));
+    }
+
+    for (const auto& match : std::get<kMatchResultsIndex>(map_match_result)) {
+      auto* p = route->add_matched_points();
+      if (controller(kMatchedPoint)) {
+        p->mutable_latlng()->set_lng(match.lnglat.lng());
+        p->mutable_latlng()->set_lat(match.lnglat.lat());
+      }
+
+      if (controller(kMatchedType)) {
+        switch (match.GetType()) {
+          case meili::MatchResult::Type::kMatched:
+            p->set_type(valhalla::TripRoute_MatchedPoint_MatchType_kMatched);
+            break;
+          case meili::MatchResult::Type::kInterpolated:
+            p->set_type(valhalla::TripRoute_MatchedPoint_MatchType_kInterpolated);
+            break;
+          default:
+            p->set_type(valhalla::TripRoute_MatchedPoint_MatchType_kUnmatched);
+            break;
+        }
+      }
+
+      if (controller(kMatchedEdgeIndex) && match.edgeid.is_valid()) {
+        p->set_edge_index(match.edge_index);
+      }
+      if (controller(kMatchedDistanceAlongEdge) &&
+          (match.GetType() != meili::MatchResult::Type::kUnmatched)) {
+        p->set_distance_along_edge(match.distance_along);
+      }
+
+      if (controller(kMatchedBeginRouteDiscontinuity)) {
+        p->set_begins_discontinuity(match.begins_discontinuity);
+      }
+
+      if (controller(kMatchedEndRouteDiscontinuity)) {
+        p->set_ends_discontinuity(match.ends_discontinuity);
+      }
+
+      // Process matched point distance from trace point
+      if (controller(kMatchedDistanceFromTracePoint) &&
+          (match.GetType() != meili::MatchResult::Type::kUnmatched)) {
+        p->set_distance_from_trace_point(match.distance_from);
+      }
+    }
+  }
+}
 } // namespace
 
 namespace valhalla {
@@ -591,9 +690,14 @@ std::string serializeTraceAttributes(
     const AttributesController& controller,
     std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
 
+  // todo: These properties should be filled *before* this function is called and then used instead
+  // of `map_match_results`.
+  fill_trace_attributes(request, controller, map_match_results);
+
   // If its pbf format just return the trip
-  if (request.options().format() == Options_Format_pbf)
+  if (request.options().format() == Options_Format_pbf) {
     return serializePbf(request);
+  }
 
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);

@@ -4,9 +4,12 @@ dynamic = ["version"]
 requires-python = ">=3.9.0"
 authors = [{ name = "Nils Nolde" }, {name = "Kevin Kreiser"}]
 description = "High-level bindings to the Valhalla C++ library"
-readme = "README.md"
+readme = "src/bindings/python/README.md"
 license = "MIT"
 license-files = ["COPYING"]
+
+[project.optional-dependencies]
+typing = ["numpy>=2.0.0,<3.0.0"]  # only needed for .pyi typing
 
 [project.urls]
 Homepage = "https://github.com/valhalla/valhalla"
@@ -60,7 +63,7 @@ CMAKE_BUILD_TYPE = "Release"
 [tool.setuptools_scm]
 version_file = "src/bindings/python/valhalla/__version__.py"
 version_scheme = "no-guess-dev"
-# PyPI doesn't accept local hashed version strings, important for pyvalhalla-weekly
+# PyPI doesn't accept local hashed version strings
 local_scheme = "no-local-version"
 
 [tool.ruff]
@@ -76,7 +79,7 @@ lint.ignore = ["E731", "F811"]
 [tool.cibuildwheel]
 # it's enough here to know it's importable, actual test is run on other CI
 # mostly to avoid building utrecht tiles within the bindings build
-test-command = "python -c \"from valhalla.utils.graph_utils import GraphId; g = GraphId(); assert g.Is_Valid() == False\""
+test-command = "python -c \"from valhalla.utils.graph_utils import GraphId; g = GraphId(); assert g.is_valid() == False\""
 # find out current defaults: cibuildwheel --print-build-identifiers --platform linux
 build = "cp*"
 skip = "*musllinux*"

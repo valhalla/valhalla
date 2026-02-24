@@ -139,14 +139,14 @@ public:
    * @return boolean true if the id is valid.
    */
   explicit inline operator bool() const {
-    return Is_Valid();
+    return is_valid();
   }
 
   /**
    * Returns true if the id is valid
    * @return boolean true if the id is valid
    */
-  bool Is_Valid() const {
+  bool is_valid() const {
     // TODO: make this strict it should check the tile hierarchy not bit field widths
     return value != kInvalidGraphId;
   }
@@ -156,7 +156,7 @@ public:
    * Construct a new GraphId with the Id portion omitted.
    * @return graphid with only tileid and level included
    */
-  GraphId Tile_Base() const {
+  GraphId tile_base() const {
     return GraphId((value & 0x1ffffff));
   }
 
@@ -213,6 +213,17 @@ public:
    */
   bool operator<(const GraphId& rhs) const {
     return value < rhs.value;
+  }
+
+  /**
+   * cache-friendly comparison operator.
+   */
+  static bool cache_comparator(const GraphId a, const GraphId b) {
+    if (a.level() != b.level())
+      return a.level() < b.level();
+    if (a.tileid() != b.tileid())
+      return a.tileid() < b.tileid();
+    return a.id() < b.id();
   }
 
   // Operator EqualTo.

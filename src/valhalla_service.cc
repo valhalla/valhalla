@@ -144,6 +144,9 @@ int main(int argc, char** argv) {
         case valhalla::Options::status:
           std::cout << actor.status(request_str, nullptr, &request) << std::endl;
           break;
+        case valhalla::Options::tile:
+          std::cout << actor.tile(request_str, nullptr, &request) << std::endl;
+          break;
         default:
           std::cerr << "Unknown action" << std::endl;
           return 1;
@@ -170,7 +173,7 @@ int main(int argc, char** argv) {
 #ifdef ENABLE_SERVICES
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
-                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+                        config.get<unsigned int>("httpd.service.shutdown_seconds", 1));
 
   // grab the endpoints
   std::string listen = config.get<std::string>("httpd.service.listen");

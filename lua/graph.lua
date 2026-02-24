@@ -164,6 +164,9 @@ motor_vehicle = {
 ["residents"] = "true"
 }
 
+-- Fully equal to motor_vehicle for now. Expand if fine tuning is needed.
+vehicle = motor_vehicle
+
 moped = {
 ["yes"] = "true",
 ["designated"] = "true",
@@ -949,7 +952,8 @@ function filter_tags_generic(kv)
     end
   end
 
-  local motor_vehicle_access = any_in(motor_vehicle, kv["motor_vehicle"])
+  local vehicle_access = any_in(vehicle, kv["vehicle"])
+  local motor_vehicle_access = any_in(motor_vehicle, kv["motor_vehicle"]) or vehicle_access
   if forward then
     for k,v in pairs(forward) do
       kv[k] = v
@@ -975,7 +979,7 @@ function filter_tags_generic(kv)
       kv["motorcycle_backward"] = "false"
       kv["pedestrian_backward"] = "false"
       kv["bike_backward"] = "false"
-    elseif kv["smoothness"] == "impassable" or kv["vehicle"] == "no" then --don't change ped access.
+    elseif kv["smoothness"] == "impassable" then --don't change ped access.
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
       kv["bus_forward"] = "false"
@@ -1024,7 +1028,8 @@ function filter_tags_generic(kv)
     kv["bike_tag"] = any_in(bicycle, kv["bicycle"]) or
                      any_in(cycleway, kv["cycleway"]) or
                      any_in(bicycle, kv["bicycle_road"]) or
-                     bicycle[kv["cyclestreet"]]
+                     bicycle[kv["cyclestreet"]] or
+                     vehicle_access
     kv["bike_forward"] = kv["bike_tag"] or kv["bike_forward"]
 
     --check for moped forward overrides
@@ -1049,21 +1054,17 @@ function filter_tags_generic(kv)
       kv["motorroad_tag"] = "true"
     end
   -- its not a highway type that we know of
-  else
+  elseif ferry or rail then
     --if its a ferry and these tags dont show up we want to set them to true
-    local default_val = tostring(ferry)
+    local default_val = "true"
 
-    if ferry == false and rail == true then
-      default_val = tostring(rail)
-    end
-
-    -- expect access=private not be combined with other values
-    if ((ferry == false and rail == false) or kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
+    -- handle inverse access cases like access=no + foot=yes
+    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
       default_val = "false"
     end
 
     local ped_val = default_val
-    if kv["smoothness"] == "impassable" or kv["vehicle"] == "no" then --don't change ped access.
+    if kv["smoothness"] == "impassable" then --don't change ped access.
       default_val = "false"
     end
 
@@ -1101,7 +1102,8 @@ function filter_tags_generic(kv)
     kv["bike_tag"] = any_in(bicycle, kv["bicycle"]) or
                      any_in(cycleway, kv["cycleway"]) or
                      any_in(bicycle, kv["bicycle_road"]) or
-                     bicycle[kv["cyclestreet"]]
+                     bicycle[kv["cyclestreet"]] or
+                     vehicle_access
     kv["bike_forward"] = kv["bike_tag"] or default_val
 
     --check for moped forward overrides
@@ -1134,6 +1136,25 @@ function filter_tags_generic(kv)
     if kv["motorroad"] == "yes" then
       kv["motorroad_tag"] = "true"
     end
+  else
+    -- something we have no idea about
+    kv["auto_forward"] = "false"
+    kv["truck_forward"] = "false"
+    kv["bus_forward"] = "false"
+    kv["taxi_forward"] = "false"
+    kv["moped_forward"] = "false"
+    kv["motorcycle_forward"] = "false"
+    kv["pedestrian_forward"] = "false"
+    kv["bike_forward"] = "false"
+
+    kv["auto_backward"] = "false"
+    kv["truck_backward"] = "false"
+    kv["bus_backward"] = "false"
+    kv["taxi_backward"] = "false"
+    kv["moped_backward"] = "false"
+    kv["motorcycle_backward"] = "false"
+    kv["pedestrian_backward"] = "false"
+    kv["bike_backward"] = "false"
   end
 
   --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
@@ -1722,6 +1743,7 @@ function filter_tags_generic(kv)
   kv["private"] = any_in(private, kv["access"]) or
                   any_in(private, kv["motor_vehicle"]) or
                   any_in(private, kv["motorcar"]) or
+                  any_in(private, kv["vehicle"]) or
                   "false"
   kv["private_hgv"] = any_in(private, kv["hgv"]) or kv["private"] or "false"
   kv["no_thru_traffic"] = any_in(no_thru_traffic, kv["access"]) or "false"
@@ -2012,21 +2034,6 @@ function filter_tags_generic(kv)
 end
 
 function nodes_proc (kv, nokeys)
-
-  if kv["iso:3166_2"] then
-    i, j = string.find(kv["iso:3166_2"], '-', 1, true)
-    if i == 3 then
-      if string.len(kv["iso:3166_2"]) == 6 or string.len(kv["iso:3166_2"]) == 5 then
-        kv["state_iso_code"] = string.sub(kv["iso:3166_2"], 4)
-      end
-    elseif string.find(kv["iso:3166_2"], '-', 1, true) == nil then
-      if string.len(kv["iso:3166_2"]) == 2 or  string.len(kv["iso:3166_2"]) == 3 then
-        kv["state_iso_code"] = kv["iso:3166_2"]
-      elseif string.len(kv["iso:3166_2"]) == 4 or  string.len(kv["iso:3166_2"]) == 5 then
-        kv["state_iso_code"] = string.sub(kv["iso:3166_2"], 3)
-      end
-    end
-  end
 
   --normalize a few tags that we care about
   local initial_access = any_in(access, kv["access"])

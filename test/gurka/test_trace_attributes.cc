@@ -255,13 +255,18 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   EXPECT_EQ(edges[1]["speeds_non_faded"]["no_flow"].GetInt(), base);
 
   // current_flow fades to predicted flow because its next up from the speed types in the request
-  EXPECT_NEAR(edges[1]["speeds_faded"]["current_flow"].GetInt(), current * 0.5 + predicted * 0.5, 1);
+  float multiplier = 480.f / 3600.f;
+  float multiplier_inverse = 1.f - multiplier;
+  EXPECT_NEAR(edges[1]["speeds_faded"]["current_flow"].GetInt(),
+              current * multiplier_inverse + predicted * multiplier, 1);
   EXPECT_NEAR(edges[1]["speeds_faded"]["constrained_flow"].GetInt(),
-              current * 0.5 + constrained * 0.5, 1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["free_flow"].GetInt(), current * 0.5 + free * 0.5, 1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["predicted_flow"].GetInt(), current * 0.5 + predicted * 0.5,
-              1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["no_flow"].GetInt(), current * 0.5 + base * 0.5, 1);
+              current * multiplier_inverse + constrained * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["free_flow"].GetInt(),
+              current * multiplier_inverse + free * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["predicted_flow"].GetInt(),
+              current * multiplier_inverse + predicted * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["no_flow"].GetInt(),
+              current * multiplier_inverse + base * multiplier, 1);
 
   api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto",
                          {{"/shape_match", "edge_walk"},
@@ -391,4 +396,41 @@ TEST(Standalone, ViaFerrataNoSacScale) {
   EXPECT_EQ(edges[0]["sac_scale"].GetInt(), 6);
   EXPECT_TRUE(edges[1].HasMember("sac_scale"));
   EXPECT_EQ(edges[1]["sac_scale"].GetInt(), 6);
+}
+
+TEST(Standalone, PbfOut) {
+  const std::string ascii_map = R"(
+      1     2
+    A----B------C------D
+                  3   4
+  )";
+
+  const gurka::ways ways = {{"ABC", {{"highway", "primary"}}}, {"CD", {{"highway", "primary"}}}};
+
+  const gurka::nodes nodes = {
+      {"B", {{"highway", "traffic_signals"}, {"traffic_signals:direction", "forward"}}}};
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/trace_attributes_pbf");
+
+  std::string trace_result;
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4"}, "auto",
+                              {{"/format", "pbf"},
+                               {"/filters/action", "include"},
+                               {"/filters/attributes/0", "matched.distance_from_trace_point"}},
+                              {}, &trace_result);
+
+  Api response;
+
+  EXPECT_TRUE(response.ParseFromString(trace_result));
+
+  EXPECT_TRUE(response.has_trip());
+  EXPECT_EQ(response.trip().routes_size(), 1);
+  EXPECT_EQ(response.trip().routes(0).matched_points_size(), 4);
+  for (auto it = response.trip().routes(0).matched_points().begin();
+       it != response.trip().routes(0).matched_points().end(); ++it) {
+    EXPECT_TRUE(it->has_distance_from_trace_point());
+    EXPECT_NEAR(it->distance_from_trace_point(), 10., 0.5);
+  }
 }

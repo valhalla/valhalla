@@ -2,6 +2,6 @@
 
 #include <nanobind/nanobind.h>
 
-NB_MODULE(graph_utils, m) {
+NB_MODULE(_graph_utils, m) {
   pyvalhalla::init_graphid(m);
 }

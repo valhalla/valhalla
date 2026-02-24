@@ -400,6 +400,58 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
   return modes;
 }
 
+// Computes speeds for ferries that have "duration" tag. Regardless of number of edges this ferry
+// will be split into, all of them should have the same speed.
+std::unordered_map<uint64_t, uint32_t> ComputeFerrySpeeds(const std::string& ways_file,
+                                                          const std::string& way_nodes_file) {
+  SCOPED_TIMER();
+
+  sequence<OSMWay> ways(ways_file, false);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
+
+  std::unordered_map<uint64_t, uint32_t> ferry_speeds;
+  size_t way_node_index = 0;
+  for (size_t way_index = 0; way_index < ways.size(); ++way_index) {
+    const auto& way = *ways[way_index];
+    if (way.ferry() && way.duration()) {
+      PointLL prev;
+      // Iterate through the way nodes until we find the first node of this way.
+      while (way_node_index < way_nodes.size()) {
+        const OSMWayNode way_node = (*way_nodes[way_node_index]);
+        if (way_node.way_index < way_index) {
+          // Ferries are rare. As there are at least 2 nodes per way, we can jump by more than 1.
+          const auto current_way_index = (*way_nodes[way_node_index]).way_index;
+          way_node_index += (way_index - current_way_index - 1) * 2 + 1;
+        } else {
+          // First iteration of the "compute length" loop as we anyway have this node.
+          prev = way_node.node.latlng();
+          way_node_index += 1;
+          break;
+        }
+      }
+
+      double length = 0.0;
+      while (way_node_index < way_nodes.size()) {
+        const OSMWayNode way_node = (*way_nodes[way_node_index]);
+        if (way_node.way_index != way_index) {
+          break;
+        }
+
+        const auto curr = way_node.node.latlng();
+        length += prev.Distance(curr);
+        prev = curr;
+        way_node_index += 1;
+      }
+
+      // convert to kph
+      const auto speed = static_cast<uint32_t>((length * 3.6) / way.duration());
+      ferry_speeds.emplace(way.way_id(), (speed == 0) ? 1 : speed);
+    }
+  }
+
+  return ferry_speeds;
+}
+
 void BuildTileSet(const std::string& ways_file,
                   const std::string& way_nodes_file,
                   const std::string& nodes_file,
@@ -412,6 +464,7 @@ void BuildTileSet(const std::string& ways_file,
                   std::queue<std::pair<GraphId, size_t>>& tiles,
                   std::mutex& tiles_lock,
                   const uint32_t tile_creation_date,
+                  const std::unordered_map<uint64_t, uint32_t>& ferry_speeds,
                   const boost::property_tree::ptree& pt,
                   std::promise<DataQuality>& result) {
 
@@ -479,7 +532,7 @@ void BuildTileSet(const std::string& ways_file,
 
   // For each tile in the task
   bool added = false;
-  DataQuality stats;
+  DataQuality stats(pt.get<std::string>("data_quality_dir", ""));
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
@@ -503,7 +556,7 @@ void BuildTileSet(const std::string& ways_file,
 
     try {
       // What actually writes the tile
-      GraphId tile_id = tile.first.Tile_Base();
+      GraphId tile_id = tile.first.tile_base();
       GraphTileBuilder graphtile(tile_dir, tile_id, false);
 
       // Information about tile creation
@@ -545,7 +598,7 @@ void BuildTileSet(const std::string& ways_file,
       //                                      ? nodes.end() - node_itr
       //                                      : std::next(tile_start)->second - tile_start->second));
 
-      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_id) {
+      while (node_itr != nodes.end() && (*node_itr).graph_id.tile_base() == tile_id) {
         // amalgamate all the node duplicates into one and the edges that connect to it
         // this moves the iterator for you
         auto bundle = collect_node_edges(node_itr, nodes, edges);
@@ -569,10 +622,6 @@ void BuildTileSet(const std::string& ways_file,
                                                   : GetMultiPolyId(admin_polys, node_ll, graphtile);
           dor = drive_on_right[admin_index];
           default_languages = GetMultiPolyIndexes(language_polys, node_ll);
-
-        } else {
-          admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
-                                           osmdata.node_names.name(node.state_iso_index()));
         }
 
         // Look for potential duplicates
@@ -930,9 +979,7 @@ void BuildTileSet(const std::string& ways_file,
 
           // ferry speed override.  duration is set on the way
           if (w.ferry() && w.duration()) {
-            // convert to kph
-            uint32_t spd = static_cast<uint32_t>((std::get<0>(found->second) * 3.6) / w.duration());
-            speed = (spd == 0) ? 1 : spd;
+            speed = ferry_speeds.at(w.way_id());
           }
 
           // Add a directed edge and get a reference to it
@@ -1351,6 +1398,8 @@ void BuildLocalTiles(const unsigned int thread_count,
   uint32_t tile_creation_date =
       DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
 
+  const auto ferry_speeds = ComputeFerrySpeeds(ways_file, way_nodes_file);
+
   LOG_INFO("Building " + std::to_string(tiles.size()) + " tiles with " +
            std::to_string(thread_count) + " threads...");
 
@@ -1377,8 +1426,8 @@ void BuildLocalTiles(const unsigned int thread_count,
                                       std::cref(complex_to_restriction_file),
                                       std::cref(linguistic_node_file), std::cref(tile_dir),
                                       std::cref(osmdata), std::ref(tile_queue), std::ref(tile_lock),
-                                      tile_creation_date, std::cref(pt.get_child("mjolnir")),
-                                      std::ref(results[i]));
+                                      tile_creation_date, std::cref(ferry_speeds),
+                                      std::cref(pt.get_child("mjolnir")), std::ref(results[i]));
   }
 
   // Join all the threads to wait for them to finish up their work
@@ -1395,12 +1444,12 @@ void BuildLocalTiles(const unsigned int thread_count,
       // Add statistics and log issues on this thread
       const auto& stat = result.get_future().get();
       stats.AddStatistics(stat);
-      stat.LogIssues();
     } // If we couldnt write a tile for whatever reason we fail the whole job
     catch (std::exception& e) {
       throw e;
     }
   }
+  stats.LogIssues();
 }
 
 } // namespace
@@ -1498,7 +1547,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   }
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
-  DataQuality stats;
+  DataQuality stats(pt.get<std::string>("mjolnir.data_quality_dir", ""));
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));

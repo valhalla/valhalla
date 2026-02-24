@@ -1,11 +1,11 @@
 ## Valhalla Python bindings
 
-[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/) [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)](https://pypi.org/project/pyvalhalla-weekly/)
+[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/)
 
 This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
 > [!NOTE]
-> `pyvalhalla(-weekly)` packages are currently only published for:
+> `pyvalhalla` packages are currently only published for:
 > - `linux-x86_x64`
 > - `linux-aarch64`
 > - `win-amd64`
@@ -17,9 +17,6 @@ On top of the (very) high-level Python bindings, we package some data-building V
 
 We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`/`aarch64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. To install on Python < 3.12, make sure to install the system dependencies as described in [the docs](https://valhalla.github.io/valhalla/building/#platform-specific-builds) before trying a `pip install pyvalhalla`.
 
-`pip install pyvalhalla` to install the most recent Valhalla **release**.  
-`pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
-
 Or manually in the current Python environment with e.g.
 
 ```shell
@@ -27,7 +24,6 @@ git clone https://github.com/valhalla/valhalla
 cd valhalla
 pip install .
 ```
-
 
 In case you need to do a source installation (from `sdist`), follow the [build instructions](https://valhalla.github.io/valhalla/building/) for your platform to install the needed dependencies. Then a simple `pip install pyvalhalla` should work fine for Linux/OSX. On Windows one needs to install C++ developer tools, see also below in the developer notes for external `vcpkg` usage to resolve dependencies.
 
@@ -60,6 +56,10 @@ In case you need to do a source installation (from `sdist`), follow the [build i
 >
 > Both commands have to repeated for each build.
 
+#### Typing support
+
+We (try to) include full typing support for pyvalhalla. If you're using `mypy` with strict typing policies, you'll need to install pyvalhalla appropriately with `pip install pyvalhalla[typing]`.
+
 ### Usage
 
 #### Bindings
@@ -87,6 +87,74 @@ print(get_help()["service_limits"]["auto"]["max_distance"])
 # instantiate Actor to load graph and call actions
 actor = Actor(config)
 route = actor.route({"locations": [...]})
+```
+
+#### Graph Utilities
+
+Access to low-level graph data structures for advanced use cases:
+
+```python
+from valhalla.utils.graph_utils import GraphId, GraphUtils
+
+# Create a GraphId from its string representation or numeric value
+edge_id = GraphId("2/421920/20")  # format: "level/tileid/id"
+# or
+edge_id = GraphId(674464020)
+
+# Initialize GraphUtils with config (reuse for multiple queries)
+# Accepts: file path (str/Path), JSON string, or dict
+config = "/path/to/valhalla.json"
+# or dict config
+config = {"mjolnir": {"tile_extract": "/path/to/tiles.tar"}}
+graph = GraphUtils(config)
+
+# Get the polyline geometry for an edge
+shape = graph.get_edge_shape(edge_id)
+
+# shape is a list of (lon, lat) tuples
+print(f"Edge has {len(shape)} coordinate points")
+for lon, lat in shape:
+    print(f"  ({lon:.6f}, {lat:.6f})")
+
+# Convert to GeoJSON LineString
+geojson = {
+    "type": "Feature",
+    "geometry": {
+        "type": "LineString",
+        "coordinates": [[lon, lat] for lon, lat in shape]
+    }
+}
+```
+
+#### Speed Compression Utilities
+
+Valhalla uses DCT-2 (Discrete Cosine Transform) to compress historical speed profiles. These utilities allow you to work with compressed speed data:
+
+```python
+import numpy as np
+from valhalla.utils.predicted_speeds import (
+    compress_speed_buckets,
+    decompress_speed_bucket,
+    encode_compressed_speeds,
+    decode_compressed_speeds,
+    BUCKETS_PER_WEEK,
+    COEFFICIENT_COUNT,
+)
+
+# Compress 2016 speed buckets (7 days × 288 five-minute intervals)
+speeds = np.full(BUCKETS_PER_WEEK, 50.0, dtype=np.float32)  # 50 KPH constant
+coefficients = compress_speed_buckets(speeds)
+
+# Decompress a specific bucket (e.g., Monday 10:00 AM)
+bucket_idx = 120  # (24 hours × 12 buckets/hour) × 0 days + 10 × 12
+speed = decompress_speed_bucket(coefficients, bucket_idx)
+
+# Encode coefficients for storage/transmission
+encoded = encode_compressed_speeds(coefficients)
+print(f"Compressed to {len(encoded)} characters")
+
+# Decode from string
+coefficients_restored = decode_compressed_speeds(encoded)
 ```
 
 #### Valhalla executables

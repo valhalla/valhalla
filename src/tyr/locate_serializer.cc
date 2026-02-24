@@ -2,6 +2,7 @@
 #include "baldr/openlr.h"
 #include "baldr/pathlocation.h"
 #include "baldr/rapidjson_utils.h"
+#include "baldr/time_info.h"
 #include "tyr/serializers.h"
 
 #include <cstdint>
@@ -31,7 +32,7 @@ OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de)
 void serialize_access_restrictions(const graph_tile_ptr& tile,
                                    rapidjson::writer_wrapper_t& writer,
                                    uint32_t edge_idx) {
-  for (const auto& res : tile->GetAccessRestrictions(edge_idx, kAllAccess)) {
+  for (const auto& res : tile->GetAccessRestrictions(edge_idx)) {
     res.json(writer);
   }
 }
@@ -109,12 +110,13 @@ void serialize_traffic_speed(const volatile baldr::TrafficSpeed& traffic_speed,
   }
 }
 
-void serialize_edges(const PathLocation& location,
+void serialize_edges(const PathLocation& path_location,
+                     const baldr::Location& location,
                      GraphReader& reader,
                      rapidjson::writer_wrapper_t& writer,
                      bool verbose) {
   writer.start_array("edges");
-  for (const auto& edge : location.edges) {
+  for (const auto& edge : path_location.edges) {
     writer.start_object();
     try {
       // get the osm way id
@@ -170,6 +172,20 @@ void serialize_edges(const PathLocation& location,
         writer.end_object();
 
         // historical traffic information
+
+        // if there's a date time on the location and the edge has
+        // a predicted speed, write that
+        if (location.date_time_ && !location.date_time_->empty() &&
+            directed_edge->has_predicted_speed()) {
+          std::string dt = location.date_time_.value();
+          auto time_info = baldr::TimeInfo::make(dt, 0); // no need to pass timezone info here
+          writer("timed_predicted_speed",
+                 static_cast<uint64_t>(
+                     tile->GetSpeed(directed_edge, kPredictedFlowMask, time_info.second_of_week)));
+        }
+
+        // in any case, to not break existing applications using this,
+        // write out the whole thing if present
         writer.start_array("predicted_speeds");
         if (directed_edge->has_predicted_speed()) {
           for (uint32_t sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
@@ -237,17 +253,18 @@ void serialize_nodes(const PathLocation& location,
 }
 
 void serialize(rapidjson::writer_wrapper_t& writer,
-               const PathLocation& location,
+               const PathLocation& path_location,
                GraphReader& reader,
-               bool verbose) {
+               bool verbose,
+               const baldr::Location& location) {
   // serialze all the edges
   writer.start_object();
   writer.set_precision(tyr::kCoordinatePrecision);
-  writer("input_lat", location.latlng_.lat());
-  writer("input_lon", location.latlng_.lng());
+  writer("input_lat", path_location.latlng_.lat());
+  writer("input_lon", path_location.latlng_.lng());
   writer.set_precision(tyr::kDefaultPrecision);
-  serialize_edges(location, reader, writer, verbose);
-  serialize_nodes(location, reader, writer, verbose);
+  serialize_edges(path_location, location, reader, writer, verbose);
+  serialize_nodes(path_location, reader, writer, verbose);
 
   writer.end_object();
 }
@@ -283,7 +300,7 @@ std::string serializeLocate(const Api& request,
 
   for (const auto& location : locations) {
     try {
-      serialize(writer, projections.at(location), reader, request.options().verbose());
+      serialize(writer, projections.at(location), reader, request.options().verbose(), location);
     } catch (const std::exception& e) {
       serialize(writer, location.latlng_, "No data found for location", request.options().verbose());
     }

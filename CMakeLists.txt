@@ -29,6 +29,7 @@ option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find 
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 option(ENABLE_GEOTIFF "Whether to include libgeotiff; currently only used for raster serialization of isotile grid" ON)
+option(INSTALL_TEST_LIB "Install Valhalla's own test lib" OFF)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -128,6 +129,7 @@ set(rapidjson_include_dir ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include)
 set(unordered_dense_include_dir ${VALHALLA_SOURCE_DIR}/third_party/unordered_dense/include)
 set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
 set(libosmium_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
+set(vtzero_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/vtzero/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
 set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
 if (PREFER_EXTERNAL_DEPS)
   # date
@@ -166,13 +168,21 @@ if (PREFER_EXTERNAL_DEPS)
   else()
     message(WARNING "No cxxopts found in system libraries, using vendored cxxopts...")
   endif()
-  # libosmium/protozero
-  find_path(OSMIUM_INCLUDE_DIRS "osmium/version.hpp")
+  # protozero is needed for libosmium & vtzero
   find_path(PROTOZERO_INCLUDE_DIRS "protozero/version.hpp")
+  # libosmium
+  find_path(OSMIUM_INCLUDE_DIRS "osmium/version.hpp")
   if (NOT OSMIUM_INCLUDE_DIRS OR NOT PROTOZERO_INCLUDE_DIRS)
     message(WARNING "libosmium or protozero not found in system libraries, using vendored libosmium and protozero...")
   else()
     set(libosmium_include_dirs ${OSMIUM_INCLUDE_DIRS} ${PROTOZERO_INCLUDE_DIRS})
+  endif()
+  # vtzero
+  find_path(VTZERO_INCLUDE_DIRS "vtzero/version.hpp")
+  if (NOT VTZERO_INCLUDE_DIRS OR NOT PROTOZERO_INCLUDE_DIRS)
+    message(WARNING "No vtzero or protozero found in system libraries, using vendored vtzero and protozero...")
+  else()
+    set(vtzero_include_dirs ${VTZERO_INCLUDE_DIRS} ${PROTOZERO_INCLUDE_DIRS})
   endif()
   # dirent
   if (WIN32)
@@ -366,7 +376,7 @@ if (WIN32)
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 endif()
 
-if(ENABLE_TESTS)
+if(ENABLE_TESTS OR INSTALL_TEST_LIB)
   add_subdirectory(test)
 endif()
 

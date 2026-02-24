@@ -33,6 +33,11 @@ custom_files/
 
 # python
 .venv
+venv
+
+# nodejs
+node_modules/
+*.node
 
 # clangd
 .cache/

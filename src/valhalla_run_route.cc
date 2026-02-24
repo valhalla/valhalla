@@ -14,7 +14,7 @@
 #include "proto/trip.pb.h"
 #include "sif/costfactory.h"
 #include "thor/bidirectional_astar.h"
-#include "thor/multimodal.h"
+#include "thor/multimodal_transit.h"
 #include "thor/route_matcher.h"
 #include "thor/triplegbuilder.h"
 #include "thor/unidirectional_astar.h"
@@ -192,7 +192,8 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
     const cost_ptr_t& cost = mode_costing[static_cast<uint32_t>(mode)];
-    const auto projections = Search(locations, reader, cost);
+    Search search(reader);
+    const auto projections = search.search(locations, cost);
     std::vector<PathLocation> path_location;
     valhalla::Options options;
 

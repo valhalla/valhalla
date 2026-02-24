@@ -11,14 +11,19 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <utility>
+
+// Defined in graph_id.cc
+Napi::Object InitGraphId(Napi::Env env, Napi::Object exports);
 
 namespace vt = valhalla::tyr;
 
 namespace {
 
-// These bindings may be used from NodeJS's thread pool, so we need to guarantee that each actor is
-// used exclusively in its own thread. Since user is free to create as many actors as they want, we
-// use pointer to config object to distinguish between concrete actors
+// These bindings may be used from NodeJS's thread pool, so we need to guarantee
+// that each actor is used exclusively in its own thread. Since user is free to
+// create as many actors as they want, we use pointer to config object to
+// distinguish between concrete actors
 vt::actor_t* GetThreadLocalActor(const boost::property_tree::ptree* config) {
   using ActorMap = std::unordered_map<const void*, std::shared_ptr<vt::actor_t>>;
   static thread_local ActorMap actors;
@@ -50,19 +55,18 @@ const boost::property_tree::ptree configure(const std::string& config) {
   return pt;
 }
 
-} // namespace
-
-class ValhallaAsyncWorker : public Napi::AsyncWorker {
-public:
+struct ValhallaAsyncWorker : Napi::AsyncWorker {
   using ActorMethodFunction = std::function<std::string(vt::actor_t*, const std::string&)>;
 
   ValhallaAsyncWorker(const Napi::Env& env,
                       const boost::property_tree::ptree* config,
                       ActorMethodFunction method,
                       const std::string& request,
-                      const std::string& method_name)
+                      const std::string& method_name,
+                      bool return_binary = false)
       : Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), config_(config),
-        method_(method), request_(request), method_name_(method_name) {
+        method_(std::move(method)), request_(request), method_name_(method_name),
+        return_binary_(return_binary) {
   }
 
   Napi::Promise GetPromise() {
@@ -80,7 +84,14 @@ protected:
   }
 
   void OnOK() override {
-    deferred_.Resolve(Napi::String::New(Env(), result_));
+    Napi::Env env = Env();
+
+    if (return_binary_) {
+      auto buffer = Napi::Buffer<char>::Copy(env, result_.data(), result_.size());
+      deferred_.Resolve(buffer);
+    } else {
+      deferred_.Resolve(Napi::String::New(env, result_));
+    }
   }
 
   void OnError(const Napi::Error& e) override {
@@ -93,8 +104,11 @@ private:
   ActorMethodFunction method_;
   std::string request_;
   std::string method_name_;
+  bool return_binary_;
   std::string result_;
 };
+
+} // namespace
 
 class Actor : public Napi::ObjectWrap<Actor> {
 public:
@@ -111,7 +125,7 @@ public:
                      InstanceMethod("transitAvailable", &Actor::TransitAvailable),
                      InstanceMethod("expansion", &Actor::Expansion),
                      InstanceMethod("centroid", &Actor::Centroid),
-                     InstanceMethod("status", &Actor::Status)});
+                     InstanceMethod("status", &Actor::Status), InstanceMethod("tile", &Actor::Tile)});
 
     // we don't need to delete it, it will be handled by Node
     Napi::FunctionReference* constructor = new Napi::FunctionReference();
@@ -156,9 +170,16 @@ private:
     }
 
     std::string request = info[0].As<Napi::String>().Utf8Value();
+    bool return_binary = false;
+
+    // Check for optional second argument: return_binary (boolean)
+    if (info.Length() > 1 && info[1].IsBoolean()) {
+      return_binary = info[1].As<Napi::Boolean>().Value();
+    }
 
     // we don't need to delete it, it will be handled by Node
-    auto* worker = new ValhallaAsyncWorker(env, &config_, method, request, method_name);
+    auto* worker = new ValhallaAsyncWorker(env, &config_, std::move(method), request, method_name,
+                                           return_binary);
     worker->Queue();
     return worker->GetPromise();
   }
@@ -246,6 +267,24 @@ private:
         info, [](vt::actor_t* actor, const std::string& request) { return actor->status(request); },
         "Status");
   }
+
+  Napi::Value Tile(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsString()) {
+      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    std::string request = info[0].As<Napi::String>().Utf8Value();
+
+    // Use CreateAsyncRequest approach but manually creating worker to force
+    // binary return.
+    auto* worker = new ValhallaAsyncWorker(
+        env, &config_,
+        [](vt::actor_t* actor, const std::string& request) { return actor->tile(request); }, request,
+        "Tile", true);
+    worker->Queue();
+    return worker->GetPromise();
+  }
 };
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
@@ -253,6 +292,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
               Napi::String::New(env, VALHALLA_PRINT_VERSION));
 
   Actor::Init(env, exports);
+  InitGraphId(env, exports);
   return exports;
 }
 

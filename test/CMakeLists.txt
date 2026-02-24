@@ -8,7 +8,9 @@
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # don't install googletest
-set(INSTALL_GTEST OFF)
+# unless you want the test library
+set(INSTALL_GTEST ${INSTALL_TEST_LIB})
+
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
 
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
@@ -16,17 +18,24 @@ set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
+enable_testing()
+include(GoogleTest)
+
 # common things that the tests need
 find_package(Threads)
-set(TEST_SRCS test.h test.cc)
+set(TEST_SRCS test.cc)
+set(TEST_HDRS test.h)
 if(ENABLE_DATA_TOOLS)
-  list(APPEND TEST_SRCS gurka/gurka.h gurka/gurka.cc)
+  list(APPEND TEST_SRCS gurka/gurka.cc)
+  list(APPEND TEST_HDRS gurka/gurka.h)
 endif()
 if(ENABLE_HTTP AND ENABLE_SERVICES)
-  list(APPEND TEST_SRCS tile_server.h tile_server.cc)
+  list(APPEND TEST_SRCS tile_server.cc)
+  list(APPEND TEST_HDRS tile_server.h)
 endif()
 add_library(valhalla_test
   ${TEST_SRCS}
+  ${TEST_HDRS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
   )
@@ -37,7 +46,8 @@ target_include_directories(valhalla_test SYSTEM PUBLIC
   ${unordered_dense_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   ${libosmium_include_dirs}
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
+  ${vtzero_include_dirs})
 target_link_libraries(valhalla_test
   valhalla gtest gtest_main gmock
   $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
@@ -57,6 +67,23 @@ if (ENABLE_GEOTIFF)
   endif()
 endif()
 
+# optionally install the test library as well
+if (INSTALL_TEST_LIB)
+  install(TARGETS valhalla_test
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT development)
+
+  install(FILES ${TEST_HDRS}
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
+    COMPONENT development)
+endif()
+
+
+# stop if the user just wants the library
+if (NOT ENABLE_TESTS)
+  return()
+endif()
+
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgeinfo edgestatus ellipse encode
@@ -69,7 +96,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller configurati
   incident_loading worker_nullptr_tiles curl_tilegetter filesystem_utils narrativebuilder util_odin)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar astar_bikeshare complexrestriction countryaccess graphbuilder graphparser
+  list(APPEND tests astar multimodal_astar complexrestriction countryaccess graphbuilder graphparser
     graphtilebuilder graphreader hierarchylimits isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
     names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban tar_index
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
@@ -102,25 +129,35 @@ foreach(test ${tests})
   endif()
 endforeach()
 
-set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
-foreach(test ${cost_tests})
-  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  set_target_properties(${test} PROPERTIES
-    FOLDER "Tests"
-    COMPILE_DEFINITIONS INLINE_TEST)
-  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  target_link_libraries(${test} valhalla_test)
-endforeach()
+## Cost tests
+set(cost_inline_test_sources
+  ${VALHALLA_SOURCE_DIR}/src/sif/autocost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/bicyclecost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/motorcyclecost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/motorscootercost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/pedestriancost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/transitcost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/truckcost.cc)
 
-set(tyr_tests route_serializer_osrm)
-foreach(test ${tyr_tests})
-  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
-  set_target_properties(${test} PROPERTIES
-    FOLDER "Tests"
-    COMPILE_DEFINITIONS INLINE_TEST)
-  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
-  target_link_libraries(${test} valhalla_test)
-endforeach()
+add_executable(cost_inline_tests EXCLUDE_FROM_ALL ${cost_inline_test_sources})
+set_target_properties(cost_inline_tests PROPERTIES
+  FOLDER "Tests"
+  COMPILE_DEFINITIONS INLINE_TEST)
+create_source_groups("Source Files" ${cost_inline_test_sources})
+target_link_libraries(cost_inline_tests valhalla_test)
+gtest_discover_tests(cost_inline_tests TEST_PREFIX "CostInline.")
+
+## Tyr tests
+set(tyr_inline_test_sources
+  ${VALHALLA_SOURCE_DIR}/src/tyr/route_serializer_osrm.cc)
+
+add_executable(tyr_inline_tests EXCLUDE_FROM_ALL ${tyr_inline_test_sources})
+set_target_properties(tyr_inline_tests PROPERTIES
+  FOLDER "Tests"
+  COMPILE_DEFINITIONS INLINE_TEST)
+create_source_groups("Source Files" ${tyr_inline_test_sources})
+target_link_libraries(tyr_inline_tests valhalla_test)
+gtest_discover_tests(tyr_inline_tests TEST_PREFIX "TyrInline.")
 
 ## Test-specific data, properties and dependencies
 target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
@@ -304,7 +341,7 @@ set (destination "${CMAKE_BINARY_DIR}/test/data/tile_src")
 #)
 
 ## Test run targets
-foreach(test ${tests} ${cost_tests} ${tyr_tests})
+foreach(test ${tests} ${cost_inline_tests} ${tyr_inline_tests})
   add_custom_command(OUTPUT ${test}.log
     COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/${test}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -322,6 +359,7 @@ endif()
 
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
+  add_dependencies(run-actor utrecht_tiles)
   add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-hierarchylimits utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)
@@ -338,7 +376,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
-  add_dependencies(run-astar_bikeshare paris_bss_tiles)
+  add_dependencies(run-multimodal_astar paris_bss_tiles utrecht_tiles)
   add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
@@ -356,20 +394,101 @@ endif()
 
 # ENABLE_DATA_TOOLS is needed for utrecht_tiles
 if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
+  # Prefer .venv Python if available (better compatibility with DYLD_INSERT_LIBRARIES on macOS)
+  set(TEST_PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
+  if(EXISTS "${VALHALLA_SOURCE_DIR}/.venv/bin/python3")
+    set(TEST_PYTHON_EXECUTABLE "${VALHALLA_SOURCE_DIR}/.venv/bin/python3")
+    message(STATUS "Using .venv Python for tests: ${TEST_PYTHON_EXECUTABLE}")
+  endif()
+
+  # Find ASan runtime library for LD_PRELOAD (if sanitizers are enabled)
+  # This approach avoids false positives from NumPy's internal allocations by preloading
+  # the ASan runtime before Python starts, allowing ASan to intercept all allocations.
+  # On Linux, both libasan and the C++ standard library must be preloaded together.
+  # See: https://github.com/wjakob/nanobind/blob/master/docs/lowlevel.rst#sanitizing-python-sessions
+  set(ASAN_PRELOAD_ENV "")
+  if(ENABLE_SANITIZERS)
+    # Step 1: Find ASan library (try Clang naming, then GCC naming on Linux)
+    if(APPLE)
+      set(san_candidates "libclang_rt.asan_osx_dynamic.dylib")
+    else()
+      set(san_candidates "libclang_rt.asan.so" "libasan.so")
+    endif()
+
+    foreach(san_libname ${san_candidates})
+      execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${san_libname}
+        OUTPUT_VARIABLE san_libpath
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      # Check if we got a real path (not just the input echoed back)
+      if(san_libpath AND NOT san_libpath STREQUAL san_libname)
+        break()  # Found it
+      endif()
+    endforeach()
+
+    if(san_libpath AND NOT san_libpath STREQUAL san_libname)
+      # Step 2: On Linux, also find C++ standard library (libstdc++ or libc++)
+      if(NOT APPLE)
+        foreach(cxx_libname "libstdc++.so" "libc++.so")
+          execute_process(
+            COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${cxx_libname}
+            OUTPUT_VARIABLE cxx_libpath
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+          )
+          if(cxx_libpath AND NOT cxx_libpath STREQUAL cxx_libname)
+            break()  # Found it
+          endif()
+        endforeach()
+
+        if(cxx_libpath AND NOT cxx_libpath STREQUAL cxx_libname)
+          set(ASAN_PRELOAD_ENV "LD_PRELOAD=${san_libpath}:${cxx_libpath}")
+        else()
+          message(WARNING "Could not find libstdc++.so or libc++.so. Python tests may fail with __cxa_throw errors.")
+          set(ASAN_PRELOAD_ENV "LD_PRELOAD=${san_libpath}")
+        endif()
+      else()
+        # macOS: Only ASan library needed
+        set(ASAN_PRELOAD_ENV "DYLD_INSERT_LIBRARIES=${san_libpath}")
+      endif()
+      message(STATUS "Python tests will use sanitizer preload: ${ASAN_PRELOAD_ENV}")
+    else()
+      message(WARNING "Sanitizers enabled but ASan runtime not found. Python tests may fail.")
+    endif()
+  endif()
+
+  # Build environment variables into bash export statements
+  # We use bash for output redirection/error handling, so we export variables within bash
+  set(PYTHON_TEST_EXPORTS "export LOCPATH=${VALHALLA_SOURCE_DIR}/locales; export PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python;")
+
+  # Add sanitizer-specific options only when sanitizers are enabled
+  if(ENABLE_SANITIZERS)
+    set(PYTHON_TEST_EXPORTS "${PYTHON_TEST_EXPORTS} export ASAN_OPTIONS=detect_leaks=0:symbolize=1;")
+    # Add preload if library was found
+    if(ASAN_PRELOAD_ENV)
+      set(PYTHON_TEST_EXPORTS "${PYTHON_TEST_EXPORTS} export ${ASAN_PRELOAD_ENV};")
+    endif()
+  endif()
+
+  # Call Python with exports in a single bash command (simpler than wrapper script)
   add_custom_command(OUTPUT python_valhalla.log
-    COMMAND
-      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-      PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python
-      ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log && exit 1)"
+    COMMAND /bin/bash -cx "\
+      ${PYTHON_TEST_EXPORTS} \
+      ${TEST_PYTHON_EXECUTABLE} -m unittest discover \
+        -s ${VALHALLA_SOURCE_DIR}/test/bindings/python \
+        -v \
+      2>&1 | tee ${CMAKE_BINARY_DIR}/test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_config.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_graph_utils.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_predicted_speeds.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
       _valhalla
-      graph_utils
+      _graph_utils
+      predicted_speeds
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
   set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")
@@ -420,3 +539,4 @@ add_custom_target(tests DEPENDS ${tests} ${cost_tests} ${tyr_tests})
 set_target_properties(tests PROPERTIES FOLDER "Tests")
 add_subdirectory(gurka)
 add_subdirectory(scripts)
+

@@ -36,7 +36,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"bicycle", 7200.0f},        {"bus", 43200.0f},           {"hov", 43200.0f},
     {"motor_scooter", 14400.0f}, {"motorcycle", 14400.0f},    {"multimodal", 7200.0f},
     {"pedestrian", 7200.0f},     {"transit", 14400.0f},       {"truck", 43200.0f},
-    {"taxi", 43200.0f},          {"bikeshare", 7200.0f},
+    {"taxi", 43200.0f},          {"bikeshare", 7200.0f},      {"auto_pedestrian", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
@@ -60,8 +60,8 @@ namespace thor {
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : service_worker_t(config), mode(valhalla::sif::TravelMode::kPedestrian),
-      bidir_astar(config.get_child("thor")), bss_astar(config.get_child("thor")),
-      multi_modal_astar(config.get_child("thor")), timedep_forward(config.get_child("thor")),
+      bidir_astar(config.get_child("thor")), multimodal_astar(config.get_child("thor")),
+      multi_modal_transit(config.get_child("thor")), timedep_forward(config.get_child("thor")),
       timedep_reverse(config.get_child("thor")), costmatrix_(config.get_child("thor")),
       time_distance_matrix_(config.get_child("thor")),
       time_distance_bss_matrix_(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
@@ -105,8 +105,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
 
-  hierarchy_limits_config_costmatrix =
-      parse_hierarchy_limits_from_config(config, "costmatrix", false);
+  hierarchy_limits_config_costmatrix = parse_hierarchy_limits_from_config(config, "costmatrix", true);
   hierarchy_limits_config_astar =
       parse_hierarchy_limits_from_config(config, "unidirectional_astar", true);
   hierarchy_limits_config_bidirectional_astar =
@@ -203,7 +202,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
 void run_service(const boost::property_tree::ptree& config) {
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
-                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+                        config.get<unsigned int>("httpd.service.shutdown_seconds", 1));
 
   // gets requests from thor proxy
   auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
@@ -319,8 +318,8 @@ void thor_worker_t::cleanup() {
   bidir_astar.Clear();
   timedep_forward.Clear();
   timedep_reverse.Clear();
-  multi_modal_astar.Clear();
-  bss_astar.Clear();
+  multi_modal_transit.Clear();
+  multimodal_astar.Clear();
   trace.clear();
   costmatrix_.Clear();
   time_distance_matrix_.Clear();

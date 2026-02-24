@@ -352,8 +352,8 @@ void validate(
         uint32_t ar_modes = de->access_restriction();
         if (ar_modes) {
           // since only truck restrictions exist, we can still get all restrictions
-          auto res = tile->GetAccessRestrictions(idx, kAllAccess);
-          if (res.size() == 0) {
+          auto res = tile->GetAccessRestrictions(idx);
+          if (res.empty()) {
             LOG_ERROR(
                 "Directed edge marked as having access restriction but none found ; tile level = " +
                 std::to_string(tile_id.level()));
@@ -376,7 +376,7 @@ void validate(
 
         // Check if end node is in a different tile
         graph_tile_ptr endnode_tile = tile;
-        if (tile_id != directededge.endnode().Tile_Base()) {
+        if (tile_id != directededge.endnode().tile_base()) {
           directededge.set_leaves_tile(true);
 
           // Get the end node tile

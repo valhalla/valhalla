@@ -1,4 +1,5 @@
 #include "loki/worker.h"
+#include "exceptions.h"
 #include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
@@ -6,6 +7,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
+#include <format>
 #include <functional>
 #include <stdexcept>
 #include <string>
@@ -115,8 +117,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   if (options.exclude_polygons_size()) {
-    const auto edges =
-        edges_in_rings(options.exclude_polygons(), *reader, costing, max_exclude_polygons_length);
+    const auto edges = edges_in_rings(options, *reader, costing, max_exclude_polygons_length);
     auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
     for (const auto& edge_id : edges) {
       auto* avoid = co.add_exclude_edges();
@@ -134,7 +135,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
     try {
       auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
-      auto results = loki::Search(exclude_locations, *reader, costing);
+      auto results = search_.search(exclude_locations, costing);
       std::unordered_set<uint64_t> avoids;
       auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
       for (const auto& result : results) {
@@ -151,7 +152,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
             // Check if a shortcut exists
             GraphId shortcut = reader->GetShortcut(edge.id);
-            if (shortcut.Is_Valid()) {
+            if (shortcut.is_valid()) {
               // Check if this shortcut has not been added
               auto shortcut_inserted = avoids.insert(shortcut);
               if (shortcut_inserted.second) {
@@ -184,6 +185,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     : service_worker_t(config), config(config),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
+      search_(*reader),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
                            ? new connectivity_map_t(config.get_child("mjolnir"), reader)
                            : nullptr),
@@ -194,7 +196,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")),
-      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)) {
+      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)),
+      candidate_query_(*reader,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -209,6 +214,25 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   // Make sure we have at least something to support!
   if (action_str.empty()) {
     throw std::runtime_error("The config actions for Loki are incorrectly loaded");
+  }
+
+  // get /tile parameters
+  size_t i = 0;
+  const auto max_road_classes = min_zoom_road_class_.size();
+  for (const auto& zoom : config.get_child("loki.service_defaults.mvt_min_zoom_road_class")) {
+    if (i >= max_road_classes) {
+      break;
+    }
+    min_zoom_road_class_[i] = zoom.second.get_value<uint32_t>();
+    if (i > 0 && min_zoom_road_class_[i] < min_zoom_road_class_[i - 1]) {
+      throw std::runtime_error("mvt_min_zoom_road_class doesn't accept descending zoom levels");
+    }
+    ++i;
+  }
+  if (i != max_road_classes) {
+    throw std::runtime_error(
+        std::format("mvt_min_zoom_road_class out of bounds, expected {} elements but got {}",
+                    max_road_classes, i));
   }
 
   // Build max_locations and max_distance maps
@@ -254,10 +278,16 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     throw std::runtime_error("Missing max_matrix_location_pairs configuration");
   }
 
-  min_transit_walking_dis =
-      config.get<size_t>("service_limits.pedestrian.min_transit_walking_distance");
-  max_transit_walking_dis =
-      config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
+  // we renamed this parameter, but never had a default in code, so fall back to the old name
+  auto val = config.get_optional<size_t>("service_limits.pedestrian.min_multimodal_walking_distance");
+  if (!val)
+    val = config.get_optional<size_t>("service_limits.pedestrian.min_transit_walking_distance");
+  min_multimodal_walking_dist = *val;
+
+  val = config.get_optional<size_t>("service_limits.pedestrian.max_multimodal_walking_distance");
+  if (!val)
+    val = config.get_optional<size_t>("service_limits.pedestrian.max_transit_walking_distance");
+  max_multimodal_walking_dist = *val;
 
   max_exclude_locations = config.get<size_t>("service_limits.max_exclude_locations");
   max_exclude_polygons_length = config.get<float>("service_limits.max_exclude_polygons_length");
@@ -284,6 +314,11 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
+  candidate_query_cache_size_ = config.get<size_t>("meili.grid.cache_size");
+  mvt_cache_dir_ = config.get<std::string>("loki.service_defaults.mvt_cache_dir", "");
+  if (!mvt_cache_dir_.empty() && !std::filesystem::exists(mvt_cache_dir_))
+    std::filesystem::create_directory(mvt_cache_dir_);
+  mvt_cache_min_zoom_ = config.get<uint32_t>("loki.service_defaults.mvt_cache_min_zoom");
 
   // signal that the worker started successfully
   started();
@@ -293,6 +328,9 @@ void loki_worker_t::cleanup() {
   service_worker_t::cleanup();
   if (reader->OverCommitted()) {
     reader->Trim();
+  }
+  if (candidate_query_.size() > candidate_query_cache_size_) {
+    candidate_query_.Clear();
   }
 }
 
@@ -419,6 +457,9 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         }
         result.messages.emplace_back(request.SerializeAsString());
         break;
+      case Options::tile:
+        result = to_response(render_tile(request), info, request);
+        break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
         throw valhalla_exception_t{107};
@@ -441,7 +482,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
 void run_service(const boost::property_tree::ptree& config) {
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
-                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+                        config.get<unsigned int>("httpd.service.shutdown_seconds", 1));
 
   // gets requests from the http server
   auto upstream_endpoint = config.get<std::string>("loki.service.proxy") + "_out";

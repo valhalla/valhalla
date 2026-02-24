@@ -381,7 +381,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
                         "bidirectional_astar", Expansion_EdgeStatus_reached, newcost.secs,
                         pred.path_distance() + meta.edge->length(), newcost.cost,
-                        static_cast<Expansion_ExpansionType>(expansion_direction), flow_sources);
+                        static_cast<Expansion_ExpansionType>(expansion_direction), flow_sources,
+                        TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
   }
 
   // we've just added this edge to the queue, but we won't expand from it if it's a not-thru edge that
@@ -411,6 +412,7 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
 
   // Update the time information even if time is invariant to account for timezones
   auto seconds_offset = invariant ? 0.f : pred.cost().secs;
+
   auto offset_time = FORWARD
                          ? time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()))
                          : time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
@@ -532,10 +534,32 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
   // we use a non varying time for all time dependent routes until we can figure out how to vary the
   // time during the path computation in the bidirectional algorithm
-  bool invariant = options.date_time_type() != Options::no_time;
+  bool invariant = options.date_time_type() == Options::invariant;
+  bool arrive_by = options.date_time_type() == Options::arrive_by;
+
   // Get time information for forward and backward searches
-  auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
-  auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
+  // and determine which strategy to use on the far end
+  TimeInfo forward_time_info;
+  TimeInfo reverse_time_info;
+  Options::ReverseTimeTracking reverse_time_tracking = options.reverse_time_tracking();
+
+  if (arrive_by) {
+    reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
+    forward_time_info =
+        reverse_time_tracking == Options::rtt_heuristic
+            ? EstimateReverseStartTime(graphreader, origin, destination, kReverseTTHeuristicFactor,
+                                       reverse_time_info, costing_, arrive_by)
+            : TimeInfo::invalid();
+  } else {
+    forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
+    reverse_time_info = invariant
+                            ? TimeInfo::make(destination, graphreader, &tz_cache_)
+                            : (reverse_time_tracking == Options::rtt_heuristic
+                                   ? EstimateReverseStartTime(graphreader, origin, destination,
+                                                              kReverseTTHeuristicFactor,
+                                                              forward_time_info, costing_, arrive_by)
+                                   : TimeInfo::invalid());
+  }
 
   // When a timedependent route is too long in distance it gets sent to this algorithm. It used to be
   // the case that this algorithm called EdgeCost without a time component. This would result in
@@ -726,7 +750,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "bidirectional_astar",
                             Expansion_EdgeStatus_settled, fwd_pred.cost().secs,
                             fwd_pred.path_distance(), fwd_pred.cost().cost,
-                            Expansion_ExpansionType_forward, kNoFlowMask);
+                            Expansion_ExpansionType_forward, kNoFlowMask,
+                            TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
       }
 
       // Prune path if predecessor is not a through edge or if the maximum
@@ -775,7 +800,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "bidirectional_astar",
                             Expansion_EdgeStatus_settled, rev_pred.cost().secs,
                             rev_pred.path_distance(), rev_pred.cost().cost,
-                            Expansion_ExpansionType_reverse, kNoFlowMask);
+                            Expansion_ExpansionType_reverse, kNoFlowMask,
+                            TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
       }
 
       // Prune path if predecessor is not a through edge
@@ -891,7 +917,8 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
                                : edgelabels_forward_[pred.predecessor()].edgeid();
     expansion_callback_(graphreader, pred.edgeid(), prev_pred, "bidirectional_astar",
                         Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
-                        pred.cost().cost, Expansion_ExpansionType_forward, kNoFlowMask);
+                        pred.cost().cost, Expansion_ExpansionType_forward, kNoFlowMask,
+                        TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
   }
 
   return true;
@@ -965,7 +992,8 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
     expansion_callback_(graphreader, fwd_edge_id, prev_pred, "bidirectional_astar",
                         Expansion_EdgeStatus_connected, fwd_pred.cost().secs,
                         fwd_pred.path_distance(), fwd_pred.cost().cost,
-                        Expansion_ExpansionType_reverse, kNoFlowMask);
+                        Expansion_ExpansionType_reverse, kNoFlowMask,
+                        TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
   }
 
   return true;
@@ -1058,7 +1086,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
       expansion_callback_(graphreader, edgeid, GraphId{}, "bidirectional_astar",
                           Expansion_EdgeStatus_reached, cost.secs,
                           static_cast<uint32_t>(edge.distance() + 0.5), cost.cost,
-                          Expansion_ExpansionType_forward, flow_sources);
+                          Expansion_ExpansionType_forward, flow_sources,
+                          TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
     }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
@@ -1167,7 +1196,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
       expansion_callback_(graphreader, edgeid, GraphId{}, "bidirectional_astar",
                           Expansion_EdgeStatus_reached, cost.secs,
                           static_cast<uint32_t>(edge.distance() + 0.5), cost.cost,
-                          Expansion_ExpansionType_reverse, flow_sources);
+                          Expansion_ExpansionType_reverse, flow_sources,
+                          TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
     }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
@@ -1470,6 +1500,56 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
 
   // No restrictions matched our patch path
   return false;
+}
+
+TimeInfo EstimateReverseStartTime(GraphReader& reader,
+                                  valhalla::Location& origin,
+                                  valhalla::Location& destination,
+                                  const double factor,
+                                  const TimeInfo& time_info,
+                                  const sif::cost_ptr_t& costing,
+                                  const bool arrive_by) {
+  // correlations are sorted by distance
+  // so we just take the beeline distance between the
+  // origin and destination's first correlated points
+  auto origin_pathedge = origin.correlation().edges().at(0);
+  auto dest_pathedge = destination.correlation().edges().at(0);
+  PointLL origin_pt{origin_pathedge.ll().lng(), origin_pathedge.ll().lat()};
+  PointLL destination_pt{dest_pathedge.ll().lng(), dest_pathedge.ll().lat()};
+  auto dist = origin_pt.Distance(destination_pt);
+  auto seconds = costing->BeeLineTimeEstimate(dist, factor);
+  LOG_DEBUG("Estimated seconds: " + std::to_string(seconds));
+
+  valhalla::PathEdge& edge = arrive_by ? origin_pathedge : dest_pathedge;
+
+  // we need to get the node info either from the edge's start or end node
+  // for the timezone info
+  GraphId edgeid(edge.graph_id());
+  graph_tile_ptr tile = reader.GetGraphTile(edgeid);
+
+  if (!tile) {
+    return TimeInfo::invalid();
+  }
+
+  const DirectedEdge* directededge = tile->directededge(edgeid);
+  graph_tile_ptr endtile = reader.GetGraphTile(directededge->endnode());
+
+  if (!endtile) {
+    return TimeInfo::invalid();
+  }
+
+  const NodeInfo* nodeinfo = nullptr;
+  if (edge.percent_along() > .5) {
+    nodeinfo = endtile->node(directededge->endnode());
+  } else {
+    // get the start node if that one's closer
+    auto opp_edge = endtile->directededge(endtile->node(directededge->endnode())->edge_index() +
+                                          directededge->opp_index());
+    nodeinfo = tile->node(opp_edge->endnode());
+  }
+
+  return arrive_by ? time_info.reverse(seconds, static_cast<int>(nodeinfo->timezone()))
+                   : time_info.forward(seconds, static_cast<int>(nodeinfo->timezone()));
 }
 
 } // namespace thor
