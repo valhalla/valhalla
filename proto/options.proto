@@ -112,7 +112,8 @@ message Tile {
 }
 
 message TileOptions {
-  bool return_shortcuts = 1;               // include shortcuts in /tile responses
+  reserved 1;
+  reserved "return_shortcuts";               // deprecated: include shortcuts in /tile responses
   repeated string exclude_layers = 2;      // which layers to exclude, default none
 }
 
@@ -130,6 +131,7 @@ message Costing {
     taxi = 9;
     auto_ = 10;
     bikeshare = 11;    // turns into pedestrian + bike
+    auto_pedestrian = 12; // turns into auto + pedestrian
   }
 
   message Options {
@@ -212,7 +214,7 @@ message Costing {
       float driveway_penalty = 26;
     }
     oneof has_transit_start_end_max_distance {
-      uint32 transit_start_end_max_distance = 27;
+      uint32 transit_start_end_max_distance = 27; // deprecated in favor of multimodal_start_end_max_distance
     }
     oneof has_transit_transfer_max_distance {
       uint32 transit_transfer_max_distance = 28;
@@ -352,6 +354,9 @@ message Costing {
     oneof has_speed_penalty_factor {
           float speed_penalty_factor = 95;
         }
+    oneof has_multimodal_start_end_max_distance {
+      uint32 multimodal_start_end_max_distance = 96;
+    }
   }
 
   oneof has_options {
@@ -424,6 +429,7 @@ message Options {
     pred_edge_id = 5;
     expansion_type = 6;
     flow_sources = 7;
+    travel_mode = 8;
   }
 
   enum ReverseTimeTracking {

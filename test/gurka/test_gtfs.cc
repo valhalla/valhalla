@@ -160,7 +160,7 @@ boost::property_tree::ptree get_config() {
                             {"mjolnir.hierarchy", "1"},
                             {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                             {"mjolnir.tile_dir", VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"},
-                            {"service_limits.pedestrian.max_transit_walking_distance", "100000"}});
+                            {"service_limits.pedestrian.max_multimodal_walking_distance", "100000"}});
 }
 
 // put the base in toronto for timezone stuff to work and put it on the edge of a level 2/3 tile

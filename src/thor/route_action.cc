@@ -378,23 +378,27 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
                                                        const Options& options) {
   // make sure they are all cancelable
   for (auto* alg : std::vector<PathAlgorithm*>{
-           &multi_modal_astar,
+           &multi_modal_transit,
            &timedep_forward,
            &timedep_reverse,
            &bidir_astar,
-           &bss_astar,
+           &multimodal_astar,
        }) {
     alg->set_interrupt(interrupt);
   }
 
   // Have to use multimodal for transit based routing
   if (routetype == "multimodal" || routetype == "transit") {
-    return &multi_modal_astar;
+    return &multi_modal_transit;
+  }
+
+  if (routetype == "auto_pedestrian") {
+    return &multimodal_astar;
   }
 
   // Have to use bike share station algorithm
   if (routetype == "bikeshare") {
-    return &bss_astar;
+    return &multimodal_astar;
   }
 
   // If the origin has date_time set use timedep_forward method if the distance
@@ -736,6 +740,8 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   // get the user provided hierarchy limits and store one for each path algorithm
   // because we may use them interchangeably
   auto hierarchy_limits_bidir = mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+  // TODO: what about multimodal costing? we need to check the  hierarchy limits for all
+  // costings that use hierarchy limits
   auto hierarchy_limits_unidir = mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
 
   // check whether hierarchy limits were already checked for this algorithm

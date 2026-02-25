@@ -381,7 +381,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
                         "bidirectional_astar", Expansion_EdgeStatus_reached, newcost.secs,
                         pred.path_distance() + meta.edge->length(), newcost.cost,
-                        static_cast<Expansion_ExpansionType>(expansion_direction), flow_sources);
+                        static_cast<Expansion_ExpansionType>(expansion_direction), flow_sources,
+                        TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
   }
 
   // we've just added this edge to the queue, but we won't expand from it if it's a not-thru edge that
@@ -749,7 +750,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "bidirectional_astar",
                             Expansion_EdgeStatus_settled, fwd_pred.cost().secs,
                             fwd_pred.path_distance(), fwd_pred.cost().cost,
-                            Expansion_ExpansionType_forward, kNoFlowMask);
+                            Expansion_ExpansionType_forward, kNoFlowMask,
+                            TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
       }
 
       // Prune path if predecessor is not a through edge or if the maximum
@@ -798,7 +800,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "bidirectional_astar",
                             Expansion_EdgeStatus_settled, rev_pred.cost().secs,
                             rev_pred.path_distance(), rev_pred.cost().cost,
-                            Expansion_ExpansionType_reverse, kNoFlowMask);
+                            Expansion_ExpansionType_reverse, kNoFlowMask,
+                            TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
       }
 
       // Prune path if predecessor is not a through edge
@@ -914,7 +917,8 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
                                : edgelabels_forward_[pred.predecessor()].edgeid();
     expansion_callback_(graphreader, pred.edgeid(), prev_pred, "bidirectional_astar",
                         Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
-                        pred.cost().cost, Expansion_ExpansionType_forward, kNoFlowMask);
+                        pred.cost().cost, Expansion_ExpansionType_forward, kNoFlowMask,
+                        TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
   }
 
   return true;
@@ -988,7 +992,8 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
     expansion_callback_(graphreader, fwd_edge_id, prev_pred, "bidirectional_astar",
                         Expansion_EdgeStatus_connected, fwd_pred.cost().secs,
                         fwd_pred.path_distance(), fwd_pred.cost().cost,
-                        Expansion_ExpansionType_reverse, kNoFlowMask);
+                        Expansion_ExpansionType_reverse, kNoFlowMask,
+                        TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
   }
 
   return true;
@@ -1081,7 +1086,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
       expansion_callback_(graphreader, edgeid, GraphId{}, "bidirectional_astar",
                           Expansion_EdgeStatus_reached, cost.secs,
                           static_cast<uint32_t>(edge.distance() + 0.5), cost.cost,
-                          Expansion_ExpansionType_forward, flow_sources);
+                          Expansion_ExpansionType_forward, flow_sources,
+                          TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
     }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
@@ -1190,7 +1196,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
       expansion_callback_(graphreader, edgeid, GraphId{}, "bidirectional_astar",
                           Expansion_EdgeStatus_reached, cost.secs,
                           static_cast<uint32_t>(edge.distance() + 0.5), cost.cost,
-                          Expansion_ExpansionType_reverse, flow_sources);
+                          Expansion_ExpansionType_reverse, flow_sources,
+                          TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
     }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru

@@ -39,25 +39,16 @@ protected:
     };
 
     // generate the lls for the nodes in the map
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {.2f, .2f});
-
-    // Set country codes for nodes
-    const gurka::nodes nodes = {{"A", {{"iso:3166_1", "CA"}, {"iso:3166_2", "CA-BC"}}},
-                                {"B", {{"iso:3166_1", "CA"}, {"iso:3166_2", "CA-BC"}}},
-                                {"C", {{"iso:3166_1", "CA"}, {"iso:3166_2", "CA-BC"}}},
-                                {"D", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
-                                {"E", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
-                                {"F", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
-                                {"G", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
-                                {"H", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
-                                {"I", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}}};
+    const auto layout =
+        gurka::detail::map_to_coordinates(ascii_map, 100, {-111.962238354, 49.003392362});
 
     // make the tiles
     std::string tile_dir = "test/data/route_incidents";
-    map = gurka::buildtiles(layout, ways, nodes, {}, tile_dir,
+    map = gurka::buildtiles(layout, ways, {}, {}, tile_dir,
                             {
                                 {"mjolnir.traffic_extract", tile_dir + "/traffic.tar"},
-                                {"mjolnir.data_processing.use_admin_db", "false"},
+                                {"mjolnir.admin",
+                                 {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                             });
 
     // stage up some live traffic data

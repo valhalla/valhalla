@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# the test assumes that pyvalhalla(-weekly) is installed to the current "python" installation
+# the test assumes that pyvalhalla is installed to the current "python" installation
 # it mostly makes sure there are no linked libraries missing
 
 set -x -o errexit -o pipefail -o nounset

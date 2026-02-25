@@ -1,5 +1,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "test.h"
 #include "valhalla/worker.h"
 
 #include <gtest/gtest.h>
@@ -104,6 +105,7 @@ protected:
     bool edge_id = false;
     bool cost = false;
     bool expansion_type = false;
+    bool travel_mode = false;
 
     const std::unordered_map<std::string, int> prop_count;
     for (const auto& prop : props) {
@@ -128,6 +130,9 @@ protected:
       if (prop == "expansion_type") {
         expansion_type = true;
       }
+      if (prop == "travel_mode") {
+        travel_mode = true;
+      }
     }
     ASSERT_EQ(parsed_api.expansion().geometries_size(), exp_feats);
     ASSERT_EQ(parsed_api.expansion().edge_status_size(), edge_status ? exp_feats : 0);
@@ -137,6 +142,7 @@ protected:
     ASSERT_EQ(parsed_api.expansion().edge_id_size(), edge_id ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().costs_size(), cost ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().expansion_type_size(), expansion_type ? exp_feats : 0);
+    ASSERT_EQ(parsed_api.expansion().travel_modes_size(), travel_mode ? exp_feats : 0);
   }
   void check_result_json(const std::string& action,
                          const std::vector<std::string>& waypoints,
@@ -305,4 +311,103 @@ INSTANTIATE_TEST_SUITE_P(ExpandPropsTest,
                                            std::vector<std::string>{"distance", "duration",
                                                                     "pred_edge_id", "expansion_type"},
                                            std::vector<std::string>{"edge_id", "cost"},
-                                           std::vector<std::string>{}));
+                                           std::vector<std::string>{"edge_id", "travel_mode"}));
+
+TEST(StandAlone, MultiModalAStarModes) {
+  const std::string ascii_map = R"(
+      A--------------B-----------C-----------D
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+  };
+
+  const gurka::nodes nodes = {{"B", {{"amenity", "parking"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, VALHALLA_BUILD_DIR "test/data/gurka_parking");
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto node = gurka::findNode(*reader, layout, "B");
+  auto nodeinfo = reader->nodeinfo(node);
+
+  EXPECT_EQ(nodeinfo->type(), baldr::NodeType::kParking)
+      << "Expected parking, got " << baldr::to_string(nodeinfo->type());
+  EXPECT_EQ(nodeinfo->access(), 2047)
+      << "Expected vehicular and pedestrian access , got " << nodeinfo->access();
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto_pedestrian", {});
+
+  gurka::assert::raw::
+      expect_maneuvers(result,
+                       {
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kStart,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kParkVehicle,
+                           DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kDestination,
+                       });
+
+  // travel mode changes along the route
+  auto& leg = result.directions().routes(0).legs(0);
+  EXPECT_EQ(leg.maneuver(0).travel_mode(), TravelMode::kDrive);
+  EXPECT_EQ(leg.maneuver(leg.maneuver_size() - 1).travel_mode(), TravelMode::kPedestrian);
+}
+
+TEST(Standalone, ChooseOptimalPath) {
+  const std::string ascii_map = R"(
+      A--------------B-----------C-----------D
+                     |           |
+                     |           |
+                     |     Z     |
+                     |     |     |
+                     E-1---X     |
+                           |     |
+                           Y--2--F
+                           |
+                           U
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},     {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},     {"BE", {{"highway", "residential"}}},
+      {"E1XY2F", {{"highway", "residential"}}}, {"FC", {{"highway", "residential"}}},
+      {"XZ", {{"highway", "residential"}}},     {"YU", {{"highway", "residential"}}},
+  };
+
+  // create two parking nodes
+  const gurka::nodes nodes = {
+      {"1", {{"amenity", "parking"}}},
+      {"2", {{"amenity", "parking"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, nodes, {},
+                               VALHALLA_BUILD_DIR "test/data/gurka_multimodal_astar_expansion");
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  for (const auto& n : {"1", "2"}) {
+    auto node = gurka::findNode(*reader, layout, n);
+    auto nodeinfo = reader->nodeinfo(node);
+
+    EXPECT_EQ(nodeinfo->type(), baldr::NodeType::kParking)
+        << "Expected parking, got " << baldr::to_string(nodeinfo->type());
+    EXPECT_EQ(nodeinfo->access(), 2047)
+        << "Expected vehicular and pedestrian access , got " << nodeinfo->access();
+  }
+
+  std::unordered_map<std::string, std::string> options = {
+      {"/action", "route"},
+      {"/expansion_properties/0", "travel_mode"},
+  };
+  auto result =
+      gurka::do_action(valhalla::Options::expansion, map, {"A", "D"}, "auto_pedestrian", options);
+
+  EXPECT_GT(result.expansion().travel_modes_size(), 0);
+  bool has_pedestrian = false;
+  bool has_drive = false;
+  for (const auto& res : result.expansion().travel_modes()) {
+    has_pedestrian |= res == TravelMode::kPedestrian;
+    has_drive |= res == TravelMode::kDrive;
+  }
+}

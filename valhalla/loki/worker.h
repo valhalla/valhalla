@@ -91,9 +91,9 @@ protected:
   unsigned int default_street_side_tolerance;
   unsigned int default_street_side_max_distance;
   float default_breakage_distance;
-  // Minimum and maximum walking distances (to validate input).
-  size_t min_transit_walking_dis;
-  size_t max_transit_walking_dis;
+  // Minimum and maximum walking distances for multimodal algorithms (to validate input).
+  size_t min_multimodal_walking_dist;
+  size_t max_multimodal_walking_dist;
   size_t max_contours;
   size_t max_contour_min;
   size_t max_contour_km;
