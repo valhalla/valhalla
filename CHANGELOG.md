@@ -1644,7 +1644,7 @@ polyline point.
 * **Bug Fixes**
   * Fix isochrone bug where the default access mode was used - this rejected edges that should not have been rejected for cases than automobile.
   * Fix A* handling of edge costs for trivial routes. This fixed an issue with disconnected regions that projected to a single edge.
-  * Fix TripPathBuilder crash if first edge is a transition edge (was occurring with map-matching in rare occasions).
+  * Fix TripLegBuilder crash if first edge is a transition edge (was occurring with map-matching in rare occasions).
 
 ## Release Date: 2017-05-15 Valhalla 2.2.3
 * **Map Matching Improvement**
@@ -1672,7 +1672,7 @@ polyline point.
   * Destination only fix when "nested" destination only areas cause a route failure. Allow destination only edges (with penalty) on 2nd pass.
   * Fix heading to properly use the partial edge shape rather than entire edge shape to determine heading at the begin and end locations.
   * Some cleanup and simplification of the bidirectional A* algorithm.
-  * Some cleanup and simplification of TripPathBuilder.
+  * Some cleanup and simplification of TripLegBuilder.
   * Make TileHierarchy data and methods static and remove tile_dir from the tile hierarchy.
 * **Map Matching Improvement**
   * Return matched points with trace attributes when using map_snap.
@@ -1910,7 +1910,7 @@ of non-separated bicycle lanes on high speed roads.
  * **Data producer updates** - Do not generate shortcuts across a node which is a fork. This caused missing fork maneuvers on longer routes.  GetNames update ("Broadway fix").  Fixed an issue with looking up a name in the ref map and not the name map.  Also, removed duplicate names.  Private = false was unsetting destination only flags for parking aisles.
 
 ## Release Date: 2016-03-30
- * **TripPathBuilder Bug Fix** - Fixed an exception that was being thrown when trying to read directed edges past the end of the list within a tile. This was due to errors in setting walkability and cyclability on upper hierarchies.
+ * **TripLegBuilder Bug Fix** - Fixed an exception that was being thrown when trying to read directed edges past the end of the list within a tile. This was due to errors in setting walkability and cyclability on upper hierarchies.
 
 ## Release Date: 2016-03-28
 
