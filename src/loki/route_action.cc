@@ -135,17 +135,20 @@ void loki_worker_t::route(Api& request) {
         throw valhalla_exception_t{150, "for auto_pedestrian: " + std::to_string(locations.size())};
       }
       std::vector<baldr::Location> start_loc(locations.begin(), locations.begin() + 1);
-      auto start_projection = search_.search(start_loc, costing);
+      auto start_projection =
+          search_.search(start_loc, mode_costing[static_cast<size_t>(TravelMode::kDrive)]);
       for (const auto& [loc, path_loc] : start_projection) {
         projections.insert({loc, path_loc});
       }
       std::vector<baldr::Location> end_loc(locations.end() - 1, locations.end());
-      auto end_projection = search_.search(end_loc, costing);
+
+      auto end_projection =
+          search_.search(end_loc, mode_costing[static_cast<size_t>(TravelMode::kPedestrian)]);
       for (const auto& [loc, path_loc] : end_projection) {
         projections.insert({loc, path_loc});
       }
     } else {
-      projections = search_.search(locations, costing);
+      projections = search_.search(locations, mode_costing[static_cast<size_t>(mode)]);
     }
     for (size_t i = 0; i < locations_end; ++i) {
       const auto& correlated = projections.at(locations[i]);
