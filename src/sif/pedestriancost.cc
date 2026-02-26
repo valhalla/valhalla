@@ -64,7 +64,7 @@ constexpr float kDefaultUseLivingStreets = 0.6f; // Factor between 0 and 1
 // Maximum distance at the beginning or end of a multimodal route
 // that you are willing to travel for this mode.  In this case,
 // it is the max walking distance.
-constexpr uint32_t kTransitStartEndMaxDistance = 2415; // 1.5 miles
+constexpr uint32_t kMultimodalStartEndMaxDistance = 2415; // 1.5 miles
 
 // Maximum transfer distance between stops that you are willing
 // to travel for this mode.  In this case, it is the max walking
@@ -121,8 +121,8 @@ constexpr ranged_default_t<float> kSideWalkFactorRange{kMinFactor, kDefaultSideW
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kDrivewayFactorRange{kMinFactor, kDefaultDrivewayFactor,
                                                        kMaxFactor};
-constexpr ranged_default_t<uint32_t> kTransitStartEndMaxDistanceRange{0, kTransitStartEndMaxDistance,
-                                                                      100000}; // Max 100k
+constexpr ranged_default_t<uint32_t>
+    kMultimodalStartEndMaxDistanceRange{0, kMultimodalStartEndMaxDistance, 100000}; // Max 100k
 constexpr ranged_default_t<uint32_t> kTransitTransferMaxDistanceRange{0, kTransitTransferMaxDistance,
                                                                       50000}; // Max 50k
 constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
@@ -909,7 +909,7 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kSideWalkFactorRange, json, "/sidewalk_factor", sidewalk_factor);
   JSON_PBF_RANGED_DEFAULT(co, kAlleyFactorRange, json, "/alley_factor", alley_factor);
   JSON_PBF_RANGED_DEFAULT(co, kDrivewayFactorRange, json, "/driveway_factor", driveway_factor);
-  JSON_PBF_RANGED_DEFAULT(co, kTransitStartEndMaxDistanceRange, json,
+  JSON_PBF_RANGED_DEFAULT(co, kMultimodalStartEndMaxDistanceRange, json,
                           "/transit_start_end_max_distance", transit_start_end_max_distance);
   JSON_PBF_RANGED_DEFAULT(co, kTransitTransferMaxDistanceRange, json,
                           "/transit_transfer_max_distance", transit_transfer_max_distance);
@@ -917,6 +917,8 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kBSSPenaltyRange, json, "/bss_rent_penalty", bike_share_penalty);
   JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills);
   JSON_PBF_RANGED_DEFAULT(co, kElevatorPenaltyRange, json, "/elevator_penalty", elevator_penalty);
+  JSON_PBF_RANGED_DEFAULT(co, kMultimodalStartEndMaxDistanceRange, json,
+                          "/multimodal_start_end_max_distance", multimodal_start_end_max_distance);
 }
 
 cost_ptr_t CreatePedestrianCost(const Costing& costing_options) {

@@ -25,7 +25,8 @@ void writeExpansionProgress(Expansion* expansion,
                             const uint32_t& distance,
                             const float& cost,
                             const Expansion_ExpansionType expansion_type,
-                            const uint8_t flow_sources) {
+                            const uint8_t flow_sources,
+                            const TravelMode mode) {
 
   auto* geom = expansion->add_geometries();
   // make the geom
@@ -56,6 +57,8 @@ void writeExpansionProgress(Expansion* expansion,
     expansion->add_expansion_type(expansion_type);
   if (exp_props.count(Options_ExpansionProperties_flow_sources))
     expansion->add_flow_sources(static_cast<uint32_t>(flow_sources));
+  if (exp_props.count(Options_ExpansionProperties_travel_mode))
+    expansion->add_travel_modes(mode);
 }
 
 struct expansion_properties_t {
@@ -68,6 +71,7 @@ struct expansion_properties_t {
   float cost;
   Expansion_ExpansionType expansion_type;
   uint8_t flow_sources;
+  valhalla::TravelMode mode;
 
   expansion_properties_t() = default;
   expansion_properties_t(baldr::GraphId prev_edgeid,
@@ -77,9 +81,11 @@ struct expansion_properties_t {
                          std::vector<midgard::PointLL>&& shape,
                          float cost,
                          Expansion_ExpansionType expansion_type,
-                         const uint8_t flow_sources)
+                         const uint8_t flow_sources,
+                         const valhalla::TravelMode mode)
       : prev_edgeid(prev_edgeid), status(status), duration(duration), shape(std::move(shape)),
-        distance(distance), cost(cost), expansion_type(expansion_type), flow_sources(flow_sources){};
+        distance(distance), cost(cost), expansion_type(expansion_type), flow_sources(flow_sources),
+        mode(mode){};
 
   // check if status is higher or same – as we will keep track of the latest one
   static bool is_latest_status(Expansion_EdgeStatus current, Expansion_EdgeStatus candidate) {
@@ -120,7 +126,7 @@ std::string thor_worker_t::expansion(Api& request) {
           const Expansion_EdgeStatus status = Expansion_EdgeStatus_reached,
           const float duration = 0.f, const uint32_t distance = 0, const float cost = 0.f,
           const Expansion_ExpansionType expansion_type = Expansion_ExpansionType_forward,
-          const uint8_t flow_sources = baldr::kNoFlowMask) {
+          const uint8_t flow_sources = baldr::kNoFlowMask, const TravelMode mode = TravelMode_MAX) {
         algo = algorithm;
 
         auto tile = reader.GetGraphTile(edgeid);
@@ -155,20 +161,20 @@ std::string thor_worker_t::expansion(Api& request) {
           }
           edge_state[edgeid] =
               expansion_properties_t(prev_edgeid, status, duration, distance, std::move(shape), cost,
-                                     expansion_type, flow_sources);
+                                     expansion_type, flow_sources, mode);
         } else {
           writeExpansionProgress(expansion, edgeid, prev_edgeid, shape, exp_props, status, duration,
-                                 distance, cost, expansion_type, flow_sources);
+                                 distance, cost, expansion_type, flow_sources, mode);
         }
       };
 
   // tell all the algorithms how to track expansion
   for (auto* alg : std::vector<PathAlgorithm*>{
-           &multi_modal_astar,
+           &multi_modal_transit,
            &timedep_forward,
            &timedep_reverse,
            &bidir_astar,
-           &bss_astar,
+           &multimodal_astar,
        }) {
     alg->set_track_expansion(track_expansion);
   }
@@ -197,13 +203,13 @@ std::string thor_worker_t::expansion(Api& request) {
     for (const auto& e : edge_state) {
       writeExpansionProgress(expansion, e.first, e.second.prev_edgeid, e.second.shape, exp_props,
                              e.second.status, e.second.duration, e.second.distance, e.second.cost,
-                             e.second.expansion_type, e.second.flow_sources);
+                             e.second.expansion_type, e.second.flow_sources, e.second.mode);
     }
   }
 
   // tell all the algorithms to stop tracking the expansion
-  for (auto* alg : std::vector<PathAlgorithm*>{&multi_modal_astar, &timedep_forward, &timedep_reverse,
-                                               &bidir_astar, &bss_astar}) {
+  for (auto* alg : std::vector<PathAlgorithm*>{&multi_modal_transit, &timedep_forward,
+                                               &timedep_reverse, &bidir_astar, &multimodal_astar}) {
     alg->set_track_expansion(nullptr);
   }
   costmatrix_.set_track_expansion(nullptr);

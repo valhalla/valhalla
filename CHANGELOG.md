@@ -1,8 +1,11 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: Removed ability to set ISO:3166 country/state code per OSM Node [#5747](https://github.com/valhalla/valhalla/pull/5747)
 * **Bug Fix**
+   * FIXED: Clamp grades on bridges and tunnels. [#5728](https://github.com/valhalla/valhalla/pull/5728)
 * **Enhancement**
    * ADDED: Include `version` field in Valhalla and OSRM route JSON responses (#1940)
+   * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
@@ -19,6 +22,7 @@
    * FIXED: replace dry-run with report arg in `valhalla_build_config` [#5875](https://github.com/valhalla/valhalla/pull/5875)
    * FIXED: Respect future hierarchy level during graph filtering [#5878](https://github.com/valhalla/valhalla/pull/5878)
    * FIXED: UK had drive on right incorrectly set after admin changes [#5882](https://github.com/valhalla/valhalla/pull/5882)
+   * FIXED: set stop impact to 0 where there are only 2 edges at the 'intersection' [#5877](https://github.com/valhalla/valhalla/pull/5877)
    * FIXED: Properly calculate ferry speed based on "duration" tag [#5885](https://github.com/valhalla/valhalla/pull/5885)
 * **Enhancement**
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)

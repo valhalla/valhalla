@@ -278,10 +278,16 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     throw std::runtime_error("Missing max_matrix_location_pairs configuration");
   }
 
-  min_transit_walking_dis =
-      config.get<size_t>("service_limits.pedestrian.min_transit_walking_distance");
-  max_transit_walking_dis =
-      config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
+  // we renamed this parameter, but never had a default in code, so fall back to the old name
+  auto val = config.get_optional<size_t>("service_limits.pedestrian.min_multimodal_walking_distance");
+  if (!val)
+    val = config.get_optional<size_t>("service_limits.pedestrian.min_transit_walking_distance");
+  min_multimodal_walking_dist = *val;
+
+  val = config.get_optional<size_t>("service_limits.pedestrian.max_multimodal_walking_distance");
+  if (!val)
+    val = config.get_optional<size_t>("service_limits.pedestrian.max_transit_walking_distance");
+  max_multimodal_walking_dist = *val;
 
   max_exclude_locations = config.get<size_t>("service_limits.max_exclude_locations");
   max_exclude_polygons_length = config.get<float>("service_limits.max_exclude_polygons_length");
