@@ -2007,3 +2007,5 @@ of non-separated bicycle lanes on high speed roads.
  * **"Loop Edge" Fix** - Fixed a bug with edges that form a loop. Split them into 2 edges during data import.
  * **Additional information returned from 'locate' method** - Added information that can be useful when debugging routes and data. Adds information about nodes and edges at a location.
  * **Guidance/Narrative Updates** - Added side of street to destination narrative. Updated verbal instructions.
+
+* ** ADDED: Include `version` field in Valhalla and OSRM route JSON responses (#1940)

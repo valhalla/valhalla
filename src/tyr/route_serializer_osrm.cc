@@ -19,6 +19,7 @@
 #include "route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
+#include "valhalla/config.h"
 
 #include <boost/variant/get.hpp>
 
@@ -2111,7 +2112,7 @@ std::string serialize(valhalla::Api& api) {
   // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
   std::string status("Ok");
   json->emplace("code", status);
-  json->emplace("version", VALHALLA_VERSION);
+  json->emplace("version",std::string(VALHALLA_PRINT_VERSION));
   switch (options.action()) {
     case valhalla::Options::trace_route:
       json->emplace("tracepoints", osrm::waypoints(options.shape(), true));
