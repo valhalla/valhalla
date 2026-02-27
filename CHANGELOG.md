@@ -166,6 +166,7 @@
    * FIXED: unknowns should be 500 and not 400 [#5359](https://github.com/valhalla/valhalla/pull/5359)
    * FIXED: Cover **all** nodes in the current tile by density index [#5338](https://github.com/valhalla/valhalla/pull/5338)
    * FIXED: Narrowing bug leading to nodes being misplaced in wrong tiles [#5364](https://github.com/valhalla/valhalla/pull/5364)
+   * FIXED: Exclusion check in the reverse direction [#5375](https://github.com/valhalla/valhalla/pull/5375)
    * FIXED: wrong integer types in expansion properties [#5380](https://github.com/valhalla/valhalla/pull/5380)
    * FIXED: fix: `std::terminate` on unsupported request format for some actions [#5387](https://github.com/valhalla/valhalla/pull/5387)
    * FIXED: python installation issue in docker image [#5424](https://github.com/valhalla/valhalla/pull/5424)
