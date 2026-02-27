@@ -5,6 +5,7 @@
    * FIXED: Clamp grades on bridges and tunnels. [#5728](https://github.com/valhalla/valhalla/pull/5728)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
+   * ADDED: `Cache-Control = public, max-age=1800"` response header to `/tile` requests; also added RPATH to local debug builds to fix ldd resolving when libvalhalla is installed system-wide [#5902](https://github.com/valhalla/valhalla/pull/5902)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
