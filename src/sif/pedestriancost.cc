@@ -487,7 +487,7 @@ public:
                uint16_t disallow_mask = kDisallowNone) const override {
     return DynamicCost::Allowed(edge, tile, disallow_mask) && edge->use() < Use::kRailFerry &&
            edge->sac_scale() <= max_hiking_difficulty_ &&
-           (!edge->bss_connection() || project_on_bss_connection);
+           (!edge->bss_connection() || project_on_bss_connection_);
   }
 
   virtual Cost BSSCost() const override {
@@ -534,10 +534,6 @@ public:
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
   float grade_penalty[16];
-
-  // Used in edgefilter, it tells if the location should be projected on a edge which is
-  // a bike share station connection
-  bool project_on_bss_connection = 0;
 
   /**
    * Override the base transition cost to not add maneuver penalties onto transit edges.
@@ -925,12 +921,6 @@ cost_ptr_t CreatePedestrianCost(const Costing& costing_options) {
   return std::make_shared<PedestrianCost>(costing_options);
 }
 
-cost_ptr_t CreateBikeShareCost(const Costing& costing_options) {
-  auto cost_ptr = std::make_shared<PedestrianCost>(costing_options);
-  cost_ptr->project_on_bss_connection = true;
-  return cost_ptr;
-}
-
 } // namespace sif
 } // namespace valhalla
 
@@ -945,7 +935,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options){};
+  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options) {};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;

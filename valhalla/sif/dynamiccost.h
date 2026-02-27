@@ -1183,6 +1183,10 @@ public:
                : distance_meters / (fixed_speed_ * midgard::kKPHtoMetersPerSec) * factor * 0.85;
   }
 
+  void set_project_on_bss_connection(bool project_on_bss_connection) {
+    project_on_bss_connection_ = project_on_bss_connection;
+  };
+
 protected:
   /**
    * Returns the averaged factor for an edge fraction based on user provided custom factors
@@ -1261,6 +1265,10 @@ protected:
   bool allow_destination_only_;
 
   bool allow_conditional_destination_;
+
+  // Used in edgefilter, it tells if the location should be projected on a edge which is
+  // a bike share station connection
+  bool project_on_bss_connection_{false};
 
   // Travel mode
   TravelMode travel_mode_;
