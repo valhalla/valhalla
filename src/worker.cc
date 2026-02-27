@@ -1578,6 +1578,9 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
 
 const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
 const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filename=route.gpx"};
+// set client cache with 30 mins cache expiry
+// TODO(nils): instead of this blanket statement, we could use our tile md5 as ETag?
+const headers_t::value_type CACHECONTROL{"Cache-Control", "public, max-age=1800"};
 
 worker_t::result_t serialize_error(const valhalla_exception_t& exception,
                                    http_request_info_t& request_info,
@@ -1601,6 +1604,8 @@ to_response(const std::string& data, http_request_info_t& request_info, const Ap
   headers_t headers{CORS, fmt_to_mime(fmt)};
   if (fmt == Options::gpx)
     headers.insert(ATTACHMENT);
+  else if (fmt == Options::mvt)
+    headers.insert(CACHECONTROL);
 
   // jsonp needs wrapped in a javascript function call
   worker_t::result_t result{false, std::list<std::string>(), ""};
