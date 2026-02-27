@@ -68,7 +68,8 @@ protected:
 
   boost::property_tree::ptree config;
   sif::CostFactory factory;
-  sif::cost_ptr_t costing;
+  sif::mode_costing_t mode_costing;
+  sif::TravelMode mode;
   std::shared_ptr<baldr::GraphReader> reader;
   Search search_;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;

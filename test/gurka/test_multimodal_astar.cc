@@ -1,3 +1,4 @@
+#include "exceptions.h"
 #include "gurka.h"
 #include "test.h"
 #include "valhalla/baldr/graphconstants.h"
@@ -46,6 +47,11 @@ TEST(Standalone, SimpleRoute) {
   auto& leg = result.directions().routes(0).legs(0);
   EXPECT_EQ(leg.maneuver(0).travel_mode(), TravelMode::kDrive);
   EXPECT_EQ(leg.maneuver(leg.maneuver_size() - 1).travel_mode(), TravelMode::kPedestrian);
+
+  // don't allow more than 2 locations
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "D", "B"}, "auto_pedestrian",
+                                {}),
+               valhalla_exception_t);
 }
 
 TEST(Standalone, ChooseOptimalPath) {
