@@ -123,7 +123,7 @@ void loki_worker_t::route(Api& request) {
 
     std::unordered_map<baldr::Location, PathLocation> projections;
 
-    // in case of auto_pedestrian costing, we 1) only allow two locations
+    // in case of auto_pedestrian costing, we 1) only allow two locations (handled by check_locations)
     // and 2) need two different costings for the start and end location.
     // Search::search does not allow for multiple costings per location so instead
     // we bite the bullet and call search twice, merging the results.
@@ -131,9 +131,6 @@ void loki_worker_t::route(Api& request) {
     // and end at the same location but with different costing? What does that even mean? Find the
     // nearest parking and walk back to where I am? Seems like a plausible use case...
     if (costing_name == "auto_pedestrian") {
-      if (locations.size() > 2) {
-        throw valhalla_exception_t{150, "for auto_pedestrian: " + std::to_string(locations.size())};
-      }
       std::vector<baldr::Location> start_loc(locations.begin(), locations.begin() + 1);
       auto start_projection =
           search_.search(start_loc, mode_costing[static_cast<size_t>(TravelMode::kDrive)]);

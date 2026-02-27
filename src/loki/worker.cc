@@ -248,7 +248,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_linear_cost_edges") {
       continue;
     }
-    if (kv.first != "trace") {
+    if (kv.first != "trace" && kv.first != "auto_pedestrian") {
       max_locations.emplace(kv.first,
                             config.get<size_t>("service_limits." + kv.first + ".max_locations"));
       if (kv.first == "centroid" && max_locations["centroid"] > 127)
@@ -262,6 +262,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                                                                ".max_matrix_location_pairs"));
     }
   }
+
+  // overwrite config value with hardcoded one since multi-location routes
+  // don't make sense for auto_pedestrian
+  max_locations.emplace("auto_pedestrian", 2);
   // this should never happen
   if (max_locations.empty()) {
     throw std::runtime_error("Missing max_locations configuration");
