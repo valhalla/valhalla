@@ -18,8 +18,8 @@ This document provides a brief overview of Valhalla route computation.
 
   All of Valhalla’s path algorithms use dynamic, run-time costing. Costing logic is held within the *sif* directory. A base class (*DynamicCost*) defines the interface that each costing model implements.  A brief overview of the costing design is located [here](sif/dynamic-costing.md). 
 
-**Forming the Trip Path**
-[TripPathBuilder](https://github.com/valhalla/valhalla/blob/master/src/thor/trippathbuilder.cc#L516) creates the Trip Path for Valhalla.  Code for this step is within the thor directory. This Trip path is a sequence of nodes and edges that will form a path.  The path is created in a forward direction from `Node 0` to `Node 1` to...`Node N`.  Edge and node attributes are added to the path which will then be passed to Odin to create Trip Directions.  Moreover, TripPathBuilder will add intersecting edge attributes at each node within the path to assist Odin with maneuver generation. 
+**Forming Trip Legs**
+[TripLegBuilder](https://github.com/valhalla/valhalla/blob/master/valhalla/thor/triplegbuilder.h) creates the Trip Legs for Valhalla. A route result contains one or more legs, where each leg represents the path between two successive locations. Code for this step is within the thor directory. Each Trip Leg is a sequence of nodes and edges that form a path, created in a forward direction from `Node 0` to `Node 1` to...`Node N`.  Edge and node attributes are added to each leg which will then be passed to Odin to create Trip Directions.  Moreover, TripLegBuilder will add intersecting edge attributes at each node within the path to assist Odin with maneuver generation. 
 
 Looking at the figure below, our path is from `Node 1` to `Node 2` to `Node 3` to...`Node N`.  The path (a, f, l) is highlighted in red.  Each arrow represents a directed edge (DE) from Node to Node. Looking at our path, when we are at `Node 2` we will store the edge information for `DE a/b` and the attributes(e.g., surface, speed, access, transit information, and etc.) for `DE a`.  Also, we will store the intersecting edge info for `c/d`, `e/f`, and `g/h`. 
 
@@ -29,7 +29,7 @@ Looking at the figure below, our path is from `Node 1` to `Node 2` to `Node 3` t
 **Generating Guidance**
 The route narrative/guidance generating code is located in the *odin* directory.
 
-  - *Odin* inspects the trip path nodes and edges in reverse order to form an initial list of maneuvers or steps
+  - *Odin* inspects the trip leg nodes and edges in reverse order to form an initial list of maneuvers or steps
   - *Odin* collapses the initial maneuver list to form a concise list of maneuvers
   - *Odin* adds text and verbal instructions to form trip directions
   - *Odin* supports these [languages](api/turn-by-turn/api-reference.md#supported-language-tags) for narration instructions
