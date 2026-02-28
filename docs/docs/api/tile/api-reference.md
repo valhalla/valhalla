@@ -24,7 +24,7 @@ We support the usual GET & POST with the common "Slippy Map"/XYZ request pattern
 
 While we're re-using the same code as for `trace_attributes`, we don't support the full list for the tile endpoint and added some which are not implemented for `trace_attributes`. If not specified otherwise, the meaning of the attribute values is either trivial or available at https://valhalla.github.io/valhalla/api/map-matching/api-reference/#edge-items. `access` attributes are returning the numeric representation of a bit mask which needs to be decoded, see https://github.com/valhalla/valhalla/blob/c5151e19f65c3b498aa606a9cc9d6d274fba11bc/valhalla/baldr/graphconstants.h#L37-L47, e.g. a value of 1033 (`0b10000001001`) indicates `auto`, `truck` and `motorcycle` access etc.
 
-Note that `forward`/`backward` refer to the direction drawn in OSM and can be replaced in `<direction>`:
+Note that `fwd`/`bwd` refer to the direction drawn in OSM and can be replaced in `<direction>`:
 
 ```
 // bidirectional attributes
@@ -68,15 +68,23 @@ edge.speed_limit
 edge.layer
 
 // directional attributes
-edge.speed_<direction>
-edge.deadend_<direction>
-edge.lanecount_<direction>
-edge.truck_speed_<direction>
-edge.traffic_signal_<direction>
-edge.stop_sign_<direction>
-edge.yield_sign_<direction>
-edge.access_<direction>
-edge.live_speed_<direction>
+edge.access:<direction>
+edge.deadend:<direction>
+edge.lanecount:<direction>
+edge.live_speed:<direction>
+edge.live_speed:<direction>:speed1
+edge.live_speed:<direction>:speed2
+edge.live_speed:<direction>:speed3
+edge.live_speed:<direction>:bp1 // bp = breakpoint, range [0-255]
+edge.live_speed:<direction>:bp2
+edge.live_speed:<direction>:congestion1  // 0 = unknown congestion, valid range [0-63]
+edge.live_speed:<direction>:congestion2
+edge.live_speed:<direction>:congestion3
+edge.speed:<direction>
+edge.stop_sign:<direction>
+edge.traffic_signal:<direction>
+edge.truck_speed:<direction>
+edge.yield_sign:<direction>
 
 // node attributes
 node.drive_on_right
