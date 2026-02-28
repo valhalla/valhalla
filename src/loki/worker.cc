@@ -81,6 +81,9 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
       if (!location.has_street_side_tolerance_case())
         location.set_street_side_tolerance(default_street_side_tolerance);
 
+      if (!location.has_street_side_cutoff_case())
+        location.set_street_side_cutoff(valhalla::RoadClass::kServiceOther);
+
       if (!location.has_street_side_max_distance_case())
         location.set_street_side_max_distance(default_street_side_max_distance);
     }

@@ -34,44 +34,46 @@ TEST(TimeTracking, make) {
     // get some loki results
     auto costing = sif::CostFactory().Create(Costing::none_);
     loki::Search search(reader);
-    auto found = search.search({baldr::Location(map.nodes.begin()->second)}, costing);
-    Location location;
-    baldr::PathLocation::toPBF(found.begin()->second, &location, reader);
+    Options options;
+    auto* loc = options.mutable_locations()->Add();
+    loc->mutable_ll()->set_lat(map.nodes.begin()->second.lat());
+    loc->mutable_ll()->set_lng(map.nodes.begin()->second.lng());
+    search.search(*options.mutable_locations(), costing);
 
     // no time
-    auto ti = baldr::TimeInfo::make(location, reader, cache);
+    auto ti = baldr::TimeInfo::make(*loc, reader, cache);
     ASSERT_EQ(ti, basic_ti);
-    ASSERT_TRUE(location.date_time().empty());
+    ASSERT_TRUE(loc->date_time().empty());
 
     // bad timezone defaults to UTC
-    location.set_date_time("2020-04-01T12:34");
-    ti = baldr::TimeInfo::make(location, reader, cache, 7777);
+    loc->set_date_time("2020-04-01T12:34");
+    ti = baldr::TimeInfo::make(*loc, reader, cache, 7777);
     // zero out the part we dont care to test
     ti.local_time = 0;
     ti.second_of_week = 0;
     ti.seconds_from_now = 0;
     ti.negative_seconds_from_now = 0;
     ASSERT_EQ(ti, (baldr::TimeInfo{1, 291, 0, 0, 0, false, nullptr}));
-    ASSERT_EQ(location.date_time(), "2020-04-01T12:34");
+    ASSERT_EQ(loc->date_time(), "2020-04-01T12:34");
 
     // current time (technically we could fail if the minute changes between the next 3 lines)
-    location.set_date_time("current");
-    ti = baldr::TimeInfo::make(location, reader, cache);
+    loc->set_date_time("current");
+    ti = baldr::TimeInfo::make(*loc, reader, cache);
     const auto* tz = dt::get_tz_db().from_index(291);
     auto now_str = dt::iso_date_time(tz);
     auto lt = dt::seconds_since_epoch(now_str, tz);
     auto sec = dt::second_of_week(lt, tz);
     ASSERT_EQ(ti, (baldr::TimeInfo{true, 291, lt, sec, 0, false, nullptr}));
-    ASSERT_EQ(location.date_time(), now_str);
+    ASSERT_EQ(loc->date_time(), now_str);
 
     // not current time but the same date time just set as a string
     now_str = dt::iso_date_time(tz);
-    location.set_date_time(now_str);
-    ti = baldr::TimeInfo::make(location, reader, cache);
+    loc->set_date_time(now_str);
+    ti = baldr::TimeInfo::make(*loc, reader, cache);
     lt = dt::seconds_since_epoch(now_str, dt::get_tz_db().from_index(1));
     sec = dt::second_of_week(lt, tz);
     ASSERT_EQ(ti, (baldr::TimeInfo{true, 291, lt, sec, 0, false, nullptr}));
-    ASSERT_EQ(location.date_time(), now_str);
+    ASSERT_EQ(loc->date_time(), now_str);
 
     // offset the time from now a bit
     now_str = dt::iso_date_time(tz);
@@ -79,28 +81,28 @@ TEST(TimeTracking, make) {
     int offset = minutes > 52 ? -7 : 7;
     now_str = now_str.substr(0, now_str.size() - 2) + (minutes + offset < 10 ? "0" : "") +
               std::to_string(minutes + offset);
-    location.set_date_time(now_str);
-    ti = baldr::TimeInfo::make(location, reader, cache);
+    loc->set_date_time(now_str);
+    ti = baldr::TimeInfo::make(*loc, reader, cache);
     lt = dt::seconds_since_epoch(now_str, tz);
     sec = dt::second_of_week(lt, tz);
     ASSERT_EQ(ti, (baldr::TimeInfo{true, 291, lt, sec, static_cast<uint64_t>(std::abs(offset * 60)),
                                    offset < 0, nullptr}));
-    ASSERT_EQ(location.date_time(), now_str);
+    ASSERT_EQ(loc->date_time(), now_str);
 
     // messed up date time
-    location.set_date_time("4000BC");
-    ti = baldr::TimeInfo::make(location, reader, cache);
+    loc->set_date_time("4000BC");
+    ti = baldr::TimeInfo::make(*loc, reader, cache);
     ASSERT_EQ(ti, basic_ti);
-    ASSERT_EQ(location.date_time(), "4000BC");
+    ASSERT_EQ(loc->date_time(), "4000BC");
 
     // user specified date time
-    location.set_date_time("2020-03-31T11:16");
-    ti = baldr::TimeInfo::make(location, reader, cache, dt::get_tz_db().to_index("America/New_York"));
+    loc->set_date_time("2020-03-31T11:16");
+    ti = baldr::TimeInfo::make(*loc, reader, cache, dt::get_tz_db().to_index("America/New_York"));
     // zero out the part we dont care to test
     ti.seconds_from_now = 0;
     ti.negative_seconds_from_now = 0;
     ASSERT_EQ(ti, (baldr::TimeInfo{1, 110, 1585667787, 213387, 0, false, nullptr}));
-    ASSERT_EQ(location.date_time(), "2020-03-31T11:16");
+    ASSERT_EQ(loc->date_time(), "2020-03-31T11:16");
   }
 }
 

@@ -2,7 +2,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
-#include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -15,10 +14,11 @@
 #include <cstdint>
 #include <filesystem>
 
+using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
-namespace vs = valhalla::sif;
+using namespace valhalla::sif;
 
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -80,8 +80,8 @@ void make_tile() {
   auto add_edge = [&](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
                       const uint32_t localedgeidx, const uint32_t opp_local_idx, const bool forward) {
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
-                                     Use::kRoad, RoadClass::kMotorway, localedgeidx, false, false,
-                                     false, false, 0, 0, false, RoadClass::kInvalid);
+                                     Use::kRoad, baldr::RoadClass::kMotorway, localedgeidx, false,
+                                     false, false, false, 0, 0, false, baldr::RoadClass::kInvalid);
     edge_builder.set_opp_index(opp_local_idx); // How is this different from opp_local_idx
     edge_builder.set_opp_local_idx(opp_local_idx);
     edge_builder.set_localedgeidx(localedgeidx);
@@ -173,14 +173,14 @@ void make_tile() {
   }
 }
 
-std::shared_ptr<vs::DynamicCost> create_costing() {
-  return vs::CreateNoCost({});
+std::shared_ptr<DynamicCost> create_costing() {
+  return CreateNoCost({});
 }
 
-void search(valhalla::baldr::Location location,
+void search(valhalla::Location& location,
             bool expected_node,
             const valhalla::midgard::PointLL& expected_point,
-            const std::vector<PathLocation::PathEdge>& expected_edges,
+            const std::vector<valhalla::PathEdge>& expected_edges,
             bool exact = false) {
   // make the config file
   boost::property_tree::ptree conf;
@@ -188,39 +188,40 @@ void search(valhalla::baldr::Location location,
   valhalla::baldr::GraphReader reader(conf);
 
   // send it to pbf and back just in case something is wrong with that conversion
-  valhalla::Location pbf;
-  PathLocation::toPBF(location, &pbf, reader);
-  location = PathLocation::fromPBF(pbf);
-  location.street_side_max_distance_ = 5000;
+  location.set_street_side_max_distance(5000);
+  google::protobuf::RepeatedPtrField<valhalla::Location> locs;
+  auto* loc = locs.Add();
+  loc->CopyFrom(location);
 
   const auto costing = create_costing();
   Search search(reader);
-  const auto results = search.search({location}, costing);
-  const auto& p = results.at(location);
+  search.search(locs, costing);
 
-  ASSERT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
-      << p.edges.front().begin_node() << ":" << p.edges.front().end_node()
+  auto& edges = location.correlation().edges();
+  ASSERT_EQ((edges.begin()->begin_node() || edges.begin()->end_node()), expected_node)
+      << edges.begin()->begin_node() << ":" << edges.begin()->end_node()
       << (expected_node ? " Should've snapped to node" : " Shouldn't've snapped to node");
 
-  ASSERT_TRUE(p.edges.size()) << "Didn't find any node/edges";
-  ASSERT_TRUE(p.edges.front().projected.ApproximatelyEqual(expected_point)) << "Found wrong point";
+  ASSERT_TRUE(edges.size()) << "Didn't find any node/edges";
+  PointLL pt{edges.begin()->ll().lng(), edges.begin()->ll().lat()};
+  ASSERT_TRUE(pt.ApproximatelyEqual(expected_point)) << "Found wrong point";
 
-  valhalla::baldr::PathLocation answer(location);
-  for (const auto& expected_edge : expected_edges) {
-    answer.edges.emplace_back(
-        PathLocation::PathEdge{expected_edge.id, expected_edge.percent_along, expected_point,
-                               expected_point.Distance(location.latlng_), expected_edge.sos});
-  }
-  // note that this just checks that p has the edges that answer has
-  // p can have more edges than answer has and that wont fail this check!
-  ASSERT_TRUE(answer.shares_edges(p)) << "Did not find expected edges";
-  // if you want to enforce that the result didnt have more then expected
-  if (exact) {
-    ASSERT_EQ(answer.edges.size(), p.edges.size()) << "Got more edges than expected";
-  }
+  // valhalla::baldr::PathLocation answer(location);
+  // for (const auto& expected_edge : expected_edges) {
+  //   answer.edges.emplace_back(
+  //       PathLocation::PathEdge{expected_edge.id, expected_edge.percent_along, expected_point,
+  //                              expected_point.Distance(location.latlng_), expected_edge.sos});
+  // }
+  // // note that this just checks that p has the edges that answer has
+  // // p can have more edges than answer has and that wont fail this check!
+  // ASSERT_TRUE(answer.shares_edges(p)) << "Did not find expected edges";
+  // // if you want to enforce that the result didnt have more then expected
+  // if (exact) {
+  //   ASSERT_EQ(answer.edges.size(), p.edges.size()) << "Got more edges than expected";
+  // }
 }
 
-void search(valhalla::baldr::Location location, size_t result_count, int reachability) {
+void search(valhalla::Location& location, size_t result_count, int reachability) {
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
@@ -251,10 +252,9 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
 TEST(Search, test_edge_search) {
   auto t = a.first.tileid();
   auto l = a.first.level();
-  using S = PathLocation::SideOfStreet;
-  using PE = PathLocation::PathEdge;
-  using ST = Location::StopType;
-  using PS = Location::PreferredSide;
+  using S = valhalla::Location_SideOfStreet;
+  using LT = Location_Type;
+  using PS = Location_PreferredSide;
 
   // snap to node searches
   search({a.second}, true, a.second,

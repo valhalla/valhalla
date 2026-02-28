@@ -185,17 +185,18 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     // Get shape
     std::vector<PointLL> shape = decode<std::vector<PointLL>>(trip_path.shape());
 
-    // Use the shape to form a single edge correlation at the start and end of
-    // the shape (using heading).
-    std::vector<valhalla::baldr::Location> locations{shape.front(), shape.back()};
-    locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
-    locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
-
     const cost_ptr_t& cost = mode_costing[static_cast<uint32_t>(mode)];
-    Search search(reader);
-    const auto projections = search.search(locations, cost);
-    std::vector<PathLocation> path_location;
     valhalla::Options options;
+    auto* origin = options.mutable_locations()->Add();
+    origin->mutable_ll()->set_lat(shape.front().lat());
+    origin->mutable_ll()->set_lng(shape.front().lng());
+    origin->set_heading(PointLL::HeadingAlongPolyline(shape, 30.f));
+    auto* dest = options.mutable_locations()->Add();
+    dest->mutable_ll()->set_lat(shape.back().lat());
+    dest->mutable_ll()->set_lng(shape.back().lng());
+    dest->set_heading(PointLL::HeadingAlongPolyline(shape, 30.f));
+    Search search(reader);
+    search.search(*options.mutable_locations(), cost);
 
     for (const auto& ll : shape) {
       auto* sll = options.mutable_shape()->Add();
@@ -210,10 +211,6 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
     }
 
-    for (const auto& loc : locations) {
-      path_location.push_back(projections.at(loc));
-      PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
-    }
     std::vector<std::vector<PathInfo>> paths;
     bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, options, options.use_timestamps(),
                                       false, paths);
@@ -259,9 +256,9 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
 namespace std {
 
 // TODO: need to pass original json here for extra address bits that we dont store in Location
-std::string to_string(const valhalla::baldr::Location& l) {
+std::string to_string(const valhalla::Location& l) {
   std::string s;
-  for (auto address : {&l.name_, &l.street_}) {
+  for (auto address : {&l.name(), &l.street()}) {
     s.append(*address);
     s.push_back(',');
   }
@@ -297,17 +294,14 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
                                        PathStatistics& data,
                                        bool verbose_lanes,
                                        valhalla::odin::MarkupFormatter& markup_formatter) {
-  // TEMPORARY? Change to PathLocation...
-  const PathLocation& origin = PathLocation::fromPBF(orig);
-  const PathLocation& destination = PathLocation::fromPBF(dest);
 
   DirectionsBuilder::Build(api, markup_formatter);
   const auto& trip_directions = api.directions().routes(0).legs(0);
   EnhancedTripLeg etl(*api.mutable_trip()->mutable_routes(0)->mutable_legs(0));
   std::string units = (api.options().units() == valhalla::Options::kilometers ? "km" : "mi");
   int m = 1;
-  valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
-  valhalla::midgard::logging::Log("To: " + std::to_string(destination), " [NARRATIVE] ");
+  // valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
+  // valhalla::midgard::logging::Log("To: " + std::to_string(destination), " [NARRATIVE] ");
   valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
   for (int i = 0; i < trip_directions.maneuver_size(); ++i) {
     const auto& maneuver = trip_directions.maneuver(i);

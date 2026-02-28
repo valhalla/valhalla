@@ -1,6 +1,5 @@
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
-#include "baldr/pathlocation.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
 #include "proto/options.pb.h"
@@ -119,15 +118,12 @@ int main(int argc, char* argv[]) {
   }
 
   // Process locations
-  auto locations = PathLocation::fromPBF(options.locations());
-  if (locations.size() != 1) {
+  if (options.locations().size() != 1) {
     // TODO - for now just 1 location - maybe later allow multiple?
     throw std::runtime_error("Requires a single location");
   }
-
   // Process avoid locations
-  auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
-  if (exclude_locations.size() == 0) {
+  if (options.exclude_locations().size() == 0) {
     LOG_INFO("No avoid locations");
   }
 
@@ -149,34 +145,19 @@ int main(int argc, char* argv[]) {
   // Find locations
   const cost_ptr_t& cost = mode_costing[static_cast<uint32_t>(mode)];
   Search search(reader);
-  const auto projections = search.search(locations, cost);
-  std::vector<PathLocation> path_location;
-  for (const auto& loc : locations) {
-    try {
-      path_location.push_back(projections.at(loc));
-    } catch (...) { exit(EXIT_FAILURE); }
-  }
+  search.search(*options.mutable_locations(), cost);
 
   // Find avoid locations
-  std::vector<sif::AvoidEdge> avoid_edges;
-  const auto avoids = search.search(exclude_locations, cost);
-  for (const auto& loc : exclude_locations) {
-    for (auto& e : avoids.at(loc).edges) {
-      avoid_edges.push_back({e.id, e.percent_along});
+  search.search(*options.mutable_exclude_locations(), cost);
+  for (const auto& loc : options.exclude_locations()) {
+    for (const auto& edge : loc.correlation().edges()) {
+      // mode_costing[static_cast<uint32_t>(mode)]->AddUserAvoidEdges();
     }
-  }
-  if (avoid_edges.size() > 0) {
-    mode_costing[static_cast<uint32_t>(mode)]->AddUserAvoidEdges(avoid_edges);
   }
 
   // For multimodal - hack the date time for now!
   if (routetype == "multimodal") {
-    path_location.front().date_time_ = "current";
-  }
-  // TODO: build real request from options above and call the functions like actor_t does
-  options.mutable_locations()->Clear();
-  for (const auto& pl : path_location) {
-    valhalla::baldr::PathLocation::toPBF(pl, options.mutable_locations()->Add(), reader);
+    options.mutable_locations()->begin()->set_date_time("current");
   }
 
   // Compute the isotile

@@ -190,9 +190,9 @@ struct candidate_t {
 // interesting bin.  if has_bin() is false, then the best projection
 // is found.
 struct projector_wrapper {
-  projector_wrapper(const Location& location, GraphReader& reader)
-      : binner(make_binner(point_ll_from_latlng(location.ll()))), location(location),
-        sq_radius(square(double(location.radius()))), project(point_ll_from_latlng(location.ll())) {
+  projector_wrapper(Location* location, GraphReader& reader)
+      : binner(make_binner(point_ll_from_latlng(location->ll()))), location(location),
+        sq_radius(square(double(location->radius()))), project(point_ll_from_latlng(location->ll())) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
     reachable.reserve(64);
@@ -234,8 +234,8 @@ struct projector_wrapper {
       int32_t tile_index;
       double distance;
       std::tie(tile_index, bin_index, distance) = binner();
-      if (distance > location.search_cutoff() ||
-          (reachable.size() && distance > location.radius() &&
+      if (distance > location->search_cutoff() ||
+          (reachable.size() && distance > location->radius() &&
            distance > std::sqrt(reachable.back().sq_distance))) {
         cur_tile = nullptr;
         break;
@@ -249,7 +249,7 @@ struct projector_wrapper {
 
   std::function<std::tuple<int32_t, unsigned short, double>()> binner;
   graph_tile_ptr cur_tile;
-  Location location;
+  Location* location;
   unsigned short bin_index = 0;
   double sq_radius;
   std::vector<candidate_t> unreachable;
@@ -576,9 +576,9 @@ struct bin_handler_t {
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
-            search_filter(edge, *costing, tile, p_itr->location.search_filter()) &&
+            search_filter(edge, *costing, tile, p_itr->location->search_filter()) &&
             (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-            search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter());
+            search_filter(opp_edge, *costing, opp_tile, p_itr->location->search_filter());
         // set to false if even one candidate was not filtered
         all_prefiltered = all_prefiltered && c_itr->prefiltered;
       }
@@ -638,15 +638,15 @@ struct bin_handler_t {
           continue;
         }
         // is this edge reachable in the right way
-        bool reachable = reach.outbound >= p_itr->location.minimum_outbound_reachability() &&
-                         reach.inbound >= p_itr->location.minimum_inbound_reachability();
+        bool reachable = reach.outbound >= p_itr->location->minimum_outbound_reachability() &&
+                         reach.inbound >= p_itr->location->minimum_inbound_reachability();
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
             costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
-            !search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter())) {
+            !search_filter(opp_edge, *costing, opp_tile, p_itr->location->search_filter())) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
-          if (opp_reach.outbound >= p_itr->location.minimum_outbound_reachability() &&
-              opp_reach.inbound >= p_itr->location.minimum_inbound_reachability()) {
+          if (opp_reach.outbound >= p_itr->location->minimum_outbound_reachability() &&
+              opp_reach.inbound >= p_itr->location->minimum_inbound_reachability()) {
             tile = opp_tile;
             edge = opp_edge;
             edge_id = opp_edgeid;
@@ -739,11 +739,10 @@ struct bin_handler_t {
     this->costing = costing;
 
     // get the unique set of input locations and the max reachability of them all
-    std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
-    pps.reserve(uniq_locations.size());
+    pps.reserve(locations.size());
     max_reach_limit = 0;
-    for (const auto& loc : uniq_locations) {
-      pps.emplace_back(loc, reader);
+    for (auto& loc : locations) {
+      pps.emplace_back(&loc, reader);
       max_reach_limit = std::max(max_reach_limit, loc.minimum_outbound_reachability());
       max_reach_limit = std::max(max_reach_limit, loc.minimum_inbound_reachability());
     }
@@ -788,14 +787,14 @@ private:
       // TODO: this is already in PathLocation, use it there
       // std::vector<PathLocation::PathEdge> filtered;
       for (const auto& candidate : pp.reachable) {
-        auto pp_pt = point_ll_from_latlng(pp.location.ll());
+        auto pp_pt = point_ll_from_latlng(pp.location->ll());
         // this may be at a node, either because it was the closest thing or from snap tolerance
         bool front =
             candidate.point == candidate.edge_info->shape().front() ||
-            pp_pt.Distance(candidate.edge_info->shape().front()) < pp.location.node_snap_tolerance();
+            pp_pt.Distance(candidate.edge_info->shape().front()) < pp.location->node_snap_tolerance();
         bool back =
             candidate.point == candidate.edge_info->shape().back() ||
-            pp_pt.Distance(candidate.edge_info->shape().back()) < pp.location.node_snap_tolerance();
+            pp_pt.Distance(candidate.edge_info->shape().back()) < pp.location->node_snap_tolerance();
         // it was the begin node
         if ((front && candidate.edge->forward()) || (back && !candidate.edge->forward())) {
           graph_tile_ptr other_tile;
@@ -803,27 +802,27 @@ private:
           if (!other_tile) {
             continue; // TODO: do an edge snap instead, but you'll only get one direction
           }
-          correlate_node(pp.location, opposing_edge->endnode(), candidate);
+          correlate_node(*pp.location, opposing_edge->endnode(), candidate);
         } // it was the end node
         else if ((back && candidate.edge->forward()) || (front && !candidate.edge->forward())) {
-          correlate_node(pp.location, candidate.edge->endnode(), candidate);
+          correlate_node(*pp.location, candidate.edge->endnode(), candidate);
         } // it was along the edge
         else {
-          correlate_edge(pp.location, candidate);
+          correlate_edge(*pp.location, candidate);
         }
       }
 
-      auto* edges = pp.location.mutable_correlation()->mutable_edges();
-      auto* filtered_edges = pp.location.mutable_correlation()->mutable_filtered_edges();
+      auto* edges = pp.location->mutable_correlation()->mutable_edges();
+      auto* filtered_edges = pp.location->mutable_correlation()->mutable_filtered_edges();
 
       // if it was a through location with a heading its pretty confusing.
       // does the user want to come into and exit the location at the preferred
       // angle? for now we are just saying that they want it to exit at the
       // heading provided. this means that if it was node snapped we only
       // want the outbound edges
-      if ((pp.location.type() == Location_Type::Location_Type_kThrough ||
-           pp.location.type() == Location_Type::Location_Type_kBreakThrough) &&
-          pp.location.heading()) {
+      if ((pp.location->type() == Location_Type::Location_Type_kThrough ||
+           pp.location->type() == Location_Type::Location_Type_kBreakThrough) &&
+          pp.location->has_heading_case()) {
         // partition the ones we want to move to the end
         auto new_end = std::stable_partition(edges->begin(), edges->end(),
                                              [](const PathEdge& e) { return !e.end_node(); });
@@ -836,7 +835,7 @@ private:
         }
         // remove them from the original
         // correlated.edges.erase(new_end, correlated.edges.end());
-        edges->erase(new_end, pp.location.mutable_correlation()->mutable_edges()->end());
+        edges->erase(new_end, pp.location->mutable_correlation()->mutable_edges()->end());
       }
 
       // if we have nothing because of filtering (heading/side) we'll just ignore it

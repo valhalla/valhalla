@@ -109,20 +109,20 @@ void loki_worker_t::route(Api& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    auto locations = options.mutable_locations();
+    auto* locations = options.mutable_locations();
     auto locations_end = locations->end();
 
     // maybe squeeze in the first and last locations of each user specified feature for cost factor
     // lines as we'll need those for edge walking
     for (const auto& line : options.cost_factor_lines()) {
       Location first_shape_loc;
-      first_shape_loc.mutable_ll()->set_lat(line.shape(0).ll().lat());
-      first_shape_loc.mutable_ll()->set_lng(line.shape(0).ll().lng());
+      first_shape_loc.mutable_ll()->set_lat(line.shape().begin()->ll().lat());
+      first_shape_loc.mutable_ll()->set_lng(line.shape().begin()->ll().lng());
       first_shape_loc.set_minimum_inbound_reachability(0);
       locations->Add(std::move(first_shape_loc));
       Location last_shape_loc;
-      last_shape_loc.mutable_ll()->set_lat(line.shape(line.shape_size() - 1).ll().lat());
-      last_shape_loc.mutable_ll()->set_lng(line.shape(line.shape_size() - 1).ll().lng());
+      last_shape_loc.mutable_ll()->set_lat(line.shape().rbegin()->ll().lat());
+      last_shape_loc.mutable_ll()->set_lng(line.shape().rbegin()->ll().lng());
       last_shape_loc.set_minimum_inbound_reachability(0);
       locations->Add(std::move(last_shape_loc));
     }
@@ -149,11 +149,11 @@ void loki_worker_t::route(Api& request) {
     } else {
       search_.search(*locations, costing);
     }
-    for (auto lit = locations->begin(); lit != locations_end; ++lit) {
+    for (auto it = locations->begin(); it != locations_end; ++it) {
       if (!connectivity_map) {
         continue;
       }
-      auto colors = connectivity_map->get_colors(connectivity_level, *lit, connectivity_radius);
+      auto colors = connectivity_map->get_colors(connectivity_level, *it, connectivity_radius);
       for (auto color : colors) {
         auto itr = color_counts.find(color);
         if (itr == color_counts.cend()) {

@@ -1,6 +1,5 @@
 #include "baldr/graphreader.h"
 #include "baldr/openlr.h"
-#include "baldr/pathlocation.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/time_info.h"
 #include "tyr/serializers.h"

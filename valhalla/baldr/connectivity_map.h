@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/proto/common.pb.h>
 
 #include <cstdint>
 #include <unordered_map>

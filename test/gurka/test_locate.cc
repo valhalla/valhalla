@@ -139,6 +139,8 @@ TEST(locate, basic_properties) {
                             },
                             reader, &json);
   ASSERT_EQ(result.options().locations(0).heading_tolerance(), 20);
+  ASSERT_EQ(result.options().locations(0).heading(), 45);
+  ASSERT_EQ(result.options().locations(0).search_cutoff(), 1);
   ASSERT_TRUE(result.options().locations(0).correlation().edges().empty());
 }
 

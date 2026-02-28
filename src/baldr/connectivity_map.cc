@@ -177,7 +177,7 @@ std::unordered_set<size_t> connectivity_map_t::get_colors(const baldr::TileLevel
   for (const auto* edges : edge_sets) {
     for (const auto& edge : *edges) {
       // Get a list of tiles required within the radius of the projected point
-      const PointLL ll{edge.ll().lat(), edge.ll().lat()};
+      const PointLL ll{edge.ll().lng(), edge.ll().lat()};
       DistanceApproximator<PointLL> approximator(ll);
       auto latdeg = (radius / kMetersPerDegreeLat);
       auto lngdeg = (radius / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));

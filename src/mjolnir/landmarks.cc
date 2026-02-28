@@ -1,7 +1,6 @@
 #include "mjolnir/landmarks.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
-#include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "midgard/sequence.h"
