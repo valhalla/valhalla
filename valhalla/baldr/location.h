@@ -56,18 +56,10 @@ inline bool operator==(const Location& a, const Location& b) {
 
 } // namespace valhalla
 namespace std {
-// template <> struct hash<valhalla::baldr::Location> {
-//   size_t operator()(const valhalla::baldr::Location& l) const {
-//     return std::hash<valhalla::midgard::PointLL>()(l.latlng_);
-//   }
+
 template <> struct hash<valhalla::Location> {
   size_t operator()(const valhalla::Location& location) const {
     return std::hash<valhalla::midgard::PointLL>()({location.ll().lng(), location.ll().lat()});
-  }
-
-private:
-  static void hash_combine(size_t& seed, size_t h) {
-    seed ^= h + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
 };
 } // namespace std

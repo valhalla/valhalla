@@ -3,7 +3,6 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {

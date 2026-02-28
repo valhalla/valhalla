@@ -4,7 +4,6 @@
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/sif/costconstants.h>

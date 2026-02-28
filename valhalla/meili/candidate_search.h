@@ -4,7 +4,6 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/meili/grid_range_query.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>

@@ -2,7 +2,6 @@
 #ifndef MMP_STATE_H_
 #define MMP_STATE_H_
 
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/routing.h>
 #include <valhalla/meili/stateid.h>
