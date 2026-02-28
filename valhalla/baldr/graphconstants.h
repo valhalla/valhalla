@@ -149,18 +149,14 @@ inline RoadClass stringToRoadClass(const std::string& s) {
   return stringToRoadClass.find(s)->second;
 }
 inline std::string to_string(RoadClass r) {
-  static const std::unordered_map<uint8_t, std::string> RoadClassStrings = {
-      {static_cast<uint8_t>(RoadClass::kMotorway), "motorway"},
-      {static_cast<uint8_t>(RoadClass::kTrunk), "trunk"},
-      {static_cast<uint8_t>(RoadClass::kPrimary), "primary"},
-      {static_cast<uint8_t>(RoadClass::kSecondary), "secondary"},
-      {static_cast<uint8_t>(RoadClass::kTertiary), "tertiary"},
-      {static_cast<uint8_t>(RoadClass::kUnclassified), "unclassified"},
-      {static_cast<uint8_t>(RoadClass::kResidential), "residential"},
-      {static_cast<uint8_t>(RoadClass::kServiceOther), "service_other"},
+  static const std::unordered_map<RoadClass, std::string> RoadClassStrings = {
+      {RoadClass::kMotorway, "motorway"},       {RoadClass::kTrunk, "trunk"},
+      {RoadClass::kPrimary, "primary"},         {RoadClass::kSecondary, "secondary"},
+      {RoadClass::kTertiary, "tertiary"},       {RoadClass::kUnclassified, "unclassified"},
+      {RoadClass::kResidential, "residential"}, {RoadClass::kServiceOther, "service_other"},
   };
 
-  auto i = RoadClassStrings.find(static_cast<uint8_t>(r));
+  auto i = RoadClassStrings.find(r);
   if (i == RoadClassStrings.cend()) {
     return "null";
   }
@@ -243,24 +239,24 @@ enum class NodeType : uint8_t {
   kElevator = 14,               // Elevator
 };
 inline std::string to_string(NodeType n) {
-  static const std::unordered_map<uint8_t, std::string> NodeTypeStrings =
-      {{static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
-       {static_cast<uint8_t>(NodeType::kGate), "gate"},
-       {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
-       {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
-       {static_cast<uint8_t>(NodeType::kTransitEgress), "transit_egress"},
-       {static_cast<uint8_t>(NodeType::kTransitStation), "transit_station"},
-       {static_cast<uint8_t>(NodeType::kMultiUseTransitPlatform), "multi_use_transit_platform"},
-       {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
-       {static_cast<uint8_t>(NodeType::kParking), "parking"},
-       {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
-       {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
-       {static_cast<uint8_t>(NodeType::kTollGantry), "toll_gantry"},
-       {static_cast<uint8_t>(NodeType::kSumpBuster), "sump_buster"},
-       {static_cast<uint8_t>(NodeType::kBuildingEntrance), "building_entrance"},
-       {static_cast<uint8_t>(NodeType::kElevator), "elevator"}};
+  static const std::unordered_map<NodeType, std::string> NodeTypeStrings =
+      {{NodeType::kStreetIntersection, "street_intersection"},
+       {NodeType::kGate, "gate"},
+       {NodeType::kBollard, "bollard"},
+       {NodeType::kTollBooth, "toll_booth"},
+       {NodeType::kTransitEgress, "transit_egress"},
+       {NodeType::kTransitStation, "transit_station"},
+       {NodeType::kMultiUseTransitPlatform, "multi_use_transit_platform"},
+       {NodeType::kBikeShare, "bike_share"},
+       {NodeType::kParking, "parking"},
+       {NodeType::kMotorWayJunction, "motor_way_junction"},
+       {NodeType::kBorderControl, "border_control"},
+       {NodeType::kTollGantry, "toll_gantry"},
+       {NodeType::kSumpBuster, "sump_buster"},
+       {NodeType::kBuildingEntrance, "building_entrance"},
+       {NodeType::kElevator, "elevator"}};
 
-  auto i = NodeTypeStrings.find(static_cast<uint8_t>(n));
+  auto i = NodeTypeStrings.find(n);
   if (i == NodeTypeStrings.cend()) {
     return "null";
   }
@@ -278,14 +274,14 @@ enum class IntersectionType : uint8_t {
                 // and node is a motorway_junction.
 };
 inline std::string to_string(IntersectionType x) {
-  static const std::unordered_map<uint8_t, std::string> IntersectionTypeStrings = {
-      {static_cast<uint8_t>(IntersectionType::kRegular), "regular"},
-      {static_cast<uint8_t>(IntersectionType::kFalse), "false"},
-      {static_cast<uint8_t>(IntersectionType::kDeadEnd), "dead-end"},
-      {static_cast<uint8_t>(IntersectionType::kFork), "fork"},
+  static const std::unordered_map<IntersectionType, std::string> IntersectionTypeStrings = {
+      {IntersectionType::kRegular, "regular"},
+      {IntersectionType::kFalse, "false"},
+      {IntersectionType::kDeadEnd, "dead-end"},
+      {IntersectionType::kFork, "fork"},
   };
 
-  auto i = IntersectionTypeStrings.find(static_cast<uint8_t>(x));
+  auto i = IntersectionTypeStrings.find(x);
   if (i == IntersectionTypeStrings.cend()) {
     return "null";
   }
@@ -348,44 +344,44 @@ enum class Use : uint8_t {
   kTransitConnection = 54,  // Connection osm <-> egress
 };
 inline std::string to_string(Use u) {
-  static const std::unordered_map<uint8_t, std::string> UseStrings = {
-      {static_cast<uint8_t>(Use::kRoad), "road"},
-      {static_cast<uint8_t>(Use::kRamp), "ramp"},
-      {static_cast<uint8_t>(Use::kTurnChannel), "turn_channel"},
-      {static_cast<uint8_t>(Use::kTrack), "track"},
-      {static_cast<uint8_t>(Use::kDriveway), "driveway"},
-      {static_cast<uint8_t>(Use::kAlley), "alley"},
-      {static_cast<uint8_t>(Use::kParkingAisle), "parking_aisle"},
-      {static_cast<uint8_t>(Use::kEmergencyAccess), "emergency_access"},
-      {static_cast<uint8_t>(Use::kDriveThru), "drive_through"},
-      {static_cast<uint8_t>(Use::kCuldesac), "culdesac"},
-      {static_cast<uint8_t>(Use::kLivingStreet), "living_street"},
-      {static_cast<uint8_t>(Use::kServiceRoad), "service_road"},
-      {static_cast<uint8_t>(Use::kCycleway), "cycleway"},
-      {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
-      {static_cast<uint8_t>(Use::kSidewalk), "sidewalk"},
-      {static_cast<uint8_t>(Use::kFootway), "footway"},
-      {static_cast<uint8_t>(Use::kElevator), "elevator"},
-      {static_cast<uint8_t>(Use::kSteps), "steps"},
-      {static_cast<uint8_t>(Use::kEscalator), "escalator"},
-      {static_cast<uint8_t>(Use::kPath), "path"},
-      {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
-      {static_cast<uint8_t>(Use::kBridleway), "bridleway"},
-      {static_cast<uint8_t>(Use::kPedestrianCrossing), "pedestrian_crossing"},
-      {static_cast<uint8_t>(Use::kRestArea), "rest_area"},
-      {static_cast<uint8_t>(Use::kServiceArea), "service_area"},
-      {static_cast<uint8_t>(Use::kOther), "other"},
-      {static_cast<uint8_t>(Use::kRailFerry), "rail-ferry"},
-      {static_cast<uint8_t>(Use::kFerry), "ferry"},
-      {static_cast<uint8_t>(Use::kRail), "rail"},
-      {static_cast<uint8_t>(Use::kBus), "bus"},
-      {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
-      {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connection"},
-      {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
-      {static_cast<uint8_t>(Use::kConstruction), "construction"},
+  static const std::unordered_map<Use, std::string> UseStrings = {
+      {Use::kRoad, "road"},
+      {Use::kRamp, "ramp"},
+      {Use::kTurnChannel, "turn_channel"},
+      {Use::kTrack, "track"},
+      {Use::kDriveway, "driveway"},
+      {Use::kAlley, "alley"},
+      {Use::kParkingAisle, "parking_aisle"},
+      {Use::kEmergencyAccess, "emergency_access"},
+      {Use::kDriveThru, "drive_through"},
+      {Use::kCuldesac, "culdesac"},
+      {Use::kLivingStreet, "living_street"},
+      {Use::kServiceRoad, "service_road"},
+      {Use::kCycleway, "cycleway"},
+      {Use::kMountainBike, "mountain_bike"},
+      {Use::kSidewalk, "sidewalk"},
+      {Use::kFootway, "footway"},
+      {Use::kElevator, "elevator"},
+      {Use::kSteps, "steps"},
+      {Use::kEscalator, "escalator"},
+      {Use::kPath, "path"},
+      {Use::kPedestrian, "pedestrian"},
+      {Use::kBridleway, "bridleway"},
+      {Use::kPedestrianCrossing, "pedestrian_crossing"},
+      {Use::kRestArea, "rest_area"},
+      {Use::kServiceArea, "service_area"},
+      {Use::kOther, "other"},
+      {Use::kRailFerry, "rail-ferry"},
+      {Use::kFerry, "ferry"},
+      {Use::kRail, "rail"},
+      {Use::kBus, "bus"},
+      {Use::kEgressConnection, "egress_connection"},
+      {Use::kPlatformConnection, "platform_connection"},
+      {Use::kTransitConnection, "transit_connection"},
+      {Use::kConstruction, "construction"},
   };
 
-  auto i = UseStrings.find(static_cast<uint8_t>(u));
+  auto i = UseStrings.find(u);
   if (i == UseStrings.cend()) {
     return "null";
   }
@@ -571,12 +567,12 @@ enum class SpeedType : uint8_t {
   kClassified = 1 // Speed assigned based on highway classification
 };
 inline std::string to_string(SpeedType s) {
-  static const std::unordered_map<uint8_t, std::string> SpeedTypeStrings = {
-      {static_cast<uint8_t>(SpeedType::kTagged), "tagged"},
-      {static_cast<uint8_t>(SpeedType::kClassified), "classified"},
+  static const std::unordered_map<SpeedType, std::string> SpeedTypeStrings = {
+      {SpeedType::kTagged, "tagged"},
+      {SpeedType::kClassified, "classified"},
   };
 
-  auto i = SpeedTypeStrings.find(static_cast<uint8_t>(s));
+  auto i = SpeedTypeStrings.find(s);
   if (i == SpeedTypeStrings.cend()) {
     return "null";
   }
@@ -597,13 +593,13 @@ enum class CycleLane : uint8_t {
                   // Alternative: Path with no pedestrians on it
 };
 inline std::string to_string(CycleLane c) {
-  static const std::unordered_map<uint8_t, std::string> CycleLaneStrings = {
-      {static_cast<uint8_t>(CycleLane::kNone), "none"},
-      {static_cast<uint8_t>(CycleLane::kShared), "shared"},
-      {static_cast<uint8_t>(CycleLane::kDedicated), "dedicated"},
-      {static_cast<uint8_t>(CycleLane::kSeparated), "separated"},
+  static const std::unordered_map<CycleLane, std::string> CycleLaneStrings = {
+      {CycleLane::kNone, "none"},
+      {CycleLane::kShared, "shared"},
+      {CycleLane::kDedicated, "dedicated"},
+      {CycleLane::kSeparated, "separated"},
   };
-  auto i = CycleLaneStrings.find(static_cast<uint8_t>(c));
+  auto i = CycleLaneStrings.find(c);
   if (i == CycleLaneStrings.cend()) {
     return "null";
   }
@@ -620,16 +616,16 @@ enum class SacScale : uint8_t {
   kDifficultAlpineHiking = 6
 };
 inline std::string to_string(SacScale c) {
-  static const std::unordered_map<uint8_t, std::string> SacScaleStrings = {
-      {static_cast<uint8_t>(SacScale::kNone), "none"},
-      {static_cast<uint8_t>(SacScale::kHiking), "hiking"},
-      {static_cast<uint8_t>(SacScale::kMountainHiking), "mountain hiking"},
-      {static_cast<uint8_t>(SacScale::kDemandingMountainHiking), "demanding mountain hiking"},
-      {static_cast<uint8_t>(SacScale::kAlpineHiking), "alpine hiking"},
-      {static_cast<uint8_t>(SacScale::kDemandingAlpineHiking), "demanding alpine hiking"},
-      {static_cast<uint8_t>(SacScale::kDifficultAlpineHiking), "difficult alpine hiking"},
+  static const std::unordered_map<SacScale, std::string> SacScaleStrings = {
+      {SacScale::kNone, "none"},
+      {SacScale::kHiking, "hiking"},
+      {SacScale::kMountainHiking, "mountain hiking"},
+      {SacScale::kDemandingMountainHiking, "demanding mountain hiking"},
+      {SacScale::kAlpineHiking, "alpine hiking"},
+      {SacScale::kDemandingAlpineHiking, "demanding alpine hiking"},
+      {SacScale::kDifficultAlpineHiking, "difficult alpine hiking"},
   };
-  auto i = SacScaleStrings.find(static_cast<uint8_t>(c));
+  auto i = SacScaleStrings.find(c);
   if (i == SacScaleStrings.cend()) {
     return "null";
   }
@@ -654,18 +650,18 @@ enum class Surface : uint8_t {
   kImpassable = 7
 };
 inline std::string to_string(Surface s) {
-  static const std::unordered_map<uint8_t, std::string> SurfaceStrings = {
-      {static_cast<uint8_t>(Surface::kPavedSmooth), "paved_smooth"},
-      {static_cast<uint8_t>(Surface::kPaved), "paved"},
-      {static_cast<uint8_t>(Surface::kPavedRough), "paved_rough"},
-      {static_cast<uint8_t>(Surface::kCompacted), "compacted"},
-      {static_cast<uint8_t>(Surface::kDirt), "dirt"},
-      {static_cast<uint8_t>(Surface::kGravel), "gravel"},
-      {static_cast<uint8_t>(Surface::kPath), "path"},
-      {static_cast<uint8_t>(Surface::kImpassable), "impassable"},
+  static const std::unordered_map<Surface, std::string> SurfaceStrings = {
+      {Surface::kPavedSmooth, "paved_smooth"},
+      {Surface::kPaved, "paved"},
+      {Surface::kPavedRough, "paved_rough"},
+      {Surface::kCompacted, "compacted"},
+      {Surface::kDirt, "dirt"},
+      {Surface::kGravel, "gravel"},
+      {Surface::kPath, "path"},
+      {Surface::kImpassable, "impassable"},
   };
 
-  auto i = SurfaceStrings.find(static_cast<uint8_t>(s));
+  auto i = SurfaceStrings.find(s);
   if (i == SurfaceStrings.cend()) {
     return "null";
   }
@@ -790,12 +786,11 @@ constexpr uint8_t kInvalidAccessRestrictionMask = std::numeric_limits<uint8_t>::
 // Minimum meters offset from start/end of shape for finding heading
 constexpr float kMinMetersOffsetForHeading = 15.0f;
 inline float GetOffsetForHeading(RoadClass road_class, Use use) {
-  uint8_t rc = static_cast<uint8_t>(road_class);
   float offset = kMinMetersOffsetForHeading;
   // Adjust offset based on road class
-  if (rc < 2) {
+  if (road_class < RoadClass::kPrimary) {
     offset *= 1.6f;
-  } else if (rc < 5) {
+  } else if (road_class < RoadClass::kUnclassified) {
     offset *= 1.4f;
   }
 
@@ -856,10 +851,10 @@ constexpr uint64_t kInvalidSecondsOfWeek =
 enum class HOVEdgeType : uint8_t { kHOV2 = 0, kHOV3 = 1 };
 
 inline std::string to_string(HOVEdgeType h) {
-  static const std::unordered_map<uint8_t, std::string> HOVEdgeTypeStrings =
-      {{static_cast<uint8_t>(HOVEdgeType::kHOV2), "HOV-2"},
-       {static_cast<uint8_t>(HOVEdgeType::kHOV3), "HOV-3"}};
-  auto i = HOVEdgeTypeStrings.find(static_cast<uint8_t>(h));
+  static const std::unordered_map<HOVEdgeType, std::string> HOVEdgeTypeStrings =
+      {{HOVEdgeType::kHOV2, "HOV-2"}, {HOVEdgeType::kHOV3, "HOV-3"}};
+
+  auto i = HOVEdgeTypeStrings.find(h);
   if (i == HOVEdgeTypeStrings.cend()) {
     return "null";
   }

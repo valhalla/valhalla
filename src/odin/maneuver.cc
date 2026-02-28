@@ -15,20 +15,20 @@ using namespace valhalla::odin;
 using namespace valhalla::baldr;
 
 namespace {
-const std::unordered_map<int, std::string>
-    relative_direction_string{{static_cast<int>(Maneuver::RelativeDirection::kNone),
+const std::unordered_map<Maneuver::RelativeDirection, std::string>
+    relative_direction_string{{Maneuver::RelativeDirection::kNone,
                                "Maneuver::RelativeDirection::kNone"},
-                              {static_cast<int>(Maneuver::RelativeDirection::kKeepStraight),
+                              {Maneuver::RelativeDirection::kKeepStraight,
                                "Maneuver::RelativeDirection::kKeepStraight"},
-                              {static_cast<int>(Maneuver::RelativeDirection::kKeepRight),
+                              {Maneuver::RelativeDirection::kKeepRight,
                                "Maneuver::RelativeDirection::kKeepRight"},
-                              {static_cast<int>(Maneuver::RelativeDirection::kRight),
+                              {Maneuver::RelativeDirection::kRight,
                                "Maneuver::RelativeDirection::kRight"},
-                              {static_cast<int>(Maneuver::RelativeDirection::KReverse),
+                              {Maneuver::RelativeDirection::KReverse,
                                "Maneuver::RelativeDirection::KReverse"},
-                              {static_cast<int>(Maneuver::RelativeDirection::kLeft),
+                              {Maneuver::RelativeDirection::kLeft,
                                "Maneuver::RelativeDirection::kLeft"},
-                              {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
+                              {Maneuver::RelativeDirection::kKeepLeft,
                                "Maneuver::RelativeDirection::kKeepLeft"}};
 
 } // namespace
@@ -1158,14 +1158,16 @@ void Maneuver::set_has_level_changes(const bool has_level_changes) {
 
 #ifdef LOGGING_LEVEL_TRACE
 namespace {
-const std::string& TrailType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{{0, "kNone"},
-                                                           {1, "kNamedCycleway"},
-                                                           {2, "kUnnamedCycleway"},
-                                                           {3, "kNamedWalkway"},
-                                                           {4, "kUnnamedWalkway"},
-                                                           {5, "kNamedMtbTrail"},
-                                                           {6, "kUnnamedMtbTrail"}};
+const std::string& TrailType_Name(TrailType v) {
+  static const std::unordered_map<TrailType, std::string> values{
+      {TrailType::kNone, "kNone"},
+      {TrailType::kNamedCycleway, "kNamedCycleway"},
+      {TrailType::kUnnamedCycleway, "kUnnamedCycleway"},
+      {TrailType::kNamedWalkway, "kNamedWalkway"},
+      {TrailType::kUnnamedWalkway, "kUnnamedWalkway"},
+      {TrailType::kNamedMtbTrail, "kNamedMtbTrail"},
+      {TrailType::kUnnamedMtbTrail, "kUnnamedMtbTrail"},
+  };
   auto f = values.find(v);
   if (f == values.cend())
     throw std::runtime_error("Missing TrailType_Name value in protobuf enum to string");
@@ -1286,7 +1288,7 @@ std::string Maneuver::ToString() const {
   man_str += std::to_string(tee_);
 
   man_str += " | trail_type=";
-  man_str += TrailType_Name(static_cast<int>(trail_type_));
+  man_str += TrailType_Name(trail_type_);
 
   man_str += " | unnamed_walkway=";
   man_str += std::to_string(unnamed_walkway());
@@ -1410,7 +1412,7 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(turn_degree_);
 
   man_str += delim;
-  man_str += relative_direction_string.find(static_cast<int>(begin_relative_direction_))->second;
+  man_str += relative_direction_string.find(begin_relative_direction_)->second;
 
   man_str += delim;
   man_str += "DirectionsLeg_Maneuver_CardinalDirection_";
@@ -1524,7 +1526,7 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(tee_);
 
   man_str += delim;
-  man_str += TrailType_Name(static_cast<int>(trail_type_));
+  man_str += TrailType_Name(trail_type_);
 
   man_str += delim;
   man_str += std::to_string(unnamed_walkway());
