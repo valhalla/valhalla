@@ -47,6 +47,11 @@ constexpr uint16_t kMopedAccess = 512;
 constexpr uint16_t kMotorcycleAccess = 1024;
 constexpr uint16_t kAllAccess = 4095;
 
+constexpr std::array<uint16_t, 11> kAccessMasks = {kAutoAccess,  kPedestrianAccess, kBicycleAccess,
+                                                   kTruckAccess, kEmergencyAccess,  kTaxiAccess,
+                                                   kBusAccess,   kHOVAccess,        kWheelchairAccess,
+                                                   kMopedAccess, kMotorcycleAccess};
+
 // Constant representing vehicular access types
 constexpr uint16_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
                                       kTaxiAccess | kBusAccess | kHOVAccess;

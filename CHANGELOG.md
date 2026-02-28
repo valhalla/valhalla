@@ -19,6 +19,7 @@
    * FIXED: MVT attributes were erroneously cast to uint32_t for booleans and others [#5861](https://github.com/valhalla/valhalla/pull/5861)
    * FIXED: small bug in valhalla_add_landmarks [#5859](https://github.com/valhalla/valhalla/pull/5859)
    * FIXED: replace dry-run with report arg in `valhalla_build_config` [#5875](https://github.com/valhalla/valhalla/pull/5875)
+   * FIXED: de-duplicate BSS connection edges [#5799](https://github.com/valhalla/valhalla/pull/5799)
    * FIXED: Respect future hierarchy level during graph filtering [#5878](https://github.com/valhalla/valhalla/pull/5878)
    * FIXED: UK had drive on right incorrectly set after admin changes [#5882](https://github.com/valhalla/valhalla/pull/5882)
    * FIXED: set stop impact to 0 where there are only 2 edges at the 'intersection' [#5877](https://github.com/valhalla/valhalla/pull/5877)
