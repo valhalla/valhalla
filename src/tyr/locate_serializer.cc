@@ -126,7 +126,7 @@ void serialize_edges(const PathLocation& path_location,
       // they want MOAR!
       if (verbose) {
         // live traffic information
-        const volatile auto& traffic = tile->trafficspeed(directed_edge);
+        const auto traffic = tile->trafficspeed(directed_edge);
 
         // incident information
         if (traffic.has_incidents) {

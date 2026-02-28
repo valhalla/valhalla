@@ -819,7 +819,9 @@ public:
     if (!invalid_time && (flow_mask & kCurrentFlowMask) && traffic_tile() &&
         live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
-      auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
+      // it is important to copy the speed to a local variable to avoid race conditions when traffic
+      // data is updated by background process
+      auto live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
       if (live_speed.speed_valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
         *flow_sources |= kCurrentFlowMask;
@@ -901,7 +903,7 @@ public:
     return (is_truck && (de->truck_speed() > 0)) ? std::min(de->truck_speed(), speed) : speed;
   }
 
-  inline const volatile TrafficSpeed& trafficspeed(const DirectedEdge* de) const {
+  inline TrafficSpeed trafficspeed(const DirectedEdge* de) const {
     auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
     return traffic_tile.trafficspeed(directed_edge_index);
   }
@@ -935,8 +937,7 @@ public:
    * @return      whether or not its closed
    */
   inline bool IsClosed(const DirectedEdge* edge) const {
-    auto volatile& live_speed =
-        traffic_tile.trafficspeed(static_cast<uint32_t>(edge - directededges_));
+    auto live_speed = traffic_tile.trafficspeed(static_cast<uint32_t>(edge - directededges_));
     return live_speed.closed();
   }
 
