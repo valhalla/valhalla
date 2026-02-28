@@ -221,8 +221,14 @@ thor_worker_t::map_match(Api& request) {
         if (!match.HasState()) {
           continue;
         }
-        for (size_t j = 0;
-             j < matcher->state_container().state(match.stateid).candidate().edges.size() - 1; ++j) {
+        for (size_t j = 0; j < matcher->state_container()
+                                       .state(match.stateid)
+                                       .candidate()
+                                       .correlation()
+                                       .edges()
+                                       .size() -
+                                   1;
+             ++j) {
           options.mutable_shape(i)->mutable_correlation()->mutable_edges()->Add();
         }
       }

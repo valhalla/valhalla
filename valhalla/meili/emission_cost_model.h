@@ -35,7 +35,8 @@ public:
   }
 
   float operator()(const StateId& stateid) const {
-    return CalculateEmissionCost(container_.state(stateid).candidate().edges.front().distance);
+    return CalculateEmissionCost(
+        container_.state(stateid).candidate().correlation().edges().begin()->distance());
   }
 
 private:

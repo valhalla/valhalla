@@ -18,26 +18,26 @@ public:
   }
 
   template <typename edgeid_iterator_t>
-  std::vector<baldr::PathLocation> WithinSquaredDistance(const midgard::PointLL& location,
-                                                         baldr::Location::StopType stop_type,
-                                                         float sq_search_radius,
-                                                         edgeid_iterator_t edgeid_begin,
-                                                         edgeid_iterator_t edgeid_end,
-                                                         const sif::cost_ptr_t& costing) const;
+  std::vector<Location> WithinSquaredDistance(const midgard::PointLL& location,
+                                              Location_Type stop_type,
+                                              float sq_search_radius,
+                                              edgeid_iterator_t edgeid_begin,
+                                              edgeid_iterator_t edgeid_end,
+                                              const sif::cost_ptr_t& costing) const;
 
 private:
   baldr::GraphReader& reader_;
 };
 
 template <typename edgeid_iterator_t>
-std::vector<baldr::PathLocation>
+std::vector<Location>
 CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
-                                          baldr::Location::StopType stop_type,
+                                          Location_Type stop_type,
                                           float sq_search_radius,
                                           edgeid_iterator_t edgeid_begin,
                                           edgeid_iterator_t edgeid_end,
                                           const sif::cost_ptr_t& costing) const {
-  std::vector<baldr::PathLocation> candidates;
+  std::vector<Location> candidates;
   std::unordered_set<baldr::GraphId> visited_nodes;
   midgard::projector_t projector(location);
   baldr::graph_tile_ptr tile;
@@ -76,7 +76,9 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     double offset;
 
     baldr::GraphId snapped_node;
-    baldr::PathLocation correlated(baldr::Location(location, stop_type));
+    Location correlated;
+    correlated.mutable_ll()->set_lat(location.lat());
+    correlated.mutable_ll()->set_lng(location.lng());
 
     // For avoiding recomputing projection later
     const bool edge_included = !costing || costing->Allowed(edge, tile, sif::kDisallowShortcut);
@@ -92,7 +94,12 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
         } else if (dist == 0.0) {
           snapped_node = opp_edge->endnode();
         }
-        correlated.edges.emplace_back(edgeid, dist, point, sq_distance);
+        auto* path_edge = correlated.mutable_correlation()->mutable_edges()->Add();
+        path_edge->set_graph_id(edgeid);
+        path_edge->set_distance(dist);
+        path_edge->mutable_ll()->set_lat(point.lat());
+        path_edge->mutable_ll()->set_lng(point.lng());
+        path_edge->set_distance(sq_distance);
       }
     }
 
@@ -112,12 +119,17 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
         } else if (dist == 0.0) {
           snapped_node = edge->endnode();
         }
-        correlated.edges.emplace_back(opp_edgeid, dist, point, sq_distance);
+        auto* path_edge = correlated.mutable_correlation()->mutable_edges()->Add();
+        path_edge->set_graph_id(edgeid);
+        path_edge->set_distance(dist);
+        path_edge->mutable_ll()->set_lat(point.lat());
+        path_edge->mutable_ll()->set_lng(point.lng());
+        path_edge->set_distance(sq_distance);
       }
     }
 
     // We found some edge candidates within the distance cut off
-    if (correlated.edges.size()) {
+    if (correlated.correlation().edges().size()) {
       // If the candidates are not at a node we just add them if they are at a node
       // we avoid adding them multiple times by remembering the node we snapped to
       // this has two consequences:
@@ -232,10 +244,10 @@ CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const {
   return result;
 }
 
-std::vector<baldr::PathLocation> CandidateGridQuery::Query(const midgard::PointLL& location,
-                                                           baldr::Location::StopType stop_type,
-                                                           float sq_search_radius,
-                                                           const sif::cost_ptr_t& costing) const {
+std::vector<Location> CandidateGridQuery::Query(const midgard::PointLL& location,
+                                                Location_Type stop_type,
+                                                float sq_search_radius,
+                                                const sif::cost_ptr_t& costing) const {
   CandidateCollector collector(reader_);
   return Query(location, stop_type, sq_search_radius, costing, collector);
 }

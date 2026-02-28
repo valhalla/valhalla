@@ -259,6 +259,16 @@ void parse_location(valhalla::Location* location,
   if (minimum_reachability) {
     location->set_minimum_reachability(*minimum_reachability);
   }
+  auto minimum_inbound_reachability =
+      rapidjson::get_optional<unsigned int>(r_loc, "/minimum_inbound_reachability");
+  if (minimum_inbound_reachability) {
+    location->set_minimum_inbound_reachability(*minimum_inbound_reachability);
+  }
+  auto minimum_outbound_reachability =
+      rapidjson::get_optional<unsigned int>(r_loc, "/minimum_outbound_reachability");
+  if (minimum_outbound_reachability) {
+    location->set_minimum_outbound_reachability(*minimum_outbound_reachability);
+  }
   auto radius = rapidjson::get_optional<unsigned int>(r_loc, "/radius");
   if (radius) {
     location->set_radius(*radius);

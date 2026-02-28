@@ -163,7 +163,7 @@ size_t connectivity_map_t::get_color(const GraphId& id) const {
 }
 
 std::unordered_set<size_t> connectivity_map_t::get_colors(const baldr::TileLevel& hierarchy_level,
-                                                          const baldr::PathLocation& location,
+                                                          const Location& location,
                                                           float radius) const {
 
   std::unordered_set<size_t> result;
@@ -171,11 +171,13 @@ std::unordered_set<size_t> connectivity_map_t::get_colors(const baldr::TileLevel
   if (level == colors.cend()) {
     return result;
   }
-  std::vector<const decltype(location.edges)*> edge_sets{&location.edges, &location.filtered_edges};
+  std::vector<const google::protobuf::RepeatedPtrField<PathEdge>*>
+      edge_sets{&location.correlation().edges(), &location.correlation().filtered_edges()};
+
   for (const auto* edges : edge_sets) {
     for (const auto& edge : *edges) {
       // Get a list of tiles required within the radius of the projected point
-      const auto& ll = edge.projected;
+      const PointLL ll{edge.ll().lat(), edge.ll().lat()};
       DistanceApproximator<PointLL> approximator(ll);
       auto latdeg = (radius / kMetersPerDegreeLat);
       auto lngdeg = (radius / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));

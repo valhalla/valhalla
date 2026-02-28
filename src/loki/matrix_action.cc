@@ -109,30 +109,27 @@ void loki_worker_t::matrix(Api& request) {
   check_hierarchy_distance(request);
 
   // correlate the various locations to the underlying graph
-  auto sources_targets = PathLocation::fromPBF(options.sources());
-  auto st = PathLocation::fromPBF(options.targets());
-  sources_targets.insert(sources_targets.end(), std::make_move_iterator(st.begin()),
-                         std::make_move_iterator(st.end()));
+  google::protobuf::RepeatedPtrField<Location> sources_targets;
+  sources_targets.MergeFrom(options.sources());
+  sources_targets.MergeFrom(options.targets());
 
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    const auto searched = search_.search(sources_targets, costing);
+    search_.search(sources_targets, costing);
     for (size_t i = 0; i < sources_targets.size(); ++i) {
       const auto& l = sources_targets[i];
-      const auto& projection = searched.at(l);
-      PathLocation::toPBF(projection,
-                          i < static_cast<size_t>(options.sources_size())
-                              ? options.mutable_sources(i)
-                              : options.mutable_targets(i -
-                                                        static_cast<size_t>(options.sources_size())),
-                          *reader);
+      if (i < options.sources_size()) {
+        options.mutable_sources(i)->CopyFrom(l);
+      } else {
+        options.mutable_targets(i)->CopyFrom(l);
+      }
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
       if (!connectivity_map) {
         continue;
       }
-      auto colors = connectivity_map->get_colors(TileHierarchy::levels().back(), projection, 0);
+      auto colors = connectivity_map->get_colors(TileHierarchy::levels().back(), l, 0);
       for (auto& color : colors) {
         auto itr = color_counts.find(color);
         if (itr == color_counts.cend()) {

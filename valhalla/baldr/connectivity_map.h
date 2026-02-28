@@ -47,9 +47,8 @@ public:
    * @param radius           the radius of the circle
    * @return colors          the colors of the tiles that intersect this circle at this level
    */
-  std::unordered_set<size_t> get_colors(const baldr::TileLevel& hierarchy_level,
-                                        const baldr::PathLocation& location,
-                                        float radius) const;
+  std::unordered_set<size_t>
+  get_colors(const baldr::TileLevel& hierarchy_level, const Location& location, float radius) const;
 
   /**
    * Returns the geojson representing the connectivity map

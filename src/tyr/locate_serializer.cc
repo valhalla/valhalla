@@ -110,18 +110,17 @@ void serialize_traffic_speed(const volatile baldr::TrafficSpeed& traffic_speed,
   }
 }
 
-void serialize_edges(const PathLocation& path_location,
-                     const baldr::Location& location,
+void serialize_edges(const Location& location,
                      GraphReader& reader,
                      rapidjson::writer_wrapper_t& writer,
                      bool verbose) {
   writer.start_array("edges");
-  for (const auto& edge : path_location.edges) {
+  for (const auto& edge : location.correlation().edges()) {
     writer.start_object();
     try {
       // get the osm way id
-      auto tile = reader.GetGraphTile(edge.id);
-      auto* directed_edge = tile->directededge(edge.id);
+      auto tile = reader.GetGraphTile(GraphId(edge.graph_id()));
+      auto* directed_edge = tile->directededge(GraphId(edge.graph_id()));
       auto edge_info = tile->edgeinfo(directed_edge);
       // they want MOAR!
       if (verbose) {
@@ -133,7 +132,7 @@ void serialize_edges(const PathLocation& path_location,
           // TODO: incidents
         }
         writer.start_array("access_restrictions");
-        serialize_access_restrictions(tile, writer, edge.id.id());
+        serialize_access_restrictions(tile, writer, GraphId(edge.graph_id()).id());
         writer.end_array();
         // write live_speed
         writer.start_object("live_speed");
@@ -142,22 +141,23 @@ void serialize_edges(const PathLocation& path_location,
 
         // basic rest of it plus edge metadata
         writer.set_precision(tyr::kCoordinatePrecision);
-        writer("correlated_lat", edge.projected.lat());
-        writer("correlated_lon", edge.projected.lng());
-        writer("side_of_street", edge.sos == PathLocation::LEFT
-                                     ? "left"
-                                     : (edge.sos == PathLocation::RIGHT ? "right" : "neither"));
+        writer("correlated_lat", edge.ll().lat());
+        writer("correlated_lon", edge.ll().lng());
+        writer("side_of_street",
+               edge.side_of_street() == Location_SideOfStreet_kLeft
+                   ? "left"
+                   : (edge.side_of_street() == Location_SideOfStreet_kRight ? "right" : "neither"));
 
-        writer("linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info));
+        writer("linear_reference", linear_reference(directed_edge, edge.percent_along(), edge_info));
         writer.set_precision(5);
-        writer("percent_along", edge.percent_along);
+        writer("percent_along", edge.percent_along());
         writer.set_precision(1);
-        writer("distance", edge.distance);
+        writer("distance", edge.distance());
         writer("shoulder", directed_edge->shoulder());
-        writer("heading", edge.projected_heading);
+        writer("heading", edge.heading());
         writer.set_precision(tyr::kDefaultPrecision);
-        writer("outbound_reach", static_cast<int64_t>(edge.outbound_reach));
-        writer("inbound_reach", static_cast<int64_t>(edge.inbound_reach));
+        writer("outbound_reach", static_cast<int64_t>(edge.outbound_reach()));
+        writer("inbound_reach", static_cast<int64_t>(edge.inbound_reach()));
 
         writer.start_object("edge_info");
         edge_info.json(writer);
@@ -168,16 +168,15 @@ void serialize_edges(const PathLocation& path_location,
         writer.end_object();
 
         writer.start_object("edge_id");
-        edge.id.json(writer);
+        GraphId(edge.graph_id()).json(writer);
         writer.end_object();
 
         // historical traffic information
 
         // if there's a date time on the location and the edge has
         // a predicted speed, write that
-        if (location.date_time_ && !location.date_time_->empty() &&
-            directed_edge->has_predicted_speed()) {
-          std::string dt = location.date_time_.value();
+        if (!location.date_time().empty() && directed_edge->has_predicted_speed()) {
+          std::string dt = location.date_time();
           auto time_info = baldr::TimeInfo::make(dt, 0); // no need to pass timezone info here
           writer("timed_predicted_speed",
                  static_cast<uint64_t>(
@@ -197,13 +196,14 @@ void serialize_edges(const PathLocation& path_location,
       else {
         writer("way_id", static_cast<uint64_t>(edge_info.wayid()));
         writer.set_precision(tyr::kCoordinatePrecision);
-        writer("correlated_lat", edge.projected.lat());
-        writer("correlated_lon", edge.projected.lng());
-        writer("side_of_street", edge.sos == PathLocation::LEFT
-                                     ? "left"
-                                     : (edge.sos == PathLocation::RIGHT ? "right" : "neither"));
+        writer("correlated_lat", edge.ll().lat());
+        writer("correlated_lon", edge.ll().lng());
+        writer("side_of_street",
+               edge.side_of_street() == Location_SideOfStreet_kLeft
+                   ? "left"
+                   : (edge.side_of_street() == Location_SideOfStreet_kRight ? "right" : "neither"));
         writer.set_precision(5);
-        writer("percent_along", edge.percent_along);
+        writer("percent_along", edge.percent_along());
         writer.set_precision(tyr::kDefaultPrecision);
       }
     } catch (...) {
@@ -215,15 +215,16 @@ void serialize_edges(const PathLocation& path_location,
   writer.end_array();
 }
 
-void serialize_nodes(const PathLocation& location,
+void serialize_nodes(const Location& location,
                      GraphReader& reader,
                      rapidjson::writer_wrapper_t& writer,
                      bool verbose) {
   // get the nodes we need
   std::unordered_set<uint64_t> nodes;
-  for (const auto& e : location.edges) {
+  for (const auto& e : location.correlation().edges()) {
     if (e.end_node()) {
-      nodes.emplace(reader.GetGraphTile(e.id)->directededge(e.id)->endnode());
+      nodes.emplace(
+          reader.GetGraphTile(GraphId(e.graph_id()))->directededge(GraphId(e.graph_id()))->endnode());
     }
   }
   writer.start_array("nodes");
@@ -253,24 +254,23 @@ void serialize_nodes(const PathLocation& location,
 }
 
 void serialize(rapidjson::writer_wrapper_t& writer,
-               const PathLocation& path_location,
+               const Location& location,
                GraphReader& reader,
-               bool verbose,
-               const baldr::Location& location) {
+               bool verbose) {
   // serialze all the edges
   writer.start_object();
   writer.set_precision(tyr::kCoordinatePrecision);
-  writer("input_lat", path_location.latlng_.lat());
-  writer("input_lon", path_location.latlng_.lng());
+  writer("input_lat", location.ll().lat());
+  writer("input_lon", location.ll().lng());
   writer.set_precision(tyr::kDefaultPrecision);
-  serialize_edges(path_location, location, reader, writer, verbose);
-  serialize_nodes(path_location, reader, writer, verbose);
+  serialize_edges(location, reader, writer, verbose);
+  serialize_nodes(location, reader, writer, verbose);
 
   writer.end_object();
 }
 
 void serialize(rapidjson::writer_wrapper_t& writer,
-               const midgard::PointLL& ll,
+               const LatLng& ll,
                const std::string& reason,
                bool verbose) {
   writer.start_object();
@@ -291,18 +291,15 @@ void serialize(rapidjson::writer_wrapper_t& writer,
 namespace valhalla {
 namespace tyr {
 
-std::string serializeLocate(const Api& request,
-                            const std::vector<baldr::Location>& locations,
-                            const std::unordered_map<baldr::Location, PathLocation>& projections,
-                            GraphReader& reader) {
+std::string serializeLocate(const Api& request, GraphReader& reader) {
   rapidjson::writer_wrapper_t writer(4096);
   writer.start_array();
 
-  for (const auto& location : locations) {
+  for (const auto& location : request.options().locations()) {
     try {
-      serialize(writer, projections.at(location), reader, request.options().verbose(), location);
+      serialize(writer, location, reader, request.options().verbose());
     } catch (const std::exception& e) {
-      serialize(writer, location.latlng_, "No data found for location", request.options().verbose());
+      serialize(writer, location.ll(), "No data found for location", request.options().verbose());
     }
   }
   writer.end_array();

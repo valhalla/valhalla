@@ -109,19 +109,23 @@ void loki_worker_t::route(Api& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    auto locations = PathLocation::fromPBF(options.locations(), true);
-    size_t locations_end = locations.size();
+    auto locations = options.mutable_locations();
+    auto locations_end = locations->end();
 
     // maybe squeeze in the first and last locations of each user specified feature for cost factor
     // lines as we'll need those for edge walking
     for (const auto& line : options.cost_factor_lines()) {
-      locations.push_back(PathLocation::fromPBF(line.shape(0)));
-      locations.back().min_inbound_reach_ = 0;
-      locations.push_back(PathLocation::fromPBF(line.shape(line.shape_size() - 1)));
-      locations.back().min_inbound_reach_ = 0;
+      Location first_shape_loc;
+      first_shape_loc.mutable_ll()->set_lat(line.shape(0).ll().lat());
+      first_shape_loc.mutable_ll()->set_lng(line.shape(0).ll().lng());
+      first_shape_loc.set_minimum_inbound_reachability(0);
+      locations->Add(std::move(first_shape_loc));
+      Location last_shape_loc;
+      last_shape_loc.mutable_ll()->set_lat(line.shape(line.shape_size() - 1).ll().lat());
+      last_shape_loc.mutable_ll()->set_lng(line.shape(line.shape_size() - 1).ll().lng());
+      last_shape_loc.set_minimum_inbound_reachability(0);
+      locations->Add(std::move(last_shape_loc));
     }
-
-    std::unordered_map<baldr::Location, PathLocation> projections;
 
     // in case of auto_pedestrian costing, we 1) only allow two locations
     // and 2) need two different costings for the start and end location.
@@ -131,29 +135,25 @@ void loki_worker_t::route(Api& request) {
     // and end at the same location but with different costing? What does that even mean? Find the
     // nearest parking and walk back to where I am? Seems like a plausible use case...
     if (costing_name == "auto_pedestrian") {
-      if (locations.size() > 2) {
-        throw valhalla_exception_t{150, "for auto_pedestrian: " + std::to_string(locations.size())};
+      if (locations->size() > 2) {
+        throw valhalla_exception_t{150, "for auto_pedestrian: " + std::to_string(locations->size())};
       }
-      std::vector<baldr::Location> start_loc(locations.begin(), locations.begin() + 1);
-      auto start_projection = search_.search(start_loc, costing);
-      for (const auto& [loc, path_loc] : start_projection) {
-        projections.insert({loc, path_loc});
-      }
-      std::vector<baldr::Location> end_loc(locations.end() - 1, locations.end());
-      auto end_projection = search_.search(end_loc, costing);
-      for (const auto& [loc, path_loc] : end_projection) {
-        projections.insert({loc, path_loc});
-      }
+      google::protobuf::RepeatedPtrField<Location> start_loc(locations->begin(),
+                                                             locations->begin() + 1);
+      search_.search(start_loc, costing);
+      google::protobuf::RepeatedPtrField<Location> end_loc(locations->end() - 1, locations->end());
+      search_.search(end_loc, costing);
+      // merge them again
+      locations->Swap(&start_loc);
+      locations->MergeFrom(end_loc);
     } else {
-      projections = search_.search(locations, costing);
+      search_.search(*locations, costing);
     }
-    for (size_t i = 0; i < locations_end; ++i) {
-      const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);
+    for (auto lit = locations->begin(); lit != locations_end; ++lit) {
       if (!connectivity_map) {
         continue;
       }
-      auto colors = connectivity_map->get_colors(connectivity_level, correlated, connectivity_radius);
+      auto colors = connectivity_map->get_colors(connectivity_level, *lit, connectivity_radius);
       for (auto color : colors) {
         auto itr = color_counts.find(color);
         if (itr == color_counts.cend()) {
@@ -165,16 +165,17 @@ void loki_worker_t::route(Api& request) {
     }
 
     // store the correlations for the cost factor lines
+    // todo(chris): make sure this'll work with auto_pedestrian as well
     size_t i = 0;
     for (auto& line : *options.mutable_cost_factor_lines()) {
-      const auto& correlated_start = projections.at(locations[locations_end + 2 * i]);
-      auto* start = line.mutable_locations()->Add();
-      PathLocation::toPBF(correlated_start, start, *reader);
-      const auto& correlated_end = projections.at(locations[locations_end + 2 * i + 1]);
-      auto* end = line.mutable_locations()->Add();
-      PathLocation::toPBF(correlated_end, end, *reader);
+      const auto& correlated_start = locations_end + 2 * i;
+      line.mutable_locations()->Add(std::move(*correlated_start));
+      const auto& correlated_end = locations_end + 2 * i + 1;
+      line.mutable_locations()->Add(std::move(*correlated_start));
       ++i;
     }
+    // and remove the first and last cost factor lines from the locations again
+    locations->erase(locations_end, locations->end());
   } catch (const valhalla_exception_t& e) { throw e; } catch (const std::exception&) {
     throw valhalla_exception_t{171};
   }

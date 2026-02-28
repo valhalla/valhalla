@@ -289,7 +289,7 @@ using labelset_ptr_t = std::shared_ptr<LabelSet>;
  */
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
-                   const std::vector<baldr::PathLocation>& destinations,
+                   const std::vector<Location>& destinations,
                    uint16_t origin_idx,
                    labelset_ptr_t labelset,
                    const midgard::DistanceApproximator<midgard::PointLL>& approximator,

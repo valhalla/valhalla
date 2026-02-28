@@ -20,10 +20,10 @@ class CandidateQuery {
 public:
   virtual ~CandidateQuery() = default;
 
-  virtual std::vector<baldr::PathLocation> Query(const midgard::PointLL& point,
-                                                 baldr::Location::StopType stop_type,
-                                                 float radius,
-                                                 const sif::cost_ptr_t& costing = nullptr) const = 0;
+  virtual std::vector<Location> Query(const midgard::PointLL& point,
+                                      Location_Type stop_type,
+                                      float radius,
+                                      const sif::cost_ptr_t& costing = nullptr) const = 0;
 };
 
 class CandidateGridQuery final : public CandidateQuery {
@@ -34,14 +34,14 @@ public:
 
   ~CandidateGridQuery() override;
 
-  std::vector<baldr::PathLocation> Query(const midgard::PointLL& location,
-                                         baldr::Location::StopType stop_type,
-                                         float sq_search_radius,
-                                         const sif::cost_ptr_t& costing) const override;
+  std::vector<Location> Query(const midgard::PointLL& location,
+                              Location_Type stop_type,
+                              float sq_search_radius,
+                              const sif::cost_ptr_t& costing) const override;
 
   template <typename Collector>
   auto Query(const midgard::PointLL& location,
-             baldr::Location::StopType stop_type,
+             Location_Type stop_type,
              float sq_search_radius,
              const sif::cost_ptr_t& costing,
              const Collector& collector) const {
