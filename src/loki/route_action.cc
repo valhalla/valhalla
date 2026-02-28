@@ -110,6 +110,8 @@ void loki_worker_t::route(Api& request) {
   std::unordered_map<size_t, size_t> color_counts;
   try {
     auto* locations = options.mutable_locations();
+    locations->begin()->set_minimum_inbound_reachability(0);
+    locations->rbegin()->set_minimum_outbound_reachability(0);
     auto locations_end = locations->end();
 
     // maybe squeeze in the first and last locations of each user specified feature for cost factor
@@ -171,7 +173,7 @@ void loki_worker_t::route(Api& request) {
       const auto& correlated_start = locations_end + 2 * i;
       line.mutable_locations()->Add(std::move(*correlated_start));
       const auto& correlated_end = locations_end + 2 * i + 1;
-      line.mutable_locations()->Add(std::move(*correlated_start));
+      line.mutable_locations()->Add(std::move(*correlated_end));
       ++i;
     }
     // and remove the first and last cost factor lines from the locations again

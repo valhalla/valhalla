@@ -353,7 +353,7 @@ struct bin_handler_t {
           auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
           valhalla::PathEdge path_edge;
-          path_edge.set_graph_id(id);
+          path_edge.set_graph_id(other_id);
           path_edge.set_percent_along(1);
           path_edge.mutable_ll()->set_lat(node_ll.lat());
           path_edge.mutable_ll()->set_lng(node_ll.lng());
@@ -783,9 +783,6 @@ private:
       correlated_edges.reserve(pp.reachable.size());
       correlated_edges.clear();
       // go through getting all the results for this one
-      // PathLocation correlated(pp.location);
-      // TODO: this is already in PathLocation, use it there
-      // std::vector<PathLocation::PathEdge> filtered;
       for (const auto& candidate : pp.reachable) {
         auto pp_pt = point_ll_from_latlng(pp.location->ll());
         // this may be at a node, either because it was the closest thing or from snap tolerance
@@ -827,9 +824,6 @@ private:
         auto new_end = std::stable_partition(edges->begin(), edges->end(),
                                              [](const PathEdge& e) { return !e.end_node(); });
         // move them to the end
-        // pp.location.mutable_correlation()->mutable_filtered_edges().insert(filtered.end(),
-        // std::make_move_iterator(new_end),
-        //                 std::make_move_iterator(correlated.edges.end()));
         for (auto it = new_end; it != edges->end(); ++it) {
           *filtered_edges->Add() = std::move(*it);
         }
@@ -861,9 +855,11 @@ private:
                       filtered_edge.set_distance(filtered_edge.distance() + 3600.0f +
                                                  max_dist_edge->distance());
                     });
-      // filtered_edges.insert(correlated.filtered_edges.end(),
-      //                                  std::make_move_iterator(filtered.begin()),
-      //                                  std::make_move_iterator(filtered.end()));
+      for (auto& e : *pp.location->mutable_correlation()->mutable_edges()) {
+        for (const auto& name : reader.edgeinfo(GraphId(e.graph_id())).GetNames()) {
+          *e.mutable_names()->Add() = name;
+        }
+      }
     }
   }
 };
