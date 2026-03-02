@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-// option optimize_for = LITE_RUNTIME;
+option optimize_for = LITE_RUNTIME;
 package valhalla;
 
 message Isochrone {
