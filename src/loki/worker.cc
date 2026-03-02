@@ -28,10 +28,25 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 
   if (locations->size()) {
     for (auto& location : *locations) {
-      if (!location.has_minimum_reachability_case())
-        location.set_minimum_reachability(default_reachability);
-      else if (location.minimum_reachability() > max_reachability)
-        location.set_minimum_reachability(max_reachability);
+      // we need to support both `minimum_reachability` and its directed (inbound/outbound) variants
+      bool has_reachability = (location.has_minimum_reachability_case() ||
+                               location.has_minimum_inbound_reachability_case() ||
+                               location.has_minimum_outbound_reachability_case());
+      bool has_direction_agnostic_reachability = location.has_minimum_reachability_case();
+
+      location.set_minimum_inbound_reachability(
+          !has_reachability ? default_reachability
+                            : std::min(has_direction_agnostic_reachability
+                                           ? location.minimum_reachability()
+                                           : location.minimum_inbound_reachability(),
+                                       max_reachability));
+
+      location.set_minimum_outbound_reachability(
+          !has_reachability ? default_reachability
+                            : std::min(has_direction_agnostic_reachability
+                                           ? location.minimum_reachability()
+                                           : location.minimum_outbound_reachability(),
+                                       max_reachability));
 
       if (!location.has_radius_case())
         location.set_radius(default_radius);
@@ -65,8 +80,22 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
       if (!location.has_street_side_tolerance_case())
         location.set_street_side_tolerance(default_street_side_tolerance);
 
+      if (!location.has_street_side_cutoff_case())
+        location.set_street_side_cutoff(valhalla::RoadClass::kServiceOther);
+
       if (!location.has_street_side_max_distance_case())
         location.set_street_side_max_distance(default_street_side_max_distance);
+
+      if (!location.has_search_filter() || !location.search_filter().has_min_road_class_case())
+        location.mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
+      if (!location.search_filter().has_max_road_class_case())
+        location.mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
+      if (!location.search_filter().has_exclude_closures_case())
+        location.mutable_search_filter()->set_exclude_closures(true);
+      if (!location.search_filter().has_exclude_closures_case())
+        location.mutable_search_filter()->set_exclude_closures(true);
+      if (!location.search_filter().has_level())
+        location.mutable_search_filter()->set_level(baldr::kMaxLevel);
     }
     if (has_302)
       add_warning(request, 302, std::to_string(kDefaultIndoorSearchCutoff));
@@ -134,24 +163,23 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       throw valhalla_exception_t{157, std::to_string(max_exclude_locations)};
     }
     try {
-      auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
-      auto results = search_.search(exclude_locations, costing);
+      search_.search(*options.mutable_exclude_locations(), costing);
       std::unordered_set<uint64_t> avoids;
       auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
-      for (const auto& result : results) {
-        for (const auto& edge : result.second.edges) {
-          auto inserted = avoids.insert(edge.id);
+      for (const auto& result : options.exclude_locations()) {
+        for (const auto& edge : result.correlation().edges()) {
+          auto inserted = avoids.insert(GraphId(edge.graph_id()));
 
           // If this edge Id was inserted add it to the request options (along with percent along)
           // Also insert shortcut edge if one includes this edge
           if (inserted.second) {
             // Add edge and percent along to pbf
             auto* avoid = co.add_exclude_edges();
-            avoid->set_id(edge.id);
-            avoid->set_percent_along(edge.percent_along);
+            avoid->set_id(GraphId(edge.graph_id()));
+            avoid->set_percent_along(edge.percent_along());
 
             // Check if a shortcut exists
-            GraphId shortcut = reader->GetShortcut(edge.id);
+            GraphId shortcut = reader->GetShortcut(GraphId(edge.graph_id()));
             if (shortcut.is_valid()) {
               // Check if this shortcut has not been added
               auto shortcut_inserted = avoids.insert(shortcut);

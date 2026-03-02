@@ -16,7 +16,7 @@ public:
               float gps_accuracy,
               float search_radius,
               double epoch_time = -1.f,
-              baldr::Location::StopType stop_type = baldr::Location::StopType::VIA)
+              Location_Type stop_type = Location_Type_kVia)
       : lnglat_(lnglat), gps_accuracy_(gps_accuracy), search_radius_(search_radius),
         epoch_time_(epoch_time), stop_type_(stop_type) {
     if (gps_accuracy_ < 0.f) {
@@ -52,11 +52,10 @@ public:
   }
 
   bool is_break_point() const {
-    return stop_type_ == baldr::Location::StopType::BREAK ||
-           stop_type_ == baldr::Location::StopType::BREAK_THROUGH;
+    return stop_type_ == Location_Type_kBreak || stop_type_ == Location_Type_kBreakThrough;
   }
 
-  baldr::Location::StopType stop_type() const {
+  Location_Type stop_type() const {
     return stop_type_;
   }
 
@@ -69,7 +68,7 @@ private:
 
   double epoch_time_;
 
-  baldr::Location::StopType stop_type_;
+  Location_Type stop_type_;
 };
 
 } // namespace meili

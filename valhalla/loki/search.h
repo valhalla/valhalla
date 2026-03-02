@@ -3,7 +3,6 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
@@ -34,8 +33,8 @@ public:
    * @return pathLocations the correlated data within the tile that matches the inputs. If a
    * projection is not found, it will not have any entry in the returned value.
    */
-  std::unordered_map<baldr::Location, baldr::PathLocation>
-  search(const std::vector<baldr::Location>& locations, const sif::cost_ptr_t& costing);
+  void search(google::protobuf::RepeatedPtrField<Location>& locations,
+              const sif::cost_ptr_t& costing);
 
 private:
   baldr::GraphReader& reader_;

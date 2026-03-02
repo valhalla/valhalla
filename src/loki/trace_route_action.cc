@@ -153,12 +153,15 @@ void loki_worker_t::trace(Api& request) {
 // actually use the display_ll now as its  used in loki::Search
 void loki_worker_t::locations_from_shape(Api& request) {
   auto& options = *request.mutable_options();
-  std::vector<baldr::Location> locations{PathLocation::fromPBF(*options.shape().begin()),
-                                         PathLocation::fromPBF(*options.shape().rbegin())};
-  locations.front().node_snap_tolerance_ = 0.f;
-  locations.front().radius_ = 10;
-  locations.back().node_snap_tolerance_ = 0.f;
-  locations.back().radius_ = 10;
+  auto* shape = request.mutable_options()->mutable_shape();
+  shape->begin()->set_node_snap_tolerance(0.f);
+  shape->begin()->set_radius(10);
+  shape->rbegin()->set_node_snap_tolerance(0.f);
+  shape->rbegin()->set_radius(10);
+
+  options.mutable_locations()->Clear();
+  options.mutable_locations()->Add()->CopyFrom(*shape->begin());
+  options.mutable_locations()->Add()->CopyFrom(*shape->rbegin());
 
   // Add first and last correlated locations to request
   try {
@@ -174,12 +177,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
 
     // Project first and last shape point onto nearest edge(s). Clear current locations list
     // and set the path locations
-    auto projections = search_.search(locations, costing);
-    options.clear_locations();
-    PathLocation::toPBF(projections.at(locations.front()), options.mutable_locations()->Add(),
-                        *reader);
-    PathLocation::toPBF(projections.at(locations.back()), options.mutable_locations()->Add(),
-                        *reader);
+    search_.search(*options.mutable_locations(), costing);
 
     // If locations were provided, backfill the origin and dest lat,lon and update
     // side of street on associated edges. TODO - create a constant for side of street

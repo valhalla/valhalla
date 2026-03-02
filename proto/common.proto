@@ -162,11 +162,17 @@ message Location {
   oneof has_street_side_cutoff {
     RoadClass street_side_cutoff = 30;
   }
-
+  oneof has_minimum_inbound_reachability {
+    uint32 minimum_inbound_reachability = 31;
+  }
+  oneof has_minimum_outbound_reachability {
+    uint32 minimum_outbound_reachability = 32;
+  }
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
   Correlation correlation = 90;
   string time_zone_offset = 91;
   string time_zone_name = 92;
+  bool transit_available = 93;
 }
 
 message TransitEgressInfo {

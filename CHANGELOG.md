@@ -5,6 +5,7 @@
    * FIXED: Clamp grades on bridges and tunnels. [#5728](https://github.com/valhalla/valhalla/pull/5728)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
+   * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**

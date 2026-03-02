@@ -1,7 +1,6 @@
 #include "mjolnir/landmarks.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
-#include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "midgard/sequence.h"
@@ -327,31 +326,24 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
       // find and collect all nearby path locations for the landmarks
       for (const auto& landmark : landmarks) {
-        baldr::Location landmark_location(midgard::PointLL{landmark.lng, landmark.lat},
-                                          baldr::Location::StopType::BREAK, 0, 0, kLandmarkRadius);
-        landmark_location.search_cutoff_ = kLandmarkSearchCutoff;
+        google::protobuf::RepeatedPtrField<Location> landmark_locs;
+        auto* landmark_loc = landmark_locs.Add();
+        landmark_loc->mutable_ll()->set_lat(landmark.lat);
+        landmark_loc->mutable_ll()->set_lng(landmark.lng);
+        landmark_loc->set_type(Location_Type_kBreak);
+        landmark_loc->set_radius(kLandmarkRadius);
+        landmark_loc->set_search_cutoff(kLandmarkSearchCutoff);
 
         // call loki::Search to get nearby edges to each landmark
-        std::unordered_map<valhalla::baldr::Location, PathLocation> result =
-            search.search({landmark_location}, sif::CreateNoCost({}));
+        search.search(landmark_locs, sif::CreateNoCost({}));
 
         // we only have one landmark as input so the return size should be no more than one
-        if (result.size() > 1) {
-          throw std::logic_error(
-              "Error occurred in finding nearby edges to a landmark. Result size is " +
-              std::to_string(result.size()) + ", but should be one or zero");
-        }
-        // if the landmark should not be associated with any edge
-        if (result.size() == 0) {
-          continue;
-        }
 
-        std::vector<PathLocation::PathEdge> edges = result.begin()->second.edges;
         // for each edge insert edgeid - landmark_pkey pair into the sequence file
         // TODO: maybe do some filtering and only keep some of the edges it finds? (now we have the
         //  75m search cutoff)
-        for (const auto& edge : edges) {
-          seq_file.push_back(std::make_pair(edge.id, landmark.id));
+        for (const auto& edge : landmark_loc->correlation().edges()) {
+          seq_file.push_back(std::make_pair(GraphId(edge.graph_id()), landmark.id));
         }
       }
     }

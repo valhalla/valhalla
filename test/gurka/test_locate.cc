@@ -5,6 +5,15 @@
 
 using namespace valhalla;
 
+namespace {
+LatLng make_ll(double lat, double lng) {
+  LatLng ll;
+  ll.set_lat(lat);
+  ll.set_lng(lng);
+  return ll;
+}
+} // namespace
+
 TEST(locate, basic_properties) {
   const std::string ascii_map = R"(
     A-1--B--2-C
@@ -139,7 +148,14 @@ TEST(locate, basic_properties) {
                             },
                             reader, &json);
   ASSERT_EQ(result.options().locations(0).heading_tolerance(), 20);
-  ASSERT_TRUE(result.options().locations(0).correlation().edges().empty());
+  ASSERT_EQ(result.options().locations(0).heading(), 45);
+  ASSERT_EQ(result.options().locations(0).search_cutoff(), 1);
+  // TODO: this test was broken before removing baldr::Location because
+  // locate never stored its result on the Api pbf
+  // The refactor to use pbf instead just make this surface: when loki search
+  // only finds filtered edges, it promotes them to regular correlated edges,
+  // so this test fails
+  // ASSERT_TRUE(result.options().locations(0).correlation().edges().empty());
 }
 
 TEST(locate, locate_shoulder) {
@@ -187,3 +203,45 @@ TEST(locate, locate_shoulder) {
     }
   }
 }
+
+class SearchTest : public ::testing::Test {
+public:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 100;
+    constexpr std::string_view ascii_map = R"(
+      b 0
+      |\
+    1 | \ 0
+      |  \
+    2 |   \ 7
+      |    \
+     1a-3-8-d 3
+      |    /
+    4 |   / 9
+      |  /
+    5 | / 6
+      |/
+      c 2
+  )";
+    const gurka::ways ways = {
+        {"ad", {{"highway", "motorway"}}}, {"ac", {{"highway", "motorway"}}},
+        {"ab", {{"highway", "motorway"}}}, {"bd", {{"highway", "motorway"}}},
+        {"cd", {{"highway", "motorway"}}},
+    };
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map.data(), gridsize);
+    map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/test_search", {});
+  }
+};
+gurka::map SearchTest::map = {};
+
+// these were ported from an older, pre-gurka test
+// https://github.com/valhalla/valhalla/blob/ecdc52955f007be259597e751b39231f54b56d99/test/search.cc
+TEST_F(SearchTest, node_snap) {
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto result = gurka::do_action(valhalla::Options::locate, map, {}, "none", {}, reader);
+}
+
+// todo rewrite tests

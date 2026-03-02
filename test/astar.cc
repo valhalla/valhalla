@@ -1,6 +1,5 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/location.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "gurka.h"
@@ -50,6 +49,25 @@ namespace vo = valhalla::odin;
 namespace vr = valhalla::tyr;
 
 namespace {
+
+void locations_from_ll(Api& request, const std::vector<valhalla::midgard::PointLL>& nodes) {
+  for (const auto& pt : nodes) {
+    auto* loc = request.mutable_options()->mutable_locations()->Add();
+    loc->mutable_ll()->set_lat(pt.lat());
+    loc->mutable_ll()->set_lng(pt.lng());
+  }
+}
+void locations_from_nodes(Api& request,
+                          const std::vector<std::string>& nodes,
+                          const gurka::nodelayout& node_locations) {
+  std::vector<midgard::PointLL> pts;
+  pts.reserve(nodes.size());
+  for (const std::string& node : nodes) {
+    pts.push_back(node_locations.at(node));
+  }
+
+  locations_from_ll(request, pts);
+}
 
 // ph34r the ASCII art diagram:
 //
@@ -218,21 +236,6 @@ void create_costing_options(Options& options, Costing::Type costing) {
   options.set_costing_type(costing);
   sif::ParseCosting(doc, "/costing_options", options);
 }
-// Convert locations to format needed by PathAlgorithm
-std::vector<valhalla::Location> ToPBFLocations(const std::vector<vb::Location>& locations,
-                                               vb::GraphReader& graphreader,
-                                               const std::shared_ptr<vs::DynamicCost>& costing) {
-  loki::Search search(graphreader);
-  const auto projections = search.search(locations, costing);
-  std::vector<valhalla::Location> result;
-  for (const auto& loc : locations) {
-    valhalla::Location pbfLoc;
-    const auto& correlated = projections.at(loc);
-    PathLocation::toPBF(correlated, &pbfLoc, graphreader);
-    result.emplace_back(std::move(pbfLoc));
-  }
-  return result;
-}
 
 enum class TrivialPathTest {
   MatchesEdge,
@@ -311,35 +314,26 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
 // to D appear first in the PathLocation.
 void TestTrivialPath(vt::PathAlgorithm& astar) {
 
-  Options options;
-  create_costing_options(options, Costing::auto_);
+  Api request;
+  create_costing_options(*request.mutable_options(), Costing::auto_);
   sif::TravelMode mode;
-  auto mode_costing = sif::CostFactory().CreateModeCosting(options, mode);
+  auto mode_costing = sif::CostFactory().CreateModeCosting(*request.mutable_options(), mode);
 
-  auto reader = get_graph_reader(test_dir);
+  // auto reader = get_graph_reader(test_dir);
+  auto config = test::make_config(test_dir);
 
-  std::vector<valhalla::baldr::Location> locations;
-  locations.push_back({node_locations["1"]});
-  locations.push_back({node_locations["2"]});
-
-  loki::Search search(*reader);
-  const auto projections = search.search(locations, mode_costing[static_cast<size_t>(mode)]);
-  valhalla::Location origin;
-  {
-    const auto& correlated = projections.at(locations[0]);
-    PathLocation::toPBF(correlated, &origin, *reader);
-    origin.set_date_time("2019-11-21T13:05");
+  locations_from_nodes(request, {"1", "2"}, node_locations);
+  for (auto& loc : *request.mutable_options()->mutable_locations()) {
+    loc.set_date_time("2019-11-21T13:05");
   }
-  valhalla::Location dest;
-  {
-    const auto& correlated = projections.at(locations[1]);
-    PathLocation::toPBF(correlated, &dest, *reader);
-    dest.set_date_time("2019-11-21T13:05");
-  }
+
+  loki::loki_worker_t loki_worker(config);
+  loki_worker.locate(request);
 
   // this should go along the path from A to B
-  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 3116,
-                         vs::TravelMode::kDrive);
+  assert_is_trivial_path(astar, *request.mutable_options()->mutable_locations(0),
+                         *request.mutable_options()->mutable_locations(1), 1,
+                         TrivialPathTest::DurationEqualTo, 3116, vs::TravelMode::kDrive);
 }
 
 TEST(Astar, TestTrivialPathForward) {
@@ -356,68 +350,44 @@ TEST(Astar, TestTrivialPathReverse) {
 // to G appear first in the PathLocation.
 TEST(Astar, TestTrivialPathTriangle) {
 
-  Options options;
-  create_costing_options(options, Costing::pedestrian);
-  vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
+  Api request;
+  create_costing_options(*request.mutable_options(), Costing::auto_);
+  sif::TravelMode mode;
+  auto mode_costing = sif::CostFactory().CreateModeCosting(*request.mutable_options(), mode);
 
-  auto reader = get_graph_reader(test_dir);
+  // auto reader = get_graph_reader(test_dir);
+  auto config = test::make_config(test_dir);
 
-  std::vector<valhalla::baldr::Location> locations;
-  locations.push_back({node_locations["4"]});
-  locations.push_back({node_locations["5"]});
+  locations_from_nodes(request, {"4", "5"}, node_locations);
 
-  loki::Search search(*reader);
-  const auto projections = search.search(locations, costs[static_cast<size_t>(mode)]);
-  valhalla::Location origin;
-  {
-    const auto& correlated = projections.at(locations[0]);
-    PathLocation::toPBF(correlated, &origin, *reader);
-  }
-  valhalla::Location dest;
-  {
-    const auto& correlated = projections.at(locations[1]);
-    PathLocation::toPBF(correlated, &dest, *reader);
-  }
+  loki::loki_worker_t loki_worker(config);
+  loki_worker.locate(request);
 
-  // TODO This fails with graphindex out of bounds for Reverse direction, is this
-  // related to why we short-circuit trivial routes to AStarPathAlgorithm in route_action.cc?
-  //
   vt::TimeDepForward astar;
   // this should go along the path from E to F
-  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 4231,
-                         vs::TravelMode::kPedestrian);
+  assert_is_trivial_path(astar, request.mutable_options()->mutable_locations()->at(0),
+                         request.mutable_options()->mutable_locations()->at(1), 1,
+                         TrivialPathTest::DurationEqualTo, 4231, vs::TravelMode::kPedestrian);
 }
 
 void TestPartialDuration(vt::PathAlgorithm& astar) {
   // Tests that a partial duration is returned when starting on a partial edge
 
-  Options options;
-  create_costing_options(options, Costing::auto_);
-  vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
+  Api request;
+  create_costing_options(*request.mutable_options(), Costing::auto_);
+  sif::TravelMode mode;
+  auto mode_costing = sif::CostFactory().CreateModeCosting(*request.mutable_options(), mode);
 
-  auto reader = get_graph_reader(test_dir);
+  // auto reader = get_graph_reader(test_dir);
+  auto config = test::make_config(test_dir);
 
-  std::vector<valhalla::baldr::Location> locations;
-  locations.push_back({node_locations["1"]});
-  locations.push_back({node_locations["3"]});
+  locations_from_nodes(request, {"1", "3"}, node_locations);
 
-  loki::Search search(*reader);
-  auto projections = search.search(locations, costs[static_cast<size_t>(mode)]);
-  valhalla::Location origin;
-  {
-    auto& correlated = projections.at(locations[0]);
-    PathLocation::toPBF(correlated, &origin, *reader);
-    origin.set_date_time("2019-11-21T13:05");
-  }
+  loki::loki_worker_t loki_worker(config);
+  loki_worker.locate(request);
 
-  valhalla::Location dest;
-  {
-    auto& correlated = projections.at(locations[1]);
-    PathLocation::toPBF(correlated, &dest, *reader);
-    dest.set_date_time("2019-11-21T13:05");
-  }
+  auto origin = request.options().locations().at(0);
+  auto dest = request.options().locations().at(1);
 
   uint32_t expected_duration = 7911;
 
@@ -1016,13 +986,6 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   // The other tests with Bayfront Singapore tests with a detour _before_
   // the complex restriction
 
-  Options options;
-  create_costing_options(options, Costing::auto_);
-  vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
-  ASSERT_TRUE(bool(costs[int(mode)]));
-  set_hierarchy_limits(costs[int(mode)], true);
-
   auto reader = get_graph_reader(test_dir);
 
   auto tile = reader->GetGraphTile(tile_id);
@@ -1045,49 +1008,41 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     expected_path.push_back("il");
     ASSERT_EQ(walked_path, expected_path) << "Wrong path";
   };
+  Api request;
+  create_costing_options(*request.mutable_options(), Costing::auto_);
+  vs::TravelMode mode;
+  auto mode_costing = sif::CostFactory().CreateModeCosting(*request.mutable_options(), mode);
+  set_hierarchy_limits(mode_costing[int(mode)], true);
 
-  std::vector<valhalla::baldr::Location> locations;
-  locations.push_back({node_locations["6"]});
-  locations.push_back({node_locations["7"]});
+  // auto reader = get_graph_reader(test_dir);
+  auto config = test::make_config(test_dir);
 
-  loki::Search search(*reader);
-  const auto projections = search.search(locations, costs[int(mode)]);
+  locations_from_nodes(request, {"6", "7"}, node_locations);
+  request.mutable_options()->mutable_locations(0)->set_date_time("2019-11-21T13:05");
 
-  std::vector<PathLocation> path_location;
-  for (const auto& loc : locations) {
-    ASSERT_NO_THROW(
-        path_location.push_back(projections.at(loc));
-        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), *reader);)
-        << "fail_invalid_origin";
-  }
+  loki::loki_worker_t loki_worker(config);
+  loki_worker.locate(request);
+
+  auto origin = request.options().locations().at(0);
+  auto dest = request.options().locations().at(1);
 
   // Set departure date for timedep forward
-  options.mutable_locations(0)->set_date_time("2019-11-21T13:05");
 
   {
     vt::TimeDepForward astar;
-    auto paths = astar
-                     .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                                  *reader, costs, mode)
-                     .front();
+    auto paths = astar.GetBestPath(origin, dest, *reader, mode_costing, mode).front();
 
     verify_paths(paths);
   }
   {
     vt::TimeDepReverse astar;
-    auto paths = astar
-                     .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                                  *reader, costs, mode)
-                     .front();
+    auto paths = astar.GetBestPath(origin, dest, *reader, mode_costing, mode).front();
 
     verify_paths(paths);
   }
   {
     vt::BidirectionalAStar astar;
-    auto paths = astar
-                     .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                                  *reader, costs, mode)
-                     .front();
+    auto paths = astar.GetBestPath(origin, dest, *reader, mode_costing, mode).front();
 
     verify_paths(paths);
   }
@@ -1274,29 +1229,23 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   // when the connecting edge is part of a complex restriction
 
   auto reader = get_graph_reader(test_dir);
-  Options options;
-  create_costing_options(options, Costing::auto_);
+  Api request;
+  create_costing_options(*request.mutable_options(), Costing::auto_);
   vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
-  ASSERT_TRUE(bool(costs[int(mode)]));
-  set_hierarchy_limits(costs[int(mode)], true);
+  auto mode_costing = sif::CostFactory().CreateModeCosting(*request.mutable_options(), mode);
+  set_hierarchy_limits(mode_costing[int(mode)], true);
 
-  std::vector<valhalla::baldr::Location> locations;
-  locations.push_back({node_locations["n"]});
-  locations.push_back({node_locations["i"]});
+  // auto reader = get_graph_reader(test_dir);
+  auto config = test::make_config(test_dir);
 
-  loki::Search search(*reader);
-  const auto projections = search.search(locations, costs[int(mode)]);
-  valhalla::Location origin;
-  {
-    const auto& correlated = projections.at(locations[0]);
-    PathLocation::toPBF(correlated, &origin, *reader);
-  }
-  valhalla::Location dest;
-  {
-    const auto& correlated = projections.at(locations[1]);
-    PathLocation::toPBF(correlated, &dest, *reader);
-  }
+  locations_from_nodes(request, {"n", "i"}, node_locations);
+  request.mutable_options()->mutable_locations(0)->set_date_time("2019-11-21T13:05");
+
+  loki::loki_worker_t loki_worker(config);
+  loki_worker.locate(request);
+
+  auto origin = request.options().locations().at(0);
+  auto dest = request.options().locations().at(1);
 
   // Test Bidirectional both for forward and reverse expansion
   boost::property_tree::ptree conf = test::make_config("");
@@ -1305,7 +1254,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   // Two tests where start and end lives on a partial complex restriction
   //      Under this circumstance the restriction should _not_ trigger
 
-  auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode);
+  auto paths = astar.GetBestPath(origin, dest, *reader, mode_costing, mode);
 
   std::vector<uint32_t> visited;
   for (auto& path_infos : paths) {
@@ -1328,7 +1277,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   // For the second test, just switch origin/destination and reverse expected,
   // result should be the same
   std::cout << "reversed test" << std::endl;
-  paths = astar.GetBestPath(dest, origin, *reader, costs, mode);
+  paths = astar.GetBestPath(dest, origin, *reader, mode_costing, mode);
 
   visited.clear();
   for (auto& path_infos : paths) {
@@ -1458,32 +1407,37 @@ TEST(ComplexRestriction, WalkVias) {
   // TODO Future improvement would be to make it simpler to quickly generate
   // tiles programmatically
   auto reader = get_graph_reader(test_dir);
-  Options options;
-  create_costing_options(options, Costing::auto_);
+  Api request;
+  create_costing_options(*request.mutable_options(), Costing::auto_);
   vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
-  auto costing = costs[int(mode)];
+  auto mode_costing = sif::CostFactory().CreateModeCosting(*request.mutable_options(), mode);
+  set_hierarchy_limits(mode_costing[int(mode)], true);
+
+  auto config = test::make_config(test_dir);
+
+  locations_from_nodes(request, {"7"}, node_locations);
+
+  loki::loki_worker_t loki_worker(config);
+  loki_worker.locate(request);
 
   bool is_forward = true;
   auto tile = reader->GetGraphTile(tile_id);
 
-  std::vector<valhalla::baldr::Location> locations;
-  locations.push_back({node_locations["7"]});
-  loki::Search search(*reader);
-  const auto projections = search.search(locations, costing);
-  const auto& correlated = projections.at(locations[0]);
-
-  ASSERT_EQ(correlated.edges.size(), 2) << "Expected only 2 edges in snapping response";
+  auto* locations = request.mutable_options()->mutable_locations();
+  ASSERT_EQ(locations->at(0).correlation().edges().size(), 2)
+      << "Expected 2 edges in snapping response";
 
   // Need to figure out if it's the forward or backward edge that we need to
   // use for walking
   const auto* cr = [&]() -> const ComplexRestriction* {
-    const auto first_id = correlated.edges.front().id;
-    auto restrictions = tile->GetComplexRestrictions(is_forward, first_id, costing->access_mode());
+    const auto first_id = GraphId(locations->at(0).correlation().edges().begin()->graph_id());
+    auto restrictions =
+        tile->GetComplexRestrictions(is_forward, first_id, mode_costing[size_t(mode)]->access_mode());
     if (!restrictions.empty())
       return &restrictions.front();
-    const auto second_id = correlated.edges.back().id;
-    restrictions = tile->GetComplexRestrictions(is_forward, second_id, costing->access_mode());
+    const auto second_id = GraphId(locations->at(0).correlation().edges().rbegin()->graph_id());
+    restrictions = tile->GetComplexRestrictions(is_forward, second_id,
+                                                mode_costing[size_t(mode)]->access_mode());
     if (!restrictions.empty())
       return &restrictions.front();
     return nullptr;
@@ -1493,19 +1447,21 @@ TEST(ComplexRestriction, WalkVias) {
 
   std::vector<GraphId> expected_vias;
   {
-    std::vector<valhalla::baldr::Location> via_locations;
-    via_locations.push_back({node_locations["V"]});
-    const auto via_projections = search.search(via_locations, costing);
-    const auto& via_correlated = via_projections.at(via_locations[0]);
-    ASSERT_EQ(via_correlated.edges.size(), 2) << "Should've found 2 edges for the via point";
+    locations->Clear();
+    locations_from_nodes(request, {"V"}, node_locations);
+    loki_worker.locate(request);
+    ASSERT_EQ(locations->at(0).correlation().edges().size(), 2)
+        << "Expected only 2 edges in snapping response";
 
-    auto* de1 = tile->directededge(via_correlated.edges.front().id);
-    auto* de2 = tile->directededge(via_correlated.edges.back().id);
+    auto* de1 =
+        tile->directededge(GraphId(locations->at(0).correlation().edges().begin()->graph_id()));
+    auto* de2 =
+        tile->directededge(GraphId(locations->at(0).correlation().edges().rbegin()->graph_id()));
     if (de1->part_of_complex_restriction()) {
-      expected_vias.push_back(via_correlated.edges.front().id);
+      expected_vias.push_back(GraphId(locations->at(0).correlation().edges().begin()->graph_id()));
     }
     if (de2->part_of_complex_restriction()) {
-      expected_vias.push_back(via_correlated.edges.back().id);
+      expected_vias.push_back(GraphId(locations->at(0).correlation().edges().rbegin()->graph_id()));
     }
     ASSERT_LE(expected_vias.size(), 2) << "Found too many edges - max should be 2 (2 DirectedEdges)";
     ASSERT_NE(expected_vias.size(), 0) << "Failed to find the via edge";
@@ -1540,41 +1496,32 @@ TEST(Astar, BiDirTrivial) {
   boost::property_tree::ptree config = test::make_config("");
   config.put("mjolnir.tile_dir", VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
   config.put<unsigned long>("mjolnir.id_table_size", 1000);
-  vb::GraphReader graph_reader(config.get_child("mjolnir"));
+  vb::GraphReader reader(config.get_child("mjolnir"));
 
-  // Locations
-  std::vector<valhalla::baldr::Location> locations;
-  baldr::Location origin(valhalla::midgard::PointLL(5.12696, 52.09701),
-                         baldr::Location::StopType::BREAK);
-  locations.push_back(origin);
-  baldr::Location dest(valhalla::midgard::PointLL(5.12700, 52.09709),
-                       baldr::Location::StopType::BREAK);
-  locations.push_back(dest);
-
-  // Costing
-  Options options;
-  create_costing_options(options, Costing::auto_);
+  Api request;
+  create_costing_options(*request.mutable_options(), Costing::auto_);
   vs::TravelMode mode;
-  auto mode_costing = vs::CostFactory().CreateModeCosting(options, mode);
-  const auto& cost = mode_costing[int(mode)];
-  set_hierarchy_limits(cost, true);
+  auto mode_costing = sif::CostFactory().CreateModeCosting(*request.mutable_options(), mode);
+  set_hierarchy_limits(mode_costing[int(mode)], true);
 
-  // Loki
-  vk::Search searcher(graph_reader);
-  const auto projections = searcher.search(locations, cost);
-  std::vector<PathLocation> path_location;
-  for (const auto& loc : locations) {
-    ASSERT_NO_THROW(
-        path_location.push_back(projections.at(loc));
-        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), graph_reader);)
-        << "fail_invalid_origin";
-  }
+  // baldr::Location origin(valhalla::midgard::PointLL(5.12696, 52.09701),
+  //                        baldr::Location::StopType::BREAK);
+  // locations.push_back(origin);
+  // baldr::Location dest(valhalla::midgard::PointLL(5.12700, 52.09709),
+  //                      baldr::Location::StopType::BREAK);
+  //
+  std::vector<valhalla::midgard::PointLL> pts{{5.12696, 52.09701}, {5.12700, 52.09709}};
+  locations_from_ll(request, pts);
+
+  loki::loki_worker_t loki_worker(config);
+  loki_worker.locate(request);
+
+  auto origin = request.options().locations().at(0);
+  auto dest = request.options().locations().at(1);
+  const auto& cost = mode_costing[int(mode)];
 
   vt::BidirectionalAStar astar;
-  auto path = astar
-                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                               graph_reader, mode_costing, mode)
-                  .front();
+  auto path = astar.GetBestPath(origin, dest, reader, mode_costing, mode).front();
 
   ASSERT_TRUE(path.size() == 1);
   EXPECT_LT(path.front().elapsed_cost.cost, 1);
@@ -1613,19 +1560,19 @@ TEST(BiDiAstar, test_recost_path) {
   const std::string test_dir = VALHALLA_BUILD_DIR "test/data/astar_shortcuts_recosting";
   const auto map = gurka::buildtiles(nodes, ways, {}, {}, test_dir);
 
-  vb::GraphReader graphreader(map.config.get_child("mjolnir"));
+  vb::GraphReader reader(map.config.get_child("mjolnir"));
 
   // before continue check that ABC is actually a shortcut
-  const auto ABC = gurka::findEdgeByNodes(graphreader, nodes, "A", "C");
+  const auto ABC = gurka::findEdgeByNodes(reader, nodes, "A", "C");
   ASSERT_TRUE(std::get<1>(ABC)->is_shortcut()) << "Expected ABC to be a shortcut";
   // before continue check that CDE is actually a shortcut
-  const auto CDE = gurka::findEdgeByNodes(graphreader, nodes, "C", "E");
+  const auto CDE = gurka::findEdgeByNodes(reader, nodes, "C", "E");
   ASSERT_TRUE(std::get<1>(CDE)->is_shortcut()) << "Expected CDE to be a shortcut";
 
-  auto const set_constrained_speed = [&graphreader, &test_dir](const std::vector<GraphId>& edge_ids) {
+  auto const set_constrained_speed = [&reader, &test_dir](const std::vector<GraphId>& edge_ids) {
     for (const auto& edgeid : edge_ids) {
       GraphId tileid(edgeid.tileid(), edgeid.level(), 0);
-      auto tile = graphreader.GetGraphTile(tileid);
+      auto tile = reader.GetGraphTile(tileid);
       vj::GraphTileBuilder tile_builder(test_dir, tileid, false);
       std::vector<DirectedEdge> edges;
       for (uint32_t j = 0; j < tile->header()->directededgecount(); ++j) {
@@ -1640,16 +1587,28 @@ TEST(BiDiAstar, test_recost_path) {
   };
   // set constrained speed for all superseded edges;
   // this speed will be used for them in costing model
-  set_constrained_speed(graphreader.RecoverShortcut(std::get<0>(ABC)));
-  set_constrained_speed(graphreader.RecoverShortcut(std::get<0>(CDE)));
+  set_constrained_speed(reader.RecoverShortcut(std::get<0>(ABC)));
+  set_constrained_speed(reader.RecoverShortcut(std::get<0>(CDE)));
   // reset cache to see updated speeds
-  graphreader.Clear();
+  reader.Clear();
 
-  Options options;
-  create_costing_options(options, Costing::auto_);
-  vs::TravelMode travel_mode = vs::TravelMode::kDrive;
+  Api request;
+  create_costing_options(*request.mutable_options(), Costing::auto_);
+  vs::TravelMode mode;
+
+  // auto reader = get_graph_reader(test_dir);
+  auto config = test::make_config(test_dir);
+
+  locations_from_nodes(request, {"1", "2"}, nodes);
+
+  loki::loki_worker_t loki_worker(config);
+  loki_worker.locate(request);
+
+  auto origin = request.options().locations().at(0);
+  auto dest = request.options().locations().at(1);
   // hack hierarchy limits to allow to go through the shortcut
-  auto hl = options.mutable_costings()
+  auto hl = request.mutable_options()
+                ->mutable_costings()
                 ->find(Costing::auto_)
                 ->second.mutable_options()
                 ->mutable_hierarchy_limits();
@@ -1660,36 +1619,26 @@ TEST(BiDiAstar, test_recost_path) {
     hl->insert({level.level, lims});
   }
 
-  const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
+  const auto mode_costing = vs::CostFactory().CreateModeCosting(request.options(), mode);
 
-  std::vector<vb::Location> locations;
-  // set origin location
-  locations.push_back({nodes["1"]});
-  // set destination location
-  locations.push_back({nodes["2"]});
-  auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
-  auto config = test::make_config("");
   vt::BidirectionalAStar astar;
 
-  const auto path =
-      astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
-          .front();
+  const auto path = astar.GetBestPath(origin, dest, reader, mode_costing, mode).front();
 
   // check that final path doesn't contain shortcuts
   for (const auto& info : path) {
-    const auto* edge = graphreader.directededge(info.edgeid);
+    const auto* edge = reader.directededge(info.edgeid);
     ASSERT_FALSE(edge->is_shortcut()) << "Final path shouldn't contain shortcuts";
   }
   // check that final path contains right number of edges
   ASSERT_EQ(path.size(), 6) << "Final path has wrong number of edges";
 
   // calculate edge duration based on length and speed
-  const auto get_edge_duration = [&graphreader, &mode_costing,
-                                  travel_mode](const vb::GraphId& edgeid,
-                                               const vb::DirectedEdge* edge) {
-    auto tile = graphreader.GetGraphTile(edgeid);
+  const auto get_edge_duration = [&reader, &mode_costing, mode](const vb::GraphId& edgeid,
+                                                                const vb::DirectedEdge* edge) {
+    auto tile = reader.GetGraphTile(edgeid);
     const float speed_meters_per_sec =
-        (1000.f / 3600.f) * tile->GetSpeed(edge, mode_costing[int(travel_mode)]->flow_mask());
+        (1000.f / 3600.f) * tile->GetSpeed(edge, mode_costing[int(mode)]->flow_mask());
     return edge->length() / speed_meters_per_sec;
   };
 
@@ -1698,7 +1647,7 @@ TEST(BiDiAstar, test_recost_path) {
   const std::vector<std::string> superseded_nodes = {"A", "B", "C", "D", "E"};
   for (size_t i = 0; (i + 1) < superseded_nodes.size(); ++i) {
     const auto edge =
-        gurka::findEdgeByNodes(graphreader, nodes, superseded_nodes[i], superseded_nodes[i + 1]);
+        gurka::findEdgeByNodes(reader, nodes, superseded_nodes[i], superseded_nodes[i + 1]);
     ASSERT_EQ(path[i + 1].edgeid, std::get<0>(edge)) << "Not expected edge in the path";
     EXPECT_NEAR((path[i + 1].elapsed_cost - path[i].elapsed_cost - path[i + 1].transition_cost).secs,
                 get_edge_duration(std::get<0>(edge), std::get<1>(edge)), 0.1f);
@@ -1744,12 +1693,13 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
   vs::TravelMode travel_mode = vs::TravelMode::kDrive;
   const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
 
-  std::vector<vb::Location> locations;
-  // set origin location
-  locations.push_back({nodes["1"]});
-  // set destination location
-  locations.push_back({nodes["2"]});
-  auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
+  std::vector<std::string> ns{"1", "2"};
+  auto* locations = options.mutable_locations();
+  for (const std::string& node : ns) {
+    auto* loc = locations->Add();
+    loc->mutable_ll()->set_lat(node_locations[node].lat());
+    loc->mutable_ll()->set_lng(node_locations[node].lng());
+  }
 
   vt::BidirectionalAStar astar;
 
@@ -1762,7 +1712,7 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
     }
   }
   const auto path =
-      astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
+      astar.GetBestPath(locations->at(0), locations->at(1), graphreader, mode_costing, travel_mode)
           .front();
 
   // collect names of base edges

@@ -129,8 +129,9 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/linear_feature_factors",
-                            {{"service_limits.min_linear_cost_factor", "0.00001"}});
+    map =
+        gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/linear_feature_factors",
+                          {{"service_limits.min_linear_cost_factor", "0.00001"}});
   }
 };
 gurka::map LinearFeatureTest::map = {};

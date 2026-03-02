@@ -22,9 +22,8 @@ std::string loki_worker_t::locate(Api& request) {
 
   // correlate the various locations to the underlying graph
   init_locate(request);
-  auto locations = PathLocation::fromPBF(request.options().locations());
-  auto projections = search_.search(locations, costing);
-  return tyr::serializeLocate(request, locations, projections, *reader);
+  search_.search(*request.mutable_options()->mutable_locations(), costing);
+  return tyr::serializeLocate(request, *reader);
 }
 
 } // namespace loki
