@@ -28,8 +28,7 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 
   if (locations->size()) {
     for (auto& location : *locations) {
-      // minimum_reachability is depracated in favor of inbound/outbound
-      // but we still support both
+      // we need to support both `minimum_reachability` and its directed (inbound/outbound) variants
       bool has_reachability = (location.has_minimum_reachability_case() ||
                                location.has_minimum_inbound_reachability_case() ||
                                location.has_minimum_outbound_reachability_case());
