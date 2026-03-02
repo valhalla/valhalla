@@ -86,6 +86,17 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 
       if (!location.has_street_side_max_distance_case())
         location.set_street_side_max_distance(default_street_side_max_distance);
+
+      if (!location.has_search_filter() || !location.search_filter().has_min_road_class_case())
+        location.mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
+      if (!location.search_filter().has_max_road_class_case())
+        location.mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
+      if (!location.search_filter().has_exclude_closures_case())
+        location.mutable_search_filter()->set_exclude_closures(true);
+      if (!location.search_filter().has_exclude_closures_case())
+        location.mutable_search_filter()->set_exclude_closures(true);
+      if (!location.search_filter().has_level())
+        location.mutable_search_filter()->set_level(baldr::kMaxLevel);
     }
     if (has_302)
       add_warning(request, 302, std::to_string(kDefaultIndoorSearchCutoff));

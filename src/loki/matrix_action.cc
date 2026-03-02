@@ -122,7 +122,7 @@ void loki_worker_t::matrix(Api& request) {
       if (i < options.sources_size()) {
         options.mutable_sources(i)->CopyFrom(l);
       } else {
-        options.mutable_targets(i)->CopyFrom(l);
+        options.mutable_targets(i - options.sources_size())->CopyFrom(l);
       }
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius

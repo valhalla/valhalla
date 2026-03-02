@@ -23,11 +23,6 @@ std::string loki_worker_t::locate(Api& request) {
   // correlate the various locations to the underlying graph
   init_locate(request);
   search_.search(*request.mutable_options()->mutable_locations(), costing);
-  size_t i = 0;
-  for (const auto& loc : request.options().locations()) {
-    LOG_ERROR("Correlated edges for location {}: {}", i, loc.correlation().edges_size());
-    ++i;
-  }
   return tyr::serializeLocate(request, *reader);
 }
 

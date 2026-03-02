@@ -79,6 +79,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     Location correlated;
     correlated.mutable_ll()->set_lat(location.lat());
     correlated.mutable_ll()->set_lng(location.lng());
+    correlated.set_type(stop_type);
 
     // For avoiding recomputing projection later
     const bool edge_included = !costing || costing->Allowed(edge, tile, sif::kDisallowShortcut);
@@ -96,10 +97,12 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
         }
         auto* path_edge = correlated.mutable_correlation()->mutable_edges()->Add();
         path_edge->set_graph_id(edgeid);
-        path_edge->set_distance(dist);
+        path_edge->set_percent_along(dist);
         path_edge->mutable_ll()->set_lat(point.lat());
         path_edge->mutable_ll()->set_lng(point.lng());
         path_edge->set_distance(sq_distance);
+        path_edge->set_begin_node(dist == 0.f);
+        path_edge->set_end_node(dist == 1.f);
       }
     }
 
@@ -120,11 +123,13 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
           snapped_node = edge->endnode();
         }
         auto* path_edge = correlated.mutable_correlation()->mutable_edges()->Add();
-        path_edge->set_graph_id(edgeid);
-        path_edge->set_distance(dist);
+        path_edge->set_graph_id(opp_edgeid);
+        path_edge->set_percent_along(dist);
         path_edge->mutable_ll()->set_lat(point.lat());
         path_edge->mutable_ll()->set_lng(point.lng());
         path_edge->set_distance(sq_distance);
+        path_edge->set_begin_node(dist == 0.f);
+        path_edge->set_end_node(dist == 1.f);
       }
     }
 

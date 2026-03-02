@@ -153,11 +153,15 @@ void loki_worker_t::trace(Api& request) {
 // actually use the display_ll now as its  used in loki::Search
 void loki_worker_t::locations_from_shape(Api& request) {
   auto& options = *request.mutable_options();
-  auto* locations = request.mutable_options()->mutable_shape();
-  locations->begin()->set_node_snap_tolerance(0.f);
-  locations->begin()->set_radius(10);
-  locations->rbegin()->set_node_snap_tolerance(0.f);
-  locations->rbegin()->set_radius(10);
+  auto* shape = request.mutable_options()->mutable_shape();
+  shape->begin()->set_node_snap_tolerance(0.f);
+  shape->begin()->set_radius(10);
+  shape->rbegin()->set_node_snap_tolerance(0.f);
+  shape->rbegin()->set_radius(10);
+
+  options.mutable_locations()->Clear();
+  options.mutable_locations()->Add()->CopyFrom(*shape->begin());
+  options.mutable_locations()->Add()->CopyFrom(*shape->rbegin());
 
   // Add first and last correlated locations to request
   try {
@@ -173,8 +177,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
 
     // Project first and last shape point onto nearest edge(s). Clear current locations list
     // and set the path locations
-    search_.search(*locations, costing);
-    options.mutable_locations()->Swap(locations);
+    search_.search(*options.mutable_locations(), costing);
 
     // If locations were provided, backfill the origin and dest lat,lon and update
     // side of street on associated edges. TODO - create a constant for side of street

@@ -846,16 +846,23 @@ private:
       // use the max score of the non filtered edges as a penalty increase on each of the
       // filtered edges so that when finding a route using non filtered edges fails the
       // use of filtered edges are always penalized higher than the non filtered ones
-      auto max_dist_edge =
-          std::max_element(edges->begin(), edges->end(), [](const PathEdge& a, const PathEdge& b) {
-            return a.distance() < b.distance();
-          });
-      std::for_each(filtered_edges->begin(), filtered_edges->end(),
-                    [&max_dist_edge](PathEdge& filtered_edge) {
-                      filtered_edge.set_distance(filtered_edge.distance() + 3600.0f +
-                                                 max_dist_edge->distance());
-                    });
+      if (edges->size() > 0 && filtered_edges->size() > 0) {
+        auto max_dist_edge =
+            std::max_element(edges->begin(), edges->end(), [](const PathEdge& a, const PathEdge& b) {
+              return a.distance() < b.distance();
+            });
+        std::for_each(filtered_edges->begin(), filtered_edges->end(),
+                      [&max_dist_edge](PathEdge& filtered_edge) {
+                        filtered_edge.set_distance(filtered_edge.distance() + 3600.0f +
+                                                   max_dist_edge->distance());
+                      });
+      }
       for (auto& e : *pp.location->mutable_correlation()->mutable_edges()) {
+        for (const auto& name : reader.edgeinfo(GraphId(e.graph_id())).GetNames()) {
+          *e.mutable_names()->Add() = name;
+        }
+      }
+      for (auto& e : *pp.location->mutable_correlation()->mutable_filtered_edges()) {
         for (const auto& name : reader.edgeinfo(GraphId(e.graph_id())).GetNames()) {
           *e.mutable_names()->Add() = name;
         }
