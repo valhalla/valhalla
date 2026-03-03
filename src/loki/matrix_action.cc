@@ -117,7 +117,7 @@ void loki_worker_t::matrix(Api& request) {
   std::unordered_map<size_t, size_t> color_counts;
   try {
     search_.search(sources_targets, costing);
-    for (size_t i = 0; i < sources_targets.size(); ++i) {
+    for (int i = 0; i < sources_targets.size(); ++i) {
       const auto& l = sources_targets[i];
       if (i < options.sources_size()) {
         options.mutable_sources(i)->CopyFrom(l);
@@ -147,7 +147,7 @@ void loki_worker_t::matrix(Api& request) {
   }
   bool connected = false;
   for (const auto& c : color_counts) {
-    if (c.second == sources_targets.size()) {
+    if (static_cast<int>(c.second) == sources_targets.size()) {
       connected = true;
       break;
     }
