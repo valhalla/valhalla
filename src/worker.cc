@@ -39,8 +39,75 @@ static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexc
   }
 };
 #endif // ENABLE_SERVICES
-       //
+
 namespace {
+
+// Parses exclude_layers from JSON and adds them to the request's tile options
+void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
+  static const std::unordered_set<std::string_view> kSupportedLayers = {valhalla::kEdgeLayerName,
+                                                                        valhalla::kNodeLayerName,
+                                                                        valhalla::kShortcutLayerName};
+
+  if (exclude_layers.has_value() && exclude_layers->IsArray()) {
+    for (const auto& lyr : exclude_layers->GetArray()) {
+      if (lyr.IsString()) {
+        const auto& lyr_name = lyr.GetString();
+        if (kSupportedLayers.contains(lyr_name)) {
+          request.mutable_options()->mutable_tile_options()->add_exclude_layers(lyr_name);
+          continue;
+        }
+      }
+      add_warning(request, 212, lyr.IsString() ? lyr.GetString() : "not a string");
+    }
+  }
+}
+
+bool is_format_supported(Options::Action action, Options::Format format) {
+  constexpr uint16_t kFormatActionSupport[] = {
+      // json
+      0xFFFF, // all actions support json
+      // gpx
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route),
+      // osrm
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
+          (1 << Options::trace_attributes) | (1 << Options::locate) | (1 << Options::status) |
+          (1 << Options::sources_to_targets) | (1 << Options::expansion),
+      // pbf
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
+          (1 << Options::centroid) | (1 << Options::trace_attributes) | (1 << Options::status) |
+          (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion),
+  // geotiff
+#ifdef ENABLE_GEOTIFF
+      (1 << Options::isochrone),
+#else
+      0,
+#endif
+      // mvt
+      (1 << Options::tile),
+  };
+  static_assert(std::size(kFormatActionSupport) == Options::Format_ARRAYSIZE,
+                "Please update format_action array to match Options::Action_ARRAYSIZE");
+
+  if (Options::Action_IsValid(action) && Options::Format_IsValid(format)) {
+    return (kFormatActionSupport[format] & (1 << action)) != 0;
+  } else {
+    return false;
+  }
+}
+
+rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
+  rapidjson::Document d;
+  if (json.empty()) {
+    d.SetObject();
+    return d;
+  }
+  d.Parse(json.c_str());
+  if (d.HasParseError()) {
+    throw e;
+  }
+  return d;
+}
+
 bool add_date_to_locations(Options& options,
                            google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                            const std::string& node) {
@@ -76,15 +143,52 @@ bool add_date_to_locations(Options& options,
            return !loc.date_time().empty();
          }) != locations.end();
 }
-} // namespace
 
-namespace valhalla {
+// Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
+// PBF objects of the sort "repeated LatLng". Invalid rings will be corrected during search operation.
+template <typename ring_pbf_t>
+void parse_ring(ring_pbf_t* ring, const rapidjson::Value& coord_array) {
 
-void parse_json_location(valhalla::Location* location,
-                         const rapidjson::Value& r_loc,
-                         Api& request,
-                         const boost::optional<bool>& ignore_closures,
-                         bool is_last_loc) {
+  // for protobuf we just validate what is there
+  if (ring->coords_size()) {
+    if (ring->coords_size() < 2)
+      throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
+    for (auto& coord : *ring->mutable_coords()) {
+      if (!coord.has_lat_case() || !coord.has_lng_case())
+        throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
+
+      coord.set_lng(midgard::circular_range_clamp<double>(coord.lng(), -180, 180));
+      if (coord.lat() < -90.0 || coord.lat() > 90.0) {
+        throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+      }
+    }
+    return;
+  }
+
+  // for json we need to do some parsing
+  for (const auto& coords : coord_array.GetArray()) {
+    if (coords.Size() < 2) {
+      throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
+    }
+
+    double lon = coords[0].GetDouble();
+    lon = midgard::circular_range_clamp<double>(lon, -180, 180);
+    double lat = coords[1].GetDouble();
+    if (lat < -90.0 || lat > 90.0) {
+      throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+    }
+
+    auto* ll = ring->add_coords();
+    ll->set_lng(lon);
+    ll->set_lat(lat);
+  }
+}
+
+void parse_location(valhalla::Location* location,
+                    const rapidjson::Value& r_loc,
+                    Api& request,
+                    const boost::optional<bool>& ignore_closures,
+                    bool is_last_loc) {
   auto lat = rapidjson::get_optional<double>(r_loc, "/lat");
   if (location->has_ll() && location->ll().has_lat_case()) {
     lat = location->ll().lat();
@@ -154,16 +258,6 @@ void parse_json_location(valhalla::Location* location,
   auto minimum_reachability = rapidjson::get_optional<unsigned int>(r_loc, "/minimum_reachability");
   if (minimum_reachability) {
     location->set_minimum_reachability(*minimum_reachability);
-  }
-  auto minimum_inbound_reachability =
-      rapidjson::get_optional<unsigned int>(r_loc, "/minimum_inbound_reachability");
-  if (minimum_inbound_reachability) {
-    location->set_minimum_inbound_reachability(*minimum_inbound_reachability);
-  }
-  auto minimum_outbound_reachability =
-      rapidjson::get_optional<unsigned int>(r_loc, "/minimum_outbound_reachability");
-  if (minimum_outbound_reachability) {
-    location->set_minimum_outbound_reachability(*minimum_outbound_reachability);
   }
   auto radius = rapidjson::get_optional<unsigned int>(r_loc, "/radius");
   if (radius) {
@@ -310,12 +404,12 @@ void parse_json_location(valhalla::Location* location,
  * @param ignore_closures           Whether to ignore closures
  * @param had_date_time             Gets set to true if any location had a date_time string
  */
-void parse_json_locations(const rapidjson::Document& doc,
-                          Api& request,
-                          const std::string& node,
-                          unsigned location_parse_error_code,
-                          const boost::optional<bool>& ignore_closures,
-                          bool& had_date_time) {
+void parse_locations(const rapidjson::Document& doc,
+                     Api& request,
+                     const std::string& node,
+                     unsigned location_parse_error_code,
+                     const boost::optional<bool>& ignore_closures,
+                     bool& had_date_time) {
   auto& options = *request.mutable_options();
 
   google::protobuf::RepeatedPtrField<valhalla::Location>* locations = nullptr;
@@ -347,7 +441,7 @@ void parse_json_locations(const rapidjson::Document& doc,
         auto* loc = locations->Add();
         auto loc_idx = locations->size() - 1;
         loc->mutable_correlation()->set_original_index(loc_idx);
-        parse_json_location(loc, r_loc, request, ignore_closures, loc_idx == last_loc_idx);
+        parse_location(loc, r_loc, request, ignore_closures, loc_idx == last_loc_idx);
         loc_had_time = loc_had_time || !loc->date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc->search_filter().exclude_closures();
@@ -359,7 +453,7 @@ void parse_json_locations(const rapidjson::Document& doc,
       for (auto& loc : *locations) {
         bool is_last_edge = i == locs_amount;
         loc.mutable_correlation()->set_original_index(i++);
-        parse_json_location(&loc, {}, request, ignore_closures, is_last_edge);
+        parse_location(&loc, {}, request, ignore_closures, is_last_edge);
         loc_had_time = loc_had_time || !loc.date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc.search_filter().exclude_closures();
@@ -393,115 +487,6 @@ void parse_json_locations(const rapidjson::Document& doc,
   } // generic exceptions and other stuff get a generic message
   catch (...) {
     throw valhalla_exception_t{location_parse_error_code};
-  }
-}
-} // namespace valhalla
-
-namespace {
-
-// Parses exclude_layers from JSON and adds them to the request's tile options
-void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
-  static const std::unordered_set<std::string_view> kSupportedLayers = {valhalla::kEdgeLayerName,
-                                                                        valhalla::kNodeLayerName,
-                                                                        valhalla::kShortcutLayerName};
-
-  if (exclude_layers.has_value() && exclude_layers->IsArray()) {
-    for (const auto& lyr : exclude_layers->GetArray()) {
-      if (lyr.IsString()) {
-        const auto& lyr_name = lyr.GetString();
-        if (kSupportedLayers.contains(lyr_name)) {
-          request.mutable_options()->mutable_tile_options()->add_exclude_layers(lyr_name);
-          continue;
-        }
-      }
-      add_warning(request, 212, lyr.IsString() ? lyr.GetString() : "not a string");
-    }
-  }
-}
-
-bool is_format_supported(Options::Action action, Options::Format format) {
-  constexpr uint16_t kFormatActionSupport[] = {
-      // json
-      0xFFFF, // all actions support json
-      // gpx
-      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route),
-      // osrm
-      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
-          (1 << Options::trace_attributes) | (1 << Options::locate) | (1 << Options::status) |
-          (1 << Options::sources_to_targets) | (1 << Options::expansion),
-      // pbf
-      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
-          (1 << Options::centroid) | (1 << Options::trace_attributes) | (1 << Options::status) |
-          (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion),
-  // geotiff
-#ifdef ENABLE_GEOTIFF
-      (1 << Options::isochrone),
-#else
-      0,
-#endif
-      // mvt
-      (1 << Options::tile),
-  };
-  static_assert(std::size(kFormatActionSupport) == Options::Format_ARRAYSIZE,
-                "Please update format_action array to match Options::Action_ARRAYSIZE");
-
-  if (Options::Action_IsValid(action) && Options::Format_IsValid(format)) {
-    return (kFormatActionSupport[format] & (1 << action)) != 0;
-  } else {
-    return false;
-  }
-}
-
-rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
-  rapidjson::Document d;
-  if (json.empty()) {
-    d.SetObject();
-    return d;
-  }
-  d.Parse(json.c_str());
-  if (d.HasParseError()) {
-    throw e;
-  }
-  return d;
-}
-
-// Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
-// PBF objects of the sort "repeated LatLng". Invalid rings will be corrected during search operation.
-template <typename ring_pbf_t>
-void parse_ring(ring_pbf_t* ring, const rapidjson::Value& coord_array) {
-
-  // for protobuf we just validate what is there
-  if (ring->coords_size()) {
-    if (ring->coords_size() < 2)
-      throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
-    for (auto& coord : *ring->mutable_coords()) {
-      if (!coord.has_lat_case() || !coord.has_lng_case())
-        throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
-
-      coord.set_lng(midgard::circular_range_clamp<double>(coord.lng(), -180, 180));
-      if (coord.lat() < -90.0 || coord.lat() > 90.0) {
-        throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
-      }
-    }
-    return;
-  }
-
-  // for json we need to do some parsing
-  for (const auto& coords : coord_array.GetArray()) {
-    if (coords.Size() < 2) {
-      throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
-    }
-
-    double lon = coords[0].GetDouble();
-    lon = midgard::circular_range_clamp<double>(lon, -180, 180);
-    double lat = coords[1].GetDouble();
-    if (lat < -90.0 || lat > 90.0) {
-      throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
-    }
-
-    auto* ll = ring->add_coords();
-    ll->set_lng(lon);
-    ll->set_lat(lat);
   }
 }
 
@@ -978,11 +963,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     add_date_to_locations(options, *options.mutable_shape(), "shape");
   } // fall back from encoded polyline to array of locations
   else {
-    parse_json_locations(doc, api, "shape", 134, ignore_closures, had_date_time);
+    parse_locations(doc, api, "shape", 134, ignore_closures, had_date_time);
 
     // if no shape then try 'trace'
     if (options.shape().size() == 0) {
-      parse_json_locations(doc, api, "trace", 135, ignore_closures, had_date_time);
+      parse_locations(doc, api, "trace", 135, ignore_closures, had_date_time);
     }
   }
 
@@ -1063,13 +1048,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   parse_recostings(doc, "/recostings", options);
 
   // get the locations in there
-  parse_json_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
+  parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
 
   // get the sources in there
-  parse_json_locations(doc, api, "sources", 131, ignore_closures, had_date_time);
+  parse_locations(doc, api, "sources", 131, ignore_closures, had_date_time);
 
   // get the targets in there
-  parse_json_locations(doc, api, "targets", 132, ignore_closures, had_date_time);
+  parse_locations(doc, api, "targets", 132, ignore_closures, had_date_time);
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (options.date_time_type() == Options::no_time && !had_date_time &&
@@ -1084,9 +1069,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // get the avoids in there
   // TODO: remove "avoid_locations/polygons" after some while
   if (doc.HasMember("avoid_locations"))
-    parse_json_locations(doc, api, "avoid_locations", 133, ignore_closures, had_date_time);
+    parse_locations(doc, api, "avoid_locations", 133, ignore_closures, had_date_time);
   else
-    parse_json_locations(doc, api, "exclude_locations", 133, ignore_closures, had_date_time);
+    parse_locations(doc, api, "exclude_locations", 133, ignore_closures, had_date_time);
 
   // Get the matrix_loctions option and set if sources or targets size is one
   // (option is only supported with one to many or many to one matrix requests)
