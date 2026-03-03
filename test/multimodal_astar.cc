@@ -53,7 +53,6 @@ struct route_tester {
 };
 
 using BssManeuverType = valhalla::DirectionsLeg_Maneuver_BssManeuverType;
-
 void test_request(const std::string& request,
                   const std::vector<TravelMode>& expected_travel_modes,
                   const std::vector<std::string>& expected_route,
@@ -384,8 +383,9 @@ TEST(Standalone, UtrechtMultiModalAStar) {
 
   response.ParseFromString(r);
   ASSERT_EQ(response.directions().routes_size(), 1);
-  EXPECT_EQ(response.directions().routes(0).legs(0).maneuver(0).travel_mode(), TravelMode::kDrive);
-  EXPECT_EQ(response.directions().routes(0).legs(0).maneuver(20).travel_mode(),
-            TravelMode::kPedestrian);
+  ASSERT_EQ(response.directions().routes(0).legs_size(), 1);
+  auto& leg = response.directions().routes(0).legs(0);
+  EXPECT_EQ(leg.maneuver(0).travel_mode(), TravelMode::kDrive);
+  EXPECT_EQ(leg.maneuver(leg.maneuver_size() - 1).travel_mode(), TravelMode::kPedestrian);
   actor.cleanup();
 }
