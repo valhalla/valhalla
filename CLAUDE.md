@@ -359,3 +359,27 @@ The `docs/docs/` directory contains detailed documentation. The most useful for 
 | `decoding.md` | Polyline6 encoding/decoding with examples in multiple languages |
 | `api/turn-by-turn/api-reference.md` | Route API: request format, costing options, response structure |
 | `building.md` | Building from source and running Valhalla server on all platforms |
+
+## Maintaining This Document
+
+This is a living document. Valhalla has 10+ years of history and receives continuous improvements — no static guide can cover everything. When working on a task, you may discover knowledge that would save future agents significant time. Update this file when appropriate, but respect its role as an AI-first document — structured for how agents parse and act on information.
+
+**When to add something:**
+- A non-obvious gotcha that caused a wrong approach or wasted build/test cycle
+- A pattern or convention not documented here that required reading multiple files to discover
+- A new test helper, build target, or tool that is broadly useful
+- A "Where to Look" entry for a problem domain not yet covered
+
+**When NOT to add:**
+- Information already covered here (check first — duplicates dilute the document)
+- Details specific to a single task or bug fix (belongs in code comments or commit messages)
+- Anything available in `docs/docs/` that can be reached via the In-Repo Documentation table above
+- Speculative guidance not validated by actually building and testing
+
+**Style rules to preserve:**
+- Tables over prose. A row in "Where to Look" beats a paragraph.
+- Bold warnings (`**IMPORTANT:**`) for things that cause silent failures or wasted time.
+- Concrete over abstract. File paths, command lines, struct names — not "the relevant module."
+- No filler. Every sentence should answer a question an agent would actually have.
+- Keep sections self-contained. An agent may be pointed at a single section, not the whole file.
+- Critical constraints stay at the top. Performance and compatibility warnings must never drift below the fold.
