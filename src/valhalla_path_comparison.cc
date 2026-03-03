@@ -1,7 +1,6 @@
 #include "argparse_utils.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/pathlocation.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/search.h"
 #include "meili/map_matcher.h"
@@ -95,13 +94,19 @@ void walk_edges(const std::string& shape,
 
   // Use the shape to form a single edge correlation at the start and end of
   // the shape (using heading).
-  std::vector<valhalla::baldr::Location> locations{shape_pts.front(), shape_pts.back()};
-  locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape_pts, 30.f));
-  locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape_pts, 30.f));
+  google::protobuf::RepeatedPtrField<Location> locations;
+  auto* start = locations.Add();
+  start->mutable_ll()->set_lng(shape_pts.front().lng());
+  start->mutable_ll()->set_lat(shape_pts.front().lat());
+  auto* end = locations.Add();
+  end->mutable_ll()->set_lng(shape_pts.back().lng());
+  end->mutable_ll()->set_lat(shape_pts.back().lat());
+
+  locations.begin()->set_heading(std::round(PointLL::HeadingAlongPolyline(shape_pts, 30.f)));
+  locations.rbegin()->set_heading(std::round(PointLL::HeadingAtEndOfPolyline(shape_pts, 30.f)));
 
   Search search(reader);
-  const auto projections = search.search(locations, cost);
-  std::vector<PathLocation> path_location;
+  search.search(locations, cost);
   valhalla::Options options;
 
   for (const auto& ll : shape_pts) {
@@ -117,13 +122,7 @@ void walk_edges(const std::string& shape,
     options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
   }
 
-  for (const auto& loc : locations) {
-    path_location.push_back(projections.at(loc));
-    PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
-  }
-
   std::vector<std::vector<PathInfo>> paths;
-  std::vector<PathLocation> correlated;
   bool rtn = RouteMatcher::FormPath(mode_costings, mode, reader, options, options.use_timestamps(),
                                     false, paths);
   if (!rtn) {
@@ -212,7 +211,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Path Traces
-  std::vector<std::vector<valhalla::baldr::Location>> paths;
+  std::vector<std::vector<Location>> paths;
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
@@ -227,7 +226,7 @@ int main(int argc, char* argv[]) {
     try {
       for (const auto& path : json_ptree.get_child("paths")) {
         paths.push_back({});
-        std::vector<valhalla::baldr::Location>& locations = paths.back();
+        std::vector<Location>& locations = paths.back();
         for (const auto& location : path.second) {
           // Get the location from the ptree
           // TODO - this was copied from the defunct Location::FromPtree
@@ -238,23 +237,31 @@ int main(int argc, char* argv[]) {
           }
           float lon = valhalla::midgard::circular_range_clamp<float>(pt.get<float>("lon"), -180, 180);
 
-          baldr::Location loc({lon, lat}, (pt.get<std::string>("type", "break") == "through"
-                                               ? baldr::Location::StopType::THROUGH
-                                               : baldr::Location::StopType::BREAK));
+          Location loc;
+          loc.mutable_ll()->set_lng(lon);
+          loc.mutable_ll()->set_lat(lat);
+          loc.set_type(pt.get<std::string>("type", "break") == "through" ? Location_Type_kThrough
+                                                                         : Location_Type_kBreak);
 
-          loc.name_ = pt.get<std::string>("name", "");
-          loc.street_ = pt.get<std::string>("street", "");
+          loc.set_name(pt.get<std::string>("name", ""));
+          loc.set_street(pt.get<std::string>("street", ""));
 
           auto date_time = pt.get_optional<std::string>("date_time");
-          loc.date_time_ = date_time ? std::make_optional<std::string>(*date_time) : std::nullopt;
+          if (date_time) {
+            loc.set_date_time(*date_time);
+          }
           auto heading = pt.get_optional<float>("heading");
-          loc.heading_ = heading ? std::make_optional<float>(*heading) : std::nullopt;
-          loc.heading_tolerance_ = pt.get<float>("heading_tolerance", loc.heading_tolerance_);
-          loc.node_snap_tolerance_ = pt.get<float>("node_snap_tolerance", loc.node_snap_tolerance_);
+          if (heading) {
+            loc.set_heading(*heading);
+          }
+          loc.set_heading_tolerance(pt.get<float>("heading_tolerance", 60));
+          loc.set_node_snap_tolerance(pt.get<float>("node_snap_tolerance", 5));
 
-          loc.min_outbound_reach_ = loc.min_inbound_reach_ =
-              pt.get<unsigned int>("minimum_reachability", 50);
-          loc.radius_ = pt.get<unsigned long>("radius", 0);
+          auto reach = pt.get<unsigned int>("minimum_reachability", 50);
+          loc.set_minimum_inbound_reachability(reach);
+          loc.set_minimum_outbound_reachability(reach);
+          loc.set_radius(pt.get<unsigned int>("radius", 0));
+          locations.emplace_back(std::move(loc));
           locations.emplace_back(std::move(loc));
         }
       }
@@ -306,7 +313,7 @@ int main(int argc, char* argv[]) {
     measurements.reserve(path.size());
     for (const auto& location : path) {
       measurements.emplace_back(
-          Measurement{{location.latlng_.lng(), location.latlng_.lat()},
+          Measurement{{location.ll().lng(), location.ll().lat()},
                       matcher->config().emission_cost.gps_accuracy_meters + 10,
                       matcher->config().candidate_search.search_radius_meters + 10});
     }

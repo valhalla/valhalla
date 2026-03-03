@@ -23,18 +23,18 @@
 
 std::string costing_str;
 
-using job_t = std::vector<valhalla::baldr::Location>;
+using job_t = google::protobuf::RepeatedPtrField<valhalla::Location>;
 std::vector<job_t> jobs;
 std::atomic<size_t> job_index(0);
 std::string geojson(const job_t& job) {
   std::string json = "{";
   for (const auto& l : job) {
     json.push_back('{');
-    json.append(std::to_string(l.latlng_.lng()));
+    json.append(std::to_string(l.ll().lng()));
     json.push_back(',');
-    json.append(std::to_string(l.latlng_.lat()));
+    json.append(std::to_string(l.ll().lat()));
     json.push_back('}');
-    if (&l != &job.back()) {
+    if (&l != &(*job.rbegin())) {
       json.push_back(',');
     }
   }
@@ -60,10 +60,11 @@ struct result_t {
     if (job.size() < other.job.size()) {
       return true;
     }
-    return job.front().latlng_ < other.job.front().latlng_;
+    return job.begin()->ll().lat() < other.job.begin()->ll().lat();
   }
   bool operator==(const result_t& other) const {
-    return cached == other.cached && time == other.time && pass == other.pass && job == other.job;
+    return cached == other.cached && time == other.time && pass == other.pass &&
+           job.begin() == other.job.begin();
   }
 };
 using results_t = std::set<result_t>;
@@ -103,8 +104,11 @@ void work_meili(const boost::property_tree::ptree& config, std::promise<results_
     bool cached = false;
     std::vector<valhalla::meili::Measurement> trace;
     for (const auto& l : job) {
-      trace.emplace_back(valhalla::meili::Measurement{l.latlng_, 5, static_cast<float>(l.radius_), 0,
-                                                      valhalla::baldr::Location::StopType::VIA});
+      trace.emplace_back(valhalla::meili::Measurement{{l.ll().lng(), l.ll().lat()},
+                                                      5,
+                                                      static_cast<float>(l.radius()),
+                                                      0,
+                                                      valhalla::Location_Type_kVia});
     }
     for (auto* r : {&result.first, &result.second}) {
       auto start = std::chrono::high_resolution_clock::now();
@@ -143,7 +147,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
   auto costing = create_costing();
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
   valhalla::loki::Search searcher(reader);
-  auto search = [&reader, &costing, &searcher](const job_t& job) {
+  auto search = [&reader, &costing, &searcher](job_t& job) {
     // so that we dont benefit from cache coherency
     reader.Clear();
     std::pair<result_t, result_t> result;
@@ -151,8 +155,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
     for (auto* r : {&result.first, &result.second}) {
       auto start = std::chrono::high_resolution_clock::now();
       try {
-        // TODO: actually save the result
-        auto result = searcher.search(job, costing);
+        searcher.search(job, costing);
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job,
                         cached};
@@ -250,14 +253,15 @@ int main(int argc, char** argv) {
       }
       float lon = valhalla::midgard::circular_range_clamp<float>(std::stof(parts[1]), -180, 180);
       valhalla::midgard::PointLL ll(lon, lat);
-      valhalla::baldr::Location loc(ll);
-      loc.min_inbound_reach_ = loc.min_outbound_reach_ = isolated;
-      loc.radius_ = radius;
-      loc.search_cutoff_ = cutoff;
-      job.emplace_back(std::move(loc));
+      valhalla::Location loc;
+      loc.set_minimum_inbound_reachability(isolated);
+      loc.set_minimum_outbound_reachability(isolated);
+      loc.set_radius(radius);
+      loc.set_search_cutoff(cutoff);
+      job.Add(std::move(loc));
       if (job.size() == batch) {
         jobs.emplace_back(std::move(job));
-        job.clear();
+        job.Clear();
       }
       line.clear();
     }

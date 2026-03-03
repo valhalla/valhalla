@@ -63,6 +63,18 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             const hierarchy_limits_config_t& config,
                             const bool allow_modifications,
                             const bool use_hierarchy_limits);
+
+void parse_json_location(valhalla::Location* location,
+                         const rapidjson::Value& r_loc,
+                         Api& request,
+                         const boost::optional<bool>& ignore_closures,
+                         bool is_last_loc);
+void parse_json_locations(const rapidjson::Document& doc,
+                          Api& request,
+                          const std::string& node,
+                          unsigned location_parse_error_code,
+                          const boost::optional<bool>& ignore_closures,
+                          bool& had_date_time);
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request

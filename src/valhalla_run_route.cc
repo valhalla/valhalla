@@ -1,7 +1,6 @@
 #include "argparse_utils.h"
 #include "baldr/attributes_controller.h"
 #include "baldr/graphreader.h"
-#include "baldr/pathlocation.h"
 #include "loki/search.h"
 #include "loki/worker.h"
 #include "midgard/encoded.h"
@@ -289,8 +288,8 @@ std::string GetFormattedTime(uint32_t seconds) {
 }
 
 valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
-                                       valhalla::Location& orig,
-                                       valhalla::Location& dest,
+                                       valhalla::Location& origin,
+                                       valhalla::Location& destination,
                                        PathStatistics& data,
                                        bool verbose_lanes,
                                        valhalla::odin::MarkupFormatter& markup_formatter) {
@@ -433,12 +432,8 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
                                    trip_directions.summary().length() % units)
                                       .str(),
                                   " [NARRATIVE] ");
-  if (origin.date_time_) {
-    valhalla::midgard::logging::Log("Departed at: " + *origin.date_time_, " [NARRATIVE] ");
-  }
-  if (destination.date_time_) {
-    valhalla::midgard::logging::Log("Arrived at: " + *destination.date_time_, " [NARRATIVE] ");
-  }
+  valhalla::midgard::logging::Log("Departed at: " + origin.date_time(), " [NARRATIVE] ");
+  valhalla::midgard::logging::Log("Arrived at: " + destination.date_time(), " [NARRATIVE] ");
   data.setTripTime(trip_directions.summary().time());
   data.setTripDist(trip_directions.summary().length());
   data.setManeuvers(trip_directions.maneuver_size());
@@ -523,19 +518,21 @@ int main(int argc, char* argv[]) {
   LOG_INFO("routetype: " + routetype);
 
   // Locations
-  auto locations = valhalla::baldr::PathLocation::fromPBF(options.locations());
+  auto locations = options.locations();
   if (locations.size() < 2) {
     throw;
   }
 
   // Something to hold the statistics
   uint32_t n = locations.size() - 1;
-  PathStatistics data({locations[0].latlng_.lat(), locations[0].latlng_.lng()},
-                      {locations[n].latlng_.lat(), locations[n].latlng_.lng()});
+  PathStatistics data({locations[0].ll().lat(), locations[0].ll().lng()},
+                      {locations[n].ll().lat(), locations[n].ll().lng()});
   // Crow flies distance between locations (km)
   float d1 = 0.0f;
   for (uint32_t i = 0; i < n; i++) {
-    d1 += locations[i].latlng_.Distance(locations[i + 1].latlng_) * kKmPerMeter;
+    d1 += PointLL(locations[i].ll().lng(), locations[i].ll().lat())
+              .Distance(PointLL(locations[i + 1].ll().lng(), locations[i + 1].ll().lat())) *
+          kKmPerMeter;
   }
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));

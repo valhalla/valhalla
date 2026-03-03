@@ -21,6 +21,80 @@ using namespace valhalla::loki;
 
 namespace valhalla {
 namespace loki {
+std::pair<bool, bool> loki_worker_t::parse_location(valhalla::Location& location) {
+  // we need to support both `minimum_reachability` and its directed (inbound/outbound) variants
+  std::pair<bool, bool> modified_search_cutoff{false, false};
+  bool has_reachability =
+      (location.has_minimum_reachability_case() || location.has_minimum_inbound_reachability_case() ||
+       location.has_minimum_outbound_reachability_case());
+  bool has_direction_agnostic_reachability = location.has_minimum_reachability_case();
+
+  location.set_minimum_inbound_reachability(
+      !has_reachability
+          ? default_reachability
+          : std::min(has_direction_agnostic_reachability ? location.minimum_reachability()
+                                                         : location.minimum_inbound_reachability(),
+                     max_reachability));
+
+  location.set_minimum_outbound_reachability(
+      !has_reachability
+          ? default_reachability
+          : std::min(has_direction_agnostic_reachability ? location.minimum_reachability()
+                                                         : location.minimum_outbound_reachability(),
+                     max_reachability));
+
+  if (!location.has_radius_case())
+    location.set_radius(default_radius);
+  else if (location.radius() > max_radius)
+    location.set_radius(max_radius);
+
+  if (!location.has_heading_tolerance_case())
+    location.set_heading_tolerance(default_heading_tolerance);
+
+  if (!location.has_node_snap_tolerance_case())
+    location.set_node_snap_tolerance(default_node_snap_tolerance);
+
+  const bool has_level =
+      location.has_search_filter() && location.search_filter().level() != baldr::kMaxLevel;
+
+  if (!location.has_search_cutoff_case() && !has_level) {
+    // no level and no cutoff, provide regular default
+    location.set_search_cutoff(default_search_cutoff);
+  } else if (location.has_search_cutoff_case() && has_level) {
+    // level and cutoff, clamp value to limit candidate search in case of bogus level input
+    if (location.search_cutoff() > kMaxIndoorSearchCutoff) {
+      modified_search_cutoff.second = true;
+      location.set_search_cutoff(kMaxIndoorSearchCutoff);
+    }
+  } else if (!location.has_search_cutoff_case() && has_level) {
+    // level and no cutoff, set special default
+    location.set_search_cutoff(kDefaultIndoorSearchCutoff);
+    modified_search_cutoff.first = true;
+  }
+  // if there is a level search filter and
+  if (!location.has_street_side_tolerance_case())
+    location.set_street_side_tolerance(default_street_side_tolerance);
+
+  if (!location.has_street_side_cutoff_case())
+    location.set_street_side_cutoff(valhalla::RoadClass::kServiceOther);
+
+  if (!location.has_street_side_max_distance_case())
+    location.set_street_side_max_distance(default_street_side_max_distance);
+
+  if (!location.has_search_filter() || !location.search_filter().has_min_road_class_case())
+    location.mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
+  if (!location.search_filter().has_max_road_class_case())
+    location.mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_level())
+    location.mutable_search_filter()->set_level(baldr::kMaxLevel);
+
+  return modified_search_cutoff;
+}
+
 void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
                                     Api& request,
                                     std::optional<valhalla_exception_t> required_exception) {
@@ -28,74 +102,7 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 
   if (locations->size()) {
     for (auto& location : *locations) {
-      // we need to support both `minimum_reachability` and its directed (inbound/outbound) variants
-      bool has_reachability = (location.has_minimum_reachability_case() ||
-                               location.has_minimum_inbound_reachability_case() ||
-                               location.has_minimum_outbound_reachability_case());
-      bool has_direction_agnostic_reachability = location.has_minimum_reachability_case();
-
-      location.set_minimum_inbound_reachability(
-          !has_reachability ? default_reachability
-                            : std::min(has_direction_agnostic_reachability
-                                           ? location.minimum_reachability()
-                                           : location.minimum_inbound_reachability(),
-                                       max_reachability));
-
-      location.set_minimum_outbound_reachability(
-          !has_reachability ? default_reachability
-                            : std::min(has_direction_agnostic_reachability
-                                           ? location.minimum_reachability()
-                                           : location.minimum_outbound_reachability(),
-                                       max_reachability));
-
-      if (!location.has_radius_case())
-        location.set_radius(default_radius);
-      else if (location.radius() > max_radius)
-        location.set_radius(max_radius);
-
-      if (!location.has_heading_tolerance_case())
-        location.set_heading_tolerance(default_heading_tolerance);
-
-      if (!location.has_node_snap_tolerance_case())
-        location.set_node_snap_tolerance(default_node_snap_tolerance);
-
-      const bool has_level =
-          location.has_search_filter() && location.search_filter().level() != baldr::kMaxLevel;
-
-      if (!location.has_search_cutoff_case() && !has_level) {
-        // no level and no cutoff, provide regular default
-        location.set_search_cutoff(default_search_cutoff);
-      } else if (location.has_search_cutoff_case() && has_level) {
-        // level and cutoff, clamp value to limit candidate search in case of bogus level input
-        if (location.search_cutoff() > kMaxIndoorSearchCutoff) {
-          has_303 = true;
-          location.set_search_cutoff(kMaxIndoorSearchCutoff);
-        }
-      } else if (!location.has_search_cutoff_case() && has_level) {
-        // level and no cutoff, set special default
-        location.set_search_cutoff(kDefaultIndoorSearchCutoff);
-        has_302 = true;
-      }
-      // if there is a level search filter and
-      if (!location.has_street_side_tolerance_case())
-        location.set_street_side_tolerance(default_street_side_tolerance);
-
-      if (!location.has_street_side_cutoff_case())
-        location.set_street_side_cutoff(valhalla::RoadClass::kServiceOther);
-
-      if (!location.has_street_side_max_distance_case())
-        location.set_street_side_max_distance(default_street_side_max_distance);
-
-      if (!location.has_search_filter() || !location.search_filter().has_min_road_class_case())
-        location.mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
-      if (!location.search_filter().has_max_road_class_case())
-        location.mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
-      if (!location.search_filter().has_exclude_closures_case())
-        location.mutable_search_filter()->set_exclude_closures(true);
-      if (!location.search_filter().has_exclude_closures_case())
-        location.mutable_search_filter()->set_exclude_closures(true);
-      if (!location.search_filter().has_level())
-        location.mutable_search_filter()->set_level(baldr::kMaxLevel);
+      std::tie(has_302, has_303) = parse_location(location);
     }
     if (has_302)
       add_warning(request, 302, std::to_string(kDefaultIndoorSearchCutoff));

@@ -48,11 +48,13 @@ public:
 
   using ZoomConfig = std::array<uint32_t, static_cast<size_t>(baldr::RoadClass::kInvalid)>;
 
-protected:
+  std::pair<bool, bool> parse_location(valhalla::Location& location);
   void parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
                        Api& request,
                        std::optional<valhalla_exception_t> required_exception = valhalla_exception_t{
                            110});
+
+protected:
   void parse_trace(Api& request);
   void parse_costing(Api& request, bool allow_none = false);
   void locations_from_shape(Api& request);
