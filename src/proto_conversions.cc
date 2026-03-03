@@ -96,7 +96,7 @@ std::string_view incidentImpactToString(const valhalla::IncidentsTile::Metadata:
 }
 
 const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_GuidanceView_Type type) {
-  static const std::unordered_map<int, std::string>
+  static const std::unordered_map<DirectionsLeg_GuidanceView_Type, std::string>
       types{{DirectionsLeg_GuidanceView_Type_kJunction, "jct"},
             {DirectionsLeg_GuidanceView_Type_kSapa, "sapa"},
             {DirectionsLeg_GuidanceView_Type_kTollbranch, "tollbranch"},
@@ -146,7 +146,7 @@ bool Options_ExpansionAction_Enum_Parse(const std::string& action, Options::Acti
 }
 
 const std::string& Options_Action_Enum_Name(const Options::Action action) {
-  static const std::unordered_map<int, std::string> actions{
+  static const std::unordered_map<Options::Action, std::string> actions{
       {Options::route, "route"},
       {Options::locate, "locate"},
       {Options::sources_to_targets, "sources_to_targets"},
@@ -179,7 +179,7 @@ bool Location_Type_Enum_Parse(const std::string& type, Location::Type* t) {
   return true;
 }
 const std::string& Location_Type_Enum_Name(const Location::Type type) {
-  static const std::unordered_map<int, std::string> types{
+  static const std::unordered_map<Location::Type, std::string> types{
       {Location::kBreak, "break"},
       {Location::kThrough, "through"},
       {Location::kBreakThrough, "break_through"},
@@ -190,7 +190,7 @@ const std::string& Location_Type_Enum_Name(const Location::Type type) {
 }
 
 const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet side) {
-  static const std::unordered_map<int, std::string> sides{
+  static const std::unordered_map<Location::SideOfStreet, std::string> sides{
       {Location::kLeft, "left"},
       {Location::kRight, "right"},
       {Location::kNone, "none"},
@@ -233,7 +233,7 @@ const std::string_view TravelMode_Enum_Name(const TravelMode mode) {
 }
 
 const std::string& Costing_Enum_Name(const Costing::Type costing) {
-  static const std::unordered_map<int, std::string> costings{
+  static const std::unordered_map<Costing::Type, std::string> costings{
       {Costing::auto_, "auto"},
       // auto_shorter is deprecated
       {Costing::bicycle, "bicycle"},
@@ -268,7 +268,7 @@ bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s) {
 }
 
 const std::string& ShapeMatch_Enum_Name(const ShapeMatch match) {
-  static const std::unordered_map<int, std::string> matches{
+  static const std::unordered_map<ShapeMatch, std::string> matches{
       {ShapeMatch::edge_walk, "edge_walk"},
       {ShapeMatch::map_snap, "map_snap"},
       {ShapeMatch::walk_or_snap, "walk_or_snap"},
@@ -290,7 +290,7 @@ bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f) {
 }
 
 const std::string& Options_Format_Enum_Name(const Options::Format match) {
-  static const std::unordered_map<int, std::string> formats{
+  static const std::unordered_map<Options::Format, std::string> formats{
       {Options::json, "json"}, {Options::gpx, "gpx"},         {Options::osrm, "osrm"},
       {Options::pbf, "pbf"},   {Options::geotiff, "geotiff"},
   };
@@ -299,7 +299,7 @@ const std::string& Options_Format_Enum_Name(const Options::Format match) {
 }
 
 const std::string& Options_Units_Enum_Name(const Options::Units unit) {
-  static const std::unordered_map<int, std::string> units{
+  static const std::unordered_map<Options::Units, std::string> units{
       {Options::kilometers, "kilometers"},
       {Options::miles, "miles"},
   };
@@ -320,7 +320,7 @@ bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a) {
 }
 
 const std::string& FilterAction_Enum_Name(const FilterAction action) {
-  static const std::unordered_map<int, std::string> actions{
+  static const std::unordered_map<FilterAction, std::string> actions{
       {FilterAction::exclude, "exclude"},
       {FilterAction::include, "include"},
   };
@@ -392,35 +392,31 @@ bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
   return true;
 }
 
-const std::unordered_map<int, std::string> vehicle_to_string{
-    {static_cast<int>(VehicleType::kCar), "car"},
-    {static_cast<int>(VehicleType::kMotorcycle), "motorcycle"},
-    {static_cast<int>(VehicleType::kAutoBus), "bus"},
-    {static_cast<int>(VehicleType::kTruck), "truck"},
-    {static_cast<int>(VehicleType::kMotorScooter), "motor_scooter"},
+const std::unordered_map<VehicleType, std::string> vehicle_to_string{
+    {VehicleType::kCar, "car"},
+    {VehicleType::kMotorcycle, "motorcycle"},
+    {VehicleType::kAutoBus, "bus"},
+    {VehicleType::kTruck, "truck"},
+    {VehicleType::kMotorScooter, "motor_scooter"},
 };
 
-const std::unordered_map<int, std::string> pedestrian_to_string{
-    {static_cast<int>(PedestrianType::kFoot), "foot"},
-    {static_cast<int>(PedestrianType::kWheelchair), "wheelchair"},
+const std::unordered_map<PedestrianType, std::string> pedestrian_to_string{
+    {PedestrianType::kFoot, "foot"},
+    {PedestrianType::kWheelchair, "wheelchair"},
 };
 
-const std::unordered_map<int, std::string> bicycle_to_string{
-    {static_cast<int>(BicycleType::kRoad), "road"},
-    {static_cast<int>(BicycleType::kCross), "cross"},
-    {static_cast<int>(BicycleType::kHybrid), "hybrid"},
-    {static_cast<int>(BicycleType::kMountain), "mountain"},
+const std::unordered_map<BicycleType, std::string> bicycle_to_string{
+    {BicycleType::kRoad, "road"},
+    {BicycleType::kCross, "cross"},
+    {BicycleType::kHybrid, "hybrid"},
+    {BicycleType::kMountain, "mountain"},
 };
 
-const std::unordered_map<int, std::string> transit_to_string{
-    {static_cast<int>(TransitType::kTram), "tram"},
-    {static_cast<int>(TransitType::kMetro), "metro"},
-    {static_cast<int>(TransitType::kRail), "rail"},
-    {static_cast<int>(TransitType::kBus), "bus"},
-    {static_cast<int>(TransitType::kFerry), "ferry"},
-    {static_cast<int>(TransitType::kCableCar), "cable_car"},
-    {static_cast<int>(TransitType::kGondola), "gondola"},
-    {static_cast<int>(TransitType::kFunicular), "funicular"},
+const std::unordered_map<TransitType, std::string> transit_to_string{
+    {TransitType::kTram, "tram"},       {TransitType::kMetro, "metro"},
+    {TransitType::kRail, "rail"},       {TransitType::kBus, "bus"},
+    {TransitType::kFerry, "ferry"},     {TransitType::kCableCar, "cable_car"},
+    {TransitType::kGondola, "gondola"}, {TransitType::kFunicular, "funicular"},
 };
 
 std::pair<std::string, std::string>
@@ -453,7 +449,7 @@ travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
 }
 
 const std::string& Expansion_EdgeStatus_Enum_Name(const Expansion_EdgeStatus status) {
-  static const std::unordered_map<int, std::string> statuses{
+  static const std::unordered_map<Expansion_EdgeStatus, std::string> statuses{
       {Expansion_EdgeStatus_reached, "r"},
       {Expansion_EdgeStatus_settled, "s"},
       {Expansion_EdgeStatus_connected, "c"},
