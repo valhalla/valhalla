@@ -213,17 +213,17 @@ public:
     constexpr std::string_view ascii_map = R"(
       b 0
       |\
-    1 | \ 0
+    1 | \ x
       |  \
     2 |   \ 7
       |    \
-     1a-3-8-d 3
+     za-y-8-d 3
       |    /
     4 |   / 9
       |  /
     5 | / 6
       |/
-      c 2
+      c u
   )";
     const gurka::ways ways = {
         {"ad", {{"highway", "motorway"}}}, {"ac", {{"highway", "motorway"}}},
@@ -241,7 +241,7 @@ gurka::map SearchTest::map = {};
 // https://github.com/valhalla/valhalla/blob/ecdc52955f007be259597e751b39231f54b56d99/test/search.cc
 TEST_F(SearchTest, node_snap) {
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-  auto result = gurka::do_action(valhalla::Options::locate, map, {}, "none", {}, reader);
+  auto result = gurka::do_action(valhalla::Options::locate, map, {"1"}, "none", {}, reader);
 }
 
 // todo rewrite tests
