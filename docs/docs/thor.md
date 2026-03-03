@@ -17,9 +17,9 @@ What follows are some notable components of thor.
   - *BidirectionalAStar* - This is a bidirectional A* algorithm used for routes that are not time-dependent and are not trivial.
   - *MultiModal* - This is a forward direction A* algorithm with transit schedule lookup included as well as logic to switch modes between pedestrian and transit. This algorithm is time-dependent due to the nature of transit schedules.
 
-### TripPathBuilder ###
+### TripLegBuilder ###
 
-The *PathAlgorithm* methods all form a simple definition of the route path containing the directed edges comprising the path as well as the elapsed time at each edge along the path. This list is sent to a class called *TripPathBuilder* to form a more detailed representation of the trip path. *TripPathBuilder* forms details along the path that are required for guidance or narrative generation. Forming this *TripPath* requires reading attribution such as names, geometry, and other information required so that the subsequent guidance generation processing does not have to access the Valhalla tiles.
+The *PathAlgorithm* methods all form a simple definition of the route path containing the directed edges comprising the path as well as the elapsed time at each edge along the path. This list is sent to a class called *TripLegBuilder* to form a more detailed representation of the trip path. *TripLegBuilder* forms details along the path that are required for guidance or narrative generation. Forming this *TripPath* requires reading attribution such as names, geometry, and other information required so that the subsequent guidance generation processing does not have to access the Valhalla tiles.
 
 ### Matrix, Isochrone, Optimized Routes ###
 Thor also includes methods to compute time-distance matrices, isochrones, and optimized routes (Traveling Salesman Problem).
