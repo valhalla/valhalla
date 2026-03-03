@@ -1,40 +1,43 @@
 # CLAUDE.md — Valhalla Project Guide
 
-## Project Overview
+Open-source C++ routing engine for OpenStreetMap data: turn-by-turn routing, time-distance matrices, isochrones, map matching, elevation queries, optimized routes (TSP). C++20, CMake, single `libvalhalla` shared library from ~10 Norse-mythology-themed modules.
 
-Valhalla is an open-source C++ routing engine for OpenStreetMap data. It provides turn-by-turn routing, time-distance matrices, isochrones, map matching, elevation queries, and optimized routes (TSP). All modules are Norse-mythology-themed.
+## Critical Constraints
 
-C++20, CMake build system, ~10 library modules compiled as CMake OBJECT libraries linked into a single `libvalhalla` shared library.
+Read this section first. Violating these constraints causes real damage at planet scale.
+
+**Tile format is frozen.** The routing graph is serialized into binary tiles containing `DirectedEdge` (~1 billion), `NodeInfo` (~500 million), `GraphTileHeader`, `EdgeInfo`, `Sign`, `AdminInfo`, `TransitDeparture`, and other bit-packed structs. Never change their binary layout — no field reordering, no bitfield width changes. The last tile version bump was ~7 years ago. Thousands of users run pre-built tilesets they cannot rebuild (~7-hour planet build). Use spare/reserved bits or extensible tile sections for new data.
+
+**Every byte is multiplied a billion times.** Adding 1 byte to `DirectedEdge` adds ~1 GiB to the tileset. Adding 1 byte to `NodeInfo` adds ~500 MiB. Adding 1 byte to `OSMWayNode` inflates the ~110 GiB intermediate `way_node.bin` by ~3 GiB (and even more because of alignment). Bit-packing in these structures is intentional.
+
+**Costing functions are the hottest path.** `EdgeCost()`, `TransitionCost()`, `Allowed()` in `src/sif/` are called millions of times per request. Profile before and after any change.
+
+**arm64 (Apple Silicon) instability.** Some tests fail on Apple Silicon due to numeric differences from x86_64. Always run relevant tests **before** making changes to establish a baseline.
 
 ## Build and Test Commands
 
 ```bash
-mkdir build && cd build
+# Build (from repo root)
+cd build && cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build . -j 12
 
-# Build
-cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build . -j 12
-
-# Build + run a single unit test
+# Unit test — target name = filename without extension (test/directededge.cc → directededge)
 cd build && cmake --build . -j 12 --target directededge && ./test/directededge
 
-# Build + run a single gurka integration test
+# Gurka integration test — target gurka_<name> from test/gurka/test_<name>.cc
 cd build && cmake --build . -j 12 --target gurka_filter && ./test/gurka/gurka_filter
 
-# Run a specific GoogleTest case
+# Single GoogleTest case
 ./test/gurka/gurka_access --gtest_filter="*YourTestName*"
 
-# Build + run multiple related tests
+# Multiple related tests
 cmake --build . -j 12 --target gurka_access --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_route
 
-# Run all tests (slow, avoid during development, might have false positives on arm64)
-make -C build check
-
-# Format (use clang-format-11 specifically, newer versions produce different output)
-clang-format-11 -i src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc
+# Format — or use clang-format-11 directly `clang-format-11 -i src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc`
+./scripts/format.sh
 ```
 
-**arm64 (Apple Silicon) warning:** Some tests fail on arm64 due to numeric instability — all tests were originally tuned for x86_64. Always run the relevant test(s) **before** making code changes to establish a baseline.
+**IMPORTANT:** Avoid `make check` — extremely slow and produces false positives on arm64. Run only the relevant tests.
 
 ### Key CMake Options
 
@@ -42,17 +45,14 @@ clang-format-11 -i src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc
 |--------|---------|---------|
 | `ENABLE_DATA_TOOLS` | ON | Tile building tools and gurka tests |
 | `ENABLE_SERVICES` | ON | HTTP service via prime_server |
-| `ENABLE_HTTP` | ON | cURL for remote tile fetching |
-| `ENABLE_PYTHON_BINDINGS` | ON | Python bindings (nanobind, in `src/bindings/python/`) |
 | `ENABLE_TESTS` | ON | Build test targets |
 | `ENABLE_SANITIZERS` | OFF | All sanitizers (Debug builds) |
 | `ENABLE_ADDRESS_SANITIZER` | OFF | ASan only |
-| `ENABLE_COVERAGE` | OFF | Coverage instrumentation (`make coverage`) |
-| `LOGGING_LEVEL` | `""` (INFO) | NONE, ALL, ERROR, WARN, INFO, DEBUG, TRACE |
+| `LOGGING_LEVEL` | INFO | NONE, ALL, ERROR, WARN, INFO, DEBUG, TRACE |
 
 ## Architecture
 
-### Module Hierarchy
+### Module Map
 
 ```
 Request → Tyr → Loki → Thor → Odin → Tyr → Response
@@ -65,57 +65,42 @@ Meili (map matching) → Loki + Thor
 Mjolnir (tile builder) → Baldr + Skadi + Midgard
 ```
 
-Headers in `valhalla/<module>/`, implementations in `src/<module>/`.
+Headers: `valhalla/<module>/`. Source: `src/<module>/`.
 
-| Module | Purpose |
-|--------|---------|
-| **Midgard** | Foundational geometry: Point2/PointLL, vectors, bounding boxes, polyline encoding, tiling, logging. Used by all other modules. |
+| Module | What It Does |
+|--------|-------------|
+| **Midgard** | Geometry primitives (Point2/PointLL, vectors, bounding boxes, polyline encoding). Foundation for everything. |
 | **Baldr** | Graph data structures: GraphId, GraphTile, NodeInfo, DirectedEdge, EdgeInfo, tile reading/caching. |
-| **Sif** | Dynamic costing. `DynamicCost` interface (`Allowed()`, `EdgeCost()`, `TransitionCost()`). Models: auto, bicycle, pedestrian, truck, bus, taxi, motor_scooter, motorcycle, multimodal, bikeshare. Created via `CostFactory` registry in `valhalla/sif/costfactory.h`. |
-| **Skadi** | Elevation data (DEM) access for Sif's elevation costing and the `/height` API. |
-| **Mjolnir** | Builds routing tiles from OSM PBF extracts via Lua tag parsing (`lua/graph.lua`). Only compiled when `ENABLE_DATA_TOOLS=ON`. |
-| **Loki** | Location-to-graph correlation. Maps lat/lon to graph edges using per-tile bin index. |
-| **Meili** | Map matching via HMM + Viterbi search. Outputs Thor-compatible data so Odin can generate directions. |
-| **Thor** | Path computation: BidirectionalAStar (main), TimeDepForward/Reverse, AStar (trivial), MultiModal (transit). Also matrices and isochrones. |
-| **Odin** | Maneuver generation and narrative text. 30+ languages via Transifex translations in `locales/`. |
-| **Tyr** | API serialization and orchestration. Outputs Valhalla JSON, OSRM JSON, GPX, or Protocol Buffers. |
+| **Sif** | Runtime costing via `DynamicCost` (`Allowed()`, `EdgeCost()`, `TransitionCost()`). Costs are never baked into tiles. Models: auto, bicycle, pedestrian, truck, bus, taxi, motor_scooter, motorcycle, multimodal, bikeshare. Factory: `valhalla/sif/costfactory.h`. |
+| **Skadi** | Elevation (DEM) data access. |
+| **Mjolnir** | Tile builder. OSM PBF → Lua tag parsing (`lua/graph.lua`) → tiles. Only when `ENABLE_DATA_TOOLS=ON`. |
+| **Loki** | Location correlation: lat/lon → graph edges via per-tile 5x5 spatial bin index. |
+| **Meili** | Map matching via HMM + Viterbi. |
+| **Thor** | Pathfinding: BidirectionalAStar (primary), TimeDepForward/Reverse, MultiModal. Also matrices and isochrones. |
+| **Odin** | Maneuver generation and narrative in 30+ languages (`locales/`). |
+| **Tyr** | API orchestration + serialization (Valhalla JSON, OSRM JSON, GPX, Protobuf). |
 
-### Core Graph Data Structures
+### The Graph (Essential Knowledge)
 
-All in `valhalla/baldr/`:
+All in `valhalla/baldr/`. Understanding these relationships is essential for almost any Valhalla task:
 
-- **GraphId** — 64-bit ID: 3-bit hierarchy level + 22-bit tile index + 21-bit node/edge index. Same format for nodes and edges — context determines which.
-- **GraphTile** — A single tile. Contains arrays of nodes, directed edges, edge info, and supplementary data.
-- **NodeInfo** — Intersection node. Points to outgoing edges via `edge_index` and `edge_count` (within same tile).
-- **DirectedEdge** — Directed edge. `endnode()` returns a GraphId that may point to a different tile. `opp_index` points to the reverse edge.
-- **EdgeInfo** — Shared metadata for forward + reverse edge pair: shape (polyline), names, way ID.
+- **GraphId** — 64-bit: 3-bit level + 22-bit tile index + 21-bit local index. Same format for nodes and edges — context determines which.
+- **NodeInfo** — An intersection. Points to its outgoing directed edges via `edge_index` + `edge_count` (within the same tile).
+- **DirectedEdge** — One direction of a road segment. `endnode()` returns a GraphId that may cross tiles. `opp_index` points to the reverse-direction edge.
+- **EdgeInfo** — Shared by forward + reverse edge pair: geometry (polyline), street names, elevation, OSM way ID.
+- **GraphTile** — Container for all of the above, plus signs, restrictions, admin info, etc.
 
-The graph uses an adjacency list format split into tiles. Each node points to its outgoing edges via `edge_index` and `edge_count` (indexes within the same tile). Each `DirectedEdge` has an `endnode()` GraphId that may point to a different tile. Each edge also has an `opp_index` pointing to the reverse direction edge.
+Three hierarchy levels:
 
-### Tile Hierarchy
+| Level | Tile Size | Contains |
+|-------|-----------|----------|
+| 0 | 4° | Highways + shortcut edges |
+| 1 | 1° | Arterials + shortcut edges |
+| 2 | 0.25° | Local roads |
 
-| Level | Tile Size | Road Classes |
-|-------|-----------|-------------|
-| 0 | 4° | Highways (motorway, trunk, primary) |
-| 1 | 1° | Arterials (secondary, tertiary) |
-| 2 | 0.25° | Local (residential, service, unclassified) |
+Shortcut edges on levels 0–1 collapse lower-level paths for fast long-distance BidirectionalAStar. Tiles are memory-mapped from a tar extract in production. `GraphReader` manages a 1 GB in-memory cache — only a fraction of ~205k planet tiles fit at once.
 
-Higher levels contain shortcut edges for fast long-distance routing. Tiles are loaded from a memory-mapped tar extract (production) or individual files (development). `GraphReader` (`valhalla/baldr/graphreader.h`) manages tile loading with an in-memory cache (default 1 GB, configurable via `mjolnir.max_cache_size`).
-
-### Request Pipeline
-
-Three workers extend `service_worker_t` (`valhalla/worker.h`):
-- `loki_worker_t` — input validation, location correlation
-- `thor_worker_t` — routing algorithms, CostFactory
-- `odin_worker_t` — maneuver generation, narrative
-
-**Deployment modes:**
-- **HTTP server** (`valhalla_service config.json [concurrency]`) — prime_server with ZMQ, N worker threads per stage
-- **Distributed workers** (`valhalla_loki_worker`, `valhalla_thor_worker`, `valhalla_odin_worker`) — each stage as a separate process via ZMQ
-- **One-shot CLI** (`valhalla_service config.json action request.json`) — uses `tyr::actor_t` in-process, no HTTP
-- **Library** (`tyr::actor_t` from `valhalla/tyr/actor.h`) — embedded use, also used by gurka tests and Python bindings
-
-**Per-action pipelines:**
+### Request Flow
 
 | Action | Pipeline |
 |--------|----------|
@@ -127,45 +112,74 @@ Three workers extend `service_worker_t` (`valhalla/worker.h`):
 | locate, height, status | Loki-only → serialize |
 | expansion | `loki.route()` → `thor.expansion()` → serialize |
 
+Deployment modes: HTTP server (`valhalla_service`), distributed ZMQ workers (`valhalla_*_worker`), one-shot CLI, embedded library (`tyr::actor_t`).
+
 ### OSM Data Pipeline
 
-Orchestrated by `build_tile_set()` in `src/mjolnir/util.cc`:
+`build_tile_set()` in `src/mjolnir/util.cc`:
 
 ```
-OSM PBF
-  → lua/graph.lua (tag transformation — configurable without recompilation)
-  → pbfgraphparser.cc: way() / relation() / node() (three ordered passes)
-  → GraphBuilder::BuildEdges (ways split at intersections)
-  → GraphBuilder::Build (edges → DirectedEdge + NodeInfo in tiles)
+OSM PBF → lua/graph.lua (tag transformation)
+  → pbfgraphparser.cc (three passes: way/relation/node)
+  → GraphBuilder (ways split at intersections → DirectedEdge + NodeInfo)
   → GraphEnhancer → GraphFilter → HierarchyBuilder → ShortcutBuilder
   → ElevationBuilder → RestrictionBuilder → GraphValidator
-  → Ready for routing
 ```
 
-Intermediate data flows through `OSMData` (container for `OSMWay`, `OSMWayNode`, etc.) and temporary `.bin` files. The Lua layer (`lua/graph.lua`) controls tag-to-attribute mapping — key tables: `highway`, `road_class`, `default_speed`, `restriction`.
+The Lua layer (`lua/graph.lua`) controls tag-to-attribute mapping without recompilation — key tables: `highway`, `road_class`, `default_speed`, `restriction`. Intermediate data flows through `OSMData` and temporary `.bin` files. See `docs/docs/mjolnir/tag_parsing.md` for the full Lua ↔ C++ tag flow and debugging tips.
 
-## Configuration
+## Where to Look
 
-JSON format, loaded into `boost::property_tree::ptree` via `valhalla::config()`. Generate defaults with:
-```bash
-scripts/valhalla_build_config --mjolnir-tile-dir ./tiles --mjolnir-tile-extract ./tiles.tar > valhalla.json
-```
+This is the most important navigation aid. Large files like `pbfgraphparser.cc` (5400+ lines) and `bidirectional_astar.cc` make knowing where to start essential.
 
-Key sections: `mjolnir` (tile paths, concurrency), `loki`/`thor` (service limits), `meili` (map matching params), `httpd` (server port), `service_limits` (per-endpoint limits). Access via ptree path traversal: `config.get<std::string>("mjolnir.tile_dir")`.
+| You're Working On | Start Here |
+|-------------------|-----------|
+| OSM tag parsing, which tags produce which attributes | `lua/graph.lua`, `src/mjolnir/pbfgraphparser.cc` |
+| How edges/nodes get their properties during tile build | `src/mjolnir/graphbuilder.cc`, `src/mjolnir/graphenhancer.cc` |
+| Whether a vehicle type can use an edge, costing weights | `src/sif/` — each model has its own file (e.g., `autocost.cc`, `bicyclecost.cc`). See `docs/docs/sif/dynamic-costing.md` |
+| Routing algorithm behavior | `src/thor/bidirectional_astar.cc`, `astar.cc`, `timedep_forward.cc`, `timedep_reverse.cc`. See `docs/docs/thor/path-algorithm.md` |
+| How lat/lon maps to graph edges | `src/loki/search.cc` (bin search → projection → filtering → reachability) |
+| Turn-by-turn maneuver generation | `src/odin/maneuversbuilder.cc`, `src/odin/narrativebuilder.cc` |
+| API response format | `src/tyr/route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc` |
+| Error codes and HTTP status mapping | `src/exceptions.cc` (100s=Loki, 200s=Odin, 300s=Skadi, 400s=Thor, 500s=Tyr) |
+| Protobuf message definitions | `proto/` — root message is `Api` in `api.proto` |
+| Live/historical traffic | Separate binary tile files; test via `test::customize_live_traffic_data()` and `test::customize_historical_traffic()` in `test/test.h` |
+| Time-dependent routing | `depart_at`/`arrive_by` params; timezone data from `tz.sqlite` |
+| Route API request/response format | `docs/docs/api/turn-by-turn/api-reference.md` |
+| Speed assignment (maxspeed, highway defaults, density) | `docs/docs/speeds.md` |
+| Domain terminology (cost vs penalty vs factor) | `docs/docs/terminology.md` |
 
-## Error Handling
+## Performance at Planet Scale
 
-Errors are thrown as `valhalla_exception_t` (`valhalla/exceptions.h`) with numeric code, message, HTTP status, and OSRM error string. All codes defined in `src/exceptions.cc`. Code ranges: 100s = Loki/parsing, 200s = Odin, 300s = Skadi, 400s = Thor, 500s = Tyr/serialization. Non-fatal issues use `add_warning(api, code)`.
+| Metric | Value |
+|--------|-------|
+| OSM planet PBF | ~85 GiB |
+| Output tileset | ~85 GiB (+10% with traffic overlay) |
+| Total tiles | ~205,000 |
+| DirectedEdge objects | ~1 billion |
+| NodeInfo objects | ~500 million |
+| Parsed OSM nodes | ~3 billion |
+| `way_node.bin` intermediate | ~110 GiB |
+| Full planet build time | ~7 hours on m8gd.8xlarge (32 vCPU, 128 GiB, NVMe) |
+
+**Why this matters for every change:**
+- **Data structure size** → +1 byte on DirectedEdge = +1 GiB tileset. Bit-packing is intentional.
+- **Tile format stability** → binary layout changes break every user's pre-built tileset. Not an option.
+- **Build intermediates** → `way_node.bin` at 110 GiB means changes to `OSMWayNode` or node processing directly inflate build time and disk.
+- **Tile I/O** → memory-mapped in production. Larger tiles = more memory pressure, slower cold starts.
+- **Cache budget** → 1 GB cache holds only a fraction of ~205k tiles. Cache-friendly access patterns matter.
 
 ## Testing
 
 ### Unit Tests vs Gurka Integration Tests
 
-**Unit tests** (`test/*.cc`) — test individual functions or modules in isolation. Target name matches filename. Link against `valhalla_test` (shared library from `test/test.cc` + `test/test.h`). Many use pre-built tilesets from `test/data/` (utrecht, whitelion, roma, etc.). Use for testing a specific function, parser, serializer, or algorithm.
+**Unit tests** (`test/*.cc`) — target name = filename. Test individual functions/modules. Many use pre-built tilesets from `test/data/` (utrecht, whitelion, roma, etc.).
 
-**Gurka tests** (`test/gurka/test_*.cc`) — end-to-end: define ASCII road maps → build OSM + tiles → run full API requests → verify results. File `test_<name>.cc` produces target `gurka_<name>`. Use for testing routing behavior, access restrictions, turn restrictions, costing, maneuvers — anything requiring multiple modules.
+**Gurka integration tests** (`test/gurka/test_*.cc`) — target `gurka_<name>`. Build ASCII road maps → generate tiles → run full API → verify. Use for testing routing behavior, access restrictions, turn restrictions, costing, maneuvers — anything requiring multiple modules. See `docs/docs/test/gurka.md` for the full framework reference including map construction, relations, assertions, and debugging with GeoJSON.
 
 ### Gurka Test Pattern
+
+Read any existing gurka test as a template. The basic pattern:
 
 ```cpp
 TEST(MyFeature, BasicCase) {
@@ -186,69 +200,110 @@ TEST(MyFeature, BasicCase) {
 }
 ```
 
-**Key helpers:** `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `gurka::findEdgeByNodes()`, `gurka::findNode()`, `gurka::assert::raw::expect_path()`, `gurka::assert::raw::expect_maneuvers()`, `gurka::assert::osrm::expect_steps()`.
+### Key Test Helpers
 
-**Test utilities** (`test/test.h`): `test::make_config()`, `test::build_live_traffic_data()`, `test::customize_live_traffic_data()`, `test::customize_historical_traffic()`, `test::customize_edges()`, `test::make_clean_graphreader()`.
+**Gurka:** `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `gurka::findEdgeByNodes()`, `gurka::findNode()`, `gurka::assert::raw::expect_path()`, `gurka::assert::raw::expect_maneuvers()`, `gurka::assert::osrm::expect_steps()`.
 
-### Test Conventions
+**Utilities** (`test/test.h`): `test::make_config()`, `test::build_live_traffic_data()`, `test::customize_live_traffic_data()`, `test::customize_historical_traffic()`, `test::customize_edges()`, `test::make_clean_graphreader()`.
+
+### Conventions
 
 - `TEST(SuiteName, TestName)` or `TEST_F(FixtureClass, TestName)`. PascalCase, no underscores in test names.
-- Prefer `EXPECT_*` over `ASSERT_*`.
+- Prefer `EXPECT_*` over `ASSERT_*` (test continues on failure, giving more diagnostic info).
+- Always baseline tests before changes — especially on arm64 where some tests have pre-existing failures.
 
 ## Development Workflow
 
-### 1. Find the Right Test
+### 1. Baseline Before Changing
 
-- `test/gurka/` for integration tests (e.g., `test_access.cc`, `test_route.cc`, `test_restrictions.cc`)
-- `test/` for unit tests (e.g., `directededge.cc`, `graphparser.cc`, `factory.cc`)
-
-### 2. Baseline It
-
-Always run the test before any code changes to establish a baseline, for example to run `test/gurka/test_access.cc`:
+**IMPORTANT:** Always run the relevant test(s) before any code changes:
 ```bash
 cd build && cmake --build . -j 12 --target gurka_access && ./test/gurka/gurka_access
 ```
+This catches pre-existing arm64 failures and establishes what "passing" looks like.
 
-### 3. Add a Failing Test
+### 2. Add a Failing Test
 
-Write a `TEST` that demonstrates the expected behavior. For bug fixes, it should reproduce the bug and fail:
+Write a `TEST` that demonstrates the expected behavior. For bug fixes, it should reproduce the bug or requires missing routing feature:
 ```bash
 cmake --build . -j 12 --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
 ```
 
-### 4. Trace the Pipeline and Fix
+### 3. Trace the Pipeline and Fix
 
-- **Tag parsing / data?** → `lua/graph.lua` or `src/mjolnir/pbfgraphparser.cc`
-- **Edge/node attributes?** → `src/mjolnir/graphbuilder.cc` or `src/mjolnir/graphenhancer.cc`
-- **Access / costing?** → `src/sif/` (the relevant cost model, e.g., `autocost.cc`)
-- **Routing algorithm?** → `src/thor/` (`bidirectional_astar.cc`, `astar.cc`, `timedep_*.cc`)
-- **Location correlation?** → `src/loki/search.cc`
-- **Maneuvers / narrative?** → `src/odin/maneuversbuilder.cc`, `src/odin/narrativebuilder.cc`
-- **Serialization?** → `src/tyr/` (`route_serializer_*.cc`, `matrix_serializer.cc`)
+Use the "Where to Look" table above to find the right file. The pipeline flows left to right: tag parsing → graph building → costing → routing → maneuvers → serialization.
 
-### 5. Iterate Until Green
+### 4. Iterate Until Green
 
 ```bash
 cmake --build . -j 12 --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
 ```
 
-### 6. Verify Related Tests
+### 5. Verify Related Tests
 
-Always finish with high-level gurka tests to catch regressions:
+**IMPORTANT:** Always finish with related gurka tests to catch regressions:
 ```bash
 cmake --build . -j 12 --target gurka_access --target gurka_route --target gurka_filter && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_route && ./test/gurka/gurka_filter
 ```
 
-Avoid running the entire suite — it is extremely slow and produces false positives on arm64.
+Never skip this step. Avoid running the entire suite — it is extremely slow and has false positives on arm64.
 
 ## Code Style
 
-- **C++20**, 2-space indent, 102-col limit, left-aligned pointers
-- Use clang-format-11 specifically (newer versions produce different output)
-- clang-tidy checks: bugprone-*, performance-*, modernize-*, clang-analyzer-*
+- **C++20**, 2-space indent, 102-col limit, left-aligned pointers (`int* p`, not `int *p`)
+- **MUST** use either script `./scripts/format.sh` or clang-format-11 directly — newer versions produce different output
+- clang-tidy checks: `bugprone-*`, `performance-*`, `modernize-*`, `clang-analyzer-*`
+- Errors thrown as `valhalla_exception_t` with numeric code — ranges in `src/exceptions.cc`
+- Configuration via `boost::property_tree::ptree`, JSON format
 
-## API Endpoints
+## Running a Route Locally
+
+`valhalla_service` supports a one-shot CLI mode (no HTTP server needed): `valhalla_service config.json <action> '<json_request>'`. This is the fastest way to test routing against real tiles. The same mechanism powers `tyr::actor_t` used in gurka tests and Python bindings.
+
+### Quick Setup: Build Tiles and Route
+
+```bash
+# Download a small OSM extract (Liechtenstein is ~2 MB, builds in seconds)
+wget https://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+
+# Generate config
+mkdir -p valhalla_tiles
+valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles \
+  --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar \
+  --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite \
+  --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
+
+# Build supporting databases and routing tiles
+valhalla_build_timezones > valhalla_tiles/timezones.sqlite
+valhalla_build_admins -c valhalla.json liechtenstein-latest.osm.pbf
+valhalla_build_tiles -c valhalla.json liechtenstein-latest.osm.pbf
+
+# Create tar extract for faster tile loading
+valhalla_build_extract -c valhalla.json -v
+
+# Route from Vaduz to Schaan (one-shot, no server)
+valhalla_service valhalla.json route '{"locations":[{"lat":47.141,"lon":9.521},{"lat":47.165,"lon":9.510}],"costing":"auto"}'
+
+# Pipe through jq for readable output
+valhalla_service valhalla.json route '{"locations":[{"lat":47.141,"lon":9.521},{"lat":47.165,"lon":9.510}],"costing":"auto"}' 2>/dev/null | jq '.trip.summary'
+```
+
+The third argument can also be a path to a JSON file. The `test_requests/` directory contains ~250 files with example requests for various scenarios (demo routes, truck routes, bicycle routes, transit, restrictions, etc.) — useful as templates for crafting test requests.
+
+### Route Geometry: Polyline6 Encoding
+
+Valhalla encodes route geometries as polyline strings with **6 digits of precision** (polyline6), not the 5-digit precision from Google's original spec. This is critical — using 5-digit precision will place points in the ocean.
+
+When a code change affects route geometry, paste the encoded `shape` string from the response into the [Valhalla polyline decoder](https://valhalla.github.io/demos/polyline/?unescape=true&polyline6=true) to visually verify the route on a map.
+
+See `docs/docs/decoding.md` for decode implementations in C++, Python, JavaScript, Go, and Rust.
+
+## Reference
+
+### API Endpoints
+
+All accept JSON via POST. Protobuf definitions in `proto/` — root message `Api` in `api.proto`.
 
 | Endpoint | Description |
 |----------|-------------|
@@ -263,9 +318,7 @@ Avoid running the entire suite — it is extremely slow and produces false posit
 | `/expansion` | Debug: edges visited during search |
 | `/status` | Health check and tileset info |
 
-All accept JSON via POST. Protobuf definitions in `proto/` — root message is `Api` in `api.proto`.
-
-## File Layout
+### File Layout
 
 ```
 valhalla/          # Public headers (valhalla/<module>/*.h)
@@ -279,26 +332,30 @@ lua/               # OSM tag parsing scripts (graph.lua, admin.lua)
 locales/           # Translation JSON files (~30 languages)
 third_party/       # Vendored deps: rapidjson, date, googletest, etc.
 scripts/           # Dev scripts: format.sh, valhalla_build_config, CI
-date_time/         # CLDR timezone mapping (compiled into binary)
-docs/              # MkDocs documentation
 ```
 
-## Key Executables
+### Key Executables
 
 - `valhalla_service` — HTTP server (multi-threaded) or one-shot CLI mode
-- `valhalla_loki_worker` / `valhalla_thor_worker` / `valhalla_odin_worker` — standalone worker processes
 - `valhalla_build_tiles` — Build routing tiles from OSM PBF
 - `valhalla_build_admins` / `valhalla_build_timezones` — Build admin/timezone databases
 - `valhalla_build_extract` — Create tar extract from tiles
+- `valhalla_build_config` — Generate default configuration JSON
 
-## Important Notes
+### In-Repo Documentation
 
-- **Costs are dynamic, not baked into tiles.** Costing is computed at runtime via `DynamicCost` (`valhalla/sif/dynamiccost.h`), enabling custom costing without rebuilding data.
-- **Lua tag parsing** (`lua/graph.lua`) controls OSM tag-to-attribute mapping without recompilation.
-- **Multimodal costing** is only supported for `/route` and `/isochrone`.
-- **Live and predictive traffic:** Live traffic in separate binary tile files; historical/predicted speeds per edge. Test helpers `customize_live_traffic_data()` and `customize_historical_traffic()` in `test/test.h`.
-- **Date/time routing:** `depart_at`/`arrive_by` for time-dependent routing. Timezone data from `tz.sqlite` (built by `valhalla_build_timezones`).
-- **Loki search pipeline:** bin search (tiles by distance) → point-to-segment projection → heading/side/road-class filtering → reachability check → `PathLocation` with `PathEdge`s.
-- **Tile bin index:** Each tile has a 5x5 spatial bin index (built by Mjolnir) for fast edge lookup.
-- **Shortcut edges** on higher hierarchy levels collapse lower-level subpaths for fast BidirectionalAStar.
-- **OSRM compatibility:** Tyr can serialize responses in OSRM-compatible JSON format.
+The `docs/docs/` directory contains detailed documentation. The most useful for development:
+
+| Document | What It Covers |
+|----------|---------------|
+| `route_overview.md` | End-to-end route computation pipeline (Loki → Thor → Odin → Tyr) |
+| `terminology.md` | Domain glossary: cost vs penalty vs factor, edge, maneuver, trip |
+| `sif/dynamic-costing.md` | Costing design: EdgeCost, TransitionCost, turn penalties, name consistency |
+| `thor/path-algorithm.md` | A*, BidirectionalA*, MultiModal, hierarchy levels, edge labeling, shortcuts |
+| `tiles.md` | Tile math: GraphId layout, lat/lon ↔ tile index, bounding box queries |
+| `speeds.md` | Speed assignment: maxspeed tags, highway defaults, urban/rural density |
+| `mjolnir/tag_parsing.md` | OSM tag flow: Lua → C++ marshalling, debugging route quality issues |
+| `test/gurka.md` | Gurka framework: ASCII maps, ways/nodes/relations, assertions, GeoJSON debugging |
+| `decoding.md` | Polyline6 encoding/decoding with examples in multiple languages |
+| `api/turn-by-turn/api-reference.md` | Route API: request format, costing options, response structure |
+| `building.md` | Building from source and running Valhalla server on all platforms |
