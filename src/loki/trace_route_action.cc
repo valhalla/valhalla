@@ -177,7 +177,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
 
     // Project first and last shape point onto nearest edge(s). Clear current locations list
     // and set the path locations
-    search_.search(*options.mutable_locations(), costing);
+    search_.search(*options.mutable_locations(), mode_costing[static_cast<size_t>(mode)]);
 
     // If locations were provided, backfill the origin and dest lat,lon and update
     // side of street on associated edges. TODO - create a constant for side of street

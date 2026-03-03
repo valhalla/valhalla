@@ -72,7 +72,7 @@ void loki_worker_t::isochrones(Api& request) {
 
   try {
     // correlate the various locations to the underlying graph
-    search_.search(*options.mutable_locations(), costing);
+    search_.search(*options.mutable_locations(), mode_costing[static_cast<size_t>(mode)]);
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 }
 

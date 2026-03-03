@@ -138,17 +138,19 @@ void loki_worker_t::route(Api& request) {
       }
       google::protobuf::RepeatedPtrField<Location> start_loc(locations->begin(),
                                                              locations->begin() + 1);
-      search_.search(start_loc, costing);
+      search_.search(start_loc, mode_costing[static_cast<size_t>(mode)]);
       google::protobuf::RepeatedPtrField<Location> end_loc(locations->begin() + 1,
                                                            locations->begin() + 2);
-      search_.search(end_loc, costing);
+      search_.search(end_loc, mode_costing[static_cast<size_t>(mode)]);
       // merge them again
       locations->at(0).CopyFrom(start_loc.at(0));
       locations->at(1).CopyFrom(end_loc.at(0));
     } else {
-      search_.search(*locations, costing);
+      search_.search(*locations, mode_costing[static_cast<size_t>(mode)]);
     }
 
+    // throw if there's a location we did not find any
+    // candidates for
     for (const auto& location : *locations) {
       if (location.correlation().edges().empty()) {
         throw valhalla_exception_t(171);
