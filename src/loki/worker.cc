@@ -170,6 +170,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       throw valhalla_exception_t{157, std::to_string(max_exclude_locations)};
     }
     try {
+      parse_locations(options.mutable_exclude_locations(), api);
       search_.search(*options.mutable_exclude_locations(), costing);
       std::unordered_set<uint64_t> avoids;
       auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();

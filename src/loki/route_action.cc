@@ -149,6 +149,12 @@ void loki_worker_t::route(Api& request) {
       search_.search(*locations, costing);
     }
 
+    for (const auto& location : *locations) {
+      if (location.correlation().edges().empty()) {
+        throw valhalla_exception_t(171);
+      }
+    }
+
     if (connectivity_map) {
       for (size_t i = 0; i < locations_size; ++i) {
         auto colors =
