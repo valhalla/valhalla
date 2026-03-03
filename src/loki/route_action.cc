@@ -158,7 +158,7 @@ void loki_worker_t::route(Api& request) {
     }
 
     if (connectivity_map) {
-      for (size_t i = 0; i < locations_size; ++i) {
+      for (int i = 0; i < locations_size; ++i) {
         auto colors =
             connectivity_map->get_colors(connectivity_level, locations->at(i), connectivity_radius);
         for (auto color : colors) {
