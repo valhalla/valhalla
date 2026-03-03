@@ -1598,7 +1598,7 @@ worker_t::result_t
 to_response(const std::string& data,
             http_request_info_t& request_info,
             const Api& request,
-            const std::vector<prime_server::headers_t::value_type>& additional_headers) {
+            const std::vector<std::pair<std::string, std::string>>& additional_headers) {
   // try to get all the proper headers
   auto fmt = request.options().format();
 
