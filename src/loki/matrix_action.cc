@@ -117,7 +117,7 @@ void loki_worker_t::matrix(Api& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    const auto searched = search_.search(sources_targets, costing);
+    const auto searched = search_.search(sources_targets, mode_costing[static_cast<size_t>(mode)]);
     for (size_t i = 0; i < sources_targets.size(); ++i) {
       const auto& l = sources_targets[i];
       const auto& projection = searched.at(l);

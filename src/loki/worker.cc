@@ -108,16 +108,17 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     // For the begin and end of multimodal we expect you to be walking
     if (options.costing_type() == Costing::multimodal) {
       options.set_costing_type(Costing::pedestrian);
-      costing = factory.Create(options);
+      mode_costing = factory.CreateModeCosting(options, mode);
       options.set_costing_type(Costing::multimodal);
     } // otherwise use the provided costing
     else {
-      costing = factory.Create(options);
+      mode_costing = factory.CreateModeCosting(options, mode);
     }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   if (options.exclude_polygons_size()) {
-    const auto edges = edges_in_rings(options, *reader, costing, max_exclude_polygons_length);
+    const auto edges = edges_in_rings(options, *reader, mode_costing[static_cast<size_t>(mode)],
+                                      max_exclude_polygons_length);
     auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
     for (const auto& edge_id : edges) {
       auto* avoid = co.add_exclude_edges();
@@ -135,7 +136,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
     try {
       auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
-      auto results = search_.search(exclude_locations, costing);
+      auto results = search_.search(exclude_locations, mode_costing[static_cast<size_t>(mode)]);
       std::unordered_set<uint64_t> avoids;
       auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
       for (const auto& result : results) {
@@ -247,7 +248,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_linear_cost_edges") {
       continue;
     }
-    if (kv.first != "trace") {
+    if (kv.first != "trace" && kv.first != "auto_pedestrian") {
       max_locations.emplace(kv.first,
                             config.get<size_t>("service_limits." + kv.first + ".max_locations"));
       if (kv.first == "centroid" && max_locations["centroid"] > 127)
@@ -261,6 +262,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                                                                ".max_matrix_location_pairs"));
     }
   }
+
+  // overwrite config value with hardcoded one since multi-location routes
+  // don't make sense for auto_pedestrian
+  max_locations.emplace("auto_pedestrian", 2);
   // this should never happen
   if (max_locations.empty()) {
     throw std::runtime_error("Missing max_locations configuration");
