@@ -235,6 +235,11 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                     max_road_classes, i));
   }
 
+  mvt_headers.emplace_back("Cache-Control",
+                           std::format("public, max-age={}",
+                                       config.get<std::string>("loki.service_defaults.mvt_max_age",
+                                                               "1800")));
+
   // Build max_locations and max_distance maps
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
@@ -458,7 +463,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(request.SerializeAsString());
         break;
       case Options::tile:
-        result = to_response(render_tile(request), info, request);
+        result = to_response(render_tile(request), info, request, mvt_headers);
         break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
