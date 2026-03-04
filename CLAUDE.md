@@ -226,37 +226,43 @@ TEST(MyFeature, BasicCase) {
 
 ## Development Workflow
 
-### 1. Baseline Before Changing
+### 1. Find Related Tests
 
-**IMPORTANT:** Always run the relevant test(s) before any code changes:
+Identify which tests cover the area you're changing:
+- `test/gurka/` — integration tests by feature (e.g., `test_access.cc` → `gurka_access`, `test_route.cc` → `gurka_route`)
+- `test/` — unit tests by module (e.g., `directededge.cc` → `directededge`)
+
+### 2. Baseline Before Changing
+
+**IMPORTANT:** Always run related tests before any code changes to establish a baseline (some tests have pre-existing arm64 failures):
 ```bash
+# example — replace gurka_access with whatever tests are relevant to your change
 cd build && cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access
 ```
-This catches pre-existing arm64 failures and establishes what "passing" looks like.
 
-### 2. Add a Failing Test
+### 3. Add a Failing Test
 
-Write a `TEST` that demonstrates the expected behavior. For bug fixes, it should reproduce the bug or requires missing routing feature:
+Write a `TEST` that demonstrates the expected behavior — it should fail before your fix and pass after:
 ```bash
 cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
 ```
 
-### 3. Trace the Pipeline and Fix
+### 4. Trace the Pipeline and Fix
 
 Use the "Where to Look" table above to find the right file. The pipeline flows left to right: tag parsing → graph building → costing → routing → maneuvers → serialization.
 
-### 4. Iterate Until Green
+### 5. Iterate Until Green
 
 ```bash
 cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
 ```
 
-### 5. Verify Related Tests
+### 6. Verify Related Tests
 
-**IMPORTANT:** Always finish with related gurka tests to catch regressions:
+**IMPORTANT:** Run tests for all functionality your changes touch, not just the test you started with. For example, if you started with `gurka_access` for a ferry fix but also modified costing or graph building, run `gurka_ferry_connections`, `gurka_route`, and any other tests covering the affected code:
 ```bash
-cmake --build . -j$(nproc) --target gurka_access --target gurka_route --target gurka_filter && \
-  ./test/gurka/gurka_access && ./test/gurka/gurka_route && ./test/gurka/gurka_filter
+cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connections --target gurka_route && \
+  ./test/gurka/gurka_access && ./test/gurka/gurka_ferry_connections && ./test/gurka/gurka_route
 ```
 
 Never skip this step. Avoid running the entire suite — it is extremely slow and has false positives on arm64.
