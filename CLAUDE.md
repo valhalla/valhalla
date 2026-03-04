@@ -249,7 +249,7 @@ cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access --
 
 ### 4. Trace the Pipeline and Fix
 
-Use the "Where to Look" table above to find the right file. The pipeline flows left to right: tag parsing → graph building → costing → routing → maneuvers → serialization.
+Use the "Where to Look" table above to find the right file. The pipeline flows left to right: tag parsing → graph building → parse costing → routing → maneuvers → serialization.
 
 ### 5. Iterate Until Green
 
