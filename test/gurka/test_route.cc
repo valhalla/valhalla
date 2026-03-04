@@ -213,6 +213,32 @@ TEST_F(IgnoreAccessTest, PedestrianIgnoreAccess) {
                                    cost, {{IgnoreAccessParam(cost), "1"}}));
 }
 
+// Verify that access=private + emergency=yes roads are routable.
+// Previously, this tag combination caused all vehicular access bits to be zeroed,
+// making these roads unroutable even with ignore_access=true. After the fix,
+// they behave like normal access=private roads (destination_only with access bits
+// preserved). See GitHub issues #5648 and #5512.
+TEST(Standalone, PrivateEmergencyIgnoreAccess) {
+  const std::string ascii_map = R"(
+      A-----------B-----------C
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "unclassified"}}},
+      {"BC",
+       {{"highway", "unclassified"}, {"access", "private"}, {"emergency", "yes"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/private_emergency_access");
+
+  // access=private + emergency=yes should be routable as destination_only
+  for (const std::string& cost : {"auto", "truck", "taxi", "bus"}) {
+    EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "C"}, cost))
+        << "Failed to route through access=private + emergency=yes road with " << cost;
+  }
+}
+
 TEST(AutoDataFix, deprecation) {
   // if both auto & auto_shorter costing options were provided, auto costing should be overridden
   Api request;
