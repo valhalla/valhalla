@@ -191,7 +191,7 @@ Edges touched per route — shows why per-edge overhead matters:
 
 ### Gurka Test Pattern
 
-Read any existing gurka test as a template. The basic pattern:
+Add your test to the relevant existing test file (e.g., access-related → `test/gurka/test_access.cc`). Minimal skeleton:
 
 ```cpp
 TEST(MyFeature, BasicCase) {
@@ -212,11 +212,7 @@ TEST(MyFeature, BasicCase) {
 }
 ```
 
-### Key Test Helpers
-
-**Gurka:** `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `gurka::findEdgeByNodes()`, `gurka::findNode()`, `gurka::assert::raw::expect_path()`, `gurka::assert::raw::expect_maneuvers()`, `gurka::assert::osrm::expect_steps()`.
-
-**Utilities** (`test/test.h`): `test::make_config()`, `test::build_live_traffic_data()`, `test::customize_live_traffic_data()`, `test::customize_historical_traffic()`, `test::customize_edges()`, `test::make_clean_graphreader()`.
+Key helpers: `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `gurka::findEdgeByNodes()`, `gurka::assert::raw::expect_path()`, `gurka::assert::raw::expect_maneuvers()`, `gurka::assert::osrm::expect_steps()`. Test utilities in `test/test.h`. Full framework reference in `docs/docs/test/gurka.md`.
 
 ### Conventions
 
