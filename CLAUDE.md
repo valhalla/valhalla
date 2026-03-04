@@ -18,24 +18,26 @@ Read this section first. Violating these constraints causes real damage at plane
 
 ```bash
 # Build (from repo root)
-cd build && cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build . -j 12
+cd build && cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build . -j$(nproc)
 
 # Unit test — target name = filename without extension (test/directededge.cc → directededge)
-cd build && cmake --build . -j 12 --target directededge && ./test/directededge
+cd build && cmake --build . -j$(nproc) --target directededge && ./test/directededge
 
 # Gurka integration test — target gurka_<name> from test/gurka/test_<name>.cc
-cd build && cmake --build . -j 12 --target gurka_filter && ./test/gurka/gurka_filter
+cd build && cmake --build . -j$(nproc) --target gurka_filter && ./test/gurka/gurka_filter
 
 # Single GoogleTest case
 ./test/gurka/gurka_access --gtest_filter="*YourTestName*"
 
 # Multiple related tests
-cmake --build . -j 12 --target gurka_access --target gurka_route && \
+cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_route
 
 # Format — or use clang-format-11 directly `clang-format-11 -i src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc`
 ./scripts/format.sh
 ```
+
+**Build parallelism:** `-j$(nproc)` works on Linux; on macOS use `-j$(sysctl -n hw.logicalcpu)` or install `coreutils` for `nproc`. Alternatively, configure CMake with Ninja (`cmake -G Ninja ..` or `CMAKE_GENERATOR=Ninja`), which parallelizes automatically without needing `-j`.
 
 **IMPORTANT:** Avoid `make check` — extremely slow and produces false positives on arm64. Run only the relevant tests.
 
@@ -218,7 +220,7 @@ TEST(MyFeature, BasicCase) {
 
 **IMPORTANT:** Always run the relevant test(s) before any code changes:
 ```bash
-cd build && cmake --build . -j 12 --target gurka_access && ./test/gurka/gurka_access
+cd build && cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access
 ```
 This catches pre-existing arm64 failures and establishes what "passing" looks like.
 
@@ -226,7 +228,7 @@ This catches pre-existing arm64 failures and establishes what "passing" looks li
 
 Write a `TEST` that demonstrates the expected behavior. For bug fixes, it should reproduce the bug or requires missing routing feature:
 ```bash
-cmake --build . -j 12 --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
+cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
 ```
 
 ### 3. Trace the Pipeline and Fix
@@ -236,14 +238,14 @@ Use the "Where to Look" table above to find the right file. The pipeline flows l
 ### 4. Iterate Until Green
 
 ```bash
-cmake --build . -j 12 --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
+cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
 ```
 
 ### 5. Verify Related Tests
 
 **IMPORTANT:** Always finish with related gurka tests to catch regressions:
 ```bash
-cmake --build . -j 12 --target gurka_access --target gurka_route --target gurka_filter && \
+cmake --build . -j$(nproc) --target gurka_access --target gurka_route --target gurka_filter && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_route && ./test/gurka/gurka_filter
 ```
 
