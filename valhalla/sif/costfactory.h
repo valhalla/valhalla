@@ -30,6 +30,9 @@ public:
    * Constructor
    */
   CostFactory() {
+    /*
+     * Costings that are composites are registered with NoCost/dummy cost
+     */
     Register(Costing::auto_, CreateAutoCost);
     // auto_data_fix was deprecated
     // auto_shorter was deprecated
@@ -43,8 +46,8 @@ public:
     Register(Costing::transit, CreateTransitCost);
     Register(Costing::multimodal, CreateNoCost); // dummy so it behaves like the rest
     Register(Costing::none_, CreateNoCost);
-    Register(Costing::bikeshare, CreateBikeShareCost);
-    Register(Costing::auto_pedestrian, CreateAutoCost);
+    Register(Costing::bikeshare, CreateNoCost);       // dummy
+    Register(Costing::auto_pedestrian, CreateNoCost); // dummy
   }
 
   /**
@@ -111,6 +114,11 @@ public:
         options.costing_type() == Costing::bikeshare) {
       // For multi-modal we set the initial mode to pedestrian. (TODO - allow other initial modes)
       mode = valhalla::sif::TravelMode::kPedestrian;
+
+      // special flag to signal pedestrian cost that correlating locations to BSS connection edges is
+      // fine
+      mode_costing[static_cast<size_t>(mode)]->set_project_on_bss_connection(options.costing_type() ==
+                                                                             Costing::bikeshare);
     } else if (options.costing_type() == Costing::auto_pedestrian) {
       mode = valhalla::sif::TravelMode::kDrive;
     }
