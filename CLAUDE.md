@@ -144,7 +144,8 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | How edges/nodes get their properties during tile build | `src/mjolnir/graphbuilder.cc`, `src/mjolnir/graphenhancer.cc` |
 | Adding new per-edge data to tiles | `TaggedValue` enum in `valhalla/baldr/graphconstants.h`, stored in `EdgeInfo` name/tag list (`valhalla/baldr/edgeinfo.h`) |
 | Whether a vehicle type can use an edge, costing weights | `src/sif/` — each model has its own file (e.g., `autocost.cc`, `bicyclecost.cc`). See `docs/docs/sif/dynamic-costing.md` |
-| Routing algorithm behavior | `src/thor/bidirectional_astar.cc`, `astar.cc`, `timedep_forward.cc`, `timedep_reverse.cc`. See `docs/docs/thor/path-algorithm.md` |
+| Routing algorithm behavior | `src/thor/bidirectional_astar.cc`, `unidirectional_astar.cc`, `timedep_forward.cc`, `timedep_reverse.cc`. See `docs/docs/thor/path-algorithm.md` |
+| Algorithm selection and time-dependent fallback | `src/thor/route_action.cc` — BidirectionalAStar by default; UnidirectionalAStar for `depart_at`/`arrive_by` under `max_timedep_distance` (default 500 km) |
 | How lat/lon maps to graph edges | `src/loki/search.cc` (bin search → projection → filtering → reachability) |
 | Turn-by-turn maneuver generation | `src/odin/maneuversbuilder.cc`, `src/odin/narrativebuilder.cc` |
 | API response serialization (pbf → JSON/GPX/pbf output) | `src/tyr/` — `route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc`, and other `*_serializer.cc`. New output fields must be added to the `.proto` definition first, then to the serializer |
@@ -169,12 +170,16 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | `way_node.bin` intermediate | ~110 GiB |
 | Full planet build time | ~7 hours on m8gd.8xlarge (32 vCPU, 128 GiB, NVMe) |
 
-**Why this matters for every change:**
-- **Data structure size** → +1 byte on DirectedEdge = +1 GiB tileset. Bit-packing is intentional.
-- **Tile format stability** → binary layout changes break every user's pre-built tileset. Not an option.
-- **Build intermediates** → `way_node.bin` at 110 GiB means changes to `OSMWayNode` or node processing directly inflate build time and disk.
-- **Tile I/O** → memory-mapped in production. Larger tiles = more memory pressure, slower cold starts.
-- **Cache budget** → 1 GB cache holds only a fraction of ~205k tiles. Cache-friendly access patterns matter.
+Edges touched per route — shows why per-edge overhead matters:
+
+| Route | Distance | Algorithm | Edges Touched |
+|-------|----------|-----------|---------------|
+| London → Birmingham | 190 km | BidirectionalAStar | ~485k |
+| London → Birmingham | 190 km | UnidirectionalAStar | ~550k |
+| Berlin → Prague | 350 km | BidirectionalAStar | ~420k |
+| Berlin → Prague | 350 km | UnidirectionalAStar | ~3M |
+| Paris → Berlin | 1000 km | BidirectionalAStar | ~800k |
+| San Francisco → New York | 4679 km | BidirectionalAStar | ~1M |
 
 ## Testing
 
