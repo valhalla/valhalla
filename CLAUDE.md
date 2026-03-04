@@ -116,6 +116,8 @@ Tiles are memory-mapped from a tar extract in production. `GraphReader` manages 
 | locate, height, status | Loki-only → serialize |
 | expansion | `loki.route()` → `thor.expansion()` → serialize |
 
+Actors communicate via Protobuf (`Api` message in `proto/api.proto`). The final "serialize" step in Tyr converts the pbf into the output format — JSON (Valhalla or OSRM-compatible), GPX, or pbf. Not all endpoints support pbf output.
+
 Deployment modes: HTTP server (`valhalla_service`), distributed ZMQ workers (`valhalla_*_worker`), one-shot CLI, embedded library (`tyr::actor_t`).
 
 ### OSM Data Pipeline
@@ -145,7 +147,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Routing algorithm behavior | `src/thor/bidirectional_astar.cc`, `astar.cc`, `timedep_forward.cc`, `timedep_reverse.cc`. See `docs/docs/thor/path-algorithm.md` |
 | How lat/lon maps to graph edges | `src/loki/search.cc` (bin search → projection → filtering → reachability) |
 | Turn-by-turn maneuver generation | `src/odin/maneuversbuilder.cc`, `src/odin/narrativebuilder.cc` |
-| API response format | `src/tyr/route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc` |
+| API response serialization (pbf → JSON/GPX/pbf output) | `src/tyr/` — `route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc`, and other `*_serializer.cc`. New output fields must be added to the `.proto` definition first, then to the serializer |
 | Error codes and HTTP status mapping | `src/exceptions.cc` (100s=Loki, 200s=Odin, 300s=Skadi, 400s=Thor, 500s=Tyr) |
 | Protobuf message definitions | `proto/` — root message is `Api` in `api.proto` |
 | Live/historical traffic | Separate binary tile files; test via `test::customize_live_traffic_data()` and `test::customize_historical_traffic()` in `test/test.h` |
