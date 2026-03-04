@@ -10,7 +10,7 @@ Read this section first. Violating these constraints causes real damage at plane
 
 **Every addition is multiplied at planet scale.** The graph contains ~1 billion `DirectedEdge`s, ~500 million `NodeInfo`s, and ~3 billion `OSMWayNode`s (the intermediate `way_node.bin` alone is ~110 GiB). Adding a `TaggedValue` to `EdgeInfo` is safe for the format but still grows every affected tile. Parsing new OSM way types creates more edges and nodes across those billions. Always consider the multiplicative cost of any graph-level change.
 
-**Costing functions are the hottest path.** `EdgeCost()`, `TransitionCost()`, `Allowed()` in `src/sif/` are called millions of times per request. Profile before and after any change.
+**Costing functions are the hottest path.** `EdgeCost()`, `TransitionCost()`, `Allowed()` in `src/sif/` are called millions of times per request.
 
 **arm64 (Apple Silicon) instability.** Some tests fail on Apple Silicon due to numeric differences from x86_64. Always run relevant tests **before** making changes to establish a baseline.
 
