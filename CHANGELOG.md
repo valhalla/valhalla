@@ -4,6 +4,7 @@
 * **Bug Fix**
    * FIXED: Clamp grades on bridges and tunnels. [#5728](https://github.com/valhalla/valhalla/pull/5728)
    * FIXED: use pedestrian costing on end location in `auto_pedestrian` costing [#5903](https://github.com/valhalla/valhalla/pull/5903)
+   * FIXED: `access=private` + `emergency=yes` roads being unroutable due to all vehicular access bits being zeroed [#5911](https://github.com/valhalla/valhalla/pull/5911)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
 
