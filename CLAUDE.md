@@ -140,6 +140,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 |-------------------|-----------|
 | OSM tag parsing, which tags produce which attributes | `lua/graph.lua`, `src/mjolnir/pbfgraphparser.cc` |
 | How edges/nodes get their properties during tile build | `src/mjolnir/graphbuilder.cc`, `src/mjolnir/graphenhancer.cc` |
+| Adding new per-edge data to tiles | `TaggedValue` enum in `valhalla/baldr/graphconstants.h`, stored in `EdgeInfo` name/tag list (`valhalla/baldr/edgeinfo.h`) |
 | Whether a vehicle type can use an edge, costing weights | `src/sif/` — each model has its own file (e.g., `autocost.cc`, `bicyclecost.cc`). See `docs/docs/sif/dynamic-costing.md` |
 | Routing algorithm behavior | `src/thor/bidirectional_astar.cc`, `astar.cc`, `timedep_forward.cc`, `timedep_reverse.cc`. See `docs/docs/thor/path-algorithm.md` |
 | How lat/lon maps to graph edges | `src/loki/search.cc` (bin search → projection → filtering → reachability) |
