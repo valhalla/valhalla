@@ -158,7 +158,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Metric | Value |
 |--------|-------|
 | OSM planet PBF | ~85 GiB |
-| Output tileset | ~85 GiB (+10% with traffic overlay) |
+| Output tileset | ~PBF size + 10% (~95 GiB for planet) |
 | Total tiles | ~205,000 |
 | DirectedEdge objects | ~1 billion |
 | NodeInfo objects | ~500 million |
