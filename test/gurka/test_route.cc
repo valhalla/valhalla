@@ -213,11 +213,6 @@ TEST_F(IgnoreAccessTest, PedestrianIgnoreAccess) {
                                    cost, {{IgnoreAccessParam(cost), "1"}}));
 }
 
-// Verify that access=private + emergency=yes roads are routable.
-// This tag combination caused all vehicular access bits to be zeroed,
-// making these roads unroutable even with ignore_access=true. After the fix,
-// they behave like normal access=private roads (destination_only with access bits
-// preserved). See GitHub issues #5648 and #5512.
 TEST(Standalone, PrivateEmergencyIgnoreAccess) {
   const std::string ascii_map = R"(
       A-----------B-----------C
