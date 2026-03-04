@@ -151,7 +151,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | API response serialization (pbf → JSON/GPX/pbf output) | `src/tyr/` — `route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc`, and other `*_serializer.cc`. New output fields must be added to the `.proto` definition first, then to the serializer |
 | Error codes and HTTP status mapping | `src/exceptions.cc` (100s=Loki, 200s=Odin, 300s=Skadi, 400s=Thor, 500s=Tyr) |
 | Protobuf message definitions | `proto/` — root message is `Api` in `api.proto` |
-| Live/historical traffic | Separate binary tile files; test via `test::customize_live_traffic_data()` and `test::customize_historical_traffic()` in `test/test.h` |
+| Live/historical traffic | Live: separate overlay (`traffic.tar`), format in `valhalla/baldr/traffictile.h`. Historical: DCT-compressed profiles in routing tiles, built by `valhalla_add_predicted_traffic`, or lightweight `free_flow_speed`/`constrained_flow_speed` on `DirectedEdge`. Speed resolution: `GraphTile::GetSpeed()`. Test helpers: `test::customize_live_traffic_data()`, `test::customize_historical_traffic()`. See `docs/docs/speeds.md` |
 | Time-dependent routing | `depart_at`/`arrive_by` params; timezone data from `tz.sqlite` |
 | Route API request/response format | `docs/docs/api/turn-by-turn/api-reference.md` |
 | Speed assignment (maxspeed, highway defaults, density) | `docs/docs/speeds.md` |
