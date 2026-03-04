@@ -220,8 +220,7 @@ TEST(Standalone, PrivateEmergencyIgnoreAccess) {
 
   const gurka::ways ways = {
       {"AB", {{"highway", "unclassified"}}},
-      {"BC",
-       {{"highway", "unclassified"}, {"access", "private"}, {"emergency", "yes"}}},
+      {"BC", {{"highway", "unclassified"}, {"access", "private"}, {"emergency", "yes"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
