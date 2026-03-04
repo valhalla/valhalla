@@ -149,9 +149,12 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | How lat/lon maps to graph edges | `src/loki/search.cc` (bin search → projection → filtering → reachability) |
 | Turn-by-turn maneuver generation | `src/odin/maneuversbuilder.cc`, `src/odin/narrativebuilder.cc` |
 | API response serialization (pbf → JSON/GPX/pbf output) | `src/tyr/` — `route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc`, and other `*_serializer.cc`. New output fields must be added to the `.proto` definition first, then to the serializer |
-| Error codes and HTTP status mapping | `src/exceptions.cc` (100s=Loki, 200s=Odin, 300s=Skadi, 400s=Thor, 500s=Tyr) |
+| Error handling | `valhalla_exception_t` in `valhalla/exceptions.h`, codes in `src/exceptions.cc` (100s=Loki, 200s=Odin, 300s=Skadi, 400s=Thor, 500s=Tyr) |
+| Configuration | `boost::property_tree::ptree`, JSON format. Generate defaults: `valhalla_build_config`. Access: `config.get<T>("section.key")` |
 | Protobuf message definitions | `proto/` — root message is `Api` in `api.proto` |
-| Live/historical traffic | Live: separate overlay (`traffic.tar`), format in `valhalla/baldr/traffictile.h`. Historical: DCT-compressed profiles in routing tiles, built by `valhalla_add_predicted_traffic`, or lightweight `free_flow_speed`/`constrained_flow_speed` on `DirectedEdge`. Speed resolution: `GraphTile::GetSpeed()`. Test helpers: `test::customize_live_traffic_data()`, `test::customize_historical_traffic()`. See `docs/docs/speeds.md` |
+| Live traffic | Separate overlay (`traffic.tar`), format in `valhalla/baldr/traffictile.h`. Test via `test::customize_live_traffic_data()` |
+| Historical/predicted speeds | Full profiles: `valhalla_add_predicted_traffic` → `valhalla/baldr/predictedspeeds.h`. Lightweight: `free_flow_speed`/`constrained_flow_speed` on `DirectedEdge`. Test via `test::customize_historical_traffic()` |
+| Speed resolution at runtime | `GraphTile::GetSpeed()` — live → predicted → constrained → freeflow → base. See `docs/docs/speeds.md` |
 | Time-dependent routing | `depart_at`/`arrive_by` params; timezone data from `tz.sqlite` |
 | Route API request/response format | `docs/docs/api/turn-by-turn/api-reference.md` |
 | Speed assignment (maxspeed, highway defaults, density) | `docs/docs/speeds.md` |
@@ -218,7 +221,6 @@ Key helpers: `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `
 
 - `TEST(SuiteName, TestName)`, `TEST_F(FixtureClass, TestName)`, or `TEST_P(FixtureClass, TestName)` for parameterized tests. PascalCase, no underscores in test names.
 - Prefer `EXPECT_*` over `ASSERT_*` (test continues on failure, giving more diagnostic info).
-- Always baseline tests before changes — especially on arm64 where some tests have pre-existing failures.
 
 ## Development Workflow
 
@@ -261,57 +263,13 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connection
   ./test/gurka/gurka_access && ./test/gurka/gurka_ferry_connections && ./test/gurka/gurka_route
 ```
 
-Never skip this step. Avoid running the entire suite — it is extremely slow and has false positives on arm64.
+Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64. Avoid it on arm64 where false positives make results unreliable.
 
 ## Code Style
 
 - **C++20**, 2-space indent, 102-col limit, left-aligned pointers (`int* p`, not `int *p`)
 - **MUST** use either script `./scripts/format.sh` or clang-format-11 directly — newer versions produce different output
 - clang-tidy checks: `bugprone-*`, `performance-*`, `modernize-*`, `clang-analyzer-*`
-- Errors thrown as `valhalla_exception_t` with numeric code — ranges in `src/exceptions.cc`
-- Configuration via `boost::property_tree::ptree`, JSON format
-
-## Running a Route Locally
-
-`valhalla_service` supports a one-shot CLI mode (no HTTP server needed): `valhalla_service config.json <action> '<json_request>'`. This is the fastest way to test routing against real tiles. The same mechanism powers `tyr::actor_t` used in gurka tests and Python bindings.
-
-### Quick Setup: Build Tiles and Route
-
-```bash
-# Download a small OSM extract (Liechtenstein is ~2 MB, builds in seconds)
-wget https://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
-
-# Generate config
-mkdir -p valhalla_tiles
-valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles \
-  --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar \
-  --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite \
-  --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
-
-# Build supporting databases and routing tiles
-valhalla_build_timezones > valhalla_tiles/timezones.sqlite
-valhalla_build_admins -c valhalla.json liechtenstein-latest.osm.pbf
-valhalla_build_tiles -c valhalla.json liechtenstein-latest.osm.pbf
-
-# Create tar extract for faster tile loading
-valhalla_build_extract -c valhalla.json -v
-
-# Route from Vaduz to Schaan (one-shot, no server)
-valhalla_service valhalla.json route '{"locations":[{"lat":47.141,"lon":9.521},{"lat":47.165,"lon":9.510}],"costing":"auto"}'
-
-# Pipe through jq for readable output
-valhalla_service valhalla.json route '{"locations":[{"lat":47.141,"lon":9.521},{"lat":47.165,"lon":9.510}],"costing":"auto"}' 2>/dev/null | jq '.trip.summary'
-```
-
-The third argument can also be a path to a JSON file. The `test_requests/` directory contains ~250 files with example requests for various scenarios (demo routes, truck routes, bicycle routes, transit, restrictions, etc.) — useful as templates for crafting test requests.
-
-### Route Geometry: Polyline6 Encoding
-
-Valhalla encodes route geometries as polyline strings with **6 digits of precision** (polyline6), not the 5-digit precision from Google's original spec. This is critical — using 5-digit precision will place points in the ocean.
-
-When a code change affects route geometry, paste the encoded `shape` string from the response into the [Valhalla polyline decoder](https://valhalla.github.io/demos/polyline/?unescape=true&polyline6=true) to visually verify the route on a map.
-
-See `docs/docs/decoding.md` for decode implementations in C++, Python, JavaScript, Go, and Rust.
 
 ## Reference
 
@@ -373,6 +331,46 @@ The `docs/docs/` directory contains detailed documentation. The most useful for 
 | `decoding.md` | Polyline6 encoding/decoding with examples in multiple languages |
 | `api/turn-by-turn/api-reference.md` | Route API: request format, costing options, response structure |
 | `building.md` | Building from source and running Valhalla server on all platforms |
+
+### Running a Route Locally
+
+`valhalla_service` supports a one-shot CLI mode (no HTTP server needed): `valhalla_service config.json <action> '<json_request>'`. This is the fastest way to test routing against real tiles. The same mechanism powers `tyr::actor_t` used in gurka tests and Python bindings.
+
+```bash
+# Download a small OSM extract (Liechtenstein is ~2 MB, builds in seconds)
+wget https://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+
+# Generate config
+mkdir -p valhalla_tiles
+valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles \
+  --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar \
+  --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite \
+  --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
+
+# Build supporting databases and routing tiles
+valhalla_build_timezones > valhalla_tiles/timezones.sqlite
+valhalla_build_admins -c valhalla.json liechtenstein-latest.osm.pbf
+valhalla_build_tiles -c valhalla.json liechtenstein-latest.osm.pbf
+
+# Create tar extract for faster tile loading
+valhalla_build_extract -c valhalla.json -v
+
+# Route from Vaduz to Schaan (one-shot, no server)
+valhalla_service valhalla.json route '{"locations":[{"lat":47.141,"lon":9.521},{"lat":47.165,"lon":9.510}],"costing":"auto"}'
+
+# Pipe through jq for readable output
+valhalla_service valhalla.json route '{"locations":[{"lat":47.141,"lon":9.521},{"lat":47.165,"lon":9.510}],"costing":"auto"}' 2>/dev/null | jq '.trip.summary'
+```
+
+The third argument can also be a path to a JSON file. The `test_requests/` directory contains ~250 files with example requests for various scenarios (demo routes, truck routes, bicycle routes, transit, restrictions, etc.) — useful as templates for crafting test requests.
+
+### Route Geometry: Polyline6 Encoding
+
+Valhalla encodes route geometries as polyline strings with **6 digits of precision** (polyline6), not the 5-digit precision from Google's original spec. This is critical — using 5-digit precision will place points in the ocean.
+
+When a code change affects route geometry, paste the encoded `shape` string from the response into the [Valhalla polyline decoder](https://valhalla.github.io/demos/polyline/?unescape=true&polyline6=true) to visually verify the route on a map.
+
+See `docs/docs/decoding.md` for decode implementations in C++, Python, JavaScript, Go, and Rust.
 
 ## Maintaining This Document
 
