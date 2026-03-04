@@ -220,7 +220,7 @@ TEST(MyFeature, BasicCase) {
 
 ### Conventions
 
-- `TEST(SuiteName, TestName)` or `TEST_F(FixtureClass, TestName)`. PascalCase, no underscores in test names.
+- `TEST(SuiteName, TestName)`, `TEST_F(FixtureClass, TestName)`, or `TEST_P(FixtureClass, TestName)` for parameterized tests. PascalCase, no underscores in test names.
 - Prefer `EXPECT_*` over `ASSERT_*` (test continues on failure, giving more diagnostic info).
 - Always baseline tests before changes — especially on arm64 where some tests have pre-existing failures.
 
