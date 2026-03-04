@@ -1,5 +1,4 @@
 #include "gurka.h"
-#include "test.h"
 
 #include <gtest/gtest.h>
 
@@ -31,7 +30,7 @@ gurka::nodelayout IncludePlatformTest::layout = {};
 gurka::ways IncludePlatformTest::ways = {};
 
 TEST_F(IncludePlatformTest, CheckPlatformsExcluded) {
-  // See if routing works when platforms are excluded
+  // exclude roads under construction
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/platforms",
                                {{"mjolnir.include_platforms", "false"}});
 
@@ -42,7 +41,7 @@ TEST_F(IncludePlatformTest, CheckPlatformsExcluded) {
 }
 
 TEST_F(IncludePlatformTest, CheckPlatformsIncluded) {
-  // See if routing works when platforms are included
+  // include roads under construction
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/platforms",
                                {{"mjolnir.include_platforms", "true"}});
 
