@@ -118,7 +118,7 @@ A-B-C
   )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}, {"name", "Main Street"}}},
+      {"AB", {{"highway", "primary"}, {"name", "Main Street"}, {"maxweight", "7"}}},
       {"BC", {{"highway", "primary"}, {"name", "Main Street"}}},
       {"BD", {{"highway", "secondary"}, {"name", "Side Street"}}},
   };
@@ -129,8 +129,8 @@ A-B-C
   std::string tile_data;
   auto api = gurka::do_action(Options::tile, map, "x", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 3550);
-  EXPECT_GT(tile_data.size(), 3450);
+  EXPECT_LT(tile_data.size(), 3750);
+  EXPECT_GT(tile_data.size(), 3550);
 
   // expect a non-verbose request to have a lot less size
   std::string tile_data_slim;
@@ -140,6 +140,7 @@ A-B-C
 
   vtzero::vector_tile tile{tile_data};
 
+  EXPECT_EQ(tile.count_layers(), 4);
   while (auto layer = tile.next_layer()) {
     EXPECT_TRUE(layer.num_features() > 0);
 
@@ -194,6 +195,31 @@ A-B-C
 
       for (const auto& prop : expected_props) {
         EXPECT_TRUE(found_props.count(prop) > 0) << "Node should have property: " << prop;
+      }
+    } else if (layer_name == "access_restrictions") {
+      EXPECT_EQ(layer.version(), 2);
+      EXPECT_EQ(layer.extent(), 4096);
+
+      EXPECT_EQ(layer.num_features(), 2);
+
+      auto feature = layer.next_feature();
+      EXPECT_TRUE(feature.has_id());
+      EXPECT_GT(feature.id(), 0);
+
+      EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::LINESTRING);
+
+      std::set<std::string> expected_props = {"value", "modes", "type", "except_destination",
+                                              "edge_id"};
+      std::set<std::string> found_props;
+      while (auto property = feature.next_property()) {
+        std::string key = std::string(property.key());
+        found_props.insert(key);
+      }
+
+      // Check that all expected properties are present
+      for (const auto& prop : expected_props) {
+        EXPECT_TRUE(found_props.count(prop) > 0)
+            << "Access Restriction should have property: " << prop;
       }
     } else {
       FAIL() << "Unexpected layer: " << layer_name;

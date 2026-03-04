@@ -147,12 +147,14 @@ void filter_tile(const std::string& tile_bytes,
   const bool exclude_edge_layer = exclude_layers.contains(kEdgeLayerName);
   const bool exclude_node_layer = exclude_layers.contains(kNodeLayerName);
   const bool exclude_shortcut_layer = exclude_layers.contains(kShortcutLayerName);
+  const bool exclude_access_restrictions_layer = exclude_layers.contains(kAccessRestrictionLayerName);
 
   auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
     if ((layer_name == kNodeLayerName && exclude_node_layer) ||
         (layer_name == kEdgeLayerName && exclude_edge_layer) ||
-        (layer_name == kShortcutLayerName && exclude_shortcut_layer)) {
+        (layer_name == kShortcutLayerName && exclude_shortcut_layer) ||
+        (layer_name == kAccessRestrictionLayerName && exclude_access_restrictions_layer)) {
       return;
     }
 
@@ -224,6 +226,17 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
   nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
 }
 
+void build_access_restrictions_layer(AccessRestrictionLayerBuilder& ar_builder,
+                                     const linestring_vtzero_t& line,
+                                     const baldr::graph_tile_ptr& tile,
+                                     const baldr::graph_tile_ptr& opp_tile,
+                                     baldr::GraphId edge_id,
+                                     baldr::GraphId opp_edge_id) {
+  auto fwd_restrictions = tile->GetAccessRestrictions(edge_id.id());
+  auto bwd_restrictions = opp_tile->GetAccessRestrictions(opp_edge_id.id());
+  ar_builder.add_feature(line, edge_id, opp_edge_id, fwd_restrictions, bwd_restrictions);
+}
+
 void build_layers(const std::shared_ptr<GraphReader>& reader,
                   vtzero::tile_builder& tile,
                   const midgard::AABB2<midgard::PointLL>& bounds,
@@ -246,6 +259,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   EdgesLayerBuilder edges_builder(tile, kEdgeLayerName.data(), controller);
   EdgesLayerBuilder shortcuts_builder(tile, kShortcutLayerName.data(), controller);
   NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
+  AccessRestrictionLayerBuilder access_restriction_builder(tile, kAccessRestrictionLayerName.data());
 
   std::unordered_set<GraphId> unique_nodes;
   unique_nodes.reserve(edge_ids.size());
@@ -326,6 +340,8 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       } else {
         edges_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
                                   reverse_traffic, edge_info);
+        build_access_restrictions_layer(access_restriction_builder, line, edge_tile, opp_tile,
+                                        edge_id, opp_edge_id);
       }
 
       // adding nodes only works if we have the opposing tile, skip for shortcuts
@@ -493,6 +509,66 @@ void NodesLayerBuilder::add_feature(const vtzero::point& position,
                               vtzero::encoded_property_value(admin_info.state_iso()));
 
   node_feature.commit();
+}
+
+AccessRestrictionLayerBuilder::AccessRestrictionLayerBuilder(vtzero::tile_builder& tile,
+                                                             const char* name)
+    : vtzero::layer_builder(tile, name) {
+  // Pre-add keys for node properties
+  key_edge_id_ = add_key_without_dup_check("edge_id");
+  key_type_ = add_key_without_dup_check("type");
+  key_modes_ = add_key_without_dup_check("modes");
+  key_except_destination_ = add_key_without_dup_check("except_destination");
+  key_value_ = add_key_without_dup_check("value");
+}
+
+void AccessRestrictionLayerBuilder::add_feature(
+    const std::vector<vtzero::point>& geometry,
+    baldr::GraphId forward_edge_id,
+    baldr::GraphId reverse_edge_id,
+    std::pair<std::span<const baldr::AccessRestriction>, size_t> forward_restrictions,
+    std::pair<std::span<const baldr::AccessRestriction>, size_t> reverse_restrictions) {
+
+  assert(forward_edge_id.is_valid() || reverse_edge_id.is_valid());
+
+  // trivially finished
+  if (forward_restrictions.first.empty() && reverse_restrictions.first.empty()) {
+    return;
+  }
+
+  GraphId restriction_id = forward_edge_id;
+  restriction_id.set_id(forward_restrictions.second);
+  for (const auto& restriction : forward_restrictions.first) {
+    vtzero::linestring_feature_builder feature{*this};
+    feature.set_id(static_cast<uint64_t>(restriction_id++));
+    feature.add_linestring_from_container(geometry);
+    feature.add_property(key_edge_id_, vtzero::encoded_property_value(forward_edge_id));
+    feature.add_property(key_type_,
+                         vtzero::encoded_property_value(static_cast<size_t>(restriction.type())));
+    feature.add_property(key_modes_,
+                         vtzero::encoded_property_value(static_cast<size_t>(restriction.modes())));
+    feature.add_property(key_except_destination_,
+                         vtzero::encoded_property_value(restriction.except_destination()));
+    // todo: handle per type
+    feature.add_property(key_value_, vtzero::encoded_property_value(restriction.value()));
+    feature.commit();
+  }
+  restriction_id.set_id(reverse_restrictions.second);
+  for (const auto& restriction : reverse_restrictions.first) {
+    vtzero::linestring_feature_builder feature{*this};
+    feature.set_id(static_cast<uint64_t>(restriction_id++));
+    feature.add_linestring_from_container(geometry);
+    feature.add_property(key_edge_id_, vtzero::encoded_property_value(reverse_edge_id));
+    feature.add_property(key_type_,
+                         vtzero::encoded_property_value(static_cast<size_t>(restriction.type())));
+    feature.add_property(key_modes_,
+                         vtzero::encoded_property_value(static_cast<size_t>(restriction.modes())));
+    feature.add_property(key_except_destination_,
+                         vtzero::encoded_property_value(restriction.except_destination()));
+    // todo: handle per type
+    feature.add_property(key_value_, vtzero::encoded_property_value(restriction.value()));
+    feature.commit();
+  }
 }
 
 std::string loki_worker_t::render_tile(Api& request) {

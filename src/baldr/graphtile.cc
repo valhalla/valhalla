@@ -1216,7 +1216,8 @@ const TransitSchedule* GraphTile::GetTransitSchedule(const uint32_t idx) const {
 }
 
 // Get the access restriction given its directed edge index
-std::span<const AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t idx) const {
+std::pair<std::span<const AccessRestriction>, size_t>
+GraphTile::GetAccessRestrictions(const uint32_t idx) const {
 
   uint32_t count = header_->access_restriction_count();
   if (count == 0) {
@@ -1249,8 +1250,10 @@ std::span<const AccessRestriction> GraphTile::GetAccessRestrictions(const uint32
   while (found < count && access_restrictions_[found].edgeindex() == idx) {
     ++found;
   }
-  return std::span<AccessRestriction>(access_restrictions_ + start, access_restrictions_ + found);
+  return {std::span<AccessRestriction>(access_restrictions_ + start, access_restrictions_ + found),
+          start};
 }
+
 // Get the array of graphids for this bin
 std::span<GraphId> GraphTile::GetBin(size_t column, size_t row) const {
   auto offsets = header_->bin_offset(column, row);

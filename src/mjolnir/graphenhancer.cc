@@ -1320,7 +1320,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Update access restrictions (update weight units)
         if (directededge.access_restriction()) {
-          auto restrictions_span = tilebuilder->GetAccessRestrictions(nodeinfo.edge_index() + j);
+          auto restrictions_span =
+              tilebuilder->GetAccessRestrictions(nodeinfo.edge_index() + j).first;
 
           std::vector<AccessRestriction> restrictions{restrictions_span.begin(),
                                                       restrictions_span.end()};
