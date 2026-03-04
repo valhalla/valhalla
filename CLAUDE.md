@@ -100,7 +100,9 @@ Three hierarchy levels:
 | 1 | 1° | Arterials + shortcut edges |
 | 2 | 0.25° | Local roads |
 
-Shortcut edges on levels 0–1 collapse lower-level paths for fast long-distance BidirectionalAStar. Tiles are memory-mapped from a tar extract in production. `GraphReader` manages a 1 GB in-memory cache — only a fraction of ~205k planet tiles fit at once.
+**Shortcut edges** on levels 0–1 collapse chains of base edges through contractible nodes. Built by `ShortcutBuilder` (`src/mjolnir/shortcutbuilder.cc`). Each shortcut is a `DirectedEdge` with `is_shortcut()` true; each replaced base edge is marked `superseded()`. Shortcuts speed up BidirectionalAStar; UnidirectionalAStar (time-dependent) does not use them. `GraphReader::RecoverShortcut()` expands them back to base edges for the final path.
+
+Tiles are memory-mapped from a tar extract in production. `GraphReader` manages a 1 GB in-memory cache — only a fraction of ~205k planet tiles fit at once.
 
 ### Request Flow
 
