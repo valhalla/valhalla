@@ -78,6 +78,7 @@ protected:
   std::unordered_map<std::string, size_t> max_locations;
   std::unordered_map<std::string, float> max_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
+  std::vector<std::pair<std::string, std::string>> mvt_headers;
   size_t max_timedep_dist_matrix;
   std::unordered_map<std::string, float> max_matrix_locations;
   size_t max_exclude_locations;

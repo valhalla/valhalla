@@ -19,6 +19,10 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
 
+namespace {
+constexpr std::string_view kDefaultMaxAge = "1800";
+}
+
 namespace valhalla {
 namespace loki {
 void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
@@ -235,6 +239,11 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         std::format("mvt_min_zoom_road_class out of bounds, expected {} elements but got {}",
                     max_road_classes, i));
   }
+
+  mvt_headers.emplace_back("Cache-Control",
+                           std::format("public, max-age={}",
+                                       config.get<std::string>("loki.service_defaults.mvt_max_age",
+                                                               kDefaultMaxAge.data())));
 
   // Build max_locations and max_distance maps
   for (const auto& kv : config.get_child("service_limits")) {
@@ -463,7 +472,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(request.SerializeAsString());
         break;
       case Options::tile:
-        result = to_response(render_tile(request), info, request);
+        result = to_response(render_tile(request), info, request, mvt_headers);
         break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
