@@ -7,6 +7,7 @@ theme:
   features:
     - content.tabs.link
     - navigation.instant
+    - navigation.instant.progress
     - navigation.sections
     - navigation.top
     - toc.follow
@@ -60,6 +61,7 @@ site_url: https://valhalla.github.io/valhalla
 docs_dir: docs
 nav:
   - index.md
+  - Getting started: getting-started.md
   - Introduction for Users: valhalla-intro.md
   - Build from Source: building.md
   - Terminology: terminology.md
