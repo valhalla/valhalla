@@ -1,5 +1,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "midgard/encoded.h"
 #include "test.h"
 
 #include <gtest/gtest.h>
@@ -396,6 +397,56 @@ TEST(Standalone, ViaFerrataNoSacScale) {
   EXPECT_EQ(edges[0]["sac_scale"].GetInt(), 6);
   EXPECT_TRUE(edges[1].HasMember("sac_scale"));
   EXPECT_EQ(edges[1]["sac_scale"].GetInt(), 6);
+}
+
+TEST(Standalone, BeginShapeIndexAtDiscontinuity) {
+  // Two not connected edges. 1245 should match both with a discontinuity between 2 and 3.
+  const std::string ascii_map = R"(
+                   D
+                  /
+    A--1--B--2---C
+           F---3--G--4--H
+          /
+         E
+  )";
+
+  const gurka::ways ways = {
+      {"ABCD", {{"highway", "primary"}}},
+      {"EFGH", {{"highway", "primary"}}},
+  };
+
+  const double gridsize = 100;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/trace_discontinuity");
+
+  std::string trace_json;
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4"}, "auto",
+                              {{"/shape_match", "map_snap"}}, {}, &trace_json, "via");
+
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+  ASSERT_FALSE(result.HasParseError()) << "Failed to parse trace_attributes response";
+  ASSERT_TRUE(result.HasMember("edges"));
+  ASSERT_TRUE(result.HasMember("shape"));
+  ASSERT_TRUE(result.HasMember("matched_points"));
+
+  const auto edges = result["edges"].GetArray();
+  ASSERT_EQ(edges.Size(), 2) << "Expected 2 edges: ABCD, EFGH";
+  EXPECT_STREQ(edges[0]["names"][0].GetString(), "ABCD");
+  EXPECT_STREQ(edges[1]["names"][0].GetString(), "EFGH");
+
+  const auto matched_points = result["matched_points"].GetArray();
+  ASSERT_EQ(matched_points.Size(), 4);
+
+  const uint32_t abcd_end_idx = edges[0]["end_shape_index"].GetUint();
+  const uint32_t efgh_begin_idx = edges[1]["begin_shape_index"].GetUint();
+  EXPECT_EQ(abcd_end_idx + 1, efgh_begin_idx) << "Discontinuity between BC and DE along the shape";
+
+  const auto shape =
+      midgard::decode<std::vector<midgard::PointLL>>(std::string(result["shape"].GetString()));
+  const auto bc_match = shape[abcd_end_idx];
+  const auto fg_match = shape[efgh_begin_idx];
+  EXPECT_GT(bc_match.Distance(fg_match), 1000.0) << "Discontinuity is big enough";
 }
 
 TEST(Standalone, PbfOut) {
