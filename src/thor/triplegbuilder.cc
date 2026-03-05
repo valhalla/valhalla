@@ -1946,6 +1946,27 @@ void TripLegBuilder::Build(
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
     const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
 
+    const bool is_first_edge = edge_itr == path_begin;
+    const bool is_last_edge = edge_itr == (path_end - 1);
+
+    // Detect disconnected edges (e.g. discontinuities from trace matching). The previous
+    // iteration set startnode = prev_edge->endnode(). If the current edge doesn't actually
+    // start there, the edges are disconnected and we must fix startnode and avoid
+    // deduplicating the first shape point.
+    bool is_disconnected = false;
+    if (!is_first_edge) {
+      graph_tile_ptr end_tile = graphtile;
+      if (graphreader.GetGraphTile(directededge->endnode(), end_tile)) {
+        const auto* end_node = end_tile->node(directededge->endnode());
+        GraphId actual_startnode =
+            end_tile->directededge(end_node->edge_index() + directededge->opp_index())->endnode();
+        if (actual_startnode != startnode) {
+          is_disconnected = true;
+          startnode = actual_startnode;
+        }
+      }
+    }
+
     if (directededge->toll()) {
       has_toll = true;
     }
@@ -1967,9 +1988,6 @@ void TripLegBuilder::Build(
     if (osmchangeset == 0 && controller(kOsmChangeset)) {
       osmchangeset = start_tile->header()->dataset_id();
     }
-
-    const bool is_first_edge = edge_itr == path_begin;
-    const bool is_last_edge = edge_itr == (path_end - 1);
 
     // have to always compute the offset in case the timezone changes along the path
     // we could cache the timezone and just add seconds when the timezone doesnt change
@@ -2030,7 +2048,9 @@ void TripLegBuilder::Build(
     multimodal_builder.Build(trip_node, edge_itr->trip_id, node, startnode, directededge, edge,
                              start_tile, graphtile, mode_costing, controller, graphreader);
 
-    uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
+    const bool include_first_point = is_first_edge || is_disconnected;
+    const uint32_t begin_index =
+        include_first_point ? static_cast<uint32_t>(trip_shape.size()) : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
     std::pair<std::vector<std::pair<float, float>>, uint32_t> levels = edgeinfo.levels();
     // Add edge to the trip node and set its attributes
@@ -2093,7 +2113,8 @@ void TripLegBuilder::Build(
       trim_shape(begin_trim_dist * edge_length, begin_trim_vrt, end_trim_dist * edge_length,
                  end_trim_vrt, edge_shape);
       // Add edge shape to the trip and skip the first point when its redundant with the previous edge
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !include_first_point,
+                        edge_shape.end());
     } // We need to clip the shape if its at the beginning or end
     else if (is_first_edge || is_last_edge) {
       // Get edge shape and reverse it if directed edge is not forward.
@@ -2113,13 +2134,16 @@ void TripLegBuilder::Build(
         trim_shape(0, edge_shape.front(), end_pct * total, end_vrt, edge_shape);
       }
       // Keep the shape
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !include_first_point,
+                        edge_shape.end());
     } // Just get the shape in there in the right direction no clipping needed
     else {
       if (directededge->forward()) {
-        trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1, edgeinfo.shape().end());
+        trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + !include_first_point,
+                          edgeinfo.shape().end());
       } else {
-        trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1, edgeinfo.shape().rend());
+        trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + !include_first_point,
+                          edgeinfo.shape().rend());
       }
     }
 
