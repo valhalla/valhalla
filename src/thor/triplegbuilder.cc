@@ -1954,7 +1954,7 @@ void TripLegBuilder::Build(
     // start there, the edges are disconnected and we must fix startnode and avoid
     // deduplicating the first shape point.
     bool is_disconnected = false;
-    if (!is_first_edge && !directededge->IsTransitLine()) {
+    if (!is_first_edge && !directededge->IsTransitLine() && edge.level() == startnode.level()) {
       graph_tile_ptr end_tile = graphtile;
       auto opp_edge = graphreader.GetOpposingEdge(directededge, end_tile);
       if (opp_edge != nullptr && startnode != opp_edge->endnode()) {
