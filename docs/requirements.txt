@@ -1,1 +1,2 @@
+markdown-callouts
 mkdocs-material<10.0
