@@ -75,6 +75,8 @@ apt install jq less tree wget
 
 All Valhalla tools use a common JSON configuration file. It contains settings for data generation, location search, service process and so on.
 
+> TODO: Set correct paths for admin and tz databases
+
 Let's create it:
 
 ```bash
@@ -129,17 +131,29 @@ wget \
     https://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
 ```
 
-Valhalla can work with _multiple_ data extracts, but this is discouraged - some problems. See linked issue (TODO).
+!!! warning
 
-Suggestion - use whole planet. Give some information about the size and time it takes.
+    Valhalla can work with _multiple_ data extracts, but this is discouraged - some problems. See linked issue (TODO).
+
+!!! info
+
+    Suggestion - use whole planet. Give some information about the size and time it takes.
 
 ### Build admin database
 
 > TODO: What is this? Why do we need it?
 
+```bash
+valhalla_build_admins -c config.json switzerland-latest.osm.pbf
+```
+
 ### Build time zones database
 
 > TODO: What is this? Why do we need it?
+
+```bash
+valhalla_build_timezones > timezones.sqlite
+```
 
 ### Build routing tiles
 
@@ -189,14 +203,67 @@ TODO: A little info about what this directory & files mean. Structure of `tiles/
 We can export the edges into a CSV file:
 
 ```bash
-valhalla_export_edges --config config.json > edges.csv
+valhalla_export_edges -c config.json > edges.csv
 ```
 
 And take a look:
 
 ```console
-$ head -n 1 edges-latest.csv
+$ head -n 1 edges.csv
 uebapAcyi{AcEcDm\mUmJiG_FaDmNuM}rBc}B}MiPeEoEqC{CCarrer Prada Motxilla
 ```
 
 > TODO: Other options for tile inspection? Website to visualize polylines?
+
+## Start the service
+
+> See [Operations Guide](guides/operations.md) for detailed information.
+
+> TODO Info about using it as a library?
+
+There are multiple ways to run Valhalla. Here's one of them:
+
+```bash
+valhalla_service config.json 1
+```
+
+Valhalla service is an HTTP server process - it accepts requests and returns responses. By default, it is available on port `8002`, but we could change that in the configuration file.
+
+> Remember that we published a port when we ran a Docker container? Now we can send requests to Valhalla using <http://localhost:8002> address from outside the container.
+
+Interface / public API - RESTful - set of paths (`/status`, `/route`, etc) for different operations, either GET or POST requests. For both, we pass the content either via query parameter or as a body | JSON content. Formats depend on the specific operation.
+
+> TODO: Some details on how the service works? Accept the request, correlate locations to the routing graph to find the correct nodes, run the algorithm, create response in a nice format.
+
+> TODO: Technical details. Graph algorithms, sequential with one core, multiple cores = multiple requests at the same time, loads tiles from disk, caches them in memory. Depending on the data layout, either each process has its own cache, or they share data via memory-mapped tar archive. Suggestion: lots of memory, fast disk, many cores.
+
+> TODO: Can I use this in production? What's performance like?
+
+Let's make a request to check the status:
+
+```console
+$ curl http://localhost:8002/status | jq '.'
+{
+  "version": "3.6.3-95fb6ddd6",
+  "tileset_last_modified": 1772753449,
+  "available_actions": [
+    "tile",
+    "status",
+    "centroid",
+    "expansion",
+    "transit_available",
+    "trace_attributes",
+    "trace_route",
+    "isochrone",
+    "optimized_route",
+    "sources_to_targets",
+    "height",
+    "route",
+    "locate"
+  ]
+}
+```
+
+This command will do this and that.
+
+> We use `curl` as it is installed inside the container, but you could use any other CLI tool (httpie, etc) or API client (Bruno, etc) to talk to the service.
