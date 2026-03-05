@@ -62,9 +62,7 @@ docs_dir: docs
 nav:
   - index.md
   - Getting started: getting-started.md
-  - Introduction for Users: valhalla-intro.md
   - Build from Source: building.md
-  - Terminology: terminology.md
   - Python bindings: README_python.md
   - Node.js bindings: README_nodejs.md
   - Public APIs:
@@ -93,6 +91,8 @@ nav:
       - elevation.md
       - testing.md
       - tzdb_update.md
+      - Introduction for Users: valhalla-intro.md
+      - Terminology: terminology.md
   - Internal components:
       - Baldr (routing data strutures/algorithms): baldr.md
       - Loki (associate locations with graph edges): loki.md
