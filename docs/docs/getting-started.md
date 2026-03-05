@@ -267,3 +267,37 @@ $ curl http://localhost:8002/status | jq '.'
 This command will do this and that.
 
 > We use `curl` as it is installed inside the container, but you could use any other CLI tool (httpie, etc) or API client (Bruno, etc) to talk to the service.
+
+## Use the API / features
+
+> See [Usage Guide]() and [API Overview]() for detailed information. Check out **public server** for web and HTTP interfaces.
+
+Basic _route_ request (auto):
+
+- Locations
+- Costing
+- Other options
+
+Response sample, visualize response polyline using their website.
+
+Couple more requests with other _costing modes_ - pedestrian, bike.
+
+Other _services_ - isochrone, map-matching, matrix.
+
+Check the logs.
+
+## Recap?
+
+- Got the project
+- Downloaded the data and created routing tiles
+- Started the service
+- Tried some requests
+
+## Continue reading
+
+- [Installation]() to see various options on how to install Valhalla.
+- [Configuration]()
+- [Data Guide]() for more details about the data, additional sources, traffic, public transit and so on.
+- [Operations Guide]() for more about settings up Valhalla for operations.
+- [Usage Guide]() for more about available services and their APIs.
+- [API Overview]()
