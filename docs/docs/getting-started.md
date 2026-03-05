@@ -91,3 +91,112 @@ The command generates a configuration with reasonable defaults. Take a look:
 ```bash
 less config.json
 ```
+
+## Prepare the data
+
+> See [Data guide](guides/data.md) for detailed information.
+
+Valhalla needs some data in order to work.
+
+The fundamental / core / main / minimal component is a set of **routing tiles** (TODO link) - a directory of files in a specific format with information about the roads, restrictions and so on.
+
+The core _data source_ for this is [OpenStreetMap](https://www.openstreetmap.org/) (OSM): Valhalla takes OSM map data in [PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format) and uses it to create a set of tiles.
+
+> IDEA: Talk a little more about _data_: content and format (PBF)? What is an extract?
+
+> IDEA: Link to learn more about OSM data format: [Beginners' Guide](https://wiki.openstreetmap.org/wiki/Beginners%27_guide), see [Downloading data](https://wiki.openstreetmap.org/wiki/Downloading_data) for more options.
+
+> Tiles are a representation of a [graph](<https://en.wikipedia.org/wiki/Graph_(abstract_data_type)>) data structure.
+
+Here's what we need to do to get a minimal working version of the system:
+
+1. Download [OSM data extract](https://download.geofabrik.de/technical.html) in `.osm.pbf` file format
+1. Build _admin_ database\*
+   > Recommendation is to build this from the _whole planet_, which is a large file and may take some time.
+1. Build _time zones_ database
+1. Build the tiles
+
+### Download OpenStreetMap data extract
+
+> IDEA: Maybe use just **one** extract? Note about an option to work with multiple extracts and the limitations. Specific version of OSM data extracts?
+
+We can use [Geofabrik's free server](https://download.geofabrik.de/) to download [data extracts](<(https://download.geofabrik.de/technical.html)>) to `osm/` directory:
+
+```bash
+wget \
+    --directory-prefix osm/ \
+    https://download.geofabrik.de/europe/andorra-latest.osm.pbf \
+    https://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+```
+
+Valhalla can work with _multiple_ data extracts, but this is discouraged - some problems. See linked issue (TODO).
+
+Suggestion - use whole planet. Give some information about the size and time it takes.
+
+### Build admin database
+
+> TODO: What is this? Why do we need it?
+
+### Build time zones database
+
+> TODO: What is this? Why do we need it?
+
+### Build routing tiles
+
+Finally, we are ready to build the tiles:
+
+```bash
+valhalla_build_tiles --config config.json osm/andorra-latest.osm.pbf
+```
+
+We'll see a log with a bunch of messages. It's okay to ignore the warnings.
+
+When finished, we can see generated data in `tiles/` directory (the one from configuration file). At the time of writing it looks like this:
+
+```console
+$ tree tiles/
+tiles/
+|-- 0
+|   `-- 003
+|       `-- 015.gph
+|-- 1
+|   `-- 047
+|       `-- 701.gph
+`-- 2
+    `-- 000
+        |-- 762
+        |   |-- 485.gph
+        |   `-- 486.gph
+        `-- 763
+            |-- 925.gph
+            |-- 926.gph
+            `-- 927.gph
+
+9 directories, 7 files
+```
+
+> IDEA: A button to show the result (like in [`jq` tutorial](https://jqlang.org/tutorial/)?)
+
+TODO: A little info about what this directory & files mean. Structure of `tiles/` directory: on top, directories represent _hierarchy levels_. For example, in directory `tiles/0/` we have the tiles with hierarchy level 0. The rest of the path encodes a _tile index_. For example, a tile at path `tiles/1/047/701.gph` has:
+
+- Level: 1 from `1/`
+- Tile index: 47701 from `047/701.gph`
+
+> Why are we doing this?
+
+### Inspect the edges
+
+We can export the edges into a CSV file:
+
+```bash
+valhalla_export_edges --config config.json > edges.csv
+```
+
+And take a look:
+
+```console
+$ head -n 1 edges-latest.csv
+uebapAcyi{AcEcDm\mUmJiG_FaDmNuM}rBc}B}MiPeEoEqC{CCarrer Prada Motxilla
+```
+
+> TODO: Other options for tile inspection? Website to visualize polylines?
