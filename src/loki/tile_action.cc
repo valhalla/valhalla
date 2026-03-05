@@ -552,13 +552,13 @@ void AccessRestrictionLayerBuilder::add_feature(
     vtzero::linestring_feature_builder feature{*this};
     feature.set_id(static_cast<uint64_t>(restriction_id++));
     feature.add_linestring_from_container(geometry);
-    feature.add_property(key_edge_id_, vtzero::encoded_property_value(forward_edge_id));
+    feature.add_property(key_edge_id_, vtzero::encoded_property_value(forward_edge_id.value));
     feature.add_property(key_type_,
-                         vtzero::encoded_property_value(static_cast<size_t>(restriction.type())));
+                         vtzero::encoded_property_value(static_cast<uint32_t>(restriction.type())));
     feature.add_property(key_modes_,
-                         vtzero::encoded_property_value(static_cast<size_t>(restriction.modes())));
-    feature.add_property(key_except_destination_,
-                         vtzero::encoded_property_value(restriction.except_destination()));
+                         vtzero::encoded_property_value(static_cast<uint32_t>(restriction.modes())));
+    feature.add_property(key_except_destination_, vtzero::encoded_property_value(static_cast<bool>(
+                                                      restriction.except_destination())));
     switch (restriction.type()) {
       case AccessType::kDestinationAllowed:
       case AccessType::kHazmat:
