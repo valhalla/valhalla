@@ -65,6 +65,10 @@ nav:
   - Build from Source: building.md
   - Python bindings: README_python.md
   - Node.js bindings: README_nodejs.md
+  - Installation:
+      - Node.js bindings: installation/nodejs.md
+      - Python bindings: installation/python.md
+      - Docker: installation/docker.md
   - User guides:
       - Configuration: guides/configuration.md
       - Data guide: guides/data.md
