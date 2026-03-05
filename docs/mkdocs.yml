@@ -54,6 +54,14 @@ markdown_extensions:
   - pymdownx.details
   - github-callouts
 
+plugins:
+  - search
+  - redirects:
+      redirect_maps:
+        "building.md": "installation/building.md"
+        "README_nodejs.md": "installation/nodejs.md"
+        "README_python.md": "installation/python.md"
+
 site_name: Valhalla Docs
 repo_url: https://github.com/valhalla/valhalla/
 edit_uri: edit/master/docs/docs/
