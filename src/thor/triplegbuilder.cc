@@ -1840,21 +1840,13 @@ void TripLegBuilder::Build(
     travel_types[i] = (mode_costing[i] != nullptr) ? mode_costing[i]->travel_type() : 0;
   }
 
-  // Get the first nodes graph id by using the end node of the first edge to get the tile with the
-  // opposing edge then use the opposing index to get the opposing edge, and its end node is the
-  // begin node of the original edge
-  auto begin_tile = graphreader.GetGraphTile(path_begin->edgeid);
-  if (begin_tile == nullptr) {
+  // Start node is the end node of the opposing edge to the first edge in the path.
+  graph_tile_ptr begin_tile;
+  auto opp_edge = graphreader.GetOpposingEdge(path_begin->edgeid, begin_tile);
+  if (!opp_edge) {
     throw tile_gone_error_t("TripLegBuilder::Build failed", path_begin->edgeid);
   }
-  const auto* first_edge = begin_tile->directededge(path_begin->edgeid);
-  auto first_tile = graphreader.GetGraphTile(first_edge->endnode());
-  if (first_tile == nullptr) {
-    throw tile_gone_error_t("TripLegBuilder::Build failed", first_edge->endnode());
-  }
-  auto* first_node = first_tile->node(first_edge->endnode());
-  GraphId startnode =
-      first_tile->directededge(first_node->edge_index() + first_edge->opp_index())->endnode();
+  GraphId startnode = opp_edge->endnode();
 
   // Partial edge at the start and side of street (sos)
   float start_pct = 0.;
@@ -1951,11 +1943,9 @@ void TripLegBuilder::Build(
 
     // By default the `startnode` is the endnode of the previous directed edge.
     if (edge_itr->is_disconnected) {
-      graph_tile_ptr end_tile = graphtile;
-      if (graphreader.GetGraphTile(directededge->endnode(), end_tile)) {
-        const auto* end_node = end_tile->node(directededge->endnode());
-        startnode =
-            end_tile->directededge(end_node->edge_index() + directededge->opp_index())->endnode();
+      graph_tile_ptr opp_tile = graphtile;
+      if (auto opp_edge = graphreader.GetOpposingEdge(directededge, opp_tile)) {
+        startnode = opp_edge->endnode();
       }
     }
 
