@@ -228,12 +228,22 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
 
 void build_access_restrictions_layer(AccessRestrictionLayerBuilder& ar_builder,
                                      const linestring_vtzero_t& line,
-                                     const baldr::graph_tile_ptr& tile,
-                                     const baldr::graph_tile_ptr& opp_tile,
+                                     const graph_tile_ptr& tile,
+                                     const graph_tile_ptr& opp_tile,
                                      baldr::GraphId edge_id,
-                                     baldr::GraphId opp_edge_id) {
-  auto fwd_restrictions = tile->GetAccessRestrictions(edge_id.id());
-  auto bwd_restrictions = opp_tile->GetAccessRestrictions(opp_edge_id.id());
+                                     baldr::GraphId opp_edge_id,
+                                     const DirectedEdge* edge,
+                                     const DirectedEdge* opp_edge) {
+
+  std::pair<std::span<const AccessRestriction>, size_t> fwd_restrictions;
+  std::pair<std::span<const AccessRestriction>, size_t> bwd_restrictions;
+  if (edge->access_restriction()) {
+    fwd_restrictions = tile->GetAccessRestrictions(edge_id.id());
+  }
+
+  if (opp_edge->access_restriction()) {
+    bwd_restrictions = opp_tile->GetAccessRestrictions(opp_edge_id.id());
+  }
   ar_builder.add_feature(line, edge_id, opp_edge_id, fwd_restrictions, bwd_restrictions);
 }
 
@@ -341,7 +351,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
         edges_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
                                   reverse_traffic, edge_info);
         build_access_restrictions_layer(access_restriction_builder, line, edge_tile, opp_tile,
-                                        edge_id, opp_edge_id);
+                                        edge_id, opp_edge_id, edge, opp_edge);
       }
 
       // adding nodes only works if we have the opposing tile, skip for shortcuts
@@ -566,7 +576,29 @@ void AccessRestrictionLayerBuilder::add_feature(
     feature.add_property(key_except_destination_,
                          vtzero::encoded_property_value(restriction.except_destination()));
     // todo: handle per type
-    feature.add_property(key_value_, vtzero::encoded_property_value(restriction.value()));
+
+    switch (restriction.type()) {
+      case AccessType::kDestinationAllowed:
+      case AccessType::kHazmat:
+        feature.add_property(key_value_,
+                             vtzero::encoded_property_value(static_cast<bool>(restriction.value())));
+        break;
+      case AccessType::kMaxHeight:
+      case AccessType::kMaxWidth:
+      case AccessType::kMaxLength:
+      case AccessType::kMaxWeight:
+      case AccessType::kMaxAxleLoad:
+        feature.add_property(key_value_, vtzero::encoded_property_value(restriction.value() * 0.01));
+        break;
+
+      // todo: turn the timed ones into something human readable
+      case AccessType::kTimedAllowed:
+      case AccessType::kTimedDenied:
+      case AccessType::kMaxAxles:
+      default:
+        feature.add_property(key_value_, vtzero::encoded_property_value(restriction.value()));
+        break;
+    }
     feature.commit();
   }
 }
