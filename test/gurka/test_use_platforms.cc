@@ -70,9 +70,80 @@ TEST(PlatformClassification, CheckOSMPlatformClassification) {
   std::tie(bc_id, bc_edge, cb_id, cb_edge) = gurka::findEdge(reader, map.nodes, "BC", "C");
 
   ASSERT_NE(bc_edge, nullptr);
-
-  // Test that the platform is treated as kOther instead of kPrimary
+  EXPECT_EQ(bc_edge->use(), baldr::Use::kPlatform);
+  // Test that the platform is classified as low-priority road.
   EXPECT_EQ(bc_edge->classification(), baldr::RoadClass::kServiceOther)
       << "Expected platform to be kServiceOther, but got: "
       << static_cast<int>(bc_edge->classification());
+}
+
+TEST(PlatformDefaults, CheckAccessMaskAndUse) {
+  const std::string ascii_map = R"(
+    A---B
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "platform"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/platforms_access",
+                               {{"mjolnir.include_platforms", "true"}});
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  baldr::GraphId ab_id, ba_id;
+  const baldr::DirectedEdge* ab_edge = nullptr;
+  const baldr::DirectedEdge* ba_edge = nullptr;
+  std::tie(ab_id, ab_edge, ba_id, ba_edge) = gurka::findEdge(reader, map.nodes, "AB", "B");
+
+  ASSERT_NE(ab_edge, nullptr);
+  ASSERT_NE(ba_edge, nullptr);
+  EXPECT_EQ(ab_edge->use(), baldr::Use::kPlatform);
+  EXPECT_EQ(ba_edge->use(), baldr::Use::kPlatform);
+
+  // check pedestrian is able to access the platform
+  EXPECT_TRUE(ab_edge->forwardaccess() & baldr::kPedestrianAccess);
+  EXPECT_TRUE(ba_edge->forwardaccess() & baldr::kPedestrianAccess);
+  EXPECT_TRUE(ab_edge->reverseaccess() & baldr::kPedestrianAccess);
+  EXPECT_TRUE(ba_edge->reverseaccess() & baldr::kPedestrianAccess);
+  // check vehicle is not able to access the platform
+  EXPECT_EQ(ab_edge->forwardaccess() & baldr::kVehicularAccess, 0);
+  EXPECT_EQ(ba_edge->forwardaccess() & baldr::kVehicularAccess, 0);
+  EXPECT_EQ(ab_edge->reverseaccess() & baldr::kVehicularAccess, 0);
+  EXPECT_EQ(ba_edge->reverseaccess() & baldr::kVehicularAccess, 0);
+}
+
+TEST(PlatformDefaults, CheckReasonableMappingRouting) {
+  const std::string ascii_map = R"(
+    A---B---C---D
+  )";
+
+  // residential road -> footway -> platform
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "footway"}}},
+      {"CD", {{"highway", "platform"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/platforms_mapping_routing",
+                               {{"mjolnir.include_platforms", "true"}});
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  baldr::GraphId cd_id;
+  baldr::GraphId dc_id;
+  const baldr::DirectedEdge* cd_edge = nullptr;
+  const baldr::DirectedEdge* dc_edge = nullptr;
+  std::tie(cd_id, cd_edge, dc_id, dc_edge) = gurka::findEdge(reader, map.nodes, "CD", "D");
+
+  ASSERT_NE(cd_edge, nullptr);
+  EXPECT_EQ(cd_edge->use(), baldr::Use::kPlatform);
+  // Test that the platform is classified as low-priority road
+  EXPECT_EQ(bc_edge->classification(), baldr::RoadClass::kServiceOther)
+      << "Expected platform to be kServiceOther, but got: "
+      << static_cast<int>(bc_edge->classification());
+
+  auto pedestrian_result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "pedestrian");
+  // Test that the path is correct and pedestrian is walking through the platform
+  gurka::assert::raw::expect_path(pedestrian_result, {"AB", "BC", "CD"});
 }
