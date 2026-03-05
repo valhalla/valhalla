@@ -1956,14 +1956,10 @@ void TripLegBuilder::Build(
     bool is_disconnected = false;
     if (!is_first_edge) {
       graph_tile_ptr end_tile = graphtile;
-      if (graphreader.GetGraphTile(directededge->endnode(), end_tile)) {
-        const auto* end_node = end_tile->node(directededge->endnode());
-        GraphId actual_startnode =
-            end_tile->directededge(end_node->edge_index() + directededge->opp_index())->endnode();
-        if (actual_startnode != startnode) {
-          is_disconnected = true;
-          startnode = actual_startnode;
-        }
+      auto opp_edge = graphreader.GetOpposingEdge(directededge, end_tile);
+      if (opp_edge != nullptr && startnode != opp_edge->endnode()) {
+        is_disconnected = true;
+        startnode = opp_edge->endnode();
       }
     }
 
