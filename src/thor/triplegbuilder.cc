@@ -1949,17 +1949,13 @@ void TripLegBuilder::Build(
     const bool is_first_edge = edge_itr == path_begin;
     const bool is_last_edge = edge_itr == (path_end - 1);
 
-    // Detect disconnected edges (e.g. discontinuities from trace matching). The previous
-    // iteration set startnode = prev_edge->endnode(). If the current edge doesn't actually
-    // start there, the edges are disconnected and we must fix startnode and avoid
-    // deduplicating the first shape point.
-    bool is_disconnected = false;
-    if (!is_first_edge && !directededge->IsTransitLine() && edge.level() == startnode.level()) {
+    // By default the `startnode` is the endnode of the previous directed edge.
+    if (edge_itr->is_disconnected) {
       graph_tile_ptr end_tile = graphtile;
-      auto opp_edge = graphreader.GetOpposingEdge(directededge, end_tile);
-      if (opp_edge != nullptr && startnode != opp_edge->endnode()) {
-        is_disconnected = true;
-        startnode = opp_edge->endnode();
+      if (graphreader.GetGraphTile(directededge->endnode(), end_tile)) {
+        const auto* end_node = end_tile->node(directededge->endnode());
+        startnode =
+            end_tile->directededge(end_node->edge_index() + directededge->opp_index())->endnode();
       }
     }
 
@@ -2044,7 +2040,7 @@ void TripLegBuilder::Build(
     multimodal_builder.Build(trip_node, edge_itr->trip_id, node, startnode, directededge, edge,
                              start_tile, graphtile, mode_costing, controller, graphreader);
 
-    const bool include_first_point = is_first_edge || is_disconnected;
+    const bool include_first_point = is_first_edge || edge_itr->is_disconnected;
     const uint32_t begin_index =
         include_first_point ? static_cast<uint32_t>(trip_shape.size()) : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
