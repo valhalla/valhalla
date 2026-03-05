@@ -1,6 +1,6 @@
 # Build from Source
 
-We aim to make Valhalla installable on every half-modern hardware, platform and architecture. If the below instructions are not working for you, we'd be happy if you [file an issue or open a PR with a fix](contributing.md).
+We aim to make Valhalla installable on every half-modern hardware, platform and architecture. If the below instructions are not working for you, we'd be happy if you [file an issue or open a PR with a fix](../contributing.md).
 
 ## Build Configuration (all platforms)
 
@@ -215,7 +215,7 @@ Currently, `rapidjson`, `date` & `dirent` (Windows only) headers are vendored in
 The following script should be enough to make some routing data and start a server using it.
 
 !!! tip
-    Instructions for [running an **elevation lookup service**](./elevation.md) with Valhalla.
+    Instructions for [running an **elevation lookup service**](../elevation.md) with Valhalla.
 
 ```bash
 # download some data and make tiles out of it
