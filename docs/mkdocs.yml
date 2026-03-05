@@ -65,6 +65,10 @@ nav:
   - Build from Source: building.md
   - Python bindings: README_python.md
   - Node.js bindings: README_nodejs.md
+  - User guides:
+      - Configuration: guides/configuration.md
+      - Data guide: guides/data.md
+      - Operations guide: guides/operations.md
   - Public APIs:
       - API Overview: api/index.md
       - Protocol Buffers: api/protocol-buffers.md
