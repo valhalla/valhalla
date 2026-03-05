@@ -307,13 +307,19 @@ void thor_worker_t::build_trace(
     }
   }
 
-  // smash all the path edges into a single vector
+  // smash all the path edges into a single vector, marking discontinuity boundaries
   std::vector<PathInfo> path_edges;
   path_edges.reserve(edge_index);
+  bool prev_path_had_discontinuity = false;
   for (const auto& path : paths) {
     bool merge_last_edge =
         !path_edges.empty() && path_edges.back().edgeid == path.first.front().edgeid;
+    const size_t first_inserted_idx = path_edges.size();
     path_edges.insert(path_edges.end(), path.first.begin() + merge_last_edge, path.first.end());
+    if (prev_path_had_discontinuity && !merge_last_edge) {
+      path_edges[first_inserted_idx].is_disconnected = true;
+    }
+    prev_path_had_discontinuity = path.second.back()->discontinuity;
   }
 
   // initialize the origin and destination location for route

@@ -105,9 +105,11 @@ const content_type TIFF_MIME("Content-type", "image/tiff");
 const content_type MVT_MIME("Content-type", "application/vnd.mapbox-vector-tile");
 } // namespace worker
 
-prime_server::worker_t::result_t to_response(const std::string& data,
-                                             prime_server::http_request_info_t& request_info,
-                                             const Api& options);
+prime_server::worker_t::result_t
+to_response(const std::string& data,
+            prime_server::http_request_info_t& request_info,
+            const Api& options,
+            const std::vector<std::pair<std::string, std::string>>& additional_headers = {});
 #endif
 
 struct statsd_client_t;
