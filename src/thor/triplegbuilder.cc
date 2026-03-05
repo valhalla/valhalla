@@ -1840,21 +1840,13 @@ void TripLegBuilder::Build(
     travel_types[i] = (mode_costing[i] != nullptr) ? mode_costing[i]->travel_type() : 0;
   }
 
-  // Get the first nodes graph id by using the end node of the first edge to get the tile with the
-  // opposing edge then use the opposing index to get the opposing edge, and its end node is the
-  // begin node of the original edge
-  auto begin_tile = graphreader.GetGraphTile(path_begin->edgeid);
-  if (begin_tile == nullptr) {
+  // Start node is the end node of the opposing edge to the first edge in the path.
+  graph_tile_ptr begin_tile;
+  auto opp_edge = graphreader.GetOpposingEdge(path_begin->edgeid, begin_tile);
+  if (!opp_edge) {
     throw tile_gone_error_t("TripLegBuilder::Build failed", path_begin->edgeid);
   }
-  const auto* first_edge = begin_tile->directededge(path_begin->edgeid);
-  auto first_tile = graphreader.GetGraphTile(first_edge->endnode());
-  if (first_tile == nullptr) {
-    throw tile_gone_error_t("TripLegBuilder::Build failed", first_edge->endnode());
-  }
-  auto* first_node = first_tile->node(first_edge->endnode());
-  GraphId startnode =
-      first_tile->directededge(first_node->edge_index() + first_edge->opp_index())->endnode();
+  GraphId startnode = opp_edge->endnode();
 
   // Partial edge at the start and side of street (sos)
   float start_pct = 0.;
@@ -1946,6 +1938,17 @@ void TripLegBuilder::Build(
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
     const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
 
+    const bool is_first_edge = edge_itr == path_begin;
+    const bool is_last_edge = edge_itr == (path_end - 1);
+
+    // By default the `startnode` is the endnode of the previous directed edge.
+    if (edge_itr->is_disconnected) {
+      graph_tile_ptr opp_tile = graphtile;
+      if (auto opp_edge = graphreader.GetOpposingEdge(directededge, opp_tile)) {
+        startnode = opp_edge->endnode();
+      }
+    }
+
     if (directededge->toll()) {
       has_toll = true;
     }
@@ -1967,9 +1970,6 @@ void TripLegBuilder::Build(
     if (osmchangeset == 0 && controller(kOsmChangeset)) {
       osmchangeset = start_tile->header()->dataset_id();
     }
-
-    const bool is_first_edge = edge_itr == path_begin;
-    const bool is_last_edge = edge_itr == (path_end - 1);
 
     // have to always compute the offset in case the timezone changes along the path
     // we could cache the timezone and just add seconds when the timezone doesnt change
@@ -2030,7 +2030,9 @@ void TripLegBuilder::Build(
     multimodal_builder.Build(trip_node, edge_itr->trip_id, node, startnode, directededge, edge,
                              start_tile, graphtile, mode_costing, controller, graphreader);
 
-    uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
+    const bool include_first_point = is_first_edge || edge_itr->is_disconnected;
+    const uint32_t begin_index =
+        include_first_point ? static_cast<uint32_t>(trip_shape.size()) : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
     std::pair<std::vector<std::pair<float, float>>, uint32_t> levels = edgeinfo.levels();
     // Add edge to the trip node and set its attributes
@@ -2093,7 +2095,8 @@ void TripLegBuilder::Build(
       trim_shape(begin_trim_dist * edge_length, begin_trim_vrt, end_trim_dist * edge_length,
                  end_trim_vrt, edge_shape);
       // Add edge shape to the trip and skip the first point when its redundant with the previous edge
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !include_first_point,
+                        edge_shape.end());
     } // We need to clip the shape if its at the beginning or end
     else if (is_first_edge || is_last_edge) {
       // Get edge shape and reverse it if directed edge is not forward.
@@ -2113,13 +2116,16 @@ void TripLegBuilder::Build(
         trim_shape(0, edge_shape.front(), end_pct * total, end_vrt, edge_shape);
       }
       // Keep the shape
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !include_first_point,
+                        edge_shape.end());
     } // Just get the shape in there in the right direction no clipping needed
     else {
       if (directededge->forward()) {
-        trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1, edgeinfo.shape().end());
+        trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + !include_first_point,
+                          edgeinfo.shape().end());
       } else {
-        trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1, edgeinfo.shape().rend());
+        trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + !include_first_point,
+                          edgeinfo.shape().rend());
       }
     }
 

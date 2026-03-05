@@ -206,6 +206,7 @@ config = {
             "mvt_min_zoom_road_class": [7, 7, 8, 11, 11, 12, 13, 14],
             "mvt_cache_dir": Optional(str),
             "mvt_cache_min_zoom": 11,
+            "mvt_max_age": "1800",
         },
         "logging": {
             "type": "std_out",
@@ -424,7 +425,6 @@ config = {
         },
         "auto_pedestrian": {
             "max_distance": 5000000.0,
-            "max_locations": 20,
             "max_matrix_distance": 400000.0,
             "max_matrix_location_pairs": 2500,
         },
@@ -559,6 +559,7 @@ help_text = {
             "mvt_min_zoom_road_class": "Minimum zoom level for each road class (8 values: Motorway, Trunk, Primary, Secondary, Tertiary, Unclassified, Residential, Service/Other). Roads will only be rendered at or above their minimum zoom level.",
             "mvt_cache_dir": "The cache directory for MVT tiles. If empty/omitted, we disable MVT caching",
             "mvt_cache_min_zoom": "The minimum zoom level which will be cached, the maximum will be determined by mvt_min_zoom_road_class",
+            "mvt_max_age": "The value used for 'max-age' in the Cache-Control response header for the MVT end point",
         },
         "logging": {
             "__note__": (
@@ -814,7 +815,6 @@ help_text = {
         },
         "auto_pedestrian": {
             "max_distance": "Maximum b-line distance between all locations in meters",
-            "max_locations": "Maximum number of input locations",
             "max_matrix_distance": "Maximum b-line distance between 2 most distant locations in meters for a matrix",
             "max_matrix_location_pairs": "Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500",
         },

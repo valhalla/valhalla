@@ -123,7 +123,7 @@ void loki_worker_t::route(Api& request) {
 
     std::unordered_map<baldr::Location, PathLocation> projections;
 
-    // in case of auto_pedestrian costing, we 1) only allow two locations
+    // in case of auto_pedestrian costing, we 1) only allow two locations (handled by check_locations)
     // and 2) need two different costings for the start and end location.
     // Search::search does not allow for multiple costings per location so instead
     // we bite the bullet and call search twice, merging the results.
@@ -131,21 +131,21 @@ void loki_worker_t::route(Api& request) {
     // and end at the same location but with different costing? What does that even mean? Find the
     // nearest parking and walk back to where I am? Seems like a plausible use case...
     if (costing_name == "auto_pedestrian") {
-      if (locations.size() > 2) {
-        throw valhalla_exception_t{150, "for auto_pedestrian: " + std::to_string(locations.size())};
-      }
       std::vector<baldr::Location> start_loc(locations.begin(), locations.begin() + 1);
-      auto start_projection = search_.search(start_loc, costing);
+      auto start_projection =
+          search_.search(start_loc, mode_costing[static_cast<size_t>(TravelMode::kDrive)]);
       for (const auto& [loc, path_loc] : start_projection) {
         projections.insert({loc, path_loc});
       }
       std::vector<baldr::Location> end_loc(locations.end() - 1, locations.end());
-      auto end_projection = search_.search(end_loc, costing);
+
+      auto end_projection =
+          search_.search(end_loc, mode_costing[static_cast<size_t>(TravelMode::kPedestrian)]);
       for (const auto& [loc, path_loc] : end_projection) {
         projections.insert({loc, path_loc});
       }
     } else {
-      projections = search_.search(locations, costing);
+      projections = search_.search(locations, mode_costing[static_cast<size_t>(mode)]);
     }
     for (size_t i = 0; i < locations_end; ++i) {
       const auto& correlated = projections.at(locations[i]);

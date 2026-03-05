@@ -1594,11 +1594,15 @@ worker_t::result_t serialize_error(const valhalla_exception_t& exception,
 }
 
 worker_t::result_t
-to_response(const std::string& data, http_request_info_t& request_info, const Api& request) {
+to_response(const std::string& data,
+            http_request_info_t& request_info,
+            const Api& request,
+            const std::vector<std::pair<std::string, std::string>>& additional_headers) {
   // try to get all the proper headers
   auto fmt = request.options().format();
 
   headers_t headers{CORS, fmt_to_mime(fmt)};
+  headers.insert(additional_headers.begin(), additional_headers.end());
   if (fmt == Options::gpx)
     headers.insert(ATTACHMENT);
 

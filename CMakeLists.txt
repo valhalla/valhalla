@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
+# ensure build-tree executables find the local libvalhalla.so
+# use RPATH (not RUNPATH) so it takes precedence over system ldconfig cache
+set(CMAKE_BUILD_RPATH "${CMAKE_BINARY_DIR}/src")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  add_link_options("-Wl,--disable-new-dtags")
+endif()
+
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
