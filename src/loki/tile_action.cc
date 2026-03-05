@@ -559,24 +559,6 @@ void AccessRestrictionLayerBuilder::add_feature(
                          vtzero::encoded_property_value(static_cast<size_t>(restriction.modes())));
     feature.add_property(key_except_destination_,
                          vtzero::encoded_property_value(restriction.except_destination()));
-    // todo: handle per type
-    feature.add_property(key_value_, vtzero::encoded_property_value(restriction.value()));
-    feature.commit();
-  }
-  restriction_id.set_id(reverse_restrictions.second);
-  for (const auto& restriction : reverse_restrictions.first) {
-    vtzero::linestring_feature_builder feature{*this};
-    feature.set_id(static_cast<uint64_t>(restriction_id++));
-    feature.add_linestring_from_container(geometry);
-    feature.add_property(key_edge_id_, vtzero::encoded_property_value(reverse_edge_id));
-    feature.add_property(key_type_,
-                         vtzero::encoded_property_value(static_cast<size_t>(restriction.type())));
-    feature.add_property(key_modes_,
-                         vtzero::encoded_property_value(static_cast<size_t>(restriction.modes())));
-    feature.add_property(key_except_destination_,
-                         vtzero::encoded_property_value(restriction.except_destination()));
-    // todo: handle per type
-
     switch (restriction.type()) {
       case AccessType::kDestinationAllowed:
       case AccessType::kHazmat:
@@ -588,7 +570,8 @@ void AccessRestrictionLayerBuilder::add_feature(
       case AccessType::kMaxLength:
       case AccessType::kMaxWeight:
       case AccessType::kMaxAxleLoad:
-        feature.add_property(key_value_, vtzero::encoded_property_value(restriction.value() * 0.01));
+        feature.add_property(key_value_, vtzero::encoded_property_value(
+                                             static_cast<float>(restriction.value() * 0.01f)));
         break;
 
       // todo: turn the timed ones into something human readable
@@ -596,7 +579,46 @@ void AccessRestrictionLayerBuilder::add_feature(
       case AccessType::kTimedDenied:
       case AccessType::kMaxAxles:
       default:
-        feature.add_property(key_value_, vtzero::encoded_property_value(restriction.value()));
+        feature.add_property(key_value_, vtzero::encoded_property_value(
+                                             static_cast<uint64_t>(restriction.value())));
+        break;
+    }
+    feature.commit();
+  }
+  restriction_id.set_id(reverse_restrictions.second);
+  for (const auto& restriction : reverse_restrictions.first) {
+    vtzero::linestring_feature_builder feature{*this};
+    feature.set_id(static_cast<uint64_t>(restriction_id++));
+    feature.add_linestring_from_container(geometry);
+    feature.add_property(key_edge_id_, vtzero::encoded_property_value(reverse_edge_id));
+    feature.add_property(key_type_,
+                         vtzero::encoded_property_value(static_cast<uint32_t>(restriction.type())));
+    feature.add_property(key_modes_,
+                         vtzero::encoded_property_value(static_cast<uint32_t>(restriction.modes())));
+    feature.add_property(key_except_destination_, vtzero::encoded_property_value(static_cast<bool>(
+                                                      restriction.except_destination())));
+    switch (restriction.type()) {
+      case AccessType::kDestinationAllowed:
+      case AccessType::kHazmat:
+        feature.add_property(key_value_,
+                             vtzero::encoded_property_value(static_cast<bool>(restriction.value())));
+        break;
+      case AccessType::kMaxHeight:
+      case AccessType::kMaxWidth:
+      case AccessType::kMaxLength:
+      case AccessType::kMaxWeight:
+      case AccessType::kMaxAxleLoad:
+        feature.add_property(key_value_, vtzero::encoded_property_value(
+                                             static_cast<float>(restriction.value() * 0.01f)));
+        break;
+
+      // todo: turn the timed ones into something human readable
+      case AccessType::kTimedAllowed:
+      case AccessType::kTimedDenied:
+      case AccessType::kMaxAxles:
+      default:
+        feature.add_property(key_value_, vtzero::encoded_property_value(
+                                             static_cast<uint64_t>(restriction.value())));
         break;
     }
     feature.commit();
