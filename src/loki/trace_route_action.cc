@@ -96,6 +96,7 @@ namespace loki {
 
 void loki_worker_t::init_trace(Api& request) {
   parse_costing(request);
+  // parse_locations(request.mutable_options()->mutable_shape(), request);
   auto& options = *request.mutable_options();
 
   // check distance for hierarchy pruning
@@ -159,11 +160,15 @@ void loki_worker_t::locations_from_shape(Api& request) {
   shape->rbegin()->set_node_snap_tolerance(0.f);
   shape->rbegin()->set_radius(10);
 
+  // Add first and last correlated locations to request
   options.mutable_locations()->Clear();
   options.mutable_locations()->Add()->CopyFrom(*shape->begin());
   options.mutable_locations()->Add()->CopyFrom(*shape->rbegin());
 
-  // Add first and last correlated locations to request
+  for (auto& location : *options.mutable_locations()) {
+    apply_location_defaults(location);
+  }
+
   try {
     // If trace route has 2 locations get the lat,lng of the first and last so we can support
     // side of street.

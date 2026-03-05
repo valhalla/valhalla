@@ -215,6 +215,7 @@ constexpr uint32_t kMaxAddedTime = 255;
 constexpr float kNoElevationData = -500.0f;
 
 constexpr uint32_t kDefaultIndoorSearchCutoff = 300;
+constexpr uint32_t kDefaultSearchCutoff = 35000;
 constexpr uint32_t kMaxIndoorSearchCutoff = 1000;
 
 // (building) level constants

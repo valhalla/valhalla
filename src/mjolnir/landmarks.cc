@@ -333,11 +333,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
         landmark_loc->set_type(Location_Type_kBreak);
         landmark_loc->set_radius(kLandmarkRadius);
         landmark_loc->set_search_cutoff(kLandmarkSearchCutoff);
-        landmark_loc->mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
-        landmark_loc->mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
-        landmark_loc->mutable_search_filter()->set_exclude_closures(true);
-        landmark_loc->mutable_search_filter()->set_exclude_closures(true);
-        landmark_loc->mutable_search_filter()->set_level(baldr::kMaxLevel);
+        apply_location_defaults(*landmark_loc);
 
         // call loki::Search to get nearby edges to each landmark
         search.search(landmark_locs, sif::CreateNoCost({}));

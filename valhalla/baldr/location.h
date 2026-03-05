@@ -1,10 +1,44 @@
 #ifndef VALHALLA_BALDR_LOCATION_H_
 #define VALHALLA_BALDR_LOCATION_H_
 
+#include "baldr/graphconstants.h"
+
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
+namespace baldr {
+
+void inline apply_location_defaults(Location& location) {
+
+  if (!location.has_search_filter() || !location.search_filter().has_min_road_class_case())
+    location.mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
+  if (!location.search_filter().has_max_road_class_case())
+    location.mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_level())
+    location.mutable_search_filter()->set_level(kMaxLevel);
+  if (!location.has_street_side_cutoff_case())
+    location.set_street_side_cutoff(valhalla::RoadClass::kServiceOther);
+
+  if (!location.has_node_snap_tolerance())
+    location.set_node_snap_tolerance(5.f);
+
+  if (!location.has_heading_tolerance())
+    location.set_heading_tolerance(60.f);
+
+  if (!location.has_street_side_tolerance())
+    location.set_street_side_tolerance(5);
+
+  if (!location.has_street_side_max_distance())
+    location.set_street_side_max_distance(1000);
+
+  location.set_search_cutoff(kDefaultSearchCutoff);
+}
+
 inline bool operator==(const LatLng& a, const LatLng& b) {
   return a.has_lat_case() == b.has_lat_case() && a.lat() == b.lat() &&
          a.has_lng_case() == b.has_lng_case() && a.lng() == b.lng();
@@ -53,7 +87,7 @@ inline bool operator==(const Location& a, const Location& b) {
          a.has_minimum_outbound_reachability_case() == b.has_minimum_outbound_reachability_case() &&
          a.minimum_outbound_reachability() == b.minimum_outbound_reachability();
 }
-
+} // namespace baldr
 } // namespace valhalla
 namespace std {
 
