@@ -139,9 +139,9 @@ TEST(PlatformDefaults, CheckReasonableMappingRouting) {
   ASSERT_NE(cd_edge, nullptr);
   EXPECT_EQ(cd_edge->use(), baldr::Use::kPlatform);
   // Test that the platform is classified as low-priority road
-  EXPECT_EQ(bc_edge->classification(), baldr::RoadClass::kServiceOther)
+  EXPECT_EQ(cd_edge->classification(), baldr::RoadClass::kServiceOther)
       << "Expected platform to be kServiceOther, but got: "
-      << static_cast<int>(bc_edge->classification());
+      << static_cast<int>(cd_edge->classification());
 
   auto pedestrian_result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "pedestrian");
   // Test that the path is correct and pedestrian is walking through the platform
