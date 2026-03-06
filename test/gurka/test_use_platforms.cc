@@ -130,8 +130,7 @@ TEST(PlatformDefaults, CheckReasonableMappingRouting) {
                                {{"mjolnir.include_platforms", "true"}});
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  baldr::GraphId cd_id;
-  baldr::GraphId dc_id;
+  baldr::GraphId cd_id, dc_id;
   const baldr::DirectedEdge* cd_edge = nullptr;
   const baldr::DirectedEdge* dc_edge = nullptr;
   std::tie(cd_id, cd_edge, dc_id, dc_edge) = gurka::findEdge(reader, map.nodes, "CD", "D");
