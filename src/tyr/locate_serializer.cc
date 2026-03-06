@@ -4,6 +4,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/time_info.h"
 #include "tyr/serializers.h"
+#include "valhalla/exceptions.h"
 
 #include <cstdint>
 
@@ -295,6 +296,8 @@ std::string serializeLocate(const Api& request,
                             const std::vector<baldr::Location>& locations,
                             const std::unordered_map<baldr::Location, PathLocation>& projections,
                             GraphReader& reader) {
+  if (request.options().format() == Options_Format_pbf)
+    throw valhalla_exception_t{107};
   rapidjson::writer_wrapper_t writer(4096);
   writer.start_array();
 

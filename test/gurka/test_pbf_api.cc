@@ -165,3 +165,20 @@ TEST(pbf_api, pbf_error) {
     api.mutable_options()->set_action(Options::route);
   }
 }
+
+TEST(pbf_api, pbf_locate_height_not_implemented) {
+  const std::string ascii_map = R"(
+    A----B)";
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_pbf_501");
+
+  for (auto action : {Options::locate, Options::height}) {
+    try {
+      gurka::do_action(action, map, {"A", "B"}, "auto", {{"/format", "pbf"}});
+      FAIL() << "Expected valhalla_exception_t for action " << action;
+    } catch (const valhalla_exception_t& e) {
+      EXPECT_EQ(e.code, 107);
+    }
+  }
+}

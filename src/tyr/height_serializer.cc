@@ -1,6 +1,7 @@
 #include "skadi/sample.h"
 #include "tyr/serializers.h"
 #include "valhalla/baldr/rapidjson_utils.h"
+#include "valhalla/exceptions.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -89,6 +90,8 @@ namespace tyr {
 std::string serializeHeight(const Api& request,
                             const std::vector<double>& heights,
                             const std::vector<double>& ranges) {
+  if (request.options().format() == Options_Format_pbf)
+    throw valhalla_exception_t{107};
   rapidjson::writer_wrapper_t writer(4096);
   writer.start_object();
 
