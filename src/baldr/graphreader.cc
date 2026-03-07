@@ -840,6 +840,9 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
 
   // If this edge is a shortcut return this edge Id
   graph_tile_ptr tile = GetGraphTile(id);
+  if (!tile) {
+    return {};
+  }
   const DirectedEdge* directededge = tile->directededge(id);
   if (directededge->is_shortcut()) {
     return id;
@@ -874,6 +877,9 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     GraphId endnode = cont_de->endnode();
     if (cont_de->leaves_tile()) {
       tile = GetGraphTile(endnode.tile_base());
+      if (!tile) {
+        break;
+      }
     }
     node = tile->node(endnode);
 
