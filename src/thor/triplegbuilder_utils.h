@@ -77,7 +77,7 @@ private:
       auto tag_range = taggedValue.equal_range(valhalla::baldr::TaggedValue::kBssInfo);
       if (tag_range.first != tag_range.second) {
         // ignore error here and treat bad data as missing data
-        auto _ = bss_station_info->ParseFromString(tag_range.first->second);
+        std::ignore = bss_station_info->ParseFromString(tag_range.first->second);
       }
       bss_station_info->set_rent_cost(pedestrian_costing->BSSCost().secs);
       bss_station_info->set_return_cost(bicycle_costing->BSSCost().secs);
