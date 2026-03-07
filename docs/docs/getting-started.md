@@ -122,7 +122,7 @@ Here's what we need to do to get a minimal working version of the system:
 
 > IDEA: Maybe use just **one** extract? Note about an option to work with multiple extracts and the limitations. Specific version of OSM data extracts?
 
-We can use [Geofabrik's free server](https://download.geofabrik.de/) to download [data extracts](<(https://download.geofabrik.de/technical.html)>) to `osm/` directory:
+We can use [Geofabrik's free server](https://download.geofabrik.de/) to download [data extracts](https://download.geofabrik.de/technical.html) to `osm/` directory:
 
 ```bash
 wget \
