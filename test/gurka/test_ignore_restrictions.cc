@@ -68,7 +68,7 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictions) {
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
   // first, route through turn restriction, should fail...
   try {
-    valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing, {});
+    valhalla::Api _ = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing, {});
     FAIL() << "Expected valhalla_exception_t.";
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
@@ -82,7 +82,7 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictions) {
 
   // second, route through time based access restrictions, should fail...
   try {
-    valhalla::Api route =
+    valhalla::Api _ =
         gurka::do_action(valhalla::Options::route, map, {"A", "F"}, costing,
                          {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-10T13:00"}});
     FAIL() << "Expected route to fail.";
@@ -117,8 +117,8 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictionsFail) {
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
   // should fail, too low
   try {
-    valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing,
-                                           {{"/costing_options/" + costing + "/height", "3"}});
+    valhalla::Api _ = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing,
+                                       {{"/costing_options/" + costing + "/height", "3"}});
     FAIL() << "Expected valhalla_exception_t.";
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
@@ -126,7 +126,7 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictionsFail) {
 
   // still too low
   try {
-    valhalla::Api route =
+    valhalla::Api _ =
         gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing,
                          {{"/costing_options/" + costing + "/ignore_non_vehicular_restrictions", "1"},
                           {"/costing_options/" + costing + "/height", "3"}});
@@ -161,8 +161,8 @@ TEST(CommonRestrictionsFail, Truck) {
 
   // too long
   try {
-    valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
-                                           {{"/costing_options/truck/height", "3"}});
+    valhalla::Api _ = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
+                                       {{"/costing_options/truck/height", "3"}});
 
     FAIL() << "Expected valhalla_exception_t.";
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
@@ -171,7 +171,7 @@ TEST(CommonRestrictionsFail, Truck) {
 
   // ...still too long
   try {
-    valhalla::Api route =
+    valhalla::Api _ =
         gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
                          {{"/costing_options/truck/ignore_non_vehicular_restrictions", "1"},
                           {"/costing_options/truck/height", "3"}});

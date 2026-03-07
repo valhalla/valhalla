@@ -62,9 +62,10 @@ private:
                   const valhalla::sif::mode_costing_t& mode_costing,
                   const valhalla::baldr::AttributesController&) {
 
-    auto pedestrian_costing =
+    const auto& pedestrian_costing =
         mode_costing[static_cast<size_t>(valhalla::sif::travel_mode_t::kPedestrian)];
-    auto bicycle_costing = mode_costing[static_cast<size_t>(valhalla::sif::travel_mode_t::kBicycle)];
+    const auto& bicycle_costing =
+        mode_costing[static_cast<size_t>(valhalla::sif::travel_mode_t::kBicycle)];
 
     if (node->type() == valhalla::baldr::NodeType::kBikeShare && pedestrian_costing &&
         bicycle_costing) {
@@ -75,7 +76,8 @@ private:
       // TODO: import more BSS data, can be used to display capacity in real time
       auto tag_range = taggedValue.equal_range(valhalla::baldr::TaggedValue::kBssInfo);
       if (tag_range.first != tag_range.second) {
-        bss_station_info->ParseFromString(tag_range.first->second);
+        // ignore error here and treat bad data as missing data
+        auto _ = bss_station_info->ParseFromString(tag_range.first->second);
       }
       bss_station_info->set_rent_cost(pedestrian_costing->BSSCost().secs);
       bss_station_info->set_return_cost(bicycle_costing->BSSCost().secs);
