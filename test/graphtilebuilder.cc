@@ -1,3 +1,4 @@
+#include "baldr/graphtileptr.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "baldr/graphid.h"
 #include "baldr/tilehierarchy.h"
@@ -27,6 +28,34 @@ public:
   using GraphTileBuilder::EdgeTuple;
   using GraphTileBuilder::EdgeTupleHasher;
   using GraphTileBuilder::GraphTileBuilder;
+  using GraphTileBuilder::speed_profile_map_;
+};
+
+class test_predicted_speeds : public PredictedSpeeds {
+  public:
+    using PredictedSpeeds::offset_;
+    using PredictedSpeeds::profiles_;
+  };
+
+class test_graph_tile : public GraphTile {
+public:
+  using GraphTile::GraphTile;
+  using GraphTile::predictedspeeds_;
+
+  test_graph_tile(const std::string& tile_dir, const GraphId& graphid)
+  : GraphTile(tile_dir, graphid) {}
+
+  // Get offset for an edge
+  uint32_t get_speed_profile_offset(uint32_t edge_idx) const {
+    const test_predicted_speeds& test_predictedspeeds_ = reinterpret_cast<const test_predicted_speeds&>(predictedspeeds_);
+
+    return test_predictedspeeds_.offset_[edge_idx];
+  }
+
+  // Get the speed value from the tile's predicted speeds for edge idx and coefficient i
+  float get_predicted_speed(uint32_t edge_idx, uint32_t seconds_of_week) const {
+    return predictedspeeds_.speed(edge_idx, seconds_of_week);
+  }
 };
 
 void assert_tile_equalish(const GraphTile& a,
@@ -276,6 +305,55 @@ TEST(GraphTileBuilder, TestAddBins) {
     assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
                          "New tiles edgeinfo or names arent matching up: 3");
   }
+}
+
+TEST(GraphTileBuilder, TestDuplicatePredictedSpeeds) {
+
+  // setup a tile with edges that have some edges with the same predicted speeds
+  std::string test_dir = "test/data/predicted_speed_builder_tiles";
+  test_graph_tile_builder test(test_dir, GraphId(0, 2, 0), false);
+
+  // Add three edges with different edge info
+  test.directededges().emplace_back();
+  test.directededges().emplace_back();
+  test.directededges().emplace_back();
+
+  bool added = false;
+  test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1111, 100.5f, 1, 60,
+                   std::list<PointLL>{{0, 0}, {1, 1}}, {"edge_one"}, {}, {},0, added);
+  test.AddEdgeInfo(1, GraphId(0, 2, 1), GraphId(0, 2, 2), 2222, 200.5f, 2, 70,
+                   std::list<PointLL>{{1, 1}, {2, 2}}, {"edge_two"}, {}, {}, 0, added);
+  test.AddEdgeInfo(2, GraphId(0, 2, 2), GraphId(0, 2, 3), 3333, 300.5f, 3, 80,
+                   std::list<PointLL>{{2, 2}, {3, 3}}, {"edge_three"}, {}, {}, 0, added);
+
+  // Create a constant speed array
+  std::array<float, kBucketsPerWeek> speeds;
+  speeds.fill(20.0f);  // 20 kph for all buckets
+
+  // Compress to coefficients
+  auto test_predicted_speed_coefficients_1 = compress_speed_buckets(speeds.data());
+
+  speeds.fill(30.0f);  // 30 kph for all buckets
+  auto test_predicted_speed_coefficients_2 = compress_speed_buckets(speeds.data());
+
+  test.AddPredictedSpeed(0, test_predicted_speed_coefficients_1);
+  test.AddPredictedSpeed(1, test_predicted_speed_coefficients_2);
+  test.AddPredictedSpeed(2, test_predicted_speed_coefficients_2);
+
+  EXPECT_EQ(test.speed_profile_map_.size(), 2);
+
+  test.UpdatePredictedSpeeds(test.directededges());
+
+  // load the tile and assert the predicted speeds and offsets are correct
+  test_graph_tile tile(test_dir, GraphId(0, 2, 0));
+
+  EXPECT_NEAR(tile.get_predicted_speed(0, 0), 20.0f, 0.1);
+  EXPECT_NEAR(tile.get_predicted_speed(1, 0), 30.0f, 0.1);
+  EXPECT_NEAR(tile.get_predicted_speed(2, 0), 30.0f, 0.1);
+
+  EXPECT_NE(tile.get_speed_profile_offset(0), tile.get_speed_profile_offset(1));
+  EXPECT_EQ(tile.get_speed_profile_offset(1), tile.get_speed_profile_offset(2));
+
 }
 
 struct fake_tile : public GraphTile {
