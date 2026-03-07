@@ -536,6 +536,12 @@ protected:
     std::hash<baldr::GraphId> id_hasher;
   };
 
+  struct SpeedProfileHasher {
+    size_t operator()(const std::array<int16_t, baldr::kCoefficientCount>& arr) const {
+        return boost::hash_range(arr.begin(), arr.end());
+    }
+  };
+
   // Edge tuple for sharing edges that have common nodes and edgeindex
   static edge_tuple
   EdgeTuple(const uint32_t edgeindex, const baldr::GraphId& nodea, const baldr::GraphId& nodeb) {
@@ -630,6 +636,9 @@ protected:
 
   // Predicted speed profiles. 200 short int for each directed edge which has predicted speed.
   std::vector<int16_t> speed_profile_builder_;
+
+  // Map of speed profiles to their offsets.
+  std::unordered_map<std::array<int16_t, baldr::kCoefficientCount>, uint32_t, SpeedProfileHasher> speed_profile_map_;
 
   // lane connectivity list offset
   uint32_t lane_connectivity_offset_ = 0;

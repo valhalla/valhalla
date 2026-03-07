@@ -1247,6 +1247,8 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
 void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
                                          const std::array<int16_t, kCoefficientCount>& coefficients,
                                          const size_t predicted_count_hint) {
+  std::cout<<"Adding predicted speed for edge "<<idx<<std::endl;
+
   if (idx >= header_->directededgecount())
     throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");
 
@@ -1255,14 +1257,26 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
   if (speed_profile_offset_builder_.size() == 0) {
     speed_profile_offset_builder_.resize(header_->directededgecount());
     speed_profile_builder_.reserve(predicted_count_hint * kCoefficientCount);
+    speed_profile_map_.reserve(predicted_count_hint);
   }
 
+  // Check if the speed profile already exists
+  auto it = speed_profile_map_.find(coefficients);
+  if (it != speed_profile_map_.end()) {
+    speed_profile_offset_builder_[idx] = it->second;
+    return;
+  }
+
+  auto new_speed_profile_offset = speed_profile_builder_.size();
   // Set the offset to the predicted speed profile for this directed edge
-  speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
+  speed_profile_offset_builder_[idx] = new_speed_profile_offset;
 
   // Append the profile
   speed_profile_builder_.insert(speed_profile_builder_.end(), coefficients.begin(),
                                 coefficients.end());
+
+  // Add the profile to the map
+  speed_profile_map_.emplace(coefficients, new_speed_profile_offset);
 }
 
 // Updates a tile with predictive speed data. Also updates directed edges with
