@@ -104,7 +104,7 @@ include(ValhallaSourceGroups)
 # - it's more trivial to use custom installations via PKG_CONFIG_PATH env var
 pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
 pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
-pkg_check_modules(EXPAT REQUIRED IMPORTED_TARGET expat)
+pkg_check_modules(EXPAT IMPORTED_TARGET expat)
 
 # cURL
 set(curl_target "")
