@@ -200,7 +200,6 @@ target_link_libraries(valhalla
   PUBLIC
     ${libvalhalla_link_libraries}
     $<$<BOOL:${WIN32}>:ws2_32>
-    $<$<BOOL:${EXPAT_FOUND}>:PkgConfig::EXPAT>
   PRIVATE
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
     Threads::Threads)
