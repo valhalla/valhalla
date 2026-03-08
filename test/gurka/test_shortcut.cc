@@ -5,6 +5,8 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+
 using namespace valhalla;
 using namespace valhalla::baldr;
 
@@ -438,4 +440,62 @@ TEST(Shortcuts, ShortcutRestrictions) {
     EXPECT_TRUE(std::get<1>(shortcut)->is_shortcut());
     EXPECT_NEAR(std::get<1>(shortcut)->length(), 7500, 1);
   }
+}
+
+// Regression test: GetShortcut must return an invalid GraphId (not crash) when
+// GetGraphTile() returns nullptr because the tile is absent from the tile store.
+// Before the fix both dereference sites in GetShortcut would segfault.
+TEST(Shortcuts, GetShortcutReturnsInvalidOnMissingTile) {
+  constexpr double gridsize = 100;
+
+  // Build a minimal map so we have a real, well-formed edge GraphId at level 0.
+  const std::string ascii_map = R"(
+      A---B---C
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "motorway"}}},
+      {"BC", {{"highway", "motorway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/gurka_shortcut_null_tile");
+
+  // Grab the edge id of AB — a non-shortcut edge that would normally trigger the
+  // walk-back loop inside GetShortcut.
+  baldr::GraphReader source_reader(map.config.get_child("mjolnir"));
+  const auto edge_id = std::get<0>(gurka::findEdgeByNodes(source_reader, layout, "A", "B"));
+  ASSERT_TRUE(edge_id.is_valid());
+
+  // Point a second reader at an empty directory so every GetGraphTile() call
+  // returns nullptr, simulating a missing / unavailable tile.
+  const std::string empty_dir = VALHALLA_BUILD_DIR "test/data/gurka_shortcut_null_tile_empty";
+  std::filesystem::create_directories(empty_dir);
+
+  auto cfg = map.config;
+  cfg.put("mjolnir.tile_dir", empty_dir);
+  baldr::GraphReader empty_reader(cfg.get_child("mjolnir"));
+
+  // Without the fix this call segfaults. With the fix it must return an
+  // invalid GraphId because the tile is not present.
+  const auto shortcut = empty_reader.GetShortcut(edge_id);
+  EXPECT_FALSE(shortcut.is_valid())
+      << "GetShortcut must return invalid GraphId, not crash, when the tile is unavailable";
+}
+
+// Death test: prove that the exact null-dereference pattern removed by the fix
+// causes a segfault (SIGSEGV).  This is the "Actual Behaviour" before the fix:
+//
+//   graph_tile_ptr tile = GetGraphTile(id);  // returns nullptr on missing tile
+//   tile->directededge(id);                  // <-- crashes here, unconditionally
+//
+// graph_tile_ptr is a shared_ptr<const GraphTile>.  Calling operator-> on a
+// null shared_ptr is undefined behaviour and reliably produces SIGSEGV.
+TEST(ShortcutsDeathTest, NullTileDereferenceSegfaults) {
+  EXPECT_DEATH(
+      {
+        // Reproduce old site 1 verbatim: no null check before ->directededge()
+        graph_tile_ptr null_tile = nullptr;
+        (void)null_tile->directededge(GraphId{});
+      },
+      "" /*any signal message*/);
 }
