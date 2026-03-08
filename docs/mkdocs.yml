@@ -56,6 +56,8 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - github-callouts
+  - md_in_html
+  - pymdownx.blocks.caption
 
 plugins:
   - search
