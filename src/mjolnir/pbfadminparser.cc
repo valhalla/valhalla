@@ -9,6 +9,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
+#include <osmium/io/xml_input.hpp>
 #include <osmium/osm/entity_bits.hpp>
 
 #include <string>

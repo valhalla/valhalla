@@ -101,4 +101,5 @@ valhalla_module(NAME mjolnir
     PkgConfig::LuaJIT
     Threads::Threads
     PkgConfig::ZLIB
-    PkgConfig::OPENSSL)
+    PkgConfig::OPENSSL
+    PkgConfig::EXPAT)

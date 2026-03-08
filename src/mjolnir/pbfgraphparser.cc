@@ -20,6 +20,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
+#include <osmium/io/xml_input.hpp>
 
 #include <thread>
 #include <utility>
