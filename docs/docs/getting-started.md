@@ -100,46 +100,35 @@ less config.json
 
 Valhalla needs some data in order to work.
 
-The fundamental / core / main / minimal component is a set of **routing tiles** (TODO link) - a directory of files in a specific format with information about the roads, restrictions and so on.
+The fundamental component is a set of [**routing tiles**](tiles.md) - a directory of files in a specific format with information about the roads, restrictions and so on.
 
-The core _data source_ for this is [OpenStreetMap](https://www.openstreetmap.org/) (OSM): Valhalla takes OSM map data in [PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format) and uses it to create a set of tiles.
+The main data source for this is [OpenStreetMap](https://www.openstreetmap.org/) (OSM): Valhalla takes OSM map data in [PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format) and uses it to create a set of tiles.
 
-> IDEA: Talk a little more about _data_: content and format (PBF)? What is an extract?
+> To learn more about OSM data format and different options, see [Beginners' Guide](https://wiki.openstreetmap.org/wiki/Beginners%27_guide) and [Downloading data](https://wiki.openstreetmap.org/wiki/Downloading_data).
 
-> IDEA: Link to learn more about OSM data format: [Beginners' Guide](https://wiki.openstreetmap.org/wiki/Beginners%27_guide), see [Downloading data](https://wiki.openstreetmap.org/wiki/Downloading_data) for more options.
+Here's what we need to do:
 
-> Tiles are a representation of a [graph](<https://en.wikipedia.org/wiki/Graph_(abstract_data_type)>) data structure.
-
-Here's what we need to do to get a minimal working version of the system:
-
-1. Download [OSM data extract](https://download.geofabrik.de/technical.html) in `.osm.pbf` file format
-1. Build _admin_ database\*
-   > Recommendation is to build this from the _whole planet_, which is a large file and may take some time.
-1. Build _time zones_ database
-1. Build the tiles
+1. Download [OSM data extract](https://download.geofabrik.de/technical.html) in `.osm.pbf` file format.
+1. Build _admins_ database.
+1. Build _time zones_ database.
+1. Build routing tiles.
 
 ### Download OpenStreetMap data extract
 
 > IDEA: Maybe use just **one** extract? Note about an option to work with multiple extracts and the limitations. Specific version of OSM data extracts?
 
-We can use [Geofabrik's free server](https://download.geofabrik.de/) to download [data extracts](https://download.geofabrik.de/technical.html) to `osm/` directory:
+We can use [Geofabrik's free server](https://download.geofabrik.de/) to download a [data extract](https://download.geofabrik.de/technical.html) to `osm/` directory:
 
 ```bash
-wget \
-    --directory-prefix osm/ \
-    https://download.geofabrik.de/europe/andorra-latest.osm.pbf \
-    https://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+wget --directory-prefix osm/ \
+    https://download.geofabrik.de/europe/andorra-latest.osm.pbf
 ```
 
 !!! warning
 
     Valhalla can work with _multiple_ data extracts, but this is discouraged - some problems. See linked issue (TODO).
 
-!!! info
-
-    Suggestion - use whole planet. Give some information about the size and time it takes.
-
-### Build admin database
+### Build admins database
 
 > TODO: What is this? Why do we need it?
 
@@ -147,25 +136,52 @@ wget \
 valhalla_build_admins -c config.json switzerland-latest.osm.pbf
 ```
 
-### Build time zones database
+We'll see some warnings and errors in the logs:
+
+```text
+2026-03-08 09:24:08.911757938 [WARN] Catalunya (349053) is missing way member 1415938360
+2026-03-08 09:24:08.911786366 [WARN] Catalunya (349053) is degenerate and will be skipped
+
+...
+
+2026-03-08 09:24:08.915498329 [ERROR] sqlite3_step() error: NOT NULL constraint failed: admin_access.admin_id.  Ignore if not using a planet extract or check if there was a name change for Cymru / Wales
+```
+
+It's safe to ignore them for now. TODO Why?
+
+!!! info
+
+    Suggestion - use whole planet. Give some information about the size and time it takes.
+
+### Download time zones database
 
 > TODO: What is this? Why do we need it?
 
-```bash
-valhalla_build_timezones > timezones.sqlite
-```
+There's a [GitHub workflow](https://github.com/valhalla/valhalla/actions/workflows/publish_tz_db.yml) which builds time zones database for the whole planet and publishes it as an artifact available for download. To get the latest file, follow the link, select the latest run and download the SQLite database file to the working directory.
+
+> TODO Images?
 
 ### Build routing tiles
 
 Finally, we are ready to build the tiles:
 
 ```bash
-valhalla_build_tiles --config config.json osm/andorra-latest.osm.pbf
+valhalla_build_tiles -c config.json osm/andorra-latest.osm.pbf
 ```
+
+TODO: This will do this and that.
 
 We'll see a log with a bunch of messages. It's okay to ignore the warnings.
 
-When finished, we can see generated data in `tiles/` directory (the one from configuration file). At the time of writing it looks like this:
+TODO Troubleshooting?
+
+- If you see the following message, make sure that you have correct path in configuration file:
+
+  ```text
+  2026-03-08 10:06:29.361219214 [WARN] Time zone db /data/tz_world.sqlite not found.  Not saving time zone information.
+  ```
+
+Once finished, we can see generated data in `tiles/` directory (the one from configuration file). At the time of writing it looks like this:
 
 ```console
 $ tree tiles/
@@ -188,8 +204,6 @@ tiles/
 
 9 directories, 7 files
 ```
-
-> IDEA: A button to show the result (like in [`jq` tutorial](https://jqlang.org/tutorial/)?)
 
 TODO: A little info about what this directory & files mean. Structure of `tiles/` directory: on top, directories represent _hierarchy levels_. For example, in directory `tiles/0/` we have the tiles with hierarchy level 0. The rest of the path encodes a _tile index_. For example, a tile at path `tiles/1/047/701.gph` has:
 
