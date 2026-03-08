@@ -1,47 +1,70 @@
 # Getting started
 
-## Prerequisites
+This guide shows some of the main features of Valhalla routing engine. We'll see how to generate the data, run the routing engine on our machine and make some requests.
 
-Basic familiarity with:
-
-- Command line
-- Docker
-- Package management
-
-## Requirements
-
-- [Docker](https://www.docker.com/)
+We assume basic familiarity with the command line and the installation method of your choice.
 
 ## Install
 
-> See _Installation instructions_ for detailed information.
+=== "Docker"
 
-> TODO: Use Python library instead?
+    The simplest way to install Valhalla and its tools is with [Docker](https://www.docker.com/). We'll use the [official _base_ image](https://github.com/valhalla/valhalla/pkgs/container/valhalla):
 
-The simplest way to install Valhalla and the tools is with Docker. We'll use the [official _base_ image](https://github.com/valhalla/valhalla/pkgs/container/valhalla):
+    ```bash
+    docker pull ghcr.io/valhalla/valhalla:latest
+    ```
 
-```bash
-docker pull ghcr.io/valhalla/valhalla:latest
-```
+    Now we can start the container:
 
-Now we can start the container:
+    ```bash
+    docker run \
+        --name valhalla \
+        --publish 127.0.0.1:8002:8002 \
+        --mount type=volume,src=valhalla-data,dst=/data \
+        --workdir /data \
+        --interactive \
+        --tty \
+        --rm \
+        ghcr.io/valhalla/valhalla:latest
+    ```
 
-```bash
-docker run \
-    --name valhalla \
-    --publish 127.0.0.1:8002:8002 \
-    --mount type=volume,src=valhalla-data,dst=/data \
-    --workdir /data \
-    --interactive \
-    --tty \
-    --rm \
-    ghcr.io/valhalla/valhalla:latest
-```
+    In addition, this command:
 
-In addition, this command:
+    - Publishes a port so we could communicate from outside the container.
+    - Creates a volume named `valhalla-data` and mounts it at `/data` directory inside the container to persist generated files.
 
-- Publishes a port so we could communicate from outside the container.
-- Creates a volume named `valhalla-data` and mounts it at `/data` directory inside the container to persist generated files.
+    From now on, we'll run all commands _inside_ the container, in `/data` directory with a mounted volume.
+
+    Finally, update the list of available software packages and install some helpful programs:
+
+    ```bash
+    apt update
+    apt install jq less tree wget
+    ```
+
+=== "Python"
+
+    Valhalla is available on [PyPI](https://pypi.org/project/pyvalhalla/):
+
+    ```bash
+    pip install pyvalhalla
+    ```
+
+    It comes with some tools (C++ executables) which we need. To run them, you could either execute the module:
+
+    ```bash
+    python -m valhalla valhalla_build_tiles --version
+    ```
+
+    or use the wrapper script directly:
+
+    ```bash
+    valhalla_build_tiles --version
+    ```
+
+    We'll use the second form in this guide to keep it short. If you have any problems, take a look at [Python bindings](installation/python.md) page.
+
+---
 
 Let's make sure that everything is okay - the following command should return the version:
 
@@ -53,19 +76,6 @@ $ valhalla_build_tiles --version
 > TODO More info about the tools?
 
 > All Valhalla tools support `--help` option to show usage.
-
-From now on, we'll run all commands _inside_ the container, in `/data` directory with a mounted volume:
-
-```bash
-cd /data
-```
-
-Finally, update the list of available software packages and install some helpful programs:
-
-```bash
-apt update
-apt install jq less tree wget
-```
 
 ## Configuration file
 
