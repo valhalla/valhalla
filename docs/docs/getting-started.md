@@ -247,7 +247,19 @@ Public API is RESTful - there's set of paths (`/status`, `/route`, etc) for diff
 
 ## Use the API / features
 
-> See [Usage Guide]() and [API Overview]() for detailed information. Check out **public server** for web and HTTP interfaces.
+!!! note
+
+    Work in progress...
+
+!!! tip
+
+    Use [demo web application](https://valhalla.openstreetmap.de) to explore and experiment with Valhalla service.
+
+    Additionally, demo server provides a [web API](https://en.wikipedia.org/wiki/Web_API) at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
+
+> TODO: Pedestrian route: [Casa de la Vall](https://en.wikipedia.org/wiki/Casa_de_la_Vall) > [La Noblesse du Temps](https://www.atlasobscura.com/places/the-nobility-of-time) statue.
+
+> TODO Auto route: [Andorra la Vella](https://en.wikipedia.org/wiki/Andorra_la_Vella) city > [Pont Tibetà de Canillo](https://www.ponttibetacanillo.com/).
 
 Basic _route_ request (auto):
 
@@ -255,17 +267,17 @@ Basic _route_ request (auto):
 - Costing
 - Other options
 
-Response sample, visualize response polyline using their website.
+Response sample, visualize response polyline with [polyline visualization tool](https://valhalla.github.io/demos/polyline/).
 
 Couple more requests with other _costing modes_ - pedestrian, bike.
 
-Other _services_ - isochrone, map-matching, matrix.
+Other _services_ - isochrone, map-matching, matrix?
 
 Check the logs.
 
 ## Continue reading
 
-- Check out [API reference](api/index.md) to see how to use different features like routing and map matching.
+- Check out [API reference](api/index.md) for a complete overview of all features - routing, map matching, isochrones, etc.
 - _Installation_ section has different ways about how to install Valhalla.
 - [Configuration guide](guides/configuration.md) has detailed information about how to configure tools and services.
 - See [Data guide](guides/data.md) for more details about the data, additional sources, traffic, public transit and so on.
