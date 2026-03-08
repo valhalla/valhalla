@@ -18,13 +18,14 @@ jobs:
       - name: Run script
         shell: bash
         run: |
-          set -e 
+          set -ex
 
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
           latest_tag=$(git -C third_party/tz ls-remote --tags --refs --quiet origin | tail --lines 1 | awk '{print $2}' | cut --delimiter='/' --fields=3 )
-          current_tag=$(git -C third_party/tz describe --exact-match --tags)
+          # TESTING: hardcode to force the update path
+          current_tag="2025b"
 
           if [[ $latest_tag != $current_tag ]]; then
               echo "New tz release available: ${latest_tag}"
