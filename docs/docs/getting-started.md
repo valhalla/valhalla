@@ -73,30 +73,27 @@ $ valhalla_build_tiles --version
 3.6.3-95fb6ddd6
 ```
 
-> TODO More info about the tools?
-
-> All Valhalla tools support `--help` option to show usage.
+Tools are simply programs which help us do different things. All Valhalla tools support `--help` option to show the usage.
 
 ## Configuration file
 
-> Move into [Data](#prepare-the-data) section?
-
-> See [Configuration](guides/configuration.md) for detailed information.
-
 All Valhalla tools use a common JSON configuration file. It contains settings for data generation, location search, service process and so on.
-
-> TODO: Set correct paths for admin and tz databases
 
 Let's create it:
 
 ```bash
+# For Python, use the following command instead (same options)
+# python -m valhalla.valhalla_build_config
+
 valhalla_build_config \
+    --mjolnir-admin "${PWD}"/admin.sqlite \
+    --mjolnir-timezone "${PWD}"/timezones.sqlite \
     --mjolnir-tile-dir "${PWD}"/tiles/ \
     --mjolnir-tile-extract "${PWD}"/tiles.tar \
     > config.json
 ```
 
-> TODO What do the options mean?
+Options override default paths to some files and directories - we'll see them later.
 
 The command generates a configuration with reasonable defaults. Take a look:
 
@@ -132,13 +129,11 @@ wget --directory-prefix osm/ \
 
 !!! warning
 
-    Valhalla can work with _multiple_ data extracts, but this is discouraged - some problems. See linked issue (TODO).
-
-> TODO More info about working with extracts?
+    Valhalla can work with multiple data extracts, but this is discouraged. See [Issue 3925](https://github.com/valhalla/valhalla/issues/3925).
 
 ### Build admins database
 
-Admins database has information about administrative boundaries: country borders, states or provinces and so on. Valhalla uses this to flag country crossings and figure out on which side of the road to drive - left or right.
+Admins database has information about administrative boundaries: country borders and so on. Valhalla uses this to flag country crossings and figure out on which side of the road to drive - left or right.
 
 ```bash
 valhalla_build_admins -c config.json andorra-latest.osm.pbf
@@ -159,7 +154,7 @@ It's safe to ignore them for now as we use a regional PBF extract, not the whole
 
 !!! info
 
-    Suggestion - use whole planet. Give some information about the size and time it takes.
+    For production, use the whole planet. TODO Why?
 
 ### Download time zones database
 
@@ -167,7 +162,9 @@ Valhalla uses time zones to enable departure or arrival date and time.
 
 There's a [GitHub workflow](https://github.com/valhalla/valhalla/actions/workflows/publish_tz_db.yml) which builds time zones database for the whole planet and publishes it as an artifact available for download. To get the latest file, follow the link, select the latest run and download the SQLite database file to the working directory.
 
-> TODO Images?
+![List of runs on GitHub Actions](images/timezones-select-latest-run-1200x768.jpeg){ width="600" }
+
+![Run details and artifacts](images/timezones-run-details-download-artifact-1200x548.jpeg){ width="600" }
 
 ### Build routing tiles
 
@@ -177,17 +174,11 @@ Finally, we are ready to build the tiles:
 valhalla_build_tiles -c config.json osm/andorra-latest.osm.pbf
 ```
 
-TODO: This will do this and that.
+We'll see a bunch of log messages. If you see the following warnings, make sure that you have correct path in configuration file:
 
-We'll see a log with a bunch of messages. It's okay to ignore the warnings.
-
-TODO Troubleshooting?
-
-- If you see the following message, make sure that you have correct path in configuration file:
-
-  ```text
-  2026-03-08 10:06:29.361219214 [WARN] Time zone db /data/tz_world.sqlite not found.  Not saving time zone information.
-  ```
+```text
+2026-03-08 10:06:29.361219214 [WARN] Time zone db /data/tz_world.sqlite not found.  Not saving time zone information.
+```
 
 Once finished, we can see generated data in `tiles/` directory (the one from configuration file). At the time of writing it looks like this:
 
@@ -213,35 +204,7 @@ tiles/
 9 directories, 7 files
 ```
 
-TODO: A little info about what this directory & files mean. Structure of `tiles/` directory: on top, directories represent _hierarchy levels_. For example, in directory `tiles/0/` we have the tiles with hierarchy level 0. The rest of the path encodes a _tile index_. For example, a tile at path `tiles/1/047/701.gph` has:
-
-- Level: 1 from `1/`
-- Tile index: 47701 from `047/701.gph`
-
-> Why are we doing this?
-
-### Inspect the edges
-
-We can export the edges into a CSV file:
-
-```bash
-valhalla_export_edges -c config.json > edges.csv
-```
-
-And take a look:
-
-```console
-$ head -n 1 edges.csv
-uebapAcyi{AcEcDm\mUmJiG_FaDmNuM}rBc}B}MiPeEoEqC{CCarrer Prada Motxilla
-```
-
-> TODO: Other options for tile inspection? Website to visualize polylines?
-
 ## Start the service
-
-> See [Operations Guide](guides/operations.md) for detailed information.
-
-> TODO Info about using it as a library?
 
 There are multiple ways to run Valhalla. Here's one of them:
 
@@ -251,17 +214,9 @@ valhalla_service config.json 1
 
 Valhalla service is an HTTP server process - it accepts requests and returns responses. By default, it is available on port `8002`, but we could change that in the configuration file.
 
-> Remember that we published a port when we ran a Docker container? Now we can send requests to Valhalla using <http://localhost:8002> address from outside the container.
+> If you used Docker and published the port, you can send requests to Valhalla using <http://localhost:8002> address from outside the container.
 
-Interface / public API - RESTful - set of paths (`/status`, `/route`, etc) for different operations, either GET or POST requests. For both, we pass the content either via query parameter or as a body | JSON content. Formats depend on the specific operation.
-
-> TODO: Some details on how the service works? Accept the request, correlate locations to the routing graph to find the correct nodes, run the algorithm, create response in a nice format.
-
-> TODO: Technical details. Graph algorithms, sequential with one core, multiple cores = multiple requests at the same time, loads tiles from disk, caches them in memory. Depending on the data layout, either each process has its own cache, or they share data via memory-mapped tar archive. Suggestion: lots of memory, fast disk, many cores.
-
-> TODO: Can I use this in production? What's performance like?
-
-Let's make a request to check the status:
+Let's check the status:
 
 ```console
 $ curl http://localhost:8002/status | jq '.'
@@ -286,9 +241,9 @@ $ curl http://localhost:8002/status | jq '.'
 }
 ```
 
-This command will do this and that.
+Public API is RESTful - there's set of paths (`/status`, `/route`, etc) for different operations, each accepts either GET or POST requests. For both, we can pass the content either via query parameter or as a body with JSON content. Formats depend on the specific operation.
 
-> We use `curl` as it is installed inside the container, but you could use any other CLI tool (httpie, etc) or API client (Bruno, etc) to talk to the service.
+> We use `curl`, but you could use any other CLI tool (httpie, etc) or API client (Bruno, etc) to talk to the service.
 
 ## Use the API / features
 
@@ -307,13 +262,6 @@ Couple more requests with other _costing modes_ - pedestrian, bike.
 Other _services_ - isochrone, map-matching, matrix.
 
 Check the logs.
-
-## Recap?
-
-- Got the project
-- Downloaded the data and created routing tiles
-- Started the service
-- Tried some requests
 
 ## Continue reading
 
