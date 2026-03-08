@@ -159,6 +159,8 @@ coefficients_restored = decode_compressed_speeds(encoded)
 
 #### Valhalla executables
 
+##### C++ executables
+
 To access the C++ (native) executables, there are 2 options:
 
 - (recommended) execute the module, e.g. `python -m valhalla valhalla_build_tiles -h`
@@ -176,6 +178,16 @@ There are also some additional commands we added:
 - `print_bin_path`: simply prints the absolute path to the package-internal `bin/` directory where the C++ executables are; useful if the executables should be accessed directly in some script
 
 To find out which Valhalla executables are currently included, run `python -m valhalla --help`. We limit the number of executables to control the wheel size. However, we're open to include any other executable if there's a good reason.
+
+##### Pure Python scripts
+
+The following tools are implemented in pure Python and installed as console scripts:
+
+- `valhalla_build_config`: Generate or merge Valhalla configuration JSON files
+- `valhalla_build_elevation`: Download elevation (DEM) tiles for a given region
+- `valhalla_build_extract`: Create tar extracts from routing tiles
+
+These are invoked directly, e.g. `valhalla_build_config -h` or `valhalla_build_extract -h`. They do **not** go through the `python -m valhalla` module mechanism.
 
 ### Building from source
 
