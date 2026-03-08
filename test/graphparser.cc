@@ -727,7 +727,7 @@ TEST(GraphParser, TestImportBssNode) {
     auto search = taggedValue.equal_range(valhalla::baldr::TaggedValue::kBssInfo);
     ASSERT_NE(search.first, search.second) << "BSS Tag TaggedValue::kBssInfo not found in EdgeInfo";
     valhalla::BikeShareStationInfo bss_station_info;
-    bss_station_info.ParseFromString(search.first->second);
+    ASSERT_TRUE(bss_station_info.ParseFromString(search.first->second));
 
     ASSERT_EQ(bss_station_info.ref(), "2");
     ASSERT_EQ(bss_station_info.network(), "Atac Bikesharing");
