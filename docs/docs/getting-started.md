@@ -96,8 +96,6 @@ less config.json
 
 ## Prepare the data
 
-> See [Data guide](guides/data.md) for detailed information.
-
 Valhalla needs some data in order to work.
 
 The fundamental component is a set of [**routing tiles**](tiles.md) - a directory of files in a specific format with information about the roads, restrictions and so on.
@@ -110,12 +108,10 @@ Here's what we need to do:
 
 1. Download [OSM data extract](https://download.geofabrik.de/technical.html) in `.osm.pbf` file format.
 1. Build _admins_ database.
-1. Build _time zones_ database.
+1. Download _time zones_ database.
 1. Build routing tiles.
 
 ### Download OpenStreetMap data extract
-
-> IDEA: Maybe use just **one** extract? Note about an option to work with multiple extracts and the limitations. Specific version of OSM data extracts?
 
 We can use [Geofabrik's free server](https://download.geofabrik.de/) to download a [data extract](https://download.geofabrik.de/technical.html) to `osm/` directory:
 
@@ -128,12 +124,14 @@ wget --directory-prefix osm/ \
 
     Valhalla can work with _multiple_ data extracts, but this is discouraged - some problems. See linked issue (TODO).
 
+> TODO More info about working with extracts?
+
 ### Build admins database
 
-> TODO: What is this? Why do we need it?
+Admins database has information about administrative boundaries: country borders, states or provinces and so on. Valhalla uses this to flag country crossings and figure out on which side of the road to drive - left or right.
 
 ```bash
-valhalla_build_admins -c config.json switzerland-latest.osm.pbf
+valhalla_build_admins -c config.json andorra-latest.osm.pbf
 ```
 
 We'll see some warnings and errors in the logs:
@@ -147,7 +145,7 @@ We'll see some warnings and errors in the logs:
 2026-03-08 09:24:08.915498329 [ERROR] sqlite3_step() error: NOT NULL constraint failed: admin_access.admin_id.  Ignore if not using a planet extract or check if there was a name change for Cymru / Wales
 ```
 
-It's safe to ignore them for now. TODO Why?
+It's safe to ignore them for now as we use a regional PBF extract, not the whole planet.
 
 !!! info
 
@@ -155,7 +153,7 @@ It's safe to ignore them for now. TODO Why?
 
 ### Download time zones database
 
-> TODO: What is this? Why do we need it?
+Valhalla uses time zones to enable departure or arrival date and time.
 
 There's a [GitHub workflow](https://github.com/valhalla/valhalla/actions/workflows/publish_tz_db.yml) which builds time zones database for the whole planet and publishes it as an artifact available for download. To get the latest file, follow the link, select the latest run and download the SQLite database file to the working directory.
 
@@ -309,9 +307,8 @@ Check the logs.
 
 ## Continue reading
 
-- [Installation]() to see various options on how to install Valhalla.
-- [Configuration]()
-- [Data Guide]() for more details about the data, additional sources, traffic, public transit and so on.
-- [Operations Guide]() for more about settings up Valhalla for operations.
-- [Usage Guide]() for more about available services and their APIs.
-- [API Overview]()
+- Check out [API reference](api/index.md) to see how to use different features like routing and map matching.
+- _Installation_ section has different ways about how to install Valhalla.
+- [Configuration guide](guides/configuration.md) has detailed information about how to configure tools and services.
+- See [Data guide](guides/data.md) for more details about the data, additional sources, traffic, public transit and so on.
+- [Operations guide](guides/operations.md) has advice on how to run the service.
