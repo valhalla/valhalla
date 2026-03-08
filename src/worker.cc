@@ -1084,6 +1084,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
 
+  auto matrix_max_distance = rapidjson::get_optional<unsigned int>(doc, "/matrix_max_distance");
+  if (matrix_max_distance) {
+    options.set_matrix_max_distance(*matrix_max_distance);
+  }
+
   // get the avoid polygons in there
   auto exclude_polygons =
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
