@@ -70,7 +70,7 @@ Let's make sure that everything is okay - the following command should return th
 
 ```console
 $ valhalla_build_tiles --version
-3.6.3-95fb6ddd6
+3.6.3
 ```
 
 Tools are simply programs which help us do different things. All Valhalla tools support `--help` option to show the usage.
@@ -177,7 +177,7 @@ valhalla_build_tiles -c config.json osm/andorra-latest.osm.pbf
 We'll see a bunch of log messages. If you see the following warnings, make sure that you have correct path in configuration file:
 
 ```text
-2026-03-08 10:06:29.361219214 [WARN] Time zone db /data/tz_world.sqlite not found.  Not saving time zone information.
+2026-03-08 10:06:29.361219214 [WARN] Time zone db /data/tz_world.sqlite not found. Not saving time zone information.
 ```
 
 Once finished, we can see generated data in `tiles/` directory (the one from configuration file). At the time of writing it looks like this:
@@ -204,6 +204,14 @@ tiles/
 9 directories, 7 files
 ```
 
+At last, we combine all tiles into a single tar archive file:
+
+```bash
+find tiles/ | sort -n | tar --create --file tiles.tar --no-recursion --files-from=-
+```
+
+Valhalla can [memory-map](https://en.wikipedia.org/wiki/Memory-mapped_file) this archive file to efficiently cache it and share between multiple processes.
+
 ## Start the service
 
 There are multiple ways to run Valhalla. Here's one of them:
@@ -221,7 +229,7 @@ Let's check the status:
 ```console
 $ curl http://localhost:8002/status | jq '.'
 {
-  "version": "3.6.3-95fb6ddd6",
+  "version": "3.6.3",
   "tileset_last_modified": 1772753449,
   "available_actions": [
     "tile",
