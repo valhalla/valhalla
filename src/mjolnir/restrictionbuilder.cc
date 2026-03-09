@@ -97,7 +97,7 @@ bool IsEdgeAllowed(const DirectedEdge* de, uint32_t access, bool forward) {
 struct MatchResult {
   GraphId edge_endpoint;
   graph_tile_ptr tile;
-  EdgeId edge;  // the edge leading to edge_endpoint
+  EdgeId edge; // the edge leading to edge_endpoint
 };
 
 bool TryMatchAtNode(GraphReader& reader,
@@ -126,8 +126,8 @@ bool TryMatchAtNode(GraphReader& reader,
         edge_ids.push_back({way_id, edge_id});
 
         // try advancing to next way_id (recursion bounded by way_ids.size())
-        if (ExpandFromNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
-                           way_ids, way_id_index + 1, tile, current_node, de->endnode()))
+        if (ExpandFromNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
+                           way_id_index + 1, tile, current_node, de->endnode()))
           return true;
 
         // record as candidate for iterative same-way continuation
@@ -172,7 +172,7 @@ bool ExpandFromNode(GraphReader& reader,
     size_t edge_ids_size;
     std::vector<MatchResult> continuations;
     size_t cont_idx;
-    bool owns_visited;  // true if this frame inserted current_node into visited_nodes
+    bool owns_visited; // true if this frame inserted current_node into visited_nodes
   };
 
   std::vector<DfsFrame> stack;
@@ -192,14 +192,13 @@ bool ExpandFromNode(GraphReader& reader,
     frame.tile = tile;
     frame.edge_ids_size = edge_ids.size();
     frame.cont_idx = 0;
-    frame.owns_visited = false;  // first frame: caller already manages visited_nodes for this node
+    frame.owns_visited = false; // first frame: caller already manages visited_nodes for this node
 
     auto node_info = tile->node(current_node);
 
     // try matching at current node
-    if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
-                       way_ids, way_id_index, tile, prev_node, current_node, node_info,
-                       frame.continuations))
+    if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
+                       way_id_index, tile, prev_node, current_node, node_info, frame.continuations))
       return true;
 
     // try matching at transition nodes
@@ -211,8 +210,8 @@ bool ExpandFromNode(GraphReader& reader,
         trans_tile = reader.GetGraphTile(trans->endnode());
         lock.unlock();
       }
-      if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
-                         way_ids, way_id_index, trans_tile, prev_node, trans->endnode(),
+      if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
+                         way_id_index, trans_tile, prev_node, trans->endnode(),
                          trans_tile->node(trans->endnode()), frame.continuations))
         return true;
     }
@@ -270,8 +269,8 @@ bool ExpandFromNode(GraphReader& reader,
     next_frame.owns_visited = true;
 
     // try matching at next node
-    if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
-                       way_ids, way_id_index, tile, frame.current_node, next_node, node_info,
+    if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
+                       way_id_index, tile, frame.current_node, next_node, node_info,
                        next_frame.continuations))
       return true;
 
@@ -284,8 +283,8 @@ bool ExpandFromNode(GraphReader& reader,
         trans_tile = reader.GetGraphTile(trans->endnode());
         lock.unlock();
       }
-      if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
-                         way_ids, way_id_index, trans_tile, frame.current_node, trans->endnode(),
+      if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
+                         way_id_index, trans_tile, frame.current_node, trans->endnode(),
                          trans_tile->node(trans->endnode()), next_frame.continuations))
         return true;
     }
