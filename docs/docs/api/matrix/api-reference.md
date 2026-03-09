@@ -62,7 +62,7 @@ The Time-Distance Matrix service uses the `auto`, `bicycle`, `pedestrian` and `b
 | `date_time` | This is the local date and time at the location.<ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time.</li></ul></li><li>`value` - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><br>|
 | `verbose`   | If `true` it will output a flat list of objects for `distances` & `durations` explicitly specifying the source & target indices. If `false` will return more compact, nested row-major `distances` & `durations` arrays and not echo `sources` and `targets`. Default `true`. |
 | `shape_format` | Specifies the optional format for the path shape of each connection. One of `polyline6`, `polyline5`, `geojson` or `no_shape` (default). |
-| `matrix_max_distance` | Maximum path distance in meters for the matrix expansion. Source-target pairs whose shortest path distance exceeds this limit will be returned as unreachable (with `null` time and distance). Only applies when the `timedistancematrix` algorithm is used. Default 0 (disabled). |
+| `matrix_max_distance` | Maximum path distance in meters for the matrix expansion. Source-target pairs whose cheapest path distance exceeds this limit will be returned as unreachable (with `null` time and distance). Only applies when the `timedistancematrix` algorithm is used. Default 0 (disabled). |
 
 ### Time-dependent matrices
 
