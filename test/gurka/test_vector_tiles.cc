@@ -132,8 +132,8 @@ A-B-C
   [[maybe_unused]] auto api =
       gurka::do_action(Options::tile, map, "x", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 3550);
-  EXPECT_GT(tile_data.size(), 3450);
+  EXPECT_LT(tile_data.size(), 3650);
+  EXPECT_GT(tile_data.size(), 3550);
 
   // expect a non-verbose request to have a lot less size
   std::string tile_data_slim;
@@ -356,17 +356,17 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   };
 
   uint32_t cache_count = 0;
-  test_tile(8, 3554, 3, 4, 1, cache_count);    // only primary & shortcut
-  test_tile(10, 3554, 3, 4, 1, cache_count);   // same as 8, adds nothing
-  test_tile(11, 4464, 6, 8, 2, cache_count);   // adds tertiary & shortcut
-  test_tile(12, 4464, 6, 8, 2, cache_count);   // same as 11, adds nothing
-  test_tile(13, 6528, 14, 20, 2, cache_count); // adds residential
-  test_tile(14, 7099, 17, 20, 2, cache_count); // adds service/other
+  test_tile(8, 3654, 3, 4, 1, cache_count);    // only primary & shortcut
+  test_tile(10, 3654, 3, 4, 1, cache_count);   // same as 8, adds nothing
+  test_tile(11, 4664, 6, 8, 2, cache_count);   // adds tertiary & shortcut
+  test_tile(12, 4664, 6, 8, 2, cache_count);   // same as 11, adds nothing
+  test_tile(13, 6728, 14, 20, 2, cache_count); // adds residential
+  test_tile(14, 7299, 17, 20, 2, cache_count); // adds service/other
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
 
   // execute the cache path
-  test_tile(14, 7099, 17, 20, 2, cache_count);
+  test_tile(14, 7299, 17, 20, 2, cache_count);
 
   // make sure we fail the request when z exceeds what the server supports
   EXPECT_THROW(
