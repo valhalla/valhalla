@@ -158,8 +158,9 @@ TEST(Standalone, ElevationCompareToSkadi) {
 
     // get a route with elevation included
     std::string route_json;
-    auto route = gurka::do_action(valhalla::Options::route, map, waypoints, "bicycle",
-                                  {{"/elevation_interval", "30"}}, {}, &route_json);
+    [[maybe_unused]] auto route =
+        gurka::do_action(valhalla::Options::route, map, waypoints, "bicycle",
+                         {{"/elevation_interval", "30"}}, {}, &route_json);
     rapidjson::Document result;
     result.Parse(route_json.c_str());
 
@@ -175,7 +176,8 @@ TEST(Standalone, ElevationCompareToSkadi) {
       std::string height_json;
       std::string request =
           R"({"height_precision":1,"resample_distance":30,"encoded_polyline":")" + shape + R"("})";
-      auto height = gurka::do_action(valhalla::Options::height, map, request, {}, &height_json);
+      [[maybe_unused]] auto height =
+          gurka::do_action(valhalla::Options::height, map, request, {}, &height_json);
 
       // pull out the elevation from the route result leg
       auto elevation =
@@ -213,7 +215,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
            {"C", "N"},
        }) {
     std::string route_json;
-    auto route =
+    [[maybe_unused]] auto route =
         gurka::do_action(valhalla::Options::route, map, {"S", "F"}, "bicycle", {}, {}, &route_json);
     rapidjson::Document result;
     result.Parse(route_json.c_str());
