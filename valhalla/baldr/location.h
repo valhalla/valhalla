@@ -36,7 +36,8 @@ void inline apply_location_defaults(Location& location) {
   if (!location.has_street_side_max_distance())
     location.set_street_side_max_distance(1000);
 
-  location.set_search_cutoff(kDefaultSearchCutoff);
+  if (!location.has_search_cutoff_case())
+    location.set_search_cutoff(kDefaultSearchCutoff);
 }
 
 inline bool operator==(const LatLng& a, const LatLng& b) {

@@ -1504,12 +1504,6 @@ TEST(Astar, BiDirTrivial) {
   auto mode_costing = sif::CostFactory().CreateModeCosting(*request.mutable_options(), mode);
   set_hierarchy_limits(mode_costing[int(mode)], true);
 
-  // baldr::Location origin(valhalla::midgard::PointLL(5.12696, 52.09701),
-  //                        baldr::Location::StopType::BREAK);
-  // locations.push_back(origin);
-  // baldr::Location dest(valhalla::midgard::PointLL(5.12700, 52.09709),
-  //                      baldr::Location::StopType::BREAK);
-  //
   std::vector<valhalla::midgard::PointLL> pts{{5.12696, 52.09701}, {5.12700, 52.09709}};
   locations_from_ll(request, pts);
 
@@ -1518,7 +1512,6 @@ TEST(Astar, BiDirTrivial) {
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
-  const auto& cost = mode_costing[int(mode)];
 
   vt::BidirectionalAStar astar;
   auto path = astar.GetBestPath(origin, dest, reader, mode_costing, mode).front();
