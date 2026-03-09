@@ -114,31 +114,36 @@ TEST_F(SimpleRestrictions, IgnoreRestrictionMatching) {
 // Verify that the restriction builder handles a way split into many edges without
 // stack overflow. Before the iterative DFS fix, ExpandFromNode used mutual recursion
 // to follow same-way-id chains, causing stack overflow on long ways (200+ edges).
+// Uses way-type via to create a complex restriction routed through
+// restrictionbuilder.cc's ExpandFromNode (node-type via would create a simple
+// restriction handled in graphbuilder.cc, which wouldn't exercise the fix).
 TEST(LongWayRestriction, NoStackOverflow) {
-  // A single OSM way split into 22 edges at intermediate nodes, with a
-  // no_left_turn restriction from this way onto a side street.
-  // The restriction builder must traverse all 22 edges to resolve the restriction.
   const std::string ascii_map = R"(
-    A-B-C-D-E-F-G-H-I-J-K-L-M-N-O-P-Q-R-S-T-U-V-W
-                                                  |
-                                              1---X
+    A-B-C-D-E-F-G-H-I-J-K-L-M-N-O-P-Q-R-S-T-U-V-W-X
+                                                      |
+                                                      Y
+                                                      |
+    a-b-c-d-e-f-g-h-i-j-k-l-m-n-o-p-q-r-s-t-u-v-w-x
   )";
 
   const gurka::ways ways = {
-      {"ABCDEFGHIJKLMNOPQRSTUVW", {{"highway", "primary"}}},
-      {"WX", {{"highway", "primary"}}},
-      {"X1", {{"highway", "primary"}}},
+      {"ABCDEFGHIJKLMNOPQRSTUVWX", {{"highway", "primary"}}},
+      {"XY", {{"highway", "primary"}}},
+      {"Yx", {{"highway", "primary"}}},
+      {"xwvutsrqponmlkjihgfedcba", {{"highway", "primary"}}},
   };
 
+  // Complex restriction with way-type via: from long way, via XY, no entry to Yx.
+  // Forces ExpandFromNode to traverse all 23 edges of ABCDEFGHIJKLMNOPQRSTUVWX.
   const gurka::relations relations = {
       {{
-           {gurka::way_member, "ABCDEFGHIJKLMNOPQRSTUVW", "from"},
-           {gurka::way_member, "WX", "to"},
-           {gurka::node_member, "W", "via"},
+           {gurka::way_member, "ABCDEFGHIJKLMNOPQRSTUVWX", "from"},
+           {gurka::way_member, "XY", "via"},
+           {gurka::way_member, "Yx", "to"},
        },
        {
            {"type", "restriction"},
-           {"restriction", "no_left_turn"},
+           {"restriction", "no_entry"},
        }},
   };
 
@@ -148,11 +153,6 @@ TEST(LongWayRestriction, NoStackOverflow) {
                                {{"mjolnir.hierarchy", "false"}, {"mjolnir.concurrency", "1"}});
 
   // Verify tiles are valid by routing along the long way
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "W"}, "auto");
-  EXPECT_EQ(result.trip().routes_size(), 1);
-  EXPECT_GT(result.trip().routes(0).legs(0).node_size(), 0);
-
-  // Verify routing to the side street also works
-  result = gurka::do_action(valhalla::Options::route, map, {"A", "1"}, "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "X"}, "auto");
   EXPECT_EQ(result.trip().routes_size(), 1);
 }
