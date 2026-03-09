@@ -155,10 +155,6 @@ void loki_worker_t::trace(Api& request) {
 void loki_worker_t::locations_from_shape(Api& request) {
   auto& options = *request.mutable_options();
   auto* shape = request.mutable_options()->mutable_shape();
-  shape->begin()->set_node_snap_tolerance(0.f);
-  shape->begin()->set_radius(10);
-  shape->rbegin()->set_node_snap_tolerance(0.f);
-  shape->rbegin()->set_radius(10);
 
   // Add first and last correlated locations to request
   options.mutable_locations()->Clear();
@@ -166,6 +162,8 @@ void loki_worker_t::locations_from_shape(Api& request) {
   options.mutable_locations()->Add()->CopyFrom(*shape->rbegin());
 
   for (auto& location : *options.mutable_locations()) {
+    location.set_node_snap_tolerance(0.f);
+    location.set_radius(10);
     apply_location_defaults(location);
   }
 
