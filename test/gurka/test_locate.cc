@@ -163,8 +163,8 @@ TEST(locate, locate_shoulder) {
 
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
-  auto result = gurka::do_action(valhalla::Options::locate, map, {"B", "C", "E", "F"}, "none", {},
-                                 reader, &json);
+  [[maybe_unused]] auto result = gurka::do_action(valhalla::Options::locate, map,
+                                                  {"B", "C", "E", "F"}, "none", {}, reader, &json);
 
   rapidjson::Document response;
   response.Parse(json);

@@ -236,6 +236,29 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     return nullptr;
   }
 
+  auto check_tile_checksum = [&](uint64_t tile_checksum) {
+    if (tile_checksum == 0) {
+      // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
+      LOG_WARN(
+          "Remote tile is missing the checksum attribute, please update the tile building valhalla instance");
+    }
+    if (!tile_dir.empty()) {
+      if (id_checksum == 0) {
+        // this is the first tile in a fresh tile_dir
+        static std::mutex mutex;
+        std::lock_guard lock{mutex};
+        std::ofstream id_txt_file(id_txt_path, std::ios::binary);
+        if (id_txt_file) {
+          id_txt_file << tile_url << std::endl;
+          id_txt_file << tile_checksum << std::endl;
+        }
+      } else if (tile_checksum != id_checksum) {
+        LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
+        throw valhalla_exception_t(446);
+      }
+    }
+  };
+
   LOG_INFO("Downloading tile " + std::to_string(graphid) + " from " + tile_url);
 
   tile_getter_t::GET_response_t result;
@@ -254,30 +277,12 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     return nullptr;
   }
 
-  // inspect the header for the checksum
-  // it's a POD type and thus trivially copyable
-  GraphTileHeader header;
-  std::memcpy(&header, result.bytes_.data(), sizeof(header));
-  auto tile_checksum = header.checksum();
-  if (tile_checksum == 0) {
-    // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
-    LOG_WARN(
-        "Remote tile is missing the checksum attribute, please update the tile building valhalla instance");
-  }
-  if (!tile_dir.empty()) {
-    if (id_checksum == 0) {
-      // this is the first tile in a fresh tile_dir
-      static std::mutex mutex;
-      std::lock_guard lock{mutex};
-      std::ofstream id_txt_file(id_txt_path, std::ios::binary);
-      if (id_txt_file) {
-        id_txt_file << tile_url << std::endl;
-        id_txt_file << tile_checksum << std::endl;
-      }
-    } else if (tile_checksum != id_checksum) {
-      LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
-      throw valhalla_exception_t(446);
-    }
+  if (!tile_getter->gzipped()) {
+    // inspect the header for the checksum
+    // it's a POD type and thus trivially copyable
+    GraphTileHeader header;
+    std::memcpy(&header, result.bytes_.data(), sizeof(header));
+    check_tile_checksum(header.checksum());
   }
 
   // try to cache it on disk so we dont have to keep fetching it from url
@@ -285,7 +290,9 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
 
   // turn the memory into a tile
   if (tile_getter->gzipped()) {
-    return DecompressTile(graphid, result.bytes_);
+    auto tile = DecompressTile(graphid, result.bytes_);
+    check_tile_checksum(tile.get()->header()->checksum());
+    return tile;
   }
 
   return graph_tile_ptr{

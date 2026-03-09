@@ -414,7 +414,7 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
   std::cerr << req_str << std::endl;
   try {
     ParseApi(req_str, Options::route, request);
-    auto res = gurka::do_action(Options::route, avoid_map, req_str);
+    auto _ = gurka::do_action(Options::route, avoid_map, req_str);
     FAIL() << "Expected to throw";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 137); } catch (...) {
     FAIL() << "Expected different error";
@@ -431,7 +431,7 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
             R"("avoid_polygons": [[[1.0, 1.0], [1.00001, 1.00001], [1.00002, 1.00002], [1.0, 1.0]],
       {}]})";
   ParseApi(req_str, Options::route, request);
-  auto res = gurka::do_action(Options::route, avoid_map, req_str);
+  [[maybe_unused]] auto res = gurka::do_action(Options::route, avoid_map, req_str);
   EXPECT_TRUE(request.options().exclude_polygons_size() == 1);
 
   // protect the public API too

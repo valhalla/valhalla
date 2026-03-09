@@ -128,5 +128,6 @@ TEST(StandAlone, failed_search) {
     }
   });
 
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
+  [[maybe_unused]] auto result =
+      gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
 }
