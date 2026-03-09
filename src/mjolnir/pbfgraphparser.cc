@@ -2022,7 +2022,9 @@ struct graph_parser {
     }
 
     std::string buffer;
-    bss_info.SerializeToString(&buffer);
+    if (!bss_info.SerializeToString(&buffer)) {
+      throw std::runtime_error("Failed to serialize BSS info");
+    }
     const uint32_t bss_info_index = osmdata_.node_names.index(buffer);
     ++osmdata_.node_name_count;
 

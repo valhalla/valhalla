@@ -483,7 +483,7 @@ TEST(Astar, test_oneway_wrong_way) {
       R"({"locations":[{"lat":51.456082740244824,"lon":-2.595050632953644},{"lat":51.455768530466514,"lon":-2.5954368710517883}],"costing":"auto"})";
 
   try {
-    auto response = tester.test(request);
+    auto _ = tester.test(request);
     FAIL() << "Expected exception!";
   } catch (const std::exception& e) {
     EXPECT_EQ(std::string(e.what()), "No path could be found for input");

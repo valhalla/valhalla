@@ -90,11 +90,11 @@ protected:
                         const std::vector<std::string>& props,
                         bool use_depart_at) {
     std::string res;
-    auto api =
+    [[maybe_unused]] auto api =
         do_expansion_action(&res, skip_opps, dedupe, action, props, waypoints, true, use_depart_at);
 
     Api parsed_api;
-    parsed_api.ParseFromString(res);
+    ASSERT_TRUE(parsed_api.ParseFromString(res));
 
     ASSERT_EQ(parsed_api.expansion().geometries_size(), exp_feats);
 
@@ -161,7 +161,7 @@ protected:
                         [](auto acc, const std::string& a) { return acc |= a == "flow_sources"; });
 
     std::string res;
-    auto api =
+    [[maybe_unused]] auto api =
         do_expansion_action(&res, skip_opps, dedupe, action, props, waypoints, false, use_depart_at);
     // get the MultiLineString feature
     rapidjson::Document res_doc;
@@ -283,7 +283,7 @@ TEST_F(ExpansionTest, NoAction) {
                           R"(}],"costing":"auto","contours":[{"distance":0.05}]})";
 
   try {
-    auto api = gurka::do_action(Options::expansion, expansion_map, req);
+    auto _ = gurka::do_action(Options::expansion, expansion_map, req);
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 115); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
@@ -410,4 +410,6 @@ TEST(Standalone, ChooseOptimalPath) {
     has_pedestrian |= res == TravelMode::kPedestrian;
     has_drive |= res == TravelMode::kDrive;
   }
+  EXPECT_TRUE(has_pedestrian) << "Expected pedestrian travel mode in expansion results";
+  EXPECT_TRUE(has_drive) << "Expected drive travel mode in expansion results";
 }

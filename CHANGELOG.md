@@ -9,6 +9,7 @@
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
    * ADDED: `Cache-Control = public, max-age=N"` response header to `/tile` requests; also added RPATH to local debug builds to fix ldd resolving when libvalhalla is installed system-wide [#5902](https://github.com/valhalla/valhalla/pull/5902)
+   * CHANGED: bump tz to 2026a [#5930](https://github.com/valhalla/valhalla/pull/5930)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
@@ -27,6 +28,7 @@
    * FIXED: UK had drive on right incorrectly set after admin changes [#5882](https://github.com/valhalla/valhalla/pull/5882)
    * FIXED: set stop impact to 0 where there are only 2 edges at the 'intersection' [#5877](https://github.com/valhalla/valhalla/pull/5877)
    * FIXED: Properly calculate ferry speed based on "duration" tag [#5885](https://github.com/valhalla/valhalla/pull/5885)
+   * Fix checksum validation for gzipped tiles [#5918](https://github.com/valhalla/valhalla/pull/5918)
 * **Enhancement**
    * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
    * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
