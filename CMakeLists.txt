@@ -105,11 +105,6 @@ include(ValhallaSourceGroups)
 pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
 pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
 
-# expat
-if(ENABLE_DATA_TOOLS)
-  pkg_check_modules(EXPAT IMPORTED_TARGET expat)
-endif()
-
 # cURL
 set(curl_target "")
 if (ENABLE_HTTP)
@@ -269,6 +264,7 @@ if(ENABLE_DATA_TOOLS)
   pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
   pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
   pkg_check_modules(OPENSSL REQUIRED IMPORTED_TARGET openssl)
+  pkg_check_modules(EXPAT IMPORTED_TARGET expat)
 endif()
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
