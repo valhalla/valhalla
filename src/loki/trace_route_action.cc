@@ -156,17 +156,6 @@ void loki_worker_t::locations_from_shape(Api& request) {
   auto& options = *request.mutable_options();
   auto* shape = request.mutable_options()->mutable_shape();
 
-  // Add first and last correlated locations to request
-  options.mutable_locations()->Clear();
-  options.mutable_locations()->Add()->CopyFrom(*shape->begin());
-  options.mutable_locations()->Add()->CopyFrom(*shape->rbegin());
-
-  for (auto& location : *options.mutable_locations()) {
-    location.set_node_snap_tolerance(0.f);
-    location.set_radius(10);
-    apply_location_defaults(location);
-  }
-
   try {
     // If trace route has 2 locations get the lat,lng of the first and last so we can support
     // side of street.
@@ -176,6 +165,16 @@ void loki_worker_t::locations_from_shape(Api& request) {
       has_locations = true;
       orig_ll = {options.locations(0).ll().lng(), options.locations(0).ll().lat()};
       dest_ll = {options.locations(1).ll().lng(), options.locations(1).ll().lat()};
+    }
+    // Add first and last correlated locations to request
+    options.mutable_locations()->Clear();
+    options.mutable_locations()->Add()->CopyFrom(*shape->begin());
+    options.mutable_locations()->Add()->CopyFrom(*shape->rbegin());
+
+    for (auto& location : *options.mutable_locations()) {
+      location.set_node_snap_tolerance(0.f);
+      location.set_radius(10);
+      apply_location_defaults(location);
     }
 
     // Project first and last shape point onto nearest edge(s). Clear current locations list
