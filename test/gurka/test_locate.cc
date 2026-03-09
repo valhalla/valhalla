@@ -5,15 +5,6 @@
 
 using namespace valhalla;
 
-namespace {
-LatLng make_ll(double lat, double lng) {
-  LatLng ll;
-  ll.set_lat(lat);
-  ll.set_lng(lng);
-  return ll;
-}
-} // namespace
-
 TEST(locate, basic_properties) {
   const std::string ascii_map = R"(
     A-1--B--2-C
