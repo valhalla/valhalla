@@ -4,7 +4,7 @@ dynamic = ["version"]
 requires-python = ">=3.9.0"
 authors = [{ name = "Nils Nolde" }, {name = "Kevin Kreiser"}]
 description = "High-level bindings to the Valhalla C++ library"
-readme = "README.md"
+readme = "src/bindings/python/README.md"
 license = "MIT"
 license-files = ["COPYING"]
 
@@ -63,7 +63,7 @@ CMAKE_BUILD_TYPE = "Release"
 [tool.setuptools_scm]
 version_file = "src/bindings/python/valhalla/__version__.py"
 version_scheme = "no-guess-dev"
-# PyPI doesn't accept local hashed version strings, important for pyvalhalla-weekly
+# PyPI doesn't accept local hashed version strings
 local_scheme = "no-local-version"
 
 [tool.ruff]

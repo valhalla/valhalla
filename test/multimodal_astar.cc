@@ -2,6 +2,7 @@
 #include "odin/worker.h"
 #include "test.h"
 #include "thor/worker.h"
+#include "tyr/actor.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -52,7 +53,6 @@ struct route_tester {
 };
 
 using BssManeuverType = valhalla::DirectionsLeg_Maneuver_BssManeuverType;
-
 void test_request(const std::string& request,
                   const std::vector<TravelMode>& expected_travel_modes,
                   const std::vector<std::string>& expected_route,
@@ -271,8 +271,8 @@ TEST(AstarBss, test_Auto) {
   std::string request =
       R"({"locations":[{"lat":48.859895,"lon":2.3610976338},{"lat":48.86271911,"lon":2.367111146}],"costing":"auto"})";
   std::vector<TravelMode> expected_travel_modes{TravelMode::kDrive};
-  std::vector<std::string> expected_route{"Rue de la Perle", "Rue des Archives", "Rue Pastourelle",
-                                          "Rue de Turenne",  "Rue Commines",     "Rue Amelot"};
+  std::vector<std::string> expected_route{"Rue de la Perle", "Rue des Archives", "Rue de Bretagne",
+                                          "Rue Commines", "Rue Amelot"};
   // There shouldn't be any bss maneuvers
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
@@ -339,13 +339,13 @@ TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
                expected_bss_ref, expected_shape);
 }
 
-class AstarBSSTest : public thor::AStarBSSAlgorithm {
+class AstarBSSTest : public thor::MultimodalAStar {
 public:
-  explicit AstarBSSTest(const boost::property_tree::ptree& config = {}) : AStarBSSAlgorithm(config) {
+  explicit AstarBSSTest(const boost::property_tree::ptree& config = {}) : MultimodalAStar(config) {
   }
 
   void Clear() {
-    AStarBSSAlgorithm::Clear();
+    MultimodalAStar::Clear();
     if (clear_reserved_memory_) {
       EXPECT_EQ(edgelabels_.capacity(), 0);
     } else {
@@ -368,4 +368,24 @@ TEST(AstarBss, test_max_reserved_labels_count) {
 
   AstarBSSTest astar(config);
   astar.Clear();
+}
+
+TEST(Standalone, UtrechtMultiModalAStar) {
+  const auto utrecht_conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+  auto reader = test::make_clean_graphreader(utrecht_conf.get_child("mjolnir"));
+  tyr::actor_t actor(utrecht_conf);
+
+  std::string request =
+      R"({"locations": [{"lat": 52.105031, "lon": 5.077844}, {"lat": 52.0942903,
+      "lon": 5.1300778}], "costing": "auto_pedestrian", "format": "pbf"})";
+  auto r = actor.route(request);
+  valhalla::Api response;
+
+  ASSERT_TRUE(response.ParseFromString(r));
+  ASSERT_EQ(response.directions().routes_size(), 1);
+  ASSERT_EQ(response.directions().routes(0).legs_size(), 1);
+  auto& leg = response.directions().routes(0).legs(0);
+  EXPECT_EQ(leg.maneuver(0).travel_mode(), TravelMode::kDrive);
+  EXPECT_EQ(leg.maneuver(leg.maneuver_size() - 1).travel_mode(), TravelMode::kPedestrian);
+  actor.cleanup();
 }

@@ -285,6 +285,7 @@ uint32_t GetStopImpact(uint32_t from,
 
   // Get the highest classification of other roads at the intersection
   bool all_ramps = true;
+  bool found_other_edge = false;
   const DirectedEdge* edge = &edges[0];
   // kUnclassified,  kResidential, and kServiceOther are grouped
   // together for the stop_impact logic.
@@ -304,10 +305,25 @@ uint32_t GetStopImpact(uint32_t from,
       }
     }
 
+    // Track whether any other drivable edge exists at this node (in either direction).
+    // This detects real intersections even on one-way streets where the cross-street
+    // only has forward access from this node.
+    if (i != to && i != from && ((edge->reverseaccess() | edge->forwardaccess()) & kAutoAccess)) {
+      found_other_edge = true;
+    }
+
     // Check if not a ramp or turn channel
     if (!edge->link()) {
       all_ramps = false;
     }
+  }
+
+  // No other drivable edges means this is not a real intersection (for example the way id has
+  // changed so we need a new edge, but we're still on the same road with no other interfering
+  // traffic). Return 0 so we don't add phantom transition costs.
+  // Don't apply this to U-turns (from == to), as dead-end U-turns should retain their cost.
+  if (!found_other_edge && from != to) {
+    return 0;
   }
 
   // kUnclassified,  kResidential, and kServiceOther are grouped

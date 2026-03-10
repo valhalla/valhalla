@@ -84,6 +84,7 @@ message DirectionsLeg {
       kBuildingEnter = 42;
       kBuildingExit = 43;
       kLevelChange = 44;
+      kParkVehicle = 45;
     }
 
     enum BssManeuverType{

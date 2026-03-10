@@ -14,7 +14,7 @@
 #include "proto/trip.pb.h"
 #include "sif/costfactory.h"
 #include "thor/bidirectional_astar.h"
-#include "thor/multimodal.h"
+#include "thor/multimodal_transit.h"
 #include "thor/route_matcher.h"
 #include "thor/triplegbuilder.h"
 #include "thor/unidirectional_astar.h"

@@ -68,7 +68,8 @@ protected:
 
   boost::property_tree::ptree config;
   sif::CostFactory factory;
-  sif::cost_ptr_t costing;
+  sif::mode_costing_t mode_costing;
+  sif::TravelMode mode;
   std::shared_ptr<baldr::GraphReader> reader;
   Search search_;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;
@@ -77,6 +78,7 @@ protected:
   std::unordered_map<std::string, size_t> max_locations;
   std::unordered_map<std::string, float> max_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
+  std::vector<std::pair<std::string, std::string>> mvt_headers;
   size_t max_timedep_dist_matrix;
   std::unordered_map<std::string, float> max_matrix_locations;
   size_t max_exclude_locations;
@@ -91,9 +93,9 @@ protected:
   unsigned int default_street_side_tolerance;
   unsigned int default_street_side_max_distance;
   float default_breakage_distance;
-  // Minimum and maximum walking distances (to validate input).
-  size_t min_transit_walking_dis;
-  size_t max_transit_walking_dis;
+  // Minimum and maximum walking distances for multimodal algorithms (to validate input).
+  size_t min_multimodal_walking_dist;
+  size_t max_multimodal_walking_dist;
   size_t max_contours;
   size_t max_contour_min;
   size_t max_contour_km;

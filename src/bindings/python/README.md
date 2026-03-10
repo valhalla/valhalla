@@ -1,11 +1,11 @@
 ## Valhalla Python bindings
 
-[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/) [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)](https://pypi.org/project/pyvalhalla-weekly/)
+[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/)
 
 This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
 > [!NOTE]
-> `pyvalhalla(-weekly)` packages are currently only published for:
+> `pyvalhalla` packages are currently only published for:
 > - `linux-x86_x64`
 > - `linux-aarch64`
 > - `win-amd64`
@@ -16,9 +16,6 @@ On top of the (very) high-level Python bindings, we package some data-building V
 ### Installation
 
 We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`/`aarch64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. To install on Python < 3.12, make sure to install the system dependencies as described in [the docs](https://valhalla.github.io/valhalla/building/#platform-specific-builds) before trying a `pip install pyvalhalla`.
-
-`pip install pyvalhalla` to install the most recent Valhalla **release**.  
-`pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
 
 Or manually in the current Python environment with e.g.
 

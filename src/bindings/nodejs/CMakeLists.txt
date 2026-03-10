@@ -44,6 +44,7 @@ set_target_properties(valhalla_node PROPERTIES
 target_include_directories(valhalla_node PRIVATE
   ${node-addon-api_SOURCE_DIR}
   ${NODE_INCLUDE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/../shared
 )
 
 target_link_libraries(valhalla_node PRIVATE valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)

@@ -247,8 +247,8 @@ std::shared_ptr<SimpleCost> CreateSimpleCost(const Costing& options) {
 TEST_F(MatrixTrafficTest, MatrixNoTraffic) {
   // no traffic, so this is CostMatrix
   std::string res;
-  const auto result = gurka::do_action(Options::sources_to_targets, map, {"1", "2"}, {"1", "2"},
-                                       "auto", {}, {}, &res);
+  [[maybe_unused]] const auto result = gurka::do_action(Options::sources_to_targets, map, {"1", "2"},
+                                                        {"1", "2"}, "auto", {}, {}, &res);
 
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
@@ -543,8 +543,8 @@ TEST(StandAlone, CostMatrixDeadends) {
   // test that the we're taking the u-turn at D to get from A -> I
   // because of the ABI turn restriction
   {
-    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"I"}, "auto",
-                                   {}, nullptr, &res);
+    [[maybe_unused]] auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"},
+                                                    {"I"}, "auto", {}, nullptr, &res);
     res_doc.Parse(res.c_str());
     check_matrix(res_doc, {1.5f}, false, "distance", Matrix::CostMatrix);
     res.erase();
@@ -552,8 +552,9 @@ TEST(StandAlone, CostMatrixDeadends) {
 
   // then we force to go 1 -> F to hit a blocking node, doing a u-turn and go back the same way
   {
-    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"B"}, "auto",
-                                   {{"/sources/0/preferred_side", "opposite"}}, nullptr, &res);
+    [[maybe_unused]] auto result =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"B"}, "auto",
+                         {{"/sources/0/preferred_side", "opposite"}}, nullptr, &res);
     res_doc.Parse(res.c_str());
     check_matrix(res_doc, {0.8f}, false, "distance", Matrix::CostMatrix);
   }
@@ -562,8 +563,8 @@ TEST(StandAlone, CostMatrixDeadends) {
   {
     rapidjson::Document res_doc;
     std::string res;
-    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"C"}, {"A"}, "auto",
-                                   {}, nullptr, &res);
+    [[maybe_unused]] auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"C"},
+                                                    {"A"}, "auto", {}, nullptr, &res);
 
     res_doc.Parse(res.c_str());
     check_matrix_empty(res_doc);
@@ -821,7 +822,7 @@ TEST_F(DateTimeTest, NoTimeZone) {
   rapidjson::Document res_doc;
   std::string res;
   {
-    auto api =
+    [[maybe_unused]] auto api =
         gurka::do_action(valhalla::Options::sources_to_targets, map, {"A", "G"}, {"A", "G"}, "auto",
                          {{"/prioritize_bidirectional", "true"},
                           {"/date_time/type", "1"},

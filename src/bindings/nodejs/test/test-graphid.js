@@ -1,6 +1,6 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert');
-const { GraphId } = require('@valhallajs/valhallajs');
+const { GraphId, getTileBaseLonLat, getTileIdFromLonLat, getTileIdsFromBbox, getTileIdsFromRing } = require('@valhallajs/valhallajs');
 
 describe('GraphId', () => {
   test('should export GraphId class', () => {
@@ -163,5 +163,149 @@ describe('GraphId', () => {
       const restored = new GraphId(original.value);
       assert.strictEqual(restored.equals(original), true);
     });
+  });
+});
+
+describe('getTileBaseLonLat', () => {
+  test('should export getTileBaseLonLat function', () => {
+    assert.strictEqual(typeof getTileBaseLonLat, 'function');
+  });
+
+  test('returns [lon, lat] array for a valid GraphId', () => {
+    const gid = getTileIdFromLonLat(2, [13.4, 52.5]);
+    const result = getTileBaseLonLat(gid);
+    assert.ok(Array.isArray(result));
+    assert.strictEqual(result.length, 2);
+    assert.strictEqual(typeof result[0], 'number');
+    assert.strictEqual(typeof result[1], 'number');
+  });
+
+  test('base lon/lat is within reasonable range', () => {
+    const gid = getTileIdFromLonLat(2, [13.4, 52.5]);
+    const [lon, lat] = getTileBaseLonLat(gid);
+    // base should be at or below the queried point
+    assert.ok(lon <= 13.4);
+    assert.ok(lat <= 52.5);
+    // and reasonably close (within one tile width)
+    assert.ok(lon > 12.0);
+    assert.ok(lat > 51.0);
+  });
+
+  test('throws on non-GraphId argument', () => {
+    assert.throws(() => getTileBaseLonLat('not a graphid'), TypeError);
+  });
+});
+
+describe('getTileIdFromLonLat', () => {
+  test('should export getTileIdFromLonLat function', () => {
+    assert.strictEqual(typeof getTileIdFromLonLat, 'function');
+  });
+
+  test('returns a valid GraphId for a coordinate', () => {
+    const gid = getTileIdFromLonLat(2, [13.4, 52.5]);
+    assert.strictEqual(gid.is_valid(), true);
+    assert.strictEqual(gid.level(), 2);
+    assert.strictEqual(gid.id(), 0);
+  });
+
+  test('returns different tiles for different levels', () => {
+    const gid0 = getTileIdFromLonLat(0, [13.4, 52.5]);
+    const gid2 = getTileIdFromLonLat(2, [13.4, 52.5]);
+    assert.strictEqual(gid0.level(), 0);
+    assert.strictEqual(gid2.level(), 2);
+  });
+
+  test('throws on invalid level', () => {
+    assert.throws(() => getTileIdFromLonLat(99, [13.4, 52.5]), Error);
+  });
+
+  test('throws on invalid coordinates', () => {
+    assert.throws(() => getTileIdFromLonLat(2, [200, 0]), Error);
+  });
+
+  test('throws on wrong argument types', () => {
+    assert.throws(() => getTileIdFromLonLat(2, 'not an array'), TypeError);
+  });
+});
+
+describe('getTileIdsFromBbox', () => {
+  test('should export getTileIdsFromBbox function', () => {
+    assert.strictEqual(typeof getTileIdsFromBbox, 'function');
+  });
+
+  test('returns GraphId array for a bbox', () => {
+    const result = getTileIdsFromBbox(13.3, 52.4, 13.5, 52.6);
+    assert.ok(Array.isArray(result));
+    assert.ok(result.length > 0);
+    for (const gid of result) {
+      assert.strictEqual(gid.is_valid(), true);
+      assert.strictEqual(gid.id(), 0);
+    }
+  });
+
+  test('respects the levels parameter', () => {
+    const result = getTileIdsFromBbox(13.3, 52.4, 13.5, 52.6, [2]);
+    assert.ok(result.length > 0);
+    for (const gid of result) {
+      assert.strictEqual(gid.level(), 2);
+    }
+  });
+
+  test('throws on invalid coordinates', () => {
+    assert.throws(() => getTileIdsFromBbox(200, 0, 201, 1), Error);
+  });
+
+  test('throws on missing arguments', () => {
+    assert.throws(() => getTileIdsFromBbox(1, 2), TypeError);
+  });
+});
+
+describe('getTileIdsFromRing', () => {
+  test('should export getTileIdsFromRing function', () => {
+    assert.strictEqual(typeof getTileIdsFromRing, 'function');
+  });
+
+  test('returns GraphId array for a simple polygon', () => {
+    // small polygon around Berlin
+    const ring = [
+      [13.3, 52.4],
+      [13.5, 52.4],
+      [13.5, 52.6],
+      [13.3, 52.6],
+    ];
+    const result = getTileIdsFromRing(ring);
+    assert.ok(Array.isArray(result));
+    assert.ok(result.length > 0);
+    // all results should be valid GraphId instances
+    for (const gid of result) {
+      assert.strictEqual(gid.is_valid(), true);
+      assert.strictEqual(gid.id(), 0); // tile-base ids have id=0
+    }
+  });
+
+  test('respects the levels parameter', () => {
+    const ring = [
+      [13.3, 52.4],
+      [13.5, 52.4],
+      [13.5, 52.6],
+      [13.3, 52.6],
+    ];
+    const result = getTileIdsFromRing(ring, [2]);
+    assert.ok(result.length > 0);
+    for (const gid of result) {
+      assert.strictEqual(gid.level(), 2);
+    }
+  });
+
+  test('throws on too few coordinates', () => {
+    assert.throws(() => getTileIdsFromRing([[0, 0], [1, 1]]), Error);
+  });
+
+  test('throws on invalid coordinates', () => {
+    assert.throws(() => getTileIdsFromRing([[200, 0], [0, 0], [0, 1]]), Error);
+  });
+
+  test('throws on non-array input', () => {
+    assert.throws(() => getTileIdsFromRing('not an array'), TypeError);
   });
 });
