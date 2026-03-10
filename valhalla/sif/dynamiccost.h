@@ -119,6 +119,7 @@ struct cost_edge_t {
 struct custom_cost_t {
   std::vector<cost_edge_t> ranges;
   double avg_factor{1.};
+  bool ignore_restrictions_;
 
   // once ranges are filled up, sort and compute average
   // returns the minimum factor
@@ -745,6 +746,13 @@ public:
                                    uint8_t& destonly_access_restr_mask) const {
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
+
+    if (!linear_cost_edges_.empty()) {
+      if (auto it = linear_cost_edges_.find(edgeid);
+          it != linear_cost_edges_.end() && it->second.ignore_restrictions_) {
+        return true;
+      }
+    }
 
     auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mode);
 

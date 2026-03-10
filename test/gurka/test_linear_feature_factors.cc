@@ -319,6 +319,70 @@ TEST_F(LinearFeatureTest, partial_edges_shape) {
   gurka::assert::raw::expect_path(request, {"TS", "SR", "RB", "A2", "A2", "A2", "EZ"});
 }
 
+TEST_F(LinearFeatureTest, ignore_access_restrictions) {
+  loki::loki_worker_t loki_worker(map.config);
+  thor::thor_worker_t thor_worker(map.config);
+
+  std::string json_request = R"(
+  {
+    "locations": [
+      {"lon": %s, "lat": %s},
+      {"lon": %s, "lat": %s}
+    ], 
+    "linear_cost_factors": [
+      {"shape": "%s", "ignore_access_restrictions": %s}
+    ], 
+    "costing": "auto",
+    "costing_options": {
+      "auto": {
+        "weight": 20
+      }
+    }
+  }
+  )";
+
+  auto json_str =
+      (boost::format(json_request) % std::to_string(map.nodes.at("4").lng()) %
+       std::to_string(map.nodes.at("4").lat()) % std::to_string(map.nodes.at("6").lng()) %
+       std::to_string(map.nodes.at("6").lat()) % encode_shape({"V", "W"}, map.nodes) % "true")
+          .str();
+
+  std::cerr << "Valhalla request is: \n" << json_str << "\n";
+
+  Api request;
+  ParseApi(json_str, Options::route, request);
+  loki_worker.route(request);
+  ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
+  EXPECT_NEAR(request.options().cost_factor_lines().at(0).cost_factor(), 1.f, 0.01);
+  EXPECT_TRUE(request.options().cost_factor_lines().at(0).ignore_access_restrictions());
+  EXPECT_EQ(request.options().cost_factor_lines().at(0).shape().size(), 2);
+
+  thor_worker.route(request);
+  auto costing_options =
+      request.options().costings().find(request.options().costing_type())->second.options();
+  EXPECT_EQ(costing_options.cost_factor_edges().size(), 1);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  bool found = false;
+  for (auto& cfe : costing_options.cost_factor_edges()) {
+    auto e = gurka::findEdgeByNodes(reader, map.nodes, "V", "W");
+    if (std::get<0>(e) == cfe.id()) {
+      EXPECT_TRUE(cfe.ignore_access_restrictions());
+      EXPECT_NEAR(cfe.factor(), 1.f, 0.01f);
+      found = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found);
+  sif::mode_costing_t mode_costing;
+  auto costings = request.options().costings().find(request.options().costing_type())->second;
+  auto auto_cost = valhalla::sif::CreateAutoCost(costings);
+
+  // finally check the route
+  gurka::assert::raw::expect_path(request, {"Relevant Ave", "UV", "VW", "WX"});
+}
+
 /**
  * Test multiple shapes, sent as GeoJSON
  */
