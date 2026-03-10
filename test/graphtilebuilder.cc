@@ -1,9 +1,9 @@
+#include "mjolnir/graphtilebuilder.h"
 #include "baldr/graphid.h"
 #include "baldr/graphtileptr.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
-#include "mjolnir/graphtilebuilder.h"
 
 #include <gtest/gtest.h>
 
@@ -322,11 +322,11 @@ TEST(GraphTileBuilder, TestDuplicatePredictedSpeeds) {
 
   bool added = false;
   base_tilebuilder.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1111, 100.5f, 1, 60,
-                   std::list<PointLL>{{0, 0}, {1, 1}}, {"edge_one"}, {}, {}, 0, added);
+                               std::list<PointLL>{{0, 0}, {1, 1}}, {"edge_one"}, {}, {}, 0, added);
   base_tilebuilder.AddEdgeInfo(1, GraphId(0, 2, 1), GraphId(0, 2, 2), 2222, 200.5f, 2, 70,
-                   std::list<PointLL>{{1, 1}, {2, 2}}, {"edge_two"}, {}, {}, 0, added);
+                               std::list<PointLL>{{1, 1}, {2, 2}}, {"edge_two"}, {}, {}, 0, added);
   base_tilebuilder.AddEdgeInfo(2, GraphId(0, 2, 2), GraphId(0, 2, 3), 3333, 300.5f, 3, 80,
-                   std::list<PointLL>{{2, 2}, {3, 3}}, {"edge_three"}, {}, {}, 0, added);
+                               std::list<PointLL>{{2, 2}, {3, 3}}, {"edge_three"}, {}, {}, 0, added);
 
   base_tilebuilder.StoreTileData();
 

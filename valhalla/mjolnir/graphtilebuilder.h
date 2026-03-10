@@ -537,8 +537,10 @@ protected:
   };
 
   struct SpeedProfileHasher {
-    size_t operator()(const std::array<int16_t, baldr::kCoefficientCount>& arr) const {
-      return boost::hash_range(arr.begin(), arr.end());
+    std::size_t operator()(const std::array<int16_t, baldr::kCoefficientCount>& arr) const {
+      std::size_t seed = 13;
+      boost::hash_range(seed, arr.begin(), arr.end());
+      return seed;
     }
   };
 
@@ -637,7 +639,7 @@ protected:
   // Predicted speed profiles. 200 short int for each directed edge which has predicted speed.
   std::vector<int16_t> speed_profile_builder_;
 
-  // Map of speed profiles to their offsets.
+  // Map of predicted speed profiles to their offsets.
   std::unordered_map<std::array<int16_t, baldr::kCoefficientCount>, uint32_t, SpeedProfileHasher>
       speed_profile_map_;
 
