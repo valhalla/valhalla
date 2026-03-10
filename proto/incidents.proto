@@ -67,6 +67,16 @@ message IncidentsTile {
     uint64 num_lanes_blocked = 16;
     uint32 length = 17;  // Length of incident as matched to road graph
 
+    message LatLng {
+      oneof has_lat {
+        double lat = 1;
+      }
+      oneof has_lng {
+        double lng = 2;
+      }
+    }
+    LatLng display_ll = 18;
+
     // IncidentMetadata id
     uint64 id = 128;
     // Country code (2 & 3 char codes)
