@@ -538,7 +538,7 @@ protected:
 
   struct SpeedProfileHasher {
     size_t operator()(const std::array<int16_t, baldr::kCoefficientCount>& arr) const {
-        return boost::hash_range(arr.begin(), arr.end());
+      return boost::hash_range(arr.begin(), arr.end());
     }
   };
 
@@ -638,7 +638,8 @@ protected:
   std::vector<int16_t> speed_profile_builder_;
 
   // Map of speed profiles to their offsets.
-  std::unordered_map<std::array<int16_t, baldr::kCoefficientCount>, uint32_t, SpeedProfileHasher> speed_profile_map_;
+  std::unordered_map<std::array<int16_t, baldr::kCoefficientCount>, uint32_t, SpeedProfileHasher>
+      speed_profile_map_;
 
   // lane connectivity list offset
   uint32_t lane_connectivity_offset_ = 0;
