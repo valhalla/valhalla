@@ -239,7 +239,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(line.cost_factor());
-          e->set_ignore_all_restrictions(line.ignore_all_restrictions());
+          e->set_ignore_access_restrictions(line.ignore_access_restrictions());
           for (const auto& edge : line.locations(0).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
               e->set_start(edge.percent_along());
@@ -254,7 +254,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           }
           auto shortcut = reader.GetShortcut(path_info.edgeid);
           if (shortcut.is_valid()) {
-            if (e->ignore_all_restrictions()) {
+            if (e->ignore_access_restrictions()) {
               auto* exclude_edge = costing_options->add_exclude_edges();
               exclude_edge->set_id(shortcut.value);
             } else {
@@ -270,12 +270,12 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
               e->set_id(path_info.edgeid);
               // apply the minimum allowed value specified in the config
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-              e->set_ignore_all_restrictions(line.ignore_all_restrictions());
+              e->set_ignore_access_restrictions(line.ignore_access_restrictions());
               e->set_start(is_first ? edge.percent_along() : 0.);
               e->set_end(is_last ? edge.percent_along() : 1.);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
               if (shortcut.is_valid()) {
-                if (e->ignore_all_restrictions()) {
+                if (e->ignore_access_restrictions()) {
                   auto* exclude_edge = costing_options->add_exclude_edges();
                   exclude_edge->set_id(shortcut.value);
                 } else {
@@ -290,7 +290,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-          e->set_ignore_all_restrictions(line.ignore_all_restrictions());
+          e->set_ignore_access_restrictions(line.ignore_access_restrictions());
           e->set_start(0.);
           e->set_end(1.);
 
@@ -302,7 +302,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(constituent);
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-              e->set_ignore_all_restrictions(line.ignore_all_restrictions());
+              e->set_ignore_access_restrictions(line.ignore_access_restrictions());
               e->set_start(0);
               e->set_end(1);
             }
@@ -312,7 +312,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
             // a little, can't we persist this information somehow?
             auto shortcut = reader.GetShortcut(path_info.edgeid);
             if (shortcut.is_valid()) {
-              if (e->ignore_all_restrictions()) {
+              if (e->ignore_access_restrictions()) {
                 auto* exclude_edge = costing_options->add_exclude_edges();
                 exclude_edge->set_id(shortcut.value);
               } else {

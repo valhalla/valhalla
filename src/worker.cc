@@ -599,9 +599,9 @@ void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatu
   }
   if (json_obj["properties"].GetObject().HasMember("factor")) {
     line_feat->set_cost_factor(json_obj["properties"].GetObject()["factor"].GetFloat());
-  } else if (json_obj["properties"].GetObject().HasMember("ignore_all_restrictions")) {
-    line_feat->set_ignore_all_restrictions(
-        json_obj["properties"].GetObject()["ignore_all_restrictions"].GetBool());
+  } else if (json_obj["properties"].GetObject().HasMember("ignore_access_restrictions")) {
+    line_feat->set_ignore_access_restrictions(
+        json_obj["properties"].GetObject()["ignore_access_restrictions"].GetBool());
     line_feat->set_cost_factor(1);
   }
 }
@@ -620,9 +620,9 @@ void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* 
 
   if (json_obj.HasMember("factor")) {
     line_feat->set_cost_factor(json_obj["factor"].GetFloat());
-  } else if (json_obj.HasMember("ignore_all_restrictions")) {
+  } else if (json_obj.HasMember("ignore_access_restrictions")) {
     line_feat->set_cost_factor(1);
-    line_feat->set_ignore_all_restrictions(json_obj["ignore_all_restrictions"].GetBool());
+    line_feat->set_ignore_access_restrictions(json_obj["ignore_access_restrictions"].GetBool());
   }
 }
 

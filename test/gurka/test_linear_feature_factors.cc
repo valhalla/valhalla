@@ -319,7 +319,7 @@ TEST_F(LinearFeatureTest, partial_edges_shape) {
   gurka::assert::raw::expect_path(request, {"TS", "SR", "RB", "A2", "A2", "A2", "EZ"});
 }
 
-TEST_F(LinearFeatureTest, ignore_all_restrictions) {
+TEST_F(LinearFeatureTest, ignore_access_restrictions) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
 
@@ -330,7 +330,7 @@ TEST_F(LinearFeatureTest, ignore_all_restrictions) {
       {"lon": %s, "lat": %s}
     ], 
     "linear_cost_factors": [
-      {"shape": "%s", "ignore_all_restrictions": %s}
+      {"shape": "%s", "ignore_access_restrictions": %s}
     ], 
     "costing": "auto",
     "costing_options": {
@@ -354,7 +354,7 @@ TEST_F(LinearFeatureTest, ignore_all_restrictions) {
   loki_worker.route(request);
   ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
   EXPECT_NEAR(request.options().cost_factor_lines().at(0).cost_factor(), 1.f, 0.01);
-  EXPECT_TRUE(request.options().cost_factor_lines().at(0).ignore_all_restrictions());
+  EXPECT_TRUE(request.options().cost_factor_lines().at(0).ignore_access_restrictions());
   EXPECT_EQ(request.options().cost_factor_lines().at(0).shape().size(), 2);
 
   thor_worker.route(request);
@@ -368,7 +368,7 @@ TEST_F(LinearFeatureTest, ignore_all_restrictions) {
   for (auto& cfe : costing_options.cost_factor_edges()) {
     auto e = gurka::findEdgeByNodes(reader, map.nodes, "V", "W");
     if (std::get<0>(e) == cfe.id()) {
-      EXPECT_TRUE(cfe.ignore_all_restrictions());
+      EXPECT_TRUE(cfe.ignore_access_restrictions());
       EXPECT_NEAR(cfe.factor(), 1.f, 0.01f);
       found = true;
       break;
