@@ -434,6 +434,10 @@ struct graph_parser {
         case Use::kOther:
           way_.set_use(Use::kOther);
           break;
+        case Use::kPlatform:
+          way_.set_use(Use::kPlatform);
+          way_.set_road_class(RoadClass::kServiceOther);
+          break;
         case Use::kConstruction:
           way_.set_use(Use::kConstruction);
           break;
