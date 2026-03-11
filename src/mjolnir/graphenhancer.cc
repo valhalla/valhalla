@@ -546,7 +546,7 @@ bool IsNotThruEdge(GraphReader& reader, const GraphId& startnode, DirectedEdge& 
     // item.
     const GraphId expandnode = expandset[expand_pos++];
     visitedset.insert(expandnode);
-    if (!tile || tile->id().tile_base() != expandnode.tile_base()) {
+    if (!tile || tile->id() != expandnode.tile_base()) {
       tile = reader.GetGraphTile(expandnode);
     }
     const NodeInfo* nodeinfo = tile->node(expandnode);
