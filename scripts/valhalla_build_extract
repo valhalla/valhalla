@@ -375,7 +375,7 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
     LOGGER.info(f"Finished creating the traffic extract at {traffic_fp}")
 
 
-if __name__ == "__main__":
+def main():
     args = parser.parse_args()
 
     # set the right logger level
@@ -436,3 +436,7 @@ if __name__ == "__main__":
         tile_resolver.matched_paths = tile_resolver.normalized_tile_paths
 
     create_extracts(config, args.with_traffic, tile_resolver, tiles_extract_out)
+
+
+if __name__ == "__main__":
+    main()
