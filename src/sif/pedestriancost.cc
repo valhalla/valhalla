@@ -534,7 +534,7 @@ public:
   float elevator_penalty_;         // Penalty applied to elevator (seconds).
 
   // Lookup table indexed by Use enum value. 0.0f = no Use-specific factor
-  std::array<float, 56> use_factor_{};
+  std::array<float, kMaxUses> use_factor_{};
 
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
@@ -738,8 +738,8 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const baldr::GraphId& edgeid,
                               const graph_tile_ptr& tile,
-                              const baldr::TimeInfo& time_info,
-                              uint8_t& flow_sources) const {
+                              const baldr::TimeInfo& /*time_info*/,
+                              uint8_t& /*flow_sources*/) const {
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {

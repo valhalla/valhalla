@@ -347,6 +347,10 @@ enum class Use : uint8_t {
   kPlatformConnection = 53, // Connection station <-> platform
   kTransitConnection = 54,  // Connection osm <-> egress
 };
+
+// Maximum number of possible Use values (0–63)
+constexpr size_t kMaxUses = 64;
+
 inline std::string to_string(Use u) {
   static const std::unordered_map<uint8_t, std::string> UseStrings = {
       {static_cast<uint8_t>(Use::kRoad), "road"},
