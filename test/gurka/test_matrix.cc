@@ -1383,7 +1383,7 @@ TEST(StandAlone, MaxDistanceCutoff) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
   // force timedistancematrix via config
   auto map =
-      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/matrix_max_distance",
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/expansion_max_distance",
                         {{"thor.source_to_target_algorithm", "timedistancematrix"}});
 
   // without max_distance: all targets should be reachable
@@ -1403,7 +1403,7 @@ TEST(StandAlone, MaxDistanceCutoff) {
   {
     std::string res;
     std::unordered_map<std::string, std::string> options = {
-        {"/matrix_max_distance", "800"},
+        {"/expansion_max_distance", "800"},
     };
     gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"B", "C", "D"}, "auto",
                      options, nullptr, &res);

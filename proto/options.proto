@@ -544,5 +544,5 @@ message Options {
   Tile tile_xyz = 63;                                              // x, y, z for /tile requests
   TileOptions tile_options = 64;                                   // additional /tile specific options
   repeated Levels exclude_levels = 65;                             // Levels to exclude within the exclude_polygon at the same index
-  uint32 matrix_max_distance = 66;                                 // Maximum path distance in meters for matrix expansion. 0 = disabled.
+  uint32 expansion_max_distance = 66;                              // Maximum path distance in meters for expansion. 0 = disabled.
 }

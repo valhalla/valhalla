@@ -192,8 +192,7 @@ template <const ExpansionType expansion_direction, const bool FORWARD>
 bool TimeDistanceMatrix::ComputeMatrix(Api& request,
                                        baldr::GraphReader& graphreader,
                                        const float max_matrix_distance) {
-  // matrix_max_distance: maximum path distance in meters for expansion (0 = disabled)
-  const uint32_t max_distance = request.options().matrix_max_distance();
+  const uint32_t max_distance_exp = request.options().expansion_max_distance();
 
   bool invariant = request.options().date_time_type() == Options::invariant;
   uint32_t matrix_locations = request.options().matrix_locations();
@@ -281,7 +280,7 @@ bool TimeDistanceMatrix::ComputeMatrix(Api& request,
 
       // Terminate when we are beyond the cost or distance threshold
       if (pred.cost().cost > current_cost_threshold_ ||
-          (max_distance > 0 && pred.path_distance() > max_distance)) {
+          (max_distance_exp > 0 && pred.path_distance() > max_distance_exp)) {
         FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
                                time_info.timezone_index, dest_edge_ids);
         break;
