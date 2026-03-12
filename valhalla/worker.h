@@ -63,6 +63,7 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             const hierarchy_limits_config_t& config,
                             const bool allow_modifications,
                             const bool use_hierarchy_limits);
+
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
