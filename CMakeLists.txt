@@ -264,7 +264,7 @@ if(ENABLE_DATA_TOOLS)
   pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
   pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
   pkg_check_modules(OPENSSL REQUIRED IMPORTED_TARGET openssl)
-  pkg_check_modules(EXPAT IMPORTED_TARGET expat)
+  pkg_check_modules(EXPAT REQUIRED IMPORTED_TARGET expat)
 endif()
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
