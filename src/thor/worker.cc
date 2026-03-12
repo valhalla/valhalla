@@ -293,7 +293,7 @@ void thor_worker_t::parse_measurements(const Api& request) {
                              pt.has_radius_case() ? pt.radius()
                                                   : config.candidate_search.search_radius_meters,
                              pt.time(),
-                             PathLocation::fromPBF(pt.type())});
+                             pt.type()});
     }
   } catch (...) { throw valhalla_exception_t{424}; }
 }
