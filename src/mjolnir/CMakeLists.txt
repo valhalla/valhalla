@@ -109,3 +109,7 @@ valhalla_module(NAME mjolnir
       ${libosmium_include_dirs}
   DEPENDS
     ${mjolnir_depends})
+
+if(EXPAT_FOUND)
+  target_compile_definitions(valhalla-mjolnir PRIVATE HAVE_EXPAT)
+endif()
