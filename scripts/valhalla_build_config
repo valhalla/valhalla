@@ -971,8 +971,9 @@ parser.add_argument(
     help="When merging, print the merge report.",
 )
 
+
 # entry point to program
-if __name__ == "__main__":
+def main():
     # TODO: add argument to set base path and use in all other path based values
     args = parser.parse_args()
 
@@ -1014,3 +1015,7 @@ if __name__ == "__main__":
         print(f"Config written to: {args.output}", file=sys.stderr)
     else:
         print(output_json)
+
+
+if __name__ == "__main__":
+    main()
