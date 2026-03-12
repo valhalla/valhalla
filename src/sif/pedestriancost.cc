@@ -658,13 +658,13 @@ PedestrianCost::PedestrianCost(const Costing& costing)
 
   // Populate the use_factor_ lookup table. 0.0f is the sentinel for "no match"
   use_factor_.fill(0.0f);
-  use_factor_[static_cast<uint8_t>(Use::kFootway)] = walkway_factor_;
-  use_factor_[static_cast<uint8_t>(Use::kSidewalk)] = walkway_factor_;
-  use_factor_[static_cast<uint8_t>(Use::kAlley)] = alley_factor_;
-  use_factor_[static_cast<uint8_t>(Use::kDriveway)] = driveway_factor_;
-  use_factor_[static_cast<uint8_t>(Use::kTrack)] = track_factor_;
-  use_factor_[static_cast<uint8_t>(Use::kLivingStreet)] = living_street_factor_;
-  use_factor_[static_cast<uint8_t>(Use::kServiceRoad)] = service_factor_;
+  use_factor_[static_cast<size_t>(Use::kFootway)] = walkway_factor_;
+  use_factor_[static_cast<size_t>(Use::kSidewalk)] = walkway_factor_;
+  use_factor_[static_cast<size_t>(Use::kAlley)] = alley_factor_;
+  use_factor_[static_cast<size_t>(Use::kDriveway)] = driveway_factor_;
+  use_factor_[static_cast<size_t>(Use::kTrack)] = track_factor_;
+  use_factor_[static_cast<size_t>(Use::kLivingStreet)] = living_street_factor_;
+  use_factor_[static_cast<size_t>(Use::kServiceRoad)] = service_factor_;
 }
 
 // Check if access is allowed on the specified edge. Disallow if no
@@ -738,8 +738,8 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const baldr::GraphId& edgeid,
                               const graph_tile_ptr& tile,
-                              const baldr::TimeInfo& /*time_info*/,
-                              uint8_t& /*flow_sources*/) const {
+                              const baldr::TimeInfo& time_info,
+                              uint8_t& flow_sources) const {
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
