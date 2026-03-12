@@ -148,6 +148,8 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
         lab.Update(pred_idx, newcost, newcost.cost, path_distance, restriction_idx);
       }
       continue;
+    } else if (max_expansion_distance_ > 0 && path_distance > max_expansion_distance_) {
+      continue;
     }
 
     // Add to the adjacency list and edge labels.
@@ -278,9 +280,8 @@ bool TimeDistanceMatrix::ComputeMatrix(Api& request,
         }
       }
 
-      // Terminate when we are beyond the cost or distance threshold
-      if (pred.cost().cost > current_cost_threshold_ ||
-          (max_distance_exp > 0 && pred.path_distance() > max_distance_exp)) {
+      // Terminate when we are beyond the cost threshold
+      if (pred.cost().cost > current_cost_threshold_) {
         FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
                                time_info.timezone_index, dest_edge_ids);
         break;
