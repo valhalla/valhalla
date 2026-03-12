@@ -534,10 +534,9 @@ bool IsNotThruEdge(GraphReader& reader, const GraphId& startnode, DirectedEdge& 
 
   // Expand edges until exhausted, the maximum number of expansions occur,
   // or end up back at the starting node. No node can be visited twice.
+  graph_tile_ptr tile;
   for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
     // If expand list is exhausted this is "not thru"
-    GraphId prior_tile;
-    graph_tile_ptr tile;
     if (expand_pos == expandset.size()) {
       return true;
     }
@@ -547,9 +546,8 @@ bool IsNotThruEdge(GraphReader& reader, const GraphId& startnode, DirectedEdge& 
     // item.
     const GraphId expandnode = expandset[expand_pos++];
     visitedset.insert(expandnode);
-    if (expandnode.tile_base() != prior_tile) {
+    if (!tile || tile->id() != expandnode.tile_base()) {
       tile = reader.GetGraphTile(expandnode);
-      prior_tile = expandnode.tile_base();
     }
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
