@@ -18,7 +18,7 @@ TEST(Standalone, TruckRegression) {
 
   const double gridsize = 10;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/truck_regression");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/truck_regression");
   auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2", "1"}, "truck",
                                  {{"/locations/1/type", "break_through"}});
   // Annoyingly because its a node snap at a break through, it starts on AB ends a leg at the end of
@@ -64,7 +64,8 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    ignore_access_map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/ignore_access");
+    ignore_access_map =
+        gurka::buildtiles(layout, ways, nodes, {}, VALHALLA_BUILD_DIR "test/data/ignore_access");
   }
 };
 
@@ -268,7 +269,7 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algorithm_selection",
+    map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/algorithm_selection",
                             {
                                 {"mjolnir.shortcuts", "false"},
                                 {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
@@ -438,7 +439,7 @@ TEST(Standalone, LegWeightRegression) {
 
   const double gridsize = 30;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/leg_weights");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/leg_weights");
   auto result = gurka::do_action(valhalla::Options::route, map, {"1", "E", "3"}, "auto",
                                  {{"/locations/1/type", "via"}});
 
@@ -477,7 +478,8 @@ TEST(Standalone, DontIgnoreRestriction) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/dont_ignore_restriction",
+  auto map = gurka::buildtiles(layout, ways, {}, relations,
+                               VALHALLA_BUILD_DIR "test/data/dont_ignore_restriction",
                                {{"mjolnir.concurrency", "1"}});
 
   try {
@@ -516,7 +518,8 @@ TEST(Standalone, BridgingEdgeIsRestricted) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/bridging_edge_is_restricted",
+  auto map = gurka::buildtiles(layout, ways, {}, relations,
+                               VALHALLA_BUILD_DIR "test/data/bridging_edge_is_restricted",
                                {{"mjolnir.concurrency", "1"}});
 
   try {
@@ -557,7 +560,8 @@ TEST(Standalone, AvoidExtraDetours) {
   };
 
   const auto nodes = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(nodes, ways, {}, {}, "test/data/avoid_extra_detours");
+  auto map =
+      gurka::buildtiles(nodes, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/avoid_extra_detours");
 
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
@@ -617,7 +621,8 @@ TEST(Standalone, DoNotAllowDoubleUturns) {
   };
 
   const auto nodes = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(nodes, ways, {}, relations, "test/data/do_not_allow_double_uturns");
+  auto map = gurka::buildtiles(nodes, ways, {}, relations,
+                               VALHALLA_BUILD_DIR "test/data/do_not_allow_double_uturns");
 
   try {
     auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto");
@@ -661,7 +666,8 @@ TEST(Standalone, OneWayIdToManyEdgeIds) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/one_way_id_to_many_edge_ids",
+  auto map = gurka::buildtiles(layout, ways, {}, relations,
+                               VALHALLA_BUILD_DIR "test/data/one_way_id_to_many_edge_ids",
                                {{"mjolnir.concurrency", "1"}});
 
   try {
@@ -701,7 +707,8 @@ TEST(Standalone, HonorAccessPropertyWhenConstructingRestriction) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/honor_restriction_access_mode",
+  auto map = gurka::buildtiles(layout, ways, {}, relations,
+                               VALHALLA_BUILD_DIR "test/data/honor_restriction_access_mode",
                                {{"mjolnir.concurrency", "1"}});
 
   try {
@@ -740,8 +747,9 @@ TEST(MultipointRoute, WithIsolatedPoints) {
       {"loki.service_defaults.minimum_reachability", "5"},
   };
 
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/multipoint_with_isolated_points",
-                               config_opts);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/multipoint_with_isolated_points", config_opts);
 
   // Locations 2 and 3 should be snapped to the main road CD.
   // no datetime, check bidirectional astar
@@ -783,7 +791,8 @@ TEST(MultipointRoute, WithPointsOnDeadends) {
       {"loki.service_defaults.minimum_reachability", "3"},
   };
 
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/multipoint_with_points_on_deadends",
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/multipoint_with_points_on_deadends",
                                config_opts);
 
   {
@@ -839,7 +848,8 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
                             {"DA", {{"highway", "primary"}}},
                             {"AY", {{"highway", "primary"}}},
                             {"YZ", {{"highway", "primary"}}}};
-  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algo_swap_dest_only");
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/algo_swap_dest_only");
 
   // Notes on this test:
   // * We want the first leg to choose bidir A*:
@@ -907,7 +917,8 @@ TEST(AlgorithmTestTrivial, unidirectional_regression) {
       {"BC", {{"highway", "primary"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0.00, 0.00});
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_trivial_regression");
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/gurka_trivial_regression");
 
   // the code used to remove one of the origin edge candidates which then forced a uturn
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "3"}, "auto");
@@ -935,7 +946,8 @@ TEST(AlgorithmTestDest, TestAlgoMultiOriginDestination) {
   const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
                             {"BC", {{"highway", "primary"}}},
                             {"CD", {{"highway", "primary"}}}};
-  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algo_multi_o_d");
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/algo_multi_o_d");
 
   auto check = [&](const char* from, const char* to, const std::vector<std::string>& expected_names) {
     for (int type = 1; type <= 2; type++) {
@@ -1036,7 +1048,8 @@ protected:
                               {"BA", {{"highway", "residential"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-8.5755, 42.1079});
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_route_no_tz");
+    map =
+        gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/time_zone_route_no_tz");
     map_tz = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_route",
                                {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
   }
@@ -1187,7 +1200,8 @@ TEST(StandAlone, HGVNoAccessPenalty) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hgv_no_access_penalty");
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/hgv_no_access_penalty");
 
   std::unordered_map<std::string, std::string> no_time = {
       {"/costing_options/truck/hgv_no_access_penalty", "2000"}};

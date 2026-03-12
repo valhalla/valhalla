@@ -14,6 +14,7 @@ namespace {
 
 using namespace valhalla;
 using namespace valhalla::meili;
+using namespace valhalla::baldr;
 
 constexpr float MAX_ACCUMULATED_COST = 99999999.f;
 
@@ -338,23 +339,29 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     if (!node_id.is_valid()) {
       return CreateMatchResult(measurement, state_id);
     }
-    assert(!state.candidate().edges.empty());
-    const auto& candidate = state.candidate().edges.front();
-    return {candidate.projected,          std::sqrt(candidate.distance), candidate.id,
-            candidate.percent_along,      measurement.epoch_time(),      state_id,
-            measurement.is_break_point(), begins_discontinuity,          ends_discontinuity};
+    assert(!state.candidate().correlation().edges().empty());
+    const auto& candidate = *state.candidate().correlation().edges().begin();
+    return {{candidate.ll().lng(), candidate.ll().lat()},
+            std::sqrt(candidate.distance()),
+            GraphId(candidate.graph_id()),
+            candidate.percent_along(),
+            measurement.epoch_time(),
+            state_id,
+            measurement.is_break_point(),
+            begins_discontinuity,
+            ends_discontinuity};
   }
 
   // find which candidate was used for this state
   baldr::graph_tile_ptr tile;
-  for (const auto& edge : state.candidate().edges) {
+  for (const auto& edge : state.candidate().correlation().edges()) {
     // if it matches either end of the path coming into this state or the beginning of the
     // path leaving this state, then we are good to go and have found the match
-    if (edge.id == prev_edge || edge.id == next_edge) {
-      return {edge.projected,
-              std::sqrt(edge.distance),
-              edge.id,
-              edge.percent_along,
+    if (edge.graph_id() == prev_edge || edge.graph_id() == next_edge) {
+      return {{edge.ll().lng(), edge.ll().lat()},
+              std::sqrt(edge.distance()),
+              GraphId(edge.graph_id()),
+              edge.percent_along(),
               measurement.epoch_time(),
               state_id,
               measurement.is_break_point(),
@@ -363,20 +370,20 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     }
 
     // the only matches we can make where the ids arent the same are at intersections
-    if (edge.percent_along > 0.f && edge.percent_along < 1.f) {
+    if (edge.percent_along() > 0.f && edge.percent_along() < 1.f) {
       continue;
     }
 
     // we are at an intersection so we need the node from the candidate where the route would be
-    auto candidate_nodes = graph_reader.GetDirectedEdgeNodes(edge.id, tile);
+    auto candidate_nodes = graph_reader.GetDirectedEdgeNodes(GraphId(edge.graph_id()), tile);
     const auto& candidate_node =
-        edge.percent_along == 0.f ? candidate_nodes.first : candidate_nodes.second;
+        edge.percent_along() == 0.f ? candidate_nodes.first : candidate_nodes.second;
 
     // if the last edge of the previous route ends at this candidate node
     const auto* prev_de = graph_reader.directededge(prev_edge, tile);
     if (prev_de && prev_de->endnode() == candidate_node) {
-      return {edge.projected,
-              std::sqrt(edge.distance),
+      return {{edge.ll().lng(), edge.ll().lat()},
+              std::sqrt(edge.distance()),
               prev_edge,
               1.f,
               measurement.epoch_time(),
@@ -389,8 +396,8 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     // if the first edge of the next route starts at this candidate node
     const auto* next_opp_de = graph_reader.GetOpposingEdge(next_edge, tile);
     if (next_opp_de && next_opp_de->endnode() == candidate_node) {
-      return {edge.projected,
-              std::sqrt(edge.distance),
+      return {{edge.ll().lng(), edge.ll().lat()},
+              std::sqrt(edge.distance()),
               next_edge,
               0.f,
               measurement.epoch_time(),
@@ -413,7 +420,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
       auto target_edge_id = std::get<1>(trans_info);
       float distance_along = std::get<2>(trans_info);
 
-      if (target_de && edge.id.level() != target_de->endnode().level()) {
+      if (target_de && GraphId(edge.graph_id()).level() != target_de->endnode().level()) {
         baldr::GraphId end_node = target_de->endnode();
         for (const auto& trans : tile->GetNodeTransitions(end_node)) {
           // we only care about if the nodes are in the same level
@@ -428,8 +435,8 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
             break;
           }
 
-          return {edge.projected,
-                  std::sqrt(edge.distance),
+          return {{edge.ll().lng(), edge.ll().lat()},
+                  std::sqrt(edge.distance()),
                   target_edge_id,
                   distance_along,
                   measurement.epoch_time(),
@@ -474,9 +481,9 @@ struct path_t {
   bool operator!=(const path_t& p) const {
     return std::search(e1, e2, p.e1, p.e2) == e2 && std::search(p.e1, p.e2, e1, e2) == p.e2;
   }
-  bool crosses(const baldr::PathLocation& candidate) const {
-    for (const auto& edge : candidate.edges) {
-      if (std::find(edges.cbegin(), edges.cend(), edge.id) != edges.cend()) {
+  bool crosses(const Location& candidate) const {
+    for (const auto& edge : candidate.correlation().edges()) {
+      if (std::find(edges.cbegin(), edges.cend(), edge.graph_id()) != edges.cend()) {
         return true;
       }
     }
