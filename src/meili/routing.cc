@@ -270,19 +270,22 @@ inline uint16_t get_inbound_edgelabel_heading(baldr::GraphReader& reader,
                                               const Label& label,
                                               const baldr::NodeInfo* nodeinfo) {
   // Get the opposing local index of the predecessor edge. If this is less
-  // than 8 then we can get the heading from the nodeinfo.
+  // than 8 then we can get the heading from the nodeinfo. The opposing index
+  // gives us the heading of the reverse edge, so we need to flip it by 180 degrees
+  // to get the actual direction of travel on the inbound edge.
   const auto idx = label.opp_local_idx();
   if (idx < 8) {
-    return nodeinfo->heading(idx);
+    return static_cast<uint16_t>((static_cast<uint16_t>(nodeinfo->heading(idx)) + 180) % 360);
   } else {
     // Have to get the heading from the edge shape...
+    // Calculate the heading in the direction we were traveling (from previous point to current node)
     baldr::graph_tile_ptr tile;
     const auto directededge = reader.directededge(label.edgeid(), tile);
     const auto edgeinfo = tile->edgeinfo(directededge);
     const auto& shape = edgeinfo.shape();
     if (shape.size() >= 2) {
-      float heading = (directededge->forward()) ? shape.back().Heading(shape.rbegin()[1])
-                                                : shape.front().Heading(shape[1]);
+      float heading = (directededge->forward()) ? shape.rbegin()[1].Heading(shape.back())
+                                                : shape[1].Heading(shape.front());
       return static_cast<uint16_t>(std::max(0.f, std::min(359.f, heading)));
     } else {
       return 0;
