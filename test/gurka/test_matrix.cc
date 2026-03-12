@@ -1399,19 +1399,19 @@ TEST(StandAlone, MaxDistanceCutoff) {
     EXPECT_FALSE(row[2]["distance"].IsNull()) << "A->D should be reachable without max_distance";
   }
 
-  // with max_distance=800, only A->B should succeed
+  // with max_distance=4500, only A->B should succeed
   {
     std::string res;
     std::unordered_map<std::string, std::string> options = {
-        {"/expansion_max_distance", "800"},
+        {"/expansion_max_distance", "4500"},
     };
     gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"B", "C", "D"}, "auto",
                      options, nullptr, &res);
     rapidjson::Document res_doc;
     res_doc.Parse(res.c_str());
     auto row = res_doc["sources_to_targets"].GetArray()[0].GetArray();
-    EXPECT_FALSE(row[0]["distance"].IsNull()) << "A->B should be reachable with max_distance=800";
-    EXPECT_TRUE(row[1]["distance"].IsNull()) << "A->C should NOT be reachable with max_distance=800";
-    EXPECT_TRUE(row[2]["distance"].IsNull()) << "A->D should NOT be reachable with max_distance=800";
+    EXPECT_FALSE(row[0]["distance"].IsNull()) << "A->B should be reachable with max_distance=4500";
+    EXPECT_TRUE(row[1]["distance"].IsNull()) << "A->C should NOT be reachable with max_distance=4500";
+    EXPECT_TRUE(row[2]["distance"].IsNull()) << "A->D should NOT be reachable with max_distance=4500";
   }
 }

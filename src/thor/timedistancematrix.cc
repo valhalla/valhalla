@@ -138,6 +138,9 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                                   pred.internal_turn());
     newcost += pred.cost() + transition_cost;
     uint32_t path_distance = pred.path_distance() + directededge->length();
+    if (max_expansion_distance_ > 0 && path_distance > max_expansion_distance_) {
+      continue;
+    }
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the cost and predecessor are updated.
@@ -147,8 +150,6 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
         adjacencylist_.decrease(es->index(), newcost.cost);
         lab.Update(pred_idx, newcost, newcost.cost, path_distance, restriction_idx);
       }
-      continue;
-    } else if (max_expansion_distance_ > 0 && path_distance > max_expansion_distance_) {
       continue;
     }
 
@@ -194,8 +195,6 @@ template <const ExpansionType expansion_direction, const bool FORWARD>
 bool TimeDistanceMatrix::ComputeMatrix(Api& request,
                                        baldr::GraphReader& graphreader,
                                        const float max_matrix_distance) {
-  const uint32_t max_distance_exp = request.options().expansion_max_distance();
-
   bool invariant = request.options().date_time_type() == Options::invariant;
   uint32_t matrix_locations = request.options().matrix_locations();
 
