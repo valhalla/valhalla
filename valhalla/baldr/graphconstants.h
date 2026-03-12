@@ -371,6 +371,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kEscalator), "escalator"},
       {static_cast<uint8_t>(Use::kPath), "path"},
       {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
+      {static_cast<uint8_t>(Use::kPlatform), "platform"},
       {static_cast<uint8_t>(Use::kBridleway), "bridleway"},
       {static_cast<uint8_t>(Use::kPedestrianCrossing), "pedestrian_crossing"},
       {static_cast<uint8_t>(Use::kRestArea), "rest_area"},

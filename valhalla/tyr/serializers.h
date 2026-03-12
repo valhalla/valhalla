@@ -174,6 +174,10 @@ inline void update_bridge_elevations(std::vector<float>& elevation,
  */
 inline std::vector<float>
 get_elevation(const TripLeg& path_leg, const float interval, const float start_distance = 0.0f) {
+  if (path_leg.node_size() == 0) {
+    return {};
+  }
+
   // Store the first elevation if start_distance == 0
   std::vector<float> elevation;
   auto first_elevation = path_leg.node(0).edge().elevation(0);
