@@ -8,6 +8,8 @@
 #include "sif/costconstants.h"
 #include "sif/hierarchylimits.h"
 
+#include <array>
+
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
@@ -531,6 +533,9 @@ public:
   float step_penalty_;             // Penalty applied to steps/stairs (seconds).
   float elevator_penalty_;         // Penalty applied to elevator (seconds).
 
+  // Lookup table indexed by Use enum value. 0.0f = no Use-specific factor
+  std::array<float, 56> use_factor_{};
+
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
   float grade_penalty[16];
@@ -650,6 +655,16 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   }
 
   use_hierarchy_limits = false;
+
+  // Populate the use_factor_ lookup table. 0.0f is the sentinel for "no match"
+  use_factor_.fill(0.0f);
+  use_factor_[static_cast<uint8_t>(Use::kFootway)] = walkway_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kSidewalk)] = walkway_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kAlley)] = alley_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kDriveway)] = driveway_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kTrack)] = track_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kLivingStreet)] = living_street_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kServiceRoad)] = service_factor_;
 }
 
 // Check if access is allowed on the specified edge. Disallow if no
@@ -741,21 +756,11 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  // TODO - consider using an array of "use factors" to avoid this conditional
   float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())] +
                  grade_penalty[edge->weighted_grade()];
-  if (edge->use() == Use::kFootway || edge->use() == Use::kSidewalk) {
-    factor *= walkway_factor_;
-  } else if (edge->use() == Use::kAlley) {
-    factor *= alley_factor_;
-  } else if (edge->use() == Use::kDriveway) {
-    factor *= driveway_factor_;
-  } else if (edge->use() == Use::kTrack) {
-    factor *= track_factor_;
-  } else if (edge->use() == Use::kLivingStreet) {
-    factor *= living_street_factor_;
-  } else if (edge->use() == Use::kServiceRoad) {
-    factor *= service_factor_;
+  const float uf = use_factor_[static_cast<uint8_t>(edge->use())];
+  if (uf != 0.0f) {
+    factor *= uf;
   } else if (edge->sidewalk_left() || edge->sidewalk_right()) {
     factor *= sidewalk_factor_;
   } else if (edge->roundabout()) {
