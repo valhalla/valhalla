@@ -25,6 +25,37 @@ using namespace valhalla::midgard;
 using namespace valhalla;
 
 namespace {
+
+void apply_location_defaults(Location& location) {
+
+  if (!location.has_search_filter() || !location.search_filter().has_min_road_class_case())
+    location.mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
+  if (!location.search_filter().has_max_road_class_case())
+    location.mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_level())
+    location.mutable_search_filter()->set_level(kMaxLevel);
+  if (!location.has_street_side_cutoff_case())
+    location.set_street_side_cutoff(valhalla::RoadClass::kServiceOther);
+
+  if (!location.has_node_snap_tolerance())
+    location.set_node_snap_tolerance(5.f);
+
+  if (!location.has_heading_tolerance())
+    location.set_heading_tolerance(60.f);
+
+  if (!location.has_street_side_tolerance())
+    location.set_street_side_tolerance(5);
+
+  if (!location.has_street_side_max_distance())
+    location.set_street_side_max_distance(1000);
+
+  if (!location.has_search_cutoff_case())
+    location.set_search_cutoff(kDefaultSearchCutoff);
+}
 // a 25m radius used to associate edges to landmarks, which allows us to only keep the close edges in
 // the tight cities
 constexpr unsigned long kLandmarkRadius = 25;
