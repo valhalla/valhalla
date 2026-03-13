@@ -242,3 +242,61 @@ TEST(Standalone, Maxweight) {
     gurka::assert::raw::expect_path(result, {"AB", "BI"});
   }
 }
+
+TEST(Standalone, Maxaxleload) {
+  const std::string ascii_map = R"(
+      A----B----C----D----E
+           |         |    |
+           |         |    |
+           I----H----G----F
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}, {"maxaxleload", "2.0"}}},
+      {"CD", {{"highway", "residential"}, {"maxaxleload", "2.0t"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FG", {{"highway", "residential"}}},
+      {"GH", {{"highway", "residential"}}},
+      {"HI", {{"highway", "residential"}}},
+      {"DG", {{"highway", "residential"}, {"maxaxleload", "1.9"}}},
+      {"BI", {{"highway", "residential"}, {"maxaxleload", "1.9t"}}},
+
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_maxaxleload");
+
+  for (const auto& costing : kSupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
+                                         {{"/costing_options/" + costing + "/axle_load", "2.0"}});
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+  }
+
+  for (const auto& costing : kSupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
+                                         {{"/costing_options/" + costing + "/axle_load", "1.8"}});
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BI"});
+  }
+
+  for (const auto& costing : kSupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
+                                         {{"/costing_options/" + costing + "/axle_load", "1.9"}});
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BI"});
+  }
+
+  for (const auto& costing : kSupportedCostingTypes) {
+    EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
+                                  {{"/costing_options/" + costing + "/axle_load", "2.1"}}),
+                 valhalla_exception_t);
+  }
+
+  for (const auto& costing : kUnsupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing);
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BI"});
+  }
+}

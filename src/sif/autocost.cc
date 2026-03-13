@@ -49,6 +49,9 @@ constexpr float kTCReverse = 9.5f;
 constexpr float kTCRamp = 1.5f;
 constexpr float kTCRoundabout = 0.5f;
 
+// Default axle attributes
+constexpr float kDefaultAxleLoad = 3.5f;
+
 // How much to favor taxi roads.
 constexpr float kTaxiFactor = 0.85f;
 
@@ -77,6 +80,7 @@ constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
+constexpr ranged_default_t<float> kAxleLoadRange{0.f, kDefaultAxleLoad, 20.0f};
 
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
@@ -357,10 +361,11 @@ public:
   float inv_distance_factor_; // How much time factors in overall favorability
 
   // Vehicle attributes (used for special restrictions and costing)
-  float height_; // Vehicle height in meters
-  float width_;  // Vehicle width in meters
-  float length_; // Vehicle length in meters
-  float weight_; // Vehicle weight in metric tons
+  float height_;    // Vehicle height in meters
+  float width_;     // Vehicle width in meters
+  float length_;    // Vehicle length in meters
+  float weight_;    // Vehicle weight in metric tons
+  float axle_load_; // Vehicle axle load weight in metric tons
 };
 
 // Constructor
@@ -414,6 +419,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   width_ = costing_options.width();
   length_ = costing_options.length();
   weight_ = costing_options.weight();
+  axle_load_ = costing_options.axle_load();
 }
 
 // Check if access is allowed on the specified edge.
@@ -483,6 +489,8 @@ bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) 
       return length_ <= static_cast<float>(restriction.value() * 0.01);
     case AccessType::kMaxWeight:
       return weight_ <= static_cast<float>(restriction.value() * 0.01);
+    case AccessType::kMaxAxleLoad:
+      return axle_load_ <= static_cast<float>(restriction.value() * 0.01);
     default:
       return true;
   };
@@ -717,6 +725,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
   JSON_PBF_RANGED_DEFAULT(co, kUseDistanceRange, json, "/use_distance", use_distance);
+  JSON_PBF_RANGED_DEFAULT(co, kAxleLoadRange, json, "/axle_load", axle_load);
   JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
                           restriction_probability);
   JSON_PBF_DEFAULT_V2(co, false, json, "/include_hot", include_hot);
@@ -1091,6 +1100,7 @@ public:
   TestAutoCost(const Costing& costing_options) : AutoCost(costing_options){};
 
   using AutoCost::alley_penalty_;
+  using AutoCost::axle_load_;
   using AutoCost::country_crossing_cost_;
   using AutoCost::destination_only_penalty_;
   using AutoCost::ferry_transition_cost_;
@@ -1276,6 +1286,14 @@ TEST(AutoCost, testAutoCostParams) {
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("weight", distributor(generator));
     EXPECT_THAT(tester->weight_, test::IsBetween(defaults.weight_.min, defaults.weight_.max));
+  }
+
+  // axle_load_
+  distributor = make_distributor_from_range(defaults.axle_load_);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("axle_load_", distributor(generator));
+    EXPECT_THAT(tester->axle_load_,
+                test::IsBetween(defaults.axle_load_.min, defaults.axle_load_.max));
   }
 
   // flow_mask_
