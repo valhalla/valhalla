@@ -31,9 +31,9 @@ protected:
     // (maxspeed=60 vs maxspeed=20), so the router prefers it by default. With use_curvature=0
     // the curvature penalty (factor ~3x for c≈10) is large enough to flip the decision to the
     // slower but straight road.
-    const gurka::ways ways_speed = {
-        {"AG", {{"highway", "primary"}, {"name", "Straight Road"}, {"maxspeed", "20"}}},
-        {"ABCDEFG", {{"highway", "primary"}, {"name", "Curvy Road"}, {"maxspeed", "60"}}}};
+    const gurka::ways ways_speed =
+        {{"AG", {{"highway", "primary"}, {"name", "Straight Road"}, {"maxspeed", "20"}}},
+         {"ABCDEFG", {{"highway", "primary"}, {"name", "Curvy Road"}, {"maxspeed", "60"}}}};
 
     const auto layout_speed = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     map_speed = gurka::buildtiles(layout_speed, ways_speed, {}, {}, "test/data/usecurvature_speed");
@@ -45,15 +45,14 @@ protected:
     // At use_curvature=1.0 (pref=1.0, c≈10): factor ≈ 0.337, cost ratio ≈ 2.4×0.337 = 0.81 < 1
     // → curvy wins. The threshold where curvature preference becomes strong enough is around
     // use_curvature ≈ 0.90 (below that, straight still wins despite curvature preference).
-    const gurka::ways ways_straight_fast = {
-        {"AG", {{"highway", "primary"}, {"name", "Straight Road"}, {"maxspeed", "60"}}},
-        {"ABCDEFG", {{"highway", "primary"}, {"name", "Curvy Road"}, {"maxspeed", "50"}}}};
+    const gurka::ways ways_straight_fast =
+        {{"AG", {{"highway", "primary"}, {"name", "Straight Road"}, {"maxspeed", "60"}}},
+         {"ABCDEFG", {{"highway", "primary"}, {"name", "Curvy Road"}, {"maxspeed", "50"}}}};
 
     const auto layout_straight_fast = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     map_straight_fast = gurka::buildtiles(layout_straight_fast, ways_straight_fast, {}, {},
                                           "test/data/usecurvature_straight_fast");
   }
-
 };
 
 gurka::map UseCurvatureTest::map = {};
@@ -135,9 +134,8 @@ TEST_F(UseCurvatureTest, NeutralDefaultPrefersFastStraightRoad) {
 TEST_F(UseCurvatureTest, PreferCurvyBelowThresholdStillPrefersStrait) {
   std::unordered_map<std::string, std::string> options = {
       {"/costing_options/motorcycle/use_curvature", "0.75"}};
-  valhalla::Api result =
-      gurka::do_action(valhalla::Options::route, map_straight_fast, {"A", "G"}, "motorcycle",
-                       options);
+  valhalla::Api result = gurka::do_action(valhalla::Options::route, map_straight_fast, {"A", "G"},
+                                          "motorcycle", options);
   gurka::assert::raw::expect_path(result, {"Straight Road"});
 }
 
@@ -147,9 +145,7 @@ TEST_F(UseCurvatureTest, PreferCurvyBelowThresholdStillPrefersStrait) {
 TEST_F(UseCurvatureTest, PreferCurvyAboveThresholdOverridesSpeedPenalty) {
   std::unordered_map<std::string, std::string> options = {
       {"/costing_options/motorcycle/use_curvature", "1"}};
-  valhalla::Api result =
-      gurka::do_action(valhalla::Options::route, map_straight_fast, {"A", "G"}, "motorcycle",
-                       options);
+  valhalla::Api result = gurka::do_action(valhalla::Options::route, map_straight_fast, {"A", "G"},
+                                          "motorcycle", options);
   gurka::assert::raw::expect_path(result, {"Curvy Road"});
 }
-
