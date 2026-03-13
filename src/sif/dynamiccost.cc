@@ -76,7 +76,7 @@ constexpr float kMaxLivingStreetFactor = 3.f;
 constexpr float kMinLitFactor = 1.f;
 
 // min factor to apply when use curvature
-constexpr float kMinCurvatureFactor = 0.01f;
+// constexpr float kMinCurvatureFactor = 0.01f;
 
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
@@ -179,21 +179,13 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
+      use_curvature_{0.f, kDefaultUseCurvature, 1.f},
       closure_factor_{kClosureFactorRange}, speed_penalty_factor_{kSpeedPenaltyFactorRange},
       exclude_unpaved_(false), exclude_bridges_(false), exclude_tunnels_(false),
       exclude_tolls_(false), exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
       include_hov3_{false}, height_{0.f, kDefaultHeight, 10.0f}, width_{0.f, kDefaultWidth, 10.0f},
       length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f} {
-      use_curvature_{0.f, kDefaultUseCurvature, kMaxPenalty},
-      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false), exclude_bridges_(false),
-      exclude_tunnels_(false), exclude_tolls_(false), exclude_highways_(false),
-      exclude_ferries_(false), has_excludes_(false),
-      use_curvature_{0.f, kDefaultUseCurvature, kMaxPenalty}, closure_factor_{kClosureFactorRange},
-      exclude_unpaved_(false), exclude_bridges_(false), exclude_tunnels_(false),
-      exclude_tolls_(false), exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
-      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
-                                                                                      false} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -459,7 +451,8 @@ void DynamicCost::set_use_lit(float use_lit) {
 }
 
 void DynamicCost::set_use_curvature(float use_curvature) {
-  curvature_factor_ = use_curvature;
+  curvature_step_ =
+      static_cast<uint32_t>(std::round(use_curvature * static_cast<float>(kCurvatureSteps - 1)));
 }
 
 void ParseBaseCostOptions(const rapidjson::Value& json,

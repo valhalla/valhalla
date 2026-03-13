@@ -21,6 +21,7 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
@@ -212,6 +213,28 @@ constexpr std::array<float, 16> kDensityFactor = populate_densityfactor(); // De
 constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
                                                        1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                        2.5f, 2.8f, 3.1f, 3.5f};
+
+// Number of discretized use_curvature steps over the range [0.0, 1.0] at 0.01 intervals.
+// 0.0 = strongly avoid curvy roads, 0.5 = neutral, 1.0 = strongly prefer curvy roads.
+constexpr uint32_t kCurvatureSteps = 101;
+
+// Curvature cost factor lookup table [use_curvature_step][edge_curvature_value].
+// Pre-computed at startup to avoid std::pow in the EdgeCost hot loop.
+// Edge curvature is a 4-bit field (0-15). use_curvature is discretized into 101 steps.
+inline const std::array<std::array<float, 16>, kCurvatureSteps> kCurvatureFactor = []() {
+  std::array<std::array<float, 16>, kCurvatureSteps> arr{};
+  for (uint32_t s = 0; s < kCurvatureSteps; s++) {
+    // Map step index to preference in [-1, +1]: 0 -> -1, 50 -> 0, 100 -> +1
+    const float pref = (s * 0.01f - 0.5f) * 2.0f;
+    for (uint32_t c = 0; c < 16; c++) {
+      // x is in (0, 1]: 1.0 for straight edges (c=0), ~0.007 for max curvature (c=15).
+      // The +0.1 offset ensures x > 0 so negative exponents stay finite.
+      const float x = 1.0f - static_cast<float>(c) / 15.1f;
+      arr[s][c] = std::pow(x, pref);
+    }
+  }
+  return arr;
+}();
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
@@ -1296,7 +1319,7 @@ protected:
   float closure_factor_;       // Avoid closed edges factor.
   float unlit_factor_;         // Avoid unlit edges factor.
   float speed_penalty_factor_; // Avoid faster edges than top speed factor.
-  float curvature_factor_;     // Prefer curvy edges factor.
+  uint32_t curvature_step_;    // Index into kCurvatureFactor[curvature_step_][curvature].
 
   // Transition costs
   sif::Cost country_crossing_cost_;

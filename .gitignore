@@ -18,6 +18,7 @@ mason/
 mason_packages/
 
 # tools
+.claude
 .cproject
 .project
 .settings

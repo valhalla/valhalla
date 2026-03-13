@@ -31,7 +31,7 @@ constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
 constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
 constexpr float kDefaultUseTrails = 0.0f;   // Factor between 0 and 1
 
-constexpr float kDefaultUseCurvature = 0.f;
+constexpr float kDefaultUseCurvature = 0.5f; // 0.5 = neutral (no curvature preference)
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kImpassable;
 
@@ -450,7 +450,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   factor *= EdgeFactor(edgeid);
-  factor *= std::pow(1.f - edge->curvature() / (kMaxCurvature + 0.1f), curvature_factor_);
+  factor *= kCurvatureFactor[curvature_step_][edge->curvature()];
 
   return {sec * factor, sec};
 }
