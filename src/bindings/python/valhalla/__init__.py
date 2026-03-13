@@ -1,9 +1,9 @@
 from pathlib import Path
 
 try:
-    from ._valhalla import VALHALLA_PRINT_VERSION
+    from ._valhalla import VALHALLA_PRINT_VERSION, RouterError
 except ModuleNotFoundError:
-    from _valhalla import VALHALLA_PRINT_VERSION
+    from _valhalla import VALHALLA_PRINT_VERSION, RouterError
 from .actor import Actor
 from .config import get_config, get_help
 
@@ -19,4 +19,4 @@ except ModuleNotFoundError:
 
 PYVALHALLA_DIR = Path(__file__).parent.resolve()
 
-__all__ = ["Actor", "get_config", "get_help", "__version__"]
+__all__ = ["Actor", "RouterError", "get_config", "get_help", "__version__"]

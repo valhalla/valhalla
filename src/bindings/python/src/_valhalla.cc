@@ -1,5 +1,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
+#include "exceptions.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "tyr/actor.h"
@@ -39,6 +40,44 @@ NB_MODULE(_valhalla, m) {
   // Add these constants in C++ to avoid creating another shim python module, as they
   // are needed at runtime of the python library and need to be set during the build
   m.attr("VALHALLA_PRINT_VERSION") = VALHALLA_PRINT_VERSION;
+
+  // Custom exception that exposes valhalla_exception_t fields to Python.
+  // We create the type manually (instead of nb::exception) so that the translator
+  // can populate structured attributes (code, http_code, etc.) on the instance.
+  static PyObject* RouterError =
+      PyErr_NewExceptionWithDoc("_valhalla.RouterError",
+                                "Exception raised when a Valhalla operation fails.\n\n"
+                                "Attributes:\n"
+                                "    code (int): Valhalla-internal error code.\n"
+                                "    message (str): Human-readable error message.\n"
+                                "    http_code (int): Corresponding HTTP status code.\n"
+                                "    http_message (str): Corresponding HTTP status message.\n",
+                                PyExc_RuntimeError, nullptr);
+  m.attr("RouterError") = nb::borrow(RouterError);
+
+  // nanobind calls registered translators when a C++ exception escapes into Python.
+  // The second arg (RouterError) is passed as payload to the lambda.
+  // Other C++ exceptions (e.g. std::runtime_error) fall through to nanobind's
+  // default translators.
+  nb::register_exception_translator(
+      [](const std::exception_ptr& p, void* payload) {
+        try {
+          std::rethrow_exception(p);
+        } catch (const valhalla::valhalla_exception_t& e) {
+          auto* type = reinterpret_cast<PyObject*>(payload);
+          // Construct a RouterError instance: equivalent to `RouterError(e.what())` in Python
+          nb::object exc = nb::steal(PyObject_CallFunction(type, "s", e.what()));
+          if (exc.ptr()) {
+            exc.attr("code") = nb::int_(e.code);
+            exc.attr("message") = nb::str(e.message.c_str());
+            exc.attr("http_code") = nb::int_(e.http_code);
+            exc.attr("http_message") = nb::str(e.http_message.c_str());
+            // Set the Python error indicator: raise exc
+            PyErr_SetObject(type, exc.ptr());
+          }
+        }
+      },
+      RouterError);
 
   nb::class_<vt::actor_t>(m, "_Actor", "Valhalla Actor class")
       .def(

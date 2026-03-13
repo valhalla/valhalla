@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 from tempfile import NamedTemporaryFile
 import unittest
-from valhalla import Actor, get_config, VALHALLA_PRINT_VERSION
+from valhalla import Actor, RouterError, get_config, VALHALLA_PRINT_VERSION
 
 
 PWD = Path(os.path.dirname(os.path.abspath(__file__)))
@@ -143,6 +143,28 @@ class TestBindings(unittest.TestCase):
         # Both should return the same data
         self.assertEqual(tile_data, tile_data_str)
 
+    def test_router_error(self):
+        query = {
+            "locations": [
+                {"lat": 0.0, "lon": 0.0},
+                {"lat": 0.1, "lon": 0.1}
+            ],
+            "costing": "auto"
+        }
+
+        with self.assertRaises(RouterError) as ctx:
+            self.actor.route(query)
+
+        e = ctx.exception
+        self.assertIsInstance(e, RuntimeError)
+        # structured fields from valhalla_exception_t
+        self.assertIsInstance(e.code, int)
+        self.assertEqual(e.code, 171)
+        self.assertEqual(e.http_code, 400)
+        self.assertEqual(e.message, "No suitable edges near location")
+        self.assertEqual(e.http_message, "Bad Request")
+        self.assertEqual(str(e), e.message)
+
     def test_change_config(self):
         with NamedTemporaryFile('w+') as tmp:
             config = get_config(self.extract_path, self.tiles_path)
@@ -153,6 +175,6 @@ class TestBindings(unittest.TestCase):
 
             actor = Actor(str(tmp.name))
 
-            with self.assertRaises(RuntimeError) as e:
+            with self.assertRaises(RouterError) as e:
                 actor.route(json.dumps({"locations":[{"lat":52.08813,"lon":5.03231},{"lat":52.09987,"lon":5.14913}],"costing":"bicycle","directions_options":{"language":"ru-RU"}}))
             self.assertIn('exceeds the max distance limit', str(e.exception))
