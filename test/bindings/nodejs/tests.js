@@ -13,6 +13,34 @@ function hasCyrillic(text) {
 
 test('variables', () => {
   assert.ok(valhalla.VALHALLA_VERSION, 'VALHALLA_VERSION is not defined');
+  assert.ok(valhalla.RouterError, 'RouterError is not exported');
+});
+
+test('RouterError', async () => {
+  const actor = new valhalla.Actor(config);
+
+  const query = {
+    locations: [
+      { lat: 0.0, lon: 0.0 },
+      { lat: 0.1, lon: 0.1 }
+    ],
+    costing: "auto"
+  };
+
+  try {
+    await actor.route(JSON.stringify(query));
+    assert.fail('Expected RouterError to be thrown');
+  } catch (e) {
+    // Should be a RouterError instance
+    assert.ok(e instanceof valhalla.RouterError, `Expected RouterError, got ${e.constructor.name}`);
+    // Should also be an Error instance (prototype chain)
+    assert.ok(e instanceof Error, 'RouterError should be instanceof Error');
+    // Structured fields from valhalla_exception_t
+    assert.equal(e.code, 171);
+    assert.equal(e.httpCode, 400);
+    assert.equal(e.message, 'No suitable edges near location');
+    assert.equal(e.httpMessage, 'Bad Request');
+  }
 });
 
 test('actor', async(t) => {
