@@ -138,6 +138,9 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                                   pred.internal_turn());
     newcost += pred.cost() + transition_cost;
     uint32_t path_distance = pred.path_distance() + directededge->length();
+    if (max_expansion_distance_ > 0 && path_distance > max_expansion_distance_) {
+      continue;
+    }
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the cost and predecessor are updated.
