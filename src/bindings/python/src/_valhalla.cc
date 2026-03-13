@@ -52,6 +52,7 @@ NB_MODULE(_valhalla, m) {
                                 ":param int http_code: Corresponding HTTP status code.\n"
                                 ":param str http_message: Corresponding HTTP status message.\n",
                                 PyExc_RuntimeError, nullptr);
+  // don't increase refcount, it's static
   m.attr("RouterError") = nb::borrow(RouterError);
 
   // nanobind calls registered translators when a C++ exception escapes into Python.
