@@ -7,6 +7,7 @@ theme:
   features:
     - content.tabs.link
     - navigation.instant
+    - navigation.instant.progress
     - navigation.sections
     - navigation.top
     - toc.follow
@@ -44,6 +45,9 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.emoji:
@@ -51,6 +55,17 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - admonition
   - pymdownx.details
+  - github-callouts
+  - md_in_html
+  - pymdownx.blocks.caption
+
+plugins:
+  - search
+  - redirects:
+      redirect_maps:
+        "building.md": "installation/building.md"
+        "README_nodejs.md": "installation/nodejs.md"
+        "README_python.md": "installation/python.md"
 
 site_name: Valhalla Docs
 repo_url: https://github.com/valhalla/valhalla/
@@ -59,11 +74,16 @@ site_url: https://valhalla.github.io/valhalla
 docs_dir: docs
 nav:
   - index.md
-  - Introduction for Users: valhalla-intro.md
-  - Build from Source: building.md
-  - Terminology: terminology.md
-  - Python bindings: README_python.md
-  - Node.js bindings: README_nodejs.md
+  - Getting started: getting-started.md
+  - Installation:
+      - Node.js bindings: installation/nodejs.md
+      - Python bindings: installation/python.md
+      - Docker: installation/docker.md
+      - Build from Source: installation/building.md
+  - User guides:
+      - Configuration: guides/configuration.md
+      - Data guide: guides/data.md
+      - Operations guide: guides/operations.md
   - Public APIs:
       - API Overview: api/index.md
       - Protocol Buffers: api/protocol-buffers.md
@@ -90,6 +110,8 @@ nav:
       - elevation.md
       - testing.md
       - tzdb_update.md
+      - Introduction for Users: valhalla-intro.md
+      - Terminology: terminology.md
   - Internal components:
       - Baldr (routing data strutures/algorithms): baldr.md
       - Loki (associate locations with graph edges): loki.md
