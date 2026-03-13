@@ -47,11 +47,10 @@ NB_MODULE(_valhalla, m) {
   static PyObject* RouterError =
       PyErr_NewExceptionWithDoc("_valhalla.RouterError",
                                 "Exception raised when a Valhalla operation fails.\n\n"
-                                "Attributes:\n"
-                                "    code (int): Valhalla-internal error code.\n"
-                                "    message (str): Human-readable error message.\n"
-                                "    http_code (int): Corresponding HTTP status code.\n"
-                                "    http_message (str): Corresponding HTTP status message.\n",
+                                ":param int code: Valhalla-internal error code.\n"
+                                ":param str message: Human-readable error message.\n"
+                                ":param int http_code: Corresponding HTTP status code.\n"
+                                ":param str http_message: Corresponding HTTP status message.\n",
                                 PyExc_RuntimeError, nullptr);
   m.attr("RouterError") = nb::borrow(RouterError);
 
