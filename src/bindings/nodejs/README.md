@@ -49,7 +49,34 @@ async function main() {
 main();
 ```
 
-### 3. Working with `GraphId` (no built graph needed)
+### 3. Error Handling
+
+When a routing operation fails, the returned promise rejects with a `RouterError` (an `Error` subclass) containing structured fields from Valhalla's internal error codes:
+
+```javascript
+import { Actor, RouterError } from '@valhallajs/valhallajs';
+
+const actor = await Actor.fromConfigFile('config.json');
+
+try {
+  await actor.route({
+    locations: [
+      { lat: 0.0, lon: 0.0 },
+      { lat: 0.1, lon: 0.1 }
+    ],
+    costing: 'auto'
+  });
+} catch (e) {
+  if (e instanceof RouterError) {
+    console.log(e.code);        // 171
+    console.log(e.message);     // "No suitable edges near location"
+    console.log(e.httpCode);    // 400
+    console.log(e.httpMessage); // "Bad Request"
+  }
+}
+```
+
+### 4. Working with `GraphId` (no built graph needed)
 
 The `GraphId` class represents Valhalla's internal graph identifiers, which encode a hierarchy level, tile ID, and element ID.
 
