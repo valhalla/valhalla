@@ -534,7 +534,7 @@ public:
   float elevator_penalty_;         // Penalty applied to elevator (seconds).
 
   // Lookup table indexed by Use enum value. 0.0f = no Use-specific factor
-  std::array<float, kMaxUses> use_factor_{};
+  std::array<float, static_cast<size_t>(Use::kSize)> use_factor_{};
 
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
@@ -658,13 +658,13 @@ PedestrianCost::PedestrianCost(const Costing& costing)
 
   // Populate the use_factor_ lookup table. 0.0f is the sentinel for "no match"
   use_factor_.fill(0.0f);
-  use_factor_[static_cast<size_t>(Use::kFootway)] = walkway_factor_;
-  use_factor_[static_cast<size_t>(Use::kSidewalk)] = walkway_factor_;
-  use_factor_[static_cast<size_t>(Use::kAlley)] = alley_factor_;
-  use_factor_[static_cast<size_t>(Use::kDriveway)] = driveway_factor_;
-  use_factor_[static_cast<size_t>(Use::kTrack)] = track_factor_;
-  use_factor_[static_cast<size_t>(Use::kLivingStreet)] = living_street_factor_;
-  use_factor_[static_cast<size_t>(Use::kServiceRoad)] = service_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kFootway)] = walkway_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kSidewalk)] = walkway_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kAlley)] = alley_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kDriveway)] = driveway_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kTrack)] = track_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kLivingStreet)] = living_street_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kServiceRoad)] = service_factor_;
 }
 
 // Check if access is allowed on the specified edge. Disallow if no
