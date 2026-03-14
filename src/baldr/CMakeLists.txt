@@ -67,9 +67,7 @@ set(sources
     incident_singleton.h
     edgetracker.cc
     nodeinfo.cc
-    location.cc
     merge.cc
-    pathlocation.cc
     predictedspeeds.cc
     tilehierarchy.cc
     timedomain.cc
