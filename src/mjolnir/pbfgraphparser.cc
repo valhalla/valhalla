@@ -20,6 +20,9 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
+#ifdef HAVE_EXPAT
+#include <osmium/io/xml_input.hpp>
+#endif
 
 #include <thread>
 #include <utility>
