@@ -174,6 +174,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
     for (auto& location : *options.mutable_locations()) {
       location.set_node_snap_tolerance(0.f);
       location.set_radius(10);
+      location.set_minimum_reachability(0);
     }
     parse_locations(options.mutable_locations(), request);
 
