@@ -537,10 +537,16 @@ protected:
   };
 
   struct SpeedProfileHasher {
-    std::size_t operator()(const std::array<int16_t, baldr::kCoefficientCount>& arr) const {
+    std::size_t operator()(const std::span<const int16_t, baldr::kCoefficientCount>& arr) const {
       std::size_t seed = 13;
       boost::hash_range(seed, arr.begin(), arr.end());
       return seed;
+    }
+  };
+
+  struct SpanEqual {
+    bool operator()(std::span<const int16_t> a, std::span<const int16_t> b) const {
+        return std::ranges::equal(a, b);
     }
   };
 
@@ -640,7 +646,7 @@ protected:
   std::vector<int16_t> speed_profile_builder_;
 
   // Map of predicted speed profiles to their offsets.
-  std::unordered_map<std::array<int16_t, baldr::kCoefficientCount>, uint32_t, SpeedProfileHasher>
+  std::unordered_map<std::span<const int16_t, baldr::kCoefficientCount>, uint32_t, SpeedProfileHasher, SpanEqual>
       speed_profile_map_;
 
   // lane connectivity list offset

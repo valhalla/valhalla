@@ -1,3 +1,4 @@
+#include "baldr/predictedspeeds.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
@@ -1259,7 +1260,7 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
   }
 
   // If the speed profile exists, reuse the offset for this directed edge.
-  auto it = speed_profile_map_.find(coefficients);
+  auto it = speed_profile_map_.find(std::span{coefficients});
   if (it != speed_profile_map_.end()) {
     speed_profile_offset_builder_[idx] = it->second;
     return;
@@ -1274,7 +1275,7 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
   speed_profile_builder_.insert(speed_profile_builder_.end(), coefficients.begin(),
                                 coefficients.end());
 
-  speed_profile_map_.emplace(coefficients, new_speed_profile_offset);
+  speed_profile_map_.emplace(std::span{speed_profile_builder_.data() + new_speed_profile_offset, kCoefficientCount}, new_speed_profile_offset);
 }
 
 // Updates a tile with predictive speed data. Also updates directed edges with
