@@ -1,5 +1,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
+#include "exceptions.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "tyr/actor.h"
@@ -39,6 +40,44 @@ NB_MODULE(_valhalla, m) {
   // Add these constants in C++ to avoid creating another shim python module, as they
   // are needed at runtime of the python library and need to be set during the build
   m.attr("VALHALLA_PRINT_VERSION") = VALHALLA_PRINT_VERSION;
+
+  // Custom exception that exposes valhalla_exception_t fields to Python.
+  // We create the type manually (instead of nb::exception) so that the translator
+  // can populate structured attributes (code, http_code, etc.) on the instance.
+  static PyObject* ValhallaError =
+      PyErr_NewExceptionWithDoc("_valhalla.ValhallaError",
+                                "Exception raised when a Valhalla operation fails.\n\n"
+                                ":param int code: Valhalla-internal error code.\n"
+                                ":param str message: Human-readable error message.\n"
+                                ":param int http_code: Corresponding HTTP status code.\n"
+                                ":param str http_message: Corresponding HTTP status message.\n",
+                                PyExc_RuntimeError, nullptr);
+  // don't increase refcount, it's static
+  m.attr("ValhallaError") = nb::borrow(ValhallaError);
+
+  // nanobind calls registered translators when a C++ exception escapes into Python.
+  // The second arg (ValhallaError) is passed as payload to the lambda.
+  // Other C++ exceptions (e.g. std::runtime_error) fall through to nanobind's
+  // default translators.
+  nb::register_exception_translator(
+      [](const std::exception_ptr& p, void* payload) {
+        try {
+          std::rethrow_exception(p);
+        } catch (const valhalla::valhalla_exception_t& e) {
+          auto* type = reinterpret_cast<PyObject*>(payload);
+          // Construct a ValhallaError instance: equivalent to `ValhallaError(e.what())` in Python
+          nb::object exc = nb::steal(PyObject_CallFunction(type, "s", e.what()));
+          if (exc.ptr()) {
+            exc.attr("code") = nb::int_(e.code);
+            exc.attr("message") = nb::str(e.message.c_str());
+            exc.attr("http_code") = nb::int_(e.http_code);
+            exc.attr("http_message") = nb::str(e.http_message.c_str());
+            // Set the Python error indicator: raise exc
+            PyErr_SetObject(type, exc.ptr());
+          }
+        }
+      },
+      ValhallaError);
 
   nb::class_<vt::actor_t>(m, "_Actor", "Valhalla Actor class")
       .def(
