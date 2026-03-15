@@ -178,7 +178,7 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
  * Set origin.
  */
 void set_origin(baldr::GraphReader& reader,
-                const std::vector<Location>& origin,
+                const std::vector<const Location*>& origin,
                 uint16_t origin_idx,
                 const labelset_ptr_t& labelset,
                 const sif::TravelMode travelmode,
@@ -190,7 +190,7 @@ void set_origin(baldr::GraphReader& reader,
   // indicate it reaches the beginning of a route when constructing the
   // route
   baldr::graph_tile_ptr tile;
-  for (const auto& edge : origin[origin_idx].correlation().edges()) {
+  for (const auto& edge : origin[origin_idx]->correlation().edges()) {
     if (edge.begin_node()) {
       auto edge_nodes = reader.GetDirectedEdgeNodes(GraphId(edge.graph_id()), tile);
       const auto nodeid = edge_nodes.first;
@@ -230,12 +230,12 @@ void set_origin(baldr::GraphReader& reader,
  * the right column as an outlier
  */
 void set_destinations(baldr::GraphReader& reader,
-                      const std::vector<Location>& destinations,
+                      const std::vector<const Location*>& destinations,
                       std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>>& node_dests,
                       std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>>& edge_dests) {
   baldr::graph_tile_ptr tile;
   for (uint16_t dest = 0; dest < destinations.size(); dest++) {
-    for (const auto& edge : destinations[dest].correlation().edges()) {
+    for (const auto& edge : destinations[dest]->correlation().edges()) {
       if (edge.begin_node()) {
         auto edge_nodes = reader.GetDirectedEdgeNodes(GraphId(edge.graph_id()), tile);
         const auto nodeid = edge_nodes.first;
@@ -350,7 +350,7 @@ inline uint16_t get_outbound_edge_heading(const baldr::graph_tile_ptr& tile,
  */
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
-                   const std::vector<Location>& destinations,
+                   const std::vector<const Location*>& destinations,
                    uint16_t origin_idx,
                    labelset_ptr_t labelset,
                    const midgard::DistanceApproximator<midgard::PointLL>& approximator,
@@ -428,7 +428,7 @@ find_shortest_path(baldr::GraphReader& reader,
       const auto it = edge_dests.find(edgeid);
       if (it != edge_dests.end()) {
         for (const auto dest : it->second) {
-          for (const auto& edge : destinations[dest].correlation().edges()) {
+          for (const auto& edge : destinations[dest]->correlation().edges()) {
             if (edge.graph_id() == edgeid) {
               // Get cost - use EdgeCost to get time along the edge.
               // Override cost portion to be distance. Heuristic cost from a
@@ -519,7 +519,7 @@ find_shortest_path(baldr::GraphReader& reader,
       // remove the destination from the destination list
       const auto destination_idx = label.dest();
       results[destination_idx] = label_idx;
-      for (const auto& edge : destinations[destination_idx].correlation().edges()) {
+      for (const auto& edge : destinations[destination_idx]->correlation().edges()) {
         const auto it = edge_dests.find(GraphId(edge.graph_id()));
         if (it != edge_dests.end()) {
           it->second.erase(destination_idx);
@@ -545,8 +545,8 @@ find_shortest_path(baldr::GraphReader& reader,
       // at the same edge as well as at the opposite edge to the queue
       const auto& origin = destinations[origin_idx];
       bool allows_immediate_uturn =
-          origin.type() == Location_Type_kBreak || origin.type() == Location_Type_kVia;
-      for (const auto& origin_edge : origin.correlation().edges()) {
+          origin->type() == Location_Type_kBreak || origin->type() == Location_Type_kVia;
+      for (const auto& origin_edge : origin->correlation().edges()) {
         // The tile will be guaranteed to be directededge's tile in this
         // loop
         baldr::graph_tile_ptr start_tile = nullptr;
@@ -574,7 +574,7 @@ find_shortest_path(baldr::GraphReader& reader,
         float turn_cost = label.turn_cost();
         for (const auto other_dest : edge_dests[GraphId(origin_edge.graph_id())]) {
           // All edges of this destination
-          for (const auto& destination_edge : destinations[other_dest].correlation().edges()) {
+          for (const auto& destination_edge : destinations[other_dest]->correlation().edges()) {
             if (origin_edge.graph_id() == destination_edge.graph_id() &&
                 origin_edge.percent_along() <= destination_edge.percent_along()) {
               // Get cost - use EdgeCost to get time along the edge.
