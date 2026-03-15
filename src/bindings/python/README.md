@@ -91,16 +91,16 @@ route = actor.route({"locations": [...]})
 
 #### Error Handling
 
-When a routing operation fails, a `RouterError` is raised (a subclass of `RuntimeError`) with structured fields from Valhalla's internal error codes:
+When a routing operation fails, a `ValhallaError` is raised (a subclass of `RuntimeError`) with structured fields from Valhalla's internal error codes:
 
 ```python
-from valhalla import Actor, RouterError, get_config
+from valhalla import Actor, ValhallaError, get_config
 
 actor = Actor(get_config(tile_extract='./valhalla_tiles.tar'))
 
 try:
     actor.route({"locations": [{"lat": 0.0, "lon": 0.0}, {"lat": 0.1, "lon": 0.1}], "costing": "auto"})
-except RouterError as e:
+except ValhallaError as e:
     print(e.code)          # 171
     print(e.message)       # "No suitable edges near location"
     print(e.http_code)     # 400

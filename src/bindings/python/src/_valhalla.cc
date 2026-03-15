@@ -44,8 +44,8 @@ NB_MODULE(_valhalla, m) {
   // Custom exception that exposes valhalla_exception_t fields to Python.
   // We create the type manually (instead of nb::exception) so that the translator
   // can populate structured attributes (code, http_code, etc.) on the instance.
-  static PyObject* RouterError =
-      PyErr_NewExceptionWithDoc("_valhalla.RouterError",
+  static PyObject* ValhallaError =
+      PyErr_NewExceptionWithDoc("_valhalla.ValhallaError",
                                 "Exception raised when a Valhalla operation fails.\n\n"
                                 ":param int code: Valhalla-internal error code.\n"
                                 ":param str message: Human-readable error message.\n"
@@ -53,10 +53,10 @@ NB_MODULE(_valhalla, m) {
                                 ":param str http_message: Corresponding HTTP status message.\n",
                                 PyExc_RuntimeError, nullptr);
   // don't increase refcount, it's static
-  m.attr("RouterError") = nb::borrow(RouterError);
+  m.attr("ValhallaError") = nb::borrow(ValhallaError);
 
   // nanobind calls registered translators when a C++ exception escapes into Python.
-  // The second arg (RouterError) is passed as payload to the lambda.
+  // The second arg (ValhallaError) is passed as payload to the lambda.
   // Other C++ exceptions (e.g. std::runtime_error) fall through to nanobind's
   // default translators.
   nb::register_exception_translator(
@@ -65,7 +65,7 @@ NB_MODULE(_valhalla, m) {
           std::rethrow_exception(p);
         } catch (const valhalla::valhalla_exception_t& e) {
           auto* type = reinterpret_cast<PyObject*>(payload);
-          // Construct a RouterError instance: equivalent to `RouterError(e.what())` in Python
+          // Construct a ValhallaError instance: equivalent to `ValhallaError(e.what())` in Python
           nb::object exc = nb::steal(PyObject_CallFunction(type, "s", e.what()));
           if (exc.ptr()) {
             exc.attr("code") = nb::int_(e.code);
@@ -77,7 +77,7 @@ NB_MODULE(_valhalla, m) {
           }
         }
       },
-      RouterError);
+      ValhallaError);
 
   nb::class_<vt::actor_t>(m, "_Actor", "Valhalla Actor class")
       .def(

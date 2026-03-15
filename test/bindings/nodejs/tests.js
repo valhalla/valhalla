@@ -13,10 +13,10 @@ function hasCyrillic(text) {
 
 test('variables', () => {
   assert.ok(valhalla.VALHALLA_VERSION, 'VALHALLA_VERSION is not defined');
-  assert.ok(valhalla.RouterError, 'RouterError is not exported');
+  assert.ok(valhalla.ValhallaError, 'ValhallaError is not exported');
 });
 
-test('RouterError', async () => {
+test('ValhallaError', async () => {
   const actor = new valhalla.Actor(config);
 
   const query = {
@@ -29,12 +29,12 @@ test('RouterError', async () => {
 
   try {
     await actor.route(JSON.stringify(query));
-    assert.fail('Expected RouterError to be thrown');
+    assert.fail('Expected ValhallaError to be thrown');
   } catch (e) {
-    // Should be a RouterError instance
-    assert.ok(e instanceof valhalla.RouterError, `Expected RouterError, got ${e.constructor.name}`);
+    // Should be a ValhallaError instance
+    assert.ok(e instanceof valhalla.ValhallaError, `Expected ValhallaError, got ${e.constructor.name}`);
     // Should also be an Error instance (prototype chain)
-    assert.ok(e instanceof Error, 'RouterError should be instanceof Error');
+    assert.ok(e instanceof Error, 'ValhallaError should be instanceof Error');
     // Structured fields from valhalla_exception_t
     assert.equal(e.code, 171);
     assert.equal(e.httpCode, 400);

@@ -17,7 +17,7 @@
    * ADDED: `expansion_max_distance` (in meters) after which an expansion is terminated [#5938](https://github.com/valhalla/valhalla/pull/5938)
    * CHANGED: Optimize `get_service_days` in servicedays.cc [#5952](https://github.com/valhalla/valhalla/pull/5952)
   * ADDED: OSM XML format support for tile building [#5934](https://github.com/valhalla/valhalla/pull/5934)
-  * ADDED: `RouterError` which exposes `valhalla_exception_t` to the Python bindings [#5956](https://github.com/valhalla/valhalla/pull/5956)
+  * ADDED: `ValhallaError` which exposes `valhalla_exception_t` to the Python bindings [#5956](https://github.com/valhalla/valhalla/pull/5956)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**

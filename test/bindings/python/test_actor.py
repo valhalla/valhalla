@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 from tempfile import NamedTemporaryFile
 import unittest
-from valhalla import Actor, RouterError, get_config, VALHALLA_PRINT_VERSION
+from valhalla import Actor, ValhallaError, get_config, VALHALLA_PRINT_VERSION
 
 
 PWD = Path(os.path.dirname(os.path.abspath(__file__)))
@@ -152,7 +152,7 @@ class TestBindings(unittest.TestCase):
             "costing": "auto"
         }
 
-        with self.assertRaises(RouterError) as ctx:
+        with self.assertRaises(ValhallaError) as ctx:
             self.actor.route(query)
 
         e = ctx.exception
@@ -175,6 +175,6 @@ class TestBindings(unittest.TestCase):
 
             actor = Actor(str(tmp.name))
 
-            with self.assertRaises(RouterError) as e:
+            with self.assertRaises(ValhallaError) as e:
                 actor.route(json.dumps({"locations":[{"lat":52.08813,"lon":5.03231},{"lat":52.09987,"lon":5.14913}],"costing":"bicycle","directions_options":{"language":"ru-RU"}}))
             self.assertIn('exceeds the max distance limit', str(e.exception))
