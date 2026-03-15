@@ -21,6 +21,7 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
@@ -212,6 +213,28 @@ constexpr std::array<float, 16> kDensityFactor = populate_densityfactor(); // De
 constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
                                                        1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                        2.5f, 2.8f, 3.1f, 3.5f};
+
+// Number of discretized use_curvature steps over the range [0.0, 1.0] at 0.01 intervals.
+// 0.0 = strongly avoid curvy roads, 0.5 = neutral, 1.0 = strongly prefer curvy roads.
+constexpr uint32_t kCurvatureSteps = 101;
+
+// Curvature cost factor lookup table [use_curvature_step][edge_curvature_value].
+// Pre-computed at startup to avoid std::pow in the EdgeCost hot loop.
+// Edge curvature is a 4-bit field (0-15). use_curvature is discretized into 101 steps.
+inline const std::array<std::array<float, 16>, kCurvatureSteps> kCurvatureFactor = []() {
+  std::array<std::array<float, 16>, kCurvatureSteps> arr{};
+  for (uint32_t s = 0; s < kCurvatureSteps; s++) {
+    // Map step index to preference in [-1, +1]: 0 -> -1, 50 -> 0, 100 -> +1
+    const float pref = (s * 0.01f - 0.5f) * 2.0f;
+    for (uint32_t c = 0; c < 16; c++) {
+      // x is in (0, 1]: 1.0 for straight edges (c=0), ~0.007 for max curvature (c=15).
+      // The +0.1 offset ensures x > 0 so negative exponents stay finite.
+      const float x = 1.0f - static_cast<float>(c) / 15.1f;
+      arr[s][c] = std::pow(x, pref);
+    }
+  }
+  return arr;
+}();
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
@@ -1253,6 +1276,12 @@ protected:
    */
   virtual void set_use_lit(float use_lit);
 
+  /**
+   * Calculate `curvature` costs based on curvature preference.
+   * @param use_curvature value of curvature preference in range [0; kMaxPenalty]
+   */
+  virtual void set_use_curvature(float use_curvature);
+
   // Algorithm pass
   uint32_t pass_;
 
@@ -1290,6 +1319,7 @@ protected:
   float closure_factor_;       // Avoid closed edges factor.
   float unlit_factor_;         // Avoid unlit edges factor.
   float speed_penalty_factor_; // Avoid faster edges than top speed factor.
+  uint32_t curvature_step_;    // Index into kCurvatureFactor[curvature_step_][curvature].
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -1443,6 +1473,9 @@ protected:
     // Calculate lit factor from costing options.
     set_use_lit(costing_options.use_lit());
 
+    // Calculate curvature factor from costing options.
+    set_use_curvature(costing_options.use_curvature());
+
     // Penalty and factor to use service roads
     service_penalty_ = costing_options.service_penalty();
     service_factor_ = costing_options.service_factor();
@@ -1568,6 +1601,8 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;
   ranged_default_t<float> use_lit_;
+
+  ranged_default_t<float> use_curvature_;
 
   ranged_default_t<float> closure_factor_;
   ranged_default_t<float> speed_penalty_factor_;
