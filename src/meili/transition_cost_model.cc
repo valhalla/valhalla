@@ -111,23 +111,23 @@ void TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) co
 
   // Prepare locations and stateids
   const auto& right_column = container_.column(right.stateid().time());
-  std::vector<Location> locations;
+  std::vector<const Location*> locations;
   locations.reserve(1 + right_column.size());
-  locations.push_back(left.candidate());
+  locations.push_back(&left.candidate());
   LOG_TRACE("Routing from: " + std::to_string(left.stateid().time()) + "." +
             std::to_string(left.stateid().id()) + " [" +
-            std::to_string(locations.back().correlation().edges().begin()->ll().lng()) + "," +
-            std::to_string(locations.back().correlation().edges().begin()->ll().lat()) + "],");
+            std::to_string(locations.back()->correlation().edges().begin()->ll().lng()) + "," +
+            std::to_string(locations.back()->correlation().edges().begin()->ll().lat()) + "],");
   std::vector<StateId> unreached_stateids;
   unreached_stateids.reserve(right_column.size());
   for (const auto& state : right_column) {
     // if (!vs_.Predecessor(state.stateid()).IsValid()) {
-    locations.push_back(state.candidate());
+    locations.push_back(&state.candidate());
     unreached_stateids.push_back(state.stateid());
     LOG_TRACE("Routing to: " + std::to_string(state.stateid().time()) + "." +
               std::to_string(state.stateid().id()) + "   [" +
-              std::to_string(locations.back().correlation().edges().begin()->ll().lng()) + "," +
-              std::to_string(locations.back().correlation().edges().begin()->ll().lat()) + "],");
+              std::to_string(locations.back()->correlation().edges().begin()->ll().lng()) + "," +
+              std::to_string(locations.back()->correlation().edges().begin()->ll().lat()) + "],");
     //}
   }
 
