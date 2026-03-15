@@ -17,7 +17,9 @@
    * CHANGED: bump nanobind to v2.12.0 [#5949](https://github.com/valhalla/valhalla/pull/5949)
    * ADDED: `expansion_max_distance` (in meters) after which an expansion is terminated [#5938](https://github.com/valhalla/valhalla/pull/5938)
    * CHANGED: Optimize `get_service_days` in servicedays.cc [#5952](https://github.com/valhalla/valhalla/pull/5952)
-  * ADDED: OSM XML format support for tile building [#5934](https://github.com/valhalla/valhalla/pull/5934)
+   * ADDED: OSM XML format support for tile building [#5934](https://github.com/valhalla/valhalla/pull/5934)
+   * CHANGED: Deduplicate predicted speed profiles when updating tile [#5941](https://github.com/valhalla/valhalla/pull/5941)
+
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
