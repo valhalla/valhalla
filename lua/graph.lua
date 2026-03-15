@@ -1903,12 +1903,14 @@ function filter_tags_generic(kv)
   kv["turn:lanes:forward"] = kv["turn:lanes:forward"]
   kv["turn:lanes:backward"] = kv["turn:lanes:backward"]
 
-  --truck goodies
+  --auto/truck goodies
   kv["maxheight"] = normalize_measurement(kv["maxheight"]) or normalize_measurement(kv["maxheight:physical"])
   kv["maxwidth"] = normalize_measurement(kv["maxwidth"]) or normalize_measurement(kv["maxwidth:physical"])
   kv["maxlength"] = normalize_measurement(kv["maxlength"])
   kv["maxweight"] = normalize_weight(kv["maxweight"])
   kv["maxaxleload"] = normalize_weight(kv["maxaxleload"])
+
+  --truck goodies
   kv["maxaxles"] = tonumber(kv["maxaxles"])
 
   --forward/backward only tags

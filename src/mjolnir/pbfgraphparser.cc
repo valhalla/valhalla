@@ -1156,7 +1156,7 @@ struct graph_parser {
     tag_handlers_["maxaxleload"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxAxleLoad);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kBusAccess | kTaxiAccess);
       set_access_restriction_value(restriction, tag_.second,
                                    [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
