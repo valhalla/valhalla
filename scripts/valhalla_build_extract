@@ -206,10 +206,7 @@ def find_geofabrik_region(index: dict, query: str) -> dict:
     """
     Find a region feature in the Geofabrik index by name or ID.
 
-    Matches (case-insensitive) against:
-      - properties.id (e.g. 'switzerland')
-      - properties.name (e.g. 'Switzerland')
-      - parent/id path (e.g. 'europe/switzerland')
+    Can be e.g. "switzerland", "Switzerland" or "europe/switzerland".
     """
     query_lower = query.lower()
     features = index.get("features", [])
@@ -226,21 +223,7 @@ def find_geofabrik_region(index: dict, query: str) -> dict:
         if "/" in query_lower and query_lower == f"{parent}/{fid}".lower():
             return feature
 
-    # no exact match — suggest close matches
-    suggestions = []
-    for feature in features:
-        props = feature.get("properties", {})
-        fid = props.get("id", "")
-        fname = props.get("name", "")
-        parent = props.get("parent", "")
-        full_path = f"{parent}/{fid}" if parent else fid
-        if query_lower in fid.lower() or query_lower in fname.lower():
-            suggestions.append(f"  {fname} ({full_path})")
-
-    if suggestions:
-        LOGGER.critical(f"Region '{query}' not found. Similar regions:\n" + "\n".join(suggestions[:15]))
-    else:
-        LOGGER.critical(f"Region '{query}' not found. Use '--region list' to see available regions.")
+    LOGGER.critical(f"Region '{query}' not found. Use '--region list' to see available regions.")
     sys.exit(1)
 
 
