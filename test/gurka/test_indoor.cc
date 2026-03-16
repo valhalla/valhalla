@@ -600,7 +600,7 @@ TEST_F(TestLevels, EdgeInfoJson) {
       "s", // HI
       "r", // IJ
   };
-  auto result =
+  [[maybe_unused]] auto result =
       gurka::do_action(valhalla::Options::locate, map, locs, "pedestrian", {}, graphreader, &json);
 
   std::unordered_map<std::string, std::vector<range_t>> expected_levels_map = {

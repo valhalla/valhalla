@@ -18,13 +18,14 @@
 using namespace valhalla;
 using namespace valhalla::midgard;
 
-constexpr size_t kNumMVTEdgeAttrs = std::size(loki::detail::kForwardEdgeAttributes) +
-                                    std::size(loki::detail::kReverseEdgeAttributes) +
-                                    std::size(loki::detail::kForwardLiveSpeedAttributes) +
-                                    std::size(loki::detail::kReverseLiveSpeedAttributes) +
-                                    // 1 + // kForwardLiveSpeedAttributes
-                                    // 1 + // kReverseLiveSpeedAttributes
-                                    std::size(loki::detail::kSharedEdgeAttributes);
+[[maybe_unused]] constexpr size_t kNumMVTEdgeAttrs =
+    std::size(loki::detail::kForwardEdgeAttributes) +
+    std::size(loki::detail::kReverseEdgeAttributes) +
+    std::size(loki::detail::kForwardLiveSpeedAttributes) +
+    std::size(loki::detail::kReverseLiveSpeedAttributes) +
+    // 1 + // kForwardLiveSpeedAttributes
+    // 1 + // kReverseLiveSpeedAttributes
+    std::size(loki::detail::kSharedEdgeAttributes);
 namespace {
 
 // handler only counting vertices in a linestring
@@ -84,7 +85,8 @@ TEST(VectorTilesBasic, TileGeneralization) {
                                const uint32_t expected_count) {
     // by default we expect full generalization
     std::string tile_data;
-    auto api = gurka::do_action(Options::tile, map, "x", 8, "auto", options, nullptr, &tile_data);
+    [[maybe_unused]] auto api =
+        gurka::do_action(Options::tile, map, "x", 8, "auto", options, nullptr, &tile_data);
 
     vtzero::vector_tile tile{tile_data};
     auto layer = tile.get_layer_by_name("edges");
@@ -127,15 +129,16 @@ A-B-C
   auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_vt_basic");
 
   std::string tile_data;
-  auto api = gurka::do_action(Options::tile, map, "x", 14, "auto", {}, nullptr, &tile_data);
+  [[maybe_unused]] auto api =
+      gurka::do_action(Options::tile, map, "x", 14, "auto", {}, nullptr, &tile_data);
 
   EXPECT_LT(tile_data.size(), 3550);
   EXPECT_GT(tile_data.size(), 3450);
 
   // expect a non-verbose request to have a lot less size
   std::string tile_data_slim;
-  auto api_slim = gurka::do_action(Options::tile, map, "B", 14, "auto", {{"/verbose", "0"}}, nullptr,
-                                   &tile_data_slim);
+  [[maybe_unused]] auto api_slim = gurka::do_action(Options::tile, map, "B", 14, "auto",
+                                                    {{"/verbose", "0"}}, nullptr, &tile_data_slim);
   EXPECT_LT(tile_data_slim.size(), tile_data.size() / 2);
 
   vtzero::vector_tile tile{tile_data};
@@ -381,15 +384,15 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
 
 TEST_F(VectorTiles, FilterIncludeExclude) {
   // edge_id:forward/backward are not defined in EdgeAttributeTile arrays
-  assert(std::size(loki::detail::kEdgePropToAttributeFlag) == (kNumMVTEdgeAttrs + 2)),
-      std::format("");
+  ASSERT_EQ(std::size(loki::detail::kEdgePropToAttributeFlag), (kNumMVTEdgeAttrs + 2));
   // same for iso_3166_1/2 not existing in NodeAttributeTile array
-  assert(std::size(loki::detail::kNodePropToAttributeFlag) ==
-         (std::size(loki::detail::kNodeAttributes) + 2));
+  ASSERT_EQ(std::size(loki::detail::kNodePropToAttributeFlag),
+            (std::size(loki::detail::kNodeAttributes) + 2));
 
   // verbose is set true in do_action
   std::string tile_data_full;
-  Api api_full = gurka::do_action(Options::tile, map, "x", 10, "auto", {}, nullptr, &tile_data_full);
+  [[maybe_unused]] Api api_full =
+      gurka::do_action(Options::tile, map, "x", 10, "auto", {}, nullptr, &tile_data_full);
 
   // get a map with settings to not allow cache
   auto map_no_cache = map;

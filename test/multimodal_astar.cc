@@ -381,7 +381,7 @@ TEST(Standalone, UtrechtMultiModalAStar) {
   auto r = actor.route(request);
   valhalla::Api response;
 
-  response.ParseFromString(r);
+  ASSERT_TRUE(response.ParseFromString(r));
   ASSERT_EQ(response.directions().routes_size(), 1);
   ASSERT_EQ(response.directions().routes(0).legs_size(), 1);
   auto& leg = response.directions().routes(0).legs(0);
