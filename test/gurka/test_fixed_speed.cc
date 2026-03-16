@@ -3,6 +3,7 @@
 #include "gurka.h"
 #include "sif/dynamiccost.h"
 
+#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
 using namespace valhalla;
