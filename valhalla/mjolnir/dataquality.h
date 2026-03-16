@@ -1,14 +1,12 @@
 #ifndef VALHALLA_MJOLNIR_DATAQUALITY_H
 #define VALHALLA_MJOLNIR_DATAQUALITY_H
 
-#include <algorithm>
+#include <valhalla/baldr/graphid.h>
+
 #include <cstdint>
+#include <filesystem>
 #include <map>
 #include <unordered_set>
-
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/midgard/logging.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -43,8 +41,9 @@ class DataQuality {
 public:
   /**
    * Constructor
+   * @param output_dir The output directory for quality files. If empty, none are written.
    */
-  DataQuality();
+  DataQuality(const std::filesystem::path& output_dir);
 
   /**
    * Add statistics (accumulate from several DataQuality objects)
@@ -90,6 +89,8 @@ protected:
 
   // Duplicate way Ids
   std::map<std::pair<uint32_t, uint32_t>, uint32_t> duplicateways_;
+
+  std::filesystem::path output_dir_;
 };
 
 } // namespace mjolnir

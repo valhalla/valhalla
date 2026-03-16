@@ -19,20 +19,25 @@
     },
     {
       "name": "gdal",
-      "default-features": false,
-      "features": ["recommended-features"]
+      "default-features": false
     },
     "geos",
-    "libspatialite",
+    {
+      "name": "libspatialite",
+      "default-features": true,
+      "features": ["rttopo"]
+    },
     "pkgconf",
-    "pybind11",
     "rapidjson",
-    "robin-hood-hashing",
+    "nanobind",
     "spatialite-tools",
     "luajit",
     "lz4",
     "protobuf",
     "sqlite3",
-    "zlib"
+    "zlib",
+    "unordered-dense",
+    "libosmium",
+    "openssl"
   ]
 }

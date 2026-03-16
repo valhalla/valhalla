@@ -1,13 +1,14 @@
 #ifndef MMP_TOPK_SEAECH_H_
 #define MMP_TOPK_SEAECH_H_
 
+#include <valhalla/meili/stateid.h>
+#include <valhalla/meili/viterbi_search.h>
+
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 #include <vector>
-
-#include <valhalla/meili/stateid.h>
-#include <valhalla/meili/viterbi_search.h>
 
 namespace valhalla {
 namespace meili {
@@ -48,7 +49,7 @@ public:
                         std::function<StateId(const StateId::Time&)> claim_stateid,
                         std::unordered_map<StateId, StateId>& initial_origins,
                         std::unordered_set<StateId>& removed_origins)
-      : vs_(vs), claim_stateid_(claim_stateid),
+      : vs_(vs), claim_stateid_(std::move(claim_stateid)),
         original_emission_cost_model_(vs.emission_cost_model()),
         original_transition_cost_model_(vs.transition_cost_model()), origin_(), clone_(),
         initial_origins_(initial_origins), removed_origins_(removed_origins),

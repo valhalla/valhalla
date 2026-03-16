@@ -1,13 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_ADMINCONSTANTS_H_
 #define VALHALLA_MJOLNIR_ADMINCONSTANTS_H_
 
+#include <valhalla/baldr/graphconstants.h>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include <valhalla/baldr/graphconstants.h>
-
-using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
@@ -30,155 +28,241 @@ enum class AccessTypes : uint16_t {
 // 0 indicates no access.
 const std::unordered_map<std::string, std::vector<int>>
     kCountryAccess{{"Australia",
-                    {-1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1, -1,
-                     -1, -1}},
+                    {-1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1, -1, -1, -1}},
                    {"Austria",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     -1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess), -1}},
+                    {(baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     (baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     -1, -1, -1, -1, -1, (baldr::kPedestrianAccess | baldr::kWheelchairAccess), -1}},
                    {"Belarus",
-                    {-1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
-                   {"Belgium",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
-                   {"Brazil",
-                    {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
+                    {-1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
                      -1, -1}},
+                   {"Belgium",
+                    {(baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     (baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1}},
+                   {"Brazil",
+                    {-1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1, -1}},
                    {"China",
-                    {-1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
+                    {-1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1}},
                    {"Denmark",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1, -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
+                    {(baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     (baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}},
+                   // Unused with latest admins, present for backwards compatibility with older
+                   // admins db
                    {"England",
-                    {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
+                    {-1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}},
                    {"France",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
+                    {(baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     (baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1}},
                    {"Finland",
-                    {-1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
+                    {-1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}},
                    // Germany - no overrides
                    {"Greece",
-                    {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
+                    {-1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}},
                    {"Hungary",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
-                     -1}},
+                    {(baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     (baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}},
                    {"Iceland",
-                    {-1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
+                    {-1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}},
                    {"Ireland",
-                    {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
-                     -1, -1}},
+                    {-1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1, -1}},
                    {"Italy",
-                    {-1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1,
-                     -1, -1}},
+                    {-1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1, -1, -1}},
                    // Netherlands allows bicycle access on trunk and trunk link without motorroad =
                    // yes
                    {"Netherlands",
-                    {-1, -1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
+                    {-1, -1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1}},
                    {"Norway",
-                    {-1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
-                   {"Northern Ireland",
-                    {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
+                    {-1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
                      -1, -1}},
+                   // Unused with latest admins, present for backwards compatibility with older
+                   // admins db
+                   {"Northern Ireland",
+                    {-1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1, -1}},
                    {"Oman",
-                    {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
+                    {-1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}},
                    {"Philippines",
-                    {-1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
+                    {-1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1}},
                    {"Poland",
-                    {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
+                    {-1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1}},
                    {"Romania",
                     {-1, -1, -1, -1, -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess),
-                     (kBicycleAccess | kMopedAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
-                   {"Russia", {-1, -1, -1, -1, -1, -1, (kMopedAccess | kBicycleAccess), -1, -1}},
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     (baldr::kBicycleAccess | baldr::kMopedAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1}},
+                   {"Russia",
+                    {-1, -1, -1, -1, -1, -1, (baldr::kMopedAccess | baldr::kBicycleAccess), -1, -1}},
+                   // Unused with latest admins, present for backwards compatibility with older
+                   // admins db
                    {"Alba / Scotland",
-                    {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
+                    {-1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}},
                    {"Slovakia",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
+                    {(baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     (baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
                      -1, -1, -1, -1, -1, -1, -1}},
                    // Spain allows bicycle access on trunk and trunk link without motorroad = yes
                    {"Spain",
-                    {-1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
+                    {-1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1}},
                    {"Sweden",
-                    {-1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1,
-                     -1}},
+                    {-1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1, -1}},
                    {"Switzerland",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
+                    {(baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
+                     (baldr::kAutoAccess | baldr::kTruckAccess | baldr::kBusAccess |
+                      baldr::kHOVAccess | baldr::kTaxiAccess | baldr::kMotorcycleAccess),
                      -1, -1, -1, -1,
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1,
-                     -1}},
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1, -1}},
                    {"ประเทศไทย",
-                    {-1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
+                    {-1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1}},
                    {"Türkiye",
-                    {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
+                    {-1, -1, -1, -1, -1, (baldr::kPedestrianAccess | baldr::kWheelchairAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}},
                    // Ukraine - no overrides
+                   {"United Kingdom",
+                    {-1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}},
                    {"United States",
-                    {-1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
+                    {-1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess |
+                      baldr::kMopedAccess),
+                     -1}},
+                   // Unused with latest admins, present for backwards compatibility with older
+                   // admins db
                    {"Cymru / Wales",
-                    {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
-                     (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}}};
+                    {-1, -1, -1, -1, -1,
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     (baldr::kPedestrianAccess | baldr::kWheelchairAccess | baldr::kBicycleAccess),
+                     -1, -1}}};
 
+// Wales present twice at both admin levels to support backwards compatibility with older admins db.
 const std::unordered_map<std::string, std::pair<uint8_t, std::string>>
     kSupportedLanguages{{"Cymru / Wales", {2, "cy;en"}},
+                        {"Cymru / Wales", {4, "cy;en"}},
                         {"United Kingdom", {2, "en"}},
                         {"Ireland", {4, "ga"}},
-                        {"Northern Ireland", {4, "ga"}},
+                        {"Northern Ireland / Tuaisceart Éireann", {4, "ga"}},
                         {"Japan", {2, "ja;en"}},
                         {"Canada", {2, "en;fr"}},
                         {"Belarus", {2, "ru;be"}},

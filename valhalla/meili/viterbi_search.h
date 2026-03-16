@@ -2,12 +2,12 @@
 #ifndef MMP_VITERBI_SEARCH_H_
 #define MMP_VITERBI_SEARCH_H_
 
+#include <valhalla/meili/priority_queue.h>
+#include <valhalla/meili/stateid.h>
+
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <valhalla/meili/priority_queue.h>
-#include <valhalla/meili/stateid.h>
 
 namespace valhalla {
 namespace meili {

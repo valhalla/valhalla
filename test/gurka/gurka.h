@@ -11,33 +11,13 @@
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
-#include "loki/worker.h"
-#include "midgard/constants.h"
-#include "midgard/encoded.h"
-#include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
-#include "mjolnir/util.h"
-#include "odin/worker.h"
-#include "proto/trip.pb.h"
-#include "thor/worker.h"
-#include "tyr/actor.h"
-#include "tyr/serializers.h"
+#include "proto/api.pb.h"
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <osmium/builder/attr.hpp>
-#include <osmium/builder/osm_object_builder.hpp>
-#include <osmium/io/output_iterator.hpp>
-#include <osmium/io/pbf_output.hpp>
-#include <osmium/object_pointer_collection.hpp>
-#include <osmium/osm/object_comparisons.hpp>
-
 #include <string>
 #include <tuple>
-
-#include <gtest/gtest.h>
 
 namespace valhalla {
 namespace gurka {
@@ -86,7 +66,6 @@ void build_pbf(const nodelayout& node_locations,
                const nodes& nodes,
                const relations& relations,
                const std::string& filename,
-               const uint64_t initial_osm_id = 0,
                const bool strict = true);
 
 /**
@@ -111,6 +90,13 @@ std::string build_valhalla_request(const std::vector<std::string>& location_type
                                    const std::string& costing = "auto",
                                    const std::unordered_map<std::string, std::string>& options = {},
                                    const std::string& stop_type = "break");
+/**
+ *
+ * convert a list of node names to lat/lons.
+ */
+std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
+                                     const std::vector<std::string>& node_names);
+
 } // namespace detail
 
 /**
@@ -230,6 +216,17 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::vector<std::string>& targets,
                         const std::string& costing,
                         const std::unordered_map<std::string, std::string>& options = {},
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                        std::string* response = nullptr,
+                        std::string* request_json = nullptr);
+
+// overload for /tile
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::string& center,
+                        const uint32_t zoom,
+                        const std::string& costing,
+                        std::unordered_map<std::string, std::string> options = {},
                         std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
                         std::string* response = nullptr,
                         std::string* request_json = nullptr);

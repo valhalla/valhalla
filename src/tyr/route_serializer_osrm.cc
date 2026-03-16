@@ -1,11 +1,9 @@
-#include <numeric>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
+#include "route_serializer_osrm.h"
+#include "baldr/admin.h"
 #include "baldr/json.h"
+#include "baldr/rapidjson_utils.h"
+#include "baldr/turnlanes.h"
+#include "exceptions.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
@@ -14,19 +12,26 @@
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrativebuilder.h"
 #include "odin/util.h"
-#include "route_serializer_osrm.h"
-#include "route_summary_cache.h"
-#include "tyr/serializer_constants.h"
-#include "tyr/serializers.h"
-#include "worker.h"
-
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 #include "proto_conversions.h"
+#include "route_summary_cache.h"
+#include "tyr/serializer_constants.h"
+#include "tyr/serializers.h"
+
+#include <boost/variant/get.hpp>
+
 #ifdef INLINE_TEST
-#include "test.h"
+#include <gtest/gtest.h>
 #endif
+
+#include <numeric>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -325,6 +330,15 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
       distance_array->push_back(json::fixed_t{length * kMeterPerDecimeter, 1});
     }
     attributes_map->emplace("distance", distance_array);
+  }
+
+  if (trip_leg.shape_attributes().congestion_size() > 0) {
+    auto congestion_array = json::array({});
+    congestion_array->reserve(trip_leg.shape_attributes().congestion_size());
+    for (const auto& congestion : trip_leg.shape_attributes().congestion()) {
+      congestion_array->push_back(uint64_t(congestion));
+    }
+    attributes_map->emplace("congestion", congestion_array);
   }
 
   if (trip_leg.shape_attributes().speed_size() > 0) {
@@ -684,13 +698,12 @@ std::string exits(const valhalla::TripSign& sign) {
 }
 
 valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incident) {
-  rapidjson::StringBuffer stringbuffer;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
-  writer.StartObject();
+  rapidjson::writer_wrapper_t writer;
+  writer.start_object();
   osrm::serializeIncidentProperties(writer, incident.metadata(), incident.begin_shape_index(),
                                     incident.end_shape_index(), "", "");
-  writer.EndObject();
-  return {stringbuffer.GetString()};
+  writer.end_object();
+  return {writer.get_buffer()};
 }
 
 // Serializes incidents and adds to json-document
@@ -700,7 +713,7 @@ void serializeIncidents(const google::protobuf::RepeatedPtrField<TripLeg::Incide
     // No incidents, nothing to do
     return;
   }
-  json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
+  json::ArrayPtr serialized_incidents = std::make_shared<json::Jarray>();
   {
     // Bring up any already existing array
     auto existing = doc.find("incidents");
@@ -2473,9 +2486,4 @@ TEST(RouteSerializerOsrm, testlaneIndications) {
 }
 
 } // namespace
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 #endif

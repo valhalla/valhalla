@@ -2,14 +2,15 @@
 #ifndef MMP_MATCH_RESULT_H_
 #define MMP_MATCH_RESULT_H_
 
-#include <algorithm>
-#include <limits>
-#include <vector>
-
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
 #include <valhalla/meili/stateid.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <algorithm>
+#include <iomanip>
+#include <limits>
+#include <ostream>
+#include <vector>
 
 namespace valhalla {
 namespace meili {
@@ -43,12 +44,12 @@ struct MatchResult {
     return stateid.IsValid();
   }
 
-  enum class Type { kUnmatched, kInterpolated, kMatched };
+  enum class Type : uint8_t { kUnmatched = 0, kInterpolated = 1, kMatched = 2 };
   Type GetType() const {
     // Set the type based on edge id and state
-    if (edgeid.Is_Valid() && HasState()) {
+    if (edgeid.is_valid() && HasState()) {
       return Type::kMatched;
-    } else if (edgeid.Is_Valid()) {
+    } else if (edgeid.is_valid()) {
       return Type::kInterpolated;
     } else {
       return Type::kUnmatched;
@@ -120,7 +121,7 @@ struct MatchResults {
 
   MatchResults(const MatchResults&) = delete;
   MatchResults& operator=(const MatchResults&) = delete;
-  MatchResults(MatchResults&& o) {
+  MatchResults(MatchResults&& o) noexcept {
     results = std::move(o.results);
     segments = std::move(o.segments);
     edges = std::move(o.edges);
@@ -128,7 +129,7 @@ struct MatchResults {
     e1 = segments.empty() || segments.front().source < 1.0f ? edges.cbegin() : edges.cbegin() + 1;
     e2 = segments.empty() || segments.back().target > 0.0f ? edges.cend() : edges.cend() - 1;
   }
-  MatchResults& operator=(MatchResults&& o) {
+  MatchResults& operator=(MatchResults&& o) noexcept {
     results = std::move(o.results);
     segments = std::move(o.segments);
     edges = std::move(o.edges);

@@ -1,8 +1,9 @@
 #pragma once
 
-#include <unordered_map>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+
+#include <unordered_map>
 
 // handy macro for shifting the 7bit path index value so that it can be or'd with the tile/level id
 #define SHIFT_path_id(x) (static_cast<uint32_t>(x) << 25u)
@@ -95,7 +96,7 @@ public:
   void Set(const baldr::GraphId& edgeid,
            const EdgeSet set,
            const uint32_t index,
-           const graph_tile_ptr& tile,
+           const baldr::graph_tile_ptr& tile,
            const uint8_t path_id = 0) {
     assert(path_id <= baldr::kMaxMultiPathId);
     auto p = edgestatus_.find(edgeid.tile_value() | SHIFT_path_id(path_id));
@@ -152,7 +153,7 @@ public:
    * @return  Returns a pointer to edge status info for this edge.
    */
   EdgeStatusInfo*
-  GetPtr(const baldr::GraphId& edgeid, const graph_tile_ptr& tile, const uint8_t path_id = 0) {
+  GetPtr(const baldr::GraphId& edgeid, const baldr::graph_tile_ptr& tile, const uint8_t path_id = 0) {
     assert(path_id <= baldr::kMaxMultiPathId);
     const auto p = edgestatus_.find(edgeid.tile_value() | SHIFT_path_id(path_id));
     if (p != edgestatus_.end()) {

@@ -23,3 +23,4 @@
 # Declare changelog to be union merged, as that's tyically
 # how you want to deal with conflicts in a changelog
 /CHANGELOG.md merge=union
+*.ipynb linguist-vendored

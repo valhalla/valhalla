@@ -1,4 +1,5 @@
 #include "thor/centroid.h"
+#include "midgard/util.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

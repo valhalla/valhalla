@@ -1,15 +1,19 @@
-
 #include "mjolnir/pbfadminparser.h"
 #include "admin_lua_proc.h"
 #include "idtable.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmadmindata.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
-
+#ifdef HAVE_EXPAT
+#include <osmium/io/xml_input.hpp>
+#endif
 #include <osmium/osm/entity_bits.hpp>
+
 #include <string>
 #include <utility>
 
@@ -84,7 +88,7 @@ struct admin_parser {
       } else if (tag.first == "name:en" && !tag.second.empty()) {
         admin.name_en_index = osm_admin_data_.name_offset_map.index(tag.second);
       } else if (tag.first == "admin_level") {
-        admin.admin_level = std::stoi(tag.second);
+        admin.admin_level = to_int(tag.second);
       } else if (tag.first == "drive_on_right") {
         admin.drive_on_right = tag.second == "true" ? true : false;
       } else if (tag.first == "allow_intersection_names") {

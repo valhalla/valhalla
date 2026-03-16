@@ -1,6 +1,5 @@
 #include "loki/worker.h"
 #include "midgard/encoded.h"
-#include "midgard/logging.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"
 

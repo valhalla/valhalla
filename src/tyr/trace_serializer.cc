@@ -1,10 +1,11 @@
-#include <cstdint>
-
 #include "baldr/attributes_controller.h"
 #include "baldr/graphconstants.h"
+#include "baldr/rapidjson_utils.h"
 #include "odin/enhancedtrippath.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"
+
+#include <cstdint>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -17,7 +18,6 @@ namespace {
 constexpr size_t kConfidenceScoreIndex = 0;
 constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripLegIndex = 3;
 
 void serialize_admins(const TripLeg& trip_path, rapidjson::writer_wrapper_t& writer) {
   writer.start_array("admins");
@@ -40,6 +40,28 @@ void serialize_admins(const TripLeg& trip_path, rapidjson::writer_wrapper_t& wri
   writer.end_array();
 }
 
+void serialize_speeds(const valhalla::TripLeg_Edge& edge,
+                      bool is_faded,
+                      const std::function<uint64_t(float)>& speed_serializer,
+                      rapidjson::writer_wrapper_t& writer) {
+  auto speeds = is_faded ? edge.speeds_faded() : edge.speeds_non_faded();
+  writer.start_object(is_faded ? "speeds_faded" : "speeds_non_faded");
+  if (speeds.current_flow()) {
+    writer("current_flow", speed_serializer(speeds.current_flow()));
+  }
+  if (speeds.predicted_flow()) {
+    writer("predicted_flow", speed_serializer(speeds.predicted_flow()));
+  }
+  if (speeds.constrained_flow()) {
+    writer("constrained_flow", speed_serializer(speeds.constrained_flow()));
+  }
+  if (speeds.free_flow()) {
+    writer("free_flow", speed_serializer(speeds.free_flow()));
+  }
+  writer("no_flow", speed_serializer(speeds.no_flow()));
+  writer.end_object();
+}
+
 void serialize_edges(const AttributesController& controller,
                      const Options& options,
                      const TripLeg& trip_path,
@@ -51,6 +73,9 @@ void serialize_edges(const AttributesController& controller,
   if (options.units() == Options::miles) {
     scale = kMilePerKm;
   }
+  auto serialize_speed = [scale](float speed) -> uint64_t {
+    return static_cast<uint64_t>(std::round(speed * scale));
+  };
 
   // Loop over edges to add attributes
   for (int i = 1; i < trip_path.node().size(); i++) {
@@ -59,26 +84,26 @@ void serialize_edges(const AttributesController& controller,
 
       writer.start_object();
       if (controller(kEdgeTruckRoute)) {
-        writer("truck_route", static_cast<bool>(edge.truck_route()));
+        writer("truck_route", edge.truck_route());
       }
       if (controller(kEdgeTruckSpeed) && (edge.truck_speed() > 0)) {
-        writer("truck_speed", static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
+        writer("truck_speed", serialize_speed(edge.truck_speed()));
       }
       if (controller(kEdgeSpeedLimit) && (edge.speed_limit() > 0)) {
         if (edge.speed_limit() == kUnlimitedSpeedLimit) {
-          writer("speed_limit", std::string("unlimited"));
+          writer("speed_limit", "unlimited");
         } else {
-          writer("speed_limit", static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
+          writer("speed_limit", serialize_speed(edge.speed_limit()));
         }
       }
       if (controller(kEdgeDensity)) {
-        writer("density", static_cast<uint64_t>(edge.density()));
+        writer("density", edge.density());
       }
       if (controller(kEdgeSacScale)) {
         writer("sac_scale", static_cast<uint64_t>(edge.sac_scale()));
       }
       if (controller(kEdgeShoulder)) {
-        writer("shoulder", static_cast<bool>(edge.shoulder()));
+        writer("shoulder", edge.shoulder());
       }
       if (controller(kEdgeSidewalk)) {
         writer("sidewalk", to_string(edge.sidewalk()));
@@ -90,7 +115,7 @@ void serialize_edges(const AttributesController& controller,
         writer("cycle_lane", to_string(static_cast<CycleLane>(edge.cycle_lane())));
       }
       if (controller(kEdgeLaneCount)) {
-        writer("lane_count", static_cast<uint64_t>(edge.lane_count()));
+        writer("lane_count", edge.lane_count());
       }
       if (edge.lane_connectivity_size()) {
         writer.start_array("lane_connectivity");
@@ -104,13 +129,13 @@ void serialize_edges(const AttributesController& controller,
         writer.end_array();
       }
       if (controller(kEdgeMaxDownwardGrade)) {
-        writer("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
+        writer("max_downward_grade", edge.max_downward_grade());
       }
       if (controller(kEdgeMaxUpwardGrade)) {
-        writer("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
+        writer("max_upward_grade", edge.max_upward_grade());
       }
       if (controller(kEdgeWeightedGrade)) {
-        writer.set_precision(3);
+        writer.set_precision(tyr::kDefaultPrecision);
         writer("weighted_grade", edge.weighted_grade());
       }
       if (controller(kEdgeMeanElevation)) {
@@ -124,10 +149,13 @@ void serialize_edges(const AttributesController& controller,
         }
       }
       if (controller(kEdgeWayId)) {
-        writer("way_id", static_cast<uint64_t>(edge.way_id()));
+        writer("way_id", edge.way_id());
+      }
+      if (controller(kEdgeBeginOsmNodeId) && edge.has_begin_osm_node_id_case()) {
+        writer("node_id", edge.begin_osm_node_id());
       }
       if (controller(kEdgeId)) {
-        writer("id", static_cast<uint64_t>(edge.id()));
+        writer("id", edge.id());
       }
       if (controller(kEdgeTravelMode)) {
         writer("travel_mode", to_string(edge.travel_mode()));
@@ -148,22 +176,22 @@ void serialize_edges(const AttributesController& controller,
         writer("drive_on_right", static_cast<bool>(!edge.drive_on_left()));
       }
       if (controller(kEdgeInternalIntersection)) {
-        writer("internal_intersection", static_cast<bool>(edge.internal_intersection()));
+        writer("internal_intersection", edge.internal_intersection());
       }
       if (controller(kEdgeRoundabout)) {
-        writer("roundabout", static_cast<bool>(edge.roundabout()));
+        writer("roundabout", edge.roundabout());
       }
       if (controller(kEdgeBridge)) {
-        writer("bridge", static_cast<bool>(edge.bridge()));
+        writer("bridge", edge.bridge());
       }
       if (controller(kEdgeTunnel)) {
-        writer("tunnel", static_cast<bool>(edge.tunnel()));
+        writer("tunnel", edge.tunnel());
       }
       if (controller(kEdgeUnpaved)) {
-        writer("unpaved", static_cast<bool>(edge.unpaved()));
+        writer("unpaved", edge.unpaved());
       }
       if (controller(kEdgeToll)) {
-        writer("toll", static_cast<bool>(edge.toll()));
+        writer("toll", edge.toll());
       }
       if (controller(kEdgeUse)) {
         writer("use", to_string(static_cast<baldr::Use>(edge.use())));
@@ -172,28 +200,45 @@ void serialize_edges(const AttributesController& controller,
         writer("traversability", to_string(edge.traversability()));
       }
       if (controller(kEdgeEndShapeIndex)) {
-        writer("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
+        writer("end_shape_index", edge.end_shape_index());
       }
       if (controller(kEdgeBeginShapeIndex)) {
-        writer("begin_shape_index", static_cast<uint64_t>(edge.begin_shape_index()));
+        writer("begin_shape_index", edge.begin_shape_index());
       }
       if (controller(kEdgeEndHeading)) {
-        writer("end_heading", static_cast<uint64_t>(edge.end_heading()));
+        writer("end_heading", edge.end_heading());
       }
       if (controller(kEdgeBeginHeading)) {
-        writer("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
+        writer("begin_heading", edge.begin_heading());
       }
       if (controller(kEdgeRoadClass)) {
         writer("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
       }
       if (controller(kEdgeSpeed)) {
-        writer("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
+        writer("speed", serialize_speed(edge.speed()));
+      }
+      if (controller(kEdgeSpeedType)) {
+        writer("speed_type", to_string(static_cast<baldr::SpeedType>(edge.speed_type())));
+      }
+      if (controller(kEdgeSpeedsFaded) &&
+          options.date_time_type() == Options::DateTimeType::Options_DateTimeType_current &&
+          edge.has_speeds_faded_case()) {
+        serialize_speeds(edge, true, serialize_speed, writer);
+      }
+      if (controller(kEdgeSpeedsNonFaded)) {
+        serialize_speeds(edge, false, serialize_speed, writer);
       }
       if (controller(kEdgeCountryCrossing)) {
-        writer("country_crossing", static_cast<bool>(edge.country_crossing()));
+        writer("country_crossing", edge.country_crossing());
       }
       if (controller(kEdgeForward)) {
-        writer("forward", static_cast<bool>(edge.forward()));
+        writer("forward", edge.forward());
+      }
+      if (controller(kEdgeTrafficSignal)) {
+        writer("traffic_signal", edge.traffic_signal());
+      }
+      if (controller(kEdgeHovType)) {
+        writer("hov_type", to_string(static_cast<baldr::HOVEdgeType>(edge.hov_type())));
       }
       if (controller(kEdgeLevels)) {
         if (edge.levels_size()) {
@@ -201,16 +246,16 @@ void serialize_edges(const AttributesController& controller,
           writer.set_precision(edge.level_precision());
           for (const auto& level : edge.levels()) {
             writer.start_array();
-            writer(static_cast<float>(level.start()));
-            writer(static_cast<float>(level.end()));
+            writer(level.start());
+            writer(level.end());
             writer.end_array();
           }
           writer.end_array();
-          writer.set_precision(3);
+          writer.set_precision(tyr::kDefaultPrecision);
         }
       }
       if (controller(kEdgeLength)) {
-        writer.set_precision(3);
+        writer.set_precision(tyr::kDefaultPrecision);
         writer("length", edge.length_km() * scale);
         if (edge.source_along_edge() != 0.f) {
           writer("source_percent_along", edge.source_along_edge());
@@ -231,7 +276,7 @@ void serialize_edges(const AttributesController& controller,
         writer.start_array("traffic_segments");
         for (const auto& segment : edge.traffic_segment()) {
           writer.start_object();
-          writer.set_precision(3);
+          writer.set_precision(tyr::kDefaultPrecision);
           writer("segment_id", segment.segment_id());
           writer("begin_percent", segment.begin_percent());
           writer("end_percent", segment.end_percent());
@@ -306,13 +351,13 @@ void serialize_edges(const AttributesController& controller,
               writer("driveability", to_string(xedge.driveability()));
             }
             if (controller(kNodeIntersectingEdgeFromEdgeNameConsistency)) {
-              writer("from_edge_name_consistency", static_cast<bool>(xedge.prev_name_consistency()));
+              writer("from_edge_name_consistency", xedge.prev_name_consistency());
             }
             if (controller(kNodeIntersectingEdgeToEdgeNameConsistency)) {
-              writer("to_edge_name_consistency", static_cast<bool>(xedge.curr_name_consistency()));
+              writer("to_edge_name_consistency", xedge.curr_name_consistency());
             }
             if (controller(kNodeIntersectingEdgeBeginHeading)) {
-              writer("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
+              writer("begin_heading", xedge.begin_heading());
             }
             if (controller(kNodeIntersectingEdgeUse)) {
               writer("use", to_string(static_cast<baldr::Use>(xedge.use())));
@@ -326,27 +371,30 @@ void serialize_edges(const AttributesController& controller,
         }
 
         if (controller(kNodeElapsedTime)) {
-          writer.set_precision(3);
+          writer.set_precision(tyr::kDefaultPrecision);
           writer("elapsed_time", node.cost().elapsed_cost().seconds());
           writer("elapsed_cost", node.cost().elapsed_cost().cost());
         }
+        if (controller(kEdgeEndOsmNodeId) && edge.has_end_osm_node_id_case()) {
+          writer("node_id", edge.end_osm_node_id());
+        }
         if (controller(kNodeAdminIndex)) {
-          writer("admin_index", static_cast<uint64_t>(node.admin_index()));
+          writer("admin_index", node.admin_index());
         }
         if (controller(kNodeType)) {
           writer("type", to_string(static_cast<baldr::NodeType>(node.type())));
         }
         if (controller(kNodeTrafficSignal)) {
-          writer("traffic_signal", static_cast<bool>(node.traffic_signal()));
+          writer("traffic_signal", node.traffic_signal());
         }
         if (controller(kNodeFork)) {
-          writer("fork", static_cast<bool>(node.fork()));
+          writer("fork", node.fork());
         }
         if (controller(kNodeTimeZone) && !node.time_zone().empty()) {
           writer("time_zone", node.time_zone());
         }
         if (controller(kNodeTransitionTime)) {
-          writer.set_precision(3);
+          writer.set_precision(tyr::kDefaultPrecision);
           writer("transition_time", node.cost().transition_cost().seconds());
         }
 
@@ -392,7 +440,7 @@ void serialize_matched_points(const AttributesController& controller,
 
     // Process matched point
     if (controller(kMatchedPoint)) {
-      writer.set_precision(6);
+      writer.set_precision(tyr::kCoordinatePrecision);
       writer("lon", match_result.lnglat.first);
       writer("lat", match_result.lnglat.second);
     }
@@ -401,13 +449,13 @@ void serialize_matched_points(const AttributesController& controller,
     if (controller(kMatchedType)) {
       switch (match_result.GetType()) {
         case meili::MatchResult::Type::kMatched:
-          writer("type", std::string("matched"));
+          writer("type", "matched");
           break;
         case meili::MatchResult::Type::kInterpolated:
-          writer("type", std::string("interpolated"));
+          writer("type", "interpolated");
           break;
         default:
-          writer("type", std::string("unmatched"));
+          writer("type", "unmatched");
           break;
       }
     }
@@ -415,31 +463,31 @@ void serialize_matched_points(const AttributesController& controller,
     // TODO: need to keep track of the index of the edge in the global set of edges a given
     // TODO: match result belongs/correlated to
     // Process matched point edge index
-    if (controller(kMatchedEdgeIndex) && match_result.edgeid.Is_Valid()) {
+    if (controller(kMatchedEdgeIndex) && match_result.edgeid.is_valid()) {
       writer("edge_index", static_cast<uint64_t>(match_result.edge_index));
     }
 
     // Process matched point begin route discontinuity
     if (controller(kMatchedBeginRouteDiscontinuity) && match_result.begins_discontinuity) {
-      writer("begin_route_discontinuity", static_cast<bool>(match_result.begins_discontinuity));
+      writer("begin_route_discontinuity", match_result.begins_discontinuity);
     }
 
     // Process matched point end route discontinuity
     if (controller(kMatchedEndRouteDiscontinuity) && match_result.ends_discontinuity) {
-      writer("end_route_discontinuity", static_cast<bool>(match_result.ends_discontinuity));
+      writer("end_route_discontinuity", match_result.ends_discontinuity);
     }
 
     // Process matched point distance along edge
     if (controller(kMatchedDistanceAlongEdge) &&
         (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
-      writer.set_precision(6);
+      writer.set_precision(tyr::kCoordinatePrecision);
       writer("distance_along_edge", match_result.distance_along);
     }
 
     // Process matched point distance from trace point
     if (controller(kMatchedDistanceFromTracePoint) &&
         (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
-      writer.set_precision(6);
+      writer.set_precision(tyr::kCoordinatePrecision);
       writer("distance_from_trace_point", match_result.distance_from);
     }
     writer.end_object();
@@ -451,7 +499,7 @@ void serialize_shape_attributes(const AttributesController& controller,
                                 const TripLeg& trip_path,
                                 rapidjson::writer_wrapper_t& writer) {
   writer.start_object("shape_attributes");
-  writer.set_precision(3);
+  writer.set_precision(tyr::kDefaultPrecision);
   if (controller(kShapeAttributesTime)) {
     writer.start_array("time");
     for (const auto& time : trip_path.shape_attributes().time()) {
@@ -473,6 +521,31 @@ void serialize_shape_attributes(const AttributesController& controller,
     for (const auto& speed : trip_path.shape_attributes().speed()) {
       // dm/s to km/h
       writer(speed * kDecimeterPerSectoKPH);
+    }
+    writer.end_array();
+  }
+  if (controller(kShapeAttributesCongestion)) {
+    writer.start_array("congestion");
+    for (const auto& congestion : trip_path.shape_attributes().congestion()) {
+      writer(congestion);
+    }
+    writer.end_array();
+  }
+  if (controller(kShapeAttributesClosure)) {
+    writer.start_array("closure");
+    for (const auto& closure : trip_path.closures()) {
+      writer.start_object();
+      writer("begin_shape_index", static_cast<uint64_t>(closure.begin_shape_index()));
+      writer("end_shape_index", static_cast<uint64_t>(closure.end_shape_index()));
+      writer.end_object();
+    }
+    writer.end_array();
+  }
+  if (controller(kShapeAttributesSpeedLimit)) {
+    writer.start_array("speed_limit");
+    for (const auto& speed_limit : trip_path.shape_attributes().speed_limit()) {
+      // already in kph
+      writer(speed_limit);
     }
     writer.end_array();
   }
@@ -500,13 +573,13 @@ void append_trace_info(
 
   // Add confidence_score
   if (controller(kConfidenceScore)) {
-    writer.set_precision(3);
+    writer.set_precision(tyr::kDefaultPrecision);
     writer("confidence_score", std::get<kConfidenceScoreIndex>(map_match_result));
   }
 
   // Add raw_score
   if (controller(kRawScore)) {
-    writer.set_precision(3);
+    writer.set_precision(tyr::kDefaultPrecision);
     writer("raw_score", std::get<kRawScoreIndex>(map_match_result));
   }
 
@@ -542,6 +615,71 @@ void append_trace_info(
     serialize_shape_attributes(controller, trip_path, writer);
   }
 }
+
+/**
+ * If a pbf response is requested, we simply add the missing stuff to the trip
+ */
+void fill_trace_attributes(
+    Api& request,
+    const AttributesController& controller,
+    std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
+
+  size_t i = 0;
+  for (const auto& map_match_result : map_match_results) {
+    auto* route = request.mutable_trip()->mutable_routes(i++);
+    if (controller(kConfidenceScore)) {
+      route->set_confidence_score(std::get<kConfidenceScoreIndex>(map_match_result));
+    }
+
+    if (controller(kRawScore)) {
+      route->set_raw_score(std::get<kRawScoreIndex>(map_match_result));
+    }
+
+    for (const auto& match : std::get<kMatchResultsIndex>(map_match_result)) {
+      auto* p = route->add_matched_points();
+      if (controller(kMatchedPoint)) {
+        p->mutable_latlng()->set_lng(match.lnglat.lng());
+        p->mutable_latlng()->set_lat(match.lnglat.lat());
+      }
+
+      if (controller(kMatchedType)) {
+        switch (match.GetType()) {
+          case meili::MatchResult::Type::kMatched:
+            p->set_type(valhalla::TripRoute_MatchedPoint_MatchType_kMatched);
+            break;
+          case meili::MatchResult::Type::kInterpolated:
+            p->set_type(valhalla::TripRoute_MatchedPoint_MatchType_kInterpolated);
+            break;
+          default:
+            p->set_type(valhalla::TripRoute_MatchedPoint_MatchType_kUnmatched);
+            break;
+        }
+      }
+
+      if (controller(kMatchedEdgeIndex) && match.edgeid.is_valid()) {
+        p->set_edge_index(match.edge_index);
+      }
+      if (controller(kMatchedDistanceAlongEdge) &&
+          (match.GetType() != meili::MatchResult::Type::kUnmatched)) {
+        p->set_distance_along_edge(match.distance_along);
+      }
+
+      if (controller(kMatchedBeginRouteDiscontinuity)) {
+        p->set_begins_discontinuity(match.begins_discontinuity);
+      }
+
+      if (controller(kMatchedEndRouteDiscontinuity)) {
+        p->set_ends_discontinuity(match.ends_discontinuity);
+      }
+
+      // Process matched point distance from trace point
+      if (controller(kMatchedDistanceFromTracePoint) &&
+          (match.GetType() != meili::MatchResult::Type::kUnmatched)) {
+        p->set_distance_from_trace_point(match.distance_from);
+      }
+    }
+  }
+}
 } // namespace
 
 namespace valhalla {
@@ -552,9 +690,14 @@ std::string serializeTraceAttributes(
     const AttributesController& controller,
     std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
 
+  // todo: These properties should be filled *before* this function is called and then used instead
+  // of `map_match_results`.
+  fill_trace_attributes(request, controller, map_match_results);
+
   // If its pbf format just return the trip
-  if (request.options().format() == Options_Format_pbf)
+  if (request.options().format() == Options_Format_pbf) {
     return serializePbf(request);
+  }
 
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);

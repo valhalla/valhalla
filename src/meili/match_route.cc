@@ -1,8 +1,11 @@
+#include "meili/map_matcher.h"
+
 #include <cassert>
 #include <vector>
 
-#include "meili/geometry_helpers.h"
-#include "meili/map_matcher.h"
+// `ValidateRoute` is only used in debug mode
+#ifndef NDEBUG
+
 #include "midgard/logging.h"
 
 namespace {
@@ -14,7 +17,7 @@ using namespace valhalla::meili;
 bool ValidateRoute(baldr::GraphReader& graphreader,
                    std::vector<EdgeSegment>::const_iterator segment_begin,
                    std::vector<EdgeSegment>::const_iterator segment_end,
-                   graph_tile_ptr& tile) {
+                   baldr::graph_tile_ptr& tile) {
   if (segment_begin == segment_end) {
     return true;
   }
@@ -47,6 +50,7 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
 }
 
 }; // namespace
+#endif
 
 namespace valhalla {
 namespace meili {
@@ -60,8 +64,8 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
                          int the_restriction_idx)
     : edgeid(the_edgeid), source(the_source), target(the_target),
       first_match_idx(the_first_match_idx), last_match_idx(the_last_match_idx),
-      discontinuity(disconnect), restriction_idx(the_restriction_idx) {
-  if (!edgeid.Is_Valid()) {
+      restriction_idx(the_restriction_idx), discontinuity(disconnect) {
+  if (!edgeid.is_valid()) {
     throw std::invalid_argument("Invalid edgeid");
   }
 
@@ -112,7 +116,7 @@ bool MergeRoute(const State& source,
   // TODO: why doesnt routing.cc return trivial routes? move this logic there
   // This is route where the source and target are the same location so we make a trivial route
   if (segments.empty()) {
-    assert(target_result.edgeid.Is_Valid());
+    assert(target_result.edgeid.is_valid());
     segments.emplace_back(target_result.edgeid, target_result.distance_along,
                           target_result.distance_along);
   }
@@ -204,7 +208,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   }
 
   std::vector<EdgeSegment> route;
-  graph_tile_ptr tile;
+  baldr::graph_tile_ptr tile;
 
   // Merge segments into route
   // std::deque<int> match_indices;
@@ -216,7 +220,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
     const MatchResult& match = match_results[curr_idx];
 
     // unmatched or interpolated
-    if (!match.edgeid.Is_Valid() || !match.HasState()) {
+    if (!match.edgeid.is_valid() || !match.HasState()) {
       continue;
     }
 

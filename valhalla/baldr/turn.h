@@ -2,7 +2,6 @@
 #define VALHALLA_BALDR_TURN_H_
 
 #include <cstdint>
-#include <stdint.h>
 #include <string>
 
 namespace valhalla {

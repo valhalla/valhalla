@@ -1,43 +1,38 @@
 #include "baldr/nodeinfo.h"
+#include "baldr/datetime.h"
+#include "baldr/graphtile.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
-#include <cmath>
-
-#include <baldr/datetime.h>
-#include <baldr/graphtile.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace {
 
-json::MapPtr access_json(uint16_t access) {
-  return json::map({{"bicycle", static_cast<bool>(access & kBicycleAccess)},
-                    {"bus", static_cast<bool>(access & kBusAccess)},
-                    {"car", static_cast<bool>(access & kAutoAccess)},
-                    {"emergency", static_cast<bool>(access & kEmergencyAccess)},
-                    {"HOV", static_cast<bool>(access & kHOVAccess)},
-                    {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
-                    {"taxi", static_cast<bool>(access & kTaxiAccess)},
-                    {"truck", static_cast<bool>(access & kTruckAccess)},
-                    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)}});
+void access_json(uint16_t access, rapidjson::writer_wrapper_t& writer) {
+  writer("bicycle", static_cast<bool>(access & kBicycleAccess));
+  writer("bus", static_cast<bool>(access & kBusAccess));
+  writer("car", static_cast<bool>(access & kAutoAccess));
+  writer("emergency", static_cast<bool>(access & kEmergencyAccess));
+  writer("HOV", static_cast<bool>(access & kHOVAccess));
+  writer("pedestrian", static_cast<bool>(access & kPedestrianAccess));
+  writer("taxi", static_cast<bool>(access & kTaxiAccess));
+  writer("truck", static_cast<bool>(access & kTruckAccess));
+  writer("wheelchair", static_cast<bool>(access & kWheelchairAccess));
 }
 
-json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
+void admin_json(const AdminInfo& admin, uint16_t tz_index, rapidjson::writer_wrapper_t& writer) {
   // admin
-  auto m = json::map({
-      {"iso_3166-1", admin.country_iso()},
-      {"country", admin.country_text()},
-      {"iso_3166-2", admin.state_iso()},
-      {"state", admin.state_text()},
-  });
+  writer("iso_3166-1", admin.country_iso());
+  writer("country", admin.country_text());
+  writer("iso_3166-2", admin.state_iso());
+  writer("state", admin.state_text());
 
   // timezone
   auto tz = DateTime::get_tz_db().from_index(tz_index);
   if (tz) {
-    m->emplace("time_zone_name", tz->name());
+    writer("time_zone_name", tz->name());
   }
-
-  return m;
 }
 
 /**
@@ -265,30 +260,42 @@ void NodeInfo::set_connecting_point(const midgard::PointLL& p) {
   headings_ = static_cast<uint64_t>(p) | (1ull << 63);
 }
 
-json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
-  auto m = json::map({
-      {"lon", json::fixed_t{latlng(tile->header()->base_ll()).first, 6}},
-      {"lat", json::fixed_t{latlng(tile->header()->base_ll()).second, 6}},
-      {"elevation", json::fixed_t{elevation(), 2}},
-      {"edge_count", static_cast<uint64_t>(edge_count_)},
-      {"access", access_json(access_)},
-      {"tagged_access", static_cast<bool>(tagged_access_)},
-      {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
-      {"administrative", admin_json(tile->admininfo(admin_index_), timezone_)},
-      {"density", static_cast<uint64_t>(density_)},
-      {"local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1)},
-      {"drive_on_right", static_cast<bool>(drive_on_right_)},
-      {"mode_change", static_cast<bool>(mode_change_)},
-      {"private_access", static_cast<bool>(private_access_)},
-      {"traffic_signal", static_cast<bool>(traffic_signal_)},
-      {"type", to_string(static_cast<NodeType>(type_))},
-      {"transition count", static_cast<uint64_t>(transition_count_)},
-      {"named_intersection", static_cast<bool>(named_)},
-  });
+void NodeInfo::json(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const {
+  auto ll = latlng(tile->header()->base_ll());
+
+  writer.set_precision(6);
+  writer("lon", ll.first);
+  writer("lat", ll.second);
+  writer.set_precision(2);
+  writer("elevation", elevation());
+  writer.set_precision(3);
+
+  writer("edge_count", static_cast<uint64_t>(edge_count_));
+
+  writer.start_object("access");
+  access_json(access_, writer);
+  writer.end_object();
+
+  writer("tagged_access", static_cast<bool>(tagged_access_));
+  writer("intersection_type", to_string(static_cast<IntersectionType>(intersection_)));
+
+  writer.start_object("administrative");
+  admin_json(tile->admininfo(admin_index_), timezone_, writer);
+  writer.end_object();
+
+  writer("density", static_cast<uint64_t>(density_));
+  writer("local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1));
+  writer("drive_on_right", static_cast<bool>(drive_on_right_));
+  writer("mode_change", static_cast<bool>(mode_change_));
+  writer("private_access", static_cast<bool>(private_access_));
+  writer("traffic_signal", static_cast<bool>(traffic_signal_));
+  writer("type", to_string(static_cast<NodeType>(type_)));
+  writer("transition_count", static_cast<uint64_t>(transition_count_));
+  writer("named_intersection", static_cast<bool>(named_));
+
   if (is_transit()) {
-    m->emplace("stop_index", static_cast<uint64_t>(stop_index()));
+    writer("stop_index", static_cast<uint64_t>(stop_index()));
   }
-  return m;
 }
 
 } // namespace baldr

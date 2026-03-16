@@ -1,15 +1,15 @@
+import ctypes
+from io import BytesIO
 import json
-from math import floor
+from math import ceil, floor
 import tarfile
 import unittest
 from pathlib import Path
 import struct
-from typing import List, Tuple
-import sys
 import os
 
 import valhalla_build_extract
-from valhalla_build_extract import TILE_SIZES, Bbox, TileResolver
+from valhalla_build_extract import GRAPHTILE_SKIP_BYTES, TILE_SIZES, TileHeader, TileResolver
 
 INDEX_BIN_SIZE = valhalla_build_extract.INDEX_BIN_SIZE
 INDEX_BIN_FORMAT = valhalla_build_extract.INDEX_BIN_FORMAT
@@ -27,14 +27,13 @@ def tile_base_to_path(base_x: int, base_y: int, level: int, fake_dir: Path) -> P
 
     # assert we got no bogus tile base..
     assert (base_x + 180) % tile_size == 0 and (
-                base_y + 90) % tile_size == 0, f"{base_x}, {base_y} on level {level} failed"
+        base_y + 90) % tile_size == 0, f"{base_x}, {base_y} on level {level} failed"
 
     row = floor((base_y + 90) / tile_size)
     col = floor((base_x + 180) / tile_size)
 
     tile_id = int((row * 360 / tile_size) + col)
 
-    level_tile_id = level | (tile_id << 3)
     path = str(level) + "{:,}".format(int(pow(10, TAR_PATH_LENGTHS[level])) + tile_id).replace(",", os.sep)[1:]
 
     return Path(path + ".gph")
@@ -45,7 +44,7 @@ class TestBuildExtract(unittest.TestCase):
         # bogus tile dir
         tile_dir = Path("/foo/")
         tile_resolver = TileResolver(tile_dir)
-        
+
         # bbox with which to filter the tile paths
         bbox = "10.2,53.9,20,59.2"
         input_paths = [tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
@@ -150,20 +149,59 @@ class TestBuildExtract(unittest.TestCase):
         valhalla_build_extract.create_extracts(config, True, tile_resolver, EXTRACT_PATH)
         tile_count = len(tile_resolver.matched_paths)
 
+        def pad(value, blocksize=tarfile.BLOCKSIZE):
+            return ceil(value / blocksize) * blocksize
+
+        tiles = (
+            os.path.join(TILE_PATH, '0', '003', '196.gph'),
+            os.path.join(TILE_PATH, '1', '051', '305.gph'),
+            os.path.join(TILE_PATH, '2', '000', '818', '660.gph')
+        )
+
+        # Tile sizes
+        def graph_tile_edge_count(tile):
+            with open(tile, 'r+b') as fh:
+                fh.seek(GRAPHTILE_SKIP_BYTES)
+                header = TileHeader()
+                b = BytesIO(fh.read(ctypes.sizeof(TileHeader)))
+                b.readinto(header)
+                b.close()
+
+            return header.directededgecount_
+
+        tile_sizes = tuple(os.path.getsize(t) for t in tiles)
+        tile_edge_counts = tuple(graph_tile_edge_count(t) for t in tiles)
+        tile_ids = (25568, 410441, 6549282)
+
+        # The Tarfile format has a 512 header byte block before every file in the tar for filename,
+        # permissions etc. We store a 512 byte index.bin file at the start of the Tarfile. Then in
+        # addition, each GraphTile has a further 2*512 byte block before the recorded offset in the
+        # index.
+        offsets = [512 * 5]
+        offsets.append(pad(tile_sizes[0]) + 512 * 3 + offsets[0])
+        offsets.append(pad(tile_sizes[1]) + 512 * 3 + offsets[1])
+
         # test that the index has the right offsets/sizes
-        exp_tuples = ((2560, 25568, 296768), (301056, 410441, 665624), (968704, 6549282, 6137088))
-        self.check_tar(EXTRACT_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
+        exp_tile_offsets_and_sizes = tuple(zip(offsets, tile_ids, tile_sizes))
+        self.check_tar(EXTRACT_PATH, exp_tile_offsets_and_sizes, tile_count * INDEX_BIN_SIZE)
+
+        traffic_tile_sizes = tuple(c * 8 + 32 for c in tile_edge_counts)
+
+        traffic_offsets = [512 * 3]
+        traffic_offsets.append(pad(traffic_tile_sizes[0]) + 512 + traffic_offsets[0])
+        traffic_offsets.append(pad(traffic_tile_sizes[1]) + 512 + traffic_offsets[1])
+
         # same for traffic.tar
-        exp_tuples = ((1536, 25568, 25856), (28160, 410441, 64400), (93184, 6549282, 604608))
+        exp_tuples = tuple(zip(traffic_offsets, tile_ids, traffic_tile_sizes))
+
         self.check_tar(TRAFFIC_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
 
         # tests the implementation using the tile_dir
         new_tile_extract = TILE_PATH.joinpath("tiles2.tar")
-        exp_tuples = ((2560, 25568, 296768), (301056, 410441, 665624), (968704, 6549282, 6137088))
         tile_resolver = TileResolver(EXTRACT_PATH)
         tile_resolver.matched_paths = tile_resolver.normalized_tile_paths
         valhalla_build_extract.create_extracts(config, True, tile_resolver, new_tile_extract)
-        self.check_tar(new_tile_extract, exp_tuples, tile_count * INDEX_BIN_SIZE)
+        self.check_tar(new_tile_extract, exp_tile_offsets_and_sizes, tile_count * INDEX_BIN_SIZE)
 
     def check_tar(self, p: Path, exp_tuples, end_index):
         with open(p, 'r+b') as f:

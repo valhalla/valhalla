@@ -1,7 +1,6 @@
 #ifndef VALHALLA_BALDR_EDGE_TRACKER_H_
 #define VALHALLA_BALDR_EDGE_TRACKER_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 
@@ -14,7 +13,7 @@ namespace baldr {
 // giving something like 108mb of bits needed.
 struct bitset_t {
   typedef uint64_t value_type;
-  static const size_t bits_per_value = sizeof(value_type) * CHAR_BIT;
+  static const size_t bits_per_value = sizeof(value_type) * 8;
   static const uint64_t u64_size = static_cast<uint64_t>(bits_per_value);
   static const uint64_t u64_one = static_cast<uint64_t>(1);
 

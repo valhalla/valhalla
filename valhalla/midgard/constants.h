@@ -1,8 +1,7 @@
 #ifndef VALHALLA_MIDGARD_CONSTANTS_H_
 #define VALHALLA_MIDGARD_CONSTANTS_H_
 
-#include <math.h>
-#include <stdint.h>
+#include <cstdint>
 
 namespace valhalla {
 namespace midgard {

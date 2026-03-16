@@ -3,6 +3,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
+
 #include <cmath>
 
 namespace vm = valhalla::midgard;
@@ -16,14 +17,14 @@ struct tile_cache {
   }
 
   inline tile_cache& operator()(vb::GraphId id) {
-    const auto id_base = id.Tile_Base();
+    const auto id_base = id.tile_base();
     if (m_last_tile_id != id_base) {
       lookup(id_base);
     }
     return *this;
   }
 
-  inline graph_tile_ptr tile() {
+  inline vb::graph_tile_ptr tile() {
     return m_tile;
   }
 
@@ -72,7 +73,7 @@ private:
 
   vb::GraphReader& m_reader;
   vb::GraphId m_last_tile_id;
-  graph_tile_ptr m_tile;
+  vb::graph_tile_ptr m_tile;
   const vb::NodeInfo* m_nodes;
   const vb::DirectedEdge* m_edges;
 };
@@ -232,7 +233,7 @@ struct node_collector {
   void add_edge(vb::GraphId edge_id) {
     const auto tile_id = m_cache.tile_id();
 
-    if (edge_id.Tile_Base() == tile_id) {
+    if (edge_id.tile_base() == tile_id) {
       // we want _both_ nodes attached to this edge. the end node is easy
       // because the ID is available from the edge itself.
       const auto& edge = m_cache.edge(edge_id);
@@ -256,7 +257,7 @@ struct node_collector {
   void add_node_with_opposite(vb::GraphId node_id, uint32_t opp_index) {
     const auto tile_id = m_cache.tile_id();
 
-    if (node_id.Tile_Base() == tile_id) {
+    if (node_id.tile_base() == tile_id) {
       const auto& node = m_cache.node(node_id);
 
       // node is in this tile, so add it to the collection
@@ -282,9 +283,7 @@ struct node_collector {
   void add_node(vb::GraphId node_id) {
     const auto tile_id = m_cache.tile_id();
 
-    if (node_id.Tile_Base() == tile_id) {
-      const auto& node = m_cache.node(node_id);
-
+    if (node_id.tile_base() == tile_id) {
       // node is in this tile, so add it to the collection
       m_nodes.push_back(node_id, m_cache.node_ll(node_id));
     }
@@ -458,15 +457,7 @@ std::vector<baldr::GraphId> edges_in_bbox(const vm::AABB2<vm::PointLL>& bbox,
 
   // erase the duplicates by sorting
   {
-    std::sort(edge_ids.begin(), edge_ids.end(), [](const auto a, const auto b) {
-      // This ordering means when we iterate over this list, it'll be
-      // cache friendly, in-memory-order
-      if (a.level() == b.level())
-        return a.tileid() < b.tileid();
-      if (a.tileid() == b.tileid())
-        return a.id() < b.id();
-      return a.level() < b.level();
-    });
+    std::sort(edge_ids.begin(), edge_ids.end(), baldr::GraphId::cache_comparator);
     auto uniq_end = std::unique(edge_ids.begin(), edge_ids.end());
     edge_ids.erase(uniq_end, edge_ids.end());
   }

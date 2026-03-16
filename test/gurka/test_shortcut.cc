@@ -1,12 +1,12 @@
-#include "gurka.h"
-#include <gtest/gtest.h>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
+#include "gurka.h"
 #include "midgard/pointll.h"
-#include "mjolnir/graphtilebuilder.h"
+
+#include <gtest/gtest.h>
 
 using namespace valhalla;
+using namespace valhalla::baldr;
 
 // Here 2 shortcuts should be created: from A to C all edges have speed 80 and from C to A all have
 // speed 90
@@ -64,7 +64,7 @@ TEST(Shortcuts, LoopWithoutShortcut) {
   auto loopEdge = std::get<0>(gurka::findEdgeByNodes(graph_reader, layout, "A", "B"));
   auto shortcut = graph_reader.GetShortcut(loopEdge);
 
-  EXPECT_FALSE(shortcut.Is_Valid()) << "Shortcuts found. Check the map.";
+  EXPECT_FALSE(shortcut.is_valid()) << "Shortcuts found. Check the map.";
 }
 
 TEST(Shortcuts, ShortcutSpeed) {
@@ -373,8 +373,9 @@ TEST(Shortcuts, ShortcutRestrictions) {
 
   // test that the long shortcut has the strictest non-conditional access restrictions
   const auto AF = gurka::findEdgeByNodes(reader, layout, "A", "F");
-  const auto AF_res =
+  auto AF_res_view =
       reader.GetGraphTile(std::get<0>(AF))->GetAccessRestrictions(std::get<0>(AF).id(), kAllAccess);
+  std::vector<baldr::AccessRestriction> AF_res(AF_res_view.begin(), AF_res_view.end());
   EXPECT_EQ(AF_res.size(), 5);
   for (const auto& res : AF_res) {
     uint64_t expected_value = 0;

@@ -1,12 +1,13 @@
 #ifndef VALHALLA_BALDR_GRAPHID_H_
 #define VALHALLA_BALDR_GRAPHID_H_
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
+
 #include <cstdint>
+#include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/json.h>
 
 namespace valhalla {
 namespace baldr {
@@ -138,14 +139,14 @@ public:
    * @return boolean true if the id is valid.
    */
   explicit inline operator bool() const {
-    return Is_Valid();
+    return is_valid();
   }
 
   /**
    * Returns true if the id is valid
    * @return boolean true if the id is valid
    */
-  bool Is_Valid() const {
+  bool is_valid() const {
     // TODO: make this strict it should check the tile hierarchy not bit field widths
     return value != kInvalidGraphId;
   }
@@ -155,7 +156,7 @@ public:
    * Construct a new GraphId with the Id portion omitted.
    * @return graphid with only tileid and level included
    */
-  GraphId Tile_Base() const {
+  GraphId tile_base() const {
     return GraphId((value & 0x1ffffff));
   }
 
@@ -169,9 +170,9 @@ public:
 
   /**
    * The json representation of the id
-   * @return  json
+   * @param writer The writer json object to represent the id
    */
-  json::Value json() const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
   /**
    * Post increments the id.
@@ -198,12 +199,31 @@ public:
   }
 
   /**
+   * Advances the id
+   */
+  GraphId& operator+=(uint32_t offset) {
+    set_id(id() + offset);
+    return *this;
+  }
+
+  /**
    * Less than operator for sorting.
    * @param  rhs  Right hand side graph Id for comparison.
    * @return  Returns true if this GraphId is less than the right hand side.
    */
   bool operator<(const GraphId& rhs) const {
     return value < rhs.value;
+  }
+
+  /**
+   * cache-friendly comparison operator.
+   */
+  static bool cache_comparator(const GraphId a, const GraphId b) {
+    if (a.level() != b.level())
+      return a.level() < b.level();
+    if (a.tileid() != b.tileid())
+      return a.tileid() < b.tileid();
+    return a.id() < b.id();
   }
 
   // Operator EqualTo.

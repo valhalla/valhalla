@@ -6,7 +6,7 @@ Valhalla routing, map-matching, and elevation services use an encoded polyline f
 
 It is very important that you use six digits, rather than five as referenced in the Google algorithms documentation. With fewer than six digits, your locations are incorrectly placed (commonly, in the middle of an ocean), and you may receive errors with your API requests.
 
-Below are some sample algorithms to decode the string to create a list of latitude,longitude coordinates. Using this [demo tool](http://valhalla.github.io/demos/polyline/), you can also paste an encoded polyline string, decode it, and see the locations on a map (and save to GeoJSON). Use it to test and verify that your points are placed where you expected them.
+Below are some sample algorithms to decode the string to create a list of latitude,longitude coordinates. Using this [demo tool](https://valhalla.github.io/demos/polyline/), you can also paste an encoded polyline string, decode it, and see the locations on a map (and save to GeoJSON). Use it to test and verify that your points are placed where you expected them.
 
 ## JavaScript
 
@@ -174,52 +174,52 @@ decode <- function(encoded) {
   lats <- vector(mode = "integer", length = 1)
   lons <- vector(mode = "integer", length = 1)
   i <- 0
-  
+
   while (i < length(chars)){
     shift <- 0
     result <- 0
     byte <- 0x20L
-    
-    while (byte >= 0x20) {  
+
+    while (byte >= 0x20) {
       i <- i + 1
       byte <- chars[[i]] %>% utf8ToInt() - 63
       result <- bitwOr(result, bitwAnd(byte, 0x1f) %>% bitwShiftL(shift))
       shift <- shift + 5
       if (byte < 0x20) break
     }
-    
+
     if (bitwAnd(result, 1)) {
       result <- result %>% bitwShiftR(1) %>% bitwNot()
     } else {
       result <- result %>% bitwShiftR(1)
     }
-    
+
     lats <- c(lats, (lats[[length(lats)]] + result))
-    
+
     shift <- 0
     result <- 0
     byte <- 10000L
-    
-    while (byte >= 0x20) {  
+
+    while (byte >= 0x20) {
       i <- i + 1
       byte <- chars[[i]] %>% utf8ToInt() - 63
       result <- bitwOr(result, bitwAnd(byte, 0x1f) %>% bitwShiftL(shift))
       shift <- shift + 5
       if (byte < 0x20) break
     }
-    
+
     if (bitwAnd(result, 1)) {
       result <- result %>% bitwShiftR(1) %>% bitwNot()
     } else {
       result <- result %>% bitwShiftR(1)
     }
-    
+
     lons <- c(lons, (lons[[length(lons)]] + result))
   }
-  
+
   decoded <- tibble::tibble(lat = lats[2:length(lats)]/1000000,
                             lng = lons[2:length(lons)]/1000000)
-  
+
   return (decoded)
 }
 ```
@@ -281,5 +281,59 @@ func decodePolyline(encoded *string, precisionOptional ...int) [][]float64 {
 	}
 
 	return coordinates
+}
+```
+
+## Rust
+
+```rust
+/// Decode a polyline string.
+fn decode_polyline(polyline: &str, precision: f64) -> Vec<(f64, f64)> {
+    let mut shape = Vec::new();
+
+    let mut chars = polyline.chars();
+    let mut last_lat = 0;
+    let mut last_lon = 0;
+
+    // Get the next latitude/longitude tuple.
+    let mut next_coordinates = || {
+        last_lat = parse_polyline_coordinate(&mut chars, last_lat)?;
+        last_lon = parse_polyline_coordinate(&mut chars, last_lon)?;
+        Some((last_lat, last_lon))
+    };
+
+    while let Some((lat, lon)) = next_coordinates() {
+        shape.push((lat as f64 / precision, lon as f64 / precision));
+    }
+
+    shape
+}
+
+/// Parse the next latitude or longitude in the polyline string.
+fn parse_polyline_coordinate(mut chars: impl Iterator<Item = char>, previous: i32) -> Option<i32> {
+    let mut byte = None;
+    let mut result = 0;
+    let mut shift = 0;
+
+    while byte.is_none_or(|b| b >= 0x20) {
+        let byte = *byte.insert(chars.next()? as i32 - 63);
+        result |= (byte & 0x1f) << shift;
+        shift += 5;
+    }
+
+    let value = if result & 1 != 0 {
+        previous + !(result >> 1)
+    } else {
+        previous + (result >> 1)
+    };
+
+    Some(value)
+}
+
+#[test]
+fn decode_polyline6() {
+    let x = decode_polyline("e~epoA|jfpOiDaK", 1E6);
+    let decoded = vec![(42.225139, -8.670911), (42.225224, -8.670718)];
+    assert_eq!(x, decoded);
 }
 ```

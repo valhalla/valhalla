@@ -1,14 +1,13 @@
-#include <cxxopts.hpp>
-
-#include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
+#include "argparse_utils.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/validatetransit.h"
 
-#include "argparse_utils.h"
+#include <cxxopts.hpp>
+
+#include <filesystem>
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree pt;
   std::vector<valhalla::mjolnir::OneStopTest> onestoptests;
@@ -18,7 +17,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a program that reads protobuf files and creates Level 3 Transit Tiles."
       "\n\n");
 
@@ -35,7 +34,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     if (result.count("target_directory")) {

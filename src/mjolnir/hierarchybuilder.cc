@@ -1,22 +1,21 @@
 #include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "scoped_timer.h"
-
-#include <boost/property_tree/ptree.hpp>
-
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "scoped_timer.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <filesystem>
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -44,9 +43,17 @@ struct OldToNewNodes {
   }
 };
 
+// Gets the hierarchy level respecting ramp & ferry-related edges which can be marked
+// with a different road class: links will have the lowest connecting non-link road class,
+// ferry-connecting edges will have kPrimary
+uint8_t get_hierarchy_level(const DirectedEdge* de) {
+  return de->is_shortcut() ? TileHierarchy::get_level(static_cast<RoadClass>(de->shortcut()))
+                           : TileHierarchy::get_level(de->classification());
+}
+
 // Add a downward transition edge if the node is valid.
 bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
-  if (node.Is_Valid()) {
+  if (node.is_valid()) {
     tilebuilder->transitions().emplace_back(node, false);
     return true;
   } else {
@@ -56,7 +63,7 @@ bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
 
 // Add an upward transition edge if the node is valid.
 bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
-  if (node.Is_Valid()) {
+  if (node.is_valid()) {
     tilebuilder->transitions().emplace_back(node, true);
     return true;
   } else {
@@ -119,11 +126,11 @@ void FormTilesInNewLevel(GraphReader& reader,
       // where a new node exists
       auto f = find_nodes(old_to_new, base_node);
       uint8_t lowest_level;
-      if (f.local_node.Is_Valid())
+      if (f.local_node.is_valid())
         lowest_level = 2;
-      else if (f.arterial_node.Is_Valid())
+      else if (f.arterial_node.is_valid())
         lowest_level = 1;
-      else if (f.highway_node.Is_Valid())
+      else if (f.highway_node.is_valid())
         lowest_level = 0;
       else
         throw std::logic_error("Could not find valid node level");
@@ -132,7 +139,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       // Despite the road class, Bike Share Stations' connections are always at local level
       return (2 == current_level);
     } else {
-      return (TileHierarchy::get_level(directededge->classification()) == current_level);
+      return (get_hierarchy_level(directededge) == current_level);
     }
   };
 
@@ -148,7 +155,7 @@ void FormTilesInNewLevel(GraphReader& reader,
   for (auto new_node = new_to_old.begin(); new_node != new_to_old.end(); new_node++) {
     // Get the node - check if a new tile
     GraphId nodea = (*new_node).first;
-    if (nodea.Tile_Base() != tile_id) {
+    if (nodea.tile_base() != tile_id) {
       // Store the prior tile
       if (tilebuilder != nullptr) {
         tilebuilder->StoreTileData();
@@ -156,7 +163,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       }
 
       // New tilebuilder for the next tile. Update current level.
-      tile_id = nodea.Tile_Base();
+      tile_id = nodea.tile_base();
       tilebuilder = new GraphTileBuilder(reader.tile_dir(), tile_id, false);
       current_level = nodea.level();
 
@@ -178,8 +185,9 @@ void FormTilesInNewLevel(GraphReader& reader,
       continue;
     }
 
-    // Copy the data version
+    // Copy the data version & checksum
     tilebuilder->header_builder().set_dataset_id(tile->header()->dataset_id());
+    tilebuilder->header_builder().set_checksum(tile->header()->checksum());
 
     // Copy node information and set the node lat,lon offsets within the new tile
     NodeInfo baseni = *(tile->node(base_node.id()));
@@ -232,7 +240,7 @@ void FormTilesInNewLevel(GraphReader& reader,
         }
         density2 = new_nodes.density;
       }
-      if (!nodeb.Is_Valid()) {
+      if (!nodeb.is_valid()) {
         LOG_ERROR("Invalid end node - not found in old_to_new map");
       }
       newedge.set_endnode(nodeb);
@@ -264,23 +272,17 @@ void FormTilesInNewLevel(GraphReader& reader,
       // the list of access restrictions in the new tile. Update the
       // edge index in the restriction to be the current directed edge Id
       if (directededge->access_restriction()) {
-        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id(), kAllAccess);
+        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id());
         for (const auto& res : restrictions) {
           tilebuilder->AddAccessRestriction(AccessRestriction(tilebuilder->directededges().size(),
-                                                              res.type(), res.modes(), res.value()));
+                                                              res.type(), res.modes(), res.value(),
+                                                              res.except_destination()));
         }
       }
 
       // Copy lane connectivity
       if (directededge->laneconnectivity()) {
-        auto laneconnectivity = tile->GetLaneConnectivity(base_edge_id.id());
-        if (laneconnectivity.size() == 0) {
-          LOG_ERROR("Base edge should have lane connectivity, but none found");
-        }
-        for (auto& lc : laneconnectivity) {
-          lc.set_to(tilebuilder->directededges().size());
-        }
-        tilebuilder->AddLaneConnectivity(laneconnectivity);
+        tilebuilder->CopyLaneConnectivityFromTile(tile, base_edge_id.id());
       }
 
       // Names can be different in the forward and backward direction
@@ -301,6 +303,9 @@ void FormTilesInNewLevel(GraphReader& reader,
                                    diff_names);
 
       newedge.set_edgeinfo_offset(edge_info_offset);
+
+      // reset shortcuts after hijacking them for reclassification
+      newedge.set_hierarchy_roadclass(RoadClass::kMotorway, true);
 
       // Add directed edge
       tilebuilder->directededges().emplace_back(std::move(newedge));
@@ -425,7 +430,7 @@ void CreateNodeAssociations(GraphReader& reader,
         } else if (directededge->use() != Use::kTransitConnection &&
                    directededge->use() != Use::kEgressConnection &&
                    directededge->use() != Use::kPlatformConnection) {
-          levels[TileHierarchy::get_level(directededge->classification())] = true;
+          levels[get_hierarchy_level(directededge)] = true;
         }
       }
 
@@ -500,11 +505,11 @@ void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new
           // Get the updated end node
           auto f = find_nodes(old_to_new, directededge.endnode());
           GraphId new_end_node;
-          if (f.local_node.Is_Valid()) {
+          if (f.local_node.is_valid()) {
             new_end_node = f.local_node;
-          } else if (f.arterial_node.Is_Valid()) {
+          } else if (f.arterial_node.is_valid()) {
             new_end_node = f.arterial_node;
-          } else if (f.highway_node.Is_Valid()) {
+          } else if (f.highway_node.is_valid()) {
             new_end_node = f.highway_node;
           } else {
             LOG_ERROR("Transit Connection does not connect to valid node");
@@ -531,11 +536,11 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir, const std::string& old_
   std::unordered_map<GraphId, bool> tile_map;
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
   for (auto itr = old_to_new.begin(); itr != old_to_new.end(); itr++) {
-    auto f = tile_map.find((*itr).node_id.Tile_Base());
+    auto f = tile_map.find((*itr).node_id.tile_base());
     if (f == tile_map.end()) {
-      tile_map[(*itr).node_id.Tile_Base()] = (*itr).local_node.Is_Valid();
+      tile_map[(*itr).node_id.tile_base()] = (*itr).local_node.is_valid();
     } else {
-      if ((*itr).local_node.Is_Valid()) {
+      if ((*itr).local_node.is_valid()) {
         f->second = true;
       }
     }
@@ -544,10 +549,10 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir, const std::string& old_
     if (!itr->second) {
       // Remove the file
       GraphId empty_tile = itr->first;
-      std::string file_location = tile_dir + filesystem::path::preferred_separator +
-                                  GraphTile::FileSuffix(empty_tile.Tile_Base());
-      remove(file_location.c_str());
-      LOG_DEBUG("Remove file: " + file_location);
+      std::filesystem::path file_location{tile_dir};
+      file_location.append(GraphTile::FileSuffix(empty_tile.tile_base()));
+      std::filesystem::remove(file_location);
+      LOG_DEBUG("Remove file: " + file_location.string());
     }
   }
 }
@@ -589,7 +594,8 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   // Update the end nodes to all transit connections in the transit hierarchy
   auto hierarchy_properties = pt.get_child("mjolnir");
   auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (transit_dir && filesystem::exists(*transit_dir) && filesystem::is_directory(*transit_dir)) {
+  if (transit_dir && std::filesystem::exists(*transit_dir) &&
+      std::filesystem::is_directory(*transit_dir)) {
     UpdateTransitConnections(reader, old_to_new_file);
   }
 

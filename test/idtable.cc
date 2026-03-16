@@ -1,10 +1,10 @@
 #include "../src/mjolnir/idtable.h"
 
+#include <gtest/gtest.h>
+
 #include <cstdint>
 #include <cstdlib>
 #include <unordered_set>
-
-#include <gtest/gtest.h>
 
 using namespace valhalla::mjolnir;
 constexpr uint64_t kTableSize = 40000;

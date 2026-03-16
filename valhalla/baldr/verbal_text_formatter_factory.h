@@ -1,10 +1,10 @@
 #ifndef VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_FACTORY_H_
 #define VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_FACTORY_H_
 
+#include <valhalla/baldr/verbal_text_formatter.h>
+
 #include <memory>
 #include <string>
-
-#include <valhalla/baldr/verbal_text_formatter.h>
 
 namespace valhalla {
 namespace baldr {

@@ -1,14 +1,15 @@
-#include "test.h"
-
-#include <string>
-
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
+#include "midgard/logging.h"
 #include "odin/worker.h"
+#include "test.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+
 #include <boost/property_tree/ptree.hpp>
+
+#include <string>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

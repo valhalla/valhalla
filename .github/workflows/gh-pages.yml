@@ -1,16 +1,19 @@
-name: Deploy Docs
+name: Docs
 
 on:
   push:
     branches:
       - master
+  pull_request:
+    paths:
+      - '**.md'
+      - 'docs/**'
+      - '.github/workflows/gh-pages.yml'
 
 jobs:
   build-deploy:
     name: Build and deploy docs
-
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'valhalla' }}
 
     steps:
       - name: Checkout
@@ -18,6 +21,8 @@ jobs:
 
       - name: Set up Python 3
         uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
       - name: Install dependencies 🔧
         working-directory: docs
@@ -25,7 +30,13 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Build and deploy to GitHub Pages 🏗️ 🚀
+      - name: Build docs 🏗️
+        working-directory: docs
+        run: |
+          mkdocs build --strict
+
+      - name: Deploy to GitHub Pages 🚀
+        if: ${{ github.event_name == 'push' && github.repository_owner == 'valhalla' }}
         working-directory: docs
         run: |
           mkdocs gh-deploy --force --strict

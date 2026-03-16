@@ -1,9 +1,10 @@
+#include "odin/sign.h"
+#include "baldr/streetname.h"
 #include "midgard/logging.h"
 
-#include "baldr/streetname.h"
-
-#include "odin/sign.h"
+#ifdef LOGGING_LEVEL_TRACE
 #include "odin/util.h"
+#endif
 
 namespace valhalla {
 namespace odin {

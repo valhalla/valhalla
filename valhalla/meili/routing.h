@@ -1,22 +1,19 @@
 // -*- mode: c++ -*-
 #ifndef MMP_ROUTING_H_
 #define MMP_ROUTING_H_
-#include <cstdint>
-
-#include <algorithm>
-#include <stdexcept>
-#include <unordered_map>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+
+#include <cstdint>
+#include <stdexcept>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace meili {
@@ -133,7 +130,7 @@ public:
   }
 
 private:
-  // Must be mutually exclusive, i.e. nodeid.Is_Valid() XOR dest != kInvalidDestination
+  // Must be mutually exclusive, i.e. nodeid.is_valid() XOR dest != kInvalidDestination
   baldr::GraphId nodeid_;
   uint16_t dest_;
 
@@ -291,7 +288,7 @@ using labelset_ptr_t = std::shared_ptr<LabelSet>;
  */
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
-                   const std::vector<baldr::PathLocation>& destinations,
+                   const std::vector<const Location*>& destinations,
                    uint16_t origin_idx,
                    labelset_ptr_t labelset,
                    const midgard::DistanceApproximator<midgard::PointLL>& approximator,

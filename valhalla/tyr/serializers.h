@@ -1,25 +1,29 @@
 #ifndef __VALHALLA_TYR_SERVICE_H__
 #define __VALHALLA_TYR_SERVICE_H__
 
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include <valhalla/baldr/attributes_controller.h>
-#include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
-#include <valhalla/proto_conversions.h>
-#include <valhalla/tyr/actor.h>
+
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
+namespace baldr {
+class GraphReader;
+struct PathLocation;
+} // namespace baldr
+
 namespace tyr {
+
+constexpr unsigned int kDefaultPrecision = 3;
+constexpr unsigned int kCoordinatePrecision = 6;
 
 /**
  * Turn path and directions into a route that one can follow
@@ -64,11 +68,7 @@ std::string serializeHeight(const Api& request,
  * @param projections  The correlated locations
  * @param reader       A graph reader to get at each correlated points info
  */
-std::string
-serializeLocate(const Api& request,
-                const std::vector<baldr::Location>& locations,
-                const std::unordered_map<baldr::Location, baldr::PathLocation>& projections,
-                baldr::GraphReader& reader);
+std::string serializeLocate(const Api& request, baldr::GraphReader& reader);
 
 /**
  * Turn a list of locations into a list of locations with a bool that says whether transit tiles are
@@ -78,9 +78,7 @@ serializeLocate(const Api& request,
  * @param locations  The input locations
  * @param found      Which locations had transit
  */
-std::string serializeTransitAvailable(const Api& request,
-                                      const std::vector<baldr::Location>& locations,
-                                      const std::unordered_set<baldr::Location>& found);
+std::string serializeTransitAvailable(const Api& request);
 
 /**
  * Turn trip paths and the match results of each into attributes based on the filter specified
@@ -130,7 +128,8 @@ baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
  * @param shape  The points making up the line.
  * @returns The GeoJSON geometry of the LineString
  */
-baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape);
+baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape);
+void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer);
 
 // Elevation serialization support
 
@@ -175,6 +174,10 @@ inline void update_bridge_elevations(std::vector<float>& elevation,
  */
 inline std::vector<float>
 get_elevation(const TripLeg& path_leg, const float interval, const float start_distance = 0.0f) {
+  if (path_leg.node_size() == 0) {
+    return {};
+  }
+
   // Store the first elevation if start_distance == 0
   std::vector<float> elevation;
   auto first_elevation = path_leg.node(0).edge().elevation(0);
@@ -190,7 +193,7 @@ get_elevation(const TripLeg& path_leg, const float interval, const float start_d
   std::vector<std::pair<uint32_t, uint32_t>> bridges;
   for (const auto& node : path_leg.node()) {
     // Get the edge on the path, the starting elevation and sampling interval
-    auto path_edge = node.edge();
+    const auto& path_edge = node.edge();
     float edge_interval = path_edge.elevation_sampling_interval();
 
     // Identify consecutive bridge/tunnel edges and store elevation indexes at start and end.
@@ -255,6 +258,10 @@ namespace osrm {
  */
 valhalla::baldr::json::MapPtr
 waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is_optimized = false);
+void waypoint(const valhalla::Location& location,
+              rapidjson::writer_wrapper_t& writer,
+              bool is_tracepoint = false,
+              bool is_optimized = false);
 
 /*
  * Serialize locations into osrm waypoints
@@ -262,10 +269,13 @@ waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is
 valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
+void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+               rapidjson::writer_wrapper_t& writer,
+               bool tracepoints = false);
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
 
-void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
                                  const int begin_shape_index,
                                  const int end_shape_index,

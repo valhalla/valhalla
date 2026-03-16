@@ -1,23 +1,22 @@
 #include "mjolnir/graphfilter.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
-#include "scoped_timer.h"
-
-#include <boost/property_tree/ptree.hpp>
-#include <iostream>
-#include <unordered_map>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/sequence.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
+#include "scoped_timer.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <filesystem>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -35,6 +34,21 @@ uint32_t aggregated = 0;
 // Group wheelchair and pedestrian access together
 constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess);
 
+uint8_t get_new_mask(uint8_t old_mask, const std::vector<uint8_t>& new_local_indexes) {
+
+  size_t n = std::min(static_cast<size_t>(8), new_local_indexes.size());
+  // For each bit set in old_mask, update a bit in the new mask using new_local_indexes
+  uint8_t new_mask = 0;
+  for (uint8_t i = 0; i < n; ++i) {
+    if ((old_mask & 1 << i) != 0 && (new_local_indexes[i] != 255)) {
+      // Replace bit set in the old mask with one from new_local_indexes
+      uint8_t index = new_local_indexes[i];
+      new_mask |= 1 << index;
+    }
+  }
+  return new_mask;
+}
+
 bool CanAggregate(const DirectedEdge* de) {
   if (de->start_restriction() || de->part_of_complex_restriction() || de->end_restriction() ||
       de->restrictions() || de->traffic_signal() || de->access_restriction()) {
@@ -43,12 +57,18 @@ bool CanAggregate(const DirectedEdge* de) {
   return true;
 }
 
+// Links and ferry-connecting edges hijack the road class for hierarchy purposes and that should be
+// respected while aggregating to prevent merging edges that are not on the same hierarchy level.
+RoadClass get_hierarchy_rc(const DirectedEdge* de) {
+  return de->is_shortcut() ? static_cast<RoadClass>(de->shortcut()) : de->classification();
+}
+
 // ExpandFromNode and ExpandFromNodeInner is reused code from restriction builder with some slight
 // modifications. We are using recursion for graph traversal. We have to make sure we don't loop back
 // to ourselves, walk in the correct direction, have not already visited a node, etc. Once we meet our
 // criteria or not we stop.
 bool ExpandFromNode(GraphReader& reader,
-                    std::list<PointLL>& shape,
+                    std::vector<PointLL>& shape,
                     GraphId& en,
                     const GraphId& from_node,
                     std::unordered_set<std::string>& isos,
@@ -79,7 +99,7 @@ bool ExpandFromNode(GraphReader& reader,
  *
  */
 bool ExpandFromNodeInner(GraphReader& reader,
-                         std::list<PointLL>& shape,
+                         std::vector<PointLL>& shape,
                          GraphId& en,
                          const GraphId& from_node,
                          std::unordered_set<std::string>& isos,
@@ -99,7 +119,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
     const auto& edge_info = prev_tile->edgeinfo(de);
 
     auto tile = prev_tile;
-    if (tile->id() != de->endnode().Tile_Base()) {
+    if (tile->id() != de->endnode().tile_base()) {
       tile = reader.GetGraphTile(de->endnode());
     }
 
@@ -111,7 +131,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
           (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
 
         // If this edge has special attributes, then we can't aggregate
-        if (!CanAggregate(de) || de->classification() != rc) {
+        if (!CanAggregate(de) || get_hierarchy_rc(de) != rc) {
           way_id = 0;
           return false;
         }
@@ -121,16 +141,15 @@ bool ExpandFromNodeInner(GraphReader& reader,
             isos.insert(tile->admin(en_info->admin_index())->country_iso());
           }
         } else {
-          std::list<PointLL> edgeshape =
-              valhalla::midgard::decode7<std::list<PointLL>>(edge_info.encoded_shape());
+          std::vector<PointLL> edgeshape =
+              valhalla::midgard::decode7<std::vector<PointLL>>(edge_info.encoded_shape());
           if (!de->forward()) {
             std::reverse(edgeshape.begin(), edgeshape.end());
           }
 
           // Append shape. Skip first point since it
           // should equal the last of the prior edge.
-          edgeshape.pop_front();
-          shape.splice(shape.end(), edgeshape);
+          shape.insert(shape.end(), std::next(edgeshape.begin()), edgeshape.end());
         }
 
         // found a node that does not have aggregation marked (using mode_change flag)
@@ -178,7 +197,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
  *
  */
 bool ExpandFromNode(GraphReader& reader,
-                    std::list<PointLL>& shape,
+                    std::vector<PointLL>& shape,
                     GraphId& en,
                     const GraphId& from_node,
                     std::unordered_set<std::string>& isos,
@@ -192,7 +211,7 @@ bool ExpandFromNode(GraphReader& reader,
                     bool validate) {
 
   auto tile = prev_tile;
-  if (tile->id() != current_node.Tile_Base()) {
+  if (tile->id() != current_node.tile_base()) {
     tile = reader.GetGraphTile(current_node);
   }
 
@@ -204,7 +223,7 @@ bool ExpandFromNode(GraphReader& reader,
 
 bool Aggregate(GraphId& start_node,
                GraphReader& reader,
-               std::list<PointLL>& shape,
+               std::vector<PointLL>& shape,
                GraphId& en,
                const GraphId& from_node,
                uint64_t& way_id,
@@ -223,12 +242,14 @@ bool Aggregate(GraphId& start_node,
  * Filter edges to optionally remove edges by access.
  * @param  reader  Graph reader.
  * @param  old_to_new  Map of original node Ids to new nodes Ids (after filtering).
+ * @param  updated_local_indexes Map of nodes with updated local edge indexes (after filtering).
  * @param  include_driving  Include edge if driving (any vehicular) access in either direction.
  * @param  include_bicycle  Include edge if bicycle access in either direction.
  * @param  include_pedestrian  Include edge if pedestrian or wheelchair access in either direction.
  */
 void FilterTiles(GraphReader& reader,
                  std::unordered_map<GraphId, GraphId>& old_to_new,
+                 std::unordered_map<GraphId, std::vector<uint8_t>>& updated_local_indexes,
                  const bool include_driving,
                  const bool include_bicycle,
                  const bool include_pedestrian) {
@@ -271,13 +292,18 @@ void FilterTiles(GraphReader& reader,
       // Current edge index for first edge from this node
       uint32_t edge_index = tilebuilder.directededges().size();
 
+      uint8_t new_edge_count = 0;
+      uint8_t removed_index = 255;
+      std::vector<uint8_t> new_local_indexes;
+
       // Iterate through directed edges outbound from this node
       std::vector<uint64_t> wayid;
       std::vector<RoadClass> classification;
       std::vector<GraphId> endnode;
       const NodeInfo* nodeinfo = tile->node(nodeid);
       std::string begin_node_iso = tile->admin(nodeinfo->admin_index())->country_iso();
-
+      std::vector<uint32_t> headings;
+      std::vector<Traversability> traversabilities;
       GraphId edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       for (uint32_t j = 0; j < nodeinfo->edge_count(); ++j, ++edgeid) {
         // Check if the directed edge should be included
@@ -285,14 +311,50 @@ void FilterTiles(GraphReader& reader,
         if (!include_edge(directededge)) {
           ++n_filtered_edges;
           edge_filtered = true;
+          new_local_indexes.push_back(removed_index);
           continue;
         }
+
+        new_local_indexes.push_back(new_edge_count);
+        new_edge_count++;
 
         // Copy the directed edge information
         DirectedEdge newedge = *directededge;
 
         // Set opposing edge indexes to 0 (gets set in graph validator).
         newedge.set_opp_index(0);
+
+        // Update the local edge index
+        newedge.set_localedgeidx(j);
+
+        // Add heading and traversability to temporary list so we can update nodeinfo headings to
+        // account for removed edges.
+        if (j < kMaxLocalEdgeIndex) {
+          headings.push_back(nodeinfo->heading(j));
+          traversabilities.push_back(nodeinfo->local_driveability(j));
+
+        } else if (headings.size() < kMaxLocalEdgeIndex) {
+          // Heading is not stored for the node. Compute it from the shape
+          auto shape = tile->edgeinfo(directededge).shape();
+          if (!directededge->forward()) {
+            std::reverse(shape.begin(), shape.end());
+          }
+          auto heading = std::round(
+              PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(get_hierarchy_rc(directededge),
+                                                                       directededge->use())));
+          headings.push_back(heading);
+
+          // Set traversability for autos
+          Traversability traversability;
+          if (directededge->forwardaccess() & kAutoAccess) {
+            traversability = (directededge->reverseaccess() & kAutoAccess) ? Traversability::kBoth
+                                                                           : Traversability::kForward;
+          } else {
+            traversability = (directededge->reverseaccess() & kAutoAccess) ? Traversability::kBackward
+                                                                           : Traversability::kNone;
+          }
+          traversabilities.push_back(traversability);
+        }
 
         // Get signs from the base directed edge
         if (directededge->sign()) {
@@ -313,23 +375,17 @@ void FilterTiles(GraphReader& reader,
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id());
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 
         // Copy lane connectivity
         if (directededge->laneconnectivity()) {
-          auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
-          if (laneconnectivity.size() == 0) {
-            LOG_ERROR("Base edge should have lane connectivity, but none found");
-          }
-          for (auto& lc : laneconnectivity) {
-            lc.set_to(tilebuilder.directededges().size());
-          }
-          tilebuilder.AddLaneConnectivity(laneconnectivity);
+          tilebuilder.CopyLaneConnectivityFromTile(tile, edgeid.id());
         }
 
         // Names can be different in the forward and backward direction
@@ -351,7 +407,7 @@ void FilterTiles(GraphReader& reader,
                                     edgeinfo.GetTypes(), added, diff_names);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());
-        classification.push_back(directededge->classification());
+        classification.push_back(get_hierarchy_rc(directededge));
         endnode.push_back(directededge->endnode());
 
         if (directededge->endnode().tile_value() != tile->header()->graphid().tile_value()) {
@@ -370,10 +426,21 @@ void FilterTiles(GraphReader& reader,
         tilebuilder.nodes().push_back(*nodeinfo);
         NodeInfo& node = tilebuilder.nodes().back();
         node.set_edge_count(edge_count);
+        node.set_local_edge_count(edge_count);
         node.set_edge_index(edge_index);
         const auto& admin = tile->admininfo(nodeinfo->admin_index());
         node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
                                                   admin.country_iso(), admin.state_iso()));
+
+        // Update headings to account for removed edges
+        if (headings.size() != traversabilities.size()) {
+          LOG_ERROR("Headings and traversabilities should be the same size");
+        }
+
+        for (uint32_t i = 0; i < headings.size(); ++i) {
+          node.set_heading(i, headings[i]);
+          node.set_local_driveability(i, traversabilities[i]);
+        }
 
         // Get named signs from the base node
         if (nodeinfo->named_intersection()) {
@@ -387,6 +454,12 @@ void FilterTiles(GraphReader& reader,
 
         // Associate the old node to the new node.
         old_to_new[nodeid] = new_node;
+
+        // If any edges from this node have been filtered, add new_local_indexes to the
+        // updated_local_indexes map
+        if (edge_filtered > 0) {
+          updated_local_indexes[nodeid] = new_local_indexes;
+        }
 
         // Check if edges at this node can be aggregated. Only 2 edges, same way Id (so that
         // edge attributes should match), don't end at same node (no loops), no traffic signal,
@@ -425,10 +498,11 @@ void FilterTiles(GraphReader& reader,
       tilebuilder.StoreTileData();
     } else {
       // Remove the tile - all nodes and edges were filtered
-      std::string file_location =
-          reader.tile_dir() + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-      remove(file_location.c_str());
-      LOG_INFO("Remove file: " + file_location + " all edges were filtered");
+      std::filesystem::path file_location{reader.tile_dir()};
+      file_location.append(GraphTile::FileSuffix(tile_id));
+      const auto& file_location_str = file_location.string();
+      ::remove(file_location_str.c_str());
+      LOG_INFO("Remove file: " + file_location_str + " all edges were filtered");
     }
 
     if (reader.OverCommitted()) {
@@ -443,7 +517,7 @@ void FilterTiles(GraphReader& reader,
 }
 
 void GetAggregatedData(GraphReader& reader,
-                       std::list<PointLL>& shape,
+                       std::vector<PointLL>& shape,
                        GraphId& en,
                        const GraphId& from_node,
                        const graph_tile_ptr& tile,
@@ -457,7 +531,7 @@ void GetAggregatedData(GraphReader& reader,
 
   // walk in the correct direction.
   uint64_t wayid = tile->edgeinfo(directededge).wayid();
-  if (Aggregate(id, reader, shape, en, from_node, wayid, isos, directededge->classification(),
+  if (Aggregate(id, reader, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
                 isForward, false)) {
     aggregated++; // count the current edge
     // flip the shape back for storing in edgeinfo
@@ -478,7 +552,7 @@ void GetAggregatedData(GraphReader& reader,
 // As of 01/15/2024 there are only ~180 of these.
 
 void ValidateData(GraphReader& reader,
-                  std::list<PointLL>& shape,
+                  std::vector<PointLL>& shape,
                   GraphId& en,
                   std::unordered_set<GraphId>& processed_nodes,
                   std::unordered_set<uint64_t>& no_agg_ways,
@@ -518,7 +592,7 @@ void ValidateData(GraphReader& reader,
 
       // walk in the correct direction.
       uint64_t wayid = edgeinfo.wayid();
-      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, directededge->classification(),
+      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
                      isForward, true)) {
         // LOG_WARN("ValidateData - failed to validate node.  Will not aggregate.");
         // for debugging only
@@ -562,7 +636,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         const DirectedEdge* directededge = tile->directededge(idx);
         if (processed_nodes.find(nodeid) == processed_nodes.end()) {
           GraphId en = directededge->endnode();
-          std::list<PointLL> shape;
+          std::vector<PointLL> shape;
           // check if we can aggregate the edges at this node.
           ValidateData(reader, shape, en, processed_nodes, no_agg_ways, nodeid, tile, directededge);
         }
@@ -658,6 +732,9 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         // Set opposing edge indexes to 0 (gets set in graph validator).
         newedge.set_opp_index(0);
 
+        // Update the local edge index
+        newedge.set_localedgeidx(j);
+
         // Get signs from the base directed edge
         if (directededge->sign()) {
           std::vector<SignInfo> signs = tile->GetSigns(edgeid.id());
@@ -677,23 +754,17 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id());
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 
         // Copy lane connectivity
         if (directededge->laneconnectivity()) {
-          auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
-          if (laneconnectivity.size() == 0) {
-            LOG_ERROR("Base edge should have lane connectivity, but none found");
-          }
-          for (auto& lc : laneconnectivity) {
-            lc.set_to(tilebuilder.directededges().size());
-          }
-          tilebuilder.AddLaneConnectivity(laneconnectivity);
+          tilebuilder.CopyLaneConnectivityFromTile(tile, edgeid.id());
         }
 
         // Names can be different in the forward and backward direction
@@ -701,7 +772,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
 
         const auto& edgeinfo = tile->edgeinfo(directededge);
         std::string encoded_shape = edgeinfo.encoded_shape();
-        std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL>>(encoded_shape);
+        std::vector<PointLL> shape = valhalla::midgard::decode7<std::vector<PointLL>>(encoded_shape);
 
         // Aggregate if end node is marked and in same tile
         bool aggregated = false;
@@ -745,6 +816,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         tilebuilder.nodes().push_back(*nodeinfo);
         NodeInfo& node = tilebuilder.nodes().back();
         node.set_edge_count(edge_count);
+        node.set_local_edge_count(edge_count);
         node.set_edge_index(edge_index);
         const auto& admin = tile->admininfo(nodeinfo->admin_index());
         node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
@@ -769,10 +841,11 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       tilebuilder.StoreTileData();
     } else {
       // Remove the tile - all nodes and edges were filtered
-      std::string file_location =
-          reader.tile_dir() + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-      remove(file_location.c_str());
-      LOG_INFO("Remove file: " + file_location + " all edges were filtered");
+      std::filesystem::path file_location{reader.tile_dir()};
+      file_location.append(GraphTile::FileSuffix(tile_id));
+      const auto& file_location_str = file_location.string();
+      ::remove(file_location_str.c_str());
+      LOG_INFO("Remove file: " + file_location_str + " all edges were filtered");
     }
 
     if (reader.OverCommitted()) {
@@ -789,7 +862,9 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
  * @param  reader  Graph reader.
  * @param  old_to_new  Map of original node Ids to new nodes Ids (after filtering).
  */
-void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
+void UpdateEndNodes(GraphReader& reader,
+                    std::unordered_map<GraphId, GraphId>& old_to_new,
+                    std::unordered_map<GraphId, std::vector<uint8_t>>& updated_local_indexes) {
   SCOPED_TIMER();
   LOG_INFO("Update end nodes of directed edges");
   // Iterate through all tiles in the local level
@@ -815,6 +890,21 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
     for (uint32_t j = 0; j < tile->header()->directededgecount(); ++j, ++edgeid) {
       const DirectedEdge* edge = tile->directededge(j);
 
+      // Check if end node has updated local indexes (any edges filtered)
+      uint8_t new_restrictions = edge->restrictions();
+      uint8_t new_name_consistency = edge->name_consistency();
+      auto indexes = updated_local_indexes.find(edge->endnode());
+      if (indexes != updated_local_indexes.end()) {
+        uint8_t old_mask = edge->restrictions();
+        if (old_mask != 0) {
+          new_restrictions = get_new_mask(old_mask, indexes->second);
+        }
+        old_mask = edge->name_consistency();
+        if (old_mask != 0) {
+          new_name_consistency = get_new_mask(old_mask, indexes->second);
+        }
+      }
+
       // Find the end node in the old_to_new mapping
       GraphId end_node;
       auto iter = old_to_new.find(edge->endnode());
@@ -830,6 +920,10 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       directededges.push_back(*edge);
       DirectedEdge& new_edge = directededges.back();
       new_edge.set_endnode(end_node);
+
+      // Update name consistency and restrictions
+      new_edge.set_restrictions(new_restrictions);
+      new_edge.set_name_consistency(new_name_consistency);
     }
 
     // Update the tile with new directededges.
@@ -842,17 +936,18 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
 }
 
 /**
- * Update Opposing Edge Index of all directed edges.
+ * Update Opposing Edge Index and Transitions of all directed edges.
  * @param  reader  Graph reader.
  */
-void UpdateOpposingEdgeIndex(GraphReader& reader) {
+void UpdateOpposingIndexAndTransitions(GraphReader& reader) {
   SCOPED_TIMER();
   LOG_INFO("Update Opposing Edge Index of directed edges");
 
+  enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {0}};
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true);
 
     // Get the graph tile. Read from this tile to create the new tile.
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
@@ -872,6 +967,8 @@ void UpdateOpposingEdgeIndex(GraphReader& reader) {
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
       const NodeInfo* nodeinfo = tile->node(nodeid);
       GraphId edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
+      const DirectedEdge* edges = tilebuilder.directededges(nodeinfo->edge_index());
+
       for (uint32_t j = 0; j < nodeinfo->edge_count(); ++j, ++edgeid) {
         // Check if the directed edge should be included
         const DirectedEdge* edge = tile->directededge(edgeid);
@@ -882,7 +979,7 @@ void UpdateOpposingEdgeIndex(GraphReader& reader) {
 
         // Get the tile at the end node
         graph_tile_ptr endnodetile;
-        if (tile->id() == edge->endnode().Tile_Base()) {
+        if (tile->id() == edge->endnode().tile_base()) {
           endnodetile = tile;
         } else {
           endnodetile = reader.GetGraphTile(edge->endnode());
@@ -890,6 +987,12 @@ void UpdateOpposingEdgeIndex(GraphReader& reader) {
 
         // Set the opposing index on the local level
         new_edge.set_opp_local_idx(GetOpposingEdgeIndex(endnodetile, nodeid, tile, *edge));
+
+        // Set edge transitions.
+        if (j < kNumberOfEdgeTransitions) {
+          uint32_t ntrans = nodeinfo->local_edge_count();
+          ProcessEdgeTransitions(j, new_edge, edges, ntrans, *nodeinfo, stats);
+        }
       }
     }
 
@@ -935,15 +1038,19 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
   // Map of old node Ids to new node Ids (after filtering).
   std::unordered_map<baldr::GraphId, baldr::GraphId> old_to_new;
 
+  // Map of updated local indexes at nodes where edges have been filtered
+  std::unordered_map<GraphId, std::vector<uint8_t>> updated_local_indexes;
+
   // Construct GraphReader
   GraphReader reader(pt.get_child("mjolnir"));
 
   // Filter edges (and nodes) by access
-  FilterTiles(reader, old_to_new, include_driving, include_bicycle, include_pedestrian);
+  FilterTiles(reader, old_to_new, updated_local_indexes, include_driving, include_bicycle,
+              include_pedestrian);
 
   // Update end nodes. Clear the GraphReader cache first.
   reader.Clear();
-  UpdateEndNodes(reader, old_to_new);
+  UpdateEndNodes(reader, old_to_new, updated_local_indexes);
 
   reader.Clear();
   old_to_new.clear();
@@ -951,11 +1058,13 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
 
   // Update end nodes. Clear the GraphReader cache first.
   reader.Clear();
-  UpdateEndNodes(reader, old_to_new);
+  // Only update the indexes once.
+  updated_local_indexes.clear();
+  UpdateEndNodes(reader, old_to_new, updated_local_indexes);
 
   // Update Opposing Edge Index. Clear the GraphReader cache first.
   reader.Clear();
-  UpdateOpposingEdgeIndex(reader);
+  UpdateOpposingIndexAndTransitions(reader);
 
   LOG_INFO("Done GraphFilter");
 }

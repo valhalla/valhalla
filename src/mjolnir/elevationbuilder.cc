@@ -1,24 +1,22 @@
 #include "mjolnir/elevationbuilder.h"
-
-#include <random>
-#include <thread>
-#include <utility>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "filesystem.h"
 #include "midgard/elevation_encoding.h"
-#include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/polyline2.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
 #include "scoped_timer.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <filesystem>
+#include <random>
+#include <thread>
+#include <utility>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -231,10 +229,20 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
     // Edge elevation information. If the edge is forward (with respect to the shape)
     // use the first value, otherwise use the second.
     bool forward = directededge.forward();
-    directededge.set_weighted_grade(forward ? std::get<0>(found->second)
-                                            : std::get<1>(found->second));
     float max_up_slope = forward ? std::get<2>(found->second) : std::get<4>(found->second);
     float max_down_slope = forward ? std::get<3>(found->second) : std::get<5>(found->second);
+    auto weighted_grade = forward ? std::get<0>(found->second) : std::get<1>(found->second);
+
+    // Clamp grade on tunnels/bridges. Successive, connected bridge/tunnel edges can
+    // lead to high grades. Note - elevation along a route is "fixed" for these cases
+    // but weighted grade can cause route issues.
+    if (directededge.bridge() || directededge.tunnel()) {
+      // Clamp grades to +/- 3% (weighted grade values between 4 and 8)
+      weighted_grade = std::clamp(weighted_grade, 4u, 8u);
+      max_up_slope = std::min(3.0f, max_up_slope);
+      max_down_slope = std::max(-3.0f, max_down_slope);
+    }
+    directededge.set_weighted_grade(weighted_grade);
     directededge.set_max_up_slope(max_up_slope);
     directededge.set_max_down_slope(max_down_slope);
   }
@@ -316,7 +324,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
                              std::deque<baldr::GraphId> tile_ids) {
 
   auto elevation = pt.get_optional<std::string>("additional_data.elevation");
-  if (!elevation || !filesystem::exists(*elevation)) {
+  if (!elevation || !std::filesystem::exists(*elevation)) {
     LOG_WARN("Elevation storage directory does not exist");
     return;
   }
@@ -336,8 +344,8 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
            std::to_string(nthreads) + " threads...");
   std::mutex lock;
   for (auto& thread : threads) {
-    thread.reset(new std::thread(add_elevations_to_multiple_tiles, std::cref(pt), std::ref(tile_ids),
-                                 std::ref(lock), std::ref(sample)));
+    thread = std::make_shared<std::thread>(add_elevations_to_multiple_tiles, std::cref(pt),
+                                           std::ref(tile_ids), std::ref(lock), std::ref(sample));
   }
 
   for (auto& thread : threads) {

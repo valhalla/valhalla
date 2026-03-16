@@ -1,4 +1,3 @@
-#include "midgard/util.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 

@@ -24,6 +24,7 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
+  add_predicted_speeds.cc
   admin.cc
   adminbuilder.cc
   bssbuilder.cc
@@ -43,12 +44,11 @@ set(sources
   hierarchybuilder.cc
   ingest_transit.cc
   landmarks.cc
-  add_predicted_speeds.cc
   linkclassification.cc
   luatagtransform.cc
   node_expander.cc
-  osmdata.cc
   osmaccessrestriction.cc
+  osmdata.cc
   osmrestriction.cc
   osmway.cc
   pbfadminparser.cc
@@ -57,11 +57,13 @@ set(sources
   servicedays.cc
   shortcutbuilder.cc
   speed_assigner.h
+  sqlite3.cc
   timeparsing.cc
   transitbuilder.cc
-  way_edges_processor.cc
   util.cc
-  validatetransit.cc)
+  validatetransit.cc
+  way_edges_processor.cc
+)
 
 set(system_includes
   ${date_include_dir}
@@ -70,6 +72,22 @@ set(system_includes
   ${PROTOBUF_INCLUDE_DIR})
 if(APPLE)
   list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+endif()
+
+set(mjolnir_depends
+  valhalla::proto
+  valhalla::baldr
+  PkgConfig::GEOS
+  PkgConfig::SpatiaLite
+  SQLite3::SQLite3
+  Boost::boost
+  PkgConfig::LuaJIT
+  Threads::Threads
+  PkgConfig::ZLIB
+  PkgConfig::OPENSSL)
+
+if(EXPAT_FOUND)
+  list(APPEND mjolnir_depends PkgConfig::EXPAT)
 endif()
 
 valhalla_module(NAME mjolnir
@@ -87,15 +105,11 @@ valhalla_module(NAME mjolnir
       ${system_includes}
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
-      ${robinhoodhashing_include_dir}
-      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+      ${unordered_dense_include_dir}
+      ${libosmium_include_dirs}
   DEPENDS
-    valhalla::proto
-    valhalla::baldr
-    PkgConfig::SpatiaLite
-    SQLite3::SQLite3
-    Boost::boost
-    PkgConfig::LuaJIT
-    Threads::Threads
-    PkgConfig::ZLIB)
+    ${mjolnir_depends})
+
+if(EXPAT_FOUND)
+  target_compile_definitions(valhalla-mjolnir PRIVATE HAVE_EXPAT)
+endif()

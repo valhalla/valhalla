@@ -1,6 +1,6 @@
 # Releasing a new Valhalla version
 
-We are using http://semver.org/ for versioning with major, minor and patch versions.
+We are using <https://semver.org/> for versioning with major, minor and patch versions.
 
 ## Guarantees
 

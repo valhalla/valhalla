@@ -1,19 +1,22 @@
 #include "mjolnir/landmarks.h"
-#include "filesystem.h"
-
 #include "baldr/graphreader.h"
-#include "midgard/sequence.h"
-#include "mjolnir/util.h"
-
 #include "baldr/location.h"
-#include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
+#include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/sqlite3.h"
 #include "sif/nocost.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
+#ifdef HAVE_EXPAT
+#include <osmium/io/xml_input.hpp>
+#endif
+#include <sqlite3.h>
 
+#include <filesystem>
 #include <future>
 #include <string_view>
 #include <thread>
@@ -25,6 +28,37 @@ using namespace valhalla::midgard;
 using namespace valhalla;
 
 namespace {
+
+void apply_location_defaults(Location& location) {
+
+  if (!location.has_search_filter() || !location.search_filter().has_min_road_class_case())
+    location.mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
+  if (!location.search_filter().has_max_road_class_case())
+    location.mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_level())
+    location.mutable_search_filter()->set_level(kMaxLevel);
+  if (!location.has_street_side_cutoff_case())
+    location.set_street_side_cutoff(valhalla::RoadClass::kServiceOther);
+
+  if (!location.has_node_snap_tolerance())
+    location.set_node_snap_tolerance(5.f);
+
+  if (!location.has_heading_tolerance())
+    location.set_heading_tolerance(60.f);
+
+  if (!location.has_street_side_tolerance())
+    location.set_street_side_tolerance(5);
+
+  if (!location.has_street_side_max_distance())
+    location.set_street_side_max_distance(1000);
+
+  if (!location.has_search_cutoff_case())
+    location.set_search_cutoff(kDefaultSearchCutoff);
+}
 // a 25m radius used to associate edges to landmarks, which allows us to only keep the close edges in
 // the tight cities
 constexpr unsigned long kLandmarkRadius = 25;
@@ -36,10 +70,10 @@ constexpr double kLandmarkQueryBuffer = .000001;
 
 // sort a sequence file to put the edges in the same tile together
 bool sort_seq_file(const std::pair<GraphId, uint64_t>& a, const std::pair<GraphId, uint64_t>& b) {
-  if (a.first.Tile_Base() == b.first.Tile_Base()) {
+  if (a.first.tile_base() == b.first.tile_base()) {
     return a.first.id() < b.first.id();
   }
-  return a.first.Tile_Base() < b.first.Tile_Base();
+  return a.first.tile_base() < b.first.tile_base();
 }
 } // namespace
 
@@ -49,7 +83,7 @@ namespace mjolnir {
 //  statements on the fly and retrievable by the caller, then anything in the code base that wants to
 //  use sqlite can make use of this utility class. for now its ok to be specific to landmarks though
 struct LandmarkDatabase::db_pimpl {
-  sqlite3* db;
+  std::optional<Sqlite3> db;
   sqlite3_stmt* insert_stmt;
   sqlite3_stmt* bounding_box_stmt;
   std::shared_ptr<void> spatial_lite;
@@ -58,29 +92,26 @@ struct LandmarkDatabase::db_pimpl {
   db_pimpl(const std::string& db_name, bool read_only)
       : insert_stmt(nullptr), bounding_box_stmt(nullptr) {
     // create parent directory if it doesn't exist
-    const filesystem::path parent_dir = filesystem::path(db_name).parent_path();
-    if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+    const std::filesystem::path parent_dir = std::filesystem::path(db_name).parent_path();
+    if (!std::filesystem::exists(parent_dir) && !std::filesystem::create_directories(parent_dir)) {
       throw std::runtime_error("Can't create parent directory " + parent_dir.string());
     }
 
     // figure out if we need to create database or can just open it up
-    auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    if (!filesystem::exists(db_name)) {
+    const auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    if (!std::filesystem::exists(db_name)) {
       if (read_only)
         throw std::logic_error("Cannot open sqlite database in read-only mode if it does not exist");
     } else if (!read_only) {
-      filesystem::remove(db_name);
+      std::filesystem::remove(db_name);
       LOG_INFO("deleting existing landmark database " + db_name + ", creating a new one");
     }
 
     // get a connection to the database
-    auto ret = sqlite3_open_v2(db_name.c_str(), &db, flags, NULL);
-    if (ret != SQLITE_OK) {
+    db = Sqlite3::open(db_name, flags);
+    if (!db) {
       throw std::runtime_error("Failed to open sqlite database: " + db_name);
     }
-
-    // loading spatiaLite as an extension
-    spatial_lite = make_spatialite_cache(db);
 
     // if the db was empty we need to initialize the schema
     char* err_msg = nullptr;
@@ -88,7 +119,7 @@ struct LandmarkDatabase::db_pimpl {
       // make the table
       const char* table =
           "SELECT InitSpatialMetaData(1); CREATE TABLE IF NOT EXISTS landmarks (id INTEGER PRIMARY KEY, name TEXT, type TEXT)";
-      ret = sqlite3_exec(db, table, NULL, NULL, &err_msg);
+      auto ret = sqlite3_exec(db->get(), table, NULL, NULL, &err_msg);
       if (ret != SQLITE_OK) {
         sqlite3_free(err_msg);
         throw std::runtime_error("Sqlite table creation error: " + std::string(err_msg));
@@ -96,7 +127,7 @@ struct LandmarkDatabase::db_pimpl {
 
       // add geom column
       const char* geom = "SELECT AddGeometryColumn('landmarks', 'geom', 4326, 'POINT', 2)";
-      ret = sqlite3_exec(db, geom, NULL, NULL, &err_msg);
+      ret = sqlite3_exec(db->get(), geom, NULL, NULL, &err_msg);
       if (ret != SQLITE_OK) {
         sqlite3_free(err_msg);
         throw std::runtime_error("Sqlite geom column creation error: " + std::string(err_msg));
@@ -104,7 +135,7 @@ struct LandmarkDatabase::db_pimpl {
 
       // make the index
       const char* index = "SELECT CreateSpatialIndex('landmarks', 'geom')";
-      ret = sqlite3_exec(db, index, NULL, NULL, &err_msg);
+      ret = sqlite3_exec(db->get(), index, NULL, NULL, &err_msg);
       if (ret != SQLITE_OK) {
         sqlite3_free(err_msg);
         throw std::runtime_error("Sqlite spatial index creation error: " + std::string(err_msg));
@@ -113,39 +144,38 @@ struct LandmarkDatabase::db_pimpl {
       // prep the insert statement
       const char* insert =
           "INSERT INTO landmarks (name, type, geom) VALUES (?, ?, MakePoint(?, ?, 4326))";
-      ret = sqlite3_prepare_v2(db, insert, strlen(insert), &insert_stmt, NULL);
+      ret = sqlite3_prepare_v2(db->get(), insert, strlen(insert), &insert_stmt, NULL);
       if (ret != SQLITE_OK)
         throw std::runtime_error("Sqlite prepared insert statement error: " +
-                                 std::string(sqlite3_errmsg(db)));
+                                 std::string(sqlite3_errmsg(db->get())));
     }
 
     // prep the select statement
     const char* select =
         "SELECT id, name, type, X(geom), Y(geom) FROM landmarks WHERE ST_Covers(BuildMbr(?, ?, ?, ?, 4326), geom)";
-    ret = sqlite3_prepare_v2(db, select, strlen(select), &bounding_box_stmt, NULL);
+    auto ret = sqlite3_prepare_v2(db->get(), select, strlen(select), &bounding_box_stmt, NULL);
     if (ret != SQLITE_OK) {
       throw std::runtime_error("Sqlite prepared select statement error: " +
-                               std::string(sqlite3_errmsg(db)));
+                               std::string(sqlite3_errmsg(db->get())));
     }
   }
   ~db_pimpl() {
     char* err_msg = nullptr;
-    if (vacuum_analyze && sqlite3_exec(db, "VACUUM", NULL, NULL, &err_msg) != SQLITE_OK) {
+    if (vacuum_analyze && sqlite3_exec(db->get(), "VACUUM", NULL, NULL, &err_msg) != SQLITE_OK) {
       sqlite3_free(err_msg);
       LOG_ERROR("Sqlite vacuum error: " + std::string(err_msg));
     }
 
-    if (vacuum_analyze && sqlite3_exec(db, "ANALYZE", NULL, NULL, &err_msg) != SQLITE_OK) {
+    if (vacuum_analyze && sqlite3_exec(db->get(), "ANALYZE", NULL, NULL, &err_msg) != SQLITE_OK) {
       sqlite3_free(err_msg);
       LOG_ERROR("Sqlite analyze error: " + std::string(err_msg));
     }
 
     sqlite3_finalize(insert_stmt);
     sqlite3_finalize(bounding_box_stmt);
-    sqlite3_close_v2(db);
   }
   std::string last_error() {
-    return std::string(sqlite3_errmsg(db));
+    return std::string(sqlite3_errmsg(db->get()));
   }
 };
 
@@ -196,14 +226,14 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   sql += ")";
 
   // callback for the sql query
-  auto populate_landmarks = [](void* data, int argc, char** argv, char** col_names) {
+  auto populate_landmarks = [](void* data, int /*argc*/, char** argv, char** /*col_names*/) {
     std::vector<Landmark>* landmarks = static_cast<std::vector<Landmark>*>(data);
 
-    int64_t landmark_id = static_cast<int64_t>(std::stoi(argv[0]));
+    int64_t landmark_id = static_cast<int64_t>(valhalla::midgard::to_int(argv[0]));
     const char* landmark_name = argv[1];
-    int landmark_type = std::stoi(argv[2]);
-    double lng = std::stod(argv[3]);
-    double lat = std::stod(argv[4]);
+    int landmark_type = valhalla::midgard::to_int(argv[2]);
+    double lng = valhalla::midgard::to_float<double>(argv[3]);
+    double lat = valhalla::midgard::to_float<double>(argv[4]);
 
     landmarks->emplace_back(
         Landmark(landmark_id, landmark_name, static_cast<LandmarkType>(landmark_type), lng, lat));
@@ -213,7 +243,7 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   std::vector<Landmark> landmarks;
   char* err_msg = nullptr;
   // execute query
-  int ret = sqlite3_exec(pimpl->db, sql.c_str(), populate_landmarks, &landmarks, &err_msg);
+  int ret = sqlite3_exec(pimpl->db->get(), sql.c_str(), populate_landmarks, &landmarks, &err_msg);
 
   // check for errors in the sql execution
   if (ret != SQLITE_OK) {
@@ -312,6 +342,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
   LandmarkDatabase db(db_name, true);
   GraphReader reader(pt);
+  loki::Search search(reader);
   // create the sequence file
   std::string file_name = "landmark_dump_" + std::to_string(thread_number);
   midgard::sequence<std::pair<GraphId, uint64_t>> seq_file(file_name, true);
@@ -329,31 +360,25 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
       // find and collect all nearby path locations for the landmarks
       for (const auto& landmark : landmarks) {
-        baldr::Location landmark_location(midgard::PointLL{landmark.lng, landmark.lat},
-                                          baldr::Location::StopType::BREAK, 0, 0, kLandmarkRadius);
-        landmark_location.search_cutoff_ = kLandmarkSearchCutoff;
+        google::protobuf::RepeatedPtrField<Location> landmark_locs;
+        auto* landmark_loc = landmark_locs.Add();
+        landmark_loc->mutable_ll()->set_lat(landmark.lat);
+        landmark_loc->mutable_ll()->set_lng(landmark.lng);
+        landmark_loc->set_type(Location_Type_kBreak);
+        landmark_loc->set_radius(kLandmarkRadius);
+        landmark_loc->set_search_cutoff(kLandmarkSearchCutoff);
+        apply_location_defaults(*landmark_loc);
 
         // call loki::Search to get nearby edges to each landmark
-        std::unordered_map<valhalla::baldr::Location, PathLocation> result =
-            loki::Search({landmark_location}, reader, sif::CreateNoCost({}));
+        search.search(landmark_locs, sif::CreateNoCost({}));
 
         // we only have one landmark as input so the return size should be no more than one
-        if (result.size() > 1) {
-          throw std::logic_error(
-              "Error occurred in finding nearby edges to a landmark. Result size is " +
-              std::to_string(result.size()) + ", but should be one or zero");
-        }
-        // if the landmark should not be associated with any edge
-        if (result.size() == 0) {
-          continue;
-        }
 
-        std::vector<PathLocation::PathEdge> edges = result.begin()->second.edges;
         // for each edge insert edgeid - landmark_pkey pair into the sequence file
         // TODO: maybe do some filtering and only keep some of the edges it finds? (now we have the
         //  75m search cutoff)
-        for (const auto& edge : edges) {
-          seq_file.push_back(std::make_pair(edge.id, landmark.id));
+        for (const auto& edge : landmark_loc->correlation().edges()) {
+          seq_file.push_back(std::make_pair(GraphId(edge.graph_id()), landmark.id));
         }
       }
     }
@@ -384,8 +409,8 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
   // every i'th thread works on every i'th tile
   for (auto it = seq_file.begin(); it != seq_file.end(); ++it) {
     // if the current tile is not the same as the last one, increase counter by one
-    if ((*it).first.Tile_Base() != last_tile) {
-      last_tile = (*it).first.Tile_Base();
+    if ((*it).first.tile_base() != last_tile) {
+      last_tile = (*it).first.tile_base();
       tile_count++;
     }
     // decide whether this tile is a "every i'th tile". if not, the thread should skip it
@@ -397,14 +422,14 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
 
     // if this pair is on a new tile, then store the previous tile and move to the new tile
     if (!tile_builder_ptr ||
-        tile_builder_ptr->header_builder().graphid().Tile_Base() != (*it).first.Tile_Base()) {
+        tile_builder_ptr->header_builder().graphid().tile_base() != (*it).first.tile_base()) {
       // store the previously updated tile
       if (tile_builder_ptr) {
         tile_builder_ptr->StoreTileData();
         updated_tiles++;
       }
       // reset the tile builder to this new tile
-      tile_builder_ptr.reset(new GraphTileBuilder(tile_dir, (*it).first.Tile_Base(), true));
+      tile_builder_ptr = std::make_unique<GraphTileBuilder>(tile_dir, (*it).first.tile_base(), true);
     }
 
     // retrieve the landmark to be added
@@ -444,12 +469,11 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
 bool AddLandmarks(const boost::property_tree::ptree& pt) {
   LOG_INFO("Starting adding landmarks to tiles...");
 
-  const size_t num_threads =
-      pt.get<size_t>("mjolnir.concurrency", std::thread::hardware_concurrency());
-  const std::string db_name = pt.get_child("mjolnir").get<std::string>("landmarks_db", "");
+  const size_t num_threads = pt.get<size_t>("concurrency", std::thread::hardware_concurrency());
+  const std::string db_name = pt.get<std::string>("landmarks", "");
 
   // get tile access
-  baldr::GraphReader reader(pt.get_child("mjolnir"));
+  baldr::GraphReader reader(pt);
 
   // get all tile ids and sort the tiles in descending order by size to balance the threads
   // TODO: it is possible in a global tileset that we have coverage only at level 2 for some places
@@ -468,9 +492,9 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
   std::vector<std::promise<std::string>> sequence_file_names(num_threads);
   for (size_t i = 0; i < num_threads; ++i) {
-    threads[i].reset(new std::thread(FindLandmarkEdges, std::cref(pt.get_child("mjolnir")),
-                                     std::cref(vec_tileset), i, num_threads,
-                                     std::ref(sequence_file_names[i])));
+    threads[i] =
+        std::make_shared<std::thread>(FindLandmarkEdges, std::cref(pt), std::cref(vec_tileset), i,
+                                      num_threads, std::ref(sequence_file_names[i]));
   }
 
   // join all the threads and collect the sequence file names
@@ -509,8 +533,8 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   const std::string tile_dir = reader.tile_dir();
   for (size_t i = 0; i < num_threads; ++i) {
     // assume the data size that each thread processes doesn't affect performance a lot
-    threads[i].reset(new std::thread(UpdateTiles, std::ref(merged_sequence_file), tile_dir, db_name,
-                                     i, num_threads, std::ref(stats_info[i])));
+    threads[i] = std::make_shared<std::thread>(UpdateTiles, std::ref(merged_sequence_file), tile_dir,
+                                               db_name, i, num_threads, std::ref(stats_info[i]));
   }
 
   for (auto& thread : threads) {
@@ -518,7 +542,7 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   }
 
   // collect and log the stats
-  size_t tiles = 0, edges = 0, landmarks = 0;
+  [[maybe_unused]] size_t tiles = 0, edges = 0, landmarks = 0;
   for (std::promise<std::tuple<size_t, size_t, size_t>>& s : stats_info) {
     std::tuple<size_t, size_t, size_t> data = s.get_future().get();
     tiles += std::get<0>(data);

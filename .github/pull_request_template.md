@@ -1,3 +1,5 @@
+_Please don't force-push once you received the first review._
+
 # Issue
 
 What issue is this PR targeting? If there is no issue that addresses the problem, please open a corresponding issue and link it here.
@@ -8,7 +10,8 @@ What issue is this PR targeting? If there is no issue that addresses the problem
  - [ ] Add #fixes with the issue number that this PR addresses
  - [ ] Update the docs with any new request parameters or changes to behavior described
  - [ ] Update the [changelog](CHANGELOG.md)
- - [ ] If you made changes to the lua files, update the [taginfo](taginfo.json) too.
+ - [ ] If you made changes to the lua files, update the [taginfo](taginfo.json) too
+ - [ ] If you made changes to a translation file, [update transifex](docs/docs/locales.md) too
 
 ## Requirements / Relations
 

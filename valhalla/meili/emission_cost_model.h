@@ -1,10 +1,10 @@
 #ifndef MMP_EMISSION_COST_MODEL_H_
 #define MMP_EMISSION_COST_MODEL_H_
 
-#include <functional>
-
 #include <valhalla/meili/config.h>
 #include <valhalla/meili/state.h>
+
+#include <functional>
 
 namespace valhalla {
 namespace meili {
@@ -35,7 +35,8 @@ public:
   }
 
   float operator()(const StateId& stateid) const {
-    return CalculateEmissionCost(container_.state(stateid).candidate().edges.front().distance);
+    return CalculateEmissionCost(
+        container_.state(stateid).candidate().correlation().edges().begin()->distance());
   }
 
 private:

@@ -1,4 +1,5 @@
 #include "midgard/util.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
@@ -6,22 +7,22 @@
 #include "midgard/polyline2.h"
 #include "midgard/vector2.h"
 
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/remove_whitespace.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <sys/stat.h>
+
 #include <algorithm>
 #include <array>
 #include <cctype>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <list>
 #include <random>
-#include <stdlib.h>
-#include <sys/stat.h>
 #include <vector>
-
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/remove_whitespace.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
 
 namespace {
 
@@ -386,6 +387,7 @@ template std::list<PointLL>
 resample_spherical_polyline<std::list<PointLL>>(const std::list<PointLL>&, double, bool);
 template std::list<Point2>
 resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double, bool);
+template bg::ring_ll_t resample_spherical_polyline<bg::ring_ll_t>(const bg::ring_ll_t&, double, bool);
 
 /* Resample a polyline at uniform intervals using more accurate spherical interpolation between
  * points. The length and number of samples is specified. The interval is computed based on
@@ -399,10 +401,13 @@ resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double,
 std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<PointLL>& polyline,
                                                          const double length,
                                                          const uint32_t n) {
-  if (polyline.size() == 0) {
+  if (polyline.empty()) {
     return {};
   }
 
+  if (n == 2) {
+    return {polyline.front(), polyline.back()};
+  }
   // Compute sample distance that splits the polyline equally to create n vertices.
   // Divisor is n-1 since there is 1 more vertex than edge on the subdivided polyline.
   double sample_distance = length / (n - 1);
@@ -432,7 +437,7 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
       auto sd = sin(d);
       auto a = sin(d - remaining) / sd;
       auto acs1 = a * cos(lat1);
-      auto b = sin(sample_distance) / sd;
+      auto b = sin(remaining) / sd;
       auto bcs2 = b * cos(lat2);
 
       // find the interpolated point along the arc
@@ -457,12 +462,14 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
     resampled.push_back(std::move(polyline.back()));
   } else if (resampled.size() == n) {
     resampled.back() = polyline.back();
+  } else {
+    resampled.resize(n);
+    resampled.back() = polyline.back();
   }
 
   if (resampled.size() != n) {
-    LOG_ERROR("resampled polyline not expected size! n: " + std::to_string(n) +
-              " actual: " + std::to_string(resampled.size()) + " length: " + std::to_string(length) +
-              " d: " + std::to_string(sample_distance));
+    LOG_ERROR("resampled polyline not expected size! n: {} actual: {} length: {} d: {}", n,
+              resampled.size(), length, sample_distance);
   }
   return resampled;
 }
@@ -654,6 +661,7 @@ template PointLL::first_type polygon_area(const std::list<PointLL>&);
 template PointLL::first_type polygon_area(const std::vector<PointLL>&);
 template Point2::first_type polygon_area(const std::list<Point2>&);
 template Point2::first_type polygon_area(const std::vector<Point2>&);
+template PointLL::first_type polygon_area(const bg::ring_ll_t&);
 
 std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& segments,
                                            std::vector<float>& accuracies,

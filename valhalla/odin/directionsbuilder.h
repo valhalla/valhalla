@@ -1,12 +1,12 @@
 #ifndef VALHALLA_ODIN_DIRECTIONSBUILDER_H_
 #define VALHALLA_ODIN_DIRECTIONSBUILDER_H_
 
-#include <list>
-
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/odin/markup_formatter.h>
 #include <valhalla/proto/api.pb.h>
+
+#include <list>
 
 namespace valhalla {
 namespace odin {

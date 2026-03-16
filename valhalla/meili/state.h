@@ -2,30 +2,28 @@
 #ifndef MMP_STATE_H_
 #define MMP_STATE_H_
 
-#include <algorithm>
-#include <unordered_map>
-#include <vector>
-
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/routing.h>
 #include <valhalla/meili/stateid.h>
-#include <valhalla/proto/common.pb.h>
+
+#include <algorithm>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace meili {
 
 class State {
 public:
-  State(const StateId& stateid, const baldr::PathLocation& candidate)
-      : stateid_(stateid), candidate_(candidate), labelset_(nullptr), label_idx_() {
+  State(const StateId& stateid, Location&& candidate)
+      : stateid_(stateid), candidate_(std::move(candidate)), labelset_(nullptr), label_idx_() {
   }
 
   const StateId& stateid() const {
     return stateid_;
   }
 
-  const baldr::PathLocation& candidate() const {
+  const Location& candidate() const {
     return candidate_;
   }
 
@@ -35,7 +33,7 @@ public:
 
   void SetRoute(const std::vector<StateId>& stateids,
                 const std::unordered_map<uint16_t, uint32_t>& results,
-                labelset_ptr_t labelset) const {
+                const labelset_ptr_t& labelset) const {
     if (!labelset) {
       throw std::runtime_error("expect valid labelset but got nullptr");
     }
@@ -79,7 +77,7 @@ public:
 private:
   StateId stateid_;
 
-  baldr::PathLocation candidate_;
+  Location candidate_;
 
   mutable std::shared_ptr<LabelSet> labelset_;
 
@@ -145,10 +143,10 @@ public:
     std::stringstream ss;
     ss << std::setprecision(6) << std::fixed
        << R"({"type":"Feature","geometry":{"type":"Point","coordinates":[)";
-    ss << s.candidate().edges[0].projected.lng() << ',' << s.candidate().edges[0].projected.lat()
-       << "]}";
+    ss << s.candidate().correlation().edges(0).ll().lng() << ','
+       << s.candidate().correlation().edges(0).ll().lat() << "]}";
     ss << ',' << R"("properties":{"time":)" << s.stateid().time() << R"(,"id":)" << s.stateid().id()
-       << R"(,"edge":")" << s.candidate().edges[0].id << "\"}}";
+       << R"(,"edge":")" << s.candidate().correlation().edges(0).graph_id() << "\"}}";
     return ss.str();
   }
 
@@ -166,13 +164,13 @@ public:
     return time;
   }
 
-  template <typename candidate_t> StateId AppendCandidate(candidate_t candidate) {
+  StateId AppendCandidate(Location&& candidate) {
     const auto& stateid = NewStateId();
-    AppendState(State(stateid, candidate));
+    AppendState(State(stateid, std::move(candidate)));
     return stateid;
   }
 
-  void AppendState(const State& state) {
+  void AppendState(State&& state) {
     if (columns_.empty()) {
       throw std::runtime_error("add measurement first");
     }
@@ -185,7 +183,7 @@ public:
                                std::to_string(state.stateid().id()));
     }
 
-    columns_.back().push_back(state);
+    columns_.back().push_back(std::move(state));
   }
 
 private:

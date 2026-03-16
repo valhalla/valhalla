@@ -1,4 +1,4 @@
-name: Update public FOSSGIS servers 
+name: Update public FOSSGIS servers
 
 on:
   push:
@@ -21,6 +21,7 @@ jobs:
   update_servers:
     name: Update servers
     runs-on: ubuntu-latest
+    if: github.repository_owner == 'valhalla'
     steps:
       - uses: actions/checkout@v4
         with:

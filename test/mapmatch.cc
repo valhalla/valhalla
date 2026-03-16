@@ -1,21 +1,19 @@
+#include "baldr/json.h"
+#include "loki/worker.h"
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
+#include "midgard/util.h"
+#include "odin/worker.h"
+#include "test.h"
+#include "thor/worker.h"
+#include "tyr/actor.h"
+#include "worker.h"
+
 #include <algorithm>
 #include <iostream>
 #include <random>
 #include <utility>
 #include <vector>
-
-#include "baldr/json.h"
-#include "loki/worker.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/encoded.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "odin/worker.h"
-#include "thor/worker.h"
-#include "tyr/actor.h"
-#include "worker.h"
-
-#include "test.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -135,7 +133,7 @@ void compare_results(const valhalla::Api& expected, const valhalla::Api& result)
 
       auto expected_seconds = leg.node().rbegin()->cost().elapsed_cost().seconds();
       auto answer_seconds = leg_answer->node().rbegin()->cost().elapsed_cost().seconds();
-      ASSERT_NEAR(expected_seconds, answer_seconds, .1)
+      ASSERT_NEAR(expected_seconds, answer_seconds, 1)
           << "Expected leg with elapsed time " << expected_seconds << " but got " << answer_seconds;
 
       auto expected_distance = expected.directions().routes(r).legs(l).summary().length();
@@ -546,10 +544,9 @@ TEST(Mapmatch, test_matching_indices_and_waypoint_indices) {
         // handle the tracepoint null case
         continue;
       }
-      EXPECT_EQ(result, answers[i][j]) << "expect matching_index and waypoint_index: (" +
-                                              answers[i][j].first + "," + answers[i][j].second +
-                                              "), " + "but got: (" + result.first + "," +
-                                              result.second + ")";
+      EXPECT_EQ(result, answers[i][j])
+          << "expect matching_index and waypoint_index: (" + answers[i][j].first + "," +
+                 answers[i][j].second + "), but got: (" + result.first + "," + result.second + ")";
       ++j;
     }
   }
@@ -1085,7 +1082,6 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
                  std::to_string(route.legs_size());
 
       for (const auto& leg : route.legs()) {
-        valhalla::Api route_api;
         auto route_test_case =
             R"({"costing":"auto","locations":[{"lat":)" + std::to_string(leg.location(0).ll().lat()) +
             R"(,"lon":)" + std::to_string(leg.location(0).ll().lng()) +

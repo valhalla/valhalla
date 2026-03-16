@@ -1,14 +1,10 @@
+#include "baldr/streetnames.h"
+#include "baldr/streetname.h"
+#include "baldr/verbal_text_formatter.h"
+#include "proto/common.pb.h"
+
 #include <optional>
 #include <vector>
-
-#include "midgard/logging.h"
-
-#include "baldr/streetname.h"
-#include "baldr/streetnames.h"
-#include "baldr/verbal_text_formatter.h"
-#include "baldr/verbal_text_formatter_us.h"
-#include "midgard/util.h"
-#include "proto/common.pb.h"
 
 namespace valhalla {
 namespace baldr {

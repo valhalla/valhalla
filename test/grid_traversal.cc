@@ -1,11 +1,9 @@
-#include <vector>
-
-#include "midgard/linesegment2.h"
+#include "meili/grid_traversal.h"
 #include "midgard/point2.h"
 
-#include "meili/grid_traversal.h"
+#include <gtest/gtest.h>
 
-#include "test.h"
+#include <vector>
 
 namespace {
 

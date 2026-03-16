@@ -1,19 +1,20 @@
 #ifndef VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
 #define VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
 
-#include <cstdint>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/exceptions.h>
 #include <valhalla/proto_conversions.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrixalgorithm.h>
+#include <valhalla/thor/pathalgorithm.h>
+
+#include <cstdint>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -49,9 +50,9 @@ public:
     if (request.options().shape_format() != no_shape)
       add_warning(request, 207);
 
-    // Set the mode and costing
     mode_ = mode;
     costing_ = mode_costing[static_cast<uint32_t>(mode_)];
+    max_expansion_distance_ = request.options().expansion_max_distance();
 
     const bool forward_search =
         request.options().sources().size() <= request.options().targets().size();
@@ -99,7 +100,7 @@ protected:
   std::vector<Destination> destinations_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+  sif::cost_ptr_t costing_;
 
   // List of edges that have potential destinations. Each "marked" edge
   // has a vector of indexes into the destinations vector
@@ -224,11 +225,14 @@ protected:
    *                           so that all supplied locations must be settled.
    * @return  Returns true if all destinations have been settled.
    */
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
   bool UpdateDestinations(const valhalla::Location& origin,
                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
-                          const graph_tile_ptr& tile,
+                          const baldr::graph_tile_ptr& tile,
+                          baldr::GraphReader& reader,
                           const sif::EdgeLabel& pred,
                           const baldr::TimeInfo& time_info,
                           const uint32_t matrix_locations);

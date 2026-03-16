@@ -28,10 +28,7 @@
 #endif
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/constants.h>
-
-#include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -40,7 +37,23 @@ namespace DateTime {
 // tz db
 struct tz_db_t {
   tz_db_t();
+  /**
+   * Returns our hard-coded tz index of supported time zones (i.e. not deprecated).
+   *
+   * @param zone The time zone name to get the index for. Note that it can't
+   *             be a deprecated time zone, which could happen for hard-coded
+   *             time zone names.
+   * @returns The hard-coded tz index, mainly used for graph build.
+   */
   size_t to_index(const std::string& zone) const;
+  /**
+   * Returns the currently supported time zone given our hard-coded tz index.
+   *
+   * @param index The tz index to look up
+   * @returns The current time zone this index points to. Note, our index map might
+   *          point to a (now) deprecated time zone name. However, the date library
+   *          will properly resolve this to the (now) supported time zone.
+   */
   const date::time_zone* from_index(size_t index) const;
 
 protected:

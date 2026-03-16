@@ -2,9 +2,15 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/tokenizer.hpp>
+
+#include <filesystem>
 #include <fstream>
+#include <future>
 #include <iomanip>
 #include <random>
 #include <sstream>
@@ -12,10 +18,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include <boost/tokenizer.hpp>
-#include <future>
-
 namespace vj = valhalla::mjolnir;
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
@@ -27,6 +31,8 @@ struct TrafficStats {
   uint32_t compressed_count = 0;
   uint32_t updated_count = 0;
   uint32_t dup_count = 0;
+  uint32_t lower_bound_count = 0;
+  uint32_t upper_bound_count = 0;
 
   // Accumulate counts from all threads
   TrafficStats& operator+=(const TrafficStats& other) {
@@ -35,6 +41,8 @@ struct TrafficStats {
     compressed_count += other.compressed_count;
     updated_count += other.updated_count;
     dup_count += other.dup_count;
+    lower_bound_count += other.lower_bound_count;
+    upper_bound_count += other.upper_bound_count;
     return *this;
   }
 };
@@ -43,6 +51,11 @@ struct TrafficSpeeds {
   uint8_t free_flow_speed = 0;
   std::optional<std::array<int16_t, valhalla::baldr::kCoefficientCount>> coefficients;
 };
+
+inline bool is_possible_outlier(float speed) {
+  return speed < kMinSpeedKph || speed > kMaxAssumedSpeed;
+}
+
 /**
  * Read speed CSV file and update the tile_speeds in unique_data
  */
@@ -89,7 +102,7 @@ ParseTrafficFile(const std::vector<std::string>& filenames, TrafficStats& stat) 
             } break;
             case 1: {
               try {
-                traffic->second.free_flow_speed = std::stoi(t);
+                traffic->second.free_flow_speed = valhalla::midgard::to_int(t);
                 stat.free_flow_count++;
               } catch (std::exception& e) {
                 LOG_WARN("Invalid free flow speed in file: " + full_filename + " line number " +
@@ -99,7 +112,7 @@ ParseTrafficFile(const std::vector<std::string>& filenames, TrafficStats& stat) 
             } break;
             case 2: {
               try {
-                traffic->second.constrained_flow_speed = std::stoi(t);
+                traffic->second.constrained_flow_speed = valhalla::midgard::to_int(t);
                 stat.constrained_count++;
               } catch (std::exception& e) {
                 LOG_WARN("Invalid constrained flow speed in file: " + full_filename +
@@ -112,6 +125,20 @@ ParseTrafficFile(const std::vector<std::string>& filenames, TrafficStats& stat) 
                 try {
                   // Decode the base64 predicted speeds
                   traffic->second.coefficients = decode_compressed_speeds(t);
+
+                  // Look at the decompressed speeds warn about possible outlier values.
+                  // The reason we do this is previously these outlier speeds were
+                  // discarded during path finding, but now the user bears responsibility
+                  // for handling outliers in their data.
+                  // (see https://github.com/valhalla/valhalla/pull/5087)
+                  for (size_t i = 0; i < kBucketsPerWeek; ++i) {
+                    if (float speed =
+                            decompress_speed_bucket((*traffic->second.coefficients).data(), i);
+                        is_possible_outlier(speed)) {
+                      stat.lower_bound_count += speed < kMinSpeedKph;
+                      stat.upper_bound_count += speed > kMaxAssumedSpeed;
+                    }
+                  }
                   stat.compressed_count++;
                 } catch (std::exception& e) {
                   LOG_WARN("Invalid compressed speeds in file: " + full_filename + " line number " +
@@ -141,9 +168,10 @@ void UpdateTile(const std::string& tile_dir,
                 const GraphId& tile_id,
                 const std::unordered_map<uint32_t, TrafficSpeeds>& speeds,
                 TrafficStats& stat) {
-  auto tile_path = tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-  if (!filesystem::exists(tile_path)) {
-    LOG_ERROR("No tile at " + tile_path);
+  std::filesystem::path tile_path{tile_dir};
+  tile_path.append(GraphTile::FileSuffix(tile_id));
+  if (!std::filesystem::exists(tile_path)) {
+    LOG_ERROR("No tile at " + tile_path.string());
     return;
   }
 
@@ -200,8 +228,8 @@ void UpdateTiles(const std::string& tile_dir,
   thread_name << std::this_thread::get_id();
 
   // Iterate through the tiles and parse them
-  size_t total = tile_end - tile_start;
-  double count = 0;
+  [[maybe_unused]] size_t total = tile_end - tile_start;
+  [[maybe_unused]] double count = 0;
   TrafficStats stat{};
   for (; tile_start != tile_end; ++tile_start) {
     LOG_INFO(thread_name.str() + " parsing traffic data for " + std::to_string(tile_start->first));
@@ -215,13 +243,13 @@ void UpdateTiles(const std::string& tile_dir,
   result.set_value(stat);
 }
 std::vector<std::pair<GraphId, std::vector<std::string>>>
-PrepareTrafficTiles(const filesystem::path& traffic_tile_dir) {
+PrepareTrafficTiles(const std::filesystem::path& traffic_tile_dir) {
   std::unordered_map<GraphId, std::vector<std::string>> files_per_tile;
-  for (filesystem::recursive_directory_iterator i(traffic_tile_dir), end; i != end; ++i) {
+  for (std::filesystem::recursive_directory_iterator i(traffic_tile_dir), end; i != end; ++i) {
     if (i->is_regular_file()) {
       // remove any extension
       auto file_name = i->path().string();
-      auto pos = file_name.rfind(filesystem::path::preferred_separator);
+      auto pos = file_name.rfind(std::filesystem::path::preferred_separator);
       file_name = file_name.substr(0, file_name.find('.', pos == std::string::npos ? 0 : pos));
       try {
         // parse it into a tile id and store the file path with it
@@ -245,8 +273,8 @@ void GenerateSummary(const boost::property_tree::ptree& config) {
   mutable_config.get_child("mjolnir").erase("tile_extract");
 
   GraphReader reader(mutable_config.get_child("mjolnir"));
-  int shortcuts_with_speed = 0;
-  int non_dr_with_speed = 0;
+  [[maybe_unused]] int shortcuts_with_speed = 0;
+  [[maybe_unused]] int non_dr_with_speed = 0;
   std::vector<uint32_t> dr_class_edges_links(8);
   std::vector<uint32_t> dr_road_class_edges(8);
   std::vector<uint32_t> pred_road_class_edges(8);
@@ -308,7 +336,7 @@ void GenerateSummary(const boost::property_tree::ptree& config) {
   LOG_INFO("non drivable with speed = " + std::to_string(non_dr_with_speed));
   LOG_INFO("Shortcuts with speed = " + std::to_string(shortcuts_with_speed));
 
-  uint32_t totaldrivable = 0, totalpt = 0, totalff = 0, totaldrivablelink = 0;
+  [[maybe_unused]] uint32_t totaldrivable = 0, totalpt = 0, totalff = 0, totaldrivablelink = 0;
   for (uint32_t i = 0; i < 8; i++) {
     float pct1 = 100.0f * (float)pred_road_class_edges[i] / dr_road_class_edges[i];
     float pct2 = 100.0f * (float)ff_road_class_edges[i] / dr_road_class_edges[i];
@@ -335,7 +363,7 @@ void GenerateSummary(const boost::property_tree::ptree& config) {
 
 //  to process threads and collect results
 void ProcessTrafficTiles(const std::string& tile_dir,
-                         const filesystem::path& traffic_tile_dir,
+                         const std::filesystem::path& traffic_tile_dir,
                          const bool summary,
                          const boost::property_tree::ptree& config) {
 
@@ -352,8 +380,8 @@ void ProcessTrafficTiles(const std::string& tile_dir,
     auto tile_start = tile_end;
     tile_end += (i < at_ceiling ? floor + 1 : floor);
     results.emplace_back();
-    threads[i].reset(
-        new std::thread(UpdateTiles, tile_dir, tile_start, tile_end, std::ref(results.back())));
+    threads[i] = std::make_shared<std::thread>(UpdateTiles, tile_dir, tile_start, tile_end,
+                                               std::ref(results.back()));
   }
 
   // Wait for threads to complete
@@ -377,6 +405,8 @@ void ProcessTrafficTiles(const std::string& tile_dir,
   LOG_INFO("Parsed " + std::to_string(final_stats.compressed_count) + " compressed records.");
   LOG_INFO("Updated " + std::to_string(final_stats.updated_count) + " directed edges.");
   LOG_INFO("Duplicate count " + std::to_string(final_stats.dup_count) + ".");
+  LOG_INFO("Speeds below lower bound count " + std::to_string(final_stats.lower_bound_count) + ".");
+  LOG_INFO("Speeds above upper bound count " + std::to_string(final_stats.upper_bound_count) + ".");
   LOG_INFO("Finished");
   // Optional summary
   if (summary) {

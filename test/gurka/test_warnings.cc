@@ -1,12 +1,8 @@
-#include <vector>
-
 #include "gurka.h"
-#include <gtest/gtest.h>
+#include "valhalla/worker.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-#include "gurka.h"
 
 using namespace valhalla;
 
@@ -73,7 +69,7 @@ TEST(Standalone, BidirAstarFallback) {
     auto api = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto",
                                 {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.info().warnings().size(), 1);
-    EXPECT_EQ(api.info().warnings(0).code(), 212);
+    EXPECT_EQ(api.info().warnings(0).code(), 214);
     EXPECT_THAT(api.info().warnings(0).description(),
                 testing::HasSubstr("max_timedep_distance for arrive_by"));
   }

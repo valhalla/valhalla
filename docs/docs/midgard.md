@@ -41,7 +41,7 @@ This class contains methods for converting x,y or lat,lng into tile Id and vice-
 ### Gridded Data ###
 
 Midgard provides a class to store data in a gridded/tiled data structure. Contains methods to mark each tile with data using a compare operator. There is also a method to generate contour lines from isotile data. The contouring method is a derivation from the C code version of CONREC by Paul Bourke:
-http://paulbourke.net/papers/conrec/
+https://paulbourke.net/papers/conrec/
 
 ## Distance Approximation ###
 

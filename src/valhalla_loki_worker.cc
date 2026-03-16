@@ -1,9 +1,9 @@
-#include <iostream>
-
 #include "baldr/rapidjson_utils.h"
+#include "loki/worker.h"
+
 #include <boost/property_tree/ptree.hpp>
 
-#include "loki/worker.h"
+#include <iostream>
 
 int main(int argc, char** argv) {
 

@@ -1,15 +1,15 @@
 #ifndef VALHALLA_BALDR_GRAPHTILEHEADER_H_
 #define VALHALLA_BALDR_GRAPHTILEHEADER_H_
 
-#include <array>
-#include <cstdint>
-#include <cstdlib>
-#include <string>
-
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <array>
+#include <cstdint>
+#include <cstdlib>
+#include <string>
 
 namespace valhalla {
 namespace baldr {
@@ -165,13 +165,7 @@ public:
    * @return Returns the base lat,lon of the tile (degrees).
    */
   midgard::PointLL base_ll() const {
-    GraphId id(graphid_);
-
-    if (id.level() == TileHierarchy::GetTransitLevel().level) {
-      return TileHierarchy::GetTransitLevel().tiles.Base(id.tileid());
-    }
-    return TileHierarchy::levels()[id.level()].tiles.Base(id.tileid());
-    // return midgard::PointLL(base_ll_.first, base_ll_.second);
+    return {base_ll_[0], base_ll_[1]};
   }
 
   /**
@@ -179,8 +173,8 @@ public:
    * @param ll  Base lat,lon of the tile.
    */
   void set_base_ll(const midgard::PointLL& ll) {
-    base_ll_.first = ll.lng();
-    base_ll_.second = ll.lat();
+    base_ll_[0] = ll.lng();
+    base_ll_[1] = ll.lat();
   }
 
   /**
@@ -590,6 +584,22 @@ public:
     tile_size_ = offset;
   }
 
+  /**
+   * Get the checksum hash of the tile
+   * @return return the 64bit hash of tile's input checksum
+   */
+  uint64_t checksum() const {
+    return checksum_;
+  }
+
+  /**
+   * Sets the checksum hash of the tile
+   * @param checksum the 64bit hash for tile's input checksum
+   */
+  void set_checksum(uint64_t checksum) {
+    checksum_ = checksum;
+  }
+
 protected:
   // TODO when c++20 bitfields can be initialized here
   // GraphId (tileid and level) of this tile. Data quality metrics.
@@ -603,7 +613,7 @@ protected:
 
   // TODO: in v4, don't store this its superfluous information, the graphid has all we need
   // Base lon, lat of the tile
-  std::pair<float, float> base_ll_ = {0, 0};
+  std::array<float, 2> base_ll_ = {0.f, 0.f};
 
   // baldr version.
   std::array<char, kMaxVersionSize> version_ = {};
@@ -666,7 +676,10 @@ protected:
   // this should be backwards compatible. Make sure use of bits from spareword* does not
   // exceed 128 bits.
   uint64_t spareword0_ = 0;
-  uint64_t spareword1_ = 0;
+
+  // for road tiles: hashed md5 of the OSM PBFs
+  // for transit tiles: so far the same
+  uint64_t checksum_ = 0; // formerly spareword1_
 
   // Offsets to beginning of data (for variable size records)
   uint32_t complex_restriction_forward_offset_ = 0; // Offset to complex restriction list
@@ -696,6 +709,13 @@ protected:
   // bitfield or union or anything like that
   std::array<uint32_t, kEmptySlots> empty_slots_ = {};
 };
+
+static_assert(sizeof(GraphTileHeader) == 272, "Bad sizeof(GraphTileHeader)");
+// make sure it stays POD-like so we can safely copy its bytes around
+static_assert(std::is_trivially_copyable_v<GraphTileHeader>,
+              "GraphTileHeader is not trivially copyable");
+static_assert(std::is_standard_layout_v<GraphTileHeader>,
+              "GraphTileHeader has non-standard layout, e.g. virtual functions");
 
 } // namespace baldr
 } // namespace valhalla

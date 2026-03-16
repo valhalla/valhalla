@@ -1,17 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_
 #define VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_
 
+#include <valhalla/baldr/edgeinfo.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/edgeinfo.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
-
-using namespace valhalla::midgard;
-using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
@@ -33,7 +27,7 @@ public:
    * @return  Returns mean elevation in meters relative to sea level.
    */
   float mean_elevation() const {
-    return kMinElevation + (ei_.mean_elevation_ * kElevationBinSize);
+    return baldr::kMinElevation + (ei_.mean_elevation_ * baldr::kElevationBinSize);
   }
 
   /**

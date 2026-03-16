@@ -1,10 +1,10 @@
 #include "midgard/pointll.h"
 #include "midgard/constants.h"
-#include "midgard/util.h"
+
+#include <gtest/gtest.h>
+
 #include <algorithm>
 #include <cmath>
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla::midgard;
@@ -340,7 +340,7 @@ TEST(PointLL, TestMidPoint) {
 
 TEST(PointLL, TestDistance) {
   auto d = PointLL(-90.0, 0.0).Distance({90.0, 0.0});
-  EXPECT_EQ(d, kPi * kRadEarthMeters) << "Distance 180 from each other should be PI * earth radius";
+  EXPECT_EQ(d, kPiD * kRadEarthMeters) << "Distance 180 from each other should be PI * earth radius";
 
   d = PointLL(-90.0, 0.0).Distance({-90.0, 0.0});
   EXPECT_EQ(d, 0.0) << "Distance between same points should be 0";

@@ -1,21 +1,22 @@
-#include <cmath>
-#include <filesystem>
+#include "baldr/rapidjson_utils.h"
+#include "gurka.h"
+#include "midgard/pointll.h"
+
+#include <gtest/gtest.h>
+
+#ifndef _WIN32
 #include <sys/mman.h>
+#endif
+
 #include <sys/stat.h>
 
-#include "gurka.h"
-#include "loki/worker.h"
-#include "microtar.h"
-#include "mjolnir/adminbuilder.h"
-#include "test/test.h"
-
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/traffictile.h>
+#include <cmath>
+#include <filesystem>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::gurka;
-using namespace valhalla::mjolnir;
+using namespace valhalla::midgard;
 
 TEST(TestRouteSummary, GetSummary) {
   const std::string ascii_map = R"(

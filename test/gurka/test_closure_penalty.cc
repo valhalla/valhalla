@@ -1,10 +1,9 @@
-#include <boost/format.hpp>
-
+#include "baldr/graphreader.h"
+#include "baldr/traffictile.h"
 #include "gurka.h"
 #include "test.h"
 
-#include "baldr/graphreader.h"
-#include "baldr/traffictile.h"
+#include <boost/format.hpp>
 
 using namespace valhalla;
 using LiveTrafficCustomize = test::LiveTrafficCustomize;
@@ -25,7 +24,7 @@ void close_dir_edge(baldr::GraphReader& reader,
                     const gurka::map& closure_map) {
   baldr::GraphId tile_id(tile.header->tile_id);
   auto edge = std::get<0>(gurka::findEdge(reader, closure_map.nodes, edge_name, end_node));
-  if (edge.Tile_Base() == tile_id && edge.id() == index) {
+  if (edge.tile_base() == tile_id && edge.id() == index) {
     SetLiveSpeed(current, 0);
   }
 }
@@ -124,7 +123,7 @@ protected:
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
                                         (void)reader, (void)tile, (void)index;
-                                        SetLiveSpeed(current, UNKNOWN_TRAFFIC_SPEED_RAW);
+                                        SetLiveSpeed(current, baldr::UNKNOWN_TRAFFIC_SPEED_RAW);
                                       });
   }
 

@@ -1,9 +1,10 @@
 #ifndef VALHALLA_SIF_HIERARCHYLIMITS_H_
 #define VALHALLA_SIF_HIERARCHYLIMITS_H_
 
+#include <valhalla/proto/options.pb.h>
+
 #include <cstdint>
 #include <limits>
-#include <valhalla/proto/options.pb.h>
 
 // Default hierarchy transitions. Note that this corresponds to a 3 level
 // strategy: highway, arterial, local. Any changes to this will require

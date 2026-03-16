@@ -1,8 +1,8 @@
 #pragma once
 
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
-#include "baldr/nodeinfo.h"
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/midgard/util.h>
 
 namespace {
 

@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "test.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -31,7 +32,7 @@ TEST(Standalone, avoid_service) {
 
 void validate_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  auto leg = result.trip().routes(0).legs(0);
+  [[maybe_unused]] auto leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, expected_names);
 }
 

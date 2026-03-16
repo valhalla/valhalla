@@ -1,7 +1,6 @@
-#include <filesystem>
-
 #include "gurka.h"
 #include "test/test.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -11,7 +10,6 @@
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::gurka;
-using namespace valhalla::mjolnir;
 
 namespace {
 const std::vector<std::string> kSupportedCostingModels = {

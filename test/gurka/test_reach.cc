@@ -1,11 +1,10 @@
 #include "gurka.h"
 #include "loki/reach.h"
+#include "proto/options.pb.h"
 #include "sif/costfactory.h"
-#include "sif/dynamiccost.h"
 #include "test.h"
 
 #include <gtest/gtest.h>
-#include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::loki;
@@ -27,7 +26,7 @@ void close_dir_edge(baldr::GraphReader& reader,
                     const gurka::map& closure_map) {
   baldr::GraphId tile_id(tile.header->tile_id);
   auto edge = std::get<0>(gurka::findEdge(reader, closure_map.nodes, edge_name, end_node));
-  if (edge.Tile_Base() == tile_id && edge.id() == index) {
+  if (edge.tile_base() == tile_id && edge.id() == index) {
     SetLiveSpeed(current, 0);
   }
 }
@@ -124,7 +123,7 @@ TEST_F(TestReach, ReachWithNoClosures) {
   sif::CostFactory factory;
   Costing c;
   c.set_type(Costing::auto_);
-  c.mutable_options()->set_flow_mask(kDefaultFlowMask);
+  c.mutable_options()->set_flow_mask(baldr::kDefaultFlowMask);
   c.set_filter_closures(false);
 
   auto costing = factory.Create(c);
@@ -159,7 +158,7 @@ TEST_F(TestReach, ReachWithClosures) {
 
   Costing c;
   c.set_type(Costing::auto_);
-  c.mutable_options()->set_flow_mask(kDefaultFlowMask);
+  c.mutable_options()->set_flow_mask(baldr::kDefaultFlowMask);
   c.set_filter_closures(true);
   // Check reach for AB - enclosed by closures, so reach should be 0
   {
@@ -220,7 +219,7 @@ TEST_F(TestReach, DISABLED_ReachWithClosures2) {
 
   Costing c;
   c.set_type(Costing::auto_);
-  c.mutable_options()->set_flow_mask(kDefaultFlowMask);
+  c.mutable_options()->set_flow_mask(baldr::kDefaultFlowMask);
   c.set_filter_closures(false);
   auto costing = factory.Create(c);
   auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "K", "L");

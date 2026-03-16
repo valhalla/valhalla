@@ -3,7 +3,6 @@
 
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace thor {

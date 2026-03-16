@@ -1,7 +1,7 @@
 # Map Matching in a Programmer's Perspective
 
 Meili uses a Hidden Markov Model (HMM) approach, proposed by
-[Paul Newson and John Krumm in 2009](http://research.microsoft.com/en-us/um/people/jckrumm/Publications%202009/map%20matching%20ACM%20GIS%20camera%20ready.pdf),
+[Paul Newson and John Krumm in 2009](https://research.microsoft.com/en-us/um/people/jckrumm/Publications%202009/map%20matching%20ACM%20GIS%20camera%20ready.pdf),
 to solve the map matching problem. The map-matching problem is
 modelled as follows: given a sequence of GPS measurements
 (observations in terms of HMM), each measurement has to match one of a

@@ -1,9 +1,9 @@
 #ifndef VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_US_TX_H_
 #define VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_US_TX_H_
 
-#include <string>
-
 #include <valhalla/baldr/verbal_text_formatter_us.h>
+
+#include <string>
 
 namespace valhalla {
 namespace baldr {

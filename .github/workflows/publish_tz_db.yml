@@ -1,0 +1,35 @@
+name: Publish the latest tzdb
+
+on:
+  # also per schedule in case upstream didn't change for a while
+  schedule:
+    - cron: "0 0 1 */2 *"  # every 2 months
+  push:
+    branches:
+      - master
+    paths:
+      - scripts/valhalla_build_timezones
+  workflow_dispatch:
+
+jobs:
+  publish_tz:
+    name: Publish tzdb on GHA artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: Compile tzdb
+        shell: bash
+        run: |
+          set -e
+          sudo apt-get install -y unzip spatialite-bin
+          ./scripts/valhalla_build_timezones > timezones.sqlite
+
+      - name: Upload tzdb
+        uses: actions/upload-artifact@v4
+        with:
+          name: timezones.sqlite
+          path: timezones.sqlite

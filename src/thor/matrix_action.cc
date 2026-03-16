@@ -1,11 +1,6 @@
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/pedestriancost.h"
-#include "thor/costmatrix.h"
-#include "thor/timedistancebssmatrix.h"
-#include "thor/timedistancematrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+
 #include <valhalla/worker.h>
 
 using namespace valhalla;

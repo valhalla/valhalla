@@ -1,50 +1,34 @@
-#include <cinttypes>
-#include <cstdint>
-#include <unordered_map>
-#include <vector>
-
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/io/wkt/wkt.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
-#include "baldr/admininfo.h"
-#include "baldr/graphconstants.h"
+#include "argparse_utils.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
-#include "midgard/constants.h"
-#include "midgard/distanceapproximator.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
-#include "mjolnir/util.h"
+#include "mjolnir/sqlite3.h"
 
-#include "argparse_utils.h"
+#include <boost/geometry/io/wkt/read.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+#include <sqlite3.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <unordered_map>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
-// Geometry types for admin queries
-typedef boost::geometry::model::d2::point_xy<double> point_type;
-typedef boost::geometry::model::polygon<point_type> polygon_type;
-typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
+std::filesystem::path config_file_path;
 
-filesystem::path config_file_path;
-
-std::unordered_map<uint32_t, multi_polygon_type>
-GetAdminInfo(sqlite3* db_handle,
+std::unordered_map<uint32_t, bg::multipolygon_ll_t>
+GetAdminInfo(valhalla::mjolnir::Sqlite3& db,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              const AABB2<PointLL>& aabb) {
   // Polys (return)
-  std::unordered_map<uint32_t, multi_polygon_type> polys;
+  std::unordered_map<uint32_t, bg::multipolygon_ll_t> polys;
 
   // Form query
   std::string sql = "SELECT state.rowid, country.name, state.name, country.iso_code, ";
@@ -60,7 +44,7 @@ GetAdminInfo(sqlite3* db_handle,
   sql += std::to_string(aabb.maxy()) + "));";
 
   sqlite3_stmt* stmt = 0;
-  uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+  uint32_t ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, 0);
   if (ret == SQLITE_OK) {
     uint32_t result = sqlite3_step(stmt);
     if (result == SQLITE_DONE) {
@@ -78,7 +62,7 @@ GetAdminInfo(sqlite3* db_handle,
 
       sqlite3_finalize(stmt);
       stmt = 0;
-      ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+      ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, 0);
       if (ret == SQLITE_OK) {
         result = 0;
         result = sqlite3_step(stmt);
@@ -120,7 +104,7 @@ GetAdminInfo(sqlite3* db_handle,
         geom = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6)));
       }
 
-      multi_polygon_type multi_poly;
+      bg::multipolygon_ll_t multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
       polys.emplace(index, multi_poly);
       drive_on_right.emplace(index, dor);
@@ -145,21 +129,11 @@ void Benchmark(const boost::property_tree::ptree& pt) {
   // Initialize the admin DB (if it exists)
   auto database = pt.get_optional<std::string>("admin");
 
-  sqlite3* db_handle = nullptr;
-  if (filesystem::exists(*database)) {
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + *database);
-      sqlite3_close(db_handle);
-      return;
-    }
-
-  } else {
-    LOG_ERROR("Admin db " + *database + " not found.");
+  auto db = valhalla::mjolnir::Sqlite3::open(database.value(), SQLITE_OPEN_READONLY);
+  if (!db) {
+    LOG_ERROR("Unable to open admin db " + *database);
     return;
   }
-  auto admin_conn = valhalla::mjolnir::make_spatialite_cache(db_handle);
 
   // Graphreader
   GraphReader reader(pt);
@@ -167,13 +141,13 @@ void Benchmark(const boost::property_tree::ptree& pt) {
   auto tiles = TileHierarchy::levels().back().tiles;
 
   // Iterate through the tiles and perform enhancements
-  std::unordered_map<uint32_t, multi_polygon_type> polys;
+  std::unordered_map<uint32_t, bg::multipolygon_ll_t> polys;
   std::unordered_map<uint32_t, bool> drive_on_right;
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // Get the admin polys if there is data for tiles that exist
     GraphId tile_id(id, local_level, 0);
     if (reader.DoesTileExist(tile_id)) {
-      polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id));
+      polys = GetAdminInfo(*db, drive_on_right, tiles.TileBounds(id));
       LOG_INFO("polys: " + std::to_string(polys.size()));
       if (polys.size() < 128) {
         counts[polys.size()]++;
@@ -185,11 +159,10 @@ void Benchmark(const boost::property_tree::ptree& pt) {
       LOG_INFO("Tiles with " + std::to_string(i) + " admin polys: " + std::to_string(counts[i]));
     }
   }
-  sqlite3_close(db_handle);
 }
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> input_files;
   boost::property_tree::ptree config;
@@ -198,7 +171,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "valhalla_benchmark_admins is a program to time the admin queries\n");
 
     options.add_options()
@@ -209,11 +182,11 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (result.count("version")) {
-      std::cout << "valhalla_benchmark_admins " << VALHALLA_VERSION << "\n";
+      std::cout << "valhalla_benchmark_admins " << VALHALLA_PRINT_VERSION << "\n";
       return EXIT_SUCCESS;
     }
   } catch (cxxopts::exceptions::exception& e) {

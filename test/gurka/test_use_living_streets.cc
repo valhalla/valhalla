@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "test.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -9,7 +10,7 @@ const std::vector<std::string>& costing = {"auto",  "taxi",          "bus",     
 
 void validate_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  auto leg = result.trip().routes(0).legs(0);
+  [[maybe_unused]] auto leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, expected_names);
 }
 
@@ -45,7 +46,7 @@ protected:
     test::customize_historical_traffic(use_living_streets_map.config, [](baldr::DirectedEdge& e) {
       e.set_free_flow_speed(40);
       e.set_constrained_flow_speed(40);
-      return std::array<float, kBucketsPerWeek>{};
+      return std::array<float, baldr::kBucketsPerWeek>{};
     });
   }
 };

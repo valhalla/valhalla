@@ -7,7 +7,7 @@ namespace valhalla {
 namespace meili {
 
 StateLabel::StateLabel(double costsofar, const StateId& stateid, const StateId& predecessor)
-    : costsofar_(costsofar), stateid_(stateid), predecessor_(predecessor) {
+    : stateid_(stateid), predecessor_(predecessor), costsofar_(costsofar) {
   if (!stateid.IsValid()) {
     throw std::invalid_argument("expect valid stateid");
   }

@@ -1,16 +1,17 @@
 #ifndef VALHALLA_MIDGARD_GRIDDEDDATA_H_
 #define VALHALLA_MIDGARD_GRIDDEDDATA_H_
 
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/polyline2.h>
+#include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util.h>
+
 #include <algorithm>
 #include <array>
 #include <functional>
 #include <limits>
 #include <list>
 #include <map>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/polyline2.h>
-#include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/util.h>
 #include <vector>
 
 namespace valhalla {
@@ -19,6 +20,8 @@ namespace midgard {
 // A special generalization value indicating that the application should
 // compute an optimal generalization factor when creating contours.
 constexpr float kOptimalGeneralization = std::numeric_limits<float>::max();
+
+constexpr float NODATA_VALUE = static_cast<float>(std::numeric_limits<uint16_t>::max());
 
 /**
  * Class to store data in a gridded/tiled data structure. Contains methods
@@ -53,7 +56,7 @@ public:
    * @param  set_data Functor to set the desired data value
    */
   inline void SetIfLessThan(const int tile_id, const value_type& value) {
-    if (tile_id >= 0 && tile_id < data_.size()) {
+    if (tile_id >= 0 && static_cast<size_t>(tile_id) < data_.size()) {
       auto& current_value = data_[tile_id];
       for (size_t i = 0; i < dimensions_t; ++i) {
         current_value[i] = std::min(value[i], current_value[i]);

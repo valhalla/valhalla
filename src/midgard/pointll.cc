@@ -1,4 +1,5 @@
 #include "midgard/pointll.h"
+#include "midgard/logging.h"
 #include "midgard/util.h"
 
 #include <list>
@@ -40,37 +41,59 @@ GeoPoint<PrecisionT> GeoPoint<PrecisionT>::PointAlongSegment(const GeoPoint<Prec
 }
 
 /**
- * Calculates the distance between two lng,lat's in meters. Uses spherical
- * geometry (law of cosines).
- * Note - this method loses precision when the points are within ~1m of each
- *        other, and cannot meaningfully meausre distances less than that.
- * @param   ll2   Second lng,lat position to calculate distance to.
- * @return  Returns the distance in meters.
+ * Calculates the great-circle distance between two longitude/latitude points, in meters.
+ *
+ * Prioritizes numerical stability and precision even for small distances:
+ *  - Uses the haversine formula (numerically stable for small angles).
+ *  - Explicitly wraps longitude differences within [-pi, pi] for dateline crossings.
+ *  - Clamps intermediate values to protect against rounding errors.
+ *
+ * @param other  Second GeoPoint to measure distance to.
+ * @return       Distance between the two points in meters as PrecisionT.
  */
-template <typename PrecisionT> PrecisionT GeoPoint<PrecisionT>::Distance(const GeoPoint& ll2) const {
-  // If points are the same, return 0
-  if (*this == ll2) {
-    return 0;
+template <typename PrecisionT>
+PrecisionT GeoPoint<PrecisionT>::Distance(const GeoPoint& other) const {
+  // Equal points short-circuit
+  if (*this == other) {
+    return static_cast<PrecisionT>(0);
   }
 
-  // Delta longitude. Don't need to worry about crossing 180
-  // since cos(x) = cos(-x)
-  double deltalng = (ll2.lng() - lng()) * kRadPerDegD;
-  double a = lat() * kRadPerDegD;
-  double c = ll2.lat() * kRadPerDegD;
+  // https://en.wikipedia.org/wiki/Haversine_formula
+  // φ1, φ2 = latitudes of the two points in radians = phi1, phi2
+  // λ1, λ2 = longitudes of the two points in radians = lambda1, lambda2
+  // Δφ = dphi
+  // Δλ = dlambda
 
-  // Find the angle subtended in radians (law of cosines)
-  double cosb = (sin(a) * sin(c)) + (cos(a) * cos(c) * cos(deltalng));
+  // Convert the coordinates to radians.
+  const double phi1 = lat() * kRadPerDegD;
+  const double phi2 = other.lat() * kRadPerDegD;
+  const double dphi = phi2 - phi1;
 
-  // Angle subtended * radius of earth (portion of the circumference).
-  // Protect against cosb being outside -1 to 1 range.
-  if (cosb >= 1) {
-    return 0.00001;
-  } else if (cosb <= -1) {
-    return kPi * kRadEarthMeters;
-  } else {
-    return static_cast<PrecisionT>(acos(cosb) * kRadEarthMeters);
-  }
+  const double lambda1 = lng() * kRadPerDegD;
+  const double lambda2 = other.lng() * kRadPerDegD;
+  double dlambda = lambda2 - lambda1;
+
+  // c1 = cos φ1
+  // c2 = cos φ2
+  const double c1 = std::cos(phi1);
+  const double c2 = std::cos(phi2);
+
+  // Haversine (numerically stable for small angles)
+  // sdphi2 = = sin(Δφ/2)
+  // sdlmb2 = = sin(Δλ/2)
+  const double sdphi2 = std::sin(dphi / 2.0);
+  const double sdlmb2 = std::sin(dlambda / 2.0);
+
+  // h = sin²(Δφ/2) + c1 * cd2 * sin²(Δλ/2)
+  double h = sdphi2 * sdphi2 + c1 * c2 * sdlmb2 * sdlmb2;
+
+  // Clamp protects against cases where the two points are on opposide sides of the Earth.
+  h = std::min<double>(1, std::max<double>(0, h));
+
+  // d = 2r * arcsin(sqrt(h))
+  const double d = 2.0 * std::asin(std::sqrt(h));
+  const double meters = kRadEarthMeters * d;
+  return static_cast<PrecisionT>(meters);
 }
 
 /**

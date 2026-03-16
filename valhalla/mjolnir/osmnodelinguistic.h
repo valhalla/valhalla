@@ -2,6 +2,7 @@
 #define VALHALLA_MJOLNIR_OSMNODELINGUISTIC_H_
 
 #include <cstdint>
+#include <cstring>
 
 namespace valhalla {
 namespace mjolnir {

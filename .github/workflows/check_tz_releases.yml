@@ -24,10 +24,9 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
           latest_tag=$(git -C third_party/tz ls-remote --tags --refs --quiet origin | tail --lines 1 | awk '{print $2}' | cut --delimiter='/' --fields=3 )
-          latest_tag_commit=$(git -C third_party/tz rev-list -n 1 $latest_tag)
-          current_commit=$(git -C ./third_party/tz rev-parse HEAD)
+          current_tag=$(git -C third_party/tz describe --exact-match --tags)
 
-          if [[ $latest_tag_commit != $current_commit ]]; then 
+          if [[ $latest_tag != $current_tag ]]; then
               echo "New tz release available: ${latest_tag}"
               new_branch="gha-bump-tz-${latest_tag}"
               git checkout -b $new_branch
@@ -40,12 +39,19 @@ jobs:
               url_old=$(grep -oP "url=\"\Khttps://github.com/.*(?=\")" scripts/valhalla_build_timezones)
               url_new=$(echo ${url_old} | sed -E "s/download\/[0-9]{4}[a-z]/download\/${latest_tag}/")
 
+              # update the badge in the README
+              sed -i "s|\(https://img.shields.io/badge/tzdb%20version-\)${current_tag}\(-blue.svg\)|\1${latest_tag}\2|" README.md
+
+              # add CHANGELOG entry under UNRELEASED > Enhancement (PR link added after PR creation)
+              sed -i '/^## UNRELEASED/,/^\* \*\*Enhancement\*\*/{/^\* \*\*Enhancement\*\*$/a\   * UPDATED: timezone database to '"${latest_tag}"'
+              }' CHANGELOG.md
+
               # first make sure the file is actually available
 
               set +e
               curl -Is --fail-with-body ${url_new} >/dev/null
 
-              if [[ $? -eq 0 ]]; then 
+              if [[ $? -eq 0 ]]; then
                   # only replace if it's available
                   url_old_escaped=$(echo "${url_old}" | sed 's/[\&/]/\\&/g')
                   url_new_escaped=$(echo "${url_new}" | sed 's/[\&/]/\\&/g')
@@ -57,14 +63,27 @@ jobs:
               fi
 
               set -e
-              # commit and push 
+              git add README.md CHANGELOG.md
+
+              # commit and push
               git commit -m "bumped tz to ${latest_tag}"
               git push origin "${new_branch}"
 
-              # open new PR 
-              body=$(echo "See [here](https://github.com/eggert/tz/blob/main/NEWS) for the latest changes made to tz.\
-              Created by workflow run [#${WORKFLOW_RUN_ID}](https://github.com/valhalla/valhalla/actions/runs/${WORKFLOW_RUN_ID})." | xargs)
-              gh pr create --base master --head $new_branch --title "Bump tz to ${latest_tag}" --body "${body}"
+              # open new PR
+              body=$(cat <<EOF
+          See [here](https://github.com/eggert/tz/blob/main/NEWS) for the latest changes made to tz. Created by workflow run [#${WORKFLOW_RUN_ID}](https://github.com/valhalla/valhalla/actions/runs/${WORKFLOW_RUN_ID}).
+
+          For the tz boundary shapefile, check https://github.com/evansiroky/timezone-boundary-builder/issues.
+          EOF
+              )
+              pr_url=$(gh pr create --base master --head $new_branch --title "Bump tz to ${latest_tag}" --body "${body}")
+              pr_number=$(echo "${pr_url}" | grep -oP '\d+$')
+
+              # update CHANGELOG entry with the PR link, amend the commit and force-push
+              sed -i "s|UPDATED: timezone database to ${latest_tag}|UPDATED: timezone database to ${latest_tag} [#${pr_number}](${pr_url})|" CHANGELOG.md
+              git add CHANGELOG.md
+              git commit --amend --no-edit
+              git push --force-with-lease origin "${new_branch}"
 
               exit 1
           fi

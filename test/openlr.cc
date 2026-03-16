@@ -1,8 +1,3 @@
-#include <iomanip>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-
 #include "baldr/openlr.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
@@ -10,7 +5,13 @@
 #include "proto/trip.pb.h"
 #include "tyr/serializers.h"
 
-#include "test.h"
+#include <boost/variant/get.hpp>
+#include <gtest/gtest.h>
+
+#include <iomanip>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
 namespace {
 

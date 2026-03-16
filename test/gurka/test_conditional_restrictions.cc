@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -153,7 +154,7 @@ TEST_F(ConditionalRestrictions, RestrictionBike) {
   EXPECT_THROW(
       {
         try {
-          auto result =
+          [[maybe_unused]] auto result =
               gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "bicycle",
                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T20:00"}});
         } catch (const std::exception& e) {
@@ -184,7 +185,7 @@ TEST_F(ConditionalRestrictions, RestrictionPedestrian) {
   EXPECT_THROW(
       {
         try {
-          auto result =
+          [[maybe_unused]] auto result =
               gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "pedestrian",
                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
         } catch (const std::exception& e) {
@@ -299,7 +300,7 @@ TEST_F(ConditionalRestrictions, AccessConditional) {
     EXPECT_THROW(
         {
           try {
-            auto result =
+            [[maybe_unused]] auto result =
                 gurka::do_action(valhalla::Options::route, map, wypoints, costing,
                                  {{"/date_time/type", "1"}, {"/date_time/value", bad_time}});
           } catch (const std::exception& e) {
@@ -326,10 +327,11 @@ TEST_F(ConditionalRestrictions, AccessConditional) {
     EXPECT_THROW(
         {
           try {
-            auto result = gurka::do_action(valhalla::Options::route, map, wypoints, costing,
-                                           {{"/date_time/type", "1"},
-                                            {"/date_time/value", bad_time},
-                                            {"/costing_options/" + costing + "/ignore_access", "1"}});
+            [[maybe_unused]] auto result =
+                gurka::do_action(valhalla::Options::route, map, wypoints, costing,
+                                 {{"/date_time/type", "1"},
+                                  {"/date_time/value", bad_time},
+                                  {"/costing_options/" + costing + "/ignore_access", "1"}});
           } catch (const std::exception& e) {
             // and this tests that it has the correct message
             EXPECT_STREQ("No path could be found for input", e.what());

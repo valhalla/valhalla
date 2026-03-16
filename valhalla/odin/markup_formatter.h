@@ -1,12 +1,12 @@
 #pragma once
 
-#include <optional>
-#include <string>
+#include <valhalla/baldr/streetname.h>
+#include <valhalla/odin/sign.h>
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/baldr/streetname.h>
-#include <valhalla/odin/sign.h>
+#include <optional>
+#include <string>
 
 namespace valhalla {
 namespace odin {

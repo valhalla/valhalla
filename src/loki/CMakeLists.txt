@@ -7,27 +7,23 @@ set(sources
   matrix_action.cc
   status_action.cc
   transit_available_action.cc
-  polygon_search.cc)
-
-# Enables stricter compiler checks on a file-by-file basis
-# which allows us to migrate piecemeal
-set(sources_with_warnings
+  polygon_search.cc
   isochrone_action.cc
   height_action.cc
   locate_action.cc
   node_search.cc
   route_action.cc
   search.cc
+  tile_action.cc
   trace_route_action.cc
   worker.cc)
 
-set(system_includes 
+set(system_includes
   ${date_include_dir}
   $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
 valhalla_module(NAME loki
   SOURCES ${sources}
-  SOURCES_WITH_WARNINGS ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
@@ -39,7 +35,11 @@ valhalla_module(NAME loki
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC
       ${system_includes}
+    PRIVATE
+      ${unordered_dense_include_dir}
+      ${vtzero_include_dirs}
   DEPENDS
+    valhalla::meili
     valhalla::skadi
     valhalla::sif
     valhalla::proto

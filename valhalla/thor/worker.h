@@ -1,35 +1,29 @@
 #ifndef __VALHALLA_THOR_SERVICE_H__
 #define __VALHALLA_THOR_SERVICE_H__
 
-#include <tuple>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/attributes_controller.h>
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/location.h>
+#include <valhalla/exceptions.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costfactory.h>
-#include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/astar_bss.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/centroid.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/isochrone.h>
-#include <valhalla/thor/multimodal.h>
+#include <valhalla/thor/multimodal_astar.h>
+#include <valhalla/thor/multimodal_transit.h>
 #include <valhalla/thor/timedistancebssmatrix.h>
 #include <valhalla/thor/timedistancematrix.h>
-#include <valhalla/thor/triplegbuilder.h>
 #include <valhalla/thor/unidirectional_astar.h>
-#include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
+
+#include <boost/property_tree/ptree_fwd.hpp>
+
+#include <tuple>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -40,7 +34,11 @@ void run_service(const boost::property_tree::ptree& config);
 
 class thor_worker_t : public service_worker_t {
 public:
-  enum SOURCE_TO_TARGET_ALGORITHM { SELECT_OPTIMAL = 0, COST_MATRIX = 1, TIME_DISTANCE_MATRIX = 2 };
+  enum SOURCE_TO_TARGET_ALGORITHM : uint8_t {
+    SELECT_OPTIMAL = 0,
+    COST_MATRIX = 1,
+    TIME_DISTANCE_MATRIX = 2
+  };
   thor_worker_t(const boost::property_tree::ptree& config,
                 const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
   virtual ~thor_worker_t();
@@ -114,8 +112,8 @@ protected:
 
   // Path algorithms (TODO - perhaps use a map?))
   BidirectionalAStar bidir_astar;
-  AStarBSSAlgorithm bss_astar;
-  MultiModalPathAlgorithm multi_modal_astar;
+  MultimodalAStar multimodal_astar;
+  MultiModalPathAlgorithm multi_modal_transit;
   TimeDepForward timedep_forward;
   TimeDepReverse timedep_reverse;
 
@@ -141,6 +139,9 @@ protected:
   hierarchy_limits_config_t hierarchy_limits_config_astar;
   hierarchy_limits_config_t hierarchy_limits_config_bidirectional_astar;
   hierarchy_limits_config_t hierarchy_limits_config_costmatrix;
+
+  double min_linear_cost_factor;
+  uint64_t max_linear_cost_edges;
 
 private:
   std::string service_name() const override {

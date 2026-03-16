@@ -1,23 +1,19 @@
 #ifndef VALHALLA_MJOLNIR_LUA_H
 #define VALHALLA_MJOLNIR_LUA_H
 
-extern "C" {
-#include <lauxlib.h>
-#include <lua.h>
-#include <lualib.h>
-}
-
-#include <osmium/osm/tag.hpp>
 #include <valhalla/mjolnir/osmdata.h>
 
-#include <robin_hood.h>
+#include <ankerl/unordered_dense.h>
+#include <osmium/osm/tag.hpp>
 
 #include <string>
+
+struct lua_State;
 
 namespace valhalla {
 namespace mjolnir {
 
-using Tags = robin_hood::unordered_map<std::string, std::string>;
+using Tags = ankerl::unordered_dense::map<std::string, std::string>;
 
 /**
  */
@@ -28,6 +24,11 @@ public:
    * @param lua   the string containing the lua code
    */
   LuaTagTransform(const std::string& lua);
+
+  LuaTagTransform(const LuaTagTransform&) = delete;
+  LuaTagTransform& operator=(const LuaTagTransform&) = delete;
+  LuaTagTransform(LuaTagTransform&&) = delete;
+  LuaTagTransform& operator=(LuaTagTransform&&) = delete;
 
   ~LuaTagTransform();
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 namespace valhalla {
 namespace baldr {
 

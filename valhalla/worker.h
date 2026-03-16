@@ -1,57 +1,24 @@
-#ifndef __VALHALLA_SERVICE_H__
-#define __VALHALLA_SERVICE_H__
-#include <string>
-
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#ifndef __VALHALLA_WORKER_H__
+#define __VALHALLA_WORKER_H__
+#include <valhalla/exceptions.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
-#include <valhalla/valhalla.h>
+
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #ifdef ENABLE_SERVICES
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 #endif
 
-#include <boost/property_tree/ptree.hpp>
+#include <string>
 
 namespace valhalla {
 
 struct hierarchy_limits_config_t {
   std::vector<HierarchyLimits> max_limits;
   std::vector<HierarchyLimits> default_limits;
-};
-
-/**
- * Project specific error messages and codes that can be converted to http responses
- */
-struct valhalla_exception_t : public std::runtime_error {
-  /**
-   * Constructs the exception by looking up predefined ones by their codes. If unsuccessful the code
-   * will be 0
-   * @param code   the code to look up
-   * @param extra  an extra string to append to the codes existing method
-   */
-  valhalla_exception_t(unsigned code, const std::string& extra = "");
-  valhalla_exception_t(unsigned code,
-                       const std::string& message,
-                       unsigned http_code,
-                       const std::string& http_message,
-                       const std::string& osrm_error,
-                       const std::string& statsd_key = "")
-      : std::runtime_error(""), code(code), message(message), http_code(http_code),
-        http_message(http_message), osrm_error(osrm_error), statsd_key(statsd_key) {
-  }
-  const char* what() const noexcept override {
-    return message.c_str();
-  }
-  unsigned code;
-  std::string message;
-  unsigned http_code;
-  std::string http_message;
-  std::string osrm_error;
-  std::string statsd_key;
 };
 
 /**
@@ -96,6 +63,7 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             const hierarchy_limits_config_t& config,
                             const bool allow_modifications,
                             const bool use_hierarchy_limits);
+
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
@@ -112,15 +80,6 @@ void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& options);
 
-/**
- * Adds a warning to the request PBF object.
- *
- * @param api   the full request
- * @param code  the warning code
- * @param extra an optional string to append to the hard-coded warning message
- */
-void add_warning(valhalla::Api& api, unsigned code, const std::string& extra = "");
-
 #ifdef ENABLE_SERVICES
 prime_server::worker_t::result_t serialize_error(const valhalla_exception_t& exception,
                                                  prime_server::http_request_info_t& request_info,
@@ -131,11 +90,15 @@ const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
 const content_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 const content_type PBF_MIME{"Content-type", "application/x-protobuf"};
 const content_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
+const content_type TIFF_MIME("Content-type", "image/tiff");
+const content_type MVT_MIME("Content-type", "application/vnd.mapbox-vector-tile");
 } // namespace worker
 
-prime_server::worker_t::result_t to_response(const std::string& data,
-                                             prime_server::http_request_info_t& request_info,
-                                             const Api& options);
+prime_server::worker_t::result_t
+to_response(const std::string& data,
+            prime_server::http_request_info_t& request_info,
+            const Api& options,
+            const std::vector<std::pair<std::string, std::string>>& additional_headers = {});
 #endif
 
 struct statsd_client_t;
@@ -207,4 +170,4 @@ protected:
 };
 } // namespace valhalla
 
-#endif //__VALHALLA_SERVICE_H__
+#endif //__VALHALLA_WORKER_H__

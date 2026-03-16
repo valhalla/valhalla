@@ -2,7 +2,6 @@
 #define VALHALLA_BALDR_TRANSITSCHEDULE_H_
 
 #include <cstdint>
-#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace baldr {

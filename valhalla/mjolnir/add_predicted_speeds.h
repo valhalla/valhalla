@@ -1,16 +1,9 @@
 #pragma once
 
-#include "filesystem.h"
-#include <array>
-#include <cstdint>
-#include <optional>
+#include <boost/property_tree/ptree_fwd.hpp>
+
+#include <filesystem>
 #include <string>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
-#include "baldr/graphid.h"
-#include "baldr/predictedspeeds.h"
 
 namespace valhalla {
 namespace mjolnir {
@@ -28,7 +21,7 @@ namespace mjolnir {
  * @throws std::invalid_argument if configuration is invalid
  */
 void ProcessTrafficTiles(const std::string& tile_dir,
-                         const filesystem::path& traffic_tile_dir,
+                         const std::filesystem::path& traffic_tile_dir,
                          const bool summary,
                          const boost::property_tree::ptree& config);
 

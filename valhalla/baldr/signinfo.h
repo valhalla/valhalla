@@ -3,6 +3,8 @@
 
 #include <valhalla/baldr/sign.h>
 
+#include <string>
+
 namespace valhalla {
 namespace baldr {
 

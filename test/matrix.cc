@@ -1,17 +1,16 @@
-#include "gurka/gurka.h"
-#include "test.h"
-
-#include <string>
-#include <vector>
-
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/dynamiccost.h"
+#include "test.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
+#include "tyr/actor.h"
 #include "tyr/serializers.h"
+
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -45,7 +44,8 @@ public:
                const GraphId& edgeid,
                const uint64_t /*current_time*/,
                const uint32_t /*tz_index*/,
-               uint8_t& /*restriction_idx*/) const override {
+               uint8_t& /*restriction_idx*/,
+               uint8_t& /*destonly_access_restr_mask*/) const override {
     if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
@@ -62,7 +62,8 @@ public:
                       const GraphId& opp_edgeid,
                       const uint64_t /*current_time*/,
                       const uint32_t /*tz_index*/,
-                      uint8_t& /*restriction_idx*/) const override {
+                      uint8_t& /*restriction_idx*/,
+                      uint8_t& /*destonly_access_restr_mask*/) const override {
     if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
@@ -80,6 +81,7 @@ public:
   }
 
   Cost EdgeCost(const DirectedEdge* edge,
+                const baldr::GraphId& /*edgeid*/,
                 const graph_tile_ptr& /*tile*/,
                 const baldr::TimeInfo& /*time_info*/,
                 uint8_t& /*flow_sources*/) const override {
@@ -277,11 +279,10 @@ TEST(Matrix, test_matrix) {
   matrix = request.matrix();
   for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal" +
-               " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s distance is not equal to expected value for TDMatrix";
 
     EXPECT_NEAR(matrix.times()[i], matrix_answers[i][0], kThreshold)
-        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s time is not equal to expected value for TDMatrix";
   }
 }
 
@@ -329,11 +330,10 @@ TEST(Matrix, test_timedistancematrix_forward) {
 
   for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal" +
-               " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s distance is not equal to expected value for TDMatrix";
 
     EXPECT_NEAR(matrix.times()[i], expected_results[i][0], kThreshold)
-        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s time is not equal to expected value for TDMatrix";
   }
 }
 
@@ -382,11 +382,10 @@ TEST(Matrix, test_timedistancematrix_reverse) {
 
   for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal" +
-               " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s distance is not equal to expected value for TDMatrix";
 
     EXPECT_NEAR(matrix.times()[i], expected_results[i][0], kThreshold)
-        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s time is not equal to expected value for TDMatrix";
   }
 }
 
@@ -507,8 +506,8 @@ TEST(Matrix, default_matrix) {
             json["sources_to_targets"].GetArray()[0][1].MemberCapacity());
 
   // first values in the object
-  EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["distance"].GetDouble(),
-                   5.88);
+  EXPECT_NEAR(json["sources_to_targets"].GetArray()[0][0].GetObject()["distance"].GetDouble(), 5.88,
+              0.0001);
   EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 473);
   EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["to_index"].GetInt64(), 0);
   EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["from_index"].GetInt64(), 0);
@@ -558,7 +557,7 @@ TEST(Matrix, slim_matrix) {
             json["sources_to_targets"].GetObject()["distances"][0].Size());
 
   // first value of "distances" array
-  EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetObject()["distances"][0][0].GetDouble(), 5.88);
+  EXPECT_NEAR(json["sources_to_targets"].GetObject()["distances"][0][0].GetDouble(), 5.88, 0.0001);
 
   // first value of "durations" array
   EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 473);
@@ -566,6 +565,133 @@ TEST(Matrix, slim_matrix) {
   EXPECT_FALSE(json.HasMember("sources"));
   EXPECT_FALSE(json.HasMember("targets"));
   EXPECT_TRUE(json.HasMember("units"));
+}
+
+class TestCostMatrix : public thor::CostMatrix {
+public:
+  explicit TestCostMatrix(const boost::property_tree::ptree& pt = {}) : thor::CostMatrix(pt) {
+    EXPECT_EQ(pt.get<int>("costmatrix.max_reserved_locations", 25), max_reserved_locations_count_);
+    EXPECT_EQ(pt.get<int>("max_reserved_labels_count_bidir_dijkstras", 2e6),
+              max_reserved_labels_count_);
+    EXPECT_EQ(pt.get<bool>("clear_reserved_memory", false), clear_reserved_memory_);
+  }
+
+  void Clear() {
+    // grab the sizes before clearing
+    decltype(locs_count_) location_counts = locs_count_;
+
+    // the number of edge labels for each expansion
+    std::vector<std::vector<size_t>> edgelabel_counts;
+    for (const size_t is_fwd : {0, 1}) {
+      auto& counts = edgelabel_counts.emplace_back();
+      for (size_t i = 0; i < locs_count_[is_fwd]; ++i) {
+        counts.push_back(edgelabel_[is_fwd][i].size());
+      }
+    }
+
+    // now we can clear
+    CostMatrix::Clear();
+
+    if (clear_reserved_memory_) {
+      for (const size_t is_fwd : {0, 1}) {
+        EXPECT_EQ(edgelabel_[is_fwd].capacity(), 0);
+        EXPECT_EQ(astar_heuristics_[is_fwd].capacity(), 0);
+        EXPECT_EQ(adjacency_[is_fwd].capacity(), 0);
+        EXPECT_EQ(edgestatus_[is_fwd].capacity(), 0);
+      }
+    } else {
+      for (const size_t is_fwd : {0, 1}) {
+        size_t expected_location_count =
+            std::min(location_counts[is_fwd], max_reserved_locations_count_);
+        EXPECT_EQ(edgelabel_[is_fwd].capacity(), expected_location_count);
+        EXPECT_EQ(astar_heuristics_[is_fwd].capacity(), expected_location_count);
+        EXPECT_EQ(adjacency_[is_fwd].capacity(), expected_location_count);
+        EXPECT_EQ(edgestatus_[is_fwd].capacity(), expected_location_count);
+
+        for (size_t i = 0; i < expected_location_count; ++i) {
+          EXPECT_EQ(edgelabel_[is_fwd][i].capacity(), (size_t)max_reserved_labels_count_);
+        }
+      }
+    }
+  }
+  using CostMatrix::clear_reserved_memory_;
+  using CostMatrix::locs_count_;
+  using CostMatrix::max_reserved_labels_count_;
+  using CostMatrix::max_reserved_locations_count_;
+};
+
+TEST(StandAlone, MatrixReservationsDefault) {
+  boost::property_tree::ptree conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+  loki::loki_worker_t loki_worker(conf);
+  TestCostMatrix matrix(conf.get_child("mjolnir"));
+  EXPECT_EQ(matrix.max_reserved_labels_count_, 2e6);
+  EXPECT_EQ(matrix.max_reserved_locations_count_, 25);
+  EXPECT_EQ(matrix.clear_reserved_memory_, false);
+  Api request;
+  ParseApi(test_request, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_scores(*request.mutable_options());
+
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
+  GraphReader reader(cfg.get_child("mjolnir"));
+  matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  EXPECT_EQ(matrix.locs_count_[0], 4);
+  EXPECT_EQ(matrix.locs_count_[1], 4);
+  matrix.Clear();
+}
+
+TEST(StandAlone, MatrixReservationsSmall) {
+  boost::property_tree::ptree conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+
+  conf.put("mjolnir.costmatrix.max_reserved_locations", "1");
+  conf.put("mjolnir.max_reserved_labels_count_bidir_dijkstras", "20");
+
+  loki::loki_worker_t loki_worker(conf);
+  TestCostMatrix matrix(conf.get_child("mjolnir"));
+  EXPECT_EQ(matrix.max_reserved_labels_count_, 20);
+  EXPECT_EQ(matrix.max_reserved_locations_count_, 1);
+  EXPECT_EQ(matrix.clear_reserved_memory_, false);
+
+  Api request;
+  ParseApi(test_request, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_scores(*request.mutable_options());
+
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
+  GraphReader reader(cfg.get_child("mjolnir"));
+  matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  matrix.Clear();
+}
+
+TEST(StandAlone, MatrixNoReservations) {
+  boost::property_tree::ptree conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+
+  conf.put("mjolnir.clear_reserved_memory", "1");
+
+  loki::loki_worker_t loki_worker(conf);
+  TestCostMatrix matrix(conf.get_child("mjolnir"));
+  EXPECT_EQ(matrix.max_reserved_labels_count_, 2e6);
+  EXPECT_EQ(matrix.max_reserved_locations_count_, 25);
+  EXPECT_EQ(matrix.clear_reserved_memory_, true);
+
+  Api request;
+  ParseApi(test_request, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_scores(*request.mutable_options());
+
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
+  GraphReader reader(cfg.get_child("mjolnir"));
+  matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  matrix.Clear();
 }
 
 /**************************************************************************************************/

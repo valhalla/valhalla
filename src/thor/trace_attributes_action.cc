@@ -1,36 +1,16 @@
-#include <algorithm>
+#include "meili/match_result.h"
+#include "midgard/logging.h"
+#include "thor/worker.h"
+#include "tyr/serializers.h"
+
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
-#include "baldr/json.h"
-#include "meili/match_result.h"
-#include "midgard/constants.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "odin/enhancedtrippath.h"
-#include "odin/util.h"
-#include "thor/worker.h"
-#include "tyr/serializers.h"
-
-#include "proto/directions.pb.h"
-#include "proto/trip.pb.h"
-
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::odin;
 using namespace valhalla::thor;
-
-namespace {
-// <Confidence score, raw score, match results, trip path> tuple indexes
-constexpr size_t kConfidenceScoreIndex = 0;
-constexpr size_t kRawScoreIndex = 1;
-constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripLegIndex = 3;
-} // namespace
 
 namespace valhalla {
 namespace thor {
@@ -48,7 +28,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
   adjust_scores(*request.mutable_options());
   parse_costing(request);
   parse_measurements(request);
-  const auto& options = request.options();
+  const Options options = request.options(); // copy `options` to have them as a backup for a fallback
   controller = AttributesController(options, true);
 
   /*
@@ -97,6 +77,10 @@ std::string thor_worker_t::trace_attributes(Api& request) {
         LOG_WARN(ShapeMatch_Enum_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
+          // Reset request to avoid `route_match` interference
+          request.Clear();
+          request.mutable_options()->CopyFrom(options);
+
           map_match_results = map_match(request);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{
@@ -105,6 +89,10 @@ std::string thor_worker_t::trace_attributes(Api& request) {
         }
       }
       break;
+    // Handle protobuf sentinel values to avoid compiler warnings
+    case ShapeMatch_INT_MIN_SENTINEL_DO_NOT_USE_:
+    case ShapeMatch_INT_MAX_SENTINEL_DO_NOT_USE_:
+      throw valhalla_exception_t{400, "Invalid shape_match value"};
   }
 
   return tyr::serializeTraceAttributes(request, controller, map_match_results);

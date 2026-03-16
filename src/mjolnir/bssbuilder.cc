@@ -1,9 +1,19 @@
 #include "mjolnir/bssbuilder.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/osmdata.h"
 #include "scoped_timer.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/range/algorithm.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -11,17 +21,6 @@
 #include <thread>
 #include <tuple>
 #include <vector>
-
-#include <boost/range/algorithm.hpp>
-
-#include "baldr/graphconstants.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/logging.h"
-#include "midgard/sequence.h"
-#include "midgard/util.h"
-#include "mjolnir/osmdata.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -186,6 +185,10 @@ std::vector<BSSConnection> project(const GraphTile& local_tile,
     auto best_ped = BestProjection{};
     auto best_bicycle = BestProjection{};
 
+    // Ensures that nearly-equivalent distances result in stable winners
+    // across clang/gcc builds.
+    auto distanceEpsilon = 0.000001;
+
     // Loop over all nodes in the tile to find the nearest edge
     for (uint32_t i = 0; i < local_tile.header()->nodecount(); ++i) {
       const NodeInfo* node = local_tile.node(i);
@@ -211,7 +214,7 @@ std::vector<BSSConnection> project(const GraphTile& local_tile,
         auto this_closest = bss_ll.Project(this_shape);
 
         if (directededge->forwardaccess() & kPedestrianAccess) {
-          if (std::get<1>(this_closest) < mindist_ped) {
+          if (std::get<1>(this_closest) < mindist_ped - distanceEpsilon) {
             mindist_ped = std::get<1>(this_closest);
             best_ped.directededge = directededge;
             best_ped.shape = this_shape;
@@ -220,7 +223,7 @@ std::vector<BSSConnection> project(const GraphTile& local_tile,
           }
         }
         if (directededge->forwardaccess() & kBicycleAccess) {
-          if (std::get<1>(this_closest) < mindist_bicycle) {
+          if (std::get<1>(this_closest) < mindist_bicycle - distanceEpsilon) {
             mindist_bicycle = std::get<1>(this_closest);
             best_bicycle.directededge = directededge;
             best_bicycle.shape = this_shape;
@@ -366,7 +369,8 @@ void project_and_add_bss_nodes(const boost::property_tree::ptree& pt,
 
       auto tile_id = tile_start->first;
       local_tile = reader_local_level.GetGraphTile(tile_id);
-      tilebuilder_local.reset(new GraphTileBuilder{reader_local_level.tile_dir(), tile_id, true});
+      tilebuilder_local =
+          std::make_unique<GraphTileBuilder>(reader_local_level.tile_dir(), tile_id, true);
     }
 
     auto new_connections = project(*local_tile, tile_start->second);
@@ -515,7 +519,8 @@ void create_edges_from_way_node(
 
       auto tile_id = tile_start->first;
       local_tile = reader_local_level.GetGraphTile(tile_id);
-      tilebuilder_local.reset(new GraphTileBuilder{reader_local_level.tile_dir(), tile_id, true});
+      tilebuilder_local =
+          std::make_unique<GraphTileBuilder>(reader_local_level.tile_dir(), tile_id, true);
     }
     create_edges(*tilebuilder_local, *local_tile, lock, tile_start->second);
   }
@@ -643,9 +648,10 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
       // Where the range ends
       std::advance(tile_end, tile_count);
       // Make the thread
-      threads[i].reset(new std::thread(project_and_add_bss_nodes, std::cref(pt.get_child("mjolnir")),
-                                       std::ref(lock), tile_start, tile_end, std::cref(osmdata),
-                                       std::ref(all)));
+      threads[i] =
+          std::make_shared<std::thread>(project_and_add_bss_nodes, std::cref(pt.get_child("mjolnir")),
+                                        std::ref(lock), tile_start, tile_end, std::cref(osmdata),
+                                        std::ref(all));
     }
 
     for (auto& thread : threads) {
@@ -687,8 +693,9 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
       // Where the range ends
       std::advance(tile_end, tile_count);
       // Make the thread
-      threads[i].reset(new std::thread(create_edges_from_way_node, std::cref(pt.get_child("mjolnir")),
-                                       std::ref(lock), tile_start, tile_end));
+      threads[i] = std::make_shared<std::thread>(create_edges_from_way_node,
+                                                 std::cref(pt.get_child("mjolnir")), std::ref(lock),
+                                                 tile_start, tile_end);
     }
 
     for (auto& thread : threads) {

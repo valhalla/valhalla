@@ -2,9 +2,11 @@
 
 // we type alias the tile pointers as they are ubiquitous throughout the library
 
-#include <boost/intrusive_ptr.hpp>
-#include <boost/smart_ptr/intrusive_ref_counter.hpp>
+#ifdef ENABLE_THREAD_SAFE_TILE_REF_COUNT
 #include <memory>
+#else
+#include <boost/intrusive_ptr.hpp>
+#endif
 
 namespace valhalla {
 namespace baldr {
@@ -16,5 +18,3 @@ using graph_tile_ptr = boost::intrusive_ptr<const GraphTile>;
 #endif
 } // namespace baldr
 } // namespace valhalla
-
-using graph_tile_ptr = valhalla::baldr::graph_tile_ptr;

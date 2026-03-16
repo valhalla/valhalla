@@ -1,18 +1,12 @@
-#include <functional>
-#include <string>
+#include "odin/worker.h"
+#include "midgard/logging.h"
+#include "odin/directionsbuilder.h"
+#include "tyr/serializers.h"
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "baldr/json.h"
-#include "midgard/logging.h"
-
-#include "midgard/util.h"
-#include "odin/directionsbuilder.h"
-#include "odin/util.h"
-#include "odin/worker.h"
-#include "tyr/serializers.h"
-
-#include "proto/trip.pb.h"
+#include <functional>
+#include <string>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -38,7 +32,7 @@ std::string odin_worker_t::narrate(Api& request) const {
   // get some annotated directions
   try {
     odin::DirectionsBuilder().Build(request, markup_formatter_);
-  } catch (...) { throw valhalla_exception_t{202}; }
+  } catch (const std::exception& e) { throw valhalla_exception_t{202, e.what()}; }
 
   // serialize those to the proper format
   return tyr::serializeDirections(request);
@@ -91,6 +85,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
       }
     }
   } catch (const std::exception& e) {
+    LOG_ERROR("500::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error({299, std::string(e.what())}, info, request);
   }
 
@@ -104,7 +99,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
 void run_service(const boost::property_tree::ptree& config) {
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
-                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+                        config.get<unsigned int>("httpd.service.shutdown_seconds", 1));
 
   // gets requests from odin proxy
   auto upstream_endpoint = config.get<std::string>("odin.service.proxy") + "_out";
