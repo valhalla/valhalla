@@ -68,8 +68,6 @@ void serialize_traffic_speed(const volatile baldr::TrafficSpeed& traffic_speed,
                              rapidjson::writer_wrapper_t& writer) {
   if (traffic_speed.speed_valid()) {
     writer.set_precision(2);
-    bool has_incidents = traffic_speed.has_incidents;
-    writer("has_incidents", has_incidents);
     writer("overall_speed", static_cast<uint64_t>(traffic_speed.get_overall_speed()));
     auto speed = static_cast<uint64_t>(traffic_speed.get_speed(0));
     if (speed == baldr::UNKNOWN_TRAFFIC_SPEED_KPH)
