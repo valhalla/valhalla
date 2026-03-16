@@ -412,7 +412,7 @@ void build(const boost::property_tree::ptree& pt,
         if (ar_modes) {
           // since only truck restrictions exist, we can still get all restrictions
           // later we may only want to get just the truck ones for stats.
-          auto res = tile->GetAccessRestrictions(idx);
+          auto res = tile->GetAccessRestrictions(idx).first;
           if (res.empty()) {
             LOG_ERROR(
                 "Directed edge marked as having access restriction but none found ; tile level = " +
