@@ -349,7 +349,7 @@ void ConnectEdges(GraphReader& reader,
   average_density += directededge->length() * directededge->density();
 
   // Preserve the most restrictive access restrictions
-  access_restrictions.update_nonconditional(tile->GetAccessRestrictions(edgeid.id()));
+  access_restrictions.update_nonconditional(tile->GetAccessRestrictions(edgeid.id()).first);
 
   // Update the end node
   endnode = directededge->endnode();
@@ -437,7 +437,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
 
       // store all access_restrictions of the base edge: non-conditional ones will be updated while
       // contracting, conditional ones are breaking contraction and are safe to simply copy
-      auto restrictions_view = tile->GetAccessRestrictions(edge_id.id());
+      auto restrictions_view = tile->GetAccessRestrictions(edge_id.id()).first;
       ShortcutAccessRestriction access_restrictions{
           std::vector<AccessRestriction>(restrictions_view.begin(), restrictions_view.end())};
 
@@ -681,7 +681,7 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id());
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id()).first;
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                                res.type(), res.modes(), res.value(),
