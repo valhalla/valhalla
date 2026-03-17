@@ -227,10 +227,21 @@ inline const std::array<std::array<float, 16>, kCurvatureSteps> kCurvatureFactor
     // Map step index to preference in [-1, +1]: 0 -> -1, 50 -> 0, 100 -> +1
     const float pref = (s * 0.01f - 0.5f) * 2.0f;
     for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
-      // x is in (0, 1]: 1.0 for straight edges (c=0), ~0.007 for max curvature (c=15).
-      // The +0.1 offset ensures x > 0 so negative exponents stay finite.
-      const float x = 1.0f - static_cast<float>(c) / 15.1f;
-      arr[s][c] = std::pow(x, pref);
+      // The +0.1 offset in the denominator ensures x > 0 so all exponents stay finite
+      // (without it, x=0 at the extreme curvature value, making pow(0, negative) undefined).
+      const float denom = static_cast<float>(baldr::kMaxCurvatureFactor) + 0.1f;
+      if (pref <= 0.0f) {
+        // Avoid curvy: penalize high-curvature edges. x=1 for straight (c=0), ~0.007 for
+        // max curvature. With pref<=0, pow(x,pref)>=1 — factors stay >=1 for A* admissibility.
+        const float x = 1.0f - static_cast<float>(c) / denom;
+        arr[s][c] = std::pow(x, pref);
+      } else {
+        // Prefer curvy: mirror the curvature axis to penalize straight edges instead, keeping
+        // factors >=1. x=1 for max curvature (c=15), ~0.007 for straight (c=0).
+        // With -pref<=0, pow(x,-pref)>=1.
+        const float x = 1.0f - static_cast<float>(baldr::kMaxCurvatureFactor - c) / denom;
+        arr[s][c] = std::pow(x, -pref);
+      }
     }
   }
   return arr;
