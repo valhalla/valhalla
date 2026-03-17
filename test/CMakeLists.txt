@@ -1,8 +1,12 @@
-option(USE_SYSTEM_GTEST "Use system-installed GoogleTest/GMock instead of bundled third_party copy" OFF)
+if(PREFER_EXTERNAL_DEPS)
+  find_package(GTest QUIET)
+endif()
 
-if(USE_SYSTEM_GTEST)
-  find_package(GTest REQUIRED)
-else()
+if(NOT GTest_FOUND)
+  if(PREFER_EXTERNAL_DEPS)
+    message(WARNING "Could not find GTest in system libraries, using vendored googletest...")
+  endif()
+
   # GoogleTest builds with /MT(d) by default, which is incompatible with Valhalla's /MD(d) builds.
   #
   # /MD(d) links the C++ runtime dynamically, while /MT(d) links it statically.
