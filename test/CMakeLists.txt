@@ -60,8 +60,8 @@ target_include_directories(valhalla_test SYSTEM PUBLIC
   ${vtzero_include_dirs})
 target_link_libraries(valhalla_test
   valhalla
-  $<$<BOOL:${USE_SYSTEM_GTEST}>:GTest::gtest GTest::gtest_main GTest::gmock>
-  $<$<NOT:$<BOOL:${USE_SYSTEM_GTEST}>>:gtest gtest_main gmock>
+  $<$<BOOL:${GTest_FOUND}>:GTest::gtest GTest::gtest_main GTest::gmock>
+  $<$<NOT:$<BOOL:${GTest_FOUND}>>:gtest gtest_main gmock>
   $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
   ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
 target_compile_definitions(valhalla_test PUBLIC
