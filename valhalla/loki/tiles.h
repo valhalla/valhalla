@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_LOKI_TILES_H__
 #define __VALHALLA_LOKI_TILES_H__
 
+#include "baldr/accessrestriction.h"
 #include "baldr/admininfo.h"
 #include "baldr/attributes_controller.h"
 #include "baldr/datetime.h"
@@ -31,6 +32,24 @@ struct EdgeAttributeTile {
                                const baldr::EdgeInfo&,
                                const volatile baldr::TrafficSpeed*);
   prop_func_t prop_func;
+};
+
+class AccessRestrictionLayerBuilder : vtzero::layer_builder {
+public:
+  explicit AccessRestrictionLayerBuilder(vtzero::tile_builder& tile, const char* name);
+
+  void add_feature(const std::vector<vtzero::point>& geometry,
+                   baldr::GraphId forward_edge_id,
+                   baldr::GraphId reverse_edge_id,
+                   std::pair<std::span<const baldr::AccessRestriction>, size_t> forward_restrictions,
+                   std::pair<std::span<const baldr::AccessRestriction>, size_t> reverse_restrictions);
+
+protected:
+  vtzero::index_value key_edge_id_;
+  vtzero::index_value key_type_;
+  vtzero::index_value key_modes_;
+  vtzero::index_value key_except_destination_;
+  vtzero::index_value key_value_;
 };
 
 /**
