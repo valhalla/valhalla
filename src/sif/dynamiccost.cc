@@ -102,7 +102,7 @@ constexpr float kDefaultUseRailFerry = 0.4f;     // Default preference of using 
 constexpr float kDefaultUseTracks = 0.5f;        // Default preference of using tracks 0-1
 constexpr float kDefaultUseLivingStreets = 0.1f; // Default preference of using living streets 0-1
 constexpr float kDefaultUseLit = 0.f;            // Default preference of using lit ways 0-1
-constexpr float kDefaultUseCurvature = 0.f;      // Default preference of using curvy streets 0-1
+constexpr float kDefaultUseCurvature = 0.5f;     // Default preference of using curvy streets 0-1
 
 // How much to avoid generic service roads.
 constexpr float kDefaultServiceFactor = 1.0f;

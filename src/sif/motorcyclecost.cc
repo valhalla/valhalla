@@ -31,8 +31,6 @@ constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
 constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
 constexpr float kDefaultUseTrails = 0.0f;   // Factor between 0 and 1
 
-constexpr float kDefaultUseCurvature = 0.5f; // 0.5 = neutral (no curvature preference)
-
 constexpr Surface kMinimumMotorcycleSurface = Surface::kImpassable;
 
 // Default turn costs
@@ -89,7 +87,6 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
   cfg.disable_rail_ferry_ = true;
-  cfg.use_curvature_.def = kDefaultUseCurvature;
   return cfg;
 }
 

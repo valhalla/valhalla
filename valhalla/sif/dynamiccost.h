@@ -226,7 +226,7 @@ inline const std::array<std::array<float, 16>, kCurvatureSteps> kCurvatureFactor
   for (uint32_t s = 0; s < kCurvatureSteps; s++) {
     // Map step index to preference in [-1, +1]: 0 -> -1, 50 -> 0, 100 -> +1
     const float pref = (s * 0.01f - 0.5f) * 2.0f;
-    for (uint32_t c = 0; c < 16; c++) {
+    for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
       // x is in (0, 1]: 1.0 for straight edges (c=0), ~0.007 for max curvature (c=15).
       // The +0.1 offset ensures x > 0 so negative exponents stay finite.
       const float x = 1.0f - static_cast<float>(c) / 15.1f;
