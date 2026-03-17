@@ -21,6 +21,7 @@
    * ADDED: OSM XML format support for tile building [#5934](https://github.com/valhalla/valhalla/pull/5934)
    * ADDED: access restriction layer in MVT [#5912](https://github.com/valhalla/valhalla/pull/5912)
    * ADDED: incidents to locate JSON response [#5968](https://github.com/valhalla/valhalla/pull/5968)
+   * ADDED: `--region` to `valhalla_build_extract` to create tars by Geofabrik region
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
