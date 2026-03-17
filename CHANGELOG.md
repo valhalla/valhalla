@@ -9,7 +9,6 @@
    * FIXED: keep `highway=platform` routable while classifying it as `service_other` instead of `primary` [#5913](https://github.com/valhalla/valhalla/pull/5913)
    * FIXED:  Fix overestimated number of entries in `UnorderedIdTable::deserialize` [#5969](https://github.com/valhalla/valhalla/pull/5969)
 
-
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
