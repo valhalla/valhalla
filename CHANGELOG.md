@@ -7,6 +7,7 @@
    * FIXED: Point at `begin_shape_index` should be on the edge even if trace has discontinuities [#5908](https://github.com/valhalla/valhalla/pull/5908)
    * FIXED: Empty "edges" in `/trace_attributes` response for `walk_or_snap`, that also causes SIGSEGV if elevation requested [#5945](https://github.com/valhalla/valhalla/pull/5945)
    * FIXED: keep `highway=platform` routable while classifying it as `service_other` instead of `primary` [#5913](https://github.com/valhalla/valhalla/pull/5913)
+   * FIXED:  Fix overestimated number of entries in `UnorderedIdTable::deserialize` [#5969](https://github.com/valhalla/valhalla/pull/5969)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
@@ -17,6 +18,8 @@
    * ADDED: `expansion_max_distance` (in meters) after which an expansion is terminated [#5938](https://github.com/valhalla/valhalla/pull/5938)
    * CHANGED: Optimize `get_service_days` in servicedays.cc [#5952](https://github.com/valhalla/valhalla/pull/5952)
    * ADDED: OSM XML format support for tile building [#5934](https://github.com/valhalla/valhalla/pull/5934)
+   * ADDED: access restriction layer in MVT [#5912](https://github.com/valhalla/valhalla/pull/5912)
+   * ADDED: incidents to locate JSON response [#5968](https://github.com/valhalla/valhalla/pull/5968)
    * ADDED: `--region` to `valhalla_build_extract` to create tars by Geofabrik region
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
