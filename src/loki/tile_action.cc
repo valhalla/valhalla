@@ -14,6 +14,7 @@
 #include "proto_conversions.h"
 #include "valhalla/exceptions.h"
 
+#include <absl/strings/str_format.h>
 #include <boost/geometry/algorithms/append.hpp>
 #include <boost/geometry/algorithms/equals.hpp>
 #include <boost/geometry/algorithms/intersection.hpp>
@@ -148,13 +149,15 @@ void filter_tile(const std::string& tile_bytes,
   const bool exclude_node_layer = exclude_layers.contains(kNodeLayerName);
   const bool exclude_shortcut_layer = exclude_layers.contains(kShortcutLayerName);
   const bool exclude_access_restrictions_layer = exclude_layers.contains(kAccessRestrictionLayerName);
+  const bool exclude_incidents_point_layer = exclude_layers.contains(kIncidentPointLayerName);
 
   auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
     if ((layer_name == kNodeLayerName && exclude_node_layer) ||
         (layer_name == kEdgeLayerName && exclude_edge_layer) ||
         (layer_name == kShortcutLayerName && exclude_shortcut_layer) ||
-        (layer_name == kAccessRestrictionLayerName && exclude_access_restrictions_layer)) {
+        (layer_name == kAccessRestrictionLayerName && exclude_access_restrictions_layer) ||
+        (layer_name == kIncidentPointLayerName && exclude_incidents_point_layer)) {
       return;
     }
 
@@ -226,6 +229,39 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
   nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
 }
 
+void build_incidents_point_layer(IncidentPointLayerBuilder& inc_point_builder,
+                                 GraphId edge_id,
+                                 graph_tile_ptr& tile,
+                                 GraphReader& reader,
+                                 const TileProjection& projection) {
+
+  auto incident_result = reader.GetIncidents(edge_id, tile);
+  for (size_t i = incident_result.start_index; i < incident_result.end_index; ++i) {
+    auto& loc = incident_result.tile->locations(i);
+    auto& meta = incident_result.tile->metadata(loc.metadata_index());
+
+    if (!meta.has_display_ll())
+      return;
+
+    const auto x = lon_to_merc_x(meta.display_ll().lng());
+    const auto y = lat_to_merc_y(meta.display_ll().lat());
+    const auto tile_coord = merc_to_tile_coords({x, y}, projection);
+
+    auto tile_x = boost::geometry::get<0>(tile_coord);
+    auto tile_y = boost::geometry::get<1>(tile_coord);
+
+    // only render nodes that are within the tile (including buffer)
+    if (tile_x < -projection.tile_buffer ||
+        tile_x > projection.tile_extent + projection.tile_buffer ||
+        tile_y < -projection.tile_buffer ||
+        tile_y > projection.tile_extent + projection.tile_buffer) {
+      return;
+    }
+
+    inc_point_builder.add_feature(meta, tile_coord);
+  }
+}
+
 void build_access_restrictions_layer(AccessRestrictionLayerBuilder& ar_builder,
                                      const linestring_vtzero_t& line,
                                      const graph_tile_ptr& tile,
@@ -270,6 +306,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   EdgesLayerBuilder shortcuts_builder(tile, kShortcutLayerName.data(), controller);
   NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
   AccessRestrictionLayerBuilder access_restriction_builder(tile, kAccessRestrictionLayerName.data());
+  IncidentPointLayerBuilder incident_point_builder(tile, kIncidentPointLayerName.data());
 
   std::unordered_set<GraphId> unique_nodes;
   unique_nodes.reserve(edge_ids.size());
@@ -277,6 +314,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   mercator_line.reserve(20);
   multilinestring_vtzero_t clipped_mvt_lines;
   baldr::graph_tile_ptr edge_tile;
+
   for (const auto& edge_id : edge_ids) {
     // TODO(nils): create another array for tile level to quickly discard edges on lower zooms
     const auto* edge = reader->directededge(edge_id, edge_tile);
@@ -332,17 +370,17 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     if (unclipped_mvt_line.size() < 2) {
       continue;
     }
+    baldr::graph_tile_ptr opp_tile = edge_tile;
+    const DirectedEdge* opp_edge = nullptr;
+    GraphId opp_edge_id = reader->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+
+    const volatile baldr::TrafficSpeed* forward_traffic = &edge_tile->trafficspeed(edge);
+    const volatile baldr::TrafficSpeed* reverse_traffic =
+        opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
     // lambda to add VT line & nodes features
     auto process_single_line = [&](const linestring_vtzero_t& line) {
       // Check for opposing edge
-      baldr::graph_tile_ptr opp_tile = edge_tile;
-      const DirectedEdge* opp_edge = nullptr;
-      GraphId opp_edge_id = reader->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-
-      const volatile baldr::TrafficSpeed* forward_traffic = &edge_tile->trafficspeed(edge);
-      const volatile baldr::TrafficSpeed* reverse_traffic =
-          opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
       if (edge->is_shortcut()) {
         shortcuts_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
@@ -364,6 +402,14 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
         }
       }
     };
+
+    if (forward_traffic && forward_traffic->has_incidents) {
+      build_incidents_point_layer(incident_point_builder, edge_id, edge_tile, *reader, projection);
+    }
+
+    if (opp_tile && reverse_traffic && reverse_traffic->has_incidents) {
+      build_incidents_point_layer(incident_point_builder, opp_edge_id, opp_tile, *reader, projection);
+    }
 
     if (!line_leaves_bbox) {
       process_single_line(unclipped_mvt_line);
@@ -593,6 +639,24 @@ void AccessRestrictionLayerBuilder::add_feature(
 
   add_feature(forward_edge_id, forward_restrictions);
   add_feature(reverse_edge_id, reverse_restrictions);
+}
+
+IncidentPointLayerBuilder::IncidentPointLayerBuilder(vtzero::tile_builder& tile, const char* name)
+    : vtzero::layer_builder(tile, name) {
+  // Pre-add keys for node properties
+  key_impact_ = add_key_without_dup_check("impact");
+  key_type_ = add_key_without_dup_check("type");
+}
+
+void IncidentPointLayerBuilder::add_feature(const IncidentsTile::Metadata& meta,
+                                            const vtzero::point& position) {
+
+  vtzero::point_feature_builder feature{*this};
+  feature.set_id(static_cast<uint64_t>(meta.id()));
+  feature.add_point(position);
+  feature.add_property(key_type_, static_cast<std::string>(incidentTypeToString(meta.type())));
+  feature.add_property(key_impact_, static_cast<std::string>(incidentImpactToString(meta.impact())));
+  feature.commit();
 }
 
 std::string loki_worker_t::render_tile(Api& request) {

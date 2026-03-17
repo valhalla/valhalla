@@ -9,6 +9,7 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/traffictile.h"
+#include "proto/incidents.pb.h"
 
 #include <vtzero/builder.hpp>
 
@@ -50,6 +51,17 @@ protected:
   vtzero::index_value key_modes_;
   vtzero::index_value key_except_destination_;
   vtzero::index_value key_value_;
+};
+
+class IncidentPointLayerBuilder : vtzero::layer_builder {
+public:
+  explicit IncidentPointLayerBuilder(vtzero::tile_builder& tile, const char* name);
+
+  void add_feature(const IncidentsTile::Metadata&, const vtzero::point&);
+
+protected:
+  vtzero::index_value key_type_;
+  vtzero::index_value key_impact_;
 };
 
 /**

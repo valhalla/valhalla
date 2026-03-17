@@ -45,8 +45,9 @@ namespace {
 // Parses exclude_layers from JSON and adds them to the request's tile options
 void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
   static const std::unordered_set<std::string_view> kSupportedLayers =
-      {valhalla::kEdgeLayerName, valhalla::kNodeLayerName, valhalla::kShortcutLayerName,
-       valhalla::kAccessRestrictionLayerName};
+      {valhalla::kEdgeLayerName,         valhalla::kNodeLayerName,
+       valhalla::kShortcutLayerName,     valhalla::kAccessRestrictionLayerName,
+       valhalla::kIncidentLineLayerName, valhalla::kIncidentPointLayerName};
 
   if (exclude_layers.has_value() && exclude_layers->IsArray()) {
     for (const auto& lyr : exclude_layers->GetArray()) {
