@@ -1006,6 +1006,9 @@ struct graph_parser {
       way_.set_truck_route(tag_.second == "true" ? true : false);
     };
     tag_handlers_["hazmat"] = [this]() {
+      if (tag_.second == "true") {
+        return;
+      }
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kHazmat);
       restriction.set_modes(kTruckAccess);
@@ -1016,6 +1019,9 @@ struct graph_parser {
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["hazmat_forward"] = [this]() {
+      if (tag_.second == "true") {
+        return;
+      }
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kHazmat);
       restriction.set_modes(kTruckAccess);
@@ -1027,6 +1033,9 @@ struct graph_parser {
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["hazmat_backward"] = [this]() {
+      if (tag_.second == "true") {
+        return;
+      }
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kHazmat);
       restriction.set_modes(kTruckAccess);
