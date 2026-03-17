@@ -44,9 +44,9 @@ namespace {
 
 // Parses exclude_layers from JSON and adds them to the request's tile options
 void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
-  static const std::unordered_set<std::string_view> kSupportedLayers = {valhalla::kEdgeLayerName,
-                                                                        valhalla::kNodeLayerName,
-                                                                        valhalla::kShortcutLayerName};
+  static const std::unordered_set<std::string_view> kSupportedLayers =
+      {valhalla::kEdgeLayerName, valhalla::kNodeLayerName, valhalla::kShortcutLayerName,
+       valhalla::kAccessRestrictionLayerName};
 
   if (exclude_layers.has_value() && exclude_layers->IsArray()) {
     for (const auto& lyr : exclude_layers->GetArray()) {
@@ -1082,6 +1082,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_matrix_locations(*matrix_locations);
   } else if (!options.has_matrix_locations_case()) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
+  }
+
+  auto expansion_max_distance = rapidjson::get_optional<unsigned int>(doc, "/expansion_max_distance");
+  if (expansion_max_distance) {
+    options.set_expansion_max_distance(*expansion_max_distance);
   }
 
   // get the avoid polygons in there

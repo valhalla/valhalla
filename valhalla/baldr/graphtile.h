@@ -713,9 +713,10 @@ public:
    * Convenience method to get the access restrictions for an edge given the
    * edge Id.
    * @param   edgeid  Directed edge Id.
-   * @return  Returns a list (vector) of AccessRestrictions.
+   * @return  Returns a span of AccessRestrictions and the start index.
    */
-  std::span<const AccessRestriction> GetAccessRestrictions(const uint32_t edgeid) const;
+  std::pair<std::span<const AccessRestriction>, size_t>
+  GetAccessRestrictions(const uint32_t edgeid) const;
 
   /**
    * Convenience method to get the access restrictions for an edge given the
@@ -727,7 +728,7 @@ public:
    */
   auto GetAccessRestrictions(const uint32_t edgeid, const uint32_t access) const {
     auto all_restrictions = GetAccessRestrictions(edgeid);
-    return all_restrictions |
+    return all_restrictions.first |
            std::views::filter([access](const auto& r) { return r.modes() & access; });
   }
 
