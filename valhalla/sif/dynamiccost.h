@@ -221,31 +221,32 @@ constexpr uint32_t kCurvatureSteps = 101;
 // Curvature cost factor lookup table [use_curvature_step][edge_curvature_value].
 // Pre-computed at startup to avoid std::pow in the EdgeCost hot loop.
 // Edge curvature is a 4-bit field (0-15). use_curvature is discretized into 101 steps.
-inline const std::array<std::array<float, 16>, kCurvatureSteps> kCurvatureFactor = []() {
-  std::array<std::array<float, 16>, kCurvatureSteps> arr{};
-  for (uint32_t s = 0; s < kCurvatureSteps; s++) {
-    // Map step index to preference in [-1, +1]: 0 -> -1, 50 -> 0, 100 -> +1
-    const float pref = (s * 0.01f - 0.5f) * 2.0f;
-    for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
-      // The +0.1 offset in the denominator ensures x > 0 so all exponents stay finite
-      // (without it, x=0 at the extreme curvature value, making pow(0, negative) undefined).
-      const float denom = static_cast<float>(baldr::kMaxCurvatureFactor) + 0.1f;
-      if (pref <= 0.0f) {
-        // Avoid curvy: penalize high-curvature edges. x=1 for straight (c=0), ~0.007 for
-        // max curvature. With pref<=0, pow(x,pref)>=1 — factors stay >=1 for A* admissibility.
-        const float x = 1.0f - static_cast<float>(c) / denom;
-        arr[s][c] = std::pow(x, pref);
-      } else {
-        // Prefer curvy: mirror the curvature axis to penalize straight edges instead, keeping
-        // factors >=1. x=1 for max curvature (c=15), ~0.007 for straight (c=0).
-        // With -pref<=0, pow(x,-pref)>=1.
-        const float x = 1.0f - static_cast<float>(baldr::kMaxCurvatureFactor - c) / denom;
-        arr[s][c] = std::pow(x, -pref);
+inline const std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps>
+    kCurvatureFactor = []() {
+      std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps> arr{};
+      for (uint32_t s = 0; s < kCurvatureSteps; s++) {
+        // Map step index to preference in [-1, +1]: 0 -> -1, 50 -> 0, 100 -> +1
+        const float pref = (s * 0.01f - 0.5f) * 2.0f;
+        for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
+          // The +0.1 offset in the denominator ensures x > 0 so all exponents stay finite
+          // (without it, x=0 at the extreme curvature value, making pow(0, negative) undefined).
+          const float denom = static_cast<float>(baldr::kMaxCurvatureFactor) + 0.1f;
+          if (pref <= 0.0f) {
+            // Avoid curvy: penalize high-curvature edges. x=1 for straight (c=0), ~0.007 for
+            // max curvature. With pref<=0, pow(x,pref)>=1 — factors stay >=1 for A* admissibility.
+            const float x = 1.0f - static_cast<float>(c) / denom;
+            arr[s][c] = std::pow(x, pref);
+          } else {
+            // Prefer curvy: mirror the curvature axis to penalize straight edges instead, keeping
+            // factors >=1. x=1 for max curvature (c=15), ~0.007 for straight (c=0).
+            // With -pref<=0, pow(x,-pref)>=1.
+            const float x = 1.0f - static_cast<float>(baldr::kMaxCurvatureFactor - c) / denom;
+            arr[s][c] = std::pow(x, -pref);
+          }
+        }
       }
-    }
-  }
-  return arr;
-}();
+      return arr;
+    }();
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
