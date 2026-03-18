@@ -872,19 +872,51 @@ TEST_F(IncidentsTest, vector_tiles) {
               layout.at("x"));
   reader->sort();
 
-  std::string tile_data;
-  [[maybe_unused]] auto api =
-      gurka::do_action(Options::tile, map, "3", 14, "auto", {}, graphreader, &tile_data);
+  std::unordered_set<std::string> description_map{"snow storm", "scorching heat", "raining frog",
+                                                  "locusts"};
+  {
+    std::string tile_data;
+    [[maybe_unused]] auto api =
+        gurka::do_action(Options::tile, map, "3", 14, "auto", {}, graphreader, &tile_data);
 
-  vtzero::vector_tile tile{tile_data};
-  // check the points layer
-  auto point_layer = tile.get_layer_by_name("incidents_points");
-  EXPECT_TRUE(point_layer.valid());
-  EXPECT_EQ(point_layer.num_features(), 5); // todo: this should be 4, but it looks like we get
-                                            // duplicate edge pairs when building the tile?
+    vtzero::vector_tile tile{tile_data};
+    // check the points layer
+    auto point_layer = tile.get_layer_by_name("incidents_points");
+    EXPECT_TRUE(point_layer.valid());
+    EXPECT_EQ(point_layer.num_features(), 5); // todo: this should be 4, but it looks like we get
+                                              // duplicate edge pairs when building the tile?
 
-  // and the lines layer
-  auto line_layer = tile.get_layer_by_name("incidents_lines");
-  EXPECT_TRUE(line_layer.valid());
-  EXPECT_EQ(line_layer.num_features(), 4);
+    // and the lines layer
+    auto line_layer = tile.get_layer_by_name("incidents_lines");
+    EXPECT_TRUE(line_layer.valid());
+    EXPECT_EQ(line_layer.num_features(), 4);
+    auto feat = line_layer.next_feature();
+    EXPECT_EQ(feat.num_properties(), 17);
+    feat.for_each_property([&](vtzero::property&& p) {
+      if (p.key() == "description") {
+        auto s = p.value().string_value().to_string();
+        EXPECT_TRUE(description_map.count(s) > 0);
+      }
+      return true;
+    });
+  }
+  {
+    std::string tile_data;
+    [[maybe_unused]] auto api = gurka::do_action(Options::tile, map, "3", 14, "auto",
+                                                 {{"/verbose", "0"}}, graphreader, &tile_data);
+
+    vtzero::vector_tile tile{tile_data};
+    // check the points layer
+    auto point_layer = tile.get_layer_by_name("incidents_points");
+    EXPECT_TRUE(point_layer.valid());
+    EXPECT_EQ(point_layer.num_features(), 5); // todo: this should be 4, but it looks like we get
+                                              // duplicate edge pairs when building the tile?
+
+    // and the lines layer
+    auto line_layer = tile.get_layer_by_name("incidents_lines");
+    EXPECT_TRUE(line_layer.valid());
+    EXPECT_EQ(line_layer.num_features(), 4);
+    auto feat = line_layer.next_feature();
+    EXPECT_EQ(feat.num_properties(), 0);
+  }
 }

@@ -216,8 +216,14 @@ void filter_tile(const std::string& tile_bytes,
     vtzero::property_mapper props_mapper{full_layer, filtered_layer};
 
     // pre-compute enabled attributes
-    const auto& prop_map = layer_name == kNodeLayerName ? loki::detail::kNodePropToAttributeFlag
-                                                        : loki::detail::kEdgePropToAttributeFlag;
+    const auto& prop_map = [&]() -> const auto& {
+      if (layer_name == kNodeLayerName)
+        return loki::detail::kNodePropToAttributeFlag;
+      if (layer_name == kIncidentPointLayerName || layer_name == kIncidentLineLayerName)
+        return loki::detail::kIncidentPropToAttributeFlag;
+      return loki::detail::kEdgePropToAttributeFlag;
+    }();
+
     const auto& key_table = full_layer.key_table();
     std::vector<bool> attrs_allowed(key_table.size(), false);
     for (uint32_t i = 0; i < key_table.size(); ++i) {
@@ -397,8 +403,8 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   EdgesLayerBuilder shortcuts_builder(tile, kShortcutLayerName.data(), controller);
   NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
   AccessRestrictionLayerBuilder access_restriction_builder(tile, kAccessRestrictionLayerName.data());
-  IncidentPointLayerBuilder incident_point_builder(tile, kIncidentPointLayerName.data());
-  IncidentLineLayerBuilder incident_line_builder(tile, kIncidentLineLayerName.data());
+  IncidentPointLayerBuilder incident_point_builder(tile, kIncidentPointLayerName.data(), controller);
+  IncidentLineLayerBuilder incident_line_builder(tile, kIncidentLineLayerName.data(), controller);
 
   std::unordered_set<GraphId> unique_nodes;
   unique_nodes.reserve(edge_ids.size());
@@ -709,29 +715,60 @@ void AccessRestrictionLayerBuilder::add_feature(
   add_feature(reverse_edge_id, reverse_restrictions);
 }
 
-IncidentPointLayerBuilder::IncidentPointLayerBuilder(vtzero::tile_builder& tile, const char* name)
-    : vtzero::layer_builder(tile, name) {
-  key_impact_ = add_key_without_dup_check("impact");
+IncidentLayersBuilder::IncidentLayersBuilder(vtzero::tile_builder& tile,
+                                             const char* name,
+                                             const baldr::AttributesController& controller)
+    : vtzero::layer_builder(tile, name), controller_(controller) {
   key_type_ = add_key_without_dup_check("type");
+  key_impact_ = add_key_without_dup_check("impact");
   key_description_ = add_key_without_dup_check("description");
+  key_sub_type_ = add_key_without_dup_check("sub_type");
+  key_sub_type_description_ = add_key_without_dup_check("sub_type_description");
+  key_start_time_ = add_key_without_dup_check("start_time");
+  key_end_time_ = add_key_without_dup_check("end_time");
   key_road_closed_ = add_key_without_dup_check("road_closed");
+  key_congestion_value_ = add_key_without_dup_check("congestion_value");
+  key_lanes_blocked_ = add_key_without_dup_check("lanes_blocked");
+  key_creation_time_ = add_key_without_dup_check("creation_time");
+  key_long_description_ = add_key_without_dup_check("long_description");
+  key_clear_lanes_ = add_key_without_dup_check("clear_lanes");
+  key_num_lanes_blocked_ = add_key_without_dup_check("num_lanes_blocked");
+  key_length_ = add_key_without_dup_check("length");
+  key_id_ = add_key_without_dup_check("id");
+  key_iso_3166_1_alpha2_ = add_key_without_dup_check("iso_3166_1_alpha2");
+  key_iso_3166_1_alpha3_ = add_key_without_dup_check("iso_3166_1_alpha3");
+
+  for (const auto& def : loki::detail::kIncidentAttributes) {
+    if (controller(def.attribute_flag)) {
+      this->*(def.key_member) = add_key_without_dup_check(def.key_name);
+    }
+  }
+}
+
+IncidentPointLayerBuilder::IncidentPointLayerBuilder(vtzero::tile_builder& tile,
+                                                     const char* name,
+                                                     const baldr::AttributesController& controller)
+    : IncidentLayersBuilder(tile, name, controller) {
 }
 
 void IncidentPointLayerBuilder::add_feature(const IncidentsTile::Metadata& meta,
                                             const vtzero::point& position) {
   vtzero::point_feature_builder feature{*this};
-  feature.set_id(static_cast<uint64_t>(meta.id()));
   feature.add_point(position);
-  feature.add_property(key_type_, static_cast<std::string>(incidentTypeToString(meta.type())));
-  feature.add_property(key_impact_, static_cast<std::string>(incidentImpactToString(meta.impact())));
-  feature.add_property(key_description_, static_cast<std::string>(meta.description()));
-  feature.add_property(key_road_closed_, static_cast<bool>(meta.road_closed()));
+  // Add node properties
+  for (const auto& def : loki::detail::kIncidentAttributes) {
+    if (controller_(def.attribute_flag)) {
+      const auto key = this->*(def.key_member);
+      feature.add_property(key, def.value_func(meta));
+    }
+  }
   feature.commit();
 }
 
-IncidentLineLayerBuilder::IncidentLineLayerBuilder(vtzero::tile_builder& tile, const char* name)
-    : vtzero::layer_builder(tile, name) {
-  key_edge_id_ = add_key_without_dup_check("edge_id");
+IncidentLineLayerBuilder::IncidentLineLayerBuilder(vtzero::tile_builder& tile,
+                                                   const char* name,
+                                                   const baldr::AttributesController& controller)
+    : IncidentLayersBuilder(tile, name, controller) {
   key_impact_ = add_key_without_dup_check("impact");
   key_type_ = add_key_without_dup_check("type");
   key_description_ = add_key_without_dup_check("description");
@@ -744,10 +781,13 @@ void IncidentLineLayerBuilder::add_feature(const IncidentsTile::Metadata& meta,
   vtzero::linestring_feature_builder feature{*this};
   feature.set_id(static_cast<uint64_t>(meta.id()));
   feature.add_linestring_from_container(geometry);
-  feature.add_property(key_type_, static_cast<std::string>(incidentTypeToString(meta.type())));
-  feature.add_property(key_impact_, static_cast<std::string>(incidentImpactToString(meta.impact())));
-  feature.add_property(key_description_, static_cast<std::string>(meta.description()));
-  feature.add_property(key_road_closed_, static_cast<bool>(meta.road_closed()));
+  // Add node properties
+  for (const auto& def : loki::detail::kIncidentAttributes) {
+    if (controller_(def.attribute_flag)) {
+      const auto key = this->*(def.key_member);
+      feature.add_property(key, def.value_func(meta));
+    }
+  }
   feature.commit();
 }
 

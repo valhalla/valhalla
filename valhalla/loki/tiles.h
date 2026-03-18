@@ -10,8 +10,12 @@
 #include "baldr/nodeinfo.h"
 #include "baldr/traffictile.h"
 #include "proto/incidents.pb.h"
+#include "proto_conversions.h"
+#include "third_party/vtzero/include/vtzero/builder.hpp"
+#include "third_party/vtzero/include/vtzero/types.hpp"
 
 #include <vtzero/builder.hpp>
+#include <vtzero/types.hpp>
 
 #include <cassert>
 #include <random>
@@ -24,10 +28,10 @@ class EdgesLayerBuilder;
 struct EdgeAttributeTile {
   const char* key_name;
   std::string_view attribute_flag;
-  vtzero::index_value EdgesLayerBuilder::*key_member;
+  vtzero::index_value EdgesLayerBuilder::* key_member;
 
   using prop_func_t = void (*)(EdgesLayerBuilder*,
-                               vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+                               vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
                                vtzero::linestring_feature_builder&,
                                const baldr::DirectedEdge&,
                                const baldr::EdgeInfo&,
@@ -53,31 +57,61 @@ protected:
   vtzero::index_value key_value_;
 };
 
-class IncidentPointLayerBuilder : vtzero::layer_builder {
-public:
-  explicit IncidentPointLayerBuilder(vtzero::tile_builder& tile, const char* name);
+struct IncidentLayersBuilder;
+struct IncidentsAttributeTile {
+  const char* key_name;
+  std::string_view attribute_flag;
+  vtzero::index_value IncidentLayersBuilder::* key_member;
 
-  void add_feature(const IncidentsTile::Metadata&, const vtzero::point&);
-
-protected:
-  vtzero::index_value key_type_;
-  vtzero::index_value key_impact_;
-  vtzero::index_value key_description_;
-  vtzero::index_value key_road_closed_;
+  using value_func_t = vtzero::encoded_property_value (*)(const IncidentsTile::Metadata&);
+  value_func_t value_func;
 };
 
-class IncidentLineLayerBuilder : vtzero::layer_builder {
+class IncidentLayersBuilder : public vtzero::layer_builder {
 public:
-  explicit IncidentLineLayerBuilder(vtzero::tile_builder& tile, const char* name);
+  explicit IncidentLayersBuilder(vtzero::tile_builder& tile,
+                                 const char* name,
+                                 const baldr::AttributesController& controller);
 
-  void add_feature(const IncidentsTile::Metadata&, const std::vector<vtzero::point>& geometry);
-
-protected:
-  vtzero::index_value key_edge_id_;
   vtzero::index_value key_type_;
   vtzero::index_value key_impact_;
   vtzero::index_value key_description_;
+  vtzero::index_value key_sub_type_;
+  vtzero::index_value key_sub_type_description_;
+  vtzero::index_value key_start_time_;
+  vtzero::index_value key_end_time_;
   vtzero::index_value key_road_closed_;
+  vtzero::index_value key_congestion_value_;
+  vtzero::index_value key_lanes_blocked_;
+  vtzero::index_value key_creation_time_;
+  vtzero::index_value key_long_description_;
+  vtzero::index_value key_clear_lanes_;
+  vtzero::index_value key_num_lanes_blocked_;
+  vtzero::index_value key_length_;
+  vtzero::index_value key_id_;
+  vtzero::index_value key_iso_3166_1_alpha2_;
+  vtzero::index_value key_iso_3166_1_alpha3_;
+
+protected:
+  const baldr::AttributesController controller_;
+};
+
+class IncidentPointLayerBuilder : public IncidentLayersBuilder {
+public:
+  explicit IncidentPointLayerBuilder(vtzero::tile_builder& tile,
+                                     const char* name,
+                                     const baldr::AttributesController& controller);
+
+  void add_feature(const IncidentsTile::Metadata&, const vtzero::point&);
+};
+
+class IncidentLineLayerBuilder : public IncidentLayersBuilder {
+public:
+  explicit IncidentLineLayerBuilder(vtzero::tile_builder& tile,
+                                    const char* name,
+                                    const baldr::AttributesController& controller);
+
+  void add_feature(const IncidentsTile::Metadata&, const std::vector<vtzero::point>& geometry);
 };
 
 /**
@@ -213,7 +247,7 @@ class NodesLayerBuilder;
 struct NodeAttributeTile {
   const char* key_name;
   std::string_view attribute_flag;
-  vtzero::index_value NodesLayerBuilder::*key_member;
+  vtzero::index_value NodesLayerBuilder::* key_member;
 
   using value_func_t = vtzero::encoded_property_value (*)(const baldr::NodeInfo&);
   value_func_t value_func;
@@ -289,7 +323,7 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         baldr::kEdgeSpeedFwd,
         &EdgesLayerBuilder::key_speed_fwd_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -303,7 +337,7 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         baldr::kEdgeDeadendFwd,
         &EdgesLayerBuilder::key_deadend_fwd_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -317,7 +351,7 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         baldr::kEdgeLaneCountFwd,
         &EdgesLayerBuilder::key_lanecount_fwd_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -331,7 +365,7 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         baldr::kEdgeTruckSpeedFwd,
         &EdgesLayerBuilder::key_truck_speed_fwd_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -345,7 +379,7 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         baldr::kEdgeSignalFwd,
         &EdgesLayerBuilder::key_traffic_signal_fwd_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -359,7 +393,7 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         baldr::kEdgeStopSignFwd,
         &EdgesLayerBuilder::key_stop_sign_fwd_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -373,7 +407,7 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         baldr::kEdgeYieldFwd,
         &EdgesLayerBuilder::key_yield_sign_fwd_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -387,7 +421,7 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
         baldr::kEdgeAccessFwd,
         &EdgesLayerBuilder::key_access_fwd_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -404,7 +438,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_speed_fwd_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -435,7 +469,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_speed1_fwd_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -446,7 +480,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_speed2_fwd_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -457,7 +491,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_speed3_fwd_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -468,7 +502,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_breakpoint1_fwd_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -479,7 +513,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_breakpoint2_fwd_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -490,7 +524,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_congestion1_fwd_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -501,7 +535,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_congestion2_fwd_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -512,7 +546,7 @@ static constexpr EdgeAttributeTile kForwardLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedFwd,
         &EdgesLayerBuilder::key_live_congestion3_fwd_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -526,7 +560,7 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         baldr::kEdgeSpeedBwd,
         &EdgesLayerBuilder::key_speed_rev_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -540,7 +574,7 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         baldr::kEdgeDeadendBwd,
         &EdgesLayerBuilder::key_deadend_rev_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -554,7 +588,7 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         baldr::kEdgeLaneCountBwd,
         &EdgesLayerBuilder::key_lanecount_rev_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -568,7 +602,7 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         baldr::kEdgeTruckSpeedBwd,
         &EdgesLayerBuilder::key_truck_speed_rev_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -582,7 +616,7 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         baldr::kEdgeSignalBwd,
         &EdgesLayerBuilder::key_traffic_signal_rev_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -596,7 +630,7 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         baldr::kEdgeStopSignBwd,
         &EdgesLayerBuilder::key_stop_sign_rev_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -610,7 +644,7 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         baldr::kEdgeYieldBwd,
         &EdgesLayerBuilder::key_yield_sign_rev_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -624,7 +658,7 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
         baldr::kEdgeAccessBwd,
         &EdgesLayerBuilder::key_access_rev_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -641,7 +675,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_speed_rev_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -671,7 +705,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_speed1_rev_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -682,7 +716,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_speed2_rev_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -693,7 +727,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_speed3_rev_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -704,7 +738,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_breakpoint1_rev_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -715,7 +749,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_breakpoint2_rev_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -726,7 +760,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_congestion1_rev_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -737,7 +771,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_congestion2_rev_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -748,7 +782,7 @@ static constexpr EdgeAttributeTile kReverseLiveSpeedAttributes[] = {
         baldr::kEdgeLiveSpeedBwd,
         &EdgesLayerBuilder::key_live_congestion3_rev_,
         [](EdgesLayerBuilder*,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const,
            vtzero::linestring_feature_builder&,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo&,
@@ -762,7 +796,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeUse,
         &EdgesLayerBuilder::key_use_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -776,7 +810,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeTunnel,
         &EdgesLayerBuilder::key_tunnel_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -790,7 +824,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeBridge,
         &EdgesLayerBuilder::key_bridge_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -804,7 +838,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeRoundabout,
         &EdgesLayerBuilder::key_roundabout_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -818,7 +852,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeShortcut,
         &EdgesLayerBuilder::key_is_shortcut_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -832,7 +866,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeLeavesTile,
         &EdgesLayerBuilder::key_leaves_tile_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -846,7 +880,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeLength,
         &EdgesLayerBuilder::key_length_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -860,7 +894,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeWeightedGrade,
         &EdgesLayerBuilder::key_weighted_grade_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -874,7 +908,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeMaxUpwardGrade,
         &EdgesLayerBuilder::key_max_up_slope_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -888,7 +922,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeMaxDownwardGrade,
         &EdgesLayerBuilder::key_max_down_slope_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -902,7 +936,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeCurvature,
         &EdgesLayerBuilder::key_curvature_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -916,7 +950,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeToll,
         &EdgesLayerBuilder::key_toll_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -930,7 +964,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeDestinationOnly,
         &EdgesLayerBuilder::key_destonly_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -944,7 +978,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeDestinationOnlyHGV,
         &EdgesLayerBuilder::key_destonly_hgv_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -958,7 +992,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeIndoor,
         &EdgesLayerBuilder::key_indoor_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -972,7 +1006,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeHovType,
         &EdgesLayerBuilder::key_hov_type_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -986,7 +1020,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeCycleLane,
         &EdgesLayerBuilder::key_cyclelane_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1000,7 +1034,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeBicycleNetwork,
         &EdgesLayerBuilder::key_bike_network_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo& ei,
@@ -1013,7 +1047,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeTruckRoute,
         &EdgesLayerBuilder::key_truck_route_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1027,7 +1061,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeSpeedType,
         &EdgesLayerBuilder::key_speed_type_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1041,7 +1075,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeCountryCrossing,
         &EdgesLayerBuilder::key_ctry_crossing_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1055,7 +1089,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeSacScale,
         &EdgesLayerBuilder::key_sac_scale_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1069,7 +1103,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeUnpaved,
         &EdgesLayerBuilder::key_unpaved_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1083,7 +1117,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeSurface,
         &EdgesLayerBuilder::key_surface_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1097,7 +1131,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeRamp,
         &EdgesLayerBuilder::key_link_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1111,7 +1145,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeInternalIntersection,
         &EdgesLayerBuilder::key_internal_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1125,7 +1159,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeShoulder,
         &EdgesLayerBuilder::key_shoulder_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1139,7 +1173,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeDismount,
         &EdgesLayerBuilder::key_dismount_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1153,7 +1187,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeUseSidepath,
         &EdgesLayerBuilder::key_use_sidepath_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1167,7 +1201,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeDensity,
         &EdgesLayerBuilder::key_density_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1181,7 +1215,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeSidewalkLeft,
         &EdgesLayerBuilder::key_sidewalk_left_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1195,7 +1229,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeSidewalkRight,
         &EdgesLayerBuilder::key_sidewalk_right_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1209,7 +1243,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeBSSConnection,
         &EdgesLayerBuilder::key_bss_connection_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1223,7 +1257,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeLit,
         &EdgesLayerBuilder::key_lit_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1236,7 +1270,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeNotThru,
         &EdgesLayerBuilder::key_not_thru_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1250,7 +1284,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgePartComplexRestriction,
         &EdgesLayerBuilder::key_part_of_complex_restriction_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge& e,
            const baldr::EdgeInfo&,
@@ -1264,7 +1298,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeWayId,
         &EdgesLayerBuilder::key_osm_way_id_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo& ei,
@@ -1278,7 +1312,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeSpeedLimit,
         &EdgesLayerBuilder::key_speed_limit_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo& ei,
@@ -1292,7 +1326,7 @@ static constexpr EdgeAttributeTile kSharedEdgeAttributes[] = {
         baldr::kEdgeLayer,
         &EdgesLayerBuilder::key_layer_,
         [](EdgesLayerBuilder* layer_builder,
-           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::* const key_member,
            vtzero::linestring_feature_builder& feature,
            const baldr::DirectedEdge&,
            const baldr::EdgeInfo& ei,
@@ -1362,6 +1396,145 @@ static constexpr NodeAttributeTile kNodeAttributes[] = {
         baldr::kNodeAccess,
         &NodesLayerBuilder::key_access_auto_,
         [](const baldr::NodeInfo& ni) { return vtzero::encoded_property_value(ni.access()); },
+    },
+};
+
+static constexpr IncidentsAttributeTile kIncidentAttributes[] = {
+    {
+        "description",
+        baldr::kIncidentDescription,
+        &IncidentLayersBuilder::key_description_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.description());
+        },
+    },
+    {
+        "type",
+        baldr::kIncidentType,
+        &IncidentLayersBuilder::key_type_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(
+              static_cast<std::string>(incidentTypeToString(meta.type())));
+        },
+    },
+    {
+        "impact",
+        baldr::kIncidentImpact,
+        &IncidentLayersBuilder::key_impact_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(
+              static_cast<std::string>(incidentImpactToString(meta.impact())));
+        },
+    },
+    {
+        "sub_type",
+        baldr::kIncidentSubType,
+        &IncidentLayersBuilder::key_sub_type_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.sub_type());
+        },
+    },
+    {
+        "sub_type_description",
+        baldr::kIncidentSubTypeDescription,
+        &IncidentLayersBuilder::key_sub_type_description_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.sub_type_description());
+        },
+    },
+    {
+        "start_time",
+        baldr::kIncidentStartTime,
+        &IncidentLayersBuilder::key_start_time_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.start_time());
+        },
+    },
+    {
+        "end_time",
+        baldr::kIncidentEndTime,
+        &IncidentLayersBuilder::key_end_time_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.end_time());
+        },
+    },
+    {
+        "road_closed",
+        baldr::kIncidentRoadClosed,
+        &IncidentLayersBuilder::key_road_closed_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.road_closed());
+        },
+    },
+    {
+        "congestion_value",
+        baldr::kIncidentCongestionValue,
+        &IncidentLayersBuilder::key_congestion_value_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.congestion().value());
+        },
+    },
+    {
+        "creation_time",
+        baldr::kIncidentCreationTime,
+        &IncidentLayersBuilder::key_creation_time_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.creation_time());
+        },
+    },
+    {
+        "long_description",
+        baldr::kIncidentLongDescription,
+        &IncidentLayersBuilder::key_long_description_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.long_description());
+        },
+    },
+    {
+        "clear_lanes",
+        baldr::kIncidentClearLanes,
+        &IncidentLayersBuilder::key_clear_lanes_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.clear_lanes());
+        },
+    },
+    {
+        "num_lanes_blocked",
+        baldr::kIncidentNumLanesBlocked,
+        &IncidentLayersBuilder::key_num_lanes_blocked_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.num_lanes_blocked());
+        },
+    },
+    {
+        "length",
+        baldr::kIncidentLength,
+        &IncidentLayersBuilder::key_length_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.length());
+        },
+    },
+    {
+        "id",
+        baldr::kIncidentId,
+        &IncidentLayersBuilder::key_id_,
+        [](const IncidentsTile::Metadata& meta) { return vtzero::encoded_property_value(meta.id()); },
+    },
+    {
+        "iso_3166_1_alpha2",
+        baldr::kIncidentIso31661Alpha2,
+        &IncidentLayersBuilder::key_iso_3166_1_alpha2_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.iso_3166_1_alpha2());
+        },
+    },
+    {
+        "iso_3166_1_alpha3",
+        baldr::kIncidentIso31661Alpha3,
+        &IncidentLayersBuilder::key_iso_3166_1_alpha3_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.iso_3166_1_alpha3());
+        },
     },
 };
 
@@ -1465,6 +1638,28 @@ static const std::unordered_map<std::string_view, std::string_view> kNodePropToA
     {"iso_3166_1", baldr::kAdminCountryCode},
     {"iso_3166_2", baldr::kAdminStateCode},
 };
+
+static const std::unordered_map<std::string_view, std::string_view> kIncidentPropToAttributeFlag = {
+    // incident
+    {"description", baldr::kIncidentDescription},
+    {"type", baldr::kIncidentType},
+    {"impact", baldr::kIncidentImpact},
+    {"sub_type", baldr::kIncidentSubType},
+    {"sub_type_description", baldr::kIncidentSubTypeDescription},
+    {"start_time", baldr::kIncidentStartTime},
+    {"end_time", baldr::kIncidentEndTime},
+    {"road_closed", baldr::kIncidentRoadClosed},
+    {"congestion_value", baldr::kIncidentCongestionValue},
+    {"creation_time", baldr::kIncidentCreationTime},
+    {"long_description", baldr::kIncidentLongDescription},
+    {"clear_lanes", baldr::kIncidentClearLanes},
+    {"num_lanes_blocked", baldr::kIncidentNumLanesBlocked},
+    {"length", baldr::kIncidentLength},
+    {"id", baldr::kIncidentId},
+    {"iso_3166_1_alpha2", baldr::kIncidentIso31661Alpha2},
+    {"iso_3166_1_alpha3", baldr::kIncidentIso31661Alpha3},
+};
+
 } // namespace detail
 
 } // namespace valhalla::loki
