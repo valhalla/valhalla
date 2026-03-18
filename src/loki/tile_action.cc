@@ -14,7 +14,6 @@
 #include "proto_conversions.h"
 #include "valhalla/exceptions.h"
 
-#include <absl/strings/str_format.h>
 #include <boost/geometry/algorithms/append.hpp>
 #include <boost/geometry/algorithms/equals.hpp>
 #include <boost/geometry/algorithms/intersection.hpp>
@@ -222,8 +221,7 @@ void filter_tile(const std::string& tile_bytes,
       if (layer_name == kIncidentPointLayerName || layer_name == kIncidentLineLayerName)
         return loki::detail::kIncidentPropToAttributeFlag;
       return loki::detail::kEdgePropToAttributeFlag;
-    }
-    ();
+    }();
 
     const auto& key_table = full_layer.key_table();
     std::vector<bool> attrs_allowed(key_table.size(), false);
@@ -287,50 +285,17 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
   nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
 }
 
-void build_incidents_point_layer(IncidentPointLayerBuilder& inc_point_builder,
-                                 GraphId edge_id,
-                                 graph_tile_ptr& tile,
-                                 GraphReader& reader,
-                                 const TileProjection& projection) {
-
-  auto incident_result = reader.GetIncidents(edge_id, tile);
-  for (size_t i = incident_result.start_index; i < incident_result.end_index; ++i) {
-    auto& loc = incident_result.tile->locations(i);
-    auto& meta = incident_result.tile->metadata(loc.metadata_index());
-
-    if (!meta.has_display_ll()) {
-      return;
-    }
-
-    const auto x = lon_to_merc_x(meta.display_ll().lng());
-    const auto y = lat_to_merc_y(meta.display_ll().lat());
-    const auto tile_coord = merc_to_tile_coords({x, y}, projection);
-
-    auto tile_x = boost::geometry::get<0>(tile_coord);
-    auto tile_y = boost::geometry::get<1>(tile_coord);
-
-    // only render nodes that are within the tile (including buffer)
-    if (tile_x < -projection.tile_buffer ||
-        tile_x > projection.tile_extent + projection.tile_buffer ||
-        tile_y < -projection.tile_buffer ||
-        tile_y > projection.tile_extent + projection.tile_buffer) {
-      return;
-    }
-
-    inc_point_builder.add_feature(meta, tile_coord);
-  }
-}
-
-void build_incidents_line_layer(IncidentLineLayerBuilder& inc_line_builder,
-                                GraphId edge_id,
-                                graph_tile_ptr& tile,
-                                const std::vector<midgard::PointLL>& shape,
-                                bg::linestring_2d_t& mercator_line,
-                                const box_vtzero_t& clip_box,
-                                double generalize,
-                                uint32_t z,
-                                const TileProjection& projection,
-                                GraphReader& reader) {
+void build_incidents_layers(IncidentPointLayerBuilder& inc_point_builder,
+                            IncidentLineLayerBuilder& inc_line_builder,
+                            GraphId edge_id,
+                            const std::vector<midgard::PointLL>& shape,
+                            bg::linestring_2d_t& mercator_line,
+                            const box_vtzero_t& clip_box,
+                            double generalize,
+                            uint32_t z,
+                            graph_tile_ptr& tile,
+                            GraphReader& reader,
+                            const TileProjection& projection) {
 
   auto process_single_line = [&](const linestring_vtzero_t& line,
                                  const IncidentsTile::Metadata& meta) {
@@ -339,13 +304,32 @@ void build_incidents_line_layer(IncidentLineLayerBuilder& inc_line_builder,
   auto incident_result = reader.GetIncidents(edge_id, tile);
   for (size_t i = incident_result.start_index; i < incident_result.end_index; ++i) {
     auto& loc = incident_result.tile->locations(i);
+    auto& meta = incident_result.tile->metadata(loc.metadata_index());
+
+    if (meta.has_display_ll()) {
+      const auto x = lon_to_merc_x(meta.display_ll().lng());
+      const auto y = lat_to_merc_y(meta.display_ll().lat());
+      const auto tile_coord = merc_to_tile_coords({x, y}, projection);
+
+      auto tile_x = boost::geometry::get<0>(tile_coord);
+      auto tile_y = boost::geometry::get<1>(tile_coord);
+
+      // only render nodes that are within the tile (including buffer)
+      if (tile_x >= -projection.tile_buffer &&
+          tile_x <= projection.tile_extent + projection.tile_buffer &&
+          tile_y >= -projection.tile_buffer &&
+          tile_y <= projection.tile_extent + projection.tile_buffer) {
+
+        inc_point_builder.add_feature(meta, tile_coord);
+      }
+    }
+
     std::vector<midgard::PointLL> trimmed_shape = shape;
     trim_shape(loc.start_offset(), loc.end_offset(), trimmed_shape);
     bool leaves_bbox = false;
     auto unclipped_mvt_line = shape_to_mercator(trimmed_shape, mercator_line, clip_box, leaves_bbox,
                                                 generalize, z, projection);
 
-    auto& meta = incident_result.tile->metadata(loc.metadata_index());
     if (!leaves_bbox) {
       process_single_line(unclipped_mvt_line, meta);
       return;
@@ -475,15 +459,13 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     };
 
     if (forward_traffic && forward_traffic->has_incidents) {
-      build_incidents_line_layer(incident_line_builder, edge_id, edge_tile, shape, mercator_line,
-                                 clip_box, generalize, z, projection, *reader);
-      build_incidents_point_layer(incident_point_builder, edge_id, edge_tile, *reader, projection);
+      build_incidents_layers(incident_point_builder, incident_line_builder, edge_id, shape,
+                             mercator_line, clip_box, generalize, z, edge_tile, *reader, projection);
     }
 
     if (opp_tile && reverse_traffic && reverse_traffic->has_incidents) {
-      build_incidents_line_layer(incident_line_builder, opp_edge_id, opp_tile, shape, mercator_line,
-                                 clip_box, generalize, z, projection, *reader);
-      build_incidents_point_layer(incident_point_builder, opp_edge_id, opp_tile, *reader, projection);
+      build_incidents_layers(incident_point_builder, incident_line_builder, opp_edge_id, shape,
+                             mercator_line, clip_box, generalize, z, opp_tile, *reader, projection);
     }
 
     if (!line_leaves_bbox) {
