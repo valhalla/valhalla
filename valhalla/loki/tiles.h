@@ -11,8 +11,6 @@
 #include "baldr/traffictile.h"
 #include "proto/incidents.pb.h"
 #include "proto_conversions.h"
-#include "third_party/vtzero/include/vtzero/builder.hpp"
-#include "third_party/vtzero/include/vtzero/types.hpp"
 
 #include <vtzero/builder.hpp>
 #include <vtzero/types.hpp>
