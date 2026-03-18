@@ -23,6 +23,7 @@
    * ADDED: access restriction layer in MVT [#5912](https://github.com/valhalla/valhalla/pull/5912)
    * ADDED: incidents to locate JSON response [#5968](https://github.com/valhalla/valhalla/pull/5968)
    * ADDED: `--region` to `valhalla_build_extract` to create tars by Geofabrik region
+   * ADDED: `incidents_points` and `incidents_lines` layers to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
