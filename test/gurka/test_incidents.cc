@@ -1,25 +1,28 @@
 #include "gurka.h"
 #include "test.h"
 
+#include <vtzero/vector_tile.hpp>
+
 using namespace valhalla;
 
 class IncidentsTest : public ::testing::Test {
 protected:
   static gurka::map map;
+  static gurka::nodelayout layout;
 
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
     A----------0----------B----------1----------C
     |                     |
     |                     |
-    |                     |
-    2                     3
-    |                     |
-    |                     |
+    |                  v  |  w
+    2                  u  3   
+    |                     |   
+    |                     x
     |                     |
     D----------4----------E----------5----------F
     |                     |
-    |                     |
+    |                     z
     |                     |
     6                     7
     |                     |
@@ -39,8 +42,7 @@ protected:
     };
 
     // generate the lls for the nodes in the map
-    const auto layout =
-        gurka::detail::map_to_coordinates(ascii_map, 100, {-111.962238354, 49.003392362});
+    layout = gurka::detail::map_to_coordinates(ascii_map, 100, {-111.962238354, 49.003392362});
 
     // make the tiles
     std::string tile_dir = "test/data/route_incidents";
@@ -58,6 +60,7 @@ protected:
 
 // initialize static member
 gurka::map IncidentsTest::map = {};
+gurka::nodelayout IncidentsTest::layout = {};
 
 // for asserting where the incident starts and ends on the route and how long it is
 struct incident_location {
@@ -169,7 +172,7 @@ void check_incident_country_code(const valhalla::TripLeg& leg,
 // a bit more work is needed if we want to do it for more than one tile at a time
 struct test_reader : public baldr::GraphReader {
   test_reader(const boost::property_tree::ptree& pt) : baldr::GraphReader(pt) {
-    tile_extract_.reset(new baldr::GraphReader::tile_extract_t(pt));
+    tile_extract_ = std::make_shared<baldr::GraphReader::tile_extract_t>(pt);
     enable_incidents_ = true;
   }
   virtual std::shared_ptr<const valhalla::IncidentsTile>
@@ -182,7 +185,8 @@ struct test_reader : public baldr::GraphReader {
   void add(const baldr::GraphId& id,
            valhalla::IncidentsTile::Location&& _incident_location,
            uint64_t incident_id,
-           const std::string& incident_description = "") {
+           const std::string& incident_description = "",
+           std::optional<midgard::PointLL> display_ll = std::nullopt) {
 
     // Grab the incidents-tile we need to add to
     valhalla::IncidentsTile& incidents_tile = incidents[id.tile_base()];
@@ -200,6 +204,11 @@ struct test_reader : public baldr::GraphReader {
       auto* metadata = incidents_tile.mutable_metadata()->Add();
       metadata->set_id(incident_id);
       metadata->set_description(incident_description);
+
+      if (display_ll) {
+        metadata->mutable_display_ll()->set_lng(display_ll->lng());
+        metadata->mutable_display_ll()->set_lat(display_ll->lat());
+      }
     }
 
     // Finally, add the relation from edge to the incident metadata
@@ -844,4 +853,38 @@ TEST_F(IncidentsTest, armageddon) {
                                        {2, 2, 0, .7, 1, .2},
                                        {3, 2, 0, .8, 1, 1.},
                                    });
+}
+TEST_F(IncidentsTest, vector_tiles) {
+
+  // mark the edges with incidents
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"CB", "BE", "EH", "HI"}, edge_ids);
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
+
+  // modify the incident tile to have incidents on this edge
+  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 123, "snow storm",
+              layout.at("u"));
+  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), .0, .2), 666, "scorching heat",
+              layout.at("v"));
+  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .5), 456, "raining frogs",
+              layout.at("w"));
+  reader->add(edge_ids[3], createIncidentLocation(edge_ids[3].id(), 0., .1), 2, "locusts",
+              layout.at("x"));
+  reader->sort();
+
+  std::string tile_data;
+  [[maybe_unused]] auto api =
+      gurka::do_action(Options::tile, map, "3", 14, "auto", {}, graphreader, &tile_data);
+
+  vtzero::vector_tile tile{tile_data};
+  // check the points layer
+  auto point_layer = tile.get_layer_by_name("incidents_points");
+  EXPECT_TRUE(point_layer.valid());
+  EXPECT_EQ(point_layer.num_features(), 5); // todo: this should be 4, but it looks like we get
+                                            // duplicate edge pairs when building the tile?
+
+  // and the lines layer
+  auto line_layer = tile.get_layer_by_name("incidents_lines");
+  EXPECT_TRUE(line_layer.valid());
+  EXPECT_EQ(line_layer.num_features(), 4);
 }

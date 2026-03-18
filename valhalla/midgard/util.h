@@ -266,6 +266,15 @@ void trim_shape(float start,
                 std::vector<PointLL>& shape);
 
 /**
+ * Trims shape (in-place) from start and end percent along.
+ *
+ * @param  start_pct     start percent along the edge from the start
+ * @param  end_pct     end percent along the edge from the start
+ * @param  shape         Shape, as vector of PointLLs
+ */
+void trim_shape(float start_pct, float end_pct, std::vector<PointLL>& shape);
+
+/**
  * Estimate the angle of the tangent at a point along a discretised curve. We attempt
  * to mostly use the shape coming into the point on the curve but if there
  * isn't enough there we will use the shape coming out of the it.
@@ -628,7 +637,7 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
 
 template <typename T> struct Finally {
   T t;
-  explicit Finally(T t) : t(std::move(t)){};
+  explicit Finally(T t) : t(std::move(t)) {};
   Finally() = delete;
   Finally(Finally&& f) = default;
   Finally(const Finally&) = delete;

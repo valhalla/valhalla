@@ -138,6 +138,55 @@ vtzero::point merc_to_tile_coords(const midgard::Point2d merc_xy, const TileProj
   return {tile_x, tile_y};
 }
 
+linestring_vtzero_t shape_to_mercator(const std::vector<midgard::PointLL>& shape,
+                                      bg::linestring_2d_t& mercator_line,
+                                      const box_vtzero_t& clip_box,
+                                      bool& line_leaves_bbox,
+                                      double generalize,
+                                      uint32_t z,
+                                      const TileProjection& projection) {
+  const auto min_x = clip_box.min_corner().x;
+  const auto max_x = clip_box.max_corner().x;
+  const auto min_y = clip_box.min_corner().y;
+  const auto max_y = clip_box.max_corner().y;
+
+  // project to pseudo mercator x/y for the generalization
+  mercator_line.clear();
+  for (const auto& ll : shape) {
+    auto merc_x = lon_to_merc_x(ll.lng());
+    auto merc_y = lat_to_merc_y(ll.lat());
+
+    boost::geometry::append(mercator_line,
+                            std::remove_reference_t<decltype(mercator_line)>::value_type(merc_x,
+                                                                                         merc_y));
+  }
+
+  // scale the epsilon with generalize query parameter
+  if (const auto gen_factor = PeuckerEpsilons[z] * generalize; generalize > 0. && gen_factor > 0.5)
+    Polyline2<Point2d>::Generalize(mercator_line, gen_factor);
+
+  // convert to tile-local coords for the rest of the operations
+  linestring_vtzero_t unclipped_mvt_line;
+  unclipped_mvt_line.reserve(mercator_line.size());
+  vtzero::point last_pt{INT32_MIN, INT32_MIN};
+  for (const auto& pt : mercator_line) {
+    const auto& mvt_coords = merc_to_tile_coords(pt, projection);
+    // Skip consecutive duplicate points (can happen after rounding)
+    if (boost::geometry::equals(mvt_coords, last_pt)) {
+      continue;
+    }
+    const auto x = mvt_coords.x;
+    const auto y = mvt_coords.y;
+
+    // only in this case we need an intersection with the clip_box
+    line_leaves_bbox = x < min_x || x > max_x || y < min_y || y > max_y;
+
+    unclipped_mvt_line.emplace_back(x, y);
+    last_pt = mvt_coords;
+  }
+  return unclipped_mvt_line;
+}
+
 void filter_tile(const std::string& tile_bytes,
                  vtzero::tile_builder& filtered_tile,
                  const baldr::AttributesController& controller,
@@ -150,6 +199,7 @@ void filter_tile(const std::string& tile_bytes,
   const bool exclude_shortcut_layer = exclude_layers.contains(kShortcutLayerName);
   const bool exclude_access_restrictions_layer = exclude_layers.contains(kAccessRestrictionLayerName);
   const bool exclude_incidents_point_layer = exclude_layers.contains(kIncidentPointLayerName);
+  const bool exclude_incidents_line_layer = exclude_layers.contains(kIncidentLineLayerName);
 
   auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
@@ -157,7 +207,8 @@ void filter_tile(const std::string& tile_bytes,
         (layer_name == kEdgeLayerName && exclude_edge_layer) ||
         (layer_name == kShortcutLayerName && exclude_shortcut_layer) ||
         (layer_name == kAccessRestrictionLayerName && exclude_access_restrictions_layer) ||
-        (layer_name == kIncidentPointLayerName && exclude_incidents_point_layer)) {
+        (layer_name == kIncidentPointLayerName && exclude_incidents_point_layer) ||
+        (layer_name == kIncidentLineLayerName && exclude_incidents_line_layer)) {
       return;
     }
 
@@ -240,8 +291,9 @@ void build_incidents_point_layer(IncidentPointLayerBuilder& inc_point_builder,
     auto& loc = incident_result.tile->locations(i);
     auto& meta = incident_result.tile->metadata(loc.metadata_index());
 
-    if (!meta.has_display_ll())
+    if (!meta.has_display_ll()) {
       return;
+    }
 
     const auto x = lon_to_merc_x(meta.display_ll().lng());
     const auto y = lat_to_merc_y(meta.display_ll().lat());
@@ -259,6 +311,49 @@ void build_incidents_point_layer(IncidentPointLayerBuilder& inc_point_builder,
     }
 
     inc_point_builder.add_feature(meta, tile_coord);
+  }
+}
+
+void build_incidents_line_layer(IncidentLineLayerBuilder& inc_line_builder,
+                                GraphId edge_id,
+                                graph_tile_ptr& tile,
+                                const std::vector<midgard::PointLL>& shape,
+                                bg::linestring_2d_t& mercator_line,
+                                const box_vtzero_t& clip_box,
+                                double generalize,
+                                uint32_t z,
+                                const TileProjection& projection,
+                                GraphReader& reader) {
+
+  auto process_single_line = [&](const linestring_vtzero_t& line,
+                                 const IncidentsTile::Metadata& meta) {
+    inc_line_builder.add_feature(meta, line);
+  };
+  auto incident_result = reader.GetIncidents(edge_id, tile);
+  for (size_t i = incident_result.start_index; i < incident_result.end_index; ++i) {
+    auto& loc = incident_result.tile->locations(i);
+    std::vector<midgard::PointLL> trimmed_shape = shape;
+    trim_shape(loc.start_offset(), loc.end_offset(), trimmed_shape);
+    bool leaves_bbox = false;
+    auto unclipped_mvt_line = shape_to_mercator(trimmed_shape, mercator_line, clip_box, leaves_bbox,
+                                                generalize, z, projection);
+
+    auto& meta = incident_result.tile->metadata(loc.metadata_index());
+    if (!leaves_bbox) {
+      process_single_line(unclipped_mvt_line, meta);
+      return;
+    }
+    multilinestring_vtzero_t clipped_mvt_lines;
+
+    boost::geometry::intersection(clip_box, unclipped_mvt_line, clipped_mvt_lines);
+    std::erase_if(clipped_mvt_lines,
+                  [](const auto& ls) { return ls.size() < 2 || (ls.size() == 2 && ls[0] == ls[1]); });
+
+    // process each clipped line segment (there may be multiple if line crosses tile multiple
+    // times)
+    for (const auto& clipped_line : clipped_mvt_lines) {
+      process_single_line(clipped_line, meta);
+    }
   }
 }
 
@@ -297,16 +392,13 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   const box_vtzero_t clip_box(vtzero::point(-projection.tile_buffer, -projection.tile_buffer),
                               vtzero::point(projection.tile_extent + projection.tile_buffer,
                                             projection.tile_extent + projection.tile_buffer));
-  const auto min_x = clip_box.min_corner().x;
-  const auto max_x = clip_box.max_corner().x;
-  const auto min_y = clip_box.min_corner().y;
-  const auto max_y = clip_box.max_corner().y;
 
   EdgesLayerBuilder edges_builder(tile, kEdgeLayerName.data(), controller);
   EdgesLayerBuilder shortcuts_builder(tile, kShortcutLayerName.data(), controller);
   NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
   AccessRestrictionLayerBuilder access_restriction_builder(tile, kAccessRestrictionLayerName.data());
   IncidentPointLayerBuilder incident_point_builder(tile, kIncidentPointLayerName.data());
+  IncidentLineLayerBuilder incident_line_builder(tile, kIncidentLineLayerName.data());
 
   std::unordered_set<GraphId> unique_nodes;
   unique_nodes.reserve(edge_ids.size());
@@ -332,39 +424,11 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       std::reverse(shape.begin(), shape.end());
     }
 
-    // project to pseudo mercator x/y for the generalization
-    mercator_line.clear();
-    for (const auto& ll : shape) {
-      auto merc_x = lon_to_merc_x(ll.lng());
-      auto merc_y = lat_to_merc_y(ll.lat());
-
-      boost::geometry::append(mercator_line, decltype(mercator_line)::value_type(merc_x, merc_y));
-    }
-
-    // scale the epsilon with generalize query parameter
-    if (const auto gen_factor = PeuckerEpsilons[z] * generalize; generalize > 0. && gen_factor > 0.5)
-      Polyline2<Point2d>::Generalize(mercator_line, gen_factor);
-
-    // convert to tile-local coords for the rest of the operations
-    linestring_vtzero_t unclipped_mvt_line;
-    unclipped_mvt_line.reserve(mercator_line.size());
-    vtzero::point last_pt{INT32_MIN, INT32_MIN};
     bool line_leaves_bbox = false;
-    for (const auto& pt : mercator_line) {
-      const auto& mvt_coords = merc_to_tile_coords(pt, projection);
-      // Skip consecutive duplicate points (can happen after rounding)
-      if (boost::geometry::equals(mvt_coords, last_pt)) {
-        continue;
-      }
-      const auto x = mvt_coords.x;
-      const auto y = mvt_coords.y;
 
-      // only in this case we need an intersection with the clip_box
-      line_leaves_bbox = x < min_x || x > max_x || y < min_y || y > max_y;
-
-      unclipped_mvt_line.emplace_back(x, y);
-      last_pt = mvt_coords;
-    }
+    linestring_vtzero_t unclipped_mvt_line =
+        shape_to_mercator(shape, mercator_line, clip_box, line_leaves_bbox, generalize, z,
+                          projection);
 
     // Must have at least 2 unique points to create a valid linestring
     if (unclipped_mvt_line.size() < 2) {
@@ -404,10 +468,14 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     };
 
     if (forward_traffic && forward_traffic->has_incidents) {
+      build_incidents_line_layer(incident_line_builder, edge_id, edge_tile, shape, mercator_line,
+                                 clip_box, generalize, z, projection, *reader);
       build_incidents_point_layer(incident_point_builder, edge_id, edge_tile, *reader, projection);
     }
 
     if (opp_tile && reverse_traffic && reverse_traffic->has_incidents) {
+      build_incidents_line_layer(incident_line_builder, opp_edge_id, opp_tile, shape, mercator_line,
+                                 clip_box, generalize, z, projection, *reader);
       build_incidents_point_layer(incident_point_builder, opp_edge_id, opp_tile, *reader, projection);
     }
 
@@ -643,19 +711,43 @@ void AccessRestrictionLayerBuilder::add_feature(
 
 IncidentPointLayerBuilder::IncidentPointLayerBuilder(vtzero::tile_builder& tile, const char* name)
     : vtzero::layer_builder(tile, name) {
-  // Pre-add keys for node properties
   key_impact_ = add_key_without_dup_check("impact");
   key_type_ = add_key_without_dup_check("type");
+  key_description_ = add_key_without_dup_check("description");
+  key_road_closed_ = add_key_without_dup_check("road_closed");
 }
 
 void IncidentPointLayerBuilder::add_feature(const IncidentsTile::Metadata& meta,
                                             const vtzero::point& position) {
-
   vtzero::point_feature_builder feature{*this};
   feature.set_id(static_cast<uint64_t>(meta.id()));
   feature.add_point(position);
   feature.add_property(key_type_, static_cast<std::string>(incidentTypeToString(meta.type())));
   feature.add_property(key_impact_, static_cast<std::string>(incidentImpactToString(meta.impact())));
+  feature.add_property(key_description_, static_cast<std::string>(meta.description()));
+  feature.add_property(key_road_closed_, static_cast<bool>(meta.road_closed()));
+  feature.commit();
+}
+
+IncidentLineLayerBuilder::IncidentLineLayerBuilder(vtzero::tile_builder& tile, const char* name)
+    : vtzero::layer_builder(tile, name) {
+  key_edge_id_ = add_key_without_dup_check("edge_id");
+  key_impact_ = add_key_without_dup_check("impact");
+  key_type_ = add_key_without_dup_check("type");
+  key_description_ = add_key_without_dup_check("description");
+  key_road_closed_ = add_key_without_dup_check("road_closed");
+}
+
+void IncidentLineLayerBuilder::add_feature(const IncidentsTile::Metadata& meta,
+                                           const std::vector<vtzero::point>& geometry) {
+
+  vtzero::linestring_feature_builder feature{*this};
+  feature.set_id(static_cast<uint64_t>(meta.id()));
+  feature.add_linestring_from_container(geometry);
+  feature.add_property(key_type_, static_cast<std::string>(incidentTypeToString(meta.type())));
+  feature.add_property(key_impact_, static_cast<std::string>(incidentImpactToString(meta.impact())));
+  feature.add_property(key_description_, static_cast<std::string>(meta.description()));
+  feature.add_property(key_road_closed_, static_cast<bool>(meta.road_closed()));
   feature.commit();
 }
 
