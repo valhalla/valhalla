@@ -753,10 +753,6 @@ IncidentLineLayerBuilder::IncidentLineLayerBuilder(vtzero::tile_builder& tile,
                                                    const char* name,
                                                    const baldr::AttributesController& controller)
     : IncidentLayersBuilder(tile, name, controller) {
-  key_impact_ = add_key_without_dup_check("impact");
-  key_type_ = add_key_without_dup_check("type");
-  key_description_ = add_key_without_dup_check("description");
-  key_road_closed_ = add_key_without_dup_check("road_closed");
 }
 
 void IncidentLineLayerBuilder::add_feature(const IncidentsTile::Metadata& meta,
