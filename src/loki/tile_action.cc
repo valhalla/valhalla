@@ -221,8 +221,7 @@ void filter_tile(const std::string& tile_bytes,
       if (layer_name == kIncidentPointLayerName || layer_name == kIncidentLineLayerName)
         return loki::detail::kIncidentPropToAttributeFlag;
       return loki::detail::kEdgePropToAttributeFlag;
-    }
-    ();
+    }();
 
     const auto& key_table = full_layer.key_table();
     std::vector<bool> attrs_allowed(key_table.size(), false);
@@ -303,7 +302,7 @@ void build_incidents_layers(IncidentPointLayerBuilder& inc_point_builder,
     inc_line_builder.add_feature(meta, line);
   };
   auto incident_result = reader.GetIncidents(edge_id, tile);
-  for (size_t i = incident_result.start_index; i < incident_result.end_index; ++i) {
+  for (auto i = incident_result.start_index; i < incident_result.end_index; ++i) {
     auto& loc = incident_result.tile->locations(i);
     auto& meta = incident_result.tile->metadata(loc.metadata_index());
 
