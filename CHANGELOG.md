@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
    * REMOVED: Removed ability to set ISO:3166 country/state code per OSM Node [#5747](https://github.com/valhalla/valhalla/pull/5747)
+   * REMOVED: all module-level `logging` config in favor of a global one
 * **Bug Fix**
    * FIXED: Clamp grades on bridges and tunnels. [#5728](https://github.com/valhalla/valhalla/pull/5728)
    * FIXED: use pedestrian costing on end location in `auto_pedestrian` costing [#5903](https://github.com/valhalla/valhalla/pull/5903)
@@ -24,6 +25,7 @@
    * ADDED: incidents to locate JSON response [#5968](https://github.com/valhalla/valhalla/pull/5968)
    * ADDED: `--region` to `valhalla_build_extract` to create tars by Geofabrik region
    * ADDED: more warnings for clamped costing options, second pass, bidir fallback and matrix_locations for CostMatrix [#3833](https://github.com/valhalla/valhalla/pull/3833)
+   * ADDED: a global one `logging` config to replace all module-level ones
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**

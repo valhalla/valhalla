@@ -1,6 +1,8 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -364,6 +366,23 @@ void logging::Log(const std::string& message, const std::string& custom_directiv
 // statically configure logging
 void logging::Configure(const LoggingConfig& config) {
   GetLogger(config);
+}
+
+// configure logging from a boost property tree config
+void logging::Configure(const boost::property_tree::ptree& config,
+                        const std::string& deprecated_key) {
+  auto logging_subtree = config.get_child_optional("logging");
+  if (!logging_subtree && !deprecated_key.empty()) {
+    logging_subtree = config.get_child_optional(deprecated_key);
+    if (logging_subtree) {
+      std::cerr << "[WARN] Per-module logging config '" << deprecated_key
+                << "' is deprecated. Use top-level 'logging' instead." << std::endl;
+    }
+  }
+  if (logging_subtree) {
+    Configure(ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string>>(
+        logging_subtree.get()));
+  }
 }
 
 } // namespace midgard

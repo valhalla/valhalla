@@ -112,6 +112,13 @@ class Optional:
 
 # global default configuration
 config = {
+    "logging": {
+        "type": "std_out",
+        "color": True,
+        "file_name": "path_to_some_file.log",
+        "max_file_size": Optional(int),
+        "max_archived_files": Optional(int),
+    },
     "mjolnir": {
         "max_cache_size": 1000000000,
         "id_table_size": 1300000000,
@@ -166,6 +173,7 @@ config = {
             "scan_tar": False,
         },
         "logging": {
+            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
             "type": "std_out",
             "color": True,
             "file_name": "path_to_some_file.log",
@@ -209,10 +217,10 @@ config = {
             "mvt_max_age": "1800",
         },
         "logging": {
+            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
             "type": "std_out",
             "color": True,
             "file_name": "path_to_some_file.log",
-            "long_request": 100.0,
             "max_file_size": Optional(int),
             "max_archived_files": Optional(int),
         },
@@ -220,10 +228,10 @@ config = {
     },
     "thor": {
         "logging": {
+            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
             "type": "std_out",
             "color": True,
             "file_name": "path_to_some_file.log",
-            "long_request": 110.0,
             "max_file_size": Optional(int),
             "max_archived_files": Optional(int),
         },
@@ -273,6 +281,7 @@ config = {
     },
     "odin": {
         "logging": {
+            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
             "type": "std_out",
             "color": True,
             "file_name": "path_to_some_file.log",
@@ -318,6 +327,7 @@ config = {
         "bicycle": {"turn_penalty_factor": 140},
         "multimodal": {"turn_penalty_factor": 70},
         "logging": {
+            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
             "type": "std_out",
             "color": True,
             "file_name": "path_to_some_file.log",
@@ -475,6 +485,17 @@ config = {
 }
 
 help_text = {
+    "logging": {
+        "__note__": (
+            "Process-wide logging configuration. The file logger is not suitable for "
+            "multi-processing mode. Log rolling in particular may cause race conditions and crashes."
+        ),
+        "type": "Type of logger either std_out or file",
+        "color": "Use colored log level in std_out logger",
+        "file_name": "Output log file for the file logger",
+        "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
+        "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
+    },
     "mjolnir": {
         "max_cache_size": "Number of bytes per thread used to store tile data in memory",
         "id_table_size": "Value controls the initial size of the Id table",
@@ -529,12 +550,9 @@ help_text = {
             "scan_tar": "bool indicating whether or not to pre-scan the tar ball(s) when loading an extract with an index file, to warm up the OS page cache.",
         },
         "logging": {
-            "__note__": (
-                "The file logger is not suitable for multi-processing mode. "
-                "Log rolling in particular may cause race conditions and crashes."
-            ),
+            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
             "type": "Type of logger either std_out or file",
-            "color": "User colored log level in std_out logger",
+            "color": "Use colored log level in std_out logger",
             "file_name": "Output log file for the file logger",
             "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
             "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
@@ -562,14 +580,10 @@ help_text = {
             "mvt_max_age": "The value used for 'max-age' in the Cache-Control response header for the MVT end point",
         },
         "logging": {
-            "__note__": (
-                "The file logger is not suitable for multi-processing mode. "
-                "Log rolling in particular may cause race conditions and crashes."
-            ),
+            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
             "type": "Type of logger either std_out or file",
-            "color": "User colored log level in std_out logger",
+            "color": "Use colored log level in std_out logger",
             "file_name": "Output log file for the file logger",
-            "long_request": "Value used in processing to determine whether it took too long",
             "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
             "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
         },
@@ -577,14 +591,10 @@ help_text = {
     },
     "thor": {
         "logging": {
-            "__note__": (
-                "The file logger is not suitable for multi-processing mode. "
-                "Log rolling in particular may cause race conditions and crashes."
-            ),
+            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
             "type": "Type of logger either std_out or file",
-            "color": "User colored log level in std_out logger",
+            "color": "Use colored log level in std_out logger",
             "file_name": "Output log file for the file logger",
-            "long_request": "Value used in processing to determine whether it took too long",
             "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
             "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
         },
@@ -647,12 +657,9 @@ help_text = {
     },
     "odin": {
         "logging": {
-            "__note__": (
-                "The file logger is not suitable for multi-processing mode. "
-                "Log rolling in particular may cause race conditions and crashes."
-            ),
+            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
             "type": "Type of logger either std_out or file",
-            "color": "User colored log level in std_out logger",
+            "color": "Use colored log level in std_out logger",
             "file_name": "Output log file for the file logger",
             "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
             "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
@@ -696,12 +703,9 @@ help_text = {
             "turn_penalty_factor": "A non-negative value to penalize turns from one road segment to next"
         },
         "logging": {
-            "__note__": (
-                "The file logger is not suitable for multi-processing mode. "
-                "Log rolling in particular may cause race conditions and crashes."
-            ),
+            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
             "type": "Type of logger either std_out or file",
-            "color": "User colored log level in std_out logger",
+            "color": "Use colored log level in std_out logger",
             "file_name": "Output log file for the file logger",
             "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
             "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",

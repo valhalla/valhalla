@@ -59,13 +59,7 @@ bool parse_common_args(const std::string& program,
     }
 
     // configure logging
-    auto logging_subtree = conf->get_child_optional(log);
-    if (!log.empty() && logging_subtree) {
-      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                     std::unordered_map<std::string, std::string>>(
-          logging_subtree.get());
-      valhalla::midgard::logging::Configure(logging_config);
-    }
+    valhalla::midgard::logging::Configure(*conf, log);
   }
 
   if (use_threads) {
