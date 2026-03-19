@@ -101,8 +101,10 @@ inline bool is_break_point(const valhalla::Location& l) {
 }
 
 inline bool is_highly_reachable(const valhalla::Location& loc, const valhalla::PathEdge& edge) {
-  return static_cast<google::protobuf::uint32>(edge.inbound_reach()) >= loc.minimum_reachability() &&
-         static_cast<google::protobuf::uint32>(edge.outbound_reach()) >= loc.minimum_reachability();
+  return static_cast<google::protobuf::uint32>(edge.inbound_reach()) >=
+             loc.minimum_inbound_reachability() &&
+         static_cast<google::protobuf::uint32>(edge.outbound_reach()) >=
+             loc.minimum_outbound_reachability();
 }
 
 template <typename Predicate> inline void remove_path_edges(valhalla::Location& loc, Predicate pred) {

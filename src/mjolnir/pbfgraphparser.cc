@@ -20,6 +20,9 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
+#ifdef HAVE_EXPAT
+#include <osmium/io/xml_input.hpp>
+#endif
 
 #include <thread>
 #include <utility>
@@ -433,6 +436,10 @@ struct graph_parser {
           break;
         case Use::kOther:
           way_.set_use(Use::kOther);
+          break;
+        case Use::kPlatform:
+          way_.set_use(Use::kPlatform);
+          way_.set_road_class(RoadClass::kServiceOther);
           break;
         case Use::kConstruction:
           way_.set_use(Use::kConstruction);
