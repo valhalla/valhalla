@@ -43,7 +43,7 @@ const boost::property_tree::ptree configure(const std::string& config) {
     std::stringstream stream(config);
     rapidjson::read_json(stream, pt);
 
-    valhalla::midgard::logging::Configure(pt, "mjolnir.logging");
+    valhalla::midgard::logging::Configure(pt);
   } catch (...) { throw std::runtime_error("Failed to load config"); }
 
   return pt;

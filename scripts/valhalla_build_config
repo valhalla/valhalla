@@ -172,14 +172,6 @@ config = {
             "use_rest_area": False,
             "scan_tar": False,
         },
-        "logging": {
-            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
-            "type": "std_out",
-            "color": True,
-            "file_name": "path_to_some_file.log",
-            "max_file_size": Optional(int),
-            "max_archived_files": Optional(int),
-        },
     },
     "additional_data": {
         "elevation": "/data/valhalla/elevation/",
@@ -216,25 +208,9 @@ config = {
             "mvt_cache_min_zoom": 11,
             "mvt_max_age": "1800",
         },
-        "logging": {
-            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
-            "type": "std_out",
-            "color": True,
-            "file_name": "path_to_some_file.log",
-            "max_file_size": Optional(int),
-            "max_archived_files": Optional(int),
-        },
         "service": {"proxy": "ipc:///tmp/loki"},
     },
     "thor": {
-        "logging": {
-            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
-            "type": "std_out",
-            "color": True,
-            "file_name": "path_to_some_file.log",
-            "max_file_size": Optional(int),
-            "max_archived_files": Optional(int),
-        },
         "source_to_target_algorithm": "select_optimal",
         "service": {"proxy": "ipc:///tmp/thor"},
         "max_reserved_labels_count_astar": 2000000,
@@ -280,14 +256,6 @@ config = {
         },
     },
     "odin": {
-        "logging": {
-            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
-            "type": "std_out",
-            "color": True,
-            "file_name": "path_to_some_file.log",
-            "max_file_size": Optional(int),
-            "max_archived_files": Optional(int),
-        },
         "service": {"proxy": "ipc:///tmp/odin"},
         "markup_formatter": {
             "markup_enabled": False,
@@ -326,14 +294,6 @@ config = {
         "pedestrian": {"turn_penalty_factor": 100, "search_radius": 50},
         "bicycle": {"turn_penalty_factor": 140},
         "multimodal": {"turn_penalty_factor": 70},
-        "logging": {
-            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
-            "type": "std_out",
-            "color": True,
-            "file_name": "path_to_some_file.log",
-            "max_file_size": Optional(int),
-            "max_archived_files": Optional(int),
-        },
         "service": {"proxy": "ipc:///tmp/meili"},
         "grid": {"size": 500, "cache_size": 100240},
     },
@@ -549,14 +509,6 @@ help_text = {
             "use_rest_area": "bool indicating whether or not to use the rest/service area tag on the ways",
             "scan_tar": "bool indicating whether or not to pre-scan the tar ball(s) when loading an extract with an index file, to warm up the OS page cache.",
         },
-        "logging": {
-            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
-            "type": "Type of logger either std_out or file",
-            "color": "Use colored log level in std_out logger",
-            "file_name": "Output log file for the file logger",
-            "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
-            "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
-        },
     },
     "additional_data": {
         "elevation": "Location of elevation tiles",
@@ -579,25 +531,9 @@ help_text = {
             "mvt_cache_min_zoom": "The minimum zoom level which will be cached, the maximum will be determined by mvt_min_zoom_road_class",
             "mvt_max_age": "The value used for 'max-age' in the Cache-Control response header for the MVT end point",
         },
-        "logging": {
-            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
-            "type": "Type of logger either std_out or file",
-            "color": "Use colored log level in std_out logger",
-            "file_name": "Output log file for the file logger",
-            "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
-            "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
-        },
         "service": {"proxy": "IPC linux domain socket file location"},
     },
     "thor": {
-        "logging": {
-            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
-            "type": "Type of logger either std_out or file",
-            "color": "Use colored log level in std_out logger",
-            "file_name": "Output log file for the file logger",
-            "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
-            "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
-        },
         "source_to_target_algorithm": 'Which matrix algorithm should be used, one of "timedistancematrix" or "costmatrix". If blank, the optimal will be selected.',
         "service": {"proxy": "IPC linux domain socket file location"},
         "max_reserved_labels_count_astar": "Maximum capacity allowed to keep reserved for unidirectional A*.",
@@ -656,14 +592,6 @@ help_text = {
         },
     },
     "odin": {
-        "logging": {
-            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
-            "type": "Type of logger either std_out or file",
-            "color": "Use colored log level in std_out logger",
-            "file_name": "Output log file for the file logger",
-            "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
-            "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
-        },
         "service": {"proxy": "IPC linux domain socket file location"},
         "markup_formatter": {
             "markup_enabled": "Boolean flag to use markup formatting",
@@ -701,14 +629,6 @@ help_text = {
         },
         "multimodal": {
             "turn_penalty_factor": "A non-negative value to penalize turns from one road segment to next"
-        },
-        "logging": {
-            "__deprecated__": "Per-module logging is deprecated. Use top-level 'logging' instead.",
-            "type": "Type of logger either std_out or file",
-            "color": "Use colored log level in std_out logger",
-            "file_name": "Output log file for the file logger",
-            "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
-            "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
         },
         "service": {"proxy": "IPC linux domain socket file location"},
         "grid": {

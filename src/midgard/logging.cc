@@ -368,20 +368,16 @@ void logging::Configure(const LoggingConfig& config) {
   GetLogger(config);
 }
 
-// configure logging from a boost property tree config
-void logging::Configure(const boost::property_tree::ptree& config,
-                        const std::string& deprecated_key) {
-  auto logging_subtree = config.get_child_optional("logging");
-  if (!logging_subtree && !deprecated_key.empty()) {
-    logging_subtree = config.get_child_optional(deprecated_key);
-    if (logging_subtree) {
-      std::cerr << "[WARN] Per-module logging config '" << deprecated_key
-                << "' is deprecated. Use top-level 'logging' instead." << std::endl;
-    }
-  }
-  if (logging_subtree) {
+// configure logging from the top-level "logging" section of a boost property tree config
+void logging::Configure(const boost::property_tree::ptree& config) {
+  try {
+    const auto& logging_subtree = config.get_child("logging");
     Configure(ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string>>(
-        logging_subtree.get()));
+        logging_subtree));
+  } catch (const boost::property_tree::ptree_bad_path&) {
+    throw std::runtime_error(
+        "Missing top-level 'logging' section in config. "
+        "Per-module logging (e.g. 'mjolnir.logging', 'loki.logging') is no longer supported.");
   }
 }
 
