@@ -144,9 +144,7 @@ void buffer_polygon(const bg::polygon_ll_t& polygon, bg::multipolygon_ll_t& mult
   for (const auto& inner : polygon.inners()) {
     inner_rings.push_back(geos_helper_t::from_striped_container(inner));
   }
-  auto* geos_poly =
-      GEOSGeom_createPolygon(outer_ring, inner_rings.empty() ? nullptr : inner_rings.data(),
-                             inner_rings.size());
+  auto* geos_poly = GEOSGeom_createPolygon(outer_ring, &inner_rings.front(), inner_rings.size());
   auto* buffered = GEOSBuffer(geos_poly, 0, 8);
   GEOSNormalize(buffered);
   auto geom_type = GEOSGeomTypeId(buffered);
