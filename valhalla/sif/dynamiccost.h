@@ -218,31 +218,42 @@ constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1
 // 0.0 = strongly avoid curvy roads, 0.5 = neutral, 1.0 = strongly prefer curvy roads.
 constexpr uint32_t kCurvatureSteps = 101;
 
+// Maximum internal discount exponent for the prefer-curvy direction (steps 51-100).
+// Mapped exponentially from use_curvature=0.5 (exp=0) to use_curvature=1.0 (exp=kMaxCurvatureExp).
+// Matches the effective saturation range of the original unbounded formula (~1000).
+constexpr float kMaxCurvatureExp = 1000.0f;
+
 // Curvature cost factor lookup table [use_curvature_step][edge_curvature_value].
 // Pre-computed at startup to avoid std::pow in the EdgeCost hot loop.
 // Edge curvature is a 4-bit field (0-15). use_curvature is discretized into 101 steps.
+//
+// Two asymmetric strategies, one per direction:
+//   Avoid-curvy (steps 0-50):  penalize high-curvature edges. Factors >= 1, A* admissible.
+//   Prefer-curvy (steps 51-100): discount high-curvature edges via exponential exponent mapping
+//     so that curvy roads approach zero cost, replicating the original formula at high values.
 inline const std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps>
     kCurvatureFactor = []() {
       std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps> arr{};
+      // The +0.1 offset ensures x > 0 so all exponents stay finite
+      // (without it, x=0 at the extreme curvature value, making pow(0, negative) undefined).
+      const float denom = static_cast<float>(baldr::kMaxCurvatureFactor) + 0.1f;
       for (uint32_t s = 0; s < kCurvatureSteps; s++) {
-        // Map step index to preference in [-1, +1]: 0 -> -1, 50 -> 0, 100 -> +1
-        const float pref = (s * 0.01f - 0.5f) * 2.0f;
         for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
-          // The +0.1 offset in the denominator ensures x > 0 so all exponents stay finite
-          // (without it, x=0 at the extreme curvature value, making pow(0, negative) undefined).
-          const float denom = static_cast<float>(baldr::kMaxCurvatureFactor) + 0.1f;
-          if (pref <= 0.0f) {
-            // Avoid curvy: penalize high-curvature edges. x=1 for straight (c=0), ~0.007 for
-            // max curvature. With pref<=0, pow(x,pref)>=1 — factors stay >=1 for A* admissibility.
-            const float x = 1.0f - static_cast<float>(c) / denom;
-            arr[s][c] = std::pow(x, pref);
+          // x in (0,1]: 1.0 for straight edges (c=0), ~0.007 for max curvature (c=15).
+          const float x = 1.0f - static_cast<float>(c) / denom;
+          float factor;
+          if (s <= 50) {
+            // Avoid-curvy: pref in [-1, 0]. pow(x, pref) >= 1 for x in (0,1].
+            const float pref = static_cast<float>(s) / 50.0f - 1.0f;
+            factor = std::pow(x, pref);
           } else {
-            // Prefer curvy: mirror the curvature axis to penalize straight edges instead, keeping
-            // factors >=1. x=1 for max curvature (c=15), ~0.007 for straight (c=0).
-            // With -pref<=0, pow(x,-pref)>=1.
-            const float x = 1.0f - static_cast<float>(baldr::kMaxCurvatureFactor - c) / denom;
-            arr[s][c] = std::pow(x, -pref);
+            // Prefer-curvy: exponent maps exponentially from 0 (step 50) to kMaxCurvatureExp
+            // (step 100). Curvy edges (x small) get factors approaching 0 — essentially free.
+            const float t = static_cast<float>(s - 50) / 50.0f;
+            const float exp_internal = std::pow(kMaxCurvatureExp + 1.0f, t) - 1.0f;
+            factor = std::pow(x, exp_internal);
           }
+          arr[s][c] = factor;
         }
       }
       return arr;
@@ -1289,8 +1300,9 @@ protected:
   virtual void set_use_lit(float use_lit);
 
   /**
-   * Calculate `curvature` costs based on curvature preference.
-   * @param use_curvature value of curvature preference in range [0; kMaxPenalty]
+   * Set the curvature step index from the costing preference value.
+   * @param use_curvature curvature preference in range [0, 1]: 0 = avoid curvy, 0.5 = neutral,
+   *                      1 = prefer curvy.
    */
   virtual void set_use_curvature(float use_curvature);
 

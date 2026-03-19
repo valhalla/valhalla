@@ -42,10 +42,9 @@ protected:
     // is faster (maxspeed=60 vs maxspeed=50 on the curvy road), so it wins at neutral. The curvy
     // road is ~2x longer, giving a time ratio T_curvy/T_straight ≈ 2.4.
     //
-    // With the prefer-curvy formula (pref>0), straight edges are penalized: factor_straight ≈
-    // pow(0.0066, -pref), curvy edges less so: factor_curvy ≈ pow(0.669, -pref). Break-even:
-    // (0.669/0.0066)^pref = 2.88 → pref ≈ 0.23 → use_curvature ≈ 0.61. Below that threshold,
-    // straight still wins; above it, curvy wins despite being slower and longer.
+    // With the prefer-curvy formula, curvy edges are discounted via exponential exponent mapping.
+    // Break-even when pow(0.338, exp) = 1/2.4 ≈ 0.417 → exp ≈ 0.8. That exponent is reached at
+    // use_curvature ≈ 0.54. Below that threshold straight still wins; above it curvy wins.
     const gurka::ways ways_straight_fast =
         {{"AG", {{"highway", "primary"}, {"name", "Straight Road"}, {"maxspeed", "60"}}},
          {"ABCDEFG", {{"highway", "primary"}, {"name", "Curvy Road"}, {"maxspeed", "50"}}}};
@@ -130,18 +129,18 @@ TEST_F(UseCurvatureTest, NeutralDefaultPrefersFastStraightRoad) {
   gurka::assert::raw::expect_path(result, {"Straight Road"});
 }
 
-// At use_curvature=0.55 (below the ~0.61 threshold) the curvature preference is not yet strong
+// At use_curvature=0.52 (below the ~0.54 threshold) the curvature preference is not yet strong
 // enough to overcome the time penalty of the slower, longer curvy road — straight still wins.
 TEST_F(UseCurvatureTest, PreferCurvyBelowThresholdStillPrefersStrait) {
   std::unordered_map<std::string, std::string> options = {
-      {"/costing_options/motorcycle/use_curvature", "0.55"}};
+      {"/costing_options/motorcycle/use_curvature", "0.52"}};
   valhalla::Api result = gurka::do_action(valhalla::Options::route, map_straight_fast, {"A", "G"},
                                           "motorcycle", options);
   gurka::assert::raw::expect_path(result, {"Straight Road"});
 }
 
-// At use_curvature=0.75 (above the ~0.61 threshold) the straight-road penalty (factor ≈ 12 for
-// c=0 at pref=0.5) outweighs the speed+distance advantage, so curvy wins.
+// At use_curvature=0.75 (well above the ~0.54 threshold) the curvature discount is strong enough
+// to outweigh the speed+distance advantage of the straight road, so curvy wins.
 TEST_F(UseCurvatureTest, PreferCurvyAboveThresholdOverridesSpeedPenalty) {
   std::unordered_map<std::string, std::string> options = {
       {"/costing_options/motorcycle/use_curvature", "0.75"}};
