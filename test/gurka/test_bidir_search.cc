@@ -50,7 +50,7 @@ TEST(StandAlone, exhaust_reverse_search) {
   EXPECT_EQ(result.info().warnings().size(), 1);
   EXPECT_EQ(result.info().warnings(0).code(), 401);
   EXPECT_THAT(result.info().warnings(0).description(),
-              testing::HasSubstr("might have used filtered edges"));
+              testing::HasSubstr("Routing failed on first pass, retrying with relaxed restrictions"));
 
   // Allowing search to extend, finds route
   map.config.put("thor.extended_search", true);

@@ -1,4 +1,5 @@
 #include "baldr/rapidjson_utils.h"
+#include "proto/api.pb.h"
 #include "proto/options.pb.h"
 #include "sif/costfactory.h"
 
