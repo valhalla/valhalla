@@ -75,8 +75,7 @@ int main(int argc, char** argv) {
   // one shot direct request mode
   if (pos_args.size() == 3) {
     // because we want the program output to go only to stdout we force any logging to be stderr
-    valhalla::midgard::logging::Configure(
-        valhalla::midgard::logging::LoggingConfig{{"type", "std_err"}});
+    valhalla::midgard::logging::Configure({{"type", "std_err"}});
 
     const std::string &action_arg = pos_args[1], request_arg = pos_args[2];
 
