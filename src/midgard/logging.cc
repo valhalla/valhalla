@@ -369,15 +369,14 @@ void logging::Configure(const LoggingConfig& config) {
 }
 
 // configure logging from the top-level "logging" section of a boost property tree config
+// if the section is missing, uses the default logger (std_out with color)
 void logging::ConfigureFromPtree(const boost::property_tree::ptree& config) {
-  try {
-    const auto& logging_subtree = config.get_child("logging");
+  auto logging_subtree = config.get_child_optional("logging");
+  if (logging_subtree) {
     Configure(ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string>>(
-        logging_subtree));
-  } catch (const boost::property_tree::ptree_bad_path&) {
-    throw std::runtime_error(
-        "Missing top-level 'logging' section in config. "
-        "Per-module logging (e.g. 'mjolnir.logging', 'loki.logging') is no longer supported.");
+        logging_subtree.get()));
+  } else {
+    LOG_WARN("No top-level 'logging' section in config, using default logger.");
   }
 }
 
