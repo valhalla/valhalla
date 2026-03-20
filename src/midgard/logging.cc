@@ -375,9 +375,9 @@ void logging::ConfigureFromPtree(const boost::property_tree::ptree& config) {
   if (logging_subtree) {
     Configure(ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string>>(
         logging_subtree.get()));
-  } else {
-    LOG_WARN("No top-level 'logging' section in config, using default logger.");
+    return;
   }
+  LOG_WARN("No top-level 'logging' section in config, using default logger.");
 }
 
 } // namespace midgard
