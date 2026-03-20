@@ -57,7 +57,7 @@ bool parse_common_args(const std::string& program,
     }
 
     // configure logging
-    valhalla::midgard::logging::Configure(*conf);
+    valhalla::midgard::logging::ConfigureFromPtree(*conf);
   }
 
   if (use_threads) {

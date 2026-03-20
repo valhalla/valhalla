@@ -154,7 +154,7 @@ void init_graphid(nb::module_& m) {
             } catch (...) { throw std::runtime_error("Failed to parse config JSON"); }
 
             // Configure logging
-            vm::logging::Configure(pt);
+            vm::logging::ConfigureFromPtree(pt);
 
             // Create GraphReader with mjolnir subtree
             new (self) vb::GraphReader(pt.get_child("mjolnir"));

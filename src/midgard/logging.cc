@@ -369,7 +369,7 @@ void logging::Configure(const LoggingConfig& config) {
 }
 
 // configure logging from the top-level "logging" section of a boost property tree config
-void logging::Configure(const boost::property_tree::ptree& config) {
+void logging::ConfigureFromPtree(const boost::property_tree::ptree& config) {
   try {
     const auto& logging_subtree = config.get_child("logging");
     Configure(ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string>>(

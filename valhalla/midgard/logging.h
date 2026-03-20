@@ -71,7 +71,7 @@ void Log(const std::string&, const std::string& custom_directive = " [TRACE] ");
 void Configure(const LoggingConfig& config);
 
 // configure logging from the top-level "logging" section of a boost property tree config
-void Configure(const boost::property_tree::ptree& config);
+void ConfigureFromPtree(const boost::property_tree::ptree& config);
 
 // guarding against redefinitions
 #ifndef LOG_ERROR
