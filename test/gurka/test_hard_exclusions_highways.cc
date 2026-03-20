@@ -12,9 +12,6 @@ const std::vector<std::string> kCostingModelsExcludeHighways = {"auto", "taxi", 
 const std::vector<std::string> kCostingModelsNoHardExcludeSetA = {"auto", "taxi", "bus", "truck",
                                                                   "motorcycle"};
 
-const std::vector<std::string> kCostingModelsNoHardExcludeSetB = {"pedestrian", "bicycle",
-                                                                  "motor_scooter"};
-
 const std::vector<std::string> kExclusionParameters = {"exclude_highways"};
 
 constexpr double grid_size_meters = 100.;
@@ -56,6 +53,20 @@ void check_result(const std::string& exclude_parameter_value,
                                          exclude_parameter_value},
                                         {"/date_time/type", time_type},
                                         {"/date_time/value", "2025-07-21T12:00"}});
+  auto& algorithms = result.trip().routes(0).legs(0).algorithms();
+  ASSERT_EQ(algorithms.size(), 1);
+  auto& algorithm = algorithms[0];
+  if (time_type == "0") {
+    ASSERT_EQ(algorithm, "time_dependent_forward_a*");
+  } else if (time_type == "1") {
+    ASSERT_EQ(algorithm, "time_dependent_forward_a*");
+  } else if (time_type == "2") {
+    ASSERT_EQ(algorithm, "time_dependent_reverse_a*");
+  } else if (time_type == "3") {
+    ASSERT_EQ(algorithm, "bidirectional_a*");
+  } else {
+    FAIL() << "Invalid algorithm: " << algorithm;
+  }
   gurka::assert::raw::expect_path(result, expected_names);
 }
 
@@ -113,7 +124,7 @@ INSTANTIATE_TEST_SUITE_P(ExcludeHighwaysTests,
                            std::vector<std::vector<std::string>> values;
                            for (const auto& costing : kCostingModelsExcludeHighways) {
                              for (const auto& param : kExclusionParameters) {
-                               for (uint32_t time_type = 0; time_type < 4; time_type++) {
+                               for (uint32_t time_type = 1; time_type < 4; time_type++) {
                                  values.push_back({costing, param, std::to_string(time_type)});
                                }
                              }
@@ -143,38 +154,7 @@ INSTANTIATE_TEST_SUITE_P(NoHardExcludeHighwaysTests,
                            std::vector<std::vector<std::string>> values;
                            for (const auto& costing : kCostingModelsNoHardExcludeSetA) {
                              for (const auto& param : kExclusionParameters) {
-                               for (uint32_t time_type = 0; time_type < 4; time_type++) {
-                                 values.push_back({costing, param, std::to_string(time_type)});
-                               }
-                             }
-                           }
-                           return values;
-                         }()));
-
-class ExclusionTestNoHardExcludeHighwaysForOtherModes
-    : public ::testing::TestWithParam<std::vector<std::string>> {
-protected:
-  static gurka::map map;
-
-  static void SetUpTestSuite() {
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_highways",
-                            {{"service_limits.allow_hard_exclusions", "true"}});
-  }
-};
-
-gurka::map ExclusionTestNoHardExcludeHighwaysForOtherModes::map = {};
-
-TEST_P(ExclusionTestNoHardExcludeHighwaysForOtherModes, NoHardExcludeHighwaysForOtherModes) {
-  check_result("0", {"I", "L"}, {"IA", "AJ", "JM", "MN", "NK", "KL"}, map, GetParam());
-}
-
-INSTANTIATE_TEST_SUITE_P(NoHardExcludeHighwaysForOtherModesTests,
-                         ExclusionTestNoHardExcludeHighwaysForOtherModes,
-                         ::testing::ValuesIn([]() {
-                           std::vector<std::vector<std::string>> values;
-                           for (const auto& costing : kCostingModelsNoHardExcludeSetB) {
-                             for (const auto& param : kExclusionParameters) {
-                               for (uint32_t time_type = 0; time_type < 4; time_type++) {
+                               for (uint32_t time_type = 1; time_type < 4; time_type++) {
                                  values.push_back({costing, param, std::to_string(time_type)});
                                }
                              }

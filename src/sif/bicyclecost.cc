@@ -567,7 +567,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_turn_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
-      IsUserAvoidEdge(edgeid) || CheckExclusions(edge, pred, true)) {
+      IsUserAvoidEdge(edgeid) || CheckExclusions<true>(edge, pred)) {
     return false;
   }
 
@@ -605,7 +605,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_turn_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||
-      IsUserAvoidEdge(opp_edgeid) || CheckExclusions(opp_edge, pred, false)) {
+      IsUserAvoidEdge(opp_edgeid) || CheckExclusions<false>(opp_edge, pred)) {
     return false;
   }
 

@@ -328,10 +328,10 @@ public:
    * origin).
    * @return Returns true if edge should be excluded.
    */
-  inline bool
-  CheckExclusions(const baldr::DirectedEdge* edge, const EdgeLabel& pred, const bool forward) const {
-    auto isDriveOnto = [forward](bool condition, bool pred_condition) {
-      return forward == condition && pred_condition != condition;
+  template <bool FORWARD>
+  inline bool CheckExclusions(const baldr::DirectedEdge* edge, const EdgeLabel& pred) const {
+    auto isDriveOnto = [](bool condition, bool pred_condition) {
+      return FORWARD == condition && pred_condition != condition;
     };
     return has_excludes_ &&
            ((exclude_bridges_ && isDriveOnto(edge->bridge(), pred.bridge())) ||

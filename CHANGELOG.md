@@ -58,7 +58,6 @@
    * FIXED: unknowns should be 500 and not 400 [#5359](https://github.com/valhalla/valhalla/pull/5359)
    * FIXED: Cover **all** nodes in the current tile by density index [#5338](https://github.com/valhalla/valhalla/pull/5338)
    * FIXED: Narrowing bug leading to nodes being misplaced in wrong tiles [#5364](https://github.com/valhalla/valhalla/pull/5364)
-   * FIXED: Exclusion check in the reverse direction [#5375](https://github.com/valhalla/valhalla/pull/5375)
    * FIXED: wrong integer types in expansion properties [#5380](https://github.com/valhalla/valhalla/pull/5380)
    * FIXED: fix: `std::terminate` on unsupported request format for some actions [#5387](https://github.com/valhalla/valhalla/pull/5387)
    * FIXED: python installation issue in docker image [#5424](https://github.com/valhalla/valhalla/pull/5424)
@@ -179,6 +178,7 @@
    * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
    * CHANGED: added openssl as a linked library to all build configs when `ENABLE_DATA_TOOLS=ON` [#5626](https://github.com/valhalla/valhalla/pull/5626)
    * UPGRADED: C++17 to C++20 [#5575](https://github.com/valhalla/valhalla/pull/5575)
+   * FIXED: Exclusion check in the reverse direction [#5375](https://github.com/valhalla/valhalla/pull/5375)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
