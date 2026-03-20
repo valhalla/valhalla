@@ -162,3 +162,53 @@ TEST(Standalone, TrivialRoute) {
   EXPECT_EQ(leg.maneuver(0).travel_mode(), TravelMode::kDrive);
   EXPECT_EQ(leg.maneuver(leg.maneuver_size() - 1).travel_mode(), TravelMode::kPedestrian);
 }
+
+
+
+TEST(Standalone, ParkingEntranceTagSupport) {
+  const std::string ascii_map = R"(
+      A--------------B-----------C
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+  };
+
+  const gurka::nodes nodes = {
+      {"B", {{"entrance", "parking"}}}
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, nodes, {},
+      VALHALLA_BUILD_DIR "test/data/gurka_parking_entrance");
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto node = gurka::findNode(*reader, layout, "B");
+  auto nodeinfo = reader->nodeinfo(node);
+
+  EXPECT_EQ(nodeinfo->type(), baldr::NodeType::kParking)
+      << "Expected parking from entrance tag, got "
+      << baldr::to_string(nodeinfo->type());
+
+  auto result = gurka::do_action(
+      valhalla::Options::route,
+      map,
+      {"A", "C"},
+      "auto_pedestrian",
+      {}
+  );
+
+  gurka::assert::raw::expect_maneuvers(
+      result,
+      {
+          DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kStart,
+          DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kParkVehicle,
+          DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kDestination,
+      }
+  );
+
+  auto& leg = result.directions().routes(0).legs(0);
+  EXPECT_EQ(leg.maneuver(0).travel_mode(), TravelMode::kDrive);
+  EXPECT_EQ(leg.maneuver(leg.maneuver_size() - 1).travel_mode(), TravelMode::kPedestrian);
+}
