@@ -140,6 +140,11 @@ size_t EdgeInfo::TaggedValueSize(const char* ptr) {
       return 1 + sizeof(ConditionalSpeedLimit) + 1;
     }
 
+    case TaggedValue::kReverseSpeedLimit: {
+      // Tag byte + fixed 1-byte speed limit + null terminator
+      return 1 + sizeof(uint8_t) + 1;
+    }
+
     case TaggedValue::kLinguistic: {
       const char* current = ptr + 1; // Skip tag byte
       while (*current != '\0') {
@@ -487,6 +492,19 @@ std::vector<ConditionalSpeedLimit> EdgeInfo::conditional_speed_limits() const {
   return limits;
 }
 
+uint32_t EdgeInfo::reverse_speed_limit() const {
+  const auto& tags = GetTags();
+  auto itr = tags.find(TaggedValue::kReverseSpeedLimit);
+  if (itr == tags.end()) {
+    return speed_limit();
+  }
+  const auto& value = itr->second;
+  if (value.size() != sizeof(uint8_t)) {
+    throw std::runtime_error("reverse speed limit must contain 1-byte value");
+  }
+  return static_cast<uint8_t>(static_cast<unsigned char>(value.front()));
+}
+
 int8_t EdgeInfo::layer() const {
   const auto& tags = GetTags();
   auto itr = tags.find(TaggedValue::kLayer);
@@ -633,6 +651,8 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
         conditional_speed_limits.push_back({l->td_.to_string(), l->speed_});
         break;
       }
+      case TaggedValue::kReverseSpeedLimit:
+        break;
       case TaggedValue::kTunnel:
         break;
       case TaggedValue::kBridge:
