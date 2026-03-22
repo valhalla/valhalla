@@ -8,6 +8,8 @@
 namespace valhalla {
 namespace mjolnir {
 
+struct build_stats;
+
 /**
  * Class used to enhance graph tile information at the local level.
  */
@@ -21,7 +23,8 @@ public:
    */
   static void Enhance(const boost::property_tree::ptree& pt,
                       const OSMData& osmdata,
-                      const std::string& access_file);
+                      const std::string& access_file,
+                      build_stats& stats);
 };
 
 } // namespace mjolnir

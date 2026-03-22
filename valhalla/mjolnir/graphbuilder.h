@@ -7,6 +7,7 @@
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmnodelinguistic.h>
 #include <valhalla/mjolnir/osmway.h>
+#include <valhalla/mjolnir/util.h>
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
@@ -48,13 +49,15 @@ public:
                     const std::string& complex_from_restriction_file,
                     const std::string& complex_to_restriction_file,
                     const std::string& linguistic_node_file,
-                    const std::map<baldr::GraphId, size_t>& tiles);
+                    const std::map<baldr::GraphId, size_t>& tiles,
+                    build_stats& stats);
 
   static std::map<baldr::GraphId, size_t> BuildEdges(const boost::property_tree::ptree& conf,
                                                      const std::string& ways_file,
                                                      const std::string& way_nodes_file,
                                                      const std::string& nodes_file,
-                                                     const std::string& edges_file);
+                                                     const std::string& edges_file,
+                                                     build_stats& stats);
 
   static std::string GetRef(const std::string& way_ref, const std::string& relation_ref);
 

@@ -10,6 +10,7 @@
 #include "mjolnir/complexrestrictionbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmrestriction.h"
+#include "mjolnir/util.h"
 #include "scoped_timer.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -328,7 +329,8 @@ void build(const std::string& complex_restriction_from_file,
            const boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue,
            std::mutex& lock,
-           std::promise<Result>& result) {
+           std::promise<Result>& result,
+           build_stats& bstats) {
   sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
   sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
 
@@ -438,8 +440,9 @@ void build(const std::string& complex_restriction_from_file,
                 std::vector<GraphId> vias(tmp_ids.begin() + 1, tmp_ids.end() - 1);
 
                 if (vias.size() > kMaxViasPerRestriction) {
-                  LOG_WARN("Tried to exceed max vias per restriction(forward).  Way: " +
-                           std::to_string(tmp_ids.at(0)));
+                  LOG_DEBUG("Tried to exceed max vias per restriction(forward).  Way: " +
+                            std::to_string(tmp_ids.at(0)));
+                  ++bstats.exceeded_max_vias;
                   return;
                 }
 
@@ -601,8 +604,9 @@ void build(const std::string& complex_restriction_from_file,
                     std::vector<GraphId> vias(tmp_ids.begin() + 1, tmp_ids.end() - 1);
 
                     if (vias.size() > kMaxViasPerRestriction) {
-                      LOG_WARN("Tried to exceed max vias per restriction(reverse).  Way: " +
-                               std::to_string(tmp_ids.at(0)));
+                      LOG_DEBUG("Tried to exceed max vias per restriction(reverse).  Way: " +
+                                std::to_string(tmp_ids.at(0)));
+                      ++bstats.exceeded_max_vias;
                       return;
                     }
 
@@ -729,7 +733,8 @@ namespace mjolnir {
 // Enhance the local level of the graph
 void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
                                const std::string& complex_from_restrictions_file,
-                               const std::string& complex_to_restrictions_file) {
+                               const std::string& complex_to_restrictions_file,
+                               build_stats& bstats) {
 
   SCOPED_TIMER();
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
@@ -758,10 +763,11 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     // Start the threads
     LOG_INFO("Adding complex turn restrictions at level " + std::to_string(tl->level));
     for (size_t i = 0; i < threads.size(); ++i) {
-      threads[i] = std::make_shared<std::thread>(build, std::cref(complex_from_restrictions_file),
-                                                 std::cref(complex_to_restrictions_file),
-                                                 std::cref(hierarchy_properties), std::ref(tilequeue),
-                                                 std::ref(lock), std::ref(promises[i]));
+      threads[i] =
+          std::make_shared<std::thread>(build, std::cref(complex_from_restrictions_file),
+                                        std::cref(complex_to_restrictions_file),
+                                        std::cref(hierarchy_properties), std::ref(tilequeue),
+                                        std::ref(lock), std::ref(promises[i]), std::ref(bstats));
     }
 
     // Wait for them to finish up their work

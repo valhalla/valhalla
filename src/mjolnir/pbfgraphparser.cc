@@ -1180,7 +1180,7 @@ struct graph_parser {
       } else if (hov_type == "HOV3") {
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       } else {
-        LOG_WARN("Unrecognized HOV type: " + hov_type);
+        LOG_DEBUG("Unrecognized HOV type: " + hov_type);
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       }
     };

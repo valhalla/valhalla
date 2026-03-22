@@ -155,7 +155,8 @@ void ConstructEdges(const std::string& ways_file,
                     const std::string& edges_file,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
                     const std::function<uint32_t(const OSMNode&)>& grid_id_predicate,
-                    const bool infer_turn_channels) {
+                    const bool infer_turn_channels,
+                    build_stats& stats) {
   LOG_INFO("Creating graph edges from ways...");
 
   // so we can read ways and nodes and write edges
@@ -186,13 +187,14 @@ void ConstructEdges(const std::string& ways_file,
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
       const auto wn = (*way_nodes[ni]).node;
       if (!wn.latlng().IsValid()) {
-        LOG_WARN("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
-                 " has not had coordinates initialized");
+        LOG_DEBUG("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
+                  " has not had coordinates initialized");
+        ++stats.uninitialized_nodes;
         valid = false;
       }
     }
     if (!valid) {
-      LOG_WARN("Do not add edge!");
+      LOG_DEBUG("Do not add edge!");
       current_way_node_index = last_way_node_index + 1;
       continue;
     }
@@ -365,7 +367,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
 
   // Check if mask exceeds the limit
   if (mask >= (1 << kMaxTurnRestrictionEdges)) {
-    LOG_WARN("Restrictions mask exceeds allowable limit on wayid: " + std::to_string(wayid));
+    LOG_DEBUG("Restrictions mask exceeds allowable limit on wayid: " + std::to_string(wayid));
   }
 
   // Return the restriction mask
@@ -466,7 +468,8 @@ void BuildTileSet(const std::string& ways_file,
                   const uint32_t tile_creation_date,
                   const std::unordered_map<uint64_t, uint32_t>& ferry_speeds,
                   const boost::property_tree::ptree& pt,
-                  std::promise<DataQuality>& result) {
+                  std::promise<DataQuality>& result,
+                  build_stats& bstats) {
 
   sequence<OSMWay> ways(ways_file, false);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
@@ -668,13 +671,15 @@ void BuildTileSet(const std::string& ways_file,
             speed = w.backward_speed();
           }
           if (speed > kMaxAssumedSpeed) {
-            LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " + std::to_string(w.way_id()));
+            LOG_DEBUG("Speed = " + std::to_string(speed) + " wayId= " + std::to_string(w.way_id()));
+            ++bstats.invalid_speed;
             speed = kMaxAssumedSpeed;
           }
           uint32_t speed_limit = w.speed_limit();
           if (speed_limit > kMaxAssumedSpeed && speed_limit != kUnlimitedSpeedLimit) {
-            LOG_WARN("Speed limit = " + std::to_string(speed_limit) +
-                     " wayId= " + std::to_string(w.way_id()));
+            LOG_DEBUG("Speed limit = " + std::to_string(speed_limit) +
+                      " wayId= " + std::to_string(w.way_id()));
+            ++bstats.invalid_speed_limit;
             speed_limit = kMaxAssumedSpeed;
           }
 
@@ -688,8 +693,9 @@ void BuildTileSet(const std::string& ways_file,
                                      : std::max(w.truck_speed(), directed_truck_speed);
 
           if (truck_speed > kMaxAssumedSpeed) {
-            LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
-                     " wayId= " + std::to_string(w.way_id()));
+            LOG_DEBUG("Truck Speed = " + std::to_string(truck_speed) +
+                      " wayId= " + std::to_string(w.way_id()));
+            ++bstats.invalid_truck_speed;
             truck_speed = kMaxAssumedSpeed;
           }
 
@@ -705,6 +711,9 @@ void BuildTileSet(const std::string& ways_file,
               CreateSimpleTurnRestriction(w.way_id(), target, nodes, edges, osmdata, ways);
           if (restrictions != 0) {
             stats.simplerestrictions++;
+          }
+          if (restrictions >= (1 << kMaxTurnRestrictionEdges)) {
+            ++bstats.restriction_mask_exceeded;
           }
 
           // traffic signal exists at a non-intersection node
@@ -1076,8 +1085,9 @@ void BuildTileSet(const std::string& ways_file,
               directededge.set_laneconnectivity(true);
             }
           } catch (std::exception& e) {
-            LOG_WARN("Failed to import lane connectivity for way: " + std::to_string(w.way_id()) +
-                     " : " + e.what());
+            LOG_DEBUG("Failed to import lane connectivity for way: " + std::to_string(w.way_id()) +
+                      " : " + e.what());
+            ++bstats.lane_connectivity_failed;
           }
 
           // Set the number of lanes.
@@ -1391,8 +1401,9 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& linguistic_node_file,
                      const std::map<GraphId, size_t>& tiles,
                      const std::string& tile_dir,
-                     DataQuality& stats,
-                     const boost::property_tree::ptree& pt) {
+                     DataQuality& quality_stats,
+                     const boost::property_tree::ptree& pt,
+                     build_stats& bstats) {
   SCOPED_TIMER();
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
   uint32_t tile_creation_date =
@@ -1427,7 +1438,8 @@ void BuildLocalTiles(const unsigned int thread_count,
                                       std::cref(linguistic_node_file), std::cref(tile_dir),
                                       std::cref(osmdata), std::ref(tile_queue), std::ref(tile_lock),
                                       tile_creation_date, std::cref(ferry_speeds),
-                                      std::cref(pt.get_child("mjolnir")), std::ref(results[i]));
+                                      std::cref(pt.get_child("mjolnir")), std::ref(results[i]),
+                                      std::ref(bstats));
   }
 
   // Join all the threads to wait for them to finish up their work
@@ -1443,13 +1455,13 @@ void BuildLocalTiles(const unsigned int thread_count,
     try {
       // Add statistics and log issues on this thread
       const auto& stat = result.get_future().get();
-      stats.AddStatistics(stat);
+      quality_stats.AddStatistics(stat);
     } // If we couldnt write a tile for whatever reason we fail the whole job
     catch (std::exception& e) {
       throw e;
     }
   }
-  stats.LogIssues();
+  quality_stats.LogIssues();
 }
 
 } // namespace
@@ -1488,7 +1500,8 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                                                    const std::string& ways_file,
                                                    const std::string& way_nodes_file,
                                                    const std::string& nodes_file,
-                                                   const std::string& edges_file) {
+                                                   const std::string& edges_file,
+                                                   build_stats& stats) {
   SCOPED_TIMER();
   uint8_t level = TileHierarchy::levels().back().level;
   auto tiling = TileHierarchy::get_tiling(level);
@@ -1508,7 +1521,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
       [&tiling, &grid_divisions](const OSMNode& node) {
         return GetGridId(node, tiling, grid_divisions);
       },
-      pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+      pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true), stats);
 
   return SortGraph(nodes_file, edges_file);
 }
@@ -1523,7 +1536,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
                          const std::string& linguistic_node_file,
-                         const std::map<GraphId, size_t>& tiles) {
+                         const std::map<GraphId, size_t>& tiles,
+                         build_stats& build_statistics) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified. ReclassifyLinks also infers turn channels
   // so we always want to do this unless reclassify_links and infer_turn_channels
@@ -1556,7 +1570,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
 
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, linguistic_node_file,
-                  tiles, tile_dir, stats, pt);
+                  tiles, tile_dir, stats, pt, build_statistics);
   stats.LogStatistics();
 }
 

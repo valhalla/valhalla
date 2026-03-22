@@ -10,6 +10,8 @@
 namespace valhalla {
 namespace mjolnir {
 
+struct build_stats;
+
 /**
  * Class used to add elevation data to the Valhalla graph tiles.
  */
@@ -22,7 +24,8 @@ public:
    * @attention It is considered that tiles are from the directory specified in config file.
    */
   static void Build(const boost::property_tree::ptree& config,
-                    std::deque<baldr::GraphId> tile_ids = {});
+                    std::deque<baldr::GraphId> tile_ids,
+                    build_stats& stats);
 };
 
 } // namespace mjolnir

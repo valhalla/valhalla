@@ -680,7 +680,7 @@ void GraphTileBuilder::ProcessTaggedValues([[maybe_unused]] const uint32_t edgei
       name_info_list.emplace_back(ni);
       ++name_count;
     } else {
-      LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+      LOG_DEBUG("Too many names for edgeindex: " + std::to_string(edgeindex));
     }
   }
 }
@@ -722,7 +722,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     for (const auto& name : names) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        LOG_DEBUG("Too many names for edgeindex: " + std::to_string(edgeindex));
         break;
       }
 
@@ -743,7 +743,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     for (const auto& name : tagged_values) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        LOG_DEBUG("Too many names for edgeindex: " + std::to_string(edgeindex));
         break;
       }
 
@@ -846,7 +846,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     for (const auto& name : names) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        LOG_DEBUG("Too many names for edgeindex: " + std::to_string(edgeindex));
         break;
       }
 
@@ -867,7 +867,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     for (const auto& name : tagged_values) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        LOG_DEBUG("Too many names for edgeindex: " + std::to_string(edgeindex));
         break;
       }
 

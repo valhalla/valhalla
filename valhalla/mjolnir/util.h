@@ -9,6 +9,7 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
+#include <atomic>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -89,6 +90,41 @@ inline std::string to_string(BuildStage stg) {
   auto i = BuildStageStrings.find(static_cast<int8_t>(stg));
   return (i == BuildStageStrings.cend()) ? "null" : i->second;
 }
+
+// Counters for warnings that fire per-item in hot loops during tile building.
+// Instead of logging each occurrence (which produces millions of lines on planet builds),
+// we accumulate counts and log a summary at the end. Full per-item detail is still
+// available at LOG_DEBUG level. Counters are atomic for thread safety.
+struct build_stats {
+  // graphbuilder.cc — ConstructEdges / Build
+  std::atomic<uint32_t> uninitialized_nodes{0};
+  std::atomic<uint32_t> restriction_mask_exceeded{0};
+  std::atomic<uint32_t> invalid_speed{0};
+  std::atomic<uint32_t> invalid_speed_limit{0};
+  std::atomic<uint32_t> invalid_truck_speed{0};
+  std::atomic<uint32_t> lane_connectivity_failed{0};
+  // osmway.cc — PBF parsing (speed/node setters that clamp)
+  std::atomic<uint32_t> exceeded_max_nodes_per_way{0};
+  std::atomic<uint32_t> exceeded_max_speed{0};
+  std::atomic<uint32_t> invalid_level{0};
+  // edgeinfobuilder.cc — Build
+  std::atomic<uint32_t> exceeded_max_names{0};
+  std::atomic<uint32_t> exceeded_max_shape_size{0};
+  std::atomic<uint32_t> exceeded_speed_limit{0};
+  // elevationbuilder.cc
+  std::atomic<uint32_t> elevation_exceeds_diff{0};
+  // graphenhancer.cc
+  std::atomic<uint32_t> access_tags_not_found{0};
+  // pbfgraphparser.cc
+  std::atomic<uint32_t> unrecognized_hov_type{0};
+  std::atomic<uint32_t> tag_parse_error{0};
+  // complexrestrictionbuilder.cc / restrictionbuilder.cc
+  std::atomic<uint32_t> exceeded_max_vias{0};
+  // add_predicted_speeds.cc
+  std::atomic<uint32_t> invalid_predicted_speed_data{0};
+
+  void report(const boost::property_tree::ptree& config) const;
+};
 
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {

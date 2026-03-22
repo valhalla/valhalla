@@ -3,6 +3,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "mjolnir/elevationbuilder.h"
+#include "mjolnir/util.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
@@ -116,6 +117,8 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  ElevationBuilder::Build(config, tile_ids);
+  build_stats stats;
+  ElevationBuilder::Build(config, tile_ids, stats);
+  stats.report(config, false);
   return EXIT_SUCCESS;
 }
