@@ -80,7 +80,7 @@ void OSMWay::set_speed_limit(const float speed_limit) {
     speed_limit_ = kUnlimitedOSMSpeed;
   } else if (speed_limit > kMaxOSMSpeed) {
     LOG_DEBUG("Exceeded max speed for way id: " + std::to_string(osmwayid_));
-    build_stats::get().increment(build_stats::kExceededMaxSpeed);
+    build_stats::get().increment(build_stats::kExceededMaxSpeedLimit);
     speed_limit_ = kMaxOSMSpeed;
   } else {
     speed_limit_ = static_cast<unsigned char>(speed_limit + 0.5f);
@@ -113,7 +113,7 @@ void OSMWay::set_forward_speed(const float forward_speed) {
 void OSMWay::set_truck_speed(const float speed) {
   if (speed > kMaxOSMSpeed) {
     LOG_DEBUG("Exceeded max truck speed for way id: " + std::to_string(osmwayid_));
-    build_stats::get().increment(build_stats::kExceededMaxSpeed);
+    build_stats::get().increment(build_stats::kExceededMaxTruckSpeed);
     truck_speed_ = kMaxOSMSpeed;
   } else {
     truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
@@ -123,7 +123,7 @@ void OSMWay::set_truck_speed(const float speed) {
 void OSMWay::set_truck_speed_forward(const float truck_speed_forward) {
   if (truck_speed_forward > kMaxOSMSpeed) {
     LOG_DEBUG("Exceeded max forward truck speed for way id: " + std::to_string(osmwayid_));
-    build_stats::get().increment(build_stats::kExceededMaxSpeed);
+    build_stats::get().increment(build_stats::kExceededMaxTruckSpeed);
     truck_speed_forward_ = kMaxOSMSpeed;
   } else {
     truck_speed_forward_ = static_cast<unsigned char>(truck_speed_forward + 0.5f);
@@ -133,7 +133,7 @@ void OSMWay::set_truck_speed_forward(const float truck_speed_forward) {
 void OSMWay::set_truck_speed_backward(const float truck_speed_backward) {
   if (truck_speed_backward > kMaxOSMSpeed) {
     LOG_DEBUG("Exceeded max backward truck speed for way id: " + std::to_string(osmwayid_));
-    build_stats::get().increment(build_stats::kExceededMaxSpeed);
+    build_stats::get().increment(build_stats::kExceededMaxTruckSpeed);
     truck_speed_backward_ = kMaxOSMSpeed;
   } else {
     truck_speed_backward_ = static_cast<unsigned char>(truck_speed_backward + 0.5f);
