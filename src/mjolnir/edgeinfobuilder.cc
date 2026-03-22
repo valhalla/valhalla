@@ -130,7 +130,6 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   uint32_t name_count = eib.name_info_list_.size();
   if (name_count > kMaxNamesPerEdge) {
     LOG_DEBUG("Exceeding max names per edge: " + std::to_string(name_count));
-    build_stats::get().increment(build_stats::kExceededMaxNames);
     name_count = kMaxNamesPerEdge;
   }
   ei.name_count_ = name_count;
