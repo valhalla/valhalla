@@ -7,7 +7,6 @@
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmnodelinguistic.h>
 #include <valhalla/mjolnir/osmway.h>
-#include <valhalla/mjolnir/util.h>
 
 #include <boost/property_tree/ptree_fwd.hpp>
 

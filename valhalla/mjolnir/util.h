@@ -102,9 +102,6 @@ struct build_stats {
   enum counter : uint8_t {
     kUninitializedNodes,
     kRestrictionMaskExceeded,
-    kInvalidSpeed,
-    kInvalidSpeedLimit,
-    kInvalidTruckSpeed,
     kLaneConnectivityFailed,
     kExceededMaxNodesPerWay,
     kExceededMaxSpeed,
@@ -127,9 +124,6 @@ struct build_stats {
   static constexpr meta_entry meta[] = {
       {"build.uninitialized_nodes", "nodes with uninitialized coordinates"},
       {"build.restriction_mask_exceeded", "restriction masks exceeding limit"},
-      {"build.invalid_speed", "edges with speed exceeding max"},
-      {"build.invalid_speed_limit", "edges with speed limit exceeding max"},
-      {"build.invalid_truck_speed", "edges with truck speed exceeding max"},
       {"build.lane_connectivity_failed", "lane connectivity import failures"},
       {"build.exceeded_max_nodes_per_way", "ways exceeding max nodes per way"},
       {"build.exceeded_max_speed", "ways with speed clamped to max"},

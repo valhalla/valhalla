@@ -367,6 +367,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
   // Check if mask exceeds the limit
   if (mask >= (1 << kMaxTurnRestrictionEdges)) {
     LOG_DEBUG("Restrictions mask exceeds allowable limit on wayid: " + std::to_string(wayid));
+    build_stats::get().increment(build_stats::kRestrictionMaskExceeded);
   }
 
   // Return the restriction mask
@@ -661,25 +662,14 @@ void BuildTileSet(const std::string& ways_file,
           if (!use_admin_db)
             dor = w.drive_on_right();
 
-          // Validate speed. Set speed limit and truck speed.
+          // Speed values are already clamped to kMaxAssumedSpeed (140) in OSMWay setters.
           uint32_t speed = w.speed();
           if (forward && w.forward_tagged_speed()) {
             speed = w.forward_speed();
           } else if (!forward && w.backward_tagged_speed()) {
             speed = w.backward_speed();
           }
-          if (speed > kMaxAssumedSpeed) {
-            LOG_DEBUG("Speed = " + std::to_string(speed) + " wayId= " + std::to_string(w.way_id()));
-            build_stats::get().increment(build_stats::kInvalidSpeed);
-            speed = kMaxAssumedSpeed;
-          }
           uint32_t speed_limit = w.speed_limit();
-          if (speed_limit > kMaxAssumedSpeed && speed_limit != kUnlimitedSpeedLimit) {
-            LOG_DEBUG("Speed limit = " + std::to_string(speed_limit) +
-                      " wayId= " + std::to_string(w.way_id()));
-            build_stats::get().increment(build_stats::kInvalidSpeedLimit);
-            speed_limit = kMaxAssumedSpeed;
-          }
 
           const uint8_t directed_truck_speed =
               forward ? w.truck_speed_forward() : w.truck_speed_backward();
@@ -689,13 +679,6 @@ void BuildTileSet(const std::string& ways_file,
           uint32_t truck_speed = w.truck_speed() && directed_truck_speed
                                      ? std::min(w.truck_speed(), directed_truck_speed)
                                      : std::max(w.truck_speed(), directed_truck_speed);
-
-          if (truck_speed > kMaxAssumedSpeed) {
-            LOG_DEBUG("Truck Speed = " + std::to_string(truck_speed) +
-                      " wayId= " + std::to_string(w.way_id()));
-            build_stats::get().increment(build_stats::kInvalidTruckSpeed);
-            truck_speed = kMaxAssumedSpeed;
-          }
 
           // Cul du sac
           auto use = w.use();
@@ -709,9 +692,6 @@ void BuildTileSet(const std::string& ways_file,
               CreateSimpleTurnRestriction(w.way_id(), target, nodes, edges, osmdata, ways);
           if (restrictions != 0) {
             stats.simplerestrictions++;
-          }
-          if (restrictions >= (1 << kMaxTurnRestrictionEdges)) {
-            build_stats::get().increment(build_stats::kRestrictionMaskExceeded);
           }
 
           // traffic signal exists at a non-intersection node
@@ -1399,7 +1379,7 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& linguistic_node_file,
                      const std::map<GraphId, size_t>& tiles,
                      const std::string& tile_dir,
-                     DataQuality& quality_stats,
+                     DataQuality& stats,
                      const boost::property_tree::ptree& pt) {
   SCOPED_TIMER();
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
@@ -1451,13 +1431,13 @@ void BuildLocalTiles(const unsigned int thread_count,
     try {
       // Add statistics and log issues on this thread
       const auto& stat = result.get_future().get();
-      quality_stats.AddStatistics(stat);
+      stats.AddStatistics(stat);
     } // If we couldnt write a tile for whatever reason we fail the whole job
     catch (std::exception& e) {
       throw e;
     }
   }
-  quality_stats.LogIssues();
+  stats.LogIssues();
 }
 
 } // namespace
