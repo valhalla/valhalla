@@ -2353,6 +2353,14 @@
       "description": "Sets auto backward to false."
     },
     {
+      "key": "junction",
+      "value": "intersection",
+      "object_types": [
+        "way"
+      ],
+      "description": "Marks the way as an internal interesection edge."
+    },
+    {
       "key": "junction:ref",
       "description": "Junction/exit number for signage (i.e. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info)",
       "object_types": [
