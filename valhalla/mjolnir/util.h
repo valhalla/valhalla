@@ -95,35 +95,70 @@ inline std::string to_string(BuildStage stg) {
 // Instead of logging each occurrence (which produces millions of lines on planet builds),
 // we accumulate counts and log a summary at the end. Full per-item detail is still
 // available at LOG_DEBUG level. Counters are atomic for thread safety.
+//
+// To add a new counter: add an enum value before kCount and a corresponding entry in
+// build_stats::meta (same order). The static_assert in util.cc will catch mismatches.
 struct build_stats {
-  // graphbuilder.cc — ConstructEdges / Build
-  std::atomic<uint32_t> uninitialized_nodes{0};
-  std::atomic<uint32_t> restriction_mask_exceeded{0};
-  std::atomic<uint32_t> invalid_speed{0};
-  std::atomic<uint32_t> invalid_speed_limit{0};
-  std::atomic<uint32_t> invalid_truck_speed{0};
-  std::atomic<uint32_t> lane_connectivity_failed{0};
-  // osmway.cc — PBF parsing (speed/node setters that clamp)
-  std::atomic<uint32_t> exceeded_max_nodes_per_way{0};
-  std::atomic<uint32_t> exceeded_max_speed{0};
-  std::atomic<uint32_t> invalid_level{0};
-  // edgeinfobuilder.cc — Build
-  std::atomic<uint32_t> exceeded_max_names{0};
-  std::atomic<uint32_t> exceeded_max_shape_size{0};
-  std::atomic<uint32_t> exceeded_speed_limit{0};
-  // elevationbuilder.cc
-  std::atomic<uint32_t> elevation_exceeds_diff{0};
-  // graphenhancer.cc
-  std::atomic<uint32_t> access_tags_not_found{0};
-  // pbfgraphparser.cc
-  std::atomic<uint32_t> unrecognized_hov_type{0};
-  std::atomic<uint32_t> tag_parse_error{0};
-  // complexrestrictionbuilder.cc / restrictionbuilder.cc
-  std::atomic<uint32_t> exceeded_max_vias{0};
-  // add_predicted_speeds.cc
-  std::atomic<uint32_t> invalid_predicted_speed_data{0};
+  enum counter : uint8_t {
+    kUninitializedNodes,
+    kRestrictionMaskExceeded,
+    kInvalidSpeed,
+    kInvalidSpeedLimit,
+    kInvalidTruckSpeed,
+    kLaneConnectivityFailed,
+    kExceededMaxNodesPerWay,
+    kExceededMaxSpeed,
+    kInvalidLevel,
+    kExceededMaxNames,
+    kExceededMaxShapeSize,
+    kExceededSpeedLimit,
+    kElevationExceedsDiff,
+    kAccessTagsNotFound,
+    kUnrecognizedHovType,
+    kTagParseError,
+    kExceededMaxVias,
+    kCount // sentinel — must be last
+  };
 
-  void report(const boost::property_tree::ptree& config) const;
+  struct meta_entry {
+    const char* statsd_key;
+    const char* log_label;
+  };
+  static constexpr meta_entry meta[] = {
+      {"build.uninitialized_nodes", "nodes with uninitialized coordinates"},
+      {"build.restriction_mask_exceeded", "restriction masks exceeding limit"},
+      {"build.invalid_speed", "edges with speed exceeding max"},
+      {"build.invalid_speed_limit", "edges with speed limit exceeding max"},
+      {"build.invalid_truck_speed", "edges with truck speed exceeding max"},
+      {"build.lane_connectivity_failed", "lane connectivity import failures"},
+      {"build.exceeded_max_nodes_per_way", "ways exceeding max nodes per way"},
+      {"build.exceeded_max_speed", "ways with speed clamped to max"},
+      {"build.invalid_level", "ways with invalid level tags"},
+      {"build.exceeded_max_names", "edges exceeding max names"},
+      {"build.exceeded_max_shape_size", "edges exceeding max encoded shape size"},
+      {"build.exceeded_speed_limit", "edges with speed limit clamped in EdgeInfo"},
+      {"build.elevation_exceeds_diff", "edges with elevation exceeding max difference"},
+      {"build.access_tags_not_found", "edges with access tags not found"},
+      {"build.unrecognized_hov_type", "ways with unrecognized HOV type"},
+      {"build.tag_parse_error", "tag parse errors"},
+      {"build.exceeded_max_vias", "restrictions exceeding max vias"},
+  };
+
+  static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");
+
+  std::atomic<uint32_t> counters[kCount]{};
+
+  void increment(counter c) {
+    ++counters[c];
+  }
+
+  static build_stats& get() {
+    static build_stats instance;
+    return instance;
+  }
+
+  void reset();
+  void report(const boost::property_tree::ptree& config, const bool emit_statsd = true) const;
 };
 
 // A little struct to hold stats information during each threads work

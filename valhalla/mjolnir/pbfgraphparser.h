@@ -32,34 +32,12 @@ public:
                            const std::string& way_nodes_file,
                            const std::string& access_file);
 
-  /**
-   * Loads given input files
-   * @param  pt                             properties file
-   * @param  input_files                    the protobuf files to parse
-   * @param  complex_restriction_from_file  where to store the from complex restrictions so they are
-   * not in memory
-   * @param  complex_restriction_to_file    where to store the to complex restrictions so they are not
-   * in memory
-   * @param  osmdata                        OSM data
-   *
-   */
   static void ParseRelations(const boost::property_tree::ptree& pt,
                              const std::vector<std::string>& input_files,
                              const std::string& complex_restriction_from_file,
                              const std::string& complex_restriction_to_file,
                              OSMData& osmdata);
 
-  /**
-   * Loads given input files
-   * @param  pt                             properties file
-   * @param  input_files                    the protobuf files to parse
-   * @param  way_nodes_file                 where to store the nodes so they are not in memory
-   * @param  bss_nodes_file                 where to store the bss nodes so they are not in memory
-   * @param  linguistic_node_file           where to store the linguistic information for nodes so
-   * they are not in memory
-   *
-   * @param  osmdata                        OSM data
-   */
   static void ParseNodes(const boost::property_tree::ptree& pt,
                          const std::vector<std::string>& input_files,
                          const std::string& way_nodes_file,

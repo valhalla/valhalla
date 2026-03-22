@@ -40,8 +40,7 @@ using cache_t =
 std::vector<int8_t> encode_edge_elevation(const std::unique_ptr<valhalla::skadi::sample>& sample,
                                           const std::vector<PointLL>& shape,
                                           const uint32_t length,
-                                          uint32_t wayid,
-                                          build_stats& stats) {
+                                          uint32_t wayid) {
   // Uniformly resample the polyline to create the desired number of vertices
   uint32_t n = encoded_elevation_count(length) + 2;
   std::vector<PointLL> resampled =
@@ -63,7 +62,7 @@ std::vector<int8_t> encode_edge_elevation(const std::unique_ptr<valhalla::skadi:
     }
     LOG_DEBUG("edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
               std::to_string(diff) + " meters.");
-    ++stats.elevation_exceeds_diff;
+    build_stats::get().increment(build_stats::kElevationExceedsDiff);
   }
   return encoded;
 }
@@ -74,8 +73,7 @@ std::vector<int8_t> encode_edge_elevation(const std::unique_ptr<valhalla::skadi:
 std::vector<int8_t> encode_btf_elevation(const std::unique_ptr<valhalla::skadi::sample>& sample,
                                          const std::vector<PointLL>& shape,
                                          const uint32_t length,
-                                         uint32_t wayid,
-                                         build_stats& stats) {
+                                         uint32_t wayid) {
   // Compute a uniform sampling interval along the edge based on its length.
   double interval = sampling_interval(length);
 
@@ -105,7 +103,7 @@ std::vector<int8_t> encode_btf_elevation(const std::unique_ptr<valhalla::skadi::
     }
     LOG_DEBUG("BTF edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
               std::to_string(diff) + " meters.");
-    ++stats.elevation_exceeds_diff;
+    build_stats::get().increment(build_stats::kElevationExceedsDiff);
   }
   return e;
 }
@@ -114,8 +112,7 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
                                    std::mutex& graphreader_lck,
                                    cache_t& cache,
                                    const std::unique_ptr<valhalla::skadi::sample>& sample,
-                                   GraphId& tile_id,
-                                   build_stats& stats) {
+                                   GraphId& tile_id) {
   // Get the tile. Serialize the entire tile?
   GraphTileBuilder tilebuilder(graphreader.tile_dir(), tile_id, true);
 
@@ -225,9 +222,9 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
       std::vector<int8_t> encoded;
       auto wayid = tilebuilder.edgeinfo(&directededge).wayid();
       if (directededge.bridge() || directededge.tunnel() || directededge.use() == Use::kFerry) {
-        encoded = encode_btf_elevation(sample, shape, length, wayid, stats);
+        encoded = encode_btf_elevation(sample, shape, length, wayid);
       } else {
-        encoded = encode_edge_elevation(sample, shape, length, wayid, stats);
+        encoded = encode_edge_elevation(sample, shape, length, wayid);
       }
       ei_offset += tilebuilder.set_elevation(edge_info_offset, mean_elevation, encoded);
     }
@@ -282,8 +279,7 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
 void add_elevations_to_multiple_tiles(const boost::property_tree::ptree& pt,
                                       std::deque<GraphId>& tilequeue,
                                       std::mutex& lock,
-                                      const std::unique_ptr<valhalla::skadi::sample>& sample,
-                                      build_stats& stats) {
+                                      const std::unique_ptr<valhalla::skadi::sample>& sample) {
   // Local Graphreader
   GraphReader graphreader(pt.get_child("mjolnir"));
 
@@ -304,7 +300,7 @@ void add_elevations_to_multiple_tiles(const boost::property_tree::ptree& pt,
     tilequeue.pop_front();
     lock.unlock();
 
-    add_elevations_to_single_tile(graphreader, lock, geo_attribute_cache, sample, tile_id, stats);
+    add_elevations_to_single_tile(graphreader, lock, geo_attribute_cache, sample, tile_id);
   }
 }
 
@@ -328,8 +324,7 @@ namespace valhalla {
 namespace mjolnir {
 
 void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
-                             std::deque<baldr::GraphId> tile_ids,
-                             build_stats& stats) {
+                             std::deque<baldr::GraphId> tile_ids) {
 
   auto elevation = pt.get_optional<std::string>("additional_data.elevation");
   if (!elevation || !std::filesystem::exists(*elevation)) {
@@ -353,8 +348,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
   std::mutex lock;
   for (auto& thread : threads) {
     thread = std::make_shared<std::thread>(add_elevations_to_multiple_tiles, std::cref(pt),
-                                           std::ref(tile_ids), std::ref(lock), std::ref(sample),
-                                           std::ref(stats));
+                                           std::ref(tile_ids), std::ref(lock), std::ref(sample));
   }
 
   for (auto& thread : threads) {

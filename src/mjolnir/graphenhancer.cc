@@ -960,8 +960,7 @@ void enhance(const boost::property_tree::ptree& pt,
              const boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue,
              std::mutex& lock, // guards `tilequeue`
-             std::promise<enhancer_stats>& result,
-             build_stats& bstats) {
+             std::promise<enhancer_stats>& result) {
 
   auto less_than = [](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); };
   sequence<OSMAccess> access_tags(access_file, false);
@@ -1183,6 +1182,7 @@ void enhance(const boost::property_tree::ptree& pt,
                 SetCountryAccess(directededge, access, access_it);
               } else {
                 LOG_DEBUG("access tags not found for " + std::to_string(e_offset.wayid()));
+                build_stats::get().increment(build_stats::kAccessTagsNotFound);
               }
             } else {
               SetCountryAccess(directededge, access, target);
@@ -1395,8 +1395,7 @@ namespace mjolnir {
 // Enhance the local level of the graph
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
                             const OSMData& osmdata,
-                            const std::string& access_file,
-                            build_stats& bstats) {
+                            const std::string& access_file) {
   SCOPED_TIMER();
   LOG_INFO("Enhancing local graph...");
 
@@ -1430,8 +1429,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
     thread =
         std::make_shared<std::thread>(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
                                       std::cref(access_file), std::ref(hierarchy_properties),
-                                      std::ref(tilequeue), std::ref(lock), std::ref(results.back()),
-                                      std::ref(bstats));
+                                      std::ref(tilequeue), std::ref(lock), std::ref(results.back()));
   }
 
   // Wait for them to finish up their work

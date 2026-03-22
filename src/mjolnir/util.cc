@@ -693,8 +693,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string new_to_old_bin = tile_dir + new_to_old_file;
   std::string old_to_new_bin = tile_dir + old_to_new_file;
 
-  // Build stats to accumulate warning counts across stages
-  build_stats stats;
+  // Reset build stats singleton for this run
+  build_stats::get().reset();
 
   // OSMData class
   OSMData osm_data{0};
@@ -747,7 +747,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (start_stage == BuildStage::kConstructEdges)
       osm_data.read_from_temp_files(tile_dir);
 
-    tiles = GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin, stats);
+    tiles = GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
     // Output manifest
     TileManifest manifest{tiles};
     manifest.LogToFile(tile_manifest);
@@ -764,14 +764,13 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
         // TODO: Remove this backfill in the future, and make calling constructedges stage
         // explicitly required in the future.
         LOG_WARN("Tile manifest not found, rebuilding edges and manifest");
-        tiles =
-            GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin, stats);
+        tiles = GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
       }
     }
 
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin, linguistic_node_bin, tiles, stats);
+                        cr_to_bin, linguistic_node_bin, tiles);
   }
 
   // Enhance the local level of the graph. This adds information to the local
@@ -782,7 +781,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (start_stage == BuildStage::kEnhance) {
       osm_data.read_from_unique_names_file(tile_dir);
     }
-    GraphEnhancer::Enhance(config, osm_data, access_bin, stats);
+    GraphEnhancer::Enhance(config, osm_data, access_bin);
   }
 
   // Perform optional edge filtering (remove edges and nodes for specific access modes)
@@ -827,7 +826,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
   // Add elevation to the tiles
   if (start_stage <= BuildStage::kElevation && BuildStage::kElevation <= end_stage) {
-    ElevationBuilder::Build(config, {}, stats);
+    ElevationBuilder::Build(config);
   }
 
   // Build the Complex Restrictions
@@ -835,7 +834,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // elevation into the tiles reads each tile and serializes the data to "builders"
   // within the tile. However, there is no serialization currently available for complex restrictions.
   if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
-    RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin, stats);
+    RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
   }
 
   // Validate the graph and add information that cannot be added until full graph is formed.
@@ -862,7 +861,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   }
 
   // Log summary of build warnings and emit to statsd
-  stats.report(config, true);
+  build_stats::get().report(config);
 
   return true;
 }
@@ -908,40 +907,17 @@ TileManifest TileManifest::ReadFromFile(const std::string& filename) {
   return TileManifest{tileset};
 }
 
-void build_stats::report(const boost::property_tree::ptree& config, const bool emit_statsd) const {
-  // Each entry: {statsd_key, log_label, count}
-  const std::initializer_list<std::tuple<const char*, const char*, uint32_t>> entries = {
-      {"build.uninitialized_nodes", "nodes with uninitialized coordinates", uninitialized_nodes},
-      {"build.restriction_mask_exceeded", "restriction masks exceeding limit",
-       restriction_mask_exceeded},
-      {"build.invalid_speed", "edges with speed exceeding max", invalid_speed},
-      {"build.invalid_speed_limit", "edges with speed limit exceeding max", invalid_speed_limit},
-      {"build.invalid_truck_speed", "edges with truck speed exceeding max", invalid_truck_speed},
-      {"build.lane_connectivity_failed", "lane connectivity import failures",
-       lane_connectivity_failed},
-      {"build.exceeded_max_nodes_per_way", "ways exceeding max nodes per way",
-       exceeded_max_nodes_per_way},
-      {"build.exceeded_max_speed", "ways with speed clamped to max", exceeded_max_speed},
-      {"build.invalid_level", "ways with invalid level tags", invalid_level},
-      {"build.exceeded_max_names", "edges exceeding max names", exceeded_max_names},
-      {"build.exceeded_max_shape_size", "edges exceeding max encoded shape size",
-       exceeded_max_shape_size},
-      {"build.exceeded_speed_limit", "edges with speed limit clamped in EdgeInfo",
-       exceeded_speed_limit},
-      {"build.elevation_exceeds_diff", "edges with elevation exceeding max difference",
-       elevation_exceeds_diff},
-      {"build.access_tags_not_found", "edges with access tags not found", access_tags_not_found},
-      {"build.unrecognized_hov_type", "ways with unrecognized HOV type", unrecognized_hov_type},
-      {"build.tag_parse_error", "tag parse errors", tag_parse_error},
-      {"build.exceeded_max_vias", "restrictions exceeding max vias", exceeded_max_vias},
-      {"build.invalid_predicted_speed_data", "invalid predicted speed data entries",
-       invalid_predicted_speed_data},
-  };
+void build_stats::reset() {
+  for (auto& c : counters)
+    c = 0;
+}
 
+void build_stats::report(const boost::property_tree::ptree& config, const bool emit_statsd) const {
   // Log summary
-  for (const auto& [key, label, count] : entries) {
+  for (uint8_t i = 0; i < kCount; ++i) {
+    auto count = counters[i].load();
     if (count > 0) {
-      LOG_WARN(std::to_string(count) + " " + label);
+      LOG_WARN(std::to_string(count) + " " + meta[i].log_label);
     }
   }
 
@@ -960,9 +936,10 @@ void build_stats::report(const boost::property_tree::ptree& config, const bool e
       tags.push_back(tag.second.data());
     }
   }
-  for (const auto& [key, label, count] : entries) {
+  for (uint8_t i = 0; i < kCount; ++i) {
+    auto count = counters[i].load();
     if (count > 0) {
-      client.count(key, count, 1.f, tags);
+      client.count(meta[i].statsd_key, count, 1.f, tags);
     }
   }
   client.flush();

@@ -49,15 +49,13 @@ public:
                     const std::string& complex_from_restriction_file,
                     const std::string& complex_to_restriction_file,
                     const std::string& linguistic_node_file,
-                    const std::map<baldr::GraphId, size_t>& tiles,
-                    build_stats& stats);
+                    const std::map<baldr::GraphId, size_t>& tiles);
 
   static std::map<baldr::GraphId, size_t> BuildEdges(const boost::property_tree::ptree& conf,
                                                      const std::string& ways_file,
                                                      const std::string& way_nodes_file,
                                                      const std::string& nodes_file,
-                                                     const std::string& edges_file,
-                                                     build_stats& stats);
+                                                     const std::string& edges_file);
 
   static std::string GetRef(const std::string& way_ref, const std::string& relation_ref);
 
