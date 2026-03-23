@@ -23,9 +23,10 @@
    * ADDED: OSM XML format support for tile building [#5934](https://github.com/valhalla/valhalla/pull/5934)
    * ADDED: access restriction layer in MVT [#5912](https://github.com/valhalla/valhalla/pull/5912)
    * ADDED: incidents to locate JSON response [#5968](https://github.com/valhalla/valhalla/pull/5968)
-   * ADDED: `--region` to `valhalla_build_extract` to create tars by Geofabrik region
+   * ADDED: `--region` to `valhalla_build_extract` to create tars by Geofabrik region [#5964](https://github.com/valhalla/valhalla/pull/5964)
    * ADDED: more warnings for clamped costing options, second pass, bidir fallback and matrix_locations for CostMatrix [#3833](https://github.com/valhalla/valhalla/pull/3833)
-   * ADDED: a global `logging` config to replace all module-level ones
+   * ADDED: a global `logging` config to replace all module-level ones [#5976](https://github.com/valhalla/valhalla/pull/5976)
+   * ADDED: consolidated lots of mjolnir's LOG_WARN for less verbose default logging; added statsd support for `build_tile_set` [#5985](https://github.com/valhalla/valhalla/pull/5985)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
