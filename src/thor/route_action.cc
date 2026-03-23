@@ -101,8 +101,10 @@ inline bool is_break_point(const valhalla::Location& l) {
 }
 
 inline bool is_highly_reachable(const valhalla::Location& loc, const valhalla::PathEdge& edge) {
-  return static_cast<google::protobuf::uint32>(edge.inbound_reach()) >= loc.minimum_reachability() &&
-         static_cast<google::protobuf::uint32>(edge.outbound_reach()) >= loc.minimum_reachability();
+  return static_cast<google::protobuf::uint32>(edge.inbound_reach()) >=
+             loc.minimum_inbound_reachability() &&
+         static_cast<google::protobuf::uint32>(edge.outbound_reach()) >=
+             loc.minimum_outbound_reachability();
 }
 
 template <typename Predicate> inline void remove_path_edges(valhalla::Location& loc, Predicate pred) {
@@ -375,7 +377,7 @@ void thor_worker_t::route(Api& request) {
 thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
                                                        const valhalla::Location& origin,
                                                        const valhalla::Location& destination,
-                                                       const Options& options) {
+                                                       Api& request) {
   // make sure they are all cancelable
   for (auto* alg : std::vector<PathAlgorithm*>{
            &multi_modal_transit,
@@ -401,6 +403,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     return &multimodal_astar;
   }
 
+  const auto& options = request.options();
   // If the origin has date_time set use timedep_forward method if the distance
   // between location is below some maximum distance (TBD).
   if (!origin.date_time().empty() && options.date_time_type() != Options::invariant &&
@@ -409,6 +412,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
       return &timedep_forward;
+    } else {
+      add_warning(request, 402);
     }
   }
 
@@ -419,6 +424,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
       return &timedep_reverse;
+    } else {
+      add_warning(request, 214);
     }
   }
 
@@ -445,7 +452,8 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
                                                                  valhalla::Location& origin,
                                                                  valhalla::Location& destination,
                                                                  const std::string& costing,
-                                                                 const Options& options) {
+                                                                 Api& request) {
+  const Options& options = request.options();
   // Find the path.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
 
@@ -475,6 +483,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   // hierarchy transition limits, and retry with more candidate edges (add those filtered
   // by heading on first pass).
   if ((paths.empty() || ped_second_pass) && cost->AllowMultiPass()) {
+    add_warning(request, 401);
     // add filtered edges to candidate edges for origin and destination
     origin.mutable_correlation()->mutable_edges()->MergeFrom(origin.correlation().filtered_edges());
     destination.mutable_correlation()->mutable_edges()->MergeFrom(
@@ -529,7 +538,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   auto route_two_locations = [&](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
     thor::PathAlgorithm* path_algorithm =
-        this->get_path_algorithm(costing, *origin, *destination, options);
+        this->get_path_algorithm(costing, *origin, *destination, api);
     path_algorithm->Clear();
 
     // once we know which algorithm will be used, set the hierarchy limits accordingly
@@ -563,7 +572,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     }
 
     // Get best path and keep it
-    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
+    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, api);
     if (temp_paths.empty())
       return false;
     for (auto& temp_path : temp_paths) {
@@ -754,7 +763,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   auto route_two_locations = [&, this](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
     thor::PathAlgorithm* path_algorithm =
-        this->get_path_algorithm(costing, *origin, *destination, options);
+        this->get_path_algorithm(costing, *origin, *destination, api);
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
@@ -785,7 +794,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
                         [&last_edge](const auto& edge) { return edge.graph_id() != last_edge; });
     }
     // Get best path and keep it
-    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
+    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, api);
     if (temp_paths.empty())
       return false;
 
