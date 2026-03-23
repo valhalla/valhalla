@@ -116,6 +116,7 @@ struct build_stats {
     kUnrecognizedHovType,
     kTagParseError,
     kExceededMaxVias,
+    kExceededMaxShortcutEdges,
     kCount // sentinel — must be last
   };
 
@@ -140,6 +141,7 @@ struct build_stats {
       {"build.unrecognized_hov_type", "ways with unrecognized HOV type"},
       {"build.tag_parse_error", "tag parse errors"},
       {"build.exceeded_max_vias", "restrictions exceeding max vias"},
+      {"build.exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges"},
   };
 
   static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");

@@ -793,6 +793,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
 
   if (total_exceeded_max > 0) {
     LOG_WARN(std::to_string(total_exceeded_max) + " nodes exceeding max shortcut edges");
+    build_stats::get().counters[build_stats::kExceededMaxShortcutEdges] = total_exceeded_max;
   }
 }
 
