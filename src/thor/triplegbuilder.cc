@@ -34,6 +34,10 @@ using namespace valhalla::thor;
 
 namespace {
 
+// arbitrary time of week to obtain freeflow/constrained speeds from GraphTile::GetSpeed(...)
+constexpr uint64_t kFreeFlowSecondsOfWeek = 0;
+constexpr uint64_t kConstrainedSecondsOfWeek = 28800;
+
 using LinguisticMap = std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>;
 
 constexpr uint8_t kNotTagged = 0;
@@ -330,6 +334,10 @@ void SetShapeAttributes(const AttributesController& controller,
     leg.mutable_shape_attributes()->mutable_speed_limit()->Reserve(
         leg.shape_attributes().speed_limit_size() + shape.size() + cuts.size());
   }
+  if (controller(kShapeAttributesCongestion)) {
+    leg.mutable_shape_attributes()->mutable_speed()->Reserve(
+        leg.shape_attributes().congestion_size() + shape.size() + cuts.size());
+  }
 
   // Set the shape attributes
   for (auto i = shape_begin + 1; i < shape.size(); ++i) {
@@ -382,6 +390,10 @@ void SetShapeAttributes(const AttributesController& controller,
     if (controller(kShapeAttributesLength)) {
       // convert length to decimeters and then round to an integer
       leg.mutable_shape_attributes()->add_length((distance * kDecimeterPerMeter) + 0.5);
+    }
+    if (controller(kShapeAttributesCongestion)) {
+      // convert length to decimeters and then round to an integer
+      leg.mutable_shape_attributes()->add_congestion(cut_itr->congestion);
     }
 
     // Set shape attributes speed per shape point if requested
@@ -1206,7 +1218,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     } else {
       uint8_t flow_sources;
       speed = directededge->length() /
-              costing->EdgeCost(directededge, graphtile, time_info, flow_sources).secs *
+              costing->EdgeCost(directededge, edge, graphtile, time_info, flow_sources).secs *
               kMetersPerSectoKPH;
     }
     trip_edge->set_speed(speed);
@@ -1219,7 +1231,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   if (controller(kEdgeSpeedsFaded) || controller(kEdgeSpeedsNonFaded)) {
     // helper function to only get the speed from GetSpeed that we are interested in
     auto get_speed = [&](uint8_t flow_mask, bool faded,
-                         uint64_t second_of_week = kInvalidSecondsOfWeek) -> std::optional<uint32_t> {
+                         uint64_t second_of_week) -> std::optional<uint32_t> {
       uint8_t flow_sources = 0;
       uint64_t seconds_from_now = 0;
       uint8_t initial_flow_mask = flow_mask;
@@ -1230,6 +1242,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
           flow_mask = costing->flow_mask();
         }
         flow_mask |= kCurrentFlowMask;
+      } else if (initial_flow_mask == kCurrentFlowMask) {
+        second_of_week = 0;
+      }
+      if (initial_flow_mask == kConstrainedFlowMask) {
+        second_of_week =
+            kConstrainedSecondsOfWeek; // arbitrary time to land us within the constrained time window
+      } else if (initial_flow_mask == kFreeFlowMask) {
+        second_of_week = kFreeFlowSecondsOfWeek; // ... or within the free flow window
       }
       uint32_t speed = graphtile->GetSpeed(directededge, flow_mask, second_of_week, false,
                                            &flow_sources, seconds_from_now);
@@ -1252,17 +1272,17 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
         speeds->set_predicted_flow(speed.value());
       }
 
-      speed = get_speed(kConstrainedFlowMask, faded);
+      speed = get_speed(kConstrainedFlowMask, faded, time_info.second_of_week);
       if (speed.has_value() && directededge->constrained_flow_speed() > 0) {
         speeds->set_constrained_flow(speed.value());
       }
 
-      speed = get_speed(kFreeFlowMask, faded);
+      speed = get_speed(kFreeFlowMask, faded, time_info.second_of_week);
       if (speed.has_value() && directededge->free_flow_speed() > 0) {
         speeds->set_free_flow(speed.value());
       }
 
-      speed = get_speed(kNoFlowMask, faded);
+      speed = get_speed(kNoFlowMask, faded, time_info.second_of_week);
       if (speed.has_value()) {
         speeds->set_no_flow(speed.value());
       }
@@ -1290,6 +1310,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set traffic signal if requested
   if (controller(kEdgeTrafficSignal)) {
     trip_edge->set_traffic_signal(directededge->traffic_signal());
+  }
+
+  // Set hov type if requested
+  if (controller(kEdgeHovType)) {
+    trip_edge->set_hov_type(GetTripLegHovType(directededge->hov_type()));
   }
 
   if (controller(kEdgeLevels)) {
@@ -1344,10 +1369,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   if (directededge->access_restriction() && edge_itr->restriction_index != kInvalidRestriction) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        graphtile->GetAccessRestrictions(edge.id(), costing->access_mode());
-    trip_edge->mutable_restriction()->set_type(
-        static_cast<uint32_t>(restrictions[edge_itr->restriction_index].type()));
+    auto restriction = graphtile->GetAccessRestrictionAtIndex(edge.id(), costing->access_mode(),
+                                                              edge_itr->restriction_index);
+    assert(restriction != nullptr);
+    trip_edge->mutable_restriction()->set_type(static_cast<uint32_t>(restriction->type()));
   }
 
   trip_edge->set_has_time_restrictions(edge_itr->restriction_index != kInvalidRestriction);
@@ -1452,6 +1477,20 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set way id (base data id) if requested
   if (controller(kEdgeWayId)) {
     trip_edge->set_way_id(edgeinfo.wayid());
+  }
+
+  if ((controller(kEdgeBeginOsmNodeId) || controller(kEdgeEndOsmNodeId)) &&
+      !edgeinfo.osm_node_ids().empty()) {
+    const auto& osm_ids = edgeinfo.osm_node_ids();
+    const bool forward = directededge->forward();
+
+    if (controller(kEdgeBeginOsmNodeId)) {
+      trip_edge->set_begin_osm_node_id(forward ? osm_ids.front() : osm_ids.back());
+    }
+
+    if (controller(kEdgeEndOsmNodeId)) {
+      trip_edge->set_end_osm_node_id(forward ? osm_ids.back() : osm_ids.front());
+    }
   }
 
   // Set weighted grade if requested
@@ -1801,21 +1840,13 @@ void TripLegBuilder::Build(
     travel_types[i] = (mode_costing[i] != nullptr) ? mode_costing[i]->travel_type() : 0;
   }
 
-  // Get the first nodes graph id by using the end node of the first edge to get the tile with the
-  // opposing edge then use the opposing index to get the opposing edge, and its end node is the
-  // begin node of the original edge
-  auto begin_tile = graphreader.GetGraphTile(path_begin->edgeid);
-  if (begin_tile == nullptr) {
+  // Start node is the end node of the opposing edge to the first edge in the path.
+  graph_tile_ptr begin_tile;
+  auto opp_edge = graphreader.GetOpposingEdge(path_begin->edgeid, begin_tile);
+  if (!opp_edge) {
     throw tile_gone_error_t("TripLegBuilder::Build failed", path_begin->edgeid);
   }
-  const auto* first_edge = begin_tile->directededge(path_begin->edgeid);
-  auto first_tile = graphreader.GetGraphTile(first_edge->endnode());
-  if (first_tile == nullptr) {
-    throw tile_gone_error_t("TripLegBuilder::Build failed", first_edge->endnode());
-  }
-  auto* first_node = first_tile->node(first_edge->endnode());
-  GraphId startnode =
-      first_tile->directededge(first_node->edge_index() + first_edge->opp_index())->endnode();
+  GraphId startnode = opp_edge->endnode();
 
   // Partial edge at the start and side of street (sos)
   float start_pct = 0.;
@@ -1907,6 +1938,17 @@ void TripLegBuilder::Build(
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
     const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
 
+    const bool is_first_edge = edge_itr == path_begin;
+    const bool is_last_edge = edge_itr == (path_end - 1);
+
+    // By default the `startnode` is the endnode of the previous directed edge.
+    if (edge_itr->is_disconnected) {
+      graph_tile_ptr opp_tile = graphtile;
+      if (auto opp_edge = graphreader.GetOpposingEdge(directededge, opp_tile)) {
+        startnode = opp_edge->endnode();
+      }
+    }
+
     if (directededge->toll()) {
       has_toll = true;
     }
@@ -1928,9 +1970,6 @@ void TripLegBuilder::Build(
     if (osmchangeset == 0 && controller(kOsmChangeset)) {
       osmchangeset = start_tile->header()->dataset_id();
     }
-
-    const bool is_first_edge = edge_itr == path_begin;
-    const bool is_last_edge = edge_itr == (path_end - 1);
 
     // have to always compute the offset in case the timezone changes along the path
     // we could cache the timezone and just add seconds when the timezone doesnt change
@@ -1991,7 +2030,9 @@ void TripLegBuilder::Build(
     multimodal_builder.Build(trip_node, edge_itr->trip_id, node, startnode, directededge, edge,
                              start_tile, graphtile, mode_costing, controller, graphreader);
 
-    uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
+    const bool include_first_point = is_first_edge || edge_itr->is_disconnected;
+    const uint32_t begin_index =
+        include_first_point ? static_cast<uint32_t>(trip_shape.size()) : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
     std::pair<std::vector<std::pair<float, float>>, uint32_t> levels = edgeinfo.levels();
     // Add edge to the trip node and set its attributes
@@ -2054,7 +2095,8 @@ void TripLegBuilder::Build(
       trim_shape(begin_trim_dist * edge_length, begin_trim_vrt, end_trim_dist * edge_length,
                  end_trim_vrt, edge_shape);
       // Add edge shape to the trip and skip the first point when its redundant with the previous edge
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !include_first_point,
+                        edge_shape.end());
     } // We need to clip the shape if its at the beginning or end
     else if (is_first_edge || is_last_edge) {
       // Get edge shape and reverse it if directed edge is not forward.
@@ -2074,13 +2116,16 @@ void TripLegBuilder::Build(
         trim_shape(0, edge_shape.front(), end_pct * total, end_vrt, edge_shape);
       }
       // Keep the shape
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !include_first_point,
+                        edge_shape.end());
     } // Just get the shape in there in the right direction no clipping needed
     else {
       if (directededge->forward()) {
-        trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1, edgeinfo.shape().end());
+        trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + !include_first_point,
+                          edgeinfo.shape().end());
       } else {
-        trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1, edgeinfo.shape().rend());
+        trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + !include_first_point,
+                          edgeinfo.shape().rend());
       }
     }
 
@@ -2194,7 +2239,7 @@ void TripLegBuilder::Build(
 
     // Add the intersecting edges at the node. Skip it if the node was an inner node (excluding start
     // node and end node) of a shortcut that was recovered.
-    if (startnode.Is_Valid() && !edge_itr->start_node_is_recovered) {
+    if (startnode.is_valid() && !edge_itr->start_node_is_recovered) {
       AddIntersectingEdges(controller, start_tile, node, directededge, prev_de, prior_opp_local_index,
                            graphreader, trip_node,
                            travel_type == PedestrianType::kBlind &&

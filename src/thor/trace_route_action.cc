@@ -64,10 +64,10 @@ void thor_worker_t::trace_route(Api& request) {
   auto _ = measure_scope_time(request);
 
   // Parse request
-  auto& options = *request.mutable_options();
-  adjust_scores(options);
+  adjust_scores(*request.mutable_options());
   parse_costing(request);
   parse_measurements(request);
+  const Options options = request.options(); // copy `options` to have them as a backup for a fallback
   controller = AttributesController(options);
 
   switch (options.shape_match()) {
@@ -108,6 +108,10 @@ void thor_worker_t::trace_route(Api& request) {
         LOG_WARN(ShapeMatch_Enum_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
+          // Reset request to avoid `route_match` interference
+          request.Clear();
+          request.mutable_options()->CopyFrom(options);
+
           map_match(request);
         } catch (const valhalla_exception_t& e) {
           throw e;
@@ -137,7 +141,8 @@ void thor_worker_t::route_match(Api& request) {
   std::vector<std::vector<PathInfo>> legs;
 
   // if the shape walking succeeds
-  if (RouteMatcher::FormPath(mode_costing, mode, *reader, options, legs)) {
+  if (RouteMatcher::FormPath(mode_costing, mode, *reader, options, options.use_timestamps(), false,
+                             legs)) {
     // the origin is the first location for sure
     auto origin = options.mutable_shape()->begin();
     // build each leg of the route
@@ -203,7 +208,7 @@ thor_worker_t::map_match(Api& request) {
       for (size_t i = 0; i < result.results.size(); ++i) {
         // Get the match
         const auto& match = result.results[i];
-        if (!match.edgeid.Is_Valid()) {
+        if (!match.edgeid.is_valid()) {
           continue;
         }
 
@@ -220,8 +225,14 @@ thor_worker_t::map_match(Api& request) {
         if (!match.HasState()) {
           continue;
         }
-        for (size_t j = 0;
-             j < matcher->state_container().state(match.stateid).candidate().edges.size() - 1; ++j) {
+        for (int j = 0; j < matcher->state_container()
+                                    .state(match.stateid)
+                                    .candidate()
+                                    .correlation()
+                                    .edges()
+                                    .size() -
+                                1;
+             ++j) {
           options.mutable_shape(i)->mutable_correlation()->mutable_edges()->Add();
         }
       }
@@ -300,13 +311,19 @@ void thor_worker_t::build_trace(
     }
   }
 
-  // smash all the path edges into a single vector
+  // smash all the path edges into a single vector, marking discontinuity boundaries
   std::vector<PathInfo> path_edges;
   path_edges.reserve(edge_index);
+  bool prev_path_had_discontinuity = false;
   for (const auto& path : paths) {
     bool merge_last_edge =
         !path_edges.empty() && path_edges.back().edgeid == path.first.front().edgeid;
+    const size_t first_inserted_idx = path_edges.size();
     path_edges.insert(path_edges.end(), path.first.begin() + merge_last_edge, path.first.end());
+    if (prev_path_had_discontinuity && !merge_last_edge) {
+      path_edges[first_inserted_idx].is_disconnected = true;
+    }
+    prev_path_had_discontinuity = path.second.back()->discontinuity;
   }
 
   // initialize the origin and destination location for route

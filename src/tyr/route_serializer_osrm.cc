@@ -332,6 +332,15 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
     attributes_map->emplace("distance", distance_array);
   }
 
+  if (trip_leg.shape_attributes().congestion_size() > 0) {
+    auto congestion_array = json::array({});
+    congestion_array->reserve(trip_leg.shape_attributes().congestion_size());
+    for (const auto& congestion : trip_leg.shape_attributes().congestion()) {
+      congestion_array->push_back(uint64_t(congestion));
+    }
+    attributes_map->emplace("congestion", congestion_array);
+  }
+
   if (trip_leg.shape_attributes().speed_size() > 0) {
     auto speeds_array = json::array({});
     speeds_array->reserve(trip_leg.shape_attributes().speed_size());
@@ -2477,9 +2486,4 @@ TEST(RouteSerializerOsrm, testlaneIndications) {
 }
 
 } // namespace
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 #endif

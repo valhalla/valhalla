@@ -257,12 +257,13 @@ TEST(Standalone, HeadingNumber2CrossRoadAuto) {
               << "FAILED at step " << steps << ", intersection " << intersection;
 
           if (json["routes"][0]["legs"][0]["steps"][steps]["intersections"][intersection].HasMember(
-                  "bearing"))
+                  "bearing")) {
             // All bearings have the same direction which is 90
             EXPECT_EQ(json["routes"][0]["legs"][0]["steps"][steps]["intersections"][intersection]
                           ["bearing"][out_index]
                               .GetInt(),
                       90);
+          }
         }
 
         // Validate `in` edge indexes and headings.
@@ -275,12 +276,13 @@ TEST(Standalone, HeadingNumber2CrossRoadAuto) {
               << "FAILED at step " << steps << ", intersection " << intersection;
 
           if (json["routes"][0]["legs"][0]["steps"][steps]["intersections"][intersection].HasMember(
-                  "bearings"))
+                  "bearings")) {
             // All bearings have the same direction which is 270
             EXPECT_EQ(json["routes"][0]["legs"][0]["steps"][steps]["intersections"][intersection]
                           ["bearings"][in_index]
                               .GetInt(),
                       270);
+          }
         }
 
         EXPECT_EQ(expected_headings[index++], json["routes"][0]["legs"][0]["steps"][steps]

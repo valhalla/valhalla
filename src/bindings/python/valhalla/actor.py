@@ -1,7 +1,8 @@
 import json
-import tempfile
 from pathlib import Path
 from typing import Union
+
+from .config import parse_and_validate_config
 
 try:
     from ._valhalla import _Actor
@@ -40,39 +41,12 @@ class Actor(_Actor):
         For details on parameters for each function consult Valhalla's documentation:
         https://github.com/valhalla/valhalla/blob/master/docs/docs/api
         """
-        # make sure there's a valhalla.json file
-        if isinstance(config, dict):
-            with tempfile.NamedTemporaryFile(
-                "w", suffix=".json", prefix="valhalla_config_", delete=False
-            ) as f:
-                json.dump(config, f)
-                self._config_path = f.name
-        elif isinstance(config, str):
-            if not Path(config).is_file():
-                raise FileNotFoundError(f"Valhalla JSON config file doesn't exist: {config}")
-            self._config_path = config
-        elif isinstance(config, Path):
-            self._config_path = str(config.resolve())
-        else:
-            raise AttributeError(f"Valhalla JSON config can't be of type {type(config)}")
+        # Use shared validation function
+        config_path, temp_file_path = parse_and_validate_config(config)
+        self._config_path = config_path
+        self._temp_file_path = temp_file_path  # Keep reference to prevent cleanup
 
-        # test if there's an extract or tile_dir
-        with open(self._config_path) as f:
-            config = json.load(f)
-        tile_extract_fp = config.get("mjolnir", {}).get("tile_extract")
-        tile_dir = config.get("mjolnir", {}).get("tile_dir")
-
-        # raise if neither exists
-        if not tile_extract_fp and not tile_dir:
-            raise AttributeError(
-                "Valhalla config JSON is not valid: mjolnir.tile_extract and mjolnir.tile_dir are missing."
-            )
-        if not Path(config["mjolnir"]["tile_extract"]).is_file():
-            if not Path(config["mjolnir"]["tile_dir"]).is_dir():
-                raise FileNotFoundError(
-                    f"Neither mjolnir.tile_extract ({Path(tile_extract_fp).resolve()}) nor mjolnir.tile_dir ({Path(tile_dir).resolve()}) exists. Can't load graph."
-                )
-
+        # Call C++ constructor
         super(Actor, self).__init__(self._config_path)
 
     @dict_or_str
@@ -118,3 +92,10 @@ class Actor(_Actor):
     @dict_or_str
     def status(self, req: Union[str, dict] = "") -> Union[str, dict]:
         return super().status(req)
+
+    def tile(self, req: Union[str, dict]) -> bytes:
+        if isinstance(req, dict):
+            return super().tile(json.dumps(req))
+        elif not isinstance(req, str):
+            raise ValueError("Request must be either of type str or dict")
+        return super().tile(req)

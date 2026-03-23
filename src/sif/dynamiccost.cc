@@ -20,6 +20,8 @@ using namespace valhalla::midgard;
 
 namespace {
 
+constexpr double kMinCustomFactor = std::numeric_limits<double>::epsilon();
+
 uint8_t SpeedMask_Parse(const boost::optional<const rapidjson::Value&>& speed_types) {
   static const std::unordered_map<std::string, uint8_t> types{
       {"freeflow", kFreeFlowMask},
@@ -109,9 +111,46 @@ constexpr float kDefaultClosureFactor = 9.0f;
 // non-closure end
 constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFactor, 10.0f};
 
+// Default speed penalty factor (increase the cost of an edge if the edge speed is faster than the top
+// speed)
+constexpr float kDefaultSpeedPenaltyFactor = 0.05f;
+constexpr ranged_default_t<float> kSpeedPenaltyFactorRange{0.0f, kDefaultSpeedPenaltyFactor, 1.0f};
+
 constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
                                                       baldr::kMaxSpeedKph};
+
+// Default dimension
+constexpr float kDefaultHeight = 1.6f; // Meters (62.9921 inches)
+constexpr float kDefaultWidth = 1.9f;  // Meters (74.8031 inches)
+constexpr float kDefaultLength = 2.7f; // Meters (208,661 inches)
+constexpr float kDefaultWeight = 0.8f; // Metric Tons (6613,87 lbs)
 } // namespace
+
+/**
+ * When all ranges for a given edge are added, sort by range start
+ * and return the smallest factor found for this edge.
+ */
+double custom_cost_t::sort_and_find_smallest() {
+  if (ranges.empty())
+    return 1.;
+
+  std::sort(ranges.begin(), ranges.end(),
+            [](const cost_edge_t& a, const cost_edge_t& b) { return a.start < b.start; });
+
+  // keep track of how much of the edge is
+  // not covered by ranges
+  double uncovered = 1.;
+  double avg = 0.;
+  double min_factor = 1.;
+  for (const auto& range : ranges) {
+    uncovered -= range.end - range.start;
+    avg += (range.end - range.start) * range.factor;
+    min_factor = std::min(min_factor, range.factor);
+  }
+  avg += uncovered * 1.;
+  avg_factor = std::max(avg, kMinCustomFactor);
+  return std::max(min_factor, kMinCustomFactor);
+}
 
 /*
  * Assign default values for costing options in constructor. In case of different
@@ -136,11 +175,12 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
-      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false), exclude_bridges_(false),
-      exclude_tunnels_(false), exclude_tolls_(false), exclude_highways_(false),
-      exclude_ferries_(false), has_excludes_(false),
-      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
-                                                                                      false} {
+      closure_factor_{kClosureFactorRange}, speed_penalty_factor_{kSpeedPenaltyFactorRange},
+      exclude_unpaved_(false), exclude_bridges_(false), exclude_tunnels_(false),
+      exclude_tolls_(false), exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
+      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
+      include_hov3_{false}, height_{0.f, kDefaultHeight, 10.0f}, width_{0.f, kDefaultWidth, 10.0f},
+      length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -149,8 +189,8 @@ DynamicCost::DynamicCost(const Costing& costing,
                          bool penalize_uturns)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true),
       allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
-      closure_factor_(kDefaultClosureFactor), flow_mask_(kDefaultFlowMask),
-      shortest_(costing.options().shortest()),
+      closure_factor_(kDefaultClosureFactor), speed_penalty_factor_(kDefaultSpeedPenaltyFactor),
+      flow_mask_(kDefaultFlowMask), shortest_(costing.options().shortest()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
       ignore_non_vehicular_restrictions_(costing.options().ignore_non_vehicular_restrictions()),
       ignore_turn_restrictions_(costing.options().ignore_restrictions() ||
@@ -161,7 +201,8 @@ DynamicCost::DynamicCost(const Costing& costing,
       ignore_construction_(costing.options().ignore_construction()),
       top_speed_(costing.options().top_speed()), fixed_speed_(costing.options().fixed_speed()),
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
-      penalize_uturns_(penalize_uturns), is_hgv_(costing.type() == Costing::truck) {
+      penalize_uturns_(penalize_uturns), is_hgv_(costing.type() == Costing::truck),
+      min_linear_cost_factor_(1.) {
 
   // set user supplied hierarchy limits if present, fill the other
   // required levels up with sentinel values (clamping to config supplied limits/defaults is handled
@@ -185,6 +226,24 @@ DynamicCost::DynamicCost(const Costing& costing,
   for (auto& edge : costing.options().exclude_edges()) {
     user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
+
+  // add linear feature factors
+  for (auto& e : costing.options().cost_factor_edges()) {
+    // short-circuit the ones with factor 0 by putting them on the exclude pile
+    if (e.factor() == 0.) {
+      user_exclude_edges_.insert({static_cast<GraphId>(e.id()), e.start()});
+      break;
+    }
+    auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
+    cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
+  }
+
+  // once all cost factors are filled, sort by range, precompute overall average
+  // and store the overall minimum factor so it won't mess with the A* heuristic
+  for (auto& [edge, cost_factors] : linear_cost_edges_) {
+    min_linear_cost_factor_ =
+        std::min(min_linear_cost_factor_, cost_factors.sort_and_find_smallest());
+  }
 }
 
 DynamicCost::~DynamicCost() {
@@ -201,9 +260,11 @@ bool DynamicCost::AllowMultiPass() const {
 // using them for the current route. Here we just call out to the derived classes costing function
 // with a time that tells the function that we aren't using time. This avoids having to worry about
 // default parameters and inheritance (which are a bad mix)
-Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge,
+                           const baldr::GraphId& edgeid,
+                           const graph_tile_ptr& tile) const {
   uint8_t flow_sources;
-  return EdgeCost(edge, tile, TimeInfo::invalid(), flow_sources);
+  return EdgeCost(edge, edgeid, tile, TimeInfo::invalid(), flow_sources);
 }
 
 // Returns the cost to make the transition from the predecessor edge.
@@ -386,7 +447,8 @@ void DynamicCost::set_use_lit(float use_lit) {
 
 void ParseBaseCostOptions(const rapidjson::Value& json,
                           Costing* c,
-                          const BaseCostingOptionsConfig& cfg) {
+                          const BaseCostingOptionsConfig& cfg,
+                          google::protobuf::RepeatedPtrField<CodedDescription>& warnings) {
   auto* co = c->mutable_options();
 
   // ignore bogus input
@@ -448,55 +510,59 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
   // destination only penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.dest_only_penalty_, json, "/destination_only_penalty",
-                          destination_only_penalty);
+                          destination_only_penalty, warnings);
 
   // maneuver_penalty
-  JSON_PBF_RANGED_DEFAULT(co, cfg.maneuver_penalty_, json, "/maneuver_penalty", maneuver_penalty);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.maneuver_penalty_, json, "/maneuver_penalty", maneuver_penalty,
+                          warnings);
 
   // alley_penalty
-  JSON_PBF_RANGED_DEFAULT(co, cfg.alley_penalty_, json, "/alley_penalty", alley_penalty);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.alley_penalty_, json, "/alley_penalty", alley_penalty, warnings);
 
   // gate_cost
-  JSON_PBF_RANGED_DEFAULT(co, cfg.gate_cost_, json, "/gate_cost", gate_cost);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.gate_cost_, json, "/gate_cost", gate_cost, warnings);
 
   // gate_penalty
-  JSON_PBF_RANGED_DEFAULT(co, cfg.gate_penalty_, json, "/gate_penalty", gate_penalty);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.gate_penalty_, json, "/gate_penalty", gate_penalty, warnings);
 
   // private_access_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.private_access_penalty_, json, "/private_access_penalty",
-                          private_access_penalty);
+                          private_access_penalty, warnings);
 
   // country_crossing_cost
   JSON_PBF_RANGED_DEFAULT(co, cfg.country_crossing_cost_, json, "/country_crossing_cost",
-                          country_crossing_cost);
+                          country_crossing_cost, warnings);
 
   // country_crossing_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.country_crossing_penalty_, json, "/country_crossing_penalty",
-                          country_crossing_penalty);
+                          country_crossing_penalty, warnings);
 
   if (!cfg.disable_toll_booth_) {
     // toll_booth_cost
-    JSON_PBF_RANGED_DEFAULT(co, cfg.toll_booth_cost_, json, "/toll_booth_cost", toll_booth_cost);
+    JSON_PBF_RANGED_DEFAULT(co, cfg.toll_booth_cost_, json, "/toll_booth_cost", toll_booth_cost,
+                            warnings);
 
     // toll_booth_penalty
     JSON_PBF_RANGED_DEFAULT(co, cfg.toll_booth_penalty_, json, "/toll_booth_penalty",
-                            toll_booth_penalty);
+                            toll_booth_penalty, warnings);
   }
 
   if (!cfg.disable_ferry_) {
     // ferry_cost
-    JSON_PBF_RANGED_DEFAULT(co, cfg.ferry_cost_, json, "/ferry_cost", ferry_cost);
+    JSON_PBF_RANGED_DEFAULT(co, cfg.ferry_cost_, json, "/ferry_cost", ferry_cost, warnings);
 
     // use_ferry
-    JSON_PBF_RANGED_DEFAULT(co, cfg.use_ferry_, json, "/use_ferry", use_ferry);
+    JSON_PBF_RANGED_DEFAULT(co, cfg.use_ferry_, json, "/use_ferry", use_ferry, warnings);
   }
 
   if (!cfg.disable_rail_ferry_) {
     // rail_ferry_cost
-    JSON_PBF_RANGED_DEFAULT(co, cfg.rail_ferry_cost_, json, "/rail_ferry_cost", rail_ferry_cost);
+    JSON_PBF_RANGED_DEFAULT(co, cfg.rail_ferry_cost_, json, "/rail_ferry_cost", rail_ferry_cost,
+                            warnings);
 
     // use_rail_ferry
-    JSON_PBF_RANGED_DEFAULT(co, cfg.use_rail_ferry_, json, "/use_rail_ferry", use_rail_ferry);
+    JSON_PBF_RANGED_DEFAULT(co, cfg.use_rail_ferry_, json, "/use_rail_ferry", use_rail_ferry,
+                            warnings);
   }
 
   JSON_PBF_DEFAULT_V2(co, cfg.exclude_unpaved_, json, "/exclude_unpaved", exclude_unpaved);
@@ -511,35 +577,47 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
                       exclude_cash_only_tolls);
 
   // service_penalty
-  JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty,
+                          warnings);
 
   // service_factor
-  JSON_PBF_RANGED_DEFAULT(co, cfg.service_factor_, json, "/service_factor", service_factor);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.service_factor_, json, "/service_factor", service_factor, warnings);
 
   // use_tracks
-  JSON_PBF_RANGED_DEFAULT(co, cfg.use_tracks_, json, "/use_tracks", use_tracks);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.use_tracks_, json, "/use_tracks", use_tracks, warnings);
 
   // use_living_streets
   JSON_PBF_RANGED_DEFAULT(co, cfg.use_living_streets_, json, "/use_living_streets",
-                          use_living_streets);
+                          use_living_streets, warnings);
 
   // use_lit
-  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_lit_, json, "/use_lit", use_lit);
+  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_lit_, json, "/use_lit", use_lit, warnings);
 
   // closure_factor
-  JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor, warnings);
+
+  // speed_penalty_factor
+  JSON_PBF_RANGED_DEFAULT(co, cfg.speed_penalty_factor_, json, "/speed_penalty_factor",
+                          speed_penalty_factor, warnings);
 
   // HOT/HOV
   JSON_PBF_DEFAULT_V2(co, cfg.include_hot_, json, "/include_hot", include_hot);
   JSON_PBF_DEFAULT_V2(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT_V2(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
 
-  JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
+  JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed, warnings);
+
+  // Dimensions
+  JSON_PBF_RANGED_DEFAULT(co, cfg.height_, json, "/height", height, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.width_, json, "/width", width, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.length_, json, "/length", length, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.weight_, json, "/weight", weight, warnings);
 }
 
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& costing_options_key,
-                  Options& options) {
+                  Options& options,
+                  google::protobuf::RepeatedPtrField<CodedDescription>& warnings) {
   // get the needed costing options in there
   for (const auto& costing_type : kCostingTypeMapping.at(options.costing_type())) {
     // Create the costing options key
@@ -549,13 +627,14 @@ void ParseCosting(const rapidjson::Document& doc,
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
     auto& costing = (*options.mutable_costings())[costing_type];
-    ParseCosting(doc, key, &costing, costing_type);
+    ParseCosting(doc, key, &costing, warnings, costing_type);
   }
 }
 
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& key,
                   Costing* costing,
+                  google::protobuf::RepeatedPtrField<CodedDescription>& warnings,
                   Costing::Type costing_type) {
   // if the costing wasnt specified we have to find it nested in the json object
   if (costing_type == Costing::Type_ARRAYSIZE) {
@@ -577,23 +656,23 @@ void ParseCosting(const rapidjson::Document& doc,
   // finally we can parse the costing
   switch (costing_type) {
     case Costing::auto_: {
-      sif::ParseAutoCostOptions(doc, key, costing);
+      sif::ParseAutoCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::bicycle: {
-      sif::ParseBicycleCostOptions(doc, key, costing);
+      sif::ParseBicycleCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::bus: {
-      sif::ParseBusCostOptions(doc, key, costing);
+      sif::ParseBusCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::taxi: {
-      sif::ParseTaxiCostOptions(doc, key, costing);
+      sif::ParseTaxiCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::motor_scooter: {
-      sif::ParseMotorScooterCostOptions(doc, key, costing);
+      sif::ParseMotorScooterCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::multimodal: {
@@ -601,27 +680,31 @@ void ParseCosting(const rapidjson::Document& doc,
       break;
     }
     case Costing::pedestrian: {
-      sif::ParsePedestrianCostOptions(doc, key, costing);
+      sif::ParsePedestrianCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::bikeshare: {
       costing->set_type(Costing::bikeshare); // Nothing to parse for this one
       break;
     }
+    case Costing::auto_pedestrian: {
+      costing->set_type(Costing::auto_pedestrian);
+      break;
+    }
     case Costing::transit: {
-      sif::ParseTransitCostOptions(doc, key, costing);
+      sif::ParseTransitCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::truck: {
-      sif::ParseTruckCostOptions(doc, key, costing);
+      sif::ParseTruckCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::motorcycle: {
-      sif::ParseMotorcycleCostOptions(doc, key, costing);
+      sif::ParseMotorcycleCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::none_: {
-      sif::ParseNoCostOptions(doc, key, costing);
+      sif::ParseNoCostOptions(doc, key, costing, warnings);
       break;
     }
     default: {

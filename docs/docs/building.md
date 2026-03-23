@@ -29,7 +29,8 @@ Important build options include:
 | `-DENABLE_ADDRESS_SANITIZER` (`ON` / `OFF`) | Build with address sanitizer (defaults to off).|
 | `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
 | `-DPREFER_SYSTEM_DEPS` (`ON` / `OFF`) | Whether to use internally vendored headers or find the equivalent external package (defaults to off).|
-| `-DENABLE_GDAL` (`ON` / `OFF`) | Whether to include GDAL as a dependency (used for GeoTIFF serialization of isochrone grid) (defaults to off).|
+| `-DENABLE_GEOTIFF` (`ON` / `OFF`) | Whether to include libgeotiff as a dependency (used for serialization of isochrone grid, defaults to ON).|
+| `-DCMAKE_UNITY_BUILD` (`ON` / `OFF`) | Whether to enable unity builds to speed up compilation (defaults to off). You may need to experiment with different values for `-DCMAKE_UNITY_BUILD_BATCH_SIZE` (default is 8) to achieve successful compilation.|
 
 ## Building with `vcpkg` - any platform
 
@@ -141,10 +142,9 @@ To install Valhalla on macOS, you need to install its dependencies with [Homebre
 
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
-brew install automake cmake libtool protobuf-c libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit boost
+brew install automake cmake libtool protobuf protobuf-c libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit boost
 # following packages are needed for running Linux compatible scripts
 brew install bash coreutils binutils
-# Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin
 ```
 
 Now, clone the Valhalla repository

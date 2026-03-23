@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_WORKER_H__
 #define __VALHALLA_WORKER_H__
 #include <valhalla/exceptions.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 
@@ -62,6 +63,7 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             const hierarchy_limits_config_t& config,
                             const bool allow_modifications,
                             const bool use_hierarchy_limits);
+
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
@@ -88,11 +90,15 @@ const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
 const content_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 const content_type PBF_MIME{"Content-type", "application/x-protobuf"};
 const content_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
+const content_type TIFF_MIME("Content-type", "image/tiff");
+const content_type MVT_MIME("Content-type", "application/vnd.mapbox-vector-tile");
 } // namespace worker
 
-prime_server::worker_t::result_t to_response(const std::string& data,
-                                             prime_server::http_request_info_t& request_info,
-                                             const Api& options);
+prime_server::worker_t::result_t
+to_response(const std::string& data,
+            prime_server::http_request_info_t& request_info,
+            const Api& options,
+            const std::vector<std::pair<std::string, std::string>>& additional_headers = {});
 #endif
 
 struct statsd_client_t;

@@ -28,7 +28,7 @@ struct graph_writer {
   vj::GraphTileBuilder& builder(vb::GraphId tile_id);
 
   inline vm::PointLL node_latlng(vb::GraphId node_id) {
-    auto& b = builder(node_id.Tile_Base());
+    auto& b = builder(node_id.tile_base());
     return b.nodes()[node_id.id()].latlng(b.header_builder().base_ll());
   }
 
@@ -210,7 +210,7 @@ void graph_builder::write_tiles(uint8_t level) const {
   std::unordered_map<vb::GraphId, edge_vector_t::iterator> tile_bases;
   vb::GraphId last_tile_id;
   for (edge_vector_t::iterator itr = renumbered_edges.begin(); itr != renumbered_edges.end(); ++itr) {
-    auto tile_id = itr->first.Tile_Base();
+    auto tile_id = itr->first.tile_base();
     if (last_tile_id != tile_id) {
       last_tile_id = tile_id;
       tile_bases[tile_id] = itr;
@@ -218,7 +218,7 @@ void graph_builder::write_tiles(uint8_t level) const {
   }
 
   for (auto e : renumbered_edges) {
-    auto tile_id = e.first.Tile_Base();
+    auto tile_id = e.first.tile_base();
     auto& tile = writer.builder(tile_id);
 
     bool forward = e.first < e.second;
@@ -236,12 +236,12 @@ void graph_builder::write_tiles(uint8_t level) const {
     // check that we found the opposite edge, which should always exist.
     assert(itr != renumbered_edges.end() && *itr == opp);
 
-    uint32_t opp_index = std::distance(tile_bases[e.second.Tile_Base()], itr);
+    uint32_t opp_index = std::distance(tile_bases[e.second.tile_base()], itr);
     edge_builder.set_opp_index(opp_index);
 
     uint32_t edge_index = tile.directededges().size();
     uint32_t edge_info_offset = 0;
-    if ((opp_index < edge_index) && (e.second.Tile_Base() == tile_id)) {
+    if ((opp_index < edge_index) && (e.second.tile_base() == tile_id)) {
       // opp edge already exists in this tile, so use its edgeinfo
       edge_info_offset = tile.directededges()[opp_index].edgeinfo_offset();
 

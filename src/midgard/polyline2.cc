@@ -1,4 +1,5 @@
 #include "midgard/polyline2.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/point2.h"
 #include "midgard/point_tile_index.h"
@@ -353,6 +354,7 @@ template float Polyline2<GeoPoint<float>>::Length(const std::vector<GeoPoint<flo
 template double Polyline2<GeoPoint<double>>::Length(const std::vector<GeoPoint<double>>&);
 template float Polyline2<GeoPoint<float>>::Length(const std::list<GeoPoint<float>>&);
 template double Polyline2<GeoPoint<double>>::Length(const std::list<GeoPoint<double>>&);
+template double Polyline2<GeoPoint<double>>::Length(const bg::ring_ll_t&);
 
 template void Polyline2<PointXY<float>>::Generalize(std::vector<PointXY<float>>&,
                                                     float,
@@ -367,6 +369,10 @@ template void Polyline2<PointXY<float>>::Generalize(std::list<PointXY<float>>&,
                                                     const std::unordered_set<size_t>&,
                                                     bool);
 template void Polyline2<PointXY<double>>::Generalize(std::list<PointXY<double>>&,
+                                                     double,
+                                                     const std::unordered_set<size_t>&,
+                                                     bool);
+template void Polyline2<PointXY<double>>::Generalize(bg::linestring_2d_t&,
                                                      double,
                                                      const std::unordered_set<size_t>&,
                                                      bool);

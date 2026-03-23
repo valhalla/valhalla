@@ -11,6 +11,14 @@ import os
 import valhalla_build_extract
 from valhalla_build_extract import GRAPHTILE_SKIP_BYTES, TILE_SIZES, TileHeader, TileResolver
 
+
+def _has_shapely():
+    try:
+        import shapely  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
 INDEX_BIN_SIZE = valhalla_build_extract.INDEX_BIN_SIZE
 INDEX_BIN_FORMAT = valhalla_build_extract.INDEX_BIN_FORMAT
 
@@ -79,6 +87,7 @@ class TestBuildExtract(unittest.TestCase):
         valhalla_build_extract.get_tiles_with_bbox(tile_resolver, bbox)
         self.assertListEqual(tile_resolver.matched_paths, list())
 
+    @unittest.skipUnless(_has_shapely(), "shapely not installed")
     def test_tile_intersects_geojson(self):
         # create 1 polygon with 2 height & width, should leave out e.g. tile (2,2)
         #  __
@@ -209,6 +218,116 @@ class TestBuildExtract(unittest.TestCase):
             while f.tell() < end_index + tarfile.BLOCKSIZE:
                 t = struct.unpack(INDEX_BIN_FORMAT, f.read(16))
                 self.assertIn(t, exp_tuples)
+
+
+class TestGeofabrikRegion(unittest.TestCase):
+    """Tests for Geofabrik region matching and tile intersection."""
+
+    MOCK_INDEX = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "id": "europe",
+                    "name": "Europe",
+                    "parent": "",
+                },
+                "geometry": {
+                    "type": "MultiPolygon",
+                    "coordinates": [[[[-25, 35], [45, 35], [45, 72], [-25, 72], [-25, 35]]]],
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "id": "switzerland",
+                    "name": "Switzerland",
+                    "parent": "europe",
+                },
+                "geometry": {
+                    "type": "MultiPolygon",
+                    "coordinates": [[[[5.9, 45.8], [10.5, 45.8], [10.5, 47.8], [5.9, 47.8], [5.9, 45.8]]]],
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "id": "france",
+                    "name": "France",
+                    "parent": "europe",
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[-5.1, 42.3], [8.2, 42.3], [8.2, 51.1], [-5.1, 51.1], [-5.1, 42.3]]],
+                },
+            },
+        ],
+    }
+
+    def test_find_by_id(self):
+        feature = valhalla_build_extract.find_geofabrik_region(self.MOCK_INDEX, "switzerland")
+        self.assertEqual(feature["properties"]["name"], "Switzerland")
+
+    def test_find_by_name(self):
+        feature = valhalla_build_extract.find_geofabrik_region(self.MOCK_INDEX, "Switzerland")
+        self.assertEqual(feature["properties"]["id"], "switzerland")
+
+    def test_find_by_name_case_insensitive(self):
+        feature = valhalla_build_extract.find_geofabrik_region(self.MOCK_INDEX, "SWITZERLAND")
+        self.assertEqual(feature["properties"]["id"], "switzerland")
+
+    def test_find_by_parent_path(self):
+        feature = valhalla_build_extract.find_geofabrik_region(self.MOCK_INDEX, "europe/switzerland")
+        self.assertEqual(feature["properties"]["name"], "Switzerland")
+
+    def test_find_not_found_exits(self):
+        with self.assertRaises(SystemExit):
+            valhalla_build_extract.find_geofabrik_region(self.MOCK_INDEX, "narnia")
+
+    @unittest.skipUnless(_has_shapely(), "shapely not installed")
+    def test_tiles_with_region(self):
+        """Test that tile intersection works with a Geofabrik region geometry."""
+        tile_dir = Path("/foo/")
+        tile_resolver = TileResolver(tile_dir)
+
+        # tiles that should intersect Switzerland's bbox (5.9-10.5, 45.8-47.8)
+        # level 0: 4° tiles, bases must be multiples of 4 offset from -180/-90
+        # level 1: 1° tiles, level 2: 0.25° tiles
+        input_paths = [tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
+            (4, 42, 0),    # level 0: 4° tile covering 4-8, 42-46 — intersects
+            (8, 42, 0),    # level 0: 4° tile covering 8-12, 42-46 — intersects
+            (6, 46, 1),    # level 1: 1° tile covering 6-7, 46-47 — intersects
+            (7, 47, 1),    # level 1: 1° tile covering 7-8, 47-48 — intersects
+            (6.25, 46, 2), # level 2: 0.25° tile covering 6.25-6.5, 46-46.25 — intersects
+        )]
+        tile_resolver.normalized_tile_paths = input_paths
+        tile_resolver.matched_paths = list()
+
+        polygons = valhalla_build_extract._polygons_from_geojson_geometry(
+            self.MOCK_INDEX["features"][1]["geometry"]
+        )
+        valhalla_build_extract._intersect_tiles_with_polygons(tile_resolver, polygons)
+        self.assertListEqual(input_paths, tile_resolver.matched_paths)
+
+        # tiles that should NOT intersect Switzerland
+        non_intersecting = [tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
+            (12, 42, 0),  # level 0: 12-16, 42-46 — east of Switzerland
+            (0, 42, 0),   # level 0: 0-4, 42-46 — west of Switzerland
+            (5, 50, 1),   # level 1: 5-6, 50-51 — north of Switzerland
+        )]
+        tile_resolver.normalized_tile_paths = non_intersecting
+        tile_resolver.matched_paths = list()
+        valhalla_build_extract._intersect_tiles_with_polygons(tile_resolver, polygons)
+        self.assertListEqual(tile_resolver.matched_paths, list())
+
+    @unittest.skipUnless(_has_shapely(), "shapely not installed")
+    def test_polygon_geometry_type(self):
+        """Test that Polygon (not just MultiPolygon) geometries work."""
+        polygons = valhalla_build_extract._polygons_from_geojson_geometry(
+            self.MOCK_INDEX["features"][2]["geometry"]  # France has Polygon type
+        )
+        self.assertEqual(len(polygons), 1)
 
 
 if __name__ == '__main__':

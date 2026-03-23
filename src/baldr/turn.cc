@@ -1,7 +1,6 @@
 #include "baldr/turn.h"
 
 #include <array>
-#include <stdexcept>
 #include <string>
 #include <unordered_map>
 namespace valhalla {

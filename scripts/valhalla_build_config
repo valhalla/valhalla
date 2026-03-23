@@ -1,7 +1,98 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from dataclasses import dataclass, field
 import json
-from typing import List, Union
+from pathlib import Path
+import sys
+from typing import Any, List, Union
+
+
+@dataclass
+class MergeReport:
+    """Tracks changes during merge."""
+
+    added: list[str] = field(default_factory=list)
+    removed: list[str] = field(default_factory=list)
+
+    def print_report(self):
+        if self.added:
+            print("\nAdded (from new config):", file=sys.stderr)
+            for path in sorted(self.added):
+                print(f"  + {path}", file=sys.stderr)
+
+        if self.removed:
+            print("\nRemoved (not in new config):", file=sys.stderr)
+            for path in sorted(self.removed):
+                print(f"  - {path}", file=sys.stderr)
+
+        if not (self.added or self.removed):
+            print("\nNo differences found.", file=sys.stderr)
+
+
+def should_remove_key(key_path: str, remove_keys: list[str] | None) -> bool:
+    """
+    Check if a key should be removed based on the remove_keys list.
+
+    If remove_keys is None, don't remove anything.
+    If remove_keys is empty list, remove all old keys.
+    If remove_keys has values, only remove keys that match or are children of those paths.
+    """
+    if remove_keys is None:
+        return False
+    if not remove_keys:
+        # Empty list means remove all
+        return True
+    # Check if key_path matches or is a child of any specified path
+    for remove_path in remove_keys:
+        if key_path == remove_path or key_path.startswith(remove_path + "."):
+            return True
+    return False
+
+
+def merge_json(
+    old: Any, new: Any, report: MergeReport, remove_keys: list[str] | None, path: str = ""
+) -> Any:
+    """
+    Recursively merge two JSON values.
+
+    Existing values in 'old' are preserved.
+    Keys only in 'old' are kept unless they should be removed based on remove_keys:
+    - None: keep all old keys
+    - []: remove all old keys not in new
+    - ['path.to.key', ...]: remove only specified keys (and their children)
+    """
+    # If new is not a dict, keep old value (preserve existing)
+    if not isinstance(new, dict):
+        return old
+
+    # If old is not a dict but new is, use new (can't merge)
+    if not isinstance(old, dict):
+        return new
+
+    # Both are dicts - merge recursively, preserving old key order
+    result = {}
+
+    # First, process keys from old (preserves original order)
+    for key in old:
+        key_path = f"{path}.{key}" if path else key
+        if key in new:
+            # Key exists in both - recursively merge
+            result[key] = merge_json(old[key], new[key], report, remove_keys, key_path)
+        elif should_remove_key(key_path, remove_keys):
+            # Key only in old and should be removed - drop it
+            report.removed.append(key_path)
+        else:
+            # Key only in old - keep it
+            result[key] = old[key]
+
+    # Then, add new keys that don't exist in old (at the end)
+    for key in new:
+        if key not in old:
+            key_path = f"{path}.{key}" if path else key
+            result[key] = new[key]
+            report.added.append(key_path)
+
+    return result
 
 
 def strtobool(value):
@@ -21,6 +112,13 @@ class Optional:
 
 # global default configuration
 config = {
+    "logging": {
+        "type": "std_out",
+        "color": True,
+        "file_name": "path_to_some_file.log",
+        "max_file_size": Optional(int),
+        "max_archived_files": Optional(int),
+    },
     "mjolnir": {
         "max_cache_size": 1000000000,
         "id_table_size": 1300000000,
@@ -30,7 +128,9 @@ config = {
         "user_agent": Optional(str),
         "tile_url": Optional(str),
         "tile_url_gz": Optional(bool),
+        "tile_url_user_pw": Optional(str),
         "concurrency": Optional(int),
+        "data_quality_dir": Optional(str),
         "tile_dir": "/data/valhalla",
         "tile_extract": "/data/valhalla/tiles.tar",
         "traffic_extract": "/data/valhalla/traffic.tar",
@@ -47,6 +147,8 @@ config = {
         "transit_pbf_limit": 20000,
         "hierarchy": True,
         "shortcuts": True,
+        "keep_all_osm_node_ids": False,
+        "keep_osm_node_ids": False,
         "include_platforms": False,
         "include_driveways": True,
         "include_construction": False,
@@ -70,17 +172,11 @@ config = {
             "use_rest_area": False,
             "scan_tar": False,
         },
-        "logging": {
-            "type": "std_out",
-            "color": True,
-            "file_name": "path_to_some_file.log",
-            "max_file_size": Optional(int),
-            "max_archived_files": Optional(int),
-        },
     },
     "additional_data": {
         "elevation": "/data/valhalla/elevation/",
         "elevation_url": Optional(str),
+        "elevation_url_user_pw": Optional(str),
     },
     "loki": {
         "actions": [
@@ -96,6 +192,7 @@ config = {
             "expansion",
             "centroid",
             "status",
+            "tile",
         ],
         "use_connectivity": True,
         "service_defaults": {
@@ -106,26 +203,14 @@ config = {
             "street_side_tolerance": 5,
             "street_side_max_distance": 1000,
             "heading_tolerance": 60,
-        },
-        "logging": {
-            "type": "std_out",
-            "color": True,
-            "file_name": "path_to_some_file.log",
-            "long_request": 100.0,
-            "max_file_size": Optional(int),
-            "max_archived_files": Optional(int),
+            "mvt_min_zoom_road_class": [7, 7, 8, 11, 11, 12, 13, 14],
+            "mvt_cache_dir": Optional(str),
+            "mvt_cache_min_zoom": 11,
+            "mvt_max_age": "1800",
         },
         "service": {"proxy": "ipc:///tmp/loki"},
     },
     "thor": {
-        "logging": {
-            "type": "std_out",
-            "color": True,
-            "file_name": "path_to_some_file.log",
-            "long_request": 110.0,
-            "max_file_size": Optional(int),
-            "max_archived_files": Optional(int),
-        },
         "source_to_target_algorithm": "select_optimal",
         "service": {"proxy": "ipc:///tmp/thor"},
         "max_reserved_labels_count_astar": 2000000,
@@ -145,16 +230,20 @@ config = {
                     "1": 400,
                     "2": 100,
                 },
+                "expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000},
             },
         },
         "bidirectional_astar": {
+            "threshold_delta": 420.0,
+            "alternative_cost_extend": 1.2,
+            "alternative_iterations_delta": 100000,
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": 400,
                     "2": 100,
                 },
                 "expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000},
-            }
+            },
         },
         "unidirectional_astar": {
             "hierarchy_limits": {
@@ -167,13 +256,6 @@ config = {
         },
     },
     "odin": {
-        "logging": {
-            "type": "std_out",
-            "color": True,
-            "file_name": "path_to_some_file.log",
-            "max_file_size": Optional(int),
-            "max_archived_files": Optional(int),
-        },
         "service": {"proxy": "ipc:///tmp/odin"},
         "markup_formatter": {
             "markup_enabled": False,
@@ -212,13 +294,6 @@ config = {
         "pedestrian": {"turn_penalty_factor": 100, "search_radius": 50},
         "bicycle": {"turn_penalty_factor": 140},
         "multimodal": {"turn_penalty_factor": 70},
-        "logging": {
-            "type": "std_out",
-            "color": True,
-            "file_name": "path_to_some_file.log",
-            "max_file_size": Optional(int),
-            "max_archived_files": Optional(int),
-        },
         "service": {"proxy": "ipc:///tmp/meili"},
         "grid": {"size": 500, "cache_size": 100240},
     },
@@ -256,8 +331,8 @@ config = {
             "max_locations": 50,
             "max_matrix_distance": 200000.0,
             "max_matrix_location_pairs": 2500,
-            "min_transit_walking_distance": 1,
-            "max_transit_walking_distance": 10000,
+            "min_multimodal_walking_distance": 1,
+            "max_multimodal_walking_distance": 10000,
         },
         "motor_scooter": {
             "max_distance": 500000.0,
@@ -318,6 +393,11 @@ config = {
             "max_matrix_distance": 200000.0,
             "max_matrix_location_pairs": 2500,
         },
+        "auto_pedestrian": {
+            "max_distance": 5000000.0,
+            "max_matrix_distance": 400000.0,
+            "max_matrix_location_pairs": 2500,
+        },
         "centroid": {"max_distance": 200000.0, "max_locations": 5},
         "max_exclude_locations": 50,
         "max_reachability": 100,
@@ -326,6 +406,8 @@ config = {
         "max_timedep_distance_matrix": 0,
         "max_alternates": 2,
         "max_exclude_polygons_length": 10000,
+        "min_linear_cost_factor": 1,
+        "max_linear_cost_edges": 50000,
         "max_distance_disable_hierarchy_culling": 0,
         "hierarchy_limits": {
             "allow_modification": False,
@@ -334,6 +416,7 @@ config = {
                     "1": 400,
                     "2": 100,
                 },
+                "max_expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000},
             },
             "unidirectional_astar": {
                 "max_allowed_up_transitions": {
@@ -362,6 +445,17 @@ config = {
 }
 
 help_text = {
+    "logging": {
+        "__note__": (
+            "Process-wide logging configuration. The file logger is not suitable for "
+            "multi-processing mode. Log rolling in particular may cause race conditions and crashes."
+        ),
+        "type": "Type of logger either std_out or file",
+        "color": "Use colored log level in std_out logger",
+        "file_name": "Output log file for the file logger",
+        "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
+        "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
+    },
     "mjolnir": {
         "max_cache_size": "Number of bytes per thread used to store tile data in memory",
         "id_table_size": "Value controls the initial size of the Id table",
@@ -371,7 +465,9 @@ help_text = {
         "user_agent": "User-Agent http header to request single tiles",
         "tile_url": "Http location to read tiles from if they are not found in the tile_dir, e.g.: http://your_valhalla_tile_server_host:8000/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with a given tile path when it make a request for that tile",
         "tile_url_gz": "Whether or not to request for compressed tiles",
+        "tile_url_user_pw": 'User & password for HTTP basic auth in the form of "user:password"',
         "concurrency": "How many threads to use in the concurrent parts of tile building",
+        "data_quality_dir": "The directory where we output files regarding data quality issues, e.g. duplicateways.txt",
         "tile_dir": "Location to read/write tiles to/from",
         "tile_extract": "Location to read tiles from tar",
         "traffic_extract": "Location to read traffic from tar",
@@ -388,6 +484,8 @@ help_text = {
         "transit_pbf_limit": "Limit individual PBF files to this many trips (needed for PBF's stupid size limit)",
         "hierarchy": "bool indicating whether road hierarchy is to be built - default to True",
         "shortcuts": "bool indicating whether shortcuts are to be built - default to True",
+        "keep_all_osm_node_ids": "bool indicating whether to store all OSM node ids in the graph data - defaults to False",
+        "keep_osm_node_ids": "bool indicating whether to store OSM node ids (at topological/graph nodes) in the graph data - defaults to False",
         "include_platforms": "bool indicating whether to include highway=platform - default to False",
         "include_driveways": "bool indicating whether private driveways are included - default to True",
         "include_construction": "bool indicating where roads under construction are included - default to False",
@@ -411,24 +509,14 @@ help_text = {
             "use_rest_area": "bool indicating whether or not to use the rest/service area tag on the ways",
             "scan_tar": "bool indicating whether or not to pre-scan the tar ball(s) when loading an extract with an index file, to warm up the OS page cache.",
         },
-        "logging": {
-            "__note__": (
-                "The file logger is not suitable for multi-processing mode. "
-                "Log rolling in particular may cause race conditions and crashes."
-            ),
-            "type": "Type of logger either std_out or file",
-            "color": "User colored log level in std_out logger",
-            "file_name": "Output log file for the file logger",
-            "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
-            "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
-        },
     },
     "additional_data": {
         "elevation": "Location of elevation tiles",
         "elevation_url": "Http location to read elevations from. this address is used if elevation tiles were not found in the elevation directory. Ex.: http://<your_valhalla_tile_server_host>:<your_valhalla_tile_server_port>/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with an elevation path when it makes a request for that particular elevation",
+        "elevation_url_user_pw": 'User & password for HTTP basic auth in the form of "user:password"',
     },
     "loki": {
-        "actions": "Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status",
+        "actions": "Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status, tile",
         "use_connectivity": "a boolean value to know whether or not to construct the connectivity maps",
         "service_defaults": {
             "radius": "Default radius to apply to incoming locations should one not be supplied",
@@ -438,34 +526,14 @@ help_text = {
             "street_side_tolerance": "If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel",
             "street_side_max_distance": "The max distance in meters that the input coordinates or display ll can be from the edge centerline for them to be used for determining the side of street. Beyond this distance the side of street is set to none",
             "heading_tolerance": "When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading",
-        },
-        "logging": {
-            "__note__": (
-                "The file logger is not suitable for multi-processing mode. "
-                "Log rolling in particular may cause race conditions and crashes."
-            ),
-            "type": "Type of logger either std_out or file",
-            "color": "User colored log level in std_out logger",
-            "file_name": "Output log file for the file logger",
-            "long_request": "Value used in processing to determine whether it took too long",
-            "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
-            "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
+            "mvt_min_zoom_road_class": "Minimum zoom level for each road class (8 values: Motorway, Trunk, Primary, Secondary, Tertiary, Unclassified, Residential, Service/Other). Roads will only be rendered at or above their minimum zoom level.",
+            "mvt_cache_dir": "The cache directory for MVT tiles. If empty/omitted, we disable MVT caching",
+            "mvt_cache_min_zoom": "The minimum zoom level which will be cached, the maximum will be determined by mvt_min_zoom_road_class",
+            "mvt_max_age": "The value used for 'max-age' in the Cache-Control response header for the MVT end point",
         },
         "service": {"proxy": "IPC linux domain socket file location"},
     },
     "thor": {
-        "logging": {
-            "__note__": (
-                "The file logger is not suitable for multi-processing mode. "
-                "Log rolling in particular may cause race conditions and crashes."
-            ),
-            "type": "Type of logger either std_out or file",
-            "color": "User colored log level in std_out logger",
-            "file_name": "Output log file for the file logger",
-            "long_request": "Value used in processing to determine whether it took too long",
-            "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
-            "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
-        },
         "source_to_target_algorithm": 'Which matrix algorithm should be used, one of "timedistancematrix" or "costmatrix". If blank, the optimal will be selected.',
         "service": {"proxy": "IPC linux domain socket file location"},
         "max_reserved_labels_count_astar": "Maximum capacity allowed to keep reserved for unidirectional A*.",
@@ -485,10 +553,18 @@ help_text = {
                 "max_up_transitions": {
                     "1": "The default maximum up transitions for level 1 in CostMatrix",
                     "2": "The default maximum up transitions for level 2 in CostMatrix",
-                }
+                },
+                "expand_within_distance": {
+                    "0": "The default distance within which expansion is allowed from the origin/destination on level 0 in costmatrix",
+                    "1": "The default distance within which expansion is allowed from the origin/destination on level 1 in costmatrix",
+                    "2": "The default distance within which expansion is allowed from the origin/destination on level 2 in costmatrix",
+                },
             },
         },
         "bidirectional_astar": {
+            "threshold_delta": "Time (seconds) to extend search once the first connection has been found",
+            "alternative_cost_extend": "Relative cost extension to find alternative routes",
+            "alternative_iterations_delta": "Number of extra iterations to allow when searching for alternative paths. Higher values will find more alternatives but will be slower",
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": "The default maximum up transitions for level 1 in CostMatrix",
@@ -499,7 +575,7 @@ help_text = {
                     "1": "The default distance within which expansion is allowed from the origin/destination on level 1 in bidirectional astar",
                     "2": "The default distance within which expansion is allowed from the origin/destination on level 2 in bidirectional astar",
                 },
-            }
+            },
         },
         "unidirectional_astar": {
             "hierarchy_limits": {
@@ -516,17 +592,6 @@ help_text = {
         },
     },
     "odin": {
-        "logging": {
-            "__note__": (
-                "The file logger is not suitable for multi-processing mode. "
-                "Log rolling in particular may cause race conditions and crashes."
-            ),
-            "type": "Type of logger either std_out or file",
-            "color": "User colored log level in std_out logger",
-            "file_name": "Output log file for the file logger",
-            "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
-            "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
-        },
         "service": {"proxy": "IPC linux domain socket file location"},
         "markup_formatter": {
             "markup_enabled": "Boolean flag to use markup formatting",
@@ -564,17 +629,6 @@ help_text = {
         },
         "multimodal": {
             "turn_penalty_factor": "A non-negative value to penalize turns from one road segment to next"
-        },
-        "logging": {
-            "__note__": (
-                "The file logger is not suitable for multi-processing mode. "
-                "Log rolling in particular may cause race conditions and crashes."
-            ),
-            "type": "Type of logger either std_out or file",
-            "color": "User colored log level in std_out logger",
-            "file_name": "Output log file for the file logger",
-            "max_file_size": "Maximum file size in bytes before rolling to a new file (0 = disabled)",
-            "max_archived_files": "Maximum number of archived log files to keep (0 = disabled)",
         },
         "service": {"proxy": "IPC linux domain socket file location"},
         "grid": {
@@ -616,8 +670,8 @@ help_text = {
             "max_locations": "Maximum number of input locations",
             "max_matrix_distance": "Maximum b-line distance between 2 most distant locations in meters for a matrix",
             "max_matrix_location_pairs": "Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500",
-            "min_transit_walking_distance": "Minimum distance you must walk to the egress of to a station",
-            "max_transit_walking_distance": "Maximum distance allowed for walking when using transit",
+            "min_multimodal_walking_distance": "Minimum distance you must walk in a multimodal route that uses pedestrian costing",
+            "max_multimodal_walking_distance": "Maximum distance allowed for walking in a multimodal route that uses pedestrian costing",
         },
         "motor_scooter": {
             "max_distance": "Maximum b-line distance between all locations in meters",
@@ -683,6 +737,11 @@ help_text = {
             "max_matrix_distance": "Maximum b-line distance between 2 most distant locations in meters for a matrix",
             "max_matrix_location_pairs": "Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500",
         },
+        "auto_pedestrian": {
+            "max_distance": "Maximum b-line distance between all locations in meters",
+            "max_matrix_distance": "Maximum b-line distance between 2 most distant locations in meters for a matrix",
+            "max_matrix_location_pairs": "Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500",
+        },
         "centroid": {
             "max_distance": "Maximum b-line distance between any pair of locations in meters",
             "max_locations": "Maximum number of input locations, 127 is a hard limit and cannot be increased in config",
@@ -694,6 +753,8 @@ help_text = {
         "max_timedep_distance_matrix": "Maximum b-line distance between 2 most distant locations in meters to allow a time-dependent matrix",
         "max_alternates": "Maximum number of alternate routes to allow in a request",
         "max_exclude_polygons_length": "Maximum total perimeter of all exclude_polygons in meters",
+        "min_linear_cost_factor": "Minimum allowed factor admissible for linear feature cost factors. Beware: low values approaching zero will render the A* heuristic unusable",
+        "max_linear_cost_edges": "Maximum total number of linear cost edges",
         "max_distance_disable_hierarchy_culling": "Maximum search distance allowed with hierarchy culling disabled",
         "hierarchy_limits": {
             "allow_modification": "Whether hierarchy limits can be modified via the request",
@@ -772,9 +833,9 @@ def add_leaf_args(
         if isinstance(tree, Optional):
             t = tree.type
         elif isinstance(tree, list):
-            t = lambda arg: arg.split(",")
+            t = lambda arg: arg.split(",")  # noqa: E731
         elif isinstance(tree, bool):
-            t = lambda arg: bool(strtobool(arg))
+            t = lambda arg: bool(strtobool(arg))  # noqa: E731
         else:
             t = type(tree)
 
@@ -806,13 +867,79 @@ parser = ArgumentParser(
 )
 add_leaf_args("", config, leaves, parser, help_text)
 
+# merge-related arguments
+parser.add_argument(
+    "-m",
+    "--merge-config",
+    type=Path,
+    help="Path to existing config file to merge with. Existing values are preserved, new keys are added.",
+)
+parser.add_argument(
+    "-o",
+    "--output",
+    type=Path,
+    help="Output file path (default: stdout)",
+)
+parser.add_argument(
+    "-r",
+    "--remove-old",
+    nargs="*",
+    metavar="KEY",
+    help="When merging, remove old keys. Without arguments, removes all keys not in new config. "
+    "With arguments (JSON dot notation, e.g. 'mjolnir.logging'), removes only those keys.",
+)
+parser.add_argument(
+    "-p",
+    "--report",
+    action="store_true",
+    help="When merging, print the merge report.",
+)
+
+
 # entry point to program
-if __name__ == "__main__":
+def main():
     # TODO: add argument to set base path and use in all other path based values
     args = parser.parse_args()
 
     # encapsulate to test easier
     override_config(args.__dict__, leaves, config)
 
-    # show the config
-    print(json.dumps(config, sort_keys=True, indent=2, separators=(",", ": ")))
+    # if merging with existing config
+    output_config = config
+    report = None
+    if args.merge_config:
+        try:
+            with args.merge_config.open("r") as f:
+                existing_config = json.load(f)
+        except FileNotFoundError:
+            print(f"Error: Config file not found: {args.merge_config}", file=sys.stderr)
+            sys.exit(1)
+        except json.JSONDecodeError as e:
+            print(f"Error: Invalid JSON in config: {e}", file=sys.stderr)
+            sys.exit(1)
+
+        report = MergeReport()
+        # args.remove_old is None if not specified, [] if specified without args, or a list of keys
+        output_config = merge_json(existing_config, config, report, args.remove_old)
+
+    if args.report:
+        if report:
+            report.print_report()
+        elif not args.merge_config:
+            print("Warn: --report requires --merge-config", file=sys.stderr)
+
+    # format output
+    output_json = json.dumps(output_config, indent=2)
+
+    # write output
+    if args.output:
+        with args.output.open("w") as f:
+            f.write(output_json)
+            f.write("\n")
+        print(f"Config written to: {args.output}", file=sys.stderr)
+    else:
+        print(output_json)
+
+
+if __name__ == "__main__":
+    main()

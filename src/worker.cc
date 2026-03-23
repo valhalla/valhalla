@@ -18,14 +18,49 @@
 #include <cpp-statsd-client/StatsdClient.hpp>
 
 #include <sstream>
-#include <unordered_map>
 
 using namespace valhalla;
 #ifdef ENABLE_SERVICES
 using namespace prime_server;
-#endif
+
+// returns the correct MIME type for a given format
+static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexcept {
+  switch (fmt) {
+    case Options::gpx:
+      return worker::GPX_MIME;
+    case Options::pbf:
+      return worker::PBF_MIME;
+    case Options::geotiff:
+      return worker::TIFF_MIME;
+    case Options::mvt:
+      return worker::MVT_MIME;
+    default:
+      return worker::JSON_MIME;
+  }
+};
+#endif // ENABLE_SERVICES
 
 namespace {
+
+// Parses exclude_layers from JSON and adds them to the request's tile options
+void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
+  static const std::unordered_set<std::string_view> kSupportedLayers =
+      {valhalla::kEdgeLayerName, valhalla::kNodeLayerName, valhalla::kShortcutLayerName,
+       valhalla::kAccessRestrictionLayerName};
+
+  if (exclude_layers.has_value() && exclude_layers->IsArray()) {
+    for (const auto& lyr : exclude_layers->GetArray()) {
+      if (lyr.IsString()) {
+        const auto& lyr_name = lyr.GetString();
+        if (kSupportedLayers.contains(lyr_name)) {
+          request.mutable_options()->mutable_tile_options()->add_exclude_layers(lyr_name);
+          continue;
+        }
+      }
+      add_warning(request, 212, lyr.IsString() ? lyr.GetString() : "not a string");
+    }
+  }
+}
 
 bool is_format_supported(Options::Action action, Options::Format format) {
   constexpr uint16_t kFormatActionSupport[] = {
@@ -42,11 +77,13 @@ bool is_format_supported(Options::Action action, Options::Format format) {
           (1 << Options::centroid) | (1 << Options::trace_attributes) | (1 << Options::status) |
           (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion),
   // geotiff
-#ifdef ENABLE_GDAL
+#ifdef ENABLE_GEOTIFF
       (1 << Options::isochrone),
 #else
       0,
 #endif
+      // mvt
+      (1 << Options::tile),
   };
   static_assert(std::size(kFormatActionSupport) == Options::Format_ARRAYSIZE,
                 "Please update format_action array to match Options::Action_ARRAYSIZE");
@@ -492,7 +529,8 @@ void parse_contours(const rapidjson::Document& doc,
 // parse all costings needed to fulfill the request, including recostings
 void parse_recostings(const rapidjson::Document& doc,
                       const std::string& key,
-                      valhalla::Options& options) {
+                      valhalla::Options& options,
+                      google::protobuf::RepeatedPtrField<valhalla::CodedDescription>& warnings) {
   // make sure we only have unique recosting names in the end
   std::unordered_set<std::string> names;
   auto check_name = [&names](const valhalla::Costing& recosting) -> void {
@@ -510,15 +548,72 @@ void parse_recostings(const rapidjson::Document& doc,
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
-      sif::ParseCosting(doc, key, options.add_recostings());
+      sif::ParseCosting(doc, key, options.add_recostings(), warnings);
       check_name(*options.recostings().rbegin());
     }
   } else if (options.recostings().size()) {
     for (auto& recosting : *options.mutable_recostings()) {
       check_name(recosting);
-      sif::ParseCosting(doc, key, &recosting, recosting.type());
+      sif::ParseCosting(doc, key, &recosting, warnings, recosting.type());
     }
   }
+}
+
+// parse x/y/z from the request and validate
+void parse_xyz(const rapidjson::Document& doc, valhalla::Options& options) {
+  const auto vt_z =
+      rapidjson::get<uint32_t>(doc, "/tile/z",
+                               options.tile_xyz().has_z_case() ? options.tile_xyz().z() : UINT32_MAX);
+  bool throws = vt_z == UINT32_MAX || vt_z > 30;
+  if (!throws) {
+    options.mutable_tile_xyz()->set_z(vt_z);
+    const uint32_t max_coord = (1u << vt_z);
+
+    const auto vt_x =
+        rapidjson::get<uint32_t>(doc, "/tile/x",
+                                 options.tile_xyz().has_x_case() ? options.tile_xyz().x()
+                                                                 : UINT32_MAX);
+    const auto vt_y =
+        rapidjson::get<uint32_t>(doc, "/tile/y",
+                                 options.tile_xyz().has_y_case() ? options.tile_xyz().y()
+                                                                 : UINT32_MAX);
+    throws = vt_x == UINT32_MAX || vt_y == UINT32_MAX;
+    if (!throws) {
+      if (vt_x >= max_coord || vt_y >= max_coord) {
+        throws = true;
+      }
+      options.mutable_tile_xyz()->set_x(vt_x);
+      options.mutable_tile_xyz()->set_y(vt_y);
+    }
+  }
+  if (throws) {
+    throw valhalla_exception_t{174};
+  }
+}
+
+void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
+  auto json_obj = json_feat.GetObject();
+  for (const auto& coords_j : json_obj["geometry"].GetObject()["coordinates"].GetArray()) {
+    auto* shape_pt = line_feat->add_shape();
+    shape_pt->mutable_ll()->set_lng(coords_j.GetArray()[0].GetFloat());
+    shape_pt->mutable_ll()->set_lat(coords_j.GetArray()[1].GetFloat());
+  }
+  line_feat->set_cost_factor(json_obj["properties"].GetObject()["factor"].GetFloat());
+}
+
+void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
+  auto json_obj = json_feat.GetObject();
+  auto shape = std::string(json_obj["shape"].GetString());
+  auto lazy_shape = midgard::Shape5Decoder<midgard::PointLL>(shape.data(), shape.size());
+
+  while (!lazy_shape.empty()) {
+    midgard::PointLL ll = lazy_shape.pop();
+    auto* shape_pt = line_feat->add_shape();
+    shape_pt->mutable_ll()->set_lng(ll.lng());
+    shape_pt->mutable_ll()->set_lat(ll.lat());
+  }
+
+  line_feat->set_cost_factor(json_obj["factor"].GetFloat());
 }
 
 /**
@@ -548,6 +643,51 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto& options = *api.mutable_options();
   if (Options::Action_IsValid(action))
     options.set_action(action);
+  auto& warnings = *api.mutable_info()->mutable_warnings();
+
+  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
+  if (options.action() == Options::sources_to_targets) {
+    options.set_verbose(
+        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
+  } else {
+    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  }
+
+  // if specified, get the filter_action value in there
+  auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
+  FilterAction filter_action;
+  if (filter_action_str && valhalla::FilterAction_Enum_Parse(*filter_action_str, &filter_action)) {
+    options.set_filter_action(filter_action);
+  }
+
+  // if specified, get the filter_attributes value in there
+  auto filter_attributes_json =
+      rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
+  if (filter_attributes_json) {
+    for (const auto& filter_attribute : *filter_attributes_json) {
+      std::string attribute = filter_attribute.GetString();
+      // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
+      // compatibility
+      if (attribute == "edge.tagged_names") {
+        attribute = baldr::kEdgeTaggedValues;
+      }
+      options.add_filter_attributes(attribute);
+    }
+  }
+
+  // if specified, get the generalize value in there
+  auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
+  if (generalize) {
+    options.set_generalize(*generalize);
+  }
+
+  // first the /tile parameters, so we can early exit
+  if (options.action() == Options::tile) {
+    parse_xyz(doc, options);
+    parse_exclude_layers(get_child_optional(doc, "/tile_options/exclude_layers"), api);
+    options.set_format(Options::mvt); // set explicitly for MIME type
+    return;
+  }
 
   // TODO: stop doing this after a sufficient amount of time has passed
   // move anything nested in deprecated directions_options up to the top level
@@ -615,6 +755,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   DirectionsType directions_type;
   if (dir_type && DirectionsType_Enum_Parse(*dir_type, &directions_type)) {
     options.set_directions_type(directions_type);
+  }
+
+  auto reverse_tt_strategy = rapidjson::get_optional<std::string>(doc, "/reverse_time_tracking");
+  Options::ReverseTimeTracking reverse_tt;
+  if (reverse_tt_strategy &&
+      Options_ReverseTimeTracking_Enum_Parse(*reverse_tt_strategy, &reverse_tt)) {
+    options.set_reverse_time_tracking(reverse_tt);
   }
 
   // costing defaults to none which is only valid for locate
@@ -777,7 +924,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   //   the gurka_closure_penalty test fails. investigate why.. intuitively it makes no sense,
   //   as in the above logic the costing options aren't even parsed yet,
   //   so how can it determine "ignore_closures" there?
-  sif::ParseCosting(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options, warnings);
 
   // if any of the locations params have a date_time object in their locations, we'll remember
   // only /sources_to_targets will parse more than one location collection and there it's fine
@@ -899,16 +1046,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_height_precision(*height_precision);
   }
 
-  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
-  if (options.action() == Options::sources_to_targets) {
-    options.set_verbose(
-        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
-  } else {
-    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
-  }
-
   // parse any named costings for re-costing a given path
-  parse_recostings(doc, "/recostings", options);
+  parse_recostings(doc, "/recostings", options, warnings);
 
   // get the locations in there
   parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
@@ -943,33 +1082,107 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else if (!options.has_matrix_locations_case()) {
+  } else if (!options.has_matrix_locations_case() ||
+             (options.sources_size() != 1 && options.targets_size() != 1)) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
 
+  auto expansion_max_distance = rapidjson::get_optional<unsigned int>(doc, "/expansion_max_distance");
+  if (expansion_max_distance) {
+    options.set_expansion_max_distance(*expansion_max_distance);
+  }
+
   // get the avoid polygons in there
-  auto rings_req =
+  auto exclude_polygons =
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
-  if (rings_req) {
-    if (!rings_req->IsArray()) {
+  if (exclude_polygons) {
+    if (!(exclude_polygons->IsArray() || exclude_polygons->IsObject())) {
       add_warning(api, 204);
     } else {
+      // it has to be either an array of rings
+      // or an array of objects
       auto* rings_pbf = options.mutable_exclude_polygons();
+      auto* levels_pbf = options.mutable_exclude_levels();
+
+      auto exclude_polygons_array_ptr = exclude_polygons;
+
+      // if it's not an array, make sure it's a GeoJSON FeatureCollection
+      if (!exclude_polygons->IsArray()) {
+        auto fc = rapidjson::get_optional<std::string>(doc, "/exclude_polygons/type");
+        auto features = rapidjson::get_child_optional(doc, "/exclude_polygons/features");
+        if (fc && *fc == "FeatureCollection" && features) {
+          exclude_polygons_array_ptr = features;
+        }
+      }
       try {
-        for (const auto& req_poly : rings_req->GetArray()) {
-          if (!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) {
+        for (const auto& req_poly : exclude_polygons_array_ptr->GetArray()) {
+          // either it's a ring or an object, in any case it can't be empty
+          if ((req_poly.IsArray() && req_poly.GetArray().Empty()) ||
+              (req_poly.IsObject() && req_poly.GetObject().ObjectEmpty())) {
             continue;
           }
-          auto* ring = rings_pbf->Add();
-          parse_ring(ring, req_poly);
+          auto* pbf_ring = rings_pbf->Add();
+          auto* pbf_levels = levels_pbf->Add();
+          if (req_poly.IsArray() && req_poly.GetArray().Size() > 0) {
+            parse_ring(pbf_ring, req_poly);
+          } else if (req_poly.IsObject() &&
+                     !req_poly.GetObject().ObjectEmpty()) { // it's a geojson feature, so it better
+                                                            // have coordinates and maybe levels
+            // we only support one ring
+            auto coordinates = rapidjson::get_child_optional(req_poly, "/geometry/coordinates/0");
+            auto geom_type = rapidjson::get_child_optional(req_poly, "/geometry/type");
+            if (coordinates && geom_type && *geom_type == "Polygon" && coordinates->IsArray()) {
+              parse_ring(pbf_ring, *coordinates);
+            } else {
+              throw std::runtime_error("Expected object to have coordinates member");
+            }
+            auto levels = rapidjson::get_child_optional(req_poly, "/properties/levels");
+            if (levels && levels->IsArray()) {
+              // parse the levels
+              for (const auto& level : levels->GetArray()) {
+                if (level.IsFloat()) {
+                  pbf_levels->add_levels(level.GetFloat());
+                }
+              }
+            }
+          }
         }
-      } catch (...) { throw valhalla_exception_t{137}; }
+      } catch (const std::exception& e) { throw valhalla_exception_t{137, e.what()}; } catch (...) {
+        throw valhalla_exception_t{137};
+      }
     }
   } // if it was there in the pbf already
   else if (options.exclude_polygons_size()) {
     for (auto& ring : *options.mutable_exclude_polygons()) {
       parse_ring(&ring, rapidjson::Value{});
+    }
+    if (options.exclude_levels_size() > 0 &&
+        options.exclude_levels_size() != options.exclude_polygons_size())
+      throw std::runtime_error(
+          "Expected number of exclude levels and number of exclude polygons to be equal");
+  }
+
+  // does the user want to apply custom costs to linear features?
+  auto linear_feats = rapidjson::get_child_optional(doc, "/linear_cost_factors");
+
+  if (linear_feats) {
+    if (!linear_feats->IsArray()) {
+      add_warning(api, 212);
+    } else {
+      try {
+        for (const auto& linear_feat : linear_feats->GetArray()) {
+          auto is_geojson = linear_feat.GetObject().HasMember("type");
+          auto* l = options.mutable_cost_factor_lines()->Add();
+
+          // either GeoJSON
+          if (is_geojson) {
+            parse_line_geojson(linear_feat, l);
+          } else { // or an encoded polyline and a cost factor
+            parse_line(linear_feat, l);
+          }
+        }
+      } catch (const std::exception& e) { throw valhalla_exception_t{173, std::string(e.what())}; }
     }
   }
 
@@ -1023,12 +1236,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get<float>(doc, "/denoise", options.has_denoise_case() ? options.denoise() : 1.0);
   options.set_denoise(std::max(std::min(denoise, 1.f), 0.f));
 
-  // if specified, get the generalize value in there
-  auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
-  if (generalize) {
-    options.set_generalize(*generalize);
-  }
-
   // if specified, get the show_locations boolean in there
   options.set_show_locations(rapidjson::get<bool>(doc, "/show_locations", options.show_locations()));
 
@@ -1075,28 +1282,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_interpolation_distance(*interpolation_distance);
   }
 
-  // if specified, get the filter_action value in there
-  auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
-  FilterAction filter_action;
-  if (filter_action_str && valhalla::FilterAction_Enum_Parse(*filter_action_str, &filter_action)) {
-    options.set_filter_action(filter_action);
-  }
-
-  // if specified, get the filter_attributes value in there
-  auto filter_attributes_json =
-      rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
-  if (filter_attributes_json) {
-    for (const auto& filter_attribute : *filter_attributes_json) {
-      std::string attribute = filter_attribute.GetString();
-      // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
-      // compatibility
-      if (attribute == "edge.tagged_names") {
-        attribute = baldr::kEdgeTaggedValues;
-      }
-      options.add_filter_attributes(attribute);
-    }
-  }
-
   // add warning for deprecated best_paths
   if (rapidjson::get_optional<uint32_t>(doc, "/best_paths")) {
     add_warning(api, 103);
@@ -1137,7 +1322,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 }
 
 } // namespace
-
 namespace valhalla {
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& request) {
@@ -1418,13 +1602,15 @@ worker_t::result_t serialize_error(const valhalla_exception_t& exception,
 }
 
 worker_t::result_t
-to_response(const std::string& data, http_request_info_t& request_info, const Api& request) {
+to_response(const std::string& data,
+            http_request_info_t& request_info,
+            const Api& request,
+            const std::vector<std::pair<std::string, std::string>>& additional_headers) {
   // try to get all the proper headers
   auto fmt = request.options().format();
-  const auto& mime = fmt == Options::json || fmt == Options::osrm
-                         ? worker::JSON_MIME
-                         : (fmt == Options::pbf ? worker::PBF_MIME : worker::GPX_MIME);
-  headers_t headers{CORS, mime};
+
+  headers_t headers{CORS, fmt_to_mime(fmt)};
+  headers.insert(additional_headers.begin(), additional_headers.end());
   if (fmt == Options::gpx)
     headers.insert(ATTACHMENT);
 

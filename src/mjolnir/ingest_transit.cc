@@ -221,12 +221,14 @@ select_transit_tiles(const std::filesystem::path& gtfs_path) {
           tile_info.station_children.insert({{stop.stop_id, feed_name}, stop.stop_id});
         }
 
-        for (const auto& stopTime : feed.get_stop_times_for_stop(stop.stop_id)) {
+        auto stop_times = feed.get_stop_times_for_stop(stop.stop_id);
+        for (; stop_times.first < stop_times.second; ++stop_times.first) {
           // add trip, route, agency and service_id from stop_time, it's the only place with that info
-          // TODO: should we throw here?
-          auto trip = feed.get_trip(stopTime.trip_id);
+          const auto& stop_time = **stop_times.first;
+          auto trip = feed.get_trip(stop_time.trip_id);
           auto route = feed.get_route(trip.route_id);
           if (!gtfs::valid(trip) || !gtfs::valid(route) || trip.service_id.empty()) {
+            // TODO: should we throw here?
             LOG_ERROR("Missing trip or route or service_id for trip");
             continue;
           }
@@ -269,7 +271,7 @@ void setup_stops(Transit& tile,
   node->set_graphid(node_id);
 
   if (node_type != NodeType::kTransitEgress) {
-    node->set_prev_type_graphid(prev_id.Is_Valid() ? prev_id : node_id - 1);
+    node->set_prev_type_graphid(prev_id.is_valid() ? prev_id : node_id - 1);
   } // in/egresses need accessibility set so that transit connect edges inherit that access
   else {
     // TODO: its unclear how to determine unidirectionality (entrance-only vs exit-only) from the gtfs
@@ -822,7 +824,7 @@ void stitch_tiles(const std::filesystem::path& transit_dir,
       for (auto& stop_pair : *tile.mutable_stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
           auto found_stop = needed.find(stop_pair.origin_onestop_id())->second;
-          if (found_stop.Is_Valid()) {
+          if (found_stop.is_valid()) {
             stop_pair.set_origin_graphid(found_stop);
           } else if (not_found.find(stop_pair.origin_onestop_id()) == not_found.cend()) {
             LOG_ERROR("Stop not found: " + stop_pair.origin_onestop_id());
@@ -832,7 +834,7 @@ void stitch_tiles(const std::filesystem::path& transit_dir,
         }
         if (!stop_pair.has_destination_graphid()) {
           auto found_stop = needed.find(stop_pair.destination_onestop_id())->second;
-          if (found_stop.Is_Valid()) {
+          if (found_stop.is_valid()) {
             stop_pair.set_destination_graphid(found_stop);
           } else if (not_found.find(stop_pair.destination_onestop_id()) == not_found.cend()) {
             LOG_ERROR("Stop not found: " + stop_pair.destination_onestop_id());

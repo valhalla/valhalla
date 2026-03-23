@@ -44,12 +44,12 @@ struct MatchResult {
     return stateid.IsValid();
   }
 
-  enum class Type { kUnmatched, kInterpolated, kMatched };
+  enum class Type : uint8_t { kUnmatched = 0, kInterpolated = 1, kMatched = 2 };
   Type GetType() const {
     // Set the type based on edge id and state
-    if (edgeid.Is_Valid() && HasState()) {
+    if (edgeid.is_valid() && HasState()) {
       return Type::kMatched;
-    } else if (edgeid.Is_Valid()) {
+    } else if (edgeid.is_valid()) {
       return Type::kInterpolated;
     } else {
       return Type::kUnmatched;

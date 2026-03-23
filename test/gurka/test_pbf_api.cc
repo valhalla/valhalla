@@ -27,7 +27,8 @@ TEST(pbf_api, pbf_in_out) {
       {"GH", {{"highway", "tertiary"}}},    {"HI", {{"highway", "unclassified"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_api_minimal");
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_api_minimal");
 
   std::unordered_set<Options::Action> pbf_actions{Options::route,
                                                   Options::trace_route,
@@ -61,6 +62,9 @@ TEST(pbf_api, pbf_in_out) {
       expected_pbf =
           gurka::do_action(Options::Action(action), map, {"A"}, "pedestrian",
                            {{"/contours/0/time", "10"}}, {}, &expected_json, "break", &request_json);
+    } else if (action == Options::tile) {
+      expected_pbf = gurka::do_action(Options::Action(action), map, "E", 8, "pedestrian", {}, nullptr,
+                                      &expected_json, &request_json);
     } else {
       expected_pbf = gurka::do_action(Options::Action(action), map, {"A", "C", "I", "G"},
                                       "pedestrian", {}, {}, &expected_json, "break", &request_json);

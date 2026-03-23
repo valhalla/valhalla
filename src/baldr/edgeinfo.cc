@@ -50,32 +50,18 @@ int32_t parse_varint(const char*& encoded) {
 }
 
 // per tag parser. each returned string includes the leading TaggedValue.
-std::vector<std::string> parse_tagged_value(const char* ptr) {
-  switch (static_cast<TaggedValue>(ptr[0])) {
-    case TaggedValue::kLayer:
-    case TaggedValue::kBssInfo:
-    case TaggedValue::kLevel:
-    case TaggedValue::kLevelRef:
-    case TaggedValue::kTunnel:
-    case TaggedValue::kBridge:
-      return {std::string(ptr)};
-    case TaggedValue::kLandmark: {
-      std::string landmark_name = ptr + 10;
-      size_t landmark_size = landmark_name.size() + 10;
-      return {std::string(ptr, landmark_size)};
-    }
-    case TaggedValue::kLevels: {
-      auto start = ptr + 1;
-      int size = static_cast<int>(parse_varint(start));
-      return {std::string(ptr, (start + size) - ptr)};
-    }
-    case TaggedValue::kConditionalSpeedLimits: {
-      return {std::string(ptr, 1 + sizeof(ConditionalSpeedLimit))};
-    }
-    case TaggedValue::kLinguistic:
-    default:
-      return {};
+std::optional<std::string_view> get_tagged_value(const char* ptr) {
+  TaggedValue tv = static_cast<TaggedValue>(ptr[0]);
+  if (tv == TaggedValue::kLinguistic) { // we handle it separately
+    return {};
   }
+
+  size_t size = EdgeInfo::TaggedValueSize(ptr);
+  if (size > 0) {
+    return std::string_view{ptr, size - 1}; // -1 to exclude the null terminator
+  }
+
+  return {};
 }
 
 } // namespace
@@ -122,6 +108,50 @@ std::pair<std::vector<std::pair<float, float>>, uint32_t> decode_levels(const st
   }
 
   return {decoded, static_cast<uint32_t>(precision)};
+}
+
+size_t EdgeInfo::TaggedValueSize(const char* ptr) {
+  switch (static_cast<TaggedValue>(ptr[0])) {
+    case TaggedValue::kLayer:
+    case TaggedValue::kBssInfo:
+    case TaggedValue::kLevel:
+    case TaggedValue::kLevelRef:
+    case TaggedValue::kTunnel:
+    case TaggedValue::kBridge:
+      // These are null-terminated strings after the tag byte
+      return strlen(ptr) + 1; // +1 for null terminator
+
+    case TaggedValue::kLandmark: {
+      // Fixed 9-byte header + null-terminated name + null terminator
+      std::string landmark_name = ptr + 10;
+      return landmark_name.size() + 10 + 1; // +1 for null terminator
+    }
+
+    case TaggedValue::kLevels:
+    case TaggedValue::kOSMNodeIds: {
+      // Tag byte + varint size + data + null terminator
+      auto start = ptr + 1;
+      int size = static_cast<int>(parse_varint(start));
+      return (start + size) - ptr + 1; // +1 for null terminator
+    }
+
+    case TaggedValue::kConditionalSpeedLimits: {
+      // Tag byte + fixed size struct + null terminator
+      return 1 + sizeof(ConditionalSpeedLimit) + 1;
+    }
+
+    case TaggedValue::kLinguistic: {
+      const char* current = ptr + 1; // Skip tag byte
+      while (*current != '\0') {
+        const auto header = midgard::unaligned_read<linguistic_text_header_t>(current);
+        current += header.length_ + kLinguisticHeaderSize;
+      }
+      return (current - ptr) + 1;
+    }
+
+    default:
+      throw std::runtime_error("Unknown tag type: " + std::to_string(static_cast<int>(ptr[0])));
+  }
 }
 
 EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_length)
@@ -240,7 +270,7 @@ std::vector<std::string> EdgeInfo::GetLinguisticTaggedValues() const {
           }
         }
       } catch (const std::invalid_argument& arg) {
-        LOG_DEBUG("invalid_argument thrown for name: " + std::string(name));
+        LOG_DEBUG("invalid_argument thrown for name: {}", name);
       }
     } else {
       throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
@@ -296,16 +326,11 @@ std::vector<std::string> EdgeInfo::GetTaggedValues() const {
     if (ni->name_offset_ < names_list_length_) {
       const char* value = names_list_ + ni->name_offset_;
       try {
-        TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
-        if (tv == baldr::TaggedValue::kLinguistic) {
-          continue;
+        if (auto contents = get_tagged_value(value)) {
+          tagged_values.emplace_back(*contents);
         }
-
-        // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
-        std::vector<std::string> contents = parse_tagged_value(value);
-        std::move(contents.begin(), contents.end(), std::back_inserter(tagged_values));
       } catch (const std::invalid_argument& arg) {
-        LOG_DEBUG("invalid_argument thrown for tagged value: " + std::string(value));
+        LOG_DEBUG("invalid_argument thrown for tagged value: {}", value);
       }
     } else {
       throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
@@ -328,20 +353,13 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
         if (ni->name_offset_ < names_list_length_) {
           const char* value = names_list_ + ni->name_offset_;
           try {
-            // no pronunciations for some reason...
-            TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
-            if (tv == baldr::TaggedValue::kLinguistic) {
-              continue;
-            }
-            // get whatever tag value was in there
-            // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
-            auto contents = parse_tagged_value(value);
-            for (const std::string& c : contents) {
+            if (auto contents = get_tagged_value(value)) {
+              TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
               // remove the leading TaggedValue byte from the content
-              tag_cache_.emplace(tv, c.substr(1));
+              tag_cache_.emplace(tv, contents->substr(1));
             }
           } catch (const std::logic_error& arg) {
-            LOG_DEBUG("logic_error thrown for tagged value: " + std::string(value));
+            LOG_DEBUG("logic_error thrown for tagged value: {}", value);
           }
         } else {
           throw std::runtime_error("GetTags: offset exceeds size of text list");
@@ -403,7 +421,7 @@ EdgeInfo::GetLinguisticMap() const {
           }
         }
       } catch (const std::invalid_argument& arg) {
-        LOG_DEBUG("invalid_argument thrown for name: " + std::string(name));
+        LOG_DEBUG("invalid_argument thrown for name: {}", name);
       }
     } else {
       throw std::runtime_error("GetLinguisticMap: offset exceeds size of text list");
@@ -516,6 +534,23 @@ std::vector<std::string> EdgeInfo::level_ref() const {
   return values;
 }
 
+std::vector<uint64_t> EdgeInfo::osm_node_ids() const {
+  const auto& tags = GetTags();
+  auto itr = tags.find(TaggedValue::kOSMNodeIds);
+  if (itr == tags.end()) {
+    return {};
+  }
+  try {
+    // TODO: can GetTags avoid parsing if we just have to redo it here?
+    const auto* ptr = itr->second.data();
+    // just to skip the size's prefix
+    parse_varint(ptr);
+    auto length = itr->second.size() - (ptr - itr->second.data());
+    auto ids = midgard::decode7int<std::vector<uint64_t>>(ptr, length);
+    return ids;
+  } catch (...) { throw std::runtime_error("failed to decode osm node ids"); };
+}
+
 void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
   writer("way_id", static_cast<uint64_t>(wayid()));
 
@@ -578,6 +613,17 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
             writer(range.second);
             writer.end_array();
           }
+        }
+        writer.end_array();
+        break;
+      }
+      case TaggedValue::kOSMNodeIds: {
+        const auto* ptr = value.data();
+        int size = static_cast<int>(parse_varint(ptr));
+        auto ids = midgard::decode7int<std::vector<uint64_t>>(ptr, size);
+        writer.start_array("osm_node_ids");
+        for (const auto& id : ids) {
+          writer(id);
         }
         writer.end_array();
         break;

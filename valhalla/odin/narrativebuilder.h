@@ -420,6 +420,7 @@ protected:
   std::string FormExitBuildingInstruction(Maneuver& maneuver);
 
   std::string FormGenericLevelChangeInstruction(Maneuver& maneuver);
+  std::string FormParkVehicleInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   /**
@@ -640,7 +641,7 @@ protected:
   /**
    * Combines a simple preposition and a definite article for certain languages.
    */
-  virtual void FormArticulatedPrepositions(std::string& instruction) {
+  virtual void FormArticulatedPrepositions(std::string& /*instruction*/) {
   }
 
   /**

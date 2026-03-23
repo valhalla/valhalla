@@ -2,7 +2,6 @@
 #include "baldr/rapidjson_utils.h"
 
 #include <string>
-#include <unordered_map>
 
 namespace {
 constexpr std::array<const char*, 10> kTypeToString = {

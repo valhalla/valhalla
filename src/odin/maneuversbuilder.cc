@@ -1864,6 +1864,11 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=BUILDING_EXIT");
   } else if (maneuver.has_level_changes() && !maneuver.end_level_ref().empty()) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kLevelChange);
+    LOG_TRACE("ManeuverType=LEVEL_CHANGE");
+  } else if (curr_edge->travel_mode() == TravelMode::kPedestrian && prev_edge &&
+             (prev_edge->travel_mode() == TravelMode::kDrive)) {
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kParkVehicle);
+    LOG_TRACE("ManeuverType=PARK_VEHICLE");
   }
   // Process simple direction
   else {
@@ -2156,6 +2161,9 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
     return false;
   }
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare) {
+    return false;
+  }
+  if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kParking) {
     return false;
   }
   /////////////////////////////////////////////////////////////////////////////

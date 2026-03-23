@@ -493,8 +493,7 @@ void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
            baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
   }
   if (incident_metadata.impact()) {
-    writer(key_prefix + "impact",
-           std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
+    writer(key_prefix + "impact", valhalla::incidentImpactToString(incident_metadata.impact()));
   }
   if (!incident_metadata.sub_type().empty()) {
     writer(key_prefix + "sub_type", incident_metadata.sub_type());
@@ -548,6 +547,14 @@ void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
   }
   if (end_shape_index >= 0) {
     writer(key_prefix + "geometry_index_end", end_shape_index);
+  }
+
+  if (incident_metadata.has_display_ll() && incident_metadata.display_ll().has_lat() &&
+      incident_metadata.display_ll().has_lng()) {
+    writer.start_object("display_ll");
+    writer("lat", incident_metadata.display_ll().lat());
+    writer("lon", incident_metadata.display_ll().lng());
+    writer.end_object();
   }
   // TODO Add test of lanes blocked and add missing properties
 }

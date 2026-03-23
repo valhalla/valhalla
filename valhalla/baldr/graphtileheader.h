@@ -613,7 +613,7 @@ protected:
 
   // TODO: in v4, don't store this its superfluous information, the graphid has all we need
   // Base lon, lat of the tile
-  std::array<float, 2> base_ll_ = {0, 0};
+  std::array<float, 2> base_ll_ = {0.f, 0.f};
 
   // baldr version.
   std::array<char, kMaxVersionSize> version_ = {};
@@ -711,10 +711,11 @@ protected:
 };
 
 static_assert(sizeof(GraphTileHeader) == 272, "Bad sizeof(GraphTileHeader)");
-// make sure this stays a POD layout
+// make sure it stays POD-like so we can safely copy its bytes around
 static_assert(std::is_trivially_copyable_v<GraphTileHeader>,
               "GraphTileHeader is not trivially copyable");
-static_assert(std::is_standard_layout_v<GraphTileHeader>, "GraphTileHeader has not standard layout");
+static_assert(std::is_standard_layout_v<GraphTileHeader>,
+              "GraphTileHeader has non-standard layout, e.g. virtual functions");
 
 } // namespace baldr
 } // namespace valhalla

@@ -76,11 +76,15 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {163, {163, "Invalid date_type", 400, HTTP_400, OSRM_INVALID_VALUE, "wrong_date_type"}},
     {164, {164, "Invalid shape format", 400, HTTP_400, OSRM_INVALID_VALUE, "wrong_shape_format"}},
     {165, {165, "Date and time required for destination for date_type of invariant", 400, HTTP_400, OSRM_INVALID_OPTIONS, "missing_invariant_date"}},
+    {166, {166, "Exceeded max distance", 400, HTTP_400, OSRM_INVALID_VALUE, "too_large_distance"}},
     {167, {167, "Exceeded maximum circumference for exclude_polygons", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "too_large_polygon"}},
     {168, {168, "Invalid expansion property type", 400, HTTP_400, OSRM_INVALID_OPTIONS, "invalid_expansion_property"}},
     {170, {170, "Locations are in unconnected regions. Go check/edit the map at osm.org", 400, HTTP_400, OSRM_NO_ROUTE, "impossible_route"}},
     {171, {171, "No suitable edges near location", 400, HTTP_400, OSRM_NO_SEGMENT, "no_edges_near"}},
     {172, {172, "Exceeded breakage distance for all pairs", 400, HTTP_400, OSRM_BREAKAGE_EXCEEDED, "too_large_breakage_distance"}},
+    {173, {173, "Failed to parse line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},
+    {174, {174, "Invalid tile coordinates", 400, HTTP_400, OSRM_INVALID_VALUE, "tile_coords_invalid"}},
+    {175, {175, "Exceeded max zoom level of", 400, HTTP_400, OSRM_INVALID_VALUE, "tile_zoom_invalid"}},
     {199, {199, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},
@@ -94,6 +98,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {230, {230, "Invalid DirectionsLeg_Maneuver_Type in method FormTurnInstruction", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_turn"}},
     {231, {231, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeTwoDirection", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_relative_two"}},
     {232, {232, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeThreeDirection", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_relative_three"}},
+    {233, {233, "Failed to edge walk line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},  
+    {234, {234, "Exceeded maximum allowed cost factor edges", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "too_many_cost_factor_edges"}},
     {299, {299, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {312, {312, "Insufficiently specified required parameter 'shape' or 'encoded_polyline'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_parse_failed"}},
     {313, {313, "'resample_distance' must be >= ", 400, HTTP_400, OSRM_INVALID_URL, "wrong_resample_distance"}},
@@ -113,6 +119,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {443, {443, "Exact route match algorithm failed to find path", 400, HTTP_400, OSRM_NO_SEGMENT, "shape_match_failed"}},
     {444, {444, "Map Match algorithm failed to find path", 400, HTTP_400, OSRM_NO_SEGMENT, "map_match_failed"}},
     {445, {445, "Shape match algorithm specification in api request is incorrect. Please see documentation for valid shape_match input.", 400, HTTP_400, OSRM_INVALID_URL, "wrong_match_type"}},
+    {446, {446, "Remote tar file has changed, service is unavailable", 500, HTTP_500, OSRM_SERVER_ERROR, "remote_tar_changed"}},
     {499, {499, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
     {504, {504, "This service does not support GeoTIFF serialization.", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
@@ -140,13 +147,20 @@ const std::unordered_map<int, std::string> warning_codes = {
   {209, R"(Customized hierarchy limits are not allowed on this server, using default hierarchy limits)"},
   {210, R"(Provided hierarchy limits exceeded maximum allowed values, using max allowed hierarchy limits)"},
   {211, R"(This action doesn't support requested format, using json instead)"},
+  {212, R"(Invalid layer name in exclude_layers array: )"},
+  {213, R"(CostMatrix algorithm used, ignoring "matrix_locations")"},
+  {214, R"(Distance exceeded max_timedep_distance for arrive_by, probably ignoring date_time)"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
   {302, R"("search_filter.level" was specified without a custom "search_cutoff", setting default default cutoff to )"},
   {303, R"("search_cutoff" exceeds maximum allowed value due to "search_filter.level" being specified, clamping cutoff to )"},
   // 4xx is used when we do sneaky important things the user should be aware of
-  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
+  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"},
+  {401, R"(Routing failed on first pass, retrying with relaxed restrictions)"},
+  {402, R"(Distance exceeded max_timedep_distance for depart_at, falling back to bidirectional A*)"},
+  // RESERVED: 500 is for clamped values, set in JSON_PBF_RANGED_DEFAULT* macros
+  // {500, R"(<option> was clamped to <value> )"},
 };
 // clang-format on
 

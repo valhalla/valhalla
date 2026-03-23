@@ -129,7 +129,7 @@ TEST_P(TestHierarchyLimits, from_request) {
 
   Api request;
   if (test_params.pbf) {
-    request.ParseFromString(test_params.request);
+    ASSERT_TRUE(request.ParseFromString(test_params.request));
   } else {
     ParseApi(test_params.request, Options::sources_to_targets, request);
   }
@@ -172,7 +172,7 @@ TEST(StandAlone, ClampHierarchyLimitsMatrix) {
                                             {std::make_pair(240000, 240000.f)}},
                                            false);
   if (test_params.pbf) {
-    request.ParseFromString(test_params.request);
+    ASSERT_TRUE(request.ParseFromString(test_params.request));
   } else {
     ParseApi(test_params.request, Options::sources_to_targets, request);
   }
@@ -202,7 +202,7 @@ TEST(StandAlone, ClampHierarchyLimitsBidirAStar) {
                                             {std::make_pair(240000, 240000.f)}},
                                            false);
   if (test_params.pbf) {
-    request.ParseFromString(test_params.request);
+    ASSERT_TRUE(request.ParseFromString(test_params.request));
   } else {
     ParseApi(test_params.request, Options::sources_to_targets, request);
   }
@@ -233,7 +233,7 @@ TEST(StandAlone, ClampHierarchyLimitsUnidirAStar) {
                                             {std::make_pair(240000, 240000.f)}},
                                            false);
   if (test_params.pbf) {
-    request.ParseFromString(test_params.request);
+    ASSERT_TRUE(request.ParseFromString(test_params.request));
   } else {
     ParseApi(test_params.request, Options::sources_to_targets, request);
   }

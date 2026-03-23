@@ -61,7 +61,8 @@ namespace valhalla {
 namespace baldr {
 
 struct curler_t::pimpl_t {
-  pimpl_t(const std::string& user_agent) : connection(init_curl()), user_agent(user_agent) {
+  pimpl_t(const std::string& user_agent, const std::string& user_pw)
+      : connection(init_curl()), user_agent(user_agent), user_pw(user_pw) {
     if (connection.get() == nullptr) {
       LOG_ERROR("Failed to created CURL connection");
       throw std::runtime_error("Failed to created CURL connection");
@@ -130,6 +131,12 @@ struct curler_t::pimpl_t {
                   "Failed to set HTTP Range");
     }
 
+    // add basic auth if it's supplied
+    if (!user_pw.empty()) {
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_USERPWD, user_pw.c_str()),
+                  "Failed to set HTTP basic auth user and/or password");
+    }
+
     // use gzip compression in any case
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ACCEPT_ENCODING, "gzip"),
                 "Failed to set content encoding header ");
@@ -168,9 +175,11 @@ struct curler_t::pimpl_t {
   std::shared_ptr<CURL> connection;
   char error[CURL_ERROR_SIZE]{};
   std::string user_agent;
+  std::string user_pw;
 };
 
-curler_t::curler_t(const std::string& user_agent) : pimpl(new pimpl_t(user_agent)) {
+curler_t::curler_t(const std::string& user_agent, const std::string& user_pw)
+    : pimpl(new pimpl_t(user_agent, user_pw)) {
 }
 
 curler_t::GET_response_t curler_t::get(const std::string& url,
@@ -187,10 +196,12 @@ curler_t::HEAD_response_t curler_t::head(const std::string& url, header_mask_t h
 
 // curler_pool_t
 
-curler_pool_t::curler_pool_t(const size_t pool_size, const std::string& user_agent)
+curler_pool_t::curler_pool_t(const size_t pool_size,
+                             const std::string& user_agent,
+                             const std::string& user_pw)
     : size_(pool_size) {
   for (size_t i = 0; i < pool_size; ++i) {
-    curlers_.emplace_back(user_agent);
+    curlers_.emplace_back(user_agent, user_pw);
   }
 }
 
@@ -222,7 +233,7 @@ void curler_pool_t::release(curler_t&& curler) {
 // if you dont build with CURL support we always error when you try to use it
 namespace valhalla {
 namespace baldr {
-curler_t::curler_t(const std::string& user_agent) {
+curler_t::curler_t(const std::string& user_agent, const std::string& user_pw) {
 }
 
 curler_t::GET_response_t curler_t::get(const std::string& url,
@@ -240,13 +251,14 @@ curler_t::HEAD_response_t curler_t::head(const std::string& url,
   throw std::runtime_error("This version of libvalhalla was not built with CURL support");
 }
 
-curler_pool_t::curler_pool_t(const size_t pool_size, const std::string&) : size_(pool_size) {
+curler_pool_t::curler_pool_t(const size_t pool_size, const std::string&, const std::string& user_pw)
+    : size_(pool_size) {
 }
 
 curler_t curler_pool_t::acquire() {
   LOG_ERROR("This version of libvalhalla was not built with CURL support");
   throw std::runtime_error("This version of libvalhalla was not built with CURL support");
-  return curler_t("");
+  return curler_t("", "");
 }
 
 void curler_pool_t::release(curler_t&&) {

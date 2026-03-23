@@ -1,5 +1,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "midgard/encoded.h"
 #include "test.h"
 
 #include <gtest/gtest.h>
@@ -26,7 +27,7 @@ TEST(Standalone, SacScaleAttributes) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/sac_scale_attributes");
 
   std::string trace_json;
-  auto api =
+  [[maybe_unused]] auto api =
       gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4", "5"},
                        "pedestrian", {{"/costing_options/pedestrian/max_hiking_difficulty", "5"}}, {},
                        &trace_json, "via");
@@ -59,8 +60,9 @@ TEST(Standalone, ShoulderAttributes) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shoulder_attributes");
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4"},
-                              "bicycle", {}, {}, &trace_json, "via");
+  [[maybe_unused]] auto api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4"}, "bicycle", {},
+                       {}, &trace_json, "via");
 
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
@@ -85,8 +87,9 @@ TEST(Standalone, InterpolatedPoints) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shoulder_attributes");
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map,
-                              {"1", "2", "3", "4", "5", "6"}, "bicycle", {}, {}, &trace_json, "via");
+  [[maybe_unused]] auto api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4", "5", "6"},
+                       "bicycle", {}, {}, &trace_json, "via");
 
   // confirm one of the interpolated points has the right edge index
   rapidjson::Document result_doc;
@@ -135,8 +138,8 @@ TEST(Standalone, RetrieveNodeTrafficSignal) {
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/traffic_signal_node_attributes");
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto", {},
-                              {}, &trace_json, "via");
+  [[maybe_unused]] auto api = gurka::do_action(valhalla::Options::trace_attributes, map,
+                                               {"A", "B", "C"}, "auto", {}, {}, &trace_json, "via");
 
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
@@ -166,8 +169,8 @@ TEST(Standalone, SpeedTypes) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/speed_types");
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto", {},
-                              {}, &trace_json, "via");
+  [[maybe_unused]] auto api = gurka::do_action(valhalla::Options::trace_attributes, map,
+                                               {"A", "B", "C"}, "auto", {}, {}, &trace_json, "via");
 
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
@@ -222,14 +225,15 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   });
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto",
-                              {{"/shape_match", "edge_walk"},
-                               {"/date_time/type", "0"},
-                               {"/date_time/value", "current"},
-                               {"/costing_options/auto/speed_types/0", "current"},
-                               {"/costing_options/auto/speed_types/1", "predicted"},
-                               {"/trace_options/breakage_distance", "10000"}},
-                              {}, &trace_json, "via");
+  [[maybe_unused]] auto api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto",
+                       {{"/shape_match", "edge_walk"},
+                        {"/date_time/type", "0"},
+                        {"/date_time/value", "current"},
+                        {"/costing_options/auto/speed_types/0", "current"},
+                        {"/costing_options/auto/speed_types/1", "predicted"},
+                        {"/trace_options/breakage_distance", "10000"}},
+                       {}, &trace_json, "via");
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
   auto edges = result["edges"].GetArray();
@@ -255,13 +259,18 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   EXPECT_EQ(edges[1]["speeds_non_faded"]["no_flow"].GetInt(), base);
 
   // current_flow fades to predicted flow because its next up from the speed types in the request
-  EXPECT_NEAR(edges[1]["speeds_faded"]["current_flow"].GetInt(), current * 0.5 + predicted * 0.5, 1);
+  float multiplier = 480.f / 3600.f;
+  float multiplier_inverse = 1.f - multiplier;
+  EXPECT_NEAR(edges[1]["speeds_faded"]["current_flow"].GetInt(),
+              current * multiplier_inverse + predicted * multiplier, 1);
   EXPECT_NEAR(edges[1]["speeds_faded"]["constrained_flow"].GetInt(),
-              current * 0.5 + constrained * 0.5, 1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["free_flow"].GetInt(), current * 0.5 + free * 0.5, 1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["predicted_flow"].GetInt(), current * 0.5 + predicted * 0.5,
-              1);
-  EXPECT_NEAR(edges[1]["speeds_faded"]["no_flow"].GetInt(), current * 0.5 + base * 0.5, 1);
+              current * multiplier_inverse + constrained * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["free_flow"].GetInt(),
+              current * multiplier_inverse + free * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["predicted_flow"].GetInt(),
+              current * multiplier_inverse + predicted * multiplier, 1);
+  EXPECT_NEAR(edges[1]["speeds_faded"]["no_flow"].GetInt(),
+              current * multiplier_inverse + base * multiplier, 1);
 
   api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto",
                          {{"/shape_match", "edge_walk"},
@@ -348,8 +357,9 @@ TEST(Standalone, RetrieveEdgeTrafficSignal) {
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/traffic_signal_edge_attributes");
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C", "D"}, "auto",
-                              {}, {}, &trace_json, "via");
+  [[maybe_unused]] auto api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C", "D"}, "auto", {}, {},
+                       &trace_json, "via");
 
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
@@ -377,9 +387,10 @@ TEST(Standalone, ViaFerrataNoSacScale) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/sac_scale_attributes");
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "pedestrian",
-                              {{"/costing_options/pedestrian/max_hiking_difficulty", "6"}}, {},
-                              &trace_json, "via");
+  [[maybe_unused]] auto api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "pedestrian",
+                       {{"/costing_options/pedestrian/max_hiking_difficulty", "6"}}, {}, &trace_json,
+                       "via");
 
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
@@ -391,4 +402,93 @@ TEST(Standalone, ViaFerrataNoSacScale) {
   EXPECT_EQ(edges[0]["sac_scale"].GetInt(), 6);
   EXPECT_TRUE(edges[1].HasMember("sac_scale"));
   EXPECT_EQ(edges[1]["sac_scale"].GetInt(), 6);
+}
+
+TEST(Standalone, BeginShapeIndexAtDiscontinuity) {
+  // Two not connected edges. 1245 should match both with a discontinuity between 2 and 3.
+  const std::string ascii_map = R"(
+                   D
+                  /
+    A--1--B--2---C
+           F---3--G--4--H
+          /
+         E
+  )";
+
+  const gurka::ways ways = {
+      {"ABCD", {{"highway", "primary"}}},
+      {"EFGH", {{"highway", "primary"}}},
+  };
+
+  const double gridsize = 100;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/trace_discontinuity");
+
+  std::string trace_json;
+  [[maybe_unused]] auto api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4"}, "auto",
+                       {{"/shape_match", "map_snap"}}, {}, &trace_json, "via");
+
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+  ASSERT_FALSE(result.HasParseError()) << "Failed to parse trace_attributes response";
+  ASSERT_TRUE(result.HasMember("edges"));
+  ASSERT_TRUE(result.HasMember("shape"));
+  ASSERT_TRUE(result.HasMember("matched_points"));
+
+  const auto edges = result["edges"].GetArray();
+  ASSERT_EQ(edges.Size(), 2) << "Expected 2 edges: ABCD, EFGH";
+  EXPECT_STREQ(edges[0]["names"][0].GetString(), "ABCD");
+  EXPECT_STREQ(edges[1]["names"][0].GetString(), "EFGH");
+
+  const auto matched_points = result["matched_points"].GetArray();
+  ASSERT_EQ(matched_points.Size(), 4);
+
+  const uint32_t abcd_end_idx = edges[0]["end_shape_index"].GetUint();
+  const uint32_t efgh_begin_idx = edges[1]["begin_shape_index"].GetUint();
+  EXPECT_EQ(abcd_end_idx + 1, efgh_begin_idx) << "Discontinuity between BC and DE along the shape";
+
+  const auto shape =
+      midgard::decode<std::vector<midgard::PointLL>>(std::string(result["shape"].GetString()));
+  const auto bc_match = shape[abcd_end_idx];
+  const auto fg_match = shape[efgh_begin_idx];
+  EXPECT_GT(bc_match.Distance(fg_match), 1000.0) << "Discontinuity is big enough";
+}
+
+TEST(Standalone, PbfOut) {
+  const std::string ascii_map = R"(
+      1     2
+    A----B------C------D
+                  3   4
+  )";
+
+  const gurka::ways ways = {{"ABC", {{"highway", "primary"}}}, {"CD", {{"highway", "primary"}}}};
+
+  const gurka::nodes nodes = {
+      {"B", {{"highway", "traffic_signals"}, {"traffic_signals:direction", "forward"}}}};
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/trace_attributes_pbf");
+
+  std::string trace_result;
+  [[maybe_unused]] auto api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4"}, "auto",
+                       {{"/format", "pbf"},
+                        {"/filters/action", "include"},
+                        {"/filters/attributes/0", "matched.distance_from_trace_point"}},
+                       {}, &trace_result);
+
+  Api response;
+
+  EXPECT_TRUE(response.ParseFromString(trace_result));
+
+  EXPECT_TRUE(response.has_trip());
+  EXPECT_EQ(response.trip().routes_size(), 1);
+  EXPECT_EQ(response.trip().routes(0).matched_points_size(), 4);
+  for (auto it = response.trip().routes(0).matched_points().begin();
+       it != response.trip().routes(0).matched_points().end(); ++it) {
+    EXPECT_TRUE(it->has_distance_from_trace_point());
+    EXPECT_NEAR(it->distance_from_trace_point(), 10., 0.5);
+  }
 }

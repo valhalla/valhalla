@@ -1,9 +1,9 @@
 from pathlib import Path
 
 try:
-    from ._valhalla import VALHALLA_PRINT_VERSION, VALHALLA_PYTHON_PACKAGE  # noqa: F401
+    from ._valhalla import VALHALLA_PRINT_VERSION
 except ModuleNotFoundError:
-    from _valhalla import VALHALLA_PRINT_VERSION, VALHALLA_PYTHON_PACKAGE  # noqa: F401
+    from _valhalla import VALHALLA_PRINT_VERSION
 from .actor import Actor
 from .config import get_config, get_help
 

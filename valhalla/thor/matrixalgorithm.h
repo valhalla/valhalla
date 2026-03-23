@@ -129,7 +129,9 @@ public:
                                                   float,
                                                   uint32_t,
                                                   float,
-                                                  const Expansion_ExpansionType)>;
+                                                  const Expansion_ExpansionType,
+                                                  const uint8_t,
+                                                  const TravelMode)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }
@@ -147,6 +149,8 @@ protected:
   expansion_callback_t expansion_callback_;
 
   uint32_t max_reserved_labels_count_;
+  // prune path if path_distance exceeds this
+  uint32_t max_expansion_distance_;
 
   // if `true` clean reserved memory for edge labels
   bool clear_reserved_memory_;

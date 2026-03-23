@@ -1,16 +1,19 @@
 #include "mjolnir/landmarks.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
-#include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/sqlite3.h"
 #include "sif/nocost.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
+#ifdef HAVE_EXPAT
+#include <osmium/io/xml_input.hpp>
+#endif
 #include <sqlite3.h>
 
 #include <filesystem>
@@ -25,6 +28,37 @@ using namespace valhalla::midgard;
 using namespace valhalla;
 
 namespace {
+
+void apply_location_defaults(Location& location) {
+
+  if (!location.has_search_filter() || !location.search_filter().has_min_road_class_case())
+    location.mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
+  if (!location.search_filter().has_max_road_class_case())
+    location.mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_level())
+    location.mutable_search_filter()->set_level(kMaxLevel);
+  if (!location.has_street_side_cutoff_case())
+    location.set_street_side_cutoff(valhalla::RoadClass::kServiceOther);
+
+  if (!location.has_node_snap_tolerance())
+    location.set_node_snap_tolerance(5.f);
+
+  if (!location.has_heading_tolerance())
+    location.set_heading_tolerance(60.f);
+
+  if (!location.has_street_side_tolerance())
+    location.set_street_side_tolerance(5);
+
+  if (!location.has_street_side_max_distance())
+    location.set_street_side_max_distance(1000);
+
+  if (!location.has_search_cutoff_case())
+    location.set_search_cutoff(kDefaultSearchCutoff);
+}
 // a 25m radius used to associate edges to landmarks, which allows us to only keep the close edges in
 // the tight cities
 constexpr unsigned long kLandmarkRadius = 25;
@@ -36,10 +70,10 @@ constexpr double kLandmarkQueryBuffer = .000001;
 
 // sort a sequence file to put the edges in the same tile together
 bool sort_seq_file(const std::pair<GraphId, uint64_t>& a, const std::pair<GraphId, uint64_t>& b) {
-  if (a.first.Tile_Base() == b.first.Tile_Base()) {
+  if (a.first.tile_base() == b.first.tile_base()) {
     return a.first.id() < b.first.id();
   }
-  return a.first.Tile_Base() < b.first.Tile_Base();
+  return a.first.tile_base() < b.first.tile_base();
 }
 } // namespace
 
@@ -195,11 +229,11 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   auto populate_landmarks = [](void* data, int /*argc*/, char** argv, char** /*col_names*/) {
     std::vector<Landmark>* landmarks = static_cast<std::vector<Landmark>*>(data);
 
-    int64_t landmark_id = static_cast<int64_t>(std::stoi(argv[0]));
+    int64_t landmark_id = static_cast<int64_t>(valhalla::midgard::to_int(argv[0]));
     const char* landmark_name = argv[1];
-    int landmark_type = std::stoi(argv[2]);
-    double lng = std::stod(argv[3]);
-    double lat = std::stod(argv[4]);
+    int landmark_type = valhalla::midgard::to_int(argv[2]);
+    double lng = valhalla::midgard::to_float<double>(argv[3]);
+    double lat = valhalla::midgard::to_float<double>(argv[4]);
 
     landmarks->emplace_back(
         Landmark(landmark_id, landmark_name, static_cast<LandmarkType>(landmark_type), lng, lat));
@@ -308,6 +342,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
   LandmarkDatabase db(db_name, true);
   GraphReader reader(pt);
+  loki::Search search(reader);
   // create the sequence file
   std::string file_name = "landmark_dump_" + std::to_string(thread_number);
   midgard::sequence<std::pair<GraphId, uint64_t>> seq_file(file_name, true);
@@ -325,31 +360,25 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
       // find and collect all nearby path locations for the landmarks
       for (const auto& landmark : landmarks) {
-        baldr::Location landmark_location(midgard::PointLL{landmark.lng, landmark.lat},
-                                          baldr::Location::StopType::BREAK, 0, 0, kLandmarkRadius);
-        landmark_location.search_cutoff_ = kLandmarkSearchCutoff;
+        google::protobuf::RepeatedPtrField<Location> landmark_locs;
+        auto* landmark_loc = landmark_locs.Add();
+        landmark_loc->mutable_ll()->set_lat(landmark.lat);
+        landmark_loc->mutable_ll()->set_lng(landmark.lng);
+        landmark_loc->set_type(Location_Type_kBreak);
+        landmark_loc->set_radius(kLandmarkRadius);
+        landmark_loc->set_search_cutoff(kLandmarkSearchCutoff);
+        apply_location_defaults(*landmark_loc);
 
         // call loki::Search to get nearby edges to each landmark
-        std::unordered_map<valhalla::baldr::Location, PathLocation> result =
-            loki::Search({landmark_location}, reader, sif::CreateNoCost({}));
+        search.search(landmark_locs, sif::CreateNoCost({}));
 
         // we only have one landmark as input so the return size should be no more than one
-        if (result.size() > 1) {
-          throw std::logic_error(
-              "Error occurred in finding nearby edges to a landmark. Result size is " +
-              std::to_string(result.size()) + ", but should be one or zero");
-        }
-        // if the landmark should not be associated with any edge
-        if (result.size() == 0) {
-          continue;
-        }
 
-        std::vector<PathLocation::PathEdge> edges = result.begin()->second.edges;
         // for each edge insert edgeid - landmark_pkey pair into the sequence file
         // TODO: maybe do some filtering and only keep some of the edges it finds? (now we have the
         //  75m search cutoff)
-        for (const auto& edge : edges) {
-          seq_file.push_back(std::make_pair(edge.id, landmark.id));
+        for (const auto& edge : landmark_loc->correlation().edges()) {
+          seq_file.push_back(std::make_pair(GraphId(edge.graph_id()), landmark.id));
         }
       }
     }
@@ -380,8 +409,8 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
   // every i'th thread works on every i'th tile
   for (auto it = seq_file.begin(); it != seq_file.end(); ++it) {
     // if the current tile is not the same as the last one, increase counter by one
-    if ((*it).first.Tile_Base() != last_tile) {
-      last_tile = (*it).first.Tile_Base();
+    if ((*it).first.tile_base() != last_tile) {
+      last_tile = (*it).first.tile_base();
       tile_count++;
     }
     // decide whether this tile is a "every i'th tile". if not, the thread should skip it
@@ -393,14 +422,14 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
 
     // if this pair is on a new tile, then store the previous tile and move to the new tile
     if (!tile_builder_ptr ||
-        tile_builder_ptr->header_builder().graphid().Tile_Base() != (*it).first.Tile_Base()) {
+        tile_builder_ptr->header_builder().graphid().tile_base() != (*it).first.tile_base()) {
       // store the previously updated tile
       if (tile_builder_ptr) {
         tile_builder_ptr->StoreTileData();
         updated_tiles++;
       }
       // reset the tile builder to this new tile
-      tile_builder_ptr = std::make_unique<GraphTileBuilder>(tile_dir, (*it).first.Tile_Base(), true);
+      tile_builder_ptr = std::make_unique<GraphTileBuilder>(tile_dir, (*it).first.tile_base(), true);
     }
 
     // retrieve the landmark to be added
@@ -440,12 +469,11 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
 bool AddLandmarks(const boost::property_tree::ptree& pt) {
   LOG_INFO("Starting adding landmarks to tiles...");
 
-  const size_t num_threads =
-      pt.get<size_t>("mjolnir.concurrency", std::thread::hardware_concurrency());
-  const std::string db_name = pt.get_child("mjolnir").get<std::string>("landmarks_db", "");
+  const size_t num_threads = pt.get<size_t>("concurrency", std::thread::hardware_concurrency());
+  const std::string db_name = pt.get<std::string>("landmarks", "");
 
   // get tile access
-  baldr::GraphReader reader(pt.get_child("mjolnir"));
+  baldr::GraphReader reader(pt);
 
   // get all tile ids and sort the tiles in descending order by size to balance the threads
   // TODO: it is possible in a global tileset that we have coverage only at level 2 for some places
@@ -464,9 +492,9 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
   std::vector<std::promise<std::string>> sequence_file_names(num_threads);
   for (size_t i = 0; i < num_threads; ++i) {
-    threads[i] = std::make_shared<std::thread>(FindLandmarkEdges, std::cref(pt.get_child("mjolnir")),
-                                               std::cref(vec_tileset), i, num_threads,
-                                               std::ref(sequence_file_names[i]));
+    threads[i] =
+        std::make_shared<std::thread>(FindLandmarkEdges, std::cref(pt), std::cref(vec_tileset), i,
+                                      num_threads, std::ref(sequence_file_names[i]));
   }
 
   // join all the threads and collect the sequence file names

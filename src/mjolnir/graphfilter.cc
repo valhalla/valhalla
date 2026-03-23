@@ -57,12 +57,18 @@ bool CanAggregate(const DirectedEdge* de) {
   return true;
 }
 
+// Links and ferry-connecting edges hijack the road class for hierarchy purposes and that should be
+// respected while aggregating to prevent merging edges that are not on the same hierarchy level.
+RoadClass get_hierarchy_rc(const DirectedEdge* de) {
+  return de->is_shortcut() ? static_cast<RoadClass>(de->shortcut()) : de->classification();
+}
+
 // ExpandFromNode and ExpandFromNodeInner is reused code from restriction builder with some slight
 // modifications. We are using recursion for graph traversal. We have to make sure we don't loop back
 // to ourselves, walk in the correct direction, have not already visited a node, etc. Once we meet our
 // criteria or not we stop.
 bool ExpandFromNode(GraphReader& reader,
-                    std::list<PointLL>& shape,
+                    std::vector<PointLL>& shape,
                     GraphId& en,
                     const GraphId& from_node,
                     std::unordered_set<std::string>& isos,
@@ -93,7 +99,7 @@ bool ExpandFromNode(GraphReader& reader,
  *
  */
 bool ExpandFromNodeInner(GraphReader& reader,
-                         std::list<PointLL>& shape,
+                         std::vector<PointLL>& shape,
                          GraphId& en,
                          const GraphId& from_node,
                          std::unordered_set<std::string>& isos,
@@ -113,7 +119,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
     const auto& edge_info = prev_tile->edgeinfo(de);
 
     auto tile = prev_tile;
-    if (tile->id() != de->endnode().Tile_Base()) {
+    if (tile->id() != de->endnode().tile_base()) {
       tile = reader.GetGraphTile(de->endnode());
     }
 
@@ -125,7 +131,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
           (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
 
         // If this edge has special attributes, then we can't aggregate
-        if (!CanAggregate(de) || de->classification() != rc) {
+        if (!CanAggregate(de) || get_hierarchy_rc(de) != rc) {
           way_id = 0;
           return false;
         }
@@ -135,16 +141,15 @@ bool ExpandFromNodeInner(GraphReader& reader,
             isos.insert(tile->admin(en_info->admin_index())->country_iso());
           }
         } else {
-          std::list<PointLL> edgeshape =
-              valhalla::midgard::decode7<std::list<PointLL>>(edge_info.encoded_shape());
+          std::vector<PointLL> edgeshape =
+              valhalla::midgard::decode7<std::vector<PointLL>>(edge_info.encoded_shape());
           if (!de->forward()) {
             std::reverse(edgeshape.begin(), edgeshape.end());
           }
 
           // Append shape. Skip first point since it
           // should equal the last of the prior edge.
-          edgeshape.pop_front();
-          shape.splice(shape.end(), edgeshape);
+          shape.insert(shape.end(), std::next(edgeshape.begin()), edgeshape.end());
         }
 
         // found a node that does not have aggregation marked (using mode_change flag)
@@ -192,7 +197,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
  *
  */
 bool ExpandFromNode(GraphReader& reader,
-                    std::list<PointLL>& shape,
+                    std::vector<PointLL>& shape,
                     GraphId& en,
                     const GraphId& from_node,
                     std::unordered_set<std::string>& isos,
@@ -206,7 +211,7 @@ bool ExpandFromNode(GraphReader& reader,
                     bool validate) {
 
   auto tile = prev_tile;
-  if (tile->id() != current_node.Tile_Base()) {
+  if (tile->id() != current_node.tile_base()) {
     tile = reader.GetGraphTile(current_node);
   }
 
@@ -218,7 +223,7 @@ bool ExpandFromNode(GraphReader& reader,
 
 bool Aggregate(GraphId& start_node,
                GraphReader& reader,
-               std::list<PointLL>& shape,
+               std::vector<PointLL>& shape,
                GraphId& en,
                const GraphId& from_node,
                uint64_t& way_id,
@@ -335,7 +340,7 @@ void FilterTiles(GraphReader& reader,
             std::reverse(shape.begin(), shape.end());
           }
           auto heading = std::round(
-              PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(directededge->classification(),
+              PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(get_hierarchy_rc(directededge),
                                                                        directededge->use())));
           headings.push_back(heading);
 
@@ -370,7 +375,7 @@ void FilterTiles(GraphReader& reader,
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id()).first;
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                                res.type(), res.modes(), res.value(),
@@ -380,14 +385,7 @@ void FilterTiles(GraphReader& reader,
 
         // Copy lane connectivity
         if (directededge->laneconnectivity()) {
-          auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
-          if (laneconnectivity.size() == 0) {
-            LOG_ERROR("Base edge should have lane connectivity, but none found");
-          }
-          for (auto& lc : laneconnectivity) {
-            lc.set_to(tilebuilder.directededges().size());
-          }
-          tilebuilder.AddLaneConnectivity(laneconnectivity);
+          tilebuilder.CopyLaneConnectivityFromTile(tile, edgeid.id());
         }
 
         // Names can be different in the forward and backward direction
@@ -409,7 +407,7 @@ void FilterTiles(GraphReader& reader,
                                     edgeinfo.GetTypes(), added, diff_names);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());
-        classification.push_back(directededge->classification());
+        classification.push_back(get_hierarchy_rc(directededge));
         endnode.push_back(directededge->endnode());
 
         if (directededge->endnode().tile_value() != tile->header()->graphid().tile_value()) {
@@ -519,7 +517,7 @@ void FilterTiles(GraphReader& reader,
 }
 
 void GetAggregatedData(GraphReader& reader,
-                       std::list<PointLL>& shape,
+                       std::vector<PointLL>& shape,
                        GraphId& en,
                        const GraphId& from_node,
                        const graph_tile_ptr& tile,
@@ -533,7 +531,7 @@ void GetAggregatedData(GraphReader& reader,
 
   // walk in the correct direction.
   uint64_t wayid = tile->edgeinfo(directededge).wayid();
-  if (Aggregate(id, reader, shape, en, from_node, wayid, isos, directededge->classification(),
+  if (Aggregate(id, reader, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
                 isForward, false)) {
     aggregated++; // count the current edge
     // flip the shape back for storing in edgeinfo
@@ -554,7 +552,7 @@ void GetAggregatedData(GraphReader& reader,
 // As of 01/15/2024 there are only ~180 of these.
 
 void ValidateData(GraphReader& reader,
-                  std::list<PointLL>& shape,
+                  std::vector<PointLL>& shape,
                   GraphId& en,
                   std::unordered_set<GraphId>& processed_nodes,
                   std::unordered_set<uint64_t>& no_agg_ways,
@@ -594,7 +592,7 @@ void ValidateData(GraphReader& reader,
 
       // walk in the correct direction.
       uint64_t wayid = edgeinfo.wayid();
-      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, directededge->classification(),
+      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
                      isForward, true)) {
         // LOG_WARN("ValidateData - failed to validate node.  Will not aggregate.");
         // for debugging only
@@ -638,7 +636,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         const DirectedEdge* directededge = tile->directededge(idx);
         if (processed_nodes.find(nodeid) == processed_nodes.end()) {
           GraphId en = directededge->endnode();
-          std::list<PointLL> shape;
+          std::vector<PointLL> shape;
           // check if we can aggregate the edges at this node.
           ValidateData(reader, shape, en, processed_nodes, no_agg_ways, nodeid, tile, directededge);
         }
@@ -756,7 +754,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id()).first;
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                                res.type(), res.modes(), res.value(),
@@ -766,14 +764,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
 
         // Copy lane connectivity
         if (directededge->laneconnectivity()) {
-          auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
-          if (laneconnectivity.size() == 0) {
-            LOG_ERROR("Base edge should have lane connectivity, but none found");
-          }
-          for (auto& lc : laneconnectivity) {
-            lc.set_to(tilebuilder.directededges().size());
-          }
-          tilebuilder.AddLaneConnectivity(laneconnectivity);
+          tilebuilder.CopyLaneConnectivityFromTile(tile, edgeid.id());
         }
 
         // Names can be different in the forward and backward direction
@@ -781,7 +772,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
 
         const auto& edgeinfo = tile->edgeinfo(directededge);
         std::string encoded_shape = edgeinfo.encoded_shape();
-        std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL>>(encoded_shape);
+        std::vector<PointLL> shape = valhalla::midgard::decode7<std::vector<PointLL>>(encoded_shape);
 
         // Aggregate if end node is marked and in same tile
         bool aggregated = false;
@@ -988,7 +979,7 @@ void UpdateOpposingIndexAndTransitions(GraphReader& reader) {
 
         // Get the tile at the end node
         graph_tile_ptr endnodetile;
-        if (tile->id() == edge->endnode().Tile_Base()) {
+        if (tile->id() == edge->endnode().tile_base()) {
           endnodetile = tile;
         } else {
           endnodetile = reader.GetGraphTile(edge->endnode());

@@ -19,8 +19,7 @@
     },
     {
       "name": "gdal",
-      "default-features": false,
-      "features": ["recommended-features"]
+      "default-features": false
     },
     "geos",
     {
@@ -29,8 +28,8 @@
       "features": ["rttopo"]
     },
     "pkgconf",
-    "pybind11",
     "rapidjson",
+    "nanobind",
     "spatialite-tools",
     "luajit",
     "lz4",

@@ -356,15 +356,17 @@ TEST(recosting, all_algorithms) {
           EXPECT_NEAR(length, label.path_distance(), 2);
           EXPECT_NEAR(elapsed_itr->cost().transition_cost().seconds(), label.transition_cost().secs,
                       .1);
-          if (!reverse)
+          if (!reverse) {
             EXPECT_NEAR(elapsed_itr->cost().transition_cost().cost(), label.transition_cost().cost,
                         .1);
+          }
           // TODO: test restrictions
           // we need to move to the next node which has the elapsed time at the end of the edge
           ++elapsed_itr;
           EXPECT_NEAR(elapsed_itr->cost().elapsed_cost().seconds(), label.cost().secs, .1);
-          if (!reverse)
+          if (!reverse) {
             EXPECT_NEAR(elapsed_itr->cost().elapsed_cost().cost(), label.cost().cost, .1);
+          }
         };
 
         // find the percentage of the edges used
@@ -386,7 +388,6 @@ TEST(recosting, all_algorithms) {
         // is there time dependence and in what direction
         auto dt_itr = option.find("/date_time/value");
         std::string date_time = dt_itr != option.cend() ? dt_itr->second : "";
-        auto type_itr = option.find("/date_time/type");
         // build up the costing object
         auto costing = sif::CostFactory().Create(api.options());
 
@@ -551,15 +552,17 @@ TEST(recosting, api) {
   auto greater_equal = [](const valhalla::TripLeg::PathCost& lesser,
                           const valhalla::TripLeg::PathCost& greater, bool cost = true,
                           bool transition = true) {
-    if (cost)
+    if (cost) {
       EXPECT_GE(greater.elapsed_cost().cost(), lesser.elapsed_cost().cost());
+    }
     bool const is_greater = greater.elapsed_cost().seconds() > lesser.elapsed_cost().seconds();
     bool const is_equal =
         std::abs(greater.elapsed_cost().seconds() - lesser.elapsed_cost().seconds()) < 0.0001;
     EXPECT_TRUE(is_greater || is_equal);
     if (transition) {
-      if (cost)
+      if (cost) {
         EXPECT_GE(greater.transition_cost().cost(), lesser.transition_cost().cost());
+      }
       EXPECT_GE(greater.transition_cost().seconds(), lesser.transition_cost().seconds());
     }
   };
@@ -570,8 +573,9 @@ TEST(recosting, api) {
     greater_equal(n.cost(), n.recosts(0));
     greater_equal(n.recosts(0), n.recosts(1));
     // this should be strickly bigger because of avoid highways
-    if (n.cost().elapsed_cost().seconds() > 0)
+    if (n.cost().elapsed_cost().seconds() > 0) {
       EXPECT_GT(n.recosts(1).elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+    }
     greater_equal(n.recosts(1), n.recosts(2), true, false);
     // bike cost uses different costing units so we only do the seconds
     greater_equal(n.recosts(2), n.recosts(3), false, false);

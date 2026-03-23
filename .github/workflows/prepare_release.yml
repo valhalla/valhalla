@@ -1,0 +1,70 @@
+name: Create a quarterly release PR
+
+on:
+  schedule:
+    # every first of a quarter
+    - cron: "0 0 1 */3 *"
+  workflow_dispatch:
+    inputs:
+      new_tag:
+        type: string
+        description: "The new release tag"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release_pr:
+    name: Release PR
+    runs-on: ubuntu-latest  
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      
+      - name: Get next tag
+        id: get_tag
+        run: |
+          set -euo pipefail
+          # manually triggered will take the passed version string
+          if [[ ${{ github.event_name }} == "workflow_dispatch" ]]; then
+            echo "new_tag=${{ inputs.new_tag }}" >> $GITHUB_OUTPUT
+          else
+            latest_tag=$(git describe --tags --abbrev=0)
+            new_tag=$(echo "$latest_tag" | awk -F. -v OFS=. '{$3 = $3 + 1; print}')
+            echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Raise PR
+        run: |
+          set -euo pipefail
+
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          new_tag="${{ steps.get_tag.outputs.new_tag }}"
+
+          # set the new patch version in valhalla/valhalla.h
+          patch_version=$(echo "$new_tag" | rev | cut -c1)
+          sed -i "s/^\(#define VALHALLA_VERSION_PATCH \).*/\1${patch_version}/" valhalla/valhalla.h
+
+          # update CHANGELOG.md
+          sed -i "0,/^## UNRELEASED/s//## Release Date: $(date +%Y-%m-%d) Valhalla $new_tag/" CHANGELOG.md
+          sed -i "1i## UNRELEASED\n* **Removed**\n* **Bug Fix**\n* **Enhancement**\n" CHANGELOG.md
+
+          branch="release-$new_tag"
+          git checkout -B "$branch"
+          git add valhalla/valhalla.h CHANGELOG.md
+          git commit -m "release version $new_tag"
+          git push -u origin "$branch"
+
+          gh pr create \
+            --title "Release ${{ steps.get_tag.outputs.new_tag }}" \
+            --body "Auto-generated release ${new_tag}. May need to elevate to minor release." \
+            --base master \
+            --head "$branch"

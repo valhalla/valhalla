@@ -153,7 +153,15 @@ public:
    * @param  idx  Directed edge index.
    * @param  lc  Lane connectivity information.
    */
-  void AddLaneConnectivity(const std::vector<baldr::LaneConnectivity>& lc);
+  void AddLaneConnectivity(std::vector<baldr::LaneConnectivity>&& lc);
+
+  /**
+   * Copy lane connectivity from an existing tile and update the target edge indices
+   * to match the current builder's directed edge count.
+   * @param  tile  Source tile to copy lane connectivity from.
+   * @param  edge_id  Edge id in the source tile.
+   */
+  void CopyLaneConnectivityFromTile(const baldr::graph_tile_ptr& tile, uint32_t edge_id);
 
   /**
    * Add forward complex restriction.

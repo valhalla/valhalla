@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true, &list_stages))
+    if (!parse_common_args(program, options, result, &config, true, &list_stages))
       return EXIT_SUCCESS;
 
     // Convert stage strings to BuildStage
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
         throw cxxopts::exceptions::exception("Invalid end stage, see above");
       }
     }
-    LOG_INFO("Start stage = " + to_string(start_stage) + " End stage = " + to_string(end_stage));
+    LOG_INFO("Start stage = {} End stage = {}", to_string(start_stage), to_string(end_stage));
 
     // Make sure start stage < end stage
     if (static_cast<int>(start_stage) > static_cast<int>(end_stage)) {

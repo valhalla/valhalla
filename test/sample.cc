@@ -213,27 +213,6 @@ TEST(Sample, store) {
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
 
-  // input for gzip
-  auto src_func = [&tile](z_stream& s) -> int {
-    s.next_in = static_cast<Byte*>(static_cast<void*>(tile.data()));
-    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(int16_t));
-    return Z_FINISH;
-  };
-
-  // output for gzip
-  std::vector<char> dst_buffer(13000, 0);
-  std::ofstream gzfile("test/data/samplegz/N00/N00E005.hgt.gz", std::ios::binary | std::ios::trunc);
-  auto dst_func = [&dst_buffer, &gzfile](z_stream& s) -> void {
-    // move these bytes to their final resting place
-    auto chunk = s.total_out - gzfile.tellp();
-    gzfile.write(static_cast<const char*>(static_cast<void*>(dst_buffer.data())), chunk);
-    // if more input is coming
-    if (s.avail_in > 0) {
-      s.next_out = static_cast<Byte*>(static_cast<void*>(dst_buffer.data()));
-      s.avail_out = dst_buffer.size();
-    }
-  };
-
   testable_sample_t s("test/data/sample");
 
   EXPECT_TRUE(s.store("/N00/N00E005.hgt", {}));

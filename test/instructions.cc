@@ -71,7 +71,7 @@ void test_instructions(const std::string& filename,
 
   // Create the request from the path bytes
   valhalla::Api request;
-  request.ParseFromString(path_bytes);
+  ASSERT_TRUE(request.ParseFromString(path_bytes));
 
   // fix_request(filename, request);
 
@@ -142,7 +142,7 @@ void test_osrm_maneuver(const std::string& filename,
 
   // Create the request from the path bytes
   valhalla::Api request;
-  request.ParseFromString(path_bytes);
+  ASSERT_TRUE(request.ParseFromString(path_bytes));
 
   // fix_request(filename, request);
 
@@ -189,7 +189,7 @@ void test_osrm_destinations(const std::string& filename,
 
   // Create the request from the path bytes
   valhalla::Api request;
-  request.ParseFromString(path_bytes);
+  ASSERT_TRUE(request.ParseFromString(path_bytes));
 
   // fix_request(filename, request);
 

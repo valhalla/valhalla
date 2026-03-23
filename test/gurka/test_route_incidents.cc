@@ -39,25 +39,16 @@ protected:
     };
 
     // generate the lls for the nodes in the map
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {.2f, .2f});
-
-    // Set country codes for nodes
-    const gurka::nodes nodes = {{"A", {{"iso:3166_1", "CA"}, {"iso:3166_2", "CA-BC"}}},
-                                {"B", {{"iso:3166_1", "CA"}, {"iso:3166_2", "CA-BC"}}},
-                                {"C", {{"iso:3166_1", "CA"}, {"iso:3166_2", "CA-BC"}}},
-                                {"D", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
-                                {"E", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
-                                {"F", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
-                                {"G", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
-                                {"H", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
-                                {"I", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}}};
+    const auto layout =
+        gurka::detail::map_to_coordinates(ascii_map, 100, {-111.962238354, 49.003392362});
 
     // make the tiles
     std::string tile_dir = "test/data/route_incidents";
-    map = gurka::buildtiles(layout, ways, nodes, {}, tile_dir,
+    map = gurka::buildtiles(layout, ways, {}, {}, tile_dir,
                             {
                                 {"mjolnir.traffic_extract", tile_dir + "/traffic.tar"},
-                                {"mjolnir.data_processing.use_admin_db", "false"},
+                                {"mjolnir.admin",
+                                 {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                             });
 
     // stage up some live traffic data
@@ -183,7 +174,7 @@ struct test_reader : public baldr::GraphReader {
   }
   virtual std::shared_ptr<const valhalla::IncidentsTile>
   GetIncidentTile(const baldr::GraphId& tile_id) const override {
-    auto i = incidents.find(tile_id.Tile_Base());
+    auto i = incidents.find(tile_id.tile_base());
     if (i == incidents.cend())
       return {};
     return std::shared_ptr<valhalla::IncidentsTile>(&i->second, [](valhalla::IncidentsTile*) {});
@@ -194,7 +185,7 @@ struct test_reader : public baldr::GraphReader {
            const std::string& incident_description = "") {
 
     // Grab the incidents-tile we need to add to
-    valhalla::IncidentsTile& incidents_tile = incidents[id.Tile_Base()];
+    valhalla::IncidentsTile& incidents_tile = incidents[id.tile_base()];
 
     // See if we have this incident metadata already
     int metadata_index =
@@ -261,7 +252,7 @@ std::shared_ptr<test_reader> setup_test(const gurka::map& map,
     auto edge_id = std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, begin_node, end_node));
     auto has_incident_cb = [edge_id](baldr::GraphReader&, baldr::TrafficTile& tile, int edge_index,
                                      valhalla::baldr::TrafficSpeed* current) -> void {
-      if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == (uint32_t)edge_index)
+      if (edge_id.tile_base() == tile.header->tile_id && edge_id.id() == (uint32_t)edge_index)
         current->has_incidents = true;
     };
     test::customize_live_traffic_data(map.config, has_incident_cb);

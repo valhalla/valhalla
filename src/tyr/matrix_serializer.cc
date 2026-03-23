@@ -123,6 +123,9 @@ void locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
       writer.set_precision(tyr::kCoordinatePrecision);
       writer("lat", corr_ll.lat());
       writer("lon", corr_ll.lng());
+      if (!location.name().empty()) {
+        writer("name", location.name());
+      }
     }
     writer.end_object();
   }
@@ -295,12 +298,8 @@ namespace tyr {
 std::string serializeMatrix(Api& request) {
   double distance_scale = (request.options().units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
 
-  // error if we failed finding any connection
   // dont bother serializing in case of /expansion request
-  if (std::all_of(request.matrix().times().begin(), request.matrix().times().end(),
-                  [](const float& time) { return time == kMaxCost; })) {
-    throw valhalla_exception_t(442);
-  } else if (request.options().action() == Options_Action_expansion) {
+  if (request.options().action() == Options_Action_expansion) {
     return "";
   }
 

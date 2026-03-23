@@ -429,9 +429,7 @@ void PopulateIntersectingEdge(TripLeg_IntersectingEdge* xedge,
                               ::google::protobuf::uint32 begin_heading,
                               bool prev_name_consistency = false,
                               bool curr_name_consistency = false,
-                              TripLeg_Traversability driveability = TripLeg_Traversability_kBoth,
-                              TripLeg_Traversability cyclability = TripLeg_Traversability_kBoth,
-                              TripLeg_Traversability walkability = TripLeg_Traversability_kBoth) {
+                              TripLeg_Traversability driveability = TripLeg_Traversability_kBoth) {
   xedge->set_begin_heading(begin_heading);
   xedge->set_driveability(driveability);
   xedge->set_prev_name_consistency(prev_name_consistency);
@@ -1775,8 +1773,7 @@ TEST(Maneuversbuilder, TestPathRightXStraightIsIntersectingForwardEdge) {
   PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.054344, 30.000000, valhalla::RoadClass::kResidential,
                20, 337, 1, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
                {}, TravelMode::kDrive);
-  PopulateIntersectingEdge(node->add_intersecting_edge(), 289, 1, 1, TripLeg_Traversability_kBoth,
-                           TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
+  PopulateIntersectingEdge(node->add_intersecting_edge(), 289, 1, 1, TripLeg_Traversability_kBoth);
 
   // node:2
   node = path.add_node();
@@ -1807,8 +1804,7 @@ TEST(Maneuversbuilder, TestPathLeftXStraightIsIntersectingForwardEdge) {
   PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.046636, 30.000000, valhalla::RoadClass::kResidential,
                20, 337, 1, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
                {}, TravelMode::kDrive);
-  PopulateIntersectingEdge(node->add_intersecting_edge(), 111, 1, 1, TripLeg_Traversability_kBoth,
-                           TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
+  PopulateIntersectingEdge(node->add_intersecting_edge(), 111, 1, 1, TripLeg_Traversability_kBoth);
 
   // node:2
   node = path.add_node();
@@ -1839,8 +1835,7 @@ TEST(Maneuversbuilder, TestPathSlightRightXSlightLeftIsIntersectingForwardEdge) 
   PopulateEdge(edge, {{"Horace Greeley Road", 0}}, 0.205258, 30.000000,
                valhalla::RoadClass::kResidential, 45, 19, 6, 12, TripLeg_Traversability_kBoth, 0, 0,
                0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TravelMode::kDrive);
-  PopulateIntersectingEdge(node->add_intersecting_edge(), 3, 0, 0, TripLeg_Traversability_kBoth,
-                           TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
+  PopulateIntersectingEdge(node->add_intersecting_edge(), 3, 0, 0, TripLeg_Traversability_kBoth);
 
   // node:2
   node = path.add_node();

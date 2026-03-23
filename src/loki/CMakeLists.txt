@@ -14,6 +14,7 @@ set(sources
   node_search.cc
   route_action.cc
   search.cc
+  tile_action.cc
   trace_route_action.cc
   worker.cc)
 
@@ -23,7 +24,6 @@ set(system_includes
 
 valhalla_module(NAME loki
   SOURCES ${sources}
-  SOURCES_WITH_WARNINGS ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
@@ -37,7 +37,9 @@ valhalla_module(NAME loki
       ${system_includes}
     PRIVATE
       ${unordered_dense_include_dir}
+      ${vtzero_include_dirs}
   DEPENDS
+    valhalla::meili
     valhalla::skadi
     valhalla::sif
     valhalla::proto
