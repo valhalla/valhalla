@@ -71,6 +71,8 @@ public:
                                  const char* name,
                                  const baldr::AttributesController& controller);
 
+  void add_feature(const IncidentsTile::Metadata&, const vtzero::point&);
+  void add_feature(const IncidentsTile::Metadata&, const std::vector<vtzero::point>& geometry);
   vtzero::index_value key_type_;
   vtzero::index_value key_impact_;
   vtzero::index_value key_description_;
@@ -92,24 +94,6 @@ public:
 
 protected:
   const baldr::AttributesController controller_;
-};
-
-class IncidentPointLayerBuilder : public IncidentLayersBuilder {
-public:
-  explicit IncidentPointLayerBuilder(vtzero::tile_builder& tile,
-                                     const char* name,
-                                     const baldr::AttributesController& controller);
-
-  void add_feature(const IncidentsTile::Metadata&, const vtzero::point&);
-};
-
-class IncidentLineLayerBuilder : public IncidentLayersBuilder {
-public:
-  explicit IncidentLineLayerBuilder(vtzero::tile_builder& tile,
-                                    const char* name,
-                                    const baldr::AttributesController& controller);
-
-  void add_feature(const IncidentsTile::Metadata&, const std::vector<vtzero::point>& geometry);
 };
 
 /**

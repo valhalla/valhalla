@@ -43,6 +43,30 @@ using namespace valhalla::loki;
 // extend the boost::geometry types without making vtzero a public dependency
 BOOST_GEOMETRY_REGISTER_POINT_2D(vtzero::point, int32_t, boost::geometry::cs::cartesian, x, y)
 namespace {
+
+PointLL shape_point_along(const std::vector<midgard::PointLL>& shape, double pct_along) {
+  if (shape.size() < 2)
+    return shape.empty() ? PointLL{} : shape[0];
+
+  double length = midgard::length(shape);
+  auto meters_along = length * pct_along;
+  double acc = 0.0;
+
+  for (auto v = shape.begin() + 1; v != shape.end(); ++v) {
+    auto u = std::prev(v);
+    auto dist = u->Distance(*v);
+    auto new_acc = acc + dist;
+
+    if (new_acc / length >= pct_along) {
+      auto remaining = meters_along - acc;
+      return u->PointAlongSegment(*v, remaining / dist);
+    }
+    acc = new_acc;
+  }
+
+  return shape.back();
+}
+
 // vtzero int32_t types
 using box_vtzero_t = boost::geometry::model::box<vtzero::point>;
 using linestring_vtzero_t = boost::geometry::model::linestring<vtzero::point>;
@@ -197,8 +221,7 @@ void filter_tile(const std::string& tile_bytes,
   const bool exclude_node_layer = exclude_layers.contains(kNodeLayerName);
   const bool exclude_shortcut_layer = exclude_layers.contains(kShortcutLayerName);
   const bool exclude_access_restrictions_layer = exclude_layers.contains(kAccessRestrictionLayerName);
-  const bool exclude_incidents_point_layer = exclude_layers.contains(kIncidentPointLayerName);
-  const bool exclude_incidents_line_layer = exclude_layers.contains(kIncidentLineLayerName);
+  const bool exclude_incidents_layer = exclude_layers.contains(kIncidentLayerName);
 
   auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
@@ -206,8 +229,7 @@ void filter_tile(const std::string& tile_bytes,
         (layer_name == kEdgeLayerName && exclude_edge_layer) ||
         (layer_name == kShortcutLayerName && exclude_shortcut_layer) ||
         (layer_name == kAccessRestrictionLayerName && exclude_access_restrictions_layer) ||
-        (layer_name == kIncidentPointLayerName && exclude_incidents_point_layer) ||
-        (layer_name == kIncidentLineLayerName && exclude_incidents_line_layer)) {
+        (layer_name == kIncidentLayerName && exclude_incidents_layer)) {
       return;
     }
 
@@ -218,11 +240,10 @@ void filter_tile(const std::string& tile_bytes,
     const auto& prop_map = [&]() -> const auto& {
       if (layer_name == kNodeLayerName)
         return loki::detail::kNodePropToAttributeFlag;
-      if (layer_name == kIncidentPointLayerName || layer_name == kIncidentLineLayerName)
+      if (layer_name == kIncidentLayerName || layer_name == kIncidentLayerName)
         return loki::detail::kIncidentPropToAttributeFlag;
       return loki::detail::kEdgePropToAttributeFlag;
-    }
-    ();
+    }();
 
     const auto& key_table = full_layer.key_table();
     std::vector<bool> attrs_allowed(key_table.size(), false);
@@ -286,8 +307,7 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
   nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
 }
 
-void build_incidents_layers(IncidentPointLayerBuilder& inc_point_builder,
-                            IncidentLineLayerBuilder& inc_line_builder,
+void build_incidents_layers(IncidentLayersBuilder& incidents_builder,
                             GraphId edge_id,
                             const std::vector<midgard::PointLL>& shape,
                             bg::linestring_2d_t& mercator_line,
@@ -300,16 +320,20 @@ void build_incidents_layers(IncidentPointLayerBuilder& inc_point_builder,
 
   auto process_single_line = [&](const linestring_vtzero_t& line,
                                  const IncidentsTile::Metadata& meta) {
-    inc_line_builder.add_feature(meta, line);
+    incidents_builder.add_feature(meta, line);
   };
   auto incident_result = reader.GetIncidents(edge_id, tile);
   for (auto i = incident_result.start_index; i < incident_result.end_index; ++i) {
     auto& loc = incident_result.tile->locations(i);
     auto& meta = incident_result.tile->metadata(loc.metadata_index());
 
-    if (meta.has_display_ll()) {
-      const auto x = lon_to_merc_x(meta.display_ll().lng());
-      const auto y = lat_to_merc_y(meta.display_ll().lat());
+    // maybe the incident is actually a point
+    if (loc.start_offset() == loc.end_offset() || meta.has_display_ll()) {
+      PointLL pt = meta.has_display_ll() ? PointLL{meta.display_ll().lng(), meta.display_ll().lat()}
+                                         : shape_point_along(shape, loc.start_offset());
+
+      const auto x = lon_to_merc_x(pt.lng());
+      const auto y = lat_to_merc_y(pt.lat());
       const auto tile_coord = merc_to_tile_coords({x, y}, projection);
 
       auto tile_x = boost::geometry::get<0>(tile_coord);
@@ -321,10 +345,15 @@ void build_incidents_layers(IncidentPointLayerBuilder& inc_point_builder,
           tile_y >= -projection.tile_buffer &&
           tile_y <= projection.tile_extent + projection.tile_buffer) {
 
-        inc_point_builder.add_feature(meta, tile_coord);
+        incidents_builder.add_feature(meta, tile_coord);
       }
+
+      // if there really is no line, bail
+      if (loc.start_offset() == loc.end_offset())
+        return;
     }
 
+    // it's a line
     std::vector<midgard::PointLL> trimmed_shape = shape;
     trim_shape(loc.start_offset(), loc.end_offset(), trimmed_shape);
     bool leaves_bbox = false;
@@ -389,8 +418,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   EdgesLayerBuilder shortcuts_builder(tile, kShortcutLayerName.data(), controller);
   NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
   AccessRestrictionLayerBuilder access_restriction_builder(tile, kAccessRestrictionLayerName.data());
-  IncidentPointLayerBuilder incident_point_builder(tile, kIncidentPointLayerName.data(), controller);
-  IncidentLineLayerBuilder incident_line_builder(tile, kIncidentLineLayerName.data(), controller);
+  IncidentLayersBuilder incidents_builder(tile, kIncidentLayerName.data(), controller);
 
   std::unordered_set<GraphId> unique_nodes;
   unique_nodes.reserve(edge_ids.size());
@@ -460,13 +488,13 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     };
 
     if (forward_traffic && forward_traffic->has_incidents) {
-      build_incidents_layers(incident_point_builder, incident_line_builder, edge_id, shape,
-                             mercator_line, clip_box, generalize, z, edge_tile, *reader, projection);
+      build_incidents_layers(incidents_builder, edge_id, shape, mercator_line, clip_box, generalize,
+                             z, edge_tile, *reader, projection);
     }
 
     if (opp_tile && reverse_traffic && reverse_traffic->has_incidents) {
-      build_incidents_layers(incident_point_builder, incident_line_builder, opp_edge_id, shape,
-                             mercator_line, clip_box, generalize, z, opp_tile, *reader, projection);
+      build_incidents_layers(incidents_builder, opp_edge_id, shape, mercator_line, clip_box,
+                             generalize, z, opp_tile, *reader, projection);
     }
 
     if (!line_leaves_bbox) {
@@ -729,14 +757,8 @@ IncidentLayersBuilder::IncidentLayersBuilder(vtzero::tile_builder& tile,
   }
 }
 
-IncidentPointLayerBuilder::IncidentPointLayerBuilder(vtzero::tile_builder& tile,
-                                                     const char* name,
-                                                     const baldr::AttributesController& controller)
-    : IncidentLayersBuilder(tile, name, controller) {
-}
-
-void IncidentPointLayerBuilder::add_feature(const IncidentsTile::Metadata& meta,
-                                            const vtzero::point& position) {
+void IncidentLayersBuilder::add_feature(const IncidentsTile::Metadata& meta,
+                                        const vtzero::point& position) {
   vtzero::point_feature_builder feature{*this};
   feature.add_point(position);
   // Add node properties
@@ -749,14 +771,8 @@ void IncidentPointLayerBuilder::add_feature(const IncidentsTile::Metadata& meta,
   feature.commit();
 }
 
-IncidentLineLayerBuilder::IncidentLineLayerBuilder(vtzero::tile_builder& tile,
-                                                   const char* name,
-                                                   const baldr::AttributesController& controller)
-    : IncidentLayersBuilder(tile, name, controller) {
-}
-
-void IncidentLineLayerBuilder::add_feature(const IncidentsTile::Metadata& meta,
-                                           const std::vector<vtzero::point>& geometry) {
+void IncidentLayersBuilder::add_feature(const IncidentsTile::Metadata& meta,
+                                        const std::vector<vtzero::point>& geometry) {
 
   vtzero::linestring_feature_builder feature{*this};
   feature.set_id(static_cast<uint64_t>(meta.id()));

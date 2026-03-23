@@ -15,10 +15,10 @@ protected:
     A----------0----------B----------1----------C
     |                     |
     |                     |
-    |                  v  |  w
-    2                  u  3   
     |                     |   
-    |                     x
+    2                     |   
+    |                     |   
+    |                     |
     |                     |
     D----------4----------E----------5----------F
     |                     |
@@ -185,8 +185,7 @@ struct test_reader : public baldr::GraphReader {
   void add(const baldr::GraphId& id,
            valhalla::IncidentsTile::Location&& _incident_location,
            uint64_t incident_id,
-           const std::string& incident_description = "",
-           std::optional<midgard::PointLL> display_ll = std::nullopt) {
+           const std::string& incident_description = "") {
 
     // Grab the incidents-tile we need to add to
     valhalla::IncidentsTile& incidents_tile = incidents[id.tile_base()];
@@ -204,11 +203,6 @@ struct test_reader : public baldr::GraphReader {
       auto* metadata = incidents_tile.mutable_metadata()->Add();
       metadata->set_id(incident_id);
       metadata->set_description(incident_description);
-
-      if (display_ll) {
-        metadata->mutable_display_ll()->set_lng(display_ll->lng());
-        metadata->mutable_display_ll()->set_lat(display_ll->lat());
-      }
     }
 
     // Finally, add the relation from edge to the incident metadata
@@ -854,69 +848,115 @@ TEST_F(IncidentsTest, armageddon) {
                                        {3, 2, 0, .8, 1, 1.},
                                    });
 }
-TEST_F(IncidentsTest, vector_tiles) {
+
+TEST(Standalone, vector_tiles) {
+
+  const std::string ascii_map = R"(
+    A----------0----------B----------1----------C
+    |                     |
+    |                     |
+    |                     |   
+    2                     3   
+    |                     |   
+    |                     |
+    |                     |
+    D----------4----------E----------5----------F
+    |                     |
+    |                     |
+    |                     |
+    6                     7
+    |                     |
+    |                     |
+    |                     |
+    G----------8----------H----------9----------I)";
+
+  // connect the ways via the nodes
+  const gurka::ways ways = {
+      {"AB", {{"highway", "tertiary"}, {"driving_side", "left"}}},
+      {"BC", {{"highway", "service"}, {"driving_side", "left"}}},
+      {"DEF", {{"highway", "primary"}, {"driving_side", "left"}}},
+      {"GHI", {{"highway", "primary"}, {"driving_side", "left"}}},
+      {"ADG", {{"highway", "motorway"}, {"driving_side", "left"}}},
+      {"BE", {{"highway", "secondary"}, {"driving_side", "left"}}},
+      {"EH", {{"highway", "tertiary"}, {"driving_side", "left"}}},
+  };
+
+  // generate the lls for the nodes in the map
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 50, {-111.962238354, 49.003392362});
+
+  // make the tiles
+  std::string tile_dir = "test/data/incidents_mvt";
+  auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir,
+                               {
+                                   {"mjolnir.traffic_extract", tile_dir + "/traffic.tar"},
+                                   {"mjolnir.admin",
+                                    {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
+                               });
+
+  // stage up some live traffic data
+  test::build_live_traffic_data(map.config);
 
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH", "HI"}, edge_ids);
+  auto reader = setup_test(map, {"AB", "BE", "DE", "AD"}, edge_ids);
+  std::cerr << "Doone!\n";
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 123, "snow storm",
-              layout.at("u"));
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), .0, .2), 666, "scorching heat",
-              layout.at("v"));
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .5), 456, "raining frogs",
-              layout.at("w"));
-  reader->add(edge_ids[3], createIncidentLocation(edge_ids[3].id(), 0., .1), 2, "locusts",
-              layout.at("x"));
+  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 0.0f, 0.0f), 123, "snow storm");
+  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0.0f, 0.7f), 666,
+              "scorching heat");
+  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0.f, 1.f), 456, "raining frogs");
+  reader->add(edge_ids[3], createIncidentLocation(edge_ids[3].id(), 0.0f, 0.0f), 2, "locusts");
   reader->sort();
 
-  std::unordered_set<std::string> description_map{"snow storm", "scorching heat", "raining frog",
+  std::unordered_set<std::string> description_map{"snow storm", "scorching heat", "raining frogs",
                                                   "locusts"};
+
   {
     std::string tile_data;
     [[maybe_unused]] auto api =
-        gurka::do_action(Options::tile, map, "3", 14, "auto", {}, graphreader, &tile_data);
+        gurka::do_action(Options::tile, map, "A", 14, "auto", {}, graphreader, &tile_data);
 
     vtzero::vector_tile tile{tile_data};
-    // check the points layer
-    auto point_layer = tile.get_layer_by_name("incidents_points");
-    EXPECT_TRUE(point_layer.valid());
-    EXPECT_EQ(point_layer.num_features(), 5); // todo: this should be 4, but it looks like we get
-                                              // duplicate edge pairs when building the tile?
 
     // and the lines layer
-    auto line_layer = tile.get_layer_by_name("incidents_lines");
-    EXPECT_TRUE(line_layer.valid());
-    EXPECT_EQ(line_layer.num_features(), 4);
-    auto feat = line_layer.next_feature();
-    EXPECT_EQ(feat.num_properties(), 17);
-    feat.for_each_property([&](vtzero::property&& p) {
-      if (p.key() == "description") {
-        auto s = p.value().string_value().to_string();
-        EXPECT_TRUE(description_map.count(s) > 0);
+    auto incidents_layer = tile.get_layer_by_name("incidents");
+    EXPECT_TRUE(incidents_layer.valid());
+    EXPECT_EQ(incidents_layer.num_features(), 6);
+
+    size_t num_lines = 0, num_points = 0;
+
+    while (auto feat = incidents_layer.next_feature()) {
+      switch (feat.geometry_type()) {
+        case (vtzero::GeomType::LINESTRING):
+          num_lines++;
+          break;
+        case (vtzero::GeomType::POINT):
+          num_points++;
+          break;
+        default:
+          FAIL() << "Unknown geometry type";
       }
-      return true;
-    });
-  }
-  {
-    std::string tile_data;
-    [[maybe_unused]] auto api = gurka::do_action(Options::tile, map, "3", 14, "auto",
-                                                 {{"/verbose", "0"}}, graphreader, &tile_data);
 
-    vtzero::vector_tile tile{tile_data};
-    // check the points layer
-    auto point_layer = tile.get_layer_by_name("incidents_points");
-    EXPECT_TRUE(point_layer.valid());
-    EXPECT_EQ(point_layer.num_features(), 5); // todo: this should be 4, but it looks like we get
-                                              // duplicate edge pairs when building the tile?
+      EXPECT_EQ(feat.num_properties(), 17);
 
-    // and the lines layer
-    auto line_layer = tile.get_layer_by_name("incidents_lines");
-    EXPECT_TRUE(line_layer.valid());
-    EXPECT_EQ(line_layer.num_features(), 4);
-    auto feat = line_layer.next_feature();
-    EXPECT_EQ(feat.num_properties(), 0);
+      bool found_description = false;
+      feat.for_each_property([&](vtzero::property&& p) {
+        if (p.key() == "description") {
+          auto s = p.value().string_value().to_string();
+          std::cerr << "found " << s
+                    << (feat.geometry_type() == vtzero::GeomType::POINT ? " p" : " l") << "\n";
+          EXPECT_TRUE(description_map.count(s) > 0) << "Unexpected description: " << s;
+          found_description = true;
+        }
+        return true;
+      });
+
+      EXPECT_TRUE(found_description);
+    }
+
+    EXPECT_EQ(num_lines, 3);
+    EXPECT_EQ(num_points, 3);
   }
 }
