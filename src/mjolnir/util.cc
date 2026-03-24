@@ -925,12 +925,13 @@ void build_stats::log_stage(BuildStage stage,
     uint32_t delta = current - snapshot[i];
     if (delta > 0) {
       LOG_WARN("[" + stage_name + "] " + std::to_string(delta) + " " + meta[i].log_label);
-      statsd_entries.emplace_back(std::string(meta[i].statsd_key) + "." + stage_name, delta);
+      // e.g. "build.exceeded_max_speed" -> "build.parseways.exceeded_max_speed"
+      statsd_entries.emplace_back("build." + stage_name + "." + (meta[i].statsd_key + 6), delta);
     }
     snapshot[i] = current;
   }
 
-  // Emit to statsd if configured (e.g. build.exceeded_max_speed.parseways)
+  // Emit to statsd if configured (e.g. build.parseways.exceeded_max_speed)
   auto host = config.get<std::string>("statsd.host", "");
   if (host.empty() || statsd_entries.empty()) {
     return;
