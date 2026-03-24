@@ -41,6 +41,7 @@ public:
    * @param  complex_restriction_to_file    where to store the to complex restrictions so they are not
    * in memory
    * @param  osmdata                        OSM data
+   *
    */
   static void ParseRelations(const boost::property_tree::ptree& pt,
                              const std::vector<std::string>& input_files,
@@ -56,6 +57,7 @@ public:
    * @param  bss_nodes_file                 where to store the bss nodes so they are not in memory
    * @param  linguistic_node_file           where to store the linguistic information for nodes so
    * they are not in memory
+   *
    * @param  osmdata                        OSM data
    */
   static void ParseNodes(const boost::property_tree::ptree& pt,

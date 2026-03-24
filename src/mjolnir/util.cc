@@ -25,6 +25,7 @@
 #include <openssl/evp.h>
 
 #include <filesystem>
+#include <format>
 #include <regex>
 
 using boost::property_tree::ptree;
@@ -869,7 +870,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(tile_manifest);
     OSMData::cleanup_temp_files(tile_dir);
   }
-
   return true;
 }
 
@@ -924,10 +924,13 @@ void build_stats::log_stage(BuildStage stage,
     uint32_t current = counters[i].load();
     uint32_t delta = current - snapshot[i];
     if (delta > 0) {
-      LOG_WARN("[" + stage_name + "] " + std::to_string(delta) + " " + meta[i].log_label);
+      LOG_WARN(std::format("[{}] {} {}", stage_name, delta, meta[i].log_label));
       // e.g. "build.exceeded_max_speed" -> "build.parseways.exceeded_max_speed"
-      statsd_entries.emplace_back("build." + stage_name + "." + (meta[i].statsd_key + 6), delta);
+      statsd_entries.emplace_back(std::format("build.{}.{}", stage_name, meta[i].statsd_key + 6),
+                                  delta);
     }
+    // update the current counters
+    // currently, all counters are incremented in a single stage
     snapshot[i] = current;
   }
 
@@ -947,7 +950,7 @@ void build_stats::log_stage(BuildStage stage,
     }
   }
   for (const auto& [key, count] : statsd_entries) {
-    client.count(key, count, 1.f, tags);
+    client.gauge(key, count, 1.f, tags);
   }
   client.flush();
 }
