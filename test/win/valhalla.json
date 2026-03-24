@@ -1,4 +1,9 @@
 {
+  "logging": {
+    "color": true,
+    "file_name": "path_to_some_file.log",
+    "type": "std_out"
+  },
   "additional_data": {
     "elevation": "/data/valhalla/elevation/"
   },
@@ -25,12 +30,6 @@
       "status",
       "tile"
     ],
-    "logging": {
-      "color": true,
-      "file_name": "path_to_some_file.log",
-      "long_request": 100.0,
-      "type": "std_out"
-    },
     "service": {
       "proxy": "ipc:///tmp/loki"
     },
@@ -83,11 +82,6 @@
       "cache_size": 100240,
       "size": 500
     },
-    "logging": {
-      "color": true,
-      "file_name": "path_to_some_file.log",
-      "type": "std_out"
-    },
     "mode": "auto",
     "multimodal": {
       "turn_penalty_factor": 70
@@ -106,11 +100,6 @@
     "landmarks": "test\\data\\landmarks.sqlite",
     "hierarchy": true,
     "include_driveways": true,
-    "logging": {
-      "color": true,
-      "file_name": "path_to_some_file.log",
-      "type": "std_out"
-    },
     "max_cache_size": 1000000000,
     "shortcuts": true,
     "tile_dir": "test\\data\\utrecht_tiles",
@@ -120,11 +109,6 @@
     "transit_feeds_dir": ""
   },
   "odin": {
-    "logging": {
-      "color": true,
-      "file_name": "path_to_some_file.log",
-      "type": "std_out"
-    },
     "service": {
       "proxy": "ipc:///tmp/odin"
     }
@@ -243,12 +227,6 @@
     }
   },
   "thor": {
-    "logging": {
-      "color": true,
-      "file_name": "path_to_some_file.log",
-      "long_request": 110.0,
-      "type": "std_out"
-    },
     "service": {
       "proxy": "ipc:///tmp/thor"
     },

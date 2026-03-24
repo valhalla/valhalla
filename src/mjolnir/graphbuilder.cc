@@ -477,8 +477,6 @@ void BuildTileSet(const std::string& ways_file,
   sequence<OSMNodeLinguistic> linguistic_node(linguistic_node_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
-  bool infer_internal_intersections =
-      pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
@@ -1013,7 +1011,7 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_use(Use::kRamp);
           }
 
-          if (!infer_internal_intersections && w.internal()) {
+          if (w.internal()) {
             if (directededge.use() != Use::kRamp && directededge.use() != Use::kTurnChannel)
               directededge.set_internal(true);
           }

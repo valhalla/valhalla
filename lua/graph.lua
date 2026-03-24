@@ -1285,6 +1285,9 @@ function filter_tags_generic(kv)
   else
     kv["roundabout"] = "false"
   end
+  if kv["junction"] == "intersection" then
+    kv["tagged_internal_intersection"] = "true"
+  end
   kv["oneway"] = oneway_norm
   if oneway_norm == "true" then
     kv["auto_backward"] = "false"

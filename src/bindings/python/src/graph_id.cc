@@ -153,14 +153,8 @@ void init_graphid(nb::module_& m) {
               }
             } catch (...) { throw std::runtime_error("Failed to parse config JSON"); }
 
-            // Configure logging like Actor does (suppress WARN/INFO messages)
-            auto logging_subtree = pt.get_child_optional("mjolnir.logging");
-            if (logging_subtree) {
-              auto logging_config =
-                  vm::ToMap<const boost::property_tree::ptree&,
-                            std::unordered_map<std::string, std::string>>(logging_subtree.get());
-              vm::logging::Configure(logging_config);
-            }
+            // Configure logging
+            vm::logging::ConfigureFromPtree(pt);
 
             // Create GraphReader with mjolnir subtree
             new (self) vb::GraphReader(pt.get_child("mjolnir"));

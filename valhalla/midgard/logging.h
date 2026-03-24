@@ -1,6 +1,8 @@
 #ifndef VALHALLA_MIDGARD_LOGGING_H_
 #define VALHALLA_MIDGARD_LOGGING_H_
 
+#include <boost/property_tree/ptree_fwd.hpp>
+
 #include <format>
 #include <mutex>
 #include <string>
@@ -67,6 +69,9 @@ void Log(const std::string&, const std::string& custom_directive = " [TRACE] ");
 // logging::Configure({ {"type", "std_out"}, {"color", ""} })
 // logging::Configure({ {"type", "file"}, {"file_name", "test.log"}, {"reopen_interval", "1"} })
 void Configure(const LoggingConfig& config);
+
+// configure logging from the top-level "logging" section of a boost property tree config
+void ConfigureFromPtree(const boost::property_tree::ptree& config);
 
 // guarding against redefinitions
 #ifndef LOG_ERROR
