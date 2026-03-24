@@ -259,7 +259,7 @@ void thor_worker_t::adjust_locations(valhalla::Api& request) {
         }
         filtered_edges->Clear();
         auto* warning = request.mutable_info()->mutable_warnings()->Add();
-        warning->set_code(213);
+        warning->set_code(215);
       }
 
       // keep filtered edges for retry in case we cant find a route with non filtered edges

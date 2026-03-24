@@ -590,6 +590,7 @@ TEST(locate, basic_properties) {
   EXPECT_FALSE(result.options().locations(0).correlation().edges().empty());
   EXPECT_TRUE(result.options().locations(0).correlation().filtered_edges().empty());
   EXPECT_EQ(result.info().warnings_size(), 1);
+  EXPECT_EQ(result.info().warnings(0).code(), 215);
 }
 
 TEST(locate, locate_shoulder) {
