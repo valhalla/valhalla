@@ -1,0 +1,46 @@
+{
+  "name": "valhalla-proto",
+  "version": "3.6.3-dev20260324",
+  "description": "Protocol buffer definitions for the Valhalla routing engine",
+  "exports": {
+    "./*": "./dist/*.js"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/*"
+      ]
+    }
+  },
+  "scripts": {
+    "generate": "rm -rf src && mkdir -p src && protoc --plugin=protoc-gen-ts_proto=node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=src -I ../descriptors ../descriptors/*.proto",
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "valhalla",
+    "routing",
+    "protobuf"
+  ],
+  "author": "Valhalla Authors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/valhalla/valhalla.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "bugs": {
+    "url": "https://github.com/valhalla/valhalla/issues"
+  },
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "ts-proto": "^2.11.2",
+    "typescript": "^5.9.3"
+  }
+}
