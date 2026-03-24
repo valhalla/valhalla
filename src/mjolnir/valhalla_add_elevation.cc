@@ -117,7 +117,6 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  build_stats::get().reset();
   ElevationBuilder::Build(config, tile_ids);
   build_stats::get().report(config, false);
   return EXIT_SUCCESS;

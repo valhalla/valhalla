@@ -693,9 +693,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string new_to_old_bin = tile_dir + new_to_old_file;
   std::string old_to_new_bin = tile_dir + old_to_new_file;
 
-  // Reset build stats singleton for this run
-  build_stats::get().reset();
-
   // OSMData class
   OSMData osm_data{0};
 
@@ -905,11 +902,6 @@ TileManifest TileManifest::ReadFromFile(const std::string& filename) {
   LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
            filename);
   return TileManifest{tileset};
-}
-
-void build_stats::reset() {
-  for (auto& c : counters)
-    c = 0;
 }
 
 void build_stats::report(const boost::property_tree::ptree& config, const bool emit_statsd) const {

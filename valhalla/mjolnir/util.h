@@ -157,7 +157,6 @@ struct build_stats {
     return instance;
   }
 
-  void reset();
   void report(const boost::property_tree::ptree& config, const bool emit_statsd = true) const;
 };
 
