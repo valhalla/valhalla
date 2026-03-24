@@ -338,7 +338,7 @@ void thor_worker_t::centroid(Api& request) {
   auto _ = measure_scope_time(request);
 
   auto& options = *request.mutable_options();
-  adjust_scores(options);
+  adjust_locations(request);
   controller = AttributesController(request.options());
   auto costing = parse_costing(request);
   auto& locations = *options.mutable_locations();
@@ -373,7 +373,7 @@ void thor_worker_t::route(Api& request) {
   auto _ = measure_scope_time(request);
 
   auto& options = *request.mutable_options();
-  adjust_scores(options);
+  adjust_locations(request);
   controller = AttributesController(options);
 
   if (!request.options().cost_factor_lines().empty()) {
