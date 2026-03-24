@@ -23,13 +23,7 @@ const boost::property_tree::ptree configure(const std::string& config) {
     // parse the config and configure logging
     rapidjson::read_json(config, pt);
 
-    auto logging_subtree = pt.get_child_optional("mjolnir.logging");
-    if (logging_subtree) {
-      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                     std::unordered_map<std::string, std::string>>(
-          logging_subtree.get());
-      valhalla::midgard::logging::Configure(logging_config);
-    }
+    valhalla::midgard::logging::ConfigureFromPtree(pt);
   } catch (...) { throw std::runtime_error("Failed to load config from: " + config); }
 
   return pt;
