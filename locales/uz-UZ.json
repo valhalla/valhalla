@@ -1,0 +1,2373 @@
+{
+  "posix_locale": "uz_UZ.UTF-8",
+  "aliases": [
+    "uz"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "Yetib kelish: <TIME>.",
+        "1": "Yetib kelish: <TIME>, <TRANSIT_STOP> bekati."
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive: 8:02 AM."
+        ],
+        "1": [
+          "Arrive: 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Soat <TIME> da yetib kelasiz.",
+        "1": "Soat <TIME> da <TRANSIT_STOP> bekatiga yetib kelasiz."
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive at 8:02 AM."
+        ],
+        "1": [
+          "Arrive at 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> buriling.",
+        "1": "<STREET_NAMES> ga <RELATIVE_DIRECTION> buriling.",
+        "2": "<BEGIN_STREET_NAMES> ga <RELATIVE_DIRECTION> buriling. <STREET_NAMES> bo'ylab davom eting.",
+        "3": "<STREET_NAMES> da qolish uchun <RELATIVE_DIRECTION> buriling.",
+        "4": "<JUNCTION_NAME> da <RELATIVE_DIRECTION> buriling.",
+        "5": "<TOWARD_SIGN> tomon <RELATIVE_DIRECTION> buriling."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> buriling.",
+        "1": "<STREET_NAMES> ga <RELATIVE_DIRECTION> buriling.",
+        "2": "<BEGIN_STREET_NAMES> ga <RELATIVE_DIRECTION> buriling.",
+        "3": "<STREET_NAMES> da qolish uchun <RELATIVE_DIRECTION> buriling.",
+        "4": "<JUNCTION_NAME> da <RELATIVE_DIRECTION> buriling.",
+        "5": "<TOWARD_SIGN> tomon <RELATIVE_DIRECTION> buriling."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road, U.S. 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on U.S. 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> yo'li <STREET_NAMES> ga aylanadi."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> yo'li <STREET_NAMES> ga aylanadi."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Davom eting.",
+        "1": "<STREET_NAMES> bo'ylab davom eting.",
+        "2": "<JUNCTION_NAME> da davom eting.",
+        "3": "<TOWARD_SIGN> tomon davom eting."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Davom eting.",
+        "1": "<LENGTH> davom eting.",
+        "2": "<STREET_NAMES> bo'ylab davom eting.",
+        "3": "<STREET_NAMES> bo'ylab <LENGTH> davom eting.",
+        "4": "<JUNCTION_NAME> da davom eting.",
+        "5": "<JUNCTION_NAME> da <LENGTH> davom eting.",
+        "6": "<TOWARD_SIGN> tomon davom eting.",
+        "7": "<TOWARD_SIGN> tomon <LENGTH> davom eting."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometr",
+        "1 kilometr",
+        "<METERS> metr",
+        "10 metrdan kam"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "yarim mil",
+        "chorak mil",
+        "<FEET> fut",
+        "10 futdan kam"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Davom eting.",
+        "1": "<STREET_NAMES> bo'ylab davom eting.",
+        "2": "<JUNCTION_NAME> da davom eting.",
+        "3": "<TOWARD_SIGN> tomon davom eting."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "Jo'nash: <TIME>.",
+        "1": "Jo'nash: <TIME>, <TRANSIT_STOP> bekatidan."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart: 8:02 AM."
+        ],
+        "1": [
+          "Depart: 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Soat <TIME> da jo'naysiz.",
+        "1": "Soat <TIME> da <TRANSIT_STOP> bekatidan jo'naysiz."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart at 8:02 AM."
+        ],
+        "1": [
+          "Depart at 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Manzilingizga yetib keldingiz.",
+        "1": "<DESTINATION> ga yetib keldingiz.",
+        "2": "Manzilingiz <RELATIVE_DIRECTION> tomonda.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> tomonda."
+      },
+      "relative_directions": [
+        "chap",
+        "o'ng"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 3206 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Manzilingizga yetib keldingiz.",
+        "1": "<DESTINATION> ga yetib keldingiz.",
+        "2": "Manzilingiz <RELATIVE_DIRECTION> tomonda.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> tomonda."
+      },
+      "relative_directions": [
+        "chap",
+        "o'ng"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Manzilingizga yetib kelasiz.",
+        "1": "<DESTINATION> ga yetib kelasiz.",
+        "2": "Manzilingiz <RELATIVE_DIRECTION> tomonda bo'ladi.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> tomonda bo'ladi."
+      },
+      "relative_directions": [
+        "chap",
+        "o'ng"
+      ],
+      "example_phrases": {
+        "0": [
+          "You will arrive at your destination."
+        ],
+        "1": [
+          "You will arrive at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination will be on the left.",
+          "Your destination will be on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company will be on the left."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Paromga chiqing.",
+        "1": "<STREET_NAMES> ga chiqing.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> ga chiqing.",
+        "3": "<TOWARD_SIGN> tomon paromga chiqing."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "ferry_label": "Parom",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Paromga chiqing.",
+        "1": "<STREET_NAMES> ga chiqing.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> ga chiqing.",
+        "3": "<TOWARD_SIGN> tomon paromga chiqing."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "ferry_label": "Parom",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Aylanmaga kiring.",
+        "1": "Aylanmaga kirib, <ORDINAL_VALUE> chiqishdan chiqing.",
+        "2": "Aylanmaga kirib, <ORDINAL_VALUE> chiqishdan <ROUNDABOUT_EXIT_STREET_NAMES> ga chiqing.",
+        "3": "Aylanmaga kirib, <ORDINAL_VALUE> chiqishdan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> ga chiqing. <ROUNDABOUT_EXIT_STREET_NAMES> bo'ylab davom eting.",
+        "4": "Aylanmaga kirib, <ORDINAL_VALUE> chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "5": "Aylanmaga kirib, <ROUNDABOUT_EXIT_STREET_NAMES> ga chiqing.",
+        "6": "Aylanmaga kirib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> ga chiqing. <ROUNDABOUT_EXIT_STREET_NAMES> bo'ylab davom eting.",
+        "7": "Aylanmaga kirib, <TOWARD_SIGN> tomon chiqing.",
+        "8": "<STREET_NAMES> ga kiring.",
+        "9": "<STREET_NAMES> ga kirib, <ORDINAL_VALUE> chiqishdan chiqing.",
+        "10": "<STREET_NAMES> ga kirib, <ORDINAL_VALUE> chiqishdan <ROUNDABOUT_EXIT_STREET_NAMES> ga chiqing.",
+        "11": "<STREET_NAMES> ga kirib, <ORDINAL_VALUE> chiqishdan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> ga chiqing. <ROUNDABOUT_EXIT_STREET_NAMES> bo'ylab davom eting.",
+        "12": "<STREET_NAMES> ga kirib, <ORDINAL_VALUE> chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "13": "<STREET_NAMES> ga kirib, <ROUNDABOUT_EXIT_STREET_NAMES> ga chiqing.",
+        "14": "<STREET_NAMES> ga kirib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> ga chiqing. <ROUNDABOUT_EXIT_STREET_NAMES> bo'ylab davom eting.",
+        "15": "<STREET_NAMES> ga kirib, <TOWARD_SIGN> tomon chiqing."
+      },
+      "ordinal_values": [
+        "birinchi",
+        "ikkinchi",
+        "uchinchi",
+        "to'rtinchi",
+        "beshinchi",
+        "oltinchi",
+        "yettinchi",
+        "sakkizinchi",
+        "to'qqizinchi",
+        "o'ninchi"
+      ],
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Aylanmaga kiring.",
+        "1": "Aylanmaga kirib, <ORDINAL_VALUE> chiqishdan chiqing.",
+        "2": "Aylanmaga kirib, <ORDINAL_VALUE> chiqishdan <ROUNDABOUT_EXIT_STREET_NAMES> ga chiqing.",
+        "3": "Aylanmaga kirib, <ORDINAL_VALUE> chiqishdan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> ga chiqing.",
+        "4": "Aylanmaga kirib, <ORDINAL_VALUE> chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "5": "Aylanmaga kirib, <ROUNDABOUT_EXIT_STREET_NAMES> ga chiqing.",
+        "6": "Aylanmaga kirib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> ga chiqing.",
+        "7": "Aylanmaga kirib, <TOWARD_SIGN> tomon chiqing.",
+        "8": "<STREET_NAMES> ga kiring.",
+        "9": "<STREET_NAMES> ga kirib, <ORDINAL_VALUE> chiqishdan chiqing.",
+        "10": "<STREET_NAMES> ga kirib, <ORDINAL_VALUE> chiqishdan <ROUNDABOUT_EXIT_STREET_NAMES> ga chiqing.",
+        "11": "<STREET_NAMES> ga kirib, <ORDINAL_VALUE> chiqishdan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> ga chiqing.",
+        "12": "<STREET_NAMES> ga kirib, <ORDINAL_VALUE> chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "13": "<STREET_NAMES> ga kirib, <ROUNDABOUT_EXIT_STREET_NAMES> ga chiqing.",
+        "14": "<STREET_NAMES> ga kirib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> ga chiqing.",
+        "15": "<STREET_NAMES> ga kirib, <TOWARD_SIGN> tomon chiqing."
+      },
+      "ordinal_values": [
+        "birinchi",
+        "ikkinchi",
+        "uchinchi",
+        "to'rtinchi",
+        "beshinchi",
+        "oltinchi",
+        "yettinchi",
+        "sakkizinchi",
+        "to'qqizinchi",
+        "o'ninchi"
+      ],
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomondagi chiqishdan chiqing.",
+        "1": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN>-chiqishdan chiqing.",
+        "2": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> chiqishidan chiqing.",
+        "3": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN>-chiqishdan <BRANCH_SIGN> ga chiqing.",
+        "4": "<RELATIVE_DIRECTION> tomondagi chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "5": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN>-chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "6": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> chiqishidan <TOWARD_SIGN> tomon chiqing.",
+        "7": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN>-chiqishdan <BRANCH_SIGN> ga <TOWARD_SIGN> tomon chiqing.",
+        "8": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqishidan chiqing.",
+        "10": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqishidan <BRANCH_SIGN> ga chiqing.",
+        "12": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqishidan <TOWARD_SIGN> tomon chiqing.",
+        "14": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqishidan <BRANCH_SIGN> ga <TOWARD_SIGN> tomon chiqing.",
+        "15": "Chiqishdan chiqing.",
+        "16": "<NUMBER_SIGN>-chiqishdan chiqing.",
+        "17": "<BRANCH_SIGN> chiqishidan chiqing.",
+        "18": "<NUMBER_SIGN>-chiqishdan <BRANCH_SIGN> ga chiqing.",
+        "19": "<TOWARD_SIGN> tomon chiqishdan chiqing.",
+        "20": "<NUMBER_SIGN>-chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "21": "<BRANCH_SIGN> chiqishidan <TOWARD_SIGN> tomon chiqing.",
+        "22": "<NUMBER_SIGN>-chiqishdan <BRANCH_SIGN> ga <TOWARD_SIGN> tomon chiqing.",
+        "23": "<NAME_SIGN> chiqishidan chiqing.",
+        "25": "<NAME_SIGN> chiqishidan <BRANCH_SIGN> ga chiqing.",
+        "27": "<NAME_SIGN> chiqishidan <TOWARD_SIGN> tomon chiqing.",
+        "29": "<NAME_SIGN> chiqishidan <BRANCH_SIGN> ga <TOWARD_SIGN> tomon chiqing."
+      },
+      "relative_directions": [
+        "chap",
+        "o'ng"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the US 322 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto US 322 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the US 322 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Aylanmadan chiqing.",
+        "1": "Aylanmadan <STREET_NAMES> ga chiqing.",
+        "2": "Aylanmadan <BEGIN_STREET_NAMES> ga chiqing. <STREET_NAMES> bo'ylab davom eting.",
+        "3": "Aylanmadan <TOWARD_SIGN> tomon chiqing."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road/MD 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Aylanmadan chiqing.",
+        "1": "Aylanmadan <STREET_NAMES> ga chiqing.",
+        "2": "Aylanmadan <BEGIN_STREET_NAMES> ga chiqing.",
+        "3": "Aylanmadan <TOWARD_SIGN> tomon chiqing."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road, Maryland 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomondagi chiqishdan chiqing.",
+        "1": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN>-chiqishdan chiqing.",
+        "2": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> chiqishidan chiqing.",
+        "3": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN>-chiqishdan <BRANCH_SIGN> ga chiqing.",
+        "4": "<RELATIVE_DIRECTION> tomondagi chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "5": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN>-chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "6": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> chiqishidan <TOWARD_SIGN> tomon chiqing.",
+        "7": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN>-chiqishdan <BRANCH_SIGN> ga <TOWARD_SIGN> tomon chiqing.",
+        "8": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqishidan chiqing.",
+        "10": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqishidan <BRANCH_SIGN> ga chiqing.",
+        "12": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqishidan <TOWARD_SIGN> tomon chiqing.",
+        "14": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqishidan <BRANCH_SIGN> ga <TOWARD_SIGN> tomon chiqing.",
+        "15": "Chiqishdan chiqing.",
+        "16": "<NUMBER_SIGN>-chiqishdan chiqing.",
+        "17": "<BRANCH_SIGN> chiqishidan chiqing.",
+        "18": "<NUMBER_SIGN>-chiqishdan <BRANCH_SIGN> ga chiqing.",
+        "19": "<TOWARD_SIGN> tomon chiqishdan chiqing.",
+        "20": "<NUMBER_SIGN>-chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "21": "<BRANCH_SIGN> chiqishidan <TOWARD_SIGN> tomon chiqing.",
+        "22": "<NUMBER_SIGN>-chiqishdan <BRANCH_SIGN> ga <TOWARD_SIGN> tomon chiqing.",
+        "23": "<NAME_SIGN> chiqishidan chiqing.",
+        "25": "<NAME_SIGN> chiqishidan <BRANCH_SIGN> ga chiqing.",
+        "27": "<NAME_SIGN> chiqishidan <TOWARD_SIGN> tomon chiqing.",
+        "29": "<NAME_SIGN> chiqishidan <BRANCH_SIGN> ga <TOWARD_SIGN> tomon chiqing."
+      },
+      "relative_directions": [
+        "chap",
+        "o'ng"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the U.S. 3 22 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the U.S. 3 22 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomondagi chiqishdan chiqing."
+      },
+      "example_phrases": {
+        "0": [
+          "Exit 1A"
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomonda yuring.",
+        "1": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> ga yuring.",
+        "2": "<RELATIVE_DIRECTION> tomonda <TOWARD_SIGN> tomon yuring.",
+        "3": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan chiqing.",
+        "4": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga chiqing.",
+        "5": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "6": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga <TOWARD_SIGN> tomon chiqing.",
+        "7": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga <TOWARD_SIGN> tomon chiqing."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chap",
+        "to'g'ri",
+        "o'ng"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take I 895 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto I 895 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take I 895 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto I 895 South toward Annapolis."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> da qolish uchun yuring.",
+        "1": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> da qolish uchun <TOWARD_SIGN> tomon yuring.",
+        "2": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> da qolish uchun chiqing.",
+        "3": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> da qolish uchun <TOWARD_SIGN> tomon chiqing."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chap",
+        "to'g'ri",
+        "o'ng"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on I 95 South.",
+          "Keep straight to stay on I 95 South.",
+          "Keep right to stay on I 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on I 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on I 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> da qolish uchun yuring.",
+        "1": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> da qolish uchun <TOWARD_SIGN> tomon yuring.",
+        "2": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> da qolish uchun chiqing.",
+        "3": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> da qolish uchun <TOWARD_SIGN> tomon chiqing."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chap",
+        "to'g'ri",
+        "o'ng"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on Interstate 95 South.",
+          "Keep straight to stay on Interstate 95 South.",
+          "Keep right to stay on Interstate 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on Interstate 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomonda yuring.",
+        "1": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> ga yuring.",
+        "2": "<RELATIVE_DIRECTION> tomonda <TOWARD_SIGN> tomon yuring.",
+        "3": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan chiqing.",
+        "4": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga chiqing.",
+        "5": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <TOWARD_SIGN> tomon chiqing.",
+        "6": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga <TOWARD_SIGN> tomon chiqing.",
+        "7": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga <TOWARD_SIGN> tomon chiqing."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chap",
+        "to'g'ri",
+        "o'ng"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take Interstate 8 95 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto Interstate 8 95 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take Interstate 8 95 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Qo'shiling.",
+        "1": "<RELATIVE_DIRECTION> qo'shiling.",
+        "2": "<STREET_NAMES> ga qo'shiling.",
+        "3": "<RELATIVE_DIRECTION> <STREET_NAMES> ga qo'shiling.",
+        "4": "<TOWARD_SIGN> tomon qo'shiling.",
+        "5": "<RELATIVE_DIRECTION> <TOWARD_SIGN> tomon qo'shiling."
+      },
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Qo'shiling.",
+        "1": "<RELATIVE_DIRECTION> qo'shiling.",
+        "2": "<STREET_NAMES> ga qo'shiling.",
+        "3": "<RELATIVE_DIRECTION> <STREET_NAMES> ga qo'shiling.",
+        "4": "<TOWARD_SIGN> tomon qo'shiling.",
+        "5": "<RELATIVE_DIRECTION> <TOWARD_SIGN> tomon qo'shiling."
+      },
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> boring."
+      },
+      "transit_stop_count_labels": {
+        "one": "bekat",
+        "other": "bekat"
+      },
+      "example_phrases": {
+        "0": [
+          "Travel 1 stop.",
+          "Travel 3 stops."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "<LENGTH> davom eting.",
+        "1": "<STREET_NAMES> bo'ylab <LENGTH> davom eting."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometr",
+        "1 kilometr",
+        "<METERS> metr",
+        "10 metrdan kam"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "yarim mil",
+        "chorak mil",
+        "<FEET> fut",
+        "10 futdan kam"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue for 300 feet.",
+          "Continue for 9 miles."
+        ],
+        "1": [
+          "Continue on Pennsylvania 7 43 for 6.2 miles.",
+          "Continue on Main Street, Vermont 30 for 1 tenth of a mile."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomondagi estakadaga chiqing.",
+        "1": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> estakadaga chiqing.",
+        "2": "<RELATIVE_DIRECTION> tomondagi estakadadan <TOWARD_SIGN> tomon chiqing.",
+        "3": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> estakadadan <TOWARD_SIGN> tomon chiqing.",
+        "4": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> estakadaga chiqing.",
+        "5": "Estakadaga chiqish uchun <RELATIVE_DIRECTION> buriling.",
+        "6": "<BRANCH_SIGN> estakadaga chiqish uchun <RELATIVE_DIRECTION> buriling.",
+        "7": "<TOWARD_SIGN> tomon estakadaga chiqish uchun <RELATIVE_DIRECTION> buriling.",
+        "8": "<BRANCH_SIGN> estakadadan <TOWARD_SIGN> tomon chiqish uchun <RELATIVE_DIRECTION> buriling.",
+        "9": "<NAME_SIGN> estakadaga chiqish uchun <RELATIVE_DIRECTION> buriling.",
+        "10": "Estakadaga chiqing.",
+        "11": "<BRANCH_SIGN> estakadaga chiqing.",
+        "12": "<TOWARD_SIGN> tomon estakadaga chiqing.",
+        "13": "<BRANCH_SIGN> estakadadan <TOWARD_SIGN> tomon chiqing.",
+        "14": "<NAME_SIGN> estakadaga chiqing."
+      },
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the I 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the PA 283 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the I 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the Soutch Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg ramp."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "To'g'ri davom eting.",
+        "1": "<STREET_NAMES> ga to'g'ri davom eting.",
+        "2": "<TOWARD_SIGN> tomon to'g'ri davom eting.",
+        "3": "<STREET_NAMES> ga <TOWARD_SIGN> tomon to'g'ri davom eting.",
+        "4": "<NAME_SIGN> estakadaga to'g'ri davom eting."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the US 322 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "To'g'ri davom eting.",
+        "1": "<STREET_NAMES> ga to'g'ri davom eting.",
+        "2": "<TOWARD_SIGN> tomon to'g'ri davom eting.",
+        "3": "<STREET_NAMES> ga <TOWARD_SIGN> tomon to'g'ri davom eting.",
+        "4": "<NAME_SIGN> estakadaga to'g'ri davom eting."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the U.S. 3 22 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomondagi estakadaga chiqing.",
+        "1": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> estakadaga chiqing.",
+        "2": "<RELATIVE_DIRECTION> tomondagi estakadadan <TOWARD_SIGN> tomon chiqing.",
+        "3": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> estakadadan <TOWARD_SIGN> tomon chiqing.",
+        "4": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> estakadaga chiqing.",
+        "5": "Estakadaga chiqish uchun <RELATIVE_DIRECTION> buriling.",
+        "6": "<BRANCH_SIGN> estakadaga chiqish uchun <RELATIVE_DIRECTION> buriling.",
+        "7": "<TOWARD_SIGN> tomon estakadaga chiqish uchun <RELATIVE_DIRECTION> buriling.",
+        "8": "<BRANCH_SIGN> estakadadan <TOWARD_SIGN> tomon chiqish uchun <RELATIVE_DIRECTION> buriling.",
+        "9": "<NAME_SIGN> estakadaga chiqish uchun <RELATIVE_DIRECTION> buriling.",
+        "10": "Estakadaga chiqing.",
+        "11": "<BRANCH_SIGN> estakadaga chiqing.",
+        "12": "<TOWARD_SIGN> tomon estakadaga chiqing.",
+        "13": "<BRANCH_SIGN> estakadadan <TOWARD_SIGN> tomon chiqing.",
+        "14": "<NAME_SIGN> estakadaga chiqing."
+      },
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the Interstate 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the Pennsylvania 2 83 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the Interstate 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the South Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Keskin <RELATIVE_DIRECTION> buriling.",
+        "1": "Keskin <RELATIVE_DIRECTION> <STREET_NAMES> ga buriling.",
+        "2": "Keskin <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> ga buriling. <STREET_NAMES> bo'ylab davom eting.",
+        "3": "Keskin <RELATIVE_DIRECTION> <STREET_NAMES> da qolish uchun buriling.",
+        "4": "Keskin <RELATIVE_DIRECTION> <JUNCTION_NAME> da buriling.",
+        "5": "Keskin <RELATIVE_DIRECTION> <TOWARD_SIGN> tomon buriling."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Keskin <RELATIVE_DIRECTION> buriling.",
+        "1": "Keskin <RELATIVE_DIRECTION> <STREET_NAMES> ga buriling.",
+        "2": "Keskin <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> ga buriling.",
+        "3": "Keskin <RELATIVE_DIRECTION> <STREET_NAMES> da qolish uchun buriling.",
+        "4": "Keskin <RELATIVE_DIRECTION> <JUNCTION_NAME> da buriling.",
+        "5": "Keskin <RELATIVE_DIRECTION> <TOWARD_SIGN> tomon buriling."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> ga yuring.",
+        "1": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab yuring.",
+        "2": "<CARDINAL_DIRECTION> ga <BEGIN_STREET_NAMES> bo'ylab yuring. <STREET_NAMES> bo'ylab davom eting.",
+        "4": "<CARDINAL_DIRECTION> ga haydang.",
+        "5": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab haydang.",
+        "6": "<CARDINAL_DIRECTION> ga <BEGIN_STREET_NAMES> bo'ylab haydang. <STREET_NAMES> bo'ylab davom eting.",
+        "8": "<CARDINAL_DIRECTION> ga yuring.",
+        "9": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab yuring.",
+        "10": "<CARDINAL_DIRECTION> ga <BEGIN_STREET_NAMES> bo'ylab yuring. <STREET_NAMES> bo'ylab davom eting.",
+        "16": "<CARDINAL_DIRECTION> ga velosipedda yuring.",
+        "17": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab velosipedda yuring.",
+        "18": "<CARDINAL_DIRECTION> ga <BEGIN_STREET_NAMES> bo'ylab velosipedda yuring. <STREET_NAMES> bo'ylab davom eting."
+      },
+      "cardinal_directions": [
+        "shimolga",
+        "shimoli-sharqqa",
+        "sharqqa",
+        "janubi-sharqqa",
+        "janubga",
+        "janubi-g'arbga",
+        "g'arbga",
+        "shimoli-g'arbga"
+      ],
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head southwest on 5th Avenue.",
+          "Head west on the walkway",
+          "Head east on the cycleway",
+          "Head north on the mountain bike trail"
+        ],
+        "2": [
+          "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "4": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "5": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "6": [
+          "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "8": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "9": [
+          "Walk southwest on 5th Avenue.",
+          "Walk west on the walkway"
+        ],
+        "10": [
+          "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "16": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue.",
+          "Bike east on the cycleway",
+          "Bike north on the mountain bike trail"
+        ],
+        "18": [
+          "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> ga yuring.",
+        "1": "<CARDINAL_DIRECTION> ga <LENGTH> yuring.",
+        "2": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab yuring.",
+        "3": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab <LENGTH> yuring.",
+        "4": "<CARDINAL_DIRECTION> ga <BEGIN_STREET_NAMES> bo'ylab yuring.",
+        "5": "<CARDINAL_DIRECTION> ga haydang.",
+        "6": "<CARDINAL_DIRECTION> ga <LENGTH> haydang.",
+        "7": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab haydang.",
+        "8": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab <LENGTH> haydang.",
+        "9": "<CARDINAL_DIRECTION> ga <BEGIN_STREET_NAMES> bo'ylab haydang.",
+        "10": "<CARDINAL_DIRECTION> ga yuring.",
+        "11": "<CARDINAL_DIRECTION> ga <LENGTH> yuring.",
+        "12": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab yuring.",
+        "13": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab <LENGTH> yuring.",
+        "14": "<CARDINAL_DIRECTION> ga <BEGIN_STREET_NAMES> bo'ylab yuring.",
+        "15": "<CARDINAL_DIRECTION> ga velosipedda yuring.",
+        "16": "<CARDINAL_DIRECTION> ga <LENGTH> velosipedda yuring.",
+        "17": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab velosipedda yuring.",
+        "18": "<CARDINAL_DIRECTION> ga <STREET_NAMES> bo'ylab <LENGTH> velosipedda yuring.",
+        "19": "<CARDINAL_DIRECTION> ga <BEGIN_STREET_NAMES> bo'ylab velosipedda yuring."
+      },
+      "cardinal_directions": [
+        "shimolga",
+        "shimoli-sharqqa",
+        "sharqqa",
+        "janubi-sharqqa",
+        "janubga",
+        "janubi-g'arbga",
+        "g'arbga",
+        "shimoli-g'arbga"
+      ],
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometr",
+        "1 kilometr",
+        "<METERS> metr",
+        "10 metrdan kam"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "yarim mil",
+        "chorak mil",
+        "<FEET> fut",
+        "10 futdan kam"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
+        ],
+        "2": [
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "4": [
+          "Head south on North Prince Street, U.S. 2 22."
+        ],
+        "5": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "6": [
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "8": [
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "9": [
+          "Drive south on North Prince Street, U.S. 2 22."
+        ],
+        "10": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "16": [
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue."
+        ],
+        "18": [
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> ga mining. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_NAME> ga <TRANSIT_HEADSIGN> tomon mining. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "tramvay",
+        "metro",
+        "poyezd",
+        "avtobus",
+        "parom",
+        "kanat yo'li",
+        "gondola",
+        "funikulyor"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bekat",
+        "other": "bekat"
+      },
+      "example_phrases": {
+        "0": [
+          "Take the New Haven. (1 stop)",
+          "Take the metro. (2 stops)",
+          "Take the bus. (12 stops)"
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST. (10 stops)",
+          "Take the ferry toward Staten Island. (1 stop)"
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "<TRANSIT_STOP> bekatiga yetib keldingiz.",
+        "1": "<TRANSIT_STOP> bekatiga yetib keldingiz. <STATION_LABEL>.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> dan chiqing."
+      },
+      "station_label": "Bekat",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_STOP> bekatiga yetib keldingiz.",
+        "1": "<TRANSIT_STOP> bekatiga yetib keldingiz.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> dan chiqing."
+      },
+      "station_label": "Bekat",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "<TRANSIT_STOP> bekatiga boring.",
+        "1": "<TRANSIT_STOP> bekatiga boring. <STATION_LABEL>.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> ga kiring."
+      },
+      "station_label": "Bekat",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_STOP> bekatiga boring.",
+        "1": "<TRANSIT_STOP> bekatiga boring.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> ga kiring."
+      },
+      "station_label": "Bekat",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "<TRANSIT_STOP> bekatiga o'ting.",
+        "1": "<TRANSIT_STOP> bekatiga o'ting. <STATION_LABEL>.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> da o'ting."
+      },
+      "station_label": "Bekat",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_STOP> bekatiga o'ting.",
+        "1": "<TRANSIT_STOP> bekatiga o'ting.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> da o'ting."
+      },
+      "station_label": "Bekat",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> da qoling. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_NAME> da <TRANSIT_HEADSIGN> tomon qoling. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "tramvay",
+        "metro",
+        "poyezd",
+        "avtobus",
+        "parom",
+        "kanat yo'li",
+        "gondola",
+        "funikulyor"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bekat",
+        "other": "bekat"
+      },
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven. (1 stop)",
+          "Remain on the train. (3 stops)"
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> da qoling.",
+        "1": "<TRANSIT_NAME> da <TRANSIT_HEADSIGN> tomon qoling."
+      },
+      "empty_transit_name_labels": [
+        "tramvay",
+        "metro",
+        "poyezd",
+        "avtobus",
+        "parom",
+        "kanat yo'li",
+        "gondola",
+        "funikulyor"
+      ],
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven."
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> ga o'ting. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_NAME> ga <TRANSIT_HEADSIGN> tomon o'ting. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "tramvay",
+        "metro",
+        "poyezd",
+        "avtobus",
+        "parom",
+        "kanat yo'li",
+        "gondola",
+        "funikulyor"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bekat",
+        "other": "bekat"
+      },
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven. (1 stop)",
+          "Transfer to take the tram. (4 stops)"
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> ga o'ting.",
+        "1": "<TRANSIT_NAME> ga <TRANSIT_HEADSIGN> tomon o'ting."
+      },
+      "empty_transit_name_labels": [
+        "tramvay",
+        "metro",
+        "poyezd",
+        "avtobus",
+        "parom",
+        "kanat yo'li",
+        "gondola",
+        "funikulyor"
+      ],
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven."
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> ga mining.",
+        "1": "<TRANSIT_NAME> ga <TRANSIT_HEADSIGN> tomon mining."
+      },
+      "empty_transit_name_labels": [
+        "tramvay",
+        "metro",
+        "poyezd",
+        "avtobus",
+        "parom",
+        "kanat yo'li",
+        "gondola",
+        "funikulyor"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the New Haven."
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> buriling.",
+        "1": "<STREET_NAMES> ga <RELATIVE_DIRECTION> buriling.",
+        "2": "<BEGIN_STREET_NAMES> ga <RELATIVE_DIRECTION> buriling. <STREET_NAMES> bo'ylab davom eting.",
+        "3": "<STREET_NAMES> da qolish uchun <RELATIVE_DIRECTION> buriling.",
+        "4": "<JUNCTION_NAME> da <RELATIVE_DIRECTION> buriling.",
+        "5": "<TOWARD_SIGN> tomon <RELATIVE_DIRECTION> buriling."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> buriling.",
+        "1": "<STREET_NAMES> ga <RELATIVE_DIRECTION> buriling.",
+        "2": "<BEGIN_STREET_NAMES> ga <RELATIVE_DIRECTION> buriling.",
+        "3": "<STREET_NAMES> da qolish uchun <RELATIVE_DIRECTION> buriling.",
+        "4": "<JUNCTION_NAME> da <RELATIVE_DIRECTION> buriling.",
+        "5": "<TOWARD_SIGN> tomon <RELATIVE_DIRECTION> buriling."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> U-burilish qiling.",
+        "1": "<STREET_NAMES> ga <RELATIVE_DIRECTION> U-burilish qiling.",
+        "2": "<STREET_NAMES> da qolish uchun <RELATIVE_DIRECTION> U-burilish qiling.",
+        "3": "<CROSS_STREET_NAMES> da <RELATIVE_DIRECTION> U-burilish qiling.",
+        "4": "<CROSS_STREET_NAMES> da <STREET_NAMES> ga <RELATIVE_DIRECTION> U-burilish qiling.",
+        "5": "<CROSS_STREET_NAMES> da <STREET_NAMES> da qolish uchun <RELATIVE_DIRECTION> U-burilish qiling.",
+        "6": "<JUNCTION_NAME> da <RELATIVE_DIRECTION> U-burilish qiling.",
+        "7": "<TOWARD_SIGN> tomon <RELATIVE_DIRECTION> U-burilish qiling."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> U-burilish qiling.",
+        "1": "<STREET_NAMES> ga <RELATIVE_DIRECTION> U-burilish qiling.",
+        "2": "<STREET_NAMES> da qolish uchun <RELATIVE_DIRECTION> U-burilish qiling.",
+        "3": "<CROSS_STREET_NAMES> da <RELATIVE_DIRECTION> U-burilish qiling.",
+        "4": "<CROSS_STREET_NAMES> da <STREET_NAMES> ga <RELATIVE_DIRECTION> U-burilish qiling.",
+        "5": "<CROSS_STREET_NAMES> da <STREET_NAMES> da qolish uchun <RELATIVE_DIRECTION> U-burilish qiling.",
+        "6": "<JUNCTION_NAME> da <RELATIVE_DIRECTION> U-burilish qiling.",
+        "7": "<TOWARD_SIGN> tomon <RELATIVE_DIRECTION> U-burilish qiling."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga",
+        "zinapoyaga",
+        "ko'prikka",
+        "tunnelga"
+      ],
+      "relative_directions": [
+        "chapga",
+        "o'ngga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Keyin <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Keyin, <LENGTH> dan so'ng, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometr",
+        "1 kilometr",
+        "<METERS> metr",
+        "10 metrdan kam"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "yarim mil",
+        "chorak mil",
+        "<FEET> fut",
+        "10 futdan kam"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right onto East Fayette Street. Then Turn right onto North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "<LENGTH> dan so'ng, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometr",
+        "1 kilometr",
+        "<METERS> metr",
+        "10 metrdan kam"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "yarim mil",
+        "chorak mil",
+        "<FEET> fut",
+        "10 futdan kam"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "<OBJECT_LABEL> dan o'ting.",
+        "1": "<OBJECT_LABEL> dagi svetafordan o'ting."
+      },
+      "object_labels": [
+        "darvoza",
+        "to'siq",
+        "yo'l kesishmasi"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pass the gate."
+        ]
+      }
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Liftga chiqing.",
+        "1": "<LEVEL> ga liftda chiqing."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the elevator."
+        ],
+        "1": [
+          "Take the elevator to Level 1."
+        ]
+      }
+    },
+    "steps": {
+      "phrases": {
+        "0": "Zinapoyadan yuring.",
+        "1": "<LEVEL> ga zinapoyadan yuring."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the stairs."
+        ],
+        "1": [
+          "Take the stairs to Level 2."
+        ]
+      }
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Eskalatorga chiqing.",
+        "1": "<LEVEL> ga eskalatordan chiqing."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the escalator."
+        ],
+        "1": [
+          "Take the escalator to Level 3."
+        ]
+      }
+    },
+    "level_change": {
+      "phrases": {
+        "0": "<LEVEL> ga davom eting."
+      },
+      "example_phrases": {
+        "0": [
+          "Continue to Level 2."
+        ]
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Binoga kiring.",
+        "1": "Binoga kirib, <STREET_NAMES> bo'ylab davom eting."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the building."
+        ],
+        "1": [
+          "Enter the building, and continue on the walkway."
+        ]
+      }
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Binodan chiqing.",
+        "1": "Binodan chiqib, <STREET_NAMES> bo'ylab davom eting."
+      },
+      "empty_street_name_labels": [
+        "piyoda yo'lakka",
+        "veloyo'lakka",
+        "tog' velosiped yo'lagiga",
+        "piyoda o'tish joyiga"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the building."
+        ],
+        "1": [
+          "Exit the building, and continue on the walkway."
+        ]
+      }
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Mashinangizni to'xtating."
+      },
+      "example_phrases": {
+        "0": [
+          "Park your vehicle."
+        ]
+      }
+    }
+  }
+}
