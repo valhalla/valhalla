@@ -925,18 +925,16 @@ void build_stats::log_stage(BuildStage stage,
     uint32_t delta = current - snapshot[i];
     if (delta > 0) {
       LOG_WARN(std::format("[{}] {} {}", stage_name, delta, meta[i].log_label));
-      // e.g. "build.exceeded_max_speed" -> "build.parseways.exceeded_max_speed"
-      statsd_entries.emplace_back(std::format("build.{}.{}", stage_name, meta[i].statsd_key + 6),
-                                  delta);
     }
-    // update the current counters
-    // currently, all counters are incremented in a single stage
+    // always emit to statsd (gauges retain last value, so we must send 0 to reset)
+    statsd_entries.emplace_back(std::format("build.{}.{}", stage_name, meta[i].statsd_key + 6),
+                                delta);
     snapshot[i] = current;
   }
 
   // Emit to statsd if configured (e.g. build.parseways.exceeded_max_speed)
   auto host = config.get<std::string>("statsd.host", "");
-  if (host.empty() || statsd_entries.empty()) {
+  if (host.empty()) {
     return;
   }
   Statsd::StatsdClient client(host, config.get<int>("statsd.port", 8125),
