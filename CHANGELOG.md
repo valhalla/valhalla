@@ -28,6 +28,8 @@
    * ADDED: a global `logging` config to replace all module-level ones
    * ADDED: support for OSM tag 'junction=intersection' to explicitly mark internal intersection edges [#5980](https://github.com/valhalla/valhalla/pull/5980)
    * ADDED: Add Uzbek (`uz-UZ`) locale [#5988](https://github.com/valhalla/valhalla/pull/5988)
+   * ADDED: `filtered_edges` in `/locate` output (**breaking**: results previously in `edges` may now be in `filtered_edges`) [#5987](https://github.com/valhalla/valhalla/pull/5987)
+   * ADDED: `ValhallaError` which exposes `valhalla_exception_t` to the Python bindings [#5956](https://github.com/valhalla/valhalla/pull/5956)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
