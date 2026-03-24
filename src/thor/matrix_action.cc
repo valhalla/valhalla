@@ -88,7 +88,7 @@ std::string thor_worker_t::matrix(Api& request) {
   auto _ = measure_scope_time(request);
 
   auto& options = *request.mutable_options();
-  adjust_scores(options);
+  adjust_locations(request);
   auto costing = parse_costing(request);
 
   bool has_time =

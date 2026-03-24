@@ -114,8 +114,7 @@ void serialize_edges(const Location& location,
                      GraphReader& reader,
                      rapidjson::writer_wrapper_t& writer,
                      bool verbose) {
-  writer.start_array("edges");
-  for (const auto& edge : location.correlation().edges()) {
+  auto serialize_edge = [&](const PathEdge& edge) {
     writer.start_object();
     try {
       // get the osm way id
@@ -260,8 +259,21 @@ void serialize_edges(const Location& location,
       LOG_WARN("Expected edge not found in graph but found by loki::search!");
     }
     writer.end_object();
+  };
+
+  writer.start_array("edges");
+  for (const auto& edge : location.correlation().edges()) {
+    serialize_edge(edge);
   }
+
   writer.end_array();
+  if (location.correlation().filtered_edges_size() > 0) {
+    writer.start_array("filtered_edges");
+    for (const auto& edge : location.correlation().filtered_edges()) {
+      serialize_edge(edge);
+    }
+    writer.end_array();
+  }
 }
 
 void serialize_nodes(const Location& location,

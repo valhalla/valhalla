@@ -4,6 +4,7 @@
 #include "midgard/pointll.h"
 #include "proto/options.pb.h"
 #include "test.h"
+#include "thor/worker.h"
 #include "tyr/actor.h"
 
 #include <gtest/gtest.h>
@@ -73,6 +74,10 @@ protected:
     return api.options().locations(0).correlation().edges();
   }
 
+  static const auto& correlated_filtered_edges(const Api& api) {
+    return api.options().locations(0).correlation().filtered_edges();
+  }
+
   static int edge_count(const Api& api) {
     return correlated_edges(api).size();
   }
@@ -85,10 +90,11 @@ protected:
     return false;
   }
 
-  static bool has_edge(const Api& api, const std::string& from, const std::string& to) {
+  static bool
+  has_edge(const Api& api, const std::string& from, const std::string& to, bool filtered = false) {
     GraphReader reader(map.config.get_child("mjolnir"));
     auto [id, edge] = gurka::findEdgeByNodes(reader, layout, from, to);
-    for (const auto& e : correlated_edges(api)) {
+    for (const auto& e : (filtered ? correlated_filtered_edges(api) : correlated_edges(api))) {
       if (GraphId(e.graph_id()) == id)
         return true;
     }
@@ -215,10 +221,10 @@ TEST_F(Search, HeadingWestSelectsReverseEdge) {
 }
 
 // heading north is roughly perpendicular to A->D so both edges match
-TEST_F(Search, HeadingNorthKeepsBothEdges) {
+TEST_F(Search, HeadingNorthYieldsFilteredEdges) {
   auto api = do_locate(pt("4"), [](valhalla::Location& loc) { loc.set_heading(0); });
-  EXPECT_TRUE(has_edge(api, "A", "D"));
-  EXPECT_TRUE(has_edge(api, "D", "A"));
+  EXPECT_TRUE(has_edge(api, "A", "D", true));
+  EXPECT_TRUE(has_edge(api, "D", "A", true));
 }
 
 // side of street — point 5 is left of CD, point 6 is right of CD
@@ -459,7 +465,7 @@ TEST(locate, basic_properties) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_locate_basic",
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_locate_basic",
                         {
                             {"mjolnir.concurrency", "1"},
                             {"mjolnir.reclassify_links", "0"},
@@ -556,7 +562,7 @@ TEST(locate, basic_properties) {
   }
 
   // if we  search with a cutoff and a certain heading and tolerance we should end up with no results
-  result = gurka::do_action(valhalla::Options::locate, map, {"1"}, "none",
+  result = gurka::do_action(valhalla::Options::locate, map, {"1", "2"}, "none",
                             {
                                 {"/locations/0/heading", "45"},
                                 {"/locations/0/heading_tolerance", "20"},
@@ -566,12 +572,24 @@ TEST(locate, basic_properties) {
   ASSERT_EQ(result.options().locations(0).heading_tolerance(), 20);
   ASSERT_EQ(result.options().locations(0).heading(), 45);
   ASSERT_EQ(result.options().locations(0).search_cutoff(), 1);
-  // TODO: this test was broken before removing baldr::Location because
-  // locate never stored its result on the Api pbf
-  // The refactor to use pbf instead just make this surface: when loki search
-  // only finds filtered edges, it promotes them to regular correlated edges,
-  // so this test fails
-  // ASSERT_TRUE(result.options().locations(0).correlation().edges().empty());
+  EXPECT_TRUE(result.options().locations(0).correlation().edges().empty());
+  EXPECT_FALSE(result.options().locations(0).correlation().filtered_edges().empty());
+
+  result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto",
+                            {
+                                {"/locations/0/heading", "45"},
+                                {"/locations/0/heading_tolerance", "20"},
+                                {"/locations/0/search_cutoff", "1"},
+                            },
+                            reader, &json);
+  ASSERT_EQ(result.options().locations(0).heading_tolerance(), 20);
+  ASSERT_EQ(result.options().locations(0).heading(), 45);
+  ASSERT_EQ(result.options().locations(0).search_cutoff(), 1);
+
+  // filtered edges should have been moved to edges
+  EXPECT_FALSE(result.options().locations(0).correlation().edges().empty());
+  EXPECT_TRUE(result.options().locations(0).correlation().filtered_edges().empty());
+  EXPECT_EQ(result.info().warnings_size(), 1);
 }
 
 TEST(locate, locate_shoulder) {
@@ -591,7 +609,8 @@ TEST(locate, locate_shoulder) {
                             {"EF", {{"highway", "tertiary"}, {"shoulder", "yes"}}}};
 
   auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_locate_shoulder_moderate");
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/gurka_locate_shoulder_moderate");
 
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
