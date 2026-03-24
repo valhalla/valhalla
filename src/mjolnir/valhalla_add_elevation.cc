@@ -117,7 +117,8 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
+  uint32_t snapshot[build_stats::kCount]{};
   ElevationBuilder::Build(config, tile_ids);
-  build_stats::get().report(config, false);
+  build_stats::get().log_stage(BuildStage::kElevation, snapshot, config);
   return EXIT_SUCCESS;
 }

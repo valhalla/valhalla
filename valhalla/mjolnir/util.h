@@ -11,6 +11,7 @@
 
 #include <atomic>
 #include <map>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -157,7 +158,10 @@ struct build_stats {
     return instance;
   }
 
-  void report(const boost::property_tree::ptree& config, const bool emit_statsd = true) const;
+  // Log and emit to statsd what changed since last snapshot, then update snapshot.
+  void log_stage(BuildStage stage,
+                 std::span<uint32_t, kCount> snapshot,
+                 const boost::property_tree::ptree& config) const;
 };
 
 // A little struct to hold stats information during each threads work
