@@ -950,6 +950,7 @@ void build_stats::log_stage(BuildStage stage,
   for (const auto& [key, count] : statsd_entries) {
     client.gauge(key, count, 1.f, tags);
   }
+  client.gauge("build.stage", static_cast<uint8_t>(stage), 1.f, tags);
   client.flush();
 }
 
