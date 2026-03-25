@@ -148,10 +148,8 @@ struct build_stats {
 
   static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");
 
-  std::array<std::atomic<uint32_t>, kCount> counters{};
-
   void increment(counter c, uint32_t by = 1) {
-    counters[c] += by;
+    counters_[c] += by;
   }
 
   static build_stats& get() {
@@ -163,6 +161,9 @@ struct build_stats {
   void log_stage(BuildStage stage,
                  std::span<uint32_t, kCount> snapshot,
                  const boost::property_tree::ptree& config) const;
+
+private:
+  std::array<std::atomic<uint32_t>, kCount> counters_{};
 };
 
 // A little struct to hold stats information during each threads work
