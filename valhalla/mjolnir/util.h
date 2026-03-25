@@ -9,6 +9,7 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
+#include <array>
 #include <atomic>
 #include <map>
 #include <span>
@@ -147,10 +148,10 @@ struct build_stats {
 
   static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");
 
-  std::atomic<uint32_t> counters[kCount]{};
+  std::array<std::atomic<uint32_t>, kCount> counters{};
 
-  void increment(counter c) {
-    ++counters[c];
+  void increment(counter c, uint32_t by = 1) {
+    counters[c] += by;
   }
 
   static build_stats& get() {
