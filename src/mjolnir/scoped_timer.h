@@ -37,7 +37,7 @@ namespace mjolnir {
         if (_st_dot != std::string::npos)                                                            \
           _st_stem = _st_stem.substr(0, _st_dot);                                                    \
         valhalla::mjolnir::build_stats::get()                                                        \
-            .record_timing(std::string("build.timing.") + _st_stem + "." + std::string(func_name),   \
+            .record_timing(std::string("mjolnir.timing.") + _st_stem + "." + std::string(func_name), \
                            static_cast<uint64_t>(_scoped_timer_duration));                           \
       })
 
