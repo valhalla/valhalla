@@ -927,8 +927,7 @@ void build_stats::log_stage(BuildStage stage,
       LOG_WARN(std::format("[{}] {} {}", stage_name, delta, meta[i].log_label));
     }
     // always emit to statsd (gauges retain last value, so we must send 0 to reset)
-    statsd_entries.emplace_back(std::format("build.{}.{}", stage_name, meta[i].statsd_key + 6),
-                                delta);
+    statsd_entries.emplace_back(std::format("mjolnir.{}.{}", stage_name, meta[i].statsd_key), delta);
     snapshot[i] = current;
   }
 
