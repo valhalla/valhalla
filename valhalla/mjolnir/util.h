@@ -9,6 +9,7 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
+#include <array>
 #include <atomic>
 #include <map>
 #include <mutex>
@@ -129,39 +130,30 @@ struct build_stats {
     BuildStage stage; // the stage that owns this counter (for statsd emission)
   };
   static constexpr meta_entry meta[] = {
-      {"build.uninitialized_nodes", "nodes with uninitialized coordinates",
-       BuildStage::kConstructEdges},
-      {"build.restriction_mask_exceeded", "restriction masks exceeding limit",
-       BuildStage::kConstructEdges},
-      {"build.lane_connectivity_failed", "lane connectivity import failures", BuildStage::kBuild},
-      {"build.exceeded_max_nodes_per_way", "ways exceeding max nodes per way",
-       BuildStage::kParseWays},
-      {"build.exceeded_max_speed", "ways with speed clamped to max", BuildStage::kParseWays},
-      {"build.exceeded_max_speed_limit", "ways with speed limit clamped to max",
-       BuildStage::kParseWays},
-      {"build.exceeded_max_truck_speed", "ways with truck speed clamped to max",
-       BuildStage::kParseWays},
-      {"build.invalid_level", "ways with invalid level tags", BuildStage::kBuild},
-      {"build.exceeded_max_names", "edges exceeding max names", BuildStage::kBuild},
-      {"build.exceeded_max_shape_size", "edges exceeding max encoded shape size", BuildStage::kBuild},
-      {"build.exceeded_speed_limit", "edges with speed limit clamped in EdgeInfo",
-       BuildStage::kBuild},
-      {"build.elevation_exceeds_diff", "edges with elevation exceeding max difference",
+      {"uninitialized_nodes", "nodes with uninitialized coordinates", BuildStage::kConstructEdges},
+      {"restriction_mask_exceeded", "restriction masks exceeding limit", BuildStage::kConstructEdges},
+      {"lane_connectivity_failed", "lane connectivity import failures", BuildStage::kBuild},
+      {"exceeded_max_nodes_per_way", "ways exceeding max nodes per way", BuildStage::kParseWays},
+      {"exceeded_max_speed", "ways with speed clamped to max", BuildStage::kParseWays},
+      {"exceeded_max_speed_limit", "ways with speed limit clamped to max", BuildStage::kParseWays},
+      {"exceeded_max_truck_speed", "ways with truck speed clamped to max", BuildStage::kParseWays},
+      {"invalid_level", "ways with invalid level tags", BuildStage::kBuild},
+      {"exceeded_max_names", "edges exceeding max names", BuildStage::kBuild},
+      {"exceeded_max_shape_size", "edges exceeding max encoded shape size", BuildStage::kBuild},
+      {"exceeded_speed_limit", "edges with speed limit clamped in EdgeInfo", BuildStage::kBuild},
+      {"elevation_exceeds_diff", "edges with elevation exceeding max difference",
        BuildStage::kElevation},
-      {"build.access_tags_not_found", "edges with access tags not found", BuildStage::kEnhance},
-      {"build.unrecognized_hov_type", "ways with unrecognized HOV type", BuildStage::kParseWays},
-      {"build.tag_parse_error", "tag parse errors", BuildStage::kParseWays},
-      {"build.exceeded_max_vias", "restrictions exceeding max vias", BuildStage::kRestrictions},
-      {"build.exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges",
-       BuildStage::kShortcuts},
+      {"access_tags_not_found", "edges with access tags not found", BuildStage::kEnhance},
+      {"unrecognized_hov_type", "ways with unrecognized HOV type", BuildStage::kParseWays},
+      {"tag_parse_error", "tag parse errors", BuildStage::kParseWays},
+      {"exceeded_max_vias", "restrictions exceeding max vias", BuildStage::kRestrictions},
+      {"exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges", BuildStage::kShortcuts},
   };
 
   static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");
 
-  std::atomic<uint32_t> counters[kCount]{};
-
-  void increment(counter c) {
-    ++counters[c];
+  void increment(counter c, uint32_t by = 1) {
+    counters_[c] += by;
   }
 
   static build_stats& get() {
@@ -179,8 +171,9 @@ struct build_stats {
                  const boost::property_tree::ptree& config) const;
 
 private:
+  std::array<std::atomic<uint32_t>, kCount> counters_{};
+
   // are modified in const log_stage
-  // mutex makes sure we're safe in multithreaded functions
   mutable std::vector<std::pair<std::string, uint64_t>> pending_timings_;
   mutable std::mutex timings_mutex_;
 };

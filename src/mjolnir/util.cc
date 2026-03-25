@@ -934,7 +934,7 @@ void build_stats::log_stage(BuildStage stage,
   // Compute deltas and log
   std::vector<std::pair<std::string, uint32_t>> statsd_entries;
   for (uint8_t i = 0; i < kCount; ++i) {
-    uint32_t current = counters[i].load();
+    uint32_t current = counters_[i].load();
     uint32_t delta = current - snapshot[i];
     if (delta > 0) {
       LOG_WARN(std::format("[{}] {} {}", stage_name, delta, meta[i].log_label));
