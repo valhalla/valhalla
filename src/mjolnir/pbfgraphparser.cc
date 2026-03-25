@@ -197,6 +197,9 @@ struct graph_parser {
         way_.set_internal(tag_.second == "true" ? true : false);
       }
     };
+    tag_handlers_["tagged_internal_intersection"] = [this]() {
+      way_.set_internal(tag_.second == "true");
+    };
     tag_handlers_["turn_channel"] = [this]() {
       if (!infer_turn_channels_) {
         way_.set_turn_channel(tag_.second == "true" ? true : false);

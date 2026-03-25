@@ -152,7 +152,7 @@ void loki_worker_t::route(Api& request) {
     // throw if there's a location we did not find any
     // candidates for
     for (const auto& location : *locations) {
-      if (location.correlation().edges().empty()) {
+      if (location.correlation().edges().empty() && location.correlation().filtered_edges().empty()) {
         throw valhalla_exception_t(171);
       }
     }
