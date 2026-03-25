@@ -681,6 +681,14 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     std::filesystem::create_directories(tile_dir);
   }
 
+  // Snapshot for per-stage delta reporting
+  uint32_t stats_snapshot[build_stats::kCount]{};
+  auto log_stage = [&stats_snapshot, &config](BuildStage stage) {
+    build_stats::get().log_stage(stage, stats_snapshot, config);
+  };
+  // nothing to report, but logic only works correctly if every stage is logged
+  log_stage(BuildStage::kInitialize);
+
   // Set up the temporary (*.bin) files used during processing
   std::string ways_bin = tile_dir + ways_file;
   std::string way_nodes_bin = tile_dir + way_nodes_file;
@@ -694,12 +702,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string cr_to_bin = tile_dir + cr_to_file;
   std::string new_to_old_bin = tile_dir + new_to_old_file;
   std::string old_to_new_bin = tile_dir + old_to_new_file;
-
-  // Snapshot for per-stage delta reporting
-  uint32_t stats_snapshot[build_stats::kCount]{};
-  auto log_stage = [&stats_snapshot, &config](BuildStage stage) {
-    build_stats::get().log_stage(stage, stats_snapshot, config);
-  };
 
   // OSMData class
   OSMData osm_data{0};
