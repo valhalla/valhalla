@@ -32,12 +32,18 @@
     "nanobind",
     "spatialite-tools",
     "luajit",
-    "lz4",
     "protobuf",
     "sqlite3",
     "zlib",
     "unordered-dense",
     "libosmium",
     "openssl"
-  ]
+  ],
+  "features": {
+    "lz4": {
+      "description": "LZ4 decompression support for elevation tiles",
+      "dependencies": ["lz4"]
+    }
+  },
+  "default-features": ["lz4"]
 }
