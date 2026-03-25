@@ -11,9 +11,11 @@
 
 #include <atomic>
 #include <map>
+#include <mutex>
 #include <span>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace valhalla {
@@ -124,25 +126,34 @@ struct build_stats {
   struct meta_entry {
     const char* statsd_key;
     const char* log_label;
+    BuildStage stage; // the stage that owns this counter (for statsd emission)
   };
   static constexpr meta_entry meta[] = {
-      {"build.uninitialized_nodes", "nodes with uninitialized coordinates"},
-      {"build.restriction_mask_exceeded", "restriction masks exceeding limit"},
-      {"build.lane_connectivity_failed", "lane connectivity import failures"},
-      {"build.exceeded_max_nodes_per_way", "ways exceeding max nodes per way"},
-      {"build.exceeded_max_speed", "ways with speed clamped to max"},
-      {"build.exceeded_max_speed_limit", "ways with speed limit clamped to max"},
-      {"build.exceeded_max_truck_speed", "ways with truck speed clamped to max"},
-      {"build.invalid_level", "ways with invalid level tags"},
-      {"build.exceeded_max_names", "edges exceeding max names"},
-      {"build.exceeded_max_shape_size", "edges exceeding max encoded shape size"},
-      {"build.exceeded_speed_limit", "edges with speed limit clamped in EdgeInfo"},
-      {"build.elevation_exceeds_diff", "edges with elevation exceeding max difference"},
-      {"build.access_tags_not_found", "edges with access tags not found"},
-      {"build.unrecognized_hov_type", "ways with unrecognized HOV type"},
-      {"build.tag_parse_error", "tag parse errors"},
-      {"build.exceeded_max_vias", "restrictions exceeding max vias"},
-      {"build.exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges"},
+      {"build.uninitialized_nodes", "nodes with uninitialized coordinates",
+       BuildStage::kConstructEdges},
+      {"build.restriction_mask_exceeded", "restriction masks exceeding limit",
+       BuildStage::kConstructEdges},
+      {"build.lane_connectivity_failed", "lane connectivity import failures", BuildStage::kBuild},
+      {"build.exceeded_max_nodes_per_way", "ways exceeding max nodes per way",
+       BuildStage::kParseWays},
+      {"build.exceeded_max_speed", "ways with speed clamped to max", BuildStage::kParseWays},
+      {"build.exceeded_max_speed_limit", "ways with speed limit clamped to max",
+       BuildStage::kParseWays},
+      {"build.exceeded_max_truck_speed", "ways with truck speed clamped to max",
+       BuildStage::kParseWays},
+      {"build.invalid_level", "ways with invalid level tags", BuildStage::kBuild},
+      {"build.exceeded_max_names", "edges exceeding max names", BuildStage::kBuild},
+      {"build.exceeded_max_shape_size", "edges exceeding max encoded shape size", BuildStage::kBuild},
+      {"build.exceeded_speed_limit", "edges with speed limit clamped in EdgeInfo",
+       BuildStage::kBuild},
+      {"build.elevation_exceeds_diff", "edges with elevation exceeding max difference",
+       BuildStage::kElevation},
+      {"build.access_tags_not_found", "edges with access tags not found", BuildStage::kEnhance},
+      {"build.unrecognized_hov_type", "ways with unrecognized HOV type", BuildStage::kParseWays},
+      {"build.tag_parse_error", "tag parse errors", BuildStage::kParseWays},
+      {"build.exceeded_max_vias", "restrictions exceeding max vias", BuildStage::kRestrictions},
+      {"build.exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges",
+       BuildStage::kShortcuts},
   };
 
   static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");
@@ -158,10 +169,20 @@ struct build_stats {
     return instance;
   }
 
+  // Record a timing to be emitted with the next log_stage() call.
+  void record_timing(const std::string& key, uint64_t seconds);
+
   // Log and emit to statsd what changed since last snapshot, then update snapshot.
+  // Also emits any timings recorded since the last call.
   void log_stage(BuildStage stage,
                  std::span<uint32_t, kCount> snapshot,
                  const boost::property_tree::ptree& config) const;
+
+private:
+  // are modified in const log_stage
+  // mutex makes sure we're safe in multithreaded functions
+  mutable std::vector<std::pair<std::string, uint64_t>> pending_timings_;
+  mutable std::mutex timings_mutex_;
 };
 
 // A little struct to hold stats information during each threads work

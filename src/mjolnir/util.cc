@@ -729,6 +729,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    log_stage(BuildStage::kParseRelations);
   }
 
   // Parse OSM data
@@ -742,6 +743,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    log_stage(BuildStage::kParseNodes);
   }
 
   // Construct edges
@@ -795,11 +797,13 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Perform optional edge filtering (remove edges and nodes for specific access modes)
   if (start_stage <= BuildStage::kFilter && BuildStage::kFilter <= end_stage) {
     GraphFilter::Filter(config);
+    log_stage(BuildStage::kFilter);
   }
 
   // Add transit
   if (start_stage <= BuildStage::kTransit && BuildStage::kTransit <= end_stage) {
     TransitBuilder::Build(config);
+    log_stage(BuildStage::kTransit);
   }
 
   // Build bike share stations
@@ -808,6 +812,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
       osm_data.read_from_unique_names_file(tile_dir);
     }
     BssBuilder::Build(config, osm_data, bss_nodes_bin);
+    log_stage(BuildStage::kBss);
   }
 
   // Builds additional hierarchies if specified within config file. Connections
@@ -816,6 +821,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (build_hierarchy) {
     if (start_stage <= BuildStage::kHierarchy && BuildStage::kHierarchy <= end_stage) {
       HierarchyBuilder::Build(config, new_to_old_bin, old_to_new_bin);
+      log_stage(BuildStage::kHierarchy);
     }
 
     // Build shortcuts if specified in the config file. Shortcuts can only be
@@ -851,6 +857,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Validate the graph and add information that cannot be added until full graph is formed.
   if (start_stage <= BuildStage::kValidate && BuildStage::kValidate <= end_stage) {
     GraphValidator::Validate(config);
+    log_stage(BuildStage::kValidate);
   }
 
   // Cleanup bin files
@@ -869,6 +876,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(old_to_new_bin);
     remove_temp_file(tile_manifest);
     OSMData::cleanup_temp_files(tile_dir);
+    log_stage(BuildStage::kCleanup);
   }
   return true;
 }
@@ -914,6 +922,11 @@ TileManifest TileManifest::ReadFromFile(const std::string& filename) {
   return TileManifest{tileset};
 }
 
+void build_stats::record_timing(const std::string& key, uint64_t seconds) {
+  std::lock_guard<std::mutex> lock(timings_mutex_);
+  pending_timings_.emplace_back(key, seconds);
+}
+
 void build_stats::log_stage(BuildStage stage,
                             std::span<uint32_t, kCount> snapshot,
                             const boost::property_tree::ptree& config) const {
@@ -926,15 +939,17 @@ void build_stats::log_stage(BuildStage stage,
     if (delta > 0) {
       LOG_WARN(std::format("[{}] {} {}", stage_name, delta, meta[i].log_label));
     }
-    // always emit to statsd (gauges retain last value, so we must send 0 to reset)
-    statsd_entries.emplace_back(std::format("build.{}.{}", stage_name, meta[i].statsd_key + 6),
-                                delta);
+    // only emit to statsd during the stage that owns this counter
+    if (stage == meta[i].stage) {
+      statsd_entries.emplace_back(meta[i].statsd_key, delta);
+    }
     snapshot[i] = current;
   }
 
-  // Emit to statsd if configured (e.g. build.parseways.exceeded_max_speed)
+  // Emit to statsd if configured
   auto host = config.get<std::string>("statsd.host", "");
   if (host.empty()) {
+    pending_timings_.clear();
     return;
   }
   Statsd::StatsdClient client(host, config.get<int>("statsd.port", 8125),
@@ -950,7 +965,11 @@ void build_stats::log_stage(BuildStage stage,
   for (const auto& [key, count] : statsd_entries) {
     client.gauge(key, count, 1.f, tags);
   }
-  client.gauge("build.stage", static_cast<uint8_t>(stage), 1.f, tags);
+  for (const auto& [key, seconds] : pending_timings_) {
+    client.gauge(key, seconds, 1.f, tags);
+  }
+  pending_timings_.clear();
+  client.gauge("build.stage", static_cast<int>(stage), 1.f, tags);
   client.flush();
 }
 
