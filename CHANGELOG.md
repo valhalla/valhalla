@@ -30,6 +30,7 @@
    * ADDED: `filtered_edges` in `/locate` output (**breaking**: results previously in `edges` may now be in `filtered_edges`) [#5987](https://github.com/valhalla/valhalla/pull/5987)
    * ADDED: `ValhallaError` which exposes `valhalla_exception_t` to the Python bindings [#5956](https://github.com/valhalla/valhalla/pull/5956)
    * ADDED: Add Uzbek (`uz-UZ`) locale [#5988](https://github.com/valhalla/valhalla/pull/5988)
+   * CHANGED: Make `lz4` system dependency optional [#5993](https://github.com/valhalla/valhalla/pull/5993)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
