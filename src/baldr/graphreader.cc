@@ -31,9 +31,9 @@ struct tile_index_entry {
 // If the tar contains an index.bin entry, uses it for fast offset-based loading.
 // Otherwise falls back to scanning all entries and parsing filenames as GraphIds.
 // Returns the number of corrupt blocks encountered.
-size_t load_tiles(valhalla::midgard::tar& archive,
+size_t load_tiles(valhalla::midgard::tar& tar,
                   std::unordered_map<uint64_t, std::pair<char*, size_t>>& tiles) {
-  return archive.for_each([&](const std::string& name, const char* data, size_t size) {
+  return tar.for_each([&](const std::string& name, const char* data, size_t size) {
     // if it's our specially named index.bin file - load all entries from it
     if (name == "index.bin") {
       auto entries =
@@ -43,8 +43,8 @@ size_t load_tiles(valhalla::midgard::tar& archive,
       tiles.reserve(entries.size());
       for (const auto& entry : entries) {
         tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
-                       std::forward_as_tuple(const_cast<char*>(archive.mm.get() + entry.offset),
-                                             entry.size));
+                      std::forward_as_tuple(const_cast<char*>(tar.mm.get() + entry.offset),
+                                            entry.size));
       }
       return false; // index loaded, stop scanning
     }
