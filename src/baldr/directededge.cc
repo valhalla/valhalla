@@ -349,7 +349,6 @@ void DirectedEdge::set_reverseaccess(const uint32_t modes) {
 // Sets the average speed in KPH.
 void DirectedEdge::set_speed(const uint32_t speed) {
   if (speed > kMaxAssumedSpeed) {
-    LOG_WARN("Exceeding maximum.  Average speed: " + std::to_string(speed));
     speed_ = kMaxAssumedSpeed;
   } else {
     speed_ = speed;
@@ -359,7 +358,6 @@ void DirectedEdge::set_speed(const uint32_t speed) {
 // Sets the truck speed in KPH.
 void DirectedEdge::set_truck_speed(const uint32_t speed) {
   if (speed > kMaxAssumedSpeed) {
-    LOG_WARN("Exceeding maximum.  Truck speed: " + std::to_string(speed));
     truck_speed_ = kMaxAssumedSpeed;
   } else {
     truck_speed_ = speed;
