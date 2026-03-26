@@ -34,6 +34,7 @@ constexpr float kDefaultUseHighways = 0.5f; // Default preference of using a mot
 constexpr float kDefaultUseTolls = 0.5f;    // Default preference of using toll roads 0-1
 constexpr float kDefaultUseTracks = 0.f;    // Default preference of using tracks 0-1
 constexpr float kDefaultUseDistance = 0.f;  // Default preference of using distance vs time 0-1
+constexpr float kDefaultUseTwistyRoads = 0.5f; // Factor between 0 and 1. 0.5 = neutral
 constexpr uint32_t kDefaultRestrictionProbability = 100; // Default percentage of allowing probable
                                                          // restrictions 0% means do not include them
 
@@ -74,6 +75,13 @@ constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFac
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
+constexpr ranged_default_t<float> kUseTwistyRoadsRange{0, kDefaultUseTwistyRoads, 1.0f};
+
+// Twisty roads constants
+constexpr float kTwistySpeedFloor = 50.0f;     // km/h - no twisty bonus below this speed
+constexpr float kTwistyReferenceSpeed = 80.0f;  // km/h - normalizing speed for perceived twistiness
+constexpr float kMaxTwistyFactor = 0.75f;        // max cost reduction at use_twisty_roads=1.0
+
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
@@ -355,6 +363,7 @@ public:
   float surface_factor_;      // How much the surface factors are applied.
   float distance_factor_;     // How much distance factors in overall favorability
   float inv_distance_factor_; // How much time factors in overall favorability
+  float twisty_factor_;       // Factor for twisty road preference
 
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
@@ -396,6 +405,10 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // Preference for distance vs time
   distance_factor_ = costing_options.use_distance() * kInvMedianSpeed;
   inv_distance_factor_ = 1.f - costing_options.use_distance();
+
+  // Twisty road preference
+  float use_twisty_roads = costing_options.use_twisty_roads();
+  twisty_factor_ = (use_twisty_roads - 0.5f) * 2.0f; // maps 0-1 to -1.0 to 1.0
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
@@ -551,6 +564,14 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
     default:
       break;
+  }
+
+  // Apply twisty road preference based on curvature and speed
+  if (twisty_factor_ != 0.0f && edge_speed >= kTwistySpeedFloor) {
+    float curvature = static_cast<float>(edge->curvature()) / 15.0f;
+    float speed_weight = static_cast<float>(edge_speed) / kTwistyReferenceSpeed;
+    float perceived_twistiness = std::min(curvature * speed_weight, 1.0f);
+    factor *= 1.0f - twisty_factor_ * perceived_twistiness * kMaxTwistyFactor;
   }
 
   factor *= EdgeFactor(edgeid);
@@ -718,6 +739,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kUseDistanceRange, json, "/use_distance", use_distance, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTwistyRoadsRange, json, "/use_twisty_roads", use_twisty_roads,
+                          warnings);
   JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
                           restriction_probability, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed, warnings);
