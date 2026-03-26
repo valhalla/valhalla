@@ -682,20 +682,24 @@ struct tar {
     size_t corrupt_blocks = 0;
     const char* position = mm.get();
     while (position < mm.get() + mm.size()) {
+      // get the header for this file
       const header_t* h = static_cast<const header_t*>(static_cast<const void*>(position));
       position += sizeof(header_t);
+      // if it doesnt checkout ignore it and move on one block at a time
       if (!h->verify()) {
         corrupt_blocks += !h->blank();
         continue;
       }
       auto size = h->get_file_size();
       if (h->typeflag == '0' || h->typeflag == '\0') {
+        // tar doesn't automatically update path separators based on OS, so we need to do it...
         std::filesystem::path filepath{h->name};
         filepath.make_preferred();
         if (!visitor(filepath.string(), position, size)) {
           break;
         }
       }
+      // every entry's data is rounded to the nearst header_t sized "block"
       auto blocks = static_cast<size_t>(std::ceil(static_cast<double>(size) / sizeof(header_t)));
       position += blocks * sizeof(header_t);
     }
