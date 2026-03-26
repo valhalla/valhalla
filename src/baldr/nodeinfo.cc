@@ -182,7 +182,6 @@ void NodeInfo::set_type(const NodeType type) {
 // a value up to kMaxLocalEdgeIndex+1 can be stored.
 void NodeInfo::set_local_edge_count(const uint32_t n) {
   if (n > kMaxLocalEdgeIndex + 1) {
-    LOG_INFO("Exceeding max. local edge count: " + std::to_string(n));
     local_edge_count_ = kMaxLocalEdgeIndex;
   } else if (n == 0) {
     LOG_ERROR("Node with 0 local edges found");
