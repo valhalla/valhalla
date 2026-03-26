@@ -70,19 +70,6 @@ GraphId GetOpposingEdge(GraphReader& reader,
   return {};
 }
 
-bool ExpandFromNode(GraphReader& reader,
-                    std::mutex& lock,
-                    uint32_t access,
-                    bool forward,
-                    GraphId& last_node,
-                    std::unordered_set<GraphId>& visited_nodes,
-                    std::vector<EdgeId>& edge_ids,
-                    const std::vector<uint64_t>& way_ids,
-                    size_t way_id_index,
-                    const graph_tile_ptr& prev_tile,
-                    GraphId prev_node,
-                    GraphId current_node);
-
 bool IsEdgeAllowed(const DirectedEdge* de, uint32_t access, bool forward) {
   bool accessible = (forward ? de->forwardaccess() : de->reverseaccess()) & access;
   return accessible &&
@@ -90,62 +77,57 @@ bool IsEdgeAllowed(const DirectedEdge* de, uint32_t access, bool forward) {
            de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection);
 }
 
-// Try to match edges at a single node (and its transition nodes) for the given way_id.
-// For each matching edge, first try advancing to the next way_id (recursive, bounded by
-// way_ids.size()). If that fails, return the edge and its endpoint so the caller can
-// continue iteratively along the same way.
-struct MatchResult {
-  GraphId edge_endpoint;
+struct EdgeCandidate {
+  GraphId edge_id;
+  GraphId end_node;
+  GraphId begin_node; // the node this edge departs from (base or transition)
   graph_tile_ptr tile;
-  EdgeId edge; // the edge leading to edge_endpoint
+  uint64_t way_id;
 };
 
-bool TryMatchAtNode(GraphReader& reader,
-                    std::mutex& lock,
-                    uint32_t access,
-                    bool forward,
-                    GraphId& last_node,
-                    std::unordered_set<GraphId>& visited_nodes,
-                    std::vector<EdgeId>& edge_ids,
-                    const std::vector<uint64_t>& way_ids,
-                    size_t way_id_index,
-                    const graph_tile_ptr& tile,
-                    GraphId prev_node,
-                    GraphId current_node,
-                    const NodeInfo* node_info,
-                    std::vector<MatchResult>& continuations) {
-  uint64_t way_id = way_ids[way_id_index];
-
-  for (size_t j = 0; j < node_info->edge_count(); ++j) {
-    GraphId edge_id(tile->id().tileid(), tile->id().level(), node_info->edge_index() + j);
-    const DirectedEdge* de = tile->directededge(edge_id);
-
-    if (de->endnode() != prev_node && IsEdgeAllowed(de, access, forward)) {
-      auto edge_info = tile->edgeinfo(de);
-      if (edge_info.wayid() == way_id) {
-        edge_ids.push_back({way_id, edge_id});
-
-        // try advancing to next way_id (recursion bounded by way_ids.size())
-        if (ExpandFromNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
-                           way_id_index + 1, tile, current_node, de->endnode()))
-          return true;
-
-        // record as candidate for iterative same-way continuation
-        if (visited_nodes.find(de->endnode()) == visited_nodes.end()) {
-          continuations.push_back({de->endnode(), tile, {way_id, edge_id}});
-        }
-
-        edge_ids.pop_back();
+// Find edges matching way_id at a node and its transition nodes (same intersection, different levels).
+// Skips edges leading back to prev_node.
+void FindMatchingEdges(GraphReader& reader,
+                       std::mutex& lock,
+                       const graph_tile_ptr& tile,
+                       GraphId current_node,
+                       const NodeInfo* node_info,
+                       GraphId prev_node,
+                       uint32_t access,
+                       bool forward,
+                       uint64_t way_id,
+                       std::vector<EdgeCandidate>& candidates) {
+  auto scan = [&](const graph_tile_ptr& t, const NodeInfo* ni, GraphId begin_node) {
+    for (size_t j = 0; j < ni->edge_count(); ++j) {
+      GraphId edge_id(t->id().tileid(), t->id().level(), ni->edge_index() + j);
+      const DirectedEdge* de = t->directededge(edge_id);
+      if (de->endnode() != prev_node && IsEdgeAllowed(de, access, forward) &&
+          t->edgeinfo(de).wayid() == way_id) {
+        candidates.push_back({edge_id, de->endnode(), begin_node, t, way_id});
       }
     }
+  };
+
+  scan(tile, node_info, current_node);
+  for (size_t k = 0; k < node_info->transition_count(); ++k) {
+    const NodeTransition* trans = tile->transition(node_info->transition_index() + k);
+    graph_tile_ptr trans_tile = tile;
+    if (trans_tile->id() != trans->endnode().tile_base()) {
+      lock.lock();
+      trans_tile = reader.GetGraphTile(trans->endnode());
+      lock.unlock();
+    }
+    scan(trans_tile, trans_tile->node(trans->endnode()), trans->endnode());
   }
-  return false;
 }
 
 // Depth-first-search to convert way_ids to edge_ids.
-// The "same way_id" chain-following is done iteratively to avoid stack overflow
-// on long ways (motorways with hundreds of edges).
-// Only "next way_id" transitions use recursion, bounded by way_ids.size().
+// Same-way chain-following is iterative (explicit stack) to avoid stack overflow on long ways.
+// Next-way transitions use recursion, bounded by way_ids.size().
+//
+// At each node the logic is two phases:
+//   1. Try advancing to the next way_id from each matching edge's endpoint (recurse).
+//   2. Collect remaining unvisited matches as same-way continuations (iterate).
 bool ExpandFromNode(GraphReader& reader,
                     std::mutex& lock,
                     uint32_t access,
@@ -163,16 +145,36 @@ bool ExpandFromNode(GraphReader& reader,
     return true;
   }
 
-  // Use an explicit stack for same-way DFS instead of recursion.
-  // Each entry: (current_node, prev_node, tile, edge_ids_size_before, continuation_index)
+  uint64_t way_id = way_ids[way_id_index];
+
   struct DfsFrame {
     GraphId current_node;
-    GraphId prev_node;
     graph_tile_ptr tile;
     size_t edge_ids_size;
-    std::vector<MatchResult> continuations;
+    std::vector<EdgeCandidate> same_way;
     size_t cont_idx;
-    bool owns_visited; // true if this frame inserted current_node into visited_nodes
+    bool owns_visited;
+  };
+
+  // Phase 1: try next-way transition from each candidate.
+  // Phase 2: collect unvisited candidates as same-way continuations.
+  auto try_advance = [&](const graph_tile_ptr& tile, GraphId current, GraphId prev,
+                         std::vector<EdgeCandidate>& same_way) -> bool {
+    std::vector<EdgeCandidate> candidates;
+    FindMatchingEdges(reader, lock, tile, current, tile->node(current), prev, access, forward, way_id,
+                      candidates);
+    for (auto& c : candidates) {
+      edge_ids.push_back({c.way_id, c.edge_id});
+      if (ExpandFromNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
+                         way_id_index + 1, c.tile, c.begin_node, c.end_node))
+        return true;
+      edge_ids.pop_back();
+    }
+    for (auto& c : candidates) {
+      if (visited_nodes.find(c.end_node) == visited_nodes.end())
+        same_way.push_back(std::move(c));
+    }
+    return false;
   };
 
   std::vector<DfsFrame> stack;
@@ -188,35 +190,14 @@ bool ExpandFromNode(GraphReader& reader,
 
     DfsFrame frame;
     frame.current_node = current_node;
-    frame.prev_node = prev_node;
     frame.tile = tile;
     frame.edge_ids_size = edge_ids.size();
     frame.cont_idx = 0;
-    frame.owns_visited = false; // first frame: caller already manages visited_nodes for this node
+    frame.owns_visited = false;
 
-    auto node_info = tile->node(current_node);
-
-    // try matching at current node
-    if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
-                       way_id_index, tile, prev_node, current_node, node_info, frame.continuations))
+    if (try_advance(tile, current_node, prev_node, frame.same_way))
       return true;
-
-    // try matching at transition nodes
-    for (size_t k = 0; k < node_info->transition_count(); ++k) {
-      const NodeTransition* trans = tile->transition(node_info->transition_index() + k);
-      graph_tile_ptr trans_tile = tile;
-      if (trans_tile->id() != trans->endnode().tile_base()) {
-        lock.lock();
-        trans_tile = reader.GetGraphTile(trans->endnode());
-        lock.unlock();
-      }
-      if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
-                         way_id_index, trans_tile, prev_node, trans->endnode(),
-                         trans_tile->node(trans->endnode()), frame.continuations))
-        return true;
-    }
-
-    if (frame.continuations.empty())
+    if (frame.same_way.empty())
       return false;
 
     stack.push_back(std::move(frame));
@@ -226,31 +207,23 @@ bool ExpandFromNode(GraphReader& reader,
   while (!stack.empty()) {
     auto& frame = stack.back();
 
-    if (frame.cont_idx >= frame.continuations.size()) {
-      // backtrack: undo visited and edge_ids for this frame
+    if (frame.cont_idx >= frame.same_way.size()) {
       if (frame.owns_visited)
         visited_nodes.erase(frame.current_node);
       edge_ids.resize(frame.edge_ids_size);
       stack.pop_back();
-
-      // advance parent's continuation index
       if (!stack.empty())
         stack.back().cont_idx++;
       continue;
     }
 
-    auto& cont = frame.continuations[frame.cont_idx];
-    GraphId next_node = cont.edge_endpoint;
+    auto& cont = frame.same_way[frame.cont_idx];
+    GraphId next_node = cont.end_node;
 
-    // reset edge_ids to frame's baseline before trying this continuation
     edge_ids.resize(frame.edge_ids_size);
-    // push the edge leading to this continuation node
-    edge_ids.push_back(cont.edge);
-
-    // mark visited for same-way continuation
+    edge_ids.push_back({cont.way_id, cont.edge_id});
     visited_nodes.insert(next_node);
 
-    // get tile for next node
     auto tile = cont.tile;
     if (tile->id() != next_node.tile_base()) {
       lock.lock();
@@ -258,39 +231,17 @@ bool ExpandFromNode(GraphReader& reader,
       lock.unlock();
     }
 
-    auto node_info = tile->node(next_node);
-
     DfsFrame next_frame;
     next_frame.current_node = next_node;
-    next_frame.prev_node = frame.current_node;
     next_frame.tile = tile;
     next_frame.edge_ids_size = edge_ids.size();
     next_frame.cont_idx = 0;
     next_frame.owns_visited = true;
 
-    // try matching at next node
-    if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
-                       way_id_index, tile, frame.current_node, next_node, node_info,
-                       next_frame.continuations))
+    if (try_advance(tile, next_node, frame.current_node, next_frame.same_way))
       return true;
 
-    // try matching at transition nodes
-    for (size_t k = 0; k < node_info->transition_count(); ++k) {
-      const NodeTransition* trans = tile->transition(node_info->transition_index() + k);
-      graph_tile_ptr trans_tile = tile;
-      if (trans_tile->id() != trans->endnode().tile_base()) {
-        lock.lock();
-        trans_tile = reader.GetGraphTile(trans->endnode());
-        lock.unlock();
-      }
-      if (TryMatchAtNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids, way_ids,
-                         way_id_index, trans_tile, frame.current_node, trans->endnode(),
-                         trans_tile->node(trans->endnode()), next_frame.continuations))
-        return true;
-    }
-
-    if (next_frame.continuations.empty()) {
-      // dead end: undo and try next continuation at current level
+    if (next_frame.same_way.empty()) {
       visited_nodes.erase(next_node);
       edge_ids.resize(next_frame.edge_ids_size);
       frame.cont_idx++;
