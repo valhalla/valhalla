@@ -794,6 +794,8 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     }
     LOG_INFO("--Forward restrictions added: " + std::to_string(forward_restrictions_count));
     LOG_INFO("--Reverse restrictions added: " + std::to_string(reverse_restrictions_count));
+    build_stats::get().increment(build_stats::kComplexTurnRestrictionCount,
+                                 forward_restrictions_count + reverse_restrictions_count);
   }
   LOG_INFO("Finished");
 }
