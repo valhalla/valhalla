@@ -256,9 +256,10 @@ public:
     // See if we can get a valid speed loaded from configuration
     auto configured_speed = FromConfig(directededge, density, country_code, state_code);
     if (configured_speed != kUnconfiguredSpeed) {
-      if (configured_speed > kMaxAssumedSpeed) {
+      if (configured_speed > valhalla::baldr::kMaxAssumedSpeed) {
         LOG_DEBUG("SpeedAssigner exceeded maximum speed: " + std::to_string(speed));
-        build_stats::get().increment(build_stats::kExceededMaxAssignerSpeed);
+        valhalla::mjolnir::build_stats::get().increment(
+            valhalla::mjolnir::build_stats::kExceededMaxAssignerSpeed);
       }
       directededge.set_speed(configured_speed);
       directededge.set_speed_type(valhalla::baldr::SpeedType::kClassified);
