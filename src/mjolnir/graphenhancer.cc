@@ -1048,6 +1048,10 @@ void enhance(const boost::property_tree::ptree& pt,
       // while processing turn lanes.
       std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
+      if (ntrans > kMaxLocalEdgeIndex + 1) {
+        LOG_DEBUG("Exceeding max. local edge count: " + std::to_string(n));
+        build_stats::get().increment(build_stats::kExceededLocalEdgeCount);
+      }
       for (uint32_t j = 0; j < ntrans; j++) {
         DirectedEdge& directededge = tilebuilder->directededge_builder(nodeinfo.edge_index() + j);
 
@@ -1117,6 +1121,10 @@ void enhance(const boost::property_tree::ptree& pt,
         density = it->second;
         stats.density_counts[density]++;
         nodeinfo.set_density(density);
+        if (density > kMaxDensity) {
+          LOG_DEBUG("Exceeding max. density: " + std::to_string(density));
+          build_stats::get().increment(build_stats::kExceededMaxDensity);
+        }
       }
 
       uint32_t admin_index = nodeinfo.admin_index();

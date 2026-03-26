@@ -4,6 +4,7 @@
 #include "midgard/util.h"
 #include "mjolnir/node_expander.h"
 #include "mjolnir/osmdata.h"
+#include "mjolnir/util.h"
 #include "scoped_timer.h"
 
 #include <queue>
@@ -332,7 +333,6 @@ void ReclassifyFerryConnections(const std::string& ways_file,
   // regular (non-ferry) edge. Skip short ferry edges (river crossing?)
   [[maybe_unused]] uint32_t ferry_endpoint_count = 0;
   [[maybe_unused]] uint32_t total_count = 0;
-  [[maybe_unused]] uint32_t missed_both = 0;
   sequence<Node>::iterator node_itr = nodes.begin();
   while (node_itr != nodes.end()) {
     auto bundle = collect_node_edges(node_itr, nodes, edges);
@@ -427,18 +427,17 @@ void ReclassifyFerryConnections(const std::string& ways_file,
 
       // Log cases where reclassification fails
       if (!inbound_path_found && !outbound_path_found) {
-        missed_both++;
-#ifdef LOGGING_LEVEL_WARN
-      } else {
-        if (!inbound_path_found) {
-          LOG_WARN("Reclassification fails inbound to ferry at LL =" + std::to_string(ll.lat()) +
-                   "," + std::to_string(ll.lng()));
-        }
-        if (!outbound_path_found) {
-          LOG_WARN("Reclassification fails outbound from ferry at LL =" + std::to_string(ll.lat()) +
-                   "," + std::to_string(ll.lng()));
-        }
-#endif
+        LOG_DEBUG("Reclassification fails in both directions to ferry at LL =" +
+                  std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+        build_stats::get().increment(build_stats::kFailsInboundFerryReclass);
+      } else if (!inbound_path_found) {
+        LOG_DEBUG("Reclassification fails inbound to ferry at LL =" + std::to_string(ll.lat()) + "," +
+                  std::to_string(ll.lng()));
+        build_stats::get().increment(build_stats::kFailsInboundFerryReclass);
+      } else if (!outbound_path_found) {
+        LOG_DEBUG("Reclassification fails outbound from ferry at LL =" + std::to_string(ll.lat()) +
+                  "," + std::to_string(ll.lng()));
+        build_stats::get().increment(build_stats::kFailsOutboundFerryReclass);
       }
     }
 
@@ -448,8 +447,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
 
   LOG_INFO("Finished ReclassifyFerryEdges: ferry_endpoint_count = " +
            std::to_string(ferry_endpoint_count) + ", " + std::to_string(total_count) +
-           " edges reclassified. Failed both directions for " + std::to_string(missed_both) +
-           " connections.");
+           " edges reclassified");
 }
 
 } // namespace mjolnir
