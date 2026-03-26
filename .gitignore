@@ -53,6 +53,6 @@ src/bindings/python/valhalla/__version__.py
 **/*.egg-info
 dist
 wheelhouse
-proto/ts/src
+proto/typescript/src
 proto/python/src
-proto/ts/valhalla-proto-*
+proto/typescript/valhallajs-proto-*

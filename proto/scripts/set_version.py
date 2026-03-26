@@ -7,7 +7,6 @@ import re
 from pathlib import Path
 import json
 import tomllib
-import tomli_w
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -68,10 +67,12 @@ def write_version_typescript(version: str) -> None:
 
 
 def write_version_python(version: str) -> None:
+    import tomli_w
+
     with open(PYPROJECT, "rb") as f:
         data = tomllib.load(f)
 
-    data["tool"]["poetry"]["version"] = version
+    data["project"]["version"] = version
 
     with open(PYPROJECT, "wb") as f:
         tomli_w.dump(data, f)

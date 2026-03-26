@@ -1,24 +1,18 @@
-[tool.poetry]
+[project]
 name = "valhalla-proto"
-version = "3.6.3.dev20260324"
+version = "3.6.3.dev20260326"
 description = "Generated Python code for the Valhalla protobuf API"
-authors = [
-    "Christian Beiwinkel <chrstn@bwnkl.de>",
-]
-packages = [
-    { include = "valhalla_proto", from = "src" },
-]
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.10"
-betterproto2 = "^0.9.0"
-
-[tool.poetry.group.dev.dependencies]
-tomli_w = "*"
-
-[build-system]
-requires = [
-    "poetry-core",
+requires-python = ">=3.10"
+authors = [
+  { name = "Christian Beiwinkel ", email = "chrstn@bwnkl.de" },
 ]
-build-backend = "poetry.core.masonry.api"
+dependencies = [
+  "betterproto2>=0.9,<0.10",
+]
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

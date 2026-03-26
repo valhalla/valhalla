@@ -94,8 +94,7 @@ def main():
     api_request = Api(options=options)
 
     resp = requests.post(
-        # "https://valhalla1.openstreetmap.de/trace_attributes",
-        "http://localhost:8002/route",
+        "https://valhalla1.openstreetmap.de/trace_attributes",
         data=api_request.SerializeToString(),
         headers={"Content-Type": "application/x-protobuf"},
     )
