@@ -136,7 +136,7 @@ struct build_stats {
     kShortcutCountLevel1,
     kShortcutEdgesLevel0,
     kShortcutEdgesLevel1,
-    kTurnRestrictionCount,
+    kSimpleTurnRestrictionCount,
     kComplexTurnRestrictionCount,
     kCount // sentinel — must be last
   };
@@ -184,14 +184,14 @@ struct build_stats {
       {"exceeded_max_vias", "restrictions exceeding max vias", BuildStage::kRestrictions},
       {"exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges", BuildStage::kShortcuts},
       // Graph summary counters
-      {"tile_count", "tiles", BuildStage::kValidate},
-      {"edge_count", "edges", BuildStage::kValidate},
-      {"node_count", "nodes", BuildStage::kValidate},
-      {"shortcut_count_level_0", "level 0 shortcuts", BuildStage::kValidate},
-      {"shortcut_count_level_1", "level 1 shortcuts", BuildStage::kValidate},
-      {"shortcut_edges_level_0", "level 0 edges in shortcuts", BuildStage::kValidate},
-      {"shortcut_edges_level_1", "level 1 edges in shortcuts", BuildStage::kValidate},
-      {"turn_restriction_count", "turn restrictions", BuildStage::kValidate},
+      {"tile_count", "amount of tiles with edges/nodes in them", BuildStage::kValidate},
+      {"edge_count", "amount of edges at Validate", BuildStage::kValidate},
+      {"node_count", "amount of nodes at Validate", BuildStage::kValidate},
+      {"shortcut_count_level_0", "level 0 shortcuts", BuildStage::kShortcuts},
+      {"shortcut_count_level_1", "level 1 shortcuts", BuildStage::kShortcuts},
+      {"shortcut_edges_level_0", "level 0 edges in shortcuts", BuildStage::kShortcuts},
+      {"shortcut_edges_level_1", "level 1 edges in shortcuts", BuildStage::kShortcuts},
+      {"simple_turn_restriction_count", "simple turn restrictions", BuildStage::kBuild},
       {"complex_turn_restriction_count", "complex turn restrictions", BuildStage::kValidate},
   };
 
