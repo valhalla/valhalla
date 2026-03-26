@@ -484,6 +484,9 @@ void validate(
     }
     lock.unlock();
 
+    build_stats::get().increment(build_stats::kNodeCount, nodes.size());
+    build_stats::get().increment(build_stats::kEdgeCount, directededges.size());
+
     // Add possible duplicates to return class
     duplicates[level] += dupcount;
   }
