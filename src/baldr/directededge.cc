@@ -426,7 +426,7 @@ void DirectedEdge::complex_restriction(const bool part_of) {
 // Set the density along the edges.
 void DirectedEdge::set_density(const uint32_t density) {
   if (density > kMaxDensity) {
-    LOG_WARN("Exceeding max. density: " + std::to_string(density));
+    LOG_DEBUG("Exceeding max. density: " + std::to_string(density));
     density_ = kMaxDensity;
   } else {
     density_ = density;
