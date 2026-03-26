@@ -366,8 +366,9 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
 
   // Check if mask exceeds the limit
   if (mask >= (1 << kMaxTurnRestrictionEdges)) {
-    LOG_DEBUG("Restrictions mask exceeds allowable limit on wayid: " + std::to_string(wayid));
-    build_stats::get().increment(build_stats::kRestrictionMaskExceeded);
+    LOG_DEBUG("Simple turn restrictions mask exceeds allowable limit on wayid: " +
+              std::to_string(wayid));
+    build_stats::get().increment(build_stats::kTurnRestrictionMaskExceeded);
   }
 
   // Return the restriction mask

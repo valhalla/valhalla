@@ -103,7 +103,7 @@ inline std::string to_string(BuildStage stg) {
 struct build_stats {
   enum counter : uint8_t {
     kUninitializedNodes,
-    kRestrictionMaskExceeded,
+    kTurnRestrictionMaskExceeded,
     kLaneConnectivityFailed,
     kExceededMaxNodesPerWay,
     kExceededMaxOSMSpeed,
@@ -131,7 +131,7 @@ struct build_stats {
   };
   static constexpr meta_entry meta[] = {
       {"uninitialized_nodes", "nodes with uninitialized coordinates"},
-      {"restriction_mask_exceeded", "restriction masks exceeding limit"},
+      {"simple_turn_restriction_mask_exceeded", "simple turn restriction masks exceeding limit"},
       {"lane_connectivity_failed", "lane connectivity import failures"},
       {"exceeded_max_nodes_per_way", "ways exceeding max nodes per way"},
       {"exceeded_max_speed", "ways with speed clamped to max"},
