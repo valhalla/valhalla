@@ -439,3 +439,48 @@ TEST(Shortcuts, ShortcutRestrictions) {
     EXPECT_NEAR(std::get<1>(shortcut)->length(), 7500, 1);
   }
 }
+
+TEST(Shortcuts, Duplicate) {
+  constexpr double gridsize = 50;
+
+  const std::string ascii_map = R"(
+                D
+                |
+                |
+            ----C-------I----
+           /            |    \
+      A---B             |     G------H
+           \            |    /
+            ------------E----
+                        |
+                        |
+                        F
+  )";
+
+  const gurka::ways ways = {
+      {"ABCIGH", {{"highway", "tertiary"}, {"name", "Fabrieksgracht"}}},
+      {"BEG", {{"highway", "tertiary"}, {"name", "Fabrieksgracht"}}},
+      {"CD", {{"highway", "residential"}, {"name", "Molenplantsoen"}}},
+      {"FEI", {{"highway", "residential"}, {"name", "Jan in 't Veltstraat "}}},
+
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/duplicate_shortcuts");
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  auto b = gurka::findNode(reader, layout, "B");
+  auto b_ni = reader.nodeinfo(b);
+
+  size_t found_shortcuts = 0;
+
+  auto edge_id = b;
+  edge_id.set_id(b_ni->edge_index());
+  auto* de = reader.directededge(edge_id);
+  for (size_t i = 0; i < b_ni->edge_count(); ++i, ++de) {
+    found_shortcuts += de->is_shortcut();
+  }
+  EXPECT_EQ(found_shortcuts, 2);
+}

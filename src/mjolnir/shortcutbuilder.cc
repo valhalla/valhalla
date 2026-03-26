@@ -496,7 +496,6 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
                                   edgeinfo.speed_limit(), shape, {}, {}, {}, 0, forward, false);
-      ;
 
       newedge.set_edgeinfo_offset(edge_info_offset);
 

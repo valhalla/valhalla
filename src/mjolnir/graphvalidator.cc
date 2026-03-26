@@ -52,6 +52,7 @@ inline bool graphid_less(GraphId a, GraphId b) {
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
                               DirectedEdge& edge,
+                              GraphId edgeid,
                               uint64_t wayid,
                               const graph_tile_ptr& tile,
                               const graph_tile_ptr& end_tile,
@@ -89,8 +90,12 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
   // attributes matches. Check for duplicates
   constexpr uint32_t absurd_index = 777777;
   uint32_t opp_index = absurd_index;
+  GraphId found;
   const DirectedEdge* directededge = end_tile->directededge(nodeinfo->edge_index());
+
+  auto opp_edge_id = endnode;
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    opp_edge_id.set_id(nodeinfo->edge_index() + i);
     // Reject edge if access does not match or the edge does not point
     // back to the startnode
     if (directededge->endnode() != startnode ||
@@ -103,6 +108,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
     if (edge.use() == Use::kTransitConnection && directededge->use() == Use::kTransitConnection &&
         wayid == end_tile->edgeinfo(directededge).wayid()) {
       opp_index = i;
+      found = opp_edge_id;
       continue;
     }
     if (edge.use() == Use::kTransitConnection || directededge->use() == Use::kTransitConnection) {
@@ -114,6 +120,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
       auto shape2 = end_tile->edgeinfo(directededge).shape();
       if (shapes_match(shape1, shape2)) {
         opp_index = i;
+        found = opp_edge_id;
         continue;
       }
     }
@@ -130,6 +137,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
             dupcount++;
           }
           opp_index = i;
+          found = opp_edge_id;
         }
       }
     } else {
@@ -171,9 +179,19 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
           if (edge.is_shortcut()) {
             std::vector<std::string> names = tile->edgeinfo(&edge).GetNames();
             std::string name = (names.size() > 0) ? names[0] : "unnamed";
-            LOG_DEBUG("Duplicate shortcut for " + name +
-                      " at LL = " + std::to_string(tile->get_node_ll(endnode).lat()) + "," +
-                      std::to_string(tile->get_node_ll(endnode).lng()));
+            auto shape1 = tile->edgeinfo(&edge).shape();
+            auto shape2 = end_tile->edgeinfo(directededge).shape();
+            uint32_t length1 = valhalla::midgard::length(shape1);
+            uint32_t length2 = valhalla::midgard::length(shape2);
+            auto size1 = shape1.size();
+            auto size2 = shape2.size();
+            uint32_t idx1 = ((length1 & 0xfffff) | ((size1 & 0xfff) << 20));
+            uint32_t idx2 = ((length2 & 0xfffff) | ((size2 & 0xfff) << 20));
+            LOG_DEBUG(
+                "Duplicate shortcut for {} at LL = {},{}, edgeids {},{}, opposing {} | length: {} vs {}, size: {} vs {} | id: {} vs {}",
+                name, tile->get_node_ll(endnode).lat(), tile->get_node_ll(endnode).lng(),
+                std::to_string(edgeid), std::to_string(opp_edge_id), std::to_string(found), length1,
+                length2, size1, size2, idx1, idx2);
           } else {
             LOG_DEBUG("Potential duplicate: wayids " + std::to_string(wayid) + " and " +
                       std::to_string(wayid2) + " level = " + std::to_string(startnode.level()) +
@@ -190,6 +208,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
           edge.set_internal(true);
         }
         opp_index = i;
+        found = opp_edge_id;
       }
     }
   }
@@ -372,6 +391,8 @@ void validate(
         // Road Length and some variables for statistics
         if (!directededge.shortcut()) {
           roadlength += directededge.length();
+        } else {
+          LOG_WARN("Shorcut mask of shortcut: {}", directededge.shortcut());
         }
 
         // Check if end node is in a different tile
@@ -394,7 +415,7 @@ void validate(
         std::string end_node_iso;
         uint64_t wayid = tile->edgeinfo(&directededge).wayid();
         uint32_t opp_index =
-            GetOpposingEdgeIndex(node, directededge, wayid, tile, endnode_tile, problem_ways,
+            GetOpposingEdgeIndex(node, directededge, edgeid, wayid, tile, endnode_tile, problem_ways,
                                  dupcount, end_node_iso, transit_level);
         directededge.set_opp_index(opp_index);
         if (directededge.use() == Use::kTransitConnection ||
