@@ -152,7 +152,7 @@ bool ExpandFromNode(GraphReader& reader,
     graph_tile_ptr tile;
     size_t edge_ids_size;
     std::vector<EdgeCandidate> same_way;
-    size_t cont_idx;
+    size_t cand_idx;
     bool owns_visited;
   };
 
@@ -192,7 +192,7 @@ bool ExpandFromNode(GraphReader& reader,
     frame.current_node = current_node;
     frame.tile = tile;
     frame.edge_ids_size = edge_ids.size();
-    frame.cont_idx = 0;
+    frame.cand_idx = 0;
     frame.owns_visited = false;
 
     if (try_advance(tile, current_node, prev_node, frame.same_way))
@@ -207,17 +207,17 @@ bool ExpandFromNode(GraphReader& reader,
   while (!stack.empty()) {
     auto& frame = stack.back();
 
-    if (frame.cont_idx >= frame.same_way.size()) {
+    if (frame.cand_idx >= frame.same_way.size()) {
       if (frame.owns_visited)
         visited_nodes.erase(frame.current_node);
       edge_ids.resize(frame.edge_ids_size);
       stack.pop_back();
       if (!stack.empty())
-        stack.back().cont_idx++;
+        stack.back().cand_idx++;
       continue;
     }
 
-    auto& cont = frame.same_way[frame.cont_idx];
+    auto& cont = frame.same_way[frame.cand_idx];
     GraphId next_node = cont.end_node;
 
     edge_ids.resize(frame.edge_ids_size);
@@ -235,7 +235,7 @@ bool ExpandFromNode(GraphReader& reader,
     next_frame.current_node = next_node;
     next_frame.tile = tile;
     next_frame.edge_ids_size = edge_ids.size();
-    next_frame.cont_idx = 0;
+    next_frame.cand_idx = 0;
     next_frame.owns_visited = true;
 
     if (try_advance(tile, next_node, frame.current_node, next_frame.same_way))
@@ -244,7 +244,7 @@ bool ExpandFromNode(GraphReader& reader,
     if (next_frame.same_way.empty()) {
       visited_nodes.erase(next_node);
       edge_ids.resize(next_frame.edge_ids_size);
-      frame.cont_idx++;
+      frame.cand_idx++;
     } else {
       stack.push_back(std::move(next_frame));
     }
