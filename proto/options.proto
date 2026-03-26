@@ -357,6 +357,9 @@ message Costing {
     oneof has_multimodal_start_end_max_distance {
       uint32 multimodal_start_end_max_distance = 96;
     }
+    oneof has_use_twisty_roads {
+      float use_twisty_roads = 97;
+    }
   }
 
   oneof has_options {
