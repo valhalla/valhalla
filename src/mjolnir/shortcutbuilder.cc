@@ -788,6 +788,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
     LOG_INFO("Finished with " + std::to_string(sc_count) + " shortcuts superseding " +
              std::to_string(edge_count) + " edges, average ~" + std::to_string(avg) +
              " edges per shortcut");
+    build_stats::get().increment_shortcuts(tile_level->level, sc_count, edge_count);
     total_exceeded_max += exceeded_max;
   }
 

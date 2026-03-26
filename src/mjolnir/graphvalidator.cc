@@ -573,6 +573,9 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   for (const auto& id : tileset) {
     tilequeue.emplace_back(id);
   }
+  // log before creating empty tiles
+  build_stats::get().increment(build_stats::kTileCount, tilequeue.size());
+
   // fixed seed for reproducible tile build
   std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
 

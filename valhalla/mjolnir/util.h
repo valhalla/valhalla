@@ -128,6 +128,16 @@ struct build_stats {
     kTagParseError,
     kExceededMaxVias,
     kExceededMaxShortcutEdges,
+    // Graph summary counters (not warnings — totals for the built graph)
+    kTileCount,
+    kEdgeCount,
+    kNodeCount,
+    kShortcutCountLevel0,
+    kShortcutCountLevel1,
+    kShortcutEdgesLevel0,
+    kShortcutEdgesLevel1,
+    kTurnRestrictionCount,
+    kComplexTurnRestrictionCount,
     kCount // sentinel — must be last
   };
 
@@ -173,12 +183,30 @@ struct build_stats {
       {"tag_parse_error", "tag parse errors", BuildStage::kParseWays},
       {"exceeded_max_vias", "restrictions exceeding max vias", BuildStage::kRestrictions},
       {"exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges", BuildStage::kShortcuts},
+      // Graph summary counters
+      {"tile_count", "tiles", BuildStage::kValidate},
+      {"edge_count", "edges", BuildStage::kValidate},
+      {"node_count", "nodes", BuildStage::kValidate},
+      {"shortcut_count_level_0", "level 0 shortcuts", BuildStage::kValidate},
+      {"shortcut_count_level_1", "level 1 shortcuts", BuildStage::kValidate},
+      {"shortcut_edges_level_0", "level 0 edges in shortcuts", BuildStage::kValidate},
+      {"shortcut_edges_level_1", "level 1 edges in shortcuts", BuildStage::kValidate},
+      {"turn_restriction_count", "turn restrictions", BuildStage::kValidate},
+      {"complex_turn_restriction_count", "complex turn restrictions", BuildStage::kValidate},
   };
 
   static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");
 
   void increment(counter c, uint32_t by = 1) {
     counters_[c] += by;
+  }
+
+  // Increment the shortcut count and edge count for the given hierarchy level.
+  void increment_shortcuts(uint8_t level, uint32_t shortcuts, uint32_t edges) {
+    counter scl = level == 0 ? kShortcutCountLevel0 : kShortcutCountLevel1;
+    counter ecl = level == 0 ? kShortcutEdgesLevel0 : kShortcutEdgesLevel1;
+    counters_[scl] += shortcuts;
+    counters_[ecl] += edges;
   }
 
   static build_stats& get() {
