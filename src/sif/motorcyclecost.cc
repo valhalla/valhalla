@@ -27,6 +27,7 @@ namespace {
 constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
 constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
 constexpr float kDefaultUseTrails = 0.0f;   // Factor between 0 and 1
+constexpr float kDefaultUseTwistyRoads = 0.5f; // Factor between 0 and 1. 0.5 = neutral
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kImpassable;
 
@@ -54,6 +55,13 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
+constexpr ranged_default_t<float> kUseTwistyRoadsRange{0, kDefaultUseTwistyRoads, 1.0f};
+
+// Twisty roads constants
+constexpr float kTwistySpeedFloor = 50.0f;     // km/h - no twisty bonus below this speed
+constexpr float kTwistyReferenceSpeed = 80.0f;  // km/h - normalizing speed for perceived twistiness
+constexpr float kMaxTwistyFactor = 0.75f;        // max cost reduction at use_twisty_roads=1.0
+
 constexpr ranged_default_t<uint32_t> kMotorcycleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                            baldr::kMaxSpeedKph};
 
@@ -291,6 +299,7 @@ public:
   float toll_factor_;    // Factor applied when road has a toll
   float surface_factor_; // How much the surface factors are applied when using trails
   float highway_factor_; // Factor applied when road is a motorway or trunk
+  float twisty_factor_;  // Factor for twisty road preference
 };
 
 // Constructor
@@ -343,6 +352,11 @@ MotorcycleCost::MotorcycleCost(const Costing& costing)
     float f = 1.0f - use_trails * 2.0f;
     surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
   }
+
+  // Twisty road preference - compute a factor from use_twisty_roads (0-1).
+  // 0.5 = neutral (factor 0), 1.0 = prefer (negative factor), 0.0 = avoid (positive factor)
+  float use_twisty_roads = costing_options.use_twisty_roads();
+  twisty_factor_ = (use_twisty_roads - 0.5f) * 2.0f; // maps 0-1 to -1.0 to 1.0
 }
 
 // Destructor
@@ -442,6 +456,14 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
+  }
+
+  // Apply twisty road preference based on curvature and speed
+  if (twisty_factor_ != 0.0f && edge_speed >= kTwistySpeedFloor) {
+    float curvature = static_cast<float>(edge->curvature()) / 15.0f;
+    float speed_weight = static_cast<float>(edge_speed) / kTwistyReferenceSpeed;
+    float perceived_twistiness = std::min(curvature * speed_weight, 1.0f);
+    factor *= 1.0f - twisty_factor_ * perceived_twistiness * kMaxTwistyFactor;
   }
 
   factor *= EdgeFactor(edgeid);
@@ -600,6 +622,8 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTwistyRoadsRange, json, "/use_twisty_roads", use_twisty_roads,
+                          warnings);
   JSON_PBF_RANGED_DEFAULT(co, kMotorcycleSpeedRange, json, "/top_speed", top_speed, warnings);
 }
 
