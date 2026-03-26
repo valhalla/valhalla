@@ -167,7 +167,6 @@ void NodeInfo::set_local_driveability(const uint32_t localidx, const Traversabil
 // Set the relative density
 void NodeInfo::set_density(const uint32_t density) {
   if (density > kMaxDensity) {
-    LOG_WARN("Exceeding max. density: " + std::to_string(density));
     density_ = kMaxDensity;
   } else {
     density_ = density;

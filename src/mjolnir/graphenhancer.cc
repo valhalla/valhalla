@@ -1117,6 +1117,10 @@ void enhance(const boost::property_tree::ptree& pt,
         density = it->second;
         stats.density_counts[density]++;
         nodeinfo.set_density(density);
+        if (density > kMaxDensity) {
+          LOG_DEBUG("Exceeding max. density: " + std::to_string(density));
+          build_stats::get().increment(build_stats::kExceededMaxDensity);
+        }
       }
 
       uint32_t admin_index = nodeinfo.admin_index();
