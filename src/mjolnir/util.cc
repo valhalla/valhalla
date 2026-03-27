@@ -947,7 +947,7 @@ void build_stats::log_stage(BuildStage stage,
   for (uint8_t i = 0; i < kCount; ++i) {
     uint32_t current = counters_[i].load();
     uint32_t delta = current - snapshot[i];
-    if (delta > 0) {
+    if (delta > 0 && meta[i].is_warning) {
       LOG_WARN(std::format("[{}] {} {}", stage_name, delta, meta[i].log_label));
     }
     // only emit to statsd during the stage that owns this counter
