@@ -62,7 +62,7 @@ std::vector<int8_t> encode_edge_elevation(const std::unique_ptr<valhalla::skadi:
     }
     LOG_DEBUG("edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
               std::to_string(diff) + " meters.");
-    build_stats::get().increment(build_stats::kElevationExceedsDiff);
+    build_stats::get().increment(build_stats::kExceededElevationDiff);
   }
   return encoded;
 }
@@ -103,7 +103,7 @@ std::vector<int8_t> encode_btf_elevation(const std::unique_ptr<valhalla::skadi::
     }
     LOG_DEBUG("BTF edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
               std::to_string(diff) + " meters.");
-    build_stats::get().increment(build_stats::kElevationExceedsDiff);
+    build_stats::get().increment(build_stats::kExceededElevationDiff);
   }
   return e;
 }

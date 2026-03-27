@@ -188,7 +188,7 @@ void ConstructEdges(const std::string& ways_file,
       if (!wn.latlng().IsValid()) {
         LOG_DEBUG("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
                   " has not had coordinates initialized");
-        build_stats::get().increment(build_stats::kUninitializedNodes);
+        build_stats::get().increment(build_stats::kFailedNodeInitialization);
         valid = false;
       }
     }
@@ -368,7 +368,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
   if (mask >= (1 << kMaxTurnRestrictionEdges)) {
     LOG_DEBUG("Simple turn restrictions mask exceeds allowable limit on wayid: " +
               std::to_string(wayid));
-    build_stats::get().increment(build_stats::kTurnRestrictionMaskExceeded);
+    build_stats::get().increment(build_stats::kExceededTurnRestrictionMask);
   }
 
   // Return the restriction mask
@@ -1065,7 +1065,7 @@ void BuildTileSet(const std::string& ways_file,
           } catch (std::exception& e) {
             LOG_DEBUG("Failed to import lane connectivity for way: " + std::to_string(w.way_id()) +
                       " : " + e.what());
-            build_stats::get().increment(build_stats::kLaneConnectivityFailed);
+            build_stats::get().increment(build_stats::kFailedLaneConnectivity);
           }
 
           // Set the number of lanes.
