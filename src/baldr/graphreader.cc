@@ -27,42 +27,6 @@ struct tile_index_entry {
   uint32_t size;    // size of the tile in bytes
 };
 
-// Loads tiles from a tar extract into the target map.
-// If the tar contains an index.bin entry, uses it for fast offset-based loading.
-// Otherwise falls back to scanning all entries and parsing filenames as GraphIds.
-// Returns the number of corrupt blocks encountered.
-size_t load_tiles(valhalla::midgard::tar& tar,
-                  std::unordered_map<uint64_t, std::pair<char*, size_t>>& tiles) {
-  return tar.for_each([&](const std::string& name, const char* data, size_t size) {
-    // if it's our specially named index.bin file - load all entries from it
-    if (name == "index.bin") {
-      auto entries =
-          std::span<tile_index_entry>(reinterpret_cast<tile_index_entry*>(const_cast<char*>(data)),
-                                      size / sizeof(tile_index_entry));
-      tiles.clear(); // just in case if somehow index.bin is not the first one
-      tiles.reserve(entries.size());
-      for (const auto& entry : entries) {
-        tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
-                      std::forward_as_tuple(const_cast<char*>(tar.mm.get() + entry.offset),
-                                            entry.size));
-      }
-      return false; // index loaded, stop scanning
-    }
-
-    try {
-      auto id = valhalla::baldr::GraphTile::GetTileId(name);
-      tiles[id] = std::make_pair(const_cast<char*>(data), size);
-    } catch (...) {
-      // It's possible to put non-tile files inside the tarfile.  As we're only
-      // parsing the file *name* as a GraphId here, we will just silently skip
-      // any file paths that can't be parsed by GraphId::GetTileId()
-      // If we end up with *no* recognizable tile files in the tarball at all,
-      // checks lower down will warn on that.
-    }
-    return true;
-  });
-}
-
 } // namespace
 
 namespace valhalla {
@@ -79,13 +43,38 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt,
                                             bool traffic_readonly) {
+  auto map_tiles = [](midgard::tar& tar,
+                      std::unordered_map<uint64_t, std::pair<char*, size_t>>& tiles) {
+    return tar.for_each([&](const std::string& name, const char* data, size_t size) {
+      if (name == "index.bin") {
+        auto entries =
+            std::span<tile_index_entry>(reinterpret_cast<tile_index_entry*>(const_cast<char*>(data)),
+                                        size / sizeof(tile_index_entry));
+        tiles.clear();
+        tiles.reserve(entries.size());
+        for (const auto& entry : entries) {
+          tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
+                        std::forward_as_tuple(const_cast<char*>(tar.mm.get() + entry.offset),
+                                              entry.size));
+        }
+        return false;
+      }
+
+      try {
+        auto id = valhalla::baldr::GraphTile::GetTileId(name);
+        tiles[id] = std::make_pair(const_cast<char*>(data), size);
+      } catch (...) {}
+      return true;
+    });
+  };
+
   bool scan_tar = pt.get<bool>("data_processing.scan_tar", false);
 
   // if you really meant to load it
   if (pt.get_optional<std::string>("tile_extract")) {
     try {
       archive = std::make_shared<midgard::tar>(pt.get<std::string>("tile_extract"));
-      auto corrupt_blocks = load_tiles(*archive, tiles);
+      auto corrupt_blocks = map_tiles(*archive, tiles);
       if (scan_tar) {
         checksum = 0;
         for (const auto& kv : tiles) {
@@ -114,7 +103,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       // load the tar
       traffic_archive =
           std::make_shared<midgard::tar>(pt.get<std::string>("traffic_extract"), traffic_readonly);
-      auto corrupt_blocks = load_tiles(*traffic_archive, traffic_tiles);
+      auto corrupt_blocks = map_tiles(*traffic_archive, traffic_tiles);
       // couldn't load it
       if (traffic_tiles.empty()) {
         LOG_WARN("Traffic tile extract contained no usable tiles");
