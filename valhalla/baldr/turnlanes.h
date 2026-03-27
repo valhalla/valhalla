@@ -4,8 +4,10 @@
 #include <cstdint>
 #include <sstream>
 #include <string>
-#include <unordered_map>
+#include <string_view>
 #include <vector>
+
+#include "midgard/const_map.h"
 
 namespace valhalla {
 namespace baldr {
@@ -31,33 +33,37 @@ constexpr uint16_t kTurnLaneReverse = 1u << 8u;
 constexpr uint16_t kTurnLaneMergeToLeft = 1u << 9u;
 constexpr uint16_t kTurnLaneMergeToRight = 1u << 10u;
 
-const static std::unordered_map<uint16_t, std::string> kTurnLaneNames =
-    {{0, "|"},
-     {kTurnLaneNone, "none"},
-     {kTurnLaneThrough, "through"},
-     {kTurnLaneSharpLeft, "sharp_left"},
-     {kTurnLaneLeft, "left"},
-     {kTurnLaneSlightLeft, "slight_left"},
-     {kTurnLaneSlightRight, "slight_right"},
-     {kTurnLaneRight, "right"},
-     {kTurnLaneSharpRight, "sharp_right"},
-     {kTurnLaneReverse, "reverse"},
-     {kTurnLaneMergeToLeft, "merge_to_left"},
-     {kTurnLaneMergeToRight, "merge_to_right"}};
+constexpr std::pair<uint16_t, std::string_view> kTurnLaneNamesData[] = {
+    {0, "|"},
+    {kTurnLaneNone, "none"},
+    {kTurnLaneThrough, "through"},
+    {kTurnLaneSharpLeft, "sharp_left"},
+    {kTurnLaneLeft, "left"},
+    {kTurnLaneSlightLeft, "slight_left"},
+    {kTurnLaneSlightRight, "slight_right"},
+    {kTurnLaneRight, "right"},
+    {kTurnLaneSharpRight, "sharp_right"},
+    {kTurnLaneReverse, "reverse"},
+    {kTurnLaneMergeToLeft, "merge_to_left"},
+    {kTurnLaneMergeToRight, "merge_to_right"},
+};
+inline constexpr auto kTurnLaneNames = midgard::ConstFlatMap(kTurnLaneNamesData);
 
-const static std::unordered_map<std::string, uint16_t> kTurnLaneMasks =
-    {{"|", kTurnLaneEmpty},
-     {"none", kTurnLaneNone},
-     {"through", kTurnLaneThrough},
-     {"sharp_left", kTurnLaneSharpLeft},
-     {"left", kTurnLaneLeft},
-     {"slight_left", kTurnLaneSlightLeft},
-     {"slight_right", kTurnLaneSlightRight},
-     {"right", kTurnLaneRight},
-     {"sharp_right", kTurnLaneSharpRight},
-     {"reverse", kTurnLaneReverse},
-     {"merge_to_left", kTurnLaneMergeToLeft},
-     {"merge_to_right", kTurnLaneMergeToRight}};
+constexpr std::pair<std::string_view, uint16_t> kTurnLaneMasksData[] = {
+    {"|", kTurnLaneEmpty},
+    {"none", kTurnLaneNone},
+    {"through", kTurnLaneThrough},
+    {"sharp_left", kTurnLaneSharpLeft},
+    {"left", kTurnLaneLeft},
+    {"slight_left", kTurnLaneSlightLeft},
+    {"slight_right", kTurnLaneSlightRight},
+    {"right", kTurnLaneRight},
+    {"sharp_right", kTurnLaneSharpRight},
+    {"reverse", kTurnLaneReverse},
+    {"merge_to_left", kTurnLaneMergeToLeft},
+    {"merge_to_right", kTurnLaneMergeToRight},
+};
+inline constexpr auto kTurnLaneMasks = midgard::ConstFlatMap(kTurnLaneMasksData);
 
 /**
  * Holds turn lane information at the end of a directed edge. Turn lane text is stored
@@ -137,7 +143,7 @@ public:
           std::string tl;
           for (uint16_t i = 0; i < kTurnLaneTypeCount; ++i) {
             if (m & (1u << i)) {
-              auto str = kTurnLaneNames.find(1u << i);
+              auto str = kTurnLaneNames.find(static_cast<uint16_t>(1u << i));
               if (str != kTurnLaneNames.end()) {
                 if (!tl.empty()) {
                   tl += kTurnLaneDelimiter;
@@ -172,7 +178,7 @@ public:
       std::string item2;
       uint16_t lanemask = 0;
       while (std::getline(ss2, item2, kTurnLaneDelimiter)) {
-        const auto turnlane_mask = kTurnLaneMasks.find(item2);
+        const auto turnlane_mask = kTurnLaneMasks.find(std::string_view(item2));
         if (turnlane_mask != kTurnLaneMasks.end()) {
           lanemask |= turnlane_mask->second;
         }

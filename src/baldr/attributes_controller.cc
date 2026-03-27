@@ -1,4 +1,5 @@
 #include "baldr/attributes_controller.h"
+#include "midgard/const_map.h"
 #include "midgard/logging.h"
 
 #include <string>
@@ -34,7 +35,7 @@ PrecomputeEnabledCategories(const std::unordered_map<std::string_view, bool>& at
  * Most attributes are enabled by default but a few additional attributes are disabled
  * unless explicitly included with the filter attributes request option.
  */
-const std::unordered_map<std::string_view, bool> AttributesController::kDefaultAttributes = {
+constexpr std::pair<std::string_view, bool> kDefaultAttributesData[] = {
     // Edge keys
     {kEdgeNames, true},
     {kEdgeLength, true},
@@ -222,18 +223,22 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kShapeAttributesClosure, false},
     {kShapeAttributesCongestion, false},
 };
+const midgard::ConstFlatMap<176, std::string_view, bool>
+    AttributesController::kDefaultAttributes(kDefaultAttributesData);
 
-const std::unordered_set<std::string_view> AttributesController::kDefaultEnabledCategories =
-    PrecomputeEnabledCategories(kDefaultAttributes);
+std::unordered_set<std::string_view> AttributesController::ComputeDefaultEnabledCategories() {
+  std::unordered_map<std::string_view, bool> attrs(kDefaultAttributes.begin(), kDefaultAttributes.end());
+  return PrecomputeEnabledCategories(attrs);
+}
 
 AttributesController::AttributesController() {
-  attributes = kDefaultAttributes;
-  enabled_categories = kDefaultEnabledCategories;
+  attributes.insert(kDefaultAttributes.begin(), kDefaultAttributes.end());
+  enabled_categories = ComputeDefaultEnabledCategories();
 }
 
 AttributesController::AttributesController(const Options& options, bool is_strict_filter) {
   // Set default controller
-  attributes = kDefaultAttributes;
+  attributes.insert(kDefaultAttributes.begin(), kDefaultAttributes.end());
 
   switch (options.filter_action()) {
     case (FilterAction::include): {

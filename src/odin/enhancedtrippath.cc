@@ -831,7 +831,7 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
     uint16_t mask = turn_lane.directions_mask();
     auto indication_to_str = [&turn_lane](uint16_t ind) -> std::string {
       if (turn_lane.state() == TurnLane::kInvalid || turn_lane.active_direction() != ind) {
-        return kTurnLaneNames.at(ind);
+        return std::string(kTurnLaneNames.at(ind));
       }
       // Surround valid/active lanes with a '*'
       std::stringstream ss;

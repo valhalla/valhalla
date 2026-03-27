@@ -43,10 +43,10 @@ using namespace std;
 namespace {
 const std::string kSignElementDelimiter = ", ";
 const std::string kDestinationsDelimiter = ": ";
-const std::string kSpeedLimitSignVienna = "vienna";
-const std::string kSpeedLimitSignMutcd = "mutcd";
-const std::string kSpeedLimitUnitsKph = "km/h";
-const std::string kSpeedLimitUnitsMph = "mph";
+constexpr std::string_view kSpeedLimitSignVienna = "vienna";
+constexpr std::string_view kSpeedLimitSignMutcd = "mutcd";
+constexpr std::string_view kSpeedLimitUnitsKph = "km/h";
+constexpr std::string_view kSpeedLimitUnitsMph = "mph";
 
 constexpr std::size_t MAX_USED_SEGMENTS = 2;
 
@@ -152,37 +152,39 @@ inline unsigned getFittedZoom(Coordinate south_west, Coordinate north_east) {
 // Sign style and unit conventions for speed limit signs by country.
 // Most countries use Vienna style and km/h, but the countries below
 // use MUTCD and/or mph conventions.
-std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit_info = {
-    {"AG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"AI", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"AS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"BS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"BZ", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"CA", {kSpeedLimitSignMutcd, kSpeedLimitUnitsKph}},
-    {"DM", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"FK", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"GB", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"GD", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"GG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"GS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"GU", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
-    {"IM", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"JE", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"KN", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"KY", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"LC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"LR", {kSpeedLimitSignMutcd, kSpeedLimitUnitsKph}},
-    {"MP", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"MS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"PR", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
-    {"SH", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"TC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"US", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
-    {"VC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"VG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
-    {"VI", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
-    {"WS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+constexpr std::pair<std::string_view, std::pair<std::string_view, std::string_view>>
+    speed_limit_info_data[] = {
+        {"AG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"AI", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"AS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"BS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"BZ", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"CA", {kSpeedLimitSignMutcd, kSpeedLimitUnitsKph}},
+        {"DM", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"FK", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"GB", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"GD", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"GG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"GS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"GU", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
+        {"IM", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"JE", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"KN", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"KY", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"LC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"LR", {kSpeedLimitSignMutcd, kSpeedLimitUnitsKph}},
+        {"MP", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"MS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"PR", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
+        {"SH", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"TC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"US", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
+        {"VC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"VG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+        {"VI", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
+        {"WS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
 };
+constexpr auto speed_limit_info = ConstFlatMap(speed_limit_info_data);
 
 std::string destinations(const valhalla::TripSign& sign);
 
@@ -360,7 +362,7 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
         speed_limit_annotation->emplace("none", true);
       } else if (speed_limit > 0) {
         // TODO support mph?
-        speed_limit_annotation->emplace("unit", kSpeedLimitUnitsKph);
+        speed_limit_annotation->emplace("unit", std::string(kSpeedLimitUnitsKph));
         speed_limit_annotation->emplace("speed", static_cast<uint64_t>(speed_limit));
       } else {
         speed_limit_annotation->emplace("unknown", true);
@@ -1824,12 +1826,12 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         auto country = speed_limit_info.find(country_code);
         if (country != speed_limit_info.end()) {
           // Some countries have different speed limit sign types and speed units
-          step->emplace("speedLimitSign", country->second.first);
-          step->emplace("speedLimitUnit", country->second.second);
+          step->emplace("speedLimitSign", std::string(country->second.first));
+          step->emplace("speedLimitUnit", std::string(country->second.second));
         } else {
           // Otherwise use the defaults (vienna convention style and km/h)
-          step->emplace("speedLimitSign", kSpeedLimitSignVienna);
-          step->emplace("speedLimitUnit", kSpeedLimitUnitsKph);
+          step->emplace("speedLimitSign", std::string(kSpeedLimitSignVienna));
+          step->emplace("speedLimitUnit", std::string(kSpeedLimitUnitsKph));
         }
       }
 

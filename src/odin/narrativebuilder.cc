@@ -4920,12 +4920,9 @@ std::string NarrativeBuilder_hiIN::GetPluralCategory(size_t /*count*/) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-const std::unordered_map<std::string, std::string> NarrativeBuilder_itIT::articulated_prepositions_ =
-    {{" su il ", " sul "}, {" su la ", " sulla "}};
-
 void NarrativeBuilder_itIT::FormArticulatedPrepositions(std::string& instruction) {
-  for (const auto& item : NarrativeBuilder_itIT::articulated_prepositions_) {
-    boost::replace_all(instruction, item.first, item.second);
+  for (const auto& [from, to] : NarrativeBuilder_itIT::articulated_prepositions_) {
+    boost::replace_all(instruction, std::string(from), std::string(to));
   }
 }
 

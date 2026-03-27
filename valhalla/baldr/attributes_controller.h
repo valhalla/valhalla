@@ -3,6 +3,9 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+
+#include "midgard/const_map.h"
 
 namespace valhalla {
 namespace baldr {
@@ -220,9 +223,9 @@ constexpr std::string_view kShapeAttributesCategory = "shape_attributes.";
 struct AttributesController {
 
   // Attributes that are required by the route action to make guidance instructions.
-  static const std::unordered_map<std::string_view, bool> kDefaultAttributes;
+  static const midgard::ConstFlatMap<176, std::string_view, bool> kDefaultAttributes;
 
-  static const std::unordered_set<std::string_view> kDefaultEnabledCategories;
+  static std::unordered_set<std::string_view> ComputeDefaultEnabledCategories();
 
   /**
    * Constructor that will use the default values for all of the attributes.

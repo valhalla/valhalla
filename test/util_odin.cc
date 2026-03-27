@@ -1,5 +1,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
+#include "locales.h"
 #include "odin/util.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -159,21 +160,20 @@ TEST(UtilOdin, test_date) {
 
 TEST(UtilOdin, test_supported_locales) {
   // crack open english
-  const auto& jsons = get_locales_json();
-  const auto en_us_json = jsons.find("en-US");
-  ASSERT_NE(en_us_json, jsons.cend()) << "No en-US found!";
+  const auto en_us_json = locales_json.find(std::string_view("en-US"));
+  ASSERT_NE(en_us_json, locales_json.end()) << "No en-US found!";
   boost::property_tree::ptree en_us;
   std::stringstream ss;
   ss << en_us_json->second;
   rapidjson::read_json(ss, en_us);
 
   // look at each one
-  for (const auto& locale : jsons) {
-    if (locale.first == "en-US")
+  for (const auto& [loc_name, loc_data] : locales_json) {
+    if (loc_name == "en-US")
       continue;
     boost::property_tree::ptree other;
     std::stringstream other_ss;
-    other_ss << locale.second;
+    other_ss << loc_data;
     rapidjson::read_json(other_ss, other);
 
     // check the locale is supported

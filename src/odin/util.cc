@@ -39,28 +39,28 @@ constexpr size_t kPrivateuseIndex = 4;
 valhalla::odin::locales_singleton_t load_narrative_locals() {
   valhalla::odin::locales_singleton_t locales;
   // for each locale
-  for (const auto& json : locales_json) {
+  for (const auto& [locale_name, locale_data] : locales_json) {
     LOG_TRACE("LOCALES");
     LOG_TRACE("-------");
-    LOG_TRACE("- " + json.first);
+    LOG_TRACE("- " + std::string(locale_name));
     // load the json
     boost::property_tree::ptree narrative_pt;
     std::stringstream ss;
-    ss << json.second;
+    ss << locale_data;
     rapidjson::read_json(ss, narrative_pt);
     LOG_TRACE("JSON read");
     // parse it into an object and add it to the map
     auto narrative_dictionary =
-        std::make_shared<valhalla::odin::NarrativeDictionary>(json.first, narrative_pt);
+        std::make_shared<valhalla::odin::NarrativeDictionary>(std::string(locale_name), narrative_pt);
     LOG_TRACE("NarrativeDictionary created");
-    locales.insert(std::make_pair(json.first, narrative_dictionary));
+    locales.insert(std::make_pair(std::string(locale_name), narrative_dictionary));
     // insert all the aliases as this same object
     auto aliases = narrative_pt.get_child("aliases");
     for (const auto& alias : aliases) {
       auto name = alias.second.get_value<std::string>();
       auto inserted = locales.insert(std::make_pair(name, narrative_dictionary));
       if (!inserted.second) {
-        throw std::logic_error("Alias '" + name + "' in json locale '" + json.first +
+        throw std::logic_error("Alias '" + name + "' in json locale '" + std::string(locale_name) +
                                "' has duplicate with posix_locale '" +
                                inserted.first->second->GetLocale().name());
       }
@@ -150,9 +150,6 @@ const locales_singleton_t& get_locales() {
   return locales;
 }
 
-const std::unordered_map<std::string, std::string>& get_locales_json() {
-  return locales_json;
-}
 
 Bcp47Locale parse_string_into_locale(const std::string& locale_string) {
   // Normalize

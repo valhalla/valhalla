@@ -77,12 +77,6 @@ using locales_singleton_t = std::unordered_map<std::string, std::shared_ptr<Narr
  */
 const locales_singleton_t& get_locales();
 
-/**
- * Returns locale strings mapped to json strings defining the dictionaries
- *
- * @return the map of locales to json strings
- */
-const std::unordered_map<std::string, std::string>& get_locales_json();
 
 Bcp47Locale parse_string_into_locale(const std::string& locale_string);
 
