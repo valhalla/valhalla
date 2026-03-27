@@ -670,12 +670,17 @@ struct tar {
     mm.map(tar_file, s.st_size, POSIX_MADV_NORMAL, readonly);
   }
 
-  // Callback per entry: (name, data_ptr, size). Return true to continue, false to stop.
-  using entry_visitor_t = std::function<bool(const std::string& name, const char* data, size_t size)>;
+  // Callback per entry: (mmap_base, name, data_ptr, size, context).
+  // Return true to continue, false to stop.
+  using entry_visitor_t = std::function<bool(const char* mmap_base,
+                                             const std::string& name,
+                                             const char* data,
+                                             size_t size,
+                                             void* context)>;
 
   // Traverse all entries, calling visitor for each regular file.
   // Returns the number of corrupt blocks encountered.
-  size_t for_each(const entry_visitor_t& visitor) {
+  size_t for_each(const entry_visitor_t& visitor, void* context = nullptr) {
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
     // lax about it and we'll count the ones we cant make sense of
@@ -695,7 +700,7 @@ struct tar {
         // tar doesn't automatically update path separators based on OS, so we need to do it...
         std::filesystem::path filepath{h->name};
         filepath.make_preferred();
-        if (!visitor(filepath.string(), position, size)) {
+        if (!visitor(mm.get(), filepath.string(), position, size, context)) {
           break;
         }
       }
