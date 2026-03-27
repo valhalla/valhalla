@@ -4,6 +4,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
+#include "mjolnir/util.h"
 
 #include <array>
 #include <cstdint>
