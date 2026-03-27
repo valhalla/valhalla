@@ -689,6 +689,10 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // nothing to report, but logic only works correctly if every stage is logged
   log_stage(BuildStage::kInitialize);
 
+  // Record build start time for staleness monitoring
+  build_stats::get().record_timing("mjolnir.build_started_at",
+                                   static_cast<uint64_t>(std::time(nullptr)));
+
   // Set up the temporary (*.bin) files used during processing
   std::string ways_bin = tile_dir + ways_file;
   std::string way_nodes_bin = tile_dir + way_nodes_file;
