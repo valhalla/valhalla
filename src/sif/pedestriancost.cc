@@ -144,13 +144,13 @@ constexpr float kSacScaleSpeedFactor[] = {
 };
 
 constexpr float kSacScaleCostFactor[] = {
-    0.0f,  // kNone
-    0.25f, // kHiking
-    0.75f, // kMountainHiking
-    1.25f, // kDemandingMountainHiking
-    2.0f,  // kAlpineHiking
-    2.5f,  // kDemandingAlpineHiking
-    3.0f   // kDifficultAlpineHiking
+    0.0f,   // kNone
+    0.10f,  // kHiking
+    0.30f,  // kMountainHiking
+    0.60f,  // kDemandingMountainHiking
+    1.00f,  // kAlpineHiking
+    1.50f,  // kDemandingAlpineHiking
+    2.00f,  // kDifficultAlpineHiking
 };
 
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
