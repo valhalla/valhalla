@@ -129,15 +129,15 @@ struct build_stats {
     kInvalidOSMTag,
     kMissingAccessTags,
     // Graph summary counters (not warnings — totals for the built graph)
-    kComplexTurnRestrictionCount,
-    kEdgeCount,
-    kNodeCount,
-    kShortcutCountLevel0,
-    kShortcutCountLevel1,
-    kShortcutEdgesLevel0,
-    kShortcutEdgesLevel1,
-    kSimpleTurnRestrictionCount,
-    kTileCount,
+    kCountComplexTurnRestrictions,
+    kCountEdges,
+    kCountNodes,
+    kCountShortcutEdgesLevel0,
+    kCountShortcutEdgesLevel1,
+    kCountShortcutsLevel0,
+    kCountShortcutsLevel1,
+    kCountSimpleTurnRestrictions,
+    kCountTiles,
     kCount // sentinel — must be last
   };
 
@@ -191,15 +191,15 @@ struct build_stats {
       {"invalid_osm_tag", "invalid OSM tag parse errors", BuildStage::kParseWays, true},
       {"missing_access_tags", "edges with missing access tags", BuildStage::kEnhance, true},
       // Graph summary counters (alphabetical)
-      {"complex_turn_restriction_count", "complex turn restrictions", BuildStage::kValidate, false},
-      {"edge_count", "amount of edges at Validate", BuildStage::kValidate, false},
-      {"node_count", "amount of nodes at Validate", BuildStage::kValidate, false},
-      {"shortcut_count_level_0", "level 0 shortcuts", BuildStage::kShortcuts, false},
-      {"shortcut_count_level_1", "level 1 shortcuts", BuildStage::kShortcuts, false},
-      {"shortcut_edges_level_0", "level 0 edges in shortcuts", BuildStage::kShortcuts, false},
-      {"shortcut_edges_level_1", "level 1 edges in shortcuts", BuildStage::kShortcuts, false},
-      {"simple_turn_restriction_count", "simple turn restrictions", BuildStage::kBuild, false},
-      {"tile_count", "amount of tiles with edges/nodes in them", BuildStage::kValidate, false},
+      {"count_complex_turn_restrictions", "complex turn restrictions", BuildStage::kValidate, false},
+      {"count_edges", "amount of edges at Validate", BuildStage::kValidate, false},
+      {"count_nodes", "amount of nodes at Validate", BuildStage::kValidate, false},
+      {"count_shortcut_edges_level_0", "level 0 edges in shortcuts", BuildStage::kShortcuts, false},
+      {"count_shortcut_edges_level_1", "level 1 edges in shortcuts", BuildStage::kShortcuts, false},
+      {"count_shortcuts_level_0", "level 0 shortcuts", BuildStage::kShortcuts, false},
+      {"count_shortcuts_level_1", "level 1 shortcuts", BuildStage::kShortcuts, false},
+      {"count_simple_turn_restrictions", "simple turn restrictions", BuildStage::kBuild, false},
+      {"count_tiles", "amount of tiles with edges/nodes in them", BuildStage::kValidate, false},
   };
 
   static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");
@@ -210,8 +210,8 @@ struct build_stats {
 
   // Increment the shortcut count and edge count for the given hierarchy level.
   void increment_shortcuts(uint8_t level, uint32_t shortcuts, uint32_t edges) {
-    counter scl = level == 0 ? kShortcutCountLevel0 : kShortcutCountLevel1;
-    counter ecl = level == 0 ? kShortcutEdgesLevel0 : kShortcutEdgesLevel1;
+    counter scl = level == 0 ? kCountShortcutsLevel0 : kCountShortcutsLevel1;
+    counter ecl = level == 0 ? kCountShortcutEdgesLevel0 : kCountShortcutEdgesLevel1;
     counters_[scl] += shortcuts;
     counters_[ecl] += edges;
   }

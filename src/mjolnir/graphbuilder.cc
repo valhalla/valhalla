@@ -691,7 +691,7 @@ void BuildTileSet(const std::string& ways_file,
               CreateSimpleTurnRestriction(w.way_id(), target, nodes, edges, osmdata, ways);
           if (restrictions != 0) {
             stats.simplerestrictions++;
-            build_stats::get().increment(build_stats::kSimpleTurnRestrictionCount);
+            build_stats::get().increment(build_stats::kCountSimpleTurnRestrictions);
           }
 
           // traffic signal exists at a non-intersection node

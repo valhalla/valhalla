@@ -484,8 +484,8 @@ void validate(
     }
     lock.unlock();
 
-    build_stats::get().increment(build_stats::kNodeCount, nodes.size());
-    build_stats::get().increment(build_stats::kEdgeCount, directededges.size());
+    build_stats::get().increment(build_stats::kCountNodes, nodes.size());
+    build_stats::get().increment(build_stats::kCountEdges, directededges.size());
 
     // Add possible duplicates to return class
     duplicates[level] += dupcount;
@@ -577,7 +577,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     tilequeue.emplace_back(id);
   }
   // log before creating empty tiles
-  build_stats::get().increment(build_stats::kTileCount, tilequeue.size());
+  build_stats::get().increment(build_stats::kCountTiles, tilequeue.size());
 
   // fixed seed for reproducible tile build
   std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
