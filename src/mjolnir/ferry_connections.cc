@@ -429,15 +429,15 @@ void ReclassifyFerryConnections(const std::string& ways_file,
       if (!inbound_path_found && !outbound_path_found) {
         LOG_DEBUG("Reclassification fails in both directions to ferry at LL =" +
                   std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
-        build_stats::get().increment(build_stats::kFailsInboundFerryReclass);
+        build_stats::get().increment(build_stats::kFailedFerryReclassBoth);
       } else if (!inbound_path_found) {
         LOG_DEBUG("Reclassification fails inbound to ferry at LL =" + std::to_string(ll.lat()) + "," +
                   std::to_string(ll.lng()));
-        build_stats::get().increment(build_stats::kFailsInboundFerryReclass);
+        build_stats::get().increment(build_stats::kFailedFerryReclassInbound);
       } else if (!outbound_path_found) {
         LOG_DEBUG("Reclassification fails outbound from ferry at LL =" + std::to_string(ll.lat()) +
                   "," + std::to_string(ll.lng()));
-        build_stats::get().increment(build_stats::kFailsOutboundFerryReclass);
+        build_stats::get().increment(build_stats::kFailedFerryReclassOutbound);
       }
     }
 

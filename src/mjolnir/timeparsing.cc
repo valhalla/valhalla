@@ -637,12 +637,12 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
     }
   } catch (const std::invalid_argument& arg) {
     LOG_DEBUG("invalid_argument thrown for condition " + str);
-    build_stats::get().increment(build_stats::kFailsOSMTimeRange);
+    build_stats::get().increment(build_stats::kFailedOSMTimeRange);
   } catch (const std::out_of_range& oor) {
     LOG_DEBUG("out_of_range thrown for condition: " + str);
-    build_stats::get().increment(build_stats::kFailsOSMTimeRange);
+    build_stats::get().increment(build_stats::kFailedOSMTimeRange);
   } catch (const std::runtime_error& oor) {
-    build_stats::get().increment(build_stats::kFailsOSMTimeRangeUnknown);
+    build_stats::get().increment(build_stats::kFailedOSMTimeRangeUnknown);
     LOG_DEBUG("runtime_error thrown for condition: " + str);
     // TODO deal with these.  For now toss.
   }

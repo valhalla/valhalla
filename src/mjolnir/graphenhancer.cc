@@ -1050,7 +1050,7 @@ void enhance(const boost::property_tree::ptree& pt,
       nodeinfo.set_local_edge_count(ntrans);
       if (ntrans > kMaxLocalEdgeIndex + 1) {
         LOG_DEBUG("Exceeding max. local edge count: " + std::to_string(n));
-        build_stats::get().increment(build_stats::kExceededLocalEdgeCount);
+        build_stats::get().increment(build_stats::kExceededMaxLocalEdgeCount);
       }
       for (uint32_t j = 0; j < ntrans; j++) {
         DirectedEdge& directededge = tilebuilder->directededge_builder(nodeinfo.edge_index() + j);
@@ -1190,7 +1190,7 @@ void enhance(const boost::property_tree::ptree& pt,
                 SetCountryAccess(directededge, access, access_it);
               } else {
                 LOG_DEBUG("access tags not found for " + std::to_string(e_offset.wayid()));
-                build_stats::get().increment(build_stats::kAccessTagsNotFound);
+                build_stats::get().increment(build_stats::kMissingAccessTags);
               }
             } else {
               SetCountryAccess(directededge, access, target);
