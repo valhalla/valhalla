@@ -149,7 +149,7 @@ struct build_stats {
   static constexpr meta_entry meta[] = {
       {"uninitialized_nodes", "nodes with uninitialized coordinates", BuildStage::kConstructEdges},
       {"simple_turn_restriction_mask_exceeded", "simple turn restriction masks exceeding limit",
-       BuildStage::kConstructEdges},
+       BuildStage::kBuild},
       {"lane_connectivity_failed", "lane connectivity import failures", BuildStage::kBuild},
       {"exceeded_max_nodes_per_way", "ways exceeding max nodes per way", BuildStage::kParseWays},
       {"fails_osm_time_range", "OSM time range raises either invalid_argument or out_of_range",
