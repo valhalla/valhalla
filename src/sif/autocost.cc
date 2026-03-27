@@ -80,7 +80,8 @@ constexpr ranged_default_t<float> kUseTwistyRoadsRange{0, kDefaultUseTwistyRoads
 // Twisty roads constants
 constexpr float kTwistySpeedFloor = 50.0f;     // km/h - no twisty bonus below this speed
 constexpr float kTwistyReferenceSpeed = 80.0f;  // km/h - normalizing speed for perceived twistiness
-constexpr float kMaxTwistyFactor = 0.75f;        // max cost reduction at use_twisty_roads=1.0
+constexpr float kMaxTwistyFactor = 3.0f;          // amplifier for twisty preference (clamped in EdgeCost)
+constexpr float kMinTwistyMultiplier = 0.05f;     // floor: never reduce cost below 5% of original
 
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
@@ -571,7 +572,8 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
     float curvature = static_cast<float>(edge->curvature()) / 15.0f;
     float speed_weight = static_cast<float>(edge_speed) / kTwistyReferenceSpeed;
     float perceived_twistiness = std::min(curvature * speed_weight, 1.0f);
-    factor *= 1.0f - twisty_factor_ * perceived_twistiness * kMaxTwistyFactor;
+    factor *= std::max(kMinTwistyMultiplier,
+                       1.0f - twisty_factor_ * perceived_twistiness * kMaxTwistyFactor);
   }
 
   factor *= EdgeFactor(edgeid);
