@@ -633,7 +633,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const BuildStage start_stage,
                     const BuildStage end_stage) {
   SCOPED_TIMER();
-  auto build_start = std::chrono::high_resolution_clock::now();
   auto remove_temp_file = [](const std::string& fname) {
     if (std::filesystem::exists(fname)) {
       std::filesystem::remove(fname);
@@ -884,14 +883,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     OSMData::cleanup_temp_files(tile_dir);
     log_stage(BuildStage::kCleanup);
   }
-  // Record total build time manually
-  // SCOPED_TIMER fires after return, too late to flush total build time
-  auto build_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                           std::chrono::high_resolution_clock::now() - build_start)
-                           .count();
-  build_stats::get().record_timing("mjolnir.timing.build_tile_set",
-                                   static_cast<uint64_t>(build_seconds));
-  log_stage(BuildStage::kCleanup);
   return true;
 }
 
