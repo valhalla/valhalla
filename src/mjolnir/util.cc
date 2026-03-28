@@ -938,7 +938,7 @@ void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree&
   for (const auto& [key, count] : statsd_entries) {
     client.gauge(key, count, 1.f, tags);
   }
-  // fl
+  client.flush();
 }
 
 } // namespace mjolnir
