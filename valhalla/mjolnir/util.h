@@ -12,7 +12,6 @@
 #include <array>
 #include <atomic>
 #include <map>
-#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -132,35 +131,46 @@ struct build_stats {
   struct meta_entry {
     const char* statsd_key;
     const char* log_label;
+    BuildStage stage;
   };
   static constexpr meta_entry meta[] = {
-      {"exceeded_elevation_diff", "edges with elevation exceeding max difference"},
-      {"exceeded_max_assigner_speed", "SpeedAssigner edges clamped to max"},
-      {"exceeded_max_density", "nodes exceeding max density"},
-      {"exceeded_max_local_edge_count", "nodes exceeding max local edge count"},
-      {"exceeded_max_names", "edges exceeding max names"},
-      {"exceeded_max_nodes_per_way", "ways exceeding max nodes per way"},
-      {"exceeded_max_osm_speed", "ways with speed clamped to max"},
-      {"exceeded_max_osm_speed_limit", "ways with speed limit clamped to max"},
-      {"exceeded_max_osm_truck_speed", "ways with truck speed clamped to max"},
-      {"exceeded_max_shape_size", "edges exceeding max encoded shape size"},
-      {"exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges"},
-      {"exceeded_max_vias", "restrictions exceeding max vias"},
-      {"exceeded_turn_restriction_mask", "simple turn restriction masks exceeding limit"},
+      {"exceeded_elevation_diff", "edges with elevation exceeding max difference",
+       BuildStage::kElevation},
+      {"exceeded_max_assigner_speed", "SpeedAssigner edges clamped to max", BuildStage::kEnhance},
+      {"exceeded_max_density", "nodes exceeding max density", BuildStage::kEnhance},
+      {"exceeded_max_local_edge_count", "nodes exceeding max local edge count", BuildStage::kEnhance},
+      {"exceeded_max_names", "edges exceeding max names", BuildStage::kBuild},
+      {"exceeded_max_nodes_per_way", "ways exceeding max nodes per way", BuildStage::kParseWays},
+      {"exceeded_max_osm_speed", "ways with speed clamped to max", BuildStage::kParseWays},
+      {"exceeded_max_osm_speed_limit", "ways with speed limit clamped to max",
+       BuildStage::kParseWays},
+      {"exceeded_max_osm_truck_speed", "ways with truck speed clamped to max",
+       BuildStage::kParseWays},
+      {"exceeded_max_shape_size", "edges exceeding max encoded shape size", BuildStage::kBuild},
+      {"exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges", BuildStage::kShortcuts},
+      {"exceeded_max_vias", "restrictions exceeding max vias", BuildStage::kRestrictions},
+      {"exceeded_turn_restriction_mask", "simple turn restriction masks exceeding limit",
+       BuildStage::kBuild},
       {"failed_ferry_reclass_both",
-       "ferry connections completely failing to reclassify edges to the next level 0 edge"},
+       "ferry connections completely failing to reclassify edges to the next level 0 edge",
+       BuildStage::kBuild},
       {"failed_ferry_reclass_inbound",
-       "inbound ferry connections failing to reclassify edges to the next level 0 edge"},
+       "inbound ferry connections failing to reclassify edges to the next level 0 edge",
+       BuildStage::kBuild},
       {"failed_ferry_reclass_outbound",
-       "outbound ferry connections failing to reclassify edges to the next level 0 edge"},
-      {"failed_lane_connectivity", "lane connectivity import failures"},
-      {"failed_node_initialization", "nodes with uninitialized coordinates"},
-      {"failed_osm_time_range", "OSM time range raises either invalid_argument or out_of_range"},
-      {"failed_osm_time_range_unknown", "OSM time range causes an unknown runtime_error"},
-      {"invalid_hov_type", "ways with invalid HOV type"},
-      {"invalid_level", "ways with invalid level tags"},
-      {"invalid_osm_tag", "invalid OSM tag parse errors"},
-      {"missing_access_tags", "edges with missing access tags"},
+       "outbound ferry connections failing to reclassify edges to the next level 0 edge",
+       BuildStage::kBuild},
+      {"failed_lane_connectivity", "lane connectivity import failures", BuildStage::kBuild},
+      {"failed_node_initialization", "nodes with uninitialized coordinates",
+       BuildStage::kConstructEdges},
+      {"failed_osm_time_range", "OSM time range raises either invalid_argument or out_of_range",
+       BuildStage::kParseWays},
+      {"failed_osm_time_range_unknown", "OSM time range causes an unknown runtime_error",
+       BuildStage::kParseWays},
+      {"invalid_hov_type", "ways with invalid HOV type", BuildStage::kParseWays},
+      {"invalid_level", "ways with invalid level tags", BuildStage::kParseWays},
+      {"invalid_osm_tag", "invalid OSM tag parse errors", BuildStage::kParseWays},
+      {"missing_access_tags", "edges with missing access tags", BuildStage::kEnhance},
   };
 
   static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");
@@ -174,10 +184,8 @@ struct build_stats {
     return instance;
   }
 
-  // Log and emit to statsd what changed since last snapshot, then update snapshot.
-  void log_stage(BuildStage stage,
-                 std::span<uint32_t, kCount> snapshot,
-                 const boost::property_tree::ptree& config) const;
+  // Log counters and emit current values to statsd.
+  void log_stage(BuildStage stage, const boost::property_tree::ptree& config) const;
 
 private:
   std::array<std::atomic<uint32_t>, kCount> counters_{};

@@ -694,11 +694,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string new_to_old_bin = tile_dir + new_to_old_file;
   std::string old_to_new_bin = tile_dir + old_to_new_file;
 
-  // Snapshot for per-stage delta reporting
-  uint32_t stats_snapshot[build_stats::kCount]{};
-  auto log_stage = [&stats_snapshot, &config](BuildStage stage) {
-    build_stats::get().log_stage(stage, stats_snapshot, config);
-  };
+  auto log_stage = [&config](BuildStage stage) { build_stats::get().log_stage(stage, config); };
 
   // OSMData class
   OSMData osm_data{0};
@@ -914,21 +910,15 @@ TileManifest TileManifest::ReadFromFile(const std::string& filename) {
   return TileManifest{tileset};
 }
 
-void build_stats::log_stage(BuildStage stage,
-                            std::span<uint32_t, kCount> snapshot,
-                            const boost::property_tree::ptree& config) const {
+void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree& config) const {
   auto stage_name = to_string(stage);
-  // Compute deltas and log
   std::vector<std::pair<std::string, uint32_t>> statsd_entries;
   for (uint8_t i = 0; i < kCount; ++i) {
     uint32_t current = counters_[i].load();
-    uint32_t delta = current - snapshot[i];
-    if (delta > 0) {
-      LOG_WARN(std::format("[{}] {} {}", stage_name, delta, meta[i].log_label));
+    if (current > 0 && stage == meta[i].stage) {
+      LOG_WARN(std::format("[{}] {} {}", stage_name, current, meta[i].log_label));
     }
-    // always emit to statsd (gauges retain last value, so we must send 0 to reset)
-    statsd_entries.emplace_back(std::format("mjolnir.{}.{}", stage_name, meta[i].statsd_key), delta);
-    snapshot[i] = current;
+    statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, current);
   }
 
   // Emit to statsd if configured (e.g. build.parseways.exceeded_max_speed)
