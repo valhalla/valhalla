@@ -910,19 +910,26 @@ TileManifest TileManifest::ReadFromFile(const std::string& filename) {
   return TileManifest{tileset};
 }
 
-void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree& config) const {
+void build_stats::log_stage(BuildStage stage,
+                            const boost::property_tree::ptree& config,
+                            bool emit_statsd) const {
   auto stage_name = to_string(stage);
-  std::vector<std::pair<std::string, uint32_t>> statsd_entries;
   for (uint8_t i = 0; i < kCount; ++i) {
     uint32_t current = counters_[i].load();
     if (current > 0 && stage == meta[i].stage) {
       LOG_WARN(std::format("[{}] {} {}", stage_name, current, meta[i].log_label));
     }
-    // always emit statsd for all metrics, it's harmless and updates 0 properly
-    statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, current);
   }
 
-  // Emit to statsd if configured (e.g. build.parseways.exceeded_max_speed)
+  if (!emit_statsd) {
+    return;
+  }
+
+  std::vector<std::pair<std::string, uint32_t>> statsd_entries;
+  for (uint8_t i = 0; i < kCount; ++i) {
+    statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, counters_[i].load());
+  }
+
   auto host = config.get<std::string>("statsd.host", "");
   if (host.empty()) {
     return;
@@ -940,7 +947,7 @@ void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree&
   for (const auto& [key, count] : statsd_entries) {
     client.gauge(key, count, 1.f, tags);
   }
-  client.flush();
+  // fl
 }
 
 } // namespace mjolnir

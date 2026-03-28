@@ -118,6 +118,6 @@ int main(int argc, char** argv) {
   }
 
   ElevationBuilder::Build(config, tile_ids);
-  build_stats::get().log_stage(BuildStage::kElevation, config);
+  build_stats::get().log_stage(BuildStage::kElevation, config, /*emit_statsd=*/false);
   return EXIT_SUCCESS;
 }
