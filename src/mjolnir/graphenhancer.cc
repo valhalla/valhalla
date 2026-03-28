@@ -1049,7 +1049,7 @@ void enhance(const boost::property_tree::ptree& pt,
       std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
       if (ntrans > kMaxLocalEdgeIndex + 1) {
-        LOG_DEBUG("Exceeding max. local edge count: " + std::to_string(n));
+        LOG_DEBUG("Exceeding max. local edge count: " + std::to_string(ntrans));
         build_stats::get().increment(build_stats::kExceededMaxLocalEdgeCount);
       }
       for (uint32_t j = 0; j < ntrans; j++) {
