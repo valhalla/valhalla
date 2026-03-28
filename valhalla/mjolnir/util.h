@@ -191,7 +191,8 @@ struct build_stats {
       {"invalid_osm_tag", "invalid OSM tag parse errors", BuildStage::kParseWays, true},
       {"missing_access_tags", "edges with missing access tags", BuildStage::kEnhance, true},
       // Graph summary counters (alphabetical)
-      {"count_complex_turn_restrictions", "complex turn restrictions", BuildStage::kValidate, false},
+      {"count_complex_turn_restrictions", "complex turn restrictions", BuildStage::kRestrictions,
+       false},
       {"count_edges", "amount of edges at Validate", BuildStage::kValidate, false},
       {"count_nodes", "amount of nodes at Validate", BuildStage::kValidate, false},
       {"count_shortcut_edges_level_0", "level 0 edges in shortcuts", BuildStage::kShortcuts, false},
