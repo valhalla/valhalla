@@ -918,6 +918,7 @@ void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree&
     if (current > 0 && stage == meta[i].stage) {
       LOG_WARN(std::format("[{}] {} {}", stage_name, current, meta[i].log_label));
     }
+    // always emit statsd for all metrics, it's harmless and updates 0 properly
     statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, current);
   }
 
