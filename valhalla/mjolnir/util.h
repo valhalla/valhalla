@@ -184,10 +184,8 @@ struct build_stats {
     return instance;
   }
 
-  // Log counters and optionally emit current values to statsd.
-  void log_stage(BuildStage stage,
-                 const boost::property_tree::ptree& config,
-                 bool emit_statsd = true) const;
+  // Log counters and emit current values to statsd.
+  void log_stage(BuildStage stage, const boost::property_tree::ptree& config) const;
 
 private:
   std::array<std::atomic<uint32_t>, kCount> counters_{};

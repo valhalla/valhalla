@@ -117,7 +117,9 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
+  // we don't want this executable to emit statsd
+  config.erase("statsd");
   ElevationBuilder::Build(config, tile_ids);
-  build_stats::get().log_stage(BuildStage::kElevation, config, /*emit_statsd=*/false);
+  build_stats::get().log_stage(BuildStage::kElevation, config);
   return EXIT_SUCCESS;
 }
