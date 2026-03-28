@@ -685,9 +685,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   auto log_stage = [&stats_snapshot, &config](BuildStage stage) {
     build_stats::get().log_stage(stage, stats_snapshot, config);
   };
-  // Record build start time before first log_stage so it gets flushed immediately
-  build_stats::get().record_timing("mjolnir.build_started_at",
-                                   static_cast<uint64_t>(std::time(nullptr)));
   // nothing to report, but logic only works correctly if every stage is logged
   log_stage(BuildStage::kInitialize);
 
