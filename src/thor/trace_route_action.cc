@@ -64,10 +64,10 @@ void thor_worker_t::trace_route(Api& request) {
   auto _ = measure_scope_time(request);
 
   // Parse request
-  auto& options = *request.mutable_options();
-  adjust_scores(options);
+  adjust_locations(request);
   parse_costing(request);
   parse_measurements(request);
+  const Options options = request.options(); // copy `options` to have them as a backup for a fallback
   controller = AttributesController(options);
 
   switch (options.shape_match()) {
@@ -108,6 +108,10 @@ void thor_worker_t::trace_route(Api& request) {
         LOG_WARN(ShapeMatch_Enum_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
+          // Reset request to avoid `route_match` interference
+          request.Clear();
+          request.mutable_options()->CopyFrom(options);
+
           map_match(request);
         } catch (const valhalla_exception_t& e) {
           throw e;
@@ -221,8 +225,14 @@ thor_worker_t::map_match(Api& request) {
         if (!match.HasState()) {
           continue;
         }
-        for (size_t j = 0;
-             j < matcher->state_container().state(match.stateid).candidate().edges.size() - 1; ++j) {
+        for (int j = 0; j < matcher->state_container()
+                                    .state(match.stateid)
+                                    .candidate()
+                                    .correlation()
+                                    .edges()
+                                    .size() -
+                                1;
+             ++j) {
           options.mutable_shape(i)->mutable_correlation()->mutable_edges()->Add();
         }
       }

@@ -541,6 +541,8 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     // edge and potentially complete the path.
     BDEdgeLabel pred = edgelabels_[predindex];
 
+    // TODO(nils): doesn't this make our "best_path" && kMaxIterationsWithoutConvergence logic
+    // redundant? this returns the very first connection it finds, doesn't seem ideal..
     if (pred.destination()) {
       if (expansion_callback_) {
         auto expansion_type =
