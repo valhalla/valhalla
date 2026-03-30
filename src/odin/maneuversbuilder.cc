@@ -1391,7 +1391,6 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
         (prev_edge->IsRoadUse())) {
       mode = TravelMode::kDrive;
     }
-    // TODO might have to adjust for pedestrian too
 
     IntersectingEdgeCounts xedge_counts;
     trip_path_->GetEnhancedNode(node_index)
