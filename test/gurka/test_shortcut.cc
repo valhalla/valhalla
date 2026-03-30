@@ -2,6 +2,7 @@
 #include "baldr/graphreader.h"
 #include "gurka.h"
 #include "midgard/pointll.h"
+#include "test.h"
 
 #include <gtest/gtest.h>
 
@@ -446,22 +447,24 @@ TEST(Shortcuts, Duplicate) {
   const std::string ascii_map = R"(
                 D
                 |
-                |
-            ----C-------I----
-           /            |    \
-      A---B             |     G------H
-           \            |    /
-            ------------E----
-                        |
+      L         |                    M
+      |     ----C-------I----        |
+      |    /    |       |    \       |
+      A---B     |       |     G------H
+      |    \    |       |    /       |
+      |     ----J-------E----        |
+      K                 |            N
                         |
                         F
   )";
 
   const gurka::ways ways = {
       {"ABCIGH", {{"highway", "tertiary"}, {"name", "Fabrieksgracht"}}},
-      {"BEG", {{"highway", "tertiary"}, {"name", "Fabrieksgracht"}}},
-      {"CD", {{"highway", "residential"}, {"name", "Molenplantsoen"}}},
+      {"BJEG", {{"highway", "tertiary"}, {"name", "Fabrieksgracht"}}},
+      {"DCJ", {{"highway", "residential"}, {"name", "Molenplantsoen"}}},
       {"FEI", {{"highway", "residential"}, {"name", "Jan in 't Veltstraat "}}},
+      {"LAK", {{"highway", "primary"}, {"name", "Querstraße"}}},
+      {"MHN", {{"highway", "primary"}, {"name", "Querstraße"}}},
 
   };
 
@@ -479,8 +482,19 @@ TEST(Shortcuts, Duplicate) {
   auto edge_id = b;
   edge_id.set_id(b_ni->edge_index());
   auto* de = reader.directededge(edge_id);
-  for (size_t i = 0; i < b_ni->edge_count(); ++i, ++de) {
+  std::vector<std::vector<midgard::PointLL>> shapes;
+  for (size_t i = 0; i < b_ni->edge_count(); ++i, ++de, edge_id++) {
     found_shortcuts += de->is_shortcut();
+    if (de->is_shortcut()) {
+      shapes.push_back(reader.edgeinfo(edge_id).shape());
+    }
   }
   EXPECT_EQ(found_shortcuts, 2);
+
+  ASSERT_EQ(shapes.size(), 2);
+  EXPECT_EQ(shapes[0].size(), shapes[1].size());
+  ASSERT_EQ(shapes[0][0], shapes[1][0]);
+  EXPECT_FALSE(test::shape_equality(shapes[0], shapes[1]))
+      << "Expected shapes to differ: " << midgard::encode(shapes[0]) << " vs "
+      << midgard::encode(shapes[1]);
 }
