@@ -1387,7 +1387,8 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     TravelMode mode = prev_edge->travel_mode();
 
     // Adjust bicycle travel mode if roundabout is a road
-    if ((mode == TravelMode::kBicycle) && (prev_edge->IsRoadUse())) {
+    if ((mode == TravelMode::kBicycle || mode == TravelMode::kPedestrian) &&
+        (prev_edge->IsRoadUse())) {
       mode = TravelMode::kDrive;
     }
     // TODO might have to adjust for pedestrian too
