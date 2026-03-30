@@ -422,183 +422,185 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     // Get the end node and check if the edge is set as a matching, entering
     // edge of the contracted node.
     GraphId end_node = directededge->endnode();
-    if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) {
-      total_edge_count++;
-      // Form a shortcut edge.
-      DirectedEdge newedge = *directededge;
-
-      // For computing weighted density and total turn duration along the shortcut
-      uint32_t edge_length = newedge.length();
-      float average_density = edge_length * newedge.density();
-      uint32_t const speed = tile->GetSpeed(directededge, kNoFlowMask);
-      assert(speed != 0);
-      float total_duration = edge_length / (speed * kKPHtoMetersPerSec);
-      uint32_t const truck_speed =
-          std::min(tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true),
-                   directededge->truck_speed() ? directededge->truck_speed() : kMaxAssumedTruckSpeed);
-      assert(truck_speed != 0);
-      float total_truck_duration = edge_length / (truck_speed * kKPHtoMetersPerSec);
-
-      // Get the shape for this edge. If this initial directed edge is not
-      // forward - reverse the shape so the edge info stored is forward for
-      // the first added edge info
-      auto edgeinfo = tile->edgeinfo(directededge);
-      std::vector<PointLL> shape =
-          valhalla::midgard::decode7<std::vector<PointLL>>(edgeinfo.encoded_shape());
-      if (!directededge->forward()) {
-        std::reverse(shape.begin(), shape.end());
-      }
-
-      // store all access_restrictions of the base edge: non-conditional ones will be updated while
-      // contracting, conditional ones are breaking contraction and are safe to simply copy
-      auto restrictions_view = tile->GetAccessRestrictions(edge_id.id()).first;
-      ShortcutAccessRestriction access_restrictions{
-          std::vector<AccessRestriction>(restrictions_view.begin(), restrictions_view.end())};
-
-      // Connect edges to the shortcut while the end node is marked as
-      // contracted (contains edge pairs in the shortcut info).
-      uint32_t rst = 0;
-      // For turn duration calculation during contraction
-      uint32_t opp_local_idx = directededge->opp_local_idx();
-      GraphId next_edge_id = edge_id;
-      bool has_bridge = directededge->bridge();
-      bool has_tunnel = directededge->tunnel();
-      while (true) {
-        EdgePairs edgepairs;
-        graph_tile_ptr tile = reader.GetGraphTile(end_node);
-        if (last_edge(tile, end_node, edgepairs)) {
-          break;
-        }
-
-        // Edge should match one of the 2 first (inbound) edges in the
-        // pair. Choose the matching outgoing (second) edge.
-        if (edgepairs.edge1.first == next_edge_id) {
-          next_edge_id = edgepairs.edge1.second;
-        } else if (edgepairs.edge2.first == next_edge_id) {
-          next_edge_id = edgepairs.edge2.second;
-        } else {
-          // Break out of loop. This case can happen when a shortcut edge
-          // enters another shortcut edge (but is not drivable in reverse
-          // direction from the node).
-          LOG_ERROR("Edge not found in edge pairs. WayID = " +
-                    std::to_string(tile->edgeinfo(tile->directededge(next_edge_id)).wayid()));
-          break;
-        }
-
-        // Connect the matching outbound directed edge (updates the next
-        // end node in the new level). Keep track of the last restriction
-        // on the connected shortcut - need to set that so turn restrictions
-        // off of shortcuts work properly
-        ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                     average_density, total_duration, total_truck_duration, access_restrictions,
-                     has_bridge, has_tunnel);
-        total_edge_count++;
-      }
-
-      // Get the length from the shape. This prevents roundoff issues when forming
-      // elevation.
-
-      // Add the edge info. Use length and number of shape points to match an
-      // edge in case multiple shortcut edges exist between the 2 nodes.
-      // Test whether this shape is forward or reverse (in case an existing
-      // edge exists). Shortcuts use way Id = 0.Set mean elevation to 0 as a placeholder,
-      // set it later if adding elevation to this dataset. No need for names etc, shortcuts
-      // aren't used in guidance
-      bool forward = true;
-      uint32_t idx = shape_id(shape);
-      uint32_t edge_info_offset =
-          tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, {}, {}, {}, 0, forward, false);
-
-      newedge.set_edgeinfo_offset(edge_info_offset);
-
-      // Set the forward flag on this directed edge. If a new edge was added
-      // the direction is forward otherwise the prior edge was the one stored
-      // in the forward direction
-      newedge.set_forward(forward);
-
-      // Shortcut edge has the opp_local_idx and restrictions of the last
-      // directed edge in the shortcut chain
-      newedge.set_opp_local_idx(opp_local_idx);
-      newedge.set_restrictions(rst);
-
-      // add new access restrictions if any and set the mask on the edge
-      if (access_restrictions.all_restrictions.size()) {
-        newedge.set_access_restriction(access_restrictions.modes);
-        for (const auto& res : access_restrictions.all_restrictions) {
-          tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                             res.second.type(), res.second.modes(),
-                                                             res.second.value(),
-                                                             res.second.except_destination()));
-        }
-      }
-
-      // set new access mask
-
-      // Update the length, curvature, and end node
-      uint32_t length = valhalla::midgard::length(shape);
-      newedge.set_length(length);
-      newedge.set_curvature(compute_curvature(shape));
-      newedge.set_endnode(end_node);
-
-      // Set the default weighted grade for the edge. No edge elevation is added.
-      newedge.set_weighted_grade(6);
-
-      // Sanity check - should never see a shortcut with signs
-      if (newedge.sign()) {
-        LOG_ERROR("Shortcut edge with exit signs");
-      }
-
-      // Get turn lanes from the base directed edge. Add them if this is the last edge otherwise
-      // set the turnlanes flag to false;
-      if (directededge->turnlanes() && last_edge(reader.GetGraphTile(directededge->endnode()),
-                                                 directededge->endnode(), edgepairs)) {
-        uint32_t offset = tile->turnlanes_offset(edge_id.id());
-        tilebuilder.AddTurnLanes(tilebuilder.directededges().size(), tile->GetName(offset));
-        newedge.set_turnlanes(true);
-      } else {
-        newedge.set_turnlanes(false);
-      }
-
-      // TODO: for now just drop lane connectivity for shortcuts
-      // they can be retrieved later by re-tracing path (via trace_attribute)
-      if (newedge.laneconnectivity()) {
-        newedge.set_laneconnectivity(false);
-      }
-
-      // Compute the weighted edge density
-      newedge.set_density(average_density / (static_cast<float>(length)));
-
-      // Update speed to the one that takes turn durations into account
-      assert(total_duration > 0);
-      uint32_t new_speed =
-          static_cast<uint32_t>(std::round(length / total_duration * kMetersPerSectoKPH));
-      newedge.set_speed(new_speed);
-
-      assert(total_truck_duration > 0);
-      uint32_t new_truck_speed =
-          static_cast<uint32_t>(std::round(length / total_truck_duration * kMetersPerSectoKPH));
-      newedge.set_truck_speed(new_truck_speed);
-
-      // Add shortcut edge. Add to the shortcut map (associates the base edge
-      // index to the shortcut index). Remove superseded mask that may have
-      // been copied from base directed edge
-      shortcuts[i] = shortcut + 1;
-      newedge.set_shortcut(shortcut + 1);
-      newedge.set_superseded(0);
-
-      // Make sure shortcut edge is not marked as internal edge
-      newedge.set_internal(false);
-
-      // Set bridge / tunnel flags
-      newedge.set_bridge(has_bridge);
-      newedge.set_tunnel(has_tunnel);
-
-      // Add new directed edge to tile builder
-      tilebuilder.directededges().emplace_back(std::move(newedge));
-      shortcut_count++;
-      shortcut++;
+    if (!IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) {
+      continue;
     }
+
+    total_edge_count++;
+    // Form a shortcut edge.
+    DirectedEdge newedge = *directededge;
+
+    // For computing weighted density and total turn duration along the shortcut
+    uint32_t edge_length = newedge.length();
+    float average_density = edge_length * newedge.density();
+    uint32_t const speed = tile->GetSpeed(directededge, kNoFlowMask);
+    assert(speed != 0);
+    float total_duration = edge_length / (speed * kKPHtoMetersPerSec);
+    uint32_t const truck_speed =
+        std::min(tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true),
+                 directededge->truck_speed() ? directededge->truck_speed() : kMaxAssumedTruckSpeed);
+    assert(truck_speed != 0);
+    float total_truck_duration = edge_length / (truck_speed * kKPHtoMetersPerSec);
+
+    // Get the shape for this edge. If this initial directed edge is not
+    // forward - reverse the shape so the edge info stored is forward for
+    // the first added edge info
+    auto edgeinfo = tile->edgeinfo(directededge);
+    std::vector<PointLL> shape =
+        valhalla::midgard::decode7<std::vector<PointLL>>(edgeinfo.encoded_shape());
+    if (!directededge->forward()) {
+      std::reverse(shape.begin(), shape.end());
+    }
+
+    // store all access_restrictions of the base edge: non-conditional ones will be updated while
+    // contracting, conditional ones are breaking contraction and are safe to simply copy
+    auto restrictions_view = tile->GetAccessRestrictions(edge_id.id()).first;
+    ShortcutAccessRestriction access_restrictions{
+        std::vector<AccessRestriction>(restrictions_view.begin(), restrictions_view.end())};
+
+    // Connect edges to the shortcut while the end node is marked as
+    // contracted (contains edge pairs in the shortcut info).
+    uint32_t rst = 0;
+    // For turn duration calculation during contraction
+    uint32_t opp_local_idx = directededge->opp_local_idx();
+    GraphId next_edge_id = edge_id;
+    bool has_bridge = directededge->bridge();
+    bool has_tunnel = directededge->tunnel();
+    while (true) {
+      EdgePairs edgepairs;
+      graph_tile_ptr tile = reader.GetGraphTile(end_node);
+      if (last_edge(tile, end_node, edgepairs)) {
+        break;
+      }
+
+      // Edge should match one of the 2 first (inbound) edges in the
+      // pair. Choose the matching outgoing (second) edge.
+      if (edgepairs.edge1.first == next_edge_id) {
+        next_edge_id = edgepairs.edge1.second;
+      } else if (edgepairs.edge2.first == next_edge_id) {
+        next_edge_id = edgepairs.edge2.second;
+      } else {
+        // Break out of loop. This case can happen when a shortcut edge
+        // enters another shortcut edge (but is not drivable in reverse
+        // direction from the node).
+        LOG_ERROR("Edge not found in edge pairs. WayID = " +
+                  std::to_string(tile->edgeinfo(tile->directededge(next_edge_id)).wayid()));
+        break;
+      }
+
+      // Connect the matching outbound directed edge (updates the next
+      // end node in the new level). Keep track of the last restriction
+      // on the connected shortcut - need to set that so turn restrictions
+      // off of shortcuts work properly
+      ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
+                   average_density, total_duration, total_truck_duration, access_restrictions,
+                   has_bridge, has_tunnel);
+      total_edge_count++;
+    }
+
+    // Get the length from the shape. This prevents roundoff issues when forming
+    // elevation.
+
+    // Add the edge info. Use length and number of shape points to match an
+    // edge in case multiple shortcut edges exist between the 2 nodes.
+    // Test whether this shape is forward or reverse (in case an existing
+    // edge exists). Shortcuts use way Id = 0.Set mean elevation to 0 as a placeholder,
+    // set it later if adding elevation to this dataset. No need for names etc, shortcuts
+    // aren't used in guidance
+    bool forward = true;
+    uint32_t idx = shape_id(shape);
+    uint32_t edge_info_offset =
+        tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
+                                edgeinfo.speed_limit(), shape, {}, {}, {}, 0, forward, false);
+
+    newedge.set_edgeinfo_offset(edge_info_offset);
+
+    // Set the forward flag on this directed edge. If a new edge was added
+    // the direction is forward otherwise the prior edge was the one stored
+    // in the forward direction
+    newedge.set_forward(forward);
+
+    // Shortcut edge has the opp_local_idx and restrictions of the last
+    // directed edge in the shortcut chain
+    newedge.set_opp_local_idx(opp_local_idx);
+    newedge.set_restrictions(rst);
+
+    // add new access restrictions if any and set the mask on the edge
+    if (access_restrictions.all_restrictions.size()) {
+      newedge.set_access_restriction(access_restrictions.modes);
+      for (const auto& res : access_restrictions.all_restrictions) {
+        tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
+                                                           res.second.type(), res.second.modes(),
+                                                           res.second.value(),
+                                                           res.second.except_destination()));
+      }
+    }
+
+    // set new access mask
+
+    // Update the length, curvature, and end node
+    uint32_t length = valhalla::midgard::length(shape);
+    newedge.set_length(length);
+    newedge.set_curvature(compute_curvature(shape));
+    newedge.set_endnode(end_node);
+
+    // Set the default weighted grade for the edge. No edge elevation is added.
+    newedge.set_weighted_grade(6);
+
+    // Sanity check - should never see a shortcut with signs
+    if (newedge.sign()) {
+      LOG_ERROR("Shortcut edge with exit signs");
+    }
+
+    // Get turn lanes from the base directed edge. Add them if this is the last edge otherwise
+    // set the turnlanes flag to false;
+    if (directededge->turnlanes() &&
+        last_edge(reader.GetGraphTile(directededge->endnode()), directededge->endnode(), edgepairs)) {
+      uint32_t offset = tile->turnlanes_offset(edge_id.id());
+      tilebuilder.AddTurnLanes(tilebuilder.directededges().size(), tile->GetName(offset));
+      newedge.set_turnlanes(true);
+    } else {
+      newedge.set_turnlanes(false);
+    }
+
+    // TODO: for now just drop lane connectivity for shortcuts
+    // they can be retrieved later by re-tracing path (via trace_attribute)
+    if (newedge.laneconnectivity()) {
+      newedge.set_laneconnectivity(false);
+    }
+
+    // Compute the weighted edge density
+    newedge.set_density(average_density / (static_cast<float>(length)));
+
+    // Update speed to the one that takes turn durations into account
+    assert(total_duration > 0);
+    uint32_t new_speed =
+        static_cast<uint32_t>(std::round(length / total_duration * kMetersPerSectoKPH));
+    newedge.set_speed(new_speed);
+
+    assert(total_truck_duration > 0);
+    uint32_t new_truck_speed =
+        static_cast<uint32_t>(std::round(length / total_truck_duration * kMetersPerSectoKPH));
+    newedge.set_truck_speed(new_truck_speed);
+
+    // Add shortcut edge. Add to the shortcut map (associates the base edge
+    // index to the shortcut index). Remove superseded mask that may have
+    // been copied from base directed edge
+    shortcuts[i] = shortcut + 1;
+    newedge.set_shortcut(shortcut + 1);
+    newedge.set_superseded(0);
+
+    // Make sure shortcut edge is not marked as internal edge
+    newedge.set_internal(false);
+
+    // Set bridge / tunnel flags
+    newedge.set_bridge(has_bridge);
+    newedge.set_tunnel(has_tunnel);
+
+    // Add new directed edge to tile builder
+    tilebuilder.directededges().emplace_back(std::move(newedge));
+    shortcut_count++;
+    shortcut++;
   }
 
 #ifdef LOGGING_LEVEL_WARN

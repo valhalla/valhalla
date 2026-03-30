@@ -145,7 +145,11 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
       if (edge.is_shortcut()) {
         // Shortcut edges - use must match (or both are links)
         if ((directededge->link() && edge.link()) || (directededge->use() == edge.use())) {
-          match = true;
+          auto shape1 = tile->edgeinfo(&edge).shape();
+          auto shape2 = end_tile->edgeinfo(directededge).shape();
+          if (shapes_match(shape1, shape2)) {
+            match = true;
+          }
         }
       } else {
         // Regular edges - match wayids and edge info offset (if in same tile)
