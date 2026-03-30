@@ -50,6 +50,41 @@ namespace vr = valhalla::tyr;
 
 namespace {
 
+/**
+ * Little helper to find multiple edges that share the same start and end node.
+ */
+std::vector<std::tuple<baldr::GraphId, const baldr::DirectedEdge*>>
+findEdgesByNodes(valhalla::baldr::GraphReader& reader,
+                 const valhalla::gurka::nodelayout& nodes,
+                 const std::string& begin_node_name,
+                 const std::string& end_node_name) {
+  std::vector<std::tuple<baldr::GraphId, const baldr::DirectedEdge*>> result;
+  // Iterate over all the tiles, there wont be many in unit tests..
+  for (auto tile_id : reader.GetTileSet()) {
+    auto tile = reader.GetGraphTile(tile_id);
+    // Iterate over all directed edges to find one with the name we want
+    for (const auto& e : tile->GetDirectedEdges()) {
+      // Bail if wrong end node
+      auto ll = reader.GetGraphTile(e.endnode())->get_node_ll(e.endnode());
+      if (!ll.ApproximatelyEqual(nodes.at(end_node_name))) {
+        continue;
+      }
+      // Bail if wrong begin node
+      auto edge_id = tile_id;
+      edge_id.set_id(&e - tile->directededge(0));
+      auto begin_node_id = reader.edge_startnode(edge_id);
+      ll = tile->get_node_ll(begin_node_id);
+      if (!ll.ApproximatelyEqual(nodes.at(begin_node_name))) {
+        continue;
+      }
+
+      // TODO: could check that the edges name contains the nodes (confirm connectivity)
+      result.push_back(std::make_tuple(edge_id, &e));
+    }
+  }
+  return result;
+}
+
 void locations_from_ll(Api& request, const std::vector<valhalla::midgard::PointLL>& nodes) {
   for (const auto& pt : nodes) {
     auto* loc = request.mutable_options()->mutable_locations()->Add();
@@ -1645,38 +1680,6 @@ TEST(BiDiAstar, test_recost_path) {
     EXPECT_NEAR((path[i + 1].elapsed_cost - path[i].elapsed_cost - path[i + 1].transition_cost).secs,
                 get_edge_duration(std::get<0>(edge), std::get<1>(edge)), 0.1f);
   }
-}
-
-std::vector<std::tuple<baldr::GraphId, const baldr::DirectedEdge*>>
-findEdgesByNodes(valhalla::baldr::GraphReader& reader,
-                 const valhalla::gurka::nodelayout& nodes,
-                 const std::string& begin_node_name,
-                 const std::string& end_node_name) {
-  std::vector<std::tuple<baldr::GraphId, const baldr::DirectedEdge*>> result;
-  // Iterate over all the tiles, there wont be many in unit tests..
-  for (auto tile_id : reader.GetTileSet()) {
-    auto tile = reader.GetGraphTile(tile_id);
-    // Iterate over all directed edges to find one with the name we want
-    for (const auto& e : tile->GetDirectedEdges()) {
-      // Bail if wrong end node
-      auto ll = reader.GetGraphTile(e.endnode())->get_node_ll(e.endnode());
-      if (!ll.ApproximatelyEqual(nodes.at(end_node_name))) {
-        continue;
-      }
-      // Bail if wrong begin node
-      auto edge_id = tile_id;
-      edge_id.set_id(&e - tile->directededge(0));
-      auto begin_node_id = reader.edge_startnode(edge_id);
-      ll = tile->get_node_ll(begin_node_id);
-      if (!ll.ApproximatelyEqual(nodes.at(begin_node_name))) {
-        continue;
-      }
-
-      // TODO: could check that the edges name contains the nodes (confirm connectivity)
-      result.push_back(std::make_tuple(edge_id, &e));
-    }
-  }
-  return result;
 }
 
 TEST(BiDiAstar, test_recost_path_2) {
