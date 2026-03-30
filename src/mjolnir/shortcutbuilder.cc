@@ -423,7 +423,6 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     // edge of the contracted node.
     GraphId end_node = directededge->endnode();
     if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) {
-
       total_edge_count++;
       // Form a shortcut edge.
       DirectedEdge newedge = *directededge;
