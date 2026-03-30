@@ -914,11 +914,13 @@ void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree&
   auto stage_name = to_string(stage);
   std::vector<std::pair<std::string, uint32_t>> statsd_entries;
   for (uint8_t i = 0; i < kCount; ++i) {
-    uint32_t current = counters_[i].load();
-    if (current > 0 && stage == meta[i].stage) {
-      LOG_WARN(std::format("[{}] {} {}", stage_name, current, meta[i].log_label));
+    if (stage == meta[i].stage) {
+      uint32_t current = counters_[i].load();
+      statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, current);
+      if (current > 0) {
+        LOG_WARN(std::format("[{}] {} {}", stage_name, current, meta[i].log_label));
+      }
     }
-    statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, current);
   }
 
   auto host = config.get<std::string>("statsd.host", "");
