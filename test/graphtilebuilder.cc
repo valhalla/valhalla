@@ -1,6 +1,5 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "baldr/graphid.h"
-#include "baldr/graphtileptr.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
@@ -28,7 +27,7 @@ public:
   using GraphTileBuilder::EdgeTuple;
   using GraphTileBuilder::EdgeTupleHasher;
   using GraphTileBuilder::GraphTileBuilder;
-  using GraphTileBuilder::speed_profile_map_;
+  using GraphTileBuilder::speed_profile_index_;
 };
 
 class test_predicted_speeds : public PredictedSpeeds {
@@ -344,7 +343,7 @@ TEST(GraphTileBuilder, TestDuplicatePredictedSpeeds) {
   speeds_tilebuilder.AddPredictedSpeed(1, test_predicted_speed_coefficients_2);
   speeds_tilebuilder.AddPredictedSpeed(2, test_predicted_speed_coefficients_2);
 
-  EXPECT_EQ(speeds_tilebuilder.speed_profile_map_.size(), 2);
+  EXPECT_EQ(speeds_tilebuilder.speed_profile_index_.size(), 2);
 
   speeds_tilebuilder.UpdatePredictedSpeeds(speeds_tilebuilder.directededges());
 
@@ -357,6 +356,56 @@ TEST(GraphTileBuilder, TestDuplicatePredictedSpeeds) {
 
   EXPECT_NE(test_tile.get_speed_profile_offset(0), test_tile.get_speed_profile_offset(1));
   EXPECT_EQ(test_tile.get_speed_profile_offset(1), test_tile.get_speed_profile_offset(2));
+}
+
+TEST(GraphTileBuilder, TestDuplicatePredictedSpeedSmallHint) {
+  constexpr uint32_t edge_count = 100;
+  constexpr uint32_t unique_speeds = 50;
+
+  std::string test_dir = "test/data/builder_predicted_speeds_rehash";
+  test_graph_tile_builder base_tilebuilder(test_dir, GraphId(0, 2, 0), false);
+
+  for (uint32_t i = 0; i < edge_count; ++i) {
+    base_tilebuilder.directededges().emplace_back();
+    bool added = false;
+    base_tilebuilder.AddEdgeInfo(i, GraphId(0, 2, i), GraphId(0, 2, i + 1), 1000 + i, 100.0f, i, 60,
+                                 std::list<PointLL>{{0, static_cast<float>(i)},
+                                                    {1, static_cast<float>(i)}},
+                                 {"edge_" + std::to_string(i)}, {}, {}, 0, added);
+  }
+  base_tilebuilder.StoreTileData();
+
+  test_graph_tile_builder speeds_tilebuilder(test_dir, GraphId(0, 2, 0), true);
+
+  // Generate unique_speeds distinct profiles, cycling them across all edges
+  std::vector<std::array<int16_t, kCoefficientCount>> profiles(unique_speeds);
+  std::array<float, kBucketsPerWeek> speeds;
+  for (uint32_t i = 0; i < unique_speeds; ++i) {
+    speeds.fill(10.0f + static_cast<float>(i));
+    profiles[i] = compress_speed_buckets(speeds.data());
+  }
+
+  for (uint32_t i = 0; i < edge_count; ++i) {
+    speeds_tilebuilder.AddPredictedSpeed(i, profiles[i % unique_speeds], 1);
+  }
+
+  EXPECT_EQ(speeds_tilebuilder.speed_profile_index_.size(), unique_speeds);
+
+  speeds_tilebuilder.UpdatePredictedSpeeds(speeds_tilebuilder.directededges());
+
+  test_graph_tile test_tile(test_dir, GraphId(0, 2, 0));
+  for (uint32_t i = 0; i < edge_count; ++i) {
+    float expected = 10.0f + static_cast<float>(i % unique_speeds);
+    EXPECT_NEAR(test_tile.get_predicted_speed(i, 0), expected, 0.5)
+        << "Edge " << i << " has wrong predicted speed";
+  }
+
+  // Edges sharing the same profile must share the same offset
+  for (uint32_t i = unique_speeds; i < edge_count; ++i) {
+    EXPECT_EQ(test_tile.get_speed_profile_offset(i),
+              test_tile.get_speed_profile_offset(i % unique_speeds))
+        << "Edge " << i << " should share offset with edge " << (i % unique_speeds);
+  }
 }
 
 struct fake_tile : public GraphTile {

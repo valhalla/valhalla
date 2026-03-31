@@ -23,6 +23,7 @@
 #include <list>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace valhalla {
 namespace mjolnir {
@@ -536,17 +537,46 @@ protected:
     std::hash<baldr::GraphId> id_hasher;
   };
 
-  struct SpeedProfileHasher {
-    std::size_t operator()(const std::span<const int16_t, baldr::kCoefficientCount>& arr) const {
+  struct SpeedProfileIndexHasher {
+    SpeedProfileIndexHasher(const std::vector<int16_t>& speed_profiles) : speed_profiles_(speed_profiles) {}
+    using is_transparent = void;
+    const std::vector<int16_t>& speed_profiles_;
+
+    std::span<const int16_t, baldr::kCoefficientCount> to_profile(uint32_t offset) const {
+      return std::span<const int16_t, baldr::kCoefficientCount>{speed_profiles_.data() + offset, baldr::kCoefficientCount};
+    }
+
+    static std::span<const int16_t, baldr::kCoefficientCount>
+    to_profile(const std::array<int16_t, baldr::kCoefficientCount>& arr) {
+      return arr;
+    }
+
+    template <typename T>
+    std::size_t operator()(const T& key) const {
+      auto profile = to_profile(key);
       std::size_t seed = 13;
-      boost::hash_range(seed, arr.begin(), arr.end());
+      boost::hash_range(seed, profile.begin(), profile.end());
       return seed;
     }
   };
 
-  struct SpanEqual {
-    bool operator()(std::span<const int16_t> a, std::span<const int16_t> b) const {
-        return std::ranges::equal(a, b);
+  struct SpeedProfileIndexEqual {
+    SpeedProfileIndexEqual(const std::vector<int16_t>& speed_profiles) : speed_profiles_(speed_profiles) {}
+    using is_transparent = void;
+    const std::vector<int16_t>& speed_profiles_;
+
+    std::span<const int16_t, baldr::kCoefficientCount> to_profile(uint32_t offset) const {
+      return std::span<const int16_t, baldr::kCoefficientCount>{speed_profiles_.data() + offset, baldr::kCoefficientCount};
+    }
+    
+    static std::span<const int16_t, baldr::kCoefficientCount>
+    to_profile(const std::array<int16_t, baldr::kCoefficientCount>& arr) {
+      return arr;
+    }
+
+    template <typename L, typename R>
+    bool operator()(const L& a, const R& b) const {
+      return std::ranges::equal(to_profile(a), to_profile(b));
     }
   };
 
@@ -642,12 +672,14 @@ protected:
   // Offsets into predicted speed profiles for each directed edge.
   std::vector<uint32_t> speed_profile_offset_builder_;
 
-  // Predicted speed profiles. 200 short int for each directed edge which has predicted speed.
+  // Flat buffer of deduplicated predicted speed profiles (kCoefficientCount short int values each).
   std::vector<int16_t> speed_profile_builder_;
 
-  // Map of predicted speed profiles to their offsets.
-  std::unordered_map<std::span<const int16_t, baldr::kCoefficientCount>, uint32_t, SpeedProfileHasher, SpanEqual>
-      speed_profile_map_;
+  // Tracks which speed profiles are already stored, so identical profiles are only kept once.
+  // Stores offsets into speed_profile_builder_; can look up by offset value or by profile content.
+  std::unordered_set<uint32_t, SpeedProfileIndexHasher, SpeedProfileIndexEqual> speed_profile_index_{0,
+    SpeedProfileIndexHasher(speed_profile_builder_),
+    SpeedProfileIndexEqual(speed_profile_builder_)};
 
   // lane connectivity list offset
   uint32_t lane_connectivity_offset_ = 0;
