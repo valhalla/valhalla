@@ -676,7 +676,7 @@ protected:
   // Offsets into predicted speed profiles for each directed edge.
   std::vector<uint32_t> speed_profile_offset_builder_;
 
-  // Flat buffer of deduplicated predicted speed profiles (kCoefficientCount short int values each).
+  // Flat buffer of deduplicated predicted speed profiles (200 short int values each).
   std::vector<int16_t> speed_profile_builder_;
 
   // Tracks which speed profiles are already stored, so identical profiles are only kept once.
