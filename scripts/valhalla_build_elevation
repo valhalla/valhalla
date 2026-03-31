@@ -323,7 +323,7 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
     return True
 
 
-if __name__ == "__main__":
+def main():
     args = parser.parse_args()
 
     # set the right logger level
@@ -379,3 +379,7 @@ if __name__ == "__main__":
 
     sum_downloaded = list(filter(lambda res: res is True, results))
     LOGGER.info(f"Downloaded {len(sum_downloaded)} tiles. Exiting.")
+
+
+if __name__ == "__main__":
+    main()
