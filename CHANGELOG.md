@@ -25,7 +25,6 @@
    * ADDED: access restriction layer in MVT [#5912](https://github.com/valhalla/valhalla/pull/5912)
    * ADDED: incidents to locate JSON response [#5968](https://github.com/valhalla/valhalla/pull/5968)
    * ADDED: `--region` to `valhalla_build_extract` to create tars by Geofabrik region
-   * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
    * ADDED: more warnings for clamped costing options, second pass, bidir fallback and matrix_locations for CostMatrix [#3833](https://github.com/valhalla/valhalla/pull/3833)
    * ADDED: a global `logging` config to replace all module-level ones
    * ADDED: support for OSM tag 'junction=intersection' to explicitly mark internal intersection edges [#5980](https://github.com/valhalla/valhalla/pull/5980)
@@ -33,6 +32,7 @@
    * ADDED: `ValhallaError` which exposes `valhalla_exception_t` to the Python bindings [#5956](https://github.com/valhalla/valhalla/pull/5956)
    * CHANGED: Make `lz4` system dependency optional [#5993](https://github.com/valhalla/valhalla/pull/5993)
    * CHANGED: Drop file names of individual tiles once tile extract loaded [#5995](https://github.com/valhalla/valhalla/pull/5995)
+   * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
