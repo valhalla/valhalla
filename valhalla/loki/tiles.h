@@ -71,8 +71,8 @@ public:
                                  const char* name,
                                  const baldr::AttributesController& controller);
 
-  void add_feature(const IncidentsTile::Metadata&, const vtzero::point&);
-  void add_feature(const IncidentsTile::Metadata&, const std::vector<vtzero::point>& geometry);
+  void add_point_feature(const IncidentsTile::Metadata&, const vtzero::point&);
+  void add_line_feature(const IncidentsTile::Metadata&, const std::vector<vtzero::point>& geometry);
   vtzero::index_value key_type_;
   vtzero::index_value key_impact_;
   vtzero::index_value key_description_;

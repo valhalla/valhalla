@@ -342,7 +342,7 @@ void build_incidents_layer(IncidentLayersBuilder& incidents_builder,
           tile_y >= -projection.tile_buffer &&
           tile_y <= projection.tile_extent + projection.tile_buffer) {
 
-        incidents_builder.add_feature(meta, tile_coord);
+        incidents_builder.add_point_feature(meta, tile_coord);
       }
 
       // if there really is no line, bail
@@ -358,7 +358,7 @@ void build_incidents_layer(IncidentLayersBuilder& incidents_builder,
                                                 generalize, z, projection);
 
     if (!leaves_bbox) {
-      incidents_builder.add_feature(meta, unclipped_mvt_line);
+      incidents_builder.add_line_feature(meta, unclipped_mvt_line);
       return;
     }
     multilinestring_vtzero_t clipped_mvt_lines;
@@ -370,7 +370,7 @@ void build_incidents_layer(IncidentLayersBuilder& incidents_builder,
     // process each clipped line segment (there may be multiple if line crosses tile multiple
     // times)
     for (const auto& clipped_line : clipped_mvt_lines) {
-      incidents_builder.add_feature(meta, clipped_line);
+      incidents_builder.add_line_feature(meta, clipped_line);
     }
   }
 }
@@ -754,11 +754,10 @@ IncidentLayersBuilder::IncidentLayersBuilder(vtzero::tile_builder& tile,
   }
 }
 
-void IncidentLayersBuilder::add_feature(const IncidentsTile::Metadata& meta,
-                                        const vtzero::point& position) {
+void IncidentLayersBuilder::add_point_feature(const IncidentsTile::Metadata& meta,
+                                              const vtzero::point& position) {
   vtzero::point_feature_builder feature{*this};
   feature.add_point(position);
-  // Add node properties
   for (const auto& def : loki::detail::kIncidentAttributes) {
     if (controller_(def.attribute_flag)) {
       const auto key = this->*(def.key_member);
@@ -768,8 +767,8 @@ void IncidentLayersBuilder::add_feature(const IncidentsTile::Metadata& meta,
   feature.commit();
 }
 
-void IncidentLayersBuilder::add_feature(const IncidentsTile::Metadata& meta,
-                                        const std::vector<vtzero::point>& geometry) {
+void IncidentLayersBuilder::add_line_feature(const IncidentsTile::Metadata& meta,
+                                             const std::vector<vtzero::point>& geometry) {
 
   vtzero::linestring_feature_builder feature{*this};
   feature.set_id(static_cast<uint64_t>(meta.id()));
