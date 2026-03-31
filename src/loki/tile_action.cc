@@ -243,8 +243,7 @@ void filter_tile(const std::string& tile_bytes,
       if (layer_name == kIncidentLayerName || layer_name == kIncidentLayerName)
         return loki::detail::kIncidentPropToAttributeFlag;
       return loki::detail::kEdgePropToAttributeFlag;
-    }
-    ();
+    }();
 
     const auto& key_table = full_layer.key_table();
     std::vector<bool> attrs_allowed(key_table.size(), false);
@@ -308,21 +307,17 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
   nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
 }
 
-void build_incidents_layers(IncidentLayersBuilder& incidents_builder,
-                            GraphId edge_id,
-                            const std::vector<midgard::PointLL>& shape,
-                            bg::linestring_2d_t& mercator_line,
-                            const box_vtzero_t& clip_box,
-                            double generalize,
-                            uint32_t z,
-                            graph_tile_ptr& tile,
-                            GraphReader& reader,
-                            const TileProjection& projection) {
+void build_incidents_layer(IncidentLayersBuilder& incidents_builder,
+                           GraphId edge_id,
+                           const std::vector<midgard::PointLL>& shape,
+                           bg::linestring_2d_t& mercator_line,
+                           const box_vtzero_t& clip_box,
+                           double generalize,
+                           uint32_t z,
+                           graph_tile_ptr& tile,
+                           GraphReader& reader,
+                           const TileProjection& projection) {
 
-  auto process_single_line = [&](const linestring_vtzero_t& line,
-                                 const IncidentsTile::Metadata& meta) {
-    incidents_builder.add_feature(meta, line);
-  };
   auto incident_result = reader.GetIncidents(edge_id, tile);
   for (auto i = incident_result.start_index; i < incident_result.end_index; ++i) {
     auto& loc = incident_result.tile->locations(i);
@@ -362,7 +357,7 @@ void build_incidents_layers(IncidentLayersBuilder& incidents_builder,
                                                 generalize, z, projection);
 
     if (!leaves_bbox) {
-      process_single_line(unclipped_mvt_line, meta);
+      incidents_builder.add_feature(meta, unclipped_mvt_line);
       return;
     }
     multilinestring_vtzero_t clipped_mvt_lines;
@@ -374,7 +369,7 @@ void build_incidents_layers(IncidentLayersBuilder& incidents_builder,
     // process each clipped line segment (there may be multiple if line crosses tile multiple
     // times)
     for (const auto& clipped_line : clipped_mvt_lines) {
-      process_single_line(clipped_line, meta);
+      incidents_builder.add_feature(meta, clipped_line);
     }
   }
 }
@@ -489,13 +484,13 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     };
 
     if (forward_traffic && forward_traffic->has_incidents) {
-      build_incidents_layers(incidents_builder, edge_id, shape, mercator_line, clip_box, generalize,
-                             z, edge_tile, *reader, projection);
+      build_incidents_layer(incidents_builder, edge_id, shape, mercator_line, clip_box, generalize, z,
+                            edge_tile, *reader, projection);
     }
 
     if (opp_tile && reverse_traffic && reverse_traffic->has_incidents) {
-      build_incidents_layers(incidents_builder, opp_edge_id, shape, mercator_line, clip_box,
-                             generalize, z, opp_tile, *reader, projection);
+      build_incidents_layer(incidents_builder, opp_edge_id, shape, mercator_line, clip_box,
+                            generalize, z, opp_tile, *reader, projection);
     }
 
     if (!line_leaves_bbox) {
