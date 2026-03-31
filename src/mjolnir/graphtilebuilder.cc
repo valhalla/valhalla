@@ -1,10 +1,10 @@
-#include "baldr/predictedspeeds.h"
-#include "mjolnir/graphtilebuilder.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
+#include "baldr/predictedspeeds.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "mjolnir/graphtilebuilder.h"
 
 #include <boost/format.hpp>
 
