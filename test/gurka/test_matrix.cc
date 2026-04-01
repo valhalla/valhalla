@@ -458,7 +458,7 @@ TEST_F(MatrixTrafficTest, CostMatrixPathfinding) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(map.config.get_child("mjolnir"));
 

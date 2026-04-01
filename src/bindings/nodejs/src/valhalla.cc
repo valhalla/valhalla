@@ -1,5 +1,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
+#include "exceptions.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "tyr/actor.h"
@@ -12,6 +13,9 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+
+// Persistent reference to the ValhallaError JS constructor, initialized in Init()
+static Napi::FunctionReference ValhallaErrorConstructor;
 
 // Defined in graph_id.cc
 Napi::Object InitGraphId(Napi::Env env, Napi::Object exports);
@@ -72,6 +76,13 @@ protected:
     try {
       auto* actor = GetThreadLocalActor(config_);
       result_ = method_(actor, request_);
+    } catch (const valhalla::valhalla_exception_t& e) {
+      // Store structured fields for OnError() to build a ValhallaError
+      exception_code_ = e.code;
+      exception_message_ = e.message;
+      exception_http_code_ = e.http_code;
+      exception_http_message_ = e.http_message;
+      SetError(e.message);
     } catch (const std::exception& e) {
       SetError(std::string(method_name_) + " error: " + e.what());
     } catch (...) { SetError(std::string(method_name_) + " error: unknown exception"); }
@@ -89,7 +100,17 @@ protected:
   }
 
   void OnError(const Napi::Error& e) override {
-    deferred_.Reject(e.Value());
+    // If this was a valhalla_exception_t, reject with a ValhallaError instance
+    if (exception_code_ > 0 && !ValhallaErrorConstructor.IsEmpty()) {
+      Napi::Env env = Env();
+      auto err = ValhallaErrorConstructor.New({Napi::String::New(env, exception_message_),
+                                               Napi::Number::New(env, exception_code_),
+                                               Napi::Number::New(env, exception_http_code_),
+                                               Napi::String::New(env, exception_http_message_)});
+      deferred_.Reject(err);
+    } else {
+      deferred_.Reject(e.Value());
+    }
   }
 
 private:
@@ -100,6 +121,12 @@ private:
   std::string method_name_;
   bool return_binary_;
   std::string result_;
+  // valhalla_exception_t fields, stored in Execute() (worker thread) for use in OnError() (main
+  // thread)
+  unsigned exception_code_ = 0;
+  std::string exception_message_;
+  unsigned exception_http_code_ = 0;
+  std::string exception_http_message_;
 };
 
 } // namespace
@@ -284,6 +311,46 @@ private:
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "VALHALLA_VERSION"),
               Napi::String::New(env, VALHALLA_PRINT_VERSION));
+
+  // Define ValhallaError as a JS class extending Error.
+  // Constructor signature: new ValhallaError(message, code, httpCode, httpMessage)
+  auto routerErrorClass = Napi::Function::New(
+      env,
+      [](const Napi::CallbackInfo& info) {
+        Napi::Env env = info.Env();
+        Napi::Object self = info.This().As<Napi::Object>();
+
+        std::string message = info.Length() > 0 ? info[0].As<Napi::String>().Utf8Value() : "";
+        self.Set("message", Napi::String::New(env, message));
+        self.Set("code",
+                 info.Length() > 1 ? info[1] : static_cast<napi_value>(Napi::Number::New(env, 0)));
+        self.Set("httpCode",
+                 info.Length() > 2 ? info[2] : static_cast<napi_value>(Napi::Number::New(env, 0)));
+        self.Set("httpMessage",
+                 info.Length() > 3 ? info[3] : static_cast<napi_value>(Napi::String::New(env, "")));
+
+        // Capture stack trace
+        auto errorObj = Napi::Error::New(env, message);
+        self.Set("stack", errorObj.Get("stack"));
+      },
+      "ValhallaError");
+
+  // Set up prototype chain: ValhallaError.prototype = Object.create(Error.prototype)
+  auto global = env.Global();
+  auto errorCtor = global.Get("Error").As<Napi::Function>();
+  auto objectCtor = global.Get("Object").As<Napi::Function>();
+  auto objectCreate = objectCtor.Get("create").As<Napi::Function>();
+  auto errorProto = errorCtor.Get("prototype");
+
+  auto routerErrorProto = objectCreate.Call(objectCtor, {errorProto}).As<Napi::Object>();
+  routerErrorProto.Set("constructor", routerErrorClass);
+  routerErrorProto.Set("name", Napi::String::New(env, "ValhallaError"));
+  routerErrorClass.Set("prototype", routerErrorProto);
+
+  ValhallaErrorConstructor = Napi::Persistent(routerErrorClass);
+  ValhallaErrorConstructor.SuppressDestruct();
+
+  exports.Set("ValhallaError", routerErrorClass);
 
   Actor::Init(env, exports);
   InitGraphId(env, exports);

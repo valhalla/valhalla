@@ -8,7 +8,9 @@
 #include "valhalla/baldr/curl_tilegetter.h"
 
 #include <boost/property_tree/ptree.hpp>
+#ifdef ENABLE_LZ4
 #include <lz4frame.h>
+#endif
 #include <sys/stat.h>
 
 #include <cmath>
@@ -127,6 +129,7 @@ public:
         return false;
       }
     } else if (format == format_t::LZ4) {
+#ifdef ENABLE_LZ4
       LZ4F_decompressionContext_t decode;
       LZ4F_decompressOptions_t options;
       LZ4F_createDecompressionContext(&decode, LZ4F_VERSION);
@@ -148,6 +151,11 @@ public:
       } while (result != 0);
 
       LZ4F_freeDecompressionContext(decode);
+#else
+      LOG_WARN("LZ4 elevation data found but LZ4 support is not compiled in");
+      format = format_t::UNKNOWN;
+      return false;
+#endif
     } else {
       LOG_WARN("Corrupt elevation data of unknown type");
       format = format_t::UNKNOWN;

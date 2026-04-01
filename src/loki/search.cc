@@ -334,7 +334,8 @@ struct bin_handler_t {
           path_edge.set_begin_node(true);
           path_edge.set_heading(angle);
           path_edge.set_side_of_street(Location_SideOfStreet_kNone);
-          if (heading_filter(location, angle) || layer_filter(location, layer)) {
+          if ((heading_filter(location, angle) || layer_filter(location, layer)) &&
+              correlated_edges.insert(id).second) {
             location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
           } else if (correlated_edges.insert(id).second) {
             location.mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
@@ -365,7 +366,8 @@ struct bin_handler_t {
           path_edge.set_side_of_street(Location_SideOfStreet_kNone);
 
           // angle is 180 degrees opposite direction of the one above
-          if (heading_filter(location, opp_angle) || layer_filter(location, layer)) {
+          if ((heading_filter(location, opp_angle) || layer_filter(location, layer)) &&
+              correlated_edges.insert(other_id).second) {
             location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
           } else if (correlated_edges.insert(other_id).second) {
             location.mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
@@ -455,9 +457,6 @@ struct bin_handler_t {
           !search_filter(other_edge, *costing, other_tile, location.search_filter())) {
         auto opp_angle = std::fmod(angle + 180.f, 360.f);
         reach = get_reach(opposing_edge_id, other_edge);
-        // PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
-        //                                        distance,         flip_side(side),  reach.outbound,
-        //                                        reach.inbound,    opp_angle,        false};
         valhalla::PathEdge other_path_edge;
         other_path_edge.set_graph_id(opposing_edge_id);
         other_path_edge.set_percent_along(1 - length_ratio);
@@ -828,34 +827,7 @@ private:
           *filtered_edges->Add() = std::move(*it);
         }
         // remove them from the original
-        // correlated.edges.erase(new_end, correlated.edges.end());
         edges->erase(new_end, pp.location->mutable_correlation()->mutable_edges()->end());
-      }
-
-      // if we have nothing because of filtering (heading/side) we'll just ignore it
-      if (edges->size() == 0 && filtered_edges->size()) {
-        for (auto&& path_edge : *filtered_edges) {
-          if (correlated_edges.insert(path_edge.graph_id()).second) {
-            edges->Add(std::move(path_edge));
-          }
-        }
-        filtered_edges->Clear();
-      }
-
-      // keep filtered edges for retry in case we cant find a route with non filtered edges
-      // use the max score of the non filtered edges as a penalty increase on each of the
-      // filtered edges so that when finding a route using non filtered edges fails the
-      // use of filtered edges are always penalized higher than the non filtered ones
-      if (edges->size() > 0 && filtered_edges->size() > 0) {
-        auto max_dist_edge =
-            std::max_element(edges->begin(), edges->end(), [](const PathEdge& a, const PathEdge& b) {
-              return a.distance() < b.distance();
-            });
-        std::for_each(filtered_edges->begin(), filtered_edges->end(),
-                      [&max_dist_edge](PathEdge& filtered_edge) {
-                        filtered_edge.set_distance(filtered_edge.distance() + 3600.0f +
-                                                   max_dist_edge->distance());
-                      });
       }
       for (auto& e : *pp.location->mutable_correlation()->mutable_edges()) {
         for (const auto& name : reader.edgeinfo(GraphId(e.graph_id())).GetNames()) {

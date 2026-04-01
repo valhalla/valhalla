@@ -49,7 +49,7 @@ public:
 #endif
   virtual void cleanup() override;
 
-  static void adjust_scores(valhalla::Options& options);
+  static void adjust_locations(valhalla::Api& options);
 
   void route(Api& request);
   std::string matrix(Api& request);

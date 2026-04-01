@@ -16,7 +16,7 @@ void thor_worker_t::optimized_route(Api& request) {
   auto _ = measure_scope_time(request);
 
   auto& options = *request.mutable_options();
-  adjust_scores(options);
+  adjust_locations(request);
   auto costing = parse_costing(request);
   controller = AttributesController(options);
 

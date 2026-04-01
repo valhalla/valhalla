@@ -51,7 +51,7 @@ target_include_directories(valhalla_test SYSTEM PUBLIC
 target_link_libraries(valhalla_test
   valhalla gtest gtest_main gmock
   $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
-  ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
+  ${CMAKE_THREAD_LIBS_INIT} ${lz4_target})
 target_compile_definitions(valhalla_test PUBLIC
   VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
   VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")

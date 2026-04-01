@@ -1924,7 +1924,7 @@ TEST(StandAlone, AstarReverseTimeTrackingTest) {
     ParseApi(test_request, Options::route, request);
     ASSERT_EQ(request.options().reverse_time_tracking(), Options::rtt_heuristic);
     loki_worker.route(request);
-    valhalla::thor::thor_worker_t::adjust_scores(*request.mutable_options());
+    valhalla::thor::thor_worker_t::adjust_locations(request);
 
     sif::mode_costing_t mode_costing;
     auto cost =
@@ -1971,7 +1971,7 @@ TEST(StandAlone, AstarReverseTimeTrackingTest) {
     ParseApi(test_request, Options::route, request);
     ASSERT_EQ(request.options().reverse_time_tracking(), Options::rtt_disabled);
     loki_worker.route(request);
-    valhalla::thor::thor_worker_t::adjust_scores(*request.mutable_options());
+    valhalla::thor::thor_worker_t::adjust_locations(request);
 
     sif::mode_costing_t mode_costing;
     auto cost =
