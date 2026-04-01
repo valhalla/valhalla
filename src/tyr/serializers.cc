@@ -220,10 +220,16 @@ std::string serializePbf(Api& request) {
   // if they dont want the options object but its a service request we have to work around it
   bool skip_options = !request.options().pbf_field_selector().options() && request.has_info() &&
                       request.info().is_service();
+  const bool skip_to_string = request.options().format_options().skip_pbf_to_string();
   Options dummy;
   if (skip_options) {
     request.mutable_options()->Swap(&dummy);
   }
+  const auto skip_options_guard = midgard::make_finally([&request, &dummy, skip_options]() {
+    if (skip_options) {
+      request.mutable_options()->Swap(&dummy);
+    }
+  });
 
   // disable all the stuff we need to disable, options must be last since we are referencing it
   if (!selection.trip())
@@ -241,15 +247,14 @@ std::string serializePbf(Api& request) {
   if (!selection.expansion())
     request.clear_expansion();
 
-  // serialize the bytes
-  auto bytes = request.SerializeAsString();
-
-  // we do need to keep the options object though because downstream request handling relies on it
-  if (skip_options) {
-    request.mutable_options()->Swap(&dummy);
+  if (skip_to_string) {
+    // If they only want to use the in memory PBF without conversion to string then
+    // we can just return an empty string.
+    return "";
   }
 
-  return bytes;
+  // serialize the bytes
+  return request.SerializeAsString();
 }
 
 // Generate leg shape in geojson format.
