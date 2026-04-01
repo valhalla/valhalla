@@ -66,6 +66,14 @@ inline const valhalla::PathEdge* find_correlated_edge(const valhalla::Location& 
 namespace valhalla {
 namespace thor {
 
+struct CostMatrix::LocationStatus {
+  int threshold;
+  ankerl::unordered_dense::set<uint32_t> unfound_connections;
+
+  LocationStatus(const int t) : threshold(t) {
+  }
+};
+
 class CostMatrix::ReachedMap {
 public:
   using PmrVector = std::vector<uint32_t, std::pmr::polymorphic_allocator<uint32_t>>;

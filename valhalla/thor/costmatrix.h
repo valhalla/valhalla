@@ -39,13 +39,6 @@ constexpr float kCostThresholdPedestrianDivisor =
  * and a threshold or iterations. When threshold goes to 0 expansion
  * stops for this location.
  */
-struct LocationStatus {
-  int threshold;
-  std::set<uint32_t> unfound_connections;
-
-  LocationStatus(const int t) : threshold(t) {
-  }
-};
 
 /**
  * Best connection. Information about the best connection found between
@@ -147,6 +140,7 @@ protected:
   float current_pathdist_threshold_;
 
   // Status
+  struct LocationStatus;
   std::array<std::vector<LocationStatus>, 2> locs_status_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each location
