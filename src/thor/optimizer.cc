@@ -11,7 +11,7 @@ namespace valhalla {
 namespace thor {
 
 Optimizer::Optimizer()
-    : interrupt_(nullptr), ntry_(0), count_(0), attempts_(0), successes_(0), best_cost_(0) {
+    : ntry_(0), count_(0), attempts_(0), successes_(0), best_cost_(0), interrupt_(nullptr) {
 }
 
 // Optimize the tour through a set of locations given the cost matrix
