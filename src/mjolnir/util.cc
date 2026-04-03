@@ -681,10 +681,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   }
 
   // Snapshot for per-stage delta reporting
-  uint32_t stats_snapshot[build_stats::kCount]{};
-  auto log_stage = [&stats_snapshot, &config](BuildStage stage) {
-    build_stats::get().log_stage(stage, stats_snapshot, config);
-  };
+  auto log_stage = [&config](BuildStage stage) { build_stats::get().log_stage(stage, config); };
   // nothing to report, but logic only works correctly if every stage is logged
   log_stage(BuildStage::kInitialize);
 
@@ -701,8 +698,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string cr_to_bin = tile_dir + cr_to_file;
   std::string new_to_old_bin = tile_dir + new_to_old_file;
   std::string old_to_new_bin = tile_dir + old_to_new_file;
-
-  auto log_stage = [&config](BuildStage stage) { build_stats::get().log_stage(stage, config); };
 
   // OSMData class
   OSMData osm_data{0};
@@ -938,7 +933,7 @@ void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree&
     if (stage == meta[i].stage) {
       uint32_t current = counters_[i].load();
       statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, current);
-      if (current > 0) {
+      if (current > 0 && meta[i].is_warning) {
         LOG_WARN(std::format("[{}] {} {}", stage_name, current, meta[i].log_label));
       }
     }
