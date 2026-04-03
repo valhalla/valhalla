@@ -733,8 +733,9 @@ protected:
   void FormArticulatedPrepositions(std::string& instruction) override;
 
 private:
-  static constexpr midgard::ConstFlatMap<2, std::string_view, std::string_view> articulated_prepositions_{
-      std::array<std::pair<std::string_view, std::string_view>, 2>{{{" su il ", " sul "}, {" su la ", " sulla "}}}};
+  static constexpr midgard::ConstFlatMap<2, std::string_view, std::string_view>
+      articulated_prepositions_{std::array<std::pair<std::string_view, std::string_view>, 2>{
+          {{" su il ", " sul "}, {" su la ", " sulla "}}}};
 };
 
 ///////////////////////////////////////////////////////////////////////////////

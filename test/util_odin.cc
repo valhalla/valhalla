@@ -1,6 +1,6 @@
 #include "baldr/rapidjson_utils.h"
-#include "midgard/logging.h"
 #include "locales.h"
+#include "midgard/logging.h"
 #include "odin/util.h"
 
 #include <boost/property_tree/ptree.hpp>

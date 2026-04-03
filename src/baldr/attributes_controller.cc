@@ -227,7 +227,8 @@ const midgard::ConstFlatMap<176, std::string_view, bool>
     AttributesController::kDefaultAttributes(kDefaultAttributesData);
 
 std::unordered_set<std::string_view> AttributesController::ComputeDefaultEnabledCategories() {
-  std::unordered_map<std::string_view, bool> attrs(kDefaultAttributes.begin(), kDefaultAttributes.end());
+  std::unordered_map<std::string_view, bool> attrs(kDefaultAttributes.begin(),
+                                                   kDefaultAttributes.end());
   return PrecomputeEnabledCategories(attrs);
 }
 

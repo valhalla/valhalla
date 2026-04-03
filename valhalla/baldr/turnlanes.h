@@ -1,13 +1,13 @@
 #ifndef VALHALLA_BALDR_TURNLANES_H_
 #define VALHALLA_BALDR_TURNLANES_H_
 
+#include "midgard/const_map.h"
+
 #include <cstdint>
 #include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "midgard/const_map.h"
 
 namespace valhalla {
 namespace baldr {

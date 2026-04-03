@@ -11,7 +11,9 @@
    * FIXED: Fix overestimated number of entries in `UnorderedIdTable::deserialize` [#5969](https://github.com/valhalla/valhalla/pull/5969)
    * FIXED: cleanup pkg-config to set the right variables [#5965](https://github.com/valhalla/valhalla/pull/5965)
    * FIXED: super trivial connections snapping to excluded edges in CostMatrix [#5996](https://github.com/valhalla/valhalla/pull/5996)
+   * FIXED: static initialization crash on newer Apple toolchains by replacing global unordered_maps with constexpr ConstFlatMap [#6016](https://github.com/valhalla/valhalla/pull/6016)
 * **Enhancement**
+   * CHANGED: locale header generation now embeds JSON as raw string literals instead of hex byte arrays, making generated locales readable and diffable [#6016](https://github.com/valhalla/valhalla/pull/6016)
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
    * ADDED: `Cache-Control = public, max-age=N"` response header to `/tile` requests; also added RPATH to local debug builds to fix ldd resolving when libvalhalla is installed system-wide [#5902](https://github.com/valhalla/valhalla/pull/5902)

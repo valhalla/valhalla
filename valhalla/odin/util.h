@@ -77,7 +77,6 @@ using locales_singleton_t = std::unordered_map<std::string, std::shared_ptr<Narr
  */
 const locales_singleton_t& get_locales();
 
-
 Bcp47Locale parse_string_into_locale(const std::string& locale_string);
 
 /**

@@ -1,4 +1,5 @@
 #include "thor/worker.h"
+#include "midgard/const_map.h"
 #include "midgard/logging.h"
 #include "thor/isochrone.h"
 
@@ -8,8 +9,6 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-
-#include "midgard/const_map.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;

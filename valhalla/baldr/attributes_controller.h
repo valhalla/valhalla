@@ -1,11 +1,11 @@
 #pragma once
+#include "midgard/const_map.h"
+
 #include <valhalla/proto/options.pb.h>
 
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-
-#include "midgard/const_map.h"
 
 namespace valhalla {
 namespace baldr {

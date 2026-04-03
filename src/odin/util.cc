@@ -150,7 +150,6 @@ const locales_singleton_t& get_locales() {
   return locales;
 }
 
-
 Bcp47Locale parse_string_into_locale(const std::string& locale_string) {
   // Normalize
   std::string source = boost::to_lower_copy(locale_string);

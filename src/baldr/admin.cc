@@ -1,9 +1,8 @@
 #include "baldr/admin.h"
+#include "midgard/const_map.h"
 
 #include <algorithm>
 #include <string_view>
-
-#include "midgard/const_map.h"
 
 namespace {
 

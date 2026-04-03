@@ -4,10 +4,10 @@
 #include <boost/property_tree/ptree_fwd.hpp>
 
 #include <format>
+#include <map>
 #include <mutex>
 #include <string>
 #include <type_traits>
-#include <map>
 #include <unordered_map>
 
 namespace valhalla {

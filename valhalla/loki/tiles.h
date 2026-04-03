@@ -2,7 +2,6 @@
 #define __VALHALLA_LOKI_TILES_H__
 
 #include "baldr/accessrestriction.h"
-#include "midgard/const_map.h"
 #include "baldr/admininfo.h"
 #include "baldr/attributes_controller.h"
 #include "baldr/datetime.h"
@@ -10,6 +9,7 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/traffictile.h"
+#include "midgard/const_map.h"
 
 #include <vtzero/builder.hpp>
 
