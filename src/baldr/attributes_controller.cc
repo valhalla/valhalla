@@ -117,7 +117,6 @@ constexpr std::pair<std::string_view, bool> kDefaultAttributesData[] = {
     {kEdgeLevels, true},
     {kEdgeTrafficSignal, true},
     {kEdgeHovType, false},
-    {kEdgeSpeedType, false},
     {kEdgeRamp, false},
     {kEdgeDismount, false},
     {kEdgeUseSidepath, false},
@@ -223,7 +222,7 @@ constexpr std::pair<std::string_view, bool> kDefaultAttributesData[] = {
     {kShapeAttributesClosure, false},
     {kShapeAttributesCongestion, false},
 };
-const midgard::ConstFlatMap<176, std::string_view, bool>
+const midgard::ConstFlatMap<175, std::string_view, bool>
     AttributesController::kDefaultAttributes(kDefaultAttributesData);
 
 std::unordered_set<std::string_view> AttributesController::ComputeDefaultEnabledCategories() {

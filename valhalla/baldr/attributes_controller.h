@@ -223,7 +223,7 @@ constexpr std::string_view kShapeAttributesCategory = "shape_attributes.";
 struct AttributesController {
 
   // Attributes that are required by the route action to make guidance instructions.
-  static const midgard::ConstFlatMap<176, std::string_view, bool> kDefaultAttributes;
+  static const midgard::ConstFlatMap<175, std::string_view, bool> kDefaultAttributes;
 
   static std::unordered_set<std::string_view> ComputeDefaultEnabledCategories();
 

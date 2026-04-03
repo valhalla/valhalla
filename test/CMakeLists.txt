@@ -41,7 +41,8 @@ add_library(valhalla_test
   )
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
-  ${VALHALLA_SOURCE_DIR}/test/gurka)
+  ${VALHALLA_SOURCE_DIR}/test/gurka
+  ${CMAKE_BINARY_DIR}/src/odin)
 target_include_directories(valhalla_test SYSTEM PUBLIC
   ${unordered_dense_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
