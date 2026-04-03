@@ -117,8 +117,9 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  uint32_t snapshot[build_stats::kCount]{};
+  // we don't want this executable to emit statsd
+  config.erase("statsd");
   ElevationBuilder::Build(config, tile_ids);
-  build_stats::get().log_stage(BuildStage::kElevation, snapshot, config);
+  build_stats::get().log_stage(BuildStage::kElevation, config);
   return EXIT_SUCCESS;
 }

@@ -153,8 +153,8 @@ struct build_stats {
        BuildStage::kElevation, true},
       {"exceeded_max_assigner_speed", "SpeedAssigner edges clamped to max", BuildStage::kEnhance,
        true},
-      {"exceeded_max_density", "nodes exceeding max density", BuildStage::kBuild, true},
-      {"exceeded_max_local_edge_count", "nodes exceeding max local edge count", BuildStage::kBuild,
+      {"exceeded_max_density", "nodes exceeding max density", BuildStage::kEnhance, true},
+      {"exceeded_max_local_edge_count", "nodes exceeding max local edge count", BuildStage::kEnhance,
        true},
       {"exceeded_max_names", "edges exceeding max names", BuildStage::kBuild, true},
       {"exceeded_max_nodes_per_way", "ways exceeding max nodes per way", BuildStage::kParseWays,
@@ -187,7 +187,7 @@ struct build_stats {
       {"failed_osm_time_range_unknown", "OSM time range causes an unknown runtime_error",
        BuildStage::kParseWays, true},
       {"invalid_hov_type", "ways with invalid HOV type", BuildStage::kParseWays, true},
-      {"invalid_level", "ways with invalid level tags", BuildStage::kBuild, true},
+      {"invalid_level", "ways with invalid level tags", BuildStage::kParseWays, true},
       {"invalid_osm_tag", "invalid OSM tag parse errors", BuildStage::kParseWays, true},
       {"missing_access_tags", "edges with missing access tags", BuildStage::kEnhance, true},
       // Graph summary counters (alphabetical)
@@ -225,11 +225,9 @@ struct build_stats {
   // Record a timing to be emitted with the next log_stage() call.
   void record_timing(const std::string& key, uint64_t seconds);
 
-  // Log and emit to statsd what changed since last snapshot, then update snapshot.
+  // Log and emit to statsd what changed since last snapshot.
   // Also emits any timings recorded since the last call.
-  void log_stage(BuildStage stage,
-                 std::span<uint32_t, kCount> snapshot,
-                 const boost::property_tree::ptree& config) const;
+  void log_stage(BuildStage stage, const boost::property_tree::ptree& config) const;
 
 private:
   std::array<std::atomic<uint32_t>, kCount> counters_{};

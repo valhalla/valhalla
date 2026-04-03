@@ -702,6 +702,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string new_to_old_bin = tile_dir + new_to_old_file;
   std::string old_to_new_bin = tile_dir + old_to_new_file;
 
+  auto log_stage = [&config](BuildStage stage) { build_stats::get().log_stage(stage, config); };
+
   // OSMData class
   OSMData osm_data{0};
 
@@ -929,29 +931,21 @@ void build_stats::record_timing(const std::string& key, uint64_t seconds) {
   pending_timings_.emplace_back(key, seconds);
 }
 
-void build_stats::log_stage(BuildStage stage,
-                            std::span<uint32_t, kCount> snapshot,
-                            const boost::property_tree::ptree& config) const {
+void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree& config) const {
   auto stage_name = to_string(stage);
-  // Compute deltas and log
   std::vector<std::pair<std::string, uint32_t>> statsd_entries;
   for (uint8_t i = 0; i < kCount; ++i) {
-    uint32_t current = counters_[i].load();
-    uint32_t delta = current - snapshot[i];
-    if (delta > 0 && meta[i].is_warning) {
-      LOG_WARN(std::format("[{}] {} {}", stage_name, delta, meta[i].log_label));
-    }
-    // only emit to statsd during the stage that owns this counter
     if (stage == meta[i].stage) {
-      statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, delta);
+      uint32_t current = counters_[i].load();
+      statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, current);
+      if (current > 0) {
+        LOG_WARN(std::format("[{}] {} {}", stage_name, current, meta[i].log_label));
+      }
     }
-    snapshot[i] = current;
   }
 
-  // Emit to statsd if configured
   auto host = config.get<std::string>("statsd.host", "");
   if (host.empty()) {
-    pending_timings_.clear();
     return;
   }
   Statsd::StatsdClient client(host, config.get<int>("statsd.port", 8125),
