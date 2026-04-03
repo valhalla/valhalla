@@ -7,6 +7,7 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
 #include "scoped_timer.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
@@ -59,8 +60,9 @@ std::vector<int8_t> encode_edge_elevation(const std::unique_ptr<valhalla::skadi:
       diff = d < diff ? diff : d;
       LOG_DEBUG("  " + std::to_string(heights[i]));
     }
-    LOG_WARN("edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
-             std::to_string(diff) + " meters.");
+    LOG_DEBUG("edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
+              std::to_string(diff) + " meters.");
+    build_stats::get().increment(build_stats::kExceededElevationDiff);
   }
   return encoded;
 }
@@ -99,8 +101,9 @@ std::vector<int8_t> encode_btf_elevation(const std::unique_ptr<valhalla::skadi::
       diff = d < diff ? diff : d;
       LOG_DEBUG("  " + std::to_string(heights[i]));
     }
-    LOG_WARN("BTF edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
-             std::to_string(diff) + " meters.");
+    LOG_DEBUG("BTF edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
+              std::to_string(diff) + " meters.");
+    build_stats::get().increment(build_stats::kExceededElevationDiff);
   }
   return e;
 }

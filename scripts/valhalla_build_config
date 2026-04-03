@@ -439,7 +439,7 @@ config = {
         "host": Optional(str),
         "port": 8125,
         "prefix": "valhalla",
-        "batch_size": Optional(int),
+        "batch_size": 500,
         "tags": Optional(list),
     },
 }
