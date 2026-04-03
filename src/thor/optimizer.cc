@@ -4,15 +4,11 @@
 #include <algorithm>
 
 namespace {
-constexpr size_t kInterruptIterationsInterval = 1000;
+constexpr size_t kInterruptIterationsInterval = 10000;
 }
 
 namespace valhalla {
 namespace thor {
-
-Optimizer::Optimizer()
-    : ntry_(0), count_(0), attempts_(0), successes_(0), best_cost_(0), interrupt_(nullptr) {
-}
 
 // Optimize the tour through a set of locations given the cost matrix
 // among all locations. The first location (origin) and last location
