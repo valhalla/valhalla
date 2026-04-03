@@ -3,7 +3,6 @@
    * REMOVED: Removed ability to set ISO:3166 country/state code per OSM Node [#5747](https://github.com/valhalla/valhalla/pull/5747)
    * REMOVED: all module-level `logging` config in favor of a global one
 * **Bug Fix**
-   * FIXED: `edge.curvature` attribute in `trace_attributes` always returned 0; wired `DirectedEdge::curvature()` through `TripLeg.Edge` proto and JSON serialization [#6012](https://github.com/valhalla/valhalla/pull/6012)
    * FIXED: Clamp grades on bridges and tunnels. [#5728](https://github.com/valhalla/valhalla/pull/5728)
    * FIXED: use pedestrian costing on end location in `auto_pedestrian` costing [#5903](https://github.com/valhalla/valhalla/pull/5903)
    * FIXED: Point at `begin_shape_index` should be on the edge even if trace has discontinuities [#5908](https://github.com/valhalla/valhalla/pull/5908)
@@ -34,6 +33,7 @@
    * CHANGED: Make `lz4` system dependency optional [#5993](https://github.com/valhalla/valhalla/pull/5993)
    * CHANGED: Drop file names of individual tiles once tile extract loaded [#5995](https://github.com/valhalla/valhalla/pull/5995)
    * CHANGED: Deduplicate predicted speed profiles when updating tile [#5941](https://github.com/valhalla/valhalla/pull/5941)
+   * FIXED: `edge.curvature` attribute in `trace_attributes` always returned 0; wired `DirectedEdge::curvature()` through `TripLeg.Edge` proto and JSON serialization [#6012](https://github.com/valhalla/valhalla/pull/6012)
 
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
