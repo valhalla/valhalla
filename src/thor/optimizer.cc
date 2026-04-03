@@ -10,6 +10,10 @@ constexpr size_t kInterruptIterationsInterval = 1000;
 namespace valhalla {
 namespace thor {
 
+Optimizer::Optimizer()
+    : interrupt_(nullptr), ntry_(0), count_(0), attempts_(0), successes_(0), best_cost_(0) {
+}
+
 // Optimize the tour through a set of locations given the cost matrix
 // among all locations. The first location (origin) and last location
 // (destination) remain fixed in the tour.

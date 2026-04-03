@@ -38,6 +38,7 @@ struct TourAlteration {
  */
 class Optimizer {
 public:
+  Optimizer();
   /**
    * Optimize the tour through a set of locations given the cost matrix
    * among all locations. The first location (origin) and last location
