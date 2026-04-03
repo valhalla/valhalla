@@ -266,6 +266,14 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connection
 
 Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64. Avoid it on arm64 where false positives make results unreliable.
 
+### Pull Requests and Generative AI
+
+**Do not create pull requests or write PR descriptions.** PRs must be authored by a human — the title, description, and framing of the change are the developer's responsibility, not the AI's. You may help draft commit messages or suggest content, but the human must review, own, and submit the PR themselves.
+
+**After completing significant work, remind the user to leave inline PR comments on GitHub on non-obvious changes.** Reviewers might not be able to see the reasoning behind a change from the diff alone. Any non-trivial decision — why an approach was chosen over alternatives, why a seemingly unrelated file was touched, subtle correctness arguments — should be called out with an inline comment by the author when opening the PR. Prompt the user to do this before they submit.
+
+**Remind the user to carefully review all generated code before committing.** AI-generated code can contain contrived logic, awkward variable naming, or patterns that no human would write. If anything looks unnatural — overly verbose conditions, oddly named variables, unnecessary abstractions — the user should rewrite it in a way that is believable and clear to human reviewers. The goal is that every line in the PR looks like something the author would have written themselves.
+
 ## Code Style
 
 - **C++20**, 2-space indent, 102-col limit, left-aligned pointers (`int* p`, not `int *p`)
