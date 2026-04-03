@@ -32,6 +32,7 @@
    * ADDED: `ValhallaError` which exposes `valhalla_exception_t` to the Python bindings [#5956](https://github.com/valhalla/valhalla/pull/5956)
    * CHANGED: Make `lz4` system dependency optional [#5993](https://github.com/valhalla/valhalla/pull/5993)
    * CHANGED: Drop file names of individual tiles once tile extract loaded [#5995](https://github.com/valhalla/valhalla/pull/5995)
+   * CHANGED: Deduplicate predicted speed profiles when updating tile [#5941](https://github.com/valhalla/valhalla/pull/5941)
    * ADDED: consolidated lots of mjolnir's LOG_WARN for less verbose default logging; added statsd support for `build_tile_set` [#5985](https://github.com/valhalla/valhalla/pull/5985)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
