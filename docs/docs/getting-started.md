@@ -261,7 +261,7 @@ Public API is RESTful - there's set of paths (`/status`, `/route`, etc) for diff
 
 !!! tip
 
-    Use [demo web application](https://valhalla.openstreetmap.de) to explore and experiment with Valhalla service.
+    Use our [demo web application](https://valhalla.openstreetmap.de) to explore and experiment with the service.
 
     Additionally, demo server provides a [web API](https://en.wikipedia.org/wiki/Web_API) at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
 
