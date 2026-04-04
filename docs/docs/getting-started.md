@@ -214,7 +214,7 @@ Valhalla can [memory-map](https://en.wikipedia.org/wiki/Memory-mapped_file) this
 
 ## Start the service
 
-There are multiple ways to run Valhalla. Here's one of them:
+There are multiple ways to run Valhalla. The most common is via the simple HTTP service:
 
 ```bash
 valhalla_service config.json 1
