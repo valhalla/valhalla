@@ -263,7 +263,7 @@ Public API is RESTful - there's set of paths (`/status`, `/route`, etc) for diff
 
     Use our [demo web application](https://valhalla.openstreetmap.de) to explore and experiment with the service.
 
-    Additionally, demo server provides a [web API](https://en.wikipedia.org/wiki/Web_API) at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
+ Or try out the underlying web server at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
 
 > TODO: Pedestrian route: [Casa de la Vall](https://en.wikipedia.org/wiki/Casa_de_la_Vall) > [La Noblesse du Temps](https://www.atlasobscura.com/places/the-nobility-of-time) statue.
 
