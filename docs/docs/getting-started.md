@@ -158,7 +158,7 @@ It's safe to ignore them for now as we use a regional PBF extract, not the whole
 
 ### Download time zones database
 
-Valhalla uses time zones to enable departure or arrival date and time.
+Valhalla uses time zones to enable proper arrival and departure times and time zone metadata in route results.
 
 There's a [GitHub workflow](https://github.com/valhalla/valhalla/actions/workflows/publish_tz_db.yml) which builds time zones database for the whole planet and publishes it as an artifact available for download. To get the latest file, follow the link, select the latest run and download the SQLite database file to the working directory.
 
