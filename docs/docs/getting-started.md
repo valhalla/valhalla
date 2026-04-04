@@ -253,7 +253,7 @@ Public API is RESTful - there's set of paths (`/status`, `/route`, etc) for diff
 
 > We use `curl`, but you could use any other CLI tool (httpie, etc) or API client (Bruno, etc) to talk to the service.
 
-## Use the API / features
+## Using the API 
 
 !!! note
 
