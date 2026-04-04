@@ -109,7 +109,7 @@ The fundamental component is a set of [**routing tiles**](tiles.md) - a director
 
 The main data source for this is [OpenStreetMap](https://www.openstreetmap.org/) (OSM): Valhalla takes OSM map data in [PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format) and uses it to create a set of tiles.
 
-> To learn more about OSM data format and different options, see [Beginners' Guide](https://wiki.openstreetmap.org/wiki/Beginners%27_guide) and [Downloading data](https://wiki.openstreetmap.org/wiki/Downloading_data).
+> To learn more about OSM, see [Beginners' Guide](https://wiki.openstreetmap.org/wiki/Beginners%27_guide) and [Downloading data](https://wiki.openstreetmap.org/wiki/Downloading_data).
 
 Here's what we need to do:
 
