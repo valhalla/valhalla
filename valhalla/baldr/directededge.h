@@ -345,6 +345,30 @@ public:
   void set_indoor(const bool indoor);
 
   /**
+   * Is this a seasonal winter road (OSM winter_road=yes)?
+   */
+  bool winter_road() const {
+    return winter_road_;
+  }
+
+  /**
+   * Sets the winter_road flag.
+   */
+  void set_winter_road(const bool v);
+
+  /**
+   * Is this an ice road (OSM ice_road=yes — road across frozen water/ground)?
+   */
+  bool ice_road() const {
+    return ice_road_;
+  }
+
+  /**
+   * Sets the ice_road flag.
+   */
+  void set_ice_road(const bool v);
+
+  /**
    * Get the HOV type (see graphconstants.h).
    */
   HOVEdgeType hov_type() const {
@@ -1259,7 +1283,7 @@ protected:
   uint64_t tunnel_ : 1;         // Is this edge part of a tunnel
   uint64_t bridge_ : 1;         // Is this edge part of a bridge?
   uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
-  uint64_t spare1_ : 1;         // Used to be "seasonal", was never used, can be reclaimed
+  uint64_t winter_road_ : 1;    // OSM winter_road=yes or ice_road=yes (seasonal road)
   uint64_t deadend_ : 1;        // Leads to a dead-end (no other drivable roads) TODO
   uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
   uint64_t stop_sign_ : 1;      // Stop sign at end of the directed edge
@@ -1268,7 +1292,8 @@ protected:
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
   uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
-  uint64_t spare4_ : 3;
+  uint64_t ice_road_ : 1;       // OSM ice_road=yes (road across frozen water/ground)
+  uint64_t spare4_ : 2;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

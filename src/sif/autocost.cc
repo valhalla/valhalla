@@ -99,6 +99,11 @@ constexpr float kSurfaceFactor[] = {
     1.0f  // kPath
 };
 
+// Factor applied to edges tagged winter_road=yes or ice_road=yes.
+// These are seasonal roads (e.g. across frozen lakes/tundra) that may be impassable
+// outside winter. Strongly disfavor them without completely blocking routing (#6025).
+constexpr float kWinterRoadFactor = 10.0f;
+
 // The basic costing for an edge is a trade off between time and distance. We allow the user to
 // specify which one is more important to them and then we use a linear combination to combine the two
 // into a final metric. The problem is that time in seconds and length in meters have two wildly
@@ -353,6 +358,7 @@ public:
   float alley_factor_;        // Avoid alleys factor.
   float toll_factor_;         // Factor applied when road has a toll
   float surface_factor_;      // How much the surface factors are applied.
+  float winter_road_penalty_; // Factor applied when road is winter_road or ice_road (#6025)
   float distance_factor_;     // How much distance factors in overall favorability
   float inv_distance_factor_; // How much time factors in overall favorability
 
@@ -371,6 +377,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
   surface_factor_ = 0.5f;
+  winter_road_penalty_ = kWinterRoadFactor;
   type_ = VehicleType::kCar;
 
   // Get the base transition costs
@@ -529,6 +536,12 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
             SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
             edge->toll() * toll_factor_;
+
+  // Strongly disfavor seasonal winter/ice roads (#6025): these roads (e.g. across frozen
+  // lakes or tundra) may be impassable outside winter and are dangerous even when open.
+  if (edge->winter_road() || edge->ice_road()) {
+    factor += winter_road_penalty_;
+  }
 
   switch (edge->use()) {
     case Use::kAlley:

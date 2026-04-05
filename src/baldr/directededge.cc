@@ -211,6 +211,16 @@ void DirectedEdge::set_indoor(const bool indoor) {
   indoor_ = indoor;
 }
 
+// Sets the winter_road flag (OSM winter_road=yes).
+void DirectedEdge::set_winter_road(const bool v) {
+  winter_road_ = v;
+}
+
+// Sets the ice_road flag (OSM ice_road=yes).
+void DirectedEdge::set_ice_road(const bool v) {
+  ice_road_ = v;
+}
+
 // Sets the hov type.
 void DirectedEdge::set_hov_type(const HOVEdgeType hov_type) {
   hov_type_ = static_cast<uint32_t>(hov_type);
