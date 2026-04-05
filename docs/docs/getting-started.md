@@ -113,14 +113,14 @@ The main data source for this is [OpenStreetMap](https://www.openstreetmap.org/)
 
 Here's what we need to do:
 
-1. Download [OSM data extract](https://download.geofabrik.de/technical.html) in `.osm.pbf` file format.
+1. Download OSM data in [PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format).
 1. Build _admins_ database.
 1. Download _time zones_ database.
 1. Build routing tiles.
 
 ### Download OpenStreetMap data extract
 
-We can use [Geofabrik's free server](https://download.geofabrik.de/) to download a [data extract](https://download.geofabrik.de/technical.html) to `osm/` directory:
+We can use [Geofabrik's free server](https://download.geofabrik.de/) to download a regional data extract to `osm/` directory:
 
 ```bash
 wget --directory-prefix osm/ \
