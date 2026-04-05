@@ -264,6 +264,13 @@ public:
       }
       directededge.set_speed(configured_speed);
       directededge.set_speed_type(valhalla::baldr::SpeedType::kClassified);
+      // Apply surface-based speed reduction even for config-assigned speeds (#5443):
+      // without this, unpaved roads with a configured speed skip the halving that
+      // the conventional path applies, making them artificially attractive when
+      // exclude_unpaved is active in regions with sparse OSM surface tagging.
+      if (directededge.surface() >= valhalla::baldr::Surface::kPavedRough) {
+        directededge.set_speed(directededge.speed() / 2);
+      }
       return true;
     }
 
