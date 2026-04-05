@@ -1,3 +1,0 @@
-# Data guide
-
-Work in progress...

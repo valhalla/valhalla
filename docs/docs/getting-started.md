@@ -283,6 +283,3 @@ Check the logs.
 
 - Check out [API reference](api/index.md) for a complete overview of all features - routing, map matching, isochrones, etc.
 - _Installation_ section has different ways about how to install Valhalla.
-- [Configuration guide](guides/configuration.md) has detailed information about how to configure tools and services.
-- See [Data guide](guides/data.md) for more details about the data, additional sources, traffic, public transit and so on.
-- [Operations guide](guides/operations.md) has advice on how to run the service.
