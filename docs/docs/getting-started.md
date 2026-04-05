@@ -90,7 +90,7 @@ valhalla_build_config \
     --mjolnir-timezone "${PWD}"/timezones.sqlite \
     --mjolnir-tile-dir "${PWD}"/tiles/ \
     --mjolnir-tile-extract "${PWD}"/tiles.tar \
-    > config.json
+    > valhalla.json
 ```
 
 Options override default paths to some files and directories - we'll see them later.
@@ -98,7 +98,7 @@ Options override default paths to some files and directories - we'll see them la
 The command generates a configuration with reasonable defaults. Take a look:
 
 ```bash
-less config.json
+less valhalla.json
 ```
 
 ## Prepare the data
@@ -136,7 +136,7 @@ wget --directory-prefix osm/ \
 Admins database has information about administrative boundaries: country borders and so on. Valhalla uses this to flag country crossings and figure out on which side of the road to drive - left or right.
 
 ```bash
-valhalla_build_admins -c config.json andorra-latest.osm.pbf
+valhalla_build_admins -c valhalla.json andorra-latest.osm.pbf
 ```
 
 We'll see some warnings and errors in the logs:
@@ -171,7 +171,7 @@ There's a [GitHub workflow](https://github.com/valhalla/valhalla/actions/workflo
 Finally, we are ready to build the tiles:
 
 ```bash
-valhalla_build_tiles -c config.json osm/andorra-latest.osm.pbf
+valhalla_build_tiles -c valhalla.json osm/andorra-latest.osm.pbf
 ```
 
 We'll see a bunch of log messages. If you see the following warnings, make sure that you have correct path in configuration file:
@@ -217,7 +217,7 @@ Valhalla can [memory-map](https://en.wikipedia.org/wiki/Memory-mapped_file) this
 There are multiple ways to run Valhalla. The most common is via the simple HTTP service:
 
 ```bash
-valhalla_service config.json 1
+valhalla_service valhalla.json 1
 ```
 
 Valhalla service is an HTTP server process - it accepts requests and returns responses. By default, it is available on port `8002`, but we could change that in the configuration file.
@@ -253,7 +253,7 @@ Public API is RESTful - there's set of paths (`/status`, `/route`, etc) for diff
 
 > We use `curl`, but you could use any other CLI tool (httpie, etc) or API client (Bruno, etc) to talk to the service.
 
-## Using the API 
+## Using the API
 
 !!! note
 
@@ -261,9 +261,7 @@ Public API is RESTful - there's set of paths (`/status`, `/route`, etc) for diff
 
 !!! tip
 
-    Use our [demo web application](https://valhalla.openstreetmap.de) to explore and experiment with the service.
-
- Or try out the underlying web server at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
+    Use our [demo web application](https://valhalla.openstreetmap.de) to explore and experiment with the service or try out the underlying web server at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
 
 > TODO: Pedestrian route: [Casa de la Vall](https://en.wikipedia.org/wiki/Casa_de_la_Vall) > [La Noblesse du Temps](https://www.atlasobscura.com/places/the-nobility-of-time) statue.
 
