@@ -162,10 +162,6 @@ Valhalla uses time zones to enable proper arrival and departure times and time z
 
 There's a [GitHub workflow](https://github.com/valhalla/valhalla/actions/workflows/publish_tz_db.yml) which builds time zones database for the whole planet and publishes it as an artifact available for download. To get the latest file, follow the link, select the latest run and download the SQLite database file to the working directory.
 
-![List of runs on GitHub Actions](images/timezones-select-latest-run-1200x768.jpeg){ width="600" }
-
-![Run details and artifacts](images/timezones-run-details-download-artifact-1200x548.jpeg){ width="600" }
-
 ### Build routing tiles
 
 Finally, we are ready to build the tiles:
