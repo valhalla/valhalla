@@ -154,7 +154,7 @@ It's safe to ignore them for now as we use a regional PBF extract, not the whole
 
 !!! info
 
-    For production, use the whole planet to build admins database. Otherwise, topological relations may be broken.
+    For production, use the **whole planet** to build admins database. Otherwise, topological relations may be broken.
 
 ### Download time zones database
 
@@ -226,8 +226,6 @@ valhalla_service valhalla.json 1
 
 Valhalla service is an HTTP server process - it accepts requests and returns responses. By default, it is available on port `8002`, but we could change that in the configuration file.
 
-> If you used Docker and published the port, you can send requests to Valhalla using <http://localhost:8002> address from outside the container.
-
 Let's check the status:
 
 ```console
@@ -255,11 +253,11 @@ $ curl http://localhost:8002/status | jq '.'
 
 Public API has a number of paths (`/status`, `/route`, etc) for different operations, each accepts either GET or POST requests. For both, we can pass the content either via query parameter or as a body with JSON content. Formats depend on the specific operation.
 
-## Using the API
+## Use the API
 
 !!! tip
 
-    Use our [demo web application](https://valhalla.openstreetmap.de) to explore and experiment with the service or try out the underlying web server at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
+    Use our [demo web application](https://valhalla.openstreetmap.de) to explore the service or try the web server at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
 
 > TODO: Pedestrian route: [Casa de la Vall](https://en.wikipedia.org/wiki/Casa_de_la_Vall) > [La Noblesse du Temps](https://www.atlasobscura.com/places/the-nobility-of-time) statue.
 
