@@ -11,6 +11,7 @@
    * FIXED: Fix overestimated number of entries in `UnorderedIdTable::deserialize` [#5969](https://github.com/valhalla/valhalla/pull/5969)
    * FIXED: cleanup pkg-config to set the right variables [#5965](https://github.com/valhalla/valhalla/pull/5965)
    * FIXED: super trivial connections snapping to excluded edges in CostMatrix [#5996](https://github.com/valhalla/valhalla/pull/5996)
+   * FIXED: `CostMatrix` returned different results for the same source→target pair depending on request size (1:1 vs m:n) — `GetAstarHeuristic` now includes all opposing locations (not just unfound), and hierarchy limits are reset per location when entering the threshold phase [#6027](https://github.com/valhalla/valhalla/pull/6027)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
