@@ -251,7 +251,7 @@ $ curl http://localhost:8002/status | jq '.'
 }
 ```
 
-Public API has a number of paths (`/status`, `/route`, etc) for different operations, each accepts either GET or POST requests. For both, we can pass the content either via query parameter or as a body with JSON content. Formats depend on the specific operation.
+Public API has a number of paths (`/status`, `/route`, etc) for different operations, each accepts either GET or POST requests. For both, we can pass the content either via the query parameter `json` or as a body with JSON content. Formats depend on the specific operation.
 
 ## Use the API
 
@@ -259,23 +259,49 @@ Public API has a number of paths (`/status`, `/route`, etc) for different operat
 
     Use our [demo web application](https://valhalla.openstreetmap.de) to explore the service or try the web server at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
 
-> TODO: Pedestrian route: [Casa de la Vall](https://en.wikipedia.org/wiki/Casa_de_la_Vall) > [La Noblesse du Temps](https://www.atlasobscura.com/places/the-nobility-of-time) statue.
+Say, we are on a tourist trip in the city of [Andorra La Vella](https://en.wikipedia.org/wiki/Andorra_la_Vella), and we happen to be at [Casa de la Vall](https://en.wikipedia.org/wiki/Casa_de_la_Vall). Our friend read about [La Noblesse du Temps](https://www.openstreetmap.org/node/4780988321) - a sculpture by Salvador Dalí. We love art, and the weather is nice, so we want to take walk.
 
-> TODO Auto route: [Andorra la Vella](https://en.wikipedia.org/wiki/Andorra_la_Vella) city > [Pont Tibetà de Canillo](https://www.ponttibetacanillo.com/).
+Let's use [Route API](api/turn-by-turn/api-reference.md) to find a pedestrian route between these locations. Here's the request:
 
-Basic _route_ request (auto):
+```json
+{
+  "locations": [
+    { "lat": 42.506667, "lon": 1.520556, "name": "Casa de la Vall" },
+    { "lat": 42.508762, "lon": 1.529484, "name": "La Noblesse du Temps" }
+  ],
+  "costing": "pedestrian",
+  "units": "kilometers"
+}
+```
 
-- Locations
-- Costing
-- Other options
+- `locations` are the destinations to visit, in order. At minimum, we need latitude and longitude coordinates; name is there for convenience.
+- `costing` is the costing model to use. Valhalla supports different models for different transport methods.
 
-Response sample, visualize response polyline with [polyline visualization tool](https://valhalla.github.io/demos/polyline/).
+Here's the response with some fields excluded to keep it short:
 
-Couple more requests with other _costing modes_ - pedestrian, bike.
+```json
+{
+  "trip": {
+    "legs": [
+      {
+        "maneuvers": [...],
+        "shape": "e{kapAs|x{A\\[j@s@Gy@wGyO[u@DYC]wA{CAOUiB_AcCu@_AmA{@c@YgCmA_HqIi@e@uE_BY]}B{F{@{@i@GU@]BIwBMuA[iEuBsTIu@k@cGKmAw@aGkAeJe@kEyCkTc@aDUwBQeCNoKRcOFgLEcFUyEwBaOc@oC_@uBoCaOcAsFqEqW_@qB{B{L_CeOu@qEyAkMs@cIe@{JOgMGoXUaH_A}EwNyc@iG_P_BoEUg@qAmDQm@Ka@Mm@GiBAsAD{@Ju@Rm@b@c@]o@]o@pAsAZu@^eAvFkR\\mADO"
+      }
+    ],
+    "summary": {
+      "time": 581.835,
+      "length": 0.814,
+    },
+  }
+}
+```
 
-Other _services_ - isochrone, map-matching, matrix?
+- `maneuvers` are the operations to perform when navigating (e.g. turns, exits) with textual instructions and additional information.
+- `shape` is the [encoded polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) of the route path with 6 digits of decimal precision.
 
-Check the logs.
+We can visualize response polyline with [polyline visualization tool](https://valhalla.github.io/demos/polyline/).
+
+> Try the same request in [Valhalla FOSSGIS Demo App](https://valhalla.openstreetmap.de) and see what you get!
 
 ## Continue reading
 
