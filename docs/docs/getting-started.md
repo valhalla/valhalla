@@ -73,7 +73,7 @@ $ valhalla_build_tiles --version
 3.6.3
 ```
 
-Tools are simply programs which help us do different things. All Valhalla tools support `--help` option to show the usage.
+Tools are helper programs to generate and inspect data, run the HTTP server and so on. All Valhalla tools support `--help` option to show the usage.
 
 ## Configuration file
 
@@ -113,7 +113,7 @@ The main data source for this is [OpenStreetMap](https://www.openstreetmap.org/)
 
 Here's what we need to do:
 
-1. Download OSM data in [PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format).
+1. Download OSM data.
 1. Build _admins_ database.
 1. Download _time zones_ database.
 1. Build routing tiles.
@@ -154,7 +154,7 @@ It's safe to ignore them for now as we use a regional PBF extract, not the whole
 
 !!! info
 
-    For production, use the whole planet. TODO Why?
+    For production, use the whole planet to build admins database. Otherwise, topological relations may be broken.
 
 ### Download time zones database
 
@@ -206,9 +206,17 @@ tiles/
 
 At last, we combine all tiles into a single tar archive file:
 
-```bash
-find tiles/ | sort -n | tar --create --file tiles.tar --no-recursion --files-from=-
-```
+=== "Docker"
+
+    ```bash
+    valhalla_build_extract -c valhalla.json
+    ```
+
+=== "Python"
+
+    ```bash
+    find tiles/ | sort -n | tar --create --file tiles.tar --no-recursion --files-from=-
+    ```
 
 Valhalla can [memory-map](https://en.wikipedia.org/wiki/Memory-mapped_file) this archive file to efficiently cache it and share between multiple processes.
 
@@ -249,15 +257,9 @@ $ curl http://localhost:8002/status | jq '.'
 }
 ```
 
-Public API is RESTful - there's set of paths (`/status`, `/route`, etc) for different operations, each accepts either GET or POST requests. For both, we can pass the content either via query parameter or as a body with JSON content. Formats depend on the specific operation.
-
-> We use `curl`, but you could use any other CLI tool (httpie, etc) or API client (Bruno, etc) to talk to the service.
+Public API has a number of paths (`/status`, `/route`, etc) for different operations, each accepts either GET or POST requests. For both, we can pass the content either via query parameter or as a body with JSON content. Formats depend on the specific operation.
 
 ## Using the API
-
-!!! note
-
-    Work in progress...
 
 !!! tip
 
