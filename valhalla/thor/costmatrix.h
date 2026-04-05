@@ -163,6 +163,10 @@ protected:
 
   bool ignore_hierarchy_limits_;
 
+  // Initial hierarchy limits snapshot, used to reset per-location limits
+  // when all connections for a source/target have been settled (#5811).
+  std::vector<valhalla::HierarchyLimits> initial_hlimits_;
+
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 

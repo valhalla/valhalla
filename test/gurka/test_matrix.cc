@@ -1417,3 +1417,71 @@ TEST(StandAlone, MaxDistanceCutoff) {
     EXPECT_TRUE(row[2]["distance"].IsNull()) << "A->D should NOT be reachable with max_distance=4500";
   }
 }
+
+// Verify that CostMatrix produces identical results for each source->target pair
+// regardless of whether it is requested as part of an m:n matrix or as a series
+// of 1:1 (or 1:n) individual requests (#5811, #5330).
+TEST(StandAlone, CostMatrixMNConsistency) {
+  // Grid layout: A is top-left, B is top-right, C is bottom-left, D is bottom-right.
+  // Using primary roads so the highway hierarchy has something to work with.
+  const std::string ascii_map = R"(
+    A-1-2-3-B
+    |       |
+    4       5
+    |       |
+    C-6-7-8-D
+  )";
+
+  const gurka::ways ways = {
+      {"A1", {{"highway", "primary"}}}, {"12", {{"highway", "primary"}}},
+      {"23", {{"highway", "primary"}}}, {"3B", {{"highway", "primary"}}},
+      {"A4", {{"highway", "primary"}}}, {"4C", {{"highway", "primary"}}},
+      {"B5", {{"highway", "primary"}}}, {"5D", {{"highway", "primary"}}},
+      {"C6", {{"highway", "primary"}}}, {"67", {{"highway", "primary"}}},
+      {"78", {{"highway", "primary"}}}, {"8D", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 200);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_mn_consistency");
+
+  const std::vector<std::string> sources = {"A", "C"};
+  const std::vector<std::string> targets = {"B", "D"};
+
+  // --- 2x2 matrix request ---
+  std::string res_mn;
+  gurka::do_action(valhalla::Options::sources_to_targets, map, sources, targets, "auto", {}, nullptr,
+                   &res_mn);
+  rapidjson::Document mn_doc;
+  mn_doc.Parse(res_mn.c_str());
+  ASSERT_EQ(mn_doc["algorithm"].GetString(), std::string("costmatrix"));
+
+  const auto& mn_rows = mn_doc["sources_to_targets"].GetArray();
+
+  // --- Individual 1x2 requests ---
+  for (size_t src = 0; src < sources.size(); ++src) {
+    std::string res_1n;
+    gurka::do_action(valhalla::Options::sources_to_targets, map, {sources[src]}, targets, "auto", {},
+                     nullptr, &res_1n);
+    rapidjson::Document one_n_doc;
+    one_n_doc.Parse(res_1n.c_str());
+    ASSERT_EQ(one_n_doc["algorithm"].GetString(), std::string("costmatrix"));
+
+    const auto& one_n_row = one_n_doc["sources_to_targets"].GetArray()[0].GetArray();
+    const auto& mn_row = mn_rows[src].GetArray();
+
+    for (size_t tgt = 0; tgt < targets.size(); ++tgt) {
+      const float mn_time = mn_row[tgt]["time"].GetFloat();
+      const float mn_dist = mn_row[tgt]["distance"].GetFloat();
+      const float one_n_time = one_n_row[tgt]["time"].GetFloat();
+      const float one_n_dist = one_n_row[tgt]["distance"].GetFloat();
+
+      EXPECT_NEAR(mn_time, one_n_time, 1.0f)
+          << "Time mismatch for source=" << sources[src] << " target=" << targets[tgt]
+          << ": 2x2=" << mn_time << " 1x2=" << one_n_time;
+      EXPECT_NEAR(mn_dist, one_n_dist, 0.01f)
+          << "Distance mismatch for source=" << sources[src] << " target=" << targets[tgt]
+          << ": 2x2=" << mn_dist << " 1x2=" << one_n_dist;
+    }
+  }
+}

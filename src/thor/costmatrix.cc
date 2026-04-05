@@ -369,6 +369,11 @@ void CostMatrix::Initialize(
       std::all_of(hlimits.begin(), hlimits.end(), [](const HierarchyLimits& limits) {
         return limits.max_up_transitions() == kUnlimitedTransitions;
       });
+  // Snapshot initial hierarchy limits so UpdateStatus can reset them per location.
+  // In m:n mode, up_transition_count accumulates across all target searches for a
+  // given source; resetting after all connections are settled prevents hierarchy
+  // budget starvation on later targets (#5811).
+  initial_hlimits_.assign(hlimits.begin(), hlimits.end());
 
   const uint32_t bucketsize = costing_->UnitSize();
   const float range = kBucketCount * bucketsize;
@@ -1001,6 +1006,12 @@ void CostMatrix::UpdateStatus(const uint32_t loc_idx, const uint32_t opp_loc_idx
                          edgelabel_[DIRECTION][index].size() +
                              edgelabel_[!DIRECTION][counter_index].size(),
                          max_iterations_, min_iterations_);
+        // Reset hierarchy limits so the threshold-phase expansion is not starved
+        // by accumulated up_transition_counts from prior target searches (#5811).
+        if (!ignore_hierarchy_limits_) {
+          hierarchy_limits_[DIRECTION][index].assign(initial_hlimits_.begin(),
+                                                     initial_hlimits_.end());
+        }
       }
     }
   }
@@ -1375,17 +1386,21 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 
 template <const MatrixExpansionType expansion_direction, const bool FORWARD>
 float CostMatrix::GetAstarHeuristic(const uint32_t loc_idx, const PointLL& ll) const {
-  if (locs_status_[FORWARD][loc_idx].unfound_connections.empty()) {
-    return 0.f;
-  }
-
+  // Use ALL opposing locations in the A* heuristic, not just unfound ones.
+  //
+  // Previously, once a target was removed from unfound_connections (connection settled),
+  // the heuristic stopped considering it. In m:n mode this biased expansion AWAY from
+  // settled targets while their threshold periods were still running, causing the search
+  // to miss better paths that lie away from remaining unfound targets. In 1:1 mode the
+  // special case of unfound_connections becoming empty returned 0 (Dijkstra), but in m:n
+  // the equivalent state never occurs until all connections are found. Including all
+  // targets keeps the heuristic admissible and consistent between 1:1 and m:n. (#5811)
   auto min_cost = std::numeric_limits<float>::max();
-  for (const auto other_idx : locs_status_[FORWARD][loc_idx].unfound_connections) {
+  for (uint32_t other_idx = 0; other_idx < astar_heuristics_[FORWARD].size(); other_idx++) {
     const auto cost = astar_heuristics_[FORWARD][other_idx].Get(ll);
     min_cost = std::min(cost, min_cost);
   }
-
-  return min_cost;
+  return min_cost == std::numeric_limits<float>::max() ? 0.f : min_cost;
 };
 
 } // namespace thor
