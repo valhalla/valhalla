@@ -13,6 +13,7 @@
 #include <queue>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -351,11 +352,43 @@ public:
       std::priority_queue<std::pair<T, size_t>, std::vector<std::pair<T, size_t>>, decltype(cmp)> pq(
           cmp);
 
+      // get number of cores, fallback to 1 if does not work
+      const size_t hardware_threads = std::thread::hardware_concurrency();
+      const size_t num_threads = hardware_threads != 0 ? hardware_threads : 1;
+
       // Sort the subsections
-      for (size_t i = 0; i < memmap.size(); i += buffer_size) {
-        std::sort(static_cast<T*>(memmap) + i,
-                  static_cast<T*>(memmap) + std::min(memmap.size(), i + buffer_size), predicate);
-        pq.emplace(*at(i), i);
+      // fallback to single threaded version if num_threds = 1 no need to spin any threads
+      if (num_threads == 1) {
+        for (size_t i = 0; i < memmap.size(); i += buffer_size) {
+          std::sort(static_cast<T*>(memmap) + i,
+                    static_cast<T*>(memmap) + std::min(memmap.size(), i + buffer_size), predicate);
+          pq.emplace(*at(i), i);
+        }
+      }
+      // multi-threaded version
+      else {
+        StrideSorter sorter{static_cast<T*>(memmap), memmap.size(), buffer_size, num_threads,
+                            predicate};
+
+        std::vector<std::thread> workers;
+        workers.reserve(num_threads - 1);
+
+        for (size_t i = 1; i < num_threads; i++) {
+          workers.emplace_back(&StrideSorter::stride_sort, &sorter, i);
+        }
+
+        sorter.stride_sort(0);
+
+        for (auto& worker : workers) {
+          if (worker.joinable()) {
+            worker.join();
+          }
+        }
+
+        // add all to priority queue
+        for (size_t i = 0; i < memmap.size(); i += buffer_size) {
+          pq.emplace(*at(i), i);
+        }
       }
 
       // Perform the merge
@@ -426,6 +459,22 @@ public:
   size_t size() const {
     return memmap.size() + write_buffer.size();
   }
+
+  // struct to manage info for threads
+  struct StrideSorter {
+    T* data;
+    size_t total_elements;
+    size_t chunk_size;
+    size_t num_threads;
+    const std::function<bool(const T&, const T&)>& predicate;
+
+    void stride_sort(size_t thread_id) {
+      for (size_t i = thread_id * chunk_size; i < total_elements; i += num_threads * chunk_size) {
+        size_t end = std::min(i + chunk_size, total_elements);
+        std::sort(data, data + end, predicate);
+      }
+    }
+  };
 
   // a read/writeable object within the sequence, accessed through memory mapped file
   struct iterator {
