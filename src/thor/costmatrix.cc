@@ -1386,21 +1386,17 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 
 template <const MatrixExpansionType expansion_direction, const bool FORWARD>
 float CostMatrix::GetAstarHeuristic(const uint32_t loc_idx, const PointLL& ll) const {
-  // Use ALL opposing locations in the A* heuristic, not just unfound ones.
-  //
-  // Previously, once a target was removed from unfound_connections (connection settled),
-  // the heuristic stopped considering it. In m:n mode this biased expansion AWAY from
-  // settled targets while their threshold periods were still running, causing the search
-  // to miss better paths that lie away from remaining unfound targets. In 1:1 mode the
-  // special case of unfound_connections becoming empty returned 0 (Dijkstra), but in m:n
-  // the equivalent state never occurs until all connections are found. Including all
-  // targets keeps the heuristic admissible and consistent between 1:1 and m:n. (#5811)
+  if (locs_status_[FORWARD][loc_idx].unfound_connections.empty()) {
+    return 0.f;
+  }
+
   auto min_cost = std::numeric_limits<float>::max();
-  for (uint32_t other_idx = 0; other_idx < astar_heuristics_[FORWARD].size(); other_idx++) {
+  for (const auto other_idx : locs_status_[FORWARD][loc_idx].unfound_connections) {
     const auto cost = astar_heuristics_[FORWARD][other_idx].Get(ll);
     min_cost = std::min(cost, min_cost);
   }
-  return min_cost == std::numeric_limits<float>::max() ? 0.f : min_cost;
+
+  return min_cost;
 };
 
 } // namespace thor
