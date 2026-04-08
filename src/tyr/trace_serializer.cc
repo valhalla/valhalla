@@ -234,6 +234,12 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeTrafficSignal)) {
         writer("traffic_signal", edge.traffic_signal());
       }
+      if (controller(kEdgeStopSign)) {
+        writer("stop_sign", edge.stop_sign());
+      }
+      if (controller(kEdgeYieldSign)) {
+        writer("yield_sign", edge.yield_sign());
+      }
       if (controller(kEdgeHovType)) {
         writer("hov_type", to_string(static_cast<baldr::HOVEdgeType>(edge.hov_type())));
       }
