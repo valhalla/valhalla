@@ -112,7 +112,7 @@ For more details, see the [NodeJS README](https://github.com/valhalla/valhalla/b
 
 ## Contributing
 
-We :heart: contributions to Valhalla. They could be non-technical, e.g. translations into other languages via [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) or documentation improvements, or technical ones like bug fixes or feature implementations. It's important to open an issue before setting out to work on a PR.
+We :heart: contributions to Valhalla. They could be non-technical, e.g. translations into other languages via [Transifex](https://explore.transifex.com/valhalla/valhalla-phrases/) or documentation improvements, or technical ones like bug fixes or feature implementations. It's important to open an issue before setting out to work on a PR.
 
 Ideally, get familiar with our [Contribution guidelines](https://github.com/valhalla/valhalla/blob/master/CONTRIBUTING.md) first.
 
