@@ -162,8 +162,12 @@ void filter_tile(const std::string& tile_bytes,
     vtzero::property_mapper props_mapper{full_layer, filtered_layer};
 
     // pre-compute enabled attributes
-    const auto& prop_map = layer_name == kNodeLayerName ? loki::detail::kNodePropToAttributeFlag
-                                                        : loki::detail::kEdgePropToAttributeFlag;
+    auto lookup_attr = [&](std::string_view key_str) -> std::string_view {
+      if (layer_name == kNodeLayerName)
+        return loki::detail::kNodePropToAttributeFlag.at(key_str);
+      else
+        return loki::detail::kEdgePropToAttributeFlag.at(key_str);
+    };
     const auto& key_table = full_layer.key_table();
     std::vector<bool> attrs_allowed(key_table.size(), false);
     for (uint32_t i = 0; i < key_table.size(); ++i) {
@@ -171,7 +175,7 @@ void filter_tile(const std::string& tile_bytes,
       const std::string_view key_str{key.data(), key.size()};
       // mandatory fields are not part of AttributeController and that throws
       try {
-        attrs_allowed[i] = controller(prop_map.at(key_str));
+        attrs_allowed[i] = controller(lookup_attr(key_str));
       } catch (const std::exception& e) { attrs_allowed[i] = true; }
     }
 

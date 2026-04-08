@@ -2,6 +2,7 @@
 #define VALHALLA_ODIN_NARRATIVEBUILDER_H_
 
 #include <valhalla/baldr/verbal_text_formatter.h>
+#include <valhalla/midgard/const_map.h>
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/odin/markup_formatter.h>
@@ -732,7 +733,9 @@ protected:
   void FormArticulatedPrepositions(std::string& instruction) override;
 
 private:
-  static const std::unordered_map<std::string, std::string> articulated_prepositions_;
+  static constexpr midgard::ConstFlatMap<2, std::string_view, std::string_view>
+      articulated_prepositions_{std::array<std::pair<std::string_view, std::string_view>, 2>{
+          {{" su il ", " sul "}, {" su la ", " sulla "}}}};
 };
 
 ///////////////////////////////////////////////////////////////////////////////

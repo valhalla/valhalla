@@ -4,6 +4,7 @@
 #include <boost/property_tree/ptree_fwd.hpp>
 
 #include <format>
+#include <map>
 #include <mutex>
 #include <string>
 #include <type_traits>
@@ -33,7 +34,7 @@ inline std::string format_or_pass(std::format_string<Args...> fmt_str, Args&&...
 class Logger;
 using LoggingConfig = std::unordered_map<std::string, std::string>;
 using LoggerCreator = Logger* (*)(const LoggingConfig&);
-class LoggerFactory : public std::unordered_map<std::string, LoggerCreator> {
+class LoggerFactory : public std::map<std::string, LoggerCreator> {
 public:
   Logger* Produce(const LoggingConfig& config) const;
 };

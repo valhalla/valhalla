@@ -1,6 +1,7 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
+#include "midgard/const_map.h"
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -24,7 +25,7 @@ const valhalla::baldr::DateTime::dt_info_t INVALID_DT = {"", "", ""};
 // adding new time zones. To keep new code/old tile compatibility, no entries may be removed.
 // "New" time zones are referring to the reference release 2018d. If "new" entries are broken up
 // even further, we'll have to use a 10 bit shift.
-const std::unordered_map<std::string, size_t> tz_name_to_id = {
+constexpr std::pair<std::string_view, size_t> tz_name_to_id_data[] = {
     {"Africa/Abidjan", 1}, // start timezones release 2018d;
     {"Africa/Accra", 2},
     {"Africa/Algiers", 3},
@@ -419,6 +420,7 @@ const std::unordered_map<std::string, size_t> tz_name_to_id = {
     {"Pacific/Kanton", 358},                   // renamed from Pacific/Enderbury
     {"America/Coyhaique", 134 | (1 << 9)}      // new time zone due to DST
 };
+constexpr auto tz_name_to_id = valhalla::midgard::ConstFlatMap(tz_name_to_id_data);
 
 // checks the integrity of the static tz maps, which will fail in case of
 // tzdb updates. this function pretty-prints missing tzs for convenience
