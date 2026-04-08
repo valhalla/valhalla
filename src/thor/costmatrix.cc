@@ -68,22 +68,30 @@ namespace thor {
 
 class CostMatrix::ReachedMap {
 public:
-  using PmrVector = std::vector<uint32_t, std::pmr::polymorphic_allocator<uint32_t>>;
+#if defined(ANKERL_UNORDERED_DENSE_PMR)
+  using Vector = std::vector<uint32_t, std::pmr::polymorphic_allocator<uint32_t>>;
 
   ReachedMap()
       : pool_(std::pmr::new_delete_resource()), vec_alloc_(&pool_),
-        storage_(std::pmr::polymorphic_allocator<std::pair<const uint64_t, PmrVector>>(&pool_)) {
+        storage_(std::pmr::polymorphic_allocator<std::pair<const uint64_t, Vector>>(&pool_)) {
   }
+#else
+  using Vector = std::vector<uint32_t>;
+#endif
 
   void add(uint64_t key, uint32_t value) {
     auto it = storage_.find(key);
     if (it == storage_.end()) {
-      it = storage_.emplace(key, PmrVector(vec_alloc_)).first;
+#if defined(ANKERL_UNORDERED_DENSE_PMR)
+      it = storage_.emplace(key, Vector(vec_alloc_)).first;
+#else
+      it = storage_.emplace(key, Vector()).first;
+#endif
     }
     it->second.push_back(value);
   }
 
-  const PmrVector* get(uint64_t key) const {
+  const Vector* get(uint64_t key) const {
     auto it = storage_.find(key);
     if (it == storage_.end()) {
       return nullptr;
@@ -96,9 +104,13 @@ public:
   }
 
 private:
+#if defined(ANKERL_UNORDERED_DENSE_PMR)
   std::pmr::unsynchronized_pool_resource pool_;
   std::pmr::polymorphic_allocator<uint32_t> vec_alloc_;
-  ankerl::unordered_dense::pmr::map<uint64_t, PmrVector> storage_;
+  ankerl::unordered_dense::pmr::map<uint64_t, Vector> storage_;
+#else
+  ankerl::unordered_dense::map<uint64_t, Vector> storage_;
+#endif
 };
 
 // Constructor with cost threshold.
@@ -833,7 +845,7 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
   // Get the opposing edge. Get a list of opposing locations whose
   // search has reached this edge.
   GraphId opp_edgeid = pred.opp_edgeid();
-  const ReachedMap::PmrVector* opp_locs = (FORWARD ? targets_ : sources_)->get(opp_edgeid);
+  const ReachedMap::Vector* opp_locs = (FORWARD ? targets_ : sources_)->get(opp_edgeid);
   if (!opp_locs) {
     return;
   }
