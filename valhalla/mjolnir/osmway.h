@@ -2071,6 +2071,34 @@ struct OSMWay {
   }
 
   /**
+   * Sets the winter_road flag (OSM winter_road=yes — seasonal road open only in winter).
+   */
+  void set_winter_road(const bool v) {
+    winter_road_ = v;
+  }
+
+  /**
+   * Get the winter_road flag.
+   */
+  bool winter_road() const {
+    return winter_road_;
+  }
+
+  /**
+   * Sets the ice_road flag (OSM ice_road=yes — road across frozen water/ground).
+   */
+  void set_ice_road(const bool v) {
+    ice_road_ = v;
+  }
+
+  /**
+   * Get the ice_road flag.
+   */
+  bool ice_road() const {
+    return ice_road_;
+  }
+
+  /**
    * Sets the HOV Type.
    * @param  hov_type
    */
@@ -2708,7 +2736,8 @@ struct OSMWay {
   uint16_t bike_backward_ : 1;
   uint16_t lit_ : 1;
   uint16_t destination_only_hgv_ : 1;
-  uint16_t spare2_ : 2;
+  uint16_t winter_road_ : 1;
+  uint16_t ice_road_ : 1;
 
   uint16_t nodecount_;
 

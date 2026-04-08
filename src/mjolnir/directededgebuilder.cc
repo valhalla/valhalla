@@ -79,6 +79,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_roundabout(way.roundabout());
   set_bridge(way.bridge());
   set_indoor(way.indoor());
+  set_winter_road(way.winter_road());
+  set_ice_road(way.ice_road());
   set_link(way.link());
   set_hov_type(way.hov_type());
   set_classification(rc);
