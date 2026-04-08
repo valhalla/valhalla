@@ -220,6 +220,37 @@ TEST_P(IntermediateLocations, test_back_to_back_via_uturns) {
   EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), total_dist, 1.0);
 }
 
+// Regression test: consecutive through locations that snap to the same node on an edge
+// should not cause a 500 error. Before the fix, equal leg_shape_index values triggered
+// "leg_shape_index not set for intermediate location" due to a strict monotonicity check.
+TEST_P(IntermediateLocations, test_consecutive_through_at_same_node) {
+  std::string date_time_type;
+  std::string intermediate_type;
+  std::tie(date_time_type, intermediate_type) = GetParam();
+
+  // This test targets the through-location bug fix; via locations at the same node cause a u-turn
+  // which is correct via behavior but not what we're testing here
+  if (intermediate_type == "via")
+    GTEST_SKIP() << "via locations at the same node produce a u-turn by design";
+
+  // Two intermediate through locations both at node B — they snap to the same point on the same edge
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B", "B", "C"}, "auto",
+                                 {
+                                     {"/locations/0/type", "break"},
+                                     {"/locations/1/type", "through"},
+                                     {"/locations/2/type", "through"},
+                                     {"/locations/3/type", "break"},
+                                     {"/date_time/type", date_time_type},
+                                     {"/date_time/value", "2111-11-11T11:11"},
+                                 });
+  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
+
+  EXPECT_EQ(d["routes"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
+  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), distance("A", "C"), 1.0);
+}
+
 // 1 is depart_at and 2 is arrive_by and 3 is invariant
 INSTANTIATE_TEST_SUITE_P(ViaWaypoints,
                          IntermediateLocations,
