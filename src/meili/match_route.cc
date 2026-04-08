@@ -87,12 +87,14 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
  * @param source         source state to use to find the route
  * @param target         target state which candidate in the next column to fetch the route for
  * @param route          a place to put the edge segments as we create them
- * @param target_result  in case we have a node to node route we have a no-op edge segment to return
+ * @param source_result  the match result for the source point (used for trivial same-edge route)
+ * @param target_result  in case we have a node to node route, or same-edge trivial route
  * @return  the vector of segments representing the route between source and target
  */
 bool MergeRoute(const State& source,
                 const State& target,
                 std::vector<EdgeSegment>& route,
+                const MatchResult& source_result,
                 const MatchResult& target_result) {
   // Discontinuity either from invalid state id or no paths on either side of this states candidates
   const auto route_rbegin = source.RouteBegin(target), route_rend = source.RouteEnd();
@@ -114,11 +116,21 @@ bool MergeRoute(const State& source,
   assert(label->predecessor() == baldr::kInvalidLabel);
 
   // TODO: why doesnt routing.cc return trivial routes? move this logic there
-  // This is route where the source and target are the same location so we make a trivial route
+  // This is a route where source and target are on the same edge (or the same location).
+  // Build a segment using source_result.distance_along so the TripLeg receives a non-zero-length
+  // edge to traverse, fixing valhalla/valhalla#5050 (trace_route fails on trivial same-edge route).
   if (segments.empty()) {
     assert(target_result.edgeid.is_valid());
-    segments.emplace_back(target_result.edgeid, target_result.distance_along,
-                          target_result.distance_along);
+    // If both points are on the same edge but source is ahead of target (u-turn on same edge),
+    // treat as a discontinuity rather than a trivial forward segment.
+    if (source_result.edgeid == target_result.edgeid &&
+        source_result.distance_along > target_result.distance_along + 1e-4) {
+      return false;
+    }
+    const double seg_source = (source_result.edgeid == target_result.edgeid)
+                                  ? source_result.distance_along
+                                  : target_result.distance_along;
+    segments.emplace_back(target_result.edgeid, seg_source, target_result.distance_along);
   }
 
   route.insert(route.end(), segments.crbegin(), segments.crend());
@@ -232,7 +244,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // then reverse merge the segments together which are on the same edge so we have a
       // minimum number of segments. in this case we could at minimum end up with 1 segment
       segments.clear();
-      if (!MergeRoute(prev_state, state, segments, match)) {
+      if (!MergeRoute(prev_state, state, segments, *prev_match, match)) {
         // we are only discontinuous if this isnt the beginning of the route
         if (!route.empty())
           route.back().discontinuity = true;

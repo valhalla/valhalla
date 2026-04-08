@@ -115,12 +115,14 @@ private:
  * @param source         source state to use to find the route
  * @param target         target state which candidate in the next column to fetch the route for
  * @param route          a place to put the edge segments as we create them
+ * @param source_result  the match result for the source point (used for trivial same-edge route)
  * @param target_result  in case we have a node to node route we have a no-op edge segment to return
  * @return  the vector of segments representing the route between source and target
  */
 bool MergeRoute(const State& source,
                 const State& target,
                 std::vector<EdgeSegment>& route,
+                const MatchResult& source_result,
                 const MatchResult& target_result);
 /**
  * This loops over all of the states in the match and returns the vector of edge segments representing
