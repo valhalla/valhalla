@@ -63,6 +63,7 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             const hierarchy_limits_config_t& config,
                             const bool allow_modifications,
                             const bool use_hierarchy_limits);
+
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
@@ -93,9 +94,11 @@ const content_type TIFF_MIME("Content-type", "image/tiff");
 const content_type MVT_MIME("Content-type", "application/vnd.mapbox-vector-tile");
 } // namespace worker
 
-prime_server::worker_t::result_t to_response(const std::string& data,
-                                             prime_server::http_request_info_t& request_info,
-                                             const Api& options);
+prime_server::worker_t::result_t
+to_response(const std::string& data,
+            prime_server::http_request_info_t& request_info,
+            const Api& options,
+            const std::vector<std::pair<std::string, std::string>>& additional_headers = {});
 #endif
 
 struct statsd_client_t;

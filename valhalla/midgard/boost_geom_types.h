@@ -5,9 +5,11 @@
 #include "midgard/point2.h"
 #include "midgard/pointll.h"
 
+#include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/linestring.hpp>
 #include <boost/geometry/geometries/multi_linestring.hpp>
 #include <boost/geometry/geometries/multi_polygon.hpp>
+#include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/geometries/register/box.hpp>
 #include <boost/geometry/geometries/register/point.hpp>

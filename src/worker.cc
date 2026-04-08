@@ -42,6 +42,26 @@ static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexc
 
 namespace {
 
+// Parses exclude_layers from JSON and adds them to the request's tile options
+void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
+  static const std::unordered_set<std::string_view> kSupportedLayers =
+      {valhalla::kEdgeLayerName, valhalla::kNodeLayerName, valhalla::kShortcutLayerName,
+       valhalla::kAccessRestrictionLayerName};
+
+  if (exclude_layers.has_value() && exclude_layers->IsArray()) {
+    for (const auto& lyr : exclude_layers->GetArray()) {
+      if (lyr.IsString()) {
+        const auto& lyr_name = lyr.GetString();
+        if (kSupportedLayers.contains(lyr_name)) {
+          request.mutable_options()->mutable_tile_options()->add_exclude_layers(lyr_name);
+          continue;
+        }
+      }
+      add_warning(request, 212, lyr.IsString() ? lyr.GetString() : "not a string");
+    }
+  }
+}
+
 bool is_format_supported(Options::Action action, Options::Format format) {
   constexpr uint16_t kFormatActionSupport[] = {
       // json
@@ -509,7 +529,8 @@ void parse_contours(const rapidjson::Document& doc,
 // parse all costings needed to fulfill the request, including recostings
 void parse_recostings(const rapidjson::Document& doc,
                       const std::string& key,
-                      valhalla::Options& options) {
+                      valhalla::Options& options,
+                      google::protobuf::RepeatedPtrField<valhalla::CodedDescription>& warnings) {
   // make sure we only have unique recosting names in the end
   std::unordered_set<std::string> names;
   auto check_name = [&names](const valhalla::Costing& recosting) -> void {
@@ -527,13 +548,13 @@ void parse_recostings(const rapidjson::Document& doc,
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
-      sif::ParseCosting(doc, key, options.add_recostings());
+      sif::ParseCosting(doc, key, options.add_recostings(), warnings);
       check_name(*options.recostings().rbegin());
     }
   } else if (options.recostings().size()) {
     for (auto& recosting : *options.mutable_recostings()) {
       check_name(recosting);
-      sif::ParseCosting(doc, key, &recosting, recosting.type());
+      sif::ParseCosting(doc, key, &recosting, warnings, recosting.type());
     }
   }
 }
@@ -622,13 +643,48 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto& options = *api.mutable_options();
   if (Options::Action_IsValid(action))
     options.set_action(action);
+  auto& warnings = *api.mutable_info()->mutable_warnings();
+
+  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
+  if (options.action() == Options::sources_to_targets) {
+    options.set_verbose(
+        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
+  } else {
+    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  }
+
+  // if specified, get the filter_action value in there
+  auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
+  FilterAction filter_action;
+  if (filter_action_str && valhalla::FilterAction_Enum_Parse(*filter_action_str, &filter_action)) {
+    options.set_filter_action(filter_action);
+  }
+
+  // if specified, get the filter_attributes value in there
+  auto filter_attributes_json =
+      rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
+  if (filter_attributes_json) {
+    for (const auto& filter_attribute : *filter_attributes_json) {
+      std::string attribute = filter_attribute.GetString();
+      // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
+      // compatibility
+      if (attribute == "edge.tagged_names") {
+        attribute = baldr::kEdgeTaggedValues;
+      }
+      options.add_filter_attributes(attribute);
+    }
+  }
+
+  // if specified, get the generalize value in there
+  auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
+  if (generalize) {
+    options.set_generalize(*generalize);
+  }
 
   // first the /tile parameters, so we can early exit
   if (options.action() == Options::tile) {
     parse_xyz(doc, options);
-    options.mutable_tile_options()->set_return_shortcuts(
-        rapidjson::get<bool>(doc, "/tile_options/return_shortcuts",
-                             options.tile_options().return_shortcuts()));
+    parse_exclude_layers(get_child_optional(doc, "/tile_options/exclude_layers"), api);
     options.set_format(Options::mvt); // set explicitly for MIME type
     return;
   }
@@ -868,7 +924,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   //   the gurka_closure_penalty test fails. investigate why.. intuitively it makes no sense,
   //   as in the above logic the costing options aren't even parsed yet,
   //   so how can it determine "ignore_closures" there?
-  sif::ParseCosting(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options, warnings);
 
   // if any of the locations params have a date_time object in their locations, we'll remember
   // only /sources_to_targets will parse more than one location collection and there it's fine
@@ -990,16 +1046,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_height_precision(*height_precision);
   }
 
-  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
-  if (options.action() == Options::sources_to_targets) {
-    options.set_verbose(
-        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
-  } else {
-    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
-  }
-
   // parse any named costings for re-costing a given path
-  parse_recostings(doc, "/recostings", options);
+  parse_recostings(doc, "/recostings", options, warnings);
 
   // get the locations in there
   parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
@@ -1034,8 +1082,14 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else if (!options.has_matrix_locations_case()) {
+  } else if (!options.has_matrix_locations_case() ||
+             (options.sources_size() != 1 && options.targets_size() != 1)) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
+  }
+
+  auto expansion_max_distance = rapidjson::get_optional<unsigned int>(doc, "/expansion_max_distance");
+  if (expansion_max_distance) {
+    options.set_expansion_max_distance(*expansion_max_distance);
   }
 
   // get the avoid polygons in there
@@ -1182,12 +1236,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get<float>(doc, "/denoise", options.has_denoise_case() ? options.denoise() : 1.0);
   options.set_denoise(std::max(std::min(denoise, 1.f), 0.f));
 
-  // if specified, get the generalize value in there
-  auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
-  if (generalize) {
-    options.set_generalize(*generalize);
-  }
-
   // if specified, get the show_locations boolean in there
   options.set_show_locations(rapidjson::get<bool>(doc, "/show_locations", options.show_locations()));
 
@@ -1234,28 +1282,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_interpolation_distance(*interpolation_distance);
   }
 
-  // if specified, get the filter_action value in there
-  auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
-  FilterAction filter_action;
-  if (filter_action_str && valhalla::FilterAction_Enum_Parse(*filter_action_str, &filter_action)) {
-    options.set_filter_action(filter_action);
-  }
-
-  // if specified, get the filter_attributes value in there
-  auto filter_attributes_json =
-      rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
-  if (filter_attributes_json) {
-    for (const auto& filter_attribute : *filter_attributes_json) {
-      std::string attribute = filter_attribute.GetString();
-      // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
-      // compatibility
-      if (attribute == "edge.tagged_names") {
-        attribute = baldr::kEdgeTaggedValues;
-      }
-      options.add_filter_attributes(attribute);
-    }
-  }
-
   // add warning for deprecated best_paths
   if (rapidjson::get_optional<uint32_t>(doc, "/best_paths")) {
     add_warning(api, 103);
@@ -1296,7 +1322,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 }
 
 } // namespace
-
 namespace valhalla {
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& request) {
@@ -1577,11 +1602,15 @@ worker_t::result_t serialize_error(const valhalla_exception_t& exception,
 }
 
 worker_t::result_t
-to_response(const std::string& data, http_request_info_t& request_info, const Api& request) {
+to_response(const std::string& data,
+            http_request_info_t& request_info,
+            const Api& request,
+            const std::vector<std::pair<std::string, std::string>>& additional_headers) {
   // try to get all the proper headers
   auto fmt = request.options().format();
 
   headers_t headers{CORS, fmt_to_mime(fmt)};
+  headers.insert(additional_headers.begin(), additional_headers.end());
   if (fmt == Options::gpx)
     headers.insert(ATTACHMENT);
 

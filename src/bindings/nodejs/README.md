@@ -49,6 +49,68 @@ async function main() {
 main();
 ```
 
+### 3. Error Handling
+
+When a routing operation fails, the returned promise rejects with a `ValhallaError` (an `Error` subclass) containing structured fields from Valhalla's internal error codes:
+
+```javascript
+import { Actor, ValhallaError } from '@valhallajs/valhallajs';
+
+const actor = await Actor.fromConfigFile('config.json');
+
+try {
+  await actor.route({
+    locations: [
+      { lat: 0.0, lon: 0.0 },
+      { lat: 0.1, lon: 0.1 }
+    ],
+    costing: 'auto'
+  });
+} catch (e) {
+  if (e instanceof ValhallaError) {
+    console.log(e.code);        // 171
+    console.log(e.message);     // "No suitable edges near location"
+    console.log(e.httpCode);    // 400
+    console.log(e.httpMessage); // "Bad Request"
+  }
+}
+```
+
+### 4. Working with `GraphId` (no built graph needed)
+
+The `GraphId` class represents Valhalla's internal graph identifiers, which encode a hierarchy level, tile ID, and element ID.
+
+```javascript
+import { GraphId } from '@valhallajs/valhallajs';
+
+// Construct from components: (tileid, level, id)
+const gid = new GraphId(100, 2, 5);
+console.log(gid.level());   // 2
+console.log(gid.tileid());  // 100
+console.log(gid.id());      // 5
+console.log(gid.is_valid()); // true
+
+// Construct from string "level/tileid/id"
+const gid2 = new GraphId('2/100/5');
+console.log(gid.equals(gid2)); // true
+
+// String and JSON representations
+console.log(gid.toString());    // "2/100/5"
+console.log(JSON.stringify(gid)); // {"level":2,"tileid":100,"id":5,"value":...}
+
+// Get tile base (same tile, id zeroed out)
+const base = gid.tile_base();
+console.log(base.toString()); // "2/100/0"
+
+// Advance the id by an offset (returns a new GraphId)
+const next = gid.add(3);
+console.log(next.toString()); // "2/100/8"
+
+// Roundtrip through the raw numeric value
+const restored = new GraphId(gid.value);
+console.log(restored.equals(gid)); // true
+```
+
 ## Protocol Buffer Support
 
 For performance-critical applications, Valhalla supports Protocol Buffer (pbf) format for requests and responses. This provides faster serialization/deserialization and smaller payload sizes compared to JSON.

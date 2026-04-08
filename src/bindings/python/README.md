@@ -1,11 +1,11 @@
 ## Valhalla Python bindings
 
-[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/) [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)](https://pypi.org/project/pyvalhalla-weekly/)
+[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/)
 
 This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
 > [!NOTE]
-> `pyvalhalla(-weekly)` packages are currently only published for:
+> `pyvalhalla` packages are currently only published for:
 > - `linux-x86_x64`
 > - `linux-aarch64`
 > - `win-amd64`
@@ -16,9 +16,6 @@ On top of the (very) high-level Python bindings, we package some data-building V
 ### Installation
 
 We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`/`aarch64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. To install on Python < 3.12, make sure to install the system dependencies as described in [the docs](https://valhalla.github.io/valhalla/building/#platform-specific-builds) before trying a `pip install pyvalhalla`.
-
-`pip install pyvalhalla` to install the most recent Valhalla **release**.  
-`pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
 
 Or manually in the current Python environment with e.g.
 
@@ -92,6 +89,24 @@ actor = Actor(config)
 route = actor.route({"locations": [...]})
 ```
 
+#### Error Handling
+
+When a routing operation fails, a `ValhallaError` is raised (a subclass of `RuntimeError`) with structured fields from Valhalla's internal error codes:
+
+```python
+from valhalla import Actor, ValhallaError, get_config
+
+actor = Actor(get_config(tile_extract='./valhalla_tiles.tar'))
+
+try:
+    actor.route({"locations": [{"lat": 0.0, "lon": 0.0}, {"lat": 0.1, "lon": 0.1}], "costing": "auto"})
+except ValhallaError as e:
+    print(e.code)          # 171
+    print(e.message)       # "No suitable edges near location"
+    print(e.http_code)     # 400
+    print(e.http_message)  # "Bad Request"
+```
+
 #### Graph Utilities
 
 Access to low-level graph data structures for advanced use cases:
@@ -162,6 +177,8 @@ coefficients_restored = decode_compressed_speeds(encoded)
 
 #### Valhalla executables
 
+##### C++ executables
+
 To access the C++ (native) executables, there are 2 options:
 
 - (recommended) execute the module, e.g. `python -m valhalla valhalla_build_tiles -h`
@@ -179,6 +196,16 @@ There are also some additional commands we added:
 - `print_bin_path`: simply prints the absolute path to the package-internal `bin/` directory where the C++ executables are; useful if the executables should be accessed directly in some script
 
 To find out which Valhalla executables are currently included, run `python -m valhalla --help`. We limit the number of executables to control the wheel size. However, we're open to include any other executable if there's a good reason.
+
+##### Pure Python scripts
+
+The following tools are implemented in pure Python and installed as console scripts:
+
+- `valhalla_build_config`: Generate or merge Valhalla configuration JSON files
+- `valhalla_build_elevation`: Download elevation (DEM) tiles for a given region
+- `valhalla_build_extract`: Create tar extracts from routing tiles
+
+These are invoked directly, e.g. `valhalla_build_config -h` or `valhalla_build_extract -h`. They do **not** go through the `python -m valhalla` module mechanism.
 
 ### Building from source
 

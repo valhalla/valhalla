@@ -160,7 +160,7 @@ boost::property_tree::ptree get_config() {
                             {"mjolnir.hierarchy", "1"},
                             {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                             {"mjolnir.tile_dir", VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"},
-                            {"service_limits.pedestrian.max_transit_walking_distance", "100000"}});
+                            {"service_limits.pedestrian.max_multimodal_walking_distance", "100000"}});
 }
 
 // put the base in toronto for timezone stuff to work and put it on the edge of a level 2/3 tile
@@ -1062,7 +1062,7 @@ TEST(GtfsExample, route_trip4) {
 TEST(GtfsExample, isochrones) {
 
   std::string res_string;
-  valhalla::Api res =
+  [[maybe_unused]] valhalla::Api res =
       gurka::do_action(valhalla::Options::isochrone, map, {"g"}, "multimodal",
                        {{"/date_time/type", "1"},
                         {"/date_time/value", "2023-02-27T04:58"},
@@ -1087,6 +1087,7 @@ TEST(GtfsExample, isochrones) {
 TEST(GtfsExample, status) {
   std::string req = R"({"verbose": true})";
   std::string res_string;
-  valhalla::Api res = gurka::do_action(valhalla::Options::status, map, req, {}, &res_string);
+  [[maybe_unused]] valhalla::Api res =
+      gurka::do_action(valhalla::Options::status, map, req, {}, &res_string);
   EXPECT_NE(res_string.find(R"("has_transit_tiles":true)"), std::string::npos);
 }

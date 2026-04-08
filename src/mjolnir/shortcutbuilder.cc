@@ -18,6 +18,7 @@
 #endif
 
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -349,7 +350,7 @@ void ConnectEdges(GraphReader& reader,
   average_density += directededge->length() * directededge->density();
 
   // Preserve the most restrictive access restrictions
-  access_restrictions.update_nonconditional(tile->GetAccessRestrictions(edgeid.id()));
+  access_restrictions.update_nonconditional(tile->GetAccessRestrictions(edgeid.id()).first);
 
   // Update the end node
   endnode = directededge->endnode();
@@ -437,7 +438,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
 
       // store all access_restrictions of the base edge: non-conditional ones will be updated while
       // contracting, conditional ones are breaking contraction and are safe to simply copy
-      auto restrictions_view = tile->GetAccessRestrictions(edge_id.id());
+      auto restrictions_view = tile->GetAccessRestrictions(edge_id.id()).first;
       ShortcutAccessRestriction access_restrictions{
           std::vector<AccessRestriction>(restrictions_view.begin(), restrictions_view.end())};
 
@@ -588,26 +589,27 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     }
   }
 
-#ifdef LOGGING_LEVEL_WARN
-  // Log a warning (with the node lat,lon) if the max number of shortcuts from a node
-  // is exceeded. This is not serious (see NOTE above) but good to know where it occurs.
+  // Log if the max number of shortcuts from a node is exceeded.
+  // This is not serious (see NOTE above) but good to know where it occurs.
   if (shortcut_count > kMaxShortcutsFromNode) {
-    PointLL ll = tile->get_node_ll(start_node);
-    LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
-             std::to_string(ll.lng()));
+    [[maybe_unused]] PointLL ll = tile->get_node_ll(start_node);
+    LOG_DEBUG("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
+              std::to_string(ll.lng()));
   }
-#endif
+
   return {shortcut_count, total_edge_count};
 }
 
 // Form shortcuts for tiles in this level.
-std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel& level) {
+// Returns {shortcut_count, total_edge_count, exceeded_max_count}.
+std::tuple<uint32_t, uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel& level) {
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
   reader.Clear();
   bool added = false;
   uint32_t shortcut_count = 0;
   uint32_t total_edge_count = 0;
+  uint32_t exceeded_max_count = 0;
   uint32_t ntiles = level.tiles.TileCount();
   uint32_t tile_level = (uint32_t)level.level;
   graph_tile_ptr tile;
@@ -653,6 +655,9 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
                                     old_edge_count, shortcuts);
       shortcut_count += stats.first;
       total_edge_count += stats.second;
+      if (stats.first > kMaxShortcutsFromNode) {
+        ++exceeded_max_count;
+      }
 
       // Copy the rest of the directed edges from this node
       GraphId edgeid(tileid, tile_level, old_edge_index);
@@ -681,7 +686,7 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id());
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id()).first;
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                                res.type(), res.modes(), res.value(),
@@ -751,7 +756,7 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
       reader.Trim();
     }
   }
-  return {shortcut_count, total_edge_count};
+  return {shortcut_count, total_edge_count, exceeded_max_count};
 }
 
 } // namespace
@@ -772,16 +777,22 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   // Get GraphReader
   GraphReader reader(pt.get_child("mjolnir"));
 
+  uint32_t total_exceeded_max = 0;
   auto tile_level = TileHierarchy::levels().rbegin();
   tile_level++;
   for (; tile_level != TileHierarchy::levels().rend(); ++tile_level) {
     // Create shortcuts on this level
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level->level));
-    [[maybe_unused]] auto stats = FormShortcuts(reader, *tile_level);
-    [[maybe_unused]] uint32_t avg = stats.first ? (stats.second / stats.first) : 0;
-    LOG_INFO("Finished with " + std::to_string(stats.first) + " shortcuts superseding " +
-             std::to_string(stats.second) + " edges, average ~" + std::to_string(avg) +
+    auto [sc_count, edge_count, exceeded_max] = FormShortcuts(reader, *tile_level);
+    [[maybe_unused]] uint32_t avg = sc_count ? (edge_count / sc_count) : 0;
+    LOG_INFO("Finished with " + std::to_string(sc_count) + " shortcuts superseding " +
+             std::to_string(edge_count) + " edges, average ~" + std::to_string(avg) +
              " edges per shortcut");
+    total_exceeded_max += exceeded_max;
+  }
+
+  if (total_exceeded_max > 0) {
+    build_stats::get().increment(build_stats::kExceededMaxShortcutEdges, total_exceeded_max);
   }
 }
 

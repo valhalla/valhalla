@@ -2,8 +2,10 @@
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
+#include "baldr/predictedspeeds.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "mjolnir/util.h"
 
 #include <boost/format.hpp>
 
@@ -13,7 +15,9 @@
 #include <iostream>
 #include <list>
 #include <set>
+#include <sstream>
 #include <stdexcept>
+#include <thread>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -268,9 +272,18 @@ void GraphTileBuilder::StoreTileData() {
     std::filesystem::create_directories(filename.parent_path());
   }
 
+  // Tiles are rewritten multiple times during building. Since threads may read tiles while they're
+  // being written, we use atomic "write to temp file + rename" to avoid partial reads.
+  std::filesystem::path tmp_filename = filename;
+  {
+    std::ostringstream suffix;
+    suffix << "_" << std::this_thread::get_id() << ".tmp";
+    tmp_filename += suffix.str();
+  }
+
   // Open file and truncate
   std::stringstream in_mem;
-  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  std::ofstream file(tmp_filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Write the nodes
     header_builder_.set_nodecount(nodes_builder_.size());
@@ -432,6 +445,8 @@ void GraphTileBuilder::StoreTileData() {
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
     file << in_mem.rdbuf();
     file.close();
+
+    std::filesystem::rename(tmp_filename, filename);
   } else {
     throw std::runtime_error("Failed to open file " + filename.string());
   }
@@ -667,7 +682,8 @@ void GraphTileBuilder::ProcessTaggedValues([[maybe_unused]] const uint32_t edgei
       name_info_list.emplace_back(ni);
       ++name_count;
     } else {
-      LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+      LOG_DEBUG("Too many names for edgeindex: " + std::to_string(edgeindex));
+      build_stats::get().increment(build_stats::kExceededMaxNames);
     }
   }
 }
@@ -709,7 +725,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     for (const auto& name : names) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        LOG_DEBUG("Too many names for edgeindex: " + std::to_string(edgeindex));
+        build_stats::get().increment(build_stats::kExceededMaxNames);
         break;
       }
 
@@ -730,7 +747,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     for (const auto& name : tagged_values) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        LOG_DEBUG("Too many names for edgeindex: " + std::to_string(edgeindex));
+        build_stats::get().increment(build_stats::kExceededMaxNames);
         break;
       }
 
@@ -833,7 +851,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     for (const auto& name : names) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        LOG_DEBUG("Too many names for edgeindex: " + std::to_string(edgeindex));
+        build_stats::get().increment(build_stats::kExceededMaxNames);
         break;
       }
 
@@ -854,7 +873,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     for (const auto& name : tagged_values) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        LOG_DEBUG("Too many names for edgeindex: " + std::to_string(edgeindex));
+        build_stats::get().increment(build_stats::kExceededMaxNames);
         break;
       }
 
@@ -1242,14 +1262,26 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
   if (speed_profile_offset_builder_.size() == 0) {
     speed_profile_offset_builder_.resize(header_->directededgecount());
     speed_profile_builder_.reserve(predicted_count_hint * kCoefficientCount);
+    speed_profile_index_.reserve(predicted_count_hint);
   }
 
+  // If the speed profile exists, reuse the offset for this directed edge.
+  auto it = speed_profile_index_.find(coefficients);
+  if (it != speed_profile_index_.end()) {
+    speed_profile_offset_builder_[idx] = *it;
+    return;
+  }
+
+  auto new_speed_profile_offset = static_cast<uint32_t>(speed_profile_builder_.size());
+
   // Set the offset to the predicted speed profile for this directed edge
-  speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
+  speed_profile_offset_builder_[idx] = new_speed_profile_offset;
 
   // Append the profile
   speed_profile_builder_.insert(speed_profile_builder_.end(), coefficients.begin(),
                                 coefficients.end());
+
+  speed_profile_index_.emplace(new_speed_profile_offset);
 }
 
 // Updates a tile with predictive speed data. Also updates directed edges with

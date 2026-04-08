@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     options.positional_help("CONFIG_JSON [CONCURRENCY] or CONFIG_JSON ACTION JSON_REQUEST");
     auto result = options.parse(argc, argv);
     // We set up conf & num_threads ourselves
-    if (!parse_common_args(program, options, result, nullptr, "", false))
+    if (!parse_common_args(program, options, result, nullptr, false))
       return EXIT_SUCCESS;
 
 #ifdef ENABLE_SERVICES
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
 #ifdef ENABLE_SERVICES
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
-                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+                        config.get<unsigned int>("httpd.service.shutdown_seconds", 1));
 
   // grab the endpoints
   std::string listen = config.get<std::string>("httpd.service.listen");
@@ -195,13 +195,7 @@ int main(int argc, char** argv) {
   }
 
   // configure logging
-  auto logging_subtree = config.get_child_optional("loki.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
+  valhalla::midgard::logging::ConfigureFromPtree(config);
 
   // number of workers to use at each stage
   auto worker_concurrency =

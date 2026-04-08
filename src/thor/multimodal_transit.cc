@@ -1,4 +1,4 @@
-#include "thor/multimodal.h"
+#include "thor/multimodal_transit.h"
 #include "baldr/datetime.h"
 #include "exceptions.h"
 #include "midgard/logging.h"

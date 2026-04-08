@@ -74,6 +74,22 @@ if(APPLE)
   list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
 endif()
 
+set(mjolnir_depends
+  valhalla::proto
+  valhalla::baldr
+  PkgConfig::GEOS
+  PkgConfig::SpatiaLite
+  SQLite3::SQLite3
+  Boost::boost
+  PkgConfig::LuaJIT
+  Threads::Threads
+  PkgConfig::ZLIB
+  PkgConfig::OPENSSL)
+
+if(EXPAT_FOUND)
+  list(APPEND mjolnir_depends PkgConfig::EXPAT)
+endif()
+
 valhalla_module(NAME mjolnir
   SOURCES ${sources}
   HEADERS ${headers}
@@ -89,16 +105,12 @@ valhalla_module(NAME mjolnir
       ${system_includes}
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
+      ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
       ${unordered_dense_include_dir}
       ${libosmium_include_dirs}
   DEPENDS
-    valhalla::proto
-    valhalla::baldr
-    PkgConfig::GEOS
-    PkgConfig::SpatiaLite
-    SQLite3::SQLite3
-    Boost::boost
-    PkgConfig::LuaJIT
-    Threads::Threads
-    PkgConfig::ZLIB
-    PkgConfig::OPENSSL)
+    ${mjolnir_depends})
+
+if(EXPAT_FOUND)
+  target_compile_definitions(valhalla-mjolnir PRIVATE HAVE_EXPAT)
+endif()
