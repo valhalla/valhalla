@@ -1493,13 +1493,13 @@ struct graph_parser {
 
       } else if (value.find("tartan") != std::string::npos ||
                  value.find("pavingstone") != std::string::npos ||
-                 value.find("paving_stones") != std::string::npos ||
-                 value.find("sett") != std::string::npos ||
-                 value.find("grass_paver") != std::string::npos) {
+                 value.find("paving_stones") != std::string::npos) {
         way_.set_surface(Surface::kPaved);
 
       } else if (value.find("cobblestone") != std::string::npos ||
-                 value.find("brick") != std::string::npos) {
+                 value.find("brick") != std::string::npos ||
+                 value.find("sett") != std::string::npos ||
+                 value.find("grass_paver") != std::string::npos) {
         way_.set_surface(Surface::kPavedRough);
 
       } else if (value.find("compacted") != std::string::npos ||
@@ -1510,16 +1510,20 @@ struct graph_parser {
       } else if (value.find("dirt") != std::string::npos ||
                  value.find("natural") != std::string::npos ||
                  value.find("earth") != std::string::npos ||
-                 value.find("ground") != std::string::npos ||
-                 value.find("mud") != std::string::npos) {
+                 value.find("ground") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
       } else if (value.find("gravel") != std::string::npos || // gravel, fine_gravel
                  value.find("pebblestone") != std::string::npos ||
-                 value.find("sand") != std::string::npos) {
+                 value.find("mud") != std::string::npos) {
+        // mud mapped to kGravel (stronger penalty than kDirt): soft mud is more
+        // vehicle-challenging than packed dirt (#4808)
         way_.set_surface(Surface::kGravel);
       } else if (value.find("grass") != std::string::npos ||
-                 value.find("stepping_stones") != std::string::npos) {
+                 value.find("stepping_stones") != std::string::npos ||
+                 value.find("sand") != std::string::npos) {
+        // sand mapped to kPath (near-impassable for standard vehicles): soft sand
+        // is far more challenging than gravel (#4808)
         way_.set_surface(Surface::kPath);
         // We have to set a flag as surface may come before Road classes and Uses
       } else {
