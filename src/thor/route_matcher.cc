@@ -133,7 +133,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                       size_t& correlated_index,
                       const graph_tile_ptr& tile,
                       const GraphId& node,
-                      end_node_t& end_nodes,
+                      const end_node_t& end_nodes,
                       EdgeLabel& prev_edge_label,
                       Cost& elapsed,
                       std::vector<PathInfo>& path_infos,
@@ -147,8 +147,13 @@ bool expand_from_node(const mode_costing_t& mode_costing,
   if (n != end_nodes.end() &&
       valhalla::midgard::equal<float>((distances[correlated_index].second + n->second.second),
                                       distances.back().second, kTotalDistanceEpsilon)) {
-    end_node = node;
-    return true;
+
+    if (!path_infos.back().is_shortcut) {
+      end_node = node;
+      return true;
+    } else { // can't end on a shortcut
+      return false;
+    }
   }
 
   // Get the last edge followed from this index
