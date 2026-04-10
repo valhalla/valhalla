@@ -250,6 +250,7 @@ message TripLeg {
     SpeedType speed_type = 65;
     bool traffic_signal = 66;
     HovType hov_type = 67;
+    uint32 curvature = 68;
   }
 
   message IntersectingEdge {
