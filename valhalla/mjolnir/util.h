@@ -12,8 +12,11 @@
 #include <array>
 #include <atomic>
 #include <map>
+#include <mutex>
+#include <span>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace valhalla {
@@ -125,52 +128,79 @@ struct build_stats {
     kInvalidLevel,
     kInvalidOSMTag,
     kMissingAccessTags,
+    // Graph summary counters (not warnings — totals for the built graph)
+    kCountComplexTurnRestrictions,
+    kCountEdges,
+    kCountNodes,
+    kCountShortcutEdgesLevel0,
+    kCountShortcutEdgesLevel1,
+    kCountShortcutsLevel0,
+    kCountShortcutsLevel1,
+    kCountSimpleTurnRestrictions,
+    kCountTiles,
     kCount // sentinel — must be last
   };
 
   struct meta_entry {
     const char* statsd_key;
     const char* log_label;
-    BuildStage stage;
+    BuildStage stage; // the stage that owns this counter (for statsd emission)
+    bool is_warning;  // true = LOG_WARN, false = LOG_INFO
   };
   static constexpr meta_entry meta[] = {
+      // Warning counters (alphabetical)
       {"exceeded_elevation_diff", "edges with elevation exceeding max difference",
-       BuildStage::kElevation},
-      {"exceeded_max_assigner_speed", "SpeedAssigner edges clamped to max", BuildStage::kEnhance},
-      {"exceeded_max_density", "nodes exceeding max density", BuildStage::kEnhance},
-      {"exceeded_max_local_edge_count", "nodes exceeding max local edge count", BuildStage::kEnhance},
-      {"exceeded_max_names", "edges exceeding max names", BuildStage::kBuild},
-      {"exceeded_max_nodes_per_way", "ways exceeding max nodes per way", BuildStage::kParseWays},
-      {"exceeded_max_osm_speed", "ways with speed clamped to max", BuildStage::kParseWays},
-      {"exceeded_max_osm_speed_limit", "ways with speed limit clamped to max",
-       BuildStage::kParseWays},
-      {"exceeded_max_osm_truck_speed", "ways with truck speed clamped to max",
-       BuildStage::kParseWays},
-      {"exceeded_max_shape_size", "edges exceeding max encoded shape size", BuildStage::kBuild},
-      {"exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges", BuildStage::kShortcuts},
-      {"exceeded_max_vias", "restrictions exceeding max vias", BuildStage::kRestrictions},
+       BuildStage::kElevation, true},
+      {"exceeded_max_assigner_speed", "SpeedAssigner edges clamped to max", BuildStage::kEnhance,
+       true},
+      {"exceeded_max_density", "nodes exceeding max density", BuildStage::kEnhance, true},
+      {"exceeded_max_local_edge_count", "nodes exceeding max local edge count", BuildStage::kEnhance,
+       true},
+      {"exceeded_max_names", "edges exceeding max names", BuildStage::kBuild, true},
+      {"exceeded_max_nodes_per_way", "ways exceeding max nodes per way", BuildStage::kParseWays,
+       true},
+      {"exceeded_max_osm_speed", "ways with speed clamped to max", BuildStage::kParseWays, true},
+      {"exceeded_max_osm_speed_limit", "ways with speed limit clamped to max", BuildStage::kParseWays,
+       true},
+      {"exceeded_max_osm_truck_speed", "ways with truck speed clamped to max", BuildStage::kParseWays,
+       true},
+      {"exceeded_max_shape_size", "edges exceeding max encoded shape size", BuildStage::kBuild, true},
+      {"exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges", BuildStage::kShortcuts,
+       true},
+      {"exceeded_max_vias", "restrictions exceeding max vias", BuildStage::kRestrictions, true},
       {"exceeded_turn_restriction_mask", "simple turn restriction masks exceeding limit",
-       BuildStage::kBuild},
+       BuildStage::kBuild, true},
       {"failed_ferry_reclass_both",
        "ferry connections completely failing to reclassify edges to the next level 0 edge",
-       BuildStage::kBuild},
+       BuildStage::kBuild, true},
       {"failed_ferry_reclass_inbound",
        "inbound ferry connections failing to reclassify edges to the next level 0 edge",
-       BuildStage::kBuild},
+       BuildStage::kBuild, true},
       {"failed_ferry_reclass_outbound",
        "outbound ferry connections failing to reclassify edges to the next level 0 edge",
-       BuildStage::kBuild},
-      {"failed_lane_connectivity", "lane connectivity import failures", BuildStage::kBuild},
+       BuildStage::kBuild, true},
+      {"failed_lane_connectivity", "lane connectivity import failures", BuildStage::kBuild, true},
       {"failed_node_initialization", "nodes with uninitialized coordinates",
-       BuildStage::kConstructEdges},
+       BuildStage::kConstructEdges, true},
       {"failed_osm_time_range", "OSM time range raises either invalid_argument or out_of_range",
-       BuildStage::kParseWays},
+       BuildStage::kParseWays, true},
       {"failed_osm_time_range_unknown", "OSM time range causes an unknown runtime_error",
-       BuildStage::kParseWays},
-      {"invalid_hov_type", "ways with invalid HOV type", BuildStage::kParseWays},
-      {"invalid_level", "ways with invalid level tags", BuildStage::kParseWays},
-      {"invalid_osm_tag", "invalid OSM tag parse errors", BuildStage::kParseWays},
-      {"missing_access_tags", "edges with missing access tags", BuildStage::kEnhance},
+       BuildStage::kParseWays, true},
+      {"invalid_hov_type", "ways with invalid HOV type", BuildStage::kParseWays, true},
+      {"invalid_level", "ways with invalid level tags", BuildStage::kParseWays, true},
+      {"invalid_osm_tag", "invalid OSM tag parse errors", BuildStage::kParseWays, true},
+      {"missing_access_tags", "edges with missing access tags", BuildStage::kEnhance, true},
+      // Graph summary counters (alphabetical)
+      {"count_complex_turn_restrictions", "complex turn restrictions", BuildStage::kRestrictions,
+       false},
+      {"count_edges", "amount of edges at Validate", BuildStage::kValidate, false},
+      {"count_nodes", "amount of nodes at Validate", BuildStage::kValidate, false},
+      {"count_shortcut_edges_level_0", "level 0 edges in shortcuts", BuildStage::kShortcuts, false},
+      {"count_shortcut_edges_level_1", "level 1 edges in shortcuts", BuildStage::kShortcuts, false},
+      {"count_shortcuts_level_0", "level 0 shortcuts", BuildStage::kShortcuts, false},
+      {"count_shortcuts_level_1", "level 1 shortcuts", BuildStage::kShortcuts, false},
+      {"count_simple_turn_restrictions", "simple turn restrictions", BuildStage::kBuild, false},
+      {"count_tiles", "amount of tiles with edges/nodes in them", BuildStage::kValidate, false},
   };
 
   static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");
@@ -179,16 +209,32 @@ struct build_stats {
     counters_[c] += by;
   }
 
+  // Increment the shortcut count and edge count for the given hierarchy level.
+  void increment_shortcuts(uint8_t level, uint32_t shortcuts, uint32_t edges) {
+    counter scl = level == 0 ? kCountShortcutsLevel0 : kCountShortcutsLevel1;
+    counter ecl = level == 0 ? kCountShortcutEdgesLevel0 : kCountShortcutEdgesLevel1;
+    counters_[scl] += shortcuts;
+    counters_[ecl] += edges;
+  }
+
   static build_stats& get() {
     static build_stats instance;
     return instance;
   }
 
-  // Log counters and emit current values to statsd.
+  // Record a timing to be emitted with the next log_stage() call.
+  void record_timing(const std::string& key, uint64_t seconds);
+
+  // Log and emit to statsd what changed since last snapshot.
+  // Also emits any timings recorded since the last call.
   void log_stage(BuildStage stage, const boost::property_tree::ptree& config) const;
 
 private:
   std::array<std::atomic<uint32_t>, kCount> counters_{};
+
+  // are modified in const log_stage
+  mutable std::vector<std::pair<std::string, uint64_t>> pending_timings_;
+  mutable std::mutex timings_mutex_;
 };
 
 // A little struct to hold stats information during each threads work

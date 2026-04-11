@@ -37,6 +37,7 @@
    * CHANGED: Deduplicate predicted speed profiles when updating tile [#5941](https://github.com/valhalla/valhalla/pull/5941)
    * FIXED: `edge.curvature` attribute in `trace_attributes` always returned 0; wired `DirectedEdge::curvature()` through `TripLeg.Edge` proto and JSON serialization [#6012](https://github.com/valhalla/valhalla/pull/6012)
    * ADDED: consolidated lots of mjolnir's LOG_WARN for less verbose default logging; added statsd support for `build_tile_set` [#5985](https://github.com/valhalla/valhalla/pull/5985)
+   * ADDED: mostly global graph attributes to mjolnir's statsd logging [#6021](https://github.com/valhalla/valhalla/pull/6021)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
