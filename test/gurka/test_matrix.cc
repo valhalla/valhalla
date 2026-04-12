@@ -343,12 +343,12 @@ TEST_F(MatrixTrafficTest, DisallowedRequest) {
   const auto result =
       gurka::do_action(Options::sources_to_targets, map, {"1", "2"}, {"1", "2"}, "auto", options);
 
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
   for (auto& loc : result.options().sources()) {
-    ASSERT_TRUE(loc.date_time().empty());
+    EXPECT_TRUE(loc.date_time().empty());
   }
   for (auto& loc : result.options().targets()) {
-    ASSERT_TRUE(loc.date_time().empty());
+    EXPECT_TRUE(loc.date_time().empty());
   }
 
   // revert for other tests
@@ -458,7 +458,7 @@ TEST_F(MatrixTrafficTest, CostMatrixPathfinding) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(map.config.get_child("mjolnir"));
 
@@ -884,6 +884,7 @@ TEST_P(TestConnectionCheck, MatrixSecondPass) {
     EXPECT_GT(api.matrix().times(0), 0.f);
     EXPECT_TRUE(api.matrix().second_pass(0));
     EXPECT_TRUE(api.info().warnings(0).description().find('0') != std::string::npos);
+    EXPECT_EQ(api.info().warnings(0).code(), 400);
   }
 
   // I -> K (idx 1) should pass on the first try
@@ -902,6 +903,7 @@ TEST_P(TestConnectionCheck, MatrixSecondPass) {
     EXPECT_FALSE(api.matrix().second_pass(0));
     EXPECT_FALSE(api.matrix().second_pass(3));
     EXPECT_TRUE(api.info().warnings(0).description().find('2') != std::string::npos);
+    EXPECT_EQ(api.info().warnings(0).code(), 400);
   }
 }
 

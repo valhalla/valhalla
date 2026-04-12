@@ -2,7 +2,7 @@
 
 [![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/)
 
-This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
+This folder ([`src/bindings/python`](https://github.com/valhalla/valhalla/tree/master/src/bindings/python)) contains the Python bindings for the [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
 > [!NOTE]
 > `pyvalhalla` packages are currently only published for:
@@ -87,6 +87,24 @@ print(get_help()["service_limits"]["auto"]["max_distance"])
 # instantiate Actor to load graph and call actions
 actor = Actor(config)
 route = actor.route({"locations": [...]})
+```
+
+#### Error Handling
+
+When a routing operation fails, a `ValhallaError` is raised (a subclass of `RuntimeError`) with structured fields from Valhalla's internal error codes:
+
+```python
+from valhalla import Actor, ValhallaError, get_config
+
+actor = Actor(get_config(tile_extract='./valhalla_tiles.tar'))
+
+try:
+    actor.route({"locations": [{"lat": 0.0, "lon": 0.0}, {"lat": 0.1, "lon": 0.1}], "costing": "auto"})
+except ValhallaError as e:
+    print(e.code)          # 171
+    print(e.message)       # "No suitable edges near location"
+    print(e.http_code)     # 400
+    print(e.http_message)  # "Bad Request"
 ```
 
 #### Graph Utilities

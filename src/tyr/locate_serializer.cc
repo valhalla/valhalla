@@ -2,6 +2,7 @@
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/time_info.h"
+#include "proto_conversions.h"
 #include "tyr/serializers.h"
 
 #include <cstdint>
@@ -113,8 +114,7 @@ void serialize_edges(const Location& location,
                      GraphReader& reader,
                      rapidjson::writer_wrapper_t& writer,
                      bool verbose) {
-  writer.start_array("edges");
-  for (const auto& edge : location.correlation().edges()) {
+  auto serialize_edge = [&](const PathEdge& edge) {
     writer.start_object();
     try {
       // get the osm way id
@@ -128,7 +128,56 @@ void serialize_edges(const Location& location,
 
         // incident information
         if (traffic.has_incidents) {
-          // TODO: incidents
+          writer.start_array("incidents");
+          auto inc_result = reader.GetIncidents(GraphId(edge.graph_id()), tile);
+
+          for (int index = inc_result.start_index; index < inc_result.end_index; ++index) {
+            writer.start_object();
+            const auto& loc = inc_result.tile->locations(index);
+            const auto& meta = inc_result.tile->metadata(loc.metadata_index());
+            writer("id", meta.id());
+            writer("type", incidentTypeToString(meta.type()));
+            writer("description", meta.description());
+            writer("long_description", meta.long_description());
+            writer("sub_type", meta.sub_type());
+            writer("sub_type_description", meta.sub_type_description());
+            writer("impact", incidentImpactToString(meta.impact()));
+            writer("road_closed", meta.road_closed());
+            writer("creation_time", meta.creation_time());
+            writer("start_time", meta.start_time());
+            writer("end_time", meta.end_time());
+            writer("num_lanes_blocked", meta.num_lanes_blocked());
+            writer("length", meta.length());
+            writer("clear_lanes", meta.clear_lanes());
+            writer("iso_3166_1_alpha2", meta.iso_3166_1_alpha2());
+            writer("iso_3166_1_alpha3", meta.iso_3166_1_alpha3());
+
+            if (meta.has_congestion()) {
+              writer.start_object("congestion");
+              writer("value", meta.congestion().value());
+              writer.end_object();
+            }
+
+            if (meta.alertc_codes_size() > 0) {
+              writer.start_array("alertc_codes");
+              for (int i = 0; i < meta.alertc_codes_size(); ++i) {
+                writer(meta.alertc_codes(i));
+              }
+              writer.end_array();
+            }
+
+            if (meta.lanes_blocked_size() > 0) {
+              writer.start_array("lanes_blocked");
+              for (int i = 0; i < meta.lanes_blocked_size(); ++i) {
+                writer(meta.lanes_blocked(i));
+              }
+              writer.end_array();
+            }
+
+            writer.end_object();
+          }
+
+          writer.end_array();
         }
         writer.start_array("access_restrictions");
         serialize_access_restrictions(tile, writer, GraphId(edge.graph_id()).id());
@@ -210,8 +259,21 @@ void serialize_edges(const Location& location,
       LOG_WARN("Expected edge not found in graph but found by loki::search!");
     }
     writer.end_object();
+  };
+
+  writer.start_array("edges");
+  for (const auto& edge : location.correlation().edges()) {
+    serialize_edge(edge);
   }
+
   writer.end_array();
+  if (location.correlation().filtered_edges_size() > 0) {
+    writer.start_array("filtered_edges");
+    for (const auto& edge : location.correlation().filtered_edges()) {
+      serialize_edge(edge);
+    }
+    writer.end_array();
+  }
 }
 
 void serialize_nodes(const Location& location,

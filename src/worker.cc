@@ -529,7 +529,8 @@ void parse_contours(const rapidjson::Document& doc,
 // parse all costings needed to fulfill the request, including recostings
 void parse_recostings(const rapidjson::Document& doc,
                       const std::string& key,
-                      valhalla::Options& options) {
+                      valhalla::Options& options,
+                      google::protobuf::RepeatedPtrField<valhalla::CodedDescription>& warnings) {
   // make sure we only have unique recosting names in the end
   std::unordered_set<std::string> names;
   auto check_name = [&names](const valhalla::Costing& recosting) -> void {
@@ -547,13 +548,13 @@ void parse_recostings(const rapidjson::Document& doc,
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
-      sif::ParseCosting(doc, key, options.add_recostings());
+      sif::ParseCosting(doc, key, options.add_recostings(), warnings);
       check_name(*options.recostings().rbegin());
     }
   } else if (options.recostings().size()) {
     for (auto& recosting : *options.mutable_recostings()) {
       check_name(recosting);
-      sif::ParseCosting(doc, key, &recosting, recosting.type());
+      sif::ParseCosting(doc, key, &recosting, warnings, recosting.type());
     }
   }
 }
@@ -642,6 +643,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto& options = *api.mutable_options();
   if (Options::Action_IsValid(action))
     options.set_action(action);
+  auto& warnings = *api.mutable_info()->mutable_warnings();
 
   // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
   if (options.action() == Options::sources_to_targets) {
@@ -922,7 +924,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   //   the gurka_closure_penalty test fails. investigate why.. intuitively it makes no sense,
   //   as in the above logic the costing options aren't even parsed yet,
   //   so how can it determine "ignore_closures" there?
-  sif::ParseCosting(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options, warnings);
 
   // if any of the locations params have a date_time object in their locations, we'll remember
   // only /sources_to_targets will parse more than one location collection and there it's fine
@@ -1045,7 +1047,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // parse any named costings for re-costing a given path
-  parse_recostings(doc, "/recostings", options);
+  parse_recostings(doc, "/recostings", options, warnings);
 
   // get the locations in there
   parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
@@ -1080,7 +1082,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else if (!options.has_matrix_locations_case()) {
+  } else if (!options.has_matrix_locations_case() ||
+             (options.sources_size() != 1 && options.targets_size() != 1)) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
 

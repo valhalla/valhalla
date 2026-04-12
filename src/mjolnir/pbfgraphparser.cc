@@ -197,6 +197,9 @@ struct graph_parser {
         way_.set_internal(tag_.second == "true" ? true : false);
       }
     };
+    tag_handlers_["tagged_internal_intersection"] = [this]() {
+      way_.set_internal(tag_.second == "true");
+    };
     tag_handlers_["turn_channel"] = [this]() {
       if (!infer_turn_channels_) {
         way_.set_turn_channel(tag_.second == "true" ? true : false);
@@ -1189,7 +1192,8 @@ struct graph_parser {
       } else if (hov_type == "HOV3") {
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       } else {
-        LOG_WARN("Unrecognized HOV type: " + hov_type);
+        LOG_DEBUG("Unrecognized HOV type: " + hov_type);
+        build_stats::get().increment(build_stats::kInvalidHovType);
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       }
     };
@@ -2590,7 +2594,8 @@ struct graph_parser {
           std::stringstream ss;
           ss << "Error during parsing of `" << tag_.first << "` tag on the way " << osmid_ << ": "
              << std::string{ex.what()};
-          LOG_WARN(ss.str());
+          LOG_DEBUG(ss.str());
+          build_stats::get().increment(build_stats::kInvalidOSMTag);
         }
 
       }

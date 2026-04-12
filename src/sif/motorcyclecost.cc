@@ -365,7 +365,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_turn_restrictions_) ||
       (edge->surface() > kMinimumMotorcycleSurface) || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile)) || CheckExclusions(edge, pred)) {
+      (pred.closure_pruning() && IsClosed(edge, tile)) || CheckExclusions<true>(edge, pred)) {
     return false;
   }
 
@@ -390,7 +390,8 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
       (opp_edge->surface() > kMinimumMotorcycleSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile)) || CheckExclusions(opp_edge, pred)) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      CheckExclusions<false>(opp_edge, pred)) {
     return false;
   }
 
@@ -586,7 +587,8 @@ Cost MotorcycleCost::TransitionCostReverse(
 
 void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                Costing* c) {
+                                Costing* c,
+                                google::protobuf::RepeatedPtrField<CodedDescription>& warnings) {
   c->set_type(Costing::motorcycle);
   c->set_name(Costing_Enum_Name(c->type()));
   auto* co = c->mutable_options();
@@ -594,11 +596,11 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
-  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
-  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
-  JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
-  JSON_PBF_RANGED_DEFAULT(co, kMotorcycleSpeedRange, json, "/top_speed", top_speed);
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kMotorcycleSpeedRange, json, "/top_speed", top_speed, warnings);
 }
 
 cost_ptr_t CreateMotorcycleCost(const Costing& costing_options) {
