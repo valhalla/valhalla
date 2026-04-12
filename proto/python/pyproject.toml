@@ -3,7 +3,8 @@ name = "valhalla-proto"
 dynamic = ["version"]
 description = "Generated Python code for the Valhalla protobuf API"
 readme = "README.md"
-requires-python = ">=3.9"
+# betterproto2 is limiting our min version requirement
+requires-python = ">=3.10"
 authors = [
   { name = "Christian Beiwinkel ", email = "chrstn@bwnkl.de" },
 ]
