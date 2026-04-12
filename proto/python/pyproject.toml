@@ -20,6 +20,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 root = "../.."
+version_scheme = "no-guess-dev"
+# PyPI doesn't accept local hashed version strings
+local_scheme = "no-local-version"
+version_file = "src/__version__.py"
 
 # betterproto2 generates: src/{__init__,message_pool}.py + src/valhalla/ + src/valhalla/mjolnir/ (for transit types)
 # Every level must be listed; "valhalla_proto" maps to src/ as the root package.
