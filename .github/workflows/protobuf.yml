@@ -26,7 +26,7 @@ jobs:
       - run: pip wheel --no-deps python/ -w python/dist
       - uses: pypa/gh-action-pypi-publish@v1.14.0
         with:
-          packages-dir: python/dist/
+          packages-dir: proto/python/dist/
           # uncomment when testing!
           repository-url: https://test.pypi.org/legacy/
  
