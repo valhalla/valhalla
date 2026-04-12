@@ -110,6 +110,7 @@ list(APPEND sources_with_warnings
 #ios we have more work to make use of system tzdb
 if(APPLE)
   list(APPEND sources ${VALHALLA_SOURCE_DIR}/third_party/date/src/ios.mm)
+  set_source_files_properties(${VALHALLA_SOURCE_DIR}/third_party/date/src/ios.mm PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 endif()
 
 valhalla_module(NAME baldr
