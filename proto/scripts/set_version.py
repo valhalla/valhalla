@@ -6,7 +6,6 @@ import datetime
 import re
 from pathlib import Path
 import json
-import tomllib
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,19 +65,6 @@ def write_version_typescript(version: str) -> None:
     print(f"Set ts/package.json version to {version}")
 
 
-def write_version_python(version: str) -> None:
-    import tomli_w
-
-    with open(PYPROJECT, "rb") as f:
-        data = tomllib.load(f)
-
-    data["project"]["version"] = version
-
-    with open(PYPROJECT, "wb") as f:
-        tomli_w.dump(data, f)
-    print(f"Set python/pyproject.toml version to {version}")
-
-
 def main() -> None:
     lang = ""
     if len(sys.argv) == 2:
@@ -87,9 +73,6 @@ def main() -> None:
     if lang == "ts" or lang == "":
         version = compute_version("-")
         write_version_typescript(version)
-    if lang == "py" or lang == "":
-        version = compute_version(".")
-        write_version_python(version)
 
 
 if __name__ == "__main__":

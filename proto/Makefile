@@ -8,22 +8,11 @@ SHELL := /bin/bash
 VALHALLA_PROTO := descriptors
 PYTHON_OUT := python/src/valhalla_proto
 
-generate-py:
-	rm -rf $(PYTHON_OUT)
-	mkdir -p $(PYTHON_OUT)
-	protoc \
-		-I $(VALHALLA_PROTO) \
-		--python_betterproto2_out=$(PYTHON_OUT) \
-		descriptors/*.proto
-
 generate-ts:
 	cd typescript && npm install && npm run generate
 
 version-for-%:
 	python scripts/set_version.py $*
-
-version-py:
-	python scripts/set_version.py py
 
 version-ts:
 	python scripts/set_version.py ts
@@ -51,7 +40,7 @@ publish-ts-tag:
 	cd typescript && npm pack
 	cd typescript && npm publish --access public
 
-release-py: generate-py version-for-py attach-commit-py build-py publish-py
+release-py: generate-py attach-commit-py build-py publish-py
 
 release-ts: generate-ts version-for-ts attach-commit-ts build-ts publish-ts
 
