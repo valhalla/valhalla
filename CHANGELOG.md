@@ -19,6 +19,8 @@
    * CHANGED: Optimize `get_service_days` in servicedays.cc [#5952](https://github.com/valhalla/valhalla/pull/5952)
    * ADDED: OSM XML format support for tile building [#5934](https://github.com/valhalla/valhalla/pull/5934)
    * ADDED: access restriction layer in MVT [#5912](https://github.com/valhalla/valhalla/pull/5912)
+  * ADDED: OSM XML format support for tile building [#5934](https://github.com/valhalla/valhalla/pull/5934)
+  * CHANGED: Skip storing hazmat access restrictions with value 'true' (normalized from yes/designated) since hazmat is allowed by default, reducing unnecessary lookups [#5972](https://github.com/valhalla/valhalla/pull/5972)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
