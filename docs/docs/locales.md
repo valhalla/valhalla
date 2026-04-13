@@ -14,7 +14,7 @@ Follow these steps to start contributing a translation:
 2. Navigate to https://www.transifex.com/explore/projects/ and search for the `Valhalla Phrases` project.
 3. Submit a request to join the team for the languages you know. You may also request a new language if yours does not appear in the list.
 4. Wait for an email with an invitation to start translating.
-5. From the [dashboard](https://www.transifex.com/valhalla/valhalla-phrases/dashboard/), navigate to the Translate page for your chosen language.
+5. From the [dashboard](https://explore.transifex.com/valhalla/valhalla-phrases/), navigate to the Translate page for your chosen language.
 6. Select the `en-US.json` source file to translate from.
 7. Before you start translating make sure to filter out any phrases with the `notranslate` tag. Apply this filter by selecting Tag > Doesn't contain tag > notranslate.
 8. For more information on how to use Transifex, check out the [getting started guide](https://docs.transifex.com/getting-started-1/translators).

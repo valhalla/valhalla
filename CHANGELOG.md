@@ -11,6 +11,8 @@
    * FIXED: Fix overestimated number of entries in `UnorderedIdTable::deserialize` [#5969](https://github.com/valhalla/valhalla/pull/5969)
    * FIXED: cleanup pkg-config to set the right variables [#5965](https://github.com/valhalla/valhalla/pull/5965)
    * FIXED: super trivial connections snapping to excluded edges in CostMatrix [#5996](https://github.com/valhalla/valhalla/pull/5996)
+   * FIXED: edge walking should not end on a shortcut [#6034](https://github.com/valhalla/valhalla/pull/6034)
+   * FIXED: Exclusion check in the reverse direction [#5375](https://github.com/valhalla/valhalla/pull/5375)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
@@ -35,6 +37,7 @@
    * CHANGED: Deduplicate predicted speed profiles when updating tile [#5941](https://github.com/valhalla/valhalla/pull/5941)
    * FIXED: `edge.curvature` attribute in `trace_attributes` always returned 0; wired `DirectedEdge::curvature()` through `TripLeg.Edge` proto and JSON serialization [#6012](https://github.com/valhalla/valhalla/pull/6012)
    * ADDED: consolidated lots of mjolnir's LOG_WARN for less verbose default logging; added statsd support for `build_tile_set` [#5985](https://github.com/valhalla/valhalla/pull/5985)
+   * ADDED: mostly global graph attributes to mjolnir's statsd logging [#6021](https://github.com/valhalla/valhalla/pull/6021)
    * ADDED: free flow and constrained flow speeds to mvt edge layer [#6014](https://github.com/valhalla/valhalla/pull/6014)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3

@@ -680,6 +680,11 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     std::filesystem::create_directories(tile_dir);
   }
 
+  // Snapshot for per-stage delta reporting
+  auto log_stage = [&config](BuildStage stage) { build_stats::get().log_stage(stage, config); };
+  // nothing to report, but logic only works correctly if every stage is logged
+  log_stage(BuildStage::kInitialize);
+
   // Set up the temporary (*.bin) files used during processing
   std::string ways_bin = tile_dir + ways_file;
   std::string way_nodes_bin = tile_dir + way_nodes_file;
@@ -693,8 +698,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string cr_to_bin = tile_dir + cr_to_file;
   std::string new_to_old_bin = tile_dir + new_to_old_file;
   std::string old_to_new_bin = tile_dir + old_to_new_file;
-
-  auto log_stage = [&config](BuildStage stage) { build_stats::get().log_stage(stage, config); };
 
   // OSMData class
   OSMData osm_data{0};
@@ -725,6 +728,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    log_stage(BuildStage::kParseRelations);
   }
 
   // Parse OSM data
@@ -738,6 +742,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    log_stage(BuildStage::kParseNodes);
   }
 
   // Construct edges
@@ -791,11 +796,13 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Perform optional edge filtering (remove edges and nodes for specific access modes)
   if (start_stage <= BuildStage::kFilter && BuildStage::kFilter <= end_stage) {
     GraphFilter::Filter(config);
+    log_stage(BuildStage::kFilter);
   }
 
   // Add transit
   if (start_stage <= BuildStage::kTransit && BuildStage::kTransit <= end_stage) {
     TransitBuilder::Build(config);
+    log_stage(BuildStage::kTransit);
   }
 
   // Build bike share stations
@@ -804,6 +811,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
       osm_data.read_from_unique_names_file(tile_dir);
     }
     BssBuilder::Build(config, osm_data, bss_nodes_bin);
+    log_stage(BuildStage::kBss);
   }
 
   // Builds additional hierarchies if specified within config file. Connections
@@ -812,6 +820,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (build_hierarchy) {
     if (start_stage <= BuildStage::kHierarchy && BuildStage::kHierarchy <= end_stage) {
       HierarchyBuilder::Build(config, new_to_old_bin, old_to_new_bin);
+      log_stage(BuildStage::kHierarchy);
     }
 
     // Build shortcuts if specified in the config file. Shortcuts can only be
@@ -847,6 +856,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Validate the graph and add information that cannot be added until full graph is formed.
   if (start_stage <= BuildStage::kValidate && BuildStage::kValidate <= end_stage) {
     GraphValidator::Validate(config);
+    log_stage(BuildStage::kValidate);
   }
 
   // Cleanup bin files
@@ -865,6 +875,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(old_to_new_bin);
     remove_temp_file(tile_manifest);
     OSMData::cleanup_temp_files(tile_dir);
+    log_stage(BuildStage::kCleanup);
   }
   return true;
 }
@@ -910,6 +921,11 @@ TileManifest TileManifest::ReadFromFile(const std::string& filename) {
   return TileManifest{tileset};
 }
 
+void build_stats::record_timing(const std::string& key, uint64_t seconds) {
+  std::lock_guard<std::mutex> lock(timings_mutex_);
+  pending_timings_.emplace_back(key, seconds);
+}
+
 void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree& config) const {
   auto stage_name = to_string(stage);
   std::vector<std::pair<std::string, uint32_t>> statsd_entries;
@@ -917,7 +933,7 @@ void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree&
     if (stage == meta[i].stage) {
       uint32_t current = counters_[i].load();
       statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, current);
-      if (current > 0) {
+      if (current > 0 && meta[i].is_warning) {
         LOG_WARN(std::format("[{}] {} {}", stage_name, current, meta[i].log_label));
       }
     }
@@ -940,6 +956,11 @@ void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree&
   for (const auto& [key, count] : statsd_entries) {
     client.gauge(key, count, 1.f, tags);
   }
+  for (const auto& [key, seconds] : pending_timings_) {
+    client.gauge(key, seconds, 1.f, tags);
+  }
+  pending_timings_.clear();
+  client.gauge("mjolnir.stage", static_cast<int>(stage), 1.f, tags);
   client.flush();
 }
 
