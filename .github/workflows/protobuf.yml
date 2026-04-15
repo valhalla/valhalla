@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
-      - run: make generate-ts version-ts attach-commit-ts build-ts
+      - run: make release-ts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
  
