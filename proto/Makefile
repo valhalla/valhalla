@@ -1,17 +1,14 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
-.PHONY: generate-ts version version-for-% attach-commit-ts attach-commit-py \
+.PHONY: generate-ts version-ts attach-commit-ts attach-commit-py \
         build-py build-ts publish-py publish-ts publish-ts-tag \
         release-py release-ts release-ts-tag
 
 generate-ts:
 	cd typescript && npm install && npm run generate
 
-version-for-%:
-	python scripts/set_version.py $*
-
 version-ts:
-	python scripts/set_version.py ts
+	@scripts/set_version.sh ts
 
 attach-commit-py:
 	git rev-parse --short HEAD > proto/python/COMMIT
@@ -38,7 +35,7 @@ publish-ts-tag:
 
 release-py: build-py publish-py
 
-release-ts: generate-ts version-for-ts attach-commit-ts build-ts publish-ts
+release-ts: generate-ts version-ts attach-commit-ts build-ts publish-ts
 
-release-ts-tag: generate-ts version-for-ts attach-commit-ts build-ts publish-ts-tag
+release-ts-tag: generate-ts version-ts attach-commit-ts build-ts publish-ts-tag
 

@@ -1,6 +1,6 @@
 {
   "name": "@valhallajs/proto",
-  "version": "3.6.3-dev20260326",
+  "version": "3.6.3-dev.68",
   "description": "Protocol buffer definitions for the Valhalla routing engine",
   "exports": {
     "./*": "./dist/*.js"
