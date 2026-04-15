@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "generate": "rm -rf src && mkdir -p src && protoc --plugin=protoc-gen-ts_proto=node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=src -I ../descriptors ../descriptors/*.proto",
+    "generate": "rm -rf src && mkdir -p src && grpc_tools_node_protoc --plugin=protoc-gen-ts_proto=node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=src -I ../descriptors ../descriptors/*.proto",
     "build": "tsc",
     "prepublishOnly": "npm run build"
   },
@@ -40,6 +40,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.2.3",
+    "grpc-tools": "^1.13.1",
     "ts-proto": "^2.11.2",
     "typescript": "^5.9.3"
   }
