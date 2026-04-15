@@ -17,7 +17,7 @@ attach-commit-ts:
 	echo "export const VALHALLA_COMMIT = \"$$(git -C .. rev-parse --short HEAD)\"" > typescript/src/_upstream.ts
 
 build-py:
-	pip wheel --no-deps python/ -w python/dist
+	python -m build ./python
 
 build-ts:
 	cd typescript && npm run build && npm pack
