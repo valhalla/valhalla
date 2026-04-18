@@ -48,6 +48,9 @@ site/
 
 .DS_Store
 
+.yolo/
+web-app/
+
 # python bindings
 src/bindings/python/valhalla/__version__.py
 **/*.egg-info

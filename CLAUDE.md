@@ -374,6 +374,77 @@ valhalla_service valhalla.json route '{"locations":[{"lat":47.141,"lon":9.521},{
 
 The third argument can also be a path to a JSON file. The `test_requests/` directory contains ~250 files with example requests for various scenarios (demo routes, truck routes, bicycle routes, transit, restrictions, etc.) — useful as templates for crafting test requests.
 
+### Running the REST API and Web Demo
+
+To run the full HTTP routing service and interactive web UI:
+
+**1. Build dependencies (Ubuntu/Debian):**
+
+```bash
+sudo apt-get install -y cmake libboost-all-dev libprotobuf-dev protobuf-compiler \
+  libsqlite3-dev libspatialite-dev liblz4-dev libgeos-dev libluajit-5.1-dev \
+  libcurl4-openssl-dev libzmq3-dev libczmq-dev libgeotiff-dev
+```
+
+**`prime_server` (not in apt — required for `ENABLE_SERVICES=ON`):**
+
+```bash
+cd /tmp && git clone --depth 1 https://github.com/kevinkreiser/prime_server.git
+cd prime_server && git submodule update --init --recursive
+mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build . -j$(nproc) && sudo cmake --install . && sudo ldconfig
+```
+
+**2. Build valhalla_service:**
+
+```bash
+git submodule update --init --recursive
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_SERVICES=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TESTS=OFF
+cmake --build . -j$(nproc) --target valhalla_service
+```
+
+**3. Generate config (pointing to pre-built tiles):**
+
+```bash
+./valhalla_build_config \
+  --mjolnir-tile-dir /path/to/valhalla_tiles \
+  --mjolnir-tile-extract /path/to/valhalla_tiles.tar \
+  --mjolnir-timezone /path/to/valhalla_tiles/timezones.sqlite \
+  --mjolnir-admin /path/to/valhalla_tiles/admins.sqlite > valhalla.json
+```
+
+**IMPORTANT:** Do not reuse old `valhalla.json` configs with a newer build — missing config fields (e.g., `httpd.service.timeout_seconds`) cause crashes. Always regenerate with `valhalla_build_config`.
+
+**4. Launch the API (listens on port 8002 by default):**
+
+```bash
+./valhalla_service valhalla.json 1
+```
+
+**5. Web demo (static files in the demos repo):**
+
+The `demos/` directory (from [valhalla/demos](https://github.com/valhalla/demos)) contains Leaflet-based UIs for routing, isochrones, matrix, map matching, etc. Serve with any static file server:
+
+```bash
+cd /path/to/demos && python3 -m http.server 8082 --bind 0.0.0.0
+```
+
+**IMPORTANT:** Use `index-internal.html` (not `index.html`) — it points to `server.local` (localhost:8002). The default `index.html` hardcodes `server.prod` (Mapbox API).
+
+| Demo URL | Feature |
+|----------|---------|
+| `/routing/index-internal.html` | Turn-by-turn routing |
+| `/isochrone/` | Isochrone/reachability |
+| `/matrix/` | Time-distance matrix |
+| `/map_matching/` | Map matching |
+| `/elevation/` | Elevation profiles |
+| `/optimized_route/` | Optimized route (TSP) |
+| `/expansion/` | Search expansion debug |
+| `/locate/` | Edge/node locate |
+
+**Pre-built Norway tiles** are available at `/Users/anders/workspace/private/valhalla-test/` (tiles, tar extract, timezone DB, and demos).
+
 ### Route Geometry: Polyline6 Encoding
 
 Valhalla encodes route geometries as polyline strings with **6 digits of precision** (polyline6), not the 5-digit precision from Google's original spec. This is critical — using 5-digit precision will place points in the ocean.
