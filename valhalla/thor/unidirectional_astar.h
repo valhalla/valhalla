@@ -156,6 +156,28 @@ protected:
    */
   std::vector<PathInfo> FormPath(const uint32_t dest);
 
+  /**
+   * Form multiple paths from the recorded candidate destination labels.
+   * The first entry in candidate_dest_labels_ is always the optimal path; any
+   * additional entries are filtered through share+stretch validators against
+   * the optimal before being included.
+   */
+  std::vector<std::vector<PathInfo>>
+  FormPaths(baldr::GraphReader& graphreader,
+            const valhalla::Location& origin,
+            const valhalla::Location& destination);
+
+  /**
+   * Run a single A* search from origin to destination and return whatever
+   * paths FormPaths collects (one optimal plus any plateau candidates that
+   * pass the validators). Callers drive penalty-based reruns by seeding
+   * penalized_edges_ between invocations.
+   */
+  std::vector<std::vector<PathInfo>>
+  ExecuteSearch(valhalla::Location& origin,
+                valhalla::Location& destination,
+                baldr::GraphReader& graphreader);
+
   sif::TravelMode mode_; // Current travel mode
   uint8_t travel_type_;  // Current travel type
 
@@ -170,6 +192,18 @@ protected:
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> edgelabels_;
+
+  // Number of paths to return (1 + alternates requested).
+  uint32_t desired_paths_count_ = 1;
+
+  // Indexes into edgelabels_ for each destination-edge pop that we accept as
+  // a candidate ending point. First entry is the optimal path's terminal label.
+  std::vector<uint32_t> candidate_dest_labels_;
+
+  // Edges whose cost is multiplied by kAlternatePenaltyFactor on a re-run to
+  // steer the search away from already-accepted paths. Survives Clear() so it
+  // can carry from one rerun to the next.
+  std::unordered_set<baldr::GraphId> penalized_edges_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;

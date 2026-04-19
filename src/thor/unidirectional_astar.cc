@@ -2,6 +2,7 @@
 #include "baldr/graphconstants.h"
 #include "midgard/logging.h"
 #include "sif/hierarchylimits.h"
+#include "thor/alternates.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -13,6 +14,16 @@ namespace valhalla {
 namespace thor {
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
+
+// Extra label-relaxation budget after the optimal destination is found, used
+// to collect candidate alternate paths. Tuned small to keep latency bounded.
+constexpr uint32_t kMaxAlternateIterations = 200000;
+
+// Cost multiplier applied to edges in penalized_edges_ during penalty reruns.
+constexpr double kAlternatePenaltyFactor = 3.0;
+
+// Upper bound on penalty reruns per GetBestPath call.
+constexpr uint32_t kMaxAlternateReruns = 4;
 
 template <const ExpansionType expansion_direction, const bool FORWARD>
 UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
@@ -45,6 +56,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   destinations_.clear();
   adjacencylist_.clear();
   edgestatus_.clear();
+  candidate_dest_labels_.clear();
 
   // Set the ferry flag to false
   has_ferry_ = false;
@@ -211,6 +223,11 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   auto edge_cost = FORWARD
                        ? costing_->EdgeCost(meta.edge, meta.edge_id, tile, time_info, flow_sources)
                        : costing_->EdgeCost(opp_edge, opp_edge_id, endtile, time_info, flow_sources);
+  // Penalize edges we've already used in prior paths (for penalty-rerun alternates).
+  if (!penalized_edges_.empty() &&
+      penalized_edges_.count(FORWARD ? meta.edge_id : opp_edge_id)) {
+    edge_cost.cost *= kAlternatePenaltyFactor;
+  }
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
 
   sif::Cost transition_cost =
@@ -473,18 +490,75 @@ std::vector<PathInfo> UnidirectionalAStar<ExpansionType::reverse>::FormPath(cons
 }
 
 template <const ExpansionType expansion_direction, const bool FORWARD>
-std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORWARD>::GetBestPath(
-    valhalla::Location& origin,
-    valhalla::Location& destination,
-    GraphReader& graphreader,
-    const sif::mode_costing_t& mode_costing,
-    const travel_mode_t mode,
-    const Options& /*options*/) {
-  // Set the mode and costing
-  mode_ = mode;
-  costing_ = mode_costing[static_cast<uint32_t>(mode_)];
-  travel_type_ = costing_->travel_type();
-  access_mode_ = costing_->access_mode();
+std::vector<std::vector<PathInfo>>
+UnidirectionalAStar<expansion_direction, FORWARD>::FormPaths(
+    GraphReader& /*graphreader*/,
+    const valhalla::Location& origin,
+    const valhalla::Location& destination) {
+  std::vector<std::vector<PathInfo>> paths;
+  LOG_INFO("UnidirectionalAStar::FormPaths: candidates=" +
+           std::to_string(candidate_dest_labels_.size()) +
+           " desired=" + std::to_string(desired_paths_count_));
+  if (candidate_dest_labels_.empty()) {
+    return paths;
+  }
+
+  // First candidate is always the optimal path.
+  paths.push_back(FormPath(candidate_dest_labels_.front()));
+  if (candidate_dest_labels_.size() == 1 || desired_paths_count_ <= 1) {
+    return paths;
+  }
+
+  // Validate subsequent candidates against the optimal via the shared helpers.
+  std::vector<std::unordered_set<GraphId>> shared_edgeids;
+  const float max_sharing = get_max_sharing(origin, destination);
+
+  uint32_t rejected_share = 0, rejected_stretch = 0, rejected_empty = 0;
+  for (size_t i = 1; i < candidate_dest_labels_.size(); ++i) {
+    if (paths.size() >= desired_paths_count_) {
+      break;
+    }
+    auto candidate = FormPath(candidate_dest_labels_[i]);
+    if (candidate.empty()) {
+      ++rejected_empty;
+      continue;
+    }
+    if (!validate_alternate_by_sharing(shared_edgeids, paths, candidate, max_sharing)) {
+      ++rejected_share;
+      continue;
+    }
+    if (!validate_alternate_by_stretch(paths.front(), candidate)) {
+      ++rejected_stretch;
+      continue;
+    }
+    if (!validate_alternate_by_local_optimality(candidate)) {
+      continue;
+    }
+    paths.emplace_back(std::move(candidate));
+  }
+
+  LOG_INFO("UnidirectionalAStar::FormPaths: returning=" + std::to_string(paths.size()) +
+           " rejected{share=" + std::to_string(rejected_share) +
+           ",stretch=" + std::to_string(rejected_stretch) +
+           ",empty=" + std::to_string(rejected_empty) + "}");
+  return paths;
+}
+
+template std::vector<std::vector<PathInfo>>
+UnidirectionalAStar<ExpansionType::forward>::FormPaths(GraphReader&,
+                                                       const valhalla::Location&,
+                                                       const valhalla::Location&);
+template std::vector<std::vector<PathInfo>>
+UnidirectionalAStar<ExpansionType::reverse>::FormPaths(GraphReader&,
+                                                       const valhalla::Location&,
+                                                       const valhalla::Location&);
+
+template <const ExpansionType expansion_direction, const bool FORWARD>
+std::vector<std::vector<PathInfo>>
+UnidirectionalAStar<expansion_direction, FORWARD>::ExecuteSearch(valhalla::Location& origin,
+                                                                 valhalla::Location& destination,
+                                                                 GraphReader& graphreader) {
+  candidate_dest_labels_.clear();
 
   if (!FORWARD) {
     // date_time must be set on the destination. Log an error but allow routes for now.
@@ -523,6 +597,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
                    // towards destination
   std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
   size_t n = 0;
+  size_t first_dest_label_count = 0; // edgelabels_.size() snapshot when first dest found
   while (true) {
     // Allow this process to be aborted
     if (interrupt && (++n % kInterruptIterationsInterval) == 0) {
@@ -533,8 +608,18 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     // invalid label indicates there are no edges that can be expanded.
     const uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
+      if (!candidate_dest_labels_.empty()) {
+        return FormPaths(graphreader, origin, destination);
+      }
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
       return {};
+    }
+
+    // If we already have the optimal and have spent a bounded extra budget
+    // without collecting more distinct destination edges, bail with what we've got.
+    if (!candidate_dest_labels_.empty() &&
+        edgelabels_.size() > first_dest_label_count + kMaxAlternateIterations) {
+      return FormPaths(graphreader, origin, destination);
     }
 
     // Copy the EdgeLabel for use in costing. Check if this is a destination
@@ -555,7 +640,15 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
                             pred.cost().cost, expansion_type, kNoFlowMask,
                             TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
       }
-      return {FormPath(predindex)};
+      if (candidate_dest_labels_.empty()) {
+        first_dest_label_count = edgelabels_.size();
+      }
+      candidate_dest_labels_.push_back(predindex);
+      if (candidate_dest_labels_.size() >= desired_paths_count_) {
+        return FormPaths(graphreader, origin, destination);
+      }
+      // Otherwise keep expanding — we want more candidates. Fall through so
+      // this edge gets marked kPermanent and we continue the loop.
     }
 
     // Mark the edge as permanently labeled. Do not do this for an origin
@@ -585,12 +678,15 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
       mindist = dist2dest;
       nc = 0;
     } else if (nc++ > kMaxIterationsWithoutConvergence) {
-      if (best_path.first >= 0) {
-        return {FormPath(best_path.first)};
-      } else {
-        LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_.size()));
-        return {};
+      if (!candidate_dest_labels_.empty()) {
+        return FormPaths(graphreader, origin, destination);
       }
+      if (best_path.first >= 0) {
+        candidate_dest_labels_.push_back(static_cast<uint32_t>(best_path.first));
+        return FormPaths(graphreader, origin, destination);
+      }
+      LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_.size()));
+      return {};
     }
 
     // Do not expand based on hierarchy level based on number of upward
@@ -613,19 +709,85 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
 }
 
 template std::vector<std::vector<PathInfo>>
+UnidirectionalAStar<ExpansionType::forward>::ExecuteSearch(valhalla::Location&,
+                                                           valhalla::Location&,
+                                                           GraphReader&);
+template std::vector<std::vector<PathInfo>>
+UnidirectionalAStar<ExpansionType::reverse>::ExecuteSearch(valhalla::Location&,
+                                                           valhalla::Location&,
+                                                           GraphReader&);
+
+template <const ExpansionType expansion_direction, const bool FORWARD>
+std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORWARD>::GetBestPath(
+    valhalla::Location& origin,
+    valhalla::Location& destination,
+    GraphReader& graphreader,
+    const sif::mode_costing_t& mode_costing,
+    const travel_mode_t mode,
+    const Options& options) {
+  // Set the mode and costing
+  mode_ = mode;
+  costing_ = mode_costing[static_cast<uint32_t>(mode_)];
+  travel_type_ = costing_->travel_type();
+  access_mode_ = costing_->access_mode();
+
+  desired_paths_count_ = 1;
+  if (options.has_alternates_case() && options.alternates())
+    desired_paths_count_ += options.alternates();
+  penalized_edges_.clear();
+
+  // First search — returns optimal plus any plateau-collected candidates.
+  auto paths = ExecuteSearch(origin, destination, graphreader);
+  if (paths.empty()) {
+    return paths;
+  }
+
+  // Penalty reruns: steer A* away from edges used by already-accepted paths.
+  const float max_sharing = get_max_sharing(origin, destination);
+  std::vector<std::unordered_set<GraphId>> shared_edgeids;
+  for (uint32_t rerun = 0;
+       rerun < kMaxAlternateReruns && paths.size() < desired_paths_count_;
+       ++rerun) {
+    for (const auto& path : paths) {
+      for (const auto& pi : path) {
+        penalized_edges_.insert(pi.edgeid);
+      }
+    }
+    Clear();
+    auto more = ExecuteSearch(origin, destination, graphreader);
+    if (more.empty()) {
+      break;
+    }
+    auto candidate = std::move(more.front());
+    if (!validate_alternate_by_sharing(shared_edgeids, paths, candidate, max_sharing) ||
+        !validate_alternate_by_stretch(paths.front(), candidate) ||
+        !validate_alternate_by_local_optimality(candidate)) {
+      LOG_INFO("UnidirectionalAStar: penalty-rerun " + std::to_string(rerun) +
+               " candidate rejected");
+      break;
+    }
+    LOG_INFO("UnidirectionalAStar: penalty-rerun " + std::to_string(rerun) +
+             " candidate accepted");
+    paths.emplace_back(std::move(candidate));
+  }
+
+  return paths;
+}
+
+template std::vector<std::vector<PathInfo>>
 UnidirectionalAStar<ExpansionType::forward>::GetBestPath(valhalla::Location& origin,
                                                          valhalla::Location& destination,
                                                          GraphReader& graphreader,
                                                          const sif::mode_costing_t& mode_costing,
                                                          const travel_mode_t mode,
-                                                         const Options& /*options*/);
+                                                         const Options& options);
 template std::vector<std::vector<PathInfo>>
 UnidirectionalAStar<ExpansionType::reverse>::GetBestPath(valhalla::Location& origin,
                                                          valhalla::Location& destination,
                                                          GraphReader& graphreader,
                                                          const sif::mode_costing_t& mode_costing,
                                                          const travel_mode_t mode,
-                                                         const Options& /*options*/);
+                                                         const Options& options);
 // Set the mode and costing
 // Initialize prior to finding best path
 template <const ExpansionType expansion_direction, const bool FORWARD>
