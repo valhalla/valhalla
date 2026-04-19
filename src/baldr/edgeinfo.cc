@@ -596,7 +596,6 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     writer("speed_limit", static_cast<uint64_t>(speed_limit()));
   }
 
-  std::vector<std::pair<std::string, uint64_t>> conditional_speed_limits;
   for (const auto& [tag, value] : GetTags()) {
     switch (tag) {
       case TaggedValue::kLayer:
@@ -646,11 +645,8 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
         writer.end_array();
         break;
       }
-      case TaggedValue::kConditionalSpeedLimits: {
-        const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
-        conditional_speed_limits.push_back({l->td_.to_string(), l->speed_});
+      case TaggedValue::kConditionalSpeedLimits:
         break;
-      }
       case TaggedValue::kReverseSpeedLimit:
         break;
       case TaggedValue::kTunnel:
@@ -660,10 +656,12 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     }
   }
 
-  if (!conditional_speed_limits.empty()) {
+  // Serialize conditional speed limits using the method as a one-liner
+  const auto csl = conditional_speed_limits();
+  if (!csl.empty()) {
     writer.start_object("conditional_speed_limits");
-    for (auto& [condition, speed] : conditional_speed_limits) {
-      writer(condition, speed);
+    for (const auto& limit : csl) {
+      writer(limit.td_.to_string(), limit.speed_);
     }
     writer.end_object();
   }

@@ -678,6 +678,8 @@ void BuildTileSet(const std::string& ways_file,
             return value;
           };
 
+          // forward_speed() and backward_speed() only come from maxspeed:{forward,backward} tags
+          // via graph.lua and pbfgraphparser, so using them here is safe when their tags exist
           uint32_t forward_speed_limit = w.forward_tagged_speed() ? w.forward_speed() : w.speed_limit();
           uint32_t reverse_speed_limit =
               w.backward_tagged_speed() ? w.backward_speed() : w.speed_limit();
