@@ -355,6 +355,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
             timedomain.set_end_mins(min);
 
             time_domains.push_back(timedomain.td_value());
+            timedomain = TimeDomain();
           }
         }
         return time_domains;
@@ -626,6 +627,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
             timedomain.set_end_mins(min);
 
             time_domains.push_back(timedomain.td_value());
+            timedomain = TimeDomain();
           }
         }
       }
@@ -634,6 +636,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
     // no time.
     if (time_domains.size() == 0 && timedomain.td_value()) {
       time_domains.push_back(timedomain.td_value());
+      timedomain = TimeDomain();
     }
   } catch (const std::invalid_argument& arg) {
     LOG_DEBUG("invalid_argument thrown for condition " + str);
