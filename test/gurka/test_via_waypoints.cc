@@ -220,6 +220,49 @@ TEST_P(IntermediateLocations, test_back_to_back_via_uturns) {
   EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), total_dist, 1.0);
 }
 
+class ColocatedThroughs : public ::testing::TestWithParam<std::string> {
+protected:
+  static gurka::map map;
+  static void SetUpTestSuite() {
+    constexpr double gridsize_metres = 10;
+    const std::string ascii_map = R"(A1234B5678C)";
+    const gurka::ways ways = {
+        {"AB", {{"highway", "primary"}}},
+        {"BC", {{"highway", "primary"}}},
+    };
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0.0, 0.0});
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_via_waypoints_colocated",
+                            build_config);
+  }
+};
+gurka::map ColocatedThroughs::map = {};
+
+TEST_P(ColocatedThroughs, same_node) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B", "B", "C"}, "auto",
+                                 {
+                                     {"/locations/0/type", "break"},
+                                     {"/locations/1/type", "through"},
+                                     {"/locations/2/type", "through"},
+                                     {"/locations/3/type", "break"},
+                                     {"/date_time/type", GetParam()},
+                                     {"/date_time/value", "2111-11-11T11:11"},
+                                 });
+  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
+
+  EXPECT_EQ(d["routes"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["waypoint_index"].GetInt(), 2);
+  // Both intermediates snapped to the same point so they share a geometry index and distance.
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(),
+            d["routes"][0]["legs"][0]["via_waypoints"][1]["geometry_index"].GetInt());
+  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
+              d["routes"][0]["legs"][0]["via_waypoints"][1]["distance_from_start"].GetDouble(), 1e-6);
+}
+
+INSTANTIATE_TEST_SUITE_P(ViaWaypoints, ColocatedThroughs, ::testing::Values("1", "2", "3"));
+
 // 1 is depart_at and 2 is arrive_by and 3 is invariant
 INSTANTIATE_TEST_SUITE_P(ViaWaypoints,
                          IntermediateLocations,
