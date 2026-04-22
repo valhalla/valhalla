@@ -1183,7 +1183,8 @@ struct graph_parser {
       } else if (hov_type == "HOV3") {
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       } else {
-        LOG_WARN("Unrecognized HOV type: " + hov_type);
+        LOG_DEBUG("Unrecognized HOV type: " + hov_type);
+        build_stats::get().increment(build_stats::kInvalidHovType);
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       }
     };
@@ -2584,7 +2585,8 @@ struct graph_parser {
           std::stringstream ss;
           ss << "Error during parsing of `" << tag_.first << "` tag on the way " << osmid_ << ": "
              << std::string{ex.what()};
-          LOG_WARN(ss.str());
+          LOG_DEBUG(ss.str());
+          build_stats::get().increment(build_stats::kInvalidOSMTag);
         }
 
       }
