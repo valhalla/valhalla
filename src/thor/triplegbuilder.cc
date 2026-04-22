@@ -475,7 +475,7 @@ void CopyLocations(TripLeg& trip_path,
     valhalla::Location* tp_intermediate = trip_path.add_location();
     tp_intermediate->CopyFrom(intermediate);
     // we can grab the right edge index in the path because we temporarily set it for trimming
-    if (last_shape_index && intermediate.correlation().leg_shape_index() <= *last_shape_index) {
+    if (last_shape_index && intermediate.correlation().leg_shape_index() < *last_shape_index) {
       throw std::logic_error("leg_shape_index not set for intermediate location");
     }
     last_shape_index = intermediate.correlation().leg_shape_index();
@@ -2181,8 +2181,8 @@ void TripLegBuilder::Build(
 
     // If we are at a node or if we hit the edge index that matches our through location edge index,
     // we need to reset to the shape index then increment the iterator
-    if (intermediate_itr != trip_path.mutable_location()->end() &&
-        intermediate_itr->correlation().leg_shape_index() == edge_index) {
+    while (intermediate_itr != trip_path.mutable_location()->end() &&
+           intermediate_itr->correlation().leg_shape_index() == edge_index) {
       intermediate_itr->mutable_correlation()->set_leg_shape_index(trip_shape.size() - 1);
       intermediate_itr->mutable_correlation()->set_distance_from_leg_origin(total_distance);
       // NOTE:
