@@ -492,3 +492,89 @@ TEST(Standalone, PbfOut) {
     EXPECT_NEAR(it->distance_from_trace_point(), 10., 0.5);
   }
 }
+
+TEST(Standalone, BackwardTraceOnOnewayEdge) {
+  const std::string ascii_map = R"(
+    D
+    |
+    0
+    |
+    A--1--2-----------3--4--B
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"oneway", "yes"}}},
+      {"DA", {{"highway", "residential"}}},
+  };
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/backward_trace_oneway");
+
+  struct TestCase {
+    std::vector<std::string> trace;
+    std::string description;
+  };
+
+  // Single edge backwards trace
+  for (const auto& tc : std::vector<TestCase>{
+           {{"3", "4", "1", "2"}, "forward then backward: 3->4->1->2"},
+           {{"1", "3", "2", "4"}, "backward middle step: 1->3->2->4"},
+           {{"2", "4", "3", "1"}, "forward then backward (shifted): 2->4->3->1"},
+       }) {
+    SCOPED_TRACE(tc.description);
+
+    std::string trace_json;
+    [[maybe_unused]] auto api =
+        gurka::do_action(valhalla::Options::trace_attributes, map, tc.trace, "auto",
+                         {{"/elevation_interval", "30"}}, {}, &trace_json);
+
+    rapidjson::Document result;
+    result.Parse(trace_json.c_str());
+    ASSERT_FALSE(result.HasParseError());
+
+    ASSERT_TRUE(result.HasMember("edges"));
+    auto edges = result["edges"].GetArray();
+    ASSERT_GE(edges.Size(), 1u);
+    EXPECT_STREQ(edges[0]["names"][0].GetString(), "AB");
+
+    // "AB" edge must have valid forward percentages (source <= target)
+    ASSERT_TRUE(edges[0].HasMember("source_percent_along"));
+    ASSERT_TRUE(edges[0].HasMember("target_percent_along"));
+    EXPECT_LE(edges[0]["source_percent_along"].GetFloat(),
+              edges[0]["target_percent_along"].GetFloat());
+  }
+
+  // Multi edge backwards trace
+  for (const auto& tc : std::vector<TestCase>{
+           {{"0", "3", "4", "1", "2"}, "forward then backward: 3->4->1->2"},
+           {{"0", "1", "3", "2", "4"}, "backward middle step: 1->3->2->4"},
+           {{"0", "2", "4", "3", "1"}, "forward then backward (shifted): 2->4->3->1"},
+       }) {
+    SCOPED_TRACE(tc.description);
+
+    std::string trace_json;
+    [[maybe_unused]] auto api =
+        gurka::do_action(valhalla::Options::trace_attributes, map, tc.trace, "auto",
+                         {{"/elevation_interval", "30"}}, {}, &trace_json);
+
+    rapidjson::Document result;
+    result.Parse(trace_json.c_str());
+    ASSERT_FALSE(result.HasParseError());
+
+    ASSERT_TRUE(result.HasMember("edges"));
+    auto edges = result["edges"].GetArray();
+    ASSERT_GE(edges.Size(), 2u);
+    EXPECT_STREQ(edges[0]["names"][0].GetString(), "DA");
+    ASSERT_TRUE(edges[0].HasMember("source_percent_along"));
+
+    EXPECT_STREQ(edges[1]["names"][0].GetString(), "AB");
+    ASSERT_TRUE(edges[1].HasMember("target_percent_along"));
+    EXPECT_GT(edges[1]["target_percent_along"].GetFloat(), 0.0);
+  }
+
+  // Fully reversed on a one-way edge — Meili can't route any consecutive pair
+  EXPECT_THROW(gurka::do_action(valhalla::Options::trace_attributes, map, {"4", "3", "2", "1"},
+                                "auto", {{"/elevation_interval", "30"}}),
+               std::exception);
+}
