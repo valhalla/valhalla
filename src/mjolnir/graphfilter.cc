@@ -125,8 +125,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
 
     const NodeInfo* en_info = tile->node(de->endnode().id());
     // check the direction, if we looped back, or are we done
-    if ((de->endnode() != prev_node) && (de->forward() == forward) &&
-        (de->endnode() != from_node)) {
+    if ((de->endnode() != prev_node) && (de->forward() == forward) && (de->endnode() != from_node)) {
       if (edge_info.wayid() == way_id &&
           (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
 
