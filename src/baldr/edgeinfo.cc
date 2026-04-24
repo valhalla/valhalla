@@ -140,6 +140,11 @@ size_t EdgeInfo::TaggedValueSize(const char* ptr) {
       return 1 + sizeof(ConditionalSpeedLimit) + 1;
     }
 
+    case TaggedValue::kReverseSpeedLimit: {
+      // Tag byte + fixed 1-byte speed limit + null terminator
+      return 1 + sizeof(uint8_t) + 1;
+    }
+
     case TaggedValue::kLinguistic: {
       const char* current = ptr + 1; // Skip tag byte
       while (*current != '\0') {
@@ -487,6 +492,19 @@ std::vector<ConditionalSpeedLimit> EdgeInfo::conditional_speed_limits() const {
   return limits;
 }
 
+uint32_t EdgeInfo::reverse_speed_limit() const {
+  const auto& tags = GetTags();
+  auto itr = tags.find(TaggedValue::kReverseSpeedLimit);
+  if (itr == tags.end()) {
+    return speed_limit();
+  }
+  const auto& value = itr->second;
+  if (value.size() != sizeof(uint8_t)) {
+    throw std::runtime_error("reverse speed limit must contain 1-byte value");
+  }
+  return static_cast<uint8_t>(static_cast<unsigned char>(value.front()));
+}
+
 int8_t EdgeInfo::layer() const {
   const auto& tags = GetTags();
   auto itr = tags.find(TaggedValue::kLayer);
@@ -578,7 +596,6 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     writer("speed_limit", static_cast<uint64_t>(speed_limit()));
   }
 
-  std::vector<std::pair<std::string, uint64_t>> conditional_speed_limits;
   for (const auto& [tag, value] : GetTags()) {
     switch (tag) {
       case TaggedValue::kLayer:
@@ -628,11 +645,10 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
         writer.end_array();
         break;
       }
-      case TaggedValue::kConditionalSpeedLimits: {
-        const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
-        conditional_speed_limits.push_back({l->td_.to_string(), l->speed_});
+      case TaggedValue::kConditionalSpeedLimits:
         break;
-      }
+      case TaggedValue::kReverseSpeedLimit:
+        break;
       case TaggedValue::kTunnel:
         break;
       case TaggedValue::kBridge:
@@ -640,10 +656,12 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     }
   }
 
-  if (!conditional_speed_limits.empty()) {
+  // Serialize conditional speed limits using the method as a one-liner
+  const auto csl = conditional_speed_limits();
+  if (!csl.empty()) {
     writer.start_object("conditional_speed_limits");
-    for (auto& [condition, speed] : conditional_speed_limits) {
-      writer(condition, speed);
+    for (const auto& limit : csl) {
+      writer(limit.td_.to_string(), limit.speed_);
     }
     writer.end_object();
   }

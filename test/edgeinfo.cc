@@ -327,6 +327,45 @@ TEST(EdgeInfo, TaggedValueSize_LongStrings) {
   EXPECT_EQ(size, tagged_value.size()) << "TaggedValueSize should match actual size";
 }
 
+TEST(EdgeInfo, ConditionalSpeedLimitsJson) {
+  // Test that conditional speed limits are properly serialized to JSON
+  EdgeInfoBuilder eibuilder;
+  eibuilder.set_wayid(123456);
+
+  // Add conditional speed limits using the builder
+  std::vector<ConditionalSpeedLimit> limits;
+  ConditionalSpeedLimit limit1;
+  limit1.speed_ = 50; // 50 KPH
+  limits.push_back(limit1);
+
+  eibuilder.set_conditional_speed_limits(limits);
+
+  // Write to memory and read back
+  boost::shared_array<char> memblock = ToFileAndBack(eibuilder);
+  std::unique_ptr<EdgeInfo> ei(new EdgeInfo(memblock.get(), nullptr, 0));
+
+  // Verify conditional_speed_limits() method returns the data
+  const auto csl = ei->conditional_speed_limits();
+  EXPECT_EQ(csl.size(), 1) << "Should have one conditional speed limit";
+  EXPECT_EQ(csl[0].speed_, 50) << "Speed limit should be 50 KPH";
+}
+
+TEST(EdgeInfo, EmptyConditionalSpeedLimitsJson) {
+  // Test that edges without conditional speed limits still serialize correctly
+  EdgeInfoBuilder eibuilder;
+  eibuilder.set_wayid(654321);
+
+  // Don't add any conditional speed limits
+
+  // Write to memory and read back
+  boost::shared_array<char> memblock = ToFileAndBack(eibuilder);
+  std::unique_ptr<EdgeInfo> ei(new EdgeInfo(memblock.get(), nullptr, 0));
+
+  // Verify conditional_speed_limits() returns empty vector
+  const auto csl = ei->conditional_speed_limits();
+  EXPECT_EQ(csl.size(), 0) << "Should have no conditional speed limits";
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
