@@ -3,6 +3,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/rapidjson_utils.h"
+#include "mjolnir/util.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/osrm_car_duration.h"
@@ -11,11 +12,13 @@
 #include "test.h"
 #include "worker.h"
 
+#include <cmath>
 #include <random>
 #endif
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::mjolnir;
 
 namespace valhalla {
 namespace sif {
@@ -445,6 +448,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   factor *= EdgeFactor(edgeid);
+  factor *= kCurvatureFactor[curvature_step_][edge->curvature()];
 
   return {sec * factor, sec};
 }
@@ -792,6 +796,56 @@ EXPECT_THAT(ctorTester->use_tolls , test::IsBetween(kUseTollsRange.min, kUseToll
    }
    **/
 }
+TEST(MotorcycleCost, testCurvatureFactorArray) {
+  // Step 50 = use_curvature 0.5 = neutral: factor must be exactly 1.0 for all curvature values.
+  for (uint32_t c = 0; c < 16; c++) {
+    EXPECT_FLOAT_EQ(kCurvatureFactor[50][c], 1.0f)
+        << "neutral step 50 should produce factor 1.0 for curvature " << c;
+  }
+
+  // Straight edges (c=0) always have factor 1.0 for all steps: x=1-0/denom=1, pow(1,any)=1.
+  for (uint32_t s = 0; s < kCurvatureSteps; s++) {
+    EXPECT_FLOAT_EQ(kCurvatureFactor[s][0], 1.0f)
+        << "straight edge (c=0) should always have factor 1.0 at step " << s;
+  }
+
+  // Prefer-curvy direction (steps > 50): curvy edges discounted, factors < 1.
+  for (uint32_t c = 1; c <= baldr::kMaxCurvatureFactor; c++) {
+    EXPECT_LT(kCurvatureFactor[100][c], 1.0f)
+        << "max prefer-curvy (step 100) should discount edge with curvature " << c;
+  }
+
+  // Avoid-curvy direction (steps < 50): curvy edges must get factor > 1 (more expensive).
+  for (uint32_t c = 1; c < 16; c++) {
+    EXPECT_GT(kCurvatureFactor[0][c], 1.0f)
+        << "max avoid-curvy (step 0) should increase cost for curvature " << c;
+  }
+
+  // The effect must be monotonic: higher curvature → stronger factor in both directions.
+  // Note: at step 100 (exp_internal=1000), high-curvature values underflow to 0 in float,
+  // so we only require weak monotonicity (≤) for the prefer-curvy direction.
+  for (uint32_t c = 1; c < 15; c++) {
+    EXPECT_LE(kCurvatureFactor[100][c + 1], kCurvatureFactor[100][c])
+        << "prefer-curvy factor should decrease monotonically with curvature";
+    EXPECT_GT(kCurvatureFactor[0][c + 1], kCurvatureFactor[0][c])
+        << "avoid-curvy factor should increase monotonically with curvature";
+  }
+
+  // Stronger preference → stronger discount: higher step → lower factor for curvy edges.
+  // Using LE because at very high steps the max-curvature factor saturates at 0.
+  for (uint32_t s = 51; s < kCurvatureSteps; s++) {
+    EXPECT_LE(kCurvatureFactor[s][baldr::kMaxCurvatureFactor],
+              kCurvatureFactor[s - 1][baldr::kMaxCurvatureFactor])
+        << "increasing prefer-curvy step should further discount max-curvature edge";
+  }
+
+  // Stronger avoidance → stronger effect: lower step → higher factor for same curvy edge.
+  for (uint32_t s = 1; s < 50; s++) {
+    EXPECT_GT(kCurvatureFactor[s - 1][15], kCurvatureFactor[s][15])
+        << "decreasing avoid-curvy step should further raise factor for max-curvature edge";
+  }
+}
+
 } // namespace
 
 #endif
