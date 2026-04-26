@@ -15,6 +15,7 @@
    * FIXED: Exclusion check in the reverse direction [#5375](https://github.com/valhalla/valhalla/pull/5375)
    * FIXED: `edge_walk` returning error 443 for trivial single-edge traces [#6046](https://github.com/valhalla/valhalla/issues/6046)
 * **Enhancement**
+   * UPDATED: timezone database to 2026b [#6052](https://github.com/valhalla/valhalla/pull/6052)
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
    * ADDED: `Cache-Control = public, max-age=N"` response header to `/tile` requests; also added RPATH to local debug builds to fix ldd resolving when libvalhalla is installed system-wide [#5902](https://github.com/valhalla/valhalla/pull/5902)
