@@ -13,6 +13,7 @@
    * FIXED: super trivial connections snapping to excluded edges in CostMatrix [#5996](https://github.com/valhalla/valhalla/pull/5996)
    * FIXED: edge walking should not end on a shortcut [#6034](https://github.com/valhalla/valhalla/pull/6034)
    * FIXED: Exclusion check in the reverse direction [#5375](https://github.com/valhalla/valhalla/pull/5375)
+   * FIXED: `edge_walk` returning error 443 for trivial single-edge traces [#6046](https://github.com/valhalla/valhalla/issues/6046)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
@@ -39,6 +40,7 @@
    * ADDED: consolidated lots of mjolnir's LOG_WARN for less verbose default logging; added statsd support for `build_tile_set` [#5985](https://github.com/valhalla/valhalla/pull/5985)
    * ADDED: mostly global graph attributes to mjolnir's statsd logging [#6021](https://github.com/valhalla/valhalla/pull/6021)
    * ADDED: free flow and constrained flow speeds to mvt edge layer [#6014](https://github.com/valhalla/valhalla/pull/6014)
+   * CHANGED: perf(costmatrix): use `ankerl::unordered_dense::set` instead of `std::set` for `LocationStatus::unfound_connections` [#6013](https://github.com/valhalla/valhalla/pull/6013)
    * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
