@@ -10,6 +10,7 @@
 #include "mjolnir/complexrestrictionbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmrestriction.h"
+#include "mjolnir/util.h"
 #include "scoped_timer.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -438,8 +439,9 @@ void build(const std::string& complex_restriction_from_file,
                 std::vector<GraphId> vias(tmp_ids.begin() + 1, tmp_ids.end() - 1);
 
                 if (vias.size() > kMaxViasPerRestriction) {
-                  LOG_WARN("Tried to exceed max vias per restriction(forward).  Way: " +
-                           std::to_string(tmp_ids.at(0)));
+                  LOG_DEBUG("Tried to exceed max vias per restriction(forward).  Way: " +
+                            std::to_string(tmp_ids.at(0)));
+                  build_stats::get().increment(build_stats::kExceededMaxVias);
                   return;
                 }
 
@@ -601,8 +603,9 @@ void build(const std::string& complex_restriction_from_file,
                     std::vector<GraphId> vias(tmp_ids.begin() + 1, tmp_ids.end() - 1);
 
                     if (vias.size() > kMaxViasPerRestriction) {
-                      LOG_WARN("Tried to exceed max vias per restriction(reverse).  Way: " +
-                               std::to_string(tmp_ids.at(0)));
+                      LOG_DEBUG("Tried to exceed max vias per restriction(reverse).  Way: " +
+                                std::to_string(tmp_ids.at(0)));
+                      build_stats::get().increment(build_stats::kExceededMaxVias);
                       return;
                     }
 
@@ -791,6 +794,8 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     }
     LOG_INFO("--Forward restrictions added: " + std::to_string(forward_restrictions_count));
     LOG_INFO("--Reverse restrictions added: " + std::to_string(reverse_restrictions_count));
+    build_stats::get().increment(build_stats::kCountComplexTurnRestrictions,
+                                 forward_restrictions_count + reverse_restrictions_count);
   }
   LOG_INFO("Finished");
 }
