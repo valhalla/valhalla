@@ -66,6 +66,14 @@ inline const valhalla::PathEdge* find_correlated_edge(const valhalla::Location& 
 namespace valhalla {
 namespace thor {
 
+struct CostMatrix::LocationStatus {
+  int threshold;
+  ankerl::unordered_dense::set<uint32_t> unfound_connections;
+
+  LocationStatus(const int t) : threshold(t) {
+  }
+};
+
 class CostMatrix::ReachedMap {
 public:
   using PmrVector = std::vector<uint32_t, std::pmr::polymorphic_allocator<uint32_t>>;
@@ -386,11 +394,16 @@ void CostMatrix::Initialize(
     adjacency_[is_fwd].resize(count);
     edgestatus_[is_fwd].resize(count);
     edgelabel_[is_fwd].resize(count);
+
+    for (uint32_t i = 0; i < count; i++) {
+      auto& loc_status = locs_status_[is_fwd].emplace_back(kMaxThreshold);
+      loc_status.unfound_connections.reserve(other_count);
+    }
+
     for (uint32_t i = 0; i < count; i++) {
       // Allocate the adjacency list and hierarchy limits for this source.
       // Use the cost threshold to size the adjacency list.
       edgelabel_[is_fwd][i].reserve(max_reserved_labels_count_);
-      locs_status_[is_fwd].emplace_back(kMaxThreshold);
       hierarchy_limits_[is_fwd][i] = hlimits;
       // for each source/target init the other direction's astar heuristic
       auto& ll = locations[i].ll();

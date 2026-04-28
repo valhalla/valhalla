@@ -1422,6 +1422,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_surface(GetTripLegSurface(directededge->surface()));
   }
 
+  // Set curvature if requested
+  if (controller(kEdgeCurvature)) {
+    trip_edge->set_curvature(directededge->curvature());
+  }
+
   if (directededge->destonly() && controller(kEdgeDestinationOnly)) {
     trip_edge->set_destination_only(directededge->destonly());
   }
