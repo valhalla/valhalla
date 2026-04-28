@@ -3,7 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
 
-## Release Date: 2026-04-01 Valhalla 3.6.4
+## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**
    * REMOVED: Removed ability to set ISO:3166 country/state code per OSM Node [#5747](https://github.com/valhalla/valhalla/pull/5747)
    * REMOVED: all module-level `logging` config in favor of a global one
