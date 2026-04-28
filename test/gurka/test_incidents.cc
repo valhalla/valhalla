@@ -1,25 +1,28 @@
 #include "gurka.h"
 #include "test.h"
 
+#include <vtzero/vector_tile.hpp>
+
 using namespace valhalla;
 
 class IncidentsTest : public ::testing::Test {
 protected:
   static gurka::map map;
+  static gurka::nodelayout layout;
 
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
     A----------0----------B----------1----------C
     |                     |
     |                     |
-    |                     |
-    2                     3
-    |                     |
+    |                     |   
+    2                     |   
+    |                     |   
     |                     |
     |                     |
     D----------4----------E----------5----------F
     |                     |
-    |                     |
+    |                     z
     |                     |
     6                     7
     |                     |
@@ -39,8 +42,7 @@ protected:
     };
 
     // generate the lls for the nodes in the map
-    const auto layout =
-        gurka::detail::map_to_coordinates(ascii_map, 100, {-111.962238354, 49.003392362});
+    layout = gurka::detail::map_to_coordinates(ascii_map, 100, {-111.962238354, 49.003392362});
 
     // make the tiles
     std::string tile_dir = "test/data/route_incidents";
@@ -58,6 +60,7 @@ protected:
 
 // initialize static member
 gurka::map IncidentsTest::map = {};
+gurka::nodelayout IncidentsTest::layout = {};
 
 // for asserting where the incident starts and ends on the route and how long it is
 struct incident_location {
@@ -169,7 +172,7 @@ void check_incident_country_code(const valhalla::TripLeg& leg,
 // a bit more work is needed if we want to do it for more than one tile at a time
 struct test_reader : public baldr::GraphReader {
   test_reader(const boost::property_tree::ptree& pt) : baldr::GraphReader(pt) {
-    tile_extract_.reset(new baldr::GraphReader::tile_extract_t(pt));
+    tile_extract_ = std::make_shared<baldr::GraphReader::tile_extract_t>(pt);
     enable_incidents_ = true;
   }
   virtual std::shared_ptr<const valhalla::IncidentsTile>
@@ -844,4 +847,116 @@ TEST_F(IncidentsTest, armageddon) {
                                        {2, 2, 0, .7, 1, .2},
                                        {3, 2, 0, .8, 1, 1.},
                                    });
+}
+
+TEST(Standalone, vector_tiles) {
+
+  const std::string ascii_map = R"(
+    A----------0----------B----------1----------C
+    |                     |
+    |                     |
+    |                     |   
+    2                     3   
+    |                     |   
+    |                     |
+    |                     |
+    D----------4----------E----------5----------F
+    |                     |
+    |                     |
+    |                     |
+    6                     7
+    |                     |
+    |                     |
+    |                     |
+    G----------8----------H----------9----------I)";
+
+  // connect the ways via the nodes
+  const gurka::ways ways = {
+      {"AB", {{"highway", "tertiary"}, {"driving_side", "left"}}},
+      {"BC", {{"highway", "service"}, {"driving_side", "left"}}},
+      {"DEF", {{"highway", "primary"}, {"driving_side", "left"}}},
+      {"GHI", {{"highway", "primary"}, {"driving_side", "left"}}},
+      {"ADG", {{"highway", "motorway"}, {"driving_side", "left"}}},
+      {"BE", {{"highway", "secondary"}, {"driving_side", "left"}}},
+      {"EH", {{"highway", "tertiary"}, {"driving_side", "left"}}},
+  };
+
+  // generate the lls for the nodes in the map
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 50, {-111.962238354, 49.003392362});
+
+  // make the tiles
+  std::string tile_dir = "test/data/incidents_mvt";
+  auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir,
+                               {
+                                   {"mjolnir.traffic_extract", tile_dir + "/traffic.tar"},
+                                   {"mjolnir.admin",
+                                    {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
+                               });
+
+  // stage up some live traffic data
+  test::build_live_traffic_data(map.config);
+
+  // mark the edges with incidents
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"AB", "BE", "DE", "AD"}, edge_ids);
+  std::cerr << "Doone!\n";
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
+
+  // modify the incident tile to have incidents on this edge
+  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 0.0f, 0.0f), 123, "snow storm");
+  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0.0f, 0.7f), 666,
+              "scorching heat");
+  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0.f, 1.f), 456, "raining frogs");
+  reader->add(edge_ids[3], createIncidentLocation(edge_ids[3].id(), 0.0f, 0.0f), 2, "locusts");
+  reader->sort();
+
+  std::unordered_set<std::string> description_map{"snow storm", "scorching heat", "raining frogs",
+                                                  "locusts"};
+
+  {
+    std::string tile_data;
+    [[maybe_unused]] auto api =
+        gurka::do_action(Options::tile, map, "A", 14, "auto", {}, graphreader, &tile_data);
+
+    vtzero::vector_tile tile{tile_data};
+
+    // and the lines layer
+    auto incidents_layer = tile.get_layer_by_name("incidents");
+    EXPECT_TRUE(incidents_layer.valid());
+    EXPECT_EQ(incidents_layer.num_features(), 6);
+
+    size_t num_lines = 0, num_points = 0;
+
+    while (auto feat = incidents_layer.next_feature()) {
+      switch (feat.geometry_type()) {
+        case (vtzero::GeomType::LINESTRING):
+          num_lines++;
+          break;
+        case (vtzero::GeomType::POINT):
+          num_points++;
+          break;
+        default:
+          FAIL() << "Unknown geometry type";
+      }
+
+      EXPECT_EQ(feat.num_properties(), 17);
+
+      bool found_description = false;
+      feat.for_each_property([&](vtzero::property&& p) {
+        if (p.key() == "description") {
+          auto s = p.value().string_value().to_string();
+          std::cerr << "found " << s
+                    << (feat.geometry_type() == vtzero::GeomType::POINT ? " p" : " l") << "\n";
+          EXPECT_TRUE(description_map.count(s) > 0) << "Unexpected description: " << s;
+          found_description = true;
+        }
+        return true;
+      });
+
+      EXPECT_TRUE(found_description);
+    }
+
+    EXPECT_EQ(num_lines, 3);
+    EXPECT_EQ(num_points, 3);
+  }
 }
