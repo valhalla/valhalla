@@ -212,6 +212,40 @@ TEST(Actor, SupportedFormats) {
   }
 }
 
+TEST(Actor, IsochroneSkipPbfToStringKeepsApiData) {
+  Api base;
+  Options* options = base.mutable_options();
+  options->set_action(Options::isochrone);
+  options->set_format(Options_Format_pbf);
+  options->set_costing_type(Costing_Type::Costing_Type_auto_);
+  auto* contour = options->mutable_contours()->Add();
+  contour->set_time(5.0f);
+  auto* location = options->mutable_locations()->Add();
+  location->mutable_ll()->set_lat(40.546115);
+  location->mutable_ll()->set_lng(-76.385076);
+
+  tyr::actor_t actor(conf);
+
+  Api without_skip = base;
+  Api with_skip = base;
+  with_skip.mutable_options()->mutable_format_options()->set_skip_pbf_to_string(true);
+
+  const std::string serialized_without_skip = actor.act(without_skip);
+  actor.cleanup();
+  const std::string serialized_with_skip = actor.act(with_skip);
+  actor.cleanup();
+
+  EXPECT_FALSE(serialized_without_skip.empty());
+  EXPECT_TRUE(serialized_with_skip.empty());
+  EXPECT_TRUE(without_skip.isochrone().intervals_size() > 0 ||
+              with_skip.isochrone().intervals_size() > 0);
+  // Skip flag should only change serialization behavior, not the computed payload.
+  without_skip.clear_info();
+  with_skip.clear_info();
+
+  EXPECT_TRUE(test::pbf_equals(without_skip, with_skip));
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

@@ -395,6 +395,15 @@ message Options {
     mvt = 5;  // we set this ourselves and throw if it's set by the user
   }
 
+  // Extended formatting options for the formats above.
+  message FormatOptions {
+    // Skips serialization of protobuf message to string and only populates the in memory Api request.
+    // Normally if we call actor.act(...) with a request in protobuf format, it will both fill the request
+    // object and serialize it to a string in the response.
+    // If this flag is set to true, then the final string serialization is skipped.
+    bool skip_pbf_to_string = 1;
+  }
+
   enum Action {
     no_action = 0;
     route = 1;
@@ -545,4 +554,5 @@ message Options {
   TileOptions tile_options = 64;                                   // additional /tile specific options
   repeated Levels exclude_levels = 65;                             // Levels to exclude within the exclude_polygon at the same index
   uint32 expansion_max_distance = 66;                              // Maximum path distance in meters for expansion. 0 = disabled.
+  FormatOptions format_options = 67;                               // Control formatting options for each of the given formats.
 }
