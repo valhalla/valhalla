@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 0  # setuptools_scm needs tags
+          fetch-tags: true  # versioning schema needs tags
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 0  # versioning schema needs tags
+          fetch-tags: true  # versioning schema needs tags
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
