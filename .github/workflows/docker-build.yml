@@ -24,7 +24,7 @@ on:
 
 jobs:
   extract_image_tag: 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.imgtag.outputs.tag }}
 
@@ -48,7 +48,7 @@ jobs:
     strategy:
       matrix:
         variant: [prod, dev]
-        os: [ubuntu-24.04, ubuntu-24.04-arm]
+        os: [ubuntu-latest, ubuntu-24.04-arm]
 
     if: ${{ github.repository_owner == 'valhalla' }}
     runs-on: ${{ matrix.os }}
@@ -63,7 +63,7 @@ jobs:
       - name: Determine platform and tag suffix
         id: vars
         run: |
-          if [ "${{ matrix.os }}" = "ubuntu-24.04" ]; then
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
             echo "platform=linux/amd64" >> "$GITHUB_OUTPUT"
             echo "tagsuffix=amd64" >> "$GITHUB_OUTPUT"
             echo "arch=amd64" >> "$GITHUB_OUTPUT"
@@ -145,7 +145,7 @@ jobs:
           - image: valhalla
           - image: valhalla-dev
           - image: valhalla-scripted
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     needs: [build_publish, extract_image_tag]
     steps:
       - name: Log in to GitHub Docker Registry
@@ -168,7 +168,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-latest
           - os: ubuntu-24.04-arm
     runs-on: ${{ matrix.os }}
     needs: [create-manifests, extract_image_tag]
