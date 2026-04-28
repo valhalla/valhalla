@@ -12,6 +12,7 @@ from ._graph_utils import (
     get_tile_base_lon_lat,
     get_tile_id_from_lon_lat,
     get_tile_ids_from_bbox,
+    get_tile_ids_from_ring,
 )
 
 __all__ = [
@@ -20,6 +21,7 @@ __all__ = [
     "get_tile_base_lon_lat",
     "get_tile_id_from_lon_lat",
     "get_tile_ids_from_bbox",
+    "get_tile_ids_from_ring",
 ]
 
 # Re-export GraphId unchanged

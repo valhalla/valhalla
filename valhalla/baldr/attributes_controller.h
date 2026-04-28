@@ -59,6 +59,8 @@ constexpr std::string_view kEdgeTransitRouteInfoOperatorName =
 constexpr std::string_view kEdgeTransitRouteInfoOperatorUrl = "edge.transit_route_info.operator_url";
 constexpr std::string_view kEdgeId = "edge.id";
 constexpr std::string_view kEdgeWayId = "edge.way_id";
+constexpr std::string_view kEdgeBeginOsmNodeId = "edge.begin_osm_node_id";
+constexpr std::string_view kEdgeEndOsmNodeId = "edge.end_osm_node_id";
 constexpr std::string_view kEdgeWeightedGrade = "edge.weighted_grade";
 constexpr std::string_view kEdgeMaxUpwardGrade = "edge.max_upward_grade";
 constexpr std::string_view kEdgeMaxDownwardGrade = "edge.max_downward_grade";
@@ -112,6 +114,8 @@ constexpr std::string_view kEdgeStopSignFwd = "edge.stop_sign_forward";
 constexpr std::string_view kEdgeYieldFwd = "edge.yield_sign_forward";
 constexpr std::string_view kEdgeAccessFwd = "edge.access_forward";
 constexpr std::string_view kEdgeLiveSpeedFwd = "edge.live_speed_forward";
+constexpr std::string_view kEdgeFreeflowSpeedFwd = "edge.freeflow_speed_forward";
+constexpr std::string_view kEdgeConstrainedSpeedFwd = "edge.freeflow_speed_forward";
 
 constexpr std::string_view kEdgeSpeedBwd = "edge.speed_backward";
 constexpr std::string_view kEdgeDeadendBwd = "edge.deadend_backward";
@@ -122,6 +126,8 @@ constexpr std::string_view kEdgeStopSignBwd = "edge.stop_sign_backward";
 constexpr std::string_view kEdgeYieldBwd = "edge.yield_sign_backward";
 constexpr std::string_view kEdgeAccessBwd = "edge.access_backward";
 constexpr std::string_view kEdgeLiveSpeedBwd = "edge.live_speed_backward";
+constexpr std::string_view kEdgeFreeflowSpeedBwd = "edge.freeflow_speed_backward";
+constexpr std::string_view kEdgeConstrainedSpeedBwd = "edge.freeflow_speed_backward";
 
 // Node keys
 constexpr std::string_view kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";

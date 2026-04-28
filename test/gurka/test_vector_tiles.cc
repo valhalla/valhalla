@@ -18,13 +18,14 @@
 using namespace valhalla;
 using namespace valhalla::midgard;
 
-constexpr size_t kNumMVTEdgeAttrs = std::size(loki::detail::kForwardEdgeAttributes) +
-                                    std::size(loki::detail::kReverseEdgeAttributes) +
-                                    std::size(loki::detail::kForwardLiveSpeedAttributes) +
-                                    std::size(loki::detail::kReverseLiveSpeedAttributes) +
-                                    // 1 + // kForwardLiveSpeedAttributes
-                                    // 1 + // kReverseLiveSpeedAttributes
-                                    std::size(loki::detail::kSharedEdgeAttributes);
+[[maybe_unused]] constexpr size_t kNumMVTEdgeAttrs =
+    std::size(loki::detail::kForwardEdgeAttributes) +
+    std::size(loki::detail::kReverseEdgeAttributes) +
+    std::size(loki::detail::kForwardLiveSpeedAttributes) +
+    std::size(loki::detail::kReverseLiveSpeedAttributes) +
+    // 1 + // kForwardLiveSpeedAttributes
+    // 1 + // kReverseLiveSpeedAttributes
+    std::size(loki::detail::kSharedEdgeAttributes);
 namespace {
 
 // handler only counting vertices in a linestring
@@ -84,7 +85,8 @@ TEST(VectorTilesBasic, TileGeneralization) {
                                const uint32_t expected_count) {
     // by default we expect full generalization
     std::string tile_data;
-    auto api = gurka::do_action(Options::tile, map, "x", 8, "auto", options, nullptr, &tile_data);
+    [[maybe_unused]] auto api =
+        gurka::do_action(Options::tile, map, "x", 8, "auto", options, nullptr, &tile_data);
 
     vtzero::vector_tile tile{tile_data};
     auto layer = tile.get_layer_by_name("edges");
@@ -118,7 +120,7 @@ A-B-C
   )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}, {"name", "Main Street"}}},
+      {"AB", {{"highway", "primary"}, {"name", "Main Street"}, {"maxweight", "7"}}},
       {"BC", {{"highway", "primary"}, {"name", "Main Street"}}},
       {"BD", {{"highway", "secondary"}, {"name", "Side Street"}}},
   };
@@ -127,28 +129,30 @@ A-B-C
   auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_vt_basic");
 
   std::string tile_data;
-  auto api = gurka::do_action(Options::tile, map, "x", 14, "auto", {}, nullptr, &tile_data);
+  [[maybe_unused]] auto api =
+      gurka::do_action(Options::tile, map, "x", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 2200);
-  EXPECT_GT(tile_data.size(), 2100);
+  EXPECT_LT(tile_data.size(), 3950);
+  EXPECT_GT(tile_data.size(), 3750);
 
   // expect a non-verbose request to have a lot less size
   std::string tile_data_slim;
-  auto api_slim = gurka::do_action(Options::tile, map, "B", 14, "auto", {{"/verbose", "0"}}, nullptr,
-                                   &tile_data_slim);
+  [[maybe_unused]] auto api_slim = gurka::do_action(Options::tile, map, "B", 14, "auto",
+                                                    {{"/verbose", "0"}}, nullptr, &tile_data_slim);
   EXPECT_LT(tile_data_slim.size(), tile_data.size() / 2);
 
   vtzero::vector_tile tile{tile_data};
 
+  EXPECT_EQ(tile.count_layers(), 4);
   while (auto layer = tile.next_layer()) {
     EXPECT_TRUE(layer.num_features() > 0);
 
     std::string layer_name = std::string(layer.name());
-    if (layer_name == "edges") {
+    if (layer_name == "edges" || layer_name == "shortcuts") {
       EXPECT_EQ(layer.version(), 2);
       EXPECT_EQ(layer.extent(), 4096);
 
-      EXPECT_EQ(layer.num_features(), 3);
+      EXPECT_EQ(layer.num_features(), layer_name == "shortcuts" ? 1 : 3);
 
       auto feature = layer.next_feature();
       EXPECT_TRUE(feature.has_id());
@@ -195,6 +199,31 @@ A-B-C
       for (const auto& prop : expected_props) {
         EXPECT_TRUE(found_props.count(prop) > 0) << "Node should have property: " << prop;
       }
+    } else if (layer_name == "access_restrictions") {
+      EXPECT_EQ(layer.version(), 2);
+      EXPECT_EQ(layer.extent(), 4096);
+
+      EXPECT_EQ(layer.num_features(), 2);
+
+      auto feature = layer.next_feature();
+      EXPECT_TRUE(feature.has_id());
+      EXPECT_GT(feature.id(), 0);
+
+      EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::LINESTRING);
+
+      std::set<std::string> expected_props = {"value", "modes", "type", "except_destination",
+                                              "edge_id"};
+      std::set<std::string> found_props;
+      while (auto property = feature.next_property()) {
+        std::string key = std::string(property.key());
+        found_props.insert(key);
+      }
+
+      // Check that all expected properties are present
+      for (const auto& prop : expected_props) {
+        EXPECT_TRUE(found_props.count(prop) > 0)
+            << "Access Restriction should have property: " << prop;
+      }
     } else {
       FAIL() << "Unexpected layer: " << layer_name;
     }
@@ -225,12 +254,12 @@ protected:
 
     const gurka::ways ways = {
         {"AB", {{"highway", "primary"}, {"name", "Main Street"}}},
-        {"BC", {{"highway", "primary"}, {"name", "Main1 Street"}}},
-        {"CD", {{"highway", "primary"}, {"name", "Main2 Street"}}},
-        {"AE", {{"highway", "secondary"}, {"name", "First Avenue"}}},
-        {"BF", {{"highway", "secondary"}, {"name", "Second Avenue"}}},
-        {"CG", {{"highway", "secondary"}, {"name", "Third Avenue"}}},
-        {"DH", {{"highway", "secondary"}, {"name", "Fourth Avenue"}}},
+        {"BC", {{"highway", "primary"}, {"name", "Main Street"}}},
+        {"CD", {{"highway", "primary"}, {"name", "Main Street"}}},
+        {"AE", {{"highway", "residential"}, {"name", "First Avenue"}}},
+        {"BF", {{"highway", "residential"}, {"name", "Second Avenue"}}},
+        {"CG", {{"highway", "residential"}, {"name", "Third Avenue"}}},
+        {"DH", {{"highway", "residential"}, {"name", "Fourth Avenue"}}},
         {"EF", {{"highway", "tertiary"}, {"name", "Oak Street"}}},
         {"FG", {{"highway", "tertiary"}, {"name", "Oak Street"}}},
         {"GH", {{"highway", "tertiary"}, {"name", "Oak Street"}}},
@@ -276,9 +305,9 @@ TEST_F(VectorTiles, LayerExclude) {
     });
     EXPECT_FALSE(tile.get_layer_by_name(exclude_layer_name.data()).valid());
     if (expect_layer_present) {
-      ASSERT_EQ(tile.count_layers(), 1);
-    } else {
       ASSERT_EQ(tile.count_layers(), 2);
+    } else {
+      ASSERT_EQ(tile.count_layers(), 3);
       ASSERT_EQ(api.info().warnings().size(), 1);
       EXPECT_EQ(api.info().warnings(0).code(), 212);
       EXPECT_STREQ(api.info().warnings(0).description().c_str(),
@@ -289,13 +318,15 @@ TEST_F(VectorTiles, LayerExclude) {
 
   test_tile("edges");
   test_tile("nodes");
+  test_tile("shortcuts");
   test_tile("non_existing_layer", false); // should be ignored, but not cause an error
   test_tile("0", false);                  // should be ignored, but not cause an error
 }
 
 TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   auto test_tile = [&](const uint32_t z, const uint32_t exp_total_size, const uint32_t exp_edges,
-                       const uint32_t exp_nodes, uint32_t& cache_count) {
+                       const uint32_t exp_nodes, const uint32_t exp_shortcuts,
+                       uint32_t& cache_count) {
     SCOPED_TRACE(std::format("Zoom {} failed", z));
     std::string tile_data;
     Api api = gurka::do_action(Options::tile, map, "x", z, "auto", {}, nullptr, &tile_data);
@@ -317,14 +348,27 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
 
     vtzero::vector_tile tile{tile_data};
     uint32_t edges = 0;
+    uint32_t shortcuts = 0;
     uint32_t nodes = 0;
 
     while (auto layer = tile.next_layer()) {
       std::string layer_name = std::string(layer.name());
-      if (layer_name == "edges") {
+      if (layer_name == "shortcuts") {
+        shortcuts = layer.num_features();
+        // make sure the feature has "shortcut = true" property
+        while (const auto& feat = layer.next_feature()) {
+          bool missed_shortcut = feat.for_each_property([](const vtzero::property& prop) {
+            const std::string_view prop_str{prop.key().data(), prop.key().size()};
+            if (prop_str == "shortcut") {
+              EXPECT_TRUE(prop.value().bool_value());
+              return false;
+            }
+            return true;
+          });
+          EXPECT_FALSE(missed_shortcut);
+        };
+      } else if (layer_name == "edges") {
         edges = layer.num_features();
-        EXPECT_EQ(layer.version(), 2);
-        EXPECT_EQ(layer.extent(), 4096);
       } else if (layer_name == "nodes") {
         nodes = layer.num_features();
       } else {
@@ -333,27 +377,28 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
     }
 
     EXPECT_EQ(edges, exp_edges);
+    EXPECT_EQ(shortcuts, exp_shortcuts);
     EXPECT_EQ(nodes, exp_nodes);
   };
 
   uint32_t cache_count = 0;
-  test_tile(8, 2183, 3, 4, cache_count);    // only primary
-  test_tile(10, 3293, 7, 12, cache_count);  // adds secondary
-  test_tile(11, 4037, 11, 12, cache_count); // adds tertiary & unclassified
-  test_tile(12, 4037, 11, 12, cache_count); // same as 11
-  test_tile(13, 5141, 15, 20, cache_count); // adds residential
-  test_tile(14, 5710, 18, 20, cache_count); // adds service/other
+  test_tile(8, 3754, 3, 4, 1, cache_count);    // only primary & shortcut
+  test_tile(10, 3754, 3, 4, 1, cache_count);   // same as 8, adds nothing
+  test_tile(11, 4664, 6, 8, 2, cache_count);   // adds tertiary & shortcut
+  test_tile(12, 4664, 6, 8, 2, cache_count);   // same as 11, adds nothing
+  test_tile(13, 6728, 14, 20, 2, cache_count); // adds residential
+  test_tile(14, 7310, 17, 20, 2, cache_count); // adds service/other
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
 
   // execute the cache path
-  test_tile(14, 5710, 18, 20, cache_count);
+  test_tile(14, 7310, 17, 20, 2, cache_count);
 
   // make sure we fail the request when z exceeds what the server supports
   EXPECT_THROW(
       {
         try {
-          test_tile(16, 7903, 17, 20, cache_count);
+          test_tile(16, 7903, 17, 20, 2, cache_count);
         } catch (const valhalla_exception_t& e) {
           EXPECT_EQ(e.code, 175);
           EXPECT_STREQ(e.what(), "Exceeded max zoom level of: 14");
@@ -365,15 +410,15 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
 
 TEST_F(VectorTiles, FilterIncludeExclude) {
   // edge_id:forward/backward are not defined in EdgeAttributeTile arrays
-  assert(std::size(loki::detail::kEdgePropToAttributeFlag) == (kNumMVTEdgeAttrs + 2)),
-      std::format("");
+  ASSERT_EQ(std::size(loki::detail::kEdgePropToAttributeFlag), (kNumMVTEdgeAttrs + 2));
   // same for iso_3166_1/2 not existing in NodeAttributeTile array
-  assert(std::size(loki::detail::kNodePropToAttributeFlag) ==
-         (std::size(loki::detail::kNodeAttributes) + 2));
+  ASSERT_EQ(std::size(loki::detail::kNodePropToAttributeFlag),
+            (std::size(loki::detail::kNodeAttributes) + 2));
 
   // verbose is set true in do_action
   std::string tile_data_full;
-  Api api_full = gurka::do_action(Options::tile, map, "x", 10, "auto", {}, nullptr, &tile_data_full);
+  [[maybe_unused]] Api api_full =
+      gurka::do_action(Options::tile, map, "x", 10, "auto", {}, nullptr, &tile_data_full);
 
   // get a map with settings to not allow cache
   auto map_no_cache = map;

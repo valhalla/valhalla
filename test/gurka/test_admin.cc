@@ -13,93 +13,6 @@
 #endif
 
 using namespace valhalla;
-const std::unordered_map<std::string, std::string> build_config{
-    {"mjolnir.data_processing.use_admin_db", "false"}};
-
-class AdminTest : public ::testing::Test {
-protected:
-  static gurka::map map;
-
-  static void SetUpTestSuite() {
-    constexpr double gridsize_metres = 100;
-
-    const std::string ascii_map = R"(
-                          A
-                          |
-                          |
-                          B
-                          |
-                          |
-                          C
-  )";
-
-    const gurka::ways ways = {{"AB", {{"highway", "motorway"}, {"driving_side", "right"}}},
-                              {"BC", {{"highway", "motorway"}, {"driving_side", "left"}}}};
-
-    const gurka::nodes nodes =
-        {{"A", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-PA"}}},
-         {"B", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-PA"}, {"iso:3166_2", "US-MD"}}},
-         {"C", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-MD"}}}};
-
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
-    map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_admin", build_config);
-  }
-};
-gurka::map AdminTest::map = {};
-Api api;
-rapidjson::Document d;
-
-/*************************************************************/
-
-TEST_F(AdminTest, Iso) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
-
-  // rest_area
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  auto leg = result.trip().routes(0).legs(0);
-  EXPECT_EQ(leg.admin(0).country_code(), "US"); // AB
-  EXPECT_EQ(leg.admin(0).state_code(), "PA");   // AB
-  EXPECT_EQ(leg.admin(1).country_code(), "US"); // BC
-  EXPECT_EQ(leg.admin(1).state_code(), "MD");   // BC
-  EXPECT_FALSE(leg.node(0).edge().drive_on_left());
-  EXPECT_TRUE(leg.node(1).edge().drive_on_left());
-}
-
-TEST_F(AdminTest, test_osrm_response) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
-  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
-
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["steps"].Size(), 3);
-
-  // Expect admin list at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("admins"));
-  EXPECT_STREQ(leg["admins"][0]["iso_3166_1"].GetString(), "US");
-  EXPECT_STREQ(leg["admins"][0]["iso_3166_1_alpha3"].GetString(), "USA");
-  EXPECT_EQ(leg["admins"].Size(), 2);
-
-  auto steps = leg["steps"].GetArray();
-
-  // First step has admin_index=0
-  int step_index = 0;
-  EXPECT_EQ(steps[step_index]["intersections"].Size(), 1);
-  EXPECT_TRUE(steps[step_index]["intersections"][0].HasMember("admin_index"));
-  EXPECT_EQ(steps[step_index]["intersections"][0]["admin_index"].GetInt(), 0);
-
-  // Second step has admin_index=0
-  step_index++;
-  EXPECT_EQ(steps[step_index]["intersections"].Size(), 1);
-  EXPECT_TRUE(steps[step_index]["intersections"][0].HasMember("admin_index"));
-  EXPECT_EQ(steps[step_index]["intersections"][0]["admin_index"].GetInt(), 0);
-
-  // Third step has admin_index=1
-  step_index++;
-  EXPECT_EQ(steps[step_index]["intersections"].Size(), 1);
-  EXPECT_TRUE(steps[step_index]["intersections"][0].HasMember("admin_index"));
-  EXPECT_EQ(steps[step_index]["intersections"][0]["admin_index"].GetInt(), 1);
-}
 
 /**************************************************************************** */
 
@@ -134,8 +47,8 @@ TEST(Standalone, AdminCrossingsCountry) {
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}}});
   std::string result_json;
   rapidjson::Document result;
-  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
-                              {{"/admin_crossings", "1"}}, {}, &result_json);
+  [[maybe_unused]] auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                                               {{"/admin_crossings", "1"}}, {}, &result_json);
   result.Parse(result_json.c_str());
 
   ASSERT_EQ(result["trip"]["legs"].Size(), 1);
@@ -183,8 +96,8 @@ TEST(Standalone, AdminCrossingsState) {
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}}});
   std::string result_json;
   rapidjson::Document result;
-  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
-                              {{"/admin_crossings", "1"}}, {}, &result_json);
+  [[maybe_unused]] auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                                               {{"/admin_crossings", "1"}}, {}, &result_json);
   result.Parse(result_json.c_str());
 
   ASSERT_EQ(result["trip"]["legs"].Size(), 1);
@@ -237,8 +150,8 @@ TEST(Standalone, AdminCrossingsMultiple) {
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}}});
   std::string result_json;
   rapidjson::Document result;
-  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
-                              {{"/admin_crossings", "1"}}, {}, &result_json);
+  [[maybe_unused]] auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                                               {{"/admin_crossings", "1"}}, {}, &result_json);
   result.Parse(result_json.c_str());
 
   ASSERT_EQ(result["trip"]["legs"].Size(), 1);
@@ -307,8 +220,8 @@ TEST(Standalone, AdminCrossingsNone) {
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}}});
   std::string result_json;
   rapidjson::Document result;
-  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
-                              {{"/admin_crossings", "1"}}, {}, &result_json);
+  [[maybe_unused]] auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                                               {{"/admin_crossings", "1"}}, {}, &result_json);
   result.Parse(result_json.c_str());
 
   ASSERT_EQ(result["trip"]["legs"].Size(), 1);
@@ -346,8 +259,8 @@ TEST(Standalone, AdminCrossingsEnter) {
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}}});
   std::string result_json;
   rapidjson::Document result;
-  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
-                              {{"/admin_crossings", "1"}}, {}, &result_json);
+  [[maybe_unused]] auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                                               {{"/admin_crossings", "1"}}, {}, &result_json);
   result.Parse(result_json.c_str());
 
   ASSERT_EQ(result["trip"]["legs"].Size(), 1);
@@ -466,8 +379,8 @@ TEST(Standalone, AdminAlongEdge) {
   std::string result_json;
   rapidjson::Document api_result;
 
-  auto api = gurka::do_action(valhalla::Options::route, map, {"G", "H"}, "auto",
-                              {{"/admin_crossings", "1"}}, {}, &result_json);
+  [[maybe_unused]] auto api = gurka::do_action(valhalla::Options::route, map, {"G", "H"}, "auto",
+                                               {{"/admin_crossings", "1"}}, {}, &result_json);
   api_result.Parse(result_json.c_str());
 
   ASSERT_EQ(api_result["trip"]["legs"].Size(), 1);

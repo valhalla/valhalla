@@ -85,6 +85,8 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeTransitRouteInfoOperatorUrl, true},
     {kEdgeId, true},
     {kEdgeWayId, true},
+    {kEdgeBeginOsmNodeId, true},
+    {kEdgeEndOsmNodeId, true},
     {kEdgeWeightedGrade, true},
     {kEdgeMaxUpwardGrade, true},
     {kEdgeMaxDownwardGrade, true},
@@ -139,6 +141,8 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeYieldFwd, false},
     {kEdgeAccessFwd, false},
     {kEdgeLiveSpeedFwd, false},
+    {kEdgeFreeflowSpeedFwd, false},
+    {kEdgeConstrainedSpeedFwd, false},
 
     {kEdgeSpeedBwd, false},
     {kEdgeDeadendBwd, false},
@@ -149,6 +153,8 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeYieldBwd, false},
     {kEdgeAccessBwd, false},
     {kEdgeLiveSpeedBwd, false},
+    {kEdgeFreeflowSpeedBwd, false},
+    {kEdgeConstrainedSpeedBwd, false},
 
     // Node keys
     {kIncidents, false},

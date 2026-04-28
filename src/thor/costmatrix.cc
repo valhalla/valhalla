@@ -52,11 +52,6 @@ int GetThreshold(const travel_mode_t mode,
              : 500;
 }
 
-bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
-  return a.has_lat_case() == b.has_lat_case() && a.has_lng_case() == b.has_lng_case() &&
-         (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
-}
-
 inline const valhalla::PathEdge* find_correlated_edge(const valhalla::Location& location,
                                                       const GraphId& edge_id) {
   for (const auto& e : location.correlation().edges()) {
@@ -70,6 +65,14 @@ inline const valhalla::PathEdge* find_correlated_edge(const valhalla::Location& 
 
 namespace valhalla {
 namespace thor {
+
+struct CostMatrix::LocationStatus {
+  int threshold;
+  ankerl::unordered_dense::set<uint32_t> unfound_connections;
+
+  LocationStatus(const int t) : threshold(t) {
+  }
+};
 
 class CostMatrix::ReachedMap {
 public:
@@ -391,11 +394,16 @@ void CostMatrix::Initialize(
     adjacency_[is_fwd].resize(count);
     edgestatus_[is_fwd].resize(count);
     edgelabel_[is_fwd].resize(count);
+
+    for (uint32_t i = 0; i < count; i++) {
+      auto& loc_status = locs_status_[is_fwd].emplace_back(kMaxThreshold);
+      loc_status.unfound_connections.reserve(other_count);
+    }
+
     for (uint32_t i = 0; i < count; i++) {
       // Allocate the adjacency list and hierarchy limits for this source.
       // Use the cost threshold to size the adjacency list.
       edgelabel_[is_fwd][i].reserve(max_reserved_labels_count_);
-      locs_status_[is_fwd].emplace_back(kMaxThreshold);
       hierarchy_limits_[is_fwd][i] = hlimits;
       // for each source/target init the other direction's astar heuristic
       auto& ll = locations[i].ll();
@@ -423,10 +431,7 @@ void CostMatrix::Initialize(
   for (uint32_t i = 0; i < locs_count_[MATRIX_FORW]; i++) {
     for (uint32_t j = 0; j < locs_count_[MATRIX_REV]; j++) {
       const auto connection_idx = i * static_cast<uint32_t>(target_locations.size()) + j;
-      if (equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
-        best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
-        best_connection_.back().found = true;
-      } else if (costing_->pass() > 0 && !matrix.second_pass(connection_idx)) {
+      if (costing_->pass() > 0 && !matrix.second_pass(connection_idx)) {
         // we've found this connection in a previous pass, we only need the time & distance
         best_connection_.emplace_back(empty, empty, Cost{0.0f, matrix.times(connection_idx)},
                                       matrix.distances(connection_idx));
@@ -641,7 +646,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix",
                         Expansion_EdgeStatus_reached, newcost.secs, pred_dist, newcost.cost,
                         static_cast<Expansion_ExpansionType>(!static_cast<bool>(expansion_direction)),
-                        flow_sources);
+                        flow_sources, TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
   }
 
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
@@ -685,7 +690,7 @@ bool CostMatrix::Expand(const uint32_t index,
                         Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
                         pred.cost().cost,
                         static_cast<Expansion_ExpansionType>(!static_cast<bool>(expansion_direction)),
-                        kNoFlowMask);
+                        kNoFlowMask, TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
   }
 
   CheckConnections<expansion_direction>(index, pred, n, graphreader, options);
@@ -983,7 +988,7 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
       expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix",
                           Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
                           pred.cost().cost, static_cast<Expansion_ExpansionType>(!FORWARD),
-                          kNoFlowMask);
+                          kNoFlowMask, TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
     }
   }
 
@@ -1229,7 +1234,7 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
                                        const bool invariant) {
   // no need to look at source == target or missing connectivity
   if ((!has_time_ && request.options().shape_format() == no_shape && !request.options().verbose()) ||
-      connection.cost.secs == 0.f || connection.distance == kMaxCost) {
+      connection.distance == kMaxCost) {
     return "";
   }
 

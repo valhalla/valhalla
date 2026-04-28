@@ -548,6 +548,14 @@ void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
   if (end_shape_index >= 0) {
     writer(key_prefix + "geometry_index_end", end_shape_index);
   }
+
+  if (incident_metadata.has_display_ll() && incident_metadata.display_ll().has_lat() &&
+      incident_metadata.display_ll().has_lng()) {
+    writer.start_object("display_ll");
+    writer("lat", incident_metadata.display_ll().lat());
+    writer("lon", incident_metadata.display_ll().lng());
+    writer.end_object();
+  }
   // TODO Add test of lanes blocked and add missing properties
 }
 

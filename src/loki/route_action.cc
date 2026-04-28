@@ -69,74 +69,122 @@ void loki_worker_t::route(Api& request) {
   auto connectivity_level = TileHierarchy::levels().back();
   uint32_t connectivity_radius = 0;
   // Validate walking distances (make sure they are in the accepted range)
-  if (costing_name == "multimodal" || costing_name == "transit") {
+  if (costing_name == "multimodal" || costing_name == "transit" ||
+      costing_name == "auto_pedestrian") {
     auto& ped_opts = *options.mutable_costings()->find(Costing::pedestrian)->second.mutable_options();
-    if (!ped_opts.has_transit_start_end_max_distance_case())
-      ped_opts.set_transit_start_end_max_distance(min_transit_walking_dis);
-    auto transit_start_end_max_distance = ped_opts.transit_start_end_max_distance();
+
+    // "transit_start_end_max_distance" is deprecated
+    // but we will still allow it for some time
+    if (ped_opts.has_transit_transfer_max_distance_case()) {
+      ped_opts.set_multimodal_start_end_max_distance(ped_opts.transit_start_end_max_distance());
+    }
+
+    // we have renamed this parameter
+    if (!ped_opts.has_multimodal_start_end_max_distance_case())
+      ped_opts.set_multimodal_start_end_max_distance(min_multimodal_walking_dist);
+    auto multimodal_start_end_max_distance = ped_opts.multimodal_start_end_max_distance();
 
     if (!ped_opts.has_transit_transfer_max_distance_case())
-      ped_opts.set_transit_transfer_max_distance(min_transit_walking_dis);
+      ped_opts.set_transit_transfer_max_distance(min_multimodal_walking_dist);
     auto transit_transfer_max_distance = ped_opts.transit_transfer_max_distance();
 
-    if (transit_start_end_max_distance < min_transit_walking_dis ||
-        transit_start_end_max_distance > max_transit_walking_dis) {
-      throw valhalla_exception_t{155, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " +
-                                          std::to_string(max_transit_walking_dis) + " (Meters)"};
+    if (multimodal_start_end_max_distance < min_multimodal_walking_dist ||
+        multimodal_start_end_max_distance > max_multimodal_walking_dist) {
+      throw valhalla_exception_t{155, " Min: " + std::to_string(min_multimodal_walking_dist) +
+                                          " Max: " + std::to_string(max_multimodal_walking_dist) +
+                                          " (Meters)"};
     }
-    if (transit_transfer_max_distance < min_transit_walking_dis ||
-        transit_transfer_max_distance > max_transit_walking_dis) {
-      throw valhalla_exception_t{156, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " +
-                                          std::to_string(max_transit_walking_dis) + " (Meters)"};
+    if (transit_transfer_max_distance < min_multimodal_walking_dist ||
+        transit_transfer_max_distance > max_multimodal_walking_dist) {
+      throw valhalla_exception_t{156, " Min: " + std::to_string(min_multimodal_walking_dist) +
+                                          " Max: " + std::to_string(max_multimodal_walking_dist) +
+                                          " (Meters)"};
     }
-    connectivity_level = TileHierarchy::GetTransitLevel();
+    if (costing_name != "auto_pedestrian") {
+      connectivity_level = TileHierarchy::GetTransitLevel();
+    }
     connectivity_radius = ped_opts.transit_start_end_max_distance();
   }
 
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    auto locations = PathLocation::fromPBF(options.locations(), true);
-    size_t locations_end = locations.size();
+    auto* locations = options.mutable_locations();
+    locations->begin()->set_minimum_inbound_reachability(0);
+    locations->rbegin()->set_minimum_outbound_reachability(0);
+    auto locations_size = locations->size();
 
     // maybe squeeze in the first and last locations of each user specified feature for cost factor
     // lines as we'll need those for edge walking
     for (const auto& line : options.cost_factor_lines()) {
-      locations.push_back(PathLocation::fromPBF(line.shape(0)));
-      locations.back().min_inbound_reach_ = 0;
-      locations.push_back(PathLocation::fromPBF(line.shape(line.shape_size() - 1)));
-      locations.back().min_inbound_reach_ = 0;
+      google::protobuf::RepeatedPtrField<Location> first_and_last;
+      first_and_last.Add()->CopyFrom(*line.shape().begin());
+      first_and_last.Add()->CopyFrom(*line.shape().rbegin());
+      Api dummy;
+      parse_locations(&first_and_last, dummy);
+      locations->MergeFrom(first_and_last);
     }
 
-    const auto projections = search_.search(locations, costing);
-    for (size_t i = 0; i < locations_end; ++i) {
-      const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);
-      if (!connectivity_map) {
-        continue;
+    // in case of auto_pedestrian costing, we 1) only allow two locations
+    // and 2) need two different costings for the start and end location.
+    // Search::search does not allow for multiple costings per location so instead
+    // we bite the bullet and call search twice, merging the results.
+    // TODO(chris): right now we hash location based purely on ll, but what if the user wants to start
+    // and end at the same location but with different costing? What does that even mean? Find the
+    // nearest parking and walk back to where I am? Seems like a plausible use case...
+    if (costing_name == "auto_pedestrian") {
+      if (locations_size > 2) {
+        throw valhalla_exception_t{150, "for auto_pedestrian: " + std::to_string(locations->size())};
       }
-      auto colors = connectivity_map->get_colors(connectivity_level, correlated, connectivity_radius);
-      for (auto color : colors) {
-        auto itr = color_counts.find(color);
-        if (itr == color_counts.cend()) {
-          color_counts[color] = 1;
-        } else {
-          ++itr->second;
+      google::protobuf::RepeatedPtrField<Location> start_loc(locations->begin(),
+                                                             locations->begin() + 1);
+      search_.search(start_loc, mode_costing[static_cast<size_t>(mode)]);
+      google::protobuf::RepeatedPtrField<Location> end_loc(locations->begin() + 1,
+                                                           locations->begin() + 2);
+      search_.search(end_loc, mode_costing[static_cast<size_t>(mode)]);
+      // merge them again
+      locations->at(0).CopyFrom(start_loc.at(0));
+      locations->at(1).CopyFrom(end_loc.at(0));
+    } else {
+      search_.search(*locations, mode_costing[static_cast<size_t>(mode)]);
+    }
+
+    // throw if there's a location we did not find any
+    // candidates for
+    for (const auto& location : *locations) {
+      if (location.correlation().edges().empty() && location.correlation().filtered_edges().empty()) {
+        throw valhalla_exception_t(171);
+      }
+    }
+
+    if (connectivity_map) {
+      for (int i = 0; i < locations_size; ++i) {
+        auto colors =
+            connectivity_map->get_colors(connectivity_level, locations->at(i), connectivity_radius);
+        for (auto color : colors) {
+          auto itr = color_counts.find(color);
+          if (itr == color_counts.cend()) {
+            color_counts[color] = 1;
+          } else {
+            ++itr->second;
+          }
         }
       }
     }
 
     // store the correlations for the cost factor lines
+    // todo(chris): make sure this'll work with auto_pedestrian as well
     size_t i = 0;
     for (auto& line : *options.mutable_cost_factor_lines()) {
-      const auto& correlated_start = projections.at(locations[locations_end + 2 * i]);
-      auto* start = line.mutable_locations()->Add();
-      PathLocation::toPBF(correlated_start, start, *reader);
-      const auto& correlated_end = projections.at(locations[locations_end + 2 * i + 1]);
-      auto* end = line.mutable_locations()->Add();
-      PathLocation::toPBF(correlated_end, end, *reader);
+      size_t correlated_start_index = locations_size + 2 * i;
+      line.mutable_locations()->Add(std::move(locations->at(correlated_start_index)));
+      size_t correlated_end_index = locations_size + 2 * i + 1;
+      line.mutable_locations()->Add(std::move(locations->at(correlated_end_index)));
       ++i;
     }
+    // and remove the first and last cost factor lines from the locations again
+    locations->DeleteSubrange(locations_size, locations->size() - locations_size);
+
   } catch (const valhalla_exception_t& e) { throw e; } catch (const std::exception&) {
     throw valhalla_exception_t{171};
   }

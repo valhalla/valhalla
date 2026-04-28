@@ -352,7 +352,7 @@ void validate(
         uint32_t ar_modes = de->access_restriction();
         if (ar_modes) {
           // since only truck restrictions exist, we can still get all restrictions
-          auto res = tile->GetAccessRestrictions(idx);
+          auto res = tile->GetAccessRestrictions(idx).first;
           if (res.empty()) {
             LOG_ERROR(
                 "Directed edge marked as having access restriction but none found ; tile level = " +
@@ -484,6 +484,9 @@ void validate(
     }
     lock.unlock();
 
+    build_stats::get().increment(build_stats::kCountNodes, nodes.size());
+    build_stats::get().increment(build_stats::kCountEdges, directededges.size());
+
     // Add possible duplicates to return class
     duplicates[level] += dupcount;
   }
@@ -573,6 +576,9 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   for (const auto& id : tileset) {
     tilequeue.emplace_back(id);
   }
+  // log before creating empty tiles
+  build_stats::get().increment(build_stats::kCountTiles, tilequeue.size());
+
   // fixed seed for reproducible tile build
   std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
 

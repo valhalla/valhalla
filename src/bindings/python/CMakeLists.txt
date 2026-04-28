@@ -41,7 +41,8 @@ foreach(tgt IN ITEMS _valhalla _graph_utils predicted_speeds)
   # force abi3.so extension
   nanobind_extension_abi3(${tgt})
 
-  target_link_libraries(${tgt} PRIVATE 
+  target_include_directories(${tgt} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../shared)
+  target_link_libraries(${tgt} PRIVATE
     valhalla
     Python::SABIModule
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
@@ -118,6 +119,8 @@ function(set_output_python rel_path)
 endfunction()
 
 configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_config ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_config.py COPYONLY)
+configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_elevation ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_elevation.py COPYONLY)
+configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_extract ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_extract.py COPYONLY)
 
 foreach (py_src ${py_srcs})
   set_output_python(${py_src})
