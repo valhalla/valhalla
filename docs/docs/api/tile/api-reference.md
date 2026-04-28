@@ -68,23 +68,15 @@ edge.speed_limit
 edge.layer
 
 // directional attributes
-edge.access:<direction>
-edge.deadend:<direction>
-edge.lanecount:<direction>
-edge.live_speed:<direction>
-edge.live_speed:<direction>:speed1
-edge.live_speed:<direction>:speed2
-edge.live_speed:<direction>:speed3
-edge.live_speed:<direction>:bp1 // bp = breakpoint, range [0-255]
-edge.live_speed:<direction>:bp2
-edge.live_speed:<direction>:congestion1  // 0 = unknown congestion, valid range [0-63]
-edge.live_speed:<direction>:congestion2
-edge.live_speed:<direction>:congestion3
-edge.speed:<direction>
-edge.stop_sign:<direction>
-edge.traffic_signal:<direction>
-edge.truck_speed:<direction>
-edge.yield_sign:<direction>
+edge.speed_<direction>
+edge.deadend_<direction>
+edge.lanecount_<direction>
+edge.truck_speed_<direction>
+edge.traffic_signal_<direction>
+edge.stop_sign_<direction>
+edge.yield_sign_<direction>
+edge.access_<direction>
+edge.live_speed_<direction>
 
 // node attributes
 node.drive_on_right
