@@ -1,41 +1,23 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
-.PHONY: generate-py generate-ts version version-for-% \
-        attach-commit-py attach-commit-ts \
+.PHONY: generate-ts version-ts attach-commit-ts attach-commit-py \
         build-py build-ts publish-py publish-ts publish-ts-tag \
-        release-py release-ts release-ts-tag release-py-tag
-
-VALHALLA_PROTO := descriptors
-PYTHON_OUT := python/src/valhalla_proto
-
-generate-py:
-	rm -rf $(PYTHON_OUT)
-	mkdir -p $(PYTHON_OUT)
-	protoc \
-		-I $(VALHALLA_PROTO) \
-		--python_betterproto2_out=$(PYTHON_OUT) \
-		descriptors/*.proto
+        release-py release-ts release-ts-tag
 
 generate-ts:
 	cd typescript && npm install && npm run generate
 
-version-for-%:
-	python scripts/set_version.py $*
-
-version-py:
-	python scripts/set_version.py py
-
 version-ts:
-	python scripts/set_version.py ts
+	@scripts/set_version.sh ts
 
 attach-commit-py:
-	echo "VALHALLA_COMMIT = \"$$(git -C .. rev-parse --short HEAD)\"" > $(PYTHON_OUT)/_upstream.py
+	git rev-parse --short HEAD > proto/python/COMMIT
 
 attach-commit-ts:
 	echo "export const VALHALLA_COMMIT = \"$$(git -C .. rev-parse --short HEAD)\"" > typescript/src/_upstream.ts
 
 build-py:
-	cd python && rm -rf dist && python -m build
+	python -m build ./python
 
 build-ts:
 	cd typescript && npm run build && npm pack
@@ -51,9 +33,9 @@ publish-ts-tag:
 	cd typescript && npm pack
 	cd typescript && npm publish --access public
 
-release-py: generate-py version-for-py attach-commit-py build-py publish-py
+release-py: build-py publish-py
 
-release-ts: generate-ts version-for-ts attach-commit-ts build-ts publish-ts
+release-ts: generate-ts version-ts attach-commit-ts build-ts publish-ts
 
-release-ts-tag: generate-ts version-for-ts attach-commit-ts build-ts publish-ts-tag
+release-ts-tag: generate-ts version-ts attach-commit-ts build-ts publish-ts-tag
 
