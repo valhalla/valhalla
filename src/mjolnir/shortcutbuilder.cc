@@ -28,6 +28,20 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+/**
+ * Helper to get a unique identifier from a shape. This uses a commutative
+ * approach so that the order of points does not matter, so that a shape and its reverse
+ * variant produce the same identifier.
+ */
+uint32_t shape_id(const std::vector<PointLL>& shape) {
+  uint32_t hash = 0;
+  for (const auto& pt : shape) {
+    hash += std::hash<double>{}(pt.lat()) * 2654435761u;
+    hash += std::hash<double>{}(pt.lng()) * 2246822519u;
+  }
+  return hash;
+}
+
 struct ShortcutAccessRestriction {
   std::unordered_map<AccessType, AccessRestriction> all_restrictions;
   // important to set the edge's attribute
@@ -484,7 +498,6 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
 
       // Get the length from the shape. This prevents roundoff issues when forming
       // elevation.
-      uint32_t length = valhalla::midgard::length(shape);
 
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
@@ -493,11 +506,10 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // set it later if adding elevation to this dataset. No need for names etc, shortcuts
       // aren't used in guidance
       bool forward = true;
-      uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
+      uint32_t idx = shape_id(shape);
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
                                   edgeinfo.speed_limit(), shape, {}, {}, {}, 0, forward, false);
-      ;
 
       newedge.set_edgeinfo_offset(edge_info_offset);
 
@@ -525,6 +537,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // set new access mask
 
       // Update the length, curvature, and end node
+      uint32_t length = valhalla::midgard::length(shape);
       newedge.set_length(length);
       newedge.set_curvature(compute_curvature(shape));
       newedge.set_endnode(end_node);
