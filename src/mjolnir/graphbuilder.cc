@@ -186,13 +186,14 @@ void ConstructEdges(const std::string& ways_file,
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
       const auto wn = (*way_nodes[ni]).node;
       if (!wn.latlng().IsValid()) {
-        LOG_WARN("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
-                 " has not had coordinates initialized");
+        LOG_DEBUG("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
+                  " has not had coordinates initialized");
+        build_stats::get().increment(build_stats::kFailedNodeInitialization);
         valid = false;
       }
     }
     if (!valid) {
-      LOG_WARN("Do not add edge!");
+      LOG_DEBUG("Do not add edge!");
       current_way_node_index = last_way_node_index + 1;
       continue;
     }
@@ -365,7 +366,9 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
 
   // Check if mask exceeds the limit
   if (mask >= (1 << kMaxTurnRestrictionEdges)) {
-    LOG_WARN("Restrictions mask exceeds allowable limit on wayid: " + std::to_string(wayid));
+    LOG_DEBUG("Simple turn restrictions mask exceeds allowable limit on wayid: " +
+              std::to_string(wayid));
+    build_stats::get().increment(build_stats::kExceededTurnRestrictionMask);
   }
 
   // Return the restriction mask
@@ -477,8 +480,6 @@ void BuildTileSet(const std::string& ways_file,
   sequence<OSMNodeLinguistic> linguistic_node(linguistic_node_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
-  bool infer_internal_intersections =
-      pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
@@ -660,23 +661,14 @@ void BuildTileSet(const std::string& ways_file,
           if (!use_admin_db)
             dor = w.drive_on_right();
 
-          // Validate speed. Set speed limit and truck speed.
+          // Speed values are already clamped to kMaxAssumedSpeed (140) in OSMWay setters.
           uint32_t speed = w.speed();
           if (forward && w.forward_tagged_speed()) {
             speed = w.forward_speed();
           } else if (!forward && w.backward_tagged_speed()) {
             speed = w.backward_speed();
           }
-          if (speed > kMaxAssumedSpeed) {
-            LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " + std::to_string(w.way_id()));
-            speed = kMaxAssumedSpeed;
-          }
           uint32_t speed_limit = w.speed_limit();
-          if (speed_limit > kMaxAssumedSpeed && speed_limit != kUnlimitedSpeedLimit) {
-            LOG_WARN("Speed limit = " + std::to_string(speed_limit) +
-                     " wayId= " + std::to_string(w.way_id()));
-            speed_limit = kMaxAssumedSpeed;
-          }
 
           const uint8_t directed_truck_speed =
               forward ? w.truck_speed_forward() : w.truck_speed_backward();
@@ -686,12 +678,6 @@ void BuildTileSet(const std::string& ways_file,
           uint32_t truck_speed = w.truck_speed() && directed_truck_speed
                                      ? std::min(w.truck_speed(), directed_truck_speed)
                                      : std::max(w.truck_speed(), directed_truck_speed);
-
-          if (truck_speed > kMaxAssumedSpeed) {
-            LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
-                     " wayId= " + std::to_string(w.way_id()));
-            truck_speed = kMaxAssumedSpeed;
-          }
 
           // Cul du sac
           auto use = w.use();
@@ -705,6 +691,7 @@ void BuildTileSet(const std::string& ways_file,
               CreateSimpleTurnRestriction(w.way_id(), target, nodes, edges, osmdata, ways);
           if (restrictions != 0) {
             stats.simplerestrictions++;
+            build_stats::get().increment(build_stats::kCountSimpleTurnRestrictions);
           }
 
           // traffic signal exists at a non-intersection node
@@ -1013,7 +1000,7 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_use(Use::kRamp);
           }
 
-          if (!infer_internal_intersections && w.internal()) {
+          if (w.internal()) {
             if (directededge.use() != Use::kRamp && directededge.use() != Use::kTurnChannel)
               directededge.set_internal(true);
           }
@@ -1076,8 +1063,9 @@ void BuildTileSet(const std::string& ways_file,
               directededge.set_laneconnectivity(true);
             }
           } catch (std::exception& e) {
-            LOG_WARN("Failed to import lane connectivity for way: " + std::to_string(w.way_id()) +
-                     " : " + e.what());
+            LOG_DEBUG("Failed to import lane connectivity for way: " + std::to_string(w.way_id()) +
+                      " : " + e.what());
+            build_stats::get().increment(build_stats::kFailedLaneConnectivity);
           }
 
           // Set the number of lanes.
