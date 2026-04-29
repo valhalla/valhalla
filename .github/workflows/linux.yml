@@ -68,6 +68,8 @@ jobs:
     needs: [lint_format]
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - uses: actions/setup-python@v6
         with:
