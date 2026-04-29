@@ -448,11 +448,11 @@ TEST(Standalone, BeginShapeIndexAtDiscontinuity) {
   const uint32_t efgh_begin_idx = edges[1]["begin_shape_index"].GetUint();
   EXPECT_EQ(abcd_end_idx + 1, efgh_begin_idx) << "Discontinuity between BC and DE along the shape";
 
-  const auto shape =
-      midgard::decode<std::vector<midgard::PointLL>>(std::string(result["shape"].GetString()));
-  const auto bc_match = shape[abcd_end_idx];
-  const auto fg_match = shape[efgh_begin_idx];
-  EXPECT_GT(bc_match.Distance(fg_match), 1000.0) << "Discontinuity is big enough";
+  // Both edges are trimmed to the matched segments:
+  const std::vector<midgard::PointLL> expected_shape{
+      layout.at("1"), layout.at("B"), layout.at("2"), layout.at("3"), layout.at("G"), layout.at("4"),
+  };
+  EXPECT_EQ(result["shape"].GetString(), midgard::encode(expected_shape));
 }
 
 TEST(Standalone, TrivialSingleEdgeRouteMatch) {
@@ -534,14 +534,16 @@ TEST(Standalone, BackwardTraceOnOnewayEdge) {
 
   struct TestCase {
     std::vector<std::string> trace;
+    uint32_t expected_edges;
     std::string description;
   };
 
   // Single edge backwards trace
   for (const auto& tc : std::vector<TestCase>{
-           {{"3", "4", "1", "2"}, "forward then backward: 3->4->1->2"},
-           {{"1", "3", "2", "4"}, "backward middle step: 1->3->2->4"},
-           {{"2", "4", "3", "1"}, "forward then backward (shifted): 2->4->3->1"},
+           {{"3", "4", "1", "2"}, 2, "forward then backward: 3->4->1->2"},
+           {{"1", "3", "2", "4"}, 2, "backward middle step: 1->3->2->4"},
+           // Last pair does not form a trace
+           {{"2", "4", "3", "1"}, 1, "forward then backward (shifted): 2->4->3->1"},
        }) {
     SCOPED_TRACE(tc.description);
 
@@ -556,21 +558,20 @@ TEST(Standalone, BackwardTraceOnOnewayEdge) {
 
     ASSERT_TRUE(result.HasMember("edges"));
     auto edges = result["edges"].GetArray();
-    ASSERT_GE(edges.Size(), 1u);
-    EXPECT_STREQ(edges[0]["names"][0].GetString(), "AB");
-
-    // "AB" edge must have valid forward percentages (source <= target)
-    ASSERT_TRUE(edges[0].HasMember("source_percent_along"));
-    ASSERT_TRUE(edges[0].HasMember("target_percent_along"));
-    EXPECT_LE(edges[0]["source_percent_along"].GetFloat(),
-              edges[0]["target_percent_along"].GetFloat());
+    ASSERT_EQ(edges.Size(), tc.expected_edges);
+    for (uint32_t i = 0; i < edges.Size(); ++i) {
+      EXPECT_STREQ(edges[i]["names"][0].GetString(), "AB");
+      EXPECT_LE(edges[i]["source_percent_along"].GetFloat(),
+                edges[i]["target_percent_along"].GetFloat());
+    }
   }
 
   // Multi edge backwards trace
   for (const auto& tc : std::vector<TestCase>{
-           {{"0", "3", "4", "1", "2"}, "forward then backward: 3->4->1->2"},
-           {{"0", "1", "3", "2", "4"}, "backward middle step: 1->3->2->4"},
-           {{"0", "2", "4", "3", "1"}, "forward then backward (shifted): 2->4->3->1"},
+           {{"0", "3", "4", "1", "2"}, 3, "forward then backward: 3->4->1->2"},
+           {{"0", "1", "3", "2", "4"}, 3, "backward middle step: 1->3->2->4"},
+           // Last pair does not form a trace
+           {{"0", "2", "4", "3", "1"}, 2, "forward then backward (shifted): 2->4->3->1"},
        }) {
     SCOPED_TRACE(tc.description);
 
@@ -585,16 +586,22 @@ TEST(Standalone, BackwardTraceOnOnewayEdge) {
 
     ASSERT_TRUE(result.HasMember("edges"));
     auto edges = result["edges"].GetArray();
-    ASSERT_GE(edges.Size(), 2u);
+    ASSERT_EQ(edges.Size(), tc.expected_edges);
     EXPECT_STREQ(edges[0]["names"][0].GetString(), "DA");
-    ASSERT_TRUE(edges[0].HasMember("source_percent_along"));
 
-    EXPECT_STREQ(edges[1]["names"][0].GetString(), "AB");
-    ASSERT_TRUE(edges[1].HasMember("target_percent_along"));
-    EXPECT_GT(edges[1]["target_percent_along"].GetFloat(), 0.0);
+    const auto get_src = [](const auto& edge) {
+      return edge.HasMember("source_percent_along") ? edge["source_percent_along"].GetFloat() : 0.f;
+    };
+    const auto get_tgt = [](const auto& edge) {
+      return edge.HasMember("target_percent_along") ? edge["target_percent_along"].GetFloat() : 1.f;
+    };
+    for (uint32_t i = 1; i < edges.Size(); ++i) {
+      EXPECT_STREQ(edges[i]["names"][0].GetString(), "AB");
+      EXPECT_LE(get_src(edges[i]), get_tgt(edges[i]));
+    }
   }
 
-  // Fully reversed on a one-way edge — Meili can't route any consecutive pair
+  // Fully reversed on a one-way edge - Meili can't route any consecutive pair
   EXPECT_THROW(gurka::do_action(valhalla::Options::trace_attributes, map, {"4", "3", "2", "1"},
                                 "auto", {{"/elevation_interval", "30"}}),
                std::exception);
