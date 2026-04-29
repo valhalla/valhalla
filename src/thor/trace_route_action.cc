@@ -315,21 +315,37 @@ void thor_worker_t::build_trace(
   std::vector<PathInfo> path_edges;
   path_edges.reserve(edge_index);
   bool prev_path_had_discontinuity = false;
-  for (const auto& path : paths) {
+  // Track the last valid path for destination selection. When a discontinuity merges onto the same
+  // edge and the new path's target is behind the previous path's target on that edge, we drop
+  // the later path — those points are effectively unmatched.
+  size_t last_valid_path_idx = 0;
+  for (size_t path_idx = 0; path_idx < paths.size(); ++path_idx) {
+    const auto& path = paths[path_idx];
     bool merge_last_edge =
         !path_edges.empty() && path_edges.back().edgeid == path.first.front().edgeid;
+    // When merging across a discontinuity onto the same edge, check if the new path goes backward
+    // relative to where the previous path left off. If so, skip this path entirely.
+    if (merge_last_edge && prev_path_had_discontinuity) {
+      const auto* prev_last_seg = paths[last_valid_path_idx].second.back();
+      const auto* candidate_dest = path.second.back();
+      if (prev_last_seg->target > candidate_dest->target) {
+        prev_path_had_discontinuity = path.second.back()->discontinuity;
+        continue;
+      }
+    }
     const size_t first_inserted_idx = path_edges.size();
     path_edges.insert(path_edges.end(), path.first.begin() + merge_last_edge, path.first.end());
     if (prev_path_had_discontinuity && !merge_last_edge) {
       path_edges[first_inserted_idx].is_disconnected = true;
     }
     prev_path_had_discontinuity = path.second.back()->discontinuity;
+    last_valid_path_idx = path_idx;
   }
 
   // initialize the origin and destination location for route
   const meili::EdgeSegment* origin_segment = paths.front().second.front();
   const meili::MatchResult& origin_match = match_results[origin_segment->first_match_idx];
-  const meili::EdgeSegment* dest_segment = paths.back().second.back();
+  const meili::EdgeSegment* dest_segment = paths[last_valid_path_idx].second.back();
   const meili::MatchResult& dest_match = match_results[dest_segment->last_match_idx];
   Location* origin_location = options.mutable_shape(&origin_match - &match_results.front());
   Location* destination_location = options.mutable_shape(&dest_match - &match_results.front());
