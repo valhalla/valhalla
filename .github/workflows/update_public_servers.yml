@@ -23,9 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'valhalla'
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v6
 
       - name: Run script
         run: |

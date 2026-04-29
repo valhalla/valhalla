@@ -14,7 +14,7 @@ jobs:
     permissions:
       id-token: write  # for trusted publishing to PyPI
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: true
           fetch-tags: true  # versioning schema needs tags
@@ -31,7 +31,7 @@ jobs:
   release-ts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: true
           fetch-tags: true  # versioning schema needs tags
