@@ -39,7 +39,7 @@ jobs:
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
-      - run: make release-ts
+      - run: make release-ts-tag
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
  
