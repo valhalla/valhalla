@@ -3,6 +3,8 @@ name: release protobuf generated code
 on:
   push:
     tags: ["*"]
+    branches:
+      - 'nn-fix-3.7.0'
  
 defaults:
   run:
@@ -26,7 +28,7 @@ jobs:
         with:
           packages-dir: proto/python/dist/
           # uncomment when testing!
-          # repository-url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/
  
   release-ts:
     runs-on: ubuntu-latest
