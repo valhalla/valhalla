@@ -58,10 +58,9 @@ jobs:
       # since we are running in a container, we need to set the ccache directory to folder accessible from GHA runner
       CCACHE_DIR: ${{ matrix.os == 'linux' && '.ccache' || '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 0
           fetch-tags: true
       
       - name: Setup ccache
@@ -123,7 +122,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build_nodejs_bindings]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           sparse-checkout: |
             src/bindings/nodejs/
@@ -131,7 +130,6 @@ jobs:
             valhalla/valhalla.h
             proto/
           sparse-checkout-cone-mode: false
-          fetch-depth: 0
           fetch-tags: true
 
       - name: Download all binding artifacts
@@ -184,7 +182,7 @@ jobs:
           node-version: '18'
 
       - name: Checkout test files
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             src/bindings/nodejs/test/
