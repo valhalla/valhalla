@@ -272,10 +272,17 @@ void thor_worker_t::build_trace(
   std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> edge_trimming;
   baldr::GraphId last_id;
   size_t edge_index = -1;
+  bool prev_path_had_discontinuity = false;
   for (const auto& path : paths) {
+    const auto* last_segment = path.second.back();
     // remember the global edge index of every input point
+    bool path_starts = true;
     for (const auto* segment : path.second) {
-      if (last_id != segment->edgeid) {
+      // Increment on edgeid change, OR when this is the first segment of a new path that follows
+      // a segment-level discontinuity AND lands on the same edge as the previous path's last
+      // segment. The two visits are physically distinct and need separate edge_index values so
+      // their edge_trimming entries don't clobber each other.
+      if (last_id != segment->edgeid || (path_starts && prev_path_had_discontinuity)) {
         ++edge_index;
       }
       // they can be -1,-1 or l,-1 or -1,h or l,h
@@ -289,35 +296,46 @@ void thor_worker_t::build_trace(
           match_results[low].edge_index = edge_index;
       }
       last_id = segment->edgeid;
+      path_starts = false;
     }
 
-    // handle the end of a discontinuity, assumes that there is no start of a discontinuity that is
-    // handled below
+    // handle the end of a discontinuity. Two signals trigger trim-at-match-point: the match-result
+    // flag (set by FindMatchResult when the previous Viterbi state was unrouteable) and the
+    // segment-level flag carried over from the previous path's last segment (set by ConstructRoute
+    // when the route between two valid states failed). Both mean "this path begins after a gap"
+    // and trimming to the matched point is the right thing in both cases.
     const auto* first_segment = path.second.front();
     const auto& first_match = match_results[first_segment->first_match_idx];
-    if (first_match.ends_discontinuity) {
+    if (first_match.ends_discontinuity || prev_path_had_discontinuity) {
       edge_trimming[first_match.edge_index] = {{true, first_match.lnglat, first_match.distance_along},
                                                {false, {}, 1.f}};
     }
 
-    // handle the start of a discontinuity, could be on the same edge where we just ended one. in that
-    // case we only touch .second. if there was no discontinuity ending on this edge then we rely on
-    // the default initializer for .first when we index the map which sets the distance to 0.f
-    const auto* last_segment = path.second.back();
+    // handle the start of a discontinuity, could be on the same edge where we just ended one. in
+    // that case we only touch .second. if there was no discontinuity ending on this edge then we
+    // rely on the default initializer for .first when we index the map which sets the distance to
+    // 0.f. As above we trim on either signal: the match-result flag (next Viterbi state
+    // unrouteable) or the segment-level flag (route between valid candidates failed).
     const auto& last_match = match_results[last_segment->last_match_idx]; // cant use edge_index
-    if (last_match.begins_discontinuity) {
+    if (last_match.begins_discontinuity || last_segment->discontinuity) {
       edge_trimming[last_match.edge_index].second = {true, last_match.lnglat,
                                                      last_match.distance_along};
     }
+
+    prev_path_had_discontinuity = last_segment->discontinuity;
   }
 
   // smash all the path edges into a single vector, marking discontinuity boundaries
   std::vector<PathInfo> path_edges;
   path_edges.reserve(edge_index);
-  bool prev_path_had_discontinuity = false;
+  prev_path_had_discontinuity = false;
   for (const auto& path : paths) {
-    bool merge_last_edge =
-        !path_edges.empty() && path_edges.back().edgeid == path.first.front().edgeid;
+    // A same-edge revisit across a discontinuity must not collapse into the previous PathInfo —
+    // the two visits need separate entries so each carries its own trimming and the disconnect
+    // is preserved.
+    bool merge_last_edge = !path_edges.empty() &&
+                           path_edges.back().edgeid == path.first.front().edgeid &&
+                           !prev_path_had_discontinuity;
     const size_t first_inserted_idx = path_edges.size();
     path_edges.insert(path_edges.end(), path.first.begin() + merge_last_edge, path.first.end());
     if (prev_path_had_discontinuity && !merge_last_edge) {
