@@ -138,10 +138,10 @@ void loki_worker_t::route(Api& request) {
       }
       google::protobuf::RepeatedPtrField<Location> start_loc(locations->begin(),
                                                              locations->begin() + 1);
-      search_.search(start_loc, mode_costing[static_cast<size_t>(mode)]);
+      search_.search(start_loc, mode_costing[static_cast<size_t>(TravelMode::kDrive)]);
       google::protobuf::RepeatedPtrField<Location> end_loc(locations->begin() + 1,
                                                            locations->begin() + 2);
-      search_.search(end_loc, mode_costing[static_cast<size_t>(mode)]);
+      search_.search(end_loc, mode_costing[static_cast<size_t>(TravelMode::kPedestrian)]);
       // merge them again
       locations->at(0).CopyFrom(start_loc.at(0));
       locations->at(1).CopyFrom(end_loc.at(0));
