@@ -50,7 +50,7 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     zlib1g-dev
   
 # build prime_server from source
-# readonly primeserver_version=0.7.0
+# readonly primeserver_version=0.10.0
 readonly primeserver_dir=/tmp/prime_server
 git clone --recurse-submodules https://github.com/kevinkreiser/prime_server $primeserver_dir
 pushd $primeserver_dir
