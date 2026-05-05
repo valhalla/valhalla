@@ -34,6 +34,7 @@
    * CHANGED: Optimize `get_service_days` in servicedays.cc [#5952](https://github.com/valhalla/valhalla/pull/5952)
    * ADDED: OSM XML format support for tile building [#5934](https://github.com/valhalla/valhalla/pull/5934)
    * ADDED: access restriction layer in MVT [#5912](https://github.com/valhalla/valhalla/pull/5912)
+  * CHANGED: Skip storing hazmat access restrictions with value 'true' (normalized from yes/designated) since hazmat is allowed by default, reducing unnecessary lookups [#5972](https://github.com/valhalla/valhalla/pull/5972)
    * ADDED: incidents to locate JSON response [#5968](https://github.com/valhalla/valhalla/pull/5968)
    * ADDED: `--region` to `valhalla_build_extract` to create tars by Geofabrik region [#5964](https://github.com/valhalla/valhalla/pull/5964)
    * ADDED: more warnings for clamped costing options, second pass, bidir fallback and matrix_locations for CostMatrix [#3833](https://github.com/valhalla/valhalla/pull/3833)
