@@ -11,6 +11,7 @@
 * **Bug Fix**
    * FIXED: Clamp grades on bridges and tunnels. [#5728](https://github.com/valhalla/valhalla/pull/5728)
    * FIXED: use pedestrian costing on end location in `auto_pedestrian` costing [#5903](https://github.com/valhalla/valhalla/pull/5903)
+   * FIXED: `access=private` + `emergency=yes` roads being unroutable due to all vehicular access bits being zeroed [#5911](https://github.com/valhalla/valhalla/pull/5911)
    * FIXED: Point at `begin_shape_index` should be on the edge even if trace has discontinuities [#5908](https://github.com/valhalla/valhalla/pull/5908)
    * FIXED: Empty "edges" in `/trace_attributes` response for `walk_or_snap`, that also causes SIGSEGV if elevation requested [#5945](https://github.com/valhalla/valhalla/pull/5945)
    * FIXED: keep `highway=platform` routable while classifying it as `service_other` instead of `primary` [#5913](https://github.com/valhalla/valhalla/pull/5913)
