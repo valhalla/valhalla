@@ -1,5 +1,11 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+   * FIXED: wrong mode used in loki for `auto_pedestrian` [#6065](https://github.com/valhalla/valhalla/pull/6065)
+* **Enhancement**
+
+## Release Date: 2026-04-28 Valhalla 3.7.0
+* **Removed**
    * REMOVED: Removed ability to set ISO:3166 country/state code per OSM Node [#5747](https://github.com/valhalla/valhalla/pull/5747)
    * REMOVED: all module-level `logging` config in favor of a global one
 * **Bug Fix**
@@ -14,6 +20,8 @@
    * FIXED: edge walking should not end on a shortcut [#6034](https://github.com/valhalla/valhalla/pull/6034)
    * FIXED: Exclusion check in the reverse direction [#5375](https://github.com/valhalla/valhalla/pull/5375)
    * FIXED: `edge_walk` returning error 443 for trivial single-edge traces [#6046](https://github.com/valhalla/valhalla/issues/6046)
+   * FIXED: set interrupt in optimized_route action [#6019](https://github.com/valhalla/valhalla/pull/6019)
+   * FIXED: Do not crash on backwards traces over oneway edges [#6048](https://github.com/valhalla/valhalla/pull/6048)
    * FIXED: Avoid creating loop edges during graph filtering [#6050](https://github.com/valhalla/valhalla/pull/6050)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
