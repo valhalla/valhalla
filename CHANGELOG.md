@@ -3,6 +3,7 @@
 * **Bug Fix**
    * FIXED: wrong mode used in loki for `auto_pedestrian` [#6065](https://github.com/valhalla/valhalla/pull/6065)
 * **Enhancement**
+   * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**
