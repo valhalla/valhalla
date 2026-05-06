@@ -218,6 +218,26 @@ constexpr std::string_view kAdminCategory = "admin.";
 constexpr std::string_view kMatchedCategory = "matched.";
 constexpr std::string_view kShapeAttributesCategory = "shape_attributes.";
 
+// Incident attributes (used by MVT)
+constexpr std::string_view kIncidentId = "incident.id";
+constexpr std::string_view kIncidentType = "incident.type";
+constexpr std::string_view kIncidentDescription = "incident.description";
+constexpr std::string_view kIncidentSubType = "incident.sub_type";
+constexpr std::string_view kIncidentSubTypeDescription = "incident.sub_type_description";
+constexpr std::string_view kIncidentStartTime = "incident.start_time";
+constexpr std::string_view kIncidentEndTime = "incident.end_time";
+constexpr std::string_view kIncidentImpact = "incident.impact";
+constexpr std::string_view kIncidentRoadClosed = "incident.road_closed";
+constexpr std::string_view kIncidentCongestionValue = "incident.congestion_value";
+constexpr std::string_view kIncidentLanesBlocked = "incident.lanes_blocked";
+constexpr std::string_view kIncidentCreationTime = "incident.creation_time";
+constexpr std::string_view kIncidentLongDescription = "incident.long_description";
+constexpr std::string_view kIncidentClearLanes = "incident.clear_lanes";
+constexpr std::string_view kIncidentNumLanesBlocked = "incident.num_lanes_blocked";
+constexpr std::string_view kIncidentLength = "incident.length";
+constexpr std::string_view kIncidentIso31661Alpha2 = "incident.iso_3166_1_alpha2";
+constexpr std::string_view kIncidentIso31661Alpha3 = "incident.iso_3166_1_alpha3";
+
 /**
  * Trip path controller for attributes
  */
