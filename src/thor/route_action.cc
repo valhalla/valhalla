@@ -171,10 +171,16 @@ opposing) { loc.mutable_correlation()->mutable_edges()->SwapElements(i, loc.path
  * Adds a shortcut to the cost factor edges given one
  * of its constituents
  */
-void add_partial_shortcut(baldr::GraphReader& reader,
-                          GraphId shortcut,
-                          valhalla::Costing_Options* options,
-                          valhalla::CostFactorEdge* cost_factor) {
+void add_shortcut(baldr::GraphReader& reader,
+                  GraphId shortcut,
+                  valhalla::Costing_Options* options,
+                  valhalla::CostFactorEdge* cost_factor) {
+
+  if (cost_factor->ignore_access_restrictions()) {
+    auto* exclude_edge = options->add_exclude_edges();
+    exclude_edge->set_id(shortcut.value);
+    return;
+  }
   GraphId edge = static_cast<GraphId>(cost_factor->id());
   graph_tile_ptr tile = reader.GetGraphTile(shortcut);
   // it's part of a shortcut
@@ -256,12 +262,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           }
           auto shortcut = reader.GetShortcut(path_info.edgeid);
           if (shortcut.is_valid()) {
-            if (e->ignore_access_restrictions()) {
-              auto* exclude_edge = costing_options->add_exclude_edges();
-              exclude_edge->set_id(shortcut.value);
-            } else {
-              add_partial_shortcut(reader, shortcut, costing_options, e);
-            }
+            add_shortcut(reader, shortcut, costing_options, e);
           }
         } else if (is_first || is_last) { // beginning or end edge
           for (const auto& edge :
@@ -277,12 +278,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
               e->set_end(is_last ? edge.percent_along() : 1.);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
               if (shortcut.is_valid()) {
-                if (e->ignore_access_restrictions()) {
-                  auto* exclude_edge = costing_options->add_exclude_edges();
-                  exclude_edge->set_id(shortcut.value);
-                } else {
-                  add_partial_shortcut(reader, shortcut, costing_options, e);
-                }
+                add_shortcut(reader, shortcut, costing_options, e);
               }
               break;
             }
@@ -314,12 +310,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
             // a little, can't we persist this information somehow?
             auto shortcut = reader.GetShortcut(path_info.edgeid);
             if (shortcut.is_valid()) {
-              if (e->ignore_access_restrictions()) {
-                auto* exclude_edge = costing_options->add_exclude_edges();
-                exclude_edge->set_id(shortcut.value);
-              } else {
-                add_partial_shortcut(reader, shortcut, costing_options, e);
-              }
+              add_shortcut(reader, shortcut, costing_options, e);
             }
           }
         }

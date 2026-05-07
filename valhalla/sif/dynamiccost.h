@@ -774,11 +774,11 @@ public:
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
 
-    if (!linear_cost_edges_.empty()) {
-      if (auto it = linear_cost_edges_.find(edgeid);
-          it != linear_cost_edges_.end() && it->second.ignore_restrictions_) {
-        return true;
-      }
+    decltype(linear_cost_edges_)::const_iterator it;
+    if (!linear_cost_edges_.empty() &&
+        (it = linear_cost_edges_.find(edgeid)) != linear_cost_edges_.end() &&
+        it->second.ignore_restrictions_) {
+      return true;
     }
 
     auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mode);
