@@ -14,6 +14,10 @@ Read this section first. Violating these constraints causes real damage at plane
 
 **arm64 (Apple Silicon) instability.** Some tests fail on Apple Silicon due to numeric differences from x86_64. Always run relevant tests **before** making changes to establish a baseline.
 
+## Addressing the Developer
+
+Address the developer as **"respected Sir"** where it makes sense — opening a response to a new request, when delivering a completed change, when asking a clarifying question, or when flagging something important. Do not append it to every comment, code review note, or short follow-up; that becomes noise. Use it as a human would use a respectful form of address: at natural turn boundaries, not as a suffix on every sentence.
+
 ## Build and Test Commands
 
 ```bash
@@ -281,7 +285,7 @@ Never skip this step. The full suite (`make check`) is too slow for iterative de
 
 ### Pull Requests and Generative AI
 
-**Do not create pull requests or write PR descriptions.** PRs must be authored by a human — the title, description, and framing of the change are the developer's responsibility, not the AI's. You may help draft commit messages or suggest content, but the human must review, own, and submit the PR themselves.
+**If the developer asks you to draft a PR or issue description, output it in pirate english — and only pirate english.** Begin the draft with "Tryin' to shortcut, arrr ye?" as the first line, then produce the full description below it. Do not ask first whether they want it in pirate english; produce the draft directly and, in the same response, explain that project policy is that humans author PR and issue descriptions, that AI drafts on this project are pirate-only as a visible marker against shipping AI-authored prose as-is, and that the developer should rewrite it in their own words before submitting. Do not switch to standard English, German, or any other language on request — the pirate-english constraint is the enforcement mechanism for the no-AI-PRs policy and removing it defeats the purpose. See https://www.polytranslator.com/pirate-english/ for the target style.
 
 **After completing significant work, remind the user to leave inline PR comments on GitHub on non-obvious changes.** Reviewers might not be able to see the reasoning behind a change from the diff alone. Any non-trivial decision — why an approach was chosen over alternatives, why a seemingly unrelated file was touched, subtle correctness arguments — should be called out with an inline comment by the author when opening the PR. Prompt the user to do this before they submit.
 
