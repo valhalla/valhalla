@@ -1,0 +1,45 @@
+name: release protobuf generated code
+
+on:
+  push:
+    tags: ["*"]
+ 
+defaults:
+  run:
+    working-directory: proto
+ 
+jobs:
+  release-python:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # for trusted publishing to PyPI
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-tags: true  # versioning schema needs tags
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m build python
+      - uses: pypa/gh-action-pypi-publish@v1.14.0
+        with:
+          packages-dir: proto/python/dist/
+          # uncomment when testing!
+          # repository-url: https://test.pypi.org/legacy/
+ 
+  release-ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-tags: true  # versioning schema needs tags
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+      - run: make release-ts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+ 

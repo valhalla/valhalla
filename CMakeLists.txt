@@ -36,6 +36,7 @@ option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find 
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 option(ENABLE_GEOTIFF "Whether to include libgeotiff; currently only used for raster serialization of isotile grid" ON)
+option(ENABLE_LZ4 "Enable LZ4 decompression support for elevation tiles" ON)
 option(INSTALL_TEST_LIB "Install Valhalla's own test lib" OFF)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
@@ -103,7 +104,6 @@ include(ValhallaSourceGroups)
 # - CMake Find* modules are versioned with CMake, not the packages, see protobuf > 21.12
 # - it's more trivial to use custom installations via PKG_CONFIG_PATH env var
 pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
-pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
 
 # cURL
 set(curl_target "")
@@ -237,6 +237,17 @@ if (ENABLE_GEOTIFF AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDING
   endif()
 endif()
 
+set(lz4_target "")
+if (ENABLE_LZ4)
+  pkg_check_modules(LZ4 IMPORTED_TARGET liblz4)
+  if (LZ4_FOUND)
+    target_compile_definitions(PkgConfig::LZ4 INTERFACE ENABLE_LZ4)
+    set(lz4_target PkgConfig::LZ4)
+  else()
+    message(WARNING "Unable to enable liblz4 support")
+  endif()
+endif()
+
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 
 # libprime_server
@@ -281,7 +292,7 @@ endif()
 ## Executable targets
 
 ## Valhalla programs
-set(valhalla_programs 
+set(valhalla_programs
     valhalla_export_edges valhalla_expand_bounding_box valhalla_service)
 
 ## Valhalla data tools

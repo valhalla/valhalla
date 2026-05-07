@@ -35,19 +35,6 @@ constexpr float kCostThresholdPedestrianDivisor =
     28.0f; // 200 km distance threshold will result in a cost threshold of ~7200 (2 hours)
 
 /**
- * Status of a location. Tracks remaining locations to be found
- * and a threshold or iterations. When threshold goes to 0 expansion
- * stops for this location.
- */
-struct LocationStatus {
-  int threshold;
-  std::set<uint32_t> unfound_connections;
-
-  LocationStatus(const int t) : threshold(t) {
-  }
-};
-
-/**
  * Best connection. Information about the best connection found between
  * a source and target pair.
  */
@@ -146,6 +133,7 @@ protected:
   // The path distance threshold being used for the currently executing query
   float current_pathdist_threshold_;
 
+  struct LocationStatus;
   // Status
   std::array<std::vector<LocationStatus>, 2> locs_status_;
 

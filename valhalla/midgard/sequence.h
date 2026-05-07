@@ -13,7 +13,6 @@
 #include <queue>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -653,21 +652,10 @@ struct tar {
     }
   };
 
-  // all of the info about which tar is memory mapped and where each file within
-  // the tar is found in the map
   std::string tar_file;
   mem_map<char> mm;
-  using entry_name_t = std::string;
-  using entry_location_t = std::pair<const char*, size_t>;
-  std::unordered_map<entry_name_t, entry_location_t> contents;
-  size_t corrupt_blocks;
 
-  tar(const std::string& tar_file,
-      bool readonly = true,
-      bool regular_files_only = true,
-      const std::function<decltype(contents)(const std::string&, const char*, const char*, size_t)>&
-          from_index = nullptr)
-      : tar_file(tar_file), corrupt_blocks(0) {
+  tar(const std::string& tar_file, bool readonly = true) : tar_file(tar_file) {
     // get the file size
     struct stat s;
     if (stat(tar_file.c_str(), &s))
@@ -680,11 +668,18 @@ struct tar {
 
     // map the file
     mm.map(tar_file, s.st_size, POSIX_MADV_NORMAL, readonly);
+  }
 
+  // Callback per entry: (name, data_ptr, size). Return true to continue, false to stop.
+  using entry_visitor_t = std::function<bool(const std::string& name, const char* data, size_t size)>;
+
+  // Traverse all entries, calling visitor for each regular file.
+  // Returns the number of corrupt blocks encountered.
+  size_t for_each(const entry_visitor_t& visitor) {
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
     // lax about it and we'll count the ones we cant make sense of
-    bool tried_index = false;
+    size_t corrupt_blocks = 0;
     const char* position = mm.get();
     while (position < mm.get() + mm.size()) {
       // get the header for this file
@@ -696,29 +691,19 @@ struct tar {
         continue;
       }
       auto size = h->get_file_size();
-      // do we record entry file or not
-      if (!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0')) {
+      if (h->typeflag == '0' || h->typeflag == '\0') {
         // tar doesn't automatically update path separators based on OS, so we need to do it...
         std::filesystem::path filepath{h->name};
         filepath.make_preferred();
-        const std::string& name = filepath.string();
-        // the caller may be able to construct the contents via an index header let them try
-        if (!tried_index && from_index != nullptr) {
-          tried_index = true;
-          contents = from_index(name, position, mm.get(), size);
-          // if it was able to initialize from an index we bail
-          if (!contents.empty()) {
-            return;
-          }
+        if (!visitor(filepath.string(), position, size)) {
+          break;
         }
-        // otherwise we just get each item at a time
-        contents.emplace(std::piecewise_construct, std::forward_as_tuple(name),
-                         std::forward_as_tuple(position, size));
       }
       // every entry's data is rounded to the nearst header_t sized "block"
       auto blocks = static_cast<size_t>(std::ceil(static_cast<double>(size) / sizeof(header_t)));
       position += blocks * sizeof(header_t);
     }
+    return corrupt_blocks;
   }
 };
 

@@ -2,7 +2,7 @@
 
 [![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/)
 
-This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
+This folder ([`src/bindings/python`](https://github.com/valhalla/valhalla/tree/master/src/bindings/python)) contains the Python bindings for the [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
 > [!NOTE]
 > `pyvalhalla` packages are currently only published for:

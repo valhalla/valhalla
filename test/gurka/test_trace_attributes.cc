@@ -455,6 +455,27 @@ TEST(Standalone, BeginShapeIndexAtDiscontinuity) {
   EXPECT_GT(bc_match.Distance(fg_match), 1000.0) << "Discontinuity is big enough";
 }
 
+TEST(Standalone, TrivialSingleEdgeRouteMatch) {
+  const std::string ascii_map = R"(
+    A---1----2---B---C
+  )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"name", "Main St"}}},
+                            {"BC", {{"highway", "primary"}, {"name", "Main St"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/trivial_single_edge_route_match");
+
+  std::string result_json;
+  ASSERT_NO_THROW(gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2"}, "auto",
+                                   {{"/shape_match", "edge_walk"}}, {}, &result_json, "via"));
+  rapidjson::Document result;
+  result.Parse(result_json.c_str());
+  ASSERT_TRUE(result.HasMember("edges"));
+  ASSERT_EQ(result["edges"].GetArray().Size(), 1u);
+  EXPECT_STREQ(result["edges"][0]["names"][0].GetString(), "Main St");
+}
+
 TEST(Standalone, PbfOut) {
   const std::string ascii_map = R"(
       1     2

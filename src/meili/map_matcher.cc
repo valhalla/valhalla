@@ -705,6 +705,11 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   // Reset everything
   Clear();
 
+  // Allow this process to be aborted
+  if (interrupt_) {
+    (*interrupt_)();
+  }
+
   std::vector<MatchResults> best_paths;
   best_paths.reserve(k);
 
@@ -721,6 +726,11 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   // Without minimum number of edge candidates, throw a 443 - NoSegment error code.
   if (!container_.HasMinimumCandidates()) {
     throw valhalla_exception_t{443};
+  }
+
+  // Allow this process to be aborted
+  if (interrupt_) {
+    (*interrupt_)();
   }
 
   // For k paths
@@ -879,11 +889,6 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
 
 StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
                                             const float sq_max_search_radius) {
-  // Test interrupt
-  if (interrupt_) {
-    (*interrupt_)();
-  }
-
   auto sq_radius = std::min(sq_max_search_radius,
                             std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
 

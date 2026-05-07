@@ -172,6 +172,9 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeSurface)) {
         writer("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
       }
+      if (controller(kEdgeCurvature)) {
+        writer("curvature", static_cast<uint64_t>(edge.curvature()));
+      }
       if (controller(kEdgeDriveOnRight)) {
         writer("drive_on_right", static_cast<bool>(!edge.drive_on_left()));
       }

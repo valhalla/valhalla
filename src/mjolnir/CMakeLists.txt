@@ -105,6 +105,7 @@ valhalla_module(NAME mjolnir
       ${system_includes}
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
+      ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
       ${unordered_dense_include_dir}
       ${libosmium_include_dirs}
   DEPENDS

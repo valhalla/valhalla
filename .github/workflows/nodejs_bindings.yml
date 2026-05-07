@@ -244,16 +244,11 @@ jobs:
           name: valhalla-npm-package
       
       - name: Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "[INFO] Downloaded package:"
           ls -lh *.tgz
-          
-          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]]; then
-            NPM_TAG="latest"
-          else
-            NPM_TAG="periodic"
-          fi
-          
-          echo "[INFO] Publishing to NPM with tag: ${NPM_TAG}..."
-          npm publish *.tgz --access public --tag ${NPM_TAG} --provenance
+          echo "[INFO] Publishing to NPM..."
+          npm publish *.tgz --access public --tag latest --provenance
 

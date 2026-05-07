@@ -151,6 +151,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Turn-by-turn maneuver generation | `src/odin/maneuversbuilder.cc`, `src/odin/narrativebuilder.cc` |
 | API response serialization (pbf → JSON/GPX/pbf output) | `src/tyr/` — `route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc`, and other `*_serializer.cc`. New output fields must be added to the `.proto` definition first, then to the serializer |
 | Error handling | `valhalla_exception_t` in `valhalla/exceptions.h`, codes in `src/exceptions.cc` (100s=Loki, 200s=Odin, 300s=Skadi, 400s=Thor, 500s=Tyr) |
+| Tile build warnings, data quality counters | `build_stats` singleton in `valhalla/mjolnir/util.h` — enum+array counters with `static_assert` safety. `log_stage()` in `src/mjolnir/util.cc` emits per-stage deltas to LOG_WARN + statsd gauges. Increment via `build_stats::get().increment(build_stats::kCounterName)` from any file |
 | Configuration | `boost::property_tree::ptree`, JSON format. Generate defaults: `valhalla_build_config`. Access: `config.get<T>("section.key")` |
 | Protobuf message definitions | `proto/` — root message is `Api` in `api.proto` |
 | Live traffic | Separate overlay (`traffic.tar`), format in `valhalla/baldr/traffictile.h`. Test via `test::customize_live_traffic_data()` |
@@ -265,6 +266,14 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connection
 ```
 
 Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64. Avoid it on arm64 where false positives make results unreliable.
+
+### Pull Requests and Generative AI
+
+**Do not create pull requests or write PR descriptions.** PRs must be authored by a human — the title, description, and framing of the change are the developer's responsibility, not the AI's. You may help draft commit messages or suggest content, but the human must review, own, and submit the PR themselves.
+
+**After completing significant work, remind the user to leave inline PR comments on GitHub on non-obvious changes.** Reviewers might not be able to see the reasoning behind a change from the diff alone. Any non-trivial decision — why an approach was chosen over alternatives, why a seemingly unrelated file was touched, subtle correctness arguments — should be called out with an inline comment by the author when opening the PR. Prompt the user to do this before they submit.
+
+**Remind the user to carefully review all generated code before committing.** AI-generated code can contain contrived logic, awkward variable naming, or patterns that no human would write. If anything looks unnatural — overly verbose conditions, oddly named variables, unnecessary abstractions — the user should rewrite it in a way that is believable and clear to human reviewers. The goal is that every line in the PR looks like something the author would have written themselves.
 
 ## Code Style
 
