@@ -1,6 +1,13 @@
 # Valhalla tile service API reference [BETA]
 
-Valhalla's `/tile` service provides a graph representation as [Mapbox Vector Tiles](https://docs.mapbox.com/data/tilesets/guides/vector-tiles-introduction/) (MVT). Currently the tiles contain 2 layers for edges and nodes with a lot of attributes (akin to [`verbose` /locate](../locate/api-reference.md) requests). It's under active development, hence BETA, however, we don't expect any breaking changes to happen, mostly more "Valhalla-like" filtering of the response to decrease tile size, adding `style.json`(s) or performance improvements.
+Valhalla's `/tile` service provides a graph representation as [Mapbox Vector Tiles](https://docs.mapbox.com/data/tilesets/guides/vector-tiles-introduction/) (MVT). Currently the tiles contain 4 layers: 
+ - edges
+ - nodes
+ - shortcuts 
+ - access restrictions 
+ - incidents  
+
+with a lot of attributes (akin to [`verbose` /locate](../locate/api-reference.md) requests). It's under active development, hence the BETA label.
 
 [View an interactive demo](https://valhalla.github.io/demos/tile)
 
@@ -88,6 +95,25 @@ node.mode_change_allowed
 node.named_intersection
 node.timezone
 node.access
+
+// incident attributes
+incident.id
+incident.description
+incident.type
+incident.impact
+incident.sub_type
+incident.sub_type_description
+incident.start_time
+incident.end_time
+incident.road_closed
+incident.congestion_value
+incident.creation_time
+incident.long_description
+incident.clear_lanes
+incident.num_lanes_blocked
+incident.length
+incident.iso_3166_1_alpha2
+incident.iso_3166_1_alpha3
 ```
 
 ## Integration into MVT compatible clients/SDKs etc

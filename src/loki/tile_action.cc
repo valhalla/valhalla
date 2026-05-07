@@ -43,6 +43,30 @@ using namespace valhalla::loki;
 // extend the boost::geometry types without making vtzero a public dependency
 BOOST_GEOMETRY_REGISTER_POINT_2D(vtzero::point, int32_t, boost::geometry::cs::cartesian, x, y)
 namespace {
+
+PointLL shape_point_along(const std::vector<midgard::PointLL>& shape, double pct_along) {
+  if (shape.size() < 2)
+    return shape.empty() ? PointLL{} : shape[0];
+
+  double length = midgard::length(shape);
+  auto meters_along = length * pct_along;
+  double acc = 0.0;
+
+  for (auto v = shape.begin() + 1; v != shape.end(); ++v) {
+    auto u = std::prev(v);
+    auto dist = u->Distance(*v);
+    auto new_acc = acc + dist;
+
+    if (new_acc / length >= pct_along) {
+      auto remaining = meters_along - acc;
+      return u->PointAlongSegment(*v, remaining / dist);
+    }
+    acc = new_acc;
+  }
+
+  return shape.back();
+}
+
 // vtzero int32_t types
 using box_vtzero_t = boost::geometry::model::box<vtzero::point>;
 using linestring_vtzero_t = boost::geometry::model::linestring<vtzero::point>;
@@ -137,6 +161,55 @@ vtzero::point merc_to_tile_coords(const midgard::Point2d merc_xy, const TileProj
   return {tile_x, tile_y};
 }
 
+linestring_vtzero_t shape_to_mercator(const std::vector<midgard::PointLL>& shape,
+                                      bg::linestring_2d_t& mercator_line,
+                                      const box_vtzero_t& clip_box,
+                                      bool& line_leaves_bbox,
+                                      double generalize,
+                                      uint32_t z,
+                                      const TileProjection& projection) {
+  const auto min_x = clip_box.min_corner().x;
+  const auto max_x = clip_box.max_corner().x;
+  const auto min_y = clip_box.min_corner().y;
+  const auto max_y = clip_box.max_corner().y;
+
+  // project to pseudo mercator x/y for the generalization
+  mercator_line.clear();
+  for (const auto& ll : shape) {
+    auto merc_x = lon_to_merc_x(ll.lng());
+    auto merc_y = lat_to_merc_y(ll.lat());
+
+    boost::geometry::append(mercator_line,
+                            std::remove_reference_t<decltype(mercator_line)>::value_type(merc_x,
+                                                                                         merc_y));
+  }
+
+  // scale the epsilon with generalize query parameter
+  if (const auto gen_factor = PeuckerEpsilons[z] * generalize; generalize > 0. && gen_factor > 0.5)
+    Polyline2<Point2d>::Generalize(mercator_line, gen_factor);
+
+  // convert to tile-local coords for the rest of the operations
+  linestring_vtzero_t unclipped_mvt_line;
+  unclipped_mvt_line.reserve(mercator_line.size());
+  vtzero::point last_pt{INT32_MIN, INT32_MIN};
+  for (const auto& pt : mercator_line) {
+    const auto& mvt_coords = merc_to_tile_coords(pt, projection);
+    // Skip consecutive duplicate points (can happen after rounding)
+    if (boost::geometry::equals(mvt_coords, last_pt)) {
+      continue;
+    }
+    const auto x = mvt_coords.x;
+    const auto y = mvt_coords.y;
+
+    // only in this case we need an intersection with the clip_box
+    line_leaves_bbox = x < min_x || x > max_x || y < min_y || y > max_y;
+
+    unclipped_mvt_line.emplace_back(x, y);
+    last_pt = mvt_coords;
+  }
+  return unclipped_mvt_line;
+}
+
 void filter_tile(const std::string& tile_bytes,
                  vtzero::tile_builder& filtered_tile,
                  const baldr::AttributesController& controller,
@@ -148,13 +221,15 @@ void filter_tile(const std::string& tile_bytes,
   const bool exclude_node_layer = exclude_layers.contains(kNodeLayerName);
   const bool exclude_shortcut_layer = exclude_layers.contains(kShortcutLayerName);
   const bool exclude_access_restrictions_layer = exclude_layers.contains(kAccessRestrictionLayerName);
+  const bool exclude_incidents_layer = exclude_layers.contains(kIncidentLayerName);
 
   auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
     if ((layer_name == kNodeLayerName && exclude_node_layer) ||
         (layer_name == kEdgeLayerName && exclude_edge_layer) ||
         (layer_name == kShortcutLayerName && exclude_shortcut_layer) ||
-        (layer_name == kAccessRestrictionLayerName && exclude_access_restrictions_layer)) {
+        (layer_name == kAccessRestrictionLayerName && exclude_access_restrictions_layer) ||
+        (layer_name == kIncidentLayerName && exclude_incidents_layer)) {
       return;
     }
 
@@ -162,8 +237,15 @@ void filter_tile(const std::string& tile_bytes,
     vtzero::property_mapper props_mapper{full_layer, filtered_layer};
 
     // pre-compute enabled attributes
-    const auto& prop_map = layer_name == kNodeLayerName ? loki::detail::kNodePropToAttributeFlag
-                                                        : loki::detail::kEdgePropToAttributeFlag;
+    const auto& prop_map = [&]() -> const auto& {
+      if (layer_name == kNodeLayerName)
+        return loki::detail::kNodePropToAttributeFlag;
+      if (layer_name == kIncidentLayerName || layer_name == kIncidentLayerName)
+        return loki::detail::kIncidentPropToAttributeFlag;
+      return loki::detail::kEdgePropToAttributeFlag;
+    }
+    ();
+
     const auto& key_table = full_layer.key_table();
     std::vector<bool> attrs_allowed(key_table.size(), false);
     for (uint32_t i = 0; i < key_table.size(); ++i) {
@@ -226,6 +308,73 @@ void build_nodes_layer(NodesLayerBuilder& nodes_builder,
   nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
 }
 
+void build_incidents_layer(IncidentLayersBuilder& incidents_builder,
+                           GraphId edge_id,
+                           const std::vector<midgard::PointLL>& shape,
+                           bg::linestring_2d_t& mercator_line,
+                           const box_vtzero_t& clip_box,
+                           double generalize,
+                           uint32_t z,
+                           graph_tile_ptr& tile,
+                           GraphReader& reader,
+                           const TileProjection& projection) {
+
+  auto incident_result = reader.GetIncidents(edge_id, tile);
+  for (auto i = incident_result.start_index; i < incident_result.end_index; ++i) {
+    auto& loc = incident_result.tile->locations(i);
+    auto& meta = incident_result.tile->metadata(loc.metadata_index());
+
+    // maybe the incident is actually a point
+    if (loc.start_offset() == loc.end_offset() || meta.has_display_ll()) {
+      PointLL pt = meta.has_display_ll() ? PointLL{meta.display_ll().lng(), meta.display_ll().lat()}
+                                         : shape_point_along(shape, loc.start_offset());
+
+      const auto x = lon_to_merc_x(pt.lng());
+      const auto y = lat_to_merc_y(pt.lat());
+      const auto tile_coord = merc_to_tile_coords({x, y}, projection);
+
+      auto tile_x = boost::geometry::get<0>(tile_coord);
+      auto tile_y = boost::geometry::get<1>(tile_coord);
+
+      // only render nodes that are within the tile (including buffer)
+      if (tile_x >= -projection.tile_buffer &&
+          tile_x <= projection.tile_extent + projection.tile_buffer &&
+          tile_y >= -projection.tile_buffer &&
+          tile_y <= projection.tile_extent + projection.tile_buffer) {
+
+        incidents_builder.add_point_feature(meta, tile_coord);
+      }
+
+      // if there really is no line, bail
+      if (loc.start_offset() == loc.end_offset())
+        return;
+    }
+
+    // it's a line
+    std::vector<midgard::PointLL> trimmed_shape = shape;
+    trim_shape(loc.start_offset(), loc.end_offset(), trimmed_shape);
+    bool leaves_bbox = false;
+    auto unclipped_mvt_line = shape_to_mercator(trimmed_shape, mercator_line, clip_box, leaves_bbox,
+                                                generalize, z, projection);
+
+    if (!leaves_bbox) {
+      incidents_builder.add_line_feature(meta, unclipped_mvt_line);
+      return;
+    }
+    multilinestring_vtzero_t clipped_mvt_lines;
+
+    boost::geometry::intersection(clip_box, unclipped_mvt_line, clipped_mvt_lines);
+    std::erase_if(clipped_mvt_lines,
+                  [](const auto& ls) { return ls.size() < 2 || (ls.size() == 2 && ls[0] == ls[1]); });
+
+    // process each clipped line segment (there may be multiple if line crosses tile multiple
+    // times)
+    for (const auto& clipped_line : clipped_mvt_lines) {
+      incidents_builder.add_line_feature(meta, clipped_line);
+    }
+  }
+}
+
 void build_access_restrictions_layer(AccessRestrictionLayerBuilder& ar_builder,
                                      const linestring_vtzero_t& line,
                                      const graph_tile_ptr& tile,
@@ -261,15 +410,12 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   const box_vtzero_t clip_box(vtzero::point(-projection.tile_buffer, -projection.tile_buffer),
                               vtzero::point(projection.tile_extent + projection.tile_buffer,
                                             projection.tile_extent + projection.tile_buffer));
-  const auto min_x = clip_box.min_corner().x;
-  const auto max_x = clip_box.max_corner().x;
-  const auto min_y = clip_box.min_corner().y;
-  const auto max_y = clip_box.max_corner().y;
 
   EdgesLayerBuilder edges_builder(tile, kEdgeLayerName.data(), controller);
   EdgesLayerBuilder shortcuts_builder(tile, kShortcutLayerName.data(), controller);
   NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
   AccessRestrictionLayerBuilder access_restriction_builder(tile, kAccessRestrictionLayerName.data());
+  IncidentLayersBuilder incidents_builder(tile, kIncidentLayerName.data(), controller);
 
   std::unordered_set<GraphId> unique_nodes;
   unique_nodes.reserve(edge_ids.size());
@@ -277,6 +423,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   mercator_line.reserve(20);
   multilinestring_vtzero_t clipped_mvt_lines;
   baldr::graph_tile_ptr edge_tile;
+
   for (const auto& edge_id : edge_ids) {
     // TODO(nils): create another array for tile level to quickly discard edges on lower zooms
     const auto* edge = reader->directededge(edge_id, edge_tile);
@@ -294,55 +441,27 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       std::reverse(shape.begin(), shape.end());
     }
 
-    // project to pseudo mercator x/y for the generalization
-    mercator_line.clear();
-    for (const auto& ll : shape) {
-      auto merc_x = lon_to_merc_x(ll.lng());
-      auto merc_y = lat_to_merc_y(ll.lat());
-
-      boost::geometry::append(mercator_line, decltype(mercator_line)::value_type(merc_x, merc_y));
-    }
-
-    // scale the epsilon with generalize query parameter
-    if (const auto gen_factor = PeuckerEpsilons[z] * generalize; generalize > 0. && gen_factor > 0.5)
-      Polyline2<Point2d>::Generalize(mercator_line, gen_factor);
-
-    // convert to tile-local coords for the rest of the operations
-    linestring_vtzero_t unclipped_mvt_line;
-    unclipped_mvt_line.reserve(mercator_line.size());
-    vtzero::point last_pt{INT32_MIN, INT32_MIN};
     bool line_leaves_bbox = false;
-    for (const auto& pt : mercator_line) {
-      const auto& mvt_coords = merc_to_tile_coords(pt, projection);
-      // Skip consecutive duplicate points (can happen after rounding)
-      if (boost::geometry::equals(mvt_coords, last_pt)) {
-        continue;
-      }
-      const auto x = mvt_coords.x;
-      const auto y = mvt_coords.y;
 
-      // only in this case we need an intersection with the clip_box
-      line_leaves_bbox = x < min_x || x > max_x || y < min_y || y > max_y;
-
-      unclipped_mvt_line.emplace_back(x, y);
-      last_pt = mvt_coords;
-    }
+    linestring_vtzero_t unclipped_mvt_line =
+        shape_to_mercator(shape, mercator_line, clip_box, line_leaves_bbox, generalize, z,
+                          projection);
 
     // Must have at least 2 unique points to create a valid linestring
     if (unclipped_mvt_line.size() < 2) {
       continue;
     }
+    baldr::graph_tile_ptr opp_tile = edge_tile;
+    const DirectedEdge* opp_edge = nullptr;
+    GraphId opp_edge_id = reader->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+
+    const volatile baldr::TrafficSpeed* forward_traffic = &edge_tile->trafficspeed(edge);
+    const volatile baldr::TrafficSpeed* reverse_traffic =
+        opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
     // lambda to add VT line & nodes features
     auto process_single_line = [&](const linestring_vtzero_t& line) {
       // Check for opposing edge
-      baldr::graph_tile_ptr opp_tile = edge_tile;
-      const DirectedEdge* opp_edge = nullptr;
-      GraphId opp_edge_id = reader->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-
-      const volatile baldr::TrafficSpeed* forward_traffic = &edge_tile->trafficspeed(edge);
-      const volatile baldr::TrafficSpeed* reverse_traffic =
-          opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
       if (edge->is_shortcut()) {
         shortcuts_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
@@ -364,6 +483,16 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
         }
       }
     };
+
+    if (forward_traffic && forward_traffic->has_incidents) {
+      build_incidents_layer(incidents_builder, edge_id, shape, mercator_line, clip_box, generalize, z,
+                            edge_tile, *reader, projection);
+    }
+
+    if (opp_tile && reverse_traffic && reverse_traffic->has_incidents) {
+      build_incidents_layer(incidents_builder, opp_edge_id, shape, mercator_line, clip_box,
+                            generalize, z, opp_tile, *reader, projection);
+    }
 
     if (!line_leaves_bbox) {
       process_single_line(unclipped_mvt_line);
@@ -593,6 +722,65 @@ void AccessRestrictionLayerBuilder::add_feature(
 
   add_feature(forward_edge_id, forward_restrictions);
   add_feature(reverse_edge_id, reverse_restrictions);
+}
+
+IncidentLayersBuilder::IncidentLayersBuilder(vtzero::tile_builder& tile,
+                                             const char* name,
+                                             const baldr::AttributesController& controller)
+    : vtzero::layer_builder(tile, name), controller_(controller) {
+  key_type_ = add_key_without_dup_check("type");
+  key_impact_ = add_key_without_dup_check("impact");
+  key_description_ = add_key_without_dup_check("description");
+  key_sub_type_ = add_key_without_dup_check("sub_type");
+  key_sub_type_description_ = add_key_without_dup_check("sub_type_description");
+  key_start_time_ = add_key_without_dup_check("start_time");
+  key_end_time_ = add_key_without_dup_check("end_time");
+  key_road_closed_ = add_key_without_dup_check("road_closed");
+  key_congestion_value_ = add_key_without_dup_check("congestion_value");
+  key_lanes_blocked_ = add_key_without_dup_check("lanes_blocked");
+  key_creation_time_ = add_key_without_dup_check("creation_time");
+  key_long_description_ = add_key_without_dup_check("long_description");
+  key_clear_lanes_ = add_key_without_dup_check("clear_lanes");
+  key_num_lanes_blocked_ = add_key_without_dup_check("num_lanes_blocked");
+  key_length_ = add_key_without_dup_check("length");
+  key_id_ = add_key_without_dup_check("id");
+  key_iso_3166_1_alpha2_ = add_key_without_dup_check("iso_3166_1_alpha2");
+  key_iso_3166_1_alpha3_ = add_key_without_dup_check("iso_3166_1_alpha3");
+
+  for (const auto& def : loki::detail::kIncidentAttributes) {
+    if (controller(def.attribute_flag)) {
+      this->*(def.key_member) = add_key_without_dup_check(def.key_name);
+    }
+  }
+}
+
+void IncidentLayersBuilder::add_point_feature(const IncidentsTile::Metadata& meta,
+                                              const vtzero::point& position) {
+  vtzero::point_feature_builder feature{*this};
+  feature.add_point(position);
+  for (const auto& def : loki::detail::kIncidentAttributes) {
+    if (controller_(def.attribute_flag)) {
+      const auto key = this->*(def.key_member);
+      feature.add_property(key, def.value_func(meta));
+    }
+  }
+  feature.commit();
+}
+
+void IncidentLayersBuilder::add_line_feature(const IncidentsTile::Metadata& meta,
+                                             const std::vector<vtzero::point>& geometry) {
+
+  vtzero::linestring_feature_builder feature{*this};
+  feature.set_id(static_cast<uint64_t>(meta.id()));
+  feature.add_linestring_from_container(geometry);
+  // Add node properties
+  for (const auto& def : loki::detail::kIncidentAttributes) {
+    if (controller_(def.attribute_flag)) {
+      const auto key = this->*(def.key_member);
+      feature.add_property(key, def.value_func(meta));
+    }
+  }
+  feature.commit();
 }
 
 std::string loki_worker_t::render_tile(Api& request) {

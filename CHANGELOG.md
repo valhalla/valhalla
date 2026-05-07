@@ -3,6 +3,7 @@
 * **Bug Fix**
    * FIXED: wrong mode used in loki for `auto_pedestrian` [#6065](https://github.com/valhalla/valhalla/pull/6065)
 * **Enhancement**
+   * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**
