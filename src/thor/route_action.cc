@@ -176,6 +176,8 @@ void add_shortcut(baldr::GraphReader& reader,
                   valhalla::Costing_Options* options,
                   valhalla::CostFactorEdge* cost_factor) {
 
+  // for ignoring access restrictions, we don't care if it's
+  // a partial, it applies to the whole edge
   if (cost_factor->ignore_access_restrictions()) {
     auto* exclude_edge = options->add_exclude_edges();
     exclude_edge->set_id(shortcut.value);
