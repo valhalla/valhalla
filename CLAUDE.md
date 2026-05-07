@@ -161,6 +161,8 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Route API request/response format | `docs/docs/api/turn-by-turn/api-reference.md` |
 | Speed assignment (maxspeed, highway defaults, density) | `docs/docs/speeds.md` |
 | Domain terminology (cost vs penalty vs factor) | `docs/docs/terminology.md` |
+| Map matching (Meili) data flow | `src/meili/map_matcher.cc` (`OfflineMatch`) → `src/meili/match_route.cc` (`ConstructRoute`) → `src/thor/map_matcher.cc` (`FormPath`) → `src/thor/trace_route_action.cc` (`build_trace`) → `src/thor/triplegbuilder.cc` (`TripLegBuilder::Build`). Candidates: `src/meili/candidate_search.cc`. Viterbi: `src/meili/viterbi_search.cc` |
+| Behavior affected by `include_pedestrian`/`bicycle`/`driving: false` | `src/mjolnir/graphfilter.cc` (`FilterTiles`, `AggregateTiles`). Filtering happens AFTER parsing — shared nodes between filtered ways create intersections that split edges during parsing. After filtering removes those edges, aggregation merges nodes that have only 2 remaining edges back together, which can change edge topology. Check `ExpandFromNodeInner` for the aggregation walk |
 
 ## Performance at Planet Scale
 
@@ -218,6 +220,16 @@ TEST(MyFeature, BasicCase) {
 ```
 
 Key helpers: `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `gurka::findEdgeByNodes()`, `gurka::assert::raw::expect_path()`, `gurka::assert::raw::expect_maneuvers()`, `gurka::assert::osrm::expect_steps()`. Test utilities in `test/test.h`. Full framework reference in `docs/docs/test/gurka.md`.
+
+**When a gurka ASCII map doesn't reproduce a real-world issue**, the problem likely depends on specific OSM data or tile build configuration that the ASCII map doesn't capture. Use real OSM data to understand the exact conditions, then design the ASCII map to match:
+
+1. Download the regional OSM PBF from Geofabrik (e.g., `sweden-latest.osm.pbf`)
+2. Extract a small bbox: `osmium extract --bbox <lon1,lat1,lon2,lat2> region.osm.pbf -o extract.osm.pbf`
+3. Inspect the OSM data — this is often where the missing piece is: `osmium cat extract.osm.pbf -o extract.osm` converts to XML, then use `rg` to find the way by ID, check which nodes are shared between ways, what tags they have, whether ways are closed loops, etc.
+4. Build tiles: `valhalla_build_tiles -c config.json extract.osm.pbf` (build admin/tz databases from the broader regional PBF via `valhalla_build_admins` / `valhalla_build_timezones`, then point the config at them)
+5. Reproduce the issue with `valhalla_service config.json <action> '<request>'`
+6. Examine the edge structure: `valhalla_service config.json locate '<location>'` — check edge count, way IDs, connectivity
+7. Design the gurka ASCII map to match the exact topology — including build flags (e.g., `{"mjolnir.include_pedestrian", "false"}`), connected ways, closed ways, etc.
 
 ### Conventions
 
