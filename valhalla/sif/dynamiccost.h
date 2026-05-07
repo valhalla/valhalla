@@ -14,13 +14,13 @@
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/midgard/util.h>
+#include <valhalla/proto/info.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 
 #include <boost/container/small_vector.hpp>
-#include <proto/info.pb.h>
 
 #include <cstdint>
 #include <memory>
