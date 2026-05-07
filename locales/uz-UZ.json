@@ -912,7 +912,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "<RELATIVE_DIRECTION> tomondagi chiqishdan chiqing."
+        "0": "<EXIT_NUMBERS>-chiqish"
       },
       "example_phrases": {
         "0": [
@@ -923,12 +923,12 @@
     "keep": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION> tomonda yuring.",
-        "1": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> ga yuring.",
-        "2": "<RELATIVE_DIRECTION> tomonda <TOWARD_SIGN> tomon yuring.",
-        "3": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan chiqing.",
-        "4": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga chiqing.",
+        "1": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan chiqing.",
+        "2": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> ga yuring.",
+        "3": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga chiqing.",
+        "4": "<RELATIVE_DIRECTION> tomonda <TOWARD_SIGN> tomon yuring.",
         "5": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <TOWARD_SIGN> tomon chiqing.",
-        "6": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga <TOWARD_SIGN> tomon chiqing.",
+        "6": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> ga <TOWARD_SIGN> tomon yuring.",
         "7": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga <TOWARD_SIGN> tomon chiqing."
       },
       "empty_street_name_labels": [
@@ -977,8 +977,8 @@
     "keep_to_stay_on": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> da qolish uchun yuring.",
-        "1": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> da qolish uchun <TOWARD_SIGN> tomon yuring.",
-        "2": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> da qolish uchun chiqing.",
+        "1": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> da qolish uchun chiqing.",
+        "2": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> da qolish uchun <TOWARD_SIGN> tomon yuring.",
         "3": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> da qolish uchun <TOWARD_SIGN> tomon chiqing."
       },
       "empty_street_name_labels": [
@@ -1015,8 +1015,8 @@
     "keep_to_stay_on_verbal": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> da qolish uchun yuring.",
-        "1": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> da qolish uchun <TOWARD_SIGN> tomon yuring.",
-        "2": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> da qolish uchun chiqing.",
+        "1": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> da qolish uchun chiqing.",
+        "2": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> da qolish uchun <TOWARD_SIGN> tomon yuring.",
         "3": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> da qolish uchun <TOWARD_SIGN> tomon chiqing."
       },
       "empty_street_name_labels": [
@@ -1053,12 +1053,12 @@
     "keep_verbal": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION> tomonda yuring.",
-        "1": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> ga yuring.",
-        "2": "<RELATIVE_DIRECTION> tomonda <TOWARD_SIGN> tomon yuring.",
-        "3": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan chiqing.",
-        "4": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga chiqing.",
+        "1": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan chiqing.",
+        "2": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> ga yuring.",
+        "3": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga chiqing.",
+        "4": "<RELATIVE_DIRECTION> tomonda <TOWARD_SIGN> tomon yuring.",
         "5": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <TOWARD_SIGN> tomon chiqing.",
-        "6": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga <TOWARD_SIGN> tomon chiqing.",
+        "6": "<RELATIVE_DIRECTION> tomonda <STREET_NAMES> ga <TOWARD_SIGN> tomon yuring.",
         "7": "<RELATIVE_DIRECTION> tomonda <NUMBER_SIGN>-chiqishdan <STREET_NAMES> ga <TOWARD_SIGN> tomon chiqing."
       },
       "empty_street_name_labels": [
@@ -1319,9 +1319,9 @@
     "ramp_straight": {
       "phrases": {
         "0": "To'g'ri davom eting.",
-        "1": "<STREET_NAMES> ga to'g'ri davom eting.",
+        "1": "<BRANCH_SIGN> estakadasiga to'g'ri davom eting.",
         "2": "<TOWARD_SIGN> tomon to'g'ri davom eting.",
-        "3": "<STREET_NAMES> ga <TOWARD_SIGN> tomon to'g'ri davom eting.",
+        "3": "<BRANCH_SIGN> estakadasiga <TOWARD_SIGN> tomon to'g'ri davom eting.",
         "4": "<NAME_SIGN> estakadaga to'g'ri davom eting."
       },
       "example_phrases": {
@@ -1345,9 +1345,9 @@
     "ramp_straight_verbal": {
       "phrases": {
         "0": "To'g'ri davom eting.",
-        "1": "<STREET_NAMES> ga to'g'ri davom eting.",
+        "1": "<BRANCH_SIGN> estakadasiga to'g'ri davom eting.",
         "2": "<TOWARD_SIGN> tomon to'g'ri davom eting.",
-        "3": "<STREET_NAMES> ga <TOWARD_SIGN> tomon to'g'ri davom eting.",
+        "3": "<BRANCH_SIGN> estakadasiga <TOWARD_SIGN> tomon to'g'ri davom eting.",
         "4": "<NAME_SIGN> estakadaga to'g'ri davom eting."
       },
       "example_phrases": {
