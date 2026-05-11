@@ -1,4 +1,4 @@
-# CLAUDE.md — Valhalla Project Guide
+# Valhalla Project Guide
 
 Open-source C++ routing engine for OpenStreetMap data: turn-by-turn routing, time-distance matrices, isochrones, map matching, elevation queries, optimized routes (TSP). C++20, CMake, single `libvalhalla` shared library from ~10 Norse-mythology-themed modules.
 
