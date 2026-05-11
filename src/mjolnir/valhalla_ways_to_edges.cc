@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     cxxopts::Options options(
       program,
       program + " " + VALHALLA_PRINT_VERSION + "\n\n"
-      "a program that creates a list of edges for each auto-drivable OSM way. CSV row format is <osm_way_id, [...edge.forward, edge.edgeid, edge.length_in_meters]>\n\n");
+      "a program that creates a list of edges for each auto-drivable OSM way. CSV row format is <osm_way_id, [...edge.forward, edge.edgeid(, edge.length_in_meters)]>\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
