@@ -1,6 +1,8 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -364,6 +366,18 @@ void logging::Log(const std::string& message, const std::string& custom_directiv
 // statically configure logging
 void logging::Configure(const LoggingConfig& config) {
   GetLogger(config);
+}
+
+// configure logging from the top-level "logging" section of a boost property tree config
+// if the section is missing, uses the default logger (std_out with color)
+void logging::ConfigureFromPtree(const boost::property_tree::ptree& config) {
+  auto logging_subtree = config.get_child_optional("logging");
+  if (logging_subtree) {
+    Configure(ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string>>(
+        logging_subtree.get()));
+    return;
+  }
+  LOG_WARN("No top-level 'logging' section in config, using default logger.");
 }
 
 } // namespace midgard

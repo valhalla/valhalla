@@ -84,6 +84,7 @@ constexpr auto kEnterBuildingKey = "instructions.enter_building";
 constexpr auto kExitBuildingKey = "instructions.exit_building";
 constexpr auto kPosixLocaleKey = "posix_locale";
 constexpr auto kLevelChangeKey = "instructions.level_change";
+constexpr auto kParkVehicleKey = "instructions.park_vehicle";
 
 // Variable keys
 constexpr auto kPhrasesKey = "phrases";
@@ -411,6 +412,8 @@ public:
 
   // Exit Building
   ExitBuildingSubset exit_building_subset;
+
+  PhraseSet park_vehicle_subset;
 
   // Posix locale
   std::string posix_locale;

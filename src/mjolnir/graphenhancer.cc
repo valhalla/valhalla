@@ -534,10 +534,9 @@ bool IsNotThruEdge(GraphReader& reader, const GraphId& startnode, DirectedEdge& 
 
   // Expand edges until exhausted, the maximum number of expansions occur,
   // or end up back at the starting node. No node can be visited twice.
+  graph_tile_ptr tile;
   for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
     // If expand list is exhausted this is "not thru"
-    GraphId prior_tile;
-    graph_tile_ptr tile;
     if (expand_pos == expandset.size()) {
       return true;
     }
@@ -547,9 +546,8 @@ bool IsNotThruEdge(GraphReader& reader, const GraphId& startnode, DirectedEdge& 
     // item.
     const GraphId expandnode = expandset[expand_pos++];
     visitedset.insert(expandnode);
-    if (expandnode.tile_base() != prior_tile) {
+    if (!tile || tile->id() != expandnode.tile_base()) {
       tile = reader.GetGraphTile(expandnode);
-      prior_tile = expandnode.tile_base();
     }
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
@@ -1050,6 +1048,10 @@ void enhance(const boost::property_tree::ptree& pt,
       // while processing turn lanes.
       std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
+      if (ntrans > kMaxLocalEdgeIndex + 1) {
+        LOG_DEBUG("Exceeding max. local edge count: " + std::to_string(ntrans));
+        build_stats::get().increment(build_stats::kExceededMaxLocalEdgeCount);
+      }
       for (uint32_t j = 0; j < ntrans; j++) {
         DirectedEdge& directededge = tilebuilder->directededge_builder(nodeinfo.edge_index() + j);
 
@@ -1119,6 +1121,10 @@ void enhance(const boost::property_tree::ptree& pt,
         density = it->second;
         stats.density_counts[density]++;
         nodeinfo.set_density(density);
+        if (density > kMaxDensity) {
+          LOG_DEBUG("Exceeding max. density: " + std::to_string(density));
+          build_stats::get().increment(build_stats::kExceededMaxDensity);
+        }
       }
 
       uint32_t admin_index = nodeinfo.admin_index();
@@ -1183,7 +1189,8 @@ void enhance(const boost::property_tree::ptree& pt,
               if (access_it != access_tags.end()) {
                 SetCountryAccess(directededge, access, access_it);
               } else {
-                LOG_WARN("access tags not found for " + std::to_string(e_offset.wayid()));
+                LOG_DEBUG("access tags not found for " + std::to_string(e_offset.wayid()));
+                build_stats::get().increment(build_stats::kMissingAccessTags);
               }
             } else {
               SetCountryAccess(directededge, access, target);
@@ -1320,7 +1327,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Update access restrictions (update weight units)
         if (directededge.access_restriction()) {
-          auto restrictions_span = tilebuilder->GetAccessRestrictions(nodeinfo.edge_index() + j);
+          auto restrictions_span =
+              tilebuilder->GetAccessRestrictions(nodeinfo.edge_index() + j).first;
 
           std::vector<AccessRestriction> restrictions{restrictions_span.begin(),
                                                       restrictions_span.end()};

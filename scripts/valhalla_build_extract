@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import ctypes
 from io import BytesIO
 import json
@@ -14,6 +14,8 @@ import tarfile
 from tarfile import BLOCKSIZE
 from time import time
 from typing import List, Tuple, Optional
+from urllib.error import URLError
+from urllib.request import urlopen
 
 # "<" prefix means little-endian and no alignment
 # order is important! if uint64_t is not first, c++ will use padding bytes to unpack
@@ -26,6 +28,8 @@ TRAFFIC_HEADER_FORMAT = "<2Q4I"
 TRAFFIC_HEADER_SIZE = struct.calcsize(TRAFFIC_HEADER_FORMAT)
 TRAFFIC_SPEED_SIZE = struct.calcsize("<Q")
 TRAFFIC_VERSION = 3
+
+GEOFABRIK_INDEX_URL = "https://download.geofabrik.de/index-v1.json"
 
 Bbox = namedtuple("Bbox", "min_x min_y max_x max_y")
 TILE_SIZES = {0: 4, 1: 1, 2: 0.25, 3: 0.25}
@@ -146,6 +150,14 @@ geom_type.add_argument(
     "as input to tile intersection. Requires shapely.",
     type=Path,
 )
+geom_type.add_argument(
+    "-r",
+    "--region",
+    help="Geofabrik region name or ID (e.g. 'switzerland', 'europe/france'). "
+    "Use '--region list' to show all available regions. Requires shapely.",
+    type=str,
+    default="",
+)
 parser.add_argument(
     "-v",
     "--verbosity",
@@ -179,41 +191,129 @@ def get_tile_bbox(tile_path_id: str) -> Tuple[float, float, float, float]:
     return tile_base_x, tile_base_y, tile_base_x + tile_size, tile_base_y + tile_size
 
 
-def get_tiles_with_geojson(tile_resolver_: TileResolver, geojson_dir: Path):
-    """Returns all tile paths intersecting with the GeoJSON (multi)polygons"""
+def fetch_geofabrik_index() -> dict:
+    """Fetch the Geofabrik region index."""
+    LOGGER.info(f"Fetching Geofabrik index from {GEOFABRIK_INDEX_URL}...")
+    try:
+        with urlopen(GEOFABRIK_INDEX_URL, timeout=30) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except (URLError, OSError) as e:
+        LOGGER.critical(f"Could not fetch Geofabrik index: {e}")
+        sys.exit(1)
+
+
+def find_geofabrik_region(index: dict, query: str) -> dict:
+    """
+    Find a region feature in the Geofabrik index by name or ID.
+
+    Can be e.g. "switzerland", "Switzerland" or "europe/switzerland".
+    """
+    query_lower = query.lower()
+    features = index.get("features", [])
+
+    for feature in features:
+        props = feature.get("properties", {})
+        fid = props.get("id", "")
+        fname = props.get("name", "")
+        parent = props.get("parent", "")
+
+        if query_lower in (fid.lower(), fname.lower()):
+            return feature
+        # match parent/id path
+        if "/" in query_lower and query_lower == f"{parent}/{fid}".lower():
+            return feature
+
+    LOGGER.critical(f"Region '{query}' not found. Use '--region list' to see available regions.")
+    sys.exit(1)
+
+
+def list_geofabrik_regions(geofabrik_index: dict):
+    """Print all available Geofabrik regions grouped by parent."""
+    features = geofabrik_index["features"]
+    by_parent = defaultdict(list)
+    for feature in features:
+        props = feature["properties"]
+        parent = props.get("parent", "")
+        fid = props.get("id", "")
+        fname = props.get("name", "")
+        by_parent[parent].append((fid, fname))
+
+    for parent in sorted(by_parent):
+        header = parent if parent else "(top-level)"
+        print(f"\n{header}:")
+        for fid, fname in sorted(by_parent[parent], key=lambda x: x[1]):
+            print(f"  {fname:40s} {fid}")
+
+
+def get_tiles_with_region(tile_resolver_: TileResolver, region: str):
+    """Fetch Geofabrik region boundary and filter tiles by intersection."""
+    index = fetch_geofabrik_index()
+    feature = find_geofabrik_region(index, region)
+
+    geometry = feature["geometry"]
+    props = feature["properties"]
+    LOGGER.info(f"Using boundary for '{props.get('name')}' ({props.get('id')})")
+
+    polygons = _polygons_from_geojson_geometry(geometry)
+    if not polygons:
+        LOGGER.critical(f"Could not parse geometry for region '{region}'.")
+        sys.exit(1)
+
+    _intersect_tiles_with_polygons(tile_resolver_, polygons)
+
+
+def _require_shapely():
+    """Import and return shapely geometry classes, or exit with an error."""
     try:
         from shapely.geometry import Polygon, box
+
+        return Polygon, box
     except ImportError:
         LOGGER.critical(
             "Could not import shapely. Please install shapely or use another download method instead."
         )
         sys.exit(1)
 
+
+def _intersect_tiles_with_polygons(tile_resolver_: TileResolver, polygons):
+    """Add all tile paths intersecting any of the given shapely polygons to matched_paths."""
+    _, box = _require_shapely()
+    for tile_path in tile_resolver_.normalized_tile_paths:
+        tile_bbox = box(*get_tile_bbox(str(tile_path)))
+        for poly in polygons:
+            if poly.intersects(tile_bbox):
+                tile_resolver_.matched_paths.append(tile_path)
+                break
+
+
+def _polygons_from_geojson_geometry(geometry: dict):
+    """Extract shapely Polygon objects from a GeoJSON geometry dict."""
+    Polygon, _ = _require_shapely()
+    polygons = []
+    if geometry["type"] == "Polygon":
+        polygons.append(Polygon(geometry["coordinates"][0]))
+    elif geometry["type"] == "MultiPolygon":
+        for single_polygon in geometry["coordinates"]:
+            polygons.append(Polygon(single_polygon[0]))
+    return polygons
+
+
+def get_tiles_with_geojson(tile_resolver_: TileResolver, geojson_dir: Path):
+    """Returns all tile paths intersecting with the GeoJSON (multi)polygons"""
     if not geojson_dir.is_dir() or not len(list(geojson_dir.glob("*.geojson"))) > 0:
         LOGGER.critical(
             f"Geojson directory does not exist or contains no GeoJSON files: {geojson_dir.resolve()}"
         )
         sys.exit(1)
 
-    def get_outer_rings(input_dir: Path) -> List[Polygon]:
-        polygons = list()
-        for file in input_dir.glob("*.geojson"):
-            with open(file) as gj_f:
-                geojson = json.load(gj_f)
-            for feature in geojson["features"]:
-                if feature["geometry"]["type"] == "Polygon":
-                    polygons.append(Polygon(feature["geometry"]["coordinates"][0]))
-                if feature["geometry"]["type"] == "MultiPolygon":
-                    for single_polygon in feature["geometry"]["coordinates"]:
-                        polygons.append(Polygon(single_polygon[0]))
-        return polygons
+    polygons = []
+    for file in geojson_dir.glob("*.geojson"):
+        with open(file) as gj_f:
+            geojson = json.load(gj_f)
+        for feature in geojson["features"]:
+            polygons.extend(_polygons_from_geojson_geometry(feature["geometry"]))
 
-    geojson_polys = get_outer_rings(geojson_dir)
-    for tile_path in tile_resolver_.normalized_tile_paths:
-        tile_bbox = box(*get_tile_bbox(str(tile_path)))
-        for poly in geojson_polys:
-            if poly.intersects(tile_bbox):
-                tile_resolver_.matched_paths.append(tile_path)
+    _intersect_tiles_with_polygons(tile_resolver_, polygons)
 
 
 def get_tiles_with_bbox(tile_resolver_: TileResolver, bbox_str: str):
@@ -375,7 +475,7 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
     LOGGER.info(f"Finished creating the traffic extract at {traffic_fp}")
 
 
-if __name__ == "__main__":
+def main():
     args = parser.parse_args()
 
     # set the right logger level
@@ -385,6 +485,13 @@ if __name__ == "__main__":
         LOGGER.setLevel(logging.INFO)
     elif args.verbosity >= 2:
         LOGGER.setLevel(logging.DEBUG)
+
+    # handle --region list early (no config needed)
+    if args.region and args.region.lower() == "list":
+        LOGGER.setLevel(logging.INFO)
+        index = fetch_geofabrik_index()
+        list_geofabrik_regions(index)
+        sys.exit(0)
 
     if not args.config and not args.inline_config:
         LOGGER.critical("No valid config file or inline config used.")
@@ -432,7 +539,13 @@ if __name__ == "__main__":
         get_tiles_with_bbox(tile_resolver, args.bbox)
     elif args.geojson_dir:
         get_tiles_with_geojson(tile_resolver, args.geojson_dir)
+    elif args.region:
+        get_tiles_with_region(tile_resolver, args.region)
     else:
         tile_resolver.matched_paths = tile_resolver.normalized_tile_paths
 
     create_extracts(config, args.with_traffic, tile_resolver, tiles_extract_out)
+
+
+if __name__ == "__main__":
+    main()

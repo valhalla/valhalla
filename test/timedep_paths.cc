@@ -38,7 +38,7 @@ void try_path(GraphReader& reader,
   Api request;
   ParseApi(test_request, Options::route, request);
   loki_worker.route(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   // For now this just tests auto costing - could extend to other
   travel_mode_t mode;

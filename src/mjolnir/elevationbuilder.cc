@@ -7,6 +7,7 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
 #include "scoped_timer.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
@@ -59,8 +60,9 @@ std::vector<int8_t> encode_edge_elevation(const std::unique_ptr<valhalla::skadi:
       diff = d < diff ? diff : d;
       LOG_DEBUG("  " + std::to_string(heights[i]));
     }
-    LOG_WARN("edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
-             std::to_string(diff) + " meters.");
+    LOG_DEBUG("edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
+              std::to_string(diff) + " meters.");
+    build_stats::get().increment(build_stats::kExceededElevationDiff);
   }
   return encoded;
 }
@@ -99,8 +101,9 @@ std::vector<int8_t> encode_btf_elevation(const std::unique_ptr<valhalla::skadi::
       diff = d < diff ? diff : d;
       LOG_DEBUG("  " + std::to_string(heights[i]));
     }
-    LOG_WARN("BTF edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
-             std::to_string(diff) + " meters.");
+    LOG_DEBUG("BTF edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
+              std::to_string(diff) + " meters.");
+    build_stats::get().increment(build_stats::kExceededElevationDiff);
   }
   return e;
 }
@@ -229,10 +232,20 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
     // Edge elevation information. If the edge is forward (with respect to the shape)
     // use the first value, otherwise use the second.
     bool forward = directededge.forward();
-    directededge.set_weighted_grade(forward ? std::get<0>(found->second)
-                                            : std::get<1>(found->second));
     float max_up_slope = forward ? std::get<2>(found->second) : std::get<4>(found->second);
     float max_down_slope = forward ? std::get<3>(found->second) : std::get<5>(found->second);
+    auto weighted_grade = forward ? std::get<0>(found->second) : std::get<1>(found->second);
+
+    // Clamp grade on tunnels/bridges. Successive, connected bridge/tunnel edges can
+    // lead to high grades. Note - elevation along a route is "fixed" for these cases
+    // but weighted grade can cause route issues.
+    if (directededge.bridge() || directededge.tunnel()) {
+      // Clamp grades to +/- 3% (weighted grade values between 4 and 8)
+      weighted_grade = std::clamp(weighted_grade, 4u, 8u);
+      max_up_slope = std::min(3.0f, max_up_slope);
+      max_down_slope = std::max(-3.0f, max_down_slope);
+    }
+    directededge.set_weighted_grade(weighted_grade);
     directededge.set_max_up_slope(max_up_slope);
     directededge.set_max_down_slope(max_down_slope);
   }

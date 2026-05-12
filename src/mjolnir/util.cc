@@ -21,9 +21,11 @@
 #include <boost/algorithm/string/constants.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cpp-statsd-client/StatsdClient.hpp>
 #include <openssl/evp.h>
 
 #include <filesystem>
+#include <format>
 #include <regex>
 
 using boost::property_tree::ptree;
@@ -285,6 +287,7 @@ uint32_t GetStopImpact(uint32_t from,
 
   // Get the highest classification of other roads at the intersection
   bool all_ramps = true;
+  bool found_other_edge = false;
   const DirectedEdge* edge = &edges[0];
   // kUnclassified,  kResidential, and kServiceOther are grouped
   // together for the stop_impact logic.
@@ -304,10 +307,25 @@ uint32_t GetStopImpact(uint32_t from,
       }
     }
 
+    // Track whether any other drivable edge exists at this node (in either direction).
+    // This detects real intersections even on one-way streets where the cross-street
+    // only has forward access from this node.
+    if (i != to && i != from && ((edge->reverseaccess() | edge->forwardaccess()) & kAutoAccess)) {
+      found_other_edge = true;
+    }
+
     // Check if not a ramp or turn channel
     if (!edge->link()) {
       all_ramps = false;
     }
+  }
+
+  // No other drivable edges means this is not a real intersection (for example the way id has
+  // changed so we need a new edge, but we're still on the same road with no other interfering
+  // traffic). Return 0 so we don't add phantom transition costs.
+  // Don't apply this to U-turns (from == to), as dead-end U-turns should retain their cost.
+  if (!found_other_edge && from != to) {
+    return 0;
   }
 
   // kUnclassified,  kResidential, and kServiceOther are grouped
@@ -662,6 +680,11 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     std::filesystem::create_directories(tile_dir);
   }
 
+  // Snapshot for per-stage delta reporting
+  auto log_stage = [&config](BuildStage stage) { build_stats::get().log_stage(stage, config); };
+  // nothing to report, but logic only works correctly if every stage is logged
+  log_stage(BuildStage::kInitialize);
+
   // Set up the temporary (*.bin) files used during processing
   std::string ways_bin = tile_dir + ways_file;
   std::string way_nodes_bin = tile_dir + way_nodes_file;
@@ -690,6 +713,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    log_stage(BuildStage::kParseWays);
   }
 
   // Parse OSM data
@@ -704,6 +728,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    log_stage(BuildStage::kParseRelations);
   }
 
   // Parse OSM data
@@ -717,6 +742,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    log_stage(BuildStage::kParseNodes);
   }
 
   // Construct edges
@@ -731,6 +757,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Output manifest
     TileManifest manifest{tiles};
     manifest.LogToFile(tile_manifest);
+    log_stage(BuildStage::kConstructEdges);
   }
 
   // Build Valhalla routing tiles
@@ -751,6 +778,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
                         cr_to_bin, linguistic_node_bin, tiles);
+    log_stage(BuildStage::kBuild);
   }
 
   // Enhance the local level of the graph. This adds information to the local
@@ -762,16 +790,19 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
       osm_data.read_from_unique_names_file(tile_dir);
     }
     GraphEnhancer::Enhance(config, osm_data, access_bin);
+    log_stage(BuildStage::kEnhance);
   }
 
   // Perform optional edge filtering (remove edges and nodes for specific access modes)
   if (start_stage <= BuildStage::kFilter && BuildStage::kFilter <= end_stage) {
     GraphFilter::Filter(config);
+    log_stage(BuildStage::kFilter);
   }
 
   // Add transit
   if (start_stage <= BuildStage::kTransit && BuildStage::kTransit <= end_stage) {
     TransitBuilder::Build(config);
+    log_stage(BuildStage::kTransit);
   }
 
   // Build bike share stations
@@ -780,6 +811,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
       osm_data.read_from_unique_names_file(tile_dir);
     }
     BssBuilder::Build(config, osm_data, bss_nodes_bin);
+    log_stage(BuildStage::kBss);
   }
 
   // Builds additional hierarchies if specified within config file. Connections
@@ -788,6 +820,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (build_hierarchy) {
     if (start_stage <= BuildStage::kHierarchy && BuildStage::kHierarchy <= end_stage) {
       HierarchyBuilder::Build(config, new_to_old_bin, old_to_new_bin);
+      log_stage(BuildStage::kHierarchy);
     }
 
     // Build shortcuts if specified in the config file. Shortcuts can only be
@@ -796,6 +829,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (build_shortcuts) {
       if (start_stage <= BuildStage::kShortcuts && BuildStage::kShortcuts <= end_stage) {
         ShortcutBuilder::Build(config);
+        log_stage(BuildStage::kShortcuts);
       }
     } else {
       LOG_INFO("Skipping shortcut builder");
@@ -807,6 +841,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Add elevation to the tiles
   if (start_stage <= BuildStage::kElevation && BuildStage::kElevation <= end_stage) {
     ElevationBuilder::Build(config);
+    log_stage(BuildStage::kElevation);
   }
 
   // Build the Complex Restrictions
@@ -815,11 +850,13 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // within the tile. However, there is no serialization currently available for complex restrictions.
   if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
     RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
+    log_stage(BuildStage::kRestrictions);
   }
 
   // Validate the graph and add information that cannot be added until full graph is formed.
   if (start_stage <= BuildStage::kValidate && BuildStage::kValidate <= end_stage) {
     GraphValidator::Validate(config);
+    log_stage(BuildStage::kValidate);
   }
 
   // Cleanup bin files
@@ -838,6 +875,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(old_to_new_bin);
     remove_temp_file(tile_manifest);
     OSMData::cleanup_temp_files(tile_dir);
+    log_stage(BuildStage::kCleanup);
   }
   return true;
 }
@@ -881,6 +919,49 @@ TileManifest TileManifest::ReadFromFile(const std::string& filename) {
   LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
            filename);
   return TileManifest{tileset};
+}
+
+void build_stats::record_timing(const std::string& key, uint64_t seconds) {
+  std::lock_guard<std::mutex> lock(timings_mutex_);
+  pending_timings_.emplace_back(key, seconds);
+}
+
+void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree& config) const {
+  auto stage_name = to_string(stage);
+  std::vector<std::pair<std::string, uint32_t>> statsd_entries;
+  for (uint8_t i = 0; i < kCount; ++i) {
+    if (stage == meta[i].stage) {
+      uint32_t current = counters_[i].load();
+      statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, current);
+      if (current > 0 && meta[i].is_warning) {
+        LOG_WARN(std::format("[{}] {} {}", stage_name, current, meta[i].log_label));
+      }
+    }
+  }
+
+  auto host = config.get<std::string>("statsd.host", "");
+  if (host.empty()) {
+    return;
+  }
+  Statsd::StatsdClient client(host, config.get<int>("statsd.port", 8125),
+                              config.get<std::string>("statsd.prefix", ""),
+                              config.get<uint64_t>("statsd.batch_size", 500), 0);
+  std::vector<std::string> tags;
+  auto added_tags = config.get_child_optional("statsd.tags");
+  if (added_tags) {
+    for (const auto& tag : *added_tags) {
+      tags.push_back(tag.second.data());
+    }
+  }
+  for (const auto& [key, count] : statsd_entries) {
+    client.gauge(key, count, 1.f, tags);
+  }
+  for (const auto& [key, seconds] : pending_timings_) {
+    client.gauge(key, seconds, 1.f, tags);
+  }
+  pending_timings_.clear();
+  client.gauge("mjolnir.stage", static_cast<int>(stage), 1.f, tags);
+  client.flush();
 }
 
 } // namespace mjolnir

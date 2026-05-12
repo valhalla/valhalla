@@ -513,6 +513,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       case DirectionsLeg_Maneuver_Type_kLevelChange:
         maneuver.set_instruction(FormGenericLevelChangeInstruction(maneuver));
         break;
+      case DirectionsLeg_Maneuver_Type_kParkVehicle:
+        maneuver.set_instruction(FormParkVehicleInstruction(maneuver));
+        break;
       case DirectionsLeg_Maneuver_Type_kContinue:
       default: {
         if (maneuver.has_node_type()) {
@@ -4273,6 +4276,19 @@ std::string NarrativeBuilder::FormGenericLevelChangeInstruction(Maneuver& maneuv
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kLevelTag, end_level);
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormParkVehicleInstruction(Maneuver& /*maneuver*/) {
+  // "0": "Park your vehicle.",
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  instruction = dictionary_.park_vehicle_subset.phrases.at(std::to_string(phrase_id));
 
   return instruction;
 }

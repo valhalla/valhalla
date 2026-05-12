@@ -97,19 +97,23 @@ TEST(Actor, Tile) {
   bool has_edges = false;
   bool has_shortcuts = false;
   bool has_nodes = false;
+  bool has_access_restrictions = false;
 
   while (auto layer = tile.next_layer()) {
     std::string layer_name = std::string(layer.name());
 
     if (layer_name == "edges") {
       has_edges = true;
-      EXPECT_EQ(layer.num_features(), 1978);
+      EXPECT_EQ(layer.num_features(), 2279);
     } else if (layer_name == "nodes") {
       has_nodes = true;
-      EXPECT_EQ(layer.num_features(), 1611);
+      EXPECT_EQ(layer.num_features(), 1742);
     } else if (layer_name == "shortcuts") {
       has_shortcuts = true;
-      EXPECT_EQ(layer.num_features(), 37);
+      EXPECT_EQ(layer.num_features(), 39);
+    } else if (layer_name == "access_restrictions") {
+      EXPECT_EQ(layer.num_features(), 38);
+      has_access_restrictions = true;
     } else {
       FAIL() << "Unexpected layer: " << layer_name;
     }
@@ -118,6 +122,7 @@ TEST(Actor, Tile) {
   EXPECT_TRUE(has_edges);
   EXPECT_TRUE(has_nodes);
   EXPECT_TRUE(has_shortcuts);
+  EXPECT_TRUE(has_access_restrictions);
 }
 
 // TODO: test the rest of them

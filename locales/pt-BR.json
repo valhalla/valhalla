@@ -2356,6 +2356,16 @@
           "Exit the building, and continue on the walkway."
         ]
       }
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      },
+      "example_phrases": {
+        "0": [
+          "Park your vehicle."
+        ]
+      }
     }
   }
 }

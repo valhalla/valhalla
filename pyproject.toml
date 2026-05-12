@@ -19,6 +19,9 @@ Issues = "https://github.com/valhalla/valhalla/issues"
 Changelog = "https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md"
 
 [project.scripts]
+valhalla_build_config = "valhalla.valhalla_build_config:main"
+valhalla_build_elevation = "valhalla.valhalla_build_elevation:main"
+valhalla_build_extract = "valhalla.valhalla_build_extract:main"
 valhalla_service = "valhalla._scripts:run"
 valhalla_build_tiles = "valhalla._scripts:run"
 valhalla_build_admins = "valhalla._scripts:run"

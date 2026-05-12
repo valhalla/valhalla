@@ -36,7 +36,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"bicycle", 7200.0f},        {"bus", 43200.0f},           {"hov", 43200.0f},
     {"motor_scooter", 14400.0f}, {"motorcycle", 14400.0f},    {"multimodal", 7200.0f},
     {"pedestrian", 7200.0f},     {"transit", 14400.0f},       {"truck", 43200.0f},
-    {"taxi", 43200.0f},          {"bikeshare", 7200.0f},
+    {"taxi", 43200.0f},          {"bikeshare", 7200.0f},      {"auto_pedestrian", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
@@ -60,8 +60,8 @@ namespace thor {
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : service_worker_t(config), mode(valhalla::sif::TravelMode::kPedestrian),
-      bidir_astar(config.get_child("thor")), bss_astar(config.get_child("thor")),
-      multi_modal_astar(config.get_child("thor")), timedep_forward(config.get_child("thor")),
+      bidir_astar(config.get_child("thor")), multimodal_astar(config.get_child("thor")),
+      multi_modal_transit(config.get_child("thor")), timedep_forward(config.get_child("thor")),
       timedep_reverse(config.get_child("thor")), costmatrix_(config.get_child("thor")),
       time_distance_matrix_(config.get_child("thor")),
       time_distance_bss_matrix_(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
@@ -237,12 +237,49 @@ std::string thor_worker_t::parse_costing(const Api& request) {
   return costing_str;
 }
 
-void thor_worker_t::adjust_scores(valhalla::Options& options) {
+/**
+ * Adjusts loki's output in the following ways:
+ *   - if the only found edges were filtered, they're moved to the regular edges
+ *   - filtered edges get higher distance penalties than non-filtered ones
+ *   - all distance scores are normalized
+ *   - the distance scores are clamped to max_distance
+ */
+void thor_worker_t::adjust_locations(valhalla::Api& request) {
+  auto& options = *request.mutable_options();
   for (auto* locations :
        {options.mutable_locations(), options.mutable_sources(), options.mutable_targets()}) {
     for (auto& location : *locations) {
+      auto* edges = location.mutable_correlation()->mutable_edges();
+      auto* filtered_edges = location.mutable_correlation()->mutable_filtered_edges();
+
+      // if we have nothing because of filtering (heading/side) we'll just ignore it
+      if (edges->size() == 0 && filtered_edges->size() > 0) {
+        for (auto&& path_edge : *filtered_edges) {
+          edges->Add(std::move(path_edge));
+        }
+        filtered_edges->Clear();
+        auto* warning = request.mutable_info()->mutable_warnings()->Add();
+        warning->set_code(215);
+      }
+
+      // keep filtered edges for retry in case we cant find a route with non filtered edges
+      // use the max score of the non filtered edges as a penalty increase on each of the
+      // filtered edges so that when finding a route using non filtered edges fails the
+      // use of filtered edges are always penalized higher than the non filtered ones
+      if (edges->size() > 0 && filtered_edges->size() > 0) {
+        auto max_dist_edge =
+            std::max_element(edges->begin(), edges->end(), [](const PathEdge& a, const PathEdge& b) {
+              return a.distance() < b.distance();
+            });
+        std::for_each(filtered_edges->begin(), filtered_edges->end(),
+                      [&max_dist_edge](PathEdge& filtered_edge) {
+                        filtered_edge.set_distance(filtered_edge.distance() + 3600.0f +
+                                                   max_dist_edge->distance());
+                      });
+      }
+
       // get the minimum score for all the candidates
-      auto minScore = std::numeric_limits<float>::max();
+      auto min_score = std::numeric_limits<float>::max();
       for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
                                location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
@@ -254,8 +291,8 @@ void thor_worker_t::adjust_scores(valhalla::Options& options) {
             candidate.set_distance(candidate.distance() * candidate.distance() * kDistanceScale);
           }
           // remember the min score
-          if (minScore > candidate.distance()) {
-            minScore = candidate.distance();
+          if (min_score > candidate.distance()) {
+            min_score = candidate.distance();
           }
         }
       }
@@ -265,7 +302,7 @@ void thor_worker_t::adjust_scores(valhalla::Options& options) {
       for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
                                location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
-          candidate.set_distance(candidate.distance() - minScore);
+          candidate.set_distance(candidate.distance() - min_score);
           if (candidate.distance() > max_score->second) {
             candidate.set_distance(max_score->second);
           }
@@ -293,7 +330,7 @@ void thor_worker_t::parse_measurements(const Api& request) {
                              pt.has_radius_case() ? pt.radius()
                                                   : config.candidate_search.search_radius_meters,
                              pt.time(),
-                             PathLocation::fromPBF(pt.type())});
+                             pt.type()});
     }
   } catch (...) { throw valhalla_exception_t{424}; }
 }
@@ -318,8 +355,8 @@ void thor_worker_t::cleanup() {
   bidir_astar.Clear();
   timedep_forward.Clear();
   timedep_reverse.Clear();
-  multi_modal_astar.Clear();
-  bss_astar.Clear();
+  multi_modal_transit.Clear();
+  multimodal_astar.Clear();
   trace.clear();
   costmatrix_.Clear();
   time_distance_matrix_.Clear();

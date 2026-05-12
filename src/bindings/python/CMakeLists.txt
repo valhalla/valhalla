@@ -119,6 +119,8 @@ function(set_output_python rel_path)
 endfunction()
 
 configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_config ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_config.py COPYONLY)
+configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_elevation ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_elevation.py COPYONLY)
+configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_extract ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_extract.py COPYONLY)
 
 foreach (py_src ${py_srcs})
   set_output_python(${py_src})

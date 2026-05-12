@@ -80,7 +80,7 @@ TEST_F(ExcludeCashOnlyTollNodeTest, Basic) {
   {
     for (const auto& costing : kSupportedCostingModels) {
       try {
-        const auto result =
+        [[maybe_unused]] const auto result =
             gurka::do_action(valhalla::Options::route, map, {"A", "E"}, costing,
                              {{"/costing_options/" + costing + "/exclude_cash_only_tolls", "1"},
                               {"/costing_options/" + costing + "/exclude_unpaved", "1"}});

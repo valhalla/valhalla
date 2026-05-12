@@ -125,8 +125,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
 
     const NodeInfo* en_info = tile->node(de->endnode().id());
     // check the direction, if we looped back, or are we done
-    if ((de->endnode() != prev_node) && (de->forward() == forward) &&
-        (de->endnode() != from_node || (de->endnode() == from_node && visited_nodes.size() > 1))) {
+    if ((de->endnode() != prev_node) && (de->forward() == forward) && (de->endnode() != from_node)) {
       if (edge_info.wayid() == way_id &&
           (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
 
@@ -375,7 +374,7 @@ void FilterTiles(GraphReader& reader,
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id());
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id()).first;
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                                res.type(), res.modes(), res.value(),
@@ -754,7 +753,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         // the list of access restrictions in the new tile. Update the
         // edge index in the restriction to be the current directed edge Id
         if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(edgeid.id());
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id()).first;
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                                res.type(), res.modes(), res.value(),

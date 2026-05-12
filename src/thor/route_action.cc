@@ -101,8 +101,10 @@ inline bool is_break_point(const valhalla::Location& l) {
 }
 
 inline bool is_highly_reachable(const valhalla::Location& loc, const valhalla::PathEdge& edge) {
-  return static_cast<google::protobuf::uint32>(edge.inbound_reach()) >= loc.minimum_reachability() &&
-         static_cast<google::protobuf::uint32>(edge.outbound_reach()) >= loc.minimum_reachability();
+  return static_cast<google::protobuf::uint32>(edge.inbound_reach()) >=
+             loc.minimum_inbound_reachability() &&
+         static_cast<google::protobuf::uint32>(edge.outbound_reach()) >=
+             loc.minimum_outbound_reachability();
 }
 
 template <typename Predicate> inline void remove_path_edges(valhalla::Location& loc, Predicate pred) {
@@ -169,10 +171,18 @@ opposing) { loc.mutable_correlation()->mutable_edges()->SwapElements(i, loc.path
  * Adds a shortcut to the cost factor edges given one
  * of its constituents
  */
-void add_partial_shortcut(baldr::GraphReader& reader,
-                          GraphId shortcut,
-                          valhalla::Costing_Options* options,
-                          valhalla::CostFactorEdge* cost_factor) {
+void add_shortcut(baldr::GraphReader& reader,
+                  GraphId shortcut,
+                  valhalla::Costing_Options* options,
+                  valhalla::CostFactorEdge* cost_factor) {
+
+  // for ignoring access restrictions, we don't care if it's
+  // a partial, it applies to the whole edge
+  if (cost_factor->ignore_access_restrictions()) {
+    auto* exclude_edge = options->add_exclude_edges();
+    exclude_edge->set_id(shortcut.value);
+    return;
+  }
   GraphId edge = static_cast<GraphId>(cost_factor->id());
   graph_tile_ptr tile = reader.GetGraphTile(shortcut);
   // it's part of a shortcut
@@ -239,6 +249,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(line.cost_factor());
+          e->set_ignore_access_restrictions(line.ignore_access_restrictions());
           for (const auto& edge : line.locations(0).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
               e->set_start(edge.percent_along());
@@ -253,7 +264,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           }
           auto shortcut = reader.GetShortcut(path_info.edgeid);
           if (shortcut.is_valid()) {
-            add_partial_shortcut(reader, shortcut, costing_options, e);
+            add_shortcut(reader, shortcut, costing_options, e);
           }
         } else if (is_first || is_last) { // beginning or end edge
           for (const auto& edge :
@@ -264,11 +275,12 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
               e->set_id(path_info.edgeid);
               // apply the minimum allowed value specified in the config
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
+              e->set_ignore_access_restrictions(line.ignore_access_restrictions());
               e->set_start(is_first ? edge.percent_along() : 0.);
               e->set_end(is_last ? edge.percent_along() : 1.);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
               if (shortcut.is_valid()) {
-                add_partial_shortcut(reader, shortcut, costing_options, e);
+                add_shortcut(reader, shortcut, costing_options, e);
               }
               break;
             }
@@ -278,6 +290,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
+          e->set_ignore_access_restrictions(line.ignore_access_restrictions());
           e->set_start(0.);
           e->set_end(1.);
 
@@ -289,6 +302,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(constituent);
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
+              e->set_ignore_access_restrictions(line.ignore_access_restrictions());
               e->set_start(0);
               e->set_end(1);
             }
@@ -298,7 +312,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
             // a little, can't we persist this information somehow?
             auto shortcut = reader.GetShortcut(path_info.edgeid);
             if (shortcut.is_valid()) {
-              add_partial_shortcut(reader, shortcut, costing_options, e);
+              add_shortcut(reader, shortcut, costing_options, e);
             }
           }
         }
@@ -317,7 +331,7 @@ void thor_worker_t::centroid(Api& request) {
   auto _ = measure_scope_time(request);
 
   auto& options = *request.mutable_options();
-  adjust_scores(options);
+  adjust_locations(request);
   controller = AttributesController(request.options());
   auto costing = parse_costing(request);
   auto& locations = *options.mutable_locations();
@@ -352,7 +366,7 @@ void thor_worker_t::route(Api& request) {
   auto _ = measure_scope_time(request);
 
   auto& options = *request.mutable_options();
-  adjust_scores(options);
+  adjust_locations(request);
   controller = AttributesController(options);
 
   if (!request.options().cost_factor_lines().empty()) {
@@ -375,28 +389,33 @@ void thor_worker_t::route(Api& request) {
 thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
                                                        const valhalla::Location& origin,
                                                        const valhalla::Location& destination,
-                                                       const Options& options) {
+                                                       Api& request) {
   // make sure they are all cancelable
   for (auto* alg : std::vector<PathAlgorithm*>{
-           &multi_modal_astar,
+           &multi_modal_transit,
            &timedep_forward,
            &timedep_reverse,
            &bidir_astar,
-           &bss_astar,
+           &multimodal_astar,
        }) {
     alg->set_interrupt(interrupt);
   }
 
   // Have to use multimodal for transit based routing
   if (routetype == "multimodal" || routetype == "transit") {
-    return &multi_modal_astar;
+    return &multi_modal_transit;
+  }
+
+  if (routetype == "auto_pedestrian") {
+    return &multimodal_astar;
   }
 
   // Have to use bike share station algorithm
   if (routetype == "bikeshare") {
-    return &bss_astar;
+    return &multimodal_astar;
   }
 
+  const auto& options = request.options();
   // If the origin has date_time set use timedep_forward method if the distance
   // between location is below some maximum distance (TBD).
   if (!origin.date_time().empty() && options.date_time_type() != Options::invariant &&
@@ -405,6 +424,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
       return &timedep_forward;
+    } else {
+      add_warning(request, 402);
     }
   }
 
@@ -415,6 +436,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
       return &timedep_reverse;
+    } else {
+      add_warning(request, 214);
     }
   }
 
@@ -441,7 +464,8 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
                                                                  valhalla::Location& origin,
                                                                  valhalla::Location& destination,
                                                                  const std::string& costing,
-                                                                 const Options& options) {
+                                                                 Api& request) {
+  const Options& options = request.options();
   // Find the path.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
 
@@ -471,6 +495,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   // hierarchy transition limits, and retry with more candidate edges (add those filtered
   // by heading on first pass).
   if ((paths.empty() || ped_second_pass) && cost->AllowMultiPass()) {
+    add_warning(request, 401);
     // add filtered edges to candidate edges for origin and destination
     origin.mutable_correlation()->mutable_edges()->MergeFrom(origin.correlation().filtered_edges());
     destination.mutable_correlation()->mutable_edges()->MergeFrom(
@@ -525,7 +550,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   auto route_two_locations = [&](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
     thor::PathAlgorithm* path_algorithm =
-        this->get_path_algorithm(costing, *origin, *destination, options);
+        this->get_path_algorithm(costing, *origin, *destination, api);
     path_algorithm->Clear();
 
     // once we know which algorithm will be used, set the hierarchy limits accordingly
@@ -559,7 +584,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     }
 
     // Get best path and keep it
-    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
+    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, api);
     if (temp_paths.empty())
       return false;
     for (auto& temp_path : temp_paths) {
@@ -736,6 +761,8 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   // get the user provided hierarchy limits and store one for each path algorithm
   // because we may use them interchangeably
   auto hierarchy_limits_bidir = mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+  // TODO: what about multimodal costing? we need to check the  hierarchy limits for all
+  // costings that use hierarchy limits
   auto hierarchy_limits_unidir = mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
 
   // check whether hierarchy limits were already checked for this algorithm
@@ -748,7 +775,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   auto route_two_locations = [&, this](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
     thor::PathAlgorithm* path_algorithm =
-        this->get_path_algorithm(costing, *origin, *destination, options);
+        this->get_path_algorithm(costing, *origin, *destination, api);
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
@@ -779,7 +806,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
                         [&last_edge](const auto& edge) { return edge.graph_id() != last_edge; });
     }
     // Get best path and keep it
-    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
+    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, api);
     if (temp_paths.empty())
       return false;
 

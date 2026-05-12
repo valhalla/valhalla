@@ -223,7 +223,7 @@ TEST(Matrix, test_matrix) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -308,7 +308,7 @@ TEST(Matrix, test_timedistancematrix_forward) {
   Api request;
   ParseApi(test_request_more_sources, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -359,7 +359,7 @@ TEST(Matrix, test_timedistancematrix_reverse) {
   Api request;
   ParseApi(test_request_more_sources, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -396,7 +396,7 @@ TEST(Matrix, test_matrix_osrm) {
   ParseApi(test_request_osrm, Options::sources_to_targets, request);
 
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -438,7 +438,7 @@ TEST(Matrix, partial_matrix) {
   Api request;
   ParseApi(test_request_partial, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -630,7 +630,7 @@ TEST(StandAlone, MatrixReservationsDefault) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
@@ -658,7 +658,7 @@ TEST(StandAlone, MatrixReservationsSmall) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
@@ -683,7 +683,7 @@ TEST(StandAlone, MatrixNoReservations) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =

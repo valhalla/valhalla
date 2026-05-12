@@ -810,9 +810,8 @@ TEST_P(ExcludeFerryTest, ExcludeFerry) {
   gurka::assert::raw::expect_path(default_result, {"AB", "BC", "CD"});
 
   try {
-    const auto result =
-        gurka::do_action(valhalla::Options::route, map, {"1", "D"}, GetParam(),
-                         {{"/costing_options/" + GetParam() + "/exclude_ferries", "1"}});
+    auto _ = gurka::do_action(valhalla::Options::route, map, {"1", "D"}, GetParam(),
+                              {{"/costing_options/" + GetParam() + "/exclude_ferries", "1"}});
     FAIL() << "Expected no path to be found";
   } catch (valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
     FAIL() << "Failed with unexpected error code";

@@ -3,6 +3,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "mjolnir/elevationbuilder.h"
+#include "mjolnir/util.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
@@ -86,7 +87,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     const auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, true))
       return EXIT_SUCCESS;
 
     if (!result.count("tiles")) {
@@ -116,6 +117,9 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
+  // we don't want this executable to emit statsd
+  config.erase("statsd");
   ElevationBuilder::Build(config, tile_ids);
+  build_stats::get().log_stage(BuildStage::kElevation, config);
   return EXIT_SUCCESS;
 }

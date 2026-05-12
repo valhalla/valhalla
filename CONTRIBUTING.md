@@ -7,7 +7,7 @@ There are many ways to make meaningful contributions to the project:
 - file issues & bugs with **clear and easily reproducible instructions**
 - contribute bug fixes
 - contribute feature implementations, for larger features/changes its best to **open an issue asking for feedback before starting implementation**
-- improve translations on [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/)
+- improve translations on [Transifex](https://explore.transifex.com/valhalla/valhalla-phrases/)
 
 ## Code contributions
 
@@ -87,7 +87,7 @@ To use this, add your executable(s) code, they will be picked up automatically b
 
 ## Translation contributions
 
-Valhalla currently supports almost 30 languages with > 95% translation coverage. If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. We're using [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) to manage translations and try to download all improvements before each release.
+Valhalla currently supports almost 30 languages with > 95% translation coverage. If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. We're using [Transifex](https://explore.transifex.com/valhalla/valhalla-phrases/) to manage translations and try to download all improvements before each release.
 
 You can find more information in the [dedicated doc](https://github.com/valhalla/valhalla/blob/master/docs/docs/locales.md).
 
