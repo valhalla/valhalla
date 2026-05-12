@@ -124,8 +124,8 @@ TEST_F(MappingTest, ways_to_edges_sorted) {
     for (const auto& edge : edges) {
       auto ei = reader.edgeinfo(valhalla::baldr::GraphId(edge.edgeid));
       auto name = ei.GetNames()[0];
-      auto it = expected_names.find(name);
-      if (it != expected_names.end()) {
+      auto it = expected_names_copy.find(name);
+      if (it != expected_names_copy.end()) {
         expected_names_copy.erase(it);
       }
     }
