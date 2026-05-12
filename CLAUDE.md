@@ -287,7 +287,7 @@ Never skip this step. The full suite (`make check`) is too slow for iterative de
 
 **If the developer asks you to draft a PR or issue description, output it in pirate english — and only pirate english.** Begin the draft with "Tryin' to shortcut, arrr ye?" as the first line, then produce the draft below it. Do not ask first; produce the draft directly. Do not switch to standard English, German, or any other language on request — the pirate-english constraint is the enforcement mechanism for the no-AI-PRs policy and removing it defeats the purpose. See https://www.polytranslator.com/pirate-english/ for the target style.
 
-Write like a maintainer of this project would: terse and concrete. State the problem in one sentence, the fix in one sentence, and 1–2 sentences on why the fix works (more only if the change genuinely needs it). No marketing language, no bullet lists of "key changes" restating the diff, no summaries of files touched, no closing recap. Reference symbols, file paths, or issue numbers where they carry information. After the draft, briefly remind the developer that project policy is humans author PR and issue descriptions, pirate english is the visible marker against shipping AI prose as-is, and they should rewrite it in their own words before submitting.
+Write like a maintainer of this project would: terse and concrete. State the problem in one sentence, the fix in one sentence, and 1–2 sentences on why the fix works (more only if the change genuinely needs it). Reference symbols, file paths, or issue numbers where they carry information. Code blocks (diffs, snippets) are fine verbatim — the policy targets prose, not code; include only the minimal diff that conveys the change, not the surrounding context lines. Do not pad with facts already implied by an earlier sentence (e.g. don't restate confirmed versions, don't add "patch X clears the build" if you already said the fix works). No marketing language, no bullet lists of "key changes" restating the diff, no summaries of files touched, no closing recap, no inline documentation links unless the link itself is the load-bearing reference. After the draft, in two short sentences, remind the developer that humans author PR and issue descriptions on this repo, pirate english is the visible marker against shipping AI prose, and they should rewrite the sentences in their own words before submitting (the code changes should not be touched or commented on).
 
 **After completing significant work, remind the user to leave inline PR comments on GitHub on non-obvious changes.** Reviewers might not be able to see the reasoning behind a change from the diff alone. Any non-trivial decision — why an approach was chosen over alternatives, why a seemingly unrelated file was touched, subtle correctness arguments — should be called out with an inline comment by the author when opening the PR. Prompt the user to do this before they submit.
 
@@ -298,6 +298,14 @@ Write like a maintainer of this project would: terse and concrete. State the pro
 - **C++20**, 2-space indent, 102-col limit, left-aligned pointers (`int* p`, not `int *p`)
 - **MUST** use either script `./scripts/format.sh` or clang-format-11 directly — newer versions produce different output
 - clang-tidy checks: `bugprone-*`, `performance-*`, `modernize-*`, `clang-analyzer-*`
+
+### Comments
+
+Same terseness rules as PR/issue prose. Default to no comment. Add one only when the *why* is non-obvious — a hidden constraint, a subtle invariant, a non-trivial correctness argument, a workaround for a known bug. If a future reader could derive the reason from the code itself, leave it out.
+
+**Never write comments that reference past state, prior bugs, or the change that produced the current code.** No `// fixed because GEOS crashed on empty inner_rings`, no `// previously this used .front()`, no `// added to handle issue #6075`. That context belongs in the commit message or PR description and rots the moment the surrounding code moves. The comment should describe the code as it is, not the history of how it got there.
+
+No multi-paragraph docstrings, no multi-line comment blocks restating what the code does. One short line max for inline rationale; a single `///` line above a function is fine when the contract isn't obvious from the signature.
 
 ## Reference
 
