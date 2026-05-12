@@ -44,7 +44,7 @@ public:
     }
 
     // closed loop ways could be broken up so that we end up with multiple
-    // edges that share the same start node, so we can get multiple edges with the same start node
+    // edges that share the same start node
     // note: size_t is the index into the edge_ids vector
     std::unordered_map<uint64_t, std::vector<std::pair<size_t, std::vector<uint64_t>>>> by_start_node;
     by_start_node.reserve(edges.size());
