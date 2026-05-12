@@ -305,7 +305,7 @@ Same terseness rules as PR/issue prose. Default to no comment. Add one only when
 
 **Never write comments that reference past state, prior bugs, or the change that produced the current code.** No `// fixed because GEOS crashed on empty inner_rings`, no `// previously this used .front()`, no `// added to handle issue #6075`. That context belongs in the commit message or PR description and rots the moment the surrounding code moves. The comment should describe the code as it is, not the history of how it got there.
 
-No multi-paragraph docstrings, no multi-line comment blocks restating what the code does. One short line max for inline rationale; a single `///` line above a function is fine when the contract isn't obvious from the signature.
+No multi-paragraph docstrings, no multi-line comment blocks restating what the code does. One short line max for inline rationale; a single `//` line above a function is fine when the contract isn't obvious from the signature.
 
 ## Reference
 
