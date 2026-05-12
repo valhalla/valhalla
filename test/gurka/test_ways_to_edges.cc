@@ -14,7 +14,6 @@ protected:
   static gurka::nodelayout layout;
 
   static void SetUpTestSuite() {
-    // QROPQS
     const std::string ascii_map = R"(
   A--B--C--D   O-------R---T
   |     |  |   |       |
@@ -76,7 +75,7 @@ gurka::map MappingTest::map = {};
 std::string MappingTest::tile_dir;
 gurka::nodelayout MappingTest::layout;
 
-TEST_F(MappingTest, ways_to_edges) {
+TEST_F(MappingTest, ways_to_edges_sorted) {
   baldr::GraphReader reader = valhalla::baldr::GraphReader(map.config.get_child("mjolnir"));
   auto config = test::make_config(tile_dir, {{
                                                  "tile_dir",
@@ -117,6 +116,9 @@ TEST_F(MappingTest, ways_to_edges) {
       ASSERT_TRUE(bwd_edges[1].length < bwd_edges[0].length);
     }
   }
+  // make a copy that we'll remove found items from
+  // to make sure all of our expected edge names were found
+  auto expected_names_copy = expected_names;
   for (const auto& [key, edges] : ways_to_edges) {
     EXPECT_GT(edges.size(), 1); // we expect at least two edges for each way
     for (const auto& edge : edges) {
@@ -124,23 +126,20 @@ TEST_F(MappingTest, ways_to_edges) {
       auto name = ei.GetNames()[0];
       auto it = expected_names.find(name);
       if (it != expected_names.end()) {
-        expected_names.erase(it);
+        expected_names_copy.erase(it);
       }
     }
   }
-  if (!expected_names.empty()) {
+  if (!expected_names_copy.empty()) {
     std::string names;
     std::string sep;
 
-    for (const auto& name : expected_names) {
+    for (const auto& name : expected_names_copy) {
       names += sep + name;
       sep = ", ";
     }
     FAIL() << "Umatched edges: " << names;
   }
-  // reset
-  expected_names = {"AB", "BC", "CD", "AEF", "FH", "HI",     "IJ",     "GK",      "CGI",
-                    "DK", "KJ", "RT", "gh",  "df", "QROPQS", "rnmpon", "agbcdea", "ijkli"};
 
   EXPECT_EQ(ways_to_edges.size(), expected_names.size()) << "Wrong number of ways in mapping";
 
@@ -182,6 +181,7 @@ TEST_F(MappingTest, ways_to_edges) {
   EXPECT_EQ(backward_count, 2);
 
   // Also test the order of the loop edges
+  // QROPQS
   {
     auto it = ways_to_edges.find(120);
     EXPECT_NE(it, ways_to_edges.end());
@@ -211,14 +211,14 @@ TEST_F(MappingTest, ways_to_edges) {
           << ") at index " << i;
     }
   }
+
   // agbcdea
   {
     auto it = ways_to_edges.find(140);
     EXPECT_NE(it, ways_to_edges.end());
 
-    // QROPQS gets split up at node O
-    // because otherwise it would form the
-    // loop edge RQ
+    // abgcdea gets split up at node c
+    // in the graph parser to prevent loop edges
     std::vector<std::pair<std::string, std::string>> expected_edges{
         {"a", "g"}, {"g", "c"}, {"c", "d"}, {"d", "a"},
         {"a", "d"}, {"d", "c"}, {"c", "g"}, {"g", "a"},
