@@ -10,8 +10,6 @@
 namespace valhalla {
 namespace baldr {
 
-// bin size in meters at the equator (half that since we offset from center) plus the largest
-// radius we support
 constexpr unsigned int kCoordinateBits = 13;
 constexpr unsigned int kRadiiBits = 32 - kCoordinateBits * 2;
 constexpr unsigned int kRadiiCount = 1 << kRadiiBits;
