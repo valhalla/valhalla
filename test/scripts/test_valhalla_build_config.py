@@ -450,5 +450,16 @@ class TestShouldRemoveKey(unittest.TestCase):
         )
 
 
+class TestNoDeadThorKeys(unittest.TestCase):
+    """Guard against re-introducing flat thor keys that no read site honours."""
+
+    def test_dead_costmatrix_key_absent(self):
+        thor_config = valhalla_build_config.config["thor"]
+        thor_help = valhalla_build_config.help_text["thor"]
+        self.assertNotIn("max_reserved_locations_costmatrix", thor_config)
+        self.assertNotIn("max_reserved_locations_costmatrix", thor_help)
+        self.assertIn("max_reserved_locations", thor_config["costmatrix"])
+
+
 if __name__ == "__main__":
     unittest.main()
