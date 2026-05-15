@@ -138,7 +138,6 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
   [[maybe_unused]] uint32_t contained_bin_count = 0;
   contained_bins.reserve(200); // TODO: approximate based on polygon size?
   bins_collector_t bins_intersected;
-  size_t initial_bins = 0;
 
   // first pull out all *unique* bins which intersect the boundaries
   for (size_t ring_idx = 0; ring_idx < rings_bg.size(); ring_idx++) {
@@ -146,7 +145,6 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     auto line_intersection = tiles.Intersect(ring);
     for (const auto& tb : line_intersection) {
       for (const auto& b : tb.second) {
-        initial_bins++;
         bins_intersected[static_cast<uint32_t>(tb.first)][b].push_back(ring_idx);
       }
     }
