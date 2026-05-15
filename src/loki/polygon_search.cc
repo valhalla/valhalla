@@ -38,12 +38,10 @@ void correct_ring(bg::ring_ll_t& ring) {
       (ring.begin()->lat() != ring.rbegin()->lat() || ring.begin()->lng() != ring.rbegin()->lng());
   if (!ring.empty() && is_open) {
     ring.push_back(ring[0]);
-    LOG_ERROR("Push back");
   }
 
   // reverse ring if counter-clockwise
   if (auto area = polygon_area(ring); area > 0) {
-    LOG_ERROR("reverse because area is {}", area);
     std::reverse(ring.begin(), ring.end());
   }
 }
