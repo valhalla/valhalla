@@ -334,26 +334,25 @@ public:
     return std::make_pair(new_tileid, new_binid);
   }
 
-  std::array<std::pair<uint32_t, unsigned short>, 8> GetNeighbors(uint32_t tileid,
-                                                                  short binid) const {
-    std::array<std::pair<uint32_t, unsigned short>, 8> neighbors;
+  std::vector<std::pair<uint32_t, unsigned short>>
+  GetNeighbors(uint32_t tileid, short binid, bool four_way) const {
+    std::vector<std::pair<uint32_t, unsigned short>> neighbors;
+    neighbors.reserve(four_way ? 4 : 8);
 
     // tile coords
     int tx = tileid % ncolumns_;
     int ty = tileid / ncolumns_;
-
     // bin coords within tile
     int bx = binid % nsubdivisions_;
     int by = binid / nsubdivisions_;
-
     // global coords
     int global_x = tx * nsubdivisions_ + bx;
     int global_y = ty * nsubdivisions_ + by;
 
-    for (uint8_t i = 0; i < 8; ++i) {
-      neighbors[i] = GetNeighbor(global_x, global_y, static_cast<Neighbor>(i));
+    // skip diagonal neighbors in four way mode
+    for (uint8_t i = four_way ? 1 : 0; i < 8; i += (four_way ? 2 : 1)) {
+      neighbors.push_back(GetNeighbor(global_x, global_y, static_cast<Neighbor>(i)));
     }
-
     return neighbors;
   }
   /**
