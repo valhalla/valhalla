@@ -9,6 +9,7 @@
    * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
    * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
    * ADDED: lz4 support for OSM PBF files [#6081](https://github.com/valhalla/valhalla/pull/6081)
+   * ADDED: topologically sorting edges in `valhalla_ways_to_edges` [#6080](https://github.com/valhalla/valhalla/pull/6080)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**
