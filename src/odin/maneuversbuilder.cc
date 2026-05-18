@@ -3072,11 +3072,10 @@ void ManeuversBuilder::UpdateInternalTurnCount(Maneuver& maneuver, int node_inde
 }
 
 float ManeuversBuilder::GetSpeed(TravelMode travel_mode, float edge_speed) const {
-  // TODO use pedestrian and bicycle speeds from costing options?
   if (travel_mode == TravelMode::kPedestrian) {
-    return 5.1f;
+    return options_.costings().find(Costing::pedestrian)->second.options().walking_speed();
   } else if (travel_mode == TravelMode::kBicycle) {
-    return 20.0f;
+    return options_.costings().find(Costing::bicycle)->second.options().cycling_speed();
   } else {
     return edge_speed;
   }
