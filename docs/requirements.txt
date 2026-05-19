@@ -1,1 +1,3 @@
+markdown-callouts
 mkdocs-material<10.0
+mkdocs-redirects
