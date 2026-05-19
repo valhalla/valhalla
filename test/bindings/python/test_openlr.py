@@ -99,34 +99,40 @@ class TestOpenlr(unittest.TestCase):
 
     def test_first_coordinate_longitude(self):
         self.assertAlmostEqual(
-            self.openlr_obj.first_coordinate[0],
+            self.openlr_obj.first_coordinate.lng,
             -73.9857,
             places=4
         )
 
     def test_first_coordinate_latitude(self):
         self.assertAlmostEqual(
-            self.openlr_obj.first_coordinate[1],
+            self.openlr_obj.first_coordinate.lat,
             40.7484,
             places=4
         )
 
     def test_last_coordinate_longitude(self):
         self.assertAlmostEqual(
-            self.openlr_obj.last_coordinate[0],
+            self.openlr_obj.last_coordinate.lng,
             -73.9815,
             places=4
         )
 
     def test_last_coordinate_latitude(self):
         self.assertAlmostEqual(
-            self.openlr_obj.last_coordinate[1],
+            self.openlr_obj.last_coordinate.lat,
             40.7527,
             places=4
         )
 
     def test_openlr_length_positive(self):
         self.assertGreater(self.openlr_obj.length, 0.0)
+
+    def test_pointll_is_valid(self):
+        self.assertEqual(
+            self.openlr_obj.first_coordinate.is_valid(),
+            True
+        )
 
     """Serialization tests"""
 

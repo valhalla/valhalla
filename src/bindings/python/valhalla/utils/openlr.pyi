@@ -199,7 +199,7 @@ class OpenLr:
         """First coordinate of the location.
 
         :return: Tuple of ``(longitude, latitude)``.
-        :rtype: tuple[float, float]
+        :rtype: PointLL
         """
 
     @property
@@ -207,7 +207,7 @@ class OpenLr:
         """Last coordinate of the location.
 
         :return: Tuple of ``(longitude, latitude)``.
-        :rtype: tuple[float, float]
+        :rtype: PointLL
         """
 
     @property

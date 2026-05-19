@@ -1,4 +1,5 @@
 #include "valhalla/baldr/openlr.h"
+#include "midgard/pointll.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
@@ -63,6 +64,20 @@ void init_openlr(nb::module_& m) {
                ">";
       });
 
+  nb::class_<valhalla::midgard::PointLL>(m, "PointLL")
+      .def(nb::init<double, double>())
+      .def_prop_ro("lng", &valhalla::midgard::PointLL::lng)
+      .def_prop_ro("lat", &valhalla::midgard::PointLL::lat)
+      .def("is_valid", &valhalla::midgard::PointLL::IsValid)
+      .def("__repr__",
+           [](const valhalla::midgard::PointLL& p) {
+             return "<PointLL lng=" + std::to_string(p.lng()) + " lat=" + std::to_string(p.lat()) +
+                    ">";
+           })
+      .def("__eq__", [](const valhalla::midgard::PointLL& a, const valhalla::midgard::PointLL& b) {
+        return a == b;
+      });
+
   nb::class_<volr::OpenLr>(m, "OpenLr")
       // semantic constructor
       .def(nb::init<const std::vector<volr::LocationReferencePoint>&, uint8_t, uint8_t, bool,
@@ -92,16 +107,8 @@ void init_openlr(nb::module_& m) {
       .def_ro("side_of_the_road", &volr::OpenLr::sideOfTheRoad)
 
       // convenience properties
-      .def_prop_ro("first_coordinate",
-                   [](const volr::OpenLr& olr) {
-                     auto p = olr.getFirstCoordinate();
-                     return nb::make_tuple(p.lng(), p.lat());
-                   })
-      .def_prop_ro("last_coordinate",
-                   [](const volr::OpenLr& olr) {
-                     auto p = olr.getLastCoordinate();
-                     return nb::make_tuple(p.lng(), p.lat());
-                   })
+      .def_prop_ro("first_coordinate", &volr::OpenLr::getFirstCoordinate)
+      .def_prop_ro("last_coordinate", &volr::OpenLr::getLastCoordinate)
       .def_prop_ro("length", &volr::OpenLr::getLength)
 
       // serialization
