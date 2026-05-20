@@ -461,7 +461,7 @@ components:
           description: Polyline6-encoded shape.
         factor:
           type: number
-          description: Cost multiplier applied to matched edges.
+          description: Cost multiplier applied to matched edges (dependent on service configuration).
         ignore_access_restrictions:
           type: boolean
           description: When true, ignore access restrictions on matched edges.
