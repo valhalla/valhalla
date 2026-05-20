@@ -1102,9 +1102,12 @@ components:
             $ref: '#/components/schemas/Location'
           description: Alias avoid_locations also accepted.
         exclude_polygons:
-          description: Array of coordinate rings [[lon,lat],…] or a GeoJSON FeatureCollection. Alias avoid_polygons also accepted.
+          description: >
+            Array of coordinate rings `[[lon,lat],…]` or a GeoJSON FeatureCollection.
+            Alias `avoid_polygons` also accepted.
           oneOf:
             - type: array
+              description: Array of closed coordinate rings. All edges intersecting any ring are excluded.
               items:
                 type: array
                 items:
@@ -1114,7 +1117,37 @@ components:
                   minItems: 2
                   maxItems: 2
             - type: object
-              description: GeoJSON FeatureCollection
+              description: GeoJSON FeatureCollection. Each Feature may carry a `properties.levels` array to restrict exclusion to specific hierarchy levels.
+              properties:
+                type:
+                  type: string
+                  enum: [FeatureCollection]
+                features:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [Feature]
+                      geometry:
+                        type: object
+                        description: GeoJSON Polygon geometry
+                      properties:
+                        type: object
+                        properties:
+                          levels:
+                            type: array
+                            items:
+                              type: integer
+                              enum: [0, 1, 2]
+                              x-enumDescriptions:
+                                0: Highways
+                                1: Arterials
+                                2: Local roads
+                            description: >
+                              Hierarchy levels to exclude within this polygon.
+                              When omitted, all edges intersecting the polygon are excluded.
         linear_cost_factors:
           type: array
           items:
