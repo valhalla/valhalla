@@ -71,7 +71,7 @@ paths:
     post:
       operationId: isochrone
       summary: /isochrone
-      description: Reachability isochrone or isodistance
+      description: Reachability isochrone or isodistance. Supports `format=geotiff` for raster output (`image/tiff`).
       requestBody:
         required: true
         content:
@@ -80,7 +80,7 @@ paths:
               $ref: '#/components/schemas/IsochroneRequest'
       responses:
         "200":
-          description: GeoJSON isochrone result
+          description: GeoJSON isochrone result, or a GeoTIFF raster when `format=geotiff`
         "400":
           $ref: '#/components/responses/Error'
 
@@ -258,7 +258,7 @@ components:
       type: string
       enum: [json, gpx, osrm, pbf, geotiff, mvt]
       default: json
-      description: Not all formats are supported by all endpoints.
+      description: Not all formats are supported by all endpoints, e.g. `geotiff` is isochrone-only.
       example: json
 
     DirectionsType:
