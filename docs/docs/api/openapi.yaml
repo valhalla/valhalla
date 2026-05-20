@@ -255,39 +255,47 @@ components:
     RoadClass:
       type: string
       enum: [motorway, trunk, primary, secondary, tertiary, unclassified, residential, service_other]
+      example: primary
 
     CostingType:
       type: string
       enum: [auto, bicycle, pedestrian, truck, bus, taxi, motor_scooter, motorcycle, multimodal, bikeshare, auto_pedestrian]
+      example: auto
 
     ShapeFormat:
       type: string
       enum: [polyline6, polyline5, geojson, no_shape]
       default: polyline6
+      example: polyline6
 
     OutputFormat:
       type: string
       enum: [json, gpx, osrm, pbf]
       default: json
       description: Not all formats are supported by all endpoints.
+      example: json
 
     DirectionsType:
       type: string
       enum: [none, maneuvers, instructions]
       default: instructions
+      example: instructions
 
     FilterAction:
       type: string
       enum: [include, exclude]
+      example: exclude
 
     ShapeMatch:
       type: string
       enum: [map_snap, edge_walk, walk_or_snap]
       default: walk_or_snap
+      example: walk_or_snap
 
     ExpansionProperty:
       type: string
       enum: [durations, costs, distances, statuses, edge_ids, pred_edge_ids]
+      example: durations
 
     # -------------------------------------------------------------------------
     # Location

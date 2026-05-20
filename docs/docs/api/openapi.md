@@ -54,14 +54,19 @@ npx @redocly/cli build-docs docs/docs/api/openapi.yaml \
 
 Open `redoc-static.html` directly in a browser. No server needed.
 
-To serve it immediately after building:
+The file is self-contained, so you can open it directly:
 
 ```bash
-npx @redocly/cli build-docs docs/docs/api/openapi.yaml -o redoc-static.html \
-  && python3 -m http.server 8080
+xdg-open redoc-static.html   # Linux
+open redoc-static.html        # macOS
 ```
 
-Then open [http://localhost:8080/redoc-static.html](http://localhost:8080/redoc-static.html).
+Or serve it over HTTP (run from the directory containing the file):
+
+```bash
+python3 -m http.server 8080
+# then open http://localhost:8080/redoc-static.html
+```
 
 If you just want to browse interactively without a build step, the Docker options above skip straight to serving.
 
