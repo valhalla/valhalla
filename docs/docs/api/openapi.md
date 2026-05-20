@@ -49,7 +49,8 @@ Redocly can bundle the spec into a single self-contained HTML file — useful fo
 ```bash
 npx @redocly/cli build-docs docs/docs/api/openapi.yaml \
   -o redoc-static.html \
-  --title "Valhalla API"
+  --title "Valhalla API" \
+  --theme.openapi.typography.fontWeightRegular=bold
 ```
 
 Open `redoc-static.html` directly in a browser. No server needed.
