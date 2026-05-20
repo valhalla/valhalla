@@ -8,10 +8,10 @@ info:
     All POST endpoints accept JSON (some also protobuf with `Content-Type: application/x-protobuf`).
   license:
     name: MIT
-    url: https://github.com/valhalla/valhalla/blob/master/LICENSE
+    url: https://github.com/valhalla/valhalla/blob/master/COPYING
 
 servers:
-  - url: https://valhalla.openstreetmap.de
+  - url: https://valhalla1.openstreetmap.de
 
 security: []
 
@@ -256,7 +256,7 @@ components:
 
     OutputFormat:
       type: string
-      enum: [json, gpx, osrm, pbf]
+      enum: [json, gpx, osrm, pbf, geotiff, mvt]
       default: json
       description: Not all formats are supported by all endpoints.
       example: json
@@ -280,7 +280,7 @@ components:
 
     ExpansionProperty:
       type: string
-      enum: [durations, costs, distances, statuses, edge_ids, pred_edge_ids]
+      enum: [durations, costs, distances, statuses, edge_ids, pred_edge_ids, expansion_type, flow_sources, travel_mode]
       example: durations
 
     # -------------------------------------------------------------------------
@@ -358,6 +358,7 @@ components:
           description: Preferred road network layer.
         node_snap_tolerance:
           type: number
+          minimum: 0
           description: Snap-to-node distance tolerance in meters.
         minimum_reachability:
           type: integer
@@ -366,7 +367,11 @@ components:
         radius:
           type: integer
           minimum: 0
-          description: Candidate search radius in meters.
+          description: Candidate search radius in meters: all viable edge candidates within the radius are correlated. If none are found, the best one outside the radius is correlated.
+        search_cutoff: 
+          type: integer
+          minimum: 0
+          description: Hard cutoff for candidate search in meters.
         accuracy:
           type: integer
           minimum: 0
@@ -392,10 +397,6 @@ components:
           type: number
           minimum: -180
           maximum: 180
-        search_cutoff:
-          type: integer
-          minimum: 0
-          description: Hard cutoff for candidate search in meters.
         street_side_tolerance:
           type: integer
           minimum: 0
@@ -457,7 +458,7 @@ components:
       properties:
         shape:
           type: string
-          description: Polyline5-encoded shape.
+          description: Polyline6-encoded shape.
         factor:
           type: number
           description: Cost multiplier applied to matched edges.
@@ -705,7 +706,7 @@ components:
               type: string
               enum: [road, cross, hybrid, mountain]
               default: hybrid
-              description: "Bicycle type. Affects default speed: road=25, cross=20, hybrid=18, mountain=16 kph."
+              description: "Bicycle type. Affects default speed: road=25, cross=20, hybrid=18, mountain=16 kph. Also affects speed factors for different surface types."
             cycling_speed:
               type: number
               minimum: 5
@@ -1176,7 +1177,7 @@ components:
             prioritize_bidirectional:
               type: boolean
               default: false
-              description: Prefer bidirectional A* even when date_time.type=depart_at.
+              description: Prefer bidirectional A* even when date_time.type={depart_at,arrive_by,current} in /route, or prefer CostMatrix over TDMatrix when calling /sources_to_targets
             recostings:
               type: array
               items:
