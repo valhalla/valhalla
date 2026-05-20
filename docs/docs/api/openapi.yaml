@@ -336,6 +336,11 @@ components:
           enum: [break, through, via, break_through]
           default: break
           description: First and last location are always forced to `break`.
+          x-enumDescriptions:
+            break: Stop here; starts or ends a route leg. Allows U-turns.
+            through: Pass through without stopping. No U-turn; keeps direction of travel.
+            via: Waypoint with a maneuver instruction but no leg-break. Allows U-turns.
+            break_through: Like `break` but does not allow U-turns at the location.
         name:
           type: string
           description: Label echoed in the response.
@@ -367,7 +372,7 @@ components:
         radius:
           type: integer
           minimum: 0
-          description: Candidate search radius in meters: all viable edge candidates within the radius are correlated. If none are found, the best one outside the radius is correlated.
+          description: "Candidate search radius in meters: all viable edge candidates within the radius are correlated. If none are found, the best one outside the radius is correlated."
         search_cutoff: 
           type: integer
           minimum: 0
@@ -428,7 +433,7 @@ components:
           description: "0=current, 1=depart_at, 2=arrive_by, 3=invariant"
         value:
           type: string
-          description: ISO 8601 datetime. Required for types 1, 2, 3.
+          description: ISO 8601 datetime string in the format `YYYY-MM-DDTHH:MM`, e.g. `2016-07-03T08:06`. Required for types 1, 2, 3.
 
     # -------------------------------------------------------------------------
     # Contour (isochrone)
