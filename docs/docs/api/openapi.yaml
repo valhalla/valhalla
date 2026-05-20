@@ -13,18 +13,27 @@ info:
 servers:
   - url: https://valhalla.openstreetmap.de
 
+security: []
+
 tags:
   - name: Routing
+    description: Turn-by-turn and optimized routes
   - name: Matrix
+    description: Time and distance between many origins and destinations
   - name: Isochrone
+    description: Reachability polygons by time or distance
   - name: MapMatching
+    description: Snap a GPS trace to the road network
   - name: Height
+    description: Elevation queries
   - name: Utilities
+    description: Graph inspection, expansion, and service status
 
 paths:
   /route:
     post:
       tags: [Routing]
+      operationId: route
       summary: Turn-by-turn route
       requestBody:
         required: true
@@ -41,6 +50,7 @@ paths:
   /optimized_route:
     post:
       tags: [Routing]
+      operationId: optimizedRoute
       summary: Optimized (TSP) route
       requestBody:
         required: true
@@ -57,6 +67,7 @@ paths:
   /sources_to_targets:
     post:
       tags: [Matrix]
+      operationId: sourcesToTargets
       summary: Time-distance matrix
       requestBody:
         required: true
@@ -73,6 +84,7 @@ paths:
   /isochrone:
     post:
       tags: [Isochrone]
+      operationId: isochrone
       summary: Reachability isochrone or isodistance
       requestBody:
         required: true
@@ -89,6 +101,7 @@ paths:
   /trace_route:
     post:
       tags: [MapMatching]
+      operationId: traceRoute
       summary: Map-matched turn-by-turn route
       requestBody:
         required: true
@@ -105,6 +118,7 @@ paths:
   /trace_attributes:
     post:
       tags: [MapMatching]
+      operationId: traceAttributes
       summary: Map-matched edge attributes
       requestBody:
         required: true
@@ -121,6 +135,7 @@ paths:
   /height:
     post:
       tags: [Height]
+      operationId: height
       summary: Elevation at points or along a path
       requestBody:
         required: true
@@ -137,6 +152,7 @@ paths:
   /locate:
     post:
       tags: [Utilities]
+      operationId: locate
       summary: Graph metadata for nearby edges and nodes
       requestBody:
         required: true
@@ -153,6 +169,7 @@ paths:
   /expansion:
     post:
       tags: [Utilities]
+      operationId: expansion
       summary: Edges visited during graph expansion (debug)
       requestBody:
         required: true
@@ -169,14 +186,18 @@ paths:
   /status:
     get:
       tags: [Utilities]
+      operationId: status
       summary: Service health and tileset info
       responses:
         "200":
           description: Status info
+        "400":
+          $ref: '#/components/responses/Error'
 
   /tile/{z}/{x}/{y}.mvt:
     get:
       tags: [Utilities]
+      operationId: tile
       summary: Mapbox Vector Tile of the routing graph
       parameters:
         - name: z
@@ -208,6 +229,8 @@ paths:
       responses:
         "200":
           description: MVT binary tile
+        "400":
+          $ref: '#/components/responses/Error'
 
 components:
   responses:
@@ -236,9 +259,6 @@ components:
     CostingType:
       type: string
       enum: [auto, bicycle, pedestrian, truck, bus, taxi, motor_scooter, motorcycle, multimodal, bikeshare, auto_pedestrian]
-      description: |
-        Deprecated aliases accepted but remapped: `auto_shorter` → auto + shortest,
-        `hov` → auto + include_hov2, `auto_data_fix` → auto + ignore_*.
 
     ShapeFormat:
       type: string
