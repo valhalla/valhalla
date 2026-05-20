@@ -629,6 +629,8 @@ components:
           description: Override all edge speeds to this value in kph. 0 = disabled.
         flow_mask:
           type: integer
+          minimum: 0
+          maximum: 15
           description: Bitmask of traffic flow data sources to use (advanced).
         height:
           type: number
@@ -1315,6 +1317,7 @@ components:
               type: array
               items:
                 type: number
+                minimum: 0
               description: Per-segment travel times in seconds. Length must equal shape points minus one.
             use_timestamps:
               type: boolean
@@ -1339,9 +1342,11 @@ components:
               properties:
                 gps_accuracy:
                   type: number
+                  minimum: 0
                   description: GPS accuracy for map matching in meters.
                 search_radius:
                   type: number
+                  minimum: 0
                   description: Candidate search radius per point in meters.
                 turn_penalty_factor:
                   type: number
@@ -1349,9 +1354,11 @@ components:
                   description: Penalty for sharp turns in matching.
                 breakage_distance:
                   type: number
+                  minimum: 0
                   description: Max gap in meters before starting a new trace segment.
                 interpolation_distance:
                   type: number
+                  minimum: 0
                   description: Interpolation distance in meters for the matched path.
 
     TraceAttributesRequest:
