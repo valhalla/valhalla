@@ -124,7 +124,7 @@ Endpoint abbreviations: **R**=route, **M**=sources_to_targets, **I**=isochrone, 
 |---|---|---|---|---|
 | `locations` | array\<Location\> | required | ≥ 1 | — |
 | `action` | string | required | `route`, `isochrone`, `sources_to_targets` | The algorithm to expand |
-| `expansion_properties` | array\<string\> | — | `durations`, `costs`, `distances`, `statuses`, `edge_ids`, `pred_edge_ids` | Properties to include per expanded edge |
+| `expansion_properties` | array\<string\> | — | `durations`, `costs`, `distances`, `statuses`, `edge_ids`, `pred_edge_ids`, `flow_sources`, `expansion_type`, `travel_mode` | Properties to include per expanded edge |
 | `expansion_max_distance` | integer | — | meters | Stop expanding beyond this distance |
 | `skip_opposites` | bool | `false` | — | Skip reverse-direction edges in output |
 | `dedupe` | bool | `false` | — | Emit each edge only once |
