@@ -1,0 +1,1465 @@
+openapi: 3.1.0
+
+info:
+  title: Valhalla Routing API
+  version: "3.x"
+  description: |
+    Open-source routing engine for OpenStreetMap data.
+    All POST endpoints accept JSON (some also protobuf with `Content-Type: application/x-protobuf`).
+  license:
+    name: MIT
+    url: https://github.com/valhalla/valhalla/blob/master/COPYING
+
+servers:
+  - url: https://valhalla1.openstreetmap.de
+
+security: []
+
+paths:
+  /route:
+    post:
+      operationId: route
+      summary: /route
+      description: Turn-by-turn route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteRequest'
+      responses:
+        "200":
+          description: Route result
+        "400":
+          $ref: '#/components/responses/Error'
+
+  /optimized_route:
+    post:
+      operationId: optimizedRoute
+      summary: /optimized_route
+      description: Optimized (TSP) route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteRequest'
+      responses:
+        "200":
+          description: Optimized route result
+        "400":
+          $ref: '#/components/responses/Error'
+
+  /sources_to_targets:
+    post:
+      operationId: sourcesToTargets
+      summary: /sources_to_targets
+      description: Time-distance matrix
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatrixRequest'
+      responses:
+        "200":
+          description: Matrix result
+        "400":
+          $ref: '#/components/responses/Error'
+
+  /isochrone:
+    post:
+      operationId: isochrone
+      summary: /isochrone
+      description: Reachability isochrone or isodistance. Supports `format=geotiff` for raster output (`image/tiff`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IsochroneRequest'
+      responses:
+        "200":
+          description: GeoJSON isochrone result, or a GeoTIFF raster when `format=geotiff`
+        "400":
+          $ref: '#/components/responses/Error'
+
+  /trace_route:
+    post:
+      operationId: traceRoute
+      summary: /trace_route
+      description: Map-matched turn-by-turn route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraceRequest'
+      responses:
+        "200":
+          description: Map-matched route result
+        "400":
+          $ref: '#/components/responses/Error'
+
+  /trace_attributes:
+    post:
+      operationId: traceAttributes
+      summary: /trace_attributes
+      description: Map-matched edge attributes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraceAttributesRequest'
+      responses:
+        "200":
+          description: Edge attribute result
+        "400":
+          $ref: '#/components/responses/Error'
+
+  /height:
+    post:
+      operationId: height
+      summary: /height
+      description: Elevation at points or along a path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeightRequest'
+      responses:
+        "200":
+          description: Elevation result
+        "400":
+          $ref: '#/components/responses/Error'
+
+  /locate:
+    post:
+      operationId: locate
+      summary: /locate
+      description: Graph metadata for nearby edges and nodes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocateRequest'
+      responses:
+        "200":
+          description: Locate result
+        "400":
+          $ref: '#/components/responses/Error'
+
+  /expansion:
+    post:
+      operationId: expansion
+      summary: /expansion
+      description: Edges visited during graph expansion (debug)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpansionRequest'
+      responses:
+        "200":
+          description: Expansion GeoJSON result
+        "400":
+          $ref: '#/components/responses/Error'
+
+  /status:
+    get:
+      operationId: status
+      summary: /status
+      description: Service health and tileset info
+      responses:
+        "200":
+          description: Status info
+        "400":
+          $ref: '#/components/responses/Error'
+
+  /tile/{z}/{x}/{y}.mvt:
+    get:
+      operationId: tile
+      summary: /tile/{z}/{x}/{y}.mvt
+      description: Mapbox Vector Tile of the routing graph
+      parameters:
+        - name: z
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 30
+        - name: x
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - name: y
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - name: exclude_layers
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [edges, nodes, shortcuts, access_restrictions]
+      responses:
+        "200":
+          description: MVT binary tile
+        "400":
+          $ref: '#/components/responses/Error'
+
+components:
+  responses:
+    Error:
+      description: Request error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error_code: { type: integer }
+              error:       { type: string }
+              status_code: { type: integer }
+              status:      { type: string }
+
+  schemas:
+
+    # -------------------------------------------------------------------------
+    # Shared primitive types
+    # -------------------------------------------------------------------------
+
+    RoadClass:
+      type: string
+      enum: [motorway, trunk, primary, secondary, tertiary, unclassified, residential, service_other]
+      example: primary
+
+    CostingType:
+      type: string
+      enum: [auto, bicycle, pedestrian, truck, bus, taxi, motor_scooter, motorcycle, multimodal, bikeshare, auto_pedestrian]
+      example: auto
+
+    ShapeFormat:
+      type: string
+      enum: [polyline6, polyline5, geojson, no_shape]
+      default: polyline6
+      example: polyline6
+
+    OutputFormat:
+      type: string
+      enum: [json, gpx, osrm, pbf, geotiff, mvt]
+      default: json
+      description: Not all formats are supported by all endpoints, e.g. `geotiff` is isochrone-only.
+      example: json
+
+    DirectionsType:
+      type: string
+      enum: [none, maneuvers, instructions]
+      default: instructions
+      example: instructions
+
+    FilterAction:
+      type: string
+      enum: [include, exclude]
+      example: exclude
+
+    ShapeMatch:
+      type: string
+      enum: [map_snap, edge_walk, walk_or_snap]
+      default: walk_or_snap
+      example: walk_or_snap
+
+    ExpansionProperty:
+      type: string
+      enum: [durations, costs, distances, statuses, edge_ids, pred_edge_ids, expansion_type, flow_sources, travel_mode]
+      example: durations
+
+    # -------------------------------------------------------------------------
+    # Location
+    # -------------------------------------------------------------------------
+
+    SearchFilter:
+      type: object
+      properties:
+        min_road_class:
+          $ref: '#/components/schemas/RoadClass'
+          default: service_other
+        max_road_class:
+          $ref: '#/components/schemas/RoadClass'
+          default: motorway
+        exclude_tunnel:
+          type: boolean
+          default: false
+        exclude_bridge:
+          type: boolean
+          default: false
+        exclude_toll:
+          type: boolean
+          default: false
+        exclude_ramp:
+          type: boolean
+          default: false
+        exclude_ferry:
+          type: boolean
+          default: false
+        exclude_closures:
+          type: boolean
+          default: true
+          description: When false, closed roads are allowed for this location.
+        level:
+          type: number
+          description: Indoor routing level.
+
+    Location:
+      type: object
+      required: [lat, lon]
+      properties:
+        lat:
+          type: number
+          minimum: -90
+          maximum: 90
+        lon:
+          type: number
+          minimum: -180
+          maximum: 180
+        type:
+          type: string
+          enum: [break, through, via, break_through]
+          default: break
+          description: First and last location are always forced to `break`.
+          x-enumDescriptions:
+            break: Stop here; starts or ends a route leg. Allows U-turns.
+            through: Pass through without stopping. No U-turn; keeps direction of travel.
+            via: Waypoint with a maneuver instruction but no leg-break. Allows U-turns.
+            break_through: Like `break` but does not allow U-turns at the location.
+        name:
+          type: string
+          description: Label echoed in the response.
+        street:
+          type: string
+          description: Street address hint for snapping.
+        date_time:
+          type: string
+          description: Per-location ISO 8601 datetime override.
+        heading:
+          type: integer
+          minimum: 0
+          maximum: 360
+          description: Preferred approach heading in degrees.
+        heading_tolerance:
+          type: integer
+          description: Tolerance around heading in degrees.
+        preferred_layer:
+          type: integer
+          description: Preferred road network layer.
+        node_snap_tolerance:
+          type: number
+          minimum: 0
+          description: Snap-to-node distance tolerance in meters.
+        minimum_reachability:
+          type: integer
+          minimum: 0
+          description: Minimum number of reachable edges for a snap candidate.
+        radius:
+          type: integer
+          minimum: 0
+          description: "Candidate search radius in meters: all viable edge candidates within the radius are correlated. If none are found, the best one outside the radius is correlated."
+        search_cutoff: 
+          type: integer
+          minimum: 0
+          description: Hard cutoff for candidate search in meters.
+        accuracy:
+          type: integer
+          minimum: 0
+          description: GPS accuracy in meters (used in map matching).
+        time:
+          type: number
+          default: -1
+          description: Timestamp in seconds (used in map matching).
+        rank_candidates:
+          type: boolean
+          default: true
+          description: Rank snap candidates by quality.
+        preferred_side:
+          type: string
+          enum: [same, opposite, either]
+          description: Preferred side of road to snap to.
+        display_lat:
+          type: number
+          minimum: -90
+          maximum: 90
+          description: Display position latitude (may differ from routing position).
+        display_lon:
+          type: number
+          minimum: -180
+          maximum: 180
+        street_side_tolerance:
+          type: integer
+          minimum: 0
+          description: Tolerance for preferred side matching in meters.
+        street_side_max_distance:
+          type: integer
+          minimum: 0
+          description: Max distance for side-of-road preference in meters.
+        street_side_cutoff:
+          $ref: '#/components/schemas/RoadClass'
+          description: Ignore side preference for roads above this class.
+        waiting:
+          type: number
+          minimum: 0
+          description: Waiting time in seconds at this stop (break/break_through only, not origin/destination).
+        search_filter:
+          $ref: '#/components/schemas/SearchFilter'
+
+    # -------------------------------------------------------------------------
+    # Date/time
+    # -------------------------------------------------------------------------
+
+    DateTimeOptions:
+      type: object
+      properties:
+        type:
+          type: integer
+          enum: [0, 1, 2, 3]
+          description: "0=current, 1=depart_at, 2=arrive_by, 3=invariant"
+        value:
+          type: string
+          description: ISO 8601 datetime string in the format `YYYY-MM-DDTHH:MM`, e.g. `2016-07-03T08:06`. Required for types 1, 2, 3.
+
+    # -------------------------------------------------------------------------
+    # Contour (isochrone)
+    # -------------------------------------------------------------------------
+
+    Contour:
+      type: object
+      description: At least one of time or distance must be specified.
+      properties:
+        time:
+          type: number
+          description: Contour limit in minutes.
+        distance:
+          type: number
+          description: Contour limit in kilometers.
+        color:
+          type: string
+          description: Hex color without '#' (e.g. "ff0000").
+
+    # -------------------------------------------------------------------------
+    # Linear cost feature
+    # -------------------------------------------------------------------------
+
+    LinearCostFactor:
+      type: object
+      description: Either an encoded-polyline form or a GeoJSON LineString feature.
+      properties:
+        shape:
+          type: string
+          description: Polyline6-encoded shape.
+        factor:
+          type: number
+          description: Cost multiplier applied to matched edges (dependent on service configuration).
+        ignore_access_restrictions:
+          type: boolean
+          description: When true, ignore access restrictions on matched edges.
+
+    # -------------------------------------------------------------------------
+    # Costing options
+    # -------------------------------------------------------------------------
+
+    BaseCostingOptions:
+      type: object
+      description: Options shared by all costing models. Parsed in src/sif/dynamiccost.cc.
+      properties:
+        name:
+          type: string
+          description: Required for recostings entries; must be unique.
+        shortest:
+          type: boolean
+          default: false
+          description: Optimize for shortest distance instead of fastest time.
+        disable_hierarchy_pruning:
+          type: boolean
+          default: false
+          description: Disable graph hierarchy culling. Very slow; for debugging only.
+        ignore_restrictions:
+          type: boolean
+          default: false
+        ignore_oneways:
+          type: boolean
+          default: false
+        ignore_access:
+          type: boolean
+          default: false
+        ignore_closures:
+          type: boolean
+          default: false
+          description: Ignore live traffic closure data.
+        destination_only_penalty:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 600
+          description: Penalty (seconds) to enter destination-only roads.
+        maneuver_penalty:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 5
+          description: Penalty (seconds) for a turn onto a different road name.
+        alley_penalty:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 5
+        gate_cost:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 30
+          description: Time cost (seconds) to pass through a gate.
+        gate_penalty:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 300
+        private_access_penalty:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 450
+        country_crossing_cost:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 600
+        country_crossing_penalty:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 0
+        ferry_cost:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 300
+          description: Transit time cost (seconds) for a ferry crossing.
+        use_ferry:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.5
+          description: "0 = avoid ferries, 1 = strongly prefer ferries."
+        rail_ferry_cost:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 300
+        use_rail_ferry:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.4
+        toll_booth_cost:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 15
+          description: Time cost (seconds) to pass a toll booth. Motor vehicle costings only.
+        toll_booth_penalty:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 0
+          description: Additional penalty for toll roads. Motor vehicle costings only.
+        service_penalty:
+          type: number
+          minimum: 0
+          maximum: 43200
+          default: 15
+          description: Penalty for service roads. Default is 75 for auto/bus/taxi.
+        service_factor:
+          type: number
+          minimum: 0.1
+          maximum: 100000
+          default: 1.0
+          description: Cost multiplier for service roads.
+        use_tracks:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.5
+          description: Preference for track roads. Default is 0 for auto/bus/taxi.
+        use_living_streets:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.1
+        use_lit:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0
+          description: Preference for lit roads at night.
+        closure_factor:
+          type: number
+          minimum: 1
+          maximum: 10
+          default: 9.0
+          description: Cost multiplier applied to live-traffic-closed edges.
+        speed_penalty_factor:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.05
+          description: Penalty rate applied per kph above the speed limit.
+        fixed_speed:
+          type: integer
+          minimum: 0
+          maximum: 252
+          default: 0
+          description: Override all edge speeds to this value in kph. 0 = disabled.
+        flow_mask:
+          type: integer
+          minimum: 0
+          maximum: 15
+          description: Bitmask of traffic flow data sources to use (advanced).
+        height:
+          type: number
+          description: Vehicle height in meters for restriction matching.
+          default: 1.6
+        width:
+          type: number
+          description: Vehicle width in meters for restriction matching.
+          default: 1.9
+        length:
+          type: number
+          description: Vehicle length in meters for restriction matching.
+          default: 2.7
+        weight:
+          type: number
+          description: Vehicle weight in metric tons for restriction matching.
+          default: 0.8
+
+    AutoCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/BaseCostingOptions'
+        - type: object
+          description: Options for auto, bus, and taxi costings. Parsed in src/sif/autocost.cc.
+          properties:
+            alley_factor:
+              type: number
+              minimum: 0.1
+              maximum: 100000
+              default: 1.0
+              description: Cost multiplier for alleys.
+            use_highways:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+              description: "0 = avoid motorways/trunks, 1 = strongly prefer them."
+            use_tolls:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+            use_distance:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0
+              description: "0 = optimize time, 1 = optimize distance."
+            restriction_probability:
+              type: integer
+              minimum: 0
+              maximum: 100
+              default: 100
+              description: Percentage chance to honour probabilistic access restrictions.
+            top_speed:
+              type: integer
+              minimum: 10
+              maximum: 252
+              default: 140
+              description: Target maximum speed in kph. Edges above this get a speed penalty.
+            include_hov2:
+              type: boolean
+              default: false
+              description: Allow use of HOV-2 lanes.
+            include_hov3:
+              type: boolean
+              default: false
+              description: Allow use of HOV-3 lanes.
+            include_hot:
+              type: boolean
+              default: false
+              description: Allow use of HOT (High-Occupancy Toll) lanes.
+
+    BicycleCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/BaseCostingOptions'
+        - type: object
+          description: Options for bicycle costing. Parsed in src/sif/bicyclecost.cc.
+          properties:
+            transport_type:
+              type: string
+              enum: [road, cross, hybrid, mountain]
+              default: hybrid
+              description: "Bicycle type. Affects default speed: road=25, cross=20, hybrid=18, mountain=16 kph. Also affects speed factors for different surface types."
+            cycling_speed:
+              type: number
+              minimum: 5
+              description: Cycling speed in kph. Defaults depend on transport_type.
+            use_roads:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.25
+              description: "0 = prefer dedicated cycling infrastructure, 1 = prefer roads."
+            use_hills:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.25
+              description: "0 = strongly avoid hills, 1 = hills are fine."
+            avoid_bad_surfaces:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.25
+              description: "0 = allow any surface, 1 = strongly avoid unpaved/rough."
+            bss_rent_cost:
+              type: number
+              minimum: 0
+              maximum: 43200
+              default: 120
+              description: Time cost (seconds) to rent a bike-share bicycle.
+            bss_rent_penalty:
+              type: number
+              minimum: 0
+              maximum: 43200
+              default: 0
+              description: Additional penalty for using bike-share stations.
+
+    PedestrianCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/BaseCostingOptions'
+        - type: object
+          description: Options for pedestrian and bikeshare costing. Parsed in src/sif/pedestriancost.cc.
+          properties:
+            transport_type:
+              type: string
+              enum: [foot, wheelchair]
+              default: foot
+              description: Changes defaults for speed, grade tolerance, and step penalty.
+            walking_speed:
+              type: number
+              minimum: 0.5
+              maximum: 25
+              description: Walking speed in kph. Default 5.1 (foot), 4.0 (wheelchair).
+            walkway_factor:
+              type: number
+              minimum: 0.1
+              maximum: 100000
+              default: 1.0
+              description: Cost multiplier for walkways and footpaths.
+            sidewalk_factor:
+              type: number
+              minimum: 0.1
+              maximum: 100000
+              default: 1.0
+            alley_factor:
+              type: number
+              minimum: 0.1
+              maximum: 100000
+              default: 1.0
+            driveway_factor:
+              type: number
+              minimum: 0.1
+              maximum: 100000
+              default: 5.0
+            step_penalty:
+              type: number
+              minimum: 0
+              maximum: 43200
+              description: Penalty (seconds) for steps/stairs. Default 30 (foot), 600 (wheelchair).
+            max_grade:
+              type: integer
+              minimum: 0
+              maximum: 90
+              description: Maximum road grade in percent. Default 90 (foot), 12 (wheelchair).
+            max_hiking_difficulty:
+              type: integer
+              minimum: 0
+              maximum: 6
+              default: 1
+              description: Maximum SAC scale difficulty (0=paved road, 6=extreme alpine).
+            mode_factor:
+              type: number
+              minimum: 0.1
+              maximum: 100000
+              default: 1.5
+              description: Cost multiplier when used as the walking leg of a multimodal route.
+            max_distance:
+              type: integer
+              minimum: 0
+              description: Maximum route distance in meters. Default 100000 (foot), 10000 (wheelchair).
+            transit_start_end_max_distance:
+              type: integer
+              minimum: 0
+              default: 2415
+              description: Max walking distance to/from the first/last transit stop in meters.
+            transit_transfer_max_distance:
+              type: integer
+              minimum: 0
+              default: 805
+              description: Max walking distance between transit stops in meters.
+            use_hills:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+              description: "0 = strongly avoid hills, 1 = hills are fine."
+            elevator_penalty:
+              type: number
+              minimum: 0
+              maximum: 43200
+              default: 5
+              description: Penalty (seconds) for using elevators.
+            bss_rent_cost:
+              type: number
+              minimum: 0
+              maximum: 43200
+              default: 120
+            bss_rent_penalty:
+              type: number
+              minimum: 0
+              maximum: 43200
+              default: 0
+
+    TruckCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/BaseCostingOptions'
+        - type: object
+          description: Options for truck costing. Parsed in src/sif/truckcost.cc. Dimension defaults differ from base.
+          properties:
+            hazmat:
+              type: boolean
+              default: false
+              description: Vehicle is carrying hazardous materials.
+            low_class_penalty:
+              type: number
+              minimum: 0
+              maximum: 43200
+              default: 0
+              description: Penalty (seconds) for residential and service roads.
+            weight:
+              type: number
+              default: 21.77
+              description: Vehicle weight in metric tons (default 48,000 lbs / ~21.77 t).
+            axle_load:
+              type: number
+              minimum: 0
+              maximum: 40
+              default: 9.07
+              description: Per-axle load in metric tons (default 20,000 lbs / ~9.07 t).
+            height:
+              type: number
+              default: 4.11
+              description: Vehicle height in meters (default 13 ft 6 in / ~4.11 m).
+            width:
+              type: number
+              default: 2.6
+              description: Vehicle width in meters (default ~2.6 m).
+            length:
+              type: number
+              default: 21.64
+              description: Vehicle length in meters (default 71 ft / ~21.64 m).
+            axle_count:
+              type: integer
+              minimum: 2
+              maximum: 20
+              default: 5
+            use_highways:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+            use_tolls:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+            top_speed:
+              type: number
+              minimum: 10
+              maximum: 252
+              default: 120
+              description: Target maximum speed in kph.
+            hgv_no_access_penalty:
+              type: number
+              minimum: 0
+              maximum: 43200
+              default: 43200
+              description: Penalty for roads tagged hgv=no. 43200 = effectively impassable.
+            use_truck_route:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0
+              description: Preference for designated truck routes.
+
+    MotorcycleCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/BaseCostingOptions'
+        - type: object
+          description: Options for motorcycle costing. Parsed in src/sif/motorcyclecost.cc.
+          properties:
+            use_highways:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+            use_tolls:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+            use_trails:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0
+              description: "0 = avoid unpaved trails, 1 = prefer trails."
+            top_speed:
+              type: integer
+              minimum: 10
+              maximum: 140
+              default: 140
+              description: Target maximum speed in kph.
+
+    MotorScooterCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/BaseCostingOptions'
+        - type: object
+          description: Options for motor_scooter costing. Parsed in src/sif/motorscootercost.cc.
+          properties:
+            top_speed:
+              type: integer
+              minimum: 20
+              maximum: 252
+              default: 45
+              description: Target maximum speed in kph.
+            use_hills:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+            use_primary:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+              description: Preference for primary roads over smaller roads.
+
+    TransitFilterOptions:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/FilterAction'
+        ids:
+          type: array
+          items:
+            type: string
+
+    TransitCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/BaseCostingOptions'
+        - type: object
+          description: Options for multimodal and transit costing. Parsed in src/sif/transitcost.cc.
+          properties:
+            mode_factor:
+              type: number
+              minimum: 0.1
+              maximum: 100000
+              default: 1.5
+              description: Cost multiplier when switching from transit to walking.
+            wheelchair:
+              type: boolean
+              default: false
+              description: Require wheelchair-accessible transit.
+            bicycle:
+              type: boolean
+              default: false
+              description: Allow bicycle on transit.
+            use_bus:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.3
+              description: "0 = avoid buses, 1 = strongly prefer buses."
+            use_rail:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.6
+            use_transfers:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.3
+              description: Willingness to transfer between transit routes.
+            transfer_cost:
+              type: number
+              minimum: 0
+              maximum: 43200
+              default: 15
+              description: Time cost (seconds) per transfer.
+            transfer_penalty:
+              type: number
+              minimum: 0
+              maximum: 43200
+              default: 300
+              description: Additional penalty (seconds) per transfer.
+            filters:
+              type: object
+              properties:
+                stops:
+                  $ref: '#/components/schemas/TransitFilterOptions'
+                operators:
+                  $ref: '#/components/schemas/TransitFilterOptions'
+                routes:
+                  $ref: '#/components/schemas/TransitFilterOptions'
+
+    CostingOptions:
+      type: object
+      description: Costing options keyed by costing model name.
+      properties:
+        auto:
+          $ref: '#/components/schemas/AutoCostingOptions'
+        bus:
+          $ref: '#/components/schemas/AutoCostingOptions'
+        taxi:
+          $ref: '#/components/schemas/AutoCostingOptions'
+        bicycle:
+          $ref: '#/components/schemas/BicycleCostingOptions'
+        pedestrian:
+          $ref: '#/components/schemas/PedestrianCostingOptions'
+        bikeshare:
+          $ref: '#/components/schemas/PedestrianCostingOptions'
+        truck:
+          $ref: '#/components/schemas/TruckCostingOptions'
+        motorcycle:
+          $ref: '#/components/schemas/MotorcycleCostingOptions'
+        motor_scooter:
+          $ref: '#/components/schemas/MotorScooterCostingOptions'
+        multimodal:
+          $ref: '#/components/schemas/TransitCostingOptions'
+        transit:
+          $ref: '#/components/schemas/TransitCostingOptions'
+
+    # -------------------------------------------------------------------------
+    # Base request (shared by all routing/matrix/isochrone endpoints)
+    # -------------------------------------------------------------------------
+
+    BaseRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Arbitrary request identifier echoed in the response.
+        jsonp:
+          type: string
+          description: JSONP callback name. Incompatible with format=pbf.
+        format:
+          $ref: '#/components/schemas/OutputFormat'
+        units:
+          type: string
+          enum: [km, miles, mi]
+          default: km
+        language:
+          type: string
+          default: en-US
+          description: BCP47 locale for narrative output. See locales/ for supported values.
+        verbose:
+          type: boolean
+          description: "Default: true for matrix, false for all others."
+        costing:
+          $ref: '#/components/schemas/CostingType'
+        costing_options:
+          $ref: '#/components/schemas/CostingOptions'
+        date_time:
+          $ref: '#/components/schemas/DateTimeOptions'
+        exclude_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+          description: Alias avoid_locations also accepted.
+        exclude_polygons:
+          description: >
+            Array of coordinate rings `[[lon,lat],…]` or a GeoJSON FeatureCollection.
+            Alias `avoid_polygons` also accepted.
+          oneOf:
+            - type: array
+              description: Array of closed coordinate rings. All edges intersecting any ring are excluded.
+              items:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+                  minItems: 2
+                  maxItems: 2
+            - type: object
+              description: GeoJSON FeatureCollection. Each Feature may carry a `properties.levels` array to restrict exclusion to specific hierarchy levels.
+              properties:
+                type:
+                  type: string
+                  enum: [FeatureCollection]
+                features:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [Feature]
+                      geometry:
+                        type: object
+                        description: GeoJSON Polygon geometry
+                      properties:
+                        type: object
+                        properties:
+                          levels:
+                            type: array
+                            items:
+                              type: integer
+                              enum: [0, 1, 2]
+                              x-enumDescriptions:
+                                0: Highways
+                                1: Arterials
+                                2: Local roads
+                            description: >
+                              Hierarchy levels to exclude within this polygon.
+                              When omitted, all edges intersecting the polygon are excluded.
+        linear_cost_factors:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinearCostFactor'
+          description: Apply cost multipliers or access overrides to specific road segments.
+
+    # -------------------------------------------------------------------------
+    # Per-endpoint request schemas
+    # -------------------------------------------------------------------------
+
+    RouteRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+        - type: object
+          required: [locations, costing]
+          properties:
+            locations:
+              type: array
+              minItems: 2
+              items:
+                $ref: '#/components/schemas/Location'
+            alternates:
+              type: integer
+              minimum: 0
+              default: 0
+              description: Number of alternative routes to return. Forced to 0 for more than 2 locations.
+            directions_type:
+              $ref: '#/components/schemas/DirectionsType'
+            shape_format:
+              $ref: '#/components/schemas/ShapeFormat'
+            generalize:
+              type: number
+              minimum: 0
+              description: Polyline generalization tolerance in meters.
+            linear_references:
+              type: boolean
+              default: false
+              description: Include base64-encoded OpenLR references per edge.
+            admin_crossings:
+              type: boolean
+              default: false
+            elevation_interval:
+              type: number
+              minimum: 0
+              maximum: 1000
+              default: 0
+              description: Elevation sample interval in meters along the path. 0 = no elevation.
+            guidance_views:
+              type: boolean
+              default: false
+            banner_instructions:
+              type: boolean
+              default: false
+              description: Include OSRM-format banner instructions.
+            voice_instructions:
+              type: boolean
+              default: false
+              description: Include OSRM-format voice instructions.
+            turn_lanes:
+              type: boolean
+              default: false
+            roundabout_exits:
+              type: boolean
+              default: true
+            prioritize_bidirectional:
+              type: boolean
+              default: false
+              description: Prefer bidirectional A* even when date_time.type={depart_at,arrive_by,current} in /route, or prefer CostMatrix over TDMatrix when calling /sources_to_targets
+            recostings:
+              type: array
+              items:
+                $ref: '#/components/schemas/BaseCostingOptions'
+              description: Re-score the found path under additional named costings.
+
+    MatrixRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+        - type: object
+          required: [sources, targets, costing]
+          properties:
+            sources:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/Location'
+            targets:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/Location'
+            matrix_locations:
+              type: integer
+              minimum: 1
+              description: Early-exit after finding this many targets. Only valid for 1:many or many:1.
+            shape_format:
+              $ref: '#/components/schemas/ShapeFormat'
+
+    IsochroneRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+        - type: object
+          required: [locations, costing, contours]
+          properties:
+            locations:
+              type: array
+              minItems: 1
+              maxItems: 1
+              items:
+                $ref: '#/components/schemas/Location'
+            contours:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/Contour'
+            polygons:
+              type: boolean
+              default: false
+              description: Return filled polygons instead of isolines.
+            denoise:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 1.0
+              description: Smoothing factor. 1 = no smoothing.
+            show_locations:
+              type: boolean
+              default: false
+            reverse:
+              type: boolean
+              default: false
+              description: Compute inbound (reverse) isochrone.
+            generalize:
+              type: number
+              minimum: 0
+
+    TraceRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+        - type: object
+          required: [costing]
+          properties:
+            shape:
+              type: array
+              minItems: 2
+              items:
+                $ref: '#/components/schemas/Location'
+              description: GPS trace points. Mutually exclusive with encoded_polyline.
+            trace:
+              type: array
+              minItems: 2
+              items:
+                $ref: '#/components/schemas/Location'
+              description: Alias for shape.
+            encoded_polyline:
+              type: string
+              description: Polyline6-encoded trace shape.
+            shape_match:
+              $ref: '#/components/schemas/ShapeMatch'
+            begin_time:
+              type: integer
+              minimum: 0
+              default: 0
+              description: Epoch start time in seconds when using durations.
+            durations:
+              type: array
+              items:
+                type: number
+                minimum: 0
+              description: Per-segment travel times in seconds. Length must equal shape points minus one.
+            use_timestamps:
+              type: boolean
+              default: false
+              description: Use per-point time field for elapsed time calculation.
+            directions_type:
+              $ref: '#/components/schemas/DirectionsType'
+            shape_format:
+              $ref: '#/components/schemas/ShapeFormat'
+            elevation_interval:
+              type: number
+              minimum: 0
+              maximum: 1000
+              default: 0
+            alternates:
+              type: integer
+              minimum: 0
+              default: 0
+              description: Number of alternative matches to return.
+            trace_options:
+              type: object
+              properties:
+                gps_accuracy:
+                  type: number
+                  minimum: 0
+                  description: GPS accuracy for map matching in meters.
+                search_radius:
+                  type: number
+                  minimum: 0
+                  description: Candidate search radius per point in meters.
+                turn_penalty_factor:
+                  type: number
+                  minimum: 0
+                  description: Penalty for sharp turns in matching.
+                breakage_distance:
+                  type: number
+                  minimum: 0
+                  description: Max gap in meters before starting a new trace segment.
+                interpolation_distance:
+                  type: number
+                  minimum: 0
+                  description: Interpolation distance in meters for the matched path.
+
+    TraceAttributesRequest:
+      allOf:
+        - $ref: '#/components/schemas/TraceRequest'
+        - type: object
+          properties:
+            filters:
+              type: object
+              properties:
+                action:
+                  $ref: '#/components/schemas/FilterAction'
+                attributes:
+                  type: array
+                  items:
+                    type: string
+                  description: Attribute keys to include or exclude (e.g. edge.length, node.elapsed_time).
+
+    HeightRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        shape:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Location'
+          description: Points at which to query elevation. Mutually exclusive with encoded_polyline.
+        encoded_polyline:
+          type: string
+          description: Polyline6 (default) or polyline5 (with shape_format=polyline5) encoded shape.
+        shape_format:
+          $ref: '#/components/schemas/ShapeFormat'
+        range:
+          type: boolean
+          default: false
+          description: Return cumulative distance alongside elevation values.
+        height_precision:
+          type: integer
+          minimum: 0
+          maximum: 2
+          default: 0
+          description: Decimal places in elevation values.
+        resample_distance:
+          type: number
+          minimum: 0
+          description: Resample the shape at this interval in meters before querying elevation.
+
+    LocateRequest:
+      type: object
+      required: [locations]
+      properties:
+        id:
+          type: string
+        locations:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Location'
+        costing:
+          $ref: '#/components/schemas/CostingType'
+        costing_options:
+          $ref: '#/components/schemas/CostingOptions'
+        verbose:
+          type: boolean
+          default: false
+
+    ExpansionRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+        - type: object
+          required: [locations, costing, action]
+          properties:
+            locations:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/Location'
+            action:
+              type: string
+              enum: [route, isochrone, sources_to_targets]
+              description: Algorithm to expand.
+            expansion_properties:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExpansionProperty'
+            expansion_max_distance:
+              type: integer
+              minimum: 0
+              description: Stop expanding beyond this distance in meters.
+            skip_opposites:
+              type: boolean
+              default: false
+              description: Skip reverse-direction edges in the output.
+            dedupe:
+              type: boolean
+              default: false
+              description: Emit each edge only once.
+            contours:
+              type: array
+              items:
+                $ref: '#/components/schemas/Contour'
+              description: Required when action=isochrone.
