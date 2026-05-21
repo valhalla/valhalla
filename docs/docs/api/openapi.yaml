@@ -462,7 +462,7 @@ components:
           description: "0=current, 1=depart_at, 2=arrive_by, 3=invariant"
         value:
           type: string
-          description: ISO 8601 datetime string in the format `YYYY-MM-DDTHH:MM`, e.g. `2016-07-03T08:06`. Required for types 1, 2, 3.
+          description: ISO 8601 local datetime string in the format `YYYY-MM-DDTHH:MM`, e.g. `2016-07-03T08:06`. Required for types 1, 2, 3.
 
     # -------------------------------------------------------------------------
     # Contour (isochrone)
@@ -470,7 +470,7 @@ components:
 
     Contour:
       type: object
-      description: At least one of time or distance must be specified.
+      description: At least one of time or distance must be specified. You can only specify one metric per contour, i.e. time or distance.
       properties:
         time:
           type: number
@@ -496,9 +496,6 @@ components:
         factor:
           type: number
           description: Cost multiplier applied to matched edges (dependent on service configuration).
-        ignore_access_restrictions:
-          type: boolean
-          description: When true, ignore access restrictions on matched edges.
 
     # -------------------------------------------------------------------------
     # Costing options
@@ -1137,11 +1134,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Location'
-          description: Alias avoid_locations also accepted.
+          description: A set of locations to exclude or avoid within a route.
         exclude_polygons:
           description: >
             Array of coordinate rings `[[lon,lat],…]` or a GeoJSON FeatureCollection.
-            Alias `avoid_polygons` also accepted.
+            Roads intersecting these rings will be avoided during path finding.
           oneOf:
             - type: array
               description: Array of closed coordinate rings. All edges intersecting any ring are excluded.
@@ -1189,7 +1186,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LinearCostFactor'
-          description: Apply cost multipliers or access overrides to specific road segments.
+          description: Apply cost multipliers to specific road segments.
 
     # -------------------------------------------------------------------------
     # Per-endpoint request schemas
@@ -1210,45 +1207,48 @@ components:
               type: integer
               minimum: 0
               default: 0
-              description: Number of alternative routes to return. Forced to 0 for more than 2 locations.
+              description: Number of alternative routes to return. Forced to 0 for more than 2 waypoints.
             directions_type:
               $ref: '#/components/schemas/DirectionsType'
             shape_format:
               $ref: '#/components/schemas/ShapeFormat'
-            generalize:
-              type: number
-              minimum: 0
-              description: Polyline generalization tolerance in meters.
             linear_references:
               type: boolean
               default: false
-              description: Include base64-encoded OpenLR references per edge.
+              description: Include base64-encoded OpenLR references per edge in the response..
             admin_crossings:
               type: boolean
               default: false
+              description: >
+                When true, the route summary includes `admins` (array of administrative regions
+                the route passes through) and `admin_crossings` (array of objects with
+                `from_admin_index`, `to_admin_index`, `from_shape_index`, and `to_shape_index`
+                indicating where and along which edge an administrative boundary is crossed).
             elevation_interval:
               type: number
               minimum: 0
               maximum: 1000
               default: 0
               description: Elevation sample interval in meters along the path. 0 = no elevation.
-            guidance_views:
-              type: boolean
-              default: false
             banner_instructions:
               type: boolean
               default: false
-              description: Include OSRM-format banner instructions.
+              description: Include OSRM-format banner instructions, if format = osrm.
             voice_instructions:
               type: boolean
               default: false
-              description: Include OSRM-format voice instructions.
+              description: Include OSRM-format voice instructions, if format = osrm.
             turn_lanes:
               type: boolean
               default: false
+              description: >
+                When true, each maneuver may include a `lanes` array describing lane-level
+                guidance: possible directions and which lanes are valid or active for following
+                the maneuver.
             roundabout_exits:
               type: boolean
               default: true
+              description: When true, exit instructions at roundabouts are added to the output.
             prioritize_bidirectional:
               type: boolean
               default: false
@@ -1278,9 +1278,14 @@ components:
             matrix_locations:
               type: integer
               minimum: 1
-              description: Early-exit after finding this many targets. Only valid for 1:many or many:1.
+              description: Early-exit after finding this many targets. Only valid for TDMatrix algorithm.
             shape_format:
               $ref: '#/components/schemas/ShapeFormat'
+            expansion_max_distance:
+              type: integer
+              minimum: 0
+              default: 0
+              description: Maximum path distance in meters for an expansion. Currently this is implemented for the timedistancematrix algorithm. Source-target pairs whose cheapest path distance exceeds this limit will be returned as unreachable (with null time and distance).
 
     IsochroneRequest:
       allOf:
@@ -1302,14 +1307,15 @@ components:
             polygons:
               type: boolean
               default: false
-              description: Return filled polygons instead of isolines.
+              description: Return polygons instead of linestrings.
             denoise:
               type: number
               minimum: 0
               maximum: 1
               default: 1.0
-              description: Smoothing factor. 1 = no smoothing.
+              description: Factor to remove smaller contours, e.g. a value of 0.5 drops any contours that are less than half the area of the largest contour.
             show_locations:
+              description: A boolean indicating whether the input locations should be returned as MultiPoint features: one feature for the exact input coordinates and one feature for the coordinates of the network node it snapped to.
               type: boolean
               default: false
             reverse:
@@ -1319,6 +1325,7 @@ components:
             generalize:
               type: number
               minimum: 0
+              description: Douglas-Peucker polyline generalization tolerance in meters.
 
     TraceRequest:
       allOf:
@@ -1332,12 +1339,6 @@ components:
               items:
                 $ref: '#/components/schemas/Location'
               description: GPS trace points. Mutually exclusive with encoded_polyline.
-            trace:
-              type: array
-              minItems: 2
-              items:
-                $ref: '#/components/schemas/Location'
-              description: Alias for shape.
             encoded_polyline:
               type: string
               description: Polyline6-encoded trace shape.
@@ -1346,7 +1347,6 @@ components:
             begin_time:
               type: integer
               minimum: 0
-              default: 0
               description: Epoch start time in seconds when using durations.
             durations:
               type: array
@@ -1367,9 +1367,11 @@ components:
               minimum: 0
               maximum: 1000
               default: 0
+              description: Elevation sample interval in meters along the path. 0 = no elevation.
             alternates:
               type: integer
               minimum: 0
+              maximum: 3
               default: 0
               description: Number of alternative matches to return.
             trace_options:
@@ -1378,22 +1380,27 @@ components:
                 gps_accuracy:
                   type: number
                   minimum: 0
+                  maximum: 100
                   description: GPS accuracy for map matching in meters.
                 search_radius:
                   type: number
                   minimum: 0
+                  maximum: 100
                   description: Candidate search radius per point in meters.
                 turn_penalty_factor:
                   type: number
                   minimum: 0
+                  maximum: 1000
                   description: Penalty for sharp turns in matching.
                 breakage_distance:
                   type: number
                   minimum: 0
+                  maximum: 10000
                   description: Max gap in meters before starting a new trace segment.
                 interpolation_distance:
                   type: number
                   minimum: 0
+                  maximum: 100
                   description: Interpolation distance in meters for the matched path.
 
     TraceAttributesRequest:
@@ -1434,8 +1441,7 @@ components:
           description: Return cumulative distance alongside elevation values.
         height_precision:
           type: integer
-          minimum: 0
-          maximum: 2
+          enum: [0, 1, 2]
           default: 0
           description: Decimal places in elevation values.
         resample_distance:
@@ -1481,10 +1487,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ExpansionProperty'
-            expansion_max_distance:
-              type: integer
-              minimum: 0
-              description: Stop expanding beyond this distance in meters.
             skip_opposites:
               type: boolean
               default: false
@@ -1493,8 +1495,3 @@ components:
               type: boolean
               default: false
               description: Emit each edge only once.
-            contours:
-              type: array
-              items:
-                $ref: '#/components/schemas/Contour'
-              description: Required when action=isochrone.
