@@ -94,7 +94,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TraceRequest'
+              $ref: '#/components/schemas/TraceRouteRequest'
       responses:
         "200":
           description: Map-matched route result
@@ -1325,7 +1325,7 @@ components:
               default: 1.0
               description: Factor to remove smaller contours, e.g. a value of 0.5 drops any contours that are less than half the area of the largest contour.
             show_locations:
-              description: A boolean indicating whether the input locations should be returned as MultiPoint features: one feature for the exact input coordinates and one feature for the coordinates of the network node it snapped to.
+              description: "A boolean indicating whether the input locations should be returned as MultiPoint features: one feature for the exact input coordinates and one feature for the coordinates of the network node it snapped to."
               type: boolean
               default: false
             reverse:
@@ -1351,25 +1351,9 @@ components:
               description: GPS trace points. Mutually exclusive with encoded_polyline.
             encoded_polyline:
               type: string
-              description: Polyline6-encoded trace shape.
+              description: Polyline6-encoded trace shape. Mutually exclusive with shape.
             shape_match:
               $ref: '#/components/schemas/ShapeMatch'
-            begin_time:
-              type: integer
-              minimum: 0
-              description: Epoch start time in seconds when using durations.
-            durations:
-              type: array
-              items:
-                type: number
-                minimum: 0
-              description: Per-segment travel times in seconds. Length must equal shape points minus one.
-            use_timestamps:
-              type: boolean
-              default: false
-              description: Use per-point time field for elapsed time calculation.
-            directions_type:
-              $ref: '#/components/schemas/DirectionsType'
             shape_format:
               $ref: '#/components/schemas/ShapeFormat'
             elevation_interval:
@@ -1377,41 +1361,70 @@ components:
               minimum: 0
               maximum: 1000
               default: 0
-              description: Elevation sample interval in meters along the path. 0 = no elevation.
-            alternates:
-              type: integer
-              minimum: 0
-              maximum: 3
-              default: 0
-              description: Number of alternative matches to return.
+              description: Elevation sample interval in meters along the matched path. 0 = disabled.
+
+    TraceRouteRequest:
+      allOf:
+        - $ref: '#/components/schemas/TraceRequest'
+        - type: object
+          properties:
             trace_options:
               type: object
+              description: Fine-tuning parameters for the map-matching algorithm.
               properties:
                 gps_accuracy:
                   type: number
                   minimum: 0
                   maximum: 100
-                  description: GPS accuracy for map matching in meters.
+                  description: GPS accuracy in meters associated with trace points.
                 search_radius:
                   type: number
                   minimum: 0
                   maximum: 100
-                  description: Candidate search radius per point in meters.
+                  description: Search radius in meters for road candidates per trace point.
                 turn_penalty_factor:
                   type: number
                   minimum: 0
                   maximum: 1000
-                  description: Penalty for sharp turns in matching.
+                  description: Penalty for sharp turns. Increase (e.g. 500) to smooth pedestrian traces.
                 breakage_distance:
                   type: number
                   minimum: 0
                   maximum: 10000
-                  description: Max gap in meters before starting a new trace segment.
+                  description: Maximum gap in meters between trace points before starting a new segment.
                 interpolation_distance:
                   type: number
                   minimum: 0
                   maximum: 100
-                  description: Interpolation distance in meters for the matched path.
+                  description: Distance in meters beyond which trace points are merged together.
+            begin_time:
+              type: integer
+              minimum: 0
+              description: Epoch start timestamp (seconds) for the trace. Used with durations to assign timestamps to encoded_polyline input.
+            durations:
+              type: array
+              items:
+                type: number
+                minimum: 0
+              description: >
+                Elapsed seconds between each successive pair of trace points. Used with begin_time
+                to derive per-point timestamps from an encoded_polyline input.
+            use_timestamps:
+              type: boolean
+              default: false
+              description: When true, use per-point time values (or derived timestamps) for elapsed time calculation instead of internal costing.
+            directions_type:
+              $ref: '#/components/schemas/DirectionsType'
+            alternates:
+              type: integer
+              minimum: 0
+              maximum: 3
+              default: 0
+              description: Number of alternative matched routes to return.
+            linear_references:
+              type: boolean
+              default: false
+              description: Include base64-encoded OpenLR location references for each matched graph edge.
 
     TraceAttributesRequest:
       allOf:
@@ -1420,6 +1433,7 @@ components:
           properties:
             filters:
               type: object
+              description: Include or exclude specific attribute keys from the response. If omitted, all attributes are returned.
               properties:
                 action:
                   $ref: '#/components/schemas/FilterAction'
@@ -1427,7 +1441,9 @@ components:
                   type: array
                   items:
                     type: string
-                  description: Attribute keys to include or exclude (e.g. edge.length, node.elapsed_time).
+                  description: >
+                    Attribute keys to include or exclude. Supports edge.*, node.*, matched.*,
+                    shape_attributes.*, and top-level keys such as shape, osm_changeset, and admin.*.
 
     HeightRequest:
       type: object
