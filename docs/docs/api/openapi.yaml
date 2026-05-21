@@ -1076,9 +1076,6 @@ components:
         id:
           type: string
           description: Arbitrary request identifier echoed in the response.
-        jsonp:
-          type: string
-          description: JSONP callback name. Incompatible with format=pbf.
         format:
           $ref: '#/components/schemas/OutputFormat'
         units:
