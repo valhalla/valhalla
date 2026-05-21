@@ -251,6 +251,7 @@ components:
     ShapeFormat:
       type: string
       enum: [polyline6, polyline5, geojson, no_shape]
+      description: Not all formats are supported by all endpoints, e.g. `no_shape` is not valid for isochrone. 
       default: polyline6
       example: polyline6
 
@@ -265,7 +266,10 @@ components:
       type: string
       enum: [none, maneuvers, instructions]
       default: instructions
-      example: instructions
+      x-enumDescriptions:
+        none: No maneuvers or instructions.
+        maneuvers: Maneuvers only, no narrative text.
+        instructions: Maneuvers with narrative instructions (default).
 
     FilterAction:
       type: string
