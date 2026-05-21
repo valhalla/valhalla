@@ -9,6 +9,7 @@
    * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
    * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
    * ADDED: lz4 support for OSM PBF files [#6081](https://github.com/valhalla/valhalla/pull/6081)
+   * ADDED: `openlr` module to Python bindings [#6087](https://github.com/valhalla/valhalla/pull/6087)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**
@@ -55,7 +56,6 @@
    * ADDED: mostly global graph attributes to mjolnir's statsd logging [#6021](https://github.com/valhalla/valhalla/pull/6021)
    * ADDED: free flow and constrained flow speeds to mvt edge layer [#6014](https://github.com/valhalla/valhalla/pull/6014)
    * CHANGED: perf(costmatrix): use `ankerl::unordered_dense::set` instead of `std::set` for `LocationStatus::unfound_connections` [#6013](https://github.com/valhalla/valhalla/pull/6013)
-   * ADDED: `openlr` module to Python bindings [#6087](https://github.com/valhalla/valhalla/pull/6087)
 
 ## Release Date: 2026-02-19 Valhalla 3.6.3
 * **Removed**
