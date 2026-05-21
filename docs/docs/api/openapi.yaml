@@ -275,6 +275,9 @@ components:
       type: string
       enum: [include, exclude]
       example: exclude
+      x-enumDescriptions:
+        include: Include only the listed Onestop IDs; everything else is excluded.
+        exclude: Exclude all listed Onestop IDs; everything else is included.
 
     ShapeMatch:
       type: string
@@ -978,11 +981,18 @@ components:
       type: object
       properties:
         action:
-          $ref: '#/components/schemas/FilterAction'
+          allOf:
+            - $ref: '#/components/schemas/FilterAction'
+            - description: Whether to include only the listed Onestop IDs or exclude them.
         ids:
           type: array
+          description: >
+            List of Onestop IDs to filter. A Onestop ID is the feed directory name and the
+            GTFS object ID joined by `_` (e.g. a route with `route_id: AUR` from feed `NYC`
+            becomes `NYC_AUR`).
           items:
             type: string
+            example: NYC_AUR
 
     TransitCostingOptions:
       allOf:
@@ -1035,9 +1045,11 @@ components:
               description: Additional penalty (seconds) per transfer.
             filters:
               type: object
+              description: >
+                Filter routes or operators by Onestop ID. Each key takes an `action`
+                (`include`/`exclude`) and a list of `ids`. Note: stop filtering is currently
+                disabled.
               properties:
-                stops:
-                  $ref: '#/components/schemas/TransitFilterOptions'
                 operators:
                   $ref: '#/components/schemas/TransitFilterOptions'
                 routes:
