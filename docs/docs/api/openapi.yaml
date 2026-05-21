@@ -284,11 +284,28 @@ components:
       enum: [map_snap, edge_walk, walk_or_snap]
       default: walk_or_snap
       example: walk_or_snap
+      x-enumDescriptions:
+        edge_walk: Exact edge-walking algorithm. Only use when the shape comes from a prior Valhalla route.
+        map_snap: Map-matching algorithm for shapes that may not closely follow Valhalla edges, e.g. GPS traces. More expensive.
+        walk_or_snap: Try edge walking first; fall back to map snapping if it fails (default).
 
     ExpansionProperty:
       type: string
+      description: >
+        GeoJSON property key to include in the expansion response. Each additional property
+        increases output size by roughly 10%. By default an empty properties object is returned.
       enum: [durations, costs, distances, statuses, edge_ids, pred_edge_ids, expansion_type, flow_sources, travel_mode]
       example: durations
+      x-enumDescriptions:
+        durations: Cumulative travel time (seconds) to reach the edge.
+        costs: Cumulative cost to reach the edge.
+        distances: Cumulative distance (metres) to reach the edge.
+        statuses: Edge status — `settled`, `reached`, or `connection`.
+        edge_ids: Graph edge ID.
+        pred_edge_ids: Predecessor edge ID.
+        expansion_type: Whether this edge belongs to a forward or reverse expansion.
+        flow_sources: Speed sources used (freeflow, constrained, predicted, live).
+        travel_mode: Travel mode (drive, pedestrian, bicycle, transit).
 
     # -------------------------------------------------------------------------
     # Location
@@ -296,6 +313,7 @@ components:
 
     SearchFilter:
       type: object
+      description: Optional filters to exclude candidate edges based on their attribution.
       properties:
         min_road_class:
           $ref: '#/components/schemas/RoadClass'
@@ -341,6 +359,7 @@ components:
         type:
           type: string
           enum: [break, through, via, break_through]
+          example: break
           default: break
           description: First and last location are always forced to `break`.
           x-enumDescriptions:
@@ -356,7 +375,7 @@ components:
           description: Street address hint for snapping.
         date_time:
           type: string
-          description: Per-location ISO 8601 datetime override.
+          description: Per-location ISO 8601 datetime override, in the format `YYYY-MM-DDTHH:MM`, e.g. `2016-07-03T08:06`.
         heading:
           type: integer
           minimum: 0
@@ -365,39 +384,38 @@ components:
         heading_tolerance:
           type: integer
           description: Tolerance around heading in degrees.
+          default: 60
         preferred_layer:
           type: integer
-          description: Preferred road network layer.
+          description: If set, edges whose layer does not match this value are discarded from candidate search.
         node_snap_tolerance:
           type: number
           minimum: 0
           description: Snap-to-node distance tolerance in meters.
+          default: 5
         minimum_reachability:
           type: integer
           minimum: 0
+          default: 50
           description: Minimum number of reachable edges for a snap candidate.
         radius:
           type: integer
           minimum: 0
-          description: "Candidate search radius in meters: all viable edge candidates within the radius are correlated. If none are found, the best one outside the radius is correlated."
+          default: 0
+          description: "Candidate search radius in meters: all viable edge candidates within the radius are correlated. If none are found, the best one outside the radius is correlated. Default: only the closest edge is considered as candidate."
         search_cutoff: 
           type: integer
           minimum: 0
+          default: 35000
           description: Hard cutoff for candidate search in meters.
-        accuracy:
-          type: integer
-          minimum: 0
-          description: GPS accuracy in meters (used in map matching).
-        time:
-          type: number
-          default: -1
-          description: Timestamp in seconds (used in map matching).
         rank_candidates:
           type: boolean
           default: true
-          description: Rank snap candidates by quality.
+          description: Rank snap candidates by distance to input.
         preferred_side:
           type: string
+          default: either
+          example: opposite
           enum: [same, opposite, either]
           description: Preferred side of road to snap to.
         display_lat:
@@ -409,15 +427,19 @@ components:
           type: number
           minimum: -180
           maximum: 180
+          description: Display position longitude (may differ from routing position).
         street_side_tolerance:
           type: integer
           minimum: 0
+          default: 5
           description: Tolerance for preferred side matching in meters.
         street_side_max_distance:
           type: integer
           minimum: 0
+          default: 1000
           description: Max distance for side-of-road preference in meters.
         street_side_cutoff:
+          default: service_other
           $ref: '#/components/schemas/RoadClass'
           description: Ignore side preference for roads above this class.
         waiting:
