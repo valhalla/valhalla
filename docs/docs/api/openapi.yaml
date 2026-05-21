@@ -30,6 +30,11 @@ paths:
       responses:
         "200":
           description: Route result
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/route.json
         "400":
           $ref: '#/components/responses/Error'
 
@@ -47,6 +52,11 @@ paths:
       responses:
         "200":
           description: Optimized route result
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/optimized_route.json
         "400":
           $ref: '#/components/responses/Error'
 
@@ -64,6 +74,11 @@ paths:
       responses:
         "200":
           description: Matrix result
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/sources_to_targets.json
         "400":
           $ref: '#/components/responses/Error'
 
@@ -81,6 +96,11 @@ paths:
       responses:
         "200":
           description: GeoJSON isochrone result, or a GeoTIFF raster when `format=geotiff`
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/isochrone.json
         "400":
           $ref: '#/components/responses/Error'
 
@@ -98,6 +118,11 @@ paths:
       responses:
         "200":
           description: Map-matched route result
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/trace_route.json
         "400":
           $ref: '#/components/responses/Error'
 
@@ -115,6 +140,11 @@ paths:
       responses:
         "200":
           description: Edge attribute result
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/trace_attributes.json
         "400":
           $ref: '#/components/responses/Error'
 
@@ -132,6 +162,11 @@ paths:
       responses:
         "200":
           description: Elevation result
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/height.json
         "400":
           $ref: '#/components/responses/Error'
 
@@ -143,6 +178,11 @@ paths:
       responses:
         "200":
           description: Locate result
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/locate.json
         "400":
           $ref: '#/components/responses/Error'
     post:
@@ -158,6 +198,11 @@ paths:
       responses:
         "200":
           description: Locate result
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/locate.json
         "400":
           $ref: '#/components/responses/Error'
 
@@ -175,6 +220,11 @@ paths:
       responses:
         "200":
           description: Expansion GeoJSON result
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/expansion.json
         "400":
           $ref: '#/components/responses/Error'
 
@@ -186,6 +236,11 @@ paths:
       responses:
         "200":
           description: Status info
+          content:
+            application/json:
+              examples:
+                default:
+                  externalValue: ./examples/status.json
         "400":
           $ref: '#/components/responses/Error'
 
