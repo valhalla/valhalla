@@ -957,7 +957,6 @@ bool ConsistentNames(const std::string& country_code,
 void enhance(const boost::property_tree::ptree& pt,
              const OSMData& osmdata,
              const std::string& access_file,
-             const boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue,
              std::mutex& lock, // guards `tilequeue`
              std::promise<enhancer_stats>& result) {
@@ -986,7 +985,7 @@ void enhance(const boost::property_tree::ptree& pt,
   }
 
   // Local Graphreader
-  GraphReader reader(hierarchy_properties);
+  GraphReader reader(pt);
 
   // Config driven speed assignment
   auto speeds_config = pt.get_optional<std::string>("default_speeds_config");
@@ -1436,8 +1435,8 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
     results.emplace_back();
     thread =
         std::make_shared<std::thread>(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
-                                      std::cref(access_file), std::ref(hierarchy_properties),
-                                      std::ref(tilequeue), std::ref(lock), std::ref(results.back()));
+                                      std::cref(access_file), std::ref(tilequeue), std::ref(lock),
+                                      std::ref(results.back()));
   }
 
   // Wait for them to finish up their work
