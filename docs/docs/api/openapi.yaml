@@ -136,6 +136,15 @@ paths:
           $ref: '#/components/responses/Error'
 
   /locate:
+    get:
+      operationId: locateGet
+      summary: /locate (GET)
+      description: Graph metadata for nearby edges and nodes
+      responses:
+        "200":
+          description: Locate result
+        "400":
+          $ref: '#/components/responses/Error'
     post:
       operationId: locate
       summary: /locate
@@ -1121,9 +1130,6 @@ components:
           type: string
           default: en-US
           description: BCP47 locale for narrative output. See locales/ for supported values.
-        verbose:
-          type: boolean
-          description: "Default: true for matrix, false for all others."
         costing:
           $ref: '#/components/schemas/CostingType'
         costing_options:
@@ -1279,6 +1285,10 @@ components:
               type: integer
               minimum: 1
               description: Early-exit after finding this many targets. Only valid for TDMatrix algorithm.
+            verbose:
+              type: boolean
+              default: true
+              description: Include detailed per-cell metadata in the response.
             shape_format:
               $ref: '#/components/schemas/ShapeFormat'
             expansion_max_distance:
@@ -1450,23 +1460,20 @@ components:
           description: Resample the shape at this interval in meters before querying elevation.
 
     LocateRequest:
-      type: object
-      required: [locations]
-      properties:
-        id:
-          type: string
-        locations:
-          type: array
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/Location'
-        costing:
-          $ref: '#/components/schemas/CostingType'
-        costing_options:
-          $ref: '#/components/schemas/CostingOptions'
-        verbose:
-          type: boolean
-          default: false
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+        - type: object
+          required: [locations]
+          properties:
+            locations:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/Location'
+            verbose:
+              type: boolean
+              default: false
+              description: Return dense edge and node attribution. When false, only the closest point, way ID, and side of street are returned.
 
     ExpansionRequest:
       allOf:
