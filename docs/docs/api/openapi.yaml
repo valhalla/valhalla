@@ -575,36 +575,38 @@ components:
         shortest:
           type: boolean
           default: false
-          description: Optimize for shortest distance instead of fastest time.
+          description: Optimize for shortest distance instead of lowest cost.
         disable_hierarchy_pruning:
           type: boolean
           default: false
-          description: Disable graph hierarchy culling. Very slow; for debugging only.
+          description: Disable graph hierarchy culling; if the bee-line distance between waypoints exceeds the config parameter value for service_limits.max_distance_disable_hierarchy_culling, the option is ignored 
         ignore_restrictions:
           type: boolean
-          default: false
+          description: If set to `true`, ignores any restrictions (e.g. turn/dimensional/conditional restrictions). Especially useful for matching GPS traces to the road network regardless of restrictions.
         ignore_oneways:
           type: boolean
           default: false
+          descrption: If set to `true`, ignores one-way restrictions. Especially useful for matching GPS traces to the road network ignoring uni-directional traffic rules. Not included in `ignore_restrictions` option.
         ignore_access:
           type: boolean
           default: false
+          descrption: Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions
         ignore_closures:
           type: boolean
           default: false
-          description: Ignore live traffic closure data.
+          description: If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is.
         destination_only_penalty:
           type: number
           minimum: 0
           maximum: 43200
           default: 600
-          description: Penalty (seconds) to enter destination-only roads.
+          description: A penalty applied when entering an road which is only allowed to enter if necessary to reach the [destination](https://wiki.openstreetmap.org/wiki/Tag:vehicle%3Ddestination).
         maneuver_penalty:
           type: number
           minimum: 0
           maximum: 43200
           default: 5
-          description: Penalty (seconds) for a turn onto a different road name.
+          description: A penalty applied when transitioning between roads that do not have consistent naming — in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds.
         alley_penalty:
           type: number
           minimum: 0
