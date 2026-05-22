@@ -168,6 +168,14 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Map matching (Meili) data flow | `src/meili/map_matcher.cc` (`OfflineMatch`) → `src/meili/match_route.cc` (`ConstructRoute`) → `src/thor/map_matcher.cc` (`FormPath`) → `src/thor/trace_route_action.cc` (`build_trace`) → `src/thor/triplegbuilder.cc` (`TripLegBuilder::Build`). Candidates: `src/meili/candidate_search.cc`. Viterbi: `src/meili/viterbi_search.cc` |
 | Behavior affected by `include_pedestrian`/`bicycle`/`driving: false` | `src/mjolnir/graphfilter.cc` (`FilterTiles`, `AggregateTiles`). Filtering happens AFTER parsing — shared nodes between filtered ways create intersections that split edges during parsing. After filtering removes those edges, aggregation merges nodes that have only 2 remaining edges back together, which can change edge topology. Check `ExpandFromNodeInner` for the aggregation walk |
 
+## Subdirectory Context — Read When Triggered
+
+Some subdirectories have their own `CLAUDE.md` with deep context that would bloat this file if pulled in always. Read the linked guide **before** doing real work in the listed area — they cover non-obvious conventions (docstring placement, build flags, stub generation, etc.) that the surrounding code does not reveal on its own.
+
+| When you are about to… | Read first |
+|---|---|
+| Touch any Python binding (`src/bindings/python/...`), add/modify a `.def(...)` call, debug pyvalhalla install/wheel issues, change `.pyi` generation, or wonder why a class docstring isn't showing up in VSCode | [src/bindings/python/CLAUDE.md](src/bindings/python/CLAUDE.md) |
+
 ## Performance at Planet Scale
 
 | Metric | Value |
