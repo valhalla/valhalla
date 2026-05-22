@@ -3,6 +3,7 @@
    * REMOVED: dead `thor.max_reserved_locations_costmatrix` help entry from `valhalla_build_config` (live key is `thor.costmatrix.max_reserved_locations`) [#6083](https://github.com/valhalla/valhalla/issues/6083)
    * REMOVED: `json` request parameter, people can use CORS in 2026 [#6099](https://github.com/valhalla/valhalla/pull/6099)
 * **Bug Fix**
+   * FIXED: trunk/motorway links demoted to tertiary when crossed by an unclassified road [#6097](https://github.com/valhalla/valhalla/issues/6097)
    * FIXED: wrong mode used in loki for `auto_pedestrian` [#6065](https://github.com/valhalla/valhalla/pull/6065)
    * FIXED: Avoid creating loop edges during graph filtering [#6050](https://github.com/valhalla/valhalla/pull/6050)
    * FIXED: UB in adminbuilder in `&inner_rings.front()` if `inner_rings` is empty [#6077](https://github.com/valhalla/valhalla/pull/6077)

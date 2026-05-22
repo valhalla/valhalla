@@ -493,6 +493,47 @@ TEST(LinkReclassification, test_use_dest_refs) {
   check_edge_classification(graph_reader, layout, "K", "C", baldr::RoadClass::kTrunk);
 }
 
+TEST(LinkReclassification, test_unclassified_crossing_no_refs) {
+  // Trunk_link ramps between a motorway and a trunk are crossed mid-ramp by an
+  // unclassified road and carry no ref/destination:ref tags. The links must
+  // keep their trunk classification (not be downgraded to tertiary).
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+  A------------B-------------C-----------D
+                \                       /
+                 \                     /
+     I------------J                   K-----------L
+                   \                 /
+                    \               /
+                     \             /
+                      F-----------G
+                      |
+                      E
+  )";
+
+  const gurka::ways ways = {
+      {"ABCD", {{"highway", "motorway"}}},
+      {"EFG", {{"highway", "trunk"}}},
+      {"BJF", {{"highway", "trunk_link"}, {"oneway", "yes"}}},
+      {"GKC", {{"highway", "trunk_link"}, {"oneway", "yes"}}},
+      {"IJ", {{"highway", "unclassified"}}},
+      {"KL", {{"highway", "unclassified"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ramps_unclassified_crossing_no_refs",
+                        {{"mjolnir.reclassify_links", "true"}});
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  // The trunk_link should stay at trunk even without ref tags
+  check_edge_classification(graph_reader, layout, "B", "J", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "J", "F", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "G", "K", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "K", "C", baldr::RoadClass::kTrunk);
+}
+
 TEST(LinkReclassification, test_hierarchical_reclass) {
   // Check that final road classes of links will be higher or equal to the classes of their children
   constexpr double gridsize_metres = 10;

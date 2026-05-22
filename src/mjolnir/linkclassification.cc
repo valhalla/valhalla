@@ -380,8 +380,15 @@ struct LinkGraphBuilder {
     // Add new edge to the graph
     AddGraphEdge(parent, graph_idx, in_edge_idx);
 
+    // A high-class link crossed by a much-weaker road is not at its destination —
+    // it continues to another major road, so don't treat the crossing as a leaf.
+    const bool link_dominates_intersection =
+        in_edge.attributes.importance < static_cast<uint32_t>(RoadClass::kTertiary) &&
+        rc >= static_cast<uint32_t>(RoadClass::kUnclassified);
+
     // Check "stop criterions" only if this link intersects a "major" road
-    if (bundle.node.non_link_edge_ && rc <= static_cast<uint32_t>(RoadClass::kResidential)) {
+    if (bundle.node.non_link_edge_ && rc <= static_cast<uint32_t>(RoadClass::kResidential) &&
+        !link_dominates_intersection) {
       const auto edge_tags = WayTags::Parse(*data_.ways[in_edge.wayindex_], data_.osmdata);
       // We should stop if this node contains a destination road or if it doesn't belong
       // to any path from the root to a destination road
@@ -865,10 +872,17 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
 
         // Reclassify edge (if reclassify_links is true).
         if (reclassify_links && rc > edge.attributes.importance) {
-          if (rc < static_cast<uint32_t>(RoadClass::kUnclassified))
+          if (rc < static_cast<uint32_t>(RoadClass::kUnclassified)) {
             edge.attributes.importance = rc;
-          else
-            edge.attributes.importance = static_cast<uint32_t>(RoadClass::kTertiary);
+          } else {
+            // Clamp to tertiary, but never below the exit-node's class — a
+            // trunk-link must not be demoted to tertiary just because it ends
+            // at (or is crossed by) an unclassified road.
+            edge.attributes.importance =
+                std::min<uint32_t>(static_cast<uint32_t>(RoadClass::kTertiary),
+                                   std::max<uint32_t>(exit_classification,
+                                                      edge.attributes.importance));
+          }
 
           ++reclass_count;
         }
