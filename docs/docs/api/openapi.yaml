@@ -575,26 +575,37 @@ components:
         shortest:
           type: boolean
           default: false
-          description: Optimize for shortest distance instead of lowest cost.
+          description: Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models.
         disable_hierarchy_pruning:
           type: boolean
           default: false
-          description: Disable graph hierarchy culling; if the bee-line distance between waypoints exceeds the config parameter value for service_limits.max_distance_disable_hierarchy_culling, the option is ignored 
+          description: >
+            Disable graph hierarchy culling; if the bee-line distance between waypoints exceeds 
+            the config parameter value for service_limits.max_distance_disable_hierarchy_culling, the option is ignored 
         ignore_restrictions:
           type: boolean
-          description: If set to `true`, ignores any restrictions (e.g. turn/dimensional/conditional restrictions). Especially useful for matching GPS traces to the road network regardless of restrictions.
+          description: >
+            If set to `true`, ignores any restrictions (e.g. turn/dimensional/conditional restrictions). 
+            Especially useful for matching GPS traces to the road network regardless of restrictions.
         ignore_oneways:
           type: boolean
           default: false
-          descrption: If set to `true`, ignores one-way restrictions. Especially useful for matching GPS traces to the road network ignoring uni-directional traffic rules. Not included in `ignore_restrictions` option.
+          descrption: >
+            If set to `true`, ignores one-way restrictions. Especially useful for matching GPS traces to the 
+            road network ignoring uni-directional traffic rules. Not included in `ignore_restrictions` option.
         ignore_access:
           type: boolean
           default: false
-          descrption: Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions
+          descrption: >
+            Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road 
+            network regardless of restrictions
         ignore_closures:
           type: boolean
           default: false
-          description: If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is.
+          description: >
+            If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** 
+            This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request 
+            and will return an error if it is.
         destination_only_penalty:
           type: number
           minimum: 0
@@ -611,96 +622,114 @@ components:
           type: number
           minimum: 0
           maximum: 43200
-          default: 5
+          description: A penalty that is applied when transitioning onto an alley. Default is 60 seconds for bicycle, 5 seconds otherwise. 
         gate_cost:
           type: number
           minimum: 0
           maximum: 43200
           default: 30
-          description: Time cost (seconds) to pass through a gate.
+          description: A cost applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with undefined or private access is encountered. This cost is added to estimated and elapsed times.
         gate_penalty:
           type: number
           minimum: 0
           maximum: 43200
-          default: 300
+          description: > 
+            A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with no access information is on the road.
+            Default is 300 for bicycle, 30 otherwise.
         private_access_penalty:
           type: number
           minimum: 0
           maximum: 43200
-          default: 450
+          description: >
+            A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) or 
+            [bollard](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dbollard) with `access=private` is encountered. 
+            Default is 600 for pedestrian, 450 otherwise.
         country_crossing_cost:
           type: number
           minimum: 0
           maximum: 43200
           default: 600
+          description: A cost applied when encountering an international border. This cost is added to the estimated and elapsed times.
         country_crossing_penalty:
           type: number
           minimum: 0
           maximum: 43200
           default: 0
+          description: >
+            A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning 
+            country boundaries.
         ferry_cost:
           type: number
           minimum: 0
           maximum: 43200
           default: 300
-          description: Transit time cost (seconds) for a ferry crossing.
+          description: A cost applied when entering a ferry. This cost is added to the estimated and elapsed times. 
         use_ferry:
           type: number
           minimum: 0
           maximum: 1
           default: 0.5
-          description: "0 = avoid ferries, 1 = strongly prefer ferries."
+          description: > 
+            This value indicates the willingness to take ferries. This is a range of values between 0 and 1. Values near 
+            0 attempt to avoid ferries and values near 1 will favor ferries. Note that sometimes 
+            ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely.
         rail_ferry_cost:
           type: number
           minimum: 0
           maximum: 43200
           default: 300
+          description: A cost applied when entering a rail ferry. This cost is added to the estimated and elapsed times. 
         use_rail_ferry:
           type: number
           minimum: 0
           maximum: 1
           default: 0.4
+          description: > 
+            This value indicates the willingness to take rail ferries. This is a range of values between 0 and 1. Values near 
+            0 attempt to avoid rail ferries and values near 1 will favor them. Note that sometimes 
+            rail ferries may be required to complete a route so values of 0 are not guaranteed to avoid them entirely.
         toll_booth_cost:
           type: number
           minimum: 0
           maximum: 43200
           default: 15
-          description: Time cost (seconds) to pass a toll booth. Motor vehicle costings only.
+          description: >
+            A cost applied when a [toll booth](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. 
+            This cost is added to the estimated and elapsed times.
         toll_booth_penalty:
           type: number
           minimum: 0
           maximum: 43200
           default: 0
-          description: Additional penalty for toll roads. Motor vehicle costings only.
+          description: A penalty applied to the cost when a [toll booth](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This penalty can be used to create paths that avoid toll roads.
         service_penalty:
           type: number
           minimum: 0
           maximum: 43200
-          default: 15
-          description: Penalty for service roads. Default is 75 for auto/bus/taxi.
+          description: A penalty applied for transition to generic service road. The default penalty is 0 for trucks and pedestrian, 75 for auto/bus/taxi, 15 otherwise. 
         service_factor:
           type: number
           minimum: 0.1
           maximum: 100000
           default: 1.0
-          description: Cost multiplier for service roads.
+          description: >
+            A factor that modifies (multiplies) the cost when generic service roads are encountered.
         use_tracks:
           type: number
           minimum: 0
           maximum: 1
-          default: 0.5
-          description: Preference for track roads. Default is 0 for auto/bus/taxi.
+          description: >
+            This value indicates the willingness to take track roads. This is a range of values between 0 and 1. Values near 0 attempt to avoid tracks and 
+            values near 1 will favor tracks a little bit. The default value is 0 for auto and truck, 0.5 otherwise. Note that sometimes tracks 
+            are required to complete a route so values of 0 are not guaranteed to avoid tracks entirely.
         use_living_streets:
           type: number
           minimum: 0
           maximum: 1
-          default: 0.1
-        use_lit:
-          type: number
-          minimum: 0
-          maximum: 1
-          default: 0
-          description: Preference for lit roads at night.
+          description: > 
+            This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets 
+            and values near 1 will favor living streets. The default value is 0 for truck, 0.5 for bicycle, 0.6 for pedestrian, 0.1 otherwise.
+            Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely.
         closure_factor:
           type: number
           minimum: 1
@@ -873,6 +902,12 @@ components:
               minimum: 0.1
               maximum: 100000
               default: 1.0
+            use_lit:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0
+              description: This value is a range of values from 0 to 1, where 0 indicates indifference towards lit streets, and 1 indicates that unlit streets should be avoided. Note that even with values near 1, there is no guarantee the returned route will include lit segments.
             driveway_factor:
               type: number
               minimum: 0.1
