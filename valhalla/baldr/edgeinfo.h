@@ -163,6 +163,30 @@ public:
   }
 
   /**
+   * Gets the forward speed limit in KPH.
+   * @return  Returns the forward speed limit in KPH.
+   */
+  uint32_t forward_speed_limit() const {
+    return speed_limit();
+  }
+
+  /**
+   * Gets the reverse speed limit in KPH.
+   * If no reverse speed limit tag is present this returns the forward speed limit.
+   * @return  Returns the reverse speed limit in KPH.
+   */
+  uint32_t reverse_speed_limit() const;
+
+  /**
+   * Gets the speed limit in KPH for the specified direction.
+   * @param forward  True for forward direction, false for reverse direction.
+   * @return  Returns the directional speed limit in KPH.
+   */
+  uint32_t speed_limit(const bool forward) const {
+    return forward ? forward_speed_limit() : reverse_speed_limit();
+  }
+
+  /**
    * Does this EdgeInfo have elevation data.
    * @return Returns true if the EdgeInfo record has elevation along the edge.
    */
