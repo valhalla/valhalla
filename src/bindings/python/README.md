@@ -175,6 +175,44 @@ print(f"Compressed to {len(encoded)} characters")
 coefficients_restored = decode_compressed_speeds(encoded)
 ```
 
+### OpenLR Utilities
+
+Utilities for encoding, decoding, and working with OpenLR location references. Supports binary and Base64 serialization of line locations and point-along-line references using Valhalla's OpenLR implementation:
+
+```python
+import valhalla.utils.openlr as olr
+
+# Location Reference Point object
+lrp2 = olr.LocationReferencePoint(
+    longitude=-73.9815,
+    latitude=40.7527,
+    bearing=45.0,
+    frc=1,
+    fow=olr.FormOfWay.MULTIPLE_CARRIAGEWAY,
+    prev=lrp1,
+    distance=500.0,
+    lfrcnp=2,
+)
+
+# OpenLR object
+openlr_obj = olr.OpenLr(
+    lrps=[lrp1, lrp2],
+    positive_offset_bucket=5,
+    negative_offset_bucket=0,
+    point_along_line=True,
+    orientation=olr.Orientation.FirstLrpTowardsSecond,
+    side_of_the_road=olr.SideOfTheRoad.RightSideOfRoad,
+)
+
+# Serialization methods
+binary_data = openlr_obj.to_binary()
+base64_data = openlr_obj.to_base64()
+
+# Parsing methods
+reconstructed_base64 = olr.OpenLr.from_base64(base64_data)
+reconstructed_binary = olr.OpenLr.from_binary(binary_data)
+```
+
 #### Valhalla executables
 
 ##### C++ executables

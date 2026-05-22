@@ -31,13 +31,22 @@ nanobind_add_module(_graph_utils
   STABLE_ABI
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_utils.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_id.cc)
-nanobind_add_module(predicted_speeds
+nanobind_add_module(_predicted_speeds
   NB_STATIC
   STABLE_ABI
   LTO
   ${CMAKE_CURRENT_SOURCE_DIR}/src/predicted_speeds.cc)
+set_target_properties(_predicted_speeds PROPERTIES
+  OUTPUT_NAME "predicted_speeds")
+nanobind_add_module(_openlr
+  NB_STATIC
+  STABLE_ABI
+  LTO
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/openlr.cc)
+set_target_properties(_openlr PROPERTIES
+  OUTPUT_NAME "openlr")
 
-foreach(tgt IN ITEMS _valhalla _graph_utils predicted_speeds)
+foreach(tgt IN ITEMS _valhalla _graph_utils _predicted_speeds _openlr)
   # force abi3.so extension
   nanobind_extension_abi3(${tgt})
 
@@ -51,16 +60,19 @@ endforeach()
 if(APPLE)
   set_target_properties(_valhalla PROPERTIES INSTALL_RPATH "@loader_path")
   set_target_properties(_graph_utils PROPERTIES INSTALL_RPATH "@loader_path")
-  set_target_properties(predicted_speeds PROPERTIES INSTALL_RPATH "@loader_path")
+  set_target_properties(_predicted_speeds PROPERTIES INSTALL_RPATH "@loader_path")
+  set_target_properties(_openlr PROPERTIES INSTALL_RPATH "@loader_path")
 elseif(UNIX AND NOT APPLE)
   set_target_properties(_valhalla PROPERTIES INSTALL_RPATH "\$ORIGIN")
   set_target_properties(_graph_utils PROPERTIES INSTALL_RPATH "\$ORIGIN")
-  set_target_properties(predicted_speeds PROPERTIES INSTALL_RPATH "\$ORIGIN")
+  set_target_properties(_predicted_speeds PROPERTIES INSTALL_RPATH "\$ORIGIN")
+  set_target_properties(_openlr PROPERTIES INSTALL_RPATH "\$ORIGIN")
 endif()
 
 set_target_properties(_valhalla PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla)
 set_target_properties(_graph_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
-set_target_properties(predicted_speeds PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
+set_target_properties(_predicted_speeds PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
+set_target_properties(_openlr PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 set(py_srcs
@@ -72,7 +84,8 @@ set(py_srcs
   valhalla/utils/graph_utils.py
   valhalla/utils/_graph_utils.pyi
   valhalla/utils/predicted_speeds.pyi
-  valhalla/utils/decode_polyline.py)
+  valhalla/utils/decode_polyline.py
+  valhalla/utils/openlr.pyi)
 
 # scikit-build-core does a different build than CMake
 if (SKBUILD)
@@ -132,7 +145,10 @@ install(TARGETS _valhalla
 install(TARGETS _graph_utils
   DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/utils"
   COMPONENT python)
-install(TARGETS predicted_speeds
+install(TARGETS _predicted_speeds
+  DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/utils"
+  COMPONENT python)
+install(TARGETS _openlr
   DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/utils"
   COMPONENT python)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla

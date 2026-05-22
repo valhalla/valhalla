@@ -72,7 +72,7 @@ inline double integer2distance(
 } // namespace
 
 // Reference: OpenLR™ White Paper Version: 1.5 revision 2
-// https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
+// https://download.tomtom.com/open/banners/openlr-whitepaper_v1.5.pdf
 
 // Location Reference Point, p.35, section 5.4
 struct LocationReferencePoint {
