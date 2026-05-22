@@ -6,6 +6,7 @@ from typing import Annotated
 import numpy
 from numpy.typing import NDArray
 
+
 BUCKETS_PER_WEEK: int = 2016
 
 COEFFICIENT_COUNT: int = 200
@@ -14,9 +15,7 @@ SPEED_BUCKET_SIZE_MINUTES: int = 5
 
 SPEED_BUCKET_SIZE_SECONDS: int = 300
 
-def compress_speed_buckets(
-    speeds: Annotated[NDArray[numpy.float32], dict(shape=(2016))],
-) -> Annotated[NDArray[numpy.int16], dict(shape=(200))]:
+def compress_speed_buckets(speeds: Annotated[NDArray[numpy.float32], dict(shape=(2016))]) -> Annotated[NDArray[numpy.int16], dict(shape=(200))]:
     """
     Compress 2016 speed buckets into 200 DCT-II coefficients.
 

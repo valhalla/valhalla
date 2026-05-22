@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from typing import overload
 
+
 class GraphId:
     """
     Identifier of a node or an edge within the tiled, hierarchical graph.
@@ -67,9 +68,13 @@ class GraphId:
         """True if is_valid()."""
 
     def __str__(self) -> str: ...
+
     def __fspath__(self) -> str: ...
+
     def __repr__(self) -> str: ...
+
     def __getstate__(self) -> tuple[int]: ...
+
     def __setstate__(self, arg: tuple[int], /) -> None: ...
 
 def get_tile_base_lon_lat(graph_id: GraphId) -> tuple:
@@ -90,9 +95,7 @@ def get_tile_id_from_lon_lat(level: int, coord: tuple) -> GraphId:
     :raises ValueError: When the level or coord are invalid.
     """
 
-def get_tile_ids_from_bbox(
-    minx: float, miny: float, maxx: float, maxy: float, levels: Sequence[int] = []
-) -> list[GraphId]:
+def get_tile_ids_from_bbox(minx: float, miny: float, maxx: float, maxy: float, levels: Sequence[int] = []) -> list[GraphId]:
     """
     Returns all tiles GraphIds for the specified levels (default: all),
     which intersect the bbox.
