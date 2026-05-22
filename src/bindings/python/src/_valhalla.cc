@@ -41,10 +41,14 @@ NB_MODULE(_valhalla, m) {
   static PyObject* ValhallaError =
       PyErr_NewExceptionWithDoc("_valhalla.ValhallaError",
                                 "Exception raised when a Valhalla operation fails.\n\n"
-                                ":param int code: Valhalla-internal error code.\n"
-                                ":param str message: Human-readable error message.\n"
-                                ":param int http_code: Corresponding HTTP status code.\n"
-                                ":param str http_message: Corresponding HTTP status message.\n",
+                                ":ivar code: Valhalla-internal error code.\n"
+                                ":vartype code: int\n"
+                                ":ivar message: Human-readable error message.\n"
+                                ":vartype message: str\n"
+                                ":ivar http_code: Corresponding HTTP status code.\n"
+                                ":vartype http_code: int\n"
+                                ":ivar http_message: Corresponding HTTP status message.\n"
+                                ":vartype http_message: str\n",
                                 PyExc_RuntimeError, nullptr);
   // don't increase refcount, it's static
   m.attr("ValhallaError") = nb::borrow(ValhallaError);
