@@ -63,6 +63,28 @@ set_target_properties(_graph_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_C
 set_target_properties(predicted_speeds PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+# Generate Python type stubs (.pyi) from the compiled extension modules.
+# Stubs are committed to the source tree and refreshed on every build;
+# INCLUDE_PRIVATE makes sure "_"-prefixed members are stubbed
+nanobind_add_stub(_valhalla_stub
+  MODULE _valhalla
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/_valhalla.pyi
+  PYTHON_PATH $<TARGET_FILE_DIR:_valhalla>
+  DEPENDS _valhalla
+  INCLUDE_PRIVATE)
+nanobind_add_stub(_graph_utils_stub
+  MODULE _graph_utils
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/utils/_graph_utils.pyi
+  PYTHON_PATH $<TARGET_FILE_DIR:_graph_utils>
+  DEPENDS _graph_utils
+  INCLUDE_PRIVATE)
+nanobind_add_stub(predicted_speeds_stub
+  MODULE predicted_speeds
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/utils/predicted_speeds.pyi
+  PYTHON_PATH $<TARGET_FILE_DIR:predicted_speeds>
+  DEPENDS predicted_speeds
+  INCLUDE_PRIVATE)
+
 set(py_srcs
   valhalla/__init__.py
   valhalla/__version__.py
@@ -70,8 +92,6 @@ set(py_srcs
   valhalla/actor.py
   valhalla/utils/__init__.py
   valhalla/utils/graph_utils.py
-  valhalla/utils/_graph_utils.pyi
-  valhalla/utils/predicted_speeds.pyi
   valhalla/utils/decode_polyline.py)
 
 # scikit-build-core does a different build than CMake
@@ -135,9 +155,17 @@ install(TARGETS _graph_utils
 install(TARGETS predicted_speeds
   DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/utils"
   COMPONENT python)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/_valhalla.pyi
+  DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla"
+  COMPONENT python)
+install(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/utils/_graph_utils.pyi
+    ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/utils/predicted_speeds.pyi
+  DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/utils"
+  COMPONENT python)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla
   DESTINATION "${VALHALLA_INSTALL_PYDIR}"
   COMPONENT python
   FILES_MATCHING
-    PATTERN "*.py*"
+    PATTERN "*.py"
     PATTERN "__pycache__" EXCLUDE)

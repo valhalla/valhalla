@@ -73,7 +73,14 @@ NB_MODULE(_valhalla, m) {
       },
       ValhallaError);
 
-  nb::class_<vt::actor_t>(m, "_Actor", "Valhalla Actor class")
+  nb::class_<vt::actor_t>(
+      m, "_Actor",
+      "Valhalla's Actor class is used to call its actions, like route, isochrone, matrix etc.\n\n"
+      "Configuration passed in either by an existing configuration JSON file path or in `dict` form,\n"
+      "e.g. by calling valhalla.config.get_config(). In the latter case a temp file will be\n"
+      "created.\n\n"
+      "For details on parameters for each function consult Valhalla's documentation:\n"
+      "https://github.com/valhalla/valhalla/blob/master/docs/docs/api")
       .def(
           "__init__",
           [](vt::actor_t* self, const std::string& config) {

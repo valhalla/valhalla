@@ -29,18 +29,11 @@ def dict_or_str(func):
     return wrapped
 
 
+# The docstrings live in C++ code, so .pyi can be generated
 class Actor(_Actor):
+    __doc__ = _Actor.__doc__
+
     def __init__(self, config: Union[Path, str, dict]):
-        """
-        Valhalla's Actor class is used to call its actions, like route, isochrone, matrix etc.
-
-        Configuration passed in either by an existing configuration JSON file path or in `dict` form,
-        e.g. by calling valhalla.config.get_config(). In the latter case a temp file will be
-        created.
-
-        For details on parameters for each function consult Valhalla's documentation:
-        https://github.com/valhalla/valhalla/blob/master/docs/docs/api
-        """
         # Use shared validation function
         config_path, temp_file_path = parse_and_validate_config(config)
         self._config_path = config_path
