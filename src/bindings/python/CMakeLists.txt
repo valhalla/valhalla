@@ -65,25 +65,24 @@ set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Generate Python type stubs (.pyi) from the compiled extension modules.
 # Stubs are committed to the source tree and refreshed on every build;
-# INCLUDE_PRIVATE makes sure "_"-prefixed members are stubbed
-nanobind_add_stub(_valhalla_stub
-  MODULE _valhalla
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/_valhalla.pyi
-  PYTHON_PATH $<TARGET_FILE_DIR:_valhalla>
-  DEPENDS _valhalla
-  INCLUDE_PRIVATE)
-nanobind_add_stub(_graph_utils_stub
-  MODULE _graph_utils
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/utils/_graph_utils.pyi
-  PYTHON_PATH $<TARGET_FILE_DIR:_graph_utils>
-  DEPENDS _graph_utils
-  INCLUDE_PRIVATE)
-nanobind_add_stub(predicted_speeds_stub
-  MODULE predicted_speeds
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/utils/predicted_speeds.pyi
-  PYTHON_PATH $<TARGET_FILE_DIR:predicted_speeds>
-  DEPENDS predicted_speeds
-  INCLUDE_PRIVATE)
+# INCLUDE_PRIVATE keeps "_"-prefixed members in the output; the POST_BUILD
+# step prepends a "machine-generated" banner via an idempotent script.
+function(valhalla_python_stub module rel_pyi)
+  set(_pyi ${CMAKE_CURRENT_SOURCE_DIR}/${rel_pyi})
+  nanobind_add_stub(${module}_stub
+    MODULE ${module}
+    OUTPUT ${_pyi}
+    PYTHON_PATH $<TARGET_FILE_DIR:${module}>
+    DEPENDS ${module}
+    INCLUDE_PRIVATE)
+  add_custom_command(TARGET ${module}_stub POST_BUILD
+    COMMAND ${Python_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/scripts/prepend_pyi_header.py ${_pyi})
+endfunction()
+
+valhalla_python_stub(_valhalla        valhalla/_valhalla.pyi)
+valhalla_python_stub(_graph_utils     valhalla/utils/_graph_utils.pyi)
+valhalla_python_stub(predicted_speeds valhalla/utils/predicted_speeds.pyi)
 
 set(py_srcs
   valhalla/__init__.py
