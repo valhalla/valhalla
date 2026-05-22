@@ -3,8 +3,8 @@
 set -o errexit -o pipefail -o nounset
 
 # Regenerate the committed .pyi stubs for the Python bindings by rebuilding
-# the `*_stub` targets. Run automatically by CI and pre-commit when a binding
-# source file changes.
+# the `*_stub` targets. Run automatically by CI when a binding source file
+# changes.
 #
 # Build dir defaults to `build`; override with the BUILD_DIR env var or first
 # positional arg, e.g. `BUILD_DIR=build/Release ./scripts/regenerate_python_stubs.sh`.
@@ -12,7 +12,7 @@ set -o errexit -o pipefail -o nounset
 BUILD_DIR="${1:-${BUILD_DIR:-build}}"
 
 if [[ ! -f "${BUILD_DIR}/CMakeCache.txt" ]] \
-  || ! grep -q "^ENABLE_PYTHON_BINDINGS:.*=ON$" "${BUILD_DIR}/CMakeCache.txt"; then
+  || ! grep -qiE "^ENABLE_PYTHON_BINDINGS:.*=(on|true|1|yes)$" "${BUILD_DIR}/CMakeCache.txt"; then
   echo "regenerate_python_stubs: '${BUILD_DIR}' is not a CMake build dir with ENABLE_PYTHON_BINDINGS=ON." >&2
   echo "  Configure one first, e.g.:" >&2
   echo "    cmake -B ${BUILD_DIR} -DENABLE_PYTHON_BINDINGS=ON -DCMAKE_BUILD_TYPE=Release" >&2

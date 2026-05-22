@@ -32,11 +32,11 @@ Install is straightforward: `install(FILES ${SRC}/.../X.pyi DESTINATION ...)` �
 
 ### Keeping stubs in sync
 
-**Pre-commit hook** ([../../../.pre-commit-config.yaml](../../../.pre-commit-config.yaml), `python-stubs`) runs [`scripts/regenerate_python_stubs.sh`](../../../scripts/regenerate_python_stubs.sh) when any `src/bindings/python/src/*.{cc,h}` or `CMakeLists.txt` is staged. The script:
+[`scripts/regenerate_python_stubs.sh`](../../../scripts/regenerate_python_stubs.sh):
 1. Rebuilds the `*_stub` targets in `BUILD_DIR` (default `build`, overridable by env var or first positional arg).
 2. `git status --porcelain`s the three `.pyi` paths; exits 1 with the diff if anything changed.
 
-**CI** runs the same script in the `arm_build` job ([.github/workflows/linux.yml](../../../.github/workflows/linux.yml)) right after `make`. The build already produces the stubs as part of `ALL`, so the script's `cmake --build` is a no-op rebuild; the `git status` check is what fails the job.
+**CI** runs it in the `arm_build` job ([.github/workflows/linux.yml](../../../.github/workflows/linux.yml)) right after `make`. The build already produces the stubs as part of `ALL`, so the script's `cmake --build` is a no-op rebuild; the `git status` check is what fails the job. There is no local pre-commit hook — when you edit a binding source locally, rebuild before committing or CI will catch the drift.
 
 ## Docstring Placement (Important — Non-Obvious)
 
