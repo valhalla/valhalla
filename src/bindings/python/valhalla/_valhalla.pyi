@@ -25,8 +25,7 @@ class _Actor:
 
     def locate(self, arg: str, /) -> str: ...
 
-    def optimized_route(self, arg: str, /) -> str:
-        """Optimizes the order of a set of waypoints by time."""
+    def optimized_route(self, arg: str, /) -> str: ...
 
     def matrix(self, arg: str, /) -> str: ...
 

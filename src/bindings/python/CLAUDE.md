@@ -44,7 +44,7 @@ Pyright/Pylance reads docstrings **statically** and does **not** walk the MRO. S
 
 The convention:
 - **User-facing classes and methods** that have a Python wrapper → docstring as a string literal in the Python source (e.g., [valhalla/actor.py](valhalla/actor.py)). Pyright sees the literal, VSCode hover works.
-- **Bindings without a Python wrapper** (currently: `_Actor.optimized_route`, exception classes, free functions in `_graph_utils` and `predicted_speeds`) → docstring stays in the C++ `.def(...)` / `nb::class_(...)` arg. The generated `.pyi` carries it.
+- **Bindings without a Python wrapper** (currently: exception classes, free functions in `_graph_utils` and `predicted_speeds`) → docstring stays in the C++ `.def(...)` / `nb::class_(...)` arg. The generated `.pyi` carries it.
 
 Don't add C++ docstrings to methods that also have a Python wrapper with its own docstring — that duplicates and drifts.
 

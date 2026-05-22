@@ -80,8 +80,7 @@ NB_MODULE(_valhalla, m) {
   // User-facing docstrings (class + each method) live on the Python `Actor`
   // wrapper in actor.py as string literals — Pyright/Pylance reads them
   // statically and does not walk the MRO, so the C++ docstrings would not
-  // show up on hover in VSCode. The one exception is `optimized_route`,
-  // which has no Python wrapper, so its docstring still lives here.
+  // show up on hover in VSCode.
   nb::class_<vt::actor_t>(m, "_Actor")
       .def(
           "__init__",
@@ -98,7 +97,6 @@ NB_MODULE(_valhalla, m) {
       .def(
           "optimized_route",
           [](vt::actor_t& self, std::string& req) { return self.optimized_route(req); },
-          "Optimizes the order of a set of waypoints by time.",
           nb::call_guard<nb::gil_scoped_release>())
       .def(
           "matrix", [](vt::actor_t& self, std::string& req) { return self.matrix(req); },
