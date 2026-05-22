@@ -67,22 +67,27 @@ set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # Stubs are committed to the source tree and refreshed on every build;
 # INCLUDE_PRIVATE keeps "_"-prefixed members in the output; the POST_BUILD
 # step prepends a "machine-generated" banner via an idempotent script.
-function(valhalla_python_stub module rel_pyi)
-  set(_pyi ${CMAKE_CURRENT_SOURCE_DIR}/${rel_pyi})
-  nanobind_add_stub(${module}_stub
-    MODULE ${module}
-    OUTPUT ${_pyi}
-    PYTHON_PATH $<TARGET_FILE_DIR:${module}>
-    DEPENDS ${module}
-    INCLUDE_PRIVATE)
-  add_custom_command(TARGET ${module}_stub POST_BUILD
-    COMMAND ${Python_EXECUTABLE}
-            ${CMAKE_CURRENT_SOURCE_DIR}/scripts/prepend_pyi_header.py ${_pyi})
-endfunction()
+#
+# Skipped under ENABLE_SANITIZERS: nanobind_add_stub imports the compiled
+# module via a vanilla python3, which can't load an ASan-instrumented .so
+if (NOT ENABLE_SANITIZERS)
+  function(valhalla_python_stub module rel_pyi)
+    set(_pyi ${CMAKE_CURRENT_SOURCE_DIR}/${rel_pyi})
+    nanobind_add_stub(${module}_stub
+      MODULE ${module}
+      OUTPUT ${_pyi}
+      PYTHON_PATH $<TARGET_FILE_DIR:${module}>
+      DEPENDS ${module}
+      INCLUDE_PRIVATE)
+    add_custom_command(TARGET ${module}_stub POST_BUILD
+      COMMAND ${Python_EXECUTABLE}
+              ${CMAKE_CURRENT_SOURCE_DIR}/scripts/prepend_pyi_header.py ${_pyi})
+  endfunction()
 
-valhalla_python_stub(_valhalla        valhalla/_valhalla.pyi)
-valhalla_python_stub(_graph_utils     valhalla/utils/_graph_utils.pyi)
-valhalla_python_stub(predicted_speeds valhalla/utils/predicted_speeds.pyi)
+  valhalla_python_stub(_valhalla        valhalla/_valhalla.pyi)
+  valhalla_python_stub(_graph_utils     valhalla/utils/_graph_utils.pyi)
+  valhalla_python_stub(predicted_speeds valhalla/utils/predicted_speeds.pyi)
+endif()
 
 set(py_srcs
   valhalla/__init__.py
