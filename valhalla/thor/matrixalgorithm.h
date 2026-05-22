@@ -159,11 +159,11 @@ protected:
   inline static void
   reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size, bool verbose, uint32_t pass = 0) {
     if (pass == 0) {
-      matrix.mutable_from_indices()->resize(size, 0U);
-      matrix.mutable_to_indices()->resize(size, 0U);
-      matrix.mutable_distances()->resize(size, 0U);
-      matrix.mutable_times()->resize(size, 0U);
-      matrix.mutable_second_pass()->resize(size, false);
+      matrix.mutable_from_indices()->Resize(size, 0U);
+      matrix.mutable_to_indices()->Resize(size, 0U);
+      matrix.mutable_distances()->Resize(size, 0U);
+      matrix.mutable_times()->Resize(size, 0U);
+      matrix.mutable_second_pass()->Resize(size, false);
       // repeated strings don't support Resize()
       matrix.mutable_date_times()->Reserve(size);
       matrix.mutable_time_zone_offsets()->Reserve(size);
@@ -181,12 +181,12 @@ protected:
       }
       if (verbose) {
         // fill with sentinel values meaning "no data"
-        matrix.mutable_begin_heading()->resize(size, kInvalidHeading);
-        matrix.mutable_end_heading()->resize(size, kInvalidHeading);
-        matrix.mutable_begin_lat()->resize(size, midgard::INVALID_LL);
-        matrix.mutable_begin_lon()->resize(size, midgard::INVALID_LL);
-        matrix.mutable_end_lat()->resize(size, midgard::INVALID_LL);
-        matrix.mutable_end_lon()->resize(size, midgard::INVALID_LL);
+        matrix.mutable_begin_heading()->Resize(size, kInvalidHeading);
+        matrix.mutable_end_heading()->Resize(size, kInvalidHeading);
+        matrix.mutable_begin_lat()->Resize(size, midgard::INVALID_LL);
+        matrix.mutable_begin_lon()->Resize(size, midgard::INVALID_LL);
+        matrix.mutable_end_lat()->Resize(size, midgard::INVALID_LL);
+        matrix.mutable_end_lon()->Resize(size, midgard::INVALID_LL);
       }
     }
   }
