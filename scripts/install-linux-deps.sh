@@ -49,12 +49,12 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     unzip \
     zlib1g-dev
   
-# build prime_server from source
-# readonly primeserver_version=0.10.0
+# build prime_server from source (pointed at tagged release)
+readonly primeserver_version=0.10.0
 readonly primeserver_dir=/tmp/prime_server
-git clone --recurse-submodules https://github.com/kevinkreiser/prime_server $primeserver_dir
-pushd $primeserver_dir
+git clone --branch="$primeserver_version" --recurse-submodules https://github.com/kevinkreiser/prime_server "$primeserver_dir"
+pushd "$primeserver_dir"
 ./autogen.sh && ./configure
 make -j${CONCURRENCY:-$(nproc)}
 sudo make install
-popd && rm -rf $primeserver_dir
+popd && rm -rf "$primeserver_dir"
