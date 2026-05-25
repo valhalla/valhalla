@@ -179,14 +179,19 @@ TEST(UtilOdin, test_supported_locales) {
     // check the locale is supported
     std::string posix_locale = other.get<std::string>("posix_locale");
     LOG_TRACE("Verify supported locale for posix_locale=" + posix_locale);
+    std::string lookup = posix_locale;
+#ifdef _WIN32
+    // Strip .UTF-8: ucrt takes language_country broadly, .UTF-8 only on Win10 1903+.
+    if (auto dot = lookup.find('.'); dot != std::string::npos)
+      lookup.resize(dot);
+#endif
     std::locale l;
     try {
-      l = std::locale(posix_locale.c_str());
+      l = std::locale(lookup.c_str());
     } catch (std::runtime_error& rte) {
-#ifdef __APPLE__
-      // Some locales are not available on macOS by default (e.g., vi_VN.UTF-8)
-      // Just log a warning instead of failing the test
-      LOG_WARN("Locale not available on macOS: " + posix_locale);
+#if defined(__APPLE__) || defined(_WIN32)
+      // macOS BSD locales and Windows ucrt locales are both sparser than glibc; warn-skip.
+      LOG_WARN("Locale not available: " + posix_locale);
       continue;
 #else
       FAIL() << "Locale not found for: " + posix_locale;

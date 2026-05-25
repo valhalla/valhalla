@@ -103,15 +103,16 @@ TEST(Filesystem, has_data_member_type) {
 }
 
 TEST(Filesystem, save_file_valid_input) {
-  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
-                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
-                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
+  const auto base = stdfs::temp_directory_path() / "save_file_input";
+  std::vector<stdfs::path> tests{base / "utrecht_tiles" / "0" / "003" / "196.gp",
+                                 base / "utrecht_tiles" / "1" / "051" / "305.gph",
+                                 base / "utrecht_tiles" / "2" / "000" / "818" / "660.gph"};
 
   for (const auto& test : tests) {
     EXPECT_TRUE(vfs::save<std::string>(test));
   }
 
-  stdfs::remove_all("/tmp/save_file_input/");
+  stdfs::remove_all(base);
 }
 
 TEST(Filesystem, save_file_invalid_input) {

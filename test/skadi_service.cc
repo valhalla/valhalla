@@ -4,7 +4,6 @@
 
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
-#include <unistd.h>
 
 #include <filesystem>
 #include <fstream>
@@ -186,7 +185,6 @@ void create_tile() {
   ASSERT_TRUE(file.good()) << "File stream is not good";
 }
 
-zmq::context_t context;
 void start_service() {
   // need a place to drop our sockets
   auto run_dir = cfg.get<std::string>("mjolnir.tile_dir");
@@ -195,7 +193,8 @@ void start_service() {
 
   // server
   std::thread server(std::bind(&http_server_t::serve,
-                               http_server_t(context, cfg.get<std::string>("httpd.service.listen"),
+                               http_server_t(valhalla::zmq_context(),
+                                             cfg.get<std::string>("httpd.service.listen"),
                                              cfg.get<std::string>("loki.service.proxy") + "_in",
                                              cfg.get<std::string>("httpd.service.loopback"),
                                              cfg.get<std::string>("httpd.service.interrupt"))));
@@ -203,11 +202,11 @@ void start_service() {
 
   // load balancer
   std::thread proxy(std::bind(&proxy_t::forward,
-                              proxy_t(context, cfg.get<std::string>("loki.service.proxy") + "_in",
+                              proxy_t(valhalla::zmq_context(),
+                                      cfg.get<std::string>("loki.service.proxy") + "_in",
                                       cfg.get<std::string>("loki.service.proxy") + "_out")));
   proxy.detach();
 
-  // service worker
   std::thread worker(valhalla::loki::run_service, cfg);
   worker.detach();
 }
@@ -225,7 +224,7 @@ TEST(SkadiService, test_requests) {
   auto request = requests.cbegin();
   std::string request_str;
   http_client_t client(
-      context, cfg.get<std::string>("httpd.service.listen"),
+      valhalla::zmq_context(), cfg.get<std::string>("httpd.service.listen"),
       [&request, &request_str]() {
         // we dont have any more requests so bail
         if (request == requests.cend())

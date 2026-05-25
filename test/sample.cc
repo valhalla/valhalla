@@ -148,7 +148,7 @@ struct testable_sample_t : public skadi::sample {
 };
 
 TEST(Sample, edges) {
-  testable_sample_t s("/dev/null");
+  testable_sample_t s("");
 
   // check 4 pixels
   auto n = .5f / 3600;
