@@ -106,19 +106,19 @@ bool remove_child(boost::property_tree::ptree& pt, const std::string& path) {
 
 namespace test {
 
-// Writable mmap of traffic.tar that outlives the TrafficTiles using it. mem_map works on Windows.
-using TrafficMMap = valhalla::midgard::mem_map<char>;
+// a memmap that we can write to for traffic tar testing
+using MMap = valhalla::midgard::mem_map<char>;
 
 class MMapGraphMemory final : public valhalla::baldr::GraphMemory {
 public:
-  MMapGraphMemory(std::shared_ptr<TrafficMMap> mmap, char* data_, size_t size_)
+  MMapGraphMemory(std::shared_ptr<MMap> mmap, char* data_, size_t size_)
       : mmap_(std::move(mmap)) {
     data = data_;
     size = size_;
   }
 
 private:
-  const std::shared_ptr<TrafficMMap> mmap_;
+  const std::shared_ptr<MMap> mmap_;
 };
 
 std::string load_binary_file(const std::string& filename) {
@@ -595,7 +595,7 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
   {
     const auto traffic_path = config.get<std::string>("mjolnir.traffic_extract");
     const auto memory =
-        std::make_shared<TrafficMMap>(traffic_path, std::filesystem::file_size(traffic_path));
+        std::make_shared<MMap>(traffic_path, std::filesystem::file_size(traffic_path));
 
     mtar_t tar;
     tar.pos = 0;

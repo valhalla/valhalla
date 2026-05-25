@@ -107,6 +107,7 @@ void run_service(const boost::property_tree::ptree& config) {
   auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
   auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
+  // listen for requests
   odin_worker_t odin_worker(config);
   prime_server::worker_t worker(zmq_context(), upstream_endpoint, "inproc:///dev/null",
                                 loopback_endpoint, interrupt_endpoint,

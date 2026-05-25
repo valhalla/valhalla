@@ -100,7 +100,7 @@ to_response(const std::string& data,
             const Api& options,
             const std::vector<std::pair<std::string, std::string>>& additional_headers = {});
 
-// Process-wide ZMQ context so inproc:// endpoints share across threads in one process.
+// a shared zqm context so inproc:// endpoints work across threads within a single process
 zmq::context_t& zmq_context();
 #endif
 
