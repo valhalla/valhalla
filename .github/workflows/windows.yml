@@ -1,0 +1,215 @@
+name: Build Windows
+
+on:
+  push:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
+        required: false
+        default: false
+
+# Cancel CI runs on a branch when new commits were pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  SETUP_TMATE: ${{ ((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) && (github.repository_owner == 'valhalla') }}
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
+jobs:
+  release_build:
+    name: Release build
+    runs-on: windows-2022
+    env:
+      BUILD_TYPE: Release
+      MSVC_VERSION: "2022"
+      # Keep aligned with VCPKG_VERSION in osx_win_python_builds.yml to share the vcpkg cache.
+      VCPKG_VERSION: "0e39c10"
+      VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
+      VCPKG_DISABLE_COMPILER_TRACKING: ON
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      # Bump in lockstep with install-linux-deps.sh and the macOS step in osx_win_python_builds.yml.
+      PRIMESERVER_VERSION: "0.10.0"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          fetch-tags: true
+
+      # Needed by run-scripts and python_valhalla under --target check. 3.12 matches the wheel job.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Same vcpkg env as osx_win_python_builds.yml for shared cache.
+      - name: Configure vcpkg env
+        shell: bash
+        run: |
+          workspace="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
+          echo "VCPKG_INSTALLATION_ROOT=${workspace}/vcpkg" >> $GITHUB_ENV
+          echo "VCPKG_TOOLCHAIN_FILE=${workspace}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_TRIPLET=x64-windows" >> $GITHUB_ENV
+          echo "VCPKG_TRIPLET_PATH=${workspace}/vcpkg/triplets/x64-windows.cmake" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_BINARY_CACHE=${workspace}/vcpkg/archives" >> $GITHUB_ENV
+          echo "PRIMESERVER_INSTALL=${workspace}/prime_server_install" >> $GITHUB_ENV
+
+      - name: Install GNU make & awk
+        run: choco install gawk make
+
+      - name: Install vcpkg
+        shell: bash
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          git checkout $VCPKG_VERSION
+          mkdir archives
+          echo "set(VCPKG_BUILD_TYPE release)" >> "$VCPKG_TRIPLET_PATH"
+          echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$VCPKG_TRIPLET_PATH"
+          cmd.exe /c bootstrap-vcpkg.bat
+
+      - name: Restore vcpkg packages
+        uses: tespkg/actions-cache/restore@v1
+        id: vcpkg_restore
+        with:
+          endpoint: fsn1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache-2
+          # PRIMESERVER_VERSION in the key so a bump invalidates the cached prime_server build.
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-prime=${{ env.PRIMESERVER_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+          path: |
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
+            prime_server_install
+
+      - name: Setup Developer Command Prompt for VS
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # Classic-mode install so prime_server's CMake can find these before valhalla's manifest
+      # install runs. Re-installed by manifest mode below (cache-hit fast).
+      - name: Install prime_server runtime deps via vcpkg
+        if: steps.vcpkg_restore.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          "$VCPKG_INSTALLATION_ROOT/vcpkg.exe" install \
+            "zeromq:$VCPKG_DEFAULT_TRIPLET" \
+            "czmq:$VCPKG_DEFAULT_TRIPLET" \
+            "curl:$VCPKG_DEFAULT_TRIPLET"
+
+      - name: Build & install prime_server
+        if: steps.vcpkg_restore.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          # --recurse-submodules: prime_server's logging utilities are a submodule.
+          git clone --branch="$PRIMESERVER_VERSION" --recurse-submodules \
+            https://github.com/kevinkreiser/prime_server "$RUNNER_TEMP/prime_server"
+          cd "$RUNNER_TEMP/prime_server"
+          # ENABLE_WERROR=OFF: prime_server's MSVC werror policy is stricter than ours.
+          cmake -B build \
+            -G "Visual Studio 17 2022" -A x64 \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
+            -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
+            -DCMAKE_INSTALL_PREFIX="$PRIMESERVER_INSTALL" \
+            -DENABLE_WERROR=OFF
+          cmake --build build --config "$BUILD_TYPE" -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+          cmake --install build --config "$BUILD_TYPE"
+
+      - name: Save vcpkg packages
+        if: steps.vcpkg_restore.outputs.cache-hit != 'true'
+        uses: tespkg/actions-cache/save@v1
+        with:
+          endpoint: fsn1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache-2
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-prime=${{ env.PRIMESERVER_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+          path: |
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
+            prime_server_install
+
+      - name: Get version modifier
+        id: version-modifier
+        if: github.ref == 'refs/heads/master'
+        shell: bash
+        run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          # PKG_CONFIG_PATH so pkgconf finds libprime_server.pc.
+          export PKG_CONFIG_PATH="$PRIMESERVER_INSTALL/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+          # services feature activates zeromq/czmq; wheel job omits it.
+          cmake -B build \
+            -G "Visual Studio 17 2022" -A x64 \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
+            -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
+            -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
+            -DVCPKG_MANIFEST_FEATURES="services" \
+            -DCMAKE_PREFIX_PATH="$PRIMESERVER_INSTALL" \
+            -DENABLE_DATA_TOOLS=ON \
+            -DENABLE_TOOLS=ON \
+            -DENABLE_PYTHON_BINDINGS=ON \
+            -DENABLE_HTTP=ON \
+            -DENABLE_SERVICES=ON \
+            -DENABLE_TESTS=ON \
+            -DENABLE_CCACHE=OFF \
+            -DPREFER_EXTERNAL_DEPS=ON \
+            -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
+
+      - name: Build Valhalla
+        shell: bash
+        run: |
+          cmake --build build --config "$BUILD_TYPE" -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+          cmake --build build --config "$BUILD_TYPE" --target install
+
+      # Full test suite (unit + gurka + scripts + python_valhalla). PATH needs vcpkg DLLs
+      # and libprime_server.dll (installed outside vcpkg).
+      - name: Run tests
+        shell: bash
+        run: |
+          export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin:${{ env.PRIMESERVER_INSTALL }}/bin"
+          cmake --build build --config "$BUILD_TYPE" --target check \
+            -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
+        with:
+          detached: true
