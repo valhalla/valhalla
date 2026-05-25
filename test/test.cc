@@ -111,8 +111,7 @@ using MMap = valhalla::midgard::mem_map<char>;
 
 class MMapGraphMemory final : public valhalla::baldr::GraphMemory {
 public:
-  MMapGraphMemory(std::shared_ptr<MMap> mmap, char* data_, size_t size_)
-      : mmap_(std::move(mmap)) {
+  MMapGraphMemory(std::shared_ptr<MMap> mmap, char* data_, size_t size_) : mmap_(std::move(mmap)) {
     data = data_;
     size = size_;
   }
