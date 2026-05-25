@@ -172,7 +172,6 @@ void test_tile_server_t::start(const std::string& tile_source_dir,
   std::string result_endpoint{"inproc://http_test_result_endpoint" + m_url};
   std::string request_interrupt{"inproc://http_test_request_interrupt" + m_url};
   std::string proxy_endpoint{"inproc://http_test_proxy_endpoint" + m_url};
-  std::string downstream_sink_endpoint{"inproc://dev_null" + m_url};
   // server
   std::thread server(std::bind(&http_server_t::serve,
                                http_server_t(context, "tcp://" + m_url, proxy_endpoint + "_upstream",
@@ -187,7 +186,7 @@ void test_tile_server_t::start(const std::string& tile_source_dir,
   // file serving thread
   std::thread file_worker(
       std::bind(&worker_t::work,
-                worker_t(context, proxy_endpoint + "_downstream", downstream_sink_endpoint,
+                worker_t(context, proxy_endpoint + "_downstream", "inproc://dev/null" + m_url,
                          result_endpoint, request_interrupt,
                          std::bind(&disk_work, std::placeholders::_1, std::placeholders::_2,
                                    std::placeholders::_3, tile_source_dir, tar_path, m_user_pw))));
