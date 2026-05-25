@@ -42,8 +42,12 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate posix_locale...");
-  // Populate posix locale
+  // Populate posix locale, strip the utf8 part off for windows to make it more likely to be supported
   posix_locale = narrative_pt.get<std::string>(kPosixLocaleKey, "en_US.UTF-8");
+#ifdef _WIN32
+  if (auto dot = posix_locale.find('.'); dot != std::string::npos)
+    posix_locale.resize(dot);
+#endif
   try {
     locale = std::locale(posix_locale.c_str());
   } catch (...) {

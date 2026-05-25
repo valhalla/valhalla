@@ -32,10 +32,13 @@ int main(int argc, char** argv) {
           "\n\n"
           "a program to run a multi-threaded Valhalla HTTP service powered by https://github.com/kevinkreiser/prime_server\n");
 
+  bool inproc_sockets = true;
   // clang-format off
   options.add_options()
     ("h,help", "Print this help message.")
     ("v,version","Print the version of this software.")
+    ("inproc-sockets", "Overrides config'd zmq sockets to use shared memory.",
+     cxxopts::value<bool>(inproc_sockets)->default_value("true"))
     // no optional args bcs of pre-cxxopts backwards-compatibility
     ("pos_args", "positional arguments", cxxopts::value<std::vector<std::string>>(pos_args));
   // clang-format on
@@ -175,6 +178,15 @@ int main(int argc, char** argv) {
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
                         config.get<unsigned int>("httpd.service.shutdown_seconds", 1));
 
+  // switch to shared mem its faster than sockets
+  if (inproc_sockets) {
+    config.put("httpd.service.loopback", "inproc://loopback");
+    config.put("httpd.service.interrupt", "inproc://interrupt");
+    config.put("loki.service.proxy", "inproc://loki");
+    config.put("thor.service.proxy", "inproc://thor");
+    config.put("odin.service.proxy", "inproc://odin");
+  }
+
   // grab the endpoints
   std::string listen = config.get<std::string>("httpd.service.listen");
   std::string loopback = config.get<std::string>("httpd.service.loopback");
@@ -186,12 +198,8 @@ int main(int argc, char** argv) {
 
   // check the server endpoint
   if (listen.find("tcp://") != 0) {
-    if (listen.find("ipc://") != 0) {
-      LOG_ERROR("You must listen on either tcp://ip:port or ipc://some_socket_file");
-      return EXIT_FAILURE;
-    } else {
-      LOG_WARN("Listening on a domain socket limits the server to local requests");
-    }
+    LOG_ERROR("You must listen on tcp://ip:port");
+    return EXIT_FAILURE;
   }
 
   // configure logging
@@ -204,15 +212,16 @@ int main(int argc, char** argv) {
   uint32_t request_timeout = config.get<uint32_t>("httpd.service.timeout_seconds");
 
   // setup the cluster within this process
-  zmq::context_t context;
   std::thread server_thread =
       std::thread(std::bind(&http_server_t::serve,
-                            http_server_t(context, listen, loki_proxy + "_in", loopback, interrupt,
-                                          true, DEFAULT_MAX_REQUEST_SIZE, request_timeout)));
+                            http_server_t(valhalla::zmq_context(), listen, loki_proxy + "_in",
+                                          loopback, interrupt, true, DEFAULT_MAX_REQUEST_SIZE,
+                                          request_timeout)));
 
   // loki layer
-  std::thread loki_proxy_thread(
-      std::bind(&proxy_t::forward, proxy_t(context, loki_proxy + "_in", loki_proxy + "_out")));
+  std::thread loki_proxy_thread(std::bind(&proxy_t::forward,
+                                          proxy_t(valhalla::zmq_context(), loki_proxy + "_in",
+                                                  loki_proxy + "_out")));
   loki_proxy_thread.detach();
   std::list<std::thread> loki_worker_threads;
   for (size_t i = 0; i < worker_concurrency; ++i) {
@@ -221,8 +230,9 @@ int main(int argc, char** argv) {
   }
 
   // thor layer
-  std::thread thor_proxy_thread(
-      std::bind(&proxy_t::forward, proxy_t(context, thor_proxy + "_in", thor_proxy + "_out")));
+  std::thread thor_proxy_thread(std::bind(&proxy_t::forward,
+                                          proxy_t(valhalla::zmq_context(), thor_proxy + "_in",
+                                                  thor_proxy + "_out")));
   thor_proxy_thread.detach();
   std::list<std::thread> thor_worker_threads;
   for (size_t i = 0; i < worker_concurrency; ++i) {
@@ -231,8 +241,9 @@ int main(int argc, char** argv) {
   }
 
   // odin layer
-  std::thread odin_proxy_thread(
-      std::bind(&proxy_t::forward, proxy_t(context, odin_proxy + "_in", odin_proxy + "_out")));
+  std::thread odin_proxy_thread(std::bind(&proxy_t::forward,
+                                          proxy_t(valhalla::zmq_context(), odin_proxy + "_in",
+                                                  odin_proxy + "_out")));
   odin_proxy_thread.detach();
   std::list<std::thread> odin_worker_threads;
   for (size_t i = 0; i < worker_concurrency; ++i) {
