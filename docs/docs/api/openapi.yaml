@@ -256,7 +256,6 @@ paths:
           schema:
             type: integer
             minimum: 0
-            maximum: 30
         - name: x
           in: path
           required: true
@@ -447,29 +446,38 @@ components:
           description: Preferred approach heading in degrees.
         heading_tolerance:
           type: integer
+          x-rad-min: 0 
+          x-rad-max: 180 
           description: Tolerance around heading in degrees.
           default: 60
         preferred_layer:
           type: integer
+          x-rad-min: -1 
+          x-rad-max: 5 
           description: If set, edges whose layer does not match this value are discarded from candidate search.
         node_snap_tolerance:
           type: number
           minimum: 0
+          x-rad-max: 100
           description: Snap-to-node distance tolerance in meters.
           default: 5
         minimum_reachability:
           type: integer
           minimum: 0
+          x-rad-max: 250
           default: 50
           description: Minimum number of reachable edges for a snap candidate.
         radius:
           type: integer
           minimum: 0
+          x-rad-max: 100
           default: 0
           description: "Candidate search radius in meters: all viable edge candidates within the radius are correlated. If none are found, the best one outside the radius is correlated. Default: only the closest edge is considered as candidate."
         search_cutoff: 
           type: integer
           minimum: 0
+          x-rad-min: 10000
+          x-rad-max: 100000
           default: 35000
           description: Hard cutoff for candidate search in meters.
         rank_candidates:
@@ -495,11 +503,13 @@ components:
         street_side_tolerance:
           type: integer
           minimum: 0
+          x-rad-max: 50
           default: 5
           description: Tolerance for preferred side matching in meters.
         street_side_max_distance:
           type: integer
           minimum: 0
+          x-rad-max: 10000
           default: 1000
           description: Max distance for side-of-road preference in meters.
         street_side_cutoff:
@@ -509,6 +519,7 @@ components:
         waiting:
           type: number
           minimum: 0
+          x-rad-max: 10000
           description: Waiting time in seconds at this stop (break/break_through only, not origin/destination).
         search_filter:
           $ref: '#/components/schemas/SearchFilter'
@@ -537,9 +548,13 @@ components:
       description: At least one of time or distance must be specified. You can only specify one metric per contour, i.e. time or distance.
       properties:
         time:
+          x-rad-min: 1
+          x-rad-max: 100
           type: number
           description: Contour limit in minutes.
         distance:
+          x-rad-min: 1
+          x-rad-max: 100
           type: number
           description: Contour limit in kilometers.
         color:
@@ -559,6 +574,8 @@ components:
           description: Polyline6-encoded shape.
         factor:
           type: number
+          x-rad-min: 0.1
+          x-rad-max: 2
           description: Cost multiplier applied to matched edges (dependent on service configuration).
 
     # -------------------------------------------------------------------------
@@ -590,13 +607,13 @@ components:
         ignore_oneways:
           type: boolean
           default: false
-          descrption: >
+          description: >
             If set to `true`, ignores one-way restrictions. Especially useful for matching GPS traces to the 
             road network ignoring uni-directional traffic rules. Not included in `ignore_restrictions` option.
         ignore_access:
           type: boolean
           default: false
-          descrption: >
+          description: >
             Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road 
             network regardless of restrictions
         ignore_closures:
@@ -1304,6 +1321,7 @@ components:
             alternates:
               type: integer
               minimum: 0
+              x-rad-max: 3
               default: 0
               description: Number of alternative routes to return. Forced to 0 for more than 2 waypoints.
             directions_type:
@@ -1325,7 +1343,7 @@ components:
             elevation_interval:
               type: number
               minimum: 0
-              maximum: 1000
+              x-rad-max: 100
               default: 0
               description: Elevation sample interval in meters along the path. 0 = no elevation.
             banner_instructions:
@@ -1366,11 +1384,13 @@ components:
             sources:
               type: array
               minItems: 1
+              x-rad-max-items: 20
               items:
                 $ref: '#/components/schemas/Location'
             targets:
               type: array
               minItems: 1
+              x-rad-max-items: 20
               items:
                 $ref: '#/components/schemas/Location'
             matrix_locations:
@@ -1386,6 +1406,7 @@ components:
             expansion_max_distance:
               type: integer
               minimum: 0
+              maximum: 100000
               default: 0
               description: Maximum path distance in meters for an expansion. Currently this is implemented for the timedistancematrix algorithm. Source-target pairs whose cheapest path distance exceeds this limit will be returned as unreachable (with null time and distance).
 
@@ -1398,12 +1419,13 @@ components:
             locations:
               type: array
               minItems: 1
-              maxItems: 1
+              x-rad-max-items: 3
               items:
                 $ref: '#/components/schemas/Location'
             contours:
               type: array
               minItems: 1
+              x-rad-max-items: 5
               items:
                 $ref: '#/components/schemas/Contour'
             polygons:
@@ -1427,6 +1449,7 @@ components:
             generalize:
               type: number
               minimum: 0
+              x-rad-max: 200
               description: Douglas-Peucker polyline generalization tolerance in meters.
 
     TraceRequest:
@@ -1438,6 +1461,7 @@ components:
             shape:
               type: array
               minItems: 2
+              x-rad-max-items: 100
               items:
                 $ref: '#/components/schemas/Location'
               description: GPS trace points. Mutually exclusive with encoded_polyline.
@@ -1451,7 +1475,7 @@ components:
             elevation_interval:
               type: number
               minimum: 0
-              maximum: 1000
+              x-rad-max: 100
               default: 0
               description: Elevation sample interval in meters along the matched path. 0 = disabled.
 
@@ -1467,27 +1491,27 @@ components:
                 gps_accuracy:
                   type: number
                   minimum: 0
-                  maximum: 100
+                  x-rad-max: 100
                   description: GPS accuracy in meters associated with trace points.
                 search_radius:
                   type: number
                   minimum: 0
-                  maximum: 100
+                  x-rad-max: 100
                   description: Search radius in meters for road candidates per trace point.
                 turn_penalty_factor:
                   type: number
                   minimum: 0
-                  maximum: 1000
+                  x-rad-max: 1000
                   description: Penalty for sharp turns. Increase (e.g. 500) to smooth pedestrian traces.
                 breakage_distance:
                   type: number
                   minimum: 0
-                  maximum: 10000
+                  x-rad-max: 10000
                   description: Maximum gap in meters between trace points before starting a new segment.
                 interpolation_distance:
                   type: number
                   minimum: 0
-                  maximum: 100
+                  x-rad-max: 100
                   description: Distance in meters beyond which trace points are merged together.
             begin_time:
               type: integer
@@ -1510,7 +1534,7 @@ components:
             alternates:
               type: integer
               minimum: 0
-              maximum: 3
+              x-rad-max: 3
               default: 0
               description: Number of alternative matched routes to return.
             linear_references:
@@ -1545,6 +1569,7 @@ components:
         shape:
           type: array
           minItems: 1
+          x-rad-max-items: 50
           items:
             $ref: '#/components/schemas/Location'
           description: Points at which to query elevation. Mutually exclusive with encoded_polyline.
@@ -1565,6 +1590,7 @@ components:
         resample_distance:
           type: number
           minimum: 0
+          x-rad-max: 100
           description: Resample the shape at this interval in meters before querying elevation.
 
     LocateRequest:
@@ -1576,6 +1602,7 @@ components:
             locations:
               type: array
               minItems: 1
+              x-rad-max-items: 50
               items:
                 $ref: '#/components/schemas/Location'
             verbose:
@@ -1592,6 +1619,7 @@ components:
             locations:
               type: array
               minItems: 1
+              x-rad-max-items: 3
               items:
                 $ref: '#/components/schemas/Location'
             action:
