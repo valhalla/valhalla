@@ -608,7 +608,7 @@ struct tar {
     char padding[12];
 
     static uint64_t octal_to_int(const char* data, size_t size) {
-      const unsigned char* ptr = (const unsigned char*)data + size;
+      const unsigned char* ptr = (const unsigned char*)data + size - 1;
       uint64_t sum = 0;
       uint64_t multiplier = 1;
       // Skip everything after the last NUL/space character
