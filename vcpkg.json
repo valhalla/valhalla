@@ -43,6 +43,19 @@
     "elevation-lz4": {
       "description": "LZ4 decompression support for elevation tiles",
       "dependencies": ["lz4"]
+    },
+    "services": {
+      "description": "ZMQ + prime_server multiprocess HTTP service. Activate from CMake by setting VCPKG_MANIFEST_FEATURES=services. Only needed for the standalone valhalla_service binary; Python wheels and the embedded library don't need it.",
+      "dependencies": [
+        {
+          "name": "zeromq",
+          "platform": "windows"
+        },
+        {
+          "name": "czmq",
+          "platform": "windows"
+        }
+      ]
     }
   },
   "default-features": ["elevation-lz4"]
