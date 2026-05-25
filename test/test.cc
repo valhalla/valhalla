@@ -12,8 +12,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cmath>
-#include "midgard/sequence.h"
-
 #include <filesystem>
 #include <fstream>
 #include <sstream>

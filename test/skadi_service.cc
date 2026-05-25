@@ -192,19 +192,19 @@ void start_service() {
     throw std::runtime_error("Couldnt make directory to run from");
 
   // server
-  std::thread server(std::bind(&http_server_t::serve,
-                               http_server_t(valhalla::zmq_context(),
-                                             cfg.get<std::string>("httpd.service.listen"),
-                                             cfg.get<std::string>("loki.service.proxy") + "_in",
-                                             cfg.get<std::string>("httpd.service.loopback"),
-                                             cfg.get<std::string>("httpd.service.interrupt"))));
+  std::thread server(
+      std::bind(&http_server_t::serve,
+                http_server_t(valhalla::zmq_context(), cfg.get<std::string>("httpd.service.listen"),
+                              cfg.get<std::string>("loki.service.proxy") + "_in",
+                              cfg.get<std::string>("httpd.service.loopback"),
+                              cfg.get<std::string>("httpd.service.interrupt"))));
   server.detach();
 
   // load balancer
-  std::thread proxy(std::bind(&proxy_t::forward,
-                              proxy_t(valhalla::zmq_context(),
-                                      cfg.get<std::string>("loki.service.proxy") + "_in",
-                                      cfg.get<std::string>("loki.service.proxy") + "_out")));
+  std::thread proxy(
+      std::bind(&proxy_t::forward,
+                proxy_t(valhalla::zmq_context(), cfg.get<std::string>("loki.service.proxy") + "_in",
+                        cfg.get<std::string>("loki.service.proxy") + "_out")));
   proxy.detach();
 
   std::thread worker(valhalla::loki::run_service, cfg);

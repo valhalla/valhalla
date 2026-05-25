@@ -212,16 +212,15 @@ int main(int argc, char** argv) {
   uint32_t request_timeout = config.get<uint32_t>("httpd.service.timeout_seconds");
 
   // setup the cluster within this process
-  std::thread server_thread =
-      std::thread(std::bind(&http_server_t::serve,
-                            http_server_t(valhalla::zmq_context(), listen, loki_proxy + "_in",
-                                          loopback, interrupt, true, DEFAULT_MAX_REQUEST_SIZE,
-                                          request_timeout)));
+  std::thread server_thread = std::thread(
+      std::bind(&http_server_t::serve,
+                http_server_t(valhalla::zmq_context(), listen, loki_proxy + "_in", loopback,
+                              interrupt, true, DEFAULT_MAX_REQUEST_SIZE, request_timeout)));
 
   // loki layer
-  std::thread loki_proxy_thread(std::bind(&proxy_t::forward,
-                                          proxy_t(valhalla::zmq_context(), loki_proxy + "_in",
-                                                  loki_proxy + "_out")));
+  std::thread loki_proxy_thread(
+      std::bind(&proxy_t::forward,
+                proxy_t(valhalla::zmq_context(), loki_proxy + "_in", loki_proxy + "_out")));
   loki_proxy_thread.detach();
   std::list<std::thread> loki_worker_threads;
   for (size_t i = 0; i < worker_concurrency; ++i) {
@@ -230,9 +229,9 @@ int main(int argc, char** argv) {
   }
 
   // thor layer
-  std::thread thor_proxy_thread(std::bind(&proxy_t::forward,
-                                          proxy_t(valhalla::zmq_context(), thor_proxy + "_in",
-                                                  thor_proxy + "_out")));
+  std::thread thor_proxy_thread(
+      std::bind(&proxy_t::forward,
+                proxy_t(valhalla::zmq_context(), thor_proxy + "_in", thor_proxy + "_out")));
   thor_proxy_thread.detach();
   std::list<std::thread> thor_worker_threads;
   for (size_t i = 0; i < worker_concurrency; ++i) {
@@ -241,9 +240,9 @@ int main(int argc, char** argv) {
   }
 
   // odin layer
-  std::thread odin_proxy_thread(std::bind(&proxy_t::forward,
-                                          proxy_t(valhalla::zmq_context(), odin_proxy + "_in",
-                                                  odin_proxy + "_out")));
+  std::thread odin_proxy_thread(
+      std::bind(&proxy_t::forward,
+                proxy_t(valhalla::zmq_context(), odin_proxy + "_in", odin_proxy + "_out")));
   odin_proxy_thread.detach();
   std::list<std::thread> odin_worker_threads;
   for (size_t i = 0; i < worker_concurrency; ++i) {
