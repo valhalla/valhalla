@@ -257,6 +257,19 @@ jobs:
           cat build/vcpkg_installed/x64-windows/lib/pkgconfig/libzmq.pc 2>&1 || true
           echo "=== prime_server install tree ==="
           find "$PRIMESERVER_INSTALL" -maxdepth 4 2>&1 | head -40 || true
+          echo "=== pkg-config --libs libprime_server ==="
+          export PKG_CONFIG_PATH="$PRIMESERVER_INSTALL/lib/pkgconfig:$PWD/build/vcpkg_installed/x64-windows/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+          pkg-config --libs libprime_server 2>&1 || true
+          echo "=== pkg-config --libs-only-L libprime_server ==="
+          pkg-config --libs-only-L libprime_server 2>&1 || true
+          echo "=== pkg-config --libs-only-l libprime_server ==="
+          pkg-config --libs-only-l libprime_server 2>&1 || true
+          echo "=== _valhalla.vcxproj link section ==="
+          grep -iE 'AdditionalLibraryDirectories|AdditionalDependencies|<Link>|<Lib>' \
+            build/src/bindings/python/_valhalla.vcxproj 2>&1 | head -30 || true
+          echo "=== retry _valhalla link to see fresh error ==="
+          export MSYS_NO_PATHCONV=1
+          cmake --build build --config "$BUILD_TYPE" --target _valhalla -- /clp:ErrorsOnly /m:4 2>&1 | tail -30 || true
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
