@@ -136,6 +136,8 @@ jobs:
         if: steps.vcpkg_restore.outputs.cache-hit != 'true'
         shell: bash
         run: |
+          # Stop Git Bash from mangling MSBuild's /p:foo and /m:4 args into project names.
+          export MSYS_NO_PATHCONV=1
           # --recurse-submodules: prime_server's logging utilities are a submodule.
           git clone --branch="$PRIMESERVER_VERSION" --recurse-submodules \
             https://github.com/kevinkreiser/prime_server "$RUNNER_TEMP/prime_server"
@@ -201,6 +203,7 @@ jobs:
       - name: Build Valhalla
         shell: bash
         run: |
+          export MSYS_NO_PATHCONV=1
           cmake --build build --config "$BUILD_TYPE" -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
           cmake --build build --config "$BUILD_TYPE" --target install
 
@@ -209,6 +212,7 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
+          export MSYS_NO_PATHCONV=1
           export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin:${{ env.PRIMESERVER_INSTALL }}/bin"
           cmake --build build --config "$BUILD_TYPE" --target check \
             -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
