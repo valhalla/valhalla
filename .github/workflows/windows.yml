@@ -217,6 +217,29 @@ jobs:
           cmake --build build --config "$BUILD_TYPE" --target check \
             -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
 
+      # tmate on windows-2022 is flaky; dump what we'd want to look at into the log too.
+      - name: Debug filesystem layout on failure
+        if: failure() || env.SETUP_TMATE == 'true'
+        shell: bash
+        run: |
+          set +e
+          echo "=== classic install: lib/ ==="
+          ls -la "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib/" 2>&1 | grep -iE 'zmq|czmq|curl' || true
+          echo "=== classic install: lib/pkgconfig/ ==="
+          ls -la "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib/pkgconfig/" 2>&1 || true
+          echo "=== manifest install: build/vcpkg_installed/x64-windows/lib/ ==="
+          ls -la build/vcpkg_installed/x64-windows/lib/ 2>&1 | grep -iE 'zmq|czmq|curl' || true
+          echo "=== manifest install: build/vcpkg_installed/x64-windows/lib/pkgconfig/ ==="
+          ls -la build/vcpkg_installed/x64-windows/lib/pkgconfig/ 2>&1 || true
+          echo "=== libprime_server.pc ==="
+          cat "$PRIMESERVER_INSTALL/lib/pkgconfig/libprime_server.pc" 2>&1 || true
+          echo "=== libzmq.pc (classic) ==="
+          cat "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib/pkgconfig/libzmq.pc" 2>&1 || true
+          echo "=== libzmq.pc (manifest) ==="
+          cat build/vcpkg_installed/x64-windows/lib/pkgconfig/libzmq.pc 2>&1 || true
+          echo "=== prime_server install tree ==="
+          find "$PRIMESERVER_INSTALL" -maxdepth 4 2>&1 | head -40 || true
+
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: ${{ env.SETUP_TMATE == 'true' || failure() }}
