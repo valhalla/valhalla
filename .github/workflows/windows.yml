@@ -87,13 +87,17 @@ jobs:
       - name: Install vcpkg
         shell: bash
         run: |
+          set -x
           git clone https://github.com/microsoft/vcpkg.git
           cd vcpkg
           git checkout $VCPKG_VERSION
           mkdir archives
           echo "set(VCPKG_BUILD_TYPE release)" >> "$VCPKG_TRIPLET_PATH"
           echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$VCPKG_TRIPLET_PATH"
-          cmd.exe /c bootstrap-vcpkg.bat
+          cmd.exe //c bootstrap-vcpkg.bat
+          # bootstrap-vcpkg.bat occasionally exits 0 without producing vcpkg.exe;
+          # surface that explicitly rather than failing later in install.
+          test -x ./vcpkg.exe || { echo "bootstrap-vcpkg.bat did not produce vcpkg.exe"; ls -la; exit 1; }
 
       - name: Restore vcpkg packages
         uses: tespkg/actions-cache/restore@v1
