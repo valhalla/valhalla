@@ -326,7 +326,8 @@ TEST_P(AddBinTest, TestAddBins) {
                          "New tiles edgeinfo or names arent matching up: 3");
   }
 }
-INSTANTIATE_TEST_SUITE_P(With_Without_BoundingCircles, AddBinTest, testing::Values(false, true));
+// TODO(chris): enable when bounding circles are enabled
+INSTANTIATE_TEST_SUITE_P(With_Without_BoundingCircles, AddBinTest, testing::Values(false));
 
 TEST(GraphTileBuilder, TestDuplicatePredictedSpeeds) {
 
@@ -481,7 +482,7 @@ TEST(GraphTileBuilder, TestBinEdges) {
   auto info = fake->edgeinfo(fake->directededge(0));
   EXPECT_EQ(info.encoded_shape(), encoded_shape7);
   GraphTileBuilder::tweeners_t tweeners;
-  auto bins = GraphTileBuilder::BinEdges(fake, tweeners, true);
+  auto bins = GraphTileBuilder::BinEdges(fake, tweeners, false);
   EXPECT_EQ(tweeners.size(), 1) << "This edge leaves a tile for 1 other tile and comes back.";
 }
 

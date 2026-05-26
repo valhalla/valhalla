@@ -20,6 +20,8 @@ namespace vj = valhalla::mjolnir;
 
 namespace {
 
+constexpr bool build_bounding_circles{false};
+
 const std::string test_tile_dir = "test/node_search_tiles";
 
 struct graph_writer {
@@ -80,8 +82,8 @@ void graph_writer::write_tiles() {
     // write the bin data
     GraphTileBuilder::tweeners_t tweeners;
     auto reloaded = vb::GraphTile::Create(test_tile_dir, tile_id);
-    auto bins = GraphTileBuilder::BinEdges(reloaded, tweeners, true);
-    GraphTileBuilder::AddBins(test_tile_dir, reloaded, bins, true);
+    auto bins = GraphTileBuilder::BinEdges(reloaded, tweeners, build_bounding_circles);
+    GraphTileBuilder::AddBins(test_tile_dir, reloaded, bins, build_bounding_circles);
 
     // merge tweeners into global
     for (const auto& entry : tweeners) {
@@ -101,7 +103,7 @@ void graph_writer::write_tiles() {
   for (const auto& entry : all_tweeners) {
     // re-open tiles to add tweeners back in.
     auto tile = vb::GraphTile::Create(test_tile_dir, entry.first);
-    vj::GraphTileBuilder::AddBins(test_tile_dir, tile, entry.second, true);
+    vj::GraphTileBuilder::AddBins(test_tile_dir, tile, entry.second, build_bounding_circles);
   }
 }
 
