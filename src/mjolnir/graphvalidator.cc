@@ -268,7 +268,10 @@ void validate(
   auto transit_level = TileHierarchy::GetTransitLevel().level;
 
   // default to false if the config does not contain any value
-  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles", true);
+  // TODO(chris): enable this line once bounding circle computation is
+  // finalized
+  bool build_bounding_circles =
+      false; // pt.get<bool>("mjolnir.data_processing.build_bounding_circles", true);
 
   // vector to hold densities for each level
   std::vector<std::vector<float>> densities(numLevels);
