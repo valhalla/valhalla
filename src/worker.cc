@@ -726,18 +726,15 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_id(*id);
   }
 
+  // we deprecated jsonp, CORS should be used instead
   auto jsonp = rapidjson::get_optional<std::string>(doc, "/jsonp");
   if (jsonp) {
-    options.set_jsonp(*jsonp);
+    add_warning(api, 104);
   }
 
   if (!is_format_supported(options.action(), options.format())) {
     options.set_format(Options::json);
     add_warning(api, 211);
-  }
-  if (options.format() == Options::pbf) {
-    // jsonp wont work because javascript doesnt support byte arrays
-    options.clear_jsonp();
   }
 
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
@@ -1341,8 +1338,7 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& request)
 
   // overwrite with osrm error response
   if (request.options().format() == Options::osrm) {
-    body << (request.options().has_jsonp_case() ? request.options().jsonp() + "(" : "")
-         << exception.osrm_error << (request.options().has_jsonp_case() ? ")" : "");
+    body << exception.osrm_error;
   } // valhalla json error response
   else if (request.options().format() != Options::pbf) {
     // build up the json map
@@ -1351,8 +1347,7 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& request)
     json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
     json_error->emplace("error", std::string(exception.message));
     json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
-    body << (request.options().has_jsonp_case() ? request.options().jsonp() + "(" : "") << *json_error
-         << (request.options().has_jsonp_case() ? ")" : "");
+    body << *json_error;
   }
 
   // keep track of what the error was
@@ -1603,9 +1598,7 @@ worker_t::result_t serialize_error(const valhalla_exception_t& exception,
                                    Api& request) {
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(exception.http_code, exception.http_message,
-                           serialize_error(exception, request),
-                           headers_t{CORS, request.options().has_jsonp_case() ? worker::JS_MIME
-                                                                              : worker::JSON_MIME});
+                           serialize_error(exception, request), headers_t{CORS, worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
 
@@ -1625,24 +1618,10 @@ to_response(const std::string& data,
   if (fmt == Options::gpx)
     headers.insert(ATTACHMENT);
 
-  // jsonp needs wrapped in a javascript function call
   worker_t::result_t result{false, std::list<std::string>(), ""};
-  if (request.options().has_jsonp_case()) {
-    headers.insert(worker::JS_MIME); // reset content type to javascript
-    std::ostringstream stream;
-    stream << request.options().jsonp() << '(';
-    stream << data;
-    stream << ')';
-
-    http_response_t response(200, "OK", stream.str(), headers);
-    response.from_info(request_info);
-    result.messages.emplace_back(response.to_string());
-  } // everything else is bytes already
-  else {
-    http_response_t response(200, "OK", data, headers);
-    response.from_info(request_info);
-    result.messages.emplace_back(response.to_string());
-  }
+  http_response_t response(200, "OK", data, headers);
+  response.from_info(request_info);
+  result.messages.emplace_back(response.to_string());
   return result;
 }
 

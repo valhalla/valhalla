@@ -449,7 +449,7 @@ message Options {
     string id = 5;                                                 // id for the request
   }
   oneof has_jsonp {
-    string jsonp = 6;                                              // javascript callback for the request
+    string jsonp = 6 [deprecated = true];                         // javascript callback for the request
   }
   oneof has_encoded_polyline {
     string encoded_polyline = 7;                                   // polyline 6 encoded shape used in /height /trace_*
