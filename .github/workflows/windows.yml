@@ -121,12 +121,13 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
 
       # Classic-mode install so prime_server's CMake can find these before valhalla's manifest
-      # install runs. Re-installed by manifest mode below (cache-hit fast).
+      # install runs. --classic forces classic mode; without it vcpkg auto-detects our
+      # vcpkg.json and refuses per-package args. Re-installed by manifest mode below (cache-hit fast).
       - name: Install prime_server runtime deps via vcpkg
         if: steps.vcpkg_restore.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          "$VCPKG_INSTALLATION_ROOT/vcpkg.exe" install \
+          "$VCPKG_INSTALLATION_ROOT/vcpkg.exe" install --classic \
             "zeromq:$VCPKG_DEFAULT_TRIPLET" \
             "czmq:$VCPKG_DEFAULT_TRIPLET" \
             "curl:$VCPKG_DEFAULT_TRIPLET"
