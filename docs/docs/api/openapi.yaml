@@ -352,6 +352,21 @@ components:
         map_snap: Map-matching algorithm for shapes that may not closely follow Valhalla edges, e.g. GPS traces. More expensive.
         walk_or_snap: Try edge walking first; fall back to map snapping if it fails (default).
 
+    SpeedType:
+      type: string
+      enum:
+        - current
+        - freeflow
+        - constrained
+        - predicted
+      description: > 
+        A speed source that may be used when costing edges.
+      x-enumDescriptions:
+        current: The current live traffic speed
+        constrained: Daytime (7am–7pm) average speed stored on the edge
+        freeflow: Nighttime (7pm–7am) average speed stored on the edge
+        predicted: Historical per-edge speed profiles (5-min buckets over a week)
+
     ExpansionProperty:
       type: string
       description: >
@@ -752,40 +767,36 @@ components:
           minimum: 1
           maximum: 10
           default: 9.0
-          description: Cost multiplier applied to live-traffic-closed edges.
+          description: >
+            A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination
+            location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty 
+            to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport,
+            i.e auto, motorcycle, motor_scooter, bus, truck & taxi.
         speed_penalty_factor:
           type: number
           minimum: 0
           maximum: 1
           default: 0.05
-          description: Penalty rate applied per kph above the speed limit.
+          description: Penalty factor applied for edges when edge speed is faster than top speed. The default value is 0.05. 
         fixed_speed:
           type: integer
           minimum: 0
           maximum: 252
           default: 0
-          description: Override all edge speeds to this value in kph. 0 = disabled.
-        flow_mask:
-          type: integer
-          minimum: 0
-          maximum: 15
-          description: Bitmask of traffic flow data sources to use (advanced).
-        height:
-          type: number
-          description: Vehicle height in meters for restriction matching.
-          default: 1.6
-        width:
-          type: number
-          description: Vehicle width in meters for restriction matching.
-          default: 1.9
-        length:
-          type: number
-          description: Vehicle length in meters for restriction matching.
-          default: 2.7
-        weight:
-          type: number
-          description: Vehicle weight in metric tons for restriction matching.
-          default: 0.8
+          description: > 
+            Fixed speed the vehicle can go in KPH. Used to override the calculated speed. Can be useful if speed of vehicle is known. Value must be between 1 and 252. The default value is 0,
+            which disables fixed speed and falls back to the standard calculated speed based on the road attribution.
+        speed_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpeedType'
+          uniqueItems: true
+          minItems: 0
+          maxItems: 4
+          description:  >
+            Which speed sources to consider for computing edge cost. Defaults to all
+            available types. Predicted, current and freeflow additionally require `date_time` to be set. 
+            If the array is left empty, or none of these sources are available, Valhalla will fall back to the default speed.
 
     AutoCostingOptions:
       allOf:
@@ -798,24 +809,34 @@ components:
               minimum: 0.1
               maximum: 100000
               default: 1.0
-              description: Cost multiplier for alleys.
+              description: >
+                A factor that modifies (multiplies) the cost when [alleys](https://wiki.openstreetmap.org/wiki/Tag:service%3Dalley) are encountered. 
+                Auto routes generally want to avoid alleys or narrow service roads between buildings.
             use_highways:
               type: number
               minimum: 0
               maximum: 1
               default: 0.5
-              description: "0 = avoid motorways/trunks, 1 = strongly prefer them."
+              description: >
+                This value indicates the willingness to take highways. This is a range of values between 0 and 1. Values near 0 attempt to avoid highways and values near 1 will 
+                favor highways. Note that sometimes highways are required to complete a route so values of 0 are not guaranteed to avoid highways entirely.
             use_tolls:
               type: number
               minimum: 0
               maximum: 1
               default: 0.5
+              description: > 
+                This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values smaller than 0.5 attempt to 
+                avoid tolls and values greater than 0.5 will slightly favor them. A value of 0.5 indicates no preference. Note that sometimes roads with tolls are required to complete a 
+                route so values of 0 are not guaranteed to avoid them entirely.
             use_distance:
               type: number
               minimum: 0
               maximum: 1
               default: 0
-              description: "0 = optimize time, 1 = optimize distance."
+              description: >
+                A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account 
+                and 1 only distance. A factor of 0.5 will weigh them roughly equally.  
             restriction_probability:
               type: integer
               minimum: 0
@@ -827,7 +848,9 @@ components:
               minimum: 10
               maximum: 252
               default: 140
-              description: Target maximum speed in kph. Edges above this get a speed penalty.
+              description: >
+                Top speed the vehicle can go in KPH. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 120 KPH 
+                for `truck` and 140 KPH for `auto` and `bus`. 
             include_hov2:
               type: boolean
               default: false
@@ -840,6 +863,22 @@ components:
               type: boolean
               default: false
               description: Allow use of HOT (High-Occupancy Toll) lanes.
+            height:
+              type: number
+              default: 1.6
+              description: Vehicle height in meters for access restriction matching.
+            width:
+              type: number
+              default: 1.9
+              description: Vehicle width in meters for access restriction matching.
+            length:
+              type: number
+              default: 2.7
+              description: Vehicle length in meters for access restriction matching.
+            weight:
+              type: number
+              default: 0.8
+              description: Vehicle weight in metric tons for access restriction matching.
 
     BicycleCostingOptions:
       allOf:
@@ -918,7 +957,10 @@ components:
               type: number
               minimum: 0.1
               maximum: 100000
-              default: 1.0
+              default: 2.0
+              description: >
+                A factor that modifies (multiplies) the cost when [alleys](https://wiki.openstreetmap.org/wiki/Tag:service%3Dalley) are encountered. 
+                Pedestrian routes generally want to avoid alleys or narrow service roads between buildings.
             use_lit:
               type: number
               minimum: 0
@@ -1005,28 +1047,28 @@ components:
               maximum: 43200
               default: 0
               description: Penalty (seconds) for residential and service roads.
+            height:
+              type: number
+              default: 4.11
+              description: Vehicle height in meters for access restriction matching.
+            width:
+              type: number
+              default: 2.6
+              description: Vehicle width in meters for access restriction matching.
+            length:
+              type: number
+              default: 21.64
+              description: Vehicle length in meters for access restriction matching.
             weight:
               type: number
               default: 21.77
-              description: Vehicle weight in metric tons (default 48,000 lbs / ~21.77 t).
+              description: Vehicle weight in metric tons for access restriction matching.
             axle_load:
               type: number
               minimum: 0
               maximum: 40
               default: 9.07
               description: Per-axle load in metric tons (default 20,000 lbs / ~9.07 t).
-            height:
-              type: number
-              default: 4.11
-              description: Vehicle height in meters (default 13 ft 6 in / ~4.11 m).
-            width:
-              type: number
-              default: 2.6
-              description: Vehicle width in meters (default ~2.6 m).
-            length:
-              type: number
-              default: 21.64
-              description: Vehicle length in meters (default 71 ft / ~21.64 m).
             axle_count:
               type: integer
               minimum: 2
@@ -1037,11 +1079,14 @@ components:
               minimum: 0
               maximum: 1
               default: 0.5
+              description: >
+                This value indicates the willingness to take highways. This is a range of values between 0 and 1. Values near 0 attempt to avoid highways and values near 1 will favor highways. Note that sometimes highways are required to complete a route so values of 0 are not guaranteed to avoid highways entirely.
             use_tolls:
               type: number
               minimum: 0
               maximum: 1
               default: 0.5
+              description: This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values smaller than 0.5 attempt to avoid tolls and values greater than 0.5 will slightly favor them. The default value is 0.5, indicating no preference. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.
             top_speed:
               type: number
               minimum: 10
@@ -1072,11 +1117,14 @@ components:
               minimum: 0
               maximum: 1
               default: 0.5
+              description: >
+                This value indicates the willingness to take highways. This is a range of values between 0 and 1. Values near 0 attempt to avoid highways and values near 1 will favor highways. Note that sometimes highways are required to complete a route so values of 0 are not guaranteed to avoid highways entirely.
             use_tolls:
               type: number
               minimum: 0
               maximum: 1
               default: 0.5
+              description: This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values smaller than 0.5 attempt to avoid tolls and values greater than 0.5 will slightly favor them. The default value is 0.5, indicating no preference. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.
             use_trails:
               type: number
               minimum: 0
