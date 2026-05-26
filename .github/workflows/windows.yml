@@ -200,6 +200,24 @@ jobs:
             -DPREFER_EXTERNAL_DEPS=ON \
             -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
 
+      # vcpkg's zeromq port drops the file as libzmq-mt-<ver>.lib but libzmq.pc advertises
+      # `-lzmq` (-> zmq.lib on MSVC), so anything consuming libprime_server via pkg-config
+      # fails to link. Alias the file as zmq.lib in both classic and manifest install dirs.
+      # TODO: get newer vcpkg where they've already fixed this
+      - name: Alias libzmq-mt-*.lib as zmq.lib
+        shell: bash
+        run: |
+          for d in \
+            "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib" \
+            build/vcpkg_installed/x64-windows/lib; do
+            for src in "$d"/libzmq-mt-*.lib; do
+              if [ -f "$src" ] && [ ! -f "$d/zmq.lib" ]; then
+                cp "$src" "$d/zmq.lib"
+                echo "aliased $src -> $d/zmq.lib"
+              fi
+            done
+          done
+
       - name: Build Valhalla
         shell: bash
         run: |
