@@ -11,7 +11,10 @@ on:
       - test/check_compilers/
       - .github/workflows/check_compilers.yml
       - ".tx"
-      - ".git*"
+      - ".gitignore"
+      - ".gitattributes"
+      - ".gitmodules"
+      - ".git-blame-ignore-revs"
     branches:
       - master
   pull_request:
@@ -24,7 +27,10 @@ on:
       - test/check_compilers/
       - .github/workflows/check_compilers.yml
       - ".tx"
-      - ".git*"
+      - ".gitignore"
+      - ".gitattributes"
+      - ".gitmodules"
+      - ".git-blame-ignore-revs"
     branches:
       - master
   workflow_dispatch:
