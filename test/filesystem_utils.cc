@@ -13,8 +13,8 @@ namespace stdfs = std::filesystem;
 
 TEST(Filesystem, concurrent_folder_create_delete) {
 
-  const std::string nested_subdir = stdfs::path{"test/k/l/m/n/o/p/q/r/s/t"};
-  const std::string base_subdir = stdfs::path{"test/k"};
+  const std::string nested_subdir = stdfs::path{"test/k/l/m/n/o/p/q/r/s/t"}.string();
+  const std::string base_subdir = stdfs::path{"test/k"}.string();
 
   if (stdfs::is_directory(base_subdir))
     stdfs::remove_all(base_subdir);
