@@ -37,6 +37,8 @@ paths:
                   externalValue: ./examples/route.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
   /optimized_route:
     post:
@@ -59,6 +61,8 @@ paths:
                   externalValue: ./examples/optimized_route.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
   /sources_to_targets:
     post:
@@ -81,6 +85,8 @@ paths:
                   externalValue: ./examples/sources_to_targets.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
   /isochrone:
     post:
@@ -103,6 +109,8 @@ paths:
                   externalValue: ./examples/isochrone.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
   /trace_route:
     post:
@@ -125,6 +133,8 @@ paths:
                   externalValue: ./examples/trace_route.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
   /trace_attributes:
     post:
@@ -147,6 +157,8 @@ paths:
                   externalValue: ./examples/trace_attributes.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
   /height:
     post:
@@ -169,6 +181,8 @@ paths:
                   externalValue: ./examples/height.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
   /locate:
     get:
@@ -185,6 +199,8 @@ paths:
                   externalValue: ./examples/locate.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
     post:
       operationId: locate
       summary: /locate
@@ -205,6 +221,8 @@ paths:
                   externalValue: ./examples/locate.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
   /expansion:
     post:
@@ -227,6 +245,8 @@ paths:
                   externalValue: ./examples/expansion.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
   /status:
     get:
@@ -243,6 +263,8 @@ paths:
                   externalValue: ./examples/status.json
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
   /tile/{z}/{x}/{y}.mvt:
     get:
@@ -280,6 +302,8 @@ paths:
           description: MVT binary tile
         "400":
           $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
 
 components:
   responses:
@@ -294,6 +318,16 @@ components:
               error:       { type: string }
               status_code: { type: integer }
               status:      { type: string }
+
+    RateLimited:
+      description: |
+        Rate limit exceeded. The public service enforces a per-user limit of
+        1 request per second and a global limit of 100 requests per second.
+        The body is nginx's default 429 HTML page.
+      content:
+        text/html:
+          schema:
+            type: string
 
   schemas:
 
