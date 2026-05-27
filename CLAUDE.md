@@ -167,6 +167,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Domain terminology (cost vs penalty vs factor) | `docs/docs/terminology.md` |
 | Map matching (Meili) data flow | `src/meili/map_matcher.cc` (`OfflineMatch`) → `src/meili/match_route.cc` (`ConstructRoute`) → `src/thor/map_matcher.cc` (`FormPath`) → `src/thor/trace_route_action.cc` (`build_trace`) → `src/thor/triplegbuilder.cc` (`TripLegBuilder::Build`). Candidates: `src/meili/candidate_search.cc`. Viterbi: `src/meili/viterbi_search.cc` |
 | Behavior affected by `include_pedestrian`/`bicycle`/`driving: false` | `src/mjolnir/graphfilter.cc` (`FilterTiles`, `AggregateTiles`). Filtering happens AFTER parsing — shared nodes between filtered ways create intersections that split edges during parsing. After filtering removes those edges, aggregation merges nodes that have only 2 remaining edges back together, which can change edge topology. Check `ExpandFromNodeInner` for the aggregation walk |
+| Anything in `src/bindings/python/...` — adding/modifying a `.def(...)` call, debugging pyvalhalla install/wheel issues, `.pyi` stub generation | [src/bindings/python/CLAUDE.md](src/bindings/python/CLAUDE.md) |
 
 ## Performance at Planet Scale
 
