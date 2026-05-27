@@ -849,8 +849,7 @@ components:
               maximum: 252
               default: 140
               description: >
-                Top speed the vehicle can go in KPH. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 120 KPH 
-                for `truck` and 140 KPH for `auto` and `bus`. 
+                Top speed the vehicle can go in KPH. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH for auto, taxi and bus. 
             include_hov2:
               type: boolean
               default: false
@@ -1107,13 +1106,13 @@ components:
             hazmat:
               type: boolean
               default: false
-              description: Vehicle is carrying hazardous materials.
+              description: A value indicating if the truck is carrying hazardous materials.
             low_class_penalty:
               type: number
               minimum: 0
               maximum: 43200
-              default: 0
-              description: Penalty (seconds) for residential and service roads.
+              default: 30
+              description: A penalty in seconds which is applied when going to residential or service roads.
             height:
               type: number
               default: 4.11
@@ -1141,6 +1140,7 @@ components:
               minimum: 2
               maximum: 20
               default: 5
+              description: The axle count of the truck. 
             use_highways:
               type: number
               minimum: 0
@@ -1159,19 +1159,27 @@ components:
               minimum: 10
               maximum: 252
               default: 120
-              description: Target maximum speed in kph.
+              description: >
+                Top speed the vehicle can go in KPH. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 120 KPH 
+                for truck. 
             hgv_no_access_penalty:
               type: number
               minimum: 0
               maximum: 43200
               default: 43200
-              description: Penalty for roads tagged hgv=no. 43200 = effectively impassable.
+              description: >
+                A penalty applied to roads with no HGV/truck access. If set to a value less than 43200 seconds, HGV will be allowed on these roads and the penalty applies. Default 
+                43200, i.e. trucks are not allowed.
             use_truck_route:
               type: number
               minimum: 0
               maximum: 1
               default: 0
-              description: Preference for designated truck routes.
+              description: >
+                This value is a range of values from 0 to 1, where 0 indicates a light preference for streets marked as truck routes, 
+                and 1 indicates that streets not marked as truck routes should be avoided. This information is derived from 
+                the `hgv=designated` tag. Note that even with values near 1, there is no guarantee the returned route will include 
+                streets marked as truck routes.
 
     MotorcycleCostingOptions:
       allOf:
@@ -1197,13 +1205,17 @@ components:
               minimum: 0
               maximum: 1
               default: 0
-              description: "0 = avoid unpaved trails, 1 = prefer trails."
+              description: > 
+                A riders's desire for adventure in their routes.  This is a range of values from 0 to 1, where 0 will avoid trails, tracks, unclassified or bad surfaces and values towards 1 will 
+                tend to avoid major roads and route on secondary roads.
             top_speed:
               type: integer
               minimum: 10
-              maximum: 140
+              maximum: 252
               default: 140
-              description: Target maximum speed in kph.
+              description: >
+                Top speed the vehicle can go in KPH. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 120 KPH 
+                for motorcycle. 
 
     MotorScooterCostingOptions:
       allOf:
