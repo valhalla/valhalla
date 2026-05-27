@@ -146,25 +146,8 @@ jobs:
             -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
             -DCMAKE_INSTALL_PREFIX="$PRIMESERVER_INSTALL" \
             -DENABLE_WERROR=OFF
-          cmake --build build --config "$BUILD_TYPE" -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+          cmake --build build --config "$BUILD_TYPE" -- /v:m /p:BuildInParallel=true /m:4
           cmake --install build --config "$BUILD_TYPE"
-
-      - name: Save vcpkg packages
-        if: steps.vcpkg_restore.outputs.cache-hit != 'true'
-        uses: tespkg/actions-cache/save@v1
-        with:
-          endpoint: fsn1.your-objectstorage.com
-          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache-2
-          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-prime=${{ env.PRIMESERVER_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
-          path: |
-            vcpkg/*
-            !vcpkg/downloads
-            !vcpkg/docs
-            !vcpkg/buildtrees
-            vcpkg/downloads/tools
-            prime_server_install
 
       - name: Get version modifier
         id: version-modifier
@@ -196,12 +179,31 @@ jobs:
             -DPREFER_EXTERNAL_DEPS=ON \
             -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
 
+      # Save after Configure CMake so vcpkg/archives includes manifest-mode-installed ports
+      # (gdal, spatialite, etc.), not just the classic-mode zeromq/czmq/curl from earlier.
+      - name: Save vcpkg packages
+        if: steps.vcpkg_restore.outputs.cache-hit != 'true'
+        uses: tespkg/actions-cache/save@v1
+        with:
+          endpoint: fsn1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache-2
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-prime=${{ env.PRIMESERVER_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+          path: |
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
+            prime_server_install
+
       - name: Build Valhalla
         shell: bash
         run: |
           set -x
           export MSYS_NO_PATHCONV=1
-          cmake --build build --config "$BUILD_TYPE" -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+          cmake --build build --config "$BUILD_TYPE" -- /v:m /p:BuildInParallel=true /m:4
           cmake --build build --config "$BUILD_TYPE" --target install
 
       - name: Run tests
@@ -212,7 +214,7 @@ jobs:
           # PATH needs vcpkg DLLs + libprime_server.dll (installed outside vcpkg).
           export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin:${{ env.PRIMESERVER_INSTALL }}/bin"
           cmake --build build --config "$BUILD_TYPE" --target check \
-            -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+            -- /v:m /p:BuildInParallel=true /m:4
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
