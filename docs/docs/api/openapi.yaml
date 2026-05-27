@@ -854,15 +854,15 @@ components:
             include_hov2:
               type: boolean
               default: false
-              description: Allow use of HOV-2 lanes.
+              description: A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous.
             include_hov3:
               type: boolean
               default: false
-              description: Allow use of HOV-3 lanes.
+              description: A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous.
             include_hot:
               type: boolean
               default: false
-              description: Allow use of HOT (High-Occupancy Toll) lanes.
+              description: A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met.
             height:
               type: number
               default: 1.6
@@ -888,43 +888,69 @@ components:
           properties:
             transport_type:
               type: string
-              enum: [road, cross, hybrid, mountain]
+              description: The type of bicycle. Affects the cycling speed and surface factors.
               default: hybrid
-              description: "Bicycle type. Affects default speed: road=25, cross=20, hybrid=18, mountain=16 kph. Also affects speed factors for different surface types."
+              enum:
+                - road
+                - hybrid
+                - city
+                - cross
+                - mountain
+              x-enumDescriptions:
+                road: A road-style bicycle with narrow tires that is generally lightweight and designed for speed on paved surfaces. Sets cycling_speed to 25 KPH. 
+                hybrid: A bicycle made mostly for city riding or casual riding on roads and paths with good surfaces. Sets cycling_speed to 18 KPH.
+                city: A bicycle made mostly for city riding or casual riding on roads and paths with good surfaces. Sets cycling_speed to 18 KPH.
+                cross: A cyclo-cross bicycle, which is similar to a road bicycle but with wider tires suitable to rougher surfaces. Sets cycling_speed to 20 KPH.
+                mountain: A mountain bicycle suitable for most surfaces but generally heavier and slower on paved surfaces. Sets cycling_speed to 16 KPH.
             cycling_speed:
               type: number
               minimum: 5
-              description: Cycling speed in kph. Defaults depend on transport_type.
+              description: Cycling speed in KPH. Defaults depend on transport_type.
             use_roads:
               type: number
               minimum: 0
               maximum: 1
               default: 0.25
-              description: "0 = prefer dedicated cycling infrastructure, 1 = prefer roads."
+              description: >
+                A cyclist's propensity to use roads alongside other vehicles. This is a range of values from 0 to 1, where 0 attempts to avoid roads and stay on cycleways and paths, 
+                and 1 indicates the rider is more comfortable riding on roads. Based on the `use_roads` factor, roads with certain classifications and higher speeds are penalized in
+                an attempt to avoid them when finding the best path.
             use_hills:
               type: number
               minimum: 0
               maximum: 1
               default: 0.25
-              description: "0 = strongly avoid hills, 1 = hills are fine."
+              description: >
+                A cyclist's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a 
+                longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads 
+                based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is 
+                not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas).            
             avoid_bad_surfaces:
               type: number
               minimum: 0
               maximum: 1
               default: 0.25
-              description: "0 = allow any surface, 1 = strongly avoid unpaved/rough."
-            bss_rent_cost:
+              description: >
+                This value is meant to represent how much a cyclist wants to avoid roads with poor surfaces relative to the bicycle type being used. This is a range of values 
+                between 0 and 1. When the value is 0, there is no penalization of roads with different surface types; only bicycle speed on each surface is taken into account. 
+                As the value approaches 1, roads with poor surfaces for the bike are penalized heavier so that they are only taken if they significantly improve travel time. 
+                When the value is equal to 1, all bad surfaces are completely disallowed from routing, including start and end points.
+            bss_return_cost:
               type: number
               minimum: 0
               maximum: 43200
               default: 120
-              description: Time cost (seconds) to rent a bike-share bicycle.
+              description: >
+                This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to return a rental bike. This value will be 
+                displayed in the final directions and used to calculate the whole duration.
             bss_rent_penalty:
               type: number
               minimum: 0
               maximum: 43200
               default: 0
-              description: Additional penalty for using bike-share stations.
+              description: >
+                This value is useful when `bikeshare` is chosen as travel mode. It is meant to describe the potential effort to return a rental bike. 
+                This value won't be displayed and used only inside of the algorithm.
 
     PedestrianCostingOptions:
       allOf:
