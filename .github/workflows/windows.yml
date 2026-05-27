@@ -203,6 +203,9 @@ jobs:
         run: |
           set -x
           export MSYS_NO_PATHCONV=1
+          # nanobind's .pyi stub generation runs Python to import the .pyd, which
+          # transitively loads libprime_server.dll + the vcpkg-installed DLLs.
+          export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin:${{ env.PRIMESERVER_INSTALL }}/bin"
           cmake --build build --config "$BUILD_TYPE" -- /v:m /p:BuildInParallel=true /m:4
           cmake --build build --config "$BUILD_TYPE" --target install
 
