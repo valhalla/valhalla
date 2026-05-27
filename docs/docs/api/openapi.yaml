@@ -886,7 +886,7 @@ components:
         - type: object
           description: Options for bicycle costing. Parsed in src/sif/bicyclecost.cc.
           properties:
-            transport_type:
+            bicycle_type:
               type: string
               description: The type of bicycle. Affects the cycling speed and surface factors.
               default: hybrid
@@ -958,27 +958,48 @@ components:
         - type: object
           description: Options for pedestrian and bikeshare costing. Parsed in src/sif/pedestriancost.cc.
           properties:
-            transport_type:
-              type: string
-              enum: [foot, wheelchair]
-              default: foot
-              description: Changes defaults for speed, grade tolerance, and step penalty.
+          type:
+            type: string
+            default: foot
+            enum:
+              - foot
+              - blind
+              - wheelchair
+            description: >
+              These options are mutually exclusive. To combine them, use `blind` and pass
+              the options adjusted for `wheelchair` users manually.
+            x-enumDescriptions:
+              foot: Default routing for pedestrians.
+              blind: >
+                Enables additional route instructions, especially useful for blind users:
+                announcing crossed streets, stairs, bridges, tunnels, gates and bollards
+                that need to be passed on route; information about traffic signals on
+                crosswalks; route numbers are not announced for named routes.
+              wheelchair: >
+                Changes the defaults for `max_distance`, `walking_speed`, and
+                `step_penalty` to be better aligned to the needs of wheelchair users.
             walking_speed:
               type: number
               minimum: 0.5
               maximum: 25
-              description: Walking speed in kph. Default 5.1 (foot), 4.0 (wheelchair).
+              default: 5.1
+              description: Walking speed in KPH. Note that for transport type wheelchair, the default is set to 4. 
             walkway_factor:
               type: number
               minimum: 0.1
               maximum: 100000
               default: 1.0
-              description: Cost multiplier for walkways and footpaths.
+              description: > 
+                A factor that modifies the cost when encountering roads classified as `footway` (no motorized vehicles allowed), which may be designated footpaths or 
+                designated sidewalks along residential roads. Pedestrian routes generally attempt to favor using these [walkways and sidewalks](https://wiki.openstreetmap.org/wiki/Sidewalks).
             sidewalk_factor:
               type: number
               minimum: 0.1
               maximum: 100000
               default: 1.0
+              description: > 
+                A factor that modifies the cost when encountering roads with dedicated sidewalks. Pedestrian routes generally attempt to favor 
+                using [sidewalks](https://wiki.openstreetmap.org/wiki/Key:sidewalk).
             alley_factor:
               type: number
               minimum: 0.1
@@ -992,70 +1013,90 @@ components:
               minimum: 0
               maximum: 1
               default: 0
-              description: This value is a range of values from 0 to 1, where 0 indicates indifference towards lit streets, and 1 indicates that unlit streets should be avoided. Note that even with values near 1, there is no guarantee the returned route will include lit segments.
+              description: >
+                This value is a range of values from 0 to 1, where 0 indicates indifference towards lit streets, and 1 indicates that unlit 
+                streets should be avoided. Note that even with values near 1, there is no guarantee the returned route will include lit segments.
             driveway_factor:
               type: number
               minimum: 0.1
               maximum: 100000
               default: 5.0
+              description: > 
+                A factor that modifies (multiplies) the cost when encountering a [driveway](https://wiki.openstreetmap.org/wiki/Tag:service%3Ddriveway), which is often 
+                a private, service road. Pedestrian routes generally want to avoid driveways (private).
             step_penalty:
               type: number
               minimum: 0
               maximum: 43200
-              description: Penalty (seconds) for steps/stairs. Default 30 (foot), 600 (wheelchair).
-            max_grade:
-              type: integer
-              minimum: 0
-              maximum: 90
-              description: Maximum road grade in percent. Default 90 (foot), 12 (wheelchair).
+              description: > 
+                A penalty in seconds added to each transition onto a path with [steps or stairs](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dsteps). Higher values 
+                apply larger cost penalties to avoid paths that contain flights of steps. The default depends on the `type` parameter (600 for wheelchair, 30 otherwise).
             max_hiking_difficulty:
               type: integer
               minimum: 0
               maximum: 6
               default: 1
-              description: Maximum SAC scale difficulty (0=paved road, 6=extreme alpine).
+              description: > 
+                This value indicates the maximum difficulty of hiking trails that is allowed. Values between 0 and 6 are allowed. The values correspond to *sac_scale* 
+                values within OpenStreetMap, see reference [here](https://wiki.openstreetmap.org/wiki/Key:sac_scale). The default value is 1 which means that well 
+                cleared trails that are mostly flat or slightly sloped are allowed. Higher difficulty trails can be allowed by specifying a higher value for max_hiking_difficulty.
             mode_factor:
               type: number
               minimum: 0.1
               maximum: 100000
               default: 1.5
-              description: Cost multiplier when used as the walking leg of a multimodal route.
+              description: >
+                A factor which the cost of a pedestrian edge will be multiplied with on multimodal request, e.g. `bss` or `multimodal/transit`. 
+                Default is a factor of 1.5, i.e. avoiding walking.
             max_distance:
               type: integer
               minimum: 0
-              description: Maximum route distance in meters. Default 100000 (foot), 10000 (wheelchair).
-            transit_start_end_max_distance:
+              description: Sets the maximum total walking distance of a route in meters. Default 100000 (foot), 10000 (wheelchair).
+            multimodal_start_end_max_distance:
               type: integer
               minimum: 0
               default: 2415
-              description: Max walking distance to/from the first/last transit stop in meters.
+              description: > 
+                (**Note**: renamed from `transit_start_end_max_distance`) A pedestrian option that can be added to the request to extend the defaults 
+                (2145 meters or approximately 1.5 miles). This is the maximum walking distance at the beginning or end of a route.
             transit_transfer_max_distance:
               type: integer
               minimum: 0
               default: 805
-              description: Max walking distance between transit stops in meters.
+              description: >
+                A pedestrian option that can be added to the request to extend the defaults (800 meters or 0.5 miles). This is the maximum walking distance between transfers.
             use_hills:
               type: number
               minimum: 0
               maximum: 1
               default: 0.5
-              description: "0 = strongly avoid hills, 1 = hills are fine."
+              description: >
+                This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the 
+                pedestrian does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade.
+                These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to 
+                find alternate paths to avoid hills (for example when route locations are in mountainous areas).
             elevator_penalty:
               type: number
               minimum: 0
               maximum: 43200
               default: 5
-              description: Penalty (seconds) for using elevators.
+              description: A penalty in seconds added to each transition via an elevator node or onto an elevator edge. Higher values apply larger cost penalties to avoid elevators.
             bss_rent_cost:
               type: number
               minimum: 0
               maximum: 43200
               default: 120
+              description: > 
+                This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to rent a bike from a bike share station. 
+                This value will be displayed in the final directions and used to calculate the whole duration.
             bss_rent_penalty:
               type: number
               minimum: 0
               maximum: 43200
               default: 0
+              description: > 
+                This value is useful when `bikeshare` is chosen as travel mode. It is meant to describe the potential effort to rent a bike from a bike share station. 
+                This value won't be displayed and used only inside of the algorithm.
 
     TruckCostingOptions:
       allOf:
