@@ -1261,9 +1261,8 @@ components:
         ids:
           type: array
           description: >
-            List of Onestop IDs to filter. A Onestop ID is the feed directory name and the
-            GTFS object ID joined by `_` (e.g. a route with `route_id: AUR` from feed `NYC`
-            becomes `NYC_AUR`).
+            List of Onestop IDs to filter. The OneStop ID is simply the feeds's directory name and the object's GTFS ID separated by an underscore, i.e. a route with `route_id: AUR` 
+            in `routes.txt` from the feed `NYC` would have the OneStop ID `NYC_AUR`, similar with operators/agencies.
           items:
             type: string
             example: NYC_AUR
@@ -1278,8 +1277,9 @@ components:
               type: number
               minimum: 0.1
               maximum: 100000
-              default: 1.5
-              description: Cost multiplier when switching from transit to walking.
+              default: 1.0
+              description: >
+                A factor which the cost of a transit edge will be multiplied with. 
             wheelchair:
               type: boolean
               default: false
@@ -1293,30 +1293,31 @@ components:
               minimum: 0
               maximum: 1
               default: 0.3
-              description: "0 = avoid buses, 1 = strongly prefer buses."
+              description: User's desire to use buses. Range of values from 0 (try to avoid buses) to 1 (strong preference for riding buses).
             use_rail:
               type: number
               minimum: 0
               maximum: 1
               default: 0.6
+              description: User's desire to use rail/subway/metro. Range of values from 0 (try to avoid rail) to 1 (strong preference for riding rail).
             use_transfers:
               type: number
               minimum: 0
               maximum: 1
               default: 0.3
-              description: Willingness to transfer between transit routes.
+              description: User's desire to favor transfers. Range of values from 0 (try to avoid transfers) to 1 (totally comfortable with transfers).
             transfer_cost:
               type: number
               minimum: 0
               maximum: 43200
               default: 15
-              description: Time cost (seconds) per transfer.
+              description: Time cost (seconds) per transfer. Influences ETA.
             transfer_penalty:
               type: number
               minimum: 0
               maximum: 43200
               default: 300
-              description: Additional penalty (seconds) per transfer.
+              description: Additional penalty (seconds) per transfer. Does not influence ETA.
             filters:
               type: object
               description: >
