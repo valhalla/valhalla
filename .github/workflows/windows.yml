@@ -52,7 +52,7 @@ jobs:
       BUILD_TYPE: Release
       MSVC_VERSION: "2022"
       # Keep aligned with VCPKG_VERSION in osx_win_python_builds.yml to share the vcpkg cache.
-      VCPKG_VERSION: "0e39c10"
+      VCPKG_VERSION: "66c0373d"
       VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
       VCPKG_DISABLE_COMPILER_TRACKING: ON
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
@@ -73,6 +73,7 @@ jobs:
       - name: Configure vcpkg env
         shell: bash
         run: |
+          set -x
           workspace="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
           echo "VCPKG_INSTALLATION_ROOT=${workspace}/vcpkg" >> $GITHUB_ENV
           echo "VCPKG_TOOLCHAIN_FILE=${workspace}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
@@ -94,10 +95,8 @@ jobs:
           mkdir archives
           echo "set(VCPKG_BUILD_TYPE release)" >> "$VCPKG_TRIPLET_PATH"
           echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$VCPKG_TRIPLET_PATH"
-          cmd.exe //c bootstrap-vcpkg.bat
-          # bootstrap-vcpkg.bat occasionally exits 0 without producing vcpkg.exe;
-          # surface that explicitly rather than failing later in install.
-          test -x ./vcpkg.exe || { echo "bootstrap-vcpkg.bat did not produce vcpkg.exe"; ls -la; exit 1; }
+          cmd.exe //c bootstrap-vcpkg.bat  # //c avoids MSYS path conversion
+          test -x ./vcpkg.exe || { echo "bootstrap-vcpkg.bat did not produce vcpkg.exe"; exit 1; }
 
       - name: Restore vcpkg packages
         uses: tespkg/actions-cache/restore@v1
@@ -120,13 +119,12 @@ jobs:
       - name: Setup Developer Command Prompt for VS
         uses: ilammy/msvc-dev-cmd@v1
 
-      # Classic-mode install so prime_server's CMake can find these before valhalla's manifest
-      # install runs. --classic forces classic mode; without it vcpkg auto-detects our
-      # vcpkg.json and refuses per-package args. Re-installed by manifest mode below (cache-hit fast).
+      # Classic-mode install for prime_server's build (--classic overrides manifest auto-detect).
       - name: Install prime_server runtime deps via vcpkg
         if: steps.vcpkg_restore.outputs.cache-hit != 'true'
         shell: bash
         run: |
+          set -x
           "$VCPKG_INSTALLATION_ROOT/vcpkg.exe" install --classic \
             "zeromq:$VCPKG_DEFAULT_TRIPLET" \
             "czmq:$VCPKG_DEFAULT_TRIPLET" \
@@ -136,13 +134,11 @@ jobs:
         if: steps.vcpkg_restore.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          # Stop Git Bash from mangling MSBuild's /p:foo and /m:4 args into project names.
-          export MSYS_NO_PATHCONV=1
-          # --recurse-submodules: prime_server's logging utilities are a submodule.
+          set -x
+          export MSYS_NO_PATHCONV=1  # keep MSBuild /p: and /m: args intact through Git Bash
           git clone --branch="$PRIMESERVER_VERSION" --recurse-submodules \
             https://github.com/kevinkreiser/prime_server "$RUNNER_TEMP/prime_server"
           cd "$RUNNER_TEMP/prime_server"
-          # ENABLE_WERROR=OFF: prime_server's MSVC werror policy is stricter than ours.
           cmake -B build \
             -G "Visual Studio 17 2022" -A x64 \
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
@@ -179,7 +175,7 @@ jobs:
       - name: Configure CMake
         shell: bash
         run: |
-          # PKG_CONFIG_PATH so pkgconf finds libprime_server.pc.
+          set -x
           export PKG_CONFIG_PATH="$PRIMESERVER_INSTALL/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
           # services feature activates zeromq/czmq; wheel job omits it.
           cmake -B build \
@@ -200,76 +196,23 @@ jobs:
             -DPREFER_EXTERNAL_DEPS=ON \
             -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
 
-      # vcpkg's zeromq port drops the file as libzmq-mt-<ver>.lib but libzmq.pc advertises
-      # `-lzmq` (-> zmq.lib on MSVC), so anything consuming libprime_server via pkg-config
-      # fails to link. Alias the file as zmq.lib in both classic and manifest install dirs.
-      # TODO: get newer vcpkg where they've already fixed this
-      - name: Alias libzmq-mt-*.lib as zmq.lib
-        shell: bash
-        run: |
-          for d in \
-            "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib" \
-            build/vcpkg_installed/x64-windows/lib; do
-            for src in "$d"/libzmq-mt-*.lib; do
-              if [ -f "$src" ] && [ ! -f "$d/zmq.lib" ]; then
-                cp "$src" "$d/zmq.lib"
-                echo "aliased $src -> $d/zmq.lib"
-              fi
-            done
-          done
-
       - name: Build Valhalla
         shell: bash
         run: |
+          set -x
           export MSYS_NO_PATHCONV=1
           cmake --build build --config "$BUILD_TYPE" -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
           cmake --build build --config "$BUILD_TYPE" --target install
 
-      # Full test suite (unit + gurka + scripts + python_valhalla). PATH needs vcpkg DLLs
-      # and libprime_server.dll (installed outside vcpkg).
       - name: Run tests
         shell: bash
         run: |
+          set -x
           export MSYS_NO_PATHCONV=1
+          # PATH needs vcpkg DLLs + libprime_server.dll (installed outside vcpkg).
           export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin:${{ env.PRIMESERVER_INSTALL }}/bin"
           cmake --build build --config "$BUILD_TYPE" --target check \
             -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
-
-      # tmate on windows-2022 is flaky; dump what we'd want to look at into the log too.
-      - name: Debug filesystem layout on failure
-        if: failure() || env.SETUP_TMATE == 'true'
-        shell: bash
-        run: |
-          set +e
-          echo "=== classic install: lib/ ==="
-          ls -la "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib/" 2>&1 | grep -iE 'zmq|czmq|curl' || true
-          echo "=== classic install: lib/pkgconfig/ ==="
-          ls -la "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib/pkgconfig/" 2>&1 || true
-          echo "=== manifest install: build/vcpkg_installed/x64-windows/lib/ ==="
-          ls -la build/vcpkg_installed/x64-windows/lib/ 2>&1 | grep -iE 'zmq|czmq|curl' || true
-          echo "=== manifest install: build/vcpkg_installed/x64-windows/lib/pkgconfig/ ==="
-          ls -la build/vcpkg_installed/x64-windows/lib/pkgconfig/ 2>&1 || true
-          echo "=== libprime_server.pc ==="
-          cat "$PRIMESERVER_INSTALL/lib/pkgconfig/libprime_server.pc" 2>&1 || true
-          echo "=== libzmq.pc (classic) ==="
-          cat "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib/pkgconfig/libzmq.pc" 2>&1 || true
-          echo "=== libzmq.pc (manifest) ==="
-          cat build/vcpkg_installed/x64-windows/lib/pkgconfig/libzmq.pc 2>&1 || true
-          echo "=== prime_server install tree ==="
-          find "$PRIMESERVER_INSTALL" -maxdepth 4 2>&1 | head -40 || true
-          echo "=== pkg-config --libs libprime_server ==="
-          export PKG_CONFIG_PATH="$PRIMESERVER_INSTALL/lib/pkgconfig:$PWD/build/vcpkg_installed/x64-windows/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-          pkg-config --libs libprime_server 2>&1 || true
-          echo "=== pkg-config --libs-only-L libprime_server ==="
-          pkg-config --libs-only-L libprime_server 2>&1 || true
-          echo "=== pkg-config --libs-only-l libprime_server ==="
-          pkg-config --libs-only-l libprime_server 2>&1 || true
-          echo "=== _valhalla.vcxproj link section ==="
-          grep -iE 'AdditionalLibraryDirectories|AdditionalDependencies|<Link>|<Lib>' \
-            build/src/bindings/python/_valhalla.vcxproj 2>&1 | head -30 || true
-          echo "=== retry _valhalla link to see fresh error ==="
-          export MSYS_NO_PATHCONV=1
-          cmake --build build --config "$BUILD_TYPE" --target _valhalla -- /clp:ErrorsOnly /m:4 2>&1 | tail -30 || true
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
