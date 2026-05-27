@@ -250,17 +250,23 @@ endif()
 
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 
-# libprime_server
-# see https://gitlab.kitware.com/cmake/cmake/-/issues/19467
+# libprime_server: prefer the CMake config (>=0.11.0) so transitive deps come through
+# as proper imported targets; fall back to pkg-config for older installs.
 set(libprime_server_targets "")
 if(ENABLE_SERVICES)
-  pkg_check_modules(libprime_server IMPORTED_TARGET libprime_server>=0.6.3)
-  if (libprime_server_FOUND)
-    target_compile_definitions(PkgConfig::libprime_server INTERFACE ENABLE_SERVICES)
-    set(libprime_server_targets PkgConfig::libprime_server)
+  find_package(libprime_server 0.11.0 CONFIG QUIET)
+  if(libprime_server_FOUND)
+    set(libprime_server_targets libprime_server::prime_server)
+    target_compile_definitions(libprime_server::prime_server INTERFACE ENABLE_SERVICES)
   else()
-    set(ENABLE_SERVICES OFF)
-    message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
+    pkg_check_modules(libprime_server IMPORTED_TARGET libprime_server>=0.6.3)
+    if(libprime_server_FOUND)
+      set(libprime_server_targets PkgConfig::libprime_server)
+      target_compile_definitions(PkgConfig::libprime_server INTERFACE ENABLE_SERVICES)
+    else()
+      set(ENABLE_SERVICES OFF)
+      message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
+    endif()
   endif()
 endif()
 

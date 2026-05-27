@@ -218,7 +218,7 @@ jobs:
           HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal libtiff libgeotiff
           export PATH="$(brew --prefix python)/libexec/bin:$PATH"
           python -m pip install --break-system-packages requests shapely numpy
-          git clone --branch=0.10.0 --recurse-submodules https://github.com/kevinkreiser/prime_server && cd prime_server && ./autogen.sh && ./configure && make -j$(sysctl -n hw.logicalcpu) && sudo make install
+          git clone --branch=0.11.0 --recurse-submodules https://github.com/kevinkreiser/prime_server && cd prime_server && cmake -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_WERROR=OFF && cmake --build build -j$(sysctl -n hw.logicalcpu) && sudo cmake --install build
 
       - name: Get branch name
         run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV

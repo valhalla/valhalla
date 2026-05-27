@@ -57,7 +57,7 @@ jobs:
       VCPKG_DISABLE_COMPILER_TRACKING: ON
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       # Bump in lockstep with install-linux-deps.sh and the macOS step in osx_win_python_builds.yml.
-      PRIMESERVER_VERSION: "0.10.0"
+      PRIMESERVER_VERSION: "0.11.0"
     steps:
       - uses: actions/checkout@v6
         with:
