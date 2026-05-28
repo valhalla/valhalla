@@ -1,14 +1,19 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: dead `thor.max_reserved_locations_costmatrix` help entry from `valhalla_build_config` (live key is `thor.costmatrix.max_reserved_locations`) [#6083](https://github.com/valhalla/valhalla/issues/6083)
+   * REMOVED: `json` request parameter, people can use CORS in 2026 [#6099](https://github.com/valhalla/valhalla/pull/6099)
 * **Bug Fix**
    * FIXED: wrong mode used in loki for `auto_pedestrian` [#6065](https://github.com/valhalla/valhalla/pull/6065)
    * FIXED: Avoid creating loop edges during graph filtering [#6050](https://github.com/valhalla/valhalla/pull/6050)
    * FIXED: UB in adminbuilder in `&inner_rings.front()` if `inner_rings` is empty [#6077](https://github.com/valhalla/valhalla/pull/6077)
+   * FIXED: duplicate config arg in `enhance` [#6095](https://github.com/valhalla/valhalla/pull/6095)
    * FIXED: flood fill leak in polygon search [#6086](https://github.com/valhalla/valhalla/pull/6086)
 * **Enhancement**
    * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
    * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
    * ADDED: lz4 support for OSM PBF files [#6081](https://github.com/valhalla/valhalla/pull/6081)
+   * CHANGED: auto-generate .pyi stubs with cmake, needs a full build [#6101](https://github.com/valhalla/valhalla/pull/6101)
+   * ADDED: Bounding circles for faster loki (not yet enabled) [#5103](https://github.com/valhalla/valhalla/pull/5103)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**

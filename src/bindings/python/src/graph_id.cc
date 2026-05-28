@@ -31,24 +31,32 @@ using valhalla::bindings::check_level;
 namespace pyvalhalla {
 
 void init_graphid(nb::module_& m) {
-  nb::class_<vb::GraphId>(m, "GraphId")
-      .def(nb::init())
+  nb::class_<vb::GraphId>(m, "GraphId",
+                          "Identifier of a node or an edge within the tiled, hierarchical graph.\n"
+                          "Includes the tile Id, hierarchy level, and a unique identifier within\n"
+                          "the tile/level.")
+      .def(nb::init(), "Constructs an invalid GraphId")
       .def(nb::init<uint32_t, uint32_t, uint32_t>(), nb::arg("tileid"), nb::arg("level"),
-           nb::arg("id"))
-      .def(nb::init<uint64_t>())
-      .def(nb::init<std::string>())
-      .def_ro("value", &vb::GraphId::value)
-      .def("tileid", &vb::GraphId::tileid)
-      .def("level", &vb::GraphId::level)
-      .def("id", &vb::GraphId::id)
-      .def("is_valid", &vb::GraphId::is_valid)
-      .def("tile_base", &vb::GraphId::tile_base)
-      .def("tile_value", &vb::GraphId::tile_value)
-      .def(nb::self + uint64_t())              // operator+(uint64_t)
-      .def(nb::self += uint32_t())             // operator+=(uint32_t)
-      .def(nb::self == nb::self)               // operator==(const GraphId&)
-      .def(nb::self != nb::self)               // operator!=(const GraphId&)
-      .def("__bool__", &vb::GraphId::is_valid) // operator bool
+           nb::arg("id"), "Constructs a GraphId from its portions.")
+      .def(nb::init<uint64_t>(),
+           "Constructs a GraphId from its integer value, e.g. 118931 == 3/14866/0.")
+      .def(nb::init<std::string>(),
+           "Constructs a GraphId from its string representation, e.g. \"2/71944/0\".")
+      .def_ro("value", &vb::GraphId::value, "The integer representation of the bit-fielded GraphId.")
+      .def("tileid", &vb::GraphId::tileid, "Gets the tile Id.")
+      .def("level", &vb::GraphId::level, "Gets the hierarchy level.")
+      .def("id", &vb::GraphId::id, "Gets the identifier within the hierarchy level.")
+      .def("is_valid", &vb::GraphId::is_valid, "Returns true if the id is valid.")
+      .def("tile_base", &vb::GraphId::tile_base,
+           "Returns a GraphId omitting the id of the of the object within the level.\n"
+           "Construct a new GraphId with the Id portion omitted.")
+      .def("tile_value", &vb::GraphId::tile_value,
+           "Returns a value indicating the tile (level and tile id) of the graph Id.")
+      .def(nb::self + uint64_t(), "Increments the id portion by value")
+      .def(nb::self += uint32_t(), "Increments the id portion by value")
+      .def(nb::self == nb::self, "Equality operator")
+      .def(nb::self != nb::self, "Inequality operator")
+      .def("__bool__", &vb::GraphId::is_valid, "True if is_valid().")
       .def("__str__", [](const vb::GraphId& graph_id) { return std::to_string(graph_id); })
       .def("__fspath__",
            [](const vb::GraphId& graph_id) { return vb::GraphTile::FileSuffix(graph_id); })
@@ -68,7 +76,10 @@ void init_graphid(nb::module_& m) {
 
         return nb::make_tuple(pt.x(), pt.y());
       },
-      nb::arg("graph_id"));
+      nb::arg("graph_id"),
+      "Get the geographic coordinate of the south-western corner of this graph_id's tile.\n\n"
+      ":param graph_id: The tile's or object's GraphId\n"
+      ":returns: The lon/lat coordinate of the SW corner of the tile");
 
   m.def(
       "get_tile_id_from_lon_lat",
@@ -84,7 +95,12 @@ void init_graphid(nb::module_& m) {
 
         return vb::TileHierarchy::GetGraphId(vm::PointLL{x, y}, static_cast<uint8_t>(level));
       },
-      nb::arg("level"), nb::arg("coord"));
+      nb::arg("level"), nb::arg("coord"),
+      "Get the tile at this hierarchy level and geographic coordinate.\n\n"
+      ":param level: The hierarchy level of the searched tiles.\n"
+      ":param coord: The geographic coordinate to intersect with tiles.\n"
+      ":returns: GraphId of found tile.\n"
+      ":raises ValueError: When the level or coord are invalid.");
 
   m.def(
       "get_tile_ids_from_bbox",
@@ -112,7 +128,16 @@ void init_graphid(nb::module_& m) {
         return tile_ids;
       },
       nb::arg("minx"), nb::arg("miny"), nb::arg("maxx"), nb::arg("maxy"),
-      nb::arg("levels") = std::vector<uint32_t>{}, nb::call_guard<nb::gil_scoped_release>());
+      nb::arg("levels") = std::vector<uint32_t>{}, nb::call_guard<nb::gil_scoped_release>(),
+      "Returns all tiles GraphIds for the specified levels (default: all),\n"
+      "which intersect the bbox.\n\n"
+      ":param minx: The bbox's minimum longitude.\n"
+      ":param miny: The bbox's minimum latitude.\n"
+      ":param maxx: The bbox's maximum longitude.\n"
+      ":param maxy: The bbox's maximum latitude.\n"
+      ":param levels: The hierarchy levels for which to find tiles.\n"
+      ":returns: The list of tile GraphIds which intersect the bounding box\n"
+      ":raises ValueError: When the level(s) or coord are invalid.");
 
   m.def(
       "get_tile_ids_from_ring",
@@ -134,10 +159,23 @@ void init_graphid(nb::module_& m) {
         return valhalla::bindings::get_tile_ids_from_ring(std::move(ring), std::move(levels));
       },
       nb::arg("ring_coords"), nb::arg("levels") = std::vector<uint32_t>{},
-      nb::call_guard<nb::gil_scoped_release>());
+      nb::call_guard<nb::gil_scoped_release>(),
+      "Returns all tile GraphIds for the specified levels (default: all),\n"
+      "which intersect or are contained within the polygon ring. The ring is\n"
+      "assumed and coerced to be an outer ring. It's automatically closed if\n"
+      "the last coordinate does not match the first.\n\n"
+      ":param coords: List of (lon, lat) tuples forming a closed ring (polygon boundary).\n"
+      "               Must have at least 3 coordinates.\n"
+      ":param levels: The hierarchy levels for which to find tiles.\n"
+      ":returns: The list of tile GraphIds which intersect or are inside the ring.\n"
+      ":raises ValueError: When the level(s), coords, or ring size are invalid.");
 
   // GraphUtils class - manages GraphReader for efficient edge access
-  nb::class_<vb::GraphReader>(m, "_GraphUtils")
+  nb::class_<
+      vb::GraphReader>(m, "_GraphUtils",
+                       "C++ binding for GraphUtils (internal use - prefer GraphUtils wrapper).\n\n"
+                       "Manages a GraphReader for efficient access to tiles and edges.\n"
+                       "Initialize once and reuse for multiple edge queries.")
       .def(
           "__init__",
           [](vb::GraphReader* self, const std::string& config) {
@@ -159,7 +197,10 @@ void init_graphid(nb::module_& m) {
             // Create GraphReader with mjolnir subtree
             new (self) vb::GraphReader(pt.get_child("mjolnir"));
           },
-          nb::arg("config"))
+          nb::arg("config"),
+          "Initialize _GraphUtils with Valhalla configuration.\n\n"
+          ":param config: Valhalla configuration as JSON string or path to config file\n"
+          ":raises RuntimeError: When config is invalid")
       .def(
           "get_edge_shape",
           [](vb::GraphReader& self,
@@ -194,6 +235,10 @@ void init_graphid(nb::module_& m) {
 
             return result;
           },
-          nb::arg("edge_id"), nb::call_guard<nb::gil_scoped_release>());
+          nb::arg("edge_id"), nb::call_guard<nb::gil_scoped_release>(),
+          "Get the shape (polyline) for an edge as a list of (lon, lat) tuples.\n\n"
+          ":param edge_id: GraphId of the edge\n"
+          ":returns: List of (lon, lat) tuples representing the edge geometry\n"
+          ":raises RuntimeError: When the tile or edge is not found");
 }
 } // namespace pyvalhalla

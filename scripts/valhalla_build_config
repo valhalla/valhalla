@@ -171,6 +171,7 @@ config = {
             "use_urban_tag": False,
             "use_rest_area": False,
             "scan_tar": False,
+            "build_bounding_circles": True,
         },
     },
     "additional_data": {
@@ -508,6 +509,7 @@ help_text = {
             "use_urban_tag": "bool indicating whether or not to use the urban area tag on the ways or to utilize the getDensity function within the graph enhancer phase",
             "use_rest_area": "bool indicating whether or not to use the rest/service area tag on the ways",
             "scan_tar": "bool indicating whether or not to pre-scan the tar ball(s) when loading an extract with an index file, to warm up the OS page cache.",
+            "build_bounding_circles": "bool indicating whether to store 32-bit bounding circles for edges analogous to the edge bins inside level 2 graph tiles. This option is currently disabled.",
         },
     },
     "additional_data": {
@@ -540,7 +542,6 @@ help_text = {
         "max_reserved_labels_count_bidir_astar": "Maximum capacity allowed to keep reserved for bidirectional A*.",
         "max_reserved_labels_count_dijkstras": "Maximum capacity allowed to keep reserved for unidirectional Dijkstras.",
         "max_reserved_labels_count_bidir_dijkstras": "Maximum capacity allowed to keep reserved for bidirectional Dijkstras.",
-        "max_reserved_locations_costmatrix": "Maximum amount of locations allowed to to keep reserved between requests for CostMatrix",
         "clear_reserved_memory": "If True clean reserved memory in path algorithms",
         "extended_search": "If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge",
         "costmatrix": {
