@@ -82,10 +82,13 @@ public:
 
       // find our candidate by start node
       auto cand_it = by_start_node.find(start_node);
+
+      // if we couldn't find one, warn and bail
       if (cand_it == by_start_node.end() || cand_it->second.empty()) {
-        throw std::runtime_error("Way " + std::to_string(way.id()) +
-                                 ": no forward edge starts at node " + std::to_string(start_node) +
-                                 " (position " + std::to_string(cursor) + ")");
+        LOG_WARN("Way " + std::to_string(way.id()) + ": no forward edge starts at node " +
+                 std::to_string(start_node) + " (position " + std::to_string(cursor) + ")");
+        it->second = {};
+        return;
       }
 
       auto& candidates = cand_it->second;
@@ -108,9 +111,12 @@ public:
 
       // didn't find a candidate
       if (chosen == std::numeric_limits<size_t>::max()) {
-        throw std::runtime_error(
-            "Way " + std::to_string(way.id()) + ": no edge at node " + std::to_string(start_node) +
-            " matches the way's node sequence from position " + std::to_string(cursor));
+        LOG_WARN("Way " + std::to_string(way.id()) + ": no edge at node " +
+                 std::to_string(start_node) + " matches the way's node sequence from position " +
+                 std::to_string(cursor));
+
+        it->second = {};
+        return;
       }
 
       const auto& picked = edges[candidates[chosen].first];
@@ -127,10 +133,13 @@ public:
       cursor += advance;
     }
 
+    // if we somehow end up with fewer edges
+    // than expected, warn and bail
     if (ordered.size() != edges.size()) {
-      throw std::runtime_error("Way " + std::to_string(way.id()) + ": ordered " +
-                               std::to_string(ordered.size()) + " of " +
-                               std::to_string(edges.size()) + " edges");
+      LOG_WARN("Way " + std::to_string(way.id()) + ": ordered " + std::to_string(ordered.size()) +
+               " of " + std::to_string(edges.size()) + " edges");
+      it->second = {};
+      return;
     }
 
     // finally, walk the ordered edges in reverse order and append their
@@ -138,6 +147,8 @@ public:
     for (size_t i = ordered.size(); i-- > 0;) {
       auto opp_id = reader_.GetOpposingEdgeId(ordered[i].edgeid);
       auto* opp_de = reader_.directededge(opp_id);
+
+      // this should never happen
       if (opp_de->forward()) {
         throw std::runtime_error("Expected backward oriented edge for Way " +
                                  std::to_string(way.id()));
