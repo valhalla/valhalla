@@ -324,7 +324,7 @@ public:
    * @return the tile local bin given as a pair of tile id, tile local bin id.
    */
   std::pair<uint32_t, unsigned short>
-  GetBinNeighbor(int global_x, int global_y, Neighbor which) const {
+  GetNeighboringBin(int global_x, int global_y, Neighbor which) const {
     // starting at lower left, moving clockwise
 
     // clang-format off
@@ -371,7 +371,7 @@ public:
 
     // skip diagonal neighbors in four way mode
     for (uint8_t i = four_way ? 1 : 0; i < 8; i += (four_way ? 2 : 1)) {
-      neighbors.push_back(GetBinNeighbor(global_x, global_y, static_cast<Neighbor>(i)));
+      neighbors.push_back(GetNeighboringBin(global_x, global_y, static_cast<Neighbor>(i)));
     }
     return neighbors;
   }
