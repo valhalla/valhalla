@@ -164,7 +164,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
       for (const auto& bin_id : bin_map) {
         if (start_bin)
           break;
-        for (const auto& neighbor : tiles.GetNeighbors(tile_id, bin_id, /*four_way=*/false)) {
+        for (const auto& neighbor : tiles.GetNeighboringBins(tile_id, bin_id, /*four_way=*/false)) {
           // skip neighbors that are themselves on the boundary
           if (auto it = line_intersection.find(neighbor.first);
               it != line_intersection.end() && it->second.find(neighbor.second) != it->second.end()) {
@@ -194,7 +194,8 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
         contained_bin_count++;
         // skip diagonal neighbors, since the Bresenham method used for finding the intersecting bins
         // does not move diagonally either
-        for (const auto& neighbor : tiles.GetNeighbors(bin.first, bin.second, /*four_way=*/false)) {
+        for (const auto& neighbor :
+             tiles.GetNeighboringBins(bin.first, bin.second, /*four_way=*/false)) {
           if (processed_bins.count(to_value(neighbor.first, neighbor.second)) > 0) {
             continue; // we have already looked at this bin
           }
@@ -241,6 +242,8 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
       auto edge_info = tile->edgeinfo(edge);
       bool exclude = false;
       for (const auto& ring_loc : bin.second) {
+        // if intersect is false, the bin is entirely within the ring,
+        // so the shape is known to intersect the ring
         bool intersects =
             !intersect ? true
                        : boost::geometry::intersects(rings_bg[ring_loc],

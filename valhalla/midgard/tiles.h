@@ -314,7 +314,17 @@ public:
                                                            : tileid;
   }
 
-  std::pair<uint32_t, unsigned short> GetNeighbor(int global_x, int global_y, Neighbor which) const {
+  /**
+   * Identify a neighboring bin given a global (ie not tile local) bin.
+   *
+   * @param global_x the global column number of the input bin
+   * @param global_y the global row number of the input bin
+   * @param which    which neighbor to return
+   *
+   * @return the tile local bin given as a pair of tile id, tile local bin id.
+   */
+  std::pair<uint32_t, unsigned short>
+  GetBinNeighbor(int global_x, int global_y, Neighbor which) const {
     // starting at lower left, moving clockwise
 
     // clang-format off
@@ -334,8 +344,18 @@ public:
     return std::make_pair(new_tileid, new_binid);
   }
 
+  /**
+   * Collects the neighboring bins for a given bin (subdivision).
+   *
+   * @param tileid   the tile of the input bin
+   * @param binid    the tile local bin identifier of the input bin
+   * @param four_way whether to return 4 or 8 (including diagonal) neighbors
+   *
+   * @return a vector of neighboring bins given as a pair of tile id and bin id, in clockwise order,
+   * starting from lower left.
+   */
   std::vector<std::pair<uint32_t, unsigned short>>
-  GetNeighbors(uint32_t tileid, short binid, bool four_way) const {
+  GetNeighboringBins(uint32_t tileid, short binid, bool four_way) const {
     std::vector<std::pair<uint32_t, unsigned short>> neighbors;
     neighbors.reserve(four_way ? 4 : 8);
 
@@ -351,10 +371,11 @@ public:
 
     // skip diagonal neighbors in four way mode
     for (uint8_t i = four_way ? 1 : 0; i < 8; i += (four_way ? 2 : 1)) {
-      neighbors.push_back(GetNeighbor(global_x, global_y, static_cast<Neighbor>(i)));
+      neighbors.push_back(GetBinNeighbor(global_x, global_y, static_cast<Neighbor>(i)));
     }
     return neighbors;
   }
+
   /**
    * Get the neighboring tileid above or north.
    * @param  tileid   Tile Id.
