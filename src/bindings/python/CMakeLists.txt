@@ -63,6 +63,32 @@ set_target_properties(_graph_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_C
 set_target_properties(predicted_speeds PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+# Generate Python type stubs (.pyi) from the compiled extension modules.
+# Stubs are committed to the source tree and refreshed on every build;
+# INCLUDE_PRIVATE keeps "_"-prefixed members in the output; the POST_BUILD
+# step prepends a "machine-generated" banner via an idempotent script.
+#
+# Skipped under ENABLE_SANITIZERS: nanobind_add_stub imports the compiled
+# module via a vanilla python3, which can't load an ASan-instrumented .so
+if (NOT ENABLE_SANITIZERS)
+  function(valhalla_python_stub module rel_pyi)
+    set(_pyi ${CMAKE_CURRENT_SOURCE_DIR}/${rel_pyi})
+    nanobind_add_stub(${module}_stub
+      MODULE ${module}
+      OUTPUT ${_pyi}
+      PYTHON_PATH $<TARGET_FILE_DIR:${module}>
+      DEPENDS ${module}
+      INCLUDE_PRIVATE)
+    add_custom_command(TARGET ${module}_stub POST_BUILD
+      COMMAND ${Python_EXECUTABLE}
+              ${CMAKE_CURRENT_SOURCE_DIR}/scripts/prepend_pyi_header.py ${_pyi})
+  endfunction()
+
+  valhalla_python_stub(_valhalla        valhalla/_valhalla.pyi)
+  valhalla_python_stub(_graph_utils     valhalla/utils/_graph_utils.pyi)
+  valhalla_python_stub(predicted_speeds valhalla/utils/predicted_speeds.pyi)
+endif()
+
 set(py_srcs
   valhalla/__init__.py
   valhalla/__version__.py
@@ -70,8 +96,6 @@ set(py_srcs
   valhalla/actor.py
   valhalla/utils/__init__.py
   valhalla/utils/graph_utils.py
-  valhalla/utils/_graph_utils.pyi
-  valhalla/utils/predicted_speeds.pyi
   valhalla/utils/decode_polyline.py)
 
 # scikit-build-core does a different build than CMake
@@ -135,9 +159,17 @@ install(TARGETS _graph_utils
 install(TARGETS predicted_speeds
   DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/utils"
   COMPONENT python)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/_valhalla.pyi
+  DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla"
+  COMPONENT python)
+install(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/utils/_graph_utils.pyi
+    ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/utils/predicted_speeds.pyi
+  DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/utils"
+  COMPONENT python)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla
   DESTINATION "${VALHALLA_INSTALL_PYDIR}"
   COMPONENT python
   FILES_MATCHING
-    PATTERN "*.py*"
+    PATTERN "*.py"
     PATTERN "__pycache__" EXCLUDE)
