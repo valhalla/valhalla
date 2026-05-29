@@ -371,7 +371,7 @@ public:
 
     // skip diagonal neighbors in four way mode
     constexpr auto start = four_way ? 1 : 0;
-    constexpr auto step = four_way ? 2 : 0;
+    constexpr auto step = four_way ? 2 : 1;
 
     int neighbor_idx = 0;
     for (uint8_t i = start; i < 8; i += step) {
