@@ -20,7 +20,6 @@ int main(int argc, char** argv) {
   const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
-  bool sort_edges = false;
   bool include_length = false;
   std::string osm_filename;
 
@@ -35,7 +34,6 @@ int main(int argc, char** argv) {
       ("h,help", "Print this help message.")
       ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
       ("v,version", "Print the version of this software.")
-      ("s,sort-edges", "If true, will sort edges topologically per way; requires complete node IDs stored in edgeinfo and passing osm-file", cxxopts::value<bool>(sort_edges)->default_value("false"))
       ("o,osm-file", "The OSM PBF file used to produce the tile set; required only if sort-edges is true", cxxopts::value<std::string>(osm_filename))
       ("l,include-length", "If true, will include edge lengths in meter as an additional column in the CSV; requires sort-edges to be set", cxxopts::value<bool>(include_length)->default_value("false"))
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
@@ -44,11 +42,6 @@ int main(int argc, char** argv) {
     auto result = options.parse(argc, argv);
     if (!parse_common_args(program, options, result, &config))
       return EXIT_SUCCESS;
-
-    if (sort_edges && osm_filename.empty()) {
-      std::cerr << "sort-edges set to true but no osm-file set\n";
-      return EXIT_FAILURE;
-    }
 
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << "\n";
@@ -70,7 +63,7 @@ int main(int argc, char** argv) {
 
     // Collect all way edges
     // optionally sort
-    if (sort_edges) {
+    if (!osm_filename.empty()) {
       ways_edges =
           vm::collect_way_edges_sorted(osm_filename, reader, include_length, file_path.string());
     } else {
