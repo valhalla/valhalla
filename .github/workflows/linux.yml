@@ -276,6 +276,9 @@ jobs:
           bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
+
+      - name: Verify Python .pyi stubs are up to date
+        run: ./scripts/regenerate_python_stubs.sh build
       
       - name: Run clang-tidy
         run: scripts/clang-tidy-only-diff.sh $(nproc)

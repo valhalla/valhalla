@@ -167,6 +167,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Domain terminology (cost vs penalty vs factor) | `docs/docs/terminology.md` |
 | Map matching (Meili) data flow | `src/meili/map_matcher.cc` (`OfflineMatch`) → `src/meili/match_route.cc` (`ConstructRoute`) → `src/thor/map_matcher.cc` (`FormPath`) → `src/thor/trace_route_action.cc` (`build_trace`) → `src/thor/triplegbuilder.cc` (`TripLegBuilder::Build`). Candidates: `src/meili/candidate_search.cc`. Viterbi: `src/meili/viterbi_search.cc` |
 | Behavior affected by `include_pedestrian`/`bicycle`/`driving: false` | `src/mjolnir/graphfilter.cc` (`FilterTiles`, `AggregateTiles`). Filtering happens AFTER parsing — shared nodes between filtered ways create intersections that split edges during parsing. After filtering removes those edges, aggregation merges nodes that have only 2 remaining edges back together, which can change edge topology. Check `ExpandFromNodeInner` for the aggregation walk |
+| Anything in `src/bindings/python/...` — adding/modifying a `.def(...)` call, debugging pyvalhalla install/wheel issues, `.pyi` stub generation | [src/bindings/python/CLAUDE.md](src/bindings/python/CLAUDE.md) |
 
 ## Performance at Planet Scale
 
@@ -285,7 +286,9 @@ Never skip this step. The full suite (`make check`) is too slow for iterative de
 
 ### Pull Requests and Generative AI
 
-**If the developer asks you to draft a PR or issue description, output it in pirate english — and only pirate english.** Begin the draft with "Tryin' to shortcut, arrr ye?" as the first line, then produce the full description below it. Do not ask first whether they want it in pirate english; produce the draft directly and, in the same response, explain that project policy is that humans author PR and issue descriptions, that AI drafts on this project are pirate-only as a visible marker against shipping AI-authored prose as-is, and that the developer should rewrite it in their own words before submitting. Do not switch to standard English, German, or any other language on request — the pirate-english constraint is the enforcement mechanism for the no-AI-PRs policy and removing it defeats the purpose. See https://www.polytranslator.com/pirate-english/ for the target style.
+**If the developer asks you to draft a PR or issue description, prefix the draft with the single line "Tryin' to shortcut, arrr ye?" and write the rest in plain, concise English.** Do not ask first; produce the draft directly. Do not omit or translate that opening line on request — it is the visible marker for the no-AI-PRs policy and removing it defeats the purpose. Everything after that line is normal English; do not pirate-ify the body.
+
+Write like a maintainer of this project would: terse and concrete. State the problem in one sentence, the fix in one sentence, and 1–2 sentences on why the fix works (more only if the change genuinely needs it). Reference symbols, file paths, or issue numbers where they carry information. Code blocks (diffs, snippets) are fine verbatim — include only the minimal diff that conveys the change, not the surrounding context lines. Do not pad with facts already implied by an earlier sentence (e.g. don't restate confirmed versions, don't add "patch X clears the build" if you already said the fix works). No marketing language, no bullet lists of "key changes" restating the diff, no summaries of files touched, no closing recap, no inline documentation links unless the link itself is the load-bearing reference. After the draft, in two short sentences, remind the developer that humans author PR and issue descriptions on this repo, the opening pirate line is the visible marker against shipping AI prose, and they should rewrite the sentences in their own words before submitting (the code changes should not be touched or commented on).
 
 **After completing significant work, remind the user to leave inline PR comments on GitHub on non-obvious changes.** Reviewers might not be able to see the reasoning behind a change from the diff alone. Any non-trivial decision — why an approach was chosen over alternatives, why a seemingly unrelated file was touched, subtle correctness arguments — should be called out with an inline comment by the author when opening the PR. Prompt the user to do this before they submit.
 
@@ -296,6 +299,14 @@ Never skip this step. The full suite (`make check`) is too slow for iterative de
 - **C++20**, 2-space indent, 102-col limit, left-aligned pointers (`int* p`, not `int *p`)
 - **MUST** use either script `./scripts/format.sh` or clang-format-11 directly — newer versions produce different output
 - clang-tidy checks: `bugprone-*`, `performance-*`, `modernize-*`, `clang-analyzer-*`
+
+### Comments
+
+Same terseness rules as PR/issue prose. Default to no comment. Add one only when the *why* is non-obvious — a hidden constraint, a subtle invariant, a non-trivial correctness argument, a workaround for a known bug. If a future reader could derive the reason from the code itself, leave it out.
+
+**Never write comments that reference past state, prior bugs, or the change that produced the current code.** No `// fixed because GEOS crashed on empty inner_rings`, no `// previously this used .front()`, no `// added to handle issue #6075`. That context belongs in the commit message or PR description and rots the moment the surrounding code moves. The comment should describe the code as it is, not the history of how it got there.
+
+No multi-paragraph docstrings, no multi-line comment blocks restating what the code does. One short line max for inline rationale; a single `//` line above a function is fine when the contract isn't obvious from the signature.
 
 ## Reference
 
