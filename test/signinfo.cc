@@ -32,6 +32,7 @@ TEST(Signinfo, ExitToTest) {
   std::vector<std::string> linguistics;
   std::vector<std::pair<std::string, bool>> default_languages;
   const std::string linguistic_node_file = "test_sign_linguistic_node.bin";
+  {
   sequence<OSMNodeLinguistic> linguistic_node(linguistic_node_file, true);
 
   bool has_guide = GraphBuilder::CreateSignInfoList(exit_node, way, pronunciationMap, langMap,
@@ -243,6 +244,7 @@ TEST(Signinfo, ExitToTest) {
     FAIL() << "destination ref I 695 North failed to create exist sign.  No exit 5 should exist.";
   }
 
+  } // destroy sequence (closes file + mmap) before removing the file on Windows
   std::filesystem::remove(linguistic_node_file);
 }
 

@@ -155,7 +155,7 @@ const std::vector<std::string> responses{
 };
 
 std::filesystem::path cfg_path{VALHALLA_BUILD_DIR "test/skadi_service_tmp"};
-const auto cfg = test::make_config(cfg_path);
+const auto cfg = test::make_config(cfg_path.string());
 
 void create_tile() {
   // its annoying to have to get actual data but its also very boring to test with fake data

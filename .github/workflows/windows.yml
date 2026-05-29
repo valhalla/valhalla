@@ -214,8 +214,10 @@ jobs:
         run: |
           set -x
           export MSYS_NO_PATHCONV=1
-          # PATH needs vcpkg DLLs + libprime_server.dll (installed outside vcpkg).
-          export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin:${{ env.PRIMESERVER_INSTALL }}/bin"
+          # PATH needs: vcpkg DLLs, libprime_server.dll (installed outside vcpkg),
+          # and the spatialite/spatialite_tool executables the tz.sqlite build invokes.
+          vcpkg_bin="${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
+          export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools:${{ env.PRIMESERVER_INSTALL }}/bin"
           cmake --build build --config "$BUILD_TYPE" --target check \
             -- /v:m /p:BuildInParallel=true /m:4
 

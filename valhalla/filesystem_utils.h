@@ -25,13 +25,10 @@ inline std::time_t last_write_time_t(const std::filesystem::path& p) {
   return FS_MTIME(s);
 }
 
-struct has_data_impl {
-  template <typename T, typename Data = decltype(std::declval<const T&>().data())>
-  static std::true_type test(int);
-  template <typename...> static std::false_type test(...);
-};
+template <typename, typename = std::void_t<>> struct has_data : std::false_type {};
 
-template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
+template <typename T>
+struct has_data<T, std::void_t<decltype(std::declval<const T&>().data())>> : std::true_type {};
 
 /**
  * Saves data to the supplied path. Will replace the contents in case fpath already exists.
