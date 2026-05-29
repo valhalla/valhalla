@@ -172,7 +172,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
           }
           auto bbox = tiles.BinBBox(neighbor.first, neighbor.second);
           PointLL center((bbox.minx() + bbox.maxx()) * 0.5, (bbox.miny() + bbox.maxy()) * 0.5);
-          if (boost::geometry::within(center, ring)) {
+          if (point_in_poly(center, ring)) {
             start_bin = neighbor;
             break;
           }
