@@ -354,10 +354,10 @@ public:
    * @return a vector of neighboring bins given as a pair of tile id and bin id, in clockwise order,
    * starting from lower left.
    */
-  std::vector<std::pair<uint32_t, unsigned short>>
-  GetNeighboringBins(uint32_t tileid, short binid, bool four_way) const {
-    std::vector<std::pair<uint32_t, unsigned short>> neighbors;
-    neighbors.reserve(four_way ? 4 : 8);
+  template <bool four_way, int neighbour_count = four_way ? 4 : 8>
+  std::array<std::pair<uint32_t, unsigned short>, neighbour_count>
+  GetNeighboringBins(uint32_t tileid, short binid) const {
+    std::array<std::pair<uint32_t, unsigned short>, neighbour_count> neighbors;
 
     // tile coords
     int tx = tileid % ncolumns_;
@@ -370,9 +370,14 @@ public:
     int global_y = ty * nsubdivisions_ + by;
 
     // skip diagonal neighbors in four way mode
-    for (uint8_t i = four_way ? 1 : 0; i < 8; i += (four_way ? 2 : 1)) {
-      neighbors.push_back(GetNeighboringBin(global_x, global_y, static_cast<Neighbor>(i)));
+    constexpr auto start = four_way ? 1 : 0;
+    constexpr auto step = four_way ? 2 : 0;
+
+    int neighbor_idx = 0;
+    for (uint8_t i = start; i < 8; i += step) {
+      neighbors[neighbor_idx++] = GetNeighboringBin(global_x, global_y, static_cast<Neighbor>(i));
     }
+
     return neighbors;
   }
 

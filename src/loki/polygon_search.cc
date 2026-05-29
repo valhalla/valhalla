@@ -41,7 +41,7 @@ void correct_ring(bg::ring_ll_t& ring) {
   }
 
   // reverse ring if counter-clockwise
-  if (auto area = polygon_area(ring); area > 0) {
+  if (polygon_area(ring) > 0) {
     std::reverse(ring.begin(), ring.end());
   }
 }
@@ -164,7 +164,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
       for (const auto& bin_id : bin_map) {
         if (start_bin)
           break;
-        for (const auto& neighbor : tiles.GetNeighboringBins(tile_id, bin_id, /*four_way=*/false)) {
+        for (const auto& neighbor : tiles.GetNeighboringBins<false>(tile_id, bin_id)) {
           // skip neighbors that are themselves on the boundary
           if (auto it = line_intersection.find(neighbor.first);
               it != line_intersection.end() && it->second.find(neighbor.second) != it->second.end()) {
@@ -194,8 +194,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
         contained_bin_count++;
         // skip diagonal neighbors, since the Bresenham method used for finding the intersecting bins
         // does not move diagonally either
-        for (const auto& neighbor :
-             tiles.GetNeighboringBins(bin.first, bin.second, /*four_way=*/false)) {
+        for (const auto& neighbor : tiles.GetNeighboringBins<true>(bin.first, bin.second)) {
           if (processed_bins.count(to_value(neighbor.first, neighbor.second)) > 0) {
             continue; // we have already looked at this bin
           }
