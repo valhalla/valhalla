@@ -66,6 +66,7 @@ nav:
   - Node.js bindings: README_nodejs.md
   - Public APIs:
       - API Overview: api/index.md
+      - OpenAPI Spec: api/openapi.md
       - Protocol Buffers: api/protocol-buffers.md
       - Turn-by-Turn Route API:
           - Overview: api/turn-by-turn/overview.md
