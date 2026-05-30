@@ -923,9 +923,13 @@ function filter_tags_generic(kv)
     return 1
   end
 
-  --toss actual areas
+  --toss actual areas, but keep pedestrian areas 
   if kv["area"] == "yes" then
+    if kv["highway"] == "pedestrian" then
+      kv["pedestrian_area"] = "true"
+    else 
     return 1
+    end
   end
 
   --figure out what basic type of road it is

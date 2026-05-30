@@ -1771,6 +1771,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the area flag.
+   * @param  area   Is this an area?
+   */
+  void set_area(const bool area) {
+    area_ = area;
+  }
+
+  /**
+   * Get the area flag.
+   * @return  Returns area flag.
+   */
+  bool area() const {
+    return area_;
+  }
+
+  /**
    * Sets the ferry flag.
    * @param  ferry   Is a ferry?
    */
@@ -2658,6 +2674,7 @@ struct OSMWay {
   uint32_t sidewalk_right_ : 1;
   uint32_t sidewalk_left_ : 1;
   uint32_t sac_scale_ : 3;
+  uint32_t area_ : 1;
 
   // Classification
   uint32_t road_class_ : 3; // Importance of the road/path

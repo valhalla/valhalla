@@ -376,6 +376,9 @@ struct graph_parser {
         amenity_ = tag_.second;
       }
     };
+    tag_handlers_["pedestrian_area"] = [this]() {
+      way_.set_area(tag_.second == "true" ? true : false);
+    };
 
     tag_handlers_["use"] = [this]() {
       Use use = (Use)to_int(tag_.second);
