@@ -18,6 +18,7 @@ segway = "segway"
 subtiles = "subtiles"
 nd = "nd" # node
 Thur = "Thur" # short for Thursday, found in timeparsing.cc
+BA = "BA" # ...why are we doing this ourselves
 
 # places
 Pont = "Pont"     # Rue du Pont
