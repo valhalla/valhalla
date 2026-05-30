@@ -63,6 +63,11 @@ class Actor(_Actor):
         return super().locate(req)
 
     @dict_or_str
+    def optimized_route(self, req: Union[str, dict]) -> Union[str, dict]:
+        """Optimizes the order of a set of waypoints."""
+        return super().optimized_route(req)
+
+    @dict_or_str
     def isochrone(self, req: Union[str, dict]) -> Union[str, dict]:
         """Calculates isochrones and isodistances."""
         return super().isochrone(req)

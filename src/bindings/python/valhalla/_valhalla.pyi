@@ -8,10 +8,14 @@ class ValhallaError(RuntimeError):
     """
     Exception raised when a Valhalla operation fails.
 
-    :param int code: Valhalla-internal error code.
-    :param str message: Human-readable error message.
-    :param int http_code: Corresponding HTTP status code.
-    :param str http_message: Corresponding HTTP status message.
+    :ivar code: Valhalla-internal error code.
+    :vartype code: int
+    :ivar message: Human-readable error message.
+    :vartype message: str
+    :ivar http_code: Corresponding HTTP status code.
+    :vartype http_code: int
+    :ivar http_message: Corresponding HTTP status message.
+    :vartype http_message: str
     """
 
 class _Actor:
@@ -21,8 +25,7 @@ class _Actor:
 
     def locate(self, arg: str, /) -> str: ...
 
-    def optimized_route(self, arg: str, /) -> str:
-        """Optimizes the order of a set of waypoints by time."""
+    def optimized_route(self, arg: str, /) -> str: ...
 
     def matrix(self, arg: str, /) -> str: ...
 
