@@ -120,7 +120,7 @@ def get_tile_ids_from_ring(ring_coords: Sequence[tuple], levels: Sequence[int] =
     assumed and coerced to be an outer ring. It's automatically closed if
     the last coordinate does not match the first.
 
-    :param coords: List of (lon, lat) tuples forming a closed ring (polygon boundary).
+    :param ring_coords: List of (lon, lat) tuples forming a closed ring (polygon boundary).
                    Must have at least 3 coordinates.
     :param levels: The hierarchy levels for which to find tiles.
     :returns: The list of tile GraphIds which intersect or are inside the ring.

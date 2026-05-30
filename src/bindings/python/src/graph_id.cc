@@ -164,7 +164,7 @@ void init_graphid(nb::module_& m) {
       "which intersect or are contained within the polygon ring. The ring is\n"
       "assumed and coerced to be an outer ring. It's automatically closed if\n"
       "the last coordinate does not match the first.\n\n"
-      ":param coords: List of (lon, lat) tuples forming a closed ring (polygon boundary).\n"
+      ":param ring_coords: List of (lon, lat) tuples forming a closed ring (polygon boundary).\n"
       "               Must have at least 3 coordinates.\n"
       ":param levels: The hierarchy levels for which to find tiles.\n"
       ":returns: The list of tile GraphIds which intersect or are inside the ring.\n"

@@ -14,6 +14,7 @@
    * ADDED: lz4 support for OSM PBF files [#6081](https://github.com/valhalla/valhalla/pull/6081)
    * CHANGED: auto-generate .pyi stubs with cmake, needs a full build [#6101](https://github.com/valhalla/valhalla/pull/6101)
    * ADDED: Bounding circles for faster loki (not yet enabled) [#5103](https://github.com/valhalla/valhalla/pull/5103)
+   * ADDED: OpenAPI documentation [#6088](https://github.com/valhalla/valhalla/pull/6088)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**
