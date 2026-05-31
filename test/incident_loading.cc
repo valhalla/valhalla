@@ -57,8 +57,7 @@ TEST_F(incident_loading, read_tile) {
   // empty but valid
   IncidentsTile t;
   {
-    std::ofstream f(filepath,
-                    std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+    std::ofstream f(filepath, std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
     f << t.SerializeAsString();
   }
   ASSERT_FALSE(testable_singleton::read_tile(filepath)) << " should ignore empty tile";
@@ -70,8 +69,7 @@ TEST_F(incident_loading, read_tile) {
   loc->set_end_offset(1);
   loc->set_metadata_index(0);
   {
-    std::ofstream f(filepath,
-                    std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+    std::ofstream f(filepath, std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
     f << t.SerializeAsString();
   }
   ASSERT_TRUE(testable_singleton::read_tile(filepath)) << " should return valid tile";

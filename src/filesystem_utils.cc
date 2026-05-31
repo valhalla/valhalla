@@ -38,10 +38,10 @@ void rename_replace(const std::filesystem::path& from,
   info->FileNameLength = static_cast<DWORD>(name_bytes);
   std::memcpy(info->FileName, to_w.c_str(), name_bytes);
 
-  DWORD err = ::SetFileInformationByHandle(handle, FileRenameInfoEx, info,
-                                           static_cast<DWORD>(buffer.size()))
-                  ? 0
-                  : ::GetLastError();
+  DWORD err =
+      ::SetFileInformationByHandle(handle, FileRenameInfoEx, info, static_cast<DWORD>(buffer.size()))
+          ? 0
+          : ::GetLastError();
   ::CloseHandle(handle);
 
   // filesystems without POSIX-semantics rename (FAT/exFAT, some SMB shares) report

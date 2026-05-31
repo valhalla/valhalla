@@ -26,8 +26,9 @@ inline std::time_t last_write_time_t(const std::filesystem::path& p) {
 }
 
 // satisfied by contiguous containers that expose a raw byte pointer via .data()
-template <typename T>
-concept has_data = requires(const T& t) { t.data(); };
+template <typename T> concept has_data = requires(const T& t) {
+  t.data();
+};
 
 /**
  * Renames `from` to `to`, replacing `to` if it exists, mirroring POSIX rename:

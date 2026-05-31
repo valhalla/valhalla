@@ -7798,8 +7798,8 @@ TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_8_miles_en_US) {
                                   "Take the M toward FOREST HILLS - 71 AV. (8 stops)", "", "",
                                   "Take the M toward FOREST HILLS - 71 AV.", "Travel 8 stops.",
                                   "Depart: 10:11 AM from Flushing Av.",
-                                  "Depart at 10:11 AM from Flushing Av.", "Arrive: 10:32 AM at 23 St.",
-                                  "Arrive at 10:32 AM at 23 St.");
+                                  "Depart at 10:11 AM from Flushing Av.",
+                                  "Arrive: 10:32 AM at 23 St.", "Arrive at 10:32 AM at 23 St.");
 #endif
 
   TryBuild(options, maneuvers, expected_maneuvers);
