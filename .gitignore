@@ -30,6 +30,7 @@ CMakeLists.txt.user
 vcpkg*/
 *.log
 custom_files/
+redoc-static.html
 
 # python
 .venv

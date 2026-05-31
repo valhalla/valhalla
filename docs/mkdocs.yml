@@ -52,6 +52,37 @@ markdown_extensions:
   - admonition
   - pymdownx.details
 
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [../src/bindings/python]
+          options:
+            # parse :param:/:returns:/:raises: RST directives in docstrings
+            docstring_style: sphinx
+            # render param/return/raise blocks as a typed table with a description column
+            docstring_section_style: spacy
+            # list members in source order, not alphabetical
+            members_order: source
+            # render the symbol's name as the page's main heading
+            show_root_heading: true
+            # heading shows "Actor" rather than the full dotted path "valhalla.actor.Actor"
+            show_root_full_path: false
+            # fold __init__'s params/docs into the class entry instead of a nested section
+            merge_init_into_class: true
+            # render the signature on its own line below the symbol name (more readable for long sigs)
+            separate_signature: true
+            # include type hints in the rendered signature
+            show_signature_annotations: true
+            # surface members inherited from base classes (e.g. _Actor methods on Actor)
+            inherited_members: true
+            # don't render a [source] link/snippet per symbol — paths point inside .pyi anyway
+            show_source: false
+            # hide underscore-prefixed members (e.g. _Actor, _GraphUtils) from the rendered output
+            filters: ["!^_"]
+
 site_name: Valhalla Docs
 repo_url: https://github.com/valhalla/valhalla/
 edit_uri: edit/master/docs/docs/
@@ -62,10 +93,19 @@ nav:
   - Introduction for Users: valhalla-intro.md
   - Build from Source: building.md
   - Terminology: terminology.md
-  - Python bindings: README_python.md
+  - Python bindings:
+      - Getting started: README_python.md
+      - API reference:
+          - Actor: python/actor.md
+          - Config: python/config.md
+          - Graph utilities: python/graph_utils.md
+          - Predicted speeds: python/predicted_speeds.md
+          - Polyline decoder: python/decode_polyline.md
+          - Exceptions: python/exceptions.md
   - Node.js bindings: README_nodejs.md
   - Public APIs:
       - API Overview: api/index.md
+      - OpenAPI Spec: api/openapi.md
       - Protocol Buffers: api/protocol-buffers.md
       - Turn-by-Turn Route API:
           - Overview: api/turn-by-turn/overview.md
