@@ -8,6 +8,16 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   add_link_options("-Wl,--disable-new-dtags")
 endif()
 
+# Windows: require Windows 10 1607+ and target it explicitly, so modern Win32 APIs
+# (e.g. POSIX-semantics rename via FileRenameInfoEx) are available without runtime
+# fallbacks. _WIN32_WINNT_WIN10 = 0x0A00, NTDDI_WIN10_RS1 (1607) = 0x0A000001.
+if(WIN32)
+  if(CMAKE_SYSTEM_VERSION VERSION_LESS 10)
+    message(FATAL_ERROR "Valhalla on Windows requires Windows 10 (1607) or newer, got ${CMAKE_SYSTEM_VERSION}")
+  endif()
+  add_compile_definitions(_WIN32_WINNT=0x0A00 NTDDI_VERSION=0x0A000001)
+endif()
+
 include(FindPkgConfig)
 include(GNUInstallDirs)
 

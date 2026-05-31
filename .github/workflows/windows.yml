@@ -56,8 +56,6 @@ jobs:
       VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
       VCPKG_DISABLE_COMPILER_TRACKING: ON
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
-      # Bump in lockstep with install-linux-deps.sh and the macOS step in osx_win_python_builds.yml.
-      PRIMESERVER_VERSION: "0.11.0"
     steps:
       - uses: actions/checkout@v6
         with:
@@ -80,7 +78,6 @@ jobs:
           echo "VCPKG_DEFAULT_TRIPLET=x64-windows" >> $GITHUB_ENV
           echo "VCPKG_TRIPLET_PATH=${workspace}/vcpkg/triplets/x64-windows.cmake" >> $GITHUB_ENV
           echo "VCPKG_DEFAULT_BINARY_CACHE=${workspace}/vcpkg/archives" >> $GITHUB_ENV
-          echo "PRIMESERVER_INSTALL=${workspace}/prime_server_install" >> $GITHUB_ENV
 
       - name: Install GNU make & awk
         run: choco install gawk make
@@ -106,48 +103,20 @@ jobs:
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache-2
-          # PRIMESERVER_VERSION in the key so a bump invalidates the cached prime_server build.
-          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-prime=${{ env.PRIMESERVER_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+          # retry: a transient S3 transfer abort on the ~1GB object otherwise goes cold
+          retry: true
+          retry-count: 3
+          # vcpkg-configuration.json (our deps), compiler version or vcpkg cli version will trigger cache misses
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
           path: |
             vcpkg/*
             !vcpkg/downloads
             !vcpkg/docs
             !vcpkg/buildtrees
             vcpkg/downloads/tools
-            prime_server_install
 
       - name: Setup Developer Command Prompt for VS
         uses: ilammy/msvc-dev-cmd@v1
-
-      # Classic-mode install for prime_server's build (--classic overrides manifest auto-detect).
-      - name: Install prime_server runtime deps via vcpkg
-        if: steps.vcpkg_restore.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          set -x
-          "$VCPKG_INSTALLATION_ROOT/vcpkg.exe" install --classic \
-            "zeromq:$VCPKG_DEFAULT_TRIPLET" \
-            "czmq:$VCPKG_DEFAULT_TRIPLET" \
-            "curl:$VCPKG_DEFAULT_TRIPLET"
-
-      - name: Build & install prime_server
-        if: steps.vcpkg_restore.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          set -x
-          export MSYS_NO_PATHCONV=1  # keep MSBuild /p: and /m: args intact through Git Bash
-          git clone --branch="$PRIMESERVER_VERSION" --recurse-submodules \
-            https://github.com/kevinkreiser/prime_server "$RUNNER_TEMP/prime_server"
-          cd "$RUNNER_TEMP/prime_server"
-          cmake -B build \
-            -G "Visual Studio 17 2022" -A x64 \
-            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
-            -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
-            -DCMAKE_INSTALL_PREFIX="$PRIMESERVER_INSTALL" \
-            -DENABLE_WERROR=OFF
-          cmake --build build --config "$BUILD_TYPE" -- /v:m /p:BuildInParallel=true /m:4
-          cmake --install build --config "$BUILD_TYPE"
 
       - name: Get version modifier
         id: version-modifier
@@ -159,8 +128,6 @@ jobs:
         shell: bash
         run: |
           set -x
-          export PKG_CONFIG_PATH="$PRIMESERVER_INSTALL/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-          # services feature activates zeromq/czmq; wheel job omits it.
           cmake -B build \
             -G "Visual Studio 17 2022" -A x64 \
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
@@ -168,7 +135,6 @@ jobs:
             -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
             -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
             -DVCPKG_MANIFEST_FEATURES="services" \
-            -DCMAKE_PREFIX_PATH="$PRIMESERVER_INSTALL" \
             -DENABLE_DATA_TOOLS=ON \
             -DENABLE_TOOLS=ON \
             -DENABLE_PYTHON_BINDINGS=ON \
@@ -179,8 +145,8 @@ jobs:
             -DPREFER_EXTERNAL_DEPS=ON \
             -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
 
-      # Save after Configure CMake so vcpkg/archives includes manifest-mode-installed ports
-      # (gdal, spatialite, etc.), not just the classic-mode zeromq/czmq/curl from earlier.
+      # Save after Configure CMake so vcpkg/archives includes every manifest-mode-installed
+      # port (gdal, spatialite, prime-server, etc.).
       - name: Save vcpkg packages
         if: steps.vcpkg_restore.outputs.cache-hit != 'true'
         uses: tespkg/actions-cache/save@v1
@@ -189,14 +155,15 @@ jobs:
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache-2
-          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-prime=${{ env.PRIMESERVER_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+          retry: true
+          retry-count: 3
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
           path: |
             vcpkg/*
             !vcpkg/downloads
             !vcpkg/docs
             !vcpkg/buildtrees
             vcpkg/downloads/tools
-            prime_server_install
 
       - name: Build Valhalla
         shell: bash
@@ -204,20 +171,30 @@ jobs:
           set -x
           export MSYS_NO_PATHCONV=1
           # nanobind's .pyi stub generation runs Python to import the .pyd, which
-          # transitively loads libprime_server.dll + the vcpkg-installed DLLs.
-          export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin:${{ env.PRIMESERVER_INSTALL }}/bin"
+          # transitively loads prime_server.dll + the other vcpkg-installed DLLs.
+          export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin"
           cmake --build build --config "$BUILD_TYPE" -- /v:m /p:BuildInParallel=true /m:4
           cmake --build build --config "$BUILD_TYPE" --target install
+
+      - name: Show commit under test
+        shell: bash
+        run: |
+          echo "=================================================================="
+          echo "CHECKED-OUT HEAD (merge commit on PR events): $(git rev-parse HEAD)"
+          echo "PR head sha:                                  ${{ github.event.pull_request.head.sha }}"
+          echo "------------------------------------------------------------------"
+          git log -3 --oneline
+          echo "=================================================================="
 
       - name: Run tests
         shell: bash
         run: |
           set -x
           export MSYS_NO_PATHCONV=1
-          # PATH needs: vcpkg DLLs, libprime_server.dll (installed outside vcpkg),
-          # and the spatialite/spatialite_tool executables the tz.sqlite build invokes.
+          # PATH needs the spatialite/spatialite_tool executables the tz.sqlite build invokes;
+          # test-binary DLLs (prime_server.dll etc.) are deployed next to the exes by vcpkg applocal.
           vcpkg_bin="${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
-          export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools:${{ env.PRIMESERVER_INSTALL }}/bin"
+          export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
           cmake --build build --config "$BUILD_TYPE" --target check \
             -- /v:m /p:BuildInParallel=true /m:4
 

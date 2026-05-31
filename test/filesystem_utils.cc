@@ -83,23 +83,12 @@ TEST(Filesystem, concurrent_folder_create_delete) {
 }
 
 TEST(Filesystem, has_data_member_type) {
-  auto arr = vfs::has_data<std::array<int, 3>>::value;
-  EXPECT_TRUE(arr);
-
-  auto vc = vfs::has_data<std::vector<int>>::value;
-  EXPECT_TRUE(vc);
-
-  auto str = vfs::has_data<std::string>::value;
-  EXPECT_TRUE(str);
-
-  auto umap = vfs::has_data<std::unordered_map<int, int>>::value;
-  EXPECT_FALSE(umap);
-
-  auto integer = vfs::has_data<int>::value;
-  EXPECT_FALSE(integer);
-
-  auto lst = vfs::has_data<std::list<int>>::value;
-  EXPECT_FALSE(lst);
+  EXPECT_TRUE((vfs::has_data<std::array<int, 3>>));
+  EXPECT_TRUE((vfs::has_data<std::vector<int>>));
+  EXPECT_TRUE((vfs::has_data<std::string>));
+  EXPECT_FALSE((vfs::has_data<std::unordered_map<int, int>>));
+  EXPECT_FALSE((vfs::has_data<int>));
+  EXPECT_FALSE((vfs::has_data<std::list<int>>));
 }
 
 TEST(Filesystem, save_file_valid_input) {

@@ -204,23 +204,23 @@ valhalla_test_config(utrecht_tiles_extract
   utrecht_tiles_extract_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.tar
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/utrecht_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${utrecht_tiles_initial_cfg}
       -s initialize -e parseways
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${utrecht_tiles_main_cfg}
       -s parserelations -e parserelations
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${utrecht_tiles_main_cfg}
       -s parsenodes -e parsenodes
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${utrecht_tiles_main_cfg}
       -s build -e cleanup
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
+  COMMAND $<TARGET_FILE:valhalla_add_predicted_traffic>
       --config ${utrecht_tiles_traffic_cfg}
       -t ${VALHALLA_SOURCE_DIR}/test/data/traffic_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_extract
@@ -239,7 +239,7 @@ valhalla_test_config(whitelion_tiles
   [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/whitelion_tiles","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
   whitelion_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${whitelion_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf
   COMMENT "Building Whitelion Tiles..."
@@ -252,7 +252,7 @@ valhalla_test_config(whitelion_tiles_reverse
   [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/whitelion_tiles_reverse","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
   whitelion_tiles_reverse_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles_reverse/2/000/814/309.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${whitelion_tiles_reverse_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk_reversed_oneway.osm.pbf
   COMMENT "Building reversed Whitelion Tiles..."
@@ -265,7 +265,7 @@ valhalla_test_config(bayfront_singapore_tiles
   [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/bayfront_singapore_tiles","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
   bayfront_singapore_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/bayfront_singapore_tiles/1/033/043.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${bayfront_singapore_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/bayfront_singapore.osm.pbf
       COMMENT "Building Singapore, Bayfront tiles..."
@@ -279,7 +279,7 @@ valhalla_test_config(roma_tiles
   roma_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/roma_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${roma_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf
   COMMENT "Building Roma Tiles..."
@@ -293,7 +293,7 @@ valhalla_test_config(paris_bss_tiles
   paris_bss_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/paris_bss_tiles/0/003/105.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/paris_bss_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${paris_bss_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/paris_bss.osm.pbf
   COMMENT "Building Paris BSS Tiles..."
@@ -306,7 +306,7 @@ valhalla_test_config(melborne_tiles
   melborne_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/melborne_tiles/0/001/251.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/melborne_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${melborne_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/melborne.osm.pbf
   COMMENT "Building Melborne Tiles..."
@@ -320,7 +320,7 @@ valhalla_test_config(ny_ar_tiles
   ny_ar_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/ny_ar_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${ny_ar_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf
   COMMENT "Building New York Access Restriction Tiles..."
@@ -334,7 +334,7 @@ valhalla_test_config(pa_ar_tiles
   pa_ar_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/pa_ar_tiles/2/000/749/212.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/pa_ar_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${pa_ar_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/pa-access-restriction.osm.pbf
   COMMENT "Building PA Access Restriction Tiles..."
@@ -348,7 +348,7 @@ valhalla_test_config(nh_ar_tiles
   nh_ar_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/nh_ar_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --config ${nh_ar_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/nh-access-restriction.osm.pbf
   COMMENT "Building New Hampshire Access Restriction Tiles..."

@@ -54,6 +54,10 @@
         {
           "name": "czmq",
           "platform": "windows"
+        },
+        {
+          "name": "prime-server",
+          "platform": "windows"
         }
       ]
     }

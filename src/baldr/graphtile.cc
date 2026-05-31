@@ -195,7 +195,7 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data,
     file.close();
     if (file.fail())
       success = false;
-    std::filesystem::rename(tmp_location, disk_location, ec);
+    filesystem_utils::rename_replace(tmp_location, disk_location, ec);
     if (ec)
       success = false;
   } else {

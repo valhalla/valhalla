@@ -1,5 +1,15 @@
 {
   "overlay-ports": [
         "./overlay-ports-vcpkg"
+  ],
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/kevinkreiser/prime_server",
+      "baseline": "a18a1e80a0340dd2586f16c4f6a59c9eb3860163",
+      "packages": [
+        "prime-server"
+      ]
+    }
   ]
 }
