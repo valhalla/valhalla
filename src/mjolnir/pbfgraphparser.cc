@@ -3843,6 +3843,7 @@ struct graph_parser {
     uint64_t from_way_id = 0;
     bool isRestriction = false, isTypeRestriction = false, hasRestriction = false;
     bool isRoad = false, isRoute = false, isBicycle = false, isConnectivity = false;
+    bool isMultipolygon = false, isPedestrian = false, isArea = false;
     bool isConditional = false, isProbable = false, has_multiple_times = false;
     uint32_t bike_network_mask = 0;
 
@@ -3860,6 +3861,8 @@ struct graph_parser {
           isRoute = true;
         } else if (tag.second == "connectivity") {
           isConnectivity = true;
+        } else if (tag.second == "multipolygon") {
+          isMultipolygon = true;
         }
       } else if (tag.first == "route") {
         if (tag.second == "road") {
@@ -3986,6 +3989,14 @@ struct graph_parser {
         to = tag.second;
       } else if (tag.first == "from") {
         from = tag.second;
+      } else if (tag.first == "highway") {
+        if (tag.second == "pedestrian") {
+          isPedestrian = true;
+        }
+      } else if (tag.first == "area") {
+        if (tag.second == "yes") {
+          isArea = true;
+        }
       }
     } // for (const auto& tag : results)
 
@@ -4269,6 +4280,7 @@ struct graph_parser {
           osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
         }
       }
+    } else if (isMultipolygon && isPedestrian && isArea) {
     }
   }
 

@@ -2465,6 +2465,10 @@ function rels_proc (kv, nokeys)
      end
   end
 
+  if (kv["type"] == "multipolygon" and kv["highway"] == "pedestrian" and kv["area"] == "yes") then
+    return 0, kv
+  end
+
   return 1, kv
 end
 
