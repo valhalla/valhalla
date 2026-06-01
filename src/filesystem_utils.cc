@@ -19,8 +19,8 @@ void rename_replace(const std::filesystem::path& from,
                     const std::filesystem::path& to,
                     std::error_code& ec) {
 #ifdef _WIN32
-  // POSIX-semantics rename (Windows 10 1607+, guaranteed by the CMake version floor):
-  // atomic and, like Linux, tolerant of readers holding the old target open.
+  // POSIX-semantics rename: atomic and, like Linux, tolerant of readers holding the
+  // old target open. Needs Windows 10 1709+ at runtime; older systems hit the fallback.
   HANDLE handle = ::CreateFileW(from.wstring().c_str(), DELETE,
                                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
                                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);

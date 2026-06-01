@@ -129,7 +129,7 @@ jobs:
         run: |
           set -x
           cmake -B build \
-            -G "Visual Studio 17 2022" -A x64 \
+            -G Ninja \
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
             -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
@@ -173,8 +173,8 @@ jobs:
           # nanobind's .pyi stub generation runs Python to import the .pyd, which
           # transitively loads prime_server.dll + the other vcpkg-installed DLLs.
           export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin"
-          cmake --build build --config "$BUILD_TYPE" -- /v:m /p:BuildInParallel=true /m:4
-          cmake --build build --config "$BUILD_TYPE" --target install
+          cmake --build build
+          cmake --build build --target install
 
       - name: Show commit under test
         shell: bash
@@ -195,8 +195,7 @@ jobs:
           # test-binary DLLs (prime_server.dll etc.) are deployed next to the exes by vcpkg applocal.
           vcpkg_bin="${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
           export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
-          cmake --build build --config "$BUILD_TYPE" --target check \
-            -- /v:m /p:BuildInParallel=true /m:4
+          cmake --build build --target check
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3

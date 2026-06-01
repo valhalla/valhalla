@@ -8,14 +8,21 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   add_link_options("-Wl,--disable-new-dtags")
 endif()
 
-# Windows: require Windows 10 1607+ and target it explicitly, so modern Win32 APIs
-# (e.g. POSIX-semantics rename via FileRenameInfoEx) are available without runtime
-# fallbacks. _WIN32_WINNT_WIN10 = 0x0A00, NTDDI_WIN10_RS1 (1607) = 0x0A000001.
 if(WIN32)
-  if(CMAKE_SYSTEM_VERSION VERSION_LESS 10)
-    message(FATAL_ERROR "Valhalla on Windows requires Windows 10 (1607) or newer, got ${CMAKE_SYSTEM_VERSION}")
+  # require the SDK to provide FileRenameInfoEx (Win10 1709 SDK) rather than pinning a target version
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles(
+    "#include <windows.h>\nint main() { (void)FileRenameInfoEx; return 0; }"
+    HAVE_FILE_RENAME_INFO_EX)
+  if(NOT HAVE_FILE_RENAME_INFO_EX)
+    message(FATAL_ERROR "Valhalla on Windows needs a Windows 10 1709 SDK or newer (FileRenameInfoEx)")
   endif()
-  add_compile_definitions(_WIN32_WINNT=0x0A00 NTDDI_VERSION=0x0A000001)
+
+  # /Z7 (embedded debug info) instead of /Zi: no mspdbsrv serialization under Ninja, sccache-friendly
+  if(POLICY CMP0141)
+    cmake_policy(SET CMP0141 NEW)
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+  endif()
 endif()
 
 include(FindPkgConfig)
