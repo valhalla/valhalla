@@ -49,30 +49,26 @@ const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
 
-uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& tile_dir) {
-  std::sort(paths.begin(), paths.end());
-
+// MD5 of the tile's data portion for e.g. integrity checks
+uint64_t hash_tile_data(const std::filesystem::path& path) {
   // uses openssl's API which can build the digest from byte chunks to save memory
   EVP_MD_CTX* ctx = EVP_MD_CTX_new();
   std::array<unsigned char, 16> digest{};
   try {
     EVP_DigestInit_ex(ctx, EVP_md5(), nullptr);
 
-    std::vector<char> buffer(1 << 26); // 64 MiB
+    std::ifstream in(path, std::ios::binary);
+    if (!in) {
+      throw std::runtime_error("Failed to open: " + path.string());
+    }
+    in.seekg(sizeof(GraphTileHeader));
 
-    for (const auto& p : paths) {
-      std::ifstream in(p, std::ios::binary);
-      if (!in) {
-        throw std::runtime_error("Failed to open: " + p);
-      }
-
-      while (in) {
-        in.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-        std::streamsize got = in.gcount();
-        if (got > 0) {
-          if (EVP_DigestUpdate(ctx, buffer.data(), static_cast<size_t>(got)) != 1) {
-            throw std::runtime_error("EVP_DigestUpdate failed");
-          }
+    std::vector<char> buffer(1 << 20); // 1 MiB
+    while (in) {
+      in.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+      if (std::streamsize got = in.gcount(); got > 0) {
+        if (EVP_DigestUpdate(ctx, buffer.data(), static_cast<size_t>(got)) != 1) {
+          throw std::runtime_error("EVP_DigestUpdate failed");
         }
       }
     }
@@ -94,11 +90,56 @@ uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& til
     lo = (lo << 8) | digest[i];
     hi = (hi << 8) | digest[8 + i];
   }
-
   std::hash<uint64_t> hasher;
-  uint64_t checksum = lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
+  return lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
+}
 
-  return checksum;
+// pack each tile's header checksum as build_id<<48 | per_tile_hash: the low 48 bits hash the tile's
+// own data, the high 16 are a tileset-wide build id (same in every tile). A tile_url client compares
+// the build id from any single downloaded tile against id.txt to detect a rebuilt remote.
+void set_tile_checksums(const std::string& tile_dir) {
+  // read a tile's header, let the callback mutate it, write it back
+  auto update_header = [](const std::filesystem::path& p, const auto& mutate) {
+    std::fstream file(p, std::ios::in | std::ios::out | std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Failed to open file " + p.string());
+    }
+    GraphTileHeader header;
+    file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
+    mutate(header);
+    file.seekp(0);
+    file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
+    if (!file) {
+      throw std::runtime_error("Failed to write to file " + p.string());
+    }
+  };
+
+  constexpr uint64_t tile_hash_mask = (uint64_t(1) << kTileHashBits) - 1;
+
+  // pass 1: store each tile's own 48-bit data hash in the low bits and accumulate the build id
+  uint64_t build_id_acc = 0;
+  for (std::filesystem::recursive_directory_iterator it(tile_dir), end; it != end; ++it) {
+    if (!it->is_regular_file() || it->path().extension() != ".gph") {
+      continue;
+    }
+    const uint64_t tile_hash = hash_tile_data(it->path()) & tile_hash_mask;
+    // addition is order independent, so the build id doesn't depend on the walk
+    build_id_acc += tile_hash;
+    update_header(it->path(), [&](GraphTileHeader& h) { h.set_checksum(tile_hash); });
+  }
+
+  // fold the accumulator to 16 bits (enough for URL based deployments)
+  uint16_t build_id = build_id_acc ^ (build_id_acc >> 16) ^ (build_id_acc >> 32) ^ (build_id_acc >> 48);
+
+  // pass 2: stamp the build id into the high bits of every tile header's checksum
+  const uint64_t build_id_bits = static_cast<uint64_t>(build_id) << kTileHashBits;
+  for (std::filesystem::recursive_directory_iterator it(tile_dir), end; it != end; ++it) {
+    if (!it->is_regular_file() || it->path().extension() != ".gph") {
+      continue;
+    }
+    update_header(it->path(),
+                  [&](GraphTileHeader& h) { h.set_checksum(h.checksum() | build_id_bits); });
+  }
 }
 
 /**
@@ -707,7 +748,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
                                          way_nodes_bin, access_bin);
-    osm_data.pbf_checksum_ = get_pbf_checksum(input_files, tile_dir);
 
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
@@ -857,6 +897,9 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (start_stage <= BuildStage::kValidate && BuildStage::kValidate <= end_stage) {
     GraphValidator::Validate(config);
     log_stage(BuildStage::kValidate);
+    // set the checksum of the graph tiles
+    // NOTE: has to be done after the last tile writing stage
+    set_tile_checksums(tile_dir);
   }
 
   // Cleanup bin files

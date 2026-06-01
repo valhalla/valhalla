@@ -1,7 +1,6 @@
 #include "gurka.h"
 
 #include <gtest/gtest.h>
-#include <openssl/evp.h>
 
 #include <fstream>
 
@@ -103,31 +102,6 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
   }
 }
 
-uint64_t get_pbf_md5(std::string pbf_path) {
-  std::ifstream file(pbf_path, std::ios::binary);
-  std::vector<unsigned char> data((std::istreambuf_iterator<char>(file)),
-                                  std::istreambuf_iterator<char>());
-
-  unsigned char digest[EVP_MAX_MD_SIZE];
-  unsigned int len = 0;
-  EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-  EVP_DigestInit_ex(ctx, EVP_md5(), nullptr);
-  EVP_DigestUpdate(ctx, data.data(), data.size());
-  EVP_DigestFinal_ex(ctx, digest, &len);
-  EVP_MD_CTX_free(ctx);
-
-  // roll the 128 bit digest into a uint64
-  uint64_t lo = 0, hi = 0;
-  for (int i = 0; i < 8; ++i) {
-    lo = (lo << 8) | digest[i];
-    hi = (hi << 8) | digest[8 + i];
-  }
-  std::hash<uint64_t> hasher;
-  uint64_t checksum = lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
-
-  return checksum;
-}
-
 // 1. build tiles with the same input twice
 // 2. check that the same tile sets are generated
 struct ReproducibleBuild : ::testing::Test {
@@ -140,17 +114,16 @@ struct ReproducibleBuild : ::testing::Test {
     };
     const auto [first_map, first_pbf] = build_tiles("1");
     const auto [second_map, second_pbf] = build_tiles("2");
-    // the checksums will differ when the PBFs weren't produced in the same second due to OSM header
-    const auto first_pbf_md5 = get_pbf_md5(first_pbf);
-    const auto second_pbf_md5 = get_pbf_md5(second_pbf);
-    EXPECT_GT(first_pbf_md5, 0);
-    EXPECT_GT(second_pbf_md5, 0);
 
     baldr::GraphReader first_reader(first_map.config.get_child("mjolnir"));
     baldr::GraphReader second_reader(second_map.config.get_child("mjolnir"));
     const std::unordered_set<GraphId> first_tiles = first_reader.GetTileSet();
     ASSERT_EQ(first_tiles.size(), second_reader.GetTileSet().size())
         << "Got different tiles sets: tile count mismatch";
+
+    // the low 48 bits hash the tile's own data, so the checksum is unique per tile but reproducible
+    // across builds; the high 16 bits are a build id, identical across every tile and both builds
+    uint16_t build_id = first_reader.GetGraphTile(*first_tiles.begin())->header()->build_id();
     for (const GraphId& tile_id : first_tiles) {
       graph_tile_ptr first_tile = first_reader.GetGraphTile(tile_id);
       ASSERT_TRUE(second_reader.DoesTileExist(tile_id))
@@ -159,8 +132,10 @@ struct ReproducibleBuild : ::testing::Test {
 
       // human readable check
       assert_tile_equalish(*first_tile, *second_tile);
-      EXPECT_EQ(first_tile->header()->checksum(), first_pbf_md5);
-      EXPECT_EQ(second_tile->header()->checksum(), second_pbf_md5);
+      EXPECT_GT(first_tile->header()->checksum(), 0);
+      EXPECT_EQ(first_tile->header()->checksum(), second_tile->header()->checksum());
+      EXPECT_EQ(first_tile->header()->build_id(), build_id);
+      EXPECT_EQ(second_tile->header()->build_id(), build_id);
 
       // check that raw tiles are equal
       const auto raw_tile_bytes = [](const graph_tile_ptr& tile) -> std::string {
