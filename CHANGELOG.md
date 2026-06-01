@@ -8,6 +8,8 @@
    * FIXED: Avoid creating loop edges during graph filtering [#6050](https://github.com/valhalla/valhalla/pull/6050)
    * FIXED: UB in adminbuilder in `&inner_rings.front()` if `inner_rings` is empty [#6077](https://github.com/valhalla/valhalla/pull/6077)
    * FIXED: duplicate config arg in `enhance` [#6095](https://github.com/valhalla/valhalla/pull/6095)
+   * FIXED: flood fill leak in polygon search [#6086](https://github.com/valhalla/valhalla/pull/6086)
+   * FIXED: Fix errors in cost_inline_tests [#6117](https://github.com/valhalla/valhalla/pull/6117)
 * **Enhancement**
    * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
    * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
@@ -36,7 +38,7 @@
    * FIXED: Do not crash on backwards traces over oneway edges [#6048](https://github.com/valhalla/valhalla/pull/6048)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
-   * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
+   * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906)
    * ADDED: `Cache-Control = public, max-age=N"` response header to `/tile` requests; also added RPATH to local debug builds to fix ldd resolving when libvalhalla is installed system-wide [#5902](https://github.com/valhalla/valhalla/pull/5902)
    * CHANGED: bump tz to 2026a [#5930](https://github.com/valhalla/valhalla/pull/5930)
    * ADDED: `display_ll` field to incident meta [#5943](https://github.com/valhalla/valhalla/pull/5943)
