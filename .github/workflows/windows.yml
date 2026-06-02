@@ -173,7 +173,8 @@ jobs:
           # nanobind's .pyi stub generation runs Python to import the .pyd, which
           # transitively loads prime_server.dll + the other vcpkg-installed DLLs.
           export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin"
-          cmake --build build
+          # -k 0: keep building after failures so one run surfaces every error
+          cmake --build build -- -k 0
           cmake --build build --target install
 
       - name: Show commit under test
@@ -195,7 +196,8 @@ jobs:
           # test-binary DLLs (prime_server.dll etc.) are deployed next to the exes by vcpkg applocal.
           vcpkg_bin="${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
           export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
-          cmake --build build --target check
+          # -k 0: run every test/target before giving up so one run surfaces all failures
+          cmake --build build --target check -- -k 0
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
