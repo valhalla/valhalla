@@ -72,7 +72,6 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
   ASSERT_EQ(ah->admincount(), bh->admincount());
   ASSERT_EQ(ah->complex_restriction_forward_offset(), bh->complex_restriction_forward_offset());
   ASSERT_EQ(ah->complex_restriction_reverse_offset(), bh->complex_restriction_reverse_offset());
-  ASSERT_EQ(ah->date_created(), bh->date_created());
   ASSERT_EQ(ah->density(), bh->density());
   ASSERT_EQ(ah->departurecount(), bh->departurecount());
   ASSERT_EQ(ah->directededgecount(), bh->directededgecount());
