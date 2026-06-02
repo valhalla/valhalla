@@ -223,7 +223,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.ta
   COMMAND $<TARGET_FILE:valhalla_add_predicted_traffic>
       --config ${utrecht_tiles_traffic_cfg}
       -t ${VALHALLA_SOURCE_DIR}/test/data/traffic_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_extract
+  COMMAND ${Python_EXECUTABLE} ${CMAKE_BINARY_DIR}/valhalla_build_extract
       --config ${utrecht_tiles_extract_cfg}
       --with-traffic --overwrite
   COMMENT "Building Utrecht Tiles..."
