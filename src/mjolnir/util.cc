@@ -129,7 +129,8 @@ void set_tile_checksums(const std::string& tile_dir) {
   }
 
   // fold the accumulator to 16 bits (enough for URL based deployments)
-  uint16_t build_id = build_id_acc ^ (build_id_acc >> 16) ^ (build_id_acc >> 32) ^ (build_id_acc >> 48);
+  uint16_t build_id =
+      build_id_acc ^ (build_id_acc >> 16) ^ (build_id_acc >> 32) ^ (build_id_acc >> 48);
 
   // pass 2: stamp the build id into the high bits of every tile header's checksum
   const uint64_t build_id_bits = static_cast<uint64_t>(build_id) << kTileHashBits;
