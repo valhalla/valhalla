@@ -268,8 +268,8 @@ TEST(GraphBuilder, ConfigDatasetId) {
   config.put("mjolnir.dataset_id", 424242);
   build_and_check(424242);
 
-  // a 0 (or absent) config id falls back to the OSM-derived changeset id
-  config.put("mjolnir.dataset_id", 0);
+  // with no dataset_id configured, fall back to the OSM-derived changeset id
+  config.get_child("mjolnir").erase("dataset_id");
   build_and_check(osm_data.max_changeset_id_);
 
   std::filesystem::remove_all(tile_dir);
