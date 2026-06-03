@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include "mjolnir/add_predicted_speeds.h"
 
 #include <gtest/gtest.h>
 
@@ -226,4 +227,44 @@ TEST(TileChecksum, BuildIdAndPerTileHash) {
   // the low bits hash each tile's own data, so they vary across tiles rather than mirroring the
   // build id; equal hashes only occur for tiles with identical data
   EXPECT_GT(per_tile_hashes.size(), 1u);
+}
+
+// Adding predicted traffic rewrites a subset of tiles. The touched tiles' data hash must be refreshed
+// and the tileset build id recomputed, so a tile_url client can tell the tileset changed.
+TEST(TileChecksum, AddPredictedTrafficRefreshesChecksums) {
+  const std::string ascii_map = R"(A----B----C----D)";
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                            {"BC", {{"highway", "primary"}}},
+                            {"CD", {{"highway", "primary"}}}};
+  const gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_traffic_checksum", {});
+  const std::string tile_dir = map.config.get<std::string>("mjolnir.tile_dir");
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  const GraphId edge_id = std::get<0>(gurka::findEdge(reader, layout, "BC", "C"));
+  ASSERT_TRUE(edge_id.is_valid());
+  const GraphId tile_id = edge_id.tile_base();
+
+  const GraphTileHeader* before = reader.GetGraphTile(tile_id)->header();
+  const uint16_t build_id_before = before->build_id();
+  const uint64_t hash_before = before->checksum();
+
+  // a single CSV row gives the edge free-flow/constrained speeds: level/tileid/edgeindex,ff,cf,
+  const std::filesystem::path traffic_dir = "test/data/gurka_traffic_checksum_csv";
+  std::filesystem::path csv = traffic_dir / GraphTile::FileSuffix(tile_id);
+  csv.replace_extension(".csv");
+  std::filesystem::create_directories(csv.parent_path());
+  std::ofstream(csv) << tile_id.level() << "/" << tile_id.tileid() << "/" << edge_id.id()
+                     << ",45,35,\n";
+
+  mjolnir::ProcessTrafficTiles(tile_dir, traffic_dir, false, map.config);
+
+  // fresh reader so we read the rewritten tile rather than the cached one
+  baldr::GraphReader updated(map.config.get_child("mjolnir"));
+  const graph_tile_ptr tile = updated.GetGraphTile(tile_id);
+  EXPECT_EQ(tile->directededge(edge_id.id())->free_flow_speed(), 45) << "traffic wasn't applied";
+
+  // the rewritten tile got a fresh data hash and the build id was recomputed for the tileset
+  EXPECT_NE(tile->header()->checksum(), hash_before);
+  EXPECT_NE(tile->header()->build_id(), build_id_before);
 }
