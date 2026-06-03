@@ -49,7 +49,8 @@ jobs:
     name: Release build
     runs-on: windows-2022
     env:
-      BUILD_TYPE: Release
+      # TEMP: RelWithDebInfo for symbols so the cdb stack-trace step is useful; revert to Release
+      BUILD_TYPE: RelWithDebInfo
       MSVC_VERSION: "2022"
       # Keep aligned with VCPKG_VERSION in osx_win_python_builds.yml to share the vcpkg cache.
       VCPKG_VERSION: "66c0373d"
@@ -166,6 +167,7 @@ jobs:
             vcpkg/downloads/tools
 
       - name: Build Valhalla
+        if: false  # TEMP: skip full build/install during crash diagnosis (cdb step builds what it needs)
         shell: bash
         run: |
           set -x
@@ -176,6 +178,26 @@ jobs:
           # -k 0: keep building after failures so one run surfaces every error
           cmake --build build -- -k 0
           cmake --build build --target install
+
+      # TEMP debug: build the crashing exes + their data with symbols and run them under
+      # cdb, breaking on the access violation to print a symbolized stack. Remove once diagnosed.
+      - name: Stack-trace crashing tests
+        shell: bash
+        run: |
+          set -x
+          export MSYS_NO_PATHCONV=1
+          ws="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
+          vcpkg_bin="${ws}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
+          export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
+          CDB="/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
+          [ -x "$CDB" ] || CDB="cdb"
+          cmake --build build --target astar utrecht_tiles gurka_use build_timezones -- -k 0 || true
+          echo "================== cdb: astar / Standalone.UtrechtMultiModalAStar (extract-based) =================="
+          "$CDB" -g -G -c 'sxe -c "kp 200; q" av; g' \
+            "${ws}/build/test/astar.exe" --gtest_filter='Standalone.UtrechtMultiModalAStar' || true
+          echo "================== cdb: gurka_use (self-contained, first crashing case) =================="
+          "$CDB" -g -G -c 'sxe -c "kp 200; q" av; g' \
+            "${ws}/build/test/gurka/gurka_use.exe" || true
 
       - name: Show commit under test
         shell: bash
@@ -188,6 +210,7 @@ jobs:
           echo "=================================================================="
 
       - name: Run tests
+        if: false  # TEMP: skip full check during crash diagnosis
         shell: bash
         run: |
           set -x
