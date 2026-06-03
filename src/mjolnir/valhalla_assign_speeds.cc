@@ -1,7 +1,9 @@
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
 #include "config.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
 #include "speed_assigner.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -72,6 +74,10 @@ void assign(const boost::property_tree::ptree& config,
       graph_reader.Trim();
     }
     lock.unlock();
+
+    // refresh the tile's data hash; the tileset build id is recomputed once at the end
+    set_tile_checksum(std::filesystem::path(config.get<std::string>("mjolnir.tile_dir")) /
+                      GraphTile::FileSuffix(tile_id));
   }
 
   result.set_value({assigned, total});
@@ -145,4 +151,7 @@ int main(int argc, char** argv) {
 
   LOG_INFO("Assigned speeds to " + std::to_string(assigned) + " edges in total out of " +
            std::to_string(total));
+
+  // the tileset changed, so refresh the build id from the now-current per-tile hashes
+  set_tileset_build_id(config.get<std::string>("mjolnir.tile_dir"));
 }
