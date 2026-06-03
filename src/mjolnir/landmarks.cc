@@ -7,6 +7,7 @@
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/sqlite3.h"
+#include "mjolnir/util.h"
 #include "sif/nocost.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -405,6 +406,14 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
   size_t updated_tiles = 0, updated_edges = 0, updated_landmarks = 0;
   GraphId last_edge, last_tile;
 
+  // store the current tile and refresh its data hash (the build id is recomputed once at the end)
+  auto store_tile = [&]() {
+    tile_builder_ptr->StoreTileData();
+    set_tile_checksum(std::filesystem::path(tile_dir) /
+                      GraphTile::FileSuffix(tile_builder_ptr->header_builder().graphid()));
+    updated_tiles++;
+  };
+
   size_t tile_count = static_cast<size_t>(-1);
   // every i'th thread works on every i'th tile
   for (auto it = seq_file.begin(); it != seq_file.end(); ++it) {
@@ -425,8 +434,7 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
         tile_builder_ptr->header_builder().graphid().tile_base() != (*it).first.tile_base()) {
       // store the previously updated tile
       if (tile_builder_ptr) {
-        tile_builder_ptr->StoreTileData();
-        updated_tiles++;
+        store_tile();
       }
       // reset the tile builder to this new tile
       tile_builder_ptr = std::make_unique<GraphTileBuilder>(tile_dir, (*it).first.tile_base(), true);
@@ -457,8 +465,7 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
   }
   // store the last updated tile
   if (tile_builder_ptr) {
-    tile_builder_ptr->StoreTileData();
-    updated_tiles++;
+    store_tile();
   }
 
   // set the stats
@@ -553,6 +560,9 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   LOG_INFO("Updated " + std::to_string(tiles) + " unique tiles, " + std::to_string(edges) +
            " unique directed edges, and wrote " + std::to_string(landmarks) +
            " landmarks (including repeated ones)");
+
+  // the tileset changed, so refresh the build id from the now-current per-tile hashes
+  set_tileset_build_id(tile_dir);
 
   return true;
 }
