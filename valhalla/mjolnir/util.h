@@ -11,6 +11,7 @@
 
 #include <array>
 #include <atomic>
+#include <filesystem>
 #include <map>
 #include <mutex>
 #include <span>
@@ -349,6 +350,22 @@ bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
                     const BuildStage end_stage = BuildStage::kValidate);
+
+/**
+ * Recompute a single tile's 48-bit data hash and store it in the low bits of the header checksum,
+ * preserving the tileset build id already in the high bits.
+ * @param tile_path filesystem path to the .gph tile
+ */
+void set_tile_checksum(const std::filesystem::path& tile_path);
+
+/**
+ * Recompute the tileset-wide build id from the per-tile data hashes already stored in each tile
+ * header (no re-hashing) and stamp it into the high bits of every tile's checksum. Call this after a
+ * tool has rewritten a subset of tiles (e.g. adding predicted traffic) so URL clients see a changed
+ * tileset.
+ * @param tile_dir directory holding the .gph tiles
+ */
+void set_tileset_build_id(const std::string& tile_dir);
 
 // The tile manifest is a JSON-serializable index of tiles to be processed during the build stage of
 // valhalla_build_tiles'. It can be used to distribute shard keys when building tiles with
