@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <fstream>
+#include <optional>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -181,4 +182,48 @@ TEST_F(ReproducibleBuild, BigGridSize) {
                             {"EI", {{"highway", "path"}, {"bicycle", "no"}}},
                             {"EH", {{"highway", "path"}}}};
   BuildTiles(ascii_map, ways, 100000);
+}
+
+// checksum_ packs a tileset-wide build id (high 16 bits) and a per-tile data hash (low 48 bits).
+// Across a multi-tile build the build id is constant while each tile hashes its own data.
+TEST(TileChecksum, BuildIdAndPerTileHash) {
+  const std::string ascii_map = R"(
+    A----B----C
+    |    |
+    D----E----F
+    |    |
+    G----H----I)";
+  const gurka::ways ways = {{"ABC", {{"highway", "primary"}}},
+                            {"ADG", {{"highway", "primary"}}},
+                            {"DEF", {{"highway", "secondary"}}},
+                            {"GHI", {{"highway", "secondary"}}},
+                            {"BE", {{"highway", "residential"}}},
+                            {"EH", {{"highway", "residential"}}}};
+  const gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, 100000);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_tile_checksum", {});
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  const std::unordered_set<GraphId> tiles = reader.GetTileSet();
+  ASSERT_GT(tiles.size(), 1) << "need multiple tiles to test per-tile uniqueness";
+
+  std::optional<uint16_t> build_id;
+  std::unordered_set<uint64_t> per_tile_hashes;
+  for (const GraphId& tile_id : tiles) {
+    const GraphTileHeader* header = reader.GetGraphTile(tile_id)->header();
+
+    // the per-tile hash occupies only the low 48 bits and build_id is set
+    EXPECT_LT(header->checksum(), uint64_t(1) << kTileHashBits);
+    EXPECT_GT(header->build_id(), 0u);
+
+    // every tile of the build carries the same build id
+    if (!build_id)
+      build_id = header->build_id();
+    EXPECT_EQ(header->build_id(), *build_id);
+
+    per_tile_hashes.insert(header->checksum());
+  }
+
+  // the low bits hash each tile's own data, so they vary across tiles rather than mirroring the
+  // build id; equal hashes only occur for tiles with identical data
+  EXPECT_GT(per_tile_hashes.size(), 1u);
 }

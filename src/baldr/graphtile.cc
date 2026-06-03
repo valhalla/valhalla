@@ -236,15 +236,15 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     return nullptr;
   }
 
-  auto check_tile_checksum = [&](uint64_t tile_checksum) {
-    if (tile_checksum == 0) {
+  auto check_tile_checksum = [&](const GraphTileHeader& header) {
+    // only the build id (identical across the tileset) tells us whether the remote was rebuilt; the
+    // per-tile hash differs from tile to tile
+    uint64_t build_id = header.build_id();
+    if (build_id == 0 && header.checksum() == 0) {
       // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
       LOG_WARN(
           "Remote tile is missing the checksum attribute, please update the tile building valhalla instance");
     }
-    // only the build id (high bits, identical across the tileset) tells us whether the remote was
-    // rebuilt; the per-tile hash in the low bits differs from tile to tile
-    uint64_t build_id = tile_checksum >> kTileHashBits;
     if (!tile_dir.empty()) {
       if (!id_checksum) {
         // first tile in a fresh tile_dir: record the URL & tileset build id
@@ -285,7 +285,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     // it's a POD type and thus trivially copyable
     GraphTileHeader header;
     std::memcpy(&header, result.bytes_.data(), sizeof(header));
-    check_tile_checksum(header.checksum());
+    check_tile_checksum(header);
   }
 
   // try to cache it on disk so we dont have to keep fetching it from url
@@ -294,7 +294,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
   // turn the memory into a tile
   if (tile_getter->gzipped()) {
     auto tile = DecompressTile(graphid, result.bytes_);
-    check_tile_checksum(tile.get()->header()->checksum());
+    check_tile_checksum(*tile.get()->header());
     return tile;
   }
 
