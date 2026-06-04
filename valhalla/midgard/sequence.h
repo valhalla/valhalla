@@ -607,8 +607,8 @@ struct tar {
     char prefix[155];
     char padding[12];
 
-    static uint64_t octal_to_int(const char* data, size_t size = 12) {
-      const unsigned char* ptr = (const unsigned char*)data + size;
+    static uint64_t octal_to_int(const char* data, size_t size) {
+      const unsigned char* ptr = (const unsigned char*)data + size - 1;
       uint64_t sum = 0;
       uint64_t multiplier = 1;
       // Skip everything after the last NUL/space character
@@ -629,7 +629,7 @@ struct tar {
       return (memcmp("ustar", magic, 5) == 0);
     }
     size_t get_file_size() const {
-      return octal_to_int(size);
+      return octal_to_int(size, sizeof(size));
     }
     bool blank() const {
       constexpr header_t BLANK{};
@@ -647,7 +647,7 @@ struct tar {
         sum += ((char*)&temp)[i];
       }
       // check if its right
-      uint64_t rsum = octal_to_int(chksum);
+      uint64_t rsum = octal_to_int(chksum, sizeof(chksum));
       return rsum == usum || static_cast<int64_t>(rsum) == sum;
     }
   };
