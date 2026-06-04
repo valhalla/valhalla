@@ -188,16 +188,27 @@ jobs:
           export MSYS_NO_PATHCONV=1
           ws="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
           vcpkg_bin="${ws}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
+          # spatialite-tools on PATH: utrecht_tiles -> build_timezones shells out to it for tz.sqlite
           export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
+          # public symbol server (+ local cache) so system frames in the stack resolve too
+          export _NT_SYMBOL_PATH="cache*${ws}/symcache;srv*https://msdl.microsoft.com/download/symbols"
           CDB="/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
           [ -x "$CDB" ] || CDB="cdb"
-          cmake --build build --target astar utrecht_tiles gurka_use build_timezones -- -k 0 || true
-          echo "================== cdb: astar / Standalone.UtrechtMultiModalAStar (extract-based) =================="
-          "$CDB" -g -G -c 'sxe -c "kp 200; q" av; g' \
-            "${ws}/build/test/astar.exe" --gtest_filter='Standalone.UtrechtMultiModalAStar' || true
-          echo "================== cdb: gurka_use (self-contained, first crashing case) =================="
-          "$CDB" -g -G -c 'sxe -c "kp 200; q" av; g' \
-            "${ws}/build/test/gurka/gurka_use.exe" || true
+          # the crash reproduces against VALID tiles, so build the tileset the test reads. running with
+          # tiles absent would crash in a different place (tile loading) than the routing code we're after.
+          cmake --build build --target multimodal_astar matrix utrecht_tiles -- -k 0 || true
+          ls "${ws}/build/test/data/utrecht_tiles"/*/ >/dev/null 2>&1 \
+            && echo "utrecht_tiles present" || echo "WARN: utrecht_tiles missing -> crash site may differ"
+
+          run_cdb() { # $1=exe, rest=args; break on first-chance AV, dump stack, quit
+            local exe="$1"; shift
+            [ -f "$exe" ] || { echo "MISSING EXE: $exe (build failed?)"; return; }
+            "$CDB" -g -G -c 'sxe -c ".echo ===== CRASH STACK =====; kp 200; .lastevent; q" av; g' "$exe" "$@" || true
+          }
+          echo "================== cdb: multimodal_astar / Standalone.UtrechtMultiModalAStar =================="
+          run_cdb "${ws}/build/test/multimodal_astar.exe" --gtest_filter='Standalone.UtrechtMultiModalAStar'
+          echo "================== cdb: matrix (first access violation) =================="
+          run_cdb "${ws}/build/test/matrix.exe"
 
       - name: Show commit under test
         shell: bash
