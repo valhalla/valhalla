@@ -40,7 +40,7 @@ struct OSMBike {
 };
 
 // OSM area data (stored within OSMData)
-struct OSMArea {
+struct OSMAreaMember {
   uint64_t way_id;
   bool is_outer;
 };
@@ -58,7 +58,7 @@ using RestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMRestriction>;
 using ViaSet = std::unordered_set<uint64_t>;
 using AccessRestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMAccessRestriction>;
 using BikeMultiMap = std::unordered_multimap<uint64_t, OSMBike>;
-using AreaMultiMap = std::unordered_multimap<uint64_t, OSMArea>;
+using AreaMultiMap = std::unordered_multimap<uint64_t, OSMAreaMember>;
 using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint64_t, OSMLaneConnectivity>;
 using LinguisticMultiMap = std::unordered_multimap<uint64_t, OSMLinguistic>;
 using ConditionalSpeedLimitsMultiMap =
