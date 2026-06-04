@@ -292,6 +292,10 @@ TEST_P(AddBinTest, TestAddBins) {
       n.exceptions(std::ifstream::failbit | std::ifstream::badbit);
       n.open(bin_dir + "/2/000/" + test_tile.first, std::ios::binary);
       std::string nbytes((std::istreambuf_iterator<char>(n)), std::istreambuf_iterator<char>());
+      // AddBins recomputes the per-tile data hash, so the checksum differs from the fixture's;
+      // normalize it before comparing the rest of the bytes
+      reinterpret_cast<GraphTileHeader*>(obytes.data())->set_checksum(0);
+      reinterpret_cast<GraphTileHeader*>(nbytes.data())->set_checksum(0);
       EXPECT_EQ(obytes, nbytes) << "Old tile and new tile should be the same if not adding any bins ";
     }
 

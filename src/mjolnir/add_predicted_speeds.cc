@@ -215,9 +215,6 @@ void UpdateTile(const std::string& tile_dir,
 
   // Write the new tile with updated directed edges and the predicted speeds
   tile_builder.UpdatePredictedSpeeds(directededges);
-
-  // the tile's data changed, so refresh its data hash; keep the tileset build id intact
-  set_tile_checksum(tile_path);
 }
 
 /**

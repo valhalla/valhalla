@@ -74,10 +74,6 @@ void assign(const boost::property_tree::ptree& config,
       graph_reader.Trim();
     }
     lock.unlock();
-
-    // refresh the tile's data hash; the tileset build id is recomputed once at the end
-    set_tile_checksum(std::filesystem::path(config.get<std::string>("mjolnir.tile_dir")) /
-                      GraphTile::FileSuffix(tile_id));
   }
 
   result.set_value({assigned, total});

@@ -22,7 +22,6 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
-#include <openssl/evp.h>
 
 #include <filesystem>
 #include <format>
@@ -48,54 +47,6 @@ const std::string cr_from_file = "complex_from_restrictions.bin";
 const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
-
-// low bits of the header checksum that hold a tile's own data hash
-constexpr uint64_t tile_hash_mask = (uint64_t(1) << kTileHashBits) - 1;
-
-// MD5 of the tile's data portion for e.g. integrity checks
-uint64_t hash_tile_data(const std::filesystem::path& path) {
-  // uses openssl's API which can build the digest from byte chunks to save memory
-  EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-  std::array<unsigned char, 16> digest{};
-  try {
-    EVP_DigestInit_ex(ctx, EVP_md5(), nullptr);
-
-    std::ifstream in(path, std::ios::binary);
-    if (!in) {
-      throw std::runtime_error("Failed to open: " + path.string());
-    }
-    in.seekg(sizeof(GraphTileHeader));
-
-    std::vector<char> buffer(1 << 20); // 1 MiB
-    while (in) {
-      in.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-      if (std::streamsize got = in.gcount(); got > 0) {
-        if (EVP_DigestUpdate(ctx, buffer.data(), static_cast<size_t>(got)) != 1) {
-          throw std::runtime_error("EVP_DigestUpdate failed");
-        }
-      }
-    }
-
-    unsigned int out_len = 0;
-    if (EVP_DigestFinal_ex(ctx, digest.data(), &out_len) != 1 || out_len != digest.size()) {
-      throw std::runtime_error("EVP_DigestFinal_ex failed");
-    }
-  } catch (...) {
-    EVP_MD_CTX_free(ctx);
-    throw;
-  }
-
-  EVP_MD_CTX_free(ctx);
-
-  // roll the 128 bit digest into a uint64
-  uint64_t lo = 0, hi = 0;
-  for (int i = 0; i < 8; ++i) {
-    lo = (lo << 8) | digest[i];
-    hi = (hi << 8) | digest[8 + i];
-  }
-  std::hash<uint64_t> hasher;
-  return lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
-}
 
 // read a tile's header, let the callback mutate it, write it back
 template <typename Fn> void update_tile_header(const std::filesystem::path& p, const Fn& mutate) {
@@ -448,14 +399,6 @@ uint32_t GetStopImpact(uint32_t from,
 
 namespace valhalla {
 namespace mjolnir {
-
-void set_tile_checksum(const std::filesystem::path& tile_path) {
-  const uint64_t tile_hash = hash_tile_data(tile_path) & tile_hash_mask;
-  // keep the tileset build id in the high bits, refresh only the per-tile data hash
-  update_tile_header(tile_path, [&](GraphTileHeader& h) {
-    h.set_checksum((static_cast<uint64_t>(h.build_id()) << kTileHashBits) | tile_hash);
-  });
-}
 
 void set_tileset_build_id(const std::string& tile_dir) {
   // sum the per-tile data hashes already stored in each header's low bits, no re-hashing needed.
@@ -905,8 +848,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (start_stage <= BuildStage::kValidate && BuildStage::kValidate <= end_stage) {
     GraphValidator::Validate(config);
     log_stage(BuildStage::kValidate);
-    // checksum the graph tiles
-    for_each_tile(tile_dir, [](const std::filesystem::path& p) { set_tile_checksum(p); });
     set_tileset_build_id(tile_dir);
   }
 

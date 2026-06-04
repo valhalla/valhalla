@@ -122,11 +122,8 @@ int main(int argc, char** argv) {
   ElevationBuilder::Build(config, tile_ids);
   build_stats::get().log_stage(BuildStage::kElevation, config);
 
-  // refresh the data hash of each tile we touched, then recompute the tileset build id
-  const std::filesystem::path tile_dir = config.get<std::string>("mjolnir.tile_dir");
-  for (const auto& tile_id : tile_ids)
-    set_tile_checksum(tile_dir / GraphTile::FileSuffix(tile_id));
-  set_tileset_build_id(tile_dir.string());
+  // the builder refreshed each touched tile's data hash
+  set_tileset_build_id(config.get<std::string>("mjolnir.tile_dir"));
 
   return EXIT_SUCCESS;
 }

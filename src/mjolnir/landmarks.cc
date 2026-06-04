@@ -409,8 +409,6 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
   // store the current tile and refresh its data hash (the build id is recomputed once at the end)
   auto store_tile = [&]() {
     tile_builder_ptr->StoreTileData();
-    set_tile_checksum(std::filesystem::path(tile_dir) /
-                      GraphTile::FileSuffix(tile_builder_ptr->header_builder().graphid()));
     updated_tiles++;
   };
 
