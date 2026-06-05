@@ -132,6 +132,10 @@ jobs:
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="/Od /Ob0 /DNDEBUG" \
+            -DCMAKE_C_FLAGS_RELWITHDEBINFO="/Od /Ob0 /DNDEBUG" \
+            -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="/debug /INCREMENTAL:NO" \
+            -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="/debug /INCREMENTAL:NO" \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
             -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
             -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
@@ -200,10 +204,13 @@ jobs:
           ls "${ws}/build/test/data/utrecht_tiles"/*/ >/dev/null 2>&1 \
             && echo "utrecht_tiles present" || echo "WARN: utrecht_tiles missing -> crash site may differ"
 
-          run_cdb() { # $1=exe, rest=args; break on first-chance AV, dump stack, quit
+          # on first-chance AV: dump real fault context (instruction/registers/r15 provenance), then quit.
+          # build is /Od /Ob0 /INCREMENTAL:NO so frames + symbols are trustworthy now.
+          AV_CMDS='.echo ===== EXCEPTION RECORD =====; .exr -1; .echo ===== REGISTERS @ FAULT =====; .ecxr; r; .echo ===== FAULTING INSTR =====; u @rip-10 L8; .echo ===== R15 LOADED BY =====; ub @rip L20; .echo ===== STACK =====; kn 200; .echo ===== MODULE =====; lmvm matrix; .echo ===== ANALYZE =====; !analyze -v; q'
+          run_cdb() { # $1=exe, rest=args
             local exe="$1"; shift
             [ -f "$exe" ] || { echo "MISSING EXE: $exe (build failed?)"; return; }
-            "$CDB" -g -G -c 'sxe -c ".echo ===== CRASH STACK =====; kp 200; .lastevent; q" av; g' "$exe" "$@" || true
+            "$CDB" -g -G -c "sxe -c \"${AV_CMDS}\" av; g" "$exe" "$@" || true
           }
           echo "================== cdb: multimodal_astar / Standalone.UtrechtMultiModalAStar =================="
           run_cdb "${ws}/build/test/multimodal_astar.exe" --gtest_filter='Standalone.UtrechtMultiModalAStar'
