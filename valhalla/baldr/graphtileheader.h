@@ -610,7 +610,7 @@ public:
    * builds of the same data.
    * @return the 48-bit hash of the tile's data
    */
-  uint64_t checksum() const {
+  uint64_t tile_checksum() const {
     return checksum_ & ((uint64_t(1) << kTileHashBits) - 1);
   }
 
@@ -619,7 +619,7 @@ public:
    * build id packed in the high bits, per-tile data hash in the low bits.
    * @param checksum the 64bit value for the tile's checksum_
    */
-  void set_checksum(uint64_t checksum) {
+  void set_raw_checksum(uint64_t checksum) {
     checksum_ = checksum;
   }
 

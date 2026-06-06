@@ -408,7 +408,7 @@ void set_tileset_build_id(const std::string& tile_dir) {
     std::ifstream in(p, std::ios::binary);
     GraphTileHeader header;
     in.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
-    build_id_acc += header.checksum();
+    build_id_acc += header.tile_checksum();
   });
 
   // fold to 16 bits (enough for URL based deployments) and stamp into every tile's high bits
@@ -416,7 +416,9 @@ void set_tileset_build_id(const std::string& tile_dir) {
       build_id_acc ^ (build_id_acc >> 16) ^ (build_id_acc >> 32) ^ (build_id_acc >> 48);
   const uint64_t build_id_bits = static_cast<uint64_t>(build_id) << kTileHashBits;
   for_each_tile(tile_dir, [&](const std::filesystem::path& p) {
-    update_tile_header(p, [&](GraphTileHeader& h) { h.set_checksum(h.checksum() | build_id_bits); });
+    update_tile_header(p, [&](GraphTileHeader& h) {
+      h.set_raw_checksum(h.tile_checksum() | build_id_bits);
+    });
   });
 }
 

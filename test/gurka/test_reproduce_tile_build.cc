@@ -133,8 +133,8 @@ struct ReproducibleBuild : ::testing::Test {
 
       // human readable check
       assert_tile_equalish(*first_tile, *second_tile);
-      EXPECT_GT(first_tile->header()->checksum(), 0);
-      EXPECT_EQ(first_tile->header()->checksum(), second_tile->header()->checksum());
+      EXPECT_GT(first_tile->header()->tile_checksum(), 0);
+      EXPECT_EQ(first_tile->header()->tile_checksum(), second_tile->header()->tile_checksum());
       EXPECT_EQ(first_tile->header()->build_id(), build_id);
       EXPECT_EQ(second_tile->header()->build_id(), build_id);
 
@@ -213,7 +213,7 @@ TEST(TileChecksum, BuildIdAndPerTileHash) {
     const GraphTileHeader* header = reader.GetGraphTile(tile_id)->header();
 
     // the per-tile hash occupies only the low 48 bits and build_id is set
-    EXPECT_LT(header->checksum(), uint64_t(1) << kTileHashBits);
+    EXPECT_LT(header->tile_checksum(), uint64_t(1) << kTileHashBits);
     EXPECT_GT(header->build_id(), 0u);
 
     // every tile of the build carries the same build id
@@ -221,7 +221,7 @@ TEST(TileChecksum, BuildIdAndPerTileHash) {
       build_id = header->build_id();
     EXPECT_EQ(header->build_id(), *build_id);
 
-    per_tile_hashes.insert(header->checksum());
+    per_tile_hashes.insert(header->tile_checksum());
   }
 
   // the low bits hash each tile's own data, so they vary across tiles rather than mirroring the
@@ -247,7 +247,7 @@ TEST(TileChecksum, AddPredictedTrafficRefreshesChecksums) {
 
   const GraphTileHeader* before = reader.GetGraphTile(tile_id)->header();
   const uint16_t build_id_before = before->build_id();
-  const uint64_t hash_before = before->checksum();
+  const uint64_t hash_before = before->tile_checksum();
 
   // a single CSV row gives the edge free-flow/constrained speeds: level/tileid/edgeindex,ff,cf,
   const std::filesystem::path traffic_dir = "test/data/gurka_traffic_checksum_csv";
@@ -265,6 +265,6 @@ TEST(TileChecksum, AddPredictedTrafficRefreshesChecksums) {
   EXPECT_EQ(tile->directededge(edge_id.id())->free_flow_speed(), 45) << "traffic wasn't applied";
 
   // the rewritten tile got a fresh data hash and the build id was recomputed for the tileset
-  EXPECT_NE(tile->header()->checksum(), hash_before);
+  EXPECT_NE(tile->header()->tile_checksum(), hash_before);
   EXPECT_NE(tile->header()->build_id(), build_id_before);
 }

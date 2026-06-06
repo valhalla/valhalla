@@ -240,7 +240,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     // only the build id (identical across the tileset) tells us whether the remote was rebuilt; the
     // per-tile hash differs from tile to tile
     uint64_t build_id = header.build_id();
-    if (build_id == 0 && header.checksum() == 0) {
+    if (build_id == 0 && header.tile_checksum() == 0) {
       // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
       LOG_WARN(
           "Remote tile is missing the checksum attribute, please update the tile building valhalla instance");

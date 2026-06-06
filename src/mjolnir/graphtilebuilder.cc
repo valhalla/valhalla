@@ -107,7 +107,8 @@ void write_tile_checksum(const std::filesystem::path& path) {
   }
   GraphTileHeader header;
   file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
-  header.set_checksum((static_cast<uint64_t>(header.build_id()) << baldr::kTileHashBits) | tile_hash);
+  header.set_raw_checksum((static_cast<uint64_t>(header.build_id()) << baldr::kTileHashBits) |
+                          tile_hash);
   file.seekp(0);
   file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
   if (!file) {
