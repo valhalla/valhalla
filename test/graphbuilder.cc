@@ -241,6 +241,40 @@ TEST(Graphbuilder, AdminBbox) {
             "BE/WAL");
 }
 
+// The tile header's dataset id comes from mjolnir.dataset_id when set, otherwise it falls back to
+// the OSM-derived changeset id gathered during parsing.
+TEST(GraphBuilder, ConfigDatasetId) {
+  ptree config;
+  config.put("mjolnir.tile_dir", tile_dir);
+  config.put("mjolnir.concurrency", 1);
+
+  OSMData osm_data{};
+  osm_data.read_from_temp_files(tile_dir);
+  osm_data.max_changeset_id_ = 555; // stand-in for the OSM-derived fallback id
+
+  std::map<baldr::GraphId, size_t> tiles =
+      GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
+
+  const auto build_and_check = [&](uint64_t expected) {
+    std::filesystem::remove_all(tile_dir);
+    GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
+                        from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
+    GraphReader reader(config.get_child("mjolnir"));
+    for (auto tile_id : reader.GetTileSet())
+      EXPECT_EQ(reader.GetGraphTile(tile_id)->header()->dataset_id(), expected);
+  };
+
+  // explicit config id wins over the OSM-derived changeset id
+  config.put("mjolnir.dataset_id", 424242);
+  build_and_check(424242);
+
+  // with no dataset_id configured, fall back to the OSM-derived changeset id
+  config.get_child("mjolnir").erase("dataset_id");
+  build_and_check(osm_data.max_changeset_id_);
+
+  std::filesystem::remove_all(tile_dir);
+}
+
 class HarrisburgTestSuiteEnv : public ::testing::Environment {
 public:
   void SetUp() override {
