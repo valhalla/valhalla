@@ -4286,11 +4286,11 @@ struct graph_parser {
         if (member.role == "outer" && member.member_type == osmium::item_type::way) {
           area_member.is_outer = true;
           area_member.way_id = member.member_id;
-          osmdata_.area_relations.insert(AreaMultiMap::value_type(osmid, area));
+          osmdata_.area_relations.insert(AreaMultiMap::value_type(osmid, area_member));
         } else if (member.role == "inner" && member.member_type == osmium::item_type::way) {
           area_member.is_outer = false;
           area_member.way_id = member.member_id;
-          osmdata_.area_relations.insert(AreaMultiMap::value_type(osmid, area));
+          osmdata_.area_relations.insert(AreaMultiMap::value_type(osmid, area_member));
         }
       }
     }
