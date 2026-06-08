@@ -9,7 +9,7 @@ import numpy
 from numpy.typing import NDArray
 
 
-VALHALLA_PRINT_VERSION: str = '3.7.0-1ac1b44c9'
+VALHALLA_PRINT_VERSION: str = '3.7.0'
 
 class ValhallaError(RuntimeError):
     """
@@ -241,4 +241,10 @@ def decode_compressed_speeds(encoded: str) -> Annotated[NDArray[numpy.int16], di
     :param encoded: Base64-encoded string (536 characters)
     :returns: Array of 200 int16 coefficients
     :raises RuntimeError: If decoded size is incorrect
+    """
+
+def decode_polyline(polyline: str, precision: int = 6, order: str = 'lnglat') -> list[tuple[float, float]]:
+    """
+    Decodes an encoded polyline string with precision to a list of coordinate tuples.
+    The coordinate order of the output can be lnglat or latlng.
     """
