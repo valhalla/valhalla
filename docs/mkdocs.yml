@@ -100,6 +100,7 @@ nav:
           - Config: python/config.md
           - Graph utilities: python/graph_utils.md
           - Predicted speeds: python/predicted_speeds.md
+          - Polyline decoder: python/decode_polyline.md
           - Exceptions: python/exceptions.md
   - Node.js bindings: README_nodejs.md
   - Public APIs:

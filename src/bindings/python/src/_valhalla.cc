@@ -1,6 +1,7 @@
 #include "baldr/module.h"
 #include "baldr/utils/module.h"
 #include "config.h"
+#include "midgard/utils/module.h"
 #include "module.h"
 
 #include <nanobind/nanobind.h>
@@ -16,4 +17,5 @@ NB_MODULE(_valhalla, m) {
   pyvalhalla::baldr::utils::init_graphreader(m);
   pyvalhalla::baldr::utils::init_graphtile(m);
   pyvalhalla::baldr::utils::init_predicted_speeds(m);
+  pyvalhalla::midgard::utils::init_polyline(m);
 }

@@ -1,7 +1,7 @@
-"""Deprecated shim. ``valhalla.utils`` moved to ``valhalla.baldr`` / ``valhalla.baldr.utils``.
+"""Deprecated shim. ``valhalla.utils`` moved to ``valhalla.baldr`` / ``valhalla.baldr.utils``
+and ``valhalla.midgard.utils``.
 
-Re-exports the relocated symbols and warns on import. Will be removed in a future
-release. ``decode_polyline`` was dropped and has no replacement here yet.
+Re-exports the relocated symbols and warns on import. Will be removed in a future release.
 """
 
 import warnings
@@ -22,6 +22,7 @@ from ..baldr.utils import (
     get_tile_ids_from_bbox,
     get_tile_ids_from_ring,
 )
+from ..midgard.utils import decode_polyline
 
 warnings.warn(
     "`valhalla.utils` is deprecated and will be removed in a future release: "
@@ -45,4 +46,5 @@ __all__ = [
     "COEFFICIENT_COUNT",
     "SPEED_BUCKET_SIZE_MINUTES",
     "SPEED_BUCKET_SIZE_SECONDS",
+    "decode_polyline",
 ]

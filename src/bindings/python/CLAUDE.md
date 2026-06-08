@@ -14,8 +14,9 @@ A single `NB_MODULE(_valhalla)` lives in [src/_valhalla.cc](src/_valhalla.cc) �
 | graph reader | `pyvalhalla::baldr::utils::init_graphreader` ([src/baldr/utils/graph_reader.cc](src/baldr/utils/graph_reader.cc)) | [src/baldr/utils/module.h](src/baldr/utils/module.h) | `baldr::GraphReader` → `_GraphUtils` |
 | graph tile | `pyvalhalla::baldr::utils::init_graphtile` ([src/baldr/utils/graph_tile.cc](src/baldr/utils/graph_tile.cc)) | [src/baldr/utils/module.h](src/baldr/utils/module.h) | `get_tile_*` helpers (`TileHierarchy`) |
 | predicted speeds | `pyvalhalla::baldr::utils::init_predicted_speeds` ([src/baldr/utils/predicted_speeds.cc](src/baldr/utils/predicted_speeds.cc)) | [src/baldr/utils/module.h](src/baldr/utils/module.h) | `baldr::compress_speed_buckets`, DCT-II helpers |
+| polyline | `pyvalhalla::midgard::utils::init_polyline` ([src/midgard/utils/polyline.cc](src/midgard/utils/polyline.cc)) | [src/midgard/utils/module.h](src/midgard/utils/module.h) | `midgard::decode` → `decode_polyline` |
 
-All symbols land flat in `_valhalla`; the `valhalla/...` Python packages **mirror the C++ module tree** and provide the user-facing namespacing by re-exporting from `_valhalla` (e.g. `pyvalhalla::baldr::GraphId` → `valhalla.baldr.GraphId`; `pyvalhalla::baldr::utils::*` → `valhalla.baldr.utils.*`). Empty `src/{midgard,mjolnir,loki}/utils/` dirs are placeholders for future bindings.
+All symbols land flat in `_valhalla`; the `valhalla/...` Python packages **mirror the C++ module tree** and provide the user-facing namespacing by re-exporting from `_valhalla` (e.g. `pyvalhalla::baldr::GraphId` → `valhalla.baldr.GraphId`; `pyvalhalla::midgard::utils::*` → `valhalla.midgard.utils.*`). Empty `src/{mjolnir,loki}/utils/` dirs are placeholders for future bindings.
 
 Shared headers under [../shared/](../shared/) (e.g., `tile_id_utils.h`) are reused by the Node.js bindings.
 
@@ -27,7 +28,8 @@ Shared headers under [../shared/](../shared/) (e.g., `tile_id_utils.h`) are reus
 | [valhalla/baldr/__init__.py](valhalla/baldr/__init__.py) | Re-exports `GraphId` from `.._valhalla` |
 | [valhalla/baldr/utils/__init__.py](valhalla/baldr/utils/__init__.py) | Public surface: re-exports tile helpers and DCT helpers straight from `..._valhalla`, plus `GraphUtils` from `.graph_utils` |
 | [valhalla/baldr/utils/graph_utils.py](valhalla/baldr/utils/graph_utils.py) | `GraphUtils(_GraphUtils)` wrapper only (dict/Path/str config). No raw re-exports — those live in `__init__.py` |
-| [valhalla/utils/__init__.py](valhalla/utils/__init__.py) | **Deprecation shim** — re-exports the relocated symbols from `valhalla.baldr[.utils]` and emits a `DeprecationWarning` on import. Remove in a future release. `decode_polyline` not covered (dropped) |
+| [valhalla/midgard/utils/__init__.py](valhalla/midgard/utils/__init__.py) | Re-exports `decode_polyline` from `..._valhalla` |
+| [valhalla/utils/__init__.py](valhalla/utils/__init__.py) | **Deprecation shim** — re-exports the relocated symbols from `valhalla.baldr[.utils]` and `valhalla.midgard.utils` and emits a `DeprecationWarning` on import. Remove in a future release |
 | [valhalla/__main__.py](valhalla/__main__.py), [valhalla/_scripts.py](valhalla/_scripts.py) | CLI entry points (installed only in scikit-build-core wheel builds — see [CMakeLists.txt](CMakeLists.txt) `SKBUILD` branch) |
 
 ## .pyi Stubs
