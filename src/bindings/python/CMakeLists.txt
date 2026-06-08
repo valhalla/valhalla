@@ -77,7 +77,8 @@ set(py_srcs
   valhalla/actor.py
   valhalla/baldr/__init__.py
   valhalla/baldr/utils/__init__.py
-  valhalla/baldr/utils/graph_utils.py)
+  valhalla/baldr/utils/graph_utils.py
+  valhalla/utils/__init__.py)
 
 # scikit-build-core does a different build than CMake
 if (SKBUILD)

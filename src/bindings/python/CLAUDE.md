@@ -27,6 +27,7 @@ Shared headers under [../shared/](../shared/) (e.g., `tile_id_utils.h`) are reus
 | [valhalla/baldr/__init__.py](valhalla/baldr/__init__.py) | Re-exports `GraphId` from `.._valhalla` |
 | [valhalla/baldr/utils/__init__.py](valhalla/baldr/utils/__init__.py) | Public surface: re-exports tile helpers and DCT helpers straight from `..._valhalla`, plus `GraphUtils` from `.graph_utils` |
 | [valhalla/baldr/utils/graph_utils.py](valhalla/baldr/utils/graph_utils.py) | `GraphUtils(_GraphUtils)` wrapper only (dict/Path/str config). No raw re-exports — those live in `__init__.py` |
+| [valhalla/utils/__init__.py](valhalla/utils/__init__.py) | **Deprecation shim** — re-exports the relocated symbols from `valhalla.baldr[.utils]` and emits a `DeprecationWarning` on import. Remove in a future release. `decode_polyline` not covered (dropped) |
 | [valhalla/__main__.py](valhalla/__main__.py), [valhalla/_scripts.py](valhalla/_scripts.py) | CLI entry points (installed only in scikit-build-core wheel builds — see [CMakeLists.txt](CMakeLists.txt) `SKBUILD` branch) |
 
 ## .pyi Stubs
