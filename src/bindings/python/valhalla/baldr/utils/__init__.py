@@ -1,14 +1,6 @@
-"""Valhalla utilities: graph access and predicted speeds compression."""
+"""Valhalla baldr utilities: graph reader, tile helpers, predicted speeds compression."""
 
-from .graph_utils import (
-    GraphId,
-    GraphUtils,
-    get_tile_base_lon_lat,
-    get_tile_id_from_lon_lat,
-    get_tile_ids_from_bbox,
-    get_tile_ids_from_ring,
-)
-from .predicted_speeds import (
+from ..._valhalla import (
     BUCKETS_PER_WEEK,
     COEFFICIENT_COUNT,
     SPEED_BUCKET_SIZE_MINUTES,
@@ -17,12 +9,17 @@ from .predicted_speeds import (
     decode_compressed_speeds,
     decompress_speed_bucket,
     encode_compressed_speeds,
+    get_tile_base_lon_lat,
+    get_tile_id_from_lon_lat,
+    get_tile_ids_from_bbox,
+    get_tile_ids_from_ring,
 )
+from .graph_utils import GraphUtils
 
 __all__ = [
-    # graph_utils
-    "GraphId",
+    # graph_reader
     "GraphUtils",
+    # graph_tile
     "get_tile_base_lon_lat",
     "get_tile_id_from_lon_lat",
     "get_tile_ids_from_bbox",

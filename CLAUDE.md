@@ -20,6 +20,8 @@ Address the developer as **"respected Sir"** where it makes sense — opening a 
 
 ## Build and Test Commands
 
+**Do NOT compile or run the build yourself to check whether your change worked.** Builds here are slow and resource-heavy (the C++ library is large; the Python bindings statically link it). After making changes, state plainly what the developer should build/run to verify (the exact target and command), and let them do it. Reserve actually invoking the build for when the developer explicitly asks you to.
+
 ```bash
 # Build (from repo root)
 cd build && cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build . -j$(nproc)

@@ -1,4 +1,5 @@
 #include "baldr/predictedspeeds.h"
+#include "module.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
@@ -8,7 +9,7 @@
 namespace nb = nanobind;
 namespace vb = valhalla::baldr;
 
-namespace pyvalhalla {
+namespace pyvalhalla::baldr::utils {
 
 void init_predicted_speeds(nb::module_& m) {
   m.attr("BUCKETS_PER_WEEK") = vb::kBucketsPerWeek;
@@ -75,9 +76,4 @@ void init_predicted_speeds(nb::module_& m) {
       ":raises RuntimeError: If decoded size is incorrect");
 }
 
-NB_MODULE(predicted_speeds, m) {
-  init_predicted_speeds(m);
-  m.doc() = "Valhalla DCT-2 speed compression utilities";
-}
-
-} // namespace pyvalhalla
+} // namespace pyvalhalla::baldr::utils

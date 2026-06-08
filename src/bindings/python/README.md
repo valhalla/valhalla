@@ -112,7 +112,8 @@ except ValhallaError as e:
 Access to low-level graph data structures for advanced use cases:
 
 ```python
-from valhalla.utils.graph_utils import GraphId, GraphUtils
+from valhalla.baldr import GraphId
+from valhalla.baldr.utils import GraphUtils
 
 # Create a GraphId from its string representation or numeric value
 edge_id = GraphId("2/421920/20")  # format: "level/tileid/id"
@@ -150,7 +151,7 @@ Valhalla uses DCT-2 (Discrete Cosine Transform) to compress historical speed pro
 
 ```python
 import numpy as np
-from valhalla.utils.predicted_speeds import (
+from valhalla.baldr.utils import (
     compress_speed_buckets,
     decompress_speed_bucket,
     encode_compressed_speeds,
