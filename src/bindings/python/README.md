@@ -270,3 +270,17 @@ This will also build & install `libvalhalla` before building the bindings. At th
 ### Testing (**`linux` only**)
 
 We have a small [test script](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/test/test_pyvalhalla_package.sh) which makes sure that all the executables are working properly. If run locally for some reason, install a `pyvalhalla` wheel first. We run this in CI in a fresh Docker container with no dependencies installed, mostly to verify dynamic linking of the vendored dependencies.
+
+#### Running the unit tests locally
+
+The binding tests live in `test/bindings/python/`. The tile-dependent ones read `test/bindings/python/valhalla.json`, whose `tile_dir`/`tile_extract` are **relative to the process working directory** and point at `test/data/utrecht_tiles`. The CMake `utrecht_tiles` target builds that fixture into `<build-dir>/test/data/utrecht_tiles/`, so the trick is to **run from the build dir** — then the relative paths resolve to the freshly built graph with no edits or symlinks:
+
+```shell
+# build the tile fixture once (needs ENABLE_DATA_TOOLS=ON)
+cmake --build build/Release --target utrecht_tiles -j$(nproc)
+
+# run from the build dir so test/data/utrecht_tiles/* resolves there
+( cd build/Release && python -m unittest discover -s ../../test/bindings/python -v )
+```
+
+The CMake target `run-python_valhalla` does exactly this (build dir as CWD) and is the canonical entry point.
