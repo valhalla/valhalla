@@ -778,8 +778,8 @@ function normalize_speed(speed)
       num = round(num * 1.609344)
     end
 
-    --toss unusably low speeds, anything too high gets clamped to kMaxOSMSpeed in c++
-    if num < 10 then
+    --toss unusably low speeds and values at/above the "unlimited" sentinel (255)
+    if num < 10 or num >= 255 then
       return nil
     end
   end
