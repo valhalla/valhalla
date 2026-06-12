@@ -132,7 +132,7 @@ jobs:
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG -d2FH4-" \
+            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
             -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
             -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
             -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
@@ -225,8 +225,23 @@ jobs:
           }
           echo "================== cdb: multimodal_astar / Standalone.UtrechtMultiModalAStar =================="
           run_cdb "${ws}/build/test/multimodal_astar.exe" --gtest_filter='Standalone.UtrechtMultiModalAStar'
-          echo "================== cdb: matrix (first access violation) =================="
-          run_cdb "${ws}/build/test/matrix.exe"
+
+          # isolate the ONE crashing test and let its fault go UNHANDLED (gtest_catch_exceptions=0) so cdb
+          # stops at the real second-chance crash. dps dumps the RAW stack (bypasses the heuristic kn walk
+          # that's unreliable mid-unwind), and we save a full minidump for offline analysis.
+          echo "================== cdb: matrix / Matrix.slim_matrix (unhandled, raw stack) =================="
+          DUMP='.echo ===CRASH===; .lastevent; .exr -1; .echo ===REGISTERS===; r; .echo ===RAW STACK (dps @rsp)===; dps @rsp L120; .echo ===HEURISTIC WALK===; kn 200; .echo ===MODULE===; lmvm matrix; .dump /ma D:/a/valhalla/valhalla/build/test/slim_matrix.dmp; .echo ===ANALYZE===; !analyze -v; q'
+          "$CDB" -g -G -c "sxd av; g; ${DUMP}" \
+            "${ws}/build/test/matrix.exe" --gtest_filter='Matrix.slim_matrix' --gtest_catch_exceptions=0 || true
+
+      # TEMP debug: keep the slim_matrix minidump for offline (WinDbg/TTD-style) analysis.
+      - name: Upload crash minidump
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slim_matrix-dump
+          path: build/test/*.dmp
+          if-no-files-found: ignore
 
       - name: Show commit under test
         shell: bash
