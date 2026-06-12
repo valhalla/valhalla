@@ -6,6 +6,9 @@
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "mjolnir/osmdata.h"
+#include "mjolnir/osmway.h"
 #include "mjolnir/util.h"
 #include "proto/trip.pb.h"
 #include "test.h"
@@ -634,6 +637,29 @@ baldr::GraphId findNode(valhalla::baldr::GraphReader& reader,
     }
   }
   throw std::runtime_error("Could not find node " + node_name);
+}
+
+mjolnir::OSMWay findWay(const map& map, uint64_t way_id) {
+  auto tile_dir = map.config.get<std::string>("mjolnir.tile_dir");
+  // linear scan as the file's sort order is not guaranteed, it's tiny in tests anyway
+  midgard::sequence<mjolnir::OSMWay> ways(tile_dir + "/ways.bin", false);
+  for (const auto& way : ways) {
+    if (way.way_id() == way_id)
+      return way;
+  }
+  throw std::runtime_error("Could not find way " + std::to_string(way_id));
+}
+
+std::vector<mjolnir::OSMWayNode> findWayNodes(const map& map, uint64_t node_id) {
+  auto tile_dir = map.config.get<std::string>("mjolnir.tile_dir");
+  // linear scan as the file's sort order changes between build stages
+  midgard::sequence<mjolnir::OSMWayNode> way_nodes(tile_dir + "/way_nodes.bin", false);
+  std::vector<mjolnir::OSMWayNode> found;
+  for (const auto& way_node : way_nodes) {
+    if (way_node.node.osmid_ == node_id)
+      found.push_back(way_node);
+  }
+  return found;
 }
 
 std::string

@@ -19,8 +19,14 @@
 
 #include <string>
 #include <tuple>
+#include <vector>
 
 namespace valhalla {
+namespace mjolnir {
+struct OSMWay;
+struct OSMWayNode;
+} // namespace mjolnir
+
 namespace gurka {
 
 using nodelayout = std::map<std::string, midgard::PointLL>;
@@ -199,6 +205,27 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
  */
 baldr::GraphId
 findNode(valhalla::baldr::GraphReader& reader, const nodelayout& nodes, const std::string& node_name);
+
+/**
+ * Finds an OSMWay in the temporary ways.bin file left by a partial tile build,
+ * i.e. buildtiles() with end_stage <= BuildStage::kEnhance.
+ *
+ * @param map     the map returned by buildtiles()
+ * @param way_id  the OSM way id, pin it via an "osm_id" tag on the gurka way
+ * @return the OSMWay, throws if not found
+ */
+mjolnir::OSMWay findWay(const map& map, uint64_t way_id);
+
+/**
+ * Finds all OSMWayNode entries for an OSM node in the temporary way_nodes.bin file left by a
+ * partial tile build, i.e. buildtiles() with end_stage <= BuildStage::kEnhance. Nodes shared
+ * between ways have one entry per referencing way.
+ *
+ * @param map      the map returned by buildtiles()
+ * @param node_id  the OSM node id, pin it via an "osm_id" tag on the gurka node
+ * @return all matching OSMWayNodes, empty if none
+ */
+std::vector<mjolnir::OSMWayNode> findWayNodes(const map& map, uint64_t node_id);
 
 std::string do_action(const map& map,
                       valhalla::Api& api,
