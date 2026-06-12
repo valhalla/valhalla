@@ -438,16 +438,20 @@ map buildtiles(const nodelayout& layout,
                const nodes& nodes,
                const relations& relations,
                const std::string& workdir,
-               const std::unordered_map<std::string, std::string>& config_options) {
+               const std::unordered_map<std::string, std::string>& config_options,
+               mjolnir::BuildStage start_stage,
+               mjolnir::BuildStage end_stage) {
   auto config = test::make_config(workdir, config_options);
-  return buildtiles(layout, ways, nodes, relations, config);
+  return buildtiles(layout, ways, nodes, relations, config, start_stage, end_stage);
 }
 
 map buildtiles(const nodelayout& layout,
                const ways& ways,
                const nodes& nodes,
                const relations& relations,
-               const boost::property_tree::ptree& config) {
+               const boost::property_tree::ptree& config,
+               mjolnir::BuildStage start_stage,
+               mjolnir::BuildStage end_stage) {
 
   map result{config, layout};
   auto workdir = config.get<std::string>("mjolnir.tile_dir");
@@ -457,19 +461,23 @@ map buildtiles(const nodelayout& layout,
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (std::filesystem::exists(workdir))
-    std::filesystem::remove_all(workdir);
-  std::filesystem::create_directories(workdir);
-
   auto pbf_filename = workdir + "/map.pbf";
-  std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
-  detail::build_pbf(result.nodes, ways, nodes, relations, pbf_filename);
+  if (start_stage == mjolnir::BuildStage::kInitialize) {
+    if (std::filesystem::exists(workdir))
+      std::filesystem::remove_all(workdir);
+    std::filesystem::create_directories(workdir);
+
+    std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
+    detail::build_pbf(result.nodes, ways, nodes, relations, pbf_filename);
+  } else if (!std::filesystem::exists(pbf_filename)) {
+    throw std::runtime_error("Can't resume from stage " + mjolnir::to_string(start_stage) +
+                             ", no previous partial build in " + workdir);
+  }
   std::cerr << "[          ] building tiles in " << result.config.get<std::string>("mjolnir.tile_dir")
             << std::endl;
   midgard::logging::Configure({{"type", ""}});
 
-  mjolnir::build_tile_set(result.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
-                          mjolnir::BuildStage::kValidate);
+  mjolnir::build_tile_set(result.config, {pbf_filename}, start_stage, end_stage);
 
   return result;
 }

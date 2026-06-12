@@ -12,6 +12,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "midgard/pointll.h"
+#include "mjolnir/util.h"
 #include "proto/api.pb.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -111,6 +112,9 @@ std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
  * @param config_options optional key value pairs where the key is ptree style dom traversal and
  *        the value is the value to put into the config. You can do things like add timezones database
  *        path
+ * @param start_stage first build stage to run; anything past kInitialize resumes a previous
+ *        partial build in the same workdir (keeps the PBF and temp *.bin files)
+ * @param end_stage last build stage to run, defaults to the full pipeline
  * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
  *         (for converting node names to coordinates)
  */
@@ -119,8 +123,10 @@ map buildtiles(const nodelayout& layout,
                const nodes& nodes,
                const relations& relations,
                const std::string& workdir,
-               const std::unordered_map<std::string, std::string>& config_options = {
-                   {"mjolnir.concurrency", "1"}});
+               const std::unordered_map<std::string, std::string>& config_options =
+                   {{"mjolnir.concurrency", "1"}},
+               mjolnir::BuildStage start_stage = mjolnir::BuildStage::kInitialize,
+               mjolnir::BuildStage end_stage = mjolnir::BuildStage::kValidate);
 
 /**
  * Given a node layout, set of ways, node properties and relations, generates an OSM PBF file,
@@ -131,6 +137,9 @@ map buildtiles(const nodelayout& layout,
  * @param nodes properties on any of the defined nodes
  * @param relations OSM relations that related nodes and ways together
  * @param config fully fledged valhalla config, the mjolnir section is used to build tiles
+ * @param start_stage first build stage to run; anything past kInitialize resumes a previous
+ *        partial build in the same workdir (keeps the PBF and temp *.bin files)
+ * @param end_stage last build stage to run, defaults to the full pipeline
  * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
  *         (for converting node names to coordinates)
  */
@@ -138,7 +147,9 @@ map buildtiles(const nodelayout& layout,
                const ways& ways,
                const nodes& nodes,
                const relations& relations,
-               const boost::property_tree::ptree& config);
+               const boost::property_tree::ptree& config,
+               mjolnir::BuildStage start_stage = mjolnir::BuildStage::kInitialize,
+               mjolnir::BuildStage end_stage = mjolnir::BuildStage::kValidate);
 
 /**
  * Finds a directed edge in the generated map.  Helpful because the IDs assigned
