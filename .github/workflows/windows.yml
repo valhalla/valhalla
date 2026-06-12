@@ -132,7 +132,7 @@ jobs:
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
+            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG -d2FH4-" \
             -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
             -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
             -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
@@ -183,6 +183,17 @@ jobs:
           cmake --build build -- -k 0
           cmake --build build --target install
 
+      # TEMP debug: is the system C runtime older than the toolset we built with? if these differ,
+      # the FH4 unwind crash is a redist mismatch (fix = app-local deploy the toolset CRT).
+      - name: VC runtime versions (System32 vs toolset redist)
+        shell: pwsh
+        run: |
+          "System32 VCRUNTIME140_1.dll: " + (Get-Item C:\Windows\System32\VCRUNTIME140_1.dll).VersionInfo.FileVersion
+          "System32 VCRUNTIME140.dll:   " + (Get-Item C:\Windows\System32\VCRUNTIME140.dll).VersionInfo.FileVersion
+          "Toolset redist copies:"
+          Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022\*\VC\Redist\MSVC\*\x64\Microsoft.VC14*.CRT\VCRUNTIME140_1.dll' -ErrorAction SilentlyContinue |
+            ForEach-Object { "  " + $_.VersionInfo.FileVersion + "  " + $_.FullName }
+
       # TEMP debug: build the crashing exes + their data with symbols and run them under
       # cdb, breaking on the access violation to print a symbolized stack. Remove once diagnosed.
       - name: Stack-trace crashing tests
@@ -206,7 +217,7 @@ jobs:
 
           # on first-chance AV: dump real fault context (instruction/registers/r15 provenance), then quit.
           # build is /Od /Ob0 /INCREMENTAL:NO so frames + symbols are trustworthy now.
-          AV_CMDS='.echo ===== EXCEPTION RECORD =====; .exr -1; .echo ===== REGISTERS @ FAULT =====; .ecxr; r; .echo ===== FAULTING INSTR =====; u @rip-10 L8; .echo ===== R15 LOADED BY =====; ub @rip L20; .echo ===== STACK =====; kn 200; .echo ===== MODULE =====; lmvm matrix; .echo ===== ANALYZE =====; !analyze -v; q'
+          AV_CMDS='.echo ===== EXCEPTION RECORD =====; .exr -1; .echo ===== REGISTERS @ FAULT =====; .ecxr; r; .echo ===== FAULTING INSTR =====; u @rip-10 L8; .echo ===== R15 LOADED BY =====; ub @rip L20; .echo ===== STACK =====; kn 200; .echo ===== MODULE =====; lmvm matrix; lmvm vcruntime140_1; lmvm vcruntime140; .echo ===== ANALYZE =====; !analyze -v; q'
           run_cdb() { # $1=exe, rest=args
             local exe="$1"; shift
             [ -f "$exe" ] || { echo "MISSING EXE: $exe (build failed?)"; return; }
