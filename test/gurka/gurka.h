@@ -34,6 +34,10 @@ using nodelayout = std::map<std::string, midgard::PointLL>;
 struct map {
   boost::property_tree::ptree config;
   nodelayout nodes;
+  // gurka node/way label -> assigned OSM id, so find* helpers can resolve names to ids at any
+  // build stage (the OSM name tag isn't attached to OSMWayNode until the node parsing pass)
+  std::unordered_map<std::string, uint64_t> node_osm_ids;
+  std::unordered_map<std::string, uint64_t> way_osm_ids;
 };
 
 using ways = std::map<std::string, std::map<std::string, std::string>>;
@@ -73,7 +77,9 @@ void build_pbf(const nodelayout& node_locations,
                const nodes& nodes,
                const relations& relations,
                const std::string& filename,
-               const bool strict = true);
+               const bool strict = true,
+               std::unordered_map<std::string, uint64_t>* node_osm_ids = nullptr,
+               std::unordered_map<std::string, uint64_t>* way_osm_ids = nullptr);
 
 /**
  * Extract list of edge names from route result.
@@ -217,6 +223,16 @@ findNode(valhalla::baldr::GraphReader& reader, const nodelayout& nodes, const st
 mjolnir::OSMWay findWay(const map& map, uint64_t way_id);
 
 /**
+ * Finds an OSMWay in the temporary ways.bin file left by a partial tile build,
+ * i.e. buildtiles() with end_stage <= BuildStage::kEnhance.
+ *
+ * @param map       the map returned by buildtiles()
+ * @param way_name  the name of the OSM way
+ * @return the OSMWay, throws if not found
+ */
+mjolnir::OSMWay findWay(const map& map, const std::string& way_name);
+
+/**
  * Finds all OSMWayNode entries for an OSM node in the temporary way_nodes.bin file left by a
  * partial tile build, i.e. buildtiles() with end_stage <= BuildStage::kEnhance. Nodes shared
  * between ways have one entry per referencing way.
@@ -226,6 +242,17 @@ mjolnir::OSMWay findWay(const map& map, uint64_t way_id);
  * @return all matching OSMWayNodes, empty if none
  */
 std::vector<mjolnir::OSMWayNode> findWayNodes(const map& map, uint64_t node_id);
+
+/**
+ * Finds all OSMWayNode entries for an OSM node in the temporary way_nodes.bin file left by a
+ * partial tile build, i.e. buildtiles() with end_stage <= BuildStage::kEnhance. Nodes shared
+ * between ways have one entry per referencing way.
+ *
+ * @param map        the map returned by buildtiles()
+ * @param node_name  the name of the OSM node
+ * @return all matching OSMWayNodes, empty if none
+ */
+std::vector<mjolnir::OSMWayNode> findWayNodes(const map& map, const std::string& node_name);
 
 std::string do_action(const map& map,
                       valhalla::Api& api,

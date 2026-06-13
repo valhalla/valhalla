@@ -15,12 +15,11 @@ TEST(ParseWays, OsmWayMarshalling) {
         {"maxspeed", "120"},
         {"lanes", "4"},
         {"surface", "gravel"},
-        {"tunnel", "yes"},
-        {"osm_id", "100"}}},
-      {"BC", {{"highway", "motorway"}, {"maxspeed", "141"}, {"osm_id", "101"}}},
-      {"CD", {{"highway", "motorway"}, {"maxspeed", "254"}, {"osm_id", "102"}}},
-      {"DE", {{"highway", "motorway"}, {"maxspeed", "5"}, {"osm_id", "103"}}},
-      {"EF", {{"highway", "motorway"}, {"maxspeed", "255"}, {"osm_id", "104"}}},
+        {"tunnel", "yes"}}},
+      {"BC", {{"highway", "motorway"}, {"maxspeed", "141"}}},
+      {"CD", {{"highway", "motorway"}, {"maxspeed", "254"}}},
+      {"DE", {{"highway", "motorway"}, {"maxspeed", "5"}}},
+      {"EF", {{"highway", "motorway"}, {"maxspeed", "255"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
 
@@ -29,7 +28,7 @@ TEST(ParseWays, OsmWayMarshalling) {
                                {{"mjolnir.concurrency", "1"}}, mjolnir::BuildStage::kInitialize,
                                mjolnir::BuildStage::kParseWays);
 
-  auto way = gurka::findWay(map, 100);
+  auto way = gurka::findWay(map, "AB");
   EXPECT_EQ(way.road_class(), baldr::RoadClass::kResidential);
   EXPECT_EQ(way.speed_limit(), 120);
   EXPECT_EQ(way.speed(), 120);
@@ -38,20 +37,20 @@ TEST(ParseWays, OsmWayMarshalling) {
   EXPECT_TRUE(way.tunnel());
 
   // speeds above kMaxOSMSpeed are clamped by OSMWay::set_speed/set_speed_limit
-  auto clamped = gurka::findWay(map, 101);
+  auto clamped = gurka::findWay(map, "BC");
   EXPECT_EQ(clamped.speed_limit(), 140);
   EXPECT_EQ(clamped.speed(), 140);
 
-  auto clamped_high = gurka::findWay(map, 102);
+  auto clamped_high = gurka::findWay(map, "CD");
   EXPECT_EQ(clamped_high.speed_limit(), 140);
   EXPECT_EQ(clamped_high.speed(), 140);
 
   // lua's normalize_speed tosses speeds below 10 kph before they reach C++
-  auto tossed = gurka::findWay(map, 103);
+  auto tossed = gurka::findWay(map, "DE");
   EXPECT_EQ(tossed.speed_limit(), 0);
 
   // it also tosses speeds >= 255 kph which would collide with the kUnlimitedSpeedLimit sentinel
-  auto sentinel = gurka::findWay(map, 104);
+  auto sentinel = gurka::findWay(map, "EF");
   EXPECT_EQ(sentinel.speed_limit(), 0);
   EXPECT_EQ(sentinel.speed(), tossed.speed());
 }
@@ -63,12 +62,12 @@ TEST(ParseNodes, TwoPhaseWayNodesFill) {
          D
   )";
   const gurka::ways ways = {
-      {"ABC", {{"highway", "residential"}, {"osm_id", "100"}}},
-      {"BD", {{"highway", "residential"}, {"osm_id", "101"}}},
+      {"ABC", {{"highway", "residential"}}},
+      {"BD", {{"highway", "residential"}}},
   };
   const gurka::nodes nodes = {
       {"A", {{"osm_id", "10"}}},
-      {"B", {{"barrier", "gate"}, {"osm_id", "20"}}},
+      {"B", {{"barrier", "gate"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   const std::string workdir = "test/data/gurka_parse_way_nodes";
@@ -79,7 +78,7 @@ TEST(ParseNodes, TwoPhaseWayNodesFill) {
   // after parsing ways the way nodes only carry the node id, the position within the way and
   // whether the node is a way endpoint - the node pass hasn't seen coords or node tags yet
   {
-    auto b_nodes = gurka::findWayNodes(map, 20);
+    auto b_nodes = gurka::findWayNodes(map, "B");
     ASSERT_EQ(b_nodes.size(), 2);
     for (const auto& way_node : b_nodes) {
       EXPECT_FALSE(way_node.node.latlng().IsValid());
@@ -96,7 +95,7 @@ TEST(ParseNodes, TwoPhaseWayNodesFill) {
   // now both copies of B have coords, the gate type and are flagged as an intersection since
   // two ways reference the node
   {
-    auto b_nodes = gurka::findWayNodes(map, 20);
+    auto b_nodes = gurka::findWayNodes(map, "B");
     ASSERT_EQ(b_nodes.size(), 2);
     for (const auto& way_node : b_nodes) {
       EXPECT_NEAR(way_node.node.latlng().lat(), map.nodes["B"].lat(), 1e-6);
@@ -106,7 +105,7 @@ TEST(ParseNodes, TwoPhaseWayNodesFill) {
     }
 
     // dead ends stay flagged as intersections
-    auto a_nodes = gurka::findWayNodes(map, 10);
+    auto a_nodes = gurka::findWayNodes(map, "A");
     ASSERT_EQ(a_nodes.size(), 1);
     EXPECT_TRUE(a_nodes.front().node.intersection());
     EXPECT_TRUE(a_nodes.front().node.latlng().IsValid());
