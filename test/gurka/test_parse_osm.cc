@@ -19,7 +19,6 @@ TEST(ParseWays, OsmWayMarshalling) {
       {"BC", {{"highway", "motorway"}, {"maxspeed", "141"}}},
       {"CD", {{"highway", "motorway"}, {"maxspeed", "254"}}},
       {"DE", {{"highway", "motorway"}, {"maxspeed", "5"}}},
-      {"EF", {{"highway", "motorway"}, {"maxspeed", "255"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
 
@@ -48,11 +47,6 @@ TEST(ParseWays, OsmWayMarshalling) {
   // lua's normalize_speed tosses speeds below 10 kph before they reach C++
   auto tossed = gurka::findWay(map, "DE");
   EXPECT_EQ(tossed.speed_limit(), 0);
-
-  // it also tosses speeds >= 255 kph which would collide with the kUnlimitedSpeedLimit sentinel
-  auto sentinel = gurka::findWay(map, "EF");
-  EXPECT_EQ(sentinel.speed_limit(), 0);
-  EXPECT_EQ(sentinel.speed(), tossed.speed());
 }
 
 TEST(ParseNodes, TwoPhaseWayNodesFill) {

@@ -36,8 +36,8 @@ struct map {
   nodelayout nodes;
   // gurka node/way label -> assigned OSM id, so find* helpers can resolve names to ids at any
   // build stage (the OSM name tag isn't attached to OSMWayNode until the node parsing pass)
-  std::unordered_map<std::string, uint64_t> node_osm_ids;
-  std::unordered_map<std::string, uint64_t> way_osm_ids;
+  std::unordered_map<std::string, uint64_t> node_osm_ids = {};
+  std::unordered_map<std::string, uint64_t> way_osm_ids = {};
 };
 
 using ways = std::map<std::string, std::map<std::string, std::string>>;
