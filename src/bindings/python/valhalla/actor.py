@@ -2,12 +2,8 @@ import json
 from pathlib import Path
 from typing import Union
 
+from ._valhalla import _Actor
 from .config import parse_and_validate_config
-
-try:
-    from ._valhalla import _Actor
-except ModuleNotFoundError:
-    from _valhalla import _Actor
 
 __all__ = ["Actor"]
 
