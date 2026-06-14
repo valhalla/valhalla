@@ -8,6 +8,7 @@
 #include "mjolnir/util.h"
 
 #include <boost/format.hpp>
+#include <openssl/evp.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -47,6 +48,72 @@ std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restriction
     offset += cr->SizeOf();
   }
   return builders;
+}
+
+// MD5 of the tile's data portion (everything after the header) folded into a uint64
+uint64_t hash_tile_data(const std::filesystem::path& path) {
+  // uses openssl's API which can build the digest from byte chunks to save memory
+  EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+  std::array<unsigned char, 16> digest{};
+  try {
+    EVP_DigestInit_ex(ctx, EVP_md5(), nullptr);
+
+    std::ifstream in(path, std::ios::binary);
+    if (!in) {
+      throw std::runtime_error("Failed to open: " + path.string());
+    }
+    in.seekg(sizeof(GraphTileHeader));
+
+    std::vector<char> buffer(1 << 20); // 1 MiB
+    while (in) {
+      in.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+      if (std::streamsize got = in.gcount(); got > 0) {
+        if (EVP_DigestUpdate(ctx, buffer.data(), static_cast<size_t>(got)) != 1) {
+          throw std::runtime_error("EVP_DigestUpdate failed");
+        }
+      }
+    }
+
+    unsigned int out_len = 0;
+    if (EVP_DigestFinal_ex(ctx, digest.data(), &out_len) != 1 || out_len != digest.size()) {
+      throw std::runtime_error("EVP_DigestFinal_ex failed");
+    }
+  } catch (...) {
+    EVP_MD_CTX_free(ctx);
+    throw;
+  }
+
+  EVP_MD_CTX_free(ctx);
+
+  // roll the 128 bit digest into a uint64
+  uint64_t lo = 0, hi = 0;
+  for (int i = 0; i < 8; ++i) {
+    lo = (lo << 8) | digest[i];
+    hi = (hi << 8) | digest[8 + i];
+  }
+  std::hash<uint64_t> hasher;
+  return lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
+}
+
+// store a freshly-written tile's 48-bit data hash in the low bits of its header checksum, keeping
+// any tileset build id already in the high bits.
+void write_tile_checksum(const std::filesystem::path& path) {
+  constexpr uint64_t tile_hash_mask = (uint64_t(1) << baldr::kTileHashBits) - 1;
+
+  const uint64_t tile_hash = hash_tile_data(path) & tile_hash_mask;
+  std::fstream file(path, std::ios::in | std::ios::out | std::ios::binary);
+  if (!file.is_open()) {
+    throw std::runtime_error("Failed to open file " + path.string());
+  }
+  GraphTileHeader header;
+  file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
+  header.set_raw_checksum((static_cast<uint64_t>(header.build_id()) << baldr::kTileHashBits) |
+                          tile_hash);
+  file.seekp(0);
+  file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
+  if (!file) {
+    throw std::runtime_error("Failed to write to file " + path.string());
+  }
 }
 
 } // namespace
@@ -446,6 +513,7 @@ void GraphTileBuilder::StoreTileData() {
     file << in_mem.rdbuf();
     file.close();
 
+    write_tile_checksum(tmp_filename);
     std::filesystem::rename(tmp_filename, filename);
   } else {
     throw std::runtime_error("Failed to open file " + filename.string());
@@ -495,6 +563,8 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
     auto end = reinterpret_cast<const char*>(header()) + header()->end_offset();
     file.write(begin, end - begin);
     file.close();
+
+    write_tile_checksum(filename);
   } else {
     throw std::runtime_error("GraphTileBuilder::Update - Failed to open file " + filename.string());
   }
@@ -1314,6 +1384,8 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
     // everything else
     file << in_mem.rdbuf();
     file.close();
+
+    write_tile_checksum(filename);
   } // failed
   else {
     throw std::runtime_error("Failed to open file " + filename.string());
@@ -1413,6 +1485,8 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
 
     // Close the file
     file.close();
+
+    write_tile_checksum(filename);
   }
 }
 
