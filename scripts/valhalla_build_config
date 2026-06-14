@@ -110,6 +110,13 @@ class Optional:
         self.type = t
 
 
+# Windows ZMQ has no ipc:// (AF_UNIX) -- fall back to loopback tcp://.
+def ipc_endpoint(ipc_path: str, tcp_port: int) -> str:
+    if sys.platform.startswith("win"):
+        return f"tcp://127.0.0.1:{tcp_port}"
+    return f"ipc://{ipc_path}"
+
+
 # global default configuration
 config = {
     "logging": {
@@ -210,11 +217,11 @@ config = {
             "mvt_cache_min_zoom": 11,
             "mvt_max_age": "1800",
         },
-        "service": {"proxy": "ipc:///tmp/loki"},
+        "service": {"proxy": ipc_endpoint("/tmp/loki", 8003)},
     },
     "thor": {
         "source_to_target_algorithm": "select_optimal",
-        "service": {"proxy": "ipc:///tmp/thor"},
+        "service": {"proxy": ipc_endpoint("/tmp/thor", 8004)},
         "max_reserved_labels_count_astar": 2000000,
         "max_reserved_labels_count_bidir_astar": 1000000,
         "max_reserved_labels_count_dijkstras": 4000000,
@@ -258,7 +265,7 @@ config = {
         },
     },
     "odin": {
-        "service": {"proxy": "ipc:///tmp/odin"},
+        "service": {"proxy": ipc_endpoint("/tmp/odin", 8005)},
         "markup_formatter": {
             "markup_enabled": False,
             "phoneme_format": "<TEXTUAL_STRING> (<span class=<QUOTES>phoneme<QUOTES>>/<VERBAL_STRING>/</span>)",
@@ -296,14 +303,14 @@ config = {
         "pedestrian": {"turn_penalty_factor": 100, "search_radius": 50},
         "bicycle": {"turn_penalty_factor": 140},
         "multimodal": {"turn_penalty_factor": 70},
-        "service": {"proxy": "ipc:///tmp/meili"},
+        "service": {"proxy": ipc_endpoint("/tmp/meili", 8006)},
         "grid": {"size": 500, "cache_size": 100240},
     },
     "httpd": {
         "service": {
             "listen": "tcp://*:8002",
-            "loopback": "ipc:///tmp/loopback",
-            "interrupt": "ipc:///tmp/interrupt",
+            "loopback": ipc_endpoint("/tmp/loopback", 8007),
+            "interrupt": ipc_endpoint("/tmp/interrupt", 8008),
             "drain_seconds": 28,
             "shutdown_seconds": 1,
             "timeout_seconds": -1,

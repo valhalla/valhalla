@@ -1,5 +1,19 @@
 {
+  "default-registry": {
+    "kind": "builtin",
+    "baseline": "66c0373dc7fca549e5803087b9487edfe3aca0a1"
+  },
   "overlay-ports": [
         "./overlay-ports-vcpkg"
+  ],
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/kevinkreiser/prime_server",
+      "baseline": "d21c595b946b447a826ef6b0b559b3eb30522c68",
+      "packages": [
+        "prime-server"
+      ]
+    }
   ]
 }

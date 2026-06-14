@@ -73,13 +73,13 @@
       "mvt_cache_min_zoom": 11
     },
     "service": {
-      "proxy": "ipc:///tmp/loki"
+      "proxy": "inproc:///tmp/loki"
     }
   },
   "thor": {
     "source_to_target_algorithm": "select_optimal",
     "service": {
-      "proxy": "ipc:///tmp/thor"
+      "proxy": "inproc:///tmp/thor"
     },
     "max_reserved_labels_count_astar": 2000000,
     "max_reserved_labels_count_bidir_astar": 1000000,
@@ -126,7 +126,7 @@
   },
   "odin": {
     "service": {
-      "proxy": "ipc:///tmp/odin"
+      "proxy": "inproc:///tmp/odin"
     },
     "markup_formatter": {
       "markup_enabled": false,
@@ -176,7 +176,7 @@
       "turn_penalty_factor": 70
     },
     "service": {
-      "proxy": "ipc:///tmp/meili"
+      "proxy": "inproc:///tmp/meili"
     },
     "grid": {
       "size": 500,
@@ -185,9 +185,9 @@
   },
   "httpd": {
     "service": {
-      "listen": "tcp://*:8002",
-      "loopback": "ipc:///tmp/loopback",
-      "interrupt": "ipc:///tmp/interrupt",
+      "listen": "tcp://127.0.0.1:8010",
+      "loopback": "inproc:///tmp/loopback",
+      "interrupt": "inproc:///tmp/interrupt",
       "drain_seconds": 28,
       "shutdown_seconds": 1
     }

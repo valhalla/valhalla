@@ -541,11 +541,9 @@ void run_service(const boost::property_tree::ptree& config) {
   auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
   auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
-  // listen for requests
-  zmq::context_t context;
   loki_worker_t loki_worker(config);
-  prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-                                interrupt_endpoint,
+  prime_server::worker_t worker(zmq_context(), upstream_endpoint, downstream_endpoint,
+                                loopback_endpoint, interrupt_endpoint,
                                 std::bind(&loki_worker_t::work, std::ref(loki_worker),
                                           std::placeholders::_1, std::placeholders::_2,
                                           std::placeholders::_3),

@@ -46,7 +46,7 @@ struct linestring_handler_t {
 
 TEST(VectorTilesBasic, ConfigFail) {
   // zoom config with descending levels fails
-  auto config = test::make_config("/tmp");
+  auto config = test::make_config(std::filesystem::temp_directory_path().string());
   auto& mvt_min_zoom_road_class = config.get_child("loki.service_defaults.mvt_min_zoom_road_class");
   auto it = mvt_min_zoom_road_class.begin();
   it->second.put_value(30);
