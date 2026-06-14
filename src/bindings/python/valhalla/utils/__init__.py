@@ -26,7 +26,7 @@ from ..midgard.utils import decode_polyline
 
 warnings.warn(
     "`valhalla.utils` is deprecated and will be removed in a future release: "
-    "https://github.com/valhalla/valhalla/pull/6132",
+    "https://github.com/valhalla/valhalla/pull/6133",
     DeprecationWarning,
     stacklevel=2,
 )
