@@ -376,6 +376,9 @@ struct graph_parser {
         amenity_ = tag_.second;
       }
     };
+    tag_handlers_["pedestrian_area"] = [this]() {
+      way_.set_area(tag_.second == "true" ? true : false);
+    };
 
     tag_handlers_["use"] = [this]() {
       Use use = (Use)to_int(tag_.second);
@@ -3840,6 +3843,7 @@ struct graph_parser {
     uint64_t from_way_id = 0;
     bool isRestriction = false, isTypeRestriction = false, hasRestriction = false;
     bool isRoad = false, isRoute = false, isBicycle = false, isConnectivity = false;
+    bool isMultipolygon = false, isPedestrian = false, isArea = false;
     bool isConditional = false, isProbable = false, has_multiple_times = false;
     uint32_t bike_network_mask = 0;
 
@@ -3857,6 +3861,8 @@ struct graph_parser {
           isRoute = true;
         } else if (tag.second == "connectivity") {
           isConnectivity = true;
+        } else if (tag.second == "multipolygon") {
+          isMultipolygon = true;
         }
       } else if (tag.first == "route") {
         if (tag.second == "road") {
@@ -3983,6 +3989,14 @@ struct graph_parser {
         to = tag.second;
       } else if (tag.first == "from") {
         from = tag.second;
+      } else if (tag.first == "highway") {
+        if (tag.second == "pedestrian") {
+          isPedestrian = true;
+        }
+      } else if (tag.first == "area") {
+        if (tag.second == "yes") {
+          isArea = true;
+        }
       }
     } // for (const auto& tag : results)
 
@@ -4264,6 +4278,19 @@ struct graph_parser {
           complex_restrictions_from_->push_back(restriction);
         } else { // simple restriction
           osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
+        }
+      }
+    } else if (isMultipolygon && isPedestrian && isArea) {
+      for (const auto& member : members) {
+        OSMAreaMember area_member;
+        if (member.role == "outer" && member.member_type == osmium::item_type::way) {
+          area_member.is_outer = true;
+          area_member.way_id = member.member_id;
+          osmdata_.area_relations.insert(AreaMultiMap::value_type(osmid, area_member));
+        } else if (member.role == "inner" && member.member_type == osmium::item_type::way) {
+          area_member.is_outer = false;
+          area_member.way_id = member.member_id;
+          osmdata_.area_relations.insert(AreaMultiMap::value_type(osmid, area_member));
         }
       }
     }

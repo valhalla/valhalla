@@ -18,6 +18,7 @@
    * ADDED: Bounding circles for faster loki (not yet enabled) [#5103](https://github.com/valhalla/valhalla/pull/5103)
    * ADDED: OpenAPI documentation [#6088](https://github.com/valhalla/valhalla/pull/6088)
    * ADDED: `dataset_id` config to optionally set an arbitrary number to each tile's `dataset_id` header field [#6126](https://github.com/valhalla/valhalla/pull/6126)
+   * ADDED: Detect pedestrian areas (highway=pedestrian + area=yes) both as simple ways or multipolygon relations and avoid them generating edges[#6127](https://github.com/valhalla/valhalla/pull/6127)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**
