@@ -1760,6 +1760,8 @@ function filter_tags_generic(kv)
   if kv["maxspeed"] == "none" then
     --- special case unlimited speed limit (german autobahn)
     kv["max_speed"] = "unlimited"
+  elseif kv["maxspeed"] == "walk" then
+    kv["max_speed"] = 5
   else
     kv["max_speed"] = normalize_speed(kv["maxspeed"])
   end
