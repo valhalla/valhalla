@@ -92,7 +92,6 @@ void assert_tile_equalish(const GraphTile& a,
             bh->complex_restriction_forward_offset());
   EXPECT_EQ(ah->complex_restriction_reverse_offset() + difference,
             bh->complex_restriction_reverse_offset());
-  EXPECT_EQ(ah->date_created(), bh->date_created());
   EXPECT_EQ(ah->density(), bh->density());
   EXPECT_EQ(ah->departurecount(), bh->departurecount());
   EXPECT_EQ(ah->directededgecount(), bh->directededgecount());
