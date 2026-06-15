@@ -62,6 +62,33 @@ projected_circle_t circumcircle3(const Point2d& a, const Point2d& b, const Point
   return {center, center.Distance(a)};
 }
 
+projected_circle_t welzl_impl(std::span<Point2d> points, std::vector<Point2d>& boundary) {
+
+  if (points.empty() || boundary.size() == 3) {
+    switch (boundary.size()) {
+      case 0:
+        return {{0, 0}, 0};
+      case 1:
+        return circumcircle1(boundary[0]);
+      case 2:
+        return circumcircle2(boundary[0], boundary[1]);
+      default:
+        return circumcircle3(boundary[0], boundary[1], boundary[2]);
+    }
+  }
+
+  const Point2d pt = points.front();
+  projected_circle_t d = welzl_impl(points.subspan(1), boundary);
+
+  if (d.second + 1e-10 >= d.first.Distance(pt))
+    return d;
+
+  boundary.push_back(pt);
+  d = welzl_impl(points.subspan(1), boundary);
+  boundary.pop_back();
+  return d;
+}
+
 std::vector<valhalla::midgard::PointLL>
 resample_at_1hz(const std::vector<valhalla::midgard::gps_segment_t>& segments) {
   std::vector<valhalla::midgard::PointLL> resampled;
@@ -901,66 +928,17 @@ std::string decode64(const std::string& encoded) {
   return decoded;
 }
 
-template <class container_t>
-std::tuple<PointLL, double> get_bounding_circle(const container_t& shape) {
-  if (shape.empty()) {
-    return {};
-  }
-  // Make 1 pass through pts. Find the 4 pts with min_lat, max_lat, min_lng, max_lng
-  midgard::PointLL min_lat = shape.front();
-  midgard::PointLL min_lng = shape.front();
-  midgard::PointLL max_lat = shape.front();
-  midgard::PointLL max_lng = shape.front();
-  for (const auto& pt : shape) {
-    if (pt.lat() < min_lat.lat()) {
-      min_lat = pt;
-    } else if (pt.lat() > max_lat.lat()) {
-      max_lat = pt;
-    }
-    if (pt.lng() < min_lng.lng()) {
-      min_lng = pt;
-    } else if (pt.lng() > max_lng.lng()) {
-      max_lng = pt;
-    }
-  }
-
-  // Pick the pair with the largest distance between them. Use the
-  // midpoint of the pair as the center of the circle and the distance
-  // as the diameter
-  double radius;
-  midgard::PointLL center;
-  auto dlat = (max_lat - min_lat).Norm();
-  auto dlng = (max_lng - min_lng).Norm();
-  if (dlat >= dlng) {
-    center = min_lat + (max_lat - min_lat) * 0.5f;
-    radius = dlat * 0.5f;
-  } else {
-    center = min_lng + (max_lng - min_lng) * 0.5f;
-    radius = dlng * 0.5f;
-  }
-
-  // Make 2nd pass and check for vertices outside the circle. If any are outside,
-  // increase radius and shift the center to include the vertex and the "back-side"
-  // of the circle. This expansion should only be required for at most a few vertices.
-  double radius_sqr = radius * radius;
-  for (const auto& pt : shape) {
-    auto dv = pt - center;
-    double d2 = dv.NormSquared();
-    if (d2 > radius_sqr) {
-      // Vertex not in circle: expand circle to include the vertex.
-      // Increase radius and shift the center towards v
-      double d = std::sqrt(d2);
-      radius = (radius + d) * 0.5f;
-      // TODO - why can't we use dv?
-      center = center + (pt - center) * ((d - radius) / d);
-    }
-  }
-  radius *= kMetersPerDegreeLat;
-  return {center, radius};
-}
-template std::tuple<PointLL, double> get_bounding_circle(const std::list<midgard::PointLL>& shape);
-template std::tuple<PointLL, double> get_bounding_circle(const std::vector<midgard::PointLL>& shape);
-
+/**
+ * Compute the minimum bounding circle of an edge shape. Projects points to azimuthal equidistant,
+ * using the shape's bbox center.
+ *
+ * @param points                the edge's shape in unprojected lat/lon
+ * @param distance_threshold    a size threshold for the shape's bounding box beyond which bounding
+ * circle computation is skipped
+ *
+ * @return optionally, a circle with center in lat/lon and a radius in meters. std::nullopt if the
+ * shape's bbox size exceeded distance_threshold or the shape is empty.
+ */
 std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
                                                 double distance_threshold) {
   if (points.empty())
@@ -981,40 +959,16 @@ std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& poin
   for (const auto& p : points)
     pts.push_back(project(p));
 
-  // welzl's recursive lambda
+  // a place to store the boundary
   std::vector<Point2d> boundary;
-  auto welzl_impl = [&](auto& self, std::span<Point2d> P) -> projected_circle_t {
-    if (P.empty() || boundary.size() == 3) {
-      switch (boundary.size()) {
-        case 0:
-          return {{0, 0}, 0};
-        case 1:
-          return circumcircle1(boundary[0]);
-        case 2:
-          return circumcircle2(boundary[0], boundary[1]);
-        default:
-          return circumcircle3(boundary[0], boundary[1], boundary[2]);
-      }
-    }
 
-    const Point2d pt = P.front();
-    projected_circle_t d = self(self, P.subspan(1));
-
-    if (d.second + 1e-10 >= d.first.Distance(pt))
-      return d;
-
-    boundary.push_back(pt);
-    d = self(self, P.subspan(1));
-    boundary.pop_back();
-    return d;
-  };
-
-  // shuffle to get expected O(n) average performance
+  // welzl's expects shuffled input
   std::vector<Point2d> shuffled = pts;
   std::shuffle(shuffled.begin(), shuffled.end(), std::mt19937{std::random_device{}()});
 
-  projected_circle_t result = welzl_impl(welzl_impl, std::span(shuffled));
+  projected_circle_t result = welzl_impl(std::span(shuffled), boundary);
 
+  // finally reproject the center to lat/lon
   const PointLL center = unproject(result.first);
   return circle_t{Point2d{center.lng(), center.lat()}, result.second};
 }
