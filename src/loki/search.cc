@@ -1049,7 +1049,7 @@ void Search::edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
         double radius = circle.second;
         if (radius != 0) {
           // we have a circle
-          float radius_deg = radius / kMetersPerDegreeLat;
+          float radius_deg = radius / (kMetersPerDegreeLat * cosf(circle.first.lat() * kRadPerDeg));
           auto intersection = circle_intersects_bounds(circle.first, radius_deg, bounds);
           switch (intersection) {
             case CircleInBbox::OUTSIDE:
