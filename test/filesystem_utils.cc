@@ -13,8 +13,8 @@ namespace stdfs = std::filesystem;
 
 TEST(Filesystem, concurrent_folder_create_delete) {
 
-  const std::string nested_subdir = stdfs::path{"test/k/l/m/n/o/p/q/r/s/t"};
-  const std::string base_subdir = stdfs::path{"test/k"};
+  const std::string nested_subdir = stdfs::path{"test/k/l/m/n/o/p/q/r/s/t"}.string();
+  const std::string base_subdir = stdfs::path{"test/k"}.string();
 
   if (stdfs::is_directory(base_subdir))
     stdfs::remove_all(base_subdir);
@@ -83,35 +83,25 @@ TEST(Filesystem, concurrent_folder_create_delete) {
 }
 
 TEST(Filesystem, has_data_member_type) {
-  auto arr = vfs::has_data<std::array<int, 3>>::value;
-  EXPECT_TRUE(arr);
-
-  auto vc = vfs::has_data<std::vector<int>>::value;
-  EXPECT_TRUE(vc);
-
-  auto str = vfs::has_data<std::string>::value;
-  EXPECT_TRUE(str);
-
-  auto umap = vfs::has_data<std::unordered_map<int, int>>::value;
-  EXPECT_FALSE(umap);
-
-  auto integer = vfs::has_data<int>::value;
-  EXPECT_FALSE(integer);
-
-  auto lst = vfs::has_data<std::list<int>>::value;
-  EXPECT_FALSE(lst);
+  EXPECT_TRUE((vfs::has_data<std::array<int, 3>>));
+  EXPECT_TRUE((vfs::has_data<std::vector<int>>));
+  EXPECT_TRUE((vfs::has_data<std::string>));
+  EXPECT_FALSE((vfs::has_data<std::unordered_map<int, int>>));
+  EXPECT_FALSE((vfs::has_data<int>));
+  EXPECT_FALSE((vfs::has_data<std::list<int>>));
 }
 
 TEST(Filesystem, save_file_valid_input) {
-  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
-                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
-                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
+  const auto base = stdfs::temp_directory_path() / "save_file_input";
+  std::vector<stdfs::path> tests{base / "utrecht_tiles" / "0" / "003" / "196.gp",
+                                 base / "utrecht_tiles" / "1" / "051" / "305.gph",
+                                 base / "utrecht_tiles" / "2" / "000" / "818" / "660.gph"};
 
   for (const auto& test : tests) {
     EXPECT_TRUE(vfs::save<std::string>(test));
   }
 
-  stdfs::remove_all("/tmp/save_file_input/");
+  stdfs::remove_all(base);
 }
 
 TEST(Filesystem, save_file_invalid_input) {

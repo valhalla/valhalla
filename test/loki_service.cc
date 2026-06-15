@@ -390,7 +390,8 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
 
   auto config = test::make_config(run_dir.string(),
                                   {{"service_limits.skadi.max_shape", "100"},
-                                   {"service_limits.max_exclude_locations", "0"}},
+                                   {"service_limits.max_exclude_locations", "0"},
+                                   {"httpd.service.listen", "tcp://127.0.0.1:8003"}},
                                   {"loki.actions", "mjolnir.tile_extract", "mjolnir.tile_dir"});
 
   boost::property_tree::ptree actions;
@@ -407,15 +408,12 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
 // config for permanently running server
 auto const config = make_config();
 
-// for zmq thead communications
-zmq::context_t context;
-
 // this macro is convenient for making all the stages of the service pipeline
 #define STAGE(stage)                                                                                 \
   {                                                                                                  \
     std::thread proxy(                                                                               \
         std::bind(&proxy_t::forward,                                                                 \
-                  proxy_t(context,                                                                   \
+                  proxy_t(valhalla::zmq_context(),                                                   \
                           config.get<std::string>(std::string(#stage) + ".service.proxy") + "_in",   \
                           config.get<std::string>(std::string(#stage) + ".service.proxy") +          \
                               "_out")));                                                             \
@@ -427,7 +425,8 @@ zmq::context_t context;
 void start_service() {
   // server
   std::thread server(std::bind(&http_server_t::serve,
-                               http_server_t(context, config.get<std::string>("httpd.service.listen"),
+                               http_server_t(valhalla::zmq_context(),
+                                             config.get<std::string>("httpd.service.listen"),
                                              config.get<std::string>("loki.service.proxy") + "_in",
                                              config.get<std::string>("httpd.service.loopback"),
                                              config.get<std::string>("httpd.service.interrupt"))));
@@ -447,7 +446,7 @@ void run_requests(const std::vector<http_request_t>& requests,
   std::string request_str;
   int success_count = 0;
   http_client_t client(
-      context, config.get<std::string>("httpd.service.listen"),
+      valhalla::zmq_context(), config.get<std::string>("httpd.service.listen"),
       [&requests, &request, &request_str]() {
         // we dont have any more requests so bail
         if (request == requests.cend()) {

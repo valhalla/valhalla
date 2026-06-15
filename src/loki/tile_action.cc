@@ -4,6 +4,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem_utils.h"
 #include "loki/tiles.h"
 #include "loki/worker.h"
 #include "meili/candidate_search.h"
@@ -691,7 +692,13 @@ std::string loki_worker_t::render_tile(Api& request) {
       LOG_WARN("Couldnt cache tile {}", tile_path.string());
     }
 
-    std::filesystem::rename(tmp, tile_path);
+    // best-effort cache publish; a failed replace just means the tile isn't cached
+    std::error_code ec;
+    valhalla::filesystem_utils::rename_replace(tmp, tile_path, ec);
+    if (ec) {
+      LOG_WARN("Couldnt cache tile {}", tile_path.string());
+      std::filesystem::remove(tmp, ec);
+    }
   }
 
   if (return_verbose && exclude_layers.empty()) {

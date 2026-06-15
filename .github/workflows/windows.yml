@@ -1,0 +1,273 @@
+name: Build Windows
+
+on:
+  push:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
+        required: false
+        default: false
+
+# Cancel CI runs on a branch when new commits were pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  SETUP_TMATE: ${{ ((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) && (github.repository_owner == 'valhalla') }}
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
+jobs:
+  release_build:
+    name: Release build
+    runs-on: windows-2022
+    env:
+      # TEMP: RelWithDebInfo for symbols so the cdb stack-trace step is useful; revert to Release
+      BUILD_TYPE: RelWithDebInfo
+      MSVC_VERSION: "2022"
+      # Keep aligned with VCPKG_VERSION in osx_win_python_builds.yml to share the vcpkg cache.
+      VCPKG_VERSION: "66c0373d"
+      VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
+      VCPKG_DISABLE_COMPILER_TRACKING: ON
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          fetch-tags: true
+
+      # Needed by run-scripts and python_valhalla under --target check. 3.12 matches the wheel job.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Same vcpkg env as osx_win_python_builds.yml for shared cache.
+      - name: Configure vcpkg env
+        shell: bash
+        run: |
+          set -x
+          workspace="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
+          echo "VCPKG_INSTALLATION_ROOT=${workspace}/vcpkg" >> $GITHUB_ENV
+          echo "VCPKG_TOOLCHAIN_FILE=${workspace}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_TRIPLET=x64-windows" >> $GITHUB_ENV
+          echo "VCPKG_TRIPLET_PATH=${workspace}/vcpkg/triplets/x64-windows.cmake" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_BINARY_CACHE=${workspace}/vcpkg/archives" >> $GITHUB_ENV
+
+      - name: Install GNU make & awk
+        run: choco install gawk make
+
+      - name: Install vcpkg
+        shell: bash
+        run: |
+          set -x
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          git checkout $VCPKG_VERSION
+          mkdir archives
+          echo "set(VCPKG_BUILD_TYPE release)" >> "$VCPKG_TRIPLET_PATH"
+          echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$VCPKG_TRIPLET_PATH"
+          cmd.exe //c bootstrap-vcpkg.bat  # //c avoids MSYS path conversion
+          test -x ./vcpkg.exe || { echo "bootstrap-vcpkg.bat did not produce vcpkg.exe"; exit 1; }
+
+      - name: Restore vcpkg packages
+        uses: tespkg/actions-cache/restore@v1
+        id: vcpkg_restore
+        with:
+          endpoint: fsn1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache-2
+          # retry: a transient S3 transfer abort on the ~1GB object otherwise goes cold
+          retry: true
+          retry-count: 3
+          # vcpkg-configuration.json (our deps), compiler version or vcpkg cli version will trigger cache misses
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          path: |
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
+
+      - name: Setup Developer Command Prompt for VS
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Get version modifier
+        id: version-modifier
+        if: github.ref == 'refs/heads/master'
+        shell: bash
+        run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          set -x
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
+            -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
+            -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
+            -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
+            -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
+            -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
+            -DVCPKG_MANIFEST_FEATURES="services" \
+            -DENABLE_DATA_TOOLS=ON \
+            -DENABLE_TOOLS=ON \
+            -DENABLE_PYTHON_BINDINGS=ON \
+            -DENABLE_HTTP=ON \
+            -DENABLE_SERVICES=ON \
+            -DENABLE_TESTS=ON \
+            -DENABLE_CCACHE=OFF \
+            -DPREFER_EXTERNAL_DEPS=ON \
+            -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
+
+      # Save after Configure CMake so vcpkg/archives includes every manifest-mode-installed
+      # port (gdal, spatialite, prime-server, etc.).
+      - name: Save vcpkg packages
+        if: steps.vcpkg_restore.outputs.cache-hit != 'true'
+        uses: tespkg/actions-cache/save@v1
+        with:
+          endpoint: fsn1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache-2
+          retry: true
+          retry-count: 3
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          path: |
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
+
+      - name: Build Valhalla
+        if: false  # TEMP: skip full build/install during crash diagnosis (cdb step builds what it needs)
+        shell: bash
+        run: |
+          set -x
+          export MSYS_NO_PATHCONV=1
+          # nanobind's .pyi stub generation runs Python to import the .pyd, which
+          # transitively loads prime_server.dll + the other vcpkg-installed DLLs.
+          export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin"
+          # -k 0: keep building after failures so one run surfaces every error
+          cmake --build build -- -k 0
+          cmake --build build --target install
+
+      # TEMP debug: is the system C runtime older than the toolset we built with? if these differ,
+      # the FH4 unwind crash is a redist mismatch (fix = app-local deploy the toolset CRT).
+      - name: VC runtime versions (System32 vs toolset redist)
+        shell: pwsh
+        run: |
+          "System32 VCRUNTIME140_1.dll: " + (Get-Item C:\Windows\System32\VCRUNTIME140_1.dll).VersionInfo.FileVersion
+          "System32 VCRUNTIME140.dll:   " + (Get-Item C:\Windows\System32\VCRUNTIME140.dll).VersionInfo.FileVersion
+          "Toolset redist copies:"
+          Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022\*\VC\Redist\MSVC\*\x64\Microsoft.VC14*.CRT\VCRUNTIME140_1.dll' -ErrorAction SilentlyContinue |
+            ForEach-Object { "  " + $_.VersionInfo.FileVersion + "  " + $_.FullName }
+
+      # TEMP debug: build the crashing exes + their data with symbols and run them under
+      # cdb, breaking on the access violation to print a symbolized stack. Remove once diagnosed.
+      - name: Stack-trace crashing tests
+        shell: bash
+        run: |
+          set -x
+          export MSYS_NO_PATHCONV=1
+          ws="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
+          vcpkg_bin="${ws}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
+          # spatialite-tools on PATH: utrecht_tiles -> build_timezones shells out to it for tz.sqlite
+          export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
+          # public symbol server (+ local cache) so system frames in the stack resolve too
+          export _NT_SYMBOL_PATH="cache*${ws}/symcache;srv*https://msdl.microsoft.com/download/symbols"
+          CDB="/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
+          [ -x "$CDB" ] || CDB="cdb"
+          # the crash reproduces against VALID tiles, so build the tileset the test reads. running with
+          # tiles absent would crash in a different place (tile loading) than the routing code we're after.
+          cmake --build build --target multimodal_astar matrix utrecht_tiles -- -k 0 || true
+          ls "${ws}/build/test/data/utrecht_tiles"/*/ >/dev/null 2>&1 \
+            && echo "utrecht_tiles present" || echo "WARN: utrecht_tiles missing -> crash site may differ"
+
+          # on first-chance AV: dump real fault context (instruction/registers/r15 provenance), then quit.
+          # build is /Od /Ob0 /INCREMENTAL:NO so frames + symbols are trustworthy now.
+          AV_CMDS='.echo ===== EXCEPTION RECORD =====; .exr -1; .echo ===== REGISTERS @ FAULT =====; .ecxr; r; .echo ===== FAULTING INSTR =====; u @rip-10 L8; .echo ===== R15 LOADED BY =====; ub @rip L20; .echo ===== STACK =====; kn 200; .echo ===== MODULE =====; lmvm matrix; lmvm vcruntime140_1; lmvm vcruntime140; .echo ===== ANALYZE =====; !analyze -v; q'
+          run_cdb() { # $1=exe, rest=args
+            local exe="$1"; shift
+            [ -f "$exe" ] || { echo "MISSING EXE: $exe (build failed?)"; return; }
+            "$CDB" -g -G -c "sxe -c \"${AV_CMDS}\" av; g" "$exe" "$@" || true
+          }
+          echo "================== cdb: multimodal_astar / Standalone.UtrechtMultiModalAStar =================="
+          run_cdb "${ws}/build/test/multimodal_astar.exe" --gtest_filter='Standalone.UtrechtMultiModalAStar'
+
+          # isolate the ONE crashing test and let its fault go UNHANDLED (gtest_catch_exceptions=0) so cdb
+          # stops at the real second-chance crash. dps dumps the RAW stack (bypasses the heuristic kn walk
+          # that's unreliable mid-unwind), and we save a full minidump for offline analysis.
+          echo "================== cdb: matrix / Matrix.slim_matrix (unhandled, raw stack) =================="
+          DUMP='.echo ===CRASH===; .lastevent; .exr -1; .echo ===REGISTERS===; r; .echo ===RAW STACK (dps @rsp)===; dps @rsp L120; .echo ===HEURISTIC WALK===; kn 200; .echo ===MODULE===; lmvm matrix; .dump /ma D:/a/valhalla/valhalla/build/test/slim_matrix.dmp; .echo ===ANALYZE===; !analyze -v; q'
+          "$CDB" -g -G -c "sxd av; g; ${DUMP}" \
+            "${ws}/build/test/matrix.exe" --gtest_filter='Matrix.slim_matrix' --gtest_catch_exceptions=0 || true
+
+      # TEMP debug: keep the slim_matrix minidump for offline (WinDbg/TTD-style) analysis.
+      - name: Upload crash minidump
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slim_matrix-dump
+          path: build/test/*.dmp
+          if-no-files-found: ignore
+
+      - name: Show commit under test
+        shell: bash
+        run: |
+          echo "=================================================================="
+          echo "CHECKED-OUT HEAD (merge commit on PR events): $(git rev-parse HEAD)"
+          echo "PR head sha:                                  ${{ github.event.pull_request.head.sha }}"
+          echo "------------------------------------------------------------------"
+          git log -3 --oneline
+          echo "=================================================================="
+
+      - name: Run tests
+        if: false  # TEMP: skip full check during crash diagnosis
+        shell: bash
+        run: |
+          set -x
+          export MSYS_NO_PATHCONV=1
+          # PATH needs the spatialite/spatialite_tool executables the tz.sqlite build invokes;
+          # test-binary DLLs (prime_server.dll etc.) are deployed next to the exes by vcpkg applocal.
+          vcpkg_bin="${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
+          export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
+          # -k 0: run every test/target before giving up so one run surfaces all failures
+          cmake --build build --target check -- -k 0
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
+        with:
+          detached: true
