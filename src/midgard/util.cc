@@ -928,6 +928,74 @@ std::string decode64(const std::string& encoded) {
   return decoded;
 }
 
+AzimuthalEquidistant::AzimuthalEquidistant(const PointLL& center)
+    : center_(center), center_rad_(center_.lng() * kRadPerDeg, center_.lat() * kRadPerDeg),
+      sin_lat_center_(std::sin(center_rad_.second)), cos_lat_center_(std::cos(center_rad_.second)) {
+}
+
+Point2d AzimuthalEquidistant::project(const PointLL& ll) const {
+
+  // convert to radians
+  const double lon = ll.lng() * kRadPerDeg;
+  const double lat = ll.lat() * kRadPerDeg;
+
+  const double sin_lat = std::sin(lat);
+  const double cos_lat = std::cos(lat);
+
+  const double dlon = lon - center_rad_.first;
+
+  // angular distance from center c, guarded against acos domain issues
+  // (formula 4)
+  const double cos_c = sin_lat_center_ * sin_lat + cos_lat_center_ * cos_lat * std::cos(dlon);
+  const double c = std::acos(std::clamp(cos_c, -1.0, 1.0));
+
+  // k is c/sin(c), approaching 1 as c->0 (formula 3)
+  const double k = (c < 1e-10) ? 1.0 : c / std::sin(c);
+
+  // formula 1
+  const double x = k * cos_lat * std::sin(dlon);
+
+  // formula 2
+  const double y = k * (cos_lat_center_ * sin_lat - sin_lat_center_ * cos_lat * std::cos(dlon));
+
+  // scale from radians to meters using earth's radius
+  return {x * kRadEarthMeters, y * kRadEarthMeters};
+}
+
+PointLL AzimuthalEquidistant::project_inverse(const Point2d& pt) const {
+
+  // back to radians from meters
+  const double x = pt.x() / kRadEarthMeters;
+  const double y = pt.y() / kRadEarthMeters;
+
+  // formula 7: angular distance from center
+  const double c = std::sqrt(x * x + y * y);
+
+  // trivially finished if input point is the center point
+  if (c < 1e-10)
+    return center_;
+
+  const double sin_c = std::sin(c);
+  const double cos_c = std::cos(c);
+
+  // formula 5
+  double lat =
+      std::asin(std::clamp(cos_c * sin_lat_center_ + y * sin_c * cos_lat_center_ / c, -1.0, 1.0));
+
+  // formula 6 with special cases for center point at 90° or -90°
+  double lon;
+  if (std::abs(center_rad_.second - kPiOver2) < 1e-10) {
+    lon = center_rad_.first + std::atan2(x, -y);
+  } else if (std::abs(center_rad_.second + kPiOver2) < 1e-10) {
+    lon = center_rad_.first + std::atan2(x, y);
+  } else {
+    lon = center_rad_.first +
+          std::atan2(x * sin_c, c * cos_lat_center_ * cos_c - y * sin_lat_center_ * sin_c);
+  }
+
+  return {lon * kDegPerRad, lat * kDegPerRad};
+}
+
 /**
  * Compute the minimum bounding circle of an edge shape. Projects points to azimuthal equidistant,
  * using the shape's bbox center.
@@ -951,25 +1019,23 @@ std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& poin
     return std::nullopt;
 
   const PointLL center_ll = bbox.Center();
-  auto project = azimuthal_equidistant(center_ll);
-  auto unproject = inverse_azimuthal_equidistant(center_ll);
+  auto azimuthal_equidistant = AzimuthalEquidistant(center_ll);
 
   std::vector<Point2d> pts;
   pts.reserve(points.size());
   for (const auto& p : points)
-    pts.push_back(project(p));
+    pts.push_back(azimuthal_equidistant.project(p));
 
   // a place to store the boundary
   std::vector<Point2d> boundary;
 
   // welzl's expects shuffled input
-  std::vector<Point2d> shuffled = pts;
-  std::shuffle(shuffled.begin(), shuffled.end(), std::mt19937{std::random_device{}()});
+  std::shuffle(pts.begin(), pts.end(), std::mt19937{std::random_device{}()});
 
-  projected_circle_t result = welzl_impl(std::span(shuffled), boundary);
+  projected_circle_t result = welzl_impl(std::span(pts), boundary);
 
   // finally reproject the center to lat/lon
-  const PointLL center = unproject(result.first);
+  const PointLL center = azimuthal_equidistant.project_inverse(result.first);
   return circle_t{Point2d{center.lng(), center.lat()}, result.second};
 }
 
