@@ -26,6 +26,42 @@
 
 namespace {
 
+using namespace valhalla;
+using namespace valhalla::midgard;
+
+using projected_circle_t = std::pair<Point2d, double>;
+
+projected_circle_t circumcircle1(const Point2d& a) {
+  return {a, 0.};
+}
+
+projected_circle_t circumcircle2(const Point2d& a, const Point2d& b) {
+  return {a.PointAlongSegment(b), a.Distance(b) / 2.};
+}
+
+projected_circle_t circumcircle3(const Point2d& a, const Point2d& b, const Point2d& c) {
+  auto midAB = a.PointAlongSegment(b);
+  auto midBC = b.PointAlongSegment(c);
+
+  // perpendicular direction to AB
+  const double dx0 = -(b.y() - a.y());
+  const double dy0 = b.x() - a.x();
+
+  // perpendicular direction to BC
+  const double dx1 = -(c.y() - b.y());
+  const double dy1 = c.x() - b.x();
+
+  // cross product of perpendiculars
+  const double denom = dx0 * dy1 - dy0 * dx1;
+
+  // distance along perpendicular of AB to the intersection with perpendicular of BC
+  const double t = ((midBC.x() - midAB.x()) * dy1 - (midBC.y() - midAB.y()) * dx1) / denom;
+
+  // use direction and distance from mid point of AB to get the center
+  const Point2d center = {midAB.x() + t * dx0, midAB.y() + t * dy0};
+  return {center, center.Distance(a)};
+}
+
 std::vector<valhalla::midgard::PointLL>
 resample_at_1hz(const std::vector<valhalla::midgard::gps_segment_t>& segments) {
   std::vector<valhalla::midgard::PointLL> resampled;
@@ -924,6 +960,64 @@ std::tuple<PointLL, double> get_bounding_circle(const container_t& shape) {
 }
 template std::tuple<PointLL, double> get_bounding_circle(const std::list<midgard::PointLL>& shape);
 template std::tuple<PointLL, double> get_bounding_circle(const std::vector<midgard::PointLL>& shape);
+
+std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
+                                                double distance_threshold) {
+  if (points.empty())
+    return std::nullopt;
+
+  // bbox check, trivially finished
+  // if bbox is larger than the distance threshold
+  AABB2<PointLL> bbox(points);
+  if (bbox.minpt().Distance(bbox.maxpt()) > distance_threshold)
+    return std::nullopt;
+
+  const PointLL center_ll = bbox.Center();
+  auto project = azimuthal_equidistant(center_ll);
+  auto unproject = inverse_azimuthal_equidistant(center_ll);
+
+  std::vector<Point2d> pts;
+  pts.reserve(points.size());
+  for (const auto& p : points)
+    pts.push_back(project(p));
+
+  // welzl's recursive lambda
+  std::vector<Point2d> boundary;
+  auto welzl_impl = [&](auto& self, std::span<Point2d> P) -> projected_circle_t {
+    if (P.empty() || boundary.size() == 3) {
+      switch (boundary.size()) {
+        case 0:
+          return {{0, 0}, 0};
+        case 1:
+          return circumcircle1(boundary[0]);
+        case 2:
+          return circumcircle2(boundary[0], boundary[1]);
+        default:
+          return circumcircle3(boundary[0], boundary[1], boundary[2]);
+      }
+    }
+
+    const Point2d pt = P.front();
+    projected_circle_t d = self(self, P.subspan(1));
+
+    if (d.second + 1e-10 >= d.first.Distance(pt))
+      return d;
+
+    boundary.push_back(pt);
+    d = self(self, P.subspan(1));
+    boundary.pop_back();
+    return d;
+  };
+
+  // shuffle to get expected O(n) average performance
+  std::vector<Point2d> shuffled = pts;
+  std::shuffle(shuffled.begin(), shuffled.end(), std::mt19937{std::random_device{}()});
+
+  projected_circle_t result = welzl_impl(welzl_impl, std::span(shuffled));
+
+  const PointLL center = unproject(result.first);
+  return circle_t{Point2d{center.lng(), center.lat()}, result.second};
+}
 
 } // namespace midgard
 } // namespace valhalla

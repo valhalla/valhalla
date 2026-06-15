@@ -325,8 +325,7 @@ TEST_P(AddBinTest, TestAddBins) {
                          "New tiles edgeinfo or names arent matching up: 3");
   }
 }
-// TODO(chris): enable when bounding circles are enabled
-INSTANTIATE_TEST_SUITE_P(With_Without_BoundingCircles, AddBinTest, testing::Values(false));
+INSTANTIATE_TEST_SUITE_P(With_Without_BoundingCircles, AddBinTest, testing::Values(false, true));
 
 TEST(GraphTileBuilder, TestDuplicatePredictedSpeeds) {
 

@@ -525,6 +525,9 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
   if (!result.intermediate)
     enqueue_statistics(request);
 
+  for (const auto& stat : request.info().statistics()) {
+    LOG_WARN("STAT {}: {}", stat.key(), stat.value());
+  }
   return result;
 }
 

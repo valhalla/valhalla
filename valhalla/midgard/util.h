@@ -13,6 +13,7 @@
 #include <list>
 #include <optional>
 #include <ostream>
+#include <random>
 #include <ranges>
 #include <stdexcept>
 #include <string>
@@ -408,7 +409,7 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
  * @param a  first point on second line
  * @param b  second point on second line
  * @param i  the intersection point if there was one
- * @return true if there was an intersection false if now
+ * @return true if there was an intersection false if not
  */
 template <class coord_t>
 bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i);
@@ -628,7 +629,7 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
 
 template <typename T> struct Finally {
   T t;
-  explicit Finally(T t) : t(std::move(t)){};
+  explicit Finally(T t) : t(std::move(t)) {};
   Finally() = delete;
   Finally(Finally&& f) = default;
   Finally(const Finally&) = delete;
@@ -800,6 +801,101 @@ template <typename T = int> T to_int(std::string_view value) {
   }
   return result.value();
 }
+
+/**
+ * Project to azimuthal equidistant projection given a center point. Assumes earth as a sphere
+ * for sake of simplicity.
+ *
+ * Reference: https://mathworld.wolfram.com/AzimuthalEquidistantProjection.html (formulas 1–4)
+ *
+ * @return Returns a functor that takes a point and projects it given the projection's center point.
+ *
+ */
+inline std::function<Point2d(PointLL)> azimuthal_equidistant(const PointLL& center) {
+  return [center](const PointLL& pt) -> Point2d {
+    // convert to radians
+    const double lon0 = center.lng() * kRadPerDeg;
+    const double lat0 = center.lat() * kRadPerDeg;
+    const double lon = pt.lng() * kRadPerDeg;
+    const double lat = pt.lat() * kRadPerDeg;
+
+    const double sin_lat0 = std::sin(lat0);
+    const double cos_lat0 = std::cos(lat0);
+    const double sin_lat = std::sin(lat);
+    const double cos_lat = std::cos(lat);
+
+    const double dlon = lon - lon0;
+
+    // angular distance from center c, guarded against acos domain issues
+    // (formula 4)
+    const double cos_c = sin_lat0 * sin_lat + cos_lat0 * cos_lat * std::cos(dlon);
+    const double c = std::acos(std::clamp(cos_c, -1.0, 1.0));
+
+    // k is c/sin(c), approaching 1 as c->0 (formula 3)
+    const double k = (c < 1e-10) ? 1.0 : c / std::sin(c);
+
+    // formula 1
+    const double x = k * cos_lat * std::sin(dlon);
+
+    // formula 2
+    const double y = k * (cos_lat0 * sin_lat - sin_lat0 * cos_lat * std::cos(dlon));
+
+    // scale from radians to meters using earth's radius
+    return {x * kRadEarthMeters, y * kRadEarthMeters};
+  };
+}
+
+/**
+ * Project from azimuthal equidistant projection to lat/lon given a center point. Assumes earth as a
+ * sphere for sake of simplicity.
+ *
+ * Reference: https://mathworld.wolfram.com/AzimuthalEquidistantProjection.html (formulas 5–7)
+ *
+ * @return Returns a functor that takes a point and performs the inverse projection given the
+ * projection's center point.
+ *
+ */
+inline std::function<PointLL(Point2d)> inverse_azimuthal_equidistant(const PointLL& center) {
+  return [center](const Point2d& pt) -> PointLL {
+    const double lon0 = center.lng() * kRadPerDeg;
+    const double lat0 = center.lat() * kRadPerDeg;
+
+    // back to radians from meters
+    const double x = pt.x() / kRadEarthMeters;
+    const double y = pt.y() / kRadEarthMeters;
+
+    // formula 7
+    const double c = std::sqrt(x * x + y * y);
+
+    // trivially finished if input point is the center point
+    if (c < 1e-10)
+      return center;
+
+    const double sin_c = std::sin(c);
+    const double cos_c = std::cos(c);
+    const double sin_lat0 = std::sin(lat0);
+    const double cos_lat0 = std::cos(lat0);
+
+    // formula 5
+    double lat = std::asin(std::clamp(cos_c * sin_lat0 + y * sin_c * cos_lat0 / c, -1.0, 1.0));
+
+    // formula 6 with special cases for center point at 90° or -90°
+    double lon;
+    if (std::abs(lat0 - M_PI_2) < 1e-10) {
+      lon = lon0 + std::atan2(x, -y);
+    } else if (std::abs(lat0 + M_PI_2) < 1e-10) {
+      lon = lon0 + std::atan2(x, y);
+    } else {
+      lon = lon0 + std::atan2(x * sin_c, c * cos_lat0 * cos_c - y * sin_lat0 * sin_c);
+    }
+
+    return {lon * kDegPerRad, lat * kDegPerRad};
+  };
+}
+
+using circle_t = std::pair<PointLL, double>;
+std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
+                                                double distance_threshold);
 
 } // namespace midgard
 } // namespace valhalla
