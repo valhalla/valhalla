@@ -575,8 +575,9 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   c.secs += OSRMCarTurnDuration(edge, node, idx);
 
   // Penalty to transition onto low class roads.
-  if (edge->classification() == baldr::RoadClass::kResidential ||
-      edge->classification() == baldr::RoadClass::kServiceOther) {
+  if (pred.classification() < baldr::RoadClass::kUnclassified &&
+      (edge->classification() == baldr::RoadClass::kResidential ||
+       edge->classification() == baldr::RoadClass::kServiceOther)) {
     c.cost += low_class_penalty_;
   }
 
@@ -771,7 +772,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options){};
+  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options) {};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;
