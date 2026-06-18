@@ -50,15 +50,8 @@ std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restriction
   return builders;
 }
 
-// MD5 of an in-memory tile data portion (everything after the header) folded into a uint64
-uint64_t hash_tile_data(const char* data, size_t size) {
-  std::array<unsigned char, 16> digest{};
-  unsigned int out_len = 0;
-  if (EVP_Digest(data, size, digest.data(), &out_len, EVP_md5(), nullptr) != 1 ||
-      out_len != digest.size()) {
-    throw std::runtime_error("EVP_Digest failed");
-  }
-  // roll the 128 bit digest into a uint64
+// Fold a finalized 128-bit MD5 digest of the tile data portion into the 48-bit tile hash.
+uint64_t fold_md5(const std::array<unsigned char, 16>& digest) {
   uint64_t lo = 0, hi = 0;
   for (int i = 0; i < 8; ++i) {
     lo = (lo << 8) | digest[i];
@@ -68,27 +61,82 @@ uint64_t hash_tile_data(const char* data, size_t size) {
   return lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
 }
 
-// hash the assembled data portion, stamp its 48-bit hash into the low bits of the header
-// checksum (keeping the build id in the high bits), then write the header followed by the
-// data to an open tile file.
-void write_tile(const std::filesystem::path& file_path,
-                GraphTileHeader& header,
-                const std::stringstream& in_mem) {
+// streambuf that writes each chunk straight to the open file while folding it into a running
+// MD5, so the tile body is never held in a single buffer.
+class hashing_streambuf : public std::streambuf {
+public:
+  hashing_streambuf(std::ofstream& file, EVP_MD_CTX* ctx) : file_(file), md5_ctx_(ctx) {
+  }
 
-  std::ofstream file(file_path, std::ios::out | std::ios::binary | std::ios::trunc);
-  if (!file.is_open())
-    throw std::runtime_error("Failed to open file " + file_path.string());
+protected:
+  std::streamsize xsputn(const char* s, std::streamsize n) override {
+    if (EVP_DigestUpdate(md5_ctx_, s, n) != 1)
+      throw std::runtime_error("EVP_DigestUpdate failed");
+    file_.write(s, n);
+    pos_ += n;
+    return n;
+  }
+  int_type overflow(int_type ch) override {
+    if (!traits_type::eq_int_type(ch, traits_type::eof())) {
+      const char c = traits_type::to_char_type(ch);
+      xsputn(&c, 1);
+    }
+    return traits_type::not_eof(ch);
+  }
+  pos_type seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode) override {
+    if (off == 0 && way == std::ios_base::cur)
+      return pos_type(pos_);
+    return pos_type(off_type(-1));
+  }
 
-  const auto data = in_mem.view();
+private:
+  std::ofstream& file_;
+  EVP_MD_CTX* md5_ctx_;
+  std::streamsize pos_ = 0;
+};
 
-  constexpr uint64_t tile_hash_mask = (uint64_t(1) << baldr::kTileHashBits) - 1;
-  const uint64_t tile_hash = hash_tile_data(data.data(), data.size()) & tile_hash_mask;
-  header.set_raw_checksum((static_cast<uint64_t>(header.build_id()) << baldr::kTileHashBits) |
-                          tile_hash);
+// Tile streamer: data portion is streamed to disk and hashed incrementally instead of being
+// buffered whole. A placeholder header is written first; finalize() re-stamps later with the final
+// checksum of the tile data portion.
+class tile_ostream : public std::ostream {
+public:
+  tile_ostream(const std::filesystem::path& file_path, GraphTileHeader& header)
+      : std::ostream(nullptr), header_(header),
+        file_(file_path, std::ios::out | std::ios::binary | std::ios::trunc),
+        md5_ctx_(EVP_MD_CTX_new(), &EVP_MD_CTX_free), buf_(file_, md5_ctx_.get()) {
+    if (!file_.is_open())
+      throw std::runtime_error("Failed to open file " + file_path.string());
+    if (!md5_ctx_ || EVP_DigestInit_ex(md5_ctx_.get(), EVP_md5(), nullptr) != 1)
+      throw std::runtime_error("EVP_DigestInit failed");
+    rdbuf(&buf_);
 
-  file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
-  file.write(data.data(), static_cast<std::streamsize>(data.size()));
-}
+    // reserve the header slot up front; rewritten by finalize() once offsets/hash are known
+    file_.write(reinterpret_cast<const char*>(&header_), sizeof(GraphTileHeader));
+  }
+
+  void finalize() {
+    flush();
+    std::array<unsigned char, 16> digest{};
+    unsigned int out_len = 0;
+    if (EVP_DigestFinal_ex(md5_ctx_.get(), digest.data(), &out_len) != 1 || out_len != digest.size())
+      throw std::runtime_error("EVP_DigestFinal failed");
+
+    constexpr uint64_t tile_hash_mask = (uint64_t(1) << baldr::kTileHashBits) - 1;
+    const uint64_t tile_hash = fold_md5(digest) & tile_hash_mask;
+    header_.set_raw_checksum((static_cast<uint64_t>(header_.build_id()) << baldr::kTileHashBits) |
+                             tile_hash);
+
+    file_.seekp(0);
+    file_.write(reinterpret_cast<const char*>(&header_), sizeof(GraphTileHeader));
+    file_.flush();
+  }
+
+private:
+  GraphTileHeader& header_;
+  std::ofstream file_;
+  std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md5_ctx_;
+  hashing_streambuf buf_;
+};
 
 } // namespace
 
@@ -322,8 +370,8 @@ void GraphTileBuilder::StoreTileData() {
     tmp_filename += suffix.str();
   }
 
-  // Collect tile structures before hashing and writing the file
-  std::stringstream in_mem;
+  // Stream the tile body straight to the temp file, hashing as we go.
+  tile_ostream in_mem(tmp_filename, header_builder_);
   // Write the nodes
   header_builder_.set_nodecount(nodes_builder_.size());
   in_mem.write(reinterpret_cast<const char*>(nodes_builder_.data()),
@@ -478,8 +526,8 @@ void GraphTileBuilder::StoreTileData() {
              route_builder_.size())
                 .str());
 
-  // Write the header (with its data hash) then the rest of the tile from the in memory buffer
-  write_tile(tmp_filename, header_builder_, in_mem);
+  // Stamp the data hash into the header and rewrite it in place, then publish atomically.
+  in_mem.finalize();
   std::filesystem::rename(tmp_filename, filename);
 }
 
@@ -504,10 +552,10 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
     throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
   }
 
-  // Assemble the data portion in memory: updated nodes, unchanged transitions, updated
-  // directed edges, then the rest of the tile unchanged.
+  // Stream the data portion straight to disk, hashing as we go: updated nodes, unchanged
+  // transitions, updated directed edges, then the rest of the tile unchanged.
   // If there are extended directed edge attributes they would need to be written out here.
-  std::stringstream in_mem;
+  tile_ostream in_mem(filename, header_builder_);
   in_mem.write(reinterpret_cast<const char*>(nodes.data()), nodes.size() * sizeof(NodeInfo));
   in_mem.write(reinterpret_cast<const char*>(transitions_),
                header_->transitioncount() * sizeof(NodeTransition));
@@ -517,7 +565,7 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
   auto end = reinterpret_cast<const char*>(header()) + header()->end_offset();
   in_mem.write(begin, end - begin);
 
-  write_tile(filename, header_builder_, in_mem);
+  in_mem.finalize();
 }
 
 // Gets a reference to the header builder.
@@ -1274,7 +1322,12 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
-  std::stringstream in_mem;
+  std::filesystem::path filename{tile_dir};
+  filename.append(GraphTile::FileSuffix(header.graphid()));
+  if (!std::filesystem::exists(filename.parent_path())) {
+    std::filesystem::create_directories(filename.parent_path());
+  }
+  tile_ostream in_mem(filename, header);
 
   // a bunch of stuff between header and bins
   const auto* begin = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
@@ -1320,14 +1373,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
               std::to_string(curr));
   }
 
-  // write to file
-  std::filesystem::path filename{tile_dir};
-  filename.append(GraphTile::FileSuffix(header.graphid()));
-  if (!std::filesystem::exists(filename.parent_path())) {
-    std::filesystem::create_directories(filename.parent_path());
-  }
-
-  write_tile(filename, header, in_mem);
+  in_mem.finalize();
 }
 
 // Add a predicted speed profile for a directed edge.
@@ -1393,9 +1439,10 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
   }
 
-  // Assemble the data portion in memory: unchanged nodes and transitions, updated directed
-  // edges, the rest of the tile up to the traffic data, then the appended speed profiles.
-  std::stringstream in_mem;
+  // Stream the data portion straight to disk, hashing as we go: unchanged nodes and
+  // transitions, updated directed edges, the rest of the tile up to the traffic data, then
+  // the appended speed profiles.
+  tile_ostream in_mem(filename, header_builder_);
   in_mem.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() * sizeof(NodeInfo));
   in_mem.write(reinterpret_cast<const char*>(transitions_),
                header_->transitioncount() * sizeof(NodeTransition));
@@ -1409,7 +1456,7 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   in_mem.write(reinterpret_cast<const char*>(speed_profile_builder_.data()),
                speed_profile_builder_.size() * sizeof(int16_t));
 
-  write_tile(filename, header_builder_, in_mem);
+  in_mem.finalize();
 }
 
 void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
