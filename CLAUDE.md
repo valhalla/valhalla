@@ -227,6 +227,22 @@ TEST(MyFeature, BasicCase) {
 
 Key helpers: `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `gurka::findEdgeByNodes()`, `gurka::assert::raw::expect_path()`, `gurka::assert::raw::expect_maneuvers()`, `gurka::assert::osrm::expect_steps()`. Test utilities in `test/test.h`. Full framework reference in `docs/docs/test/gurka.md`.
 
+### Partial Tile Builds in Gurka
+
+**When changing tile build stages (mjolnir parsing, graph building, anything in `BuildStage`), consider testing the intermediate stage output directly** instead of (or in addition to) asserting on routing results — end-to-end assertions can mask whether a bug is in parsing or in a later stage. `gurka::buildtiles()` takes optional `start_stage`/`end_stage` (`mjolnir::BuildStage`, defaults run the full pipeline):
+
+```cpp
+// stop after parsing ways — temp *.bin files stay in workdir for inspection
+auto map = gurka::buildtiles(layout, ways, {}, {}, workdir, opts,
+                             mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kParseWays);
+auto way = gurka::findWay(map, 100);           // OSMWay from ways.bin, throws if missing
+auto way_nodes = gurka::findWayNodes(map, 20); // all OSMWayNode entries from way_nodes.bin
+// then resume — start_stage > kInitialize keeps the PBF and *.bin files
+gurka::buildtiles(layout, ways, {}, {}, workdir, opts, mjolnir::BuildStage::kParseRelations);
+```
+
+Pin deterministic OSM IDs via an `osm_id` tag on gurka ways/nodes. Example tests: `test/gurka/test_parse_osm.cc`. Stage outputs (all `midgard::sequence<T>`, structs in `valhalla/mjolnir/osm*.h`): `kParseWays` → `ways.bin` (`OSMWay`), `way_nodes.bin` (`OSMWayNode`, no coords yet), `access.bin`; `kParseRelations` → `complex_from_restrictions.bin`/`complex_to_restrictions.bin` (`OSMRestriction`); `kParseNodes` → `way_nodes.bin` (now with coords/node attrs), `bss_nodes.bin`, `linguistics_node.bin`; `kConstructEdges` → `edges.bin`, `nodes.bin`. For bins without a gurka helper yet, read them directly with `midgard::sequence<T>` (precedent: `test/graphparser.cc`) — and prefer adding a typed `gurka::find*` helper over hardcoding filenames in tests.
+
 **When a gurka ASCII map doesn't reproduce a real-world issue**, the problem likely depends on specific OSM data or tile build configuration that the ASCII map doesn't capture. Use real OSM data to understand the exact conditions, then design the ASCII map to match:
 
 1. Download the regional OSM PBF from Geofabrik (e.g., `sweden-latest.osm.pbf`)
