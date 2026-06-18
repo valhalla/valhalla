@@ -128,7 +128,7 @@ public:
 
     file_.seekp(0);
     file_.write(reinterpret_cast<const char*>(&header_), sizeof(GraphTileHeader));
-    file_.flush();
+    file_.close();
   }
 
 private:
