@@ -4,7 +4,6 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/pointll.h>
 
-#include <array>
 #include <cstdint>
 
 namespace valhalla {
@@ -15,28 +14,6 @@ constexpr unsigned int kRadiiBits = 32 - kCoordinateBits * 2;
 constexpr unsigned int kRadiiCount = 1 << kRadiiBits;
 constexpr uint32_t kMaxOffsetValue = (1 << kCoordinateBits) - 1;
 
-// the possible radii for our discretized bounding circles. we only store indices into this
-// array on disk, so we predefine the set of all possible radii here loosely
-// based on the distribution of all actual bounding circles in a planet (most edges are
-// small, so we want a finer resolution in the 1-20 meter range)
-constexpr std::array<uint16_t, kRadiiCount> kBoundingCircleRadii =
-    {1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  13,  15,  17,   18,   20,   23,
-     25,  27,  30,  35,  40,  43,  45,  50,  55,  60,  65,  70,  75,   80,   85,   90,
-     95,  100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210,  220,  230,  240,
-     250, 275, 300, 325, 350, 375, 400, 500, 550, 600, 700, 800, 1000, 1500, 2000, 2500};
-
-constexpr uint32_t kInvalidRadiusIndex = kBoundingCircleRadii.size();
-
-// the maximum offset in the x and y axis we support is derived from
-//   - half the size of the bin (since we compute offsets relative to the center) plus
-//   - the radius of the largest radius we support
-constexpr double kMaxOffsetMeters =
-    0.05 * midgard::kMetersPerDegreeLat / 2 + kBoundingCircleRadii.back();
-
-// the offset resolution is the max offset divided by the number of unique values
-// given the number of bits we use for each offset
-constexpr double kOffsetIncrement = kMaxOffsetMeters / (1 << (kCoordinateBits - 1));
-
 struct DiscretizedBoundingCircle {
 
   /**
@@ -46,7 +23,7 @@ struct DiscretizedBoundingCircle {
    * to the bin (i.e. this edge cannot be possibly be intersecting the bin)
    */
   constexpr DiscretizedBoundingCircle()
-      : y_offset_(kMaxOffsetValue), x_offset_(kMaxOffsetValue), radius_index_(0){};
+      : y_offset_(kMaxOffsetValue), x_offset_(kMaxOffsetValue), radius_index_(0) {};
 
   /**
    * Constructor.
@@ -65,7 +42,7 @@ struct DiscretizedBoundingCircle {
   /**
    * Get the bounding circle's absolute center point lat/lon and radius (in meters).
    */
-  std::pair<midgard::PointLL, uint16_t>
+  std::pair<midgard::PointLL, double>
   get(const midgard::DistanceApproximator<midgard::PointLL>& approx,
       const midgard::PointLL& bin_center) const;
 
