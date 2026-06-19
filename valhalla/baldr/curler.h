@@ -29,6 +29,7 @@ struct curler_t {
    * Fetch a url and return the bytes that we got
    *
    * @param  url                the url to fetch
+   * @param  is_sftp            whether the url indicates sftp protocol
    * @param  gzipped            whether to request for gzip compressed data
    * @param  interrupt          throws if request should be interrupted
    * @param  range_offset       the HTTP Range start offset
@@ -36,6 +37,7 @@ struct curler_t {
    * @return the bytes we fetched
    */
   GET_response_t get(const std::string& url,
+                     bool is_sftp,
                      bool gzipped,
                      const interrupt_t* interrupt,
                      const uint64_t range_offset,

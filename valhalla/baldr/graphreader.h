@@ -987,6 +987,7 @@ protected:
   std::unique_ptr<tile_getter_t> tile_getter_;
   const size_t max_concurrent_users_;
   const std::string tile_url_;
+  bool url_is_sftp_;
   const std::filesystem::path url_id_txt_path_;
   const bool is_tar_url_;
   // tileset build id recorded in id.txt; unset until the first downloaded tile establishes it

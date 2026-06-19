@@ -62,8 +62,10 @@ public:
   /**
    * Makes a synchronous request to the corresponding url and returns response_t object.
    * */
-  virtual GET_response_t
-  get(const std::string& url, const uint64_t offset = 0, const uint64_t size = 0) = 0;
+  virtual GET_response_t get(const std::string& url,
+                             bool is_sftp = false,
+                             const uint64_t offset = 0,
+                             const uint64_t size = 0) = 0;
 
   virtual HEAD_response_t head(const std::string& url, header_mask_t header_mask) = 0;
 
@@ -83,7 +85,7 @@ public:
    * Allows users to interrupt downloading requests.
    * Returns true if the request should be interrupted.
    */
-  virtual void set_interrupt(const interrupt_t*){};
+  virtual void set_interrupt(const interrupt_t*) {};
 
   virtual ~tile_getter_t() = default;
 };

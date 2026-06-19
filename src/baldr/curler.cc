@@ -106,6 +106,7 @@ struct curler_t::pimpl_t {
 
   // TODO: retries?
   GET_response_t get(const std::string& url,
+                     bool is_sftp,
                      bool gzipped,
                      const interrupt_t* interrupt,
                      const uint64_t range_offset,
@@ -113,7 +114,6 @@ struct curler_t::pimpl_t {
     // curl options are sticky: if a HEAD was called, we need to tell it again this is a GET
     curl_easy_setopt(connection.get(), CURLOPT_HTTPGET, 1L);
     curl_easy_setopt(connection.get(), CURLOPT_NOBODY, 0L);
-    const bool is_sftp = (url.rfind("sftp://", 0) == 0);
 
     if (interrupt) {
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_XFERINFOFUNCTION, progress_callback),
@@ -191,11 +191,12 @@ curler_t::curler_t(const std::string& user_agent, const std::string& user_pw)
 }
 
 curler_t::GET_response_t curler_t::get(const std::string& url,
+                                       bool is_sftp,
                                        bool gzipped,
                                        const curler_t::interrupt_t* interrupt,
                                        uint64_t range_offset,
                                        uint64_t range_size) const {
-  return pimpl->get(url, gzipped, interrupt, range_offset, range_size);
+  return pimpl->get(url, is_sftp, gzipped, interrupt, range_offset, range_size);
 }
 
 curler_t::HEAD_response_t curler_t::head(const std::string& url, header_mask_t header_mask) {

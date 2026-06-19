@@ -137,7 +137,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
 void GraphReader::load_remote_tar_offsets() {
   // get the tar header of the first file so we know with which range to download index.bin
   auto first_file_resp =
-      CURL_OR_THROW(tile_getter_->get(tile_url_, 0, sizeof(tar::header_t)), tile_url_);
+      CURL_OR_THROW(tile_getter_->get(tile_url_, url_is_sftp_, 0, sizeof(tar::header_t)), tile_url_);
   auto first_file_header = reinterpret_cast<tar::header_t*>(first_file_resp.bytes_.data());
 
   // verify the first file is indeed the index.bin
@@ -150,9 +150,10 @@ void GraphReader::load_remote_tar_offsets() {
   }
 
   // fetch the index.bin and read its content into remote_tar_offsets
-  auto index_bin_response = CURL_OR_THROW(tile_getter_->get(tile_url_, sizeof(tar::header_t),
-                                                            first_file_header->get_file_size()),
-                                          tile_url_);
+  auto index_bin_response =
+      CURL_OR_THROW(tile_getter_->get(tile_url_, url_is_sftp_, sizeof(tar::header_t),
+                                      first_file_header->get_file_size()),
+                    tile_url_);
   const auto index_bin_size = index_bin_response.bytes_.size() / sizeof(tile_index_entry);
 
   remote_tar_offsets_.reserve(index_bin_size);
@@ -484,6 +485,7 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
       tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
       tile_url_(pt.get<std::string>("tile_url", "")),
+      url_is_sftp_(tile_url_.rfind("sftp://", 0) == 0),
       url_id_txt_path_(std::filesystem::path(tile_dir_) / "id.txt"),
       is_tar_url_(!tile_url_.empty() &&
                   tile_url_.find(GraphTile::kTilePathPattern) == std::string::npos),
@@ -647,8 +649,8 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
     tile = nullptr;
     // either we find its tar offset or it's a plain tiles URL
     if (tar_has_tile || !is_tar_url_) {
-      tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_, tar_offset,
-                                     tar_size, url_id_txt_path_, url_id_txt_checksum_);
+      tile = GraphTile::CacheTileURL(tile_url_, url_is_sftp_, base, tile_getter_.get(), tile_dir_,
+                                     tar_offset, tar_size, url_id_txt_path_, url_id_txt_checksum_);
     }
 
     if (!tile) {
