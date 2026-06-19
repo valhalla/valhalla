@@ -267,20 +267,22 @@ docker exec -t valhalla-py /valhalla-py/src/bindings/python/scripts/build_manyli
 
 This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.13 installations.
 
-### Testing (**`linux` only**)
+### Testing
+
+#### Test wheel (**`linux` only**)
 
 We have a small [test script](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/test/test_pyvalhalla_package.sh) which makes sure that all the executables are working properly. If run locally for some reason, install a `pyvalhalla` wheel first. We run this in CI in a fresh Docker container with no dependencies installed, mostly to verify dynamic linking of the vendored dependencies.
 
 #### Running the unit tests locally
 
-The binding tests live in `test/bindings/python/`. The tile-dependent ones read `test/bindings/python/valhalla.json`, whose `tile_dir`/`tile_extract` are **relative to the process working directory** and point at `test/data/utrecht_tiles`. The CMake `utrecht_tiles` target builds that fixture into `<build-dir>/test/data/utrecht_tiles/`, so the trick is to **run from the build dir** — then the relative paths resolve to the freshly built graph with no edits or symlinks:
+The binding tests live in `test/bindings/python/`. The tile-dependent ones read `test/bindings/python/valhalla.json`, whose `tile_dir` points at `test/data/utrecht_tiles`, so one needs to execute the tests in the build directory:
 
 ```shell
 # build the tile fixture once (needs ENABLE_DATA_TOOLS=ON)
 cmake --build build/Release --target utrecht_tiles -j$(nproc)
 
 # run from the build dir so test/data/utrecht_tiles/* resolves there
-( cd build/Release && python -m unittest discover -s ../../test/bindings/python -v )
+( cd <build_dir> && python -m unittest discover -s ../../test/bindings/python -v )
 ```
 
-The CMake target `run-python_valhalla` does exactly this (build dir as CWD) and is the canonical entry point.
+The CMake target `run-python_valhalla` is the canonical entry point.

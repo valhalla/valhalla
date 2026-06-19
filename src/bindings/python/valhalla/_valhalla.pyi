@@ -257,6 +257,7 @@ class _GraphUtils:
         :raises RuntimeError: When the tile or edge is not found
         """
 
+<<<<<<< HEAD
     def get_tile_header(self, tile_id: GraphId) -> GraphTileHeader:
         """
         Get the GraphTileHeader for the tile that contains this GraphId.
@@ -266,6 +267,8 @@ class _GraphUtils:
         :raises RuntimeError: When the tile is not found
         """
 
+=======
+>>>>>>> origin/master
 def get_tile_base_lon_lat(graph_id: GraphId) -> tuple:
     """
     Get the geographic coordinate of the south-western corner of this graph_id's tile.

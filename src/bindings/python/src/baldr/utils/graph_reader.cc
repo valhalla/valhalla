@@ -1,8 +1,11 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
+<<<<<<< HEAD
 #include "baldr/graphtileheader.h"
-#include "baldr/rapidjson_utils.h"
+=======
+>>>>>>> origin/master
+    #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 #include "module.h"
 
@@ -16,7 +19,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace nb = nanobind;
+    namespace nb = nanobind;
 namespace vb = valhalla::baldr;
 namespace vm = valhalla::midgard;
 
@@ -92,6 +95,7 @@ void init_graphreader(nb::module_& m) {
           "Get the shape (polyline) for an edge as a list of (lon, lat) tuples.\n\n"
           ":param edge_id: GraphId of the edge\n"
           ":returns: List of (lon, lat) tuples representing the edge geometry\n"
+<<<<<<< HEAD
           ":raises RuntimeError: When the tile or edge is not found")
       .def(
           "get_tile_header",
@@ -107,5 +111,8 @@ void init_graphreader(nb::module_& m) {
           ":param tile_id: GraphId of (or within) the tile\n"
           ":returns: GraphTileHeader with the tile's summary metadata\n"
           ":raises RuntimeError: When the tile is not found");
+=======
+          ":raises RuntimeError: When the tile or edge is not found");
+>>>>>>> origin/master
 }
 } // namespace pyvalhalla::baldr::utils

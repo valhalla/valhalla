@@ -8,8 +8,6 @@ configured `GraphReader`.
 
 ::: valhalla.baldr.GraphId
 
-::: valhalla.baldr.GraphTileHeader
-
 ::: valhalla.baldr.utils.get_tile_base_lon_lat
 
 ::: valhalla.baldr.utils.get_tile_id_from_lon_lat
