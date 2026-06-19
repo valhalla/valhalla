@@ -10,7 +10,7 @@ protected:
   static gurka::map shortest_map;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 100;
+    constexpr double gridsize = 10;
 
     const std::string ascii_map = R"(
           H-------------I

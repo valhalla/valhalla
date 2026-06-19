@@ -359,9 +359,7 @@ TEST(Standalone, LowRoadClassPenalty_1) {
   // despite low_class_penalty.
   const std::string ascii_map = R"(
 
-      A-B-G-H-I-J-K-L
-      1             2
-      C             D
+      A1B-G-H-I-J-K2L
       |             |
       |             |
       |             |
@@ -377,9 +375,8 @@ TEST(Standalone, LowRoadClassPenalty_1) {
       {"AB", {{"highway", "residential"}}},  {"BG", {{"highway", "residential"}}},
       {"GH", {{"highway", "residential"}}},  {"HI", {{"highway", "residential"}}},
       {"IJ", {{"highway", "residential"}}},  {"JK", {{"highway", "residential"}}},
-      {"KL", {{"highway", "residential"}}},  {"LD", {{"highway", "unclassified"}}},
-      {"AC", {{"highway", "unclassified"}}}, {"CE", {{"highway", "unclassified"}}},
-      {"DF", {{"highway", "unclassified"}}}, {"EF", {{"highway", "unclassified"}}},
+      {"KL", {{"highway", "residential"}}},  {"LF", {{"highway", "unclassified"}}},
+      {"AE", {{"highway", "unclassified"}}}, {"EF", {{"highway", "unclassified"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -387,7 +384,7 @@ TEST(Standalone, LowRoadClassPenalty_1) {
 
   valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "truck");
 
-  gurka::assert::raw::expect_path(route, {"AC", "AB", "BG", "GH", "HI", "IJ", "JK", "KL", "LD"});
+  gurka::assert::raw::expect_path(route, {"AB", "BG", "GH", "HI", "IJ", "JK", "KL"});
 }
 
 /**
