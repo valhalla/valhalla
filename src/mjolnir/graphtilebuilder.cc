@@ -8,6 +8,7 @@
 #include "mjolnir/util.h"
 
 #include <boost/format.hpp>
+#include <openssl/evp.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -48,6 +49,94 @@ std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restriction
   }
   return builders;
 }
+
+// Fold a finalized 128-bit MD5 digest of the tile data portion into the 48-bit tile hash.
+uint64_t fold_md5(const std::array<unsigned char, 16>& digest) {
+  uint64_t lo = 0, hi = 0;
+  for (int i = 0; i < 8; ++i) {
+    lo = (lo << 8) | digest[i];
+    hi = (hi << 8) | digest[8 + i];
+  }
+  std::hash<uint64_t> hasher;
+  return lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
+}
+
+// streambuf that writes each chunk straight to the open file while folding it into a running
+// MD5, so the tile body is never held in a single buffer.
+class hashing_streambuf : public std::streambuf {
+public:
+  hashing_streambuf(std::ofstream& file, EVP_MD_CTX* ctx) : file_(file), md5_ctx_(ctx) {
+  }
+
+protected:
+  std::streamsize xsputn(const char* s, std::streamsize n) override {
+    if (EVP_DigestUpdate(md5_ctx_, s, n) != 1)
+      throw std::runtime_error("EVP_DigestUpdate failed");
+    file_.write(s, n);
+    pos_ += n;
+    return n;
+  }
+  int_type overflow(int_type ch) override {
+    if (!traits_type::eq_int_type(ch, traits_type::eof())) {
+      const char c = traits_type::to_char_type(ch);
+      xsputn(&c, 1);
+    }
+    return traits_type::not_eof(ch);
+  }
+  pos_type seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode) override {
+    if (off == 0 && way == std::ios_base::cur)
+      return pos_type(pos_);
+    return pos_type(off_type(-1));
+  }
+
+private:
+  std::ofstream& file_;
+  EVP_MD_CTX* md5_ctx_;
+  std::streamsize pos_ = 0;
+};
+
+// Tile streamer: data portion is streamed to disk and hashed incrementally instead of being
+// buffered whole. A placeholder header is written first; finalize() re-stamps later with the final
+// checksum of the tile data portion.
+class tile_ostream : public std::ostream {
+public:
+  tile_ostream(const std::filesystem::path& file_path, GraphTileHeader& header)
+      : std::ostream(nullptr), header_(header),
+        file_(file_path, std::ios::out | std::ios::binary | std::ios::trunc),
+        md5_ctx_(EVP_MD_CTX_new(), &EVP_MD_CTX_free), buf_(file_, md5_ctx_.get()) {
+    if (!file_.is_open())
+      throw std::runtime_error("Failed to open file " + file_path.string());
+    if (!md5_ctx_ || EVP_DigestInit_ex(md5_ctx_.get(), EVP_md5(), nullptr) != 1)
+      throw std::runtime_error("EVP_DigestInit failed");
+    rdbuf(&buf_);
+
+    // reserve the header slot up front; rewritten by finalize() once offsets/hash are known
+    file_.write(reinterpret_cast<const char*>(&header_), sizeof(GraphTileHeader));
+  }
+
+  void finalize() {
+    flush();
+    std::array<unsigned char, 16> digest{};
+    unsigned int out_len = 0;
+    if (EVP_DigestFinal_ex(md5_ctx_.get(), digest.data(), &out_len) != 1 || out_len != digest.size())
+      throw std::runtime_error("EVP_DigestFinal failed");
+
+    constexpr uint64_t tile_hash_mask = (uint64_t(1) << baldr::kTileHashBits) - 1;
+    const uint64_t tile_hash = fold_md5(digest) & tile_hash_mask;
+    header_.set_raw_checksum((static_cast<uint64_t>(header_.build_id()) << baldr::kTileHashBits) |
+                             tile_hash);
+
+    file_.seekp(0);
+    file_.write(reinterpret_cast<const char*>(&header_), sizeof(GraphTileHeader));
+    file_.close();
+  }
+
+private:
+  GraphTileHeader& header_;
+  std::ofstream file_;
+  std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md5_ctx_;
+  hashing_streambuf buf_;
+};
 
 } // namespace
 
@@ -281,175 +370,165 @@ void GraphTileBuilder::StoreTileData() {
     tmp_filename += suffix.str();
   }
 
-  // Open file and truncate
-  std::stringstream in_mem;
-  std::ofstream file(tmp_filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-  if (file.is_open()) {
-    // Write the nodes
-    header_builder_.set_nodecount(nodes_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(nodes_builder_.data()),
-                 nodes_builder_.size() * sizeof(NodeInfo));
+  // Stream the tile body straight to the temp file, hashing as we go.
+  tile_ostream in_mem(tmp_filename, header_builder_);
+  // Write the nodes
+  header_builder_.set_nodecount(nodes_builder_.size());
+  in_mem.write(reinterpret_cast<const char*>(nodes_builder_.data()),
+               nodes_builder_.size() * sizeof(NodeInfo));
 
-    // Write the node transitions
-    header_builder_.set_transitioncount(transitions_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(transitions_builder_.data()),
-                 transitions_builder_.size() * sizeof(NodeTransition));
+  // Write the node transitions
+  header_builder_.set_transitioncount(transitions_builder_.size());
+  in_mem.write(reinterpret_cast<const char*>(transitions_builder_.data()),
+               transitions_builder_.size() * sizeof(NodeTransition));
 
-    // Write the directed edges
-    header_builder_.set_directededgecount(directededges_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(directededges_builder_.data()),
-                 directededges_builder_.size() * sizeof(DirectedEdge));
+  // Write the directed edges
+  header_builder_.set_directededgecount(directededges_builder_.size());
+  in_mem.write(reinterpret_cast<const char*>(directededges_builder_.data()),
+               directededges_builder_.size() * sizeof(DirectedEdge));
 
-    // Write extended directed edge attributes if they exist.
-    if (directededges_ext_builder_.size() > 0) {
-      if (directededges_ext_builder_.size() != directededges_builder_.size()) {
-        LOG_ERROR("DirectedEdge extended attributes not same size as directed edges");
-      } else {
-        header_builder_.set_has_ext_directededge(true);
-        in_mem.write(reinterpret_cast<const char*>(directededges_ext_builder_.data()),
-                     directededges_ext_builder_.size() * sizeof(DirectedEdgeExt));
-      }
+  // Write extended directed edge attributes if they exist.
+  if (directededges_ext_builder_.size() > 0) {
+    if (directededges_ext_builder_.size() != directededges_builder_.size()) {
+      LOG_ERROR("DirectedEdge extended attributes not same size as directed edges");
+    } else {
+      header_builder_.set_has_ext_directededge(true);
+      in_mem.write(reinterpret_cast<const char*>(directededges_ext_builder_.data()),
+                   directededges_ext_builder_.size() * sizeof(DirectedEdgeExt));
     }
-
-    // Sort and write the access restrictions
-    header_builder_.set_access_restriction_count(access_restriction_builder_.size());
-    std::sort(access_restriction_builder_.begin(), access_restriction_builder_.end());
-    in_mem.write(reinterpret_cast<const char*>(access_restriction_builder_.data()),
-                 access_restriction_builder_.size() * sizeof(AccessRestriction));
-
-    // Sort and write the transit departures
-    header_builder_.set_departurecount(departure_builder_.size());
-    std::sort(departure_builder_.begin(), departure_builder_.end());
-    in_mem.write(reinterpret_cast<const char*>(departure_builder_.data()),
-                 departure_builder_.size() * sizeof(TransitDeparture));
-
-    // Sort write the transit stops
-    header_builder_.set_stopcount(stop_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(stop_builder_.data()),
-                 stop_builder_.size() * sizeof(TransitStop));
-
-    // Write the transit routes
-    header_builder_.set_routecount(route_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(route_builder_.data()),
-                 route_builder_.size() * sizeof(TransitRoute));
-
-    // Write transit schedules
-    header_builder_.set_schedulecount(schedule_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(schedule_builder_.data()),
-                 schedule_builder_.size() * sizeof(TransitSchedule));
-
-    // TODO add transfers later
-    header_builder_.set_transfercount(0);
-
-    // Write the signs
-    std::stable_sort(signs_builder_.begin(), signs_builder_.end());
-    header_builder_.set_signcount(signs_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(signs_builder_.data()),
-                 signs_builder_.size() * sizeof(Sign));
-
-    // Write turn lanes
-    header_builder_.set_turnlane_count(turnlanes_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(turnlanes_builder_.data()),
-                 turnlanes_builder_.size() * sizeof(TurnLanes));
-
-    // Write the admins
-    header_builder_.set_admincount(admins_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(admins_builder_.data()),
-                 admins_builder_.size() * sizeof(Admin));
-
-    // Edge bins can only be added after you've stored the tile
-
-    // Write the forward complex restriction data
-    header_builder_.set_complex_restriction_forward_offset(
-        (sizeof(GraphTileHeader)) + (nodes_builder_.size() * sizeof(NodeInfo)) +
-        (transitions_builder_.size() * sizeof(NodeTransition)) +
-        (directededges_builder_.size() * sizeof(DirectedEdge)) +
-        (directededges_ext_builder_.size() * sizeof(DirectedEdgeExt)) +
-        (access_restriction_builder_.size() * sizeof(AccessRestriction)) +
-        (departure_builder_.size() * sizeof(TransitDeparture)) +
-        (stop_builder_.size() * sizeof(TransitStop)) +
-        (route_builder_.size() * sizeof(TransitRoute)) +
-        (schedule_builder_.size() * sizeof(TransitSchedule)) +
-        // TODO - once transit transfers are added need to update here
-        (signs_builder_.size() * sizeof(Sign)) + (turnlanes_builder_.size() * sizeof(TurnLanes)) +
-        (admins_builder_.size() * sizeof(Admin)));
-    uint32_t forward_restriction_size = 0;
-    for (auto& complex_restriction : complex_restriction_forward_builder_) {
-      in_mem << complex_restriction;
-      forward_restriction_size += complex_restriction.SizeOf();
-    }
-
-    // Write the reverse complex restriction data
-    header_builder_.set_complex_restriction_reverse_offset(
-        header_builder_.complex_restriction_forward_offset() + forward_restriction_size);
-    uint32_t reverse_restriction_size = 0;
-    for (auto& complex_restriction : complex_restriction_reverse_builder_) {
-      in_mem << complex_restriction;
-      reverse_restriction_size += complex_restriction.SizeOf();
-    }
-
-    // Write the edge data (update edge_info_offset_)
-    int64_t current_size = in_mem.tellp();
-    header_builder_.set_edgeinfo_offset(header_builder_.complex_restriction_reverse_offset() +
-                                        reverse_restriction_size);
-    for (const auto& edgeinfo : edgeinfo_list_) {
-      in_mem << edgeinfo;
-    }
-    int64_t edge_info_size = in_mem.tellp() - current_size;
-
-    // Write the names
-    header_builder_.set_textlist_offset(header_builder_.edgeinfo_offset() + edge_info_size);
-    for (const auto& text : textlistbuilder_) {
-      in_mem << text << '\0';
-    }
-
-    // Add padding (if needed) to align to 8-byte word.
-    int tmp = in_mem.tellp() % 8;
-    int padding = (tmp > 0) ? 8 - tmp : 0;
-    if (padding > 0 && padding < 8) {
-      in_mem.write("\0\0\0\0\0\0\0\0", padding);
-    }
-
-    // Write lane connections
-    header_builder_.set_lane_connectivity_offset(header_builder_.textlist_offset() +
-                                                 text_list_offset_ + padding);
-    std::sort(lane_connectivity_builder_.begin(), lane_connectivity_builder_.end());
-    in_mem.write(reinterpret_cast<const char*>(lane_connectivity_builder_.data()),
-                 lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
-
-    // Set the end offset
-    header_builder_.set_end_offset(header_builder_.lane_connectivity_offset() +
-                                   (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
-
-    // Sanity check for the end offset
-    uint32_t curr =
-        static_cast<uint32_t>(in_mem.tellp()) + static_cast<uint32_t>(sizeof(GraphTileHeader));
-    if (header_builder_.end_offset() != curr) {
-      LOG_ERROR("Mismatch in end offset " + std::to_string(header_builder_.end_offset()) +
-                " vs in_mem stream " + std::to_string(curr) +
-                " padding = " + std::to_string(padding));
-    }
-
-    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset "
-                             "= %5% textlist offset = %6% lane connections = %7%") %
-               filename % nodes_builder_.size() % directededges_builder_.size() %
-               signs_builder_.size() % edge_info_offset_ % text_list_offset_ %
-               lane_connectivity_builder_.size())
-                  .str());
-    LOG_DEBUG((boost::format("   admins = %1%  departures = %2% stops = %3% routes = %4%") %
-               admins_builder_.size() % departure_builder_.size() % stop_builder_.size() %
-               route_builder_.size())
-                  .str());
-
-    // Write the header then the rest of the tile from the in memory buffer
-    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
-    file << in_mem.rdbuf();
-    file.close();
-
-    std::filesystem::rename(tmp_filename, filename);
-  } else {
-    throw std::runtime_error("Failed to open file " + filename.string());
   }
+
+  // Sort and write the access restrictions
+  header_builder_.set_access_restriction_count(access_restriction_builder_.size());
+  std::sort(access_restriction_builder_.begin(), access_restriction_builder_.end());
+  in_mem.write(reinterpret_cast<const char*>(access_restriction_builder_.data()),
+               access_restriction_builder_.size() * sizeof(AccessRestriction));
+
+  // Sort and write the transit departures
+  header_builder_.set_departurecount(departure_builder_.size());
+  std::sort(departure_builder_.begin(), departure_builder_.end());
+  in_mem.write(reinterpret_cast<const char*>(departure_builder_.data()),
+               departure_builder_.size() * sizeof(TransitDeparture));
+
+  // Sort write the transit stops
+  header_builder_.set_stopcount(stop_builder_.size());
+  in_mem.write(reinterpret_cast<const char*>(stop_builder_.data()),
+               stop_builder_.size() * sizeof(TransitStop));
+
+  // Write the transit routes
+  header_builder_.set_routecount(route_builder_.size());
+  in_mem.write(reinterpret_cast<const char*>(route_builder_.data()),
+               route_builder_.size() * sizeof(TransitRoute));
+
+  // Write transit schedules
+  header_builder_.set_schedulecount(schedule_builder_.size());
+  in_mem.write(reinterpret_cast<const char*>(schedule_builder_.data()),
+               schedule_builder_.size() * sizeof(TransitSchedule));
+
+  // TODO add transfers later
+  header_builder_.set_transfercount(0);
+
+  // Write the signs
+  std::stable_sort(signs_builder_.begin(), signs_builder_.end());
+  header_builder_.set_signcount(signs_builder_.size());
+  in_mem.write(reinterpret_cast<const char*>(signs_builder_.data()),
+               signs_builder_.size() * sizeof(Sign));
+
+  // Write turn lanes
+  header_builder_.set_turnlane_count(turnlanes_builder_.size());
+  in_mem.write(reinterpret_cast<const char*>(turnlanes_builder_.data()),
+               turnlanes_builder_.size() * sizeof(TurnLanes));
+
+  // Write the admins
+  header_builder_.set_admincount(admins_builder_.size());
+  in_mem.write(reinterpret_cast<const char*>(admins_builder_.data()),
+               admins_builder_.size() * sizeof(Admin));
+
+  // Edge bins can only be added after you've stored the tile
+
+  // Write the forward complex restriction data
+  header_builder_.set_complex_restriction_forward_offset(
+      (sizeof(GraphTileHeader)) + (nodes_builder_.size() * sizeof(NodeInfo)) +
+      (transitions_builder_.size() * sizeof(NodeTransition)) +
+      (directededges_builder_.size() * sizeof(DirectedEdge)) +
+      (directededges_ext_builder_.size() * sizeof(DirectedEdgeExt)) +
+      (access_restriction_builder_.size() * sizeof(AccessRestriction)) +
+      (departure_builder_.size() * sizeof(TransitDeparture)) +
+      (stop_builder_.size() * sizeof(TransitStop)) + (route_builder_.size() * sizeof(TransitRoute)) +
+      (schedule_builder_.size() * sizeof(TransitSchedule)) +
+      // TODO - once transit transfers are added need to update here
+      (signs_builder_.size() * sizeof(Sign)) + (turnlanes_builder_.size() * sizeof(TurnLanes)) +
+      (admins_builder_.size() * sizeof(Admin)));
+  uint32_t forward_restriction_size = 0;
+  for (auto& complex_restriction : complex_restriction_forward_builder_) {
+    in_mem << complex_restriction;
+    forward_restriction_size += complex_restriction.SizeOf();
+  }
+
+  // Write the reverse complex restriction data
+  header_builder_.set_complex_restriction_reverse_offset(
+      header_builder_.complex_restriction_forward_offset() + forward_restriction_size);
+  uint32_t reverse_restriction_size = 0;
+  for (auto& complex_restriction : complex_restriction_reverse_builder_) {
+    in_mem << complex_restriction;
+    reverse_restriction_size += complex_restriction.SizeOf();
+  }
+
+  // Write the edge data (update edge_info_offset_)
+  int64_t current_size = in_mem.tellp();
+  header_builder_.set_edgeinfo_offset(header_builder_.complex_restriction_reverse_offset() +
+                                      reverse_restriction_size);
+  for (const auto& edgeinfo : edgeinfo_list_) {
+    in_mem << edgeinfo;
+  }
+  int64_t edge_info_size = in_mem.tellp() - current_size;
+
+  // Write the names
+  header_builder_.set_textlist_offset(header_builder_.edgeinfo_offset() + edge_info_size);
+  for (const auto& text : textlistbuilder_) {
+    in_mem << text << '\0';
+  }
+
+  // Add padding (if needed) to align to 8-byte word.
+  int tmp = in_mem.tellp() % 8;
+  int padding = (tmp > 0) ? 8 - tmp : 0;
+  if (padding > 0 && padding < 8) {
+    in_mem.write("\0\0\0\0\0\0\0\0", padding);
+  }
+
+  // Write lane connections
+  header_builder_.set_lane_connectivity_offset(header_builder_.textlist_offset() + text_list_offset_ +
+                                               padding);
+  std::sort(lane_connectivity_builder_.begin(), lane_connectivity_builder_.end());
+  in_mem.write(reinterpret_cast<const char*>(lane_connectivity_builder_.data()),
+               lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
+
+  // Set the end offset
+  header_builder_.set_end_offset(header_builder_.lane_connectivity_offset() +
+                                 (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
+
+  // Sanity check for the end offset
+  uint32_t curr =
+      static_cast<uint32_t>(in_mem.tellp()) + static_cast<uint32_t>(sizeof(GraphTileHeader));
+  if (header_builder_.end_offset() != curr) {
+    LOG_ERROR("Mismatch in end offset " + std::to_string(header_builder_.end_offset()) +
+              " vs in_mem stream " + std::to_string(curr) + " padding = " + std::to_string(padding));
+  }
+
+  LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset "
+                           "= %5% textlist offset = %6% lane connections = %7%") %
+             filename % nodes_builder_.size() % directededges_builder_.size() %
+             signs_builder_.size() % edge_info_offset_ % text_list_offset_ %
+             lane_connectivity_builder_.size())
+                .str());
+  LOG_DEBUG((boost::format("   admins = %1%  departures = %2% stops = %3% routes = %4%") %
+             admins_builder_.size() % departure_builder_.size() % stop_builder_.size() %
+             route_builder_.size())
+                .str());
+
+  // Stamp the data hash into the header and rewrite it in place, then publish atomically.
+  in_mem.finalize();
+  std::filesystem::rename(tmp_filename, filename);
 }
 
 // Update a graph tile with new nodes and directed edges. The rest of the
@@ -465,39 +544,28 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
     std::filesystem::create_directories(filename.parent_path());
   }
 
-  // Open file. Truncate so we replace the contents.
-  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-  if (file.is_open()) {
-    // Write the header
-    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
-    // Write the updated nodes. Make sure node count matches.
-    if (nodes.size() != header_->nodecount()) {
-      throw std::runtime_error("GraphTileBuilder::Update - node count has changed");
-    }
-    file.write(reinterpret_cast<const char*>(nodes.data()), nodes.size() * sizeof(NodeInfo));
-
-    // Write node transitions
-    file.write(reinterpret_cast<const char*>(transitions_),
-               header_->transitioncount() * sizeof(NodeTransition));
-
-    // Write the updated directed edges. Make sure edge count matches.
-    if (directededges.size() != header_->directededgecount()) {
-      throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
-    }
-    file.write(reinterpret_cast<const char*>(directededges.data()),
-               directededges.size() * sizeof(DirectedEdge));
-
-    // If there are extended directed edge attributes they would need to be written out here
-    // (and likely added to the method)
-
-    // Write the rest of the tiles
-    auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
-    auto end = reinterpret_cast<const char*>(header()) + header()->end_offset();
-    file.write(begin, end - begin);
-    file.close();
-  } else {
-    throw std::runtime_error("GraphTileBuilder::Update - Failed to open file " + filename.string());
+  // Make sure node and edge counts match.
+  if (nodes.size() != header_->nodecount()) {
+    throw std::runtime_error("GraphTileBuilder::Update - node count has changed");
   }
+  if (directededges.size() != header_->directededgecount()) {
+    throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
+  }
+
+  // Stream the data portion straight to disk, hashing as we go: updated nodes, unchanged
+  // transitions, updated directed edges, then the rest of the tile unchanged.
+  // If there are extended directed edge attributes they would need to be written out here.
+  tile_ostream in_mem(filename, header_builder_);
+  in_mem.write(reinterpret_cast<const char*>(nodes.data()), nodes.size() * sizeof(NodeInfo));
+  in_mem.write(reinterpret_cast<const char*>(transitions_),
+               header_->transitioncount() * sizeof(NodeTransition));
+  in_mem.write(reinterpret_cast<const char*>(directededges.data()),
+               directededges.size() * sizeof(DirectedEdge));
+  auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
+  auto end = reinterpret_cast<const char*>(header()) + header()->end_offset();
+  in_mem.write(begin, end - begin);
+
+  in_mem.finalize();
 }
 
 // Gets a reference to the header builder.
@@ -1254,7 +1322,12 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
-  std::stringstream in_mem;
+  std::filesystem::path filename{tile_dir};
+  filename.append(GraphTile::FileSuffix(header.graphid()));
+  if (!std::filesystem::exists(filename.parent_path())) {
+    std::filesystem::create_directories(filename.parent_path());
+  }
+  tile_ostream in_mem(filename, header);
 
   // a bunch of stuff between header and bins
   const auto* begin = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
@@ -1300,24 +1373,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
               std::to_string(curr));
   }
 
-  // write to file
-  std::filesystem::path filename{tile_dir};
-  filename.append(GraphTile::FileSuffix(header.graphid()));
-  if (!std::filesystem::exists(filename.parent_path())) {
-    std::filesystem::create_directories(filename.parent_path());
-  }
-  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-  // open it
-  if (file.is_open()) {
-    // new header
-    file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
-    // everything else
-    file << in_mem.rdbuf();
-    file.close();
-  } // failed
-  else {
-    throw std::runtime_error("Failed to open file " + filename.string());
-  }
+  in_mem.finalize();
 }
 
 // Add a predicted speed profile for a directed edge.
@@ -1370,50 +1426,37 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   if (!std::filesystem::exists(filename.parent_path()))
     std::filesystem::create_directories(filename.parent_path());
 
-  // Open file and truncate
-  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-  if (file.is_open()) {
-    // Write a new header - add the offset to predicted speed data and the profile count.
-    // Update the end offset (shift by the amount of predicted speed data added).
-    size_t offset = header_->end_offset();
-    header_builder_.set_end_offset(header_->end_offset() +
-                                   (speed_profile_offset_builder_.size() * sizeof(uint32_t)) +
-                                   (speed_profile_builder_.size() * sizeof(int16_t)));
-    header_builder_.set_predictedspeeds_offset(offset);
-    header_builder_.set_predictedspeeds_count(speed_profile_builder_.size() / kCoefficientCount);
-    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
+  // Update the header - add the offset to predicted speed data and the profile count.
+  // Update the end offset (shift by the amount of predicted speed data added).
+  size_t offset = header_->end_offset();
+  header_builder_.set_end_offset(header_->end_offset() +
+                                 (speed_profile_offset_builder_.size() * sizeof(uint32_t)) +
+                                 (speed_profile_builder_.size() * sizeof(int16_t)));
+  header_builder_.set_predictedspeeds_offset(offset);
+  header_builder_.set_predictedspeeds_count(speed_profile_builder_.size() / kCoefficientCount);
 
-    // Copy the nodes (they are unchanged when adding predicted speeds).
-    file.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() * sizeof(NodeInfo));
+  if (directededges.size() != header_->directededgecount()) {
+    throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
+  }
 
-    // Copy the node transitions (they are unchanged when adding predicted speeds).
-    file.write(reinterpret_cast<const char*>(transitions_),
+  // Stream the data portion straight to disk, hashing as we go: unchanged nodes and
+  // transitions, updated directed edges, the rest of the tile up to the traffic data, then
+  // the appended speed profiles.
+  tile_ostream in_mem(filename, header_builder_);
+  in_mem.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() * sizeof(NodeInfo));
+  in_mem.write(reinterpret_cast<const char*>(transitions_),
                header_->transitioncount() * sizeof(NodeTransition));
-
-    // Write the updated directed edges. Make sure edge count matches.
-    if (directededges.size() != header_->directededgecount()) {
-      throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
-    }
-    file.write(reinterpret_cast<const char*>(directededges.data()),
+  in_mem.write(reinterpret_cast<const char*>(directededges.data()),
                directededges.size() * sizeof(DirectedEdge));
-
-    // Write out data from access restrictions to the end of lane connectivity data.
-    auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
-    auto end = reinterpret_cast<const char*>(header()) + offset;
-    file.write(begin, end - begin);
-
-    // Append the speed profile indexes and profiles.
-    file.write(reinterpret_cast<const char*>(speed_profile_offset_builder_.data()),
+  auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
+  auto end = reinterpret_cast<const char*>(header()) + offset;
+  in_mem.write(begin, end - begin);
+  in_mem.write(reinterpret_cast<const char*>(speed_profile_offset_builder_.data()),
                speed_profile_offset_builder_.size() * sizeof(uint32_t));
-    file.write(reinterpret_cast<const char*>(speed_profile_builder_.data()),
+  in_mem.write(reinterpret_cast<const char*>(speed_profile_builder_.data()),
                speed_profile_builder_.size() * sizeof(int16_t));
 
-    // Write the rest of the tiles. TBD (if anything is added after the speed profiles
-    // then this will need to be updated)
-
-    // Close the file
-    file.close();
-  }
+  in_mem.finalize();
 }
 
 void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
