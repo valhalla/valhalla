@@ -85,7 +85,7 @@ public:
    * Allows users to interrupt downloading requests.
    * Returns true if the request should be interrupted.
    */
-  virtual void set_interrupt(const interrupt_t*) {};
+  virtual void set_interrupt(const interrupt_t*){};
 
   virtual ~tile_getter_t() = default;
 };
