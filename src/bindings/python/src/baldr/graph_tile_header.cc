@@ -59,8 +59,10 @@ void init_graphtileheader(nb::module_& m) {
       .def_prop_ro("date_created", &vb::GraphTileHeader::date_created,
                    "Tile creation date (days since the pivot date).")
       .def_prop_ro("end_offset", &vb::GraphTileHeader::end_offset, "Tile size in bytes.")
-      // TODO(nils): integrate https://github.com/valhalla/valhalla/pull/6123
-      .def_prop_ro("checksum", &vb::GraphTileHeader::checksum, "64-bit checksum of the tile's input.")
+      .def_prop_ro("tile_checksum", &vb::GraphTileHeader::tile_checksum,
+                   "Integer checksum (48 bit) of the tile's data.")
+      .def_prop_ro("build_id", &vb::GraphTileHeader::build_id,
+                   "Integer additive checksum (16 bit) of the tileset.")
       .def("__repr__", [](const vb::GraphTileHeader& h) {
         return "<GraphTileHeader " + std::to_string(h.graphid()) +
                " nodes=" + std::to_string(h.nodecount()) +
