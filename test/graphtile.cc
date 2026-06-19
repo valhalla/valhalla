@@ -142,7 +142,7 @@ TEST(GraphTileVersion, VersionChecksum) {
   std::string expected_version = VALHALLA_VERSION;
   EXPECT_TRUE(tile->header()->version().compare(0, expected_version.size(), expected_version) == 0);
 
-  auto checksum = tile->header()->checksum();
+  auto checksum = tile->header()->tile_checksum();
   EXPECT_GT(checksum, 0);
 }
 
