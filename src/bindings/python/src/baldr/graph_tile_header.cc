@@ -15,7 +15,7 @@ namespace pyvalhalla::baldr {
 void init_graphtileheader(nb::module_& m) {
   nb::class_<vb::GraphTileHeader>(
       m, "GraphTileHeader",
-      "Read-only information about a graph tile. Obtain one via GraphUtils.get_tile_header().")
+      "Read-only information about a graph tile. Obtain one via GraphUtils.get_graph_tile_header().")
       .def_prop_ro("graphid", &vb::GraphTileHeader::graphid,
                    "GraphId (tile id + level) of this tile.")
       .def_prop_ro(

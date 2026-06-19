@@ -131,7 +131,7 @@ class GraphId:
 
 class GraphTileHeader:
     """
-    Read-only information about a graph tile. Obtain one via GraphUtils.get_tile_header().
+    Read-only information about a graph tile. Obtain one via GraphUtils.get_graph_tile_header().
     """
 
     @property
@@ -257,7 +257,7 @@ class _GraphUtils:
         :raises RuntimeError: When the tile or edge is not found
         """
 
-    def get_tile_header(self, tile_id: GraphId) -> GraphTileHeader:
+    def get_graph_tile_header(self, tile_id: GraphId) -> GraphTileHeader:
         """
         Get the GraphTileHeader for the tile that contains this GraphId.
 

@@ -94,7 +94,7 @@ void init_graphreader(nb::module_& m) {
           ":returns: List of (lon, lat) tuples representing the edge geometry\n"
           ":raises RuntimeError: When the tile or edge is not found")
       .def(
-          "get_tile_header",
+          "get_graph_tile_header",
           [](vb::GraphReader& self, const vb::GraphId& tile_id) -> vb::GraphTileHeader {
             auto tile = self.GetGraphTile(tile_id);
             if (!tile) {

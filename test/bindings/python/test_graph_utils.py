@@ -190,17 +190,17 @@ class TestBindings(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             graph.get_edge_shape(invalid_edge_id)
 
-    def test_get_tile_header(self):
-        """Test GraphUtils.get_tile_header with real Utrecht tiles."""
+    def test_get_graph_tile_header(self):
+        """Test GraphUtils.get_graph_tile_header with real Utrecht tiles."""
         graph = GraphUtils(json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}}))
 
         # missing tile -> RuntimeError
         with self.assertRaises(RuntimeError) as exc:
-            graph.get_tile_header(GraphId(999999, 2, 0))
+            graph.get_graph_tile_header(GraphId(999999, 2, 0))
         self.assertIn("Tile not found", str(exc.exception))
 
         tile_gid = get_tile_id_from_lon_lat(self.level, (self.utrecht_lon, self.utrecht_lat))
-        header = graph.get_tile_header(tile_gid)
+        header = graph.get_graph_tile_header(tile_gid)
         self.assertIsInstance(header, GraphTileHeader)
 
         # the header identifies the same tile (id portion is 0 for the tile base)
@@ -233,6 +233,32 @@ class TestBindings(unittest.TestCase):
             header.nodecount = 0
 
         self.assertIn("GraphTileHeader", repr(header))
+
+    def test_tile_header_tile_checksum(self):
+        """tile_checksum is the 48-bit per-tile data hash (low bits of checksum_)."""
+        graph = GraphUtils(json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}}))
+        tile_gid = get_tile_id_from_lon_lat(self.level, (self.utrecht_lon, self.utrecht_lat))
+        header = graph.get_graph_tile_header(tile_gid)
+
+        self.assertIsInstance(header.tile_checksum, int)
+        self.assertGreater(header.tile_checksum, 0)
+        self.assertLess(header.tile_checksum, 1 << 48)
+
+        with self.assertRaises(AttributeError):
+            header.tile_checksum = 0
+
+    def test_tile_header_build_id(self):
+        """build_id is the 16-bit tileset id packed into the high bits of checksum_."""
+        graph = GraphUtils(json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}}))
+        tile_gid = get_tile_id_from_lon_lat(self.level, (self.utrecht_lon, self.utrecht_lat))
+        header = graph.get_graph_tile_header(tile_gid)
+
+        self.assertIsInstance(header.build_id, int)
+        self.assertGreater(header.build_id, 0)
+        self.assertLess(header.build_id, 1 << 16)
+
+        with self.assertRaises(AttributeError):
+            header.build_id = 0
 
     def test_graphutils_dict_config(self):
         """Test GraphUtils initialization with dict config."""
