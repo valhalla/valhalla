@@ -164,7 +164,7 @@ struct curler_t::pimpl_t {
 
     // sftp has no HTTP status code, so we fake one since
     // curl_easy_perform would have thrown if something had gone wrong
-    if (is_sftp && result.http_code_ == 0 && result.bytes_.size() == range_size) {
+    if (is_sftp && result.http_code_ == 0) {
       result.http_code_ = 200;
     }
 
