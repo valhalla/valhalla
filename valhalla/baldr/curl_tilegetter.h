@@ -31,13 +31,7 @@ public:
                      const uint64_t range_offset = 0,
                      const uint64_t range_size = 0) override {
     scoped_curler_t curler(curlers_);
-    auto result = curler.get().get(url, is_sftp, gzipped_, interrupt_, range_offset, range_size);
-    // TODO: Check other codes.
-    if (result.http_code_ == 200 || result.http_code_ == 206 || (is_sftp && result.http_code_ == 0)) {
-      result.status_ = tile_getter_t::status_code_t::SUCCESS;
-    }
-
-    return result;
+    return curler.get().get(url, is_sftp, gzipped_, interrupt_, range_offset, range_size);
   }
 
   HEAD_response_t head(const std::string& url, header_mask_t header_mask) override {

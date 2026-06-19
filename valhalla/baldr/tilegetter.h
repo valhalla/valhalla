@@ -29,7 +29,7 @@ public:
   /**
    * Operation status code.
    */
-  enum class status_code_t { SUCCESS, FAILURE };
+  enum class status_code_t : uint8_t { SUCCESS, FAILURE };
 
   /**
    * Mask for response headers

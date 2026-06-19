@@ -162,10 +162,8 @@ struct curler_t::pimpl_t {
     // grab the return code
     curl_easy_getinfo(connection.get(), CURLINFO_RESPONSE_CODE, &result.http_code_);
 
-    // sftp has no HTTP status code, so we fake one since
-    // curl_easy_perform would have thrown if something had gone wrong
-    if (is_sftp && result.http_code_ == 0) {
-      result.http_code_ = 200;
+    if (result.http_code_ == 200 || result.http_code_ == 206 || (is_sftp && result.http_code_ == 0)) {
+      result.status_ = tile_getter_t::status_code_t::SUCCESS;
     }
 
     // hand over the results
