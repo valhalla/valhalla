@@ -113,6 +113,7 @@ struct curler_t::pimpl_t {
     // curl options are sticky: if a HEAD was called, we need to tell it again this is a GET
     curl_easy_setopt(connection.get(), CURLOPT_HTTPGET, 1L);
     curl_easy_setopt(connection.get(), CURLOPT_NOBODY, 0L);
+    const bool is_sftp = (url.rfind("sftp://", 0) == 0);
 
     if (interrupt) {
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_XFERINFOFUNCTION, progress_callback),
@@ -160,6 +161,13 @@ struct curler_t::pimpl_t {
     assert_curl(curl_easy_perform(connection.get()), "Failed to get URL ");
     // grab the return code
     curl_easy_getinfo(connection.get(), CURLINFO_RESPONSE_CODE, &result.http_code_);
+
+    // sftp has no HTTP status code, so we fake one since
+    // curl_easy_perform would have thrown if something had gone wrong
+    if (is_sftp && result.http_code_ == 0) {
+      result.http_code_ = 200;
+    }
+
     // hand over the results
     return result;
   }
