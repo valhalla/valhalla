@@ -106,6 +106,7 @@ struct curler_t::pimpl_t {
 
   // TODO: retries?
   GET_response_t get(const std::string& url,
+                     bool is_sftp,
                      bool gzipped,
                      const interrupt_t* interrupt,
                      const uint64_t range_offset,
@@ -160,6 +161,11 @@ struct curler_t::pimpl_t {
     assert_curl(curl_easy_perform(connection.get()), "Failed to get URL ");
     // grab the return code
     curl_easy_getinfo(connection.get(), CURLINFO_RESPONSE_CODE, &result.http_code_);
+
+    if (result.http_code_ == 200 || result.http_code_ == 206 || (is_sftp && result.http_code_ == 0)) {
+      result.status_ = tile_getter_t::status_code_t::SUCCESS;
+    }
+
     // hand over the results
     return result;
   }
@@ -183,11 +189,12 @@ curler_t::curler_t(const std::string& user_agent, const std::string& user_pw)
 }
 
 curler_t::GET_response_t curler_t::get(const std::string& url,
+                                       bool is_sftp,
                                        bool gzipped,
                                        const curler_t::interrupt_t* interrupt,
                                        uint64_t range_offset,
                                        uint64_t range_size) const {
-  return pimpl->get(url, gzipped, interrupt, range_offset, range_size);
+  return pimpl->get(url, is_sftp, gzipped, interrupt, range_offset, range_size);
 }
 
 curler_t::HEAD_response_t curler_t::head(const std::string& url, header_mask_t header_mask) {

@@ -250,8 +250,8 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
 
         auto test_tile_index = tile_i % params.test_tile_names.size();
         auto expected_tile_id = params.test_tile_ids[test_tile_index];
-        auto tile =
-            GraphTile::CacheTileURL(params.full_tile_url_pattern, expected_tile_id, &tile_getter, "");
+        auto tile = GraphTile::CacheTileURL(params.full_tile_url_pattern, false, expected_tile_id,
+                                            &tile_getter, "");
 
         if (expected_tile_id != non_existent_tile_id) {
           ASSERT_TRUE(tile);

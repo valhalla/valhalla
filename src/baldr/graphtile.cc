@@ -224,6 +224,7 @@ void store(const std::string& cache_location,
 }
 
 graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
+                                       bool is_sftp,
                                        const GraphId& graphid,
                                        tile_getter_t* tile_getter,
                                        const std::string& tile_dir,
@@ -270,10 +271,10 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     auto fname =
         valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
                                                valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
-    result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
+    result = tile_getter->get(baldr::make_single_point_url(tile_url, fname), is_sftp);
   } else {
     // or HTTP range on a tar
-    result = tile_getter->get(tile_url, range_offset, range_size);
+    result = tile_getter->get(tile_url, is_sftp, range_offset, range_size);
   }
 
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {

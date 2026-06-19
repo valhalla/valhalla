@@ -189,6 +189,7 @@ public:
    */
 
   static graph_tile_ptr CacheTileURL(const std::string& tile_url,
+                                     bool is_sftp,
                                      const GraphId& graphid,
                                      tile_getter_t* tile_getter,
                                      const std::string& tile_dir,
