@@ -227,8 +227,12 @@ class GraphTileHeader:
         """Tile size in bytes."""
 
     @property
-    def checksum(self) -> int:
-        """64-bit checksum of the tile's input."""
+    def tile_checksum(self) -> int:
+        """Integer checksum (48 bit) of the tile's data."""
+
+    @property
+    def build_id(self) -> int:
+        """Integer additive checksum (16 bit) of the tileset."""
 
     def __repr__(self) -> str: ...
 
@@ -263,7 +267,7 @@ class _GraphUtils:
 
         :param tile_id: GraphId of (or within) the tile
         :returns: GraphTileHeader with the tile's summary metadata
-        :raises RuntimeError: When the tile is not found
+        :raises RuntimeError: When the tile is or edge not found
         """
 
 def get_tile_base_lon_lat(graph_id: GraphId) -> tuple:
