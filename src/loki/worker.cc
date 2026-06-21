@@ -381,6 +381,7 @@ void loki_worker_t::cleanup() {
     reader->Trim();
   }
   bbox_intersection_.clear();
+  search_.clear();
 }
 
 void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {

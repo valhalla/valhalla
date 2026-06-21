@@ -1168,7 +1168,7 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
       continue;
     }
 
-    auto bounding_circle = minimum_bounding_circle(shape, kBoundingCircleRadii.back() * 2);
+    auto bounding_circle = minimum_bounding_circle(shape, std::numeric_limits<double>::max());
     // for each bin that got intersected
     auto intersection = tiles.Intersect(shape);
     for (const auto& i : intersection) {
