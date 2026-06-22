@@ -50,40 +50,9 @@ namespace vr = valhalla::tyr;
 
 namespace {
 
-void apply_location_defaults(Location& location) {
-
-  if (!location.has_search_filter() || !location.search_filter().has_min_road_class_case())
-    location.mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
-  if (!location.search_filter().has_max_road_class_case())
-    location.mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
-  if (!location.search_filter().has_exclude_closures_case())
-    location.mutable_search_filter()->set_exclude_closures(true);
-  if (!location.search_filter().has_exclude_closures_case())
-    location.mutable_search_filter()->set_exclude_closures(true);
-  if (!location.search_filter().has_level())
-    location.mutable_search_filter()->set_level(kMaxLevel);
-  if (!location.has_street_side_cutoff_case())
-    location.set_street_side_cutoff(valhalla::RoadClass::kServiceOther);
-
-  if (!location.has_node_snap_tolerance())
-    location.set_node_snap_tolerance(5.f);
-
-  if (!location.has_heading_tolerance())
-    location.set_heading_tolerance(60.f);
-
-  if (!location.has_street_side_tolerance())
-    location.set_street_side_tolerance(5);
-
-  if (!location.has_street_side_max_distance())
-    location.set_street_side_max_distance(1000);
-
-  if (!location.has_search_cutoff_case())
-    location.set_search_cutoff(kDefaultSearchCutoff);
-}
 void locations_from_ll(Api& request, const std::vector<valhalla::midgard::PointLL>& nodes) {
   for (const auto& pt : nodes) {
     auto* loc = request.mutable_options()->mutable_locations()->Add();
-    apply_location_defaults(*loc);
     loc->mutable_ll()->set_lat(pt.lat());
     loc->mutable_ll()->set_lng(pt.lng());
   }
@@ -360,6 +329,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   // this should go along the path from A to B
   assert_is_trivial_path(astar, *request.mutable_options()->mutable_locations(0),
@@ -393,6 +363,7 @@ TEST(Astar, TestTrivialPathTriangle) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   vt::TimeDepForward astar;
   // this should go along the path from E to F
@@ -416,6 +387,7 @@ void TestPartialDuration(vt::PathAlgorithm& astar) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
@@ -1053,6 +1025,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
@@ -1274,6 +1247,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
@@ -1450,6 +1424,7 @@ TEST(ComplexRestriction, WalkVias) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   bool is_forward = true;
   auto tile = reader->GetGraphTile(tile_id);
@@ -1480,7 +1455,9 @@ TEST(ComplexRestriction, WalkVias) {
   {
     locations->Clear();
     locations_from_nodes(request, {"V"}, node_locations);
+    loki_worker.cleanup();
     loki_worker.locate(request);
+    loki_worker.cleanup();
     ASSERT_EQ(locations->at(0).correlation().edges().size(), 2)
         << "Expected only 2 edges in snapping response";
 
@@ -1540,6 +1517,7 @@ TEST(Astar, BiDirTrivial) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
@@ -1627,6 +1605,7 @@ TEST(BiDiAstar, test_recost_path) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
@@ -1955,6 +1934,7 @@ TEST(StandAlone, AstarReverseTimeTrackingTest) {
     ParseApi(test_request, Options::route, request);
     ASSERT_EQ(request.options().reverse_time_tracking(), Options::rtt_heuristic);
     loki_worker.route(request);
+    loki_worker.cleanup();
     valhalla::thor::thor_worker_t::adjust_locations(request);
 
     sif::mode_costing_t mode_costing;
@@ -2002,6 +1982,7 @@ TEST(StandAlone, AstarReverseTimeTrackingTest) {
     ParseApi(test_request, Options::route, request);
     ASSERT_EQ(request.options().reverse_time_tracking(), Options::rtt_disabled);
     loki_worker.route(request);
+    loki_worker.cleanup();
     valhalla::thor::thor_worker_t::adjust_locations(request);
 
     sif::mode_costing_t mode_costing;
