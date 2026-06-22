@@ -300,8 +300,6 @@ struct projector_wrapper {
 };
 
 struct bin_handler_t {
-  size_t shapes_checked_count = 0;
-  size_t all_prefiltered_count = 0;
   std::vector<projector_wrapper> pps;
   GraphReader& reader;
   cost_ptr_t costing;
@@ -318,8 +316,6 @@ struct bin_handler_t {
   }
 
   void clear() {
-    shapes_checked_count = 0;
-    all_prefiltered_count = 0;
     pps.clear();
     max_reach_limit = 0;
     bin_candidates.clear();
@@ -602,9 +598,7 @@ struct bin_handler_t {
 
   // handle a bin for the range of candidates that share it
   void handle_bin(std::vector<projector_wrapper>::iterator begin,
-                  std::vector<projector_wrapper>::iterator end,
-                  size_t& all_prefiltered_count,
-                  size_t& shapes_checked_count) {
+                  std::vector<projector_wrapper>::iterator end) {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     bool has_bounding_circles = tile->header()->has_bounding_circles();
@@ -614,7 +608,7 @@ struct bin_handler_t {
     for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
       auto edge_id = *edge_it;
       bool all_prefiltered = true;
-      std::pair<PointLL, uint16_t> circle({0, 0}, 0);
+      std::pair<PointLL, double> circle({0, 0}, 0.);
       if (has_bounding_circles && bounding_circle->is_valid())
         circle = bounding_circle->get(begin->bin_center_approximator, begin->bin_center);
       double radius = circle.second;
@@ -672,7 +666,6 @@ struct bin_handler_t {
           }
         }
         if (all_prefiltered) {
-          all_prefiltered_count++;
           continue;
         }
       }
@@ -723,7 +716,6 @@ struct bin_handler_t {
       if (all_prefiltered) {
         continue;
       }
-      shapes_checked_count++;
 
       // TODO: can we speed this up? the majority of edges will be short and far away enough
       // such that the closest point on the edge will be one of the edges end points, we can get
@@ -896,7 +888,7 @@ struct bin_handler_t {
     std::sort(pps.begin(), pps.end());
     while (pps.front().has_bin()) {
       auto range = find_best_range(pps);
-      handle_bin(range.first, range.second, all_prefiltered_count, shapes_checked_count);
+      handle_bin(range.first, range.second);
       auto it = std::partition(pps.begin(), pps.end(), [](auto& pp) { return pp.has_bin(); });
       std::sort(pps.begin(), it);
     }
@@ -1012,8 +1004,6 @@ void Search::search(google::protobuf::RepeatedPtrField<Location>& locations,
     return;
 
   handler_->search(locations, costing);
-  LOG_INFO("Search stats: {} prefiltered bin edges, {} shapes checked",
-           handler_->all_prefiltered_count, handler_->shapes_checked_count);
 }
 
 void Search::clear() {
@@ -1057,7 +1047,7 @@ void Search::edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
         if (!tile)
           continue;
 
-        std::pair<PointLL, uint16_t> circle({0, 0}, 0);
+        std::pair<PointLL, double> circle({0, 0}, 0);
         if (has_bounding_circles && bounding_circle->is_valid())
           circle = bounding_circle->get(bin_center_approximator, bin_center);
         double radius = circle.second;
