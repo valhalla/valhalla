@@ -863,5 +863,13 @@ using circle_t = std::pair<PointLL, double>;
 std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
                                                 double distance_threshold);
 
+template <typename T> inline T square(T v) {
+  return v * v;
+}
+enum class CircleInBbox : uint8_t { OUTSIDE = 0, INSIDE = 1, INTERSECTS = 2 };
+CircleInBbox circle_intersects_bounds(const PointLL& center,
+                                      float radius_deg,
+                                      const AABB2<valhalla::midgard::PointLL>& box);
+
 } // namespace midgard
 } // namespace valhalla

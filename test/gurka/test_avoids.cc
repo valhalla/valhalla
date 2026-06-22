@@ -209,7 +209,8 @@ protected:
     // Add low length limit for exclude_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_avoids",
                                   {{"service_limits.max_exclude_polygons_length", "10000"},
-                                   {"mjolnir.shortcut_caching", "true"}});
+                                   {"mjolnir.shortcut_caching", "true"},
+                                   {"mjolnir.data_processing.build_bounding_circles", "1"}});
   }
 };
 
