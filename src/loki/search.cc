@@ -113,7 +113,7 @@ bool heading_filter(const Location& location, float angle) {
     return std::min(location.heading() - angle, (360.f - location.heading()) + angle) >
            location.heading_tolerance();
   }
-  return std::min(angle - location.heading(), location.heading() + (360.f - angle)) >
+  return std::min(angle - location.heading(), (360.f - angle) + location.heading()) >
          location.heading_tolerance();
 }
 
@@ -438,12 +438,12 @@ struct bin_handler_t {
     crawl(found_node, true);
   }
 
-  void correlate_edge(Location* location, const candidate_t& candidate) {
-    PointLL pt = point_ll_from_latlng(location->ll());
+  void correlate_edge(Location& location, const candidate_t& candidate) {
+    PointLL pt = point_ll_from_latlng(location.ll());
     // get the distance between the result
     auto distance = candidate.point.Distance(pt);
     // the search cutoff is a hard filter so skip any outside of that
-    if (distance > location->search_cutoff())
+    if (distance > location.search_cutoff())
       return;
     // now that we have an edge we can pass back all the info about it
     if (candidate.edge != nullptr) {
@@ -468,13 +468,13 @@ struct bin_handler_t {
                         GetOffsetForHeading(candidate.edge->classification(), candidate.edge->use()),
                         candidate.edge->forward());
       auto layer = candidate.edge_info->layer();
-      auto sq_tolerance = square(double(location->street_side_tolerance()));
-      auto sq_max_distance = square(double(location->street_side_max_distance()));
-      auto display_pt = point_ll_from_latlng(location->display_ll());
+      auto sq_tolerance = square(double(location.street_side_tolerance()));
+      auto sq_max_distance = square(double(location.street_side_max_distance()));
+      auto display_pt = point_ll_from_latlng(location.display_ll());
       auto side =
-          candidate.get_side((location->has_display_ll() ? display_pt : pt), angle,
-                             location->has_display_ll() ? display_pt.DistanceSquared(candidate.point)
-                                                        : candidate.sq_distance,
+          candidate.get_side((location.has_display_ll() ? display_pt : pt), angle,
+                             location.has_display_ll() ? display_pt.DistanceSquared(candidate.point)
+                                                       : candidate.sq_distance,
                              sq_tolerance, sq_max_distance);
       auto reach = get_reach(candidate.edge_id, candidate.edge);
 
@@ -496,12 +496,12 @@ struct bin_handler_t {
 
       // correlate the edge we found if its not filtered out
       bool hard_filtered =
-          search_filter(candidate.edge, *costing, candidate.tile, location->search_filter());
-      if (!hard_filtered && (side_filter(path_edge, *location, reader) ||
-                             heading_filter(*location, angle) || layer_filter(*location, layer))) {
-        location->mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
+          search_filter(candidate.edge, *costing, candidate.tile, location.search_filter());
+      if (!hard_filtered && (side_filter(path_edge, location, reader) ||
+                             heading_filter(location, angle) || layer_filter(location, layer))) {
+        location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
       } else if (!hard_filtered && correlated_edges.insert(candidate.edge_id).second) {
-        location->mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
+        location.mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
       }
 
       // correlate its evil twin
@@ -510,7 +510,7 @@ struct bin_handler_t {
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
       if (other_edge && costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
-          !search_filter(other_edge, *costing, other_tile, location->search_filter())) {
+          !search_filter(other_edge, *costing, other_tile, location.search_filter())) {
         auto opp_angle = std::fmod(angle + 180.f, 360.f);
         reach = get_reach(opposing_edge_id, other_edge);
         valhalla::PathEdge other_path_edge;
@@ -530,11 +530,11 @@ struct bin_handler_t {
         bc->set_radius(candidate.bounding_circle.second);
 
         // angle is 180 degrees opposite of the one above
-        if (side_filter(other_path_edge, *location, reader) || heading_filter(*location, opp_angle) ||
-            layer_filter(*location, layer)) {
-          location->mutable_correlation()->mutable_filtered_edges()->Add(std::move(other_path_edge));
+        if (side_filter(other_path_edge, location, reader) || heading_filter(location, opp_angle) ||
+            layer_filter(location, layer)) {
+          location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(other_path_edge));
         } else if (correlated_edges.insert(opposing_edge_id).second) {
-          location->mutable_correlation()->mutable_edges()->Add(std::move(other_path_edge));
+          location.mutable_correlation()->mutable_edges()->Add(std::move(other_path_edge));
         }
       }
     }
@@ -937,7 +937,7 @@ private:
           correlate_node(*pp.location, candidate.edge->endnode(), candidate);
         } // it was along the edge
         else {
-          correlate_edge(pp.location, candidate);
+          correlate_edge(*pp.location, candidate);
         }
       }
 
