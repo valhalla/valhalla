@@ -124,6 +124,7 @@ nav:
       - route_overview.md
       - Decoding shape: decoding.md
       - Tile structure: tiles.md
+      - Change identification: change_identification.md
       - Speed information: speeds.md
       - Dynamic costing: sif/dynamic-costing.md
       - Elevation influenced bicycle routing: sif/elevation_costing.md
