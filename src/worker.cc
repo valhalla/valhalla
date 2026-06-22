@@ -1637,7 +1637,7 @@ struct statsd_client_t : public Statsd::StatsdClient {
                              conf.get<int>("statsd.port", 8125),
                              conf.get<std::string>("statsd.prefix", ""),
                              conf.get<uint64_t>("statsd.batch_size", 500),
-                             7) {
+                             0) {
     auto host = conf.get<std::string>("statsd.host", "");
     if (!errorMessage().empty() && !host.empty()) {
       LOG_ERROR(errorMessage());
@@ -1712,7 +1712,7 @@ midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api
   auto start = std::chrono::steady_clock::now();
   return midgard::Finally<std::function<void()>>([this, &api, start]() {
     auto elapsed = std::chrono::steady_clock::now() - start;
-    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(elapsed).count();
+    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
     const auto& action = Options_Action_Enum_Name(api.options().action());
 
     auto* stat = api.mutable_info()->mutable_statistics()->Add();
