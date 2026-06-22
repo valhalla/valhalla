@@ -849,6 +849,17 @@ protected:
 };
 
 using circle_t = std::pair<PointLL, double>;
+/**
+ * Compute the minimum bounding circle of an edge shape. Projects points to azimuthal equidistant,
+ * using the shape's bbox center.
+ *
+ * @param points                the edge's shape in unprojected lat/lon
+ * @param distance_threshold    a size threshold for the shape's bounding box beyond which bounding
+ * circle computation is skipped
+ *
+ * @return optionally, a circle with center in lat/lon and a radius in meters. std::nullopt if the
+ * shape's bbox size exceeded distance_threshold or the shape is empty.
+ */
 std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
                                                 double distance_threshold);
 
