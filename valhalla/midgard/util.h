@@ -629,7 +629,7 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
 
 template <typename T> struct Finally {
   T t;
-  explicit Finally(T t) : t(std::move(t)){};
+  explicit Finally(T t) : t(std::move(t)) {};
   Finally() = delete;
   Finally(Finally&& f) = default;
   Finally(const Finally&) = delete;
@@ -866,7 +866,17 @@ std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& poin
 template <typename T> inline T square(T v) {
   return v * v;
 }
+
 enum class CircleInBbox : uint8_t { OUTSIDE = 0, INSIDE = 1, INTERSECTS = 2 };
+/**
+ * Test whether a circle intersects an axis-aligned bounding box.
+ *
+ * @param center      the circle center in lat/lon
+ * @param radius_deg  the radius in degrees
+ * @param box         axis-aligned bounding box in lat/lon
+ *
+ * @return whether the circle is outside, fully inside, or on the boundary of the bounding box
+ */
 CircleInBbox circle_intersects_bounds(const PointLL& center,
                                       float radius_deg,
                                       const AABB2<valhalla::midgard::PointLL>& box);
