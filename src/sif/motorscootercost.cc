@@ -677,7 +677,10 @@ make_real_distributor_from_range(const ranged_default_t<T>& range) {
 template <typename T>
 std::uniform_int_distribution<T>* make_int_distributor_from_range(const ranged_default_t<T>& range) {
   T rangeLength = range.max - range.min;
-  return new std::uniform_int_distribution<T>(range.min - rangeLength, range.max + rangeLength);
+  return new std::uniform_int_distribution<T>(std::numeric_limits<T>::min() + rangeLength > range.min
+                                                  ? std::numeric_limits<T>::min()
+                                                  : range.min - rangeLength,
+                                              range.max + rangeLength);
 }
 
 TEST(MotorscooterCost, testMotorScooterCostParams) {

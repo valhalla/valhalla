@@ -517,6 +517,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     }
   }
 }
+
 } // anonymous namespace
 
 namespace valhalla {
@@ -844,11 +845,12 @@ std::string loki_worker_t::render_tile(Api& request) {
   const auto bounds = tile_to_bbox(x, y, z);
 
   // query edges in bbox, omits opposing edges
-  const auto edge_ids = candidate_query_.RangeQuery(bounds);
+  // query edges in bbox, omits opposing edges
+  search_.edges_in_bounds(bounds, bbox_intersection_);
   // sort for cache friendliness
   std::vector<GraphId> sorted_ids;
-  sorted_ids.reserve(edge_ids.size());
-  sorted_ids.assign(edge_ids.begin(), edge_ids.end());
+  sorted_ids.reserve(bbox_intersection_.size());
+  sorted_ids.assign(bbox_intersection_.begin(), bbox_intersection_.end());
   std::sort(sorted_ids.begin(), sorted_ids.end(), GraphId::cache_comparator);
 
   // we use generalize as a scaling factor to our default generalization

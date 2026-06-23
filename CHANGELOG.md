@@ -1,8 +1,27 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: dead `thor.max_reserved_locations_costmatrix` help entry from `valhalla_build_config` (live key is `thor.costmatrix.max_reserved_locations`) [#6083](https://github.com/valhalla/valhalla/issues/6083)
+   * REMOVED: `json` request parameter, people can use CORS in 2026 [#6099](https://github.com/valhalla/valhalla/pull/6099)
+   * REMOVED: `date_created_` field from `baldr::GraphTileHeader` [#6115](https://github.com/valhalla/valhalla/pull/6115)
 * **Bug Fix**
    * FIXED: wrong mode used in loki for `auto_pedestrian` [#6065](https://github.com/valhalla/valhalla/pull/6065)
+   * FIXED: Avoid creating loop edges during graph filtering [#6050](https://github.com/valhalla/valhalla/pull/6050)
+   * FIXED: UB in adminbuilder in `&inner_rings.front()` if `inner_rings` is empty [#6077](https://github.com/valhalla/valhalla/pull/6077)
+   * FIXED: duplicate config arg in `enhance` [#6095](https://github.com/valhalla/valhalla/pull/6095)
+   * FIXED: flood fill leak in polygon search [#6086](https://github.com/valhalla/valhalla/pull/6086)
+   * FIXED: Fix errors in cost_inline_tests [#6117](https://github.com/valhalla/valhalla/pull/6117)
+   * FIXED: JSON serialization of NaN values [#6147](https://github.com/valhalla/valhalla/pull/6147)
 * **Enhancement**
+   * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
+   * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
+   * ADDED: lz4 support for OSM PBF files [#6081](https://github.com/valhalla/valhalla/pull/6081)
+   * CHANGED: auto-generate .pyi stubs with cmake, needs a full build [#6101](https://github.com/valhalla/valhalla/pull/6101)
+   * ADDED: Bounding circles for faster loki (not yet enabled) [#5103](https://github.com/valhalla/valhalla/pull/5103)
+   * ADDED: OpenAPI documentation [#6088](https://github.com/valhalla/valhalla/pull/6088)
+   * ADDED: `dataset_id` config to optionally set an arbitrary number to each tile's `dataset_id` header field [#6126](https://github.com/valhalla/valhalla/pull/6126)
+   * ADDED: partial gurka tile build and `findWay` & `findWayNodes` gurka lookups for temp .bin files [#6136](https://github.com/valhalla/valhalla/pull/6136)
+   * CHANGED: `checksum_` field in GraphTileHeader reflects now global tileset ID & tile data checksum [#6123](https://github.com/valhalla/valhalla/pull/6123)
+   * BREAKING: overhauled `pyvalhalla` package layout, some `valhalla.utils` imports will break [#6133](https://github.com/valhalla/valhalla/pull/6133)
    * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
@@ -25,7 +44,7 @@
    * FIXED: Do not crash on backwards traces over oneway edges [#6048](https://github.com/valhalla/valhalla/pull/6048)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
-   * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
+   * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906)
    * ADDED: `Cache-Control = public, max-age=N"` response header to `/tile` requests; also added RPATH to local debug builds to fix ldd resolving when libvalhalla is installed system-wide [#5902](https://github.com/valhalla/valhalla/pull/5902)
    * CHANGED: bump tz to 2026a [#5930](https://github.com/valhalla/valhalla/pull/5930)
    * ADDED: `display_ll` field to incident meta [#5943](https://github.com/valhalla/valhalla/pull/5943)

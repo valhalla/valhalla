@@ -5405,6 +5405,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
 
   // Some OSM extracts do not have changeset Ids. For these set the max changeset Id
   // to the max OSM Id
+  // Note, we also allow dataset_id to be set by config, which happens at tile build
   if (osmdata.max_changeset_id_ == 0) {
     osmdata.max_changeset_id_ = max_osm_id;
     LOG_INFO("Finished: max_osm_id " + std::to_string(osmdata.max_changeset_id_));
