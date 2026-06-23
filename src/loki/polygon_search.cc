@@ -243,7 +243,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
           circle = bounding_circle->get(bin_center_approximator, bin_center);
         radius = circle.second;
         radius_deg = radius / (kMetersPerDegreeLat * cosf(circle.first.lat() * kRadPerDeg));
-        radius_sq = square(radius);
+        radius_sq = midgard::sqr(radius);
       }
 
       if (edge_id.tile_base() != tile->header()->graphid().tile_base() &&
