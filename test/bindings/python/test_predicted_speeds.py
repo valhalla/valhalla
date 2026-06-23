@@ -3,7 +3,7 @@
 import unittest
 
 import numpy as np
-from valhalla.utils.predicted_speeds import (
+from valhalla.baldr.utils import (
     BUCKETS_PER_WEEK,
     COEFFICIENT_COUNT,
     compress_speed_buckets,

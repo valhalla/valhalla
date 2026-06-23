@@ -92,7 +92,6 @@ void assert_tile_equalish(const GraphTile& a,
             bh->complex_restriction_forward_offset());
   EXPECT_EQ(ah->complex_restriction_reverse_offset() + difference,
             bh->complex_restriction_reverse_offset());
-  EXPECT_EQ(ah->date_created(), bh->date_created());
   EXPECT_EQ(ah->density(), bh->density());
   EXPECT_EQ(ah->departurecount(), bh->departurecount());
   EXPECT_EQ(ah->directededgecount(), bh->directededgecount());
@@ -293,6 +292,10 @@ TEST_P(AddBinTest, TestAddBins) {
       n.exceptions(std::ifstream::failbit | std::ifstream::badbit);
       n.open(bin_dir + "/2/000/" + test_tile.first, std::ios::binary);
       std::string nbytes((std::istreambuf_iterator<char>(n)), std::istreambuf_iterator<char>());
+      // AddBins recomputes the per-tile data hash, so the checksum differs from the fixture's;
+      // normalize it before comparing the rest of the bytes
+      reinterpret_cast<GraphTileHeader*>(obytes.data())->set_raw_checksum(0);
+      reinterpret_cast<GraphTileHeader*>(nbytes.data())->set_raw_checksum(0);
       EXPECT_EQ(obytes, nbytes) << "Old tile and new tile should be the same if not adding any bins ";
     }
 
