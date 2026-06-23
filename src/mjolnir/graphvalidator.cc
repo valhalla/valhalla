@@ -52,7 +52,6 @@ inline bool graphid_less(GraphId a, GraphId b) {
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
                               DirectedEdge& edge,
-                              uint32_t edge_idx,
                               uint64_t wayid,
                               const graph_tile_ptr& tile,
                               const graph_tile_ptr& end_tile,
@@ -98,11 +97,6 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
     if (directededge->endnode() != startnode ||
         edge.forwardaccess() != directededge->reverseaccess() ||
         edge.reverseaccess() != directededge->forwardaccess()) {
-      continue;
-    }
-
-    // if this edge is a loop, it can't be its own opposing edge
-    if (edge.endnode() == startnode && i == edge_idx) {
       continue;
     }
 
@@ -411,7 +405,7 @@ void validate(
         std::string end_node_iso;
         uint64_t wayid = tile->edgeinfo(&directededge).wayid();
         uint32_t opp_index =
-            GetOpposingEdgeIndex(node, directededge, j, wayid, tile, endnode_tile, problem_ways,
+            GetOpposingEdgeIndex(node, directededge, wayid, tile, endnode_tile, problem_ways,
                                  dupcount, end_node_iso, transit_level);
         directededge.set_opp_index(opp_index);
         if (directededge.use() == Use::kTransitConnection ||

@@ -467,6 +467,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       while (true) {
         EdgePairs edgepairs;
         graph_tile_ptr tile = reader.GetGraphTile(end_node);
+
         if (last_edge(tile, end_node, edgepairs)) {
           break;
         }
@@ -494,6 +495,13 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
                      average_density, total_duration, total_truck_duration, access_restrictions,
                      has_bridge, has_tunnel);
         total_edge_count++;
+      }
+
+      // if the shortcut formed would be a loop, skip it.
+      // this happens very rarely in practice, e.g. on roundabouts with only
+      // one non-contractable node: https://www.openstreetmap.org/#map=19/53.316187/6.011144
+      if (start_node == end_node) {
+        continue;
       }
 
       // Get the length from the shape. This prevents roundoff issues when forming
