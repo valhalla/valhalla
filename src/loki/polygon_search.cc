@@ -246,8 +246,6 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
         radius_sq = square(radius);
       }
 
-      // TODO: optimize the tile switching by enqueuing edges
-      // from other levels & tiles and process them after this big loop
       if (edge_id.tile_base() != tile->header()->graphid().tile_base() &&
           !reader.GetGraphTile(edge_id, tile)) {
         continue;
