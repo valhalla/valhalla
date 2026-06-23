@@ -18,14 +18,6 @@ using namespace valhalla::baldr;
 
 constexpr float MAX_ACCUMULATED_COST = 99999999.f;
 
-inline float GreatCircleDistanceSquared(const Measurement& left, const Measurement& right) {
-  return left.lnglat().DistanceSquared(right.lnglat());
-}
-
-inline float GreatCircleDistance(const Measurement& left, const Measurement& right) {
-  return left.lnglat().Distance(right.lnglat());
-}
-
 inline float ClockDistance(const Measurement& left, const Measurement& right) {
   return right.epoch_time() < 0 || left.epoch_time() < 0 ? -1
                                                          : right.epoch_time() - left.epoch_time();
@@ -209,7 +201,7 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   for (const auto& measurement : measurements) {
     // we need some info about the measurement to figure out what the best interpolation would be
     const auto& match_measurement = mapmatcher.state_container().measurement(stateid.time());
-    const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
+    const auto match_measurement_distance = measurement.distance(match_measurement);
     const auto match_measurement_time = ClockDistance(measurement, match_measurement);
 
     // interpolate this point along the route
@@ -705,6 +697,11 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   // Reset everything
   Clear();
 
+  // Allow this process to be aborted
+  if (interrupt_) {
+    (*interrupt_)();
+  }
+
   std::vector<MatchResults> best_paths;
   best_paths.reserve(k);
 
@@ -721,6 +718,11 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   // Without minimum number of edge candidates, throw a 443 - NoSegment error code.
   if (!container_.HasMinimumCandidates()) {
     throw valhalla_exception_t{443};
+  }
+
+  // Allow this process to be aborted
+  if (interrupt_) {
+    (*interrupt_)();
   }
 
   // For k paths
@@ -844,7 +846,7 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
   auto time = AppendMeasurement(*last, sq_max_search_radius);
   double interpolated_epoch_time = -1;
   for (auto m = std::next(last); m != measurements.end(); ++m) {
-    const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
+    const auto sq_distance = last->distance_squared(*m);
     // Always match the last measurement and if its far enough away
     if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
       // If there were interpolated points between these two points with time information
@@ -879,11 +881,6 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
 
 StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
                                             const float sq_max_search_radius) {
-  // Test interrupt
-  if (interrupt_) {
-    (*interrupt_)();
-  }
-
   auto sq_radius = std::min(sq_max_search_radius,
                             std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
 

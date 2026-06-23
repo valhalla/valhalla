@@ -1183,7 +1183,8 @@ struct graph_parser {
       } else if (hov_type == "HOV3") {
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       } else {
-        LOG_WARN("Unrecognized HOV type: " + hov_type);
+        LOG_DEBUG("Unrecognized HOV type: " + hov_type);
+        build_stats::get().increment(build_stats::kInvalidHovType);
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       }
     };
@@ -2584,7 +2585,8 @@ struct graph_parser {
           std::stringstream ss;
           ss << "Error during parsing of `" << tag_.first << "` tag on the way " << osmid_ << ": "
              << std::string{ex.what()};
-          LOG_WARN(ss.str());
+          LOG_DEBUG(ss.str());
+          build_stats::get().increment(build_stats::kInvalidOSMTag);
         }
 
       }
@@ -5403,6 +5405,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
 
   // Some OSM extracts do not have changeset Ids. For these set the max changeset Id
   // to the max OSM Id
+  // Note, we also allow dataset_id to be set by config, which happens at tile build
   if (osmdata.max_changeset_id_ == 0) {
     osmdata.max_changeset_id_ = max_osm_id;
     LOG_INFO("Finished: max_osm_id " + std::to_string(osmdata.max_changeset_id_));

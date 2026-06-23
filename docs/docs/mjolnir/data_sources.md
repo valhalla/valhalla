@@ -17,6 +17,6 @@ Valhalla uses terrain data for building elevation-influenced routes, such as for
 
 ## Boost Timezone Data
 
-Valhalla attaches timezone information to every node/intersection in the road network. The timezone data comes from [tz_world](https://efele.net/maps/tz/world/). This data contains polygon definitions of the various timezones throughout the world. Timezone specifications within each region and conversions of time between timezones are derived using [Boost](https://www.boost.org/users/license.html).
+Valhalla attaches timezone information to every node/intersection in the road network. The timezone data comes from [timezone-boundary-builder](https://github.com/evansiroky/timezone-boundary-builder) and the [IANA timezone database](https://github.com/eggert/tz). This data contains polygon definitions of the various timezones throughout the world. Timezone specifications within each region and conversions of time between timezones are derived using [Boost](https://www.boost.org/users/license.html).
 
 Please notify us if you believe that an open data project has not been properly noted.

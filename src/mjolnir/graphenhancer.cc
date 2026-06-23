@@ -954,10 +954,9 @@ bool ConsistentNames(const std::string& country_code,
   return (!(street_names1->FindCommonBaseNames(*street_names2)->empty()));
 }
 
-void enhance(const boost::property_tree::ptree& pt,
+void enhance(const boost::property_tree::ptree& mjolnir_config,
              const OSMData& osmdata,
              const std::string& access_file,
-             const boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue,
              std::mutex& lock, // guards `tilequeue`
              std::promise<enhancer_stats>& result) {
@@ -965,13 +964,14 @@ void enhance(const boost::property_tree::ptree& pt,
   auto less_than = [](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); };
   sequence<OSMAccess> access_tags(access_file, false);
 
-  auto database = pt.get_optional<std::string>("admin");
+  auto database = mjolnir_config.get_optional<std::string>("admin");
   bool infer_internal_intersections =
-      pt.get<bool>("data_processing.infer_internal_intersections", true);
-  bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
-  bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
-  bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
-  bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
+      mjolnir_config.get<bool>("data_processing.infer_internal_intersections", true);
+  bool infer_turn_channels = mjolnir_config.get<bool>("data_processing.infer_turn_channels", true);
+  bool apply_country_overrides =
+      mjolnir_config.get<bool>("data_processing.apply_country_overrides", true);
+  bool use_urban_tag = mjolnir_config.get<bool>("data_processing.use_urban_tag", false);
+  bool use_admin_db = mjolnir_config.get<bool>("data_processing.use_admin_db", true);
   // Initialize the admin DB (if it exists)
   auto admin_db = (database && use_admin_db) ? AdminDB::open(*database) : std::optional<AdminDB>{};
   if (!database && use_admin_db) {
@@ -986,10 +986,10 @@ void enhance(const boost::property_tree::ptree& pt,
   }
 
   // Local Graphreader
-  GraphReader reader(hierarchy_properties);
+  GraphReader reader(mjolnir_config);
 
   // Config driven speed assignment
-  auto speeds_config = pt.get_optional<std::string>("default_speeds_config");
+  auto speeds_config = mjolnir_config.get_optional<std::string>("default_speeds_config");
   SpeedAssigner speed_assigner(speeds_config);
 
   // Get some things we need throughout
@@ -1048,6 +1048,10 @@ void enhance(const boost::property_tree::ptree& pt,
       // while processing turn lanes.
       std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
+      if (ntrans > kMaxLocalEdgeIndex + 1) {
+        LOG_DEBUG("Exceeding max. local edge count: " + std::to_string(ntrans));
+        build_stats::get().increment(build_stats::kExceededMaxLocalEdgeCount);
+      }
       for (uint32_t j = 0; j < ntrans; j++) {
         DirectedEdge& directededge = tilebuilder->directededge_builder(nodeinfo.edge_index() + j);
 
@@ -1117,6 +1121,10 @@ void enhance(const boost::property_tree::ptree& pt,
         density = it->second;
         stats.density_counts[density]++;
         nodeinfo.set_density(density);
+        if (density > kMaxDensity) {
+          LOG_DEBUG("Exceeding max. density: " + std::to_string(density));
+          build_stats::get().increment(build_stats::kExceededMaxDensity);
+        }
       }
 
       uint32_t admin_index = nodeinfo.admin_index();
@@ -1181,7 +1189,8 @@ void enhance(const boost::property_tree::ptree& pt,
               if (access_it != access_tags.end()) {
                 SetCountryAccess(directededge, access, access_it);
               } else {
-                LOG_WARN("access tags not found for " + std::to_string(e_offset.wayid()));
+                LOG_DEBUG("access tags not found for " + std::to_string(e_offset.wayid()));
+                build_stats::get().increment(build_stats::kMissingAccessTags);
               }
             } else {
               SetCountryAccess(directededge, access, target);
@@ -1408,9 +1417,9 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
 
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tempqueue;
-  boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
+  boost::property_tree::ptree mjolnir_config = pt.get_child("mjolnir");
   auto local_level = TileHierarchy::levels().back().level;
-  GraphReader reader(hierarchy_properties);
+  GraphReader reader(mjolnir_config);
   auto local_tiles = reader.GetTileSet(local_level);
   for (const auto& tile_id : local_tiles) {
     tempqueue.emplace_back(tile_id);
@@ -1425,10 +1434,9 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // Start the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread =
-        std::make_shared<std::thread>(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
-                                      std::cref(access_file), std::ref(hierarchy_properties),
-                                      std::ref(tilequeue), std::ref(lock), std::ref(results.back()));
+    thread = std::make_shared<std::thread>(enhance, std::cref(mjolnir_config), std::cref(osmdata),
+                                           std::cref(access_file), std::ref(tilequeue),
+                                           std::ref(lock), std::ref(results.back()));
   }
 
   // Wait for them to finish up their work

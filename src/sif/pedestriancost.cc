@@ -688,7 +688,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       // path_distance for multimodal is currently checked inside the algorithm
       ((!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) ||
-      CheckExclusions(edge, pred)) {
+      CheckExclusions<true>(edge, pred)) {
     return false;
   }
 
@@ -724,7 +724,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
-      opp_edge->use() == Use::kPlatformConnection || CheckExclusions(opp_edge, pred)) {
+      opp_edge->use() == Use::kPlatformConnection || CheckExclusions<false>(opp_edge, pred)) {
     return false;
   }
 
@@ -982,7 +982,11 @@ make_distributor_from_range(const ranged_default_t<float>& range) {
 std::uniform_int_distribution<uint32_t>*
 make_distributor_from_range(const ranged_default_t<uint32_t>& range) {
   uint32_t rangeLength = range.max - range.min;
-  return new std::uniform_int_distribution<uint32_t>(range.min - rangeLength,
+  return new std::uniform_int_distribution<uint32_t>(std::numeric_limits<uint32_t>::min() +
+                                                                 rangeLength >
+                                                             range.min
+                                                         ? std::numeric_limits<uint32_t>::min()
+                                                         : range.min - rangeLength,
                                                      range.max + rangeLength);
 }
 
@@ -1176,13 +1180,13 @@ defaults.use_ferry_.max));
   }
 
   // transit_start_end_max_distance_
-  int_distributor.reset(make_distributor_from_range(kTransitStartEndMaxDistanceRange));
+  int_distributor.reset(make_distributor_from_range(kMultimodalStartEndMaxDistanceRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_pedestriancost_from_json("transit_start_end_max_distance",
                                                    (*int_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->transit_start_end_max_distance_,
-                test::IsBetween(kTransitStartEndMaxDistanceRange.min,
-                                kTransitStartEndMaxDistanceRange.max));
+                test::IsBetween(kMultimodalStartEndMaxDistanceRange.min,
+                                kMultimodalStartEndMaxDistanceRange.max));
   }
 
   // transit_transfer_max_distance_
