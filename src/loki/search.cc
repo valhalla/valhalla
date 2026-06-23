@@ -22,10 +22,6 @@ PointLL point_ll_from_latlng(const valhalla::LatLng& latlng) {
   return PointLL(latlng.lng(), latlng.lat());
 }
 
-template <typename T> inline T square(T v) {
-  return v * v;
-}
-
 bool search_filter(const DirectedEdge* edge,
                    const DynamicCost& costing,
                    const graph_tile_ptr& tile,
@@ -193,8 +189,8 @@ struct candidate_t {
 struct projector_wrapper {
   projector_wrapper(Location* location, GraphReader& reader)
       : binner(make_binner(point_ll_from_latlng(location->ll()))), location(location),
-        bin_center_approximator(bin_center), sq_radius(square(double(location->radius()))),
-        sq_cutoff(square(double(location->search_cutoff()))),
+        bin_center_approximator(bin_center), sq_radius(midgard::sqr(double(location->radius()))),
+        sq_cutoff(midgard::sqr(double(location->search_cutoff()))),
         project(point_ll_from_latlng(location->ll())) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
@@ -447,8 +443,8 @@ struct bin_handler_t {
                         GetOffsetForHeading(candidate.edge->classification(), candidate.edge->use()),
                         candidate.edge->forward());
       auto layer = candidate.edge_info->layer();
-      auto sq_tolerance = square(double(location.street_side_tolerance()));
-      auto sq_max_distance = square(double(location.street_side_max_distance()));
+      auto sq_tolerance = midgard::sqr(double(location.street_side_tolerance()));
+      auto sq_max_distance = midgard::sqr(double(location.street_side_max_distance()));
       auto display_pt = point_ll_from_latlng(location.display_ll());
       auto side =
           candidate.get_side((location.has_display_ll() ? display_pt : pt), angle,
@@ -608,8 +604,7 @@ struct bin_handler_t {
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           auto dsqr = p_itr->project.approx.DistanceSquared(circle.first);
 
-          double cutoff_and_radius = static_cast<double>(p_itr->location->search_cutoff()) + radius;
-          if (dsqr > (cutoff_and_radius * cutoff_and_radius)) {
+          if (dsqr > midgard::sqr(static_cast<double>(p_itr->location->search_cutoff()) + radius)) {
             c_itr->prefiltered = true;
             continue;
           }
@@ -621,9 +616,8 @@ struct bin_handler_t {
           }
           // we can also ignore this edge if we have something in radius but this edge is entirely
           // out of radius
-          double radius_and_radius = static_cast<double>(p_itr->location->radius()) + radius;
           if ((p_itr->reachable.back().sq_distance < p_itr->sq_radius &&
-               dsqr > radius_and_radius * radius_and_radius)) {
+               dsqr > midgard::sqr(static_cast<double>(p_itr->location->radius()) + radius))) {
             c_itr->prefiltered = true;
           } else {
             // finally we have at least one in-radius candidate and the best candidate

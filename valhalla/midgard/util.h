@@ -629,7 +629,7 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
 
 template <typename T> struct Finally {
   T t;
-  explicit Finally(T t) : t(std::move(t)){};
+  explicit Finally(T t) : t(std::move(t)) {};
   Finally() = delete;
   Finally(Finally&& f) = default;
   Finally(const Finally&) = delete;
@@ -862,10 +862,6 @@ using circle_t = std::pair<PointLL, double>;
  */
 std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
                                                 double distance_threshold);
-
-template <typename T> inline T square(T v) {
-  return v * v;
-}
 
 enum class CircleInBbox : uint8_t { OUTSIDE = 0, INSIDE = 1, INTERSECTS = 2 };
 /**

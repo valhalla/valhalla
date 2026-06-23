@@ -1042,9 +1042,9 @@ CircleInBbox circle_intersects_bounds(const PointLL& center,
 
   float dx = closest_x - center.lng();
   float dy = closest_y - center.lat();
-  float distance_squared = square(dx) + square(dy);
+  float distance_squared = sqr(dx) + sqr(dy);
 
-  return distance_squared <= square(radius_deg) ? CircleInBbox::INTERSECTS : CircleInBbox::OUTSIDE;
+  return distance_squared <= sqr(radius_deg) ? CircleInBbox::INTERSECTS : CircleInBbox::OUTSIDE;
 }
 } // namespace midgard
 } // namespace valhalla
