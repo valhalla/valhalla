@@ -11,7 +11,7 @@
    * FIXED: flood fill leak in polygon search [#6086](https://github.com/valhalla/valhalla/pull/6086)
    * FIXED: Fix errors in cost_inline_tests [#6117](https://github.com/valhalla/valhalla/pull/6117)
    * FIXED: JSON serialization of NaN values [#6147](https://github.com/valhalla/valhalla/pull/6147)
-   * FIXED: apply `low_class_penalty` only when transitioning from a higher class road in `TruckCost::TransitionCost`, add `low_class_factor` for truck costing (**breaking**: impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
+   * BREAKING: apply `low_class_penalty` only when transitioning from a higher class road in `TruckCost::TransitionCost`(impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
 * **Enhancement**
    * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
    * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
@@ -23,6 +23,7 @@
    * ADDED: partial gurka tile build and `findWay` & `findWayNodes` gurka lookups for temp .bin files [#6136](https://github.com/valhalla/valhalla/pull/6136)
    * CHANGED: `checksum_` field in GraphTileHeader reflects now global tileset ID & tile data checksum [#6123](https://github.com/valhalla/valhalla/pull/6123)
    * BREAKING: overhauled `pyvalhalla` package layout, some `valhalla.utils` imports will break [#6133](https://github.com/valhalla/valhalla/pull/6133)
+   * BREAKING: add `low_class_factor` for truck costing (impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**
