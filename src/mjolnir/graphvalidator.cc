@@ -91,6 +91,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
   uint32_t opp_index = absurd_index;
   const DirectedEdge* directededge = end_tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+
     // Reject edge if access does not match or the edge does not point
     // back to the startnode
     if (directededge->endnode() != startnode ||
@@ -145,7 +146,11 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
       if (edge.is_shortcut()) {
         // Shortcut edges - use must match (or both are links)
         if ((directededge->link() && edge.link()) || (directededge->use() == edge.use())) {
-          match = true;
+          auto shape1 = tile->edgeinfo(&edge).shape();
+          auto shape2 = end_tile->edgeinfo(directededge).shape();
+          if (shapes_match(shape1, shape2)) {
+            match = true;
+          }
         }
       } else {
         // Regular edges - match wayids and edge info offset (if in same tile)
