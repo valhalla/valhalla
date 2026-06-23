@@ -629,8 +629,7 @@ struct bin_handler_t {
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           auto dsqr = p_itr->project.approx.DistanceSquared(circle.first);
 
-          double cutoff_and_radius = static_cast<double>(p_itr->location->search_cutoff()) + radius;
-          if (dsqr > (cutoff_and_radius * cutoff_and_radius)) {
+          if (dsqr > midgard::sqr(static_cast<double>(p_itr->location->search_cutoff()) + radius)) {
             c_itr->prefiltered = true;
             continue;
           }
@@ -642,9 +641,8 @@ struct bin_handler_t {
           }
           // we can also ignore this edge if we have something in radius but this edge is entirely
           // out of radius
-          double radius_and_radius = static_cast<double>(p_itr->location->radius()) + radius;
           if ((p_itr->reachable.back().sq_distance < p_itr->sq_radius &&
-               dsqr > radius_and_radius * radius_and_radius)) {
+               dsqr > midgard::sqr(static_cast<double>(p_itr->location->radius()) + radius))) {
             c_itr->prefiltered = true;
           } else {
             // finally we have at least one in-radius candidate and the best candidate
