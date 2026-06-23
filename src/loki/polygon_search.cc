@@ -273,6 +273,8 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
 
         auto& ring = rings_bg[ring_loc];
 
+        // if we need to check edges individually, and there is no bounding circle, or there is one
+        // but it intersects with the ring's bounding box, we need to have a closer look
         if (intersect &&
             (radius == 0 ||
              (radius != 0 && circle_intersects_bounds(circle.first, radius_deg, ring.second) !=
@@ -300,17 +302,18 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
               }
             }
 
+            // no need to check the shape, we know the circle is fully inside
+            // the ring
             if (!segment_within_radius) {
               intersects = true;
             }
           }
 
           if (!intersects) {
-            // either we have no circle or we do but it's not completely outside of the ring bbox, so
-            // we have to check the shape
-
+            // either we have no circle or we do but it intersected the ring boundary
             if (!edgeinfo)
               edgeinfo = tile->edgeinfo(edge);
+
             intersects =
                 boost::geometry::intersects(ring.first, bg::linestring_ll_t(edgeinfo->shape().begin(),
                                                                             edgeinfo->shape().end()));
