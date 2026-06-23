@@ -960,12 +960,12 @@ private:
         // remove them from the original
         edges->erase(new_end, pp.location->mutable_correlation()->mutable_edges()->end());
       }
-      for (auto& e : *pp.location->mutable_correlation()->mutable_edges()) {
+      for (auto& e : *edges) {
         for (const auto& name : reader.edgeinfo(GraphId(e.graph_id())).GetNames()) {
           *e.mutable_names()->Add() = name;
         }
       }
-      for (auto& e : *pp.location->mutable_correlation()->mutable_filtered_edges()) {
+      for (auto& e : *filtered_edges) {
         for (const auto& name : reader.edgeinfo(GraphId(e.graph_id())).GetNames()) {
           *e.mutable_names()->Add() = name;
         }
