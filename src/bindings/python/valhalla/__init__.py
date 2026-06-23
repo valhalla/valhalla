@@ -1,9 +1,6 @@
 from pathlib import Path
 
-try:
-    from ._valhalla import VALHALLA_PRINT_VERSION, ValhallaError
-except ModuleNotFoundError:
-    from _valhalla import VALHALLA_PRINT_VERSION, ValhallaError
+from ._valhalla import VALHALLA_PRINT_VERSION, ValhallaError
 from .actor import Actor
 from .config import get_config, get_help
 

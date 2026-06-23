@@ -29,30 +29,29 @@ template <typename T> inline T square(T v) {
 bool search_filter(const DirectedEdge* edge,
                    const DynamicCost& costing,
                    const graph_tile_ptr& tile,
-                   const valhalla::SearchFilter* filter) {
+                   const valhalla::SearchFilter& filter) {
   // check if this edge matches any of the exclusion filters
   uint32_t road_class = static_cast<uint32_t>(edge->classification());
-  uint32_t min_road_class = static_cast<uint32_t>(filter->min_road_class());
-  uint32_t max_road_class = static_cast<uint32_t>(filter->max_road_class());
+  uint32_t min_road_class = static_cast<uint32_t>(filter.min_road_class());
+  uint32_t max_road_class = static_cast<uint32_t>(filter.max_road_class());
 
   // Note that min_ and max_road_class are integers where, by default, max_road_class
   // is 0 and min_road_class is 7. This filter rejects roads where the functional
   // road class is outside of the min to max range.
   return (road_class > min_road_class || road_class < max_road_class) ||
-         (filter->exclude_tunnel() && edge->tunnel()) ||
-         (filter->exclude_bridge() && edge->bridge()) || (filter->exclude_toll() && edge->toll()) ||
-         (filter->exclude_ramp() && (edge->use() == Use::kRamp)) ||
-         (filter->exclude_ferry() &&
-          (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
-         (filter->exclude_closures() && (costing.flow_mask() & kCurrentFlowMask) &&
+         (filter.exclude_tunnel() && edge->tunnel()) || (filter.exclude_bridge() && edge->bridge()) ||
+         (filter.exclude_toll() && edge->toll()) ||
+         (filter.exclude_ramp() && (edge->use() == Use::kRamp)) ||
+         (filter.exclude_ferry() && (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
+         (filter.exclude_closures() && (costing.flow_mask() & kCurrentFlowMask) &&
           tile->IsClosed(edge)) ||
-         (filter->level() != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter->level()));
+         (filter.level() != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level()));
 }
 
-bool side_filter(const valhalla::PathEdge& edge, const Location* location, GraphReader& reader) {
+bool side_filter(const valhalla::PathEdge& edge, const Location& location, GraphReader& reader) {
   // nothing to filter if you dont want to filter or if there is no side of street
   if (edge.side_of_street() == valhalla::Location_SideOfStreet_kNone ||
-      location->preferred_side() == valhalla::Location_PreferredSide_either)
+      location.preferred_side() == valhalla::Location_PreferredSide_either)
     return false;
 
   // need this for further checking of driving side and road class
@@ -64,7 +63,7 @@ bool side_filter(const valhalla::PathEdge& edge, const Location* location, Graph
   // nothing to filter if it is a minor road
   // since motorway = 0 and service = 7, higher number means smaller road class
   uint32_t road_class = static_cast<uint32_t>(opp->classification());
-  if (road_class > static_cast<uint32_t>(location->street_side_cutoff()))
+  if (road_class > static_cast<uint32_t>(location.street_side_cutoff()))
     return false;
 
   // need the driving side for this edge
@@ -78,32 +77,32 @@ bool side_filter(const valhalla::PathEdge& edge, const Location* location, Graph
       node->drive_on_right() == (edge.side_of_street() == valhalla::Location_SideOfStreet_kRight);
   // and then if you were asking for the same and it was the same OR if you were asking for opposite
   // and it was opposite THEN we dont filter
-  return same != (location->preferred_side() == valhalla::Location_PreferredSide_same);
+  return same != (location.preferred_side() == valhalla::Location_PreferredSide_same);
 }
 
-bool heading_filter(const Location* location, float angle) {
+bool heading_filter(const Location& location, float angle) {
   // no heading means we filter nothing
-  if (!location->has_heading_case()) {
+  if (!location.has_heading_case()) {
     return false;
   }
 
   // we want the closest distance between two angles which can be had
   // across 0 or between the two so we just need to know which is bigger
-  if (location->heading() > angle) {
-    return std::min(location->heading() - angle, (360.f - location->heading()) + angle) >
-           location->heading_tolerance();
+  if (location.heading() > angle) {
+    return std::min(location.heading() - angle, (360.f - location.heading()) + angle) >
+           location.heading_tolerance();
   }
-  return std::min(angle - location->heading(), (360.f - angle) + location->heading()) >
-         location->heading_tolerance();
+  return std::min(angle - location.heading(), (360.f - angle) + location.heading()) >
+         location.heading_tolerance();
 }
 
-bool layer_filter(const Location* location, int8_t layer) {
+bool layer_filter(const Location& location, int8_t layer) {
   // no layer - we do not filter
-  if (!location->has_preferred_layer_case()) {
+  if (!location.has_preferred_layer_case()) {
     return false;
   }
 
-  return location->preferred_layer() != layer;
+  return location.preferred_layer() != layer;
 }
 
 valhalla::Location_SideOfStreet flip_side(const valhalla::Location_SideOfStreet side) {
@@ -302,10 +301,10 @@ struct bin_handler_t {
     directed_reaches.clear();
   }
 
-  void correlate_node(Location* location, const GraphId& found_node, const candidate_t& candidate) {
+  void correlate_node(Location& location, const GraphId& found_node, const candidate_t& candidate) {
     // the search cutoff is a hard filter so skip any outside of that
-    PointLL pt = point_ll_from_latlng(location->ll());
-    if (candidate.point.Distance(pt) > location->search_cutoff())
+    PointLL pt = point_ll_from_latlng(location.ll());
+    if (candidate.point.Distance(pt) > location.search_cutoff())
       return;
     // we need this because we might need to go to different levels
     double distance = std::numeric_limits<double>::lowest();
@@ -339,7 +338,7 @@ struct bin_handler_t {
         // do we want this edge, note we have to re-evaluate the filter check because we may be
         // seeing these edges a second time (filtered out before)
         if (costing->Allowed(edge, tile, kDisallowShortcut) &&
-            !search_filter(edge, *costing, tile, &location->search_filter())) {
+            !search_filter(edge, *costing, tile, location.search_filter())) {
           auto reach = get_reach(id, edge);
           valhalla::PathEdge path_edge;
           path_edge.set_graph_id(id);
@@ -360,9 +359,9 @@ struct bin_handler_t {
 
           if ((heading_filter(location, angle) || layer_filter(location, layer)) &&
               correlated_edges.insert(id).second) {
-            location->mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
+            location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
           } else if (correlated_edges.insert(id).second) {
-            location->mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
+            location.mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
           }
         }
 
@@ -374,7 +373,7 @@ struct bin_handler_t {
           continue;
 
         if (costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
-            !search_filter(other_edge, *costing, other_tile, &location->search_filter())) {
+            !search_filter(other_edge, *costing, other_tile, location.search_filter())) {
           auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
 
@@ -398,9 +397,9 @@ struct bin_handler_t {
           // angle is 180 degrees opposite direction of the one above
           if ((heading_filter(location, opp_angle) || layer_filter(location, layer)) &&
               correlated_edges.insert(other_id).second) {
-            location->mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
+            location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
           } else if (correlated_edges.insert(other_id).second) {
-            location->mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
+            location.mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
           }
         }
       }
@@ -418,12 +417,12 @@ struct bin_handler_t {
     crawl(found_node, true);
   }
 
-  void correlate_edge(Location* location, const candidate_t& candidate) {
-    PointLL pt = point_ll_from_latlng(location->ll());
+  void correlate_edge(Location& location, const candidate_t& candidate) {
+    PointLL pt = point_ll_from_latlng(location.ll());
     // get the distance between the result
     auto distance = candidate.point.Distance(pt);
     // the search cutoff is a hard filter so skip any outside of that
-    if (distance > location->search_cutoff())
+    if (distance > location.search_cutoff())
       return;
     // now that we have an edge we can pass back all the info about it
     if (candidate.edge != nullptr) {
@@ -448,13 +447,13 @@ struct bin_handler_t {
                         GetOffsetForHeading(candidate.edge->classification(), candidate.edge->use()),
                         candidate.edge->forward());
       auto layer = candidate.edge_info->layer();
-      auto sq_tolerance = square(double(location->street_side_tolerance()));
-      auto sq_max_distance = square(double(location->street_side_max_distance()));
-      auto display_pt = point_ll_from_latlng(location->display_ll());
+      auto sq_tolerance = square(double(location.street_side_tolerance()));
+      auto sq_max_distance = square(double(location.street_side_max_distance()));
+      auto display_pt = point_ll_from_latlng(location.display_ll());
       auto side =
-          candidate.get_side((location->has_display_ll() ? display_pt : pt), angle,
-                             location->has_display_ll() ? display_pt.DistanceSquared(candidate.point)
-                                                        : candidate.sq_distance,
+          candidate.get_side((location.has_display_ll() ? display_pt : pt), angle,
+                             location.has_display_ll() ? display_pt.DistanceSquared(candidate.point)
+                                                       : candidate.sq_distance,
                              sq_tolerance, sq_max_distance);
       auto reach = get_reach(candidate.edge_id, candidate.edge);
 
@@ -476,12 +475,12 @@ struct bin_handler_t {
 
       // correlate the edge we found if its not filtered out
       bool hard_filtered =
-          search_filter(candidate.edge, *costing, candidate.tile, &location->search_filter());
+          search_filter(candidate.edge, *costing, candidate.tile, location.search_filter());
       if (!hard_filtered && (side_filter(path_edge, location, reader) ||
                              heading_filter(location, angle) || layer_filter(location, layer))) {
-        location->mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
+        location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
       } else if (!hard_filtered && correlated_edges.insert(candidate.edge_id).second) {
-        location->mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
+        location.mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
       }
 
       // correlate its evil twin
@@ -490,7 +489,7 @@ struct bin_handler_t {
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
       if (other_edge && costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
-          !search_filter(other_edge, *costing, other_tile, &location->search_filter())) {
+          !search_filter(other_edge, *costing, other_tile, location.search_filter())) {
         auto opp_angle = std::fmod(angle + 180.f, 360.f);
         reach = get_reach(opposing_edge_id, other_edge);
         valhalla::PathEdge other_path_edge;
@@ -512,9 +511,9 @@ struct bin_handler_t {
         // angle is 180 degrees opposite of the one above
         if (side_filter(other_path_edge, location, reader) || heading_filter(location, opp_angle) ||
             layer_filter(location, layer)) {
-          location->mutable_correlation()->mutable_filtered_edges()->Add(std::move(other_path_edge));
+          location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(other_path_edge));
         } else if (correlated_edges.insert(opposing_edge_id).second) {
-          location->mutable_correlation()->mutable_edges()->Add(std::move(other_path_edge));
+          location.mutable_correlation()->mutable_edges()->Add(std::move(other_path_edge));
         }
       }
     }
@@ -684,9 +683,9 @@ struct bin_handler_t {
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
             c_itr->prefiltered ||
-            (search_filter(edge, *costing, tile, &p_itr->location->search_filter()) &&
+            (search_filter(edge, *costing, tile, p_itr->location->search_filter()) &&
              (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-             search_filter(opp_edge, *costing, opp_tile, &p_itr->location->search_filter()));
+             search_filter(opp_edge, *costing, opp_tile, p_itr->location->search_filter()));
         // set to false if even one candidate was not filtered
         all_prefiltered = all_prefiltered && c_itr->prefiltered;
       }
@@ -752,7 +751,7 @@ struct bin_handler_t {
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
             costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
-            !search_filter(opp_edge, *costing, opp_tile, &p_itr->location->search_filter())) {
+            !search_filter(opp_edge, *costing, opp_tile, p_itr->location->search_filter())) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
           if (opp_reach.outbound >= p_itr->location->minimum_outbound_reachability() &&
               opp_reach.inbound >= p_itr->location->minimum_inbound_reachability()) {
@@ -911,13 +910,13 @@ private:
           if (!other_tile) {
             continue; // TODO: do an edge snap instead, but you'll only get one direction
           }
-          correlate_node(pp.location, opposing_edge->endnode(), candidate);
+          correlate_node(*pp.location, opposing_edge->endnode(), candidate);
         } // it was the end node
         else if ((back && candidate.edge->forward()) || (front && !candidate.edge->forward())) {
-          correlate_node(pp.location, candidate.edge->endnode(), candidate);
+          correlate_node(*pp.location, candidate.edge->endnode(), candidate);
         } // it was along the edge
         else {
-          correlate_edge(pp.location, candidate);
+          correlate_edge(*pp.location, candidate);
         }
       }
 

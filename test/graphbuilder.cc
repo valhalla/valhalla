@@ -48,8 +48,7 @@ TEST(GraphBuilder, TestConstructEdges) {
   ptree config;
   config.put("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
-  OSMData osm_data{0,  /* pbf_checksum_ */
-                   0,  /* max_changeset_id_ */
+  OSMData osm_data{0,  /* max_changeset_id_ */
                    0,  /* osm_node_count */
                    0,  /* osm_way_count */
                    0,  /* osm_way_node_count */
@@ -95,8 +94,7 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
   ptree config;
   config.put<std::string>("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
-  OSMData osm_data{0,  /* pbf_checksum_ */
-                   0,  /* max_changeset_id_ */
+  OSMData osm_data{0,  /* max_changeset_id_ */
                    0,  /* osm_node_count */
                    0,  /* osm_way_count */
                    0,  /* osm_way_node_count */
