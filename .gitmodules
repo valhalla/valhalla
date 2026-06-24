@@ -43,3 +43,6 @@
 [submodule "third_party/nanobind"]
 	path = third_party/nanobind
 	url = https://github.com/wjakob/nanobind
+[submodule "third_party/flatbush"]
+	path = third_party/flatbush
+	url = https://github.com/chrstnbwnkl/flatbush.git

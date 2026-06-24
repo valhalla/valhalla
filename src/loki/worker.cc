@@ -160,6 +160,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     const auto edges = edges_in_rings(options, *reader, mode_costing[static_cast<size_t>(mode)],
                                       max_exclude_polygons_length);
     auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
+    co.mutable_exclude_edges()->Reserve(edges.size());
     for (const auto& edge_id : edges) {
       auto* avoid = co.add_exclude_edges();
       avoid->set_id(edge_id);
