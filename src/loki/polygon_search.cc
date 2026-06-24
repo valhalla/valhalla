@@ -21,6 +21,26 @@ using namespace valhalla::loki;
 
 namespace {
 
+/**
+ * Helper to test whether a linear ring intersects a circle.
+ */
+bool intersects_boundary(const bg::ring_ll_t& ring,
+                         const PointLL& circle_center,
+                         double circle_radius_sq) {
+  for (size_t i = 0; i < ring.size() - 1; ++i) {
+    const auto& pt = ring[i];
+    const auto& next_pt = ring[i + 1];
+    auto projected = circle_center.Project(pt, next_pt);
+
+    // if we find any segment that's within radius, bail
+    if (circle_center.DistanceSquared(projected) <= circle_radius_sq) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 uint64_t to_value(uint32_t tileid, unsigned short bin) {
   return static_cast<uint64_t>(tileid) | (static_cast<uint64_t>(bin) << 32);
 }
@@ -274,42 +294,27 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
         auto& ring = rings_bg[ring_loc];
 
         // if we need to check edges individually, and there is no bounding circle, or there is one
-        // but it intersects with the ring's bounding box, we need to have a closer look
+        // and it intersects with the ring's bounding box, we need to have a closer look
         if (intersect &&
             (radius == 0 ||
              (radius != 0 && circle_intersects_bounds(circle.first, radius_deg, ring.second) !=
                                  CircleInBbox::OUTSIDE))) {
+          bool outside = false;
 
-          // avoid boost::geometry::intersects(...) at all cost; if the circle center
-          // is inside the polygon and the distance from the circle center
-          // to each segment is larger than its radius, the shape must be fully inside
-          // the polygon
+          // avoid boost::geometry::intersects(...) at all cost; if the circle is either fully inside
+          // or fully outside the ring, we don't need to intersect the shape
 
-          // if we have a bounding circle, and the center of that circle is inside the polygon
-          if (radius != 0. && point_in_poly(circle.first, ring.first)) {
-            bool segment_within_radius = false;
-            // circle intersects the ring bbox, and the center is inside the polygon
-            for (size_t i = 0; i < ring.first.size() - 1; ++i) {
-              const auto& pt = ring.first[i];
-              const auto& next_pt = ring.first[i + 1];
-              auto projected = circle.first.Project(pt, next_pt);
-              // if the circle collides with any ring segment,
-              // we need to check the shape
-              if (circle.first.DistanceSquared(projected) <= radius_sq) {
-                // check_shape = true;
-                segment_within_radius = true;
-                break;
-              }
-            }
+          // if we have a bounding circle, and none of the ring segments are within radius
+          if (radius != 0. && !intersects_boundary(ring.first, circle.first, radius_sq)) {
 
-            // no need to check the shape, we know the circle is fully inside
-            // the ring
-            if (!segment_within_radius) {
-              intersects = true;
-            }
+            // if the center is inside the ring, we know the shape must intersect the ring, else
+            // it must be disjoint
+            auto pip = point_in_poly(circle.first, ring.first);
+            intersects = pip;
+            outside = !pip;
           }
 
-          if (!intersects) {
+          if (!intersects && !outside) {
             // either we have no circle or we do but it intersected the ring boundary
             if (!edgeinfo)
               edgeinfo = tile->edgeinfo(edge);
@@ -334,12 +339,12 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
                 exclude_levels[ring_loc].find(levels.first[0].first) !=
                     exclude_levels[ring_loc].end()) {
               exclude = true;
+              break;
             }
           } else {
             exclude = true;
-          }
-          if (intersects && exclude)
             break;
+          }
         }
       }
       if (exclude) {
