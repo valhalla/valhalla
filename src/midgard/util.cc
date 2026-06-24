@@ -706,10 +706,9 @@ template bool point_in_poly<valhalla::midgard::PointLL, std::list<valhalla::midg
     const valhalla::midgard::PointLL&,
     const std::list<valhalla::midgard::PointLL>&);
 
-template bool
-point_in_poly<valhalla::midgard::PointLL, boost::geometry::model::ring<valhalla::midgard::PointLL>>(
+template bool point_in_poly<valhalla::midgard::PointLL, std::vector<valhalla::midgard::PointLL>>(
     const valhalla::midgard::PointLL&,
-    const boost::geometry::model::ring<valhalla::midgard::PointLL>&);
+    const std::vector<valhalla::midgard::PointLL>&);
 
 template <class container_t>
 typename container_t::value_type::first_type polygon_area(const container_t& polygon) {
