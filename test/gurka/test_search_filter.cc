@@ -1322,3 +1322,73 @@ TEST_F(LevelSearchFilter, CutoffClamped) {
     FAIL() << "Failed with unexpected exception type";
   };
 }
+
+// ---------------------------------------------------------------------------
+// Tests for preferred_edge_ids: direct edge ID hint bypasses spatial search.
+// ---------------------------------------------------------------------------
+
+class PreferredEdgeIds : public ::testing::Test {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 100;
+    const std::string ascii_map = R"(
+        A----B----C
+    )";
+    const gurka::ways ways = {
+        {"AB", {{"highway", "primary"}}},
+        {"BC", {{"highway", "primary"}}},
+    };
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/preferred_edge_ids");
+  }
+};
+
+gurka::map PreferredEdgeIds::map = {};
+
+TEST_F(PreferredEdgeIds, ValidEdgeIdSkipsBinSearch) {
+  GraphReader reader(map.config.get_child("mjolnir"));
+
+  // Look up the GraphId for edge AB (forward direction, ending at B).
+  auto [edge_id, edge, opp_edge_id, opp_edge] = gurka::findEdge(reader, map.nodes, "AB", "B");
+  ASSERT_TRUE(edge_id.Is_Valid());
+
+  // Build a request where the origin hints at this edge ID directly.
+  const std::string req = R"({
+    "locations": [
+      {"lat":)" +
+                          std::to_string(map.nodes.at("A").lat()) + R"(,"lon":)" +
+                          std::to_string(map.nodes.at("A").lng()) + R"(,
+       "preferred_edge_ids":[)" +
+                          std::to_string(edge_id.value) + R"(]},
+      {"lat":)" +
+                          std::to_string(map.nodes.at("C").lat()) + R"(,"lon":)" +
+                          std::to_string(map.nodes.at("C").lng()) + R"(}
+    ],
+    "costing":"auto"
+  })";
+
+  auto result = gurka::do_action(valhalla::Options::route, map, req);
+  // Route should still succeed and use the road network.
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
+}
+
+TEST_F(PreferredEdgeIds, InvalidEdgeIdFallsBackToNormalSearch) {
+  // A zero/invalid GraphId value should cause fallback to the normal spatial search.
+  const std::string req = R"({
+    "locations": [
+      {"lat":)" +
+                          std::to_string(map.nodes.at("A").lat()) + R"(,"lon":)" +
+                          std::to_string(map.nodes.at("A").lng()) + R"(,
+       "preferred_edge_ids":[0]},
+      {"lat":)" +
+                          std::to_string(map.nodes.at("C").lat()) + R"(,"lon":)" +
+                          std::to_string(map.nodes.at("C").lng()) + R"(}
+    ],
+    "costing":"auto"
+  })";
+
+  auto result = gurka::do_action(valhalla::Options::route, map, req);
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
+}

@@ -874,10 +874,18 @@ struct bin_handler_t {
     pps.reserve(locations.size());
     max_reach_limit = 0;
     for (auto& loc : locations) {
+      // If the caller supplied preferred edge IDs, try to resolve them directly and skip
+      // the expensive spatial bin search. Fall back to normal search if none are valid.
+      if (loc.preferred_edge_ids_size() > 0 && try_correlate_from_edge_ids(loc))
+        continue;
       pps.emplace_back(&loc, reader);
       max_reach_limit = std::max(max_reach_limit, loc.minimum_outbound_reachability());
       max_reach_limit = std::max(max_reach_limit, loc.minimum_inbound_reachability());
     }
+
+    if (pps.empty())
+      return;
+
     // very annoying but it saves a lot of time to preallocate this instead of doing it in the loop
     // in handle_bins
     bin_candidates.resize(pps.size());
@@ -894,6 +902,89 @@ struct bin_handler_t {
     }
 
     finalize();
+  }
+
+  // Resolve a location using its preferred_edge_ids instead of a spatial bin search.
+  // Projects the location coordinate onto each valid edge geometry to compute percent_along
+  // and populates correlation.edges directly. Returns true if at least one edge was resolved.
+  bool try_correlate_from_edge_ids(Location& location) {
+    const PointLL input_pt = point_ll_from_latlng(location.ll());
+    correlated_edges.clear();
+    bool any_valid = false;
+
+    for (const uint64_t raw_id : location.preferred_edge_ids()) {
+      GraphId edge_id(raw_id);
+      if (!edge_id.Is_Valid())
+        continue;
+
+      graph_tile_ptr tile;
+      if (!reader.GetGraphTile(edge_id, tile) || !tile)
+        continue;
+
+      const DirectedEdge* edge = tile->directededge(edge_id);
+      if (!edge || !costing->Allowed(edge, tile, kDisallowShortcut))
+        continue;
+
+      auto edge_info = tile->edgeinfo(edge);
+      const auto& shape = edge_info.shape();
+      if (shape.size() < 2)
+        continue;
+
+      // Project the input coordinate onto the edge shape segment by segment.
+      projector_t project(input_pt);
+      double best_sq_distance = std::numeric_limits<double>::max();
+      PointLL best_point;
+      size_t best_index = 0;
+      for (size_t i = 0; i + 1 < shape.size(); ++i) {
+        PointLL pt = project(shape[i], shape[i + 1]);
+        double dsq = project.approx.DistanceSquared(pt);
+        if (dsq < best_sq_distance) {
+          best_sq_distance = dsq;
+          best_point = pt;
+          best_index = i;
+        }
+      }
+
+      // Compute percent_along using the same method as correlate_edge.
+      double partial_length = 0;
+      for (size_t i = 0; i < best_index; ++i)
+        partial_length += shape[i].Distance(shape[i + 1]);
+      partial_length += shape[best_index].Distance(best_point);
+      partial_length = std::min(partial_length, static_cast<double>(edge->length()));
+      double length_ratio = partial_length / edge->length();
+      if (!edge->forward())
+        length_ratio = 1.0 - length_ratio;
+
+      const double distance = std::sqrt(best_sq_distance);
+      const float angle =
+          tangent_angle(best_index, best_point, shape,
+                        GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
+      const auto reach = get_reach(edge_id, edge);
+
+      if (correlated_edges.insert(edge_id).second) {
+        valhalla::PathEdge path_edge;
+        path_edge.set_graph_id(edge_id.value);
+        path_edge.set_percent_along(length_ratio);
+        path_edge.mutable_ll()->set_lat(best_point.lat());
+        path_edge.mutable_ll()->set_lng(best_point.lng());
+        path_edge.set_distance(distance);
+        path_edge.set_inbound_reach(reach.inbound);
+        path_edge.set_outbound_reach(reach.outbound);
+        path_edge.set_heading(angle);
+        path_edge.set_side_of_street(Location_SideOfStreet_kNone);
+        location.mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
+        any_valid = true;
+      }
+    }
+
+    if (any_valid) {
+      for (auto& e : *location.mutable_correlation()->mutable_edges()) {
+        for (const auto& name : reader.edgeinfo(GraphId(e.graph_id())).GetNames()) {
+          *e.mutable_names()->Add() = name;
+        }
+      }
+    }
+    return any_valid;
   }
 
 private:
