@@ -18,6 +18,15 @@ using namespace valhalla::loki;
 
 namespace {
 
+bool circle_outside_bounds(const PointLL& center,
+                           float radius_sq,
+                           const AABB2<valhalla::midgard::PointLL>& box) {
+
+  PointLL closest{std::clamp(center.x(), box.minx(), box.maxx()),
+                  std::clamp(center.y(), box.miny(), box.maxy())};
+
+  return center.DistanceSquared(closest) > radius_sq;
+}
 /**
  * Tests whether a point lies inside a linear ring
  *
@@ -31,8 +40,6 @@ bool point_in_ring(const PointLL& pt,
   // cast a ray rightward from pt, count crossings
   int crossings = 0;
 
-  // query only segments whose bounding boxes intersect the ray's y-range
-  // neighbors(min_x, min_y, max_x, max_y) returns indices of candidate segments
   auto candidates =
       rtree.search(flatbush::Box{pt.lng(), pt.lat(), std::numeric_limits<double>::max(), pt.lat()});
 
@@ -59,6 +66,30 @@ bool point_in_ring(const PointLL& pt,
   return crossings % 2 == 1;
 }
 
+flatbush::Box<double> box_from_shape(std::span<const PointLL> shape) {
+  auto [minx, maxx] = std::ranges::minmax(shape, {}, &PointLL::x);
+  auto [miny, maxy] = std::ranges::minmax(shape, {}, &PointLL::y);
+  return {minx.x(), miny.y(), maxx.x(), maxy.y()};
+}
+
+CircleInBbox circle_intersects_ring(const PointLL& center,
+                                    double radius,
+                                    const std::vector<PointLL>& ring,
+                                    const flatbush::Flatbush<double>& rtree) {
+
+  auto candidates = rtree.neighbors(flatbush::Point<double>{center.x(), center.y()},
+                                    std::numeric_limits<size_t>::max(), radius);
+
+  for (const auto idx : candidates) {
+    auto project = center.Project(ring[idx], ring[idx + 1]);
+    if (center.Distance(project) <= radius) {
+      return CircleInBbox::INTERSECTS;
+    }
+  }
+
+  auto pip = point_in_ring(center, ring, rtree);
+  return pip ? CircleInBbox::INSIDE : CircleInBbox::OUTSIDE;
+}
 /**
  * Test whether a line intersects a linear ring.
  */
@@ -69,12 +100,10 @@ bool line_intersects_ring(const std::vector<PointLL>& shape,
   // go through the shape's segments
   for (size_t i = 0; i < shape.size() - 1; ++i) {
     LineSegment2<PointLL> seg(shape[i], shape[i + 1]);
-    AABB2<PointLL> aabb(shape);
-    flatbush::Box<double> box{aabb.minx(), aabb.miny(), aabb.maxx(), aabb.maxy()};
+    auto box = box_from_shape(std::span(shape).subspan(i, 2));
 
     // look for ring segments with intersecting bounding boxes
     auto candidates = rtree.search(box);
-
     for (const auto idx : candidates) {
       LineSegment2<PointLL> ring_seg(ring[idx], ring[idx + 1]);
       PointLL intersect;
@@ -89,30 +118,6 @@ bool line_intersects_ring(const std::vector<PointLL>& shape,
   // no single ring segment intersected with any shape segment; the shape could still be fully
   // inside the ring though
   return point_in_ring(*shape.begin(), ring, rtree);
-}
-
-/**
- * Helper to test whether a linear ring intersects a circle.
- */
-bool intersects_boundary(const std::vector<PointLL>& ring,
-                         const flatbush::Flatbush<double>& rtree,
-                         const PointLL& circle_center,
-                         double circle_radius) {
-
-  auto ids = rtree.neighbors(flatbush::Point<double>{circle_center.lng(), circle_center.lat()},
-                             std::numeric_limits<size_t>::max(), circle_radius);
-  auto rsqr = valhalla::midgard::sqr(circle_radius);
-  for (const auto idx : ids) {
-    const auto& pt = ring[idx];
-    const auto& next_pt = ring[idx + 1];
-    auto projected = circle_center.Project(pt, next_pt);
-
-    // if we find any segment that's within radius, bail
-    if (circle_center.DistanceSquared(projected) <= rsqr) {
-      return true;
-    }
-  }
-  return false;
 }
 
 uint64_t to_value(uint32_t tileid, unsigned short bin) {
@@ -230,7 +235,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
       const auto& next_pt = ring.first[i + 1];
       std::vector<PointLL> pts{pt, next_pt};
       AABB2<PointLL> bb(pts);
-      flatbush::Box<double> box{bb.minx(), bb.miny(), bb.maxx(), bb.maxy()};
+      flatbush::Box<double> box = box_from_shape(std::span(ring.first).subspan(i, 2));
       builder.add(box);
     }
     rtrees.push_back(builder.finish());
@@ -374,38 +379,25 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
 
       bool exclude = false;
       std::optional<EdgeInfo> edgeinfo;
+
       for (const auto& ring_loc : bin.second) {
         // if intersect is false, the bin is entirely within the ring,
         // so the shape is known to intersect the ring
         bool intersects = !intersect;
-
-        auto& ring = rings[ring_loc];
+        const auto& ring = rings[ring_loc];
+        const auto& rtree = rtrees[ring_loc];
 
         // if we need to check edges individually, and there is no bounding circle, or there is one
         // and it intersects with the ring's bounding box, we need to have a closer look
         if (intersect &&
             (radius == 0 ||
-             (radius != 0 && circle_intersects_bounds(circle.first, radius_deg, ring.second) !=
-                                 CircleInBbox::OUTSIDE))) {
-          bool outside = false;
-
-          // if we have a bounding circle, and none of the ring segments are within radius
-          if (radius != 0. &&
-              !intersects_boundary(ring.first, rtrees[ring_loc], circle.first, circle.second)) {
-
-            // if the center is inside the ring, we know the shape must intersect the ring, else
-            // it must be disjoint
-            auto pip = point_in_ring(circle.first, ring.first, rtrees[ring_loc]);
-            intersects = pip;
-            outside = !pip;
-          }
-
-          if (!intersects && !outside) {
+             (radius != 0 && !circle_outside_bounds(circle.first, radius_sq, ring.second)))) {
+          if (!intersects) {
             // either we have no circle or we do but it intersected the ring boundary
             if (!edgeinfo)
               edgeinfo = tile->edgeinfo(edge);
 
-            intersects = line_intersects_ring(edgeinfo->shape(), ring.first, rtrees[ring_loc]);
+            intersects = line_intersects_ring(edgeinfo->shape(), ring.first, rtree);
           }
         }
 
