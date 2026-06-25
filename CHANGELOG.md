@@ -11,6 +11,7 @@
    * FIXED: flood fill leak in polygon search [#6086](https://github.com/valhalla/valhalla/pull/6086)
    * FIXED: Fix errors in cost_inline_tests [#6117](https://github.com/valhalla/valhalla/pull/6117)
    * FIXED: JSON serialization of NaN values [#6147](https://github.com/valhalla/valhalla/pull/6147)
+   * BREAKING: apply `low_class_penalty` only when transitioning from a higher class road in `TruckCost::TransitionCost`(impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
 * **Enhancement**
    * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
    * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
@@ -22,6 +23,7 @@
    * ADDED: partial gurka tile build and `findWay` & `findWayNodes` gurka lookups for temp .bin files [#6136](https://github.com/valhalla/valhalla/pull/6136)
    * CHANGED: `checksum_` field in GraphTileHeader reflects now global tileset ID & tile data checksum [#6123](https://github.com/valhalla/valhalla/pull/6123)
    * BREAKING: overhauled `pyvalhalla` package layout, some `valhalla.utils` imports will break [#6133](https://github.com/valhalla/valhalla/pull/6133)
+   * BREAKING: add `low_class_factor` for truck costing (impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
    * ADDED: `get_graph_tile_header` & `GraphTileHeader` bindings [#6134](https://github.com/valhalla/valhalla/pull/6134)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
@@ -59,7 +61,7 @@
    * ADDED: more warnings for clamped costing options, second pass, bidir fallback and matrix_locations for CostMatrix [#3833](https://github.com/valhalla/valhalla/pull/3833)
    * ADDED: a global `logging` config to replace all module-level ones [#5976](https://github.com/valhalla/valhalla/pull/5976)
    * ADDED: support for OSM tag 'junction=intersection' to explicitly mark internal intersection edges [#5980](https://github.com/valhalla/valhalla/pull/5980)
-   * ADDED: `filtered_edges` in `/locate` output (**breaking**: results previously in `edges` may now be in `filtered_edges`) [#5987](https://github.com/valhalla/valhalla/pull/5987)
+   * BREAKING: added `filtered_edges` in `/locate` output (results previously in `edges` may now be in `filtered_edges`) [#5987](https://github.com/valhalla/valhalla/pull/5987)
    * ADDED: `ValhallaError` which exposes `valhalla_exception_t` to the Python bindings [#5956](https://github.com/valhalla/valhalla/pull/5956)
    * CHANGED: Make `lz4` system dependency optional [#5993](https://github.com/valhalla/valhalla/pull/5993)
    * CHANGED: Drop file names of individual tiles once tile extract loaded [#5995](https://github.com/valhalla/valhalla/pull/5995)
