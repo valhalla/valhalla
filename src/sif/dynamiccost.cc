@@ -75,9 +75,6 @@ constexpr float kMaxLivingStreetFactor = 3.f;
 // min factor to apply when use lit
 constexpr float kMinLitFactor = 1.f;
 
-constexpr float kMinFactor = 0.1f;
-constexpr float kMaxFactor = 100000.0f;
-
 // Base transition costs
 constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
 constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
@@ -236,6 +233,7 @@ DynamicCost::DynamicCost(const Costing& costing,
     }
     auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
     cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
+    cost_edge.ignore_restrictions_ = e.ignore_access_restrictions();
   }
 
   // once all cost factors are filled, sort by range, precompute overall average

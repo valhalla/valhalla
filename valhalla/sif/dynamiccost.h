@@ -14,13 +14,13 @@
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/midgard/util.h>
+#include <valhalla/proto/info.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 
 #include <boost/container/small_vector.hpp>
-#include <proto/info.pb.h>
 
 #include <cstdint>
 #include <memory>
@@ -138,6 +138,7 @@ struct cost_edge_t {
 struct custom_cost_t {
   std::vector<cost_edge_t> ranges;
   double avg_factor{1.};
+  bool ignore_restrictions_;
 
   // once ranges are filled up, sort and compute average
   // returns the minimum factor
@@ -182,6 +183,8 @@ constexpr uint32_t kDefaultUnitSize = 1;
 // Maximum penalty allowed. Cannot be too high because sometimes one cannot avoid a particular
 // attribute or condition to complete a route.
 constexpr float kMaxPenalty = 12.0f * midgard::kSecPerHour; // 12 hours
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
 
 // Maximum ferry penalty (when use_ferry == 0 or use_rail_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -772,6 +775,13 @@ public:
                                    uint8_t& destonly_access_restr_mask) const {
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
+
+    decltype(linear_cost_edges_)::const_iterator it;
+    if (!linear_cost_edges_.empty() &&
+        (it = linear_cost_edges_.find(edgeid)) != linear_cost_edges_.end() &&
+        it->second.ignore_restrictions_) {
+      return true;
+    }
 
     auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mode);
 

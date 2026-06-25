@@ -162,3 +162,38 @@ TEST(Standalone, TrivialRoute) {
   EXPECT_EQ(leg.maneuver(0).travel_mode(), TravelMode::kDrive);
   EXPECT_EQ(leg.maneuver(leg.maneuver_size() - 1).travel_mode(), TravelMode::kPedestrian);
 }
+
+/**
+ * Make sure the right costing is used in loki for
+ * start and end locations
+ */
+TEST(StandAlone, Locate) {
+  const std::string ascii_map = R"(
+      A--1----B----C---D---2---E
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "footway"}}},
+      {"DE", {{"highway", "footway"}}},
+  };
+
+  const gurka::nodes nodes = {{"B", {{"amenity", "parking"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, nodes, {},
+                               VALHALLA_BUILD_DIR "test/data/gurka_multimodal_snap");
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto node = gurka::findNode(*reader, layout, "B");
+  auto nodeinfo = reader->nodeinfo(node);
+
+  EXPECT_EQ(nodeinfo->type(), baldr::NodeType::kParking)
+      << "Expected parking, got " << baldr::to_string(nodeinfo->type());
+  EXPECT_EQ(nodeinfo->access(), 2047)
+      << "Expected vehicular and pedestrian access , got " << nodeinfo->access();
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto_pedestrian", {});
+
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
+}

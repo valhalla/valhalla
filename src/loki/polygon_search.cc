@@ -142,8 +142,8 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
   // first pull out all *unique* bins which intersect the boundaries
   for (size_t ring_idx = 0; ring_idx < rings_bg.size(); ring_idx++) {
     const auto& ring = rings_bg[ring_idx];
-    auto line_intersected = tiles.Intersect(ring);
-    for (const auto& tb : line_intersected) {
+    auto line_intersection = tiles.Intersect(ring);
+    for (const auto& tb : line_intersection) {
       for (const auto& b : tb.second) {
         bins_intersected[static_cast<uint32_t>(tb.first)][b].push_back(ring_idx);
       }
@@ -156,65 +156,25 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     // first area it finds, so very large and oddly concave
     // polygons might not work
     std::optional<std::pair<uint32_t, unsigned short>> start_bin;
-
     std::unordered_set<uint64_t> processed_bins;
 
-    bool found = false;
-    for (const auto& [tile_id, bin_map] : line_intersected) {
-      if (found)
+    for (const auto& [tile_id, bin_map] : line_intersection) {
+      if (start_bin)
         break;
       for (const auto& bin_id : bin_map) {
-        if (found)
+        if (start_bin)
           break;
-        // go through all of them, go through its neighbors
-        // and if we find an intersecting neighbor, check if it's
-        // already in the intersected bins
-
-        auto bbox = tiles.BinBBox(tile_id, bin_id);
-        std::array<PointLL, 4> corners = {
-            PointLL(bbox.minx(), bbox.miny()),
-            PointLL(bbox.minx(), bbox.maxy()),
-            PointLL(bbox.maxx(), bbox.maxy()),
-            PointLL(bbox.maxx(), bbox.miny()),
-        };
-        auto neighbors = tiles.GetNeighbors(tile_id, bin_id);
-
-        for (uint8_t corner_idx = 0; corner_idx < 4; corner_idx++) {
-          if (found)
-            break;
-          const auto& corner = corners[corner_idx];
-          // corner is outside of the ring
-          if (!boost::geometry::within(corner, ring))
+        for (const auto& neighbor : tiles.GetNeighboringBins<false>(tile_id, bin_id)) {
+          // skip neighbors that are themselves on the boundary
+          if (auto it = line_intersection.find(neighbor.first);
+              it != line_intersection.end() && it->second.find(neighbor.second) != it->second.end()) {
             continue;
-
-          // look for neighboring bins that share this corner
-          for (const auto& neighbor : neighbors) {
-            if (found)
-              break;
-
-            auto neighbor_bbox = tiles.BinBBox(neighbor.first, neighbor.second);
-            std::array<PointLL, 4> neighbor_corners = {
-                PointLL(neighbor_bbox.minx(), neighbor_bbox.miny()),
-                PointLL(neighbor_bbox.minx(), neighbor_bbox.maxy()),
-                PointLL(neighbor_bbox.maxx(), neighbor_bbox.maxy()),
-                PointLL(neighbor_bbox.maxx(), neighbor_bbox.miny()),
-            };
-
-            for (const auto& neighbor_corner : neighbor_corners) {
-              if (neighbor_corner == corner) {
-                // we've found a neighbor that shares the corner
-                if (auto it = bins_intersected.find(neighbor.first);
-                    it != bins_intersected.end() &&
-                    it->second.find(neighbor.second) != it->second.end()) {
-                  // but this neighbor is not fully contained in the ring
-                  continue;
-                }
-
-                start_bin = neighbor;
-                found = true;
-                break;
-              }
-            }
+          }
+          auto bbox = tiles.BinBBox(neighbor.first, neighbor.second);
+          PointLL center((bbox.minx() + bbox.maxx()) * 0.5, (bbox.miny() + bbox.maxy()) * 0.5);
+          if (point_in_poly(center, ring)) {
+            start_bin = neighbor;
+            break;
           }
         }
       }
@@ -223,28 +183,28 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     if (start_bin) {
       std::queue<std::pair<uint32_t, unsigned short>> bin_queue;
       bin_queue.push(*start_bin);
+      processed_bins.insert(to_value(start_bin->first, start_bin->second));
       size_t n = 0;
-
-      // don't run forever
-      while (!bin_queue.empty() && n++ < 1e6) {
+      while (!bin_queue.empty() && n++ < 1'000'000) {
         // keep looking for contained bins until we run out of bins to look at
         auto bin = bin_queue.front();
         bin_queue.pop();
         // settle this bin and add its neighbors
         contained_bins[bin.first][bin.second].push_back(ring_idx);
         contained_bin_count++;
-
-        for (const auto& neighbor : tiles.GetNeighbors(bin.first, bin.second)) {
+        // skip diagonal neighbors, since the Bresenham method used for finding the intersecting bins
+        // does not move diagonally either
+        for (const auto& neighbor : tiles.GetNeighboringBins<true>(bin.first, bin.second)) {
           if (processed_bins.count(to_value(neighbor.first, neighbor.second)) > 0) {
             continue; // we have already looked at this bin
           }
 
-          if (auto it = bins_intersected.find(neighbor.first);
-              it != bins_intersected.end() && it->second.find(neighbor.second) != it->second.end()) {
+          processed_bins.insert(to_value(neighbor.first, neighbor.second));
+          if (auto it = line_intersection.find(neighbor.first);
+              it != line_intersection.end() && it->second.find(neighbor.second) != it->second.end()) {
             continue; // this one intersects the boundary
           }
           bin_queue.push(neighbor);
-          processed_bins.insert(to_value(neighbor.first, neighbor.second));
         }
       }
     }
@@ -281,6 +241,8 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
       auto edge_info = tile->edgeinfo(edge);
       bool exclude = false;
       for (const auto& ring_loc : bin.second) {
+        // if intersect is false, the bin is entirely within the ring,
+        // so the shape is known to intersect the ring
         bool intersects =
             !intersect ? true
                        : boost::geometry::intersects(rings_bg[ring_loc],
