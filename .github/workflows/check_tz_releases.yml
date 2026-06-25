@@ -10,7 +10,7 @@ jobs:
     name: Check if latest tag commit differs from the commit the submodule currently points to
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: "recursive"
           fetch-depth: 0

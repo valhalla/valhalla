@@ -14,13 +14,13 @@
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/midgard/util.h>
+#include <valhalla/proto/info.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 
 #include <boost/container/small_vector.hpp>
-#include <proto/info.pb.h>
 
 #include <cstdint>
 #include <memory>
@@ -138,6 +138,7 @@ struct cost_edge_t {
 struct custom_cost_t {
   std::vector<cost_edge_t> ranges;
   double avg_factor{1.};
+  bool ignore_restrictions_;
 
   // once ranges are filled up, sort and compute average
   // returns the minimum factor
@@ -375,18 +376,25 @@ public:
    * or highways are excluded in the request.
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
+   * @param  forward        Check edge on the forward or reverse path (from destination towards
+   * origin).
    * @return Returns true if edge should be excluded.
    */
+  template <bool FORWARD>
   inline bool CheckExclusions(const baldr::DirectedEdge* edge, const EdgeLabel& pred) const {
+    auto isDriveOnto = [](bool condition, bool pred_condition) {
+      return FORWARD == condition && pred_condition != condition;
+    };
     return has_excludes_ &&
-           ((exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
-            (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
-            (exclude_tolls_ && !pred.toll() && edge->toll()) ||
-            (exclude_highways_ && pred.classification() != baldr::RoadClass::kMotorway &&
-             edge->classification() == baldr::RoadClass::kMotorway) ||
+           ((exclude_bridges_ && isDriveOnto(edge->bridge(), pred.bridge())) ||
+            (exclude_tunnels_ && isDriveOnto(edge->tunnel(), pred.tunnel())) ||
+            (exclude_tolls_ && isDriveOnto(edge->toll(), pred.toll())) ||
+            (exclude_highways_ &&
+             isDriveOnto(edge->classification() == baldr::RoadClass::kMotorway,
+                         pred.classification() == baldr::RoadClass::kMotorway)) ||
             (exclude_ferries_ &&
-             !(pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry) &&
-             (edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry)));
+             isDriveOnto(edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry,
+                         pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry)));
   }
 
   /**
@@ -765,6 +773,13 @@ public:
                                    uint8_t& destonly_access_restr_mask) const {
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
+
+    decltype(linear_cost_edges_)::const_iterator it;
+    if (!linear_cost_edges_.empty() &&
+        (it = linear_cost_edges_.find(edgeid)) != linear_cost_edges_.end() &&
+        it->second.ignore_restrictions_) {
+      return true;
+    }
 
     auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mode);
 

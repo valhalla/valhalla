@@ -77,10 +77,10 @@ jobs:
     needs: [publish_pypi]
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 0
+          # we need to fetch all tags for setuptools-scm to work properly
           fetch-tags: true
 
       - name: Get version modifier
@@ -111,11 +111,10 @@ jobs:
           - arch: aarch64
             runner: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           # we need to fetch all tags for setuptools-scm to work properly
-          fetch-depth: 0
           fetch-tags: true
 
       # this is only used to run cibuildwheel
@@ -208,11 +207,10 @@ jobs:
     name: Build OSX & Python wheels
     needs: [publish_pypi]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           # we need to fetch all tags for setuptools-scm to work properly
-          fetch-depth: 0
           fetch-tags: true
 
       - name: Install dependencies
@@ -320,11 +318,10 @@ jobs:
       VCPKG_DISABLE_COMPILER_TRACKING: ON
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           # we need to fetch all tags for setuptools-scm to work properly
-          fetch-depth: 0
           fetch-tags: true
 
       # we add a custom triplet to avoid cache misses as much as possible
@@ -476,7 +473,7 @@ jobs:
           - arch: aarch64
             runner: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/download-artifact@v4
         with:
@@ -495,7 +492,7 @@ jobs:
     runs-on: macos-14
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v4
         with:
@@ -518,7 +515,7 @@ jobs:
     runs-on: windows-2022
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v4
         with:

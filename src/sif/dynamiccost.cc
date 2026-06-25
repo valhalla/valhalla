@@ -236,6 +236,7 @@ DynamicCost::DynamicCost(const Costing& costing,
     }
     auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
     cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
+    cost_edge.ignore_restrictions_ = e.ignore_access_restrictions();
   }
 
   // once all cost factors are filled, sort by range, precompute overall average

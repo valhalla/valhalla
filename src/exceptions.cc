@@ -134,6 +134,7 @@ const std::unordered_map<int, std::string> warning_codes = {
     R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
   {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
   {103, R"(best_paths has been deprecated, use "alternates" instead)"},
+  {104, R"(jsonp has been deprecated, use CORS instead)"},
   // 2xx is used for ineffective parameters, i.e. we ignore them because of reasons
   {200, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},

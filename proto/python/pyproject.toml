@@ -1,0 +1,37 @@
+[project]
+name = "valhalla-proto"
+dynamic = ["version"]
+description = "Generated Python code for the Valhalla protobuf API"
+readme = "README.md"
+# betterproto2 is limiting our min version requirement
+requires-python = ">=3.10"
+authors = [
+  { name = "Christian Beiwinkel ", email = "chrstn@bwnkl.de" },
+]
+license = "MIT"
+license-files = ["COPYING"]
+dependencies = [
+  # still in active dev, could break at some point
+  "betterproto2",
+]
+
+[build-system]
+requires = ["setuptools", "setuptools_scm", "betterproto2-compiler", "grpcio-tools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+root = "../.."
+version_scheme = "no-guess-dev"
+# PyPI doesn't accept local hashed version strings
+local_scheme = "no-local-version"
+version_file = "src/__version__.py"
+
+# betterproto2 generates: src/{__init__,message_pool}.py + src/valhalla/ + src/valhalla/mjolnir/ (for transit types)
+# Every level must be listed; "valhalla_proto" maps to src/ as the root package.
+[tool.setuptools]
+packages = ["valhalla_proto", "valhalla_proto.valhalla", "valhalla_proto.valhalla.mjolnir"]
+
+# there are relative imports in the generated code,
+# need to treat "src" as package
+[tool.setuptools.package-dir]
+"valhalla_proto" = "src"

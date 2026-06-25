@@ -7,6 +7,7 @@ import re
 from tempfile import NamedTemporaryFile
 import unittest
 from valhalla import Actor, ValhallaError, get_config, VALHALLA_PRINT_VERSION
+from valhalla.valhalla_build_config import config as default_config
 
 
 PWD = Path(os.path.dirname(os.path.abspath(__file__)))
@@ -60,6 +61,21 @@ class TestBindings(unittest.TestCase):
     def test_config_no_tiles(self):
         with self.assertRaises(FileNotFoundError):
             get_config("valhalla_tiles")
+
+    def test_endpoints_are_callable(self):
+        # Smoke test: every action in loki.actions must be present as a
+        # callable wrapper on Actor itself, not merely inherited from _Actor —
+        # without a Python wrapper the dict/str input conversion doesn't apply.
+        # sources_to_targets is the JSON action name; pyvalhalla exposes it as
+        # matrix.
+        endpoints = [
+            "matrix" if a == "sources_to_targets" else a
+            for a in default_config["loki"]["actions"]
+        ]
+        for name in endpoints:
+            with self.subTest(endpoint=name):
+                self.assertIn(name, Actor.__dict__, f"Actor.{name} is missing a Python wrapper")
+                self.assertTrue(callable(getattr(self.actor, name)))
 
     def test_route(self):
         query = {

@@ -30,6 +30,7 @@ CMakeLists.txt.user
 vcpkg*/
 *.log
 custom_files/
+redoc-static.html
 
 # python
 .venv
@@ -53,3 +54,6 @@ src/bindings/python/valhalla/__version__.py
 **/*.egg-info
 dist
 wheelhouse
+proto/typescript/src
+proto/python/src
+proto/typescript/valhallajs-proto-*

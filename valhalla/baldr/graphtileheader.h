@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHTILEHEADER_H_
 #define VALHALLA_BALDR_GRAPHTILEHEADER_H_
 
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/midgard/logging.h>
@@ -18,7 +19,7 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 11;
+constexpr size_t kEmptySlots = 10;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -246,6 +247,10 @@ public:
       LOG_ERROR("Tile exceeded maximum directededge count: " + std::to_string(count));
     }
     directededgecount_ = count;
+  }
+
+  bool has_bounding_circles() const {
+    return boundingcircles_offset_ != 0 && boundingcircles_offset_ != tile_size_;
   }
 
   /**
@@ -585,19 +590,45 @@ public:
   }
 
   /**
-   * Get the checksum hash of the tile
-   * @return return the 64bit hash of tile's input checksum
+   * Get the offset to the start of the bounding circles
+   * @return the byte offset to the start of the bounding circles
    */
-  uint64_t checksum() const {
-    return checksum_;
+  uint32_t bounding_circle_offset() const {
+    return boundingcircles_offset_ == tile_size_ ? 0 : boundingcircles_offset_;
   }
 
   /**
-   * Sets the checksum hash of the tile
-   * @param checksum the 64bit hash for tile's input checksum
+   * Sets the offset to the start of the bounding circles
+   * @param offset the offset in bytes to the beginning of the bounding circles
    */
-  void set_checksum(uint64_t checksum) {
+  void set_bounding_circle_offset(uint32_t offset) {
+    boundingcircles_offset_ = offset;
+  }
+
+  /**
+   * Get the per-tile data hash, the low bits of checksum_. Unique per tile but reproducible across
+   * builds of the same data.
+   * @return the 48-bit hash of the tile's data
+   */
+  uint64_t tile_checksum() const {
+    return checksum_ & ((uint64_t(1) << kTileHashBits) - 1);
+  }
+
+  /**
+   * Sets the raw checksum_ field:
+   * build id packed in the high bits, per-tile data hash in the low bits.
+   * @param checksum the 64bit value for the tile's checksum_
+   */
+  void set_raw_checksum(uint64_t checksum) {
     checksum_ = checksum;
+  }
+
+  /**
+   * Returns the tileset build id packed into the high bits of checksum_.
+   * It stays the same across every tile of a build.
+   */
+  uint16_t build_id() const {
+    return static_cast<uint16_t>(checksum_ >> kTileHashBits);
   }
 
 protected:
@@ -702,6 +733,7 @@ protected:
   // GraphTile data size in bytes
   uint32_t tile_size_ = 0;
 
+  uint32_t boundingcircles_offset_ = 0;
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,
   // simply add a uint32_t some_offset_; just above empty_slots_ and decrease

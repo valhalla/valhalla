@@ -487,8 +487,6 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
       _valhalla
-      _graph_utils
-      predicted_speeds
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
   set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")

@@ -36,7 +36,7 @@ option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find 
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 option(ENABLE_GEOTIFF "Whether to include libgeotiff; currently only used for raster serialization of isotile grid" ON)
-option(ENABLE_LZ4 "Enable LZ4 decompression support for elevation tiles" ON)
+option(ENABLE_LZ4 "Enable LZ4 decompression support for elevation tiles and OSM PBF files" ON)
 option(INSTALL_TEST_LIB "Install Valhalla's own test lib" OFF)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")

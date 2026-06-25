@@ -6,8 +6,8 @@ import pickle
 import unittest
 from pathlib import Path
 
-from valhalla.utils import (
-    GraphId,
+from valhalla.baldr import GraphId
+from valhalla.baldr.utils import (
     GraphUtils,
     get_tile_base_lon_lat,
     get_tile_id_from_lon_lat,

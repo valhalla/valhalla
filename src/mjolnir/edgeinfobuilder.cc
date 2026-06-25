@@ -4,6 +4,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "mjolnir/util.h"
 
 #include <algorithm>
 #include <list>
@@ -46,7 +47,6 @@ void EdgeInfoBuilder::set_speed_limit(const uint32_t speed_limit) {
   if (speed_limit == kUnlimitedSpeedLimit) {
     ei_.speed_limit_ = kUnlimitedSpeedLimit;
   } else if (speed_limit > kMaxAssumedSpeed) {
-    LOG_WARN("Exceeding maximum.  Speed limit: " + std::to_string(speed_limit));
     ei_.speed_limit_ = kMaxAssumedSpeed;
   } else {
     ei_.speed_limit_ = speed_limit;
@@ -61,7 +61,8 @@ void EdgeInfoBuilder::set_has_elevation(const bool elevation) {
 // Set the list of name info (offsets, etc.) used by this edge.
 void EdgeInfoBuilder::set_name_info_list(const std::vector<NameInfo>& name_info_list) {
   if (name_info_list.size() > kMaxNamesPerEdge) {
-    LOG_WARN("Tried to exceed max names per edge: " + std::to_string(name_info_list.size()));
+    LOG_DEBUG("Tried to exceed max names per edge: " + std::to_string(name_info_list.size()));
+    build_stats::get().increment(build_stats::kExceededMaxNames);
   } else {
     name_info_list_ = name_info_list;
   }
@@ -70,7 +71,8 @@ void EdgeInfoBuilder::set_name_info_list(const std::vector<NameInfo>& name_info_
 // Add street name info to the list.
 void EdgeInfoBuilder::AddNameInfo(const baldr::NameInfo& info) {
   if (name_info_list_.size() == kMaxNamesPerEdge) {
-    LOG_WARN("Tried to exceed max names per edge");
+    LOG_DEBUG("Tried to exceed max names per edge");
+    build_stats::get().increment(build_stats::kExceededMaxNames);
   } else {
     name_info_list_.push_back(info);
   }
@@ -125,14 +127,15 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   auto ei = eib.ei_;
   uint32_t name_count = eib.name_info_list_.size();
   if (name_count > kMaxNamesPerEdge) {
-    LOG_WARN("Exceeding max names per edge: " + std::to_string(name_count));
+    LOG_DEBUG("Exceeding max names per edge: " + std::to_string(name_count));
     name_count = kMaxNamesPerEdge;
   }
   ei.name_count_ = name_count;
 
   // Check if we are exceeding the max encoded size
   if (eib.encoded_shape_.size() > kMaxEncodedShapeSize) {
-    LOG_WARN("Exceeding max encoded shape size: " + std::to_string(eib.encoded_shape_.size()));
+    LOG_DEBUG("Exceeding max encoded shape size: " + std::to_string(eib.encoded_shape_.size()));
+    build_stats::get().increment(build_stats::kExceededMaxShapeSize);
     ei.encoded_shape_size_ = static_cast<uint32_t>(kMaxEncodedShapeSize);
   } else {
     ei.encoded_shape_size_ = static_cast<uint32_t>(eib.encoded_shape_.size());

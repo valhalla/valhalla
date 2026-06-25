@@ -1,0 +1,130 @@
+{
+	"trip": {
+		"locations": [
+			{
+				"type": "break",
+				"lat": 52.517973,
+				"lon": 13.433304,
+				"original_index": 0
+			},
+			{
+				"type": "break",
+				"lat": 52.519604,
+				"lon": 13.434299,
+				"original_index": 0
+			}
+		],
+		"legs": [
+			{
+				"maneuvers": [
+					{
+						"type": 1,
+						"instruction": "Drive west on Karl-Marx-Allee/B 1/B 5.",
+						"verbal_succinct_transition_instruction": "Drive west. Then Turn right onto Lebuser Straße.",
+						"verbal_pre_transition_instruction": "Drive west on Karl-Marx-Allee, B 1. Then Turn right onto Lebuser Straße.",
+						"verbal_post_transition_instruction": "Continue for 30 meters.",
+						"street_names": [
+							"Karl-Marx-Allee",
+							"B 1",
+							"B 5"
+						],
+						"bearing_after": 279,
+						"time": 3.468,
+						"length": 0.024,
+						"cost": 3.806,
+						"begin_shape_index": 0,
+						"end_shape_index": 3,
+						"verbal_multi_cue": true,
+						"travel_mode": "drive",
+						"travel_type": "car"
+					},
+					{
+						"type": 10,
+						"instruction": "Turn right onto Lebuser Straße.",
+						"verbal_transition_alert_instruction": "Turn right onto Lebuser Straße.",
+						"verbal_succinct_transition_instruction": "Turn right.",
+						"verbal_pre_transition_instruction": "Turn right onto Lebuser Straße.",
+						"verbal_post_transition_instruction": "Continue for 200 meters.",
+						"street_names": [
+							"Lebuser Straße"
+						],
+						"bearing_before": 280,
+						"bearing_after": 5,
+						"time": 34.183,
+						"length": 0.204,
+						"cost": 78.023,
+						"begin_shape_index": 3,
+						"end_shape_index": 18,
+						"travel_mode": "drive",
+						"travel_type": "car"
+					},
+					{
+						"type": 10,
+						"instruction": "Turn right onto Palisadenstraße.",
+						"verbal_transition_alert_instruction": "Turn right onto Palisadenstraße.",
+						"verbal_succinct_transition_instruction": "Turn right.",
+						"verbal_pre_transition_instruction": "Turn right onto Palisadenstraße.",
+						"verbal_post_transition_instruction": "Continue for 60 meters.",
+						"street_names": [
+							"Palisadenstraße"
+						],
+						"bearing_before": 10,
+						"bearing_after": 115,
+						"time": 17.856,
+						"length": 0.062,
+						"cost": 45.995,
+						"begin_shape_index": 18,
+						"end_shape_index": 26,
+						"travel_mode": "drive",
+						"travel_type": "car"
+					},
+					{
+						"type": 4,
+						"instruction": "You have arrived at your destination.",
+						"verbal_transition_alert_instruction": "You will arrive at your destination.",
+						"verbal_pre_transition_instruction": "You have arrived at your destination.",
+						"bearing_before": 109,
+						"time": 0.0,
+						"length": 0.0,
+						"cost": 0.0,
+						"begin_shape_index": 26,
+						"end_shape_index": 26,
+						"travel_mode": "drive",
+						"travel_type": "car"
+					}
+				],
+				"summary": {
+					"has_time_restrictions": false,
+					"has_toll": false,
+					"has_highway": false,
+					"has_ferry": false,
+					"min_lat": 52.517973,
+					"min_lon": 13.432941,
+					"max_lat": 52.519821,
+					"max_lon": 13.434299,
+					"time": 55.508,
+					"length": 0.291,
+					"cost": 127.824
+				},
+				"shape": "kdmdcBq|{rXYvGMzBa@`IqDWiAKeGw@sAQsAQsAQmEk@mJwAmB]iMuC}XmGsEgAoMyCeAWiCi@f@kCPiAR}@z@sELq@|B_MzAsK~@oH"
+			}
+		],
+		"summary": {
+			"has_time_restrictions": false,
+			"has_toll": false,
+			"has_highway": false,
+			"has_ferry": false,
+			"min_lat": 52.517973,
+			"min_lon": 13.432941,
+			"max_lat": 52.519821,
+			"max_lon": 13.434299,
+			"time": 55.508,
+			"length": 0.291,
+			"cost": 127.824
+		},
+		"status_message": "Found route between points",
+		"status": 0,
+		"units": "kilometers",
+		"language": "en-US"
+	}
+}

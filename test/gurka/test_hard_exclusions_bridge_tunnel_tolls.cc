@@ -16,7 +16,7 @@ const std::vector<std::string> kExclusionParameters = {"exclude_bridges", "exclu
 constexpr double grid_size_meters = 100.;
 
 const std::string ascii_map = R"(
-  E----F----G----H----I----A----J----K----L
+  E====F====G----H====I----A----J====K----L
                                 |    |
                                 |    |
                                 |    |
@@ -30,7 +30,7 @@ const gurka::ways ways = {
     {"GH", {{"highway", "residential"}}},
     {"HI", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
     {"IA", {{"highway", "residential"}}},
-    {"IJ", {{"highway", "residential"}}},
+    {"AJ", {{"highway", "residential"}}},
     {"JK", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
     {"KL", {{"highway", "residential"}}},
     {"JM", {{"highway", "residential"}}},
@@ -48,9 +48,12 @@ void check_result(const std::string& exclude_parameter_value,
 
   const std::string& costing = props[0];
   const std::string& exclude_parameter = props[1];
+  const std::string& time_type = props[2];
   const auto result = gurka::do_action(valhalla::Options::route, map, waypoints, costing,
                                        {{"/costing_options/" + costing + "/" + exclude_parameter,
-                                         exclude_parameter_value}});
+                                         exclude_parameter_value},
+                                        {"/date_time/type", time_type},
+                                        {"/date_time/value", "2025-07-21T12:00"}});
   gurka::assert::raw::expect_path(result, expected_names);
 }
 
@@ -74,8 +77,8 @@ gurka::map ExclusionTest::map = {};
 gurka::map ExclusionTest::mapNotAllowed = {};
 
 TEST_P(ExclusionTest, InTheMiddle) {
-  check_result("0", {"I", "L"}, {"IJ", "JK", "KL"}, map, GetParam());
-  check_result("1", {"I", "L"}, {"IJ", "JM", "MN", "NK", "KL"}, map, GetParam());
+  check_result("0", {"I", "L"}, {"IA", "AJ", "JK", "KL"}, map, GetParam());
+  check_result("1", {"I", "L"}, {"IA", "AJ", "JM", "MN", "NK", "KL"}, map, GetParam());
 }
 
 TEST_P(ExclusionTest, InTheBeginning) {
@@ -85,32 +88,30 @@ TEST_P(ExclusionTest, InTheBeginning) {
 
 TEST_P(ExclusionTest, InTheEnd) {
   check_result("0", {"H", "E"}, {"GH", "FG", "EF"}, map, GetParam());
-  check_result("1", {"H", "E"}, {"GH", "FG", "EF"}, map, GetParam());
+  try {
+    check_result("1", {"H", "E"}, {"GH", "FG", "EF"}, map, GetParam());
+    FAIL() << "Missing exception.";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
 }
 
 TEST_P(ExclusionTest, InTheMiddleNotAllowed) {
-  check_result("0", {"I", "L"}, {"IJ", "JK", "KL"}, mapNotAllowed, GetParam());
-  try {
-    check_result("1", {"I", "L"}, {"IJ", "JM", "MN", "NK", "KL"}, mapNotAllowed, GetParam());
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 145); } catch (...) {
-    FAIL() << "Expected valhalla_exception_t.";
-  };
+  check_result("0", {"I", "L"}, {"IA", "AJ", "JK", "KL"}, mapNotAllowed, GetParam());
+  check_result("1", {"I", "L"}, {"IA", "AJ", "JM", "MN", "NK", "KL"}, mapNotAllowed, GetParam());
 }
 
 TEST_P(ExclusionTest, InTheBeginningNotAllowed) {
   check_result("0", {"E", "H"}, {"EF", "FG", "GH"}, mapNotAllowed, GetParam());
-  try {
-    check_result("1", {"E", "H"}, {"EF", "FG", "GH"}, mapNotAllowed, GetParam());
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 145); } catch (...) {
-    FAIL() << "Expected valhalla_exception_t.";
-  };
+  check_result("1", {"E", "H"}, {"EF", "FG", "GH"}, mapNotAllowed, GetParam());
 }
 
 TEST_P(ExclusionTest, InTheEndNotAllowed) {
   check_result("0", {"H", "E"}, {"GH", "FG", "EF"}, mapNotAllowed, GetParam());
   try {
     check_result("1", {"H", "E"}, {"GH", "FG", "EF"}, mapNotAllowed, GetParam());
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 145); } catch (...) {
+    FAIL() << "Missing exception.";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }
@@ -139,7 +140,9 @@ INSTANTIATE_TEST_SUITE_P(ExcludePropsTest, ExclusionTest, ::testing::ValuesIn([]
                            std::vector<std::vector<std::string>> values;
                            for (const auto& costing : kSupportedCostingModels) {
                              for (const auto& param : kExclusionParameters) {
-                               values.push_back({costing, param});
+                               for (uint32_t time_type = 0; time_type < 4; time_type++) {
+                                 values.push_back({costing, param, std::to_string(time_type)});
+                               }
                              }
                            }
                            return values;

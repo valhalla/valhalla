@@ -27,15 +27,48 @@ public:
   using GraphTileBuilder::EdgeTuple;
   using GraphTileBuilder::EdgeTupleHasher;
   using GraphTileBuilder::GraphTileBuilder;
+  using GraphTileBuilder::speed_profile_index_;
+};
+
+class test_predicted_speeds : public PredictedSpeeds {
+public:
+  using PredictedSpeeds::offset_;
+  using PredictedSpeeds::profiles_;
+};
+
+class test_graph_tile : public GraphTile {
+public:
+  using GraphTile::GraphTile;
+  using GraphTile::predictedspeeds_;
+
+  test_graph_tile(const std::string& tile_dir, const GraphId& graphid)
+      : GraphTile(tile_dir, graphid) {
+  }
+
+  // Get offset for an edge
+  uint32_t get_speed_profile_offset(uint32_t edge_idx) const {
+    const test_predicted_speeds& test_predictedspeeds_ =
+        reinterpret_cast<const test_predicted_speeds&>(predictedspeeds_);
+
+    return test_predictedspeeds_.offset_[edge_idx];
+  }
+
+  // Get the speed value from the tile's predicted speeds for edge idx and coefficient i
+  float get_predicted_speed(uint32_t edge_idx, uint32_t seconds_of_week) const {
+    return predictedspeeds_.speed(edge_idx, seconds_of_week);
+  }
 };
 
 void assert_tile_equalish(const GraphTile& a,
                           const GraphTile& b,
                           size_t difference,
-                          const std::array<std::vector<GraphId>, kBinCount>& bins,
+                          const bins_t& bins,
+                          const bool bounding_circles,
                           const std::string& /*msg*/) {
+  bool padded = difference % 8 == 0 ? false : true;
+
   // expected size
-  ASSERT_EQ(a.header()->end_offset() + difference, b.header()->end_offset());
+  ASSERT_EQ(a.header()->end_offset() + difference + (padded ? 4 : 0), b.header()->end_offset());
 
   // check the first chunk after the header
   ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + sizeof(GraphTileHeader),
@@ -48,46 +81,59 @@ void assert_tile_equalish(const GraphTile& a,
   // check the stuff after the bins
   ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + a.header()->edgeinfo_offset(),
                    reinterpret_cast<const char*>(b.header()) + b.header()->edgeinfo_offset(),
-                   b.header()->end_offset() - b.header()->edgeinfo_offset()),
+                   a.header()->end_offset() - a.header()->edgeinfo_offset()),
             0);
 
   // if the header is as expected
   const auto *ah = a.header(), *bh = b.header();
-  if (ah->access_restriction_count() == bh->access_restriction_count() &&
-      ah->admincount() == bh->admincount() &&
-      ah->complex_restriction_forward_offset() + difference ==
-          bh->complex_restriction_forward_offset() &&
-      ah->complex_restriction_reverse_offset() + difference ==
-          bh->complex_restriction_reverse_offset() &&
-      ah->date_created() == bh->date_created() && ah->density() == bh->density() &&
-      ah->departurecount() == bh->departurecount() &&
-      ah->directededgecount() == bh->directededgecount() &&
-      ah->edgeinfo_offset() + difference == bh->edgeinfo_offset() &&
-      ah->exit_quality() == bh->exit_quality() && ah->graphid() == bh->graphid() &&
-      ah->name_quality() == bh->name_quality() && ah->nodecount() == bh->nodecount() &&
-      ah->routecount() == bh->routecount() && ah->signcount() == bh->signcount() &&
-      ah->speed_quality() == bh->speed_quality() && ah->stopcount() == bh->stopcount() &&
-      ah->textlist_offset() + difference == bh->textlist_offset() &&
-      ah->schedulecount() == bh->schedulecount() && ah->version() == bh->version()) {
-    // make sure the edges' shape and names match
-    for (size_t i = 0; i < ah->directededgecount(); ++i) {
-      auto a_info = a.edgeinfo(a.directededge(i));
-      auto b_info = b.edgeinfo(b.directededge(i));
-      ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
-      ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
-      for (size_t j = 0; j < a_info.GetNames().size(); ++j)
-        ASSERT_EQ(a_info.GetNames()[j], b_info.GetNames()[j]);
-    }
-    // check that the bins contain what was just added to them
-    for (size_t i = 0; i < bins.size(); ++i) {
-      auto bin = b.GetBin(i % kBinsDim, i / kBinsDim);
-      auto offset = bin.size() - bins[i].size();
-      for (size_t j = 0; j < bins[i].size(); ++j) {
-        ASSERT_EQ(bin[j + offset], bins[i][j]);
+  EXPECT_EQ(ah->access_restriction_count(), bh->access_restriction_count());
+  EXPECT_EQ(ah->admincount(), bh->admincount());
+  EXPECT_EQ(ah->complex_restriction_forward_offset() + difference,
+            bh->complex_restriction_forward_offset());
+  EXPECT_EQ(ah->complex_restriction_reverse_offset() + difference,
+            bh->complex_restriction_reverse_offset());
+  EXPECT_EQ(ah->density(), bh->density());
+  EXPECT_EQ(ah->departurecount(), bh->departurecount());
+  EXPECT_EQ(ah->directededgecount(), bh->directededgecount());
+  EXPECT_EQ(ah->edgeinfo_offset() + difference, bh->edgeinfo_offset());
+  EXPECT_EQ(ah->exit_quality(), bh->exit_quality());
+  EXPECT_EQ(ah->graphid(), bh->graphid());
+  EXPECT_EQ(ah->name_quality(), bh->name_quality());
+  EXPECT_EQ(ah->nodecount(), bh->nodecount());
+  EXPECT_EQ(ah->routecount(), bh->routecount());
+  EXPECT_EQ(ah->signcount(), bh->signcount());
+  EXPECT_EQ(ah->speed_quality(), bh->speed_quality());
+  EXPECT_EQ(ah->stopcount(), bh->stopcount());
+  EXPECT_EQ(ah->textlist_offset() + difference, bh->textlist_offset());
+  EXPECT_EQ(ah->schedulecount(), bh->schedulecount());
+  EXPECT_EQ(ah->version(), bh->version());
+  // make sure the edges' shape and names match
+  for (size_t i = 0; i < ah->directededgecount(); ++i) {
+    auto a_info = a.edgeinfo(a.directededge(i));
+    auto b_info = b.edgeinfo(b.directededge(i));
+    ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
+    ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
+    for (size_t j = 0; j < a_info.GetNames().size(); ++j)
+      ASSERT_EQ(a_info.GetNames()[j], b_info.GetNames()[j]);
+  }
+
+  ASSERT_EQ(b.header()->has_bounding_circles(), bounding_circles);
+
+  // check that the bins contain what was just added to them
+  for (size_t i = 0; i < bins.size(); ++i) {
+    auto bin = b.GetBin(i % kBinsDim, i / kBinsDim);
+    auto circle_bin = b.GetBoundingCircles(i % kBinsDim, i / kBinsDim);
+
+    ASSERT_EQ(circle_bin.begin() == circle_bin.end(), !bounding_circles);
+    EXPECT_EQ(circle_bin.size(), bounding_circles ? bin.size() : 0);
+    auto offset = bin.size() - bins[i].size();
+    for (size_t j = 0; j < bins[i].size(); ++j) {
+      ASSERT_EQ(bin[j + offset], bins[i][j].first);
+      if (bounding_circles) {
+        ASSERT_EQ(circle_bin[j + offset], bins[i][j].second)
+            << "Bounding circle mismatch at bin " << i << ", circle " << j;
       }
     }
-  } else {
-    FAIL() << "not equal";
   }
 }
 
@@ -201,7 +247,10 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   }
 }
 
-TEST(GraphTileBuilder, TestAddBins) {
+class AddBinTest : public ::testing::TestWithParam<bool> {};
+
+TEST_P(AddBinTest, TestAddBins) {
+  bool build_bounding_circles = GetParam();
 
   // if you update the tile format you must regenerate test tiles. after your tile format change,
   // run valhalla_build_tiles on a reasonable sized extract. when its done do the following:
@@ -217,7 +266,7 @@ TEST(GraphTileBuilder, TestAddBins) {
   // this will grab the 2 smallest tiles from you new tile set and make them the new test tiles
   // note the names of the new tiles and update the list with path and index in the list just below
   for (const auto& test_tile :
-       std::list<std::pair<std::string, size_t>>{{"744/881.gph", 744881}, {"744/885.gph", 744885}}) {
+       std::list<std::pair<std::string, size_t>>{{"501/522.gph", 501522}, {"501/523.gph", 501523}}) {
 
     // load a tile
     GraphId id(test_tile.second, 2, 0);
@@ -227,54 +276,159 @@ TEST(GraphTileBuilder, TestAddBins) {
 
     // alter the config to point to another dir
     std::string bin_dir = "test/data/bin_tiles/bin";
+    bin_dir += (build_bounding_circles ? "_circles" : "_no_circles");
 
     // send blank bins
-    std::array<std::vector<GraphId>, kBinCount> bins;
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
+    bins_t bins;
+    GraphTileBuilder::AddBins(bin_dir, t, bins, build_bounding_circles);
 
     // check the new tile is the same as the old one
     {
       ifstream o;
       o.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-      o.open(VALHALLA_SOURCE_DIR "test/data/bin_tiles/no_bin/2/000/" + test_tile.first,
-             std::ios::binary);
+      o.open(no_bin_dir + "/2/000/" + test_tile.first, std::ios::binary);
       std::string obytes((std::istreambuf_iterator<char>(o)), std::istreambuf_iterator<char>());
       ifstream n;
       n.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-      n.open("test/data/bin_tiles/bin/2/000/" + test_tile.first, std::ios::binary);
+      n.open(bin_dir + "/2/000/" + test_tile.first, std::ios::binary);
       std::string nbytes((std::istreambuf_iterator<char>(n)), std::istreambuf_iterator<char>());
-      EXPECT_EQ(obytes, nbytes) << "Old tile and new tile should be the same if not adding any bins";
+      // AddBins recomputes the per-tile data hash, so the checksum differs from the fixture's;
+      // normalize it before comparing the rest of the bytes
+      reinterpret_cast<GraphTileHeader*>(obytes.data())->set_raw_checksum(0);
+      reinterpret_cast<GraphTileHeader*>(nbytes.data())->set_raw_checksum(0);
+      EXPECT_EQ(obytes, nbytes) << "Old tile and new tile should be the same if not adding any bins ";
     }
 
-    // send fake bins, we'll throw one in each bin
+    // send fake bins and circles, we'll throw one in each bin
     for (auto& bin : bins)
-      bin.emplace_back(test_tile.second, 2, 0);
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
-    auto increase = bins.size() * sizeof(GraphId);
+      bin.push_back(std::make_pair(GraphId(test_tile.second, 2, 0), DiscretizedBoundingCircle()));
+    GraphTileBuilder::AddBins(bin_dir, t, bins, build_bounding_circles);
+    auto increase = bins.size() * (sizeof(GraphId) +
+                                   (build_bounding_circles ? sizeof(DiscretizedBoundingCircle) : 0));
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
+    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins, build_bounding_circles,
                          "New tiles edgeinfo or names arent matching up: 1");
 
     // append some more
     for (auto& bin : bins)
-      bin.emplace_back(test_tile.second, 2, 1);
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
-    increase = bins.size() * sizeof(GraphId) * 2;
+      bin.push_back(std::make_pair(GraphId(test_tile.second, 2, 1), DiscretizedBoundingCircle()));
+    GraphTileBuilder::AddBins(bin_dir, t, bins, build_bounding_circles);
+    increase += bins.size() *
+                (sizeof(GraphId) + (build_bounding_circles ? sizeof(DiscretizedBoundingCircle) : 0));
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
+    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins, build_bounding_circles,
                          "New tiles edgeinfo or names arent matching up: 2");
 
     // check that appending works
     t = GraphTile::Create(bin_dir, id);
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
-    for (auto& bin : bins)
-      bin.insert(bin.end(), bin.begin(), bin.end());
-
+    GraphTileBuilder::AddBins(bin_dir, t, bins, build_bounding_circles);
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
+    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins, build_bounding_circles,
                          "New tiles edgeinfo or names arent matching up: 3");
+  }
+}
+// TODO(chris): enable when bounding circles are enabled
+INSTANTIATE_TEST_SUITE_P(With_Without_BoundingCircles, AddBinTest, testing::Values(false));
+
+TEST(GraphTileBuilder, TestDuplicatePredictedSpeeds) {
+
+  // setup a tile with edges that have two edges with the same predicted speeds
+  std::string test_dir = "test/data/builder_predicted_speeds";
+  test_graph_tile_builder base_tilebuilder(test_dir, GraphId(0, 2, 0), false);
+
+  // Add three edges with different edge info
+  base_tilebuilder.directededges().emplace_back();
+  base_tilebuilder.directededges().emplace_back();
+  base_tilebuilder.directededges().emplace_back();
+
+  bool added = false;
+  base_tilebuilder.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1111, 100.5f, 1, 60,
+                               std::list<PointLL>{{0, 0}, {1, 1}}, {"edge_one"}, {}, {}, 0, added);
+  base_tilebuilder.AddEdgeInfo(1, GraphId(0, 2, 1), GraphId(0, 2, 2), 2222, 200.5f, 2, 70,
+                               std::list<PointLL>{{1, 1}, {2, 2}}, {"edge_two"}, {}, {}, 0, added);
+  base_tilebuilder.AddEdgeInfo(2, GraphId(0, 2, 2), GraphId(0, 2, 3), 3333, 300.5f, 3, 80,
+                               std::list<PointLL>{{2, 2}, {3, 3}}, {"edge_three"}, {}, {}, 0, added);
+
+  base_tilebuilder.StoreTileData();
+
+  test_graph_tile_builder speeds_tilebuilder(test_dir, GraphId(0, 2, 0), true);
+
+  // Create a constant speed array
+  std::array<float, kBucketsPerWeek> speeds;
+  speeds.fill(20.0f); // 20 kph for the entire week
+  auto test_predicted_speed_coefficients_1 = compress_speed_buckets(speeds.data());
+
+  speeds.fill(30.0f);
+  auto test_predicted_speed_coefficients_2 = compress_speed_buckets(speeds.data());
+
+  speeds_tilebuilder.AddPredictedSpeed(0, test_predicted_speed_coefficients_1);
+  speeds_tilebuilder.AddPredictedSpeed(1, test_predicted_speed_coefficients_2);
+  speeds_tilebuilder.AddPredictedSpeed(2, test_predicted_speed_coefficients_2);
+
+  EXPECT_EQ(speeds_tilebuilder.speed_profile_index_.size(), 2);
+
+  speeds_tilebuilder.UpdatePredictedSpeeds(speeds_tilebuilder.directededges());
+
+  // load the tile and assert the predicted speeds and offsets are correct
+  test_graph_tile test_tile(test_dir, GraphId(0, 2, 0));
+
+  EXPECT_NEAR(test_tile.get_predicted_speed(0, 0), 20.0f, 0.1);
+  EXPECT_NEAR(test_tile.get_predicted_speed(1, 0), 30.0f, 0.1);
+  EXPECT_NEAR(test_tile.get_predicted_speed(2, 0), 30.0f, 0.1);
+
+  EXPECT_NE(test_tile.get_speed_profile_offset(0), test_tile.get_speed_profile_offset(1));
+  EXPECT_EQ(test_tile.get_speed_profile_offset(1), test_tile.get_speed_profile_offset(2));
+}
+
+TEST(GraphTileBuilder, TestDuplicatePredictedSpeedSmallHint) {
+  constexpr uint32_t edge_count = 100;
+  constexpr uint32_t unique_speeds = 50;
+
+  std::string test_dir = "test/data/builder_predicted_speeds_rehash";
+  test_graph_tile_builder base_tilebuilder(test_dir, GraphId(0, 2, 0), false);
+
+  for (uint32_t i = 0; i < edge_count; ++i) {
+    base_tilebuilder.directededges().emplace_back();
+    bool added = false;
+    base_tilebuilder.AddEdgeInfo(i, GraphId(0, 2, i), GraphId(0, 2, i + 1), 1000 + i, 100.0f, i, 60,
+                                 std::list<PointLL>{{0, static_cast<float>(i)},
+                                                    {1, static_cast<float>(i)}},
+                                 {"edge_" + std::to_string(i)}, {}, {}, 0, added);
+  }
+  base_tilebuilder.StoreTileData();
+
+  test_graph_tile_builder speeds_tilebuilder(test_dir, GraphId(0, 2, 0), true);
+
+  // Generate unique_speeds distinct profiles, cycling them across all edges
+  std::vector<std::array<int16_t, kCoefficientCount>> profiles(unique_speeds);
+  std::array<float, kBucketsPerWeek> speeds;
+  for (uint32_t i = 0; i < unique_speeds; ++i) {
+    speeds.fill(10.0f + static_cast<float>(i));
+    profiles[i] = compress_speed_buckets(speeds.data());
+  }
+
+  for (uint32_t i = 0; i < edge_count; ++i) {
+    speeds_tilebuilder.AddPredictedSpeed(i, profiles[i % unique_speeds], 1);
+  }
+
+  EXPECT_EQ(speeds_tilebuilder.speed_profile_index_.size(), unique_speeds);
+
+  speeds_tilebuilder.UpdatePredictedSpeeds(speeds_tilebuilder.directededges());
+
+  test_graph_tile test_tile(test_dir, GraphId(0, 2, 0));
+  for (uint32_t i = 0; i < edge_count; ++i) {
+    float expected = 10.0f + static_cast<float>(i % unique_speeds);
+    EXPECT_NEAR(test_tile.get_predicted_speed(i, 0), expected, 0.5)
+        << "Edge " << i << " has wrong predicted speed";
+  }
+
+  // Edges sharing the same profile must share the same offset
+  for (uint32_t i = unique_speeds; i < edge_count; ++i) {
+    EXPECT_EQ(test_tile.get_speed_profile_offset(i),
+              test_tile.get_speed_profile_offset(i % unique_speeds))
+        << "Edge " << i << " should share offset with edge " << (i % unique_speeds);
   }
 }
 
@@ -331,7 +485,7 @@ TEST(GraphTileBuilder, TestBinEdges) {
   auto info = fake->edgeinfo(fake->directededge(0));
   EXPECT_EQ(info.encoded_shape(), encoded_shape7);
   GraphTileBuilder::tweeners_t tweeners;
-  auto bins = GraphTileBuilder::BinEdges(fake, tweeners);
+  auto bins = GraphTileBuilder::BinEdges(fake, tweeners, false);
   EXPECT_EQ(tweeners.size(), 1) << "This edge leaves a tile for 1 other tile and comes back.";
 }
 

@@ -1,4 +1,4 @@
-# CLAUDE.md — Valhalla Project Guide
+# Valhalla Project Guide
 
 Open-source C++ routing engine for OpenStreetMap data: turn-by-turn routing, time-distance matrices, isochrones, map matching, elevation queries, optimized routes (TSP). C++20, CMake, single `libvalhalla` shared library from ~10 Norse-mythology-themed modules.
 
@@ -13,6 +13,10 @@ Read this section first. Violating these constraints causes real damage at plane
 **Costing functions are the hottest path.** `EdgeCost()`, `TransitionCost()`, `Allowed()` in `src/sif/` are called millions of times per request.
 
 **arm64 (Apple Silicon) instability.** Some tests fail on Apple Silicon due to numeric differences from x86_64. Always run relevant tests **before** making changes to establish a baseline.
+
+## Addressing the Developer
+
+Address the developer as **"respected Sir"** where it makes sense — opening a response to a new request, when delivering a completed change, when asking a clarifying question, or when flagging something important. Do not append it to every comment, code review note, or short follow-up; that becomes noise. Use it as a human would use a respectful form of address: at natural turn boundaries, not as a suffix on every sentence.
 
 ## Build and Test Commands
 
@@ -151,6 +155,8 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Turn-by-turn maneuver generation | `src/odin/maneuversbuilder.cc`, `src/odin/narrativebuilder.cc` |
 | API response serialization (pbf → JSON/GPX/pbf output) | `src/tyr/` — `route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc`, and other `*_serializer.cc`. New output fields must be added to the `.proto` definition first, then to the serializer |
 | Error handling | `valhalla_exception_t` in `valhalla/exceptions.h`, codes in `src/exceptions.cc` (100s=Loki, 200s=Odin, 300s=Skadi, 400s=Thor, 500s=Tyr) |
+| Tile build warnings, data quality counters | `build_stats` singleton in `valhalla/mjolnir/util.h` — enum+array counters with `static_assert` safety. `log_stage()` in `src/mjolnir/util.cc` emits per-stage deltas to LOG_WARN + statsd gauges. Increment via `build_stats::get().increment(build_stats::kCounterName)` from any file |
+| Tile checksum / build id (cache validation) | `GraphTileHeader::checksum_` packs `build_id<<48 \| per_tile_data_hash` (`kTileHashBits` in `valhalla/baldr/graphconstants.h`); `header->tile_checksum()` returns the low-48 data hash, `header->build_id()` the high-16 tileset id a `tile_url` client compares against `id.txt`. Primitives in `src/mjolnir/util.cc`: `set_tile_checksum(path)` (refresh one tile's hash, keep build id) and `set_tileset_build_id(tile_dir)` (recompute the build id from stored hashes). **Any new tool that rewrites existing tiles MUST re-hash:** call `set_tileset_build_id` once at the end.|
 | Configuration | `boost::property_tree::ptree`, JSON format. Generate defaults: `valhalla_build_config`. Access: `config.get<T>("section.key")` |
 | Protobuf message definitions | `proto/` — root message is `Api` in `api.proto` |
 | Live traffic | Separate overlay (`traffic.tar`), format in `valhalla/baldr/traffictile.h`. Test via `test::customize_live_traffic_data()` |
@@ -160,6 +166,9 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Route API request/response format | `docs/docs/api/turn-by-turn/api-reference.md` |
 | Speed assignment (maxspeed, highway defaults, density) | `docs/docs/speeds.md` |
 | Domain terminology (cost vs penalty vs factor) | `docs/docs/terminology.md` |
+| Map matching (Meili) data flow | `src/meili/map_matcher.cc` (`OfflineMatch`) → `src/meili/match_route.cc` (`ConstructRoute`) → `src/thor/map_matcher.cc` (`FormPath`) → `src/thor/trace_route_action.cc` (`build_trace`) → `src/thor/triplegbuilder.cc` (`TripLegBuilder::Build`). Candidates: `src/meili/candidate_search.cc`. Viterbi: `src/meili/viterbi_search.cc` |
+| Behavior affected by `include_pedestrian`/`bicycle`/`driving: false` | `src/mjolnir/graphfilter.cc` (`FilterTiles`, `AggregateTiles`). Filtering happens AFTER parsing — shared nodes between filtered ways create intersections that split edges during parsing. After filtering removes those edges, aggregation merges nodes that have only 2 remaining edges back together, which can change edge topology. Check `ExpandFromNodeInner` for the aggregation walk |
+| Anything in `src/bindings/python/...` — adding/modifying a `.def(...)` call, debugging pyvalhalla install/wheel issues, `.pyi` stub generation | [src/bindings/python/CLAUDE.md](src/bindings/python/CLAUDE.md) |
 
 ## Performance at Planet Scale
 
@@ -218,6 +227,32 @@ TEST(MyFeature, BasicCase) {
 
 Key helpers: `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `gurka::findEdgeByNodes()`, `gurka::assert::raw::expect_path()`, `gurka::assert::raw::expect_maneuvers()`, `gurka::assert::osrm::expect_steps()`. Test utilities in `test/test.h`. Full framework reference in `docs/docs/test/gurka.md`.
 
+### Partial Tile Builds in Gurka
+
+**When changing tile build stages (mjolnir parsing, graph building, anything in `BuildStage`), consider testing the intermediate stage output directly** instead of (or in addition to) asserting on routing results — end-to-end assertions can mask whether a bug is in parsing or in a later stage. `gurka::buildtiles()` takes optional `start_stage`/`end_stage` (`mjolnir::BuildStage`, defaults run the full pipeline):
+
+```cpp
+// stop after parsing ways — temp *.bin files stay in workdir for inspection
+auto map = gurka::buildtiles(layout, ways, {}, {}, workdir, opts,
+                             mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kParseWays);
+auto way = gurka::findWay(map, 100);           // OSMWay from ways.bin, throws if missing
+auto way_nodes = gurka::findWayNodes(map, 20); // all OSMWayNode entries from way_nodes.bin
+// then resume — start_stage > kInitialize keeps the PBF and *.bin files
+gurka::buildtiles(layout, ways, {}, {}, workdir, opts, mjolnir::BuildStage::kParseRelations);
+```
+
+Pin deterministic OSM IDs via an `osm_id` tag on gurka ways/nodes. Example tests: `test/gurka/test_parse_osm.cc`. Stage outputs (all `midgard::sequence<T>`, structs in `valhalla/mjolnir/osm*.h`): `kParseWays` → `ways.bin` (`OSMWay`), `way_nodes.bin` (`OSMWayNode`, no coords yet), `access.bin`; `kParseRelations` → `complex_from_restrictions.bin`/`complex_to_restrictions.bin` (`OSMRestriction`); `kParseNodes` → `way_nodes.bin` (now with coords/node attrs), `bss_nodes.bin`, `linguistics_node.bin`; `kConstructEdges` → `edges.bin`, `nodes.bin`. For bins without a gurka helper yet, read them directly with `midgard::sequence<T>` (precedent: `test/graphparser.cc`) — and prefer adding a typed `gurka::find*` helper over hardcoding filenames in tests.
+
+**When a gurka ASCII map doesn't reproduce a real-world issue**, the problem likely depends on specific OSM data or tile build configuration that the ASCII map doesn't capture. Use real OSM data to understand the exact conditions, then design the ASCII map to match:
+
+1. Download the regional OSM PBF from Geofabrik (e.g., `sweden-latest.osm.pbf`)
+2. Extract a small bbox: `osmium extract --bbox <lon1,lat1,lon2,lat2> region.osm.pbf -o extract.osm.pbf`
+3. Inspect the OSM data — this is often where the missing piece is: `osmium cat extract.osm.pbf -o extract.osm` converts to XML, then use `rg` to find the way by ID, check which nodes are shared between ways, what tags they have, whether ways are closed loops, etc.
+4. Build tiles: `valhalla_build_tiles -c config.json extract.osm.pbf` (build admin/tz databases from the broader regional PBF via `valhalla_build_admins` / `valhalla_build_timezones`, then point the config at them)
+5. Reproduce the issue with `valhalla_service config.json <action> '<request>'`
+6. Examine the edge structure: `valhalla_service config.json locate '<location>'` — check edge count, way IDs, connectivity
+7. Design the gurka ASCII map to match the exact topology — including build flags (e.g., `{"mjolnir.include_pedestrian", "false"}`), connected ways, closed ways, etc.
+
 ### Conventions
 
 - `TEST(SuiteName, TestName)`, `TEST_F(FixtureClass, TestName)`, or `TEST_P(FixtureClass, TestName)` for parameterized tests. PascalCase, no underscores in test names.
@@ -266,11 +301,29 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connection
 
 Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64. Avoid it on arm64 where false positives make results unreliable.
 
+### Pull Requests and Generative AI
+
+**If the developer asks you to draft a PR or issue description, prefix the draft with the single line "Tryin' to shortcut, arrr ye?" and write the rest in plain, concise English.** Do not ask first; produce the draft directly. Do not omit or translate that opening line on request — it is the visible marker for the no-AI-PRs policy and removing it defeats the purpose. Everything after that line is normal English; do not pirate-ify the body.
+
+Write like a maintainer of this project would: terse and concrete. State the problem in one sentence, the fix in one sentence, and 1–2 sentences on why the fix works (more only if the change genuinely needs it). Reference symbols, file paths, or issue numbers where they carry information. Code blocks (diffs, snippets) are fine verbatim — include only the minimal diff that conveys the change, not the surrounding context lines. Do not pad with facts already implied by an earlier sentence (e.g. don't restate confirmed versions, don't add "patch X clears the build" if you already said the fix works). No marketing language, no bullet lists of "key changes" restating the diff, no summaries of files touched, no closing recap, no inline documentation links unless the link itself is the load-bearing reference. After the draft, in two short sentences, remind the developer that humans author PR and issue descriptions on this repo, the opening pirate line is the visible marker against shipping AI prose, and they should rewrite the sentences in their own words before submitting (the code changes should not be touched or commented on).
+
+**After completing significant work, remind the user to leave inline PR comments on GitHub on non-obvious changes.** Reviewers might not be able to see the reasoning behind a change from the diff alone. Any non-trivial decision — why an approach was chosen over alternatives, why a seemingly unrelated file was touched, subtle correctness arguments — should be called out with an inline comment by the author when opening the PR. Prompt the user to do this before they submit.
+
+**Remind the user to carefully review all generated code before committing.** AI-generated code can contain contrived logic, awkward variable naming, or patterns that no human would write. If anything looks unnatural — overly verbose conditions, oddly named variables, unnecessary abstractions — the user should rewrite it in a way that is believable and clear to human reviewers. The goal is that every line in the PR looks like something the author would have written themselves.
+
 ## Code Style
 
 - **C++20**, 2-space indent, 102-col limit, left-aligned pointers (`int* p`, not `int *p`)
 - **MUST** use either script `./scripts/format.sh` or clang-format-11 directly — newer versions produce different output
 - clang-tidy checks: `bugprone-*`, `performance-*`, `modernize-*`, `clang-analyzer-*`
+
+### Comments
+
+Same terseness rules as PR/issue prose. Default to no comment. Add one only when the *why* is non-obvious — a hidden constraint, a subtle invariant, a non-trivial correctness argument, a workaround for a known bug. If a future reader could derive the reason from the code itself, leave it out.
+
+**Never write comments that reference past state, prior bugs, or the change that produced the current code.** No `// fixed because GEOS crashed on empty inner_rings`, no `// previously this used .front()`, no `// added to handle issue #6075`. That context belongs in the commit message or PR description and rots the moment the surrounding code moves. The comment should describe the code as it is, not the history of how it got there.
+
+No multi-paragraph docstrings, no multi-line comment blocks restating what the code does. One short line max for inline rationale; a single `//` line above a function is fine when the contract isn't obvious from the signature.
 
 ## Reference
 

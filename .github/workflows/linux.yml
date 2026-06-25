@@ -54,9 +54,7 @@ jobs:
     name: Lint & Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+      - uses: actions/checkout@v6
 
       - name: Run Formatter & Linter
         run: |
@@ -69,10 +67,9 @@ jobs:
     runs-on: ubuntu-24.04
     needs: [lint_format]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 1
 
       - uses: actions/setup-python@v6
         with:
@@ -145,10 +142,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint_format]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 1
 
       - uses: actions/setup-python@v6
         with:
@@ -230,10 +226,9 @@ jobs:
     runs-on: ubuntu-24.04-arm
     needs: [lint_format]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 1
 
       - uses: actions/setup-python@v6
         with:
@@ -281,6 +276,9 @@ jobs:
           bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
+
+      - name: Verify Python .pyi stubs are up to date
+        run: ./scripts/regenerate_python_stubs.sh build
       
       - name: Run clang-tidy
         run: scripts/clang-tidy-only-diff.sh $(nproc)

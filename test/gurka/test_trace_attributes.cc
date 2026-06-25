@@ -448,11 +448,32 @@ TEST(Standalone, BeginShapeIndexAtDiscontinuity) {
   const uint32_t efgh_begin_idx = edges[1]["begin_shape_index"].GetUint();
   EXPECT_EQ(abcd_end_idx + 1, efgh_begin_idx) << "Discontinuity between BC and DE along the shape";
 
-  const auto shape =
-      midgard::decode<std::vector<midgard::PointLL>>(std::string(result["shape"].GetString()));
-  const auto bc_match = shape[abcd_end_idx];
-  const auto fg_match = shape[efgh_begin_idx];
-  EXPECT_GT(bc_match.Distance(fg_match), 1000.0) << "Discontinuity is big enough";
+  // Both edges are trimmed to the matched segments:
+  const std::vector<midgard::PointLL> expected_shape{
+      layout.at("1"), layout.at("B"), layout.at("2"), layout.at("3"), layout.at("G"), layout.at("4"),
+  };
+  EXPECT_EQ(result["shape"].GetString(), midgard::encode(expected_shape));
+}
+
+TEST(Standalone, TrivialSingleEdgeRouteMatch) {
+  const std::string ascii_map = R"(
+    A---1----2---B---C
+  )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"name", "Main St"}}},
+                            {"BC", {{"highway", "primary"}, {"name", "Main St"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/trivial_single_edge_route_match");
+
+  std::string result_json;
+  ASSERT_NO_THROW(gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2"}, "auto",
+                                   {{"/shape_match", "edge_walk"}}, {}, &result_json, "via"));
+  rapidjson::Document result;
+  result.Parse(result_json.c_str());
+  ASSERT_TRUE(result.HasMember("edges"));
+  ASSERT_EQ(result["edges"].GetArray().Size(), 1u);
+  EXPECT_STREQ(result["edges"][0]["names"][0].GetString(), "Main St");
 }
 
 TEST(Standalone, PbfOut) {
@@ -491,4 +512,97 @@ TEST(Standalone, PbfOut) {
     EXPECT_TRUE(it->has_distance_from_trace_point());
     EXPECT_NEAR(it->distance_from_trace_point(), 10., 0.5);
   }
+}
+
+TEST(Standalone, BackwardTraceOnOnewayEdge) {
+  const std::string ascii_map = R"(
+    D
+    |
+    0
+    |
+    A--1--2-----------3--4--B
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"oneway", "yes"}}},
+      {"DA", {{"highway", "residential"}}},
+  };
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/backward_trace_oneway");
+
+  struct TestCase {
+    std::vector<std::string> trace;
+    uint32_t expected_edges;
+    std::string description;
+  };
+
+  // Single edge backwards trace
+  for (const auto& tc : std::vector<TestCase>{
+           {{"3", "4", "1", "2"}, 2, "forward then backward: 3->4->1->2"},
+           {{"1", "3", "2", "4"}, 2, "backward middle step: 1->3->2->4"},
+           // Last pair does not form a trace
+           {{"2", "4", "3", "1"}, 1, "forward then backward (shifted): 2->4->3->1"},
+       }) {
+    SCOPED_TRACE(tc.description);
+
+    std::string trace_json;
+    [[maybe_unused]] auto api =
+        gurka::do_action(valhalla::Options::trace_attributes, map, tc.trace, "auto",
+                         {{"/elevation_interval", "30"}}, {}, &trace_json);
+
+    rapidjson::Document result;
+    result.Parse(trace_json.c_str());
+    ASSERT_FALSE(result.HasParseError());
+
+    ASSERT_TRUE(result.HasMember("edges"));
+    auto edges = result["edges"].GetArray();
+    ASSERT_EQ(edges.Size(), tc.expected_edges);
+    for (uint32_t i = 0; i < edges.Size(); ++i) {
+      EXPECT_STREQ(edges[i]["names"][0].GetString(), "AB");
+      EXPECT_LE(edges[i]["source_percent_along"].GetFloat(),
+                edges[i]["target_percent_along"].GetFloat());
+    }
+  }
+
+  // Multi edge backwards trace
+  for (const auto& tc : std::vector<TestCase>{
+           {{"0", "3", "4", "1", "2"}, 3, "forward then backward: 3->4->1->2"},
+           {{"0", "1", "3", "2", "4"}, 3, "backward middle step: 1->3->2->4"},
+           // Last pair does not form a trace
+           {{"0", "2", "4", "3", "1"}, 2, "forward then backward (shifted): 2->4->3->1"},
+       }) {
+    SCOPED_TRACE(tc.description);
+
+    std::string trace_json;
+    [[maybe_unused]] auto api =
+        gurka::do_action(valhalla::Options::trace_attributes, map, tc.trace, "auto",
+                         {{"/elevation_interval", "30"}}, {}, &trace_json);
+
+    rapidjson::Document result;
+    result.Parse(trace_json.c_str());
+    ASSERT_FALSE(result.HasParseError());
+
+    ASSERT_TRUE(result.HasMember("edges"));
+    auto edges = result["edges"].GetArray();
+    ASSERT_EQ(edges.Size(), tc.expected_edges);
+    EXPECT_STREQ(edges[0]["names"][0].GetString(), "DA");
+
+    const auto get_src = [](const auto& edge) {
+      return edge.HasMember("source_percent_along") ? edge["source_percent_along"].GetFloat() : 0.f;
+    };
+    const auto get_tgt = [](const auto& edge) {
+      return edge.HasMember("target_percent_along") ? edge["target_percent_along"].GetFloat() : 1.f;
+    };
+    for (uint32_t i = 1; i < edges.Size(); ++i) {
+      EXPECT_STREQ(edges[i]["names"][0].GetString(), "AB");
+      EXPECT_LE(get_src(edges[i]), get_tgt(edges[i]));
+    }
+  }
+
+  // Fully reversed on a one-way edge - Meili can't route any consecutive pair
+  EXPECT_THROW(gurka::do_action(valhalla::Options::trace_attributes, map, {"4", "3", "2", "1"},
+                                "auto", {{"/elevation_interval", "30"}}),
+               std::exception);
 }
