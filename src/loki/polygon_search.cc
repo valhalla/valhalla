@@ -229,7 +229,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
   std::vector<flatbush::Flatbush<double>> rtrees;
   rtrees.reserve(rings.size());
   for (const auto& ring : rings) {
-    flatbush::FlatbushBuilder<double> builder;
+    flatbush::FlatbushBuilder<double> builder(ring.first.size());
     for (size_t i = 0; i < ring.first.size() - 1; ++i) {
       const auto& pt = ring.first[i];
       const auto& next_pt = ring.first[i + 1];
