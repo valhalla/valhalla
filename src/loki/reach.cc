@@ -51,7 +51,6 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
   directed_reach reach{};
   if (max_reach == 0)
     return reach;
-  LOG_INFO("Reach calculated");
   max_reach_ = max_reach;
 
   // these are used below to get conservative estimates of forward and reverse reach
