@@ -798,7 +798,7 @@ public:
       restriction_idx = is_time_restricted && restriction_idx == baldr::kInvalidRestriction
                             ? static_cast<uint8_t>(i)
                             : restriction_idx;
-      if ((current_time != 0) && !had_time_in_range && (is_time_restricted) &&
+      if (current_time != 0 && !had_time_in_range && is_time_restricted &&
           !ignore_non_vehicular_restrictions_) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
         had_time_allowed = access_type == baldr::AccessType::kTimedAllowed;
