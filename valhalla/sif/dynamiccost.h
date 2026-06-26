@@ -802,7 +802,7 @@ public:
         had_time_allowed = access_type == baldr::AccessType::kTimedAllowed;
         had_time_denied = access_type == baldr::AccessType::kTimedDenied;
         had_destination_allowed = access_type == baldr::AccessType::kDestinationAllowed;
-        had_time_in_range |= IsConditionalActive(restriction.value(), current_time, tz_index);
+        had_time_in_range = IsConditionalActive(restriction.value(), current_time, tz_index);
       }
 
       if (restriction.except_destination() &&
