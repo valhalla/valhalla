@@ -790,17 +790,17 @@ public:
     for (const auto& [i, restriction] : midgard::enumerate(restrictions)) {
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
-      if (!ignore_non_vehicular_restrictions_ &&
+      if ((current_time != 0) && !had_time_in_range &&
           (access_type == baldr::AccessType::kTimedAllowed ||
            access_type == baldr::AccessType::kTimedDenied ||
-           access_type == baldr::AccessType::kDestinationAllowed)) {
+           access_type == baldr::AccessType::kDestinationAllowed) &&
+          !ignore_non_vehicular_restrictions_) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
         restriction_idx = static_cast<uint8_t>(i);
         had_time_allowed = access_type == baldr::AccessType::kTimedAllowed;
         had_time_denied = access_type == baldr::AccessType::kTimedDenied;
         had_destination_allowed = access_type == baldr::AccessType::kDestinationAllowed;
-        had_time_in_range |=
-            (current_time != 0) && IsConditionalActive(restriction.value(), current_time, tz_index);
+        had_time_in_range |= IsConditionalActive(restriction.value(), current_time, tz_index);
       }
 
       if (restriction.except_destination() &&
@@ -819,16 +819,17 @@ public:
     }
     destonly_access_restr_mask = tmp_mask;
 
-    return (current_time == 0) || ignore_non_vehicular_restrictions_ ||
-           // either there was a time denied restriction, in which case we're only allowed if we
-           // weren't in range, or there was a time allowed restriction, then we're only allowed if we
-           // were in range
-           (had_time_denied && !had_time_in_range) || (had_time_allowed && had_time_in_range) ||
-           // finally, if there was a destination allowed restriction, we're allowed if we're a) in
-           // range and at the destination or b) out of range
-           (had_destination_allowed &&
-            ((had_time_in_range && (is_dest || allow_conditional_destination_)) ||
-             !had_time_in_range));
+    return
+        // we never encountered a timed restriction or we did but we didn't care
+        (!had_time_allowed && !had_time_denied && !had_destination_allowed) ||
+        // either there was a time denied restriction, in which case we're only allowed if we
+        // weren't in range, or there was a time allowed restriction, then we're only allowed if we
+        // were in range
+        (had_time_denied && !had_time_in_range) || (had_time_allowed && had_time_in_range) ||
+        // finally, if there was a destination allowed restriction, we're allowed if we're a) in
+        // range and at the destination or b) out of range
+        (had_destination_allowed &&
+         ((had_time_in_range && (is_dest || allow_conditional_destination_)) || !had_time_in_range));
   }
 
   /**
