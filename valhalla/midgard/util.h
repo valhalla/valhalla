@@ -863,5 +863,19 @@ using circle_t = std::pair<PointLL, double>;
 std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
                                                 double distance_threshold);
 
+enum class CircleInBbox : uint8_t { OUTSIDE = 0, INSIDE = 1, INTERSECTS = 2 };
+/**
+ * Test whether a circle intersects an axis-aligned bounding box.
+ *
+ * @param center      the circle center in lat/lon
+ * @param radius_deg  the radius in degrees
+ * @param box         axis-aligned bounding box in lat/lon
+ *
+ * @return whether the circle is outside, fully inside, or on the boundary of the bounding box
+ */
+CircleInBbox circle_intersects_bounds(const PointLL& center,
+                                      float radius_deg,
+                                      const AABB2<valhalla::midgard::PointLL>& box);
+
 } // namespace midgard
 } // namespace valhalla

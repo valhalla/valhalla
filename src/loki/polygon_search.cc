@@ -21,6 +21,26 @@ using namespace valhalla::loki;
 
 namespace {
 
+/**
+ * Helper to test whether a linear ring intersects a circle.
+ */
+bool intersects_boundary(const bg::ring_ll_t& ring,
+                         const PointLL& circle_center,
+                         double circle_radius_sq) {
+  for (size_t i = 0; i < ring.size() - 1; ++i) {
+    const auto& pt = ring[i];
+    const auto& next_pt = ring[i + 1];
+    auto projected = circle_center.Project(pt, next_pt);
+
+    // if we find any segment that's within radius, bail
+    if (circle_center.DistanceSquared(projected) <= circle_radius_sq) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 uint64_t to_value(uint32_t tileid, unsigned short bin) {
   return static_cast<uint64_t>(tileid) | (static_cast<uint64_t>(bin) << 32);
 }
@@ -46,14 +66,14 @@ void correct_ring(bg::ring_ll_t& ring) {
   }
 }
 
-bg::ring_ll_t PBFToRing(const valhalla::Ring& ring_pbf) {
+std::pair<bg::ring_ll_t, AABB2<PointLL>> PBFToRing(const valhalla::Ring& ring_pbf) {
   bg::ring_ll_t new_ring;
   new_ring.reserve(ring_pbf.coords().size());
   for (const auto& coord : ring_pbf.coords()) {
     new_ring.push_back({coord.lng(), coord.lat()});
   }
   correct_ring(new_ring);
-  return new_ring;
+  return {new_ring, AABB2<PointLL>(new_ring)};
 }
 
 #ifdef LOGGING_LEVEL_TRACE
@@ -118,11 +138,11 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
 
   // convert to bg object and check length restriction
   double rings_length = 0;
-  std::vector<bg::ring_ll_t> rings_bg;
+  std::vector<std::pair<bg::ring_ll_t, AABB2<PointLL>>> rings_bg;
   rings_bg.reserve(rings_pbf.size());
   for (const auto& ring_pbf : rings_pbf) {
     rings_length +=
-        boost::geometry::perimeter(rings_bg.emplace_back(PBFToRing(ring_pbf)), Haversine());
+        boost::geometry::perimeter(rings_bg.emplace_back(PBFToRing(ring_pbf)).first, Haversine());
   }
   if (rings_length > max_length) {
     throw valhalla_exception_t(167, std::to_string(static_cast<size_t>(max_length)) + " meters");
@@ -142,7 +162,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
   // first pull out all *unique* bins which intersect the boundaries
   for (size_t ring_idx = 0; ring_idx < rings_bg.size(); ring_idx++) {
     const auto& ring = rings_bg[ring_idx];
-    auto line_intersection = tiles.Intersect(ring);
+    auto line_intersection = tiles.Intersect(ring.first);
     for (const auto& tb : line_intersection) {
       for (const auto& b : tb.second) {
         bins_intersected[static_cast<uint32_t>(tb.first)][b].push_back(ring_idx);
@@ -172,7 +192,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
           }
           auto bbox = tiles.BinBBox(neighbor.first, neighbor.second);
           PointLL center((bbox.minx() + bbox.maxx()) * 0.5, (bbox.miny() + bbox.maxy()) * 0.5);
-          if (point_in_poly(center, ring)) {
+          if (point_in_poly(center, ring.first)) {
             start_bin = neighbor;
             break;
           }
@@ -216,56 +236,115 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     if (!tile) {
       return;
     }
-    for (const auto& edge_id : tile->GetBin(bin.first)) {
+
+    bool has_bounding_circles = tile->header()->has_bounding_circles();
+    auto edges = tile->GetBin(bin.first);
+    auto bounding_circles = tile->GetBoundingCircles(bin.first);
+    auto bounding_circle = bounding_circles.begin();
+    auto minx = tiles.TileBounds(tileid).minx();
+    auto miny = tiles.TileBounds(tileid).miny();
+    for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
+      auto edge_id = *edge_it;
       if (avoid_edge_ids.count(edge_id) != 0) {
         continue;
       }
-      // TODO: optimize the tile switching by enqueuing edges
-      // from other levels & tiles and process them after this big loop
+      double radius = 0, radius_deg, radius_sq;
+      std::pair<PointLL, double> circle({0, 0}, 0.);
+      // if we need to check each bin edge individually, prepare its bounding circle
+      // if available
+      if (intersect) {
+        auto lat_offset =
+            (bin.first / kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+        auto lng_offset =
+            (bin.first % kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+        PointLL bin_center(minx + lng_offset, miny + lat_offset);
+        auto bin_center_approximator = DistanceApproximator<PointLL>(bin_center);
+        if (has_bounding_circles && bounding_circle->is_valid())
+          circle = bounding_circle->get(bin_center_approximator, bin_center);
+        radius = circle.second;
+        radius_deg = radius / (kMetersPerDegreeLat * cosf(circle.first.lat() * kRadPerDeg));
+        radius_sq = midgard::sqr(radius);
+      }
+
       if (edge_id.tile_base() != tile->header()->graphid().tile_base() &&
           !reader.GetGraphTile(edge_id, tile)) {
         continue;
       }
-      const auto edge = tile->directededge(edge_id);
+
+      const DirectedEdge* edge;
+      edge = tile->directededge(edge_id);
       auto opp_tile = tile;
       const baldr::DirectedEdge* opp_edge = nullptr;
       baldr::GraphId opp_id;
 
-      // bail if we wouldnt be allowed on this edge anyway (or its opposing)
+      // bail if we wouldnt be allowed on this edge anyway, nor its opposing
       if (!costing->Allowed(edge, tile) &&
           (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).is_valid() ||
            !costing->Allowed(opp_edge, opp_tile))) {
         continue;
       }
 
-      auto edge_info = tile->edgeinfo(edge);
       bool exclude = false;
+      std::optional<EdgeInfo> edgeinfo;
       for (const auto& ring_loc : bin.second) {
         // if intersect is false, the bin is entirely within the ring,
         // so the shape is known to intersect the ring
-        bool intersects =
-            !intersect ? true
-                       : boost::geometry::intersects(rings_bg[ring_loc],
-                                                     bg::linestring_ll_t(edge_info.shape().begin(),
-                                                                         edge_info.shape().end()));
+        bool intersects = !intersect;
+
+        auto& ring = rings_bg[ring_loc];
+
+        // if we need to check edges individually, and there is no bounding circle, or there is one
+        // and it intersects with the ring's bounding box, we need to have a closer look
+        if (intersect &&
+            (radius == 0 ||
+             (radius != 0 && circle_intersects_bounds(circle.first, radius_deg, ring.second) !=
+                                 CircleInBbox::OUTSIDE))) {
+          bool outside = false;
+
+          // avoid boost::geometry::intersects(...) at all cost; if the circle is either fully inside
+          // or fully outside the ring, we don't need to intersect the shape
+
+          // if we have a bounding circle, and none of the ring segments are within radius
+          if (radius != 0. && !intersects_boundary(ring.first, circle.first, radius_sq)) {
+
+            // if the center is inside the ring, we know the shape must intersect the ring, else
+            // it must be disjoint
+            auto pip = point_in_poly(circle.first, ring.first);
+            intersects = pip;
+            outside = !pip;
+          }
+
+          if (!intersects && !outside) {
+            // either we have no circle or we do but it intersected the ring boundary
+            if (!edgeinfo)
+              edgeinfo = tile->edgeinfo(edge);
+
+            intersects =
+                boost::geometry::intersects(ring.first, bg::linestring_ll_t(edgeinfo->shape().begin(),
+                                                                            edgeinfo->shape().end()));
+          }
+        }
+
         // if the edge shape intersects the ring, check if the user passed
         // levels
         if (intersects) {
           if (exclude_levels[ring_loc].size() > 0) {
             // the user passed levels, so only exclude the edges if they run on
             // (not across) that level
-            const auto& levels = edge_info.levels();
+            if (!edgeinfo)
+              edgeinfo = tile->edgeinfo(edge);
+            const auto& levels = edgeinfo->levels();
             // the edge runs on this level (i.e. does not merely traverse it)
             if (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second &&
                 exclude_levels[ring_loc].find(levels.first[0].first) !=
                     exclude_levels[ring_loc].end()) {
               exclude = true;
+              break;
             }
           } else {
             exclude = true;
-          }
-          if (intersects && exclude)
             break;
+          }
         }
       }
       if (exclude) {

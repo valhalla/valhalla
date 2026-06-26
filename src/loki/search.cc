@@ -22,31 +22,6 @@ PointLL point_ll_from_latlng(const valhalla::LatLng& latlng) {
   return PointLL(latlng.lng(), latlng.lat());
 }
 
-template <typename T> inline T square(T v) {
-  return v * v;
-}
-
-enum class CircleInBbox : uint8_t { OUTSIDE = 0, INSIDE = 1, INTERSECTS = 2 };
-
-CircleInBbox circle_intersects_bounds(const PointLL& center,
-                                      float radius_deg,
-                                      const AABB2<valhalla::midgard::PointLL>& box) {
-
-  if (center.lng() - radius_deg >= box.minx() && center.lng() + radius_deg <= box.maxx() &&
-      center.lat() - radius_deg >= box.miny() && center.lat() + radius_deg <= box.maxy()) {
-    return CircleInBbox::INSIDE;
-  }
-
-  float closest_x = std::max(box.minx(), std::min(center.lng(), box.maxx()));
-  float closest_y = std::max(box.miny(), std::min(center.lat(), box.maxy()));
-
-  float dx = closest_x - center.lng();
-  float dy = closest_y - center.lat();
-  float distance_squared = square(dx) + square(dy);
-
-  return distance_squared <= square(radius_deg) ? CircleInBbox::INTERSECTS : CircleInBbox::OUTSIDE;
-}
-
 bool search_filter(const DirectedEdge* edge,
                    const DynamicCost& costing,
                    const graph_tile_ptr& tile,
@@ -214,8 +189,8 @@ struct candidate_t {
 struct projector_wrapper {
   projector_wrapper(Location* location, GraphReader& reader)
       : binner(make_binner(point_ll_from_latlng(location->ll()))), location(location),
-        bin_center_approximator(bin_center), sq_radius(square(double(location->radius()))),
-        sq_cutoff(square(double(location->search_cutoff()))),
+        bin_center_approximator(bin_center), sq_radius(midgard::sqr(double(location->radius()))),
+        sq_cutoff(midgard::sqr(double(location->search_cutoff()))),
         project(point_ll_from_latlng(location->ll())) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
@@ -468,8 +443,8 @@ struct bin_handler_t {
                         GetOffsetForHeading(candidate.edge->classification(), candidate.edge->use()),
                         candidate.edge->forward());
       auto layer = candidate.edge_info->layer();
-      auto sq_tolerance = square(double(location.street_side_tolerance()));
-      auto sq_max_distance = square(double(location.street_side_max_distance()));
+      auto sq_tolerance = midgard::sqr(double(location.street_side_tolerance()));
+      auto sq_max_distance = midgard::sqr(double(location.street_side_max_distance()));
       auto display_pt = point_ll_from_latlng(location.display_ll());
       auto side =
           candidate.get_side((location.has_display_ll() ? display_pt : pt), angle,
