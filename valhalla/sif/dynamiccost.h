@@ -792,13 +792,15 @@ public:
     for (const auto& [i, restriction] : midgard::enumerate(restrictions)) {
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
-      if ((current_time != 0) && !had_time_in_range &&
-          (access_type == baldr::AccessType::kTimedAllowed ||
-           access_type == baldr::AccessType::kTimedDenied ||
-           access_type == baldr::AccessType::kDestinationAllowed) &&
+      bool is_time_restricted = access_type == baldr::AccessType::kTimedAllowed ||
+                                access_type == baldr::AccessType::kTimedDenied ||
+                                access_type == baldr::AccessType::kDestinationAllowed;
+      restriction_idx = is_time_restricted && restriction_idx == baldr::kInvalidRestriction
+                            ? static_cast<uint8_t>(i)
+                            : restriction_idx;
+      if ((current_time != 0) && !had_time_in_range && (is_time_restricted) &&
           !ignore_non_vehicular_restrictions_) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
-        restriction_idx = static_cast<uint8_t>(i);
         had_time_allowed = access_type == baldr::AccessType::kTimedAllowed;
         had_time_denied = access_type == baldr::AccessType::kTimedDenied;
         had_destination_allowed = access_type == baldr::AccessType::kDestinationAllowed;
