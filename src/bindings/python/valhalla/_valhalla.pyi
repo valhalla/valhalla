@@ -129,6 +129,113 @@ class GraphId:
 
     def __setstate__(self, arg: tuple[int], /) -> None: ...
 
+class GraphTileHeader:
+    """
+    Read-only information about a graph tile. Obtain one via GraphUtils.get_graph_tile_header().
+    """
+
+    @property
+    def graphid(self) -> GraphId:
+        """GraphId (tile id + level) of this tile."""
+
+    @property
+    def base_ll(self) -> tuple[float, float]:
+        """(lon, lat) of the tile's south-western corner, in degrees."""
+
+    @property
+    def version(self) -> str:
+        """Tile format version string."""
+
+    @property
+    def dataset_id(self) -> int:
+        """Data set id (e.g. latest OSM changeset id)."""
+
+    @property
+    def density(self) -> int:
+        """Relative road density (0-15)."""
+
+    @property
+    def has_elevation(self) -> bool:
+        """True if the tile carries edge elevation data."""
+
+    @property
+    def has_ext_directededge(self) -> bool:
+        """True if the tile carries extended directed-edge attributes."""
+
+    @property
+    def has_bounding_circles(self) -> bool:
+        """True if the tile carries node bounding circles."""
+
+    @property
+    def nodecount(self) -> int:
+        """Number of nodes."""
+
+    @property
+    def directededgecount(self) -> int:
+        """Number of directed edges."""
+
+    @property
+    def transitioncount(self) -> int:
+        """Number of node transitions."""
+
+    @property
+    def signcount(self) -> int:
+        """Number of signs."""
+
+    @property
+    def access_restriction_count(self) -> int:
+        """Number of access restriction records."""
+
+    @property
+    def admincount(self) -> int:
+        """Number of admin records."""
+
+    @property
+    def turnlane_count(self) -> int:
+        """Number of turn lane records."""
+
+    @property
+    def predictedspeeds_count(self) -> int:
+        """Number of predicted speed records."""
+
+    @property
+    def departurecount(self) -> int:
+        """Number of transit departures."""
+
+    @property
+    def stopcount(self) -> int:
+        """Number of transit stops."""
+
+    @property
+    def routecount(self) -> int:
+        """Number of transit routes."""
+
+    @property
+    def schedulecount(self) -> int:
+        """Number of transit schedules."""
+
+    @property
+    def transfercount(self) -> int:
+        """Number of transit transfers."""
+
+    @property
+    def date_created(self) -> int:
+        """Tile creation date (days since the pivot date)."""
+
+    @property
+    def end_offset(self) -> int:
+        """Tile size in bytes."""
+
+    @property
+    def tile_checksum(self) -> int:
+        """Integer checksum (48 bit) of the tile's data."""
+
+    @property
+    def build_id(self) -> int:
+        """Integer additive checksum (16 bit) of the tileset."""
+
+    def __repr__(self) -> str: ...
+
 class _GraphUtils:
     """
     C++ binding for GraphUtils (internal use - prefer GraphUtils wrapper).
@@ -152,6 +259,15 @@ class _GraphUtils:
         :param edge_id: GraphId of the edge
         :returns: List of (lon, lat) tuples representing the edge geometry
         :raises RuntimeError: When the tile or edge is not found
+        """
+
+    def get_graph_tile_header(self, tile_id: GraphId) -> GraphTileHeader:
+        """
+        Get the GraphTileHeader for the tile that contains this GraphId.
+
+        :param tile_id: GraphId of (or within) the tile
+        :returns: GraphTileHeader with the tile's summary metadata
+        :raises RuntimeError: When the tile is or edge not found
         """
 
 def get_tile_base_lon_lat(graph_id: GraphId) -> tuple:
