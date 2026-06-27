@@ -26,6 +26,9 @@
 
 namespace {
 
+// ~0.00064m at kRadEarthMeters
+constexpr double kAngularDistEpsilon = 1e-10;
+
 using namespace valhalla;
 using namespace valhalla::midgard;
 
@@ -943,20 +946,21 @@ Point2d AzimuthalEquidistant::project(const PointLL& ll) const {
   const double cos_lat = std::cos(lat);
 
   const double dlon = lon - center_rad_.first;
+  const double cos_dlon = std::cos(dlon);
 
   // angular distance from center c, guarded against acos domain issues
   // (formula 4)
-  const double cos_c = sin_lat_center_ * sin_lat + cos_lat_center_ * cos_lat * std::cos(dlon);
+  const double cos_c = sin_lat_center_ * sin_lat + cos_lat_center_ * cos_lat * cos_dlon;
   const double c = std::acos(std::clamp(cos_c, -1.0, 1.0));
 
   // k is c/sin(c), approaching 1 as c->0 (formula 3)
-  const double k = (c < 1e-10) ? 1.0 : c / std::sin(c);
+  const double k = (c < kAngularDistEpsilon) ? 1.0 : c / std::sin(c);
 
   // formula 1
   const double x = k * cos_lat * std::sin(dlon);
 
   // formula 2
-  const double y = k * (cos_lat_center_ * sin_lat - sin_lat_center_ * cos_lat * std::cos(dlon));
+  const double y = k * (cos_lat_center_ * sin_lat - sin_lat_center_ * cos_lat * cos_dlon);
 
   // scale from radians to meters using earth's radius
   return {x * kRadEarthMeters, y * kRadEarthMeters};
