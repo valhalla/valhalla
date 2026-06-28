@@ -162,6 +162,16 @@ gtest_discover_tests(tyr_inline_tests TEST_PREFIX "TyrInline.")
 ## Test-specific data, properties and dependencies
 target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
 
+# tz.sqlite is built by scripts/valhalla_build_timezones, which shells out to the
+# spatialite-tools CLI programs. Fail clearly at configure time if they are missing.
+if(ENABLE_DATA_TOOLS)
+  find_program(SPATIALITE_TOOL_EXECUTABLE NAMES spatialite_tool)
+  find_program(SPATIALITE_EXECUTABLE NAMES spatialite)
+  if(NOT SPATIALITE_TOOL_EXECUTABLE OR NOT SPATIALITE_EXECUTABLE)
+    message(FATAL_ERROR "spatialite-tools not found: need both 'spatialite_tool' and 'spatialite' to build tz.sqlite for tests. Install with: brew install spatialite-tools (macOS) or apt-get install spatialite-bin (Debian/Ubuntu).")
+  endif()
+endif()
+
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   DEPENDS ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/
