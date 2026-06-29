@@ -1032,5 +1032,23 @@ std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& poin
   return circle_t{Point2d{center.lng(), center.lat()}, result.second};
 }
 
+CircleInBbox circle_intersects_bounds(const PointLL& center,
+                                      float radius_deg,
+                                      const AABB2<valhalla::midgard::PointLL>& box) {
+
+  if (center.lng() - radius_deg >= box.minx() && center.lng() + radius_deg <= box.maxx() &&
+      center.lat() - radius_deg >= box.miny() && center.lat() + radius_deg <= box.maxy()) {
+    return CircleInBbox::INSIDE;
+  }
+
+  float closest_x = std::max(box.minx(), std::min(center.lng(), box.maxx()));
+  float closest_y = std::max(box.miny(), std::min(center.lat(), box.maxy()));
+
+  float dx = closest_x - center.lng();
+  float dy = closest_y - center.lat();
+  float distance_squared = sqr(dx) + sqr(dy);
+
+  return distance_squared <= sqr(radius_deg) ? CircleInBbox::INTERSECTS : CircleInBbox::OUTSIDE;
+}
 } // namespace midgard
 } // namespace valhalla
