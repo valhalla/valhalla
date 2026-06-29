@@ -11,6 +11,7 @@ A single `NB_MODULE(_valhalla)` lives in [src/_valhalla.cc](src/_valhalla.cc) �
 | exception | `pyvalhalla::init_exceptions` ([src/exceptions.cc](src/exceptions.cc)) | [src/module.h](src/module.h) | `ValhallaError` (manual `PyErr_NewExceptionWithDoc` + translator) |
 | actor | `pyvalhalla::init_actor` ([src/actor.cc](src/actor.cc)) | [src/module.h](src/module.h) | `tyr::actor_t` → `_Actor` |
 | graph id | `pyvalhalla::baldr::init_graphid` ([src/baldr/graph_id.cc](src/baldr/graph_id.cc)) | [src/baldr/module.h](src/baldr/module.h) | `baldr::GraphId` |
+| graph tile header | `pyvalhalla::baldr::init_graphtileheader` ([src/baldr/graph_tile_header.cc](src/baldr/graph_tile_header.cc)) | [src/baldr/module.h](src/baldr/module.h) | `baldr::GraphTileHeader` (read-only props; obtained via `GraphUtils.get_graph_tile_header`) |
 | graph reader | `pyvalhalla::baldr::utils::init_graphreader` ([src/baldr/utils/graph_reader.cc](src/baldr/utils/graph_reader.cc)) | [src/baldr/utils/module.h](src/baldr/utils/module.h) | `baldr::GraphReader` → `_GraphUtils` |
 | graph tile | `pyvalhalla::baldr::utils::init_graphtile` ([src/baldr/utils/graph_tile.cc](src/baldr/utils/graph_tile.cc)) | [src/baldr/utils/module.h](src/baldr/utils/module.h) | `get_tile_*` helpers (`TileHierarchy`) |
 | predicted speeds | `pyvalhalla::baldr::utils::init_predicted_speeds` ([src/baldr/utils/predicted_speeds.cc](src/baldr/utils/predicted_speeds.cc)) | [src/baldr/utils/module.h](src/baldr/utils/module.h) | `baldr::compress_speed_buckets`, DCT-II helpers |

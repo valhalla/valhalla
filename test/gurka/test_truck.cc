@@ -349,3 +349,75 @@ TEST(Standalone, UseTruckRoute) {
   gurka::assert::raw::expect_path(default_route, {"AB", "BC"});
   gurka::assert::raw::expect_path(use_truck_route, {"AE", "ED", "CD"});
 }
+
+TEST(Standalone, LowRoadClassPenalty_1) {
+  constexpr double gridsize = 100;
+
+  // start and end of route on tertiary,
+  // the route via unclassified roads is much
+  // shorter. Make sure the unclassified path is chosen
+  // despite low_class_penalty.
+  const std::string ascii_map = R"(
+
+      A1B-G-H-I-J-K2L
+      |             |
+      |             |
+      |             |
+      |             |
+      |             |
+      |             |
+      |             |
+      |             |
+      E-------------F
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},  {"BG", {{"highway", "residential"}}},
+      {"GH", {{"highway", "residential"}}},  {"HI", {{"highway", "residential"}}},
+      {"IJ", {{"highway", "residential"}}},  {"JK", {{"highway", "residential"}}},
+      {"KL", {{"highway", "residential"}}},  {"LF", {{"highway", "unclassified"}}},
+      {"AE", {{"highway", "unclassified"}}}, {"EF", {{"highway", "unclassified"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/low_class_penalty_1");
+
+  valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "truck");
+
+  gurka::assert::raw::expect_path(route, {"AB", "BG", "GH", "HI", "IJ", "JK", "KL"});
+}
+
+/**
+ * Similar to the first example, but make the detour shorter and therefore more favorable.
+ */
+TEST(Standalone, LowRoadClassPenalty_2) {
+  constexpr double gridsize = 100;
+
+  const std::string ascii_map = R"(
+
+      A-B-G-H-I-J-K-L
+      1             2
+      C             D
+      |             |
+      |             |
+      |             |
+      E-------------F
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},  {"BG", {{"highway", "residential"}}},
+      {"GH", {{"highway", "residential"}}},  {"HI", {{"highway", "residential"}}},
+      {"IJ", {{"highway", "residential"}}},  {"JK", {{"highway", "residential"}}},
+      {"KL", {{"highway", "residential"}}},  {"LD", {{"highway", "unclassified"}}},
+      {"AC", {{"highway", "unclassified"}}}, {"CE", {{"highway", "unclassified"}}},
+      {"DF", {{"highway", "unclassified"}}}, {"EF", {{"highway", "unclassified"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/low_class_penalty_2");
+
+  valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "truck");
+
+  // should avoid the residential path here
+  gurka::assert::raw::expect_path(route, {"AC", "CE", "EF", "DF", "LD"});
+}
