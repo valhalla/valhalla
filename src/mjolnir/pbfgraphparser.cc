@@ -4283,7 +4283,7 @@ struct graph_parser {
           osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
         }
       }
-    } else if (isMultipolygon && isPedestrian && isArea) {
+    } else if (isMultipolygon && isPedestrian && isArea && pedestrian_areas_) {
       for (const auto& member : members) {
         OSMAreaMember area_member;
         if (member.role == "outer" && member.member_type == osmium::item_type::way) {
