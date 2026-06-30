@@ -228,7 +228,7 @@ TEST(Standalone, PrivateEmergencyIgnoreAccess) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/private_emergency_access");
 
   // access=private + emergency=yes should be routable as destination_only
-  for (const std::string& cost : {"auto", "truck", "taxi", "bus"}) {
+  for (const auto& cost : {"auto", "truck", "taxi", "bus"}) {
     EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "C"}, cost))
         << "Failed to route through access=private + emergency=yes road with " << cost;
   }
