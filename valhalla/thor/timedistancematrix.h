@@ -50,9 +50,9 @@ public:
     if (request.options().shape_format() != no_shape)
       add_warning(request, 207);
 
-    // Set the mode and costing
     mode_ = mode;
     costing_ = mode_costing[static_cast<uint32_t>(mode_)];
+    max_expansion_distance_ = request.options().expansion_max_distance();
 
     const bool forward_search =
         request.options().sources().size() <= request.options().targets().size();

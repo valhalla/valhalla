@@ -230,11 +230,37 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        uint64_t range_offset,
                                        uint64_t range_size,
                                        const std::filesystem::path& id_txt_path,
-                                       uint64_t id_checksum) {
+                                       std::optional<uint64_t> id_checksum) {
   // Don't bother with invalid ids
   if (!graphid.is_valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
   }
+
+  auto check_tile_checksum = [&](const GraphTileHeader& header) {
+    // only the build id (identical across the tileset) tells us whether the remote was rebuilt; the
+    // per-tile hash differs from tile to tile
+    uint64_t build_id = header.build_id();
+    if (build_id == 0 && header.tile_checksum() == 0) {
+      // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
+      LOG_WARN(
+          "Remote tile is missing the checksum attribute, please update the tile building valhalla instance");
+    }
+    if (!tile_dir.empty()) {
+      if (!id_checksum) {
+        // first tile in a fresh tile_dir: record the URL & tileset build id
+        static std::mutex mutex;
+        std::lock_guard lock{mutex};
+        std::ofstream id_txt_file(id_txt_path, std::ios::binary);
+        if (id_txt_file) {
+          id_txt_file << tile_url << std::endl;
+          id_txt_file << build_id << std::endl;
+        }
+      } else if (build_id != *id_checksum) {
+        LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
+        throw valhalla_exception_t(446);
+      }
+    }
+  };
 
   LOG_INFO("Downloading tile " + std::to_string(graphid) + " from " + tile_url);
 
@@ -254,30 +280,12 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     return nullptr;
   }
 
-  // inspect the header for the checksum
-  // it's a POD type and thus trivially copyable
-  GraphTileHeader header;
-  std::memcpy(&header, result.bytes_.data(), sizeof(header));
-  auto tile_checksum = header.checksum();
-  if (tile_checksum == 0) {
-    // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
-    LOG_WARN(
-        "Remote tile is missing the checksum attribute, please update the tile building valhalla instance");
-  }
-  if (!tile_dir.empty()) {
-    if (id_checksum == 0) {
-      // this is the first tile in a fresh tile_dir
-      static std::mutex mutex;
-      std::lock_guard lock{mutex};
-      std::ofstream id_txt_file(id_txt_path, std::ios::binary);
-      if (id_txt_file) {
-        id_txt_file << tile_url << std::endl;
-        id_txt_file << tile_checksum << std::endl;
-      }
-    } else if (tile_checksum != id_checksum) {
-      LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
-      throw valhalla_exception_t(446);
-    }
+  if (!tile_getter->gzipped()) {
+    // inspect the header for the checksum
+    // it's a POD type and thus trivially copyable
+    GraphTileHeader header;
+    std::memcpy(&header, result.bytes_.data(), sizeof(header));
+    check_tile_checksum(header);
   }
 
   // try to cache it on disk so we dont have to keep fetching it from url
@@ -285,7 +293,9 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
 
   // turn the memory into a tile
   if (tile_getter->gzipped()) {
-    return DecompressTile(graphid, result.bytes_);
+    auto tile = DecompressTile(graphid, result.bytes_);
+    check_tile_checksum(*tile.get()->header());
+    return tile;
   }
 
   return graph_tile_ptr{
@@ -378,6 +388,10 @@ void GraphTile::Initialize(const GraphId& graphid) {
 
   // Set a pointer to the edge bin list
   edge_bins_ = reinterpret_cast<GraphId*>(ptr);
+
+  // We store the bounding circles offset in the header
+  bounding_circles_ =
+      reinterpret_cast<DiscretizedBoundingCircle*>(tile_ptr + header_->bounding_circle_offset());
 
   // Start of forward restriction information and its size
   complex_restriction_forward_ = tile_ptr + header_->complex_restriction_forward_offset();
@@ -1216,7 +1230,8 @@ const TransitSchedule* GraphTile::GetTransitSchedule(const uint32_t idx) const {
 }
 
 // Get the access restriction given its directed edge index
-std::span<const AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t idx) const {
+std::pair<std::span<const AccessRestriction>, size_t>
+GraphTile::GetAccessRestrictions(const uint32_t idx) const {
 
   uint32_t count = header_->access_restriction_count();
   if (count == 0) {
@@ -1249,8 +1264,10 @@ std::span<const AccessRestriction> GraphTile::GetAccessRestrictions(const uint32
   while (found < count && access_restrictions_[found].edgeindex() == idx) {
     ++found;
   }
-  return std::span<AccessRestriction>(access_restrictions_ + start, access_restrictions_ + found);
+  return {std::span<AccessRestriction>(access_restrictions_ + start, access_restrictions_ + found),
+          start};
 }
+
 // Get the array of graphids for this bin
 std::span<GraphId> GraphTile::GetBin(size_t column, size_t row) const {
   auto offsets = header_->bin_offset(column, row);
@@ -1260,6 +1277,25 @@ std::span<GraphId> GraphTile::GetBin(size_t column, size_t row) const {
 std::span<GraphId> GraphTile::GetBin(size_t index) const {
   auto offsets = header_->bin_offset(index);
   return std::span<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
+}
+
+// Get the array of bounding circles for the given bin
+std::span<DiscretizedBoundingCircle> GraphTile::GetBoundingCircles(size_t column, size_t row) const {
+  if (!header_->has_bounding_circles()) {
+    return std::span<DiscretizedBoundingCircle>{bounding_circles_, bounding_circles_};
+  }
+  auto offsets = header_->bin_offset(column, row);
+  return std::span<DiscretizedBoundingCircle>{bounding_circles_ + offsets.first,
+                                              bounding_circles_ + offsets.second};
+}
+
+std::span<DiscretizedBoundingCircle> GraphTile::GetBoundingCircles(size_t index) const {
+  if (!header_->has_bounding_circles()) {
+    return std::span<DiscretizedBoundingCircle>{bounding_circles_, bounding_circles_};
+  }
+  auto offsets = header_->bin_offset(index);
+  return std::span<DiscretizedBoundingCircle>{bounding_circles_ + offsets.first,
+                                              bounding_circles_ + offsets.second};
 }
 
 // Get turn lanes for this edge.

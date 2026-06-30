@@ -134,6 +134,7 @@ const std::unordered_map<int, std::string> warning_codes = {
     R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
   {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
   {103, R"(best_paths has been deprecated, use "alternates" instead)"},
+  {104, R"(jsonp has been deprecated, use CORS instead)"},
   // 2xx is used for ineffective parameters, i.e. we ignore them because of reasons
   {200, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
@@ -148,13 +149,20 @@ const std::unordered_map<int, std::string> warning_codes = {
   {210, R"(Provided hierarchy limits exceeded maximum allowed values, using max allowed hierarchy limits)"},
   {211, R"(This action doesn't support requested format, using json instead)"},
   {212, R"(Invalid layer name in exclude_layers array: )"},
+  {213, R"(CostMatrix algorithm used, ignoring "matrix_locations")"},
+  {214, R"(Distance exceeded max_timedep_distance for arrive_by, probably ignoring date_time)"},
+  {215, R"(At least one location had no correlated edges, resorting to filtered edges)"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
   {302, R"("search_filter.level" was specified without a custom "search_cutoff", setting default default cutoff to )"},
   {303, R"("search_cutoff" exceeds maximum allowed value due to "search_filter.level" being specified, clamping cutoff to )"},
   // 4xx is used when we do sneaky important things the user should be aware of
-  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
+  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"},
+  {401, R"(Routing failed on first pass, retrying with relaxed restrictions)"},
+  {402, R"(Distance exceeded max_timedep_distance for depart_at, falling back to bidirectional A*)"},
+  // RESERVED: 500 is for clamped values, set in JSON_PBF_RANGED_DEFAULT* macros
+  // {500, R"(<option> was clamped to <value> )"},
 };
 // clang-format on
 

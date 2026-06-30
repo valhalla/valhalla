@@ -49,10 +49,12 @@ public:
   using ZoomConfig = std::array<uint32_t, static_cast<size_t>(baldr::RoadClass::kInvalid)>;
 
 protected:
+  std::pair<bool, bool> parse_location(valhalla::Location& location);
   void parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
                        Api& request,
                        std::optional<valhalla_exception_t> required_exception = valhalla_exception_t{
                            110});
+
   void parse_trace(Api& request);
   void parse_costing(Api& request, bool allow_none = false);
   void locations_from_shape(Api& request);
@@ -111,9 +113,9 @@ protected:
   bool allow_verbose;
   bool allow_hard_exclusions;
   float max_distance_disable_hierarchy_culling;
+  std::unordered_set<baldr::GraphId> bbox_intersection_;
 
   // for /tile requests
-  size_t candidate_query_cache_size_;
   meili::CandidateGridQuery candidate_query_;
   ZoomConfig min_zoom_road_class_;
   std::string mvt_cache_dir_;

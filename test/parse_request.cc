@@ -137,7 +137,7 @@ constexpr float kDefaultTruck_TollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultTruck_TollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultTruck_CountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultTruck_CountryCrossingPenalty = 0.0f;   // Seconds
-constexpr float kDefaultTruck_LowClassPenalty = 30.0f;         // Seconds
+constexpr float kDefaultTruck_LowClassPenalty = 15.0f;         // Seconds
 constexpr float kDefaultTruck_TruckWeight = 21.77f;            // Metric Tons (48,000 lbs)
 constexpr float kDefaultTruck_TruckAxleLoad = 9.07f;           // Metric Tons (20,000 lbs)
 constexpr uint32_t kDefaultTruck_TruckAxles = 5;               // Count
@@ -1626,10 +1626,11 @@ void test_closure_factor_parsing(const Costing::Type costing_type,
 
 // utility functions for testing disable_hierarchy_pruning
 // Create costing options (reference: /test/astar.cc)
-void create_costing_options(Options& options, Costing::Type type) {
+void create_costing_options(Api& request, Costing::Type type) {
   const rapidjson::Document doc;
-  options.set_costing_type(type);
-  sif::ParseCosting(doc, "/costing_options", options);
+  request.mutable_options()->set_costing_type(type);
+  sif::ParseCosting(doc, "/costing_options", *request.mutable_options(),
+                    *request.mutable_info()->mutable_warnings());
 }
 
 // Set disable_hierarchy_pruning to true in costing options
@@ -1645,11 +1646,12 @@ protected:
   // Test the hierarchy limits are actually disabled when disable_hierarchy_pruning = true
   void doTest(Costing::Type costing_type) {
     // Set costing options
-    Options options;
-    set_disable_hierarchy_pruning(options, costing_type);
-    create_costing_options(options, costing_type);
+    Api request;
+    set_disable_hierarchy_pruning(*request.mutable_options(), costing_type);
+    create_costing_options(request, costing_type);
     valhalla::sif::TravelMode travel_mode;
-    const auto mode_costing = valhalla::sif::CostFactory().CreateModeCosting(options, travel_mode);
+    const auto mode_costing =
+        valhalla::sif::CostFactory().CreateModeCosting(request.options(), travel_mode);
 
     // Check hierarchy limits
     const auto& hierarchy_limits = mode_costing[int(travel_mode)]->GetHierarchyLimits();

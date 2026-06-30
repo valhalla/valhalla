@@ -249,8 +249,9 @@ TEST(Isochrones, OriginEdge) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/isochrones/origin_edge");
 
   std::string geojson;
-  auto result = gurka::do_action(valhalla::Options::isochrone, map, {"b"}, "pedestrian",
-                                 {{"/contours/0/time", "10"}}, {}, &geojson);
+  [[maybe_unused]] auto result =
+      gurka::do_action(valhalla::Options::isochrone, map, {"b"}, "pedestrian",
+                       {{"/contours/0/time", "10"}}, {}, &geojson);
   std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
 
   bg::polygon_ll_t polygon;
@@ -287,16 +288,17 @@ TEST(Isochrones, ContoursOutOfBounds) {
 
     // base case: within service limits, should succeed
     {
-      auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
-                                     {{"/contours/0/distance", "399"}}, {});
+      [[maybe_unused]] auto result =
+          gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
+                           {{"/contours/0/distance", "399"}}, {});
       result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
                                 {{"/contours/0/time", "199"}}, {});
     }
 
     // distance exceeds service limits
     try {
-      auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
-                                     {{"/contours/0/distance", "500"}}, {});
+      auto _ = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
+                                {{"/contours/0/distance", "500"}}, {});
       FAIL() << "Expected to throw";
     } catch (const valhalla_exception_t& e) {
       EXPECT_EQ(e.message, "Exceeded max distance: 400");
@@ -305,8 +307,8 @@ TEST(Isochrones, ContoursOutOfBounds) {
 
     // time exceeds service limits
     try {
-      auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
-                                     {{"/contours/0/time", "220"}}, {});
+      auto _ = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
+                                {{"/contours/0/time", "220"}}, {});
       FAIL() << "Expected to throw";
     } catch (const valhalla_exception_t& e) {
       EXPECT_EQ(e.message, "Exceeded max time: 200");
@@ -334,8 +336,9 @@ TEST(Isochrones, LongEdge) {
       gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/isochrones/long_edge");
 
   std::string geojson;
-  auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
-                                 {{"/contours/0/time", "15"}}, {}, &geojson);
+  [[maybe_unused]] auto result =
+      gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
+                       {{"/contours/0/time", "15"}}, {}, &geojson);
   std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
 
   bg::polygon_ll_t polygon;

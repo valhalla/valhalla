@@ -3,6 +3,7 @@
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/admininfo.h>
+#include <valhalla/baldr/boundingcircle.h>
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>
@@ -39,6 +40,7 @@
 #include <iterator>
 #include <list>
 #include <memory>
+#include <optional>
 
 namespace valhalla {
 namespace baldr {
@@ -182,7 +184,7 @@ public:
    * @param  range_offset HTTP range offsete in case of a tar URL
    * @param  range_size HTTP range offsete in case of a tar URL
    * @param  id_txt_path the file path to the tile_dir's id.txt
-   * @param  id_creation_time the timestamp according to the id.txt
+   * @param  id_checksum the (optional) expected checksum of the tileset
    * @return the graph tile or nullptr
    */
 
@@ -193,7 +195,7 @@ public:
                                      uint64_t range_offset = 0,
                                      uint64_t range_size = 0,
                                      const std::filesystem::path& id_txt_path = "",
-                                     uint64_t id_checksum = 0);
+                                     std::optional<uint64_t> id_checksum = std::nullopt);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -713,9 +715,10 @@ public:
    * Convenience method to get the access restrictions for an edge given the
    * edge Id.
    * @param   edgeid  Directed edge Id.
-   * @return  Returns a list (vector) of AccessRestrictions.
+   * @return  Returns a span of AccessRestrictions and the start index.
    */
-  std::span<const AccessRestriction> GetAccessRestrictions(const uint32_t edgeid) const;
+  std::pair<std::span<const AccessRestriction>, size_t>
+  GetAccessRestrictions(const uint32_t edgeid) const;
 
   /**
    * Convenience method to get the access restrictions for an edge given the
@@ -727,7 +730,7 @@ public:
    */
   auto GetAccessRestrictions(const uint32_t edgeid, const uint32_t access) const {
     auto all_restrictions = GetAccessRestrictions(edgeid);
-    return all_restrictions |
+    return all_restrictions.first |
            std::views::filter([access](const auto& r) { return r.modes() & access; });
   }
 
@@ -764,6 +767,21 @@ public:
    * @return iterable container of graphids contained in the bin
    */
   std::span<GraphId> GetBin(size_t index) const;
+
+  /**
+   * Get an iterable list of bounding circles given a bin in the tile
+   * @param  column the bin's column
+   * @param  row the bin's row
+   * @return iterable container of bounding circles that intersect the bin
+   */
+  std::span<DiscretizedBoundingCircle> GetBoundingCircles(size_t column, size_t row) const;
+
+  /**
+   * Get an iterable list of bounding circles given a bin in the tile
+   * @param  index the bin's index in the row major array
+   * @return iterable container of bounding circles that intersect the bin
+   */
+  std::span<DiscretizedBoundingCircle> GetBoundingCircles(size_t index) const;
 
   /**
    * Get lane connections ending on this edge.
@@ -1027,6 +1045,10 @@ protected:
   // List of edge graph ids. The list is broken up in bins which have
   // indices in the tile header.
   GraphId* edge_bins_{};
+
+  // List of edge bounding circles. The list is broken up in bins which
+  // share the same indices as the edge bins
+  DiscretizedBoundingCircle* bounding_circles_{};
 
   // Lane connectivity data.
   LaneConnectivity* lane_connectivity_{};

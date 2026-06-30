@@ -31,9 +31,9 @@ protected:
       \ 5     |
        \   6  |
         F-----E
-        |     |      
-        |     y      
-        |     |      
+        |     |
+        |     y
+        |     |
         G-x---H
          )";
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -1287,7 +1287,7 @@ TEST_F(LevelSearchFilter, TraverseLevels) {
 
 TEST_F(LevelSearchFilter, NonExistentLevel) {
   try {
-    auto result = Route({{"x", 0}, {"y", 6}});
+    auto _ = Route({{"x", 0}, {"y", 6}});
     FAIL() << "We should not get to here";
   } catch (const valhalla_exception_t& e) {
     EXPECT_EQ(e.code, 171);
@@ -1297,7 +1297,7 @@ TEST_F(LevelSearchFilter, NonExistentLevel) {
 
 TEST_F(LevelSearchFilter, Cutoff) {
   try {
-    auto result = Route({{"x", 0}, {"z", 1}});
+    auto _ = Route({{"x", 0}, {"z", 1}});
     FAIL() << "We should not get to here";
   } catch (const valhalla_exception_t& e) {
     EXPECT_EQ(e.code, 171);
@@ -1316,7 +1316,7 @@ TEST_F(LevelSearchFilter, CutoffClamped) {
   try {
     // w is about 1300m away, so the search_cutoff being clamped to 1000 should result
     // in an exception
-    auto result = Route({{"x", 0}, {"w", 1}}, 2000);
+    auto _ = Route({{"x", 0}, {"w", 1}}, 2000);
     FAIL() << "Should fail";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 171); } catch (...) {
     FAIL() << "Failed with unexpected exception type";

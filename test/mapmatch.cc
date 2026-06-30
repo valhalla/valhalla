@@ -1082,7 +1082,6 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
                  std::to_string(route.legs_size());
 
       for (const auto& leg : route.legs()) {
-        valhalla::Api route_api;
         auto route_test_case =
             R"({"costing":"auto","locations":[{"lat":)" + std::to_string(leg.location(0).ll().lat()) +
             R"(,"lon":)" + std::to_string(leg.location(0).ll().lng()) +

@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_LOKI_TILES_H__
 #define __VALHALLA_LOKI_TILES_H__
 
+#include "baldr/accessrestriction.h"
 #include "baldr/admininfo.h"
 #include "baldr/attributes_controller.h"
 #include "baldr/datetime.h"
@@ -31,6 +32,24 @@ struct EdgeAttributeTile {
                                const baldr::EdgeInfo&,
                                const volatile baldr::TrafficSpeed*);
   prop_func_t prop_func;
+};
+
+class AccessRestrictionLayerBuilder : vtzero::layer_builder {
+public:
+  explicit AccessRestrictionLayerBuilder(vtzero::tile_builder& tile, const char* name);
+
+  void add_feature(const std::vector<vtzero::point>& geometry,
+                   baldr::GraphId forward_edge_id,
+                   baldr::GraphId reverse_edge_id,
+                   std::pair<std::span<const baldr::AccessRestriction>, size_t> forward_restrictions,
+                   std::pair<std::span<const baldr::AccessRestriction>, size_t> reverse_restrictions);
+
+protected:
+  vtzero::index_value key_edge_id_;
+  vtzero::index_value key_type_;
+  vtzero::index_value key_modes_;
+  vtzero::index_value key_except_destination_;
+  vtzero::index_value key_value_;
 };
 
 /**
@@ -133,6 +152,10 @@ public:
   vtzero::index_value key_stop_sign_rev_;
   vtzero::index_value key_yield_sign_fwd_;
   vtzero::index_value key_yield_sign_rev_;
+  vtzero::index_value key_freeflow_speed_fwd_;
+  vtzero::index_value key_freeflow_speed_rev_;
+  vtzero::index_value key_constrained_speed_fwd_;
+  vtzero::index_value key_constrained_speed_rev_;
   // Access properties (forward)
   vtzero::index_value key_access_fwd_;
   // Access properties (reverse)
@@ -346,6 +369,34 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed*) {
           feature.add_property(layer_builder->*(key_member), e.forwardaccess());
+        },
+    },
+    {
+        "freeflow_speed:fwd",
+        baldr::kEdgeFreeflowSpeedFwd,
+        &EdgesLayerBuilder::key_freeflow_speed_fwd_,
+        [](EdgesLayerBuilder* layer_builder,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::linestring_feature_builder& feature,
+           const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          feature.add_property(layer_builder->*(key_member),
+                               vtzero::encoded_property_value(e.free_flow_speed()));
+        },
+    },
+    {
+        "constrained_speed:fwd",
+        baldr::kEdgeConstrainedSpeedFwd,
+        &EdgesLayerBuilder::key_constrained_speed_fwd_,
+        [](EdgesLayerBuilder* layer_builder,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::linestring_feature_builder& feature,
+           const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          feature.add_property(layer_builder->*(key_member),
+                               vtzero::encoded_property_value(e.constrained_flow_speed()));
         },
     },
 };
@@ -583,6 +634,34 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed*) {
           feature.add_property(layer_builder->*(key_member), e.forwardaccess());
+        },
+    },
+    {
+        "freeflow_speed:bwd",
+        baldr::kEdgeFreeflowSpeedBwd,
+        &EdgesLayerBuilder::key_freeflow_speed_rev_,
+        [](EdgesLayerBuilder* layer_builder,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::linestring_feature_builder& feature,
+           const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          feature.add_property(layer_builder->*(key_member),
+                               vtzero::encoded_property_value(e.free_flow_speed()));
+        },
+    },
+    {
+        "constrained_speed:bwd",
+        baldr::kEdgeConstrainedSpeedBwd,
+        &EdgesLayerBuilder::key_constrained_speed_rev_,
+        [](EdgesLayerBuilder* layer_builder,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::linestring_feature_builder& feature,
+           const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          feature.add_property(layer_builder->*(key_member),
+                               vtzero::encoded_property_value(e.constrained_flow_speed()));
         },
     },
 };
@@ -1329,6 +1408,8 @@ static const std::unordered_map<std::string_view, std::string_view> kEdgePropToA
     {"stop_sign:fwd", baldr::kEdgeStopSignFwd},
     {"yield_sign:fwd", baldr::kEdgeYieldFwd},
     {"access:fwd", baldr::kEdgeAccessFwd},
+    {"freeflow_speed:fwd", baldr::kEdgeFreeflowSpeedFwd},
+    {"constrained_speed:fwd", baldr::kEdgeConstrainedSpeedFwd},
     // Forward live speed
     {"live_speed:fwd", baldr::kEdgeLiveSpeedFwd},
     {"live_speed:fwd:speed1", baldr::kEdgeLiveSpeedFwd},
@@ -1348,6 +1429,8 @@ static const std::unordered_map<std::string_view, std::string_view> kEdgePropToA
     {"stop_sign:bwd", baldr::kEdgeStopSignBwd},
     {"yield_sign:bwd", baldr::kEdgeYieldBwd},
     {"access:bwd", baldr::kEdgeAccessBwd},
+    {"freeflow_speed:bwd", baldr::kEdgeFreeflowSpeedBwd},
+    {"constrained_speed:bwd", baldr::kEdgeConstrainedSpeedBwd},
     // Reverse live speed
     {"live_speed:bwd", baldr::kEdgeLiveSpeedBwd},
     {"live_speed:bwd:speed1", baldr::kEdgeLiveSpeedBwd},

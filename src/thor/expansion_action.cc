@@ -26,7 +26,7 @@ void writeExpansionProgress(Expansion* expansion,
                             const float& cost,
                             const Expansion_ExpansionType expansion_type,
                             const uint8_t flow_sources,
-                            const TravelMode mode) {
+                            const valhalla::TravelMode mode) {
 
   auto* geom = expansion->add_geometries();
   // make the geom

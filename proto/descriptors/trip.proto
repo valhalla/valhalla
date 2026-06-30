@@ -1,0 +1,415 @@
+syntax = "proto3";
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+import public "common.proto";
+import public "sign.proto";
+import "incidents.proto";
+
+message TripLeg {
+
+  enum Traversability {
+    kNone = 0;
+    kForward = 1;
+    kBackward = 2;
+    kBoth = 3;
+  }
+
+  enum Use {
+    kRoadUse = 0;
+    kRampUse = 1;              // Link - exits/entrance ramps.
+    kTurnChannelUse = 2;       // Link - turn lane.
+    kTrackUse = 3;             // Agricultural use; forest tracks
+    kDrivewayUse = 4;          // Driveway/private service
+    kAlleyUse = 5;             // Service road - limited route use
+    kParkingAisleUse = 6;      // Access roads in parking areas
+    kEmergencyAccessUse = 7;   // Emergency vehicles only
+    kDriveThruUse = 8;         // Commercial drive-thru (banks/fast-food)
+    kCuldesacUse = 9;          // Cul-de-sac (edge that forms a loop and is only
+                               // connected at one node to another edge.
+    kLivingStreetUse = 10;     // Shared space for cars, bikes, pedestrians
+    kServiceRoadUse = 11;      // Generic service road (not driveway, alley, parking aisle, etc.)
+
+    // Bicycle specific uses
+    kCyclewayUse = 20;          // Dedicated bicycle path
+    kMountainBikeUse = 21;      // Mountain bike trail
+
+    kSidewalkUse = 24;
+
+    // Pedestrian specific uses
+    kFootwayUse = 25;
+    kStepsUse = 26;             // Stairs
+    kPathUse = 27;
+    kPedestrianUse = 28;
+    kBridlewayUse = 29;
+    kPedestrianCrossingUse = 32;
+    kElevatorUse = 33;
+    kEscalatorUse = 34;
+
+    //Rest/Service Areas
+    kRestAreaUse = 30;
+    kServiceAreaUse = 31;
+
+    // Other...
+    kOtherUse = 40;
+
+    // Ferry and rail ferry
+    kFerryUse = 41;
+    kRailFerryUse = 42;
+
+    kConstructionUse = 43;       // Road under construction
+
+    // Transit specific uses. Must be last in the list
+    kRailUse = 50;               // Rail line
+    kBusUse = 51;                // Bus line
+    kEgressConnectionUse = 52;   // Connection between transit station and transit egress
+    kPlatformConnectionUse = 53; // Connection between transit station and transit platform
+    kTransitConnectionUse = 54;  // Connection between road network and transit egress
+  }
+
+  enum Surface {
+    kPavedSmooth = 0;
+    kPaved = 1;
+    kPavedRough = 2;
+    kCompacted = 3;
+    kDirt = 4;
+    kGravel = 5;
+    kPath = 6;
+    kImpassable = 7;
+  }
+
+  enum CycleLane {
+    kNoCycleLane = 0;
+    kShared = 1;    // Shared use lane (could be shared with pedestrians)
+    kDedicated = 2; // Dedicated cycle lane
+    kSeparated = 3; // A separate cycle lane (physical separation from the main carriageway
+  }
+
+  enum SacScale {
+    kNoSacScale = 0;
+    kHiking = 1;
+    kMountainHiking = 2;
+    kDemandingMountainHiking = 3;
+    kAlpineHiking = 4;
+    kDemandingAlpineHiking = 5;
+    kDifficultAlpineHiking = 6;
+  }
+
+  enum Sidewalk {
+    kNoSidewalk = 0;
+    kLeft = 1;
+    kRight = 2;
+    kBothSides = 3;
+  }
+
+  enum HovType {
+    kHOV2 = 0;
+    kHOV3 = 1;
+  }
+
+  enum SpeedType {
+    kTagged = 0;
+    kClassified = 1;
+  }
+
+  message LaneConnectivity {
+    uint64 from_way_id = 1;
+    string from_lanes = 2;
+    string to_lanes = 3;
+  }
+
+  message TrafficSegment {
+    uint64 segment_id = 1;
+    float begin_percent = 2;
+    float end_percent = 3;
+    bool starts_segment = 4;
+    bool ends_segment = 5;
+  }
+
+  message Speeds {
+    float predicted_flow = 1;
+    float constrained_flow = 2;
+    float free_flow = 3;
+    float current_flow = 4;
+    float no_flow = 5;
+  }
+
+  message Restriction{
+    uint32 type = 1;
+  }
+
+  // represents a single date/time range from https://wiki.openstreetmap.org/wiki/Key:opening_hours
+  message TimeDomain {
+    enum DayDowType {
+      kDayOfMonth = 0;    // day_dow is a day of month in range [1,31]
+      kNthDayOfWeek = 1;  // day_dow is a day of week in range [1,7]
+    }
+
+    DayDowType day_dow_type = 1;  // `begin_day_dow` and `end_day_dow` type
+    uint32 dow_mask = 2;          // day of week mask, e.g. 0b0111110 for Mo-Fr as week starts from Su
+    uint32 begin_hrs = 3;         // begin hours, 0 if not set
+    uint32 begin_mins = 4;        // begin minutes, 0 if not set
+    uint32 begin_month = 5;       // begin month, from 1 (January) to 12 (December), 0 if not set
+    uint32 begin_day_dow = 6;     // begin day of month or nth dow, i.e. 1st Sunday
+    uint32 begin_week = 7;        // which week does this start, i.e. 1st week in Oct
+    uint32 end_hrs = 8;           // end hours, 0 if not set
+    uint32 end_mins = 9;          // end minutes, 0 if not set
+    uint32 end_month = 10;        // end month, from 1 (January) to 12 (December), 0 if not set
+    uint32 end_day_dow = 11;      // end day of month or nth dow, i.e. last Sunday
+    uint32 end_week = 12;         // which week does this end, i.e. last week in Oct
+  }
+
+  message ConditionalSpeedLimit {
+    uint32 speed_limit = 1;
+    TimeDomain condition = 2;
+  }
+
+  message Edge {
+    repeated StreetName name = 1;           // street names
+    float length_km = 2;           // km
+    float speed = 3;               // km/h
+    RoadClass road_class = 4;
+    uint32 begin_heading = 5;      // 0-359
+    uint32 end_heading = 6;        // 0-359
+    uint32 begin_shape_index = 7;  // inclusive
+    uint32 end_shape_index = 8;    // inclusive
+    Traversability traversability = 9;
+    Use use = 10;
+    bool toll = 11;
+    bool unpaved = 12;
+    bool tunnel = 13;
+    bool bridge = 14;
+    bool roundabout = 15;
+    bool internal_intersection = 16;
+    bool drive_on_left = 17;      // [default = false]
+    Surface surface = 18;
+    TripSign sign = 19;
+    TravelMode travel_mode = 20;
+    VehicleType vehicle_type = 21;
+    PedestrianType pedestrian_type = 22;
+    BicycleType bicycle_type = 23;
+    TransitType transit_type = 24;
+    TransitRouteInfo transit_route_info = 25;
+    uint64 id = 26;
+    uint64 way_id = 27;
+    float weighted_grade = 28;
+    int32 max_upward_grade = 29;    // set to 32768 if no elevation data
+    int32 max_downward_grade = 30;  // set to 32768 if no elevation data
+    uint32 lane_count = 31;
+    CycleLane cycle_lane = 32;
+    bool bicycle_network = 33;      // true if the edge is part of a bike network
+    Sidewalk sidewalk = 34;
+    uint32 density = 35;
+    uint32 speed_limit = 36;        // 0 if unavailable, 255 if unlimited
+    float truck_speed = 37;         // km/h, 0 if unavailable
+    bool truck_route = 38;
+    repeated LaneConnectivity lane_connectivity = 39;
+    int32 mean_elevation = 40;        // set to 32768 if no elevation data
+    repeated TrafficSegment traffic_segment = 41;
+    repeated TurnLane turn_lanes = 42;
+    bool has_time_restrictions = 43;
+    float default_speed = 44;       // km/h
+    Restriction restriction = 45;
+    bool destination_only = 46;
+    bool is_urban = 47; // uses edge density to decide if edge is in an urban area
+    repeated TaggedValue tagged_value = 48;
+
+    // for the part of the edge that is used in the path we must know where
+    // it starts and ends along the length of the edge as a percentage
+    float source_along_edge = 49;
+    float target_along_edge = 50;
+    SacScale sac_scale = 51;
+    bool shoulder = 52;
+    bool indoor = 53;
+    repeated RouteLandmark landmarks = 54;   // landmarks in the trip leg
+    repeated StreetName tunnel_name = 55;
+    float elevation_sampling_interval = 56;
+    repeated float elevation = 57;
+    bool country_crossing = 58;
+    bool forward = 59;
+    oneof has_begin_osm_node_id {
+      uint64 begin_osm_node_id = 70;
+    }
+
+    oneof has_end_osm_node_id {
+      uint64 end_osm_node_id = 71;
+    }
+
+    repeated ConditionalSpeedLimit conditional_speed_limits = 60;
+    message Level {
+      float start = 1;
+      float end = 2;
+    }
+    repeated Level levels = 61;
+    uint32 level_precision = 62;
+    oneof has_speeds_faded {
+      Speeds speeds_faded = 63;
+    }
+    oneof has_speeds_non_faded {
+      Speeds speeds_non_faded = 64;
+    }
+    SpeedType speed_type = 65;
+    bool traffic_signal = 66;
+    HovType hov_type = 67;
+    uint32 curvature = 68;
+  }
+
+  message IntersectingEdge {
+    uint32 begin_heading = 1;       // 0-359
+    bool prev_name_consistency = 2;
+    bool curr_name_consistency = 3;
+    Traversability driveability = 4;
+    Traversability cyclability = 5;
+    Traversability walkability = 6;
+    Use use = 7;
+    RoadClass road_class = 8;
+    uint32 lane_count = 9;
+    TripSign sign = 10;
+    repeated StreetName name = 21;           // street names
+  }
+
+  message Cost {
+    double seconds = 1;
+    double cost = 2;
+  }
+
+  message PathCost {
+    Cost elapsed_cost = 1;
+    Cost transition_cost = 2;
+  }
+
+  message Node {
+    enum Type {
+      kStreetIntersection = 0;      // Regular intersection of 2+ roads
+      kGate = 1;                    // Gate or rising bollard
+      kBollard = 2;                 // Bollard (fixed obstruction)
+      kTollBooth = 3;               // Toll booth / fare collection
+      // TODO - for now there is no differentiation between bus and rail stops...
+      kTransitEgress = 4;           // Transit egress
+      kTransitStation = 5;          // Transit station
+      kTransitPlatform = 6;         // Transit platform (rail and bus)
+      kBikeShare = 7;               // Bike share location
+      kParking = 8;                 // Parking location
+      kMotorwayJunction = 9;        // Highway = motorway_junction
+      kBorderControl = 10;          // Border control
+      kTollGantry = 11;             // Toll gantry
+      kSumpBuster = 12;             // Sump Buster
+      kBuildingEntrance = 13;       // Building Entrance
+      kElevator = 14;               // Elevator
+    }
+    Edge edge = 1;
+    repeated IntersectingEdge intersecting_edge = 2;
+    uint32 admin_index = 3;         // index into the admin list, 0 if unknown
+    Type type = 4;                  // The type of node
+    bool fork = 5;                  // Fork
+    TransitPlatformInfo transit_platform_info = 6;
+    TransitStationInfo transit_station_info = 7;
+    TransitEgressInfo transit_egress_info = 10;
+    string time_zone = 11;
+    PathCost cost = 12;             // how much cost did it take at this node in the path
+    repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for recostings
+    BikeShareStationInfo bss_info = 14;
+     bool traffic_signal = 21;
+ }
+
+  message Admin {
+    string country_code = 1;
+    string country_text = 2;
+    string state_code = 3;
+    string state_text = 4;
+  }
+
+  message ShapeAttributes {
+    repeated uint32 time = 1 [packed=true]; // milliseconds
+    repeated uint32 length = 2 [packed=true]; // decimeters
+    repeated uint32 speed = 3 [packed=true]; // decimeters per sec
+    // 4 is reserved
+    repeated uint32 speed_limit = 5 [packed=true]; // speed limit in kph
+    repeated uint32 congestion = 6 [packed=true]; // congestion value between 0 and 63
+  }
+
+  // we encapsulate the real incident object here so we can add information
+  // about where it is along the route, ie once its referenced to the route
+  message Incident {
+    valhalla.IncidentsTile.Metadata metadata = 1;
+    // Valhalla additions to incident metadata goes here
+    uint32 begin_shape_index = 3;
+    uint32 end_shape_index = 4;
+  };
+
+  message Closure {
+    oneof has_begin_shape_index {
+      uint32 begin_shape_index = 1;
+    }
+    oneof has_end_shape_index {
+      uint32 end_shape_index = 2;
+    }
+  };
+
+  uint64 osm_changeset = 1;
+  uint64 trip_id = 2;
+  uint32 leg_id = 3;
+  uint32 leg_count = 4;
+  repeated Location location = 5;
+  repeated Node node = 6;
+  repeated Admin admin = 7;
+  string shape = 8;
+  BoundingBox bbox = 9;
+  ShapeAttributes shape_attributes = 10;
+  repeated Incident incidents = 11;
+  repeated string algorithms = 12;
+  repeated Closure closures = 13;
+  Summary summary = 14;
+  repeated LevelChange level_changes = 15;
+}
+
+message TripRoute {
+  message MatchedPoint {
+    enum MatchType {
+      kUnmatched = 0;
+      kInterpolated = 1;
+      kMatched = 2;
+    }
+    MatchType type = 1;
+    // The index of the edge in the list of edges that this matched point is associated with.
+    oneof has_edge_index {
+      uint32 edge_index = 2;
+    }
+    // Whether or not there is a discontinuity starting from this point.
+    bool begins_discontinuity = 3;
+    // Whether or not a discontinuity ends at this point.
+    bool ends_discontinuity = 4;
+    // Percentage distance along the edge for this matched point. For example, if the matched point
+    // is halfway along the edge then the value would be 0.5.
+    // N.B.: `distance_along_edge` refers to the "uncapped" edge, so to get the distance between
+    // two matched points along the route, the edge length should be restored using
+    // `source_along_edge` and `target_along_edge` of the corresponding edges.
+    // For the first and last matchings in the response this value should be equal to
+    // `source_along_edge` and `target__along_edge` of the corresponding edges.
+    oneof has_distance_along_edge {
+      double distance_along_edge = 5;
+    }
+    // The distance in meters from the trace point to the matched point.
+    oneof has_distance_from_trace_point {
+      double distance_from_trace_point = 6;
+    }
+    // Matched point coordinate.
+    oneof has_latlng {
+      LatLng latlng = 7;
+    }
+  }
+
+  repeated TripLeg legs = 1;
+  // Each point corresponds to a trace point in the original request.
+  repeated MatchedPoint matched_points = 2;
+  // Relative quality measure for this map matching alternative. Value of 1.0 for the best match,
+  // lower values indicate how much worse this alternative is compared to the best match.
+  float confidence_score = 3;
+  // Total accumulated cost from the map matching algorithm. Lower values indicate better match
+  // quality based on GPS accuracy and route consistency.
+  float raw_score = 4;
+  bool is_best = 5;
+}
+
+message Trip {
+  repeated TripRoute routes = 1;
+}

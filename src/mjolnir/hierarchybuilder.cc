@@ -187,7 +187,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
     // Copy the data version & checksum
     tilebuilder->header_builder().set_dataset_id(tile->header()->dataset_id());
-    tilebuilder->header_builder().set_checksum(tile->header()->checksum());
+    tilebuilder->header_builder().set_raw_checksum(tile->header()->tile_checksum());
 
     // Copy node information and set the node lat,lon offsets within the new tile
     NodeInfo baseni = *(tile->node(base_node.id()));
@@ -272,7 +272,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       // the list of access restrictions in the new tile. Update the
       // edge index in the restriction to be the current directed edge Id
       if (directededge->access_restriction()) {
-        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id());
+        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id()).first;
         for (const auto& res : restrictions) {
           tilebuilder->AddAccessRestriction(AccessRestriction(tilebuilder->directededges().size(),
                                                               res.type(), res.modes(), res.value(),

@@ -103,12 +103,12 @@ rapidjson::Value build_exclude_level_polygons(const std::vector<ring_bg_t>& ring
 }
 
 // common method can't deal with arrays of floats
-std::string build_local_req(rapidjson::Document& doc,
-                            rapidjson::MemoryPoolAllocator<>& allocator,
-                            const std::vector<midgard::PointLL>& waypoints,
-                            const std::string& costing,
-                            const rapidjson::Value& geom_obj,
-                            const std::string& type) {
+std::string build_route_request(rapidjson::Document& doc,
+                                rapidjson::MemoryPoolAllocator<>& allocator,
+                                const std::vector<midgard::PointLL>& waypoints,
+                                const std::string& costing,
+                                const rapidjson::Value& geom_obj,
+                                const std::string& type) {
 
   rapidjson::Value locations(rapidjson::kArrayType);
   for (const auto& waypoint : waypoints) {
@@ -119,6 +119,41 @@ std::string build_local_req(rapidjson::Document& doc,
   }
 
   doc.AddMember("locations", locations, allocator);
+  doc.AddMember("costing", costing, allocator);
+
+  rapidjson::Pointer(type).Set(doc, geom_obj);
+
+  rapidjson::StringBuffer sb;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+  doc.Accept(writer);
+  return sb.GetString();
+}
+
+std::string build_matrix_request(rapidjson::Document& doc,
+                                 rapidjson::MemoryPoolAllocator<>& allocator,
+                                 const std::vector<midgard::PointLL>& sources,
+                                 const std::vector<midgard::PointLL>& targets,
+                                 const std::string& costing,
+                                 const rapidjson::Value& geom_obj,
+                                 const std::string& type) {
+
+  rapidjson::Value sources_arr(rapidjson::kArrayType);
+  rapidjson::Value targets_arr(rapidjson::kArrayType);
+  for (const auto& waypoint : sources) {
+    rapidjson::Value p(rapidjson::kObjectType);
+    p.AddMember("lon", waypoint.lng(), allocator);
+    p.AddMember("lat", waypoint.lat(), allocator);
+    sources_arr.PushBack(p, allocator);
+  }
+  for (const auto& waypoint : targets) {
+    rapidjson::Value p(rapidjson::kObjectType);
+    p.AddMember("lon", waypoint.lng(), allocator);
+    p.AddMember("lat", waypoint.lat(), allocator);
+    targets_arr.PushBack(p, allocator);
+  }
+
+  doc.AddMember("sources", sources_arr, allocator);
+  doc.AddMember("targets", targets_arr, allocator);
   doc.AddMember("costing", costing, allocator);
 
   rapidjson::Pointer(type).Set(doc, geom_obj);
@@ -193,7 +228,7 @@ TEST_F(AvoidTest, TestMaxPolygonPerimeter) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_polys(rings, allocator);
-  auto req = build_local_req(doc, allocator, lls, "auto", value, "/exclude_polygons");
+  auto req = build_route_request(doc, allocator, lls, "auto", value, "/exclude_polygons");
 
   // make sure the right exception is thrown
   try {
@@ -217,7 +252,7 @@ TEST_P(AvoidTest, TestAvoidPolygonWithDeprecatedParam) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_polys(rings, allocator);
-  auto req = build_local_req(doc, allocator, lls, GetParam(), value, "/avoid_polygons");
+  auto req = build_route_request(doc, allocator, lls, GetParam(), value, "/avoid_polygons");
 
   // will avoid 1st
   auto route = gurka::do_action(Options::route, avoid_map, req);
@@ -293,7 +328,7 @@ TEST_F(AvoidTest, ExcludeLevelsJSON) {
   auto& allocator = doc.GetAllocator();
   auto excludes_j = build_exclude_level_polygons(exclude_ring, levels, allocator);
   auto req =
-      build_local_req(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
+      build_route_request(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
 
   auto res = gurka::do_action(Options::route, avoid_map, req);
   gurka::assert::raw::expect_path(res, {"MN", "FN", "LF"});
@@ -311,7 +346,7 @@ TEST_F(AvoidTest, ExcludeLevelsJSON_Multiple) {
   auto& allocator = doc.GetAllocator();
   auto excludes_j = build_exclude_level_polygons(exclude_ring, levels, allocator);
   auto req =
-      build_local_req(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
+      build_route_request(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
 
   auto res = gurka::do_action(Options::route, avoid_map, req);
   gurka::assert::raw::expect_path(res, {"GB", "2nd", "2nd", "2nd", "LF"});
@@ -332,7 +367,7 @@ TEST_F(AvoidTest, ExcludeLevelsJSON_MultiRing) {
   auto& allocator = doc.GetAllocator();
   auto excludes_j = build_exclude_level_polygons(exclude_rings, levels, allocator);
   auto req =
-      build_local_req(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
+      build_route_request(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
 
   auto res = gurka::do_action(Options::route, avoid_map, req);
   gurka::assert::raw::expect_path(res, {"GB", "2nd", "2nd", "2nd", "LF"});
@@ -353,7 +388,7 @@ TEST_F(AvoidTest, ExcludeLevelsJSON_OnlyOneLevelExclude) {
   auto& allocator = doc.GetAllocator();
   auto excludes_j = build_exclude_level_polygons(exclude_rings, levels, allocator);
   auto req =
-      build_local_req(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
+      build_route_request(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
 
   auto res = gurka::do_action(Options::route, avoid_map, req);
   gurka::assert::raw::expect_path(res, {"GB", "2nd", "2nd", "2nd", "LF"});
@@ -374,7 +409,7 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_polys(rings, allocator);
-  auto req = build_local_req(doc, allocator, lls, GetParam(), value, "/exclude_polygons");
+  auto req = build_route_request(doc, allocator, lls, GetParam(), value, "/exclude_polygons");
 
   // make sure the right exception is thrown
   try {
@@ -414,7 +449,7 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
   std::cerr << req_str << std::endl;
   try {
     ParseApi(req_str, Options::route, request);
-    auto res = gurka::do_action(Options::route, avoid_map, req_str);
+    auto _ = gurka::do_action(Options::route, avoid_map, req_str);
     FAIL() << "Expected to throw";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 137); } catch (...) {
     FAIL() << "Expected different error";
@@ -431,7 +466,7 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
             R"("avoid_polygons": [[[1.0, 1.0], [1.00001, 1.00001], [1.00002, 1.00002], [1.0, 1.0]],
       {}]})";
   ParseApi(req_str, Options::route, request);
-  auto res = gurka::do_action(Options::route, avoid_map, req_str);
+  [[maybe_unused]] auto res = gurka::do_action(Options::route, avoid_map, req_str);
   EXPECT_TRUE(request.options().exclude_polygons_size() == 1);
 
   // protect the public API too
@@ -491,7 +526,7 @@ TEST_P(AvoidTest, TestAvoidLocation) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_locs(avoid_locs, allocator);
-  auto req = build_local_req(doc, allocator, lls, GetParam(), value, "/exclude_locations");
+  auto req = build_route_request(doc, allocator, lls, GetParam(), value, "/exclude_locations");
 
   // will avoid 1st
   auto route = gurka::do_action(Options::route, avoid_map, req);
@@ -587,7 +622,7 @@ TEST_F(LargeAvoidTest, TestAvoidHugePolygon) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_polys(rings, allocator);
-  auto req = build_local_req(doc, allocator, lls, "auto", value, "/exclude_polygons");
+  auto req = build_route_request(doc, allocator, lls, "auto", value, "/exclude_polygons");
 
   // with a polygon this large, it should miss edges in non-line-intersecting bins
   try {
@@ -624,7 +659,7 @@ TEST_F(LargeAvoidTest, TestAvoidHugePolygonWithLevels) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = build_exclude_level_polygons(rings, levels, allocator);
-  auto req = build_local_req(doc, allocator, lls, "pedestrian", value, "/exclude_polygons");
+  auto req = build_route_request(doc, allocator, lls, "pedestrian", value, "/exclude_polygons");
 
   // with a polygon this large, it should miss edges in non-line-intersecting bins
   try {
@@ -633,11 +668,44 @@ TEST_F(LargeAvoidTest, TestAvoidHugePolygonWithLevels) {
 
   levels = {{1.f}};
   value = build_exclude_level_polygons(rings, levels, allocator);
-  req = build_local_req(doc, allocator, lls, "pedestrian", value, "/exclude_polygons");
+  req = build_route_request(doc, allocator, lls, "pedestrian", value, "/exclude_polygons");
   try {
     gurka::do_action(Options::route, avoid_map, req);
     FAIL() << "Expected to fail";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
     FAIL() << "Expected valhalla_exception_t";
   };
+}
+
+TEST(StandAlone, SuperTrivialExcludedConnection) {
+  const std::string ascii_map = R"(
+              1--------2     
+    A------B-x+--------+yC------D
+              |        |
+              |        |
+              4--------3
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/supertrivial",
+                               {{"thor.source_to_target_algorithm", "costmatrix"},
+                                {"service_limits.max_exclude_polygons_length", "1000000000"}});
+  {
+    std::vector<ring_bg_t> rings = {
+        {map.nodes["1"], map.nodes["2"], map.nodes["3"], map.nodes["4"], map.nodes["1"]}};
+
+    auto lls = {map.nodes["x"]};
+    rapidjson::Document doc;
+    doc.SetObject();
+    auto& allocator = doc.GetAllocator();
+    auto value = get_avoid_polys(rings, allocator);
+    auto req = build_matrix_request(doc, allocator, lls, lls, "auto", value, "/exclude_polygons");
+    auto res = gurka::do_action(valhalla::Options::sources_to_targets, map, req);
+    EXPECT_EQ(res.matrix().distances(0), 100000000); // kMaxCost
+  }
 }

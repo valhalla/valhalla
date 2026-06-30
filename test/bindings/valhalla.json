@@ -1,4 +1,9 @@
 {
+  "logging": {
+    "type": "std_out",
+    "color": true,
+    "file_name": "path_to_some_file.log"
+  },
   "mjolnir": {
     "max_cache_size": 1000000000,
     "id_table_size": 1300000000,
@@ -6,7 +11,6 @@
     "lru_mem_cache_hard_control": false,
     "use_simple_mem_cache": false,
     "tile_dir": "test/data/utrecht_tiles",
-    "tile_extract": "test/data/utrecht_tiles/tiles.tar",
     "traffic_extract": "/data/valhalla/traffic.tar",
     "admin": "/data/valhalla/admin.sqlite",
     "landmarks": "/data/valhalla/landmarks.sqlite",
@@ -32,12 +36,8 @@
       "allow_alt_name": false,
       "use_urban_tag": false,
       "use_rest_area": false,
-      "scan_tar": false
-    },
-    "logging": {
-      "type": "std_out",
-      "color": true,
-      "file_name": "path_to_some_file.log"
+      "scan_tar": false,
+      "build_bounding_circles": true
     }
   },
   "additional_data": {
@@ -71,23 +71,11 @@
       "mvt_min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14],
       "mvt_cache_min_zoom": 11
     },
-    "logging": {
-      "type": "std_out",
-      "color": true,
-      "file_name": "path_to_some_file.log",
-      "long_request": 100.0
-    },
     "service": {
       "proxy": "ipc:///tmp/loki"
     }
   },
   "thor": {
-    "logging": {
-      "type": "std_out",
-      "color": true,
-      "file_name": "path_to_some_file.log",
-      "long_request": 110.0
-    },
     "source_to_target_algorithm": "select_optimal",
     "service": {
       "proxy": "ipc:///tmp/thor"
@@ -136,11 +124,6 @@
     }
   },
   "odin": {
-    "logging": {
-      "type": "std_out",
-      "color": true,
-      "file_name": "path_to_some_file.log"
-    },
     "service": {
       "proxy": "ipc:///tmp/odin"
     },
@@ -190,11 +173,6 @@
     },
     "multimodal": {
       "turn_penalty_factor": 70
-    },
-    "logging": {
-      "type": "std_out",
-      "color": true,
-      "file_name": "path_to_some_file.log"
     },
     "service": {
       "proxy": "ipc:///tmp/meili"

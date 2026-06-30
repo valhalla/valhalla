@@ -14,6 +14,7 @@
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/midgard/util.h>
+#include <valhalla/proto/info.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
@@ -34,17 +35,26 @@
  * @param costing_options  pointer to protobuf costing options object
  * @param range            ranged_default_t object which will check any provided values are in range
  * @param json             rapidjson value object which should contain user provided costing options
- * @param json_key         the json key to use to pull a user provided value out of the jsonn
+ * @param json_key         the json key to use to pull a user provided value out of the json
  * @param option_name      the name of the option will be set on the costing options object
  */
 
-#define JSON_PBF_RANGED_DEFAULT(costing_options, range, json, json_key, option_name)                 \
+#define JSON_PBF_RANGED_DEFAULT(costing_options, range, json, json_key, option_name, warnings)       \
   {                                                                                                  \
+    bool clamped = false;                                                                            \
     costing_options->set_##option_name(                                                              \
         range(rapidjson::get<decltype(range.def)>(json, json_key,                                    \
                                                   costing_options->has_##option_name##_case()        \
                                                       ? costing_options->option_name()               \
-                                                      : range.def)));                                \
+                                                      : range.def),                                  \
+              clamped));                                                                             \
+    if (clamped) {                                                                                   \
+      auto warning = warnings.Add();                                                                 \
+      warning->set_description("'" + std::string(json_key) + "' has been clamped to " +              \
+                               std::to_string(range.def));                                           \
+                                                                                                     \
+      warning->set_code(500);                                                                        \
+    }                                                                                                \
   }
 
 /**
@@ -57,13 +67,22 @@
  * @param option_name      the name of the option will be set on the costing options object
  */
 
-#define JSON_PBF_RANGED_DEFAULT_V2(costing_options, range, json, json_key, option_name)              \
+#define JSON_PBF_RANGED_DEFAULT_V2(costing_options, range, json, json_key, option_name, warnings)    \
   {                                                                                                  \
+    bool clamped = false;                                                                            \
     costing_options->set_##option_name(                                                              \
         range(rapidjson::get<decltype(range.def)>(json, json_key,                                    \
                                                   costing_options->option_name()                     \
                                                       ? costing_options->option_name()               \
-                                                      : range.def)));                                \
+                                                      : range.def),                                  \
+              clamped));                                                                             \
+    if (clamped) {                                                                                   \
+      auto warning = warnings.Add();                                                                 \
+      warning->set_description("'" + std::string(json_key) + "' has been clamped to " +              \
+                               std::to_string(range.def));                                           \
+                                                                                                     \
+      warning->set_code(500);                                                                        \
+    }                                                                                                \
   }
 
 /**
@@ -119,6 +138,7 @@ struct cost_edge_t {
 struct custom_cost_t {
   std::vector<cost_edge_t> ranges;
   double avg_factor{1.};
+  bool ignore_restrictions_;
 
   // once ranges are filled up, sort and compute average
   // returns the minimum factor
@@ -130,8 +150,9 @@ template <class T> struct ranged_default_t {
   T min, def, max;
 
   // Returns the value snapped to the default if outside of the range
-  T operator()(const T& value) const {
+  T operator()(const T& value, bool& clamped) const {
     if (value < min || value > max) {
+      clamped = true;
       return def;
     }
     return value;
@@ -162,6 +183,8 @@ constexpr uint32_t kDefaultUnitSize = 1;
 // Maximum penalty allowed. Cannot be too high because sometimes one cannot avoid a particular
 // attribute or condition to complete a route.
 constexpr float kMaxPenalty = 12.0f * midgard::kSecPerHour; // 12 hours
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
 
 // Maximum ferry penalty (when use_ferry == 0 or use_rail_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -355,18 +378,25 @@ public:
    * or highways are excluded in the request.
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
+   * @param  forward        Check edge on the forward or reverse path (from destination towards
+   * origin).
    * @return Returns true if edge should be excluded.
    */
+  template <bool FORWARD>
   inline bool CheckExclusions(const baldr::DirectedEdge* edge, const EdgeLabel& pred) const {
+    auto isDriveOnto = [](bool condition, bool pred_condition) {
+      return FORWARD == condition && pred_condition != condition;
+    };
     return has_excludes_ &&
-           ((exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
-            (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
-            (exclude_tolls_ && !pred.toll() && edge->toll()) ||
-            (exclude_highways_ && pred.classification() != baldr::RoadClass::kMotorway &&
-             edge->classification() == baldr::RoadClass::kMotorway) ||
+           ((exclude_bridges_ && isDriveOnto(edge->bridge(), pred.bridge())) ||
+            (exclude_tunnels_ && isDriveOnto(edge->tunnel(), pred.tunnel())) ||
+            (exclude_tolls_ && isDriveOnto(edge->toll(), pred.toll())) ||
+            (exclude_highways_ &&
+             isDriveOnto(edge->classification() == baldr::RoadClass::kMotorway,
+                         pred.classification() == baldr::RoadClass::kMotorway)) ||
             (exclude_ferries_ &&
-             !(pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry) &&
-             (edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry)));
+             isDriveOnto(edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry,
+                         pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry)));
   }
 
   /**
@@ -745,6 +775,13 @@ public:
                                    uint8_t& destonly_access_restr_mask) const {
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
+
+    decltype(linear_cost_edges_)::const_iterator it;
+    if (!linear_cost_edges_.empty() &&
+        (it = linear_cost_edges_.find(edgeid)) != linear_cost_edges_.end() &&
+        it->second.ignore_restrictions_) {
+      return true;
+    }
 
     auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
@@ -1599,20 +1636,24 @@ struct BaseCostingOptionsConfig {
  * @param json The json request represented as a DOM tree.
  * @param co A mutable protocol buffer where the parsed json values will be stored.
  * @param cfg Default values with enable/disable parsing indicators for costing options.
+ * @param warnings costing models can set warnings when they e.g. clamped costing option values
  */
 void ParseBaseCostOptions(const rapidjson::Value& json,
                           Costing* co,
-                          const BaseCostingOptionsConfig& cfg);
+                          const BaseCostingOptionsConfig& cfg,
+                          google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Parses all the costing options for all needed costings
  * @param doc                   json document
  * @param costing_options_key   the key in the json document where the options are located
  * @param options               where to store the parsed costing
+ * @param warnings              the warnings array to update
  */
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& costing_options_key,
-                  Options& options);
+                  Options& options,
+                  google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Parses the costing options for the costing specified within the json object. If the
@@ -1621,11 +1662,13 @@ void ParseCosting(const rapidjson::Document& doc,
  * @param doc                   json document
  * @param key                   the key in the json document where the options are located
  * @param costing_options       where to store the parsed options
+ * @param warnings              the warnings array to update
  * @param costing               specify the costing you want to parse or let it check the json
  */
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& key,
                   Costing* costing,
+                  google::protobuf::RepeatedPtrField<CodedDescription>& warnings,
                   Costing::Type costing_type = static_cast<Costing::Type>(Costing::Type_ARRAYSIZE));
 
 } // namespace sif

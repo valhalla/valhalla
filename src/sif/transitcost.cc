@@ -38,9 +38,6 @@ constexpr float kDefaultUseTransfers = 0.3f;
 
 Cost kImpossibleCost = {10000000.0f, 10000000.0f};
 
-constexpr float kMinFactor = 0.1f;
-constexpr float kMaxFactor = 100000.0f;
-
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kModeFactorRange{kMinFactor, kModeFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseBusRange{0, kDefaultUseBus, 1.0f};
@@ -638,7 +635,8 @@ uint32_t TransitCost::UnitSize() const {
 
 void ParseTransitCostOptions(const rapidjson::Document& doc,
                              const std::string& costing_options_key,
-                             Costing* c) {
+                             Costing* c,
+                             google::protobuf::RepeatedPtrField<CodedDescription>& warnings) {
   c->set_type(Costing::transit);
   c->set_name(Costing_Enum_Name(c->type()));
   auto* co = c->mutable_options();
@@ -648,14 +646,15 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
 
   // TODO: no base costing parsing because transit doesnt care about any of those options?
 
-  JSON_PBF_RANGED_DEFAULT(co, kModeFactorRange, json, "/mode_factor", mode_factor);
+  JSON_PBF_RANGED_DEFAULT(co, kModeFactorRange, json, "/mode_factor", mode_factor, warnings);
   JSON_PBF_DEFAULT_V2(co, false, json, "/wheelchair", wheelchair);
   JSON_PBF_DEFAULT_V2(co, false, json, "/bicycle", bicycle);
-  JSON_PBF_RANGED_DEFAULT(co, kUseBusRange, json, "/use_bus", use_bus);
-  JSON_PBF_RANGED_DEFAULT(co, kUseRailRange, json, "/use_rail", use_rail);
-  JSON_PBF_RANGED_DEFAULT(co, kUseTransfersRange, json, "/use_transfers", use_transfers);
-  JSON_PBF_RANGED_DEFAULT(co, kTransferCostRange, json, "/transfer_cost", transfer_cost);
-  JSON_PBF_RANGED_DEFAULT(co, kTransferPenaltyRange, json, "/transfer_penalty", transfer_penalty);
+  JSON_PBF_RANGED_DEFAULT(co, kUseBusRange, json, "/use_bus", use_bus, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseRailRange, json, "/use_rail", use_rail, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTransfersRange, json, "/use_transfers", use_transfers, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kTransferCostRange, json, "/transfer_cost", transfer_cost, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kTransferPenaltyRange, json, "/transfer_penalty", transfer_penalty,
+                          warnings);
 
   // filter_stop_action
   auto filter_stop_action_str = rapidjson::get_optional<std::string>(json, "/filters/stops/action");

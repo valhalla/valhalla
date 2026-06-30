@@ -58,10 +58,9 @@ jobs:
       # since we are running in a container, we need to set the ccache directory to folder accessible from GHA runner
       CCACHE_DIR: ${{ matrix.os == 'linux' && '.ccache' || '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 0
           fetch-tags: true
       
       - name: Setup ccache
@@ -123,7 +122,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build_nodejs_bindings]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           sparse-checkout: |
             src/bindings/nodejs/
@@ -131,7 +130,6 @@ jobs:
             valhalla/valhalla.h
             proto/
           sparse-checkout-cone-mode: false
-          fetch-depth: 0
           fetch-tags: true
 
       - name: Download all binding artifacts
@@ -184,7 +182,7 @@ jobs:
           node-version: '18'
 
       - name: Checkout test files
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             src/bindings/nodejs/test/
@@ -244,16 +242,11 @@ jobs:
           name: valhalla-npm-package
       
       - name: Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "[INFO] Downloaded package:"
           ls -lh *.tgz
-          
-          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]]; then
-            NPM_TAG="latest"
-          else
-            NPM_TAG="periodic"
-          fi
-          
-          echo "[INFO] Publishing to NPM with tag: ${NPM_TAG}..."
-          npm publish *.tgz --access public --tag ${NPM_TAG} --provenance
+          echo "[INFO] Publishing to NPM..."
+          npm publish *.tgz --access public --tag latest --provenance
 

@@ -778,8 +778,8 @@ function normalize_speed(speed)
       num = round(num * 1.609344)
     end
 
-    --if num > 150kph or num < 10kph....toss
-    if num > 150 or num < 10 then
+    --toss unusably low speeds
+    if num < 10 then
       return nil
     end
   end
@@ -1285,6 +1285,9 @@ function filter_tags_generic(kv)
   else
     kv["roundabout"] = "false"
   end
+  if kv["junction"] == "intersection" then
+    kv["tagged_internal_intersection"] = "true"
+  end
   kv["oneway"] = oneway_norm
   if oneway_norm == "true" then
     kv["auto_backward"] = "false"
@@ -1757,6 +1760,8 @@ function filter_tags_generic(kv)
   if kv["maxspeed"] == "none" then
     --- special case unlimited speed limit (german autobahn)
     kv["max_speed"] = "unlimited"
+  elseif kv["maxspeed"] == "walk" then
+    kv["max_speed"] = 5
   else
     kv["max_speed"] = normalize_speed(kv["maxspeed"])
   end

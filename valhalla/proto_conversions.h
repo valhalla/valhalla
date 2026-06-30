@@ -12,6 +12,7 @@ namespace valhalla {
 // Layer names for vector tiles
 constexpr std::string_view kEdgeLayerName = "edges";
 constexpr std::string_view kNodeLayerName = "nodes";
+constexpr std::string_view kAccessRestrictionLayerName = "access_restrictions";
 constexpr std::string_view kShortcutLayerName = "shortcuts";
 
 // Associate RoadClass values to TripLeg proto

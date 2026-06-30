@@ -1062,7 +1062,7 @@ TEST(GtfsExample, route_trip4) {
 TEST(GtfsExample, isochrones) {
 
   std::string res_string;
-  valhalla::Api res =
+  [[maybe_unused]] valhalla::Api res =
       gurka::do_action(valhalla::Options::isochrone, map, {"g"}, "multimodal",
                        {{"/date_time/type", "1"},
                         {"/date_time/value", "2023-02-27T04:58"},
@@ -1087,6 +1087,7 @@ TEST(GtfsExample, isochrones) {
 TEST(GtfsExample, status) {
   std::string req = R"({"verbose": true})";
   std::string res_string;
-  valhalla::Api res = gurka::do_action(valhalla::Options::status, map, req, {}, &res_string);
+  [[maybe_unused]] valhalla::Api res =
+      gurka::do_action(valhalla::Options::status, map, req, {}, &res_string);
   EXPECT_NE(res_string.find(R"("has_transit_tiles":true)"), std::string::npos);
 }

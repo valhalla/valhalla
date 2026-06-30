@@ -12,7 +12,7 @@ namespace mjolnir {
 // Set the via edge ids used by this complex restriction.
 void ComplexRestrictionBuilder::set_via_list(const std::vector<GraphId>& via_list) {
   if (via_list.size() > kMaxViasPerRestriction) {
-    LOG_WARN("Tried to exceed max vias per restriction: " + std::to_string(via_list.size()));
+    LOG_DEBUG("Tried to exceed max vias per restriction: " + std::to_string(via_list.size()));
   } else {
     via_list_ = via_list;
   }
@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& os, const ComplexRestrictionBuilder& crb)
   // Check the number of via edges against limits.
   uint32_t via_count = crb.via_list_.size();
   if (via_count > kMaxViasPerRestriction) {
-    LOG_WARN("Exceeding max vias per restriction: " + std::to_string(via_count));
+    LOG_DEBUG("Exceeding max vias per restriction: " + std::to_string(via_count));
     via_count = kMaxViasPerRestriction;
   }
 

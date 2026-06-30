@@ -247,8 +247,8 @@ std::shared_ptr<SimpleCost> CreateSimpleCost(const Costing& options) {
 TEST_F(MatrixTrafficTest, MatrixNoTraffic) {
   // no traffic, so this is CostMatrix
   std::string res;
-  const auto result = gurka::do_action(Options::sources_to_targets, map, {"1", "2"}, {"1", "2"},
-                                       "auto", {}, {}, &res);
+  [[maybe_unused]] const auto result = gurka::do_action(Options::sources_to_targets, map, {"1", "2"},
+                                                        {"1", "2"}, "auto", {}, {}, &res);
 
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
@@ -343,12 +343,12 @@ TEST_F(MatrixTrafficTest, DisallowedRequest) {
   const auto result =
       gurka::do_action(Options::sources_to_targets, map, {"1", "2"}, {"1", "2"}, "auto", options);
 
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
   for (auto& loc : result.options().sources()) {
-    ASSERT_TRUE(loc.date_time().empty());
+    EXPECT_TRUE(loc.date_time().empty());
   }
   for (auto& loc : result.options().targets()) {
-    ASSERT_TRUE(loc.date_time().empty());
+    EXPECT_TRUE(loc.date_time().empty());
   }
 
   // revert for other tests
@@ -458,7 +458,7 @@ TEST_F(MatrixTrafficTest, CostMatrixPathfinding) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(map.config.get_child("mjolnir"));
 
@@ -543,8 +543,8 @@ TEST(StandAlone, CostMatrixDeadends) {
   // test that the we're taking the u-turn at D to get from A -> I
   // because of the ABI turn restriction
   {
-    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"I"}, "auto",
-                                   {}, nullptr, &res);
+    [[maybe_unused]] auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"},
+                                                    {"I"}, "auto", {}, nullptr, &res);
     res_doc.Parse(res.c_str());
     check_matrix(res_doc, {1.5f}, false, "distance", Matrix::CostMatrix);
     res.erase();
@@ -552,8 +552,9 @@ TEST(StandAlone, CostMatrixDeadends) {
 
   // then we force to go 1 -> F to hit a blocking node, doing a u-turn and go back the same way
   {
-    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"B"}, "auto",
-                                   {{"/sources/0/preferred_side", "opposite"}}, nullptr, &res);
+    [[maybe_unused]] auto result =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"B"}, "auto",
+                         {{"/sources/0/preferred_side", "opposite"}}, nullptr, &res);
     res_doc.Parse(res.c_str());
     check_matrix(res_doc, {0.8f}, false, "distance", Matrix::CostMatrix);
   }
@@ -562,8 +563,8 @@ TEST(StandAlone, CostMatrixDeadends) {
   {
     rapidjson::Document res_doc;
     std::string res;
-    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"C"}, {"A"}, "auto",
-                                   {}, nullptr, &res);
+    [[maybe_unused]] auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"C"},
+                                                    {"A"}, "auto", {}, nullptr, &res);
 
     res_doc.Parse(res.c_str());
     check_matrix_empty(res_doc);
@@ -821,7 +822,7 @@ TEST_F(DateTimeTest, NoTimeZone) {
   rapidjson::Document res_doc;
   std::string res;
   {
-    auto api =
+    [[maybe_unused]] auto api =
         gurka::do_action(valhalla::Options::sources_to_targets, map, {"A", "G"}, {"A", "G"}, "auto",
                          {{"/prioritize_bidirectional", "true"},
                           {"/date_time/type", "1"},
@@ -883,6 +884,7 @@ TEST_P(TestConnectionCheck, MatrixSecondPass) {
     EXPECT_GT(api.matrix().times(0), 0.f);
     EXPECT_TRUE(api.matrix().second_pass(0));
     EXPECT_TRUE(api.info().warnings(0).description().find('0') != std::string::npos);
+    EXPECT_EQ(api.info().warnings(0).code(), 400);
   }
 
   // I -> K (idx 1) should pass on the first try
@@ -901,6 +903,7 @@ TEST_P(TestConnectionCheck, MatrixSecondPass) {
     EXPECT_FALSE(api.matrix().second_pass(0));
     EXPECT_FALSE(api.matrix().second_pass(3));
     EXPECT_TRUE(api.info().warnings(0).description().find('2') != std::string::npos);
+    EXPECT_EQ(api.info().warnings(0).code(), 400);
   }
 }
 
@@ -1367,4 +1370,50 @@ TEST(StandAlone, TrivialCorrelation) {
       gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto", {}, nullptr);
 
   EXPECT_EQ(result.matrix().distances(0), 0);
+}
+
+TEST(StandAlone, MaxDistanceCutoff) {
+  const std::string ascii_map = R"(
+    A------B------C------D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  // force timedistancematrix via config
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/expansion_max_distance",
+                        {{"thor.source_to_target_algorithm", "timedistancematrix"}});
+
+  // without max_distance: all targets should be reachable
+  {
+    std::string res;
+    gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"B", "C", "D"}, "auto", {},
+                     nullptr, &res);
+    rapidjson::Document res_doc;
+    res_doc.Parse(res.c_str());
+    auto row = res_doc["sources_to_targets"].GetArray()[0].GetArray();
+    EXPECT_FALSE(row[0]["distance"].IsNull()) << "A->B should be reachable without max_distance";
+    EXPECT_FALSE(row[1]["distance"].IsNull()) << "A->C should be reachable without max_distance";
+    EXPECT_FALSE(row[2]["distance"].IsNull()) << "A->D should be reachable without max_distance";
+  }
+
+  // with max_distance=4500, only A->B should succeed
+  {
+    std::string res;
+    std::unordered_map<std::string, std::string> options = {
+        {"/expansion_max_distance", "4500"},
+    };
+    gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"B", "C", "D"}, "auto",
+                     options, nullptr, &res);
+    rapidjson::Document res_doc;
+    res_doc.Parse(res.c_str());
+    auto row = res_doc["sources_to_targets"].GetArray()[0].GetArray();
+    EXPECT_FALSE(row[0]["distance"].IsNull()) << "A->B should be reachable with max_distance=4500";
+    EXPECT_TRUE(row[1]["distance"].IsNull()) << "A->C should NOT be reachable with max_distance=4500";
+    EXPECT_TRUE(row[2]["distance"].IsNull()) << "A->D should NOT be reachable with max_distance=4500";
+  }
 }

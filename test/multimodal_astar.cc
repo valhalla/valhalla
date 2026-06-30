@@ -279,15 +279,20 @@ TEST(AstarBss, test_Auto) {
   test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver);
 }
 
-// When auto is chosen as travel_mode, the departure edge must NOT be a bss connections edge
+// When truck is chosen as travel_mode, the departure edge must NOT be a bss connections edge
 TEST(AstarBss, test_Truck) {
   std::string request =
       R"({"locations":[{"lat":48.859895,"lon":2.3610976338},{"lat":48.86271911,"lon":2.367111146}],"costing":"truck"})";
   std::vector<TravelMode> expected_travel_modes{TravelMode::kDrive};
-  std::vector<std::string>
-      expected_route{"Rue de la Perle",     "Rue des Archives",       "Rue Pastourelle",
-                     "Rue du Temple",       "Place de la République", "Place de la République",
-                     "Boulevard du Temple", "Rue Oberkampf",          "Rue Amelot"};
+  std::vector<std::string> expected_route{
+      "Rue de la Perle",
+      "Rue du Temple",
+      "Place de la République",
+      "Place de la République",
+      "Boulevard du Temple",
+      "Rue Oberkampf",
+      "Rue Amelot",
+  };
   // There shouldn't be any bss maneuvers
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
@@ -381,7 +386,7 @@ TEST(Standalone, UtrechtMultiModalAStar) {
   auto r = actor.route(request);
   valhalla::Api response;
 
-  response.ParseFromString(r);
+  ASSERT_TRUE(response.ParseFromString(r));
   ASSERT_EQ(response.directions().routes_size(), 1);
   ASSERT_EQ(response.directions().routes(0).legs_size(), 1);
   auto& leg = response.directions().routes(0).legs(0);

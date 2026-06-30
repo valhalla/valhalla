@@ -15,64 +15,74 @@ endif()
 
 message(STATUS "Installing python modules to ${Python_SITEARCH}")
 
-# add and install module(s)
-nanobind_add_module(_valhalla 
-  NB_STATIC
-  STABLE_ABI
-  LTO
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/_valhalla.cc)
-# Note: LTO disabled for _graph_utils to work around GCC 14 ICE on ARM64
-# The graph_id.cc file includes heavy baldr/graphreader.h templates that
-# trigger "lto1: internal compiler error: in get_token" during LTO phase.
 # See: https://github.com/actions/runner/issues/2508
 # See: https://www.mail-archive.com/ptxdist@pengutronix.de/msg24413.html
-nanobind_add_module(_graph_utils
+nanobind_add_module(_valhalla
   NB_STATIC
   STABLE_ABI
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_utils.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_id.cc)
-nanobind_add_module(predicted_speeds
-  NB_STATIC
-  STABLE_ABI
-  LTO
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/predicted_speeds.cc)
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/_valhalla.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/actor.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/exceptions.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/graph_id.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/graph_tile_header.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/graph_reader.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/graph_tile.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/predicted_speeds.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/midgard/utils/polyline.cc)
 
-foreach(tgt IN ITEMS _valhalla _graph_utils predicted_speeds)
-  # force abi3.so extension
-  nanobind_extension_abi3(${tgt})
+# force abi3.so extension
+nanobind_extension_abi3(_valhalla)
 
-  target_include_directories(${tgt} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../shared)
-  target_link_libraries(${tgt} PRIVATE
-    valhalla
-    Python::SABIModule
-    $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
-endforeach()
+target_include_directories(_valhalla PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../shared)
+target_link_libraries(_valhalla PRIVATE
+  valhalla
+  Python::SABIModule
+  $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
 
 if(APPLE)
   set_target_properties(_valhalla PROPERTIES INSTALL_RPATH "@loader_path")
-  set_target_properties(_graph_utils PROPERTIES INSTALL_RPATH "@loader_path")
-  set_target_properties(predicted_speeds PROPERTIES INSTALL_RPATH "@loader_path")
 elseif(UNIX AND NOT APPLE)
   set_target_properties(_valhalla PROPERTIES INSTALL_RPATH "\$ORIGIN")
-  set_target_properties(_graph_utils PROPERTIES INSTALL_RPATH "\$ORIGIN")
-  set_target_properties(predicted_speeds PROPERTIES INSTALL_RPATH "\$ORIGIN")
 endif()
 
 set_target_properties(_valhalla PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla)
-set_target_properties(_graph_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
-set_target_properties(predicted_speeds PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# Generate Python type stubs (.pyi) from the compiled extension modules.
+# Stubs are committed to the source tree and refreshed on every build;
+# INCLUDE_PRIVATE keeps "_"-prefixed members in the output; the POST_BUILD
+# step prepends a "machine-generated" banner via an idempotent script.
+#
+# Skipped under ENABLE_SANITIZERS: nanobind_add_stub imports the compiled
+# module via a vanilla python3, which can't load an ASan-instrumented .so
+if (NOT ENABLE_SANITIZERS)
+  function(valhalla_python_stub module rel_pyi)
+    set(_pyi ${CMAKE_CURRENT_SOURCE_DIR}/${rel_pyi})
+    nanobind_add_stub(${module}_stub
+      MODULE ${module}
+      OUTPUT ${_pyi}
+      PYTHON_PATH $<TARGET_FILE_DIR:${module}>
+      DEPENDS ${module}
+      INCLUDE_PRIVATE)
+    add_custom_command(TARGET ${module}_stub POST_BUILD
+      COMMAND ${Python_EXECUTABLE}
+              ${CMAKE_CURRENT_SOURCE_DIR}/scripts/prepend_pyi_header.py ${_pyi})
+  endfunction()
+
+  valhalla_python_stub(_valhalla valhalla/_valhalla.pyi)
+endif()
 
 set(py_srcs
   valhalla/__init__.py
   valhalla/__version__.py
   valhalla/config.py
   valhalla/actor.py
-  valhalla/utils/__init__.py
-  valhalla/utils/graph_utils.py
-  valhalla/utils/_graph_utils.pyi
-  valhalla/utils/predicted_speeds.pyi
-  valhalla/utils/decode_polyline.py)
+  valhalla/baldr/__init__.py
+  valhalla/baldr/utils/__init__.py
+  valhalla/baldr/utils/graph_utils.py
+  valhalla/midgard/__init__.py
+  valhalla/midgard/utils/__init__.py
+  valhalla/utils/__init__.py)
 
 # scikit-build-core does a different build than CMake
 if (SKBUILD)
@@ -119,6 +129,8 @@ function(set_output_python rel_path)
 endfunction()
 
 configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_config ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_config.py COPYONLY)
+configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_elevation ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_elevation.py COPYONLY)
+configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_extract ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_extract.py COPYONLY)
 
 foreach (py_src ${py_srcs})
   set_output_python(${py_src})
@@ -127,15 +139,12 @@ endforeach()
 install(TARGETS _valhalla
   DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla"
   COMPONENT python)
-install(TARGETS _graph_utils
-  DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/utils"
-  COMPONENT python)
-install(TARGETS predicted_speeds
-  DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/utils"
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/_valhalla.pyi
+  DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla"
   COMPONENT python)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla
   DESTINATION "${VALHALLA_INSTALL_PYDIR}"
   COMPONENT python
   FILES_MATCHING
-    PATTERN "*.py*"
+    PATTERN "*.py"
     PATTERN "__pycache__" EXCLUDE)
