@@ -175,6 +175,7 @@ struct graph_parser {
     include_platforms_ = pt.get<bool>("include_platforms", false);
     include_driveways_ = pt.get<bool>("include_driveways", true);
     include_construction_ = pt.get<bool>("include_construction", false);
+    pedestrian_areas_ = pt.get<bool>("pedestrian_areas", false);
     infer_internal_intersections_ =
         pt.get<bool>("data_processing.infer_internal_intersections", true);
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
@@ -377,7 +378,9 @@ struct graph_parser {
       }
     };
     tag_handlers_["pedestrian_area"] = [this]() {
-      way_.set_area(tag_.second == "true" ? true : false);
+      if (pedestrian_areas_) {
+        way_.set_area(tag_.second == "true" ? true : false);
+      }
     };
 
     tag_handlers_["use"] = [this]() {
@@ -5060,6 +5063,9 @@ struct graph_parser {
   // Configuration option indicating whether or not to infer turn channels during the graph
   // enhancer phase or use the turn_channel key from the pbf
   bool infer_turn_channels_;
+
+  // Configuration option indicating wheter or not to generate edges and route trough pedestrian areas
+  bool pedestrian_areas_;
 
   // Configuration option indicating whether or not to process the direction key on the ways or
   // utilize the guidance relation tags during the parsing phase
