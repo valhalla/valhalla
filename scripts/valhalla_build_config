@@ -159,6 +159,7 @@ config = {
         "global_synchronized_cache": False,
         "max_concurrent_reader_users": 1,
         "reclassify_links": True,
+        "pedestrian_areas": False,
         "default_speeds_config": Optional(str),
         "dataset_id": Optional(int),
         "data_processing": {
@@ -498,6 +499,7 @@ help_text = {
         "global_synchronized_cache": "bool indicating whether global_synchronized_cache is used - default to False",
         "max_concurrent_reader_users": "number of threads in the threadpool which can be used to fetch tiles over the network via curl",
         "reclassify_links": "bool indicating whether or not to reclassify links - reclassifies ramps based on the lowest class connecting road",
+        "pedestrian_areas": "bool indicating whether or not to generate traversal edges for pedestrian areas - default to False",
         "default_speeds_config": "a path indicating the json config file which graph enhancer will use to set the speeds of edges in the graph based on their geographic location (state/country), density (urban/rural), road class, road use (form of way)",
         "dataset_id": "Optional integer id to identify the tile dataset. By default we try to set the maximum OSM changeset ID.",
         "data_processing": {

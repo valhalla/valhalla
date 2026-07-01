@@ -21,6 +21,7 @@ const std::string restrictions_file = "osmdata_restrictions.bin";
 const std::string viaset_file = "osmdata_viaset.bin";
 const std::string access_restrictions_file = "osmdata_access_restrictions.bin";
 const std::string bike_relations_file = "osmdata_bike_relations.bin";
+const std::string area_relations_file = "osmdata_area_relations.bin";
 const std::string way_ref_file = "osmdata_way_refs.bin";
 const std::string way_ref_rev_file = "osmdata_way_refs_rev.bin";
 const std::string node_names_file = "osmdata_node_names.bin";
@@ -55,6 +56,15 @@ struct BikeRelation {
   BikeRelation() : way_id(0), relation(OSMBike()) {
   }
   BikeRelation(const uint64_t w, const OSMBike& r) : way_id(w), relation(r) {
+  }
+};
+
+struct AreaRelation {
+  uint64_t relation_id;
+  OSMAreaMember area_member;
+  AreaRelation() : relation_id(0), area_member(OSMAreaMember()) {
+  }
+  AreaRelation(uint64_t r, const OSMAreaMember& m) : relation_id(r), area_member(m) {
   }
 };
 
@@ -176,6 +186,30 @@ bool write_bike_relations(const std::string& filename, const BikeMultiMap& bike_
              relations.size() * sizeof(BikeRelation));
   file.close();
   return true;
+}
+
+bool write_area_relations(const std::string &filename, const AreaMultiMap& area_relations) {
+
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  if (!file.is_open()) {
+    LOG_ERROR("write_area_relations failed to open output file: " + filename);
+    return false;
+  }
+
+  // Create a vector of area relations from the multimap
+  std::vector<AreaRelation> relations;
+  for (auto it = area_relations.cbegin(); it != area_relations.cend(); ++it) {
+    relations.emplace_back(it->first, it->second);
+  }
+
+  // Write the count and then the area relations
+  uint32_t sz = relations.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(relations.data()),
+             relations.size() * sizeof(AreaRelation));
+  file.close();
+  return true;
+
 }
 
 bool write_way_refs(const std::string& filename, const OSMStringMap& way_refs) {
@@ -417,6 +451,28 @@ bool read_bike_relations(const std::string& filename, BikeMultiMap& bike_relatio
   return true;
 }
 
+bool read_area_relations(const std::string& filename, AreaMultiMap& area_relations) {
+
+  std::ifstream file(filename, std::ios::in | std::ios::binary);
+  if (!file.is_open()) {
+    LOG_ERROR("read_area_relations failed to open input file: " + filename);
+    return false;
+  }
+
+  // Read the count and then the area relations list
+  uint32_t count = 0;
+  file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
+  std::vector<AreaRelation> rel(count);
+  file.read(reinterpret_cast<char*>(rel.data()), count * sizeof(AreaRelation));
+  file.close();
+
+  // Iterate through the temporary area relations list and add to the area relations multi-map
+  for (const auto& r : rel) {
+    area_relations.insert({r.relation_id, r.area_member});
+  }
+  return true;
+}
+
 bool read_way_refs(const std::string& filename, OSMStringMap& way_refs) {
   // Open file and truncate
   std::ifstream file(filename, std::ios::in | std::ios::binary);
@@ -603,6 +659,7 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
       write_viaset(tile_dir + viaset_file, via_set) &&
       write_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
       write_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
+      write_area_relations(tile_dir + area_relations_file, area_relations) &&
       write_way_refs(tile_dir + way_ref_file, way_ref) &&
       write_way_refs(tile_dir + way_ref_rev_file, way_ref_rev) &&
       write_node_names(tile_dir + node_names_file, node_names) &&
@@ -650,6 +707,7 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
       read_viaset(tile_directory + viaset_file, via_set) &&
       read_access_restrictions(tile_directory + access_restrictions_file, access_restrictions) &&
       read_bike_relations(tile_directory + bike_relations_file, bike_relations) &&
+      read_area_relations(tile_directory + area_relations_file, area_relations) &&
       read_way_refs(tile_directory + way_ref_file, way_ref) &&
       read_way_refs(tile_directory + way_ref_rev_file, way_ref_rev) &&
       read_node_names(tile_directory + node_names_file, node_names) &&
@@ -722,6 +780,7 @@ void OSMData::cleanup_temp_files(const std::string& tile_dir) {
   remove_temp_file(tile_dir + viaset_file);
   remove_temp_file(tile_dir + access_restrictions_file);
   remove_temp_file(tile_dir + bike_relations_file);
+  remove_temp_file(tile_dir + area_relations_file);
   remove_temp_file(tile_dir + way_ref_file);
   remove_temp_file(tile_dir + way_ref_rev_file);
   remove_temp_file(tile_dir + node_names_file);

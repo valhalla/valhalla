@@ -39,6 +39,12 @@ struct OSMBike {
   uint32_t ref_index;
 };
 
+// OSM area data (stored within OSMData)
+struct OSMAreaMember {
+  uint64_t way_id;
+  bool is_outer;
+};
+
 // OSM lane connectivity (stored within OSMData)
 struct OSMLaneConnectivity {
   uint32_t to_way_id;
@@ -52,6 +58,7 @@ using RestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMRestriction>;
 using ViaSet = std::unordered_set<uint64_t>;
 using AccessRestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMAccessRestriction>;
 using BikeMultiMap = std::unordered_multimap<uint64_t, OSMBike>;
+using AreaMultiMap = std::unordered_multimap<uint64_t, OSMAreaMember>;
 using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint64_t, OSMLaneConnectivity>;
 using LinguisticMultiMap = std::unordered_multimap<uint64_t, OSMLinguistic>;
 using ConditionalSpeedLimitsMultiMap =
@@ -118,6 +125,9 @@ struct OSMData {
 
   // Stores bike information from the relations.  Indexed by the way Id.
   BikeMultiMap bike_relations;
+
+  // Stores area information from the relations. Indexed by the relation Id.
+  AreaMultiMap area_relations;
 
   // Map that stores an updated ref for a way. This needs to remain a map, since relations
   // update many ways at a time (so we can't move this into OSMWay unless that is mapped by Id).
