@@ -30,6 +30,7 @@ uint32_t n_filtered_edges = 0;
 uint32_t n_filtered_nodes = 0;
 uint32_t can_aggregate = 0;
 uint32_t aggregated = 0;
+uint32_t loop_edges_prevented = 0;
 
 // Group wheelchair and pedestrian access together
 constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess);
@@ -124,7 +125,9 @@ bool ExpandFromNodeInner(GraphReader& reader,
     }
 
     const NodeInfo* en_info = tile->node(de->endnode().id());
-    // check the direction, if we looped back, or are we done
+    // Check direction and do not continue onto an edge that returns to the aggregation start node.
+    // Allowing that would collapse a closed way into a single loop edge (start == end), which breaks
+    // opposing-edge indexes and map matching (trace_route / trace_attributes).
     if ((de->endnode() != prev_node) && (de->forward() == forward) && (de->endnode() != from_node)) {
       if (edge_info.wayid() == way_id &&
           (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
@@ -174,6 +177,16 @@ bool ExpandFromNodeInner(GraphReader& reader,
           visited_nodes.erase(de->endnode());
         }
       }
+    } else if ((de->endnode() != prev_node) && (de->forward() == forward) &&
+               (de->endnode() == from_node) && edge_info.wayid() == way_id &&
+               visited_nodes.size() > 1) {
+      // Would have closed a loop edge (start == end) — keep the way split instead.
+      ++loop_edges_prevented;
+      LOG_DEBUG("GraphFilter: prevented loop edge for way_id=" + std::to_string(way_id) +
+                " from_node=" + std::to_string(from_node.value) +
+                " current_node=" + std::to_string(current_node.value) +
+                " visited_nodes=" + std::to_string(visited_nodes.size()) +
+                (validate ? " (validate)" : " (aggregate)"));
     }
   }
   return false;
@@ -774,14 +787,28 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         std::vector<PointLL> shape = valhalla::midgard::decode7<std::vector<PointLL>>(encoded_shape);
 
         // Aggregate if end node is marked and in same tile
-        bool aggregated = false;
+        bool was_aggregated = false;
         GraphId en = directededge->endnode();
 
         if (en.tile_value() == tile_id) {
           if (tile->node(en.id())->mode_change()) {
-            GetAggregatedData(reader, shape, en, nodeid, tile, directededge);
-            newedge.set_endnode(en);
-            aggregated = true;
+            GraphId agg_en = en;
+            GetAggregatedData(reader, shape, agg_en, nodeid, tile, directededge);
+            // Safety: never emit a self-loop directed edge (start == end).
+            if (agg_en == nodeid) {
+              ++loop_edges_prevented;
+              LOG_WARN("GraphFilter: refusing loop edge after aggregation way_id=" +
+                       std::to_string(edgeinfo.wayid()) +
+                       " node=" + std::to_string(nodeid.value) +
+                       " — keeping original end node and shape");
+              // Restore non-aggregated shape/end node
+              shape = valhalla::midgard::decode7<std::vector<PointLL>>(encoded_shape);
+              en = directededge->endnode();
+            } else {
+              en = agg_en;
+              newedge.set_endnode(en);
+              was_aggregated = true;
+            }
           }
         }
 
@@ -798,9 +825,12 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         newedge.set_edgeinfo_offset(edge_info_offset);
 
         // Update length and curvature if the edge was aggregated
-        if (aggregated) {
+        if (was_aggregated) {
           newedge.set_length(valhalla::midgard::length(shape));
           newedge.set_curvature(compute_curvature(shape));
+          LOG_TRACE("GraphFilter: aggregated way_id=" + std::to_string(edgeinfo.wayid()) +
+                    " from=" + std::to_string(nodeid.value) + " to=" + std::to_string(en.value) +
+                    " length_m=" + std::to_string(newedge.length()));
         }
 
         // Add directed edge
@@ -854,6 +884,10 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
 
   LOG_INFO("Aggregated " + std::to_string(aggregated) + " directededges out of " +
            std::to_string(n_original_edges));
+  if (loop_edges_prevented > 0) {
+    LOG_INFO("GraphFilter: prevented " + std::to_string(loop_edges_prevented) +
+             " potential loop edge(s) during aggregation (kept closed ways split)");
+  }
 }
 
 /**
@@ -1011,6 +1045,14 @@ namespace mjolnir {
 
 // Optionally filter edges and nodes based on access.
 void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
+  // Reset stage counters (Filter may be invoked more than once in tests)
+  n_original_edges = 0;
+  n_original_nodes = 0;
+  n_filtered_edges = 0;
+  n_filtered_nodes = 0;
+  can_aggregate = 0;
+  aggregated = 0;
+  loop_edges_prevented = 0;
 
   // TODO: thread this. Could be difficult due to sequence creates to associate nodes
 
