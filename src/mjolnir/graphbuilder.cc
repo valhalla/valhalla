@@ -155,8 +155,7 @@ void ConstructEdges(const std::string& ways_file,
                     const std::string& edges_file,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
                     const std::function<uint32_t(const OSMNode&)>& grid_id_predicate,
-                    const bool infer_turn_channels,
-                    const bool pedestrian_areas) {
+                    const bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
 
   // so we can read ways and nodes and write edges
@@ -183,7 +182,7 @@ void ConstructEdges(const std::string& ways_file,
         first_way_node_index + way.node_count() - way_node.way_shape_node_index - 1;
 
     // If the way is part of an area, make sure it does not generate edges
-    if (way.area() && !pedestrian_areas) {
+    if (way.area()) {
       current_way_node_index = last_way_node_index + 1;
       continue;
     }
@@ -1503,8 +1502,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
       [&tiling, &grid_divisions](const OSMNode& node) {
         return GetGridId(node, tiling, grid_divisions);
       },
-      pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true),
-      pt.get<bool>("mjolnir.pedestrian_areas", false));
+      pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   return SortGraph(nodes_file, edges_file);
 }
