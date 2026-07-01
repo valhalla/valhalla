@@ -1,5 +1,10 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2026-07-01 Valhalla 3.7.1
+* **Removed**
    * REMOVED: dead `thor.max_reserved_locations_costmatrix` help entry from `valhalla_build_config` (live key is `thor.costmatrix.max_reserved_locations`) [#6083](https://github.com/valhalla/valhalla/issues/6083)
    * REMOVED: `json` request parameter, people can use CORS in 2026 [#6099](https://github.com/valhalla/valhalla/pull/6099)
    * REMOVED: `date_created_` field from `baldr::GraphTileHeader` [#6115](https://github.com/valhalla/valhalla/pull/6115)
