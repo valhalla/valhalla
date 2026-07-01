@@ -5064,7 +5064,7 @@ struct graph_parser {
   // enhancer phase or use the turn_channel key from the pbf
   bool infer_turn_channels_;
 
-  // Configuration option indicating wheter or not to generate edges and route trough pedestrian areas
+  // Configuration option indicating whether or not to generate edges and route trough pedestrian areas
   bool pedestrian_areas_;
 
   // Configuration option indicating whether or not to process the direction key on the ways or
