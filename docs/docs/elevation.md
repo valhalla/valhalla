@@ -1,6 +1,6 @@
 # Elevation Lookup Service
 
-This document describes how to run an elevation lookup service using Valhalla. Documentation for querying this service can be found here: [elevation-api-docdocs](api/elevation/api-reference.md).
+This document describes how to run an elevation lookup service using Valhalla. Documentation for querying this service can be found [here](api/elevation/api-reference.md).
 
 ## Running
 
