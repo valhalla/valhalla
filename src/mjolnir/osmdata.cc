@@ -641,7 +641,6 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
     return false;
   }
   SCOPED_TIMER();
-  file.write(reinterpret_cast<const char*>(&pbf_checksum_), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&max_changeset_id_), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&osm_node_count), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&osm_way_count), sizeof(uint64_t));
@@ -690,7 +689,6 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
     return false;
   }
   SCOPED_TIMER();
-  file.read(reinterpret_cast<char*>(&pbf_checksum_), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&max_changeset_id_), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&osm_node_count), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&osm_way_count), sizeof(uint64_t));
