@@ -1236,7 +1236,7 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
       continue;
     }
 
-    std::tuple<PointLL, double> bounding_circle = get_bounding_circle(shape);
+    auto bounding_circle = minimum_bounding_circle(shape, std::numeric_limits<double>::max());
     // for each bin that got intersected
     auto intersection = tiles.Intersect(shape);
     for (const auto& i : intersection) {
@@ -1262,8 +1262,10 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
             PointLL center{minx + lng_offset, miny + lat_offset};
             DistanceApproximator<PointLL> approx(center);
 
-            circle = baldr::DiscretizedBoundingCircle(approx, center, std::get<0>(bounding_circle),
-                                                      std::get<1>(bounding_circle));
+            if (bounding_circle) {
+              circle = baldr::DiscretizedBoundingCircle(approx, center, bounding_circle->first,
+                                                        bounding_circle->second);
+            }
           }
           out_bins[bin].push_back(std::make_pair(edge_id, circle));
         }

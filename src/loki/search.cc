@@ -142,7 +142,6 @@ std::function<std::tuple<int32_t, unsigned short, double>()> make_binner(const P
 // Model a segment (2 consecutive points in an edge in a bin).
 struct candidate_t {
   double sq_distance{};
-  // TODO: get rid of this if possible
   double distance{};
   PointLL point;
   size_t index{};
@@ -608,7 +607,7 @@ struct bin_handler_t {
     for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
       auto edge_id = *edge_it;
       bool all_prefiltered = true;
-      std::pair<PointLL, uint16_t> circle({0, 0}, 0);
+      std::pair<PointLL, double> circle({0, 0}, 0.);
       if (has_bounding_circles && bounding_circle->is_valid())
         circle = bounding_circle->get(begin->bin_center_approximator, begin->bin_center);
       double radius = circle.second;
@@ -630,7 +629,7 @@ struct bin_handler_t {
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           auto dsqr = p_itr->project.approx.DistanceSquared(circle.first);
 
-          if (dsqr > std::pow(p_itr->location->search_cutoff() + radius, 2)) {
+          if (dsqr > midgard::sqr(static_cast<double>(p_itr->location->search_cutoff()) + radius)) {
             c_itr->prefiltered = true;
             continue;
           }
@@ -643,7 +642,7 @@ struct bin_handler_t {
           // we can also ignore this edge if we have something in radius but this edge is entirely
           // out of radius
           if ((p_itr->reachable.back().sq_distance < p_itr->sq_radius &&
-               dsqr > std::pow(p_itr->location->radius() + radius, 2))) {
+               dsqr > midgard::sqr(static_cast<double>(p_itr->location->radius()) + radius))) {
             c_itr->prefiltered = true;
           } else {
             // finally we have at least one in-radius candidate and the best candidate
@@ -866,8 +865,6 @@ struct bin_handler_t {
   // we keep the points sorted at each round such that unfinished ones
   // are at the front of the sorted list
   void search(google::protobuf::RepeatedPtrField<Location>& locations, const cost_ptr_t& costing) {
-    clear();
-
     this->costing = costing;
 
     // get the unique set of input locations and the max reachability of them all
@@ -963,12 +960,12 @@ private:
         // remove them from the original
         edges->erase(new_end, pp.location->mutable_correlation()->mutable_edges()->end());
       }
-      for (auto& e : *pp.location->mutable_correlation()->mutable_edges()) {
+      for (auto& e : *edges) {
         for (const auto& name : reader.edgeinfo(GraphId(e.graph_id())).GetNames()) {
           *e.mutable_names()->Add() = name;
         }
       }
-      for (auto& e : *pp.location->mutable_correlation()->mutable_filtered_edges()) {
+      for (auto& e : *filtered_edges) {
         for (const auto& name : reader.edgeinfo(GraphId(e.graph_id())).GetNames()) {
           *e.mutable_names()->Add() = name;
         }
@@ -1004,6 +1001,10 @@ void Search::search(google::protobuf::RepeatedPtrField<Location>& locations,
     return;
 
   handler_->search(locations, costing);
+}
+
+void Search::clear() {
+  handler_->clear();
 }
 
 void Search::edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
@@ -1043,13 +1044,13 @@ void Search::edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
         if (!tile)
           continue;
 
-        std::pair<PointLL, uint16_t> circle({0, 0}, 0);
+        std::pair<PointLL, double> circle({0, 0}, 0);
         if (has_bounding_circles && bounding_circle->is_valid())
           circle = bounding_circle->get(bin_center_approximator, bin_center);
         double radius = circle.second;
         if (radius != 0) {
           // we have a circle
-          float radius_deg = radius / kMetersPerDegreeLat;
+          float radius_deg = radius / (kMetersPerDegreeLat * cosf(circle.first.lat() * kRadPerDeg));
           auto intersection = circle_intersects_bounds(circle.first, radius_deg, bounds);
           switch (intersection) {
             case CircleInBbox::OUTSIDE:
