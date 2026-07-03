@@ -378,9 +378,7 @@ struct graph_parser {
       }
     };
     tag_handlers_["pedestrian_area"] = [this]() {
-      if (pedestrian_areas_) {
-        way_.set_area(tag_.second == "true" ? true : false);
-      }
+      way_.set_area(tag_.second == "true" ? true : false);
     };
 
     tag_handlers_["use"] = [this]() {

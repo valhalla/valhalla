@@ -45,7 +45,7 @@ TEST(area_routing, square_skipped_routes_around) {
   gurka::assert::raw::expect_path(result, {"top", "right", "bottom"});
 }
 
-TEST(area_routing, area_bit_set_when_enabled) {
+TEST(area_routing, area_bit_is_set) {
   const std::string ascii_map = R"(
     A----B
     |    |
@@ -58,31 +58,10 @@ TEST(area_routing, area_bit_set_when_enabled) {
 
   // build with pedestrian_areas enabled, stop after parsing ways
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_area_bit_on",
-                               {{"mjolnir.concurrency", "1"}, {"mjolnir.pedestrian_areas", "true"}},
-                               mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kParseWays);
-
-  auto way = gurka::findWay(map, "ABCDA");
-  // we expect the area_bit to be true
-  EXPECT_TRUE(way.area());
-}
-
-TEST(area_routing, area_bit_not_set_when_disabled) {
-  const std::string ascii_map = R"(
-    A----B
-    |    |
-    D----C
-  )";
-  const gurka::ways ways = {
-      {"ABCDA", {{"highway", "pedestrian"}, {"area", "yes"}}},
-  };
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-
-  // build without the flag (defaults to false), stop after parsing ways
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_area_bit_off",
                                {{"mjolnir.concurrency", "1"}}, mjolnir::BuildStage::kInitialize,
                                mjolnir::BuildStage::kParseWays);
 
   auto way = gurka::findWay(map, "ABCDA");
-  // we expect the area_bit to be false
-  EXPECT_FALSE(way.area());
+  // we expect the area_bit to be true
+  EXPECT_TRUE(way.area());
 }
