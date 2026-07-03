@@ -234,8 +234,8 @@ bool CostMatrix::SourceToTarget(Api& request,
     for (uint32_t i = 0; i < locs_count_[MATRIX_REV]; i++) {
       if (locs_status_[MATRIX_REV][i].threshold > 0) {
         locs_status_[MATRIX_REV][i].threshold--;
-        Expand<MatrixExpansionType::reverse>(i, n, graphreader, request.options(),
-                                             reverse_time_info, invariant);
+        Expand<MatrixExpansionType::reverse>(i, n, graphreader, request.options(), reverse_time_info,
+                                             invariant);
         // if we exhausted this search
         if (locs_status_[MATRIX_REV][i].threshold == 0) {
           for (uint32_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
