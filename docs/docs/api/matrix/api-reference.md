@@ -59,7 +59,7 @@ The Time-Distance Matrix service uses the `auto`, `bicycle`, `pedestrian` and `b
 | :------------------ | :----------- |
 | `id` | Name your matrix request. If `id` is specified, the naming will be sent thru to the response. |
 | `matrix_locations` | For one-to-many or many-to-one requests this specifies the minimum number of locations that satisfy the request. However, when specified, this option allows a partial result to be returned. This is basically equivalent to "find the closest/best `matrix_locations` locations out of the full location set". |
-| `date_time` | This is the local date and time at the location.<ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time.</li></ul></li><li>`value` - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><br>|
+| `date_time` | This is the local date and time at the location.<ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time.</li><li>3 - Invariant specified time. Time does not vary over the course of the paths.</li></ul></li><li>`value` - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><br>|
 | `verbose`   | If `true` it will output a flat list of objects for `distances` & `durations` explicitly specifying the source & target indices. If `false` will return more compact, nested row-major `distances` & `durations` arrays and not echo `sources` and `targets`. Default `true`. |
 | `shape_format` | Specifies the optional format for the path shape of each connection. One of `polyline6`, `polyline5`, `geojson` or `no_shape` (default). |
 | `expansion_max_distance` | Maximum path distance in meters for an expansion. Currently this is implemented for the `timedistancematrix` algorithm. Source-target pairs whose cheapest path distance exceeds this limit will be returned as unreachable (with `null` time and distance). Default 0 (disabled). |
@@ -71,6 +71,8 @@ Most control can be achieved when setting a `date_time` string on each source or
 However, there are important limitations of the `/sources_to_targets` service's time awareness. Due to algorithmic complexity, we disallow time-dependence for certain combinations of `date_time` on locations, if
 - `date_time.type = 0/1` or `date_time` on any source, when there's more sources than targets
 - `date_time.type = 2` or `date_time` on any target, when there's more or equal amount of targets than/as sources
+
+With time-dependence on the sources, the default algorithm is the exact but slower `timedistancematrix`; set `prioritize_bidirectional: true` to prefer the much faster `costmatrix`. Its bidirectional search only propagates time along the forward trees, though the final durations are recomputed with time-dependent speeds on the found paths. With `date_time.type = 3` (invariant time) and all sources sharing the same departure instant, the reverse trees also use the frozen departure-time speeds, so path selection near the targets respects traffic as well.
 
 ## Outputs of the matrix service
 

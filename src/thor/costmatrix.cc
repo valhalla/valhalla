@@ -199,6 +199,19 @@ bool CostMatrix::SourceToTarget(Api& request,
 
   auto time_infos = SetOriginTimes(source_location_list, graphreader);
 
+  // with invariant time the clock never advances along the path, so edge costs don't depend
+  // on when a tree reaches them and the reverse trees can use time-dependent speeds too.
+  // Each reverse tree serves every source, so all sources must depart at the same instant;
+  // TimeInfo::local_time holds resolved epoch seconds, so comparing it also catches equal
+  // date_time strings that resolve to different instants across timezones.
+  auto reverse_time_info = baldr::TimeInfo::invalid();
+  if (invariant && !time_infos.empty() &&
+      std::all_of(time_infos.begin(), time_infos.end(), [&time_infos](const baldr::TimeInfo& ti) {
+        return ti.valid && ti.local_time == time_infos.front().local_time;
+      })) {
+    reverse_time_info = time_infos.front();
+  }
+
   // Initialize best connections and status. Any locations that are the
   // same get set to 0 time, distance and are not added to the remaining
   // location set.
@@ -207,7 +220,7 @@ bool CostMatrix::SourceToTarget(Api& request,
   // Set the source and target locations
   // TODO: for now we only allow depart_at/current date_time
   SetSources(graphreader, source_location_list, time_infos, target_location_list);
-  SetTargets(graphreader, target_location_list, source_location_list);
+  SetTargets(graphreader, target_location_list, source_location_list, reverse_time_info);
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
@@ -221,7 +234,8 @@ bool CostMatrix::SourceToTarget(Api& request,
     for (uint32_t i = 0; i < locs_count_[MATRIX_REV]; i++) {
       if (locs_status_[MATRIX_REV][i].threshold > 0) {
         locs_status_[MATRIX_REV][i].threshold--;
-        Expand<MatrixExpansionType::reverse>(i, n, graphreader, request.options());
+        Expand<MatrixExpansionType::reverse>(i, n, graphreader, request.options(),
+                                             reverse_time_info, invariant);
         // if we exhausted this search
         if (locs_status_[MATRIX_REV][i].threshold == 0) {
           for (uint32_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
@@ -1121,7 +1135,8 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 // these locations.
 void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
-                            const google::protobuf::RepeatedPtrField<valhalla::Location>& sources) {
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
+                            const baldr::TimeInfo& time_info) {
 
   std::unordered_multimap<GraphId, double> source_edges;
   for (const auto& s : sources) {
@@ -1173,8 +1188,8 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // along the destination edge.
       uint8_t flow_sources;
 
-      Cost edgecost = costing_->PartialEdgeCost(directededge, edgeid, tile, TimeInfo::invalid(),
-                                                flow_sources, 0, edge.percent_along());
+      Cost edgecost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                                0, edge.percent_along());
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
