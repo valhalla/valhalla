@@ -914,7 +914,7 @@ struct bin_handler_t {
 
     for (const uint64_t raw_id : location.preferred_edge_ids()) {
       GraphId edge_id(raw_id);
-      if (!edge_id.Is_Valid())
+      if (!edge_id.is_valid())
         continue;
 
       graph_tile_ptr tile;
