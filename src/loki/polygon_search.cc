@@ -18,6 +18,16 @@ using namespace valhalla::loki;
 
 namespace {
 
+/**
+ * Test whether a circle is fully outside of a bounding box
+ *
+ * @param center    the circle's center
+ * @param radius_sq the circle's radius, squared
+ * @param box       the bounding box to test against
+ *
+ * @return true if the closest point in the box from the circle center is outside of
+ *         the circle's radius, else false
+ */
 bool circle_outside_bounds(const PointLL& center,
                            float radius_sq,
                            const AABB2<valhalla::midgard::PointLL>& box) {
@@ -27,12 +37,18 @@ bool circle_outside_bounds(const PointLL& center,
 
   return center.DistanceSquared(closest) > radius_sq;
 }
+
 /**
  * Tests whether a point lies inside a linear ring
  *
- * Uses a ray-casting algorithm supported by an rtree on the ring segments
+ * Uses a ray-casting algorithm supported by an r-tree on the ring segments
  * to only consider segments that intersect with the test point's x axis.
  *
+ * @param pt    the test point
+ * @param ring  the linear ring to test against
+ * @param rtree the r-tree indexed with the ring's segments
+ *
+ * @return true if the point is inside the ring, else false
  */
 bool point_in_ring(const PointLL& pt,
                    const std::vector<PointLL>& ring,
@@ -72,26 +88,15 @@ flatbush::Box<double> box_from_shape(std::span<const PointLL> shape) {
   return {minx.x(), miny.y(), maxx.x(), maxy.y()};
 }
 
-CircleInBbox circle_intersects_ring(const PointLL& center,
-                                    double radius,
-                                    const std::vector<PointLL>& ring,
-                                    const flatbush::Flatbush<double>& rtree) {
-
-  auto candidates = rtree.neighbors(flatbush::Point<double>{center.x(), center.y()},
-                                    std::numeric_limits<size_t>::max(), radius);
-
-  for (const auto idx : candidates) {
-    auto project = center.Project(ring[idx], ring[idx + 1]);
-    if (center.Distance(project) <= radius) {
-      return CircleInBbox::INTERSECTS;
-    }
-  }
-
-  auto pip = point_in_ring(center, ring, rtree);
-  return pip ? CircleInBbox::INSIDE : CircleInBbox::OUTSIDE;
-}
 /**
  * Test whether a line intersects a linear ring.
+ *
+ * @param shape the test line
+ * @param ring  the ring to test against
+ * @param rtree the rtree indexed on the ring segments
+ *
+ * @return true if any line segment intersects any ring segment, or the line is fully contained within
+ *         the ring, else false
  */
 bool line_intersects_ring(const std::vector<PointLL>& shape,
                           const std::vector<PointLL>& ring,
@@ -142,14 +147,14 @@ void correct_ring(std::vector<PointLL>& ring) {
   }
 }
 
-std::pair<std::vector<PointLL>, AABB2<PointLL>> PBFToRing(const valhalla::Ring& ring_pbf) {
+std::vector<PointLL> PBFToRing(const valhalla::Ring& ring_pbf) {
   std::vector<PointLL> new_ring;
   new_ring.reserve(ring_pbf.coords().size());
   for (const auto& coord : ring_pbf.coords()) {
     new_ring.push_back({coord.lng(), coord.lat()});
   }
   correct_ring(new_ring);
-  return {new_ring, AABB2<PointLL>(new_ring)};
+  return new_ring;
 }
 
 #ifdef LOGGING_LEVEL_TRACE
@@ -217,7 +222,8 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
   std::vector<std::pair<std::vector<PointLL>, AABB2<PointLL>>> rings;
   rings.reserve(rings_pbf.size());
   for (const auto& ring_pbf : rings_pbf) {
-    const auto& ring = rings.emplace_back(PBFToRing(ring_pbf));
+    const auto ring_coords = PBFToRing(ring_pbf);
+    const auto& ring = rings.emplace_back(std::move(ring_coords), AABB2<PointLL>(ring_coords));
     for (size_t i = 0; i < ring.first.size() - 1; ++i) {
       rings_length += ring.first[i].Distance(ring.first[i + 1]);
     }
@@ -226,15 +232,13 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     throw valhalla_exception_t(167, std::to_string(static_cast<size_t>(max_length)) + " meters");
   }
 
+  // construct the r-trees, one for each ring, indexing the
+  // rings segments
   std::vector<flatbush::Flatbush<double>> rtrees;
   rtrees.reserve(rings.size());
   for (const auto& ring : rings) {
     flatbush::FlatbushBuilder<double> builder(ring.first.size());
     for (size_t i = 0; i < ring.first.size() - 1; ++i) {
-      const auto& pt = ring.first[i];
-      const auto& next_pt = ring.first[i + 1];
-      std::vector<PointLL> pts{pt, next_pt};
-      AABB2<PointLL> bb(pts);
       flatbush::Box<double> box = box_from_shape(std::span(ring.first).subspan(i, 2));
       builder.add(box);
     }
