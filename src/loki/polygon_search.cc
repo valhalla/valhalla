@@ -198,7 +198,8 @@ namespace loki {
 std::unordered_set<GraphId> edges_in_rings(const Options& options,
                                            baldr::GraphReader& reader,
                                            const sif::cost_ptr_t& costing,
-                                           float max_length) {
+                                           float max_length,
+                                           size_t max_vertices) {
   // protect for bogus input
   const auto& rings_pbf = options.exclude_polygons();
   if (rings_pbf.empty() || rings_pbf.Get(0).coords().empty() ||
@@ -219,6 +220,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
 
   // convert to vector and check length restriction
   double rings_length = 0;
+  size_t vertex_count = 0;
   std::vector<std::pair<std::vector<PointLL>, AABB2<PointLL>>> rings;
   rings.reserve(rings_pbf.size());
   for (const auto& ring_pbf : rings_pbf) {
@@ -227,9 +229,15 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     for (size_t i = 0; i < ring.first.size() - 1; ++i) {
       rings_length += ring.first[i].Distance(ring.first[i + 1]);
     }
+    vertex_count += ring.first.size();
   }
+
   if (rings_length > max_length) {
     throw valhalla_exception_t(167, std::to_string(static_cast<size_t>(max_length)) + " meters");
+  }
+
+  if (vertex_count > max_vertices) {
+    throw valhalla_exception_t(176, std::to_string(static_cast<size_t>(max_vertices)));
   }
 
   // construct the r-trees, one for each ring, indexing the

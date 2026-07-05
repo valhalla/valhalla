@@ -158,7 +158,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
   if (options.exclude_polygons_size()) {
     const auto edges = edges_in_rings(options, *reader, mode_costing[static_cast<size_t>(mode)],
-                                      max_exclude_polygons_length);
+                                      max_exclude_polygons_length, max_exclude_polygons_vertices);
     auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
     co.mutable_exclude_edges()->Reserve(edges.size());
     for (const auto& edge_id : edges) {
@@ -344,6 +344,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 
   max_exclude_locations = config.get<size_t>("service_limits.max_exclude_locations");
   max_exclude_polygons_length = config.get<float>("service_limits.max_exclude_polygons_length");
+  max_exclude_polygons_vertices =
+      config.get<size_t>("service_limits.max_exclude_polygons_vertices", 100);
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");
