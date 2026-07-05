@@ -6,8 +6,6 @@ theme:
   favicon: images/valhalla_logo.svg
   features:
     - content.tabs.link
-    - navigation.tabs
-    - navigation.tabs.sticky
     - navigation.indexes
     - navigation.instant
     - navigation.instant.prefetch
