@@ -11,15 +11,6 @@ license-files = ["COPYING"]
 [project.optional-dependencies]
 typing = ["numpy>=2.0.0,<3.0.0"]  # only needed for .pyi typing
 
-[dependency-groups]
-docs = [
-    # pin below the 2.0 rewrite: it drops the plugin system and has no migration path
-    # consider zensical (still too early in dev)
-    "mkdocs>=1.6,<2",
-    "mkdocs-material>=9.7,<10",
-    "mkdocstrings[python]>=0.27,<2",
-]
-
 [project.urls]
 Homepage = "https://github.com/valhalla/valhalla"
 Documentation = "https://valhalla.github.io/valhalla/"
