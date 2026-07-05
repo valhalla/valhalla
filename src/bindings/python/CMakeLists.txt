@@ -24,6 +24,7 @@ nanobind_add_module(_valhalla
   ${CMAKE_CURRENT_SOURCE_DIR}/src/actor.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/exceptions.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/graph_id.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/graph_tile_header.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/graph_reader.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/graph_tile.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/predicted_speeds.cc

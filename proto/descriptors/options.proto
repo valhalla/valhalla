@@ -358,6 +358,10 @@ message Costing {
     oneof has_multimodal_start_end_max_distance {
       uint32 multimodal_start_end_max_distance = 96;
     }
+
+    oneof has_low_class_factor {
+      float low_class_factor = 97;
+    }
   }
 
   oneof has_options {
