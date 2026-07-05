@@ -368,8 +368,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
         continue;
       }
 
-      const DirectedEdge* edge;
-      edge = tile->directededge(edge_id);
+      const auto edge = tile->directededge(edge_id);
       auto opp_tile = tile;
       const baldr::DirectedEdge* opp_edge = nullptr;
       baldr::GraphId opp_id;
