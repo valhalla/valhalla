@@ -345,7 +345,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
       if (avoid_edge_ids.count(edge_id) != 0) {
         continue;
       }
-      double radius = 0, radius_deg, radius_sq;
+      double radius = 0, radius_sq;
       std::pair<PointLL, double> circle({0, 0}, 0.);
       // if we need to check each bin edge individually, prepare its bounding circle
       // if available
@@ -359,7 +359,6 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
         if (has_bounding_circles && bounding_circle->is_valid())
           circle = bounding_circle->get(bin_center_approximator, bin_center);
         radius = circle.second;
-        radius_deg = radius / (kMetersPerDegreeLat * cosf(circle.first.lat() * kRadPerDeg));
         radius_sq = midgard::sqr(radius);
       }
 
