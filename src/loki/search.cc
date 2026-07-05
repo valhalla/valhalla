@@ -22,6 +22,26 @@ PointLL point_ll_from_latlng(const valhalla::LatLng& latlng) {
   return PointLL(latlng.lng(), latlng.lat());
 }
 
+enum class CircleInBbox : uint8_t { OUTSIDE = 0, INSIDE = 1, INTERSECTS = 2 };
+CircleInBbox circle_intersects_bounds(const PointLL& center,
+                                      float radius_deg,
+                                      const AABB2<valhalla::midgard::PointLL>& box) {
+
+  if (center.lng() - radius_deg >= box.minx() && center.lng() + radius_deg <= box.maxx() &&
+      center.lat() - radius_deg >= box.miny() && center.lat() + radius_deg <= box.maxy()) {
+    return CircleInBbox::INSIDE;
+  }
+
+  float closest_x = std::max(box.minx(), std::min(center.lng(), box.maxx()));
+  float closest_y = std::max(box.miny(), std::min(center.lat(), box.maxy()));
+
+  float dx = closest_x - center.lng();
+  float dy = closest_y - center.lat();
+  float distance_squared = sqr(dx) + sqr(dy);
+
+  return distance_squared <= sqr(radius_deg) ? CircleInBbox::INTERSECTS : CircleInBbox::OUTSIDE;
+}
+
 bool search_filter(const DirectedEdge* edge,
                    const DynamicCost& costing,
                    const graph_tile_ptr& tile,

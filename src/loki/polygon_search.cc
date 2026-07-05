@@ -5,7 +5,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "valhalla/worker.h"
+#include "valhalla/exceptions.h"
 
 #include <flatbush.h>
 
