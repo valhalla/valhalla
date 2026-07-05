@@ -56,8 +56,8 @@ bool point_in_ring(const PointLL& pt,
   // cast a ray rightward from pt, count crossings
   int crossings = 0;
 
-  auto candidates =
-      rtree.search(flatbush::Box{pt.lng(), pt.lat(), std::numeric_limits<double>::max(), pt.lat()});
+  auto candidates = rtree.search(
+      flatbush::Box<double>{pt.lng(), pt.lat(), std::numeric_limits<double>::max(), pt.lat()});
 
   for (auto idx : candidates) {
     const PointLL& a = ring[idx];
