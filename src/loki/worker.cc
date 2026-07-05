@@ -289,7 +289,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
-        kv.first == "max_exclude_polygons_length" ||
+        kv.first == "max_exclude_polygons_length" || kv.first == "max_exclude_polygons_vertices" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
         kv.first == "status" || kv.first == "allow_hard_exclusions" ||
         kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
