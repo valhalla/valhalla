@@ -188,7 +188,7 @@ bool write_bike_relations(const std::string& filename, const BikeMultiMap& bike_
   return true;
 }
 
-bool write_area_relations(const std::string &filename, const AreaMultiMap& area_relations) {
+bool write_area_relations(const std::string& filename, const AreaMultiMap& area_relations) {
 
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (!file.is_open()) {
@@ -209,7 +209,6 @@ bool write_area_relations(const std::string &filename, const AreaMultiMap& area_
              relations.size() * sizeof(AreaRelation));
   file.close();
   return true;
-
 }
 
 bool write_way_refs(const std::string& filename, const OSMStringMap& way_refs) {
