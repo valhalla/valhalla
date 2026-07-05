@@ -13,6 +13,7 @@
 #include <list>
 #include <optional>
 #include <ostream>
+#include <random>
 #include <ranges>
 #include <stdexcept>
 #include <string>
@@ -408,7 +409,7 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
  * @param a  first point on second line
  * @param b  second point on second line
  * @param i  the intersection point if there was one
- * @return true if there was an intersection false if now
+ * @return true if there was an intersection false if not
  */
 template <class coord_t>
 bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i);
@@ -800,6 +801,67 @@ template <typename T = int> T to_int(std::string_view value) {
   }
   return result.value();
 }
+
+/**
+ * Helper class to project points to the azimuthal equidistant projection given a center point.
+ * Assumes earth as a sphere for sake of simplicity.
+ *
+ * Reference: https://mathworld.wolfram.com/AzimuthalEquidistantProjection.html (formulas 1–4 for the
+ * forward projection, 5–7 for the inverse)
+ */
+class AzimuthalEquidistant {
+public:
+  /**
+   * Constructor. Takes a center point in unprojected lat/lon and calculates its radian conversion as
+   * well as the latitudes sin/cos to avoid unnecessary recomputation later.
+   */
+  AzimuthalEquidistant(const PointLL& center);
+  AzimuthalEquidistant() = delete;
+
+  /**
+   * Projects a point from lat/lon to azimuthal equidistant.
+   *
+   * @param ll the point to project in unprojected lat/lon
+   * @returns the projected point
+   */
+  Point2d project(const PointLL& ll) const;
+
+  /**
+   * Performs the inverse projection from a point in meters from the projection center back
+   * to lat/lon
+   *
+   * @param pt the point to project back to unprojected lat/lon; x/y must be in meters from the
+   * center.
+   *
+   * @returns lat/lon
+   */
+  PointLL project_inverse(const Point2d& pt) const;
+
+  PointLL center() const {
+    return center_;
+  };
+
+protected:
+  PointLL center_;
+  std::pair<double, double> center_rad_;
+  double sin_lat_center_;
+  double cos_lat_center_;
+};
+
+using circle_t = std::pair<PointLL, double>;
+/**
+ * Compute the minimum bounding circle of an edge shape. Projects points to azimuthal equidistant,
+ * using the shape's bbox center.
+ *
+ * @param points                the edge's shape in unprojected lat/lon
+ * @param distance_threshold    a size threshold for the shape's bounding box beyond which bounding
+ * circle computation is skipped
+ *
+ * @return optionally, a circle with center in lat/lon and a radius in meters. std::nullopt if the
+ * shape's bbox size exceeded distance_threshold or the shape is empty.
+ */
+std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
+                                                double distance_threshold);
 
 } // namespace midgard
 } // namespace valhalla

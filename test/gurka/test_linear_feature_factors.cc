@@ -165,6 +165,7 @@ TEST_F(LinearFeatureTest, simple_high_factor) {
   Api request;
   ParseApi(json_str, Options::route, request);
   loki_worker.route(request);
+  loki_worker.cleanup();
   ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
   EXPECT_EQ(request.options().cost_factor_lines().at(0).cost_factor(), 200);
   EXPECT_EQ(request.options().cost_factor_lines().at(0).shape().size(), 3);
@@ -237,6 +238,7 @@ TEST_F(LinearFeatureTest, simple_low_factor) {
   Api request;
   ParseApi(json_str, Options::route, request);
   loki_worker.route(request);
+  loki_worker.cleanup();
   ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
   EXPECT_EQ(request.options().cost_factor_lines().at(0).cost_factor(), 0.01f);
   EXPECT_EQ(request.options().cost_factor_lines().at(0).shape().size(), 5);
@@ -296,6 +298,7 @@ TEST_F(LinearFeatureTest, partial_edges_shape) {
   Api request;
   ParseApi(json_str, Options::route, request);
   loki_worker.route(request);
+  loki_worker.cleanup();
   ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
   EXPECT_NEAR(request.options().cost_factor_lines().at(0).cost_factor(), 100.f, 0.01);
   EXPECT_EQ(request.options().cost_factor_lines().at(0).shape().size(), 3);
@@ -353,6 +356,7 @@ TEST_F(LinearFeatureTest, ignore_access_restrictions) {
   Api request;
   ParseApi(json_str, Options::route, request);
   loki_worker.route(request);
+  loki_worker.cleanup();
   ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
   EXPECT_NEAR(request.options().cost_factor_lines().at(0).cost_factor(), 1.f, 0.01);
   EXPECT_TRUE(request.options().cost_factor_lines().at(0).ignore_access_restrictions());
@@ -431,6 +435,7 @@ TEST_F(LinearFeatureTest, multi_shape_geojson) {
   Api request;
   ParseApi(json_str, Options::route, request);
   loki_worker.route(request);
+  loki_worker.cleanup();
   ASSERT_EQ(request.options().cost_factor_lines().size(), 2);
   EXPECT_EQ(request.options().cost_factor_lines().at(0).cost_factor(), 100.f);
   EXPECT_EQ(request.options().cost_factor_lines().at(0).shape().size(), 4);
