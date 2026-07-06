@@ -58,8 +58,8 @@ TEST(area_routing, area_bit_is_set) {
 
   // build with pedestrian_areas enabled, stop after parsing ways
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_area_bit_on",
-                               {{"mjolnir.concurrency", "1"}}, mjolnir::BuildStage::kInitialize,
-                               mjolnir::BuildStage::kParseWays);
+                               {{"mjolnir.concurrency", "1"}, {"mjolnir.pedestrian_areas", "true"}},
+                               mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kParseWays);
 
   auto way = gurka::findWay(map, "ABCDA");
   // we expect the area_bit to be true

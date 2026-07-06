@@ -2404,6 +2404,13 @@ struct graph_parser {
     const auto& nodes = way.nodes;
     const auto& tags = way.tags;
 
+    if (!pedestrian_areas_) {
+      auto pa = tags.find("pedestrian_area");
+      if (pa != tags.end() && pa->second == "true") {
+        return;
+      }
+    }
+
     try {
       // Throw away use if include_driveways_ is false
       Tags::const_iterator use;
