@@ -232,14 +232,14 @@ protected:
    * these locations.
    * @param  graphreader  Graph reader for accessing routing graph.
    * @param  target       List of target locations.
-   * @param  source       List of source locations.
    * @param  time_info    Time info for the reverse trees; only valid with invariant
-   *                      time and a single departure instant shared by all sources.
+   *                      time and a single departure time shared by all sources.
+   * @param  source       List of source locations.
    */
   void SetTargets(baldr::GraphReader& graphreader,
                   const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
-                  const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                  const baldr::TimeInfo& time_info);
+                  const baldr::TimeInfo& time_info,
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& sources);
 
   /**
    * If time awareness was requested for the CostMatrix algorithm, we need

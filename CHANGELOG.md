@@ -26,7 +26,7 @@
    * ADDED: enabled bounding circles for faster candidate search in `/locate` and `/tile` [#6141/](https://github.com/valhalla/valhalla/pull/6141) 
    * BREAKING: add `low_class_factor` for truck costing (impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
    * ADDED: `get_graph_tile_header` & `GraphTileHeader` bindings [#6134](https://github.com/valhalla/valhalla/pull/6134)
-   * CHANGED: CostMatrix reverse trees use time-dependent speeds with `invariant` date_time when all sources share the same departure instant [#6168](https://github.com/valhalla/valhalla/pull/6168)
+   * CHANGED: `CostMatrix` reverse trees use time-dependent speeds with `invariant` date_time [#6168](https://github.com/valhalla/valhalla/pull/6168)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**

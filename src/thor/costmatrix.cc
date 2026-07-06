@@ -199,16 +199,9 @@ bool CostMatrix::SourceToTarget(Api& request,
 
   auto time_infos = SetOriginTimes(source_location_list, graphreader);
 
-  // with invariant time the clock never advances along the path, so edge costs don't depend
-  // on when a tree reaches them and the reverse trees can use time-dependent speeds too.
-  // Each reverse tree serves every source, so all sources must depart at the same instant;
-  // TimeInfo::local_time holds resolved epoch seconds, so comparing it also catches equal
-  // date_time strings that resolve to different instants across timezones.
+  // anchor the reverse trees on the frozen departure time if the request allows it
   auto reverse_time_info = baldr::TimeInfo::invalid();
-  if (invariant && !time_infos.empty() &&
-      std::all_of(time_infos.begin(), time_infos.end(), [&time_infos](const baldr::TimeInfo& ti) {
-        return ti.valid && ti.local_time == time_infos.front().local_time;
-      })) {
+  if (check_invariant_reverse_time(request.options()) && time_infos.front().valid) {
     reverse_time_info = time_infos.front();
   }
 
@@ -220,7 +213,7 @@ bool CostMatrix::SourceToTarget(Api& request,
   // Set the source and target locations
   // TODO: for now we only allow depart_at/current date_time
   SetSources(graphreader, source_location_list, time_infos, target_location_list);
-  SetTargets(graphreader, target_location_list, source_location_list, reverse_time_info);
+  SetTargets(graphreader, target_location_list, reverse_time_info, source_location_list);
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
@@ -1135,8 +1128,8 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 // these locations.
 void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
-                            const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                            const baldr::TimeInfo& time_info) {
+                            const baldr::TimeInfo& time_info,
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& sources) {
 
   std::unordered_multimap<GraphId, double> source_edges;
   for (const auto& s : sources) {
