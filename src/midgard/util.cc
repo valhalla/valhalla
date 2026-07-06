@@ -80,7 +80,7 @@ projected_circle_t welzl_impl(std::span<Point2d> points, std::vector<Point2d>& b
     }
   }
 
-  const Point2d pt = points.front();
+  const Point2d& pt = points.front();
   projected_circle_t d = welzl_impl(points.subspan(1), boundary);
 
   if (d.second + 1e-10 >= d.first.Distance(pt))
@@ -932,15 +932,15 @@ std::string decode64(const std::string& encoded) {
 }
 
 AzimuthalEquidistant::AzimuthalEquidistant(const PointLL& center)
-    : center_(center), center_rad_(center_.lng() * kRadPerDeg, center_.lat() * kRadPerDeg),
+    : center_(center), center_rad_(center_.lng() * kRadPerDegD, center_.lat() * kRadPerDegD),
       sin_lat_center_(std::sin(center_rad_.second)), cos_lat_center_(std::cos(center_rad_.second)) {
 }
 
 Point2d AzimuthalEquidistant::project(const PointLL& ll) const {
 
   // convert to radians
-  const double lon = ll.lng() * kRadPerDeg;
-  const double lat = ll.lat() * kRadPerDeg;
+  const double lon = ll.lng() * kRadPerDegD;
+  const double lat = ll.lat() * kRadPerDegD;
 
   const double sin_lat = std::sin(lat);
   const double cos_lat = std::cos(lat);
@@ -963,14 +963,14 @@ Point2d AzimuthalEquidistant::project(const PointLL& ll) const {
   const double y = k * (cos_lat_center_ * sin_lat - sin_lat_center_ * cos_lat * cos_dlon);
 
   // scale from radians to meters using earth's radius
-  return {x * kRadEarthMeters, y * kRadEarthMeters};
+  return {x * kRadEarthMetersD, y * kRadEarthMetersD};
 }
 
 PointLL AzimuthalEquidistant::project_inverse(const Point2d& pt) const {
 
   // back to radians from meters
-  const double x = pt.x() / kRadEarthMeters;
-  const double y = pt.y() / kRadEarthMeters;
+  const double x = pt.x() / kRadEarthMetersD;
+  const double y = pt.y() / kRadEarthMetersD;
 
   // formula 7: angular distance from center
   const double c = std::sqrt(x * x + y * y);
@@ -988,16 +988,16 @@ PointLL AzimuthalEquidistant::project_inverse(const Point2d& pt) const {
 
   // formula 6 with special cases for center point at 90° or -90°
   double lon;
-  if (std::abs(center_rad_.second - kPiOver2) < 1e-10) {
+  if (std::abs(center_rad_.second - kPiOver2D) < 1e-10) {
     lon = center_rad_.first + std::atan2(x, -y);
-  } else if (std::abs(center_rad_.second + kPiOver2) < 1e-10) {
+  } else if (std::abs(center_rad_.second + kPiOver2D) < 1e-10) {
     lon = center_rad_.first + std::atan2(x, y);
   } else {
     lon = center_rad_.first +
           std::atan2(x * sin_c, c * cos_lat_center_ * cos_c - y * sin_lat_center_ * sin_c);
   }
 
-  return {lon * kDegPerRad, lat * kDegPerRad};
+  return {lon * kDegPerRadD, lat * kDegPerRadD};
 }
 
 std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
@@ -1029,7 +1029,7 @@ std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& poin
 
   // finally reproject the center to lat/lon
   const PointLL center = azimuthal_equidistant.project_inverse(result.first);
-  return circle_t{Point2d{center.lng(), center.lat()}, result.second};
+  return circle_t{center, result.second};
 }
 
 } // namespace midgard
