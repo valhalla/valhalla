@@ -280,7 +280,7 @@ jobs:
       # only package python bindings if it's not a PR
       
       - uses: pypa/cibuildwheel@v2.23.3
-        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
         env:
           CIBW_ENVIRONMENT: >
             CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }}"
