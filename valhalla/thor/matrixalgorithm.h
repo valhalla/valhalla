@@ -246,10 +246,11 @@ struct Destination {
   }
 };
 
-// return true if the reverse trees can use time-dependent speeds: with invariant time the
+// return true if the reverse trees may use time-dependent speeds: with invariant time the
 // clock never advances along the path, so edge costs don't depend on when a tree reaches
 // them. A reverse tree is shared by all sources, so they must all depart at the same time;
-// timezones are resolved per source later on, path selection anchors on the first source's.
+// equal date_time strings can still resolve to different instants across timezones, which
+// CostMatrix rechecks once the time infos are resolved against the graph.
 inline bool check_invariant_reverse_time(const Options& options) {
   if (options.date_time_type() != Options::invariant || options.sources().empty() ||
       options.sources(0).date_time().empty()) {

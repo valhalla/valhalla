@@ -199,9 +199,13 @@ bool CostMatrix::SourceToTarget(Api& request,
 
   auto time_infos = SetOriginTimes(source_location_list, graphreader);
 
-  // anchor the reverse trees on the frozen departure time if the request allows it
+  // anchor the reverse trees on the frozen departure time if the request allows it and the
+  // sources' date_times resolved to the same instant (their timezones may differ)
   auto reverse_time_info = baldr::TimeInfo::invalid();
-  if (check_invariant_reverse_time(request.options()) && time_infos.front().valid) {
+  if (check_invariant_reverse_time(request.options()) &&
+      std::all_of(time_infos.begin(), time_infos.end(), [&time_infos](const baldr::TimeInfo& ti) {
+        return ti.valid && ti.local_time == time_infos.front().local_time;
+      })) {
     reverse_time_info = time_infos.front();
   }
 
