@@ -243,7 +243,8 @@ void filter_tile(const std::string& tile_bytes,
       if (layer_name == kIncidentLayerName || layer_name == kIncidentLayerName)
         return loki::detail::kIncidentPropToAttributeFlag;
       return loki::detail::kEdgePropToAttributeFlag;
-    }();
+    }
+    ();
 
     const auto& key_table = full_layer.key_table();
     std::vector<bool> attrs_allowed(key_table.size(), false);
