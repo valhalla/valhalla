@@ -19,6 +19,13 @@ using namespace valhalla::loki;
 namespace {
 
 /**
+ * Check whether a line segment crosses the antimeridian
+ */
+bool crosses_antimeridian(double lon1, double lon2) {
+  return std::abs(lon2 - lon1) > 180.0;
+}
+
+/**
  * Test whether a circle is fully outside of a bounding box
  *
  * @param center    the circle's center
@@ -227,7 +234,13 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     const auto ring_coords = PBFToRing(ring_pbf);
     const auto& ring = rings.emplace_back(std::move(ring_coords), AABB2<PointLL>(ring_coords));
     for (size_t i = 0; i < ring.first.size() - 1; ++i) {
-      rings_length += ring.first[i].Distance(ring.first[i + 1]);
+      const auto& pt = ring.first[i];
+      const auto& next_pt = ring.first[i + 1];
+      rings_length += pt.Distance(next_pt);
+      // can't deal with polygons that cross the AM
+      if (crosses_antimeridian(pt.lng(), next_pt.lng())) {
+        throw valhalla_exception_t(177);
+      }
     }
     vertex_count += ring.first.size();
   }
