@@ -1,6 +1,11 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2026-07-06 Valhalla 3.8.1
+* **Removed**
+* **Bug Fix**
    * FIXED: `cibuildhweel` had configuration issues preventing PyPI release; added CI protection for Linux wheels [#6179](https://github.com/valhalla/valhalla/issues/6179)
 * **Enhancement**
 
