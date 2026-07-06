@@ -102,7 +102,7 @@ jobs:
     name: Build Linux Python wheels
     runs-on: ${{ matrix.runner }}
     needs: [build_sdist]
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
+    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     strategy:
       matrix:
         include:
@@ -281,7 +281,7 @@ jobs:
       # only package python bindings if it's not a PR
       
       - uses: pypa/cibuildwheel@v2.23.3
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
+        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
         env:
           CIBW_ENVIRONMENT: >
             CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }}"
@@ -436,7 +436,7 @@ jobs:
       # only package python bindings if it's not a PR
       
       - uses: pypa/cibuildwheel@v2.23.3
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
+        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
         env:
           CIBW_ENVIRONMENT_WINDOWS: >-
             CMAKE_ARGS="-DENABLE_SERVICES=OFF -DENABLE_TESTS=OFF -DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
