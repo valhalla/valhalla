@@ -229,7 +229,6 @@ constexpr std::string_view kIncidentEndTime = "incident.end_time";
 constexpr std::string_view kIncidentImpact = "incident.impact";
 constexpr std::string_view kIncidentRoadClosed = "incident.road_closed";
 constexpr std::string_view kIncidentCongestionValue = "incident.congestion_value";
-constexpr std::string_view kIncidentLanesBlocked = "incident.lanes_blocked";
 constexpr std::string_view kIncidentCreationTime = "incident.creation_time";
 constexpr std::string_view kIncidentLongDescription = "incident.long_description";
 constexpr std::string_view kIncidentClearLanes = "incident.clear_lanes";

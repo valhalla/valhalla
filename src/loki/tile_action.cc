@@ -243,8 +243,7 @@ void filter_tile(const std::string& tile_bytes,
       if (layer_name == kIncidentLayerName || layer_name == kIncidentLayerName)
         return loki::detail::kIncidentPropToAttributeFlag;
       return loki::detail::kEdgePropToAttributeFlag;
-    }
-    ();
+    }();
 
     const auto& key_table = full_layer.key_table();
     std::vector<bool> attrs_allowed(key_table.size(), false);
@@ -484,12 +483,12 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
       }
     };
 
-    if (forward_traffic && forward_traffic->has_incidents) {
+    if (forward_traffic->has_incidents) {
       build_incidents_layer(incidents_builder, edge_id, shape, mercator_line, clip_box, generalize, z,
                             edge_tile, *reader, projection);
     }
 
-    if (opp_tile && reverse_traffic && reverse_traffic->has_incidents) {
+    if (opp_edge && reverse_traffic->has_incidents) {
       build_incidents_layer(incidents_builder, opp_edge_id, shape, mercator_line, clip_box,
                             generalize, z, opp_tile, *reader, projection);
     }
@@ -729,24 +728,6 @@ IncidentLayersBuilder::IncidentLayersBuilder(vtzero::tile_builder& tile,
                                              const char* name,
                                              const baldr::AttributesController& controller)
     : vtzero::layer_builder(tile, name), controller_(controller) {
-  key_type_ = add_key_without_dup_check("type");
-  key_impact_ = add_key_without_dup_check("impact");
-  key_description_ = add_key_without_dup_check("description");
-  key_sub_type_ = add_key_without_dup_check("sub_type");
-  key_sub_type_description_ = add_key_without_dup_check("sub_type_description");
-  key_start_time_ = add_key_without_dup_check("start_time");
-  key_end_time_ = add_key_without_dup_check("end_time");
-  key_road_closed_ = add_key_without_dup_check("road_closed");
-  key_congestion_value_ = add_key_without_dup_check("congestion_value");
-  key_lanes_blocked_ = add_key_without_dup_check("lanes_blocked");
-  key_creation_time_ = add_key_without_dup_check("creation_time");
-  key_long_description_ = add_key_without_dup_check("long_description");
-  key_clear_lanes_ = add_key_without_dup_check("clear_lanes");
-  key_num_lanes_blocked_ = add_key_without_dup_check("num_lanes_blocked");
-  key_length_ = add_key_without_dup_check("length");
-  key_id_ = add_key_without_dup_check("id");
-  key_iso_3166_1_alpha2_ = add_key_without_dup_check("iso_3166_1_alpha2");
-  key_iso_3166_1_alpha3_ = add_key_without_dup_check("iso_3166_1_alpha3");
 
   for (const auto& def : loki::detail::kIncidentAttributes) {
     if (controller(def.attribute_flag)) {

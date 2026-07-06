@@ -1,6 +1,6 @@
 # Valhalla tile service API reference [BETA]
 
-Valhalla's `/tile` service provides a graph representation as [Mapbox Vector Tiles](https://docs.mapbox.com/data/tilesets/guides/vector-tiles-introduction/) (MVT). Currently the tiles contain 4 layers: 
+Valhalla's `/tile` service provides a graph representation as [Mapbox Vector Tiles](https://docs.mapbox.com/data/tilesets/guides/vector-tiles-introduction/) (MVT). Currently the tiles contain 5 layers: 
  - edges
  - nodes
  - shortcuts 

@@ -237,7 +237,6 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kIncidentImpact, false},
     {kIncidentRoadClosed, false},
     {kIncidentCongestionValue, false},
-    {kIncidentLanesBlocked, false},
     {kIncidentCreationTime, false},
     {kIncidentLongDescription, false},
     {kIncidentClearLanes, false},
