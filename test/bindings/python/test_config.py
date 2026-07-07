@@ -201,13 +201,7 @@ class TestGetConfig(unittest.TestCase):
     """Test suite for get_config function."""
 
     def test_get_config_does_not_raise(self):
-        """get_config() must build a config without raising.
-
-        Regression test for #5976, which moved logging config from the
-        module-level `mjolnir.logging` to a top-level `logging` section but
-        left get_config() writing to the removed `mjolnir.logging` key, so it
-        raised KeyError('logging') for every caller.
-        """
+        """get_config() must build a config without raising."""
         # Empty tile paths avoid the strict filesystem resolve, so this runs
         # without any tile data present.
         config = get_config(tile_extract="", tile_dir="")
