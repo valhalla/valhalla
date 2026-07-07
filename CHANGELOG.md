@@ -3,6 +3,12 @@
 * **Bug Fix**
 * **Enhancement**
 
+## Release Date: 2026-07-06 Valhalla 3.8.1
+* **Removed**
+* **Bug Fix**
+   * FIXED: `cibuildhweel` had configuration issues preventing PyPI release; added CI protection for Linux wheels [#6179](https://github.com/valhalla/valhalla/issues/6179)
+* **Enhancement**
+
 ## Release Date: 2026-07-06 Valhalla 3.8.0
 * **Removed**
    * REMOVED: dead `thor.max_reserved_locations_costmatrix` help entry from `valhalla_build_config` (live key is `thor.costmatrix.max_reserved_locations`) [#6083](https://github.com/valhalla/valhalla/issues/6083)
