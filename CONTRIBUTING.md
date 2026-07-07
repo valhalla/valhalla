@@ -97,6 +97,17 @@ Valhalla uses [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/
 
 Additionally, some pages are made to be shown on GitHub (`README.md`, `CONTRIBUTING.md`, etc). See [About writing and formatting on GitHub](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/about-writing-and-formatting-on-github) for more info.
 
+### Building locally
+
+The documentation dependencies are defined in the `docs` dependency group in `pyproject.toml`. Install them and serve the site with live reload:
+
+```bash
+pip install --group docs
+mkdocs serve -f docs/mkdocs.yml
+```
+
+The site is then available at `http://localhost:8000`. Run `mkdocs build --strict` to catch broken links and invalid navigation before pushing.
+
 ### Publishing
 
 Documentation is published to GitHub pages [via GitHub Actions](https://squidfunk.github.io/mkdocs-material/publishing-your-site/#with-github-actions) on every push to `master` branch.

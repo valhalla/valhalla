@@ -55,7 +55,7 @@ protected:
   vtzero::index_value key_value_;
 };
 
-struct IncidentLayersBuilder;
+class IncidentLayersBuilder;
 struct IncidentsAttributeTile {
   const char* key_name;
   std::string_view attribute_flag;
