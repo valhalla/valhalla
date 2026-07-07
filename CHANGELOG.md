@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: Per-leg `has_toll`/`has_highway`/`has_ferry` in the Valhalla JSON output were always `false` with `directions_type=none` because they were accumulated from maneuvers; fall back to the leg summary instead [#6151](https://github.com/valhalla/valhalla/issues/6151)
 * **Enhancement**
 
 ## Release Date: 2026-07-06 Valhalla 3.8.1

@@ -266,6 +266,14 @@ TEST(Standalone, TripLegSummary) {
   EXPECT_TRUE(summary["has_highway"].GetBool());
   EXPECT_TRUE(summary["has_toll"].GetBool());
   EXPECT_TRUE(summary["has_ferry"].GetBool());
+
+  // The per-leg JSON flags must match the leg summary regardless of directions_type. With
+  // directions_type "none" there are no maneuvers to accumulate from, so these come from the leg
+  // summary. See https://github.com/valhalla/valhalla/issues/6151
+  auto leg_none = trip["legs"].GetArray()[0]["summary"].GetObject();
+  EXPECT_TRUE(leg_none["has_highway"].GetBool());
+  EXPECT_TRUE(leg_none["has_toll"].GetBool());
+  EXPECT_TRUE(leg_none["has_ferry"].GetBool());
   result_json.erase();
 
   valhalla::Api result4 = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
@@ -281,6 +289,11 @@ TEST(Standalone, TripLegSummary) {
   EXPECT_TRUE(summary["has_highway"].GetBool());
   EXPECT_TRUE(summary["has_toll"].GetBool());
   EXPECT_TRUE(summary["has_ferry"].GetBool());
+
+  auto leg_maneuvers = trip["legs"].GetArray()[0]["summary"].GetObject();
+  EXPECT_TRUE(leg_maneuvers["has_highway"].GetBool());
+  EXPECT_TRUE(leg_maneuvers["has_toll"].GetBool());
+  EXPECT_TRUE(leg_maneuvers["has_ferry"].GetBool());
 
   std::filesystem::remove_all(workdir);
 }
