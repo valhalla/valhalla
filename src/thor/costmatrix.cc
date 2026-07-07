@@ -215,7 +215,6 @@ bool CostMatrix::SourceToTarget(Api& request,
   Initialize(source_location_list, target_location_list, request.matrix());
 
   // Set the source and target locations
-  // TODO: for now we only allow depart_at/current date_time
   SetSources(graphreader, source_location_list, time_infos, target_location_list);
   SetTargets(graphreader, target_location_list, reverse_time_info, source_location_list);
 
