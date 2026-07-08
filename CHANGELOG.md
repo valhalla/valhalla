@@ -8,6 +8,7 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: `cibuildhweel` had configuration issues preventing PyPI release; added CI protection for Linux wheels [#6179](https://github.com/valhalla/valhalla/issues/6179)
+   * FIXED: check for spatialite-tools at cmake config time if `ENABLE_DATA_TOOLS = ON` [#2202](https://github.com/valhalla/valhalla/issues/2202)
 * **Enhancement**
 
 ## Release Date: 2026-07-06 Valhalla 3.8.0
@@ -25,7 +26,6 @@
    * FIXED: JSON serialization of NaN values [#6147](https://github.com/valhalla/valhalla/pull/6147)
    * BREAKING: apply `low_class_penalty` only when transitioning from a higher class road in `TruckCost::TransitionCost`(impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
    * FIXED: bounding circle precision issues [#6169](https://github.com/valhalla/valhalla/pull/6169)
-   * FIXED: check for spatialite-tools at cmake config time if `ENABLE_DATA_TOOLS = ON` [#2202](https://github.com/valhalla/valhalla/issues/2202)
 * **Enhancement**
    * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
    * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
