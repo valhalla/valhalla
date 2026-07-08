@@ -4,6 +4,7 @@
    * FIXED: Per-leg `has_toll`/`has_highway`/`has_ferry` in the Valhalla JSON output were always `false` with `directions_type=none` because they were accumulated from maneuvers; fall back to the leg summary instead [#6151](https://github.com/valhalla/valhalla/issues/6151)
    * FIXED: Python `get_config()` raised `KeyError('logging')` since 3.7.0 by writing the removed `mjolnir.logging` key after logging config moved to the top level in #5976 [#6185](https://github.com/valhalla/valhalla/pull/6185)
 * **Enhancement**
+   * ADDED: write support for metadata fields in graph tile headers in the python bindings [#6194](https://github.com/valhalla/valhalla/pull/6194)
 
 ## Release Date: 2026-07-06 Valhalla 3.8.1
 * **Removed**
