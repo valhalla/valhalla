@@ -6,8 +6,9 @@ theme:
   favicon: images/valhalla_logo.svg
   features:
     - content.tabs.link
+    - navigation.indexes
     - navigation.instant
-    - navigation.sections
+    - navigation.instant.prefetch
     - navigation.top
     - toc.follow
     - content.code.copy
@@ -89,84 +90,89 @@ edit_uri: edit/master/docs/docs/
 site_url: https://valhalla.github.io/valhalla
 docs_dir: docs
 nav:
-  - index.md
-  - Introduction for Users: valhalla-intro.md
-  - Build from Source: building.md
-  - Terminology: terminology.md
-  - Python bindings:
-      - Getting started: README_python.md
-      - API reference:
-          - Actor: python/actor.md
-          - Config: python/config.md
-          - Graph utilities: python/graph_utils.md
-          - Predicted speeds: python/predicted_speeds.md
-          - Polyline decoder: python/decode_polyline.md
-          - Exceptions: python/exceptions.md
-  - Node.js bindings: README_nodejs.md
-  - Public APIs:
-      - API Overview: api/index.md
-      - OpenAPI Spec: api/openapi.md
-      - Protocol Buffers: api/protocol-buffers.md
-      - Turn-by-Turn Route API:
+  - Home: index.md
+  - Get started:
+      - Introduction for users: valhalla-intro.md
+      - Build from source: building.md
+      - Terminology: terminology.md
+  - HTTP API:
+      - Overview: api/index.md
+      - Formats:
+          - OpenAPI spec: api/openapi.md
+          - Protocol Buffers: api/protocol-buffers.md
+          - Decoding shape: decoding.md
+      - Route:
           - Overview: api/turn-by-turn/overview.md
-          - API Reference: api/turn-by-turn/api-reference.md
-      - Optimized Route API: api/optimized/api-reference.md
-      - Matrix API: api/matrix/api-reference.md
-      - Isochrone API: api/isochrone/api-reference.md
-      - Map Matching API: api/map-matching/api-reference.md
-      - Locate API: api/locate/api-reference.md
-      - Elevation API: api/elevation/api-reference.md
-      - Expansion API: api/expansion/api-reference.md
-      - Status API: api/status/api-reference.md
-      - Tile API: api/tile/api-reference.md
-  - Internal topics:
+          - API reference: api/turn-by-turn/api-reference.md
+      - Optimized: api/optimized/api-reference.md
+      - Matrix: api/matrix/api-reference.md
+      - Isochrone: api/isochrone/api-reference.md
+      - Map matching: api/map-matching/api-reference.md
+      - Locate: api/locate/api-reference.md
+      - Elevation: api/elevation/api-reference.md
+      - Expansion: api/expansion/api-reference.md
+      - Status: api/status/api-reference.md
+      - Tile: api/tile/api-reference.md
+  - Language bindings:
+      - Python:
+          - Getting started: README_python.md
+          - API reference:
+              - Actor: python/actor.md
+              - Config: python/config.md
+              - Graph utilities: python/graph_utils.md
+              - Predicted speeds: python/predicted_speeds.md
+              - Polyline decoder: python/decode_polyline.md
+              - Exceptions: python/exceptions.md
+      - Node.js: README_nodejs.md
+  - How it works:
+      - Route pipeline: route_overview.md
       - "Why tiles?": mjolnir/why_tiles.md
-      - route_overview.md
-      - Decoding shape: decoding.md
       - Tile structure: tiles.md
-      - Change identification: change_identification.md
       - Speed information: speeds.md
-      - Dynamic costing: sif/dynamic-costing.md
-      - Elevation influenced bicycle routing: sif/elevation_costing.md
-      - elevation.md
-      - testing.md
-      - tzdb_update.md
-  - Internal components:
-      - Baldr (routing data strutures/algorithms): baldr.md
-      - Loki (associate locations with graph edges): loki.md
-      - Midgard (data structures for geography/geometry): midgard.md
-      - Odin (route narrative/maneuver generation): odin.md
-      - Sif (costing for edges/transitions): sif.md
-      - Skadi (digital elevation model usage): skadi.md
-      - Tyr (service layer): tyr.md
-      - Meili (map matching):
-          - meili.md
-          - Overview: meili/overview.md
-          - Algorithms: meili/algorithms.md
-          - Configuration: meili/configuration.md
-          - meili/implementation_details.md
-          - meili/library_api.md
-          - meili/service_api.md
-      - Mjolnir (routing graph/tile generation):
-          - mjolnir.md
-          - mjolnir/geojson.md
-          - mjolnir/getting_started_guide.md
-          - mjolnir/map_roulette.md
-          - mjolnir/map_roulette_blog.md
-          - mjolnir/tag_parsing.md
-          - mjolnir/historical_traffic.md
-      - Thor (routing algorithms):
-          - thor.md
-          - thor/isochrones.md
-          - thor/path-algorithm.md
-          - incidents.md
-  - Data sources:
-      - Data sources: mjolnir/data_sources.md
-      - Administrative data: mjolnir/admins.md
-      - Attribution requirements: mjolnir/attribution.md
-  - Development:
-      - contributing.md
-      - Testing: test/gurka.md
+      - Historical traffic: mjolnir/historical_traffic.md
+      - Live traffic incidents: incidents.md
+      - Change identification: change_identification.md
+      - Elevation: elevation.md
+      - Costing:
+          - Dynamic costing: sif/dynamic-costing.md
+          - Elevation influenced bicycle routing: sif/elevation_costing.md
+  - Contributing:
+      - Contributing guide: contributing.md
+      - Testing:
+          - Unit tests: testing.md
+          - Integration tests (gurka): test/gurka.md
+      - Architecture:
+          - Baldr (routing data structures/algorithms): baldr.md
+          - Loki (associate locations with graph edges): loki.md
+          - Midgard (data structures for geography/geometry): midgard.md
+          - Odin (route narrative/maneuver generation): odin.md
+          - Sif (costing for edges/transitions): sif.md
+          - Skadi (digital elevation model usage): skadi.md
+          - Tyr (service layer): tyr.md
+          - Thor (routing algorithms):
+              - thor.md
+              - Path algorithm: thor/path-algorithm.md
+              - Isochrones: thor/isochrones.md
+          - Meili (map matching):
+              - meili.md
+              - Overview: meili/overview.md
+              - Algorithms: meili/algorithms.md
+              - Configuration: meili/configuration.md
+              - Implementation details: meili/implementation_details.md
+              - Library API: meili/library_api.md
+              - Service API: meili/service_api.md
+          - Mjolnir (routing graph/tile generation):
+              - mjolnir.md
+              - Tag parsing: mjolnir/tag_parsing.md
+              - GeoJSON: mjolnir/geojson.md
+              - Getting started: mjolnir/getting_started_guide.md
+              - MapRoulette: mjolnir/map_roulette.md
+              - MapRoulette blog: mjolnir/map_roulette_blog.md
+      - Data:
+          - Data sources: mjolnir/data_sources.md
+          - Administrative data: mjolnir/admins.md
+          - Attribution requirements: mjolnir/attribution.md
       - Locales: locales.md
+      - Releasing: releasing.md
+      - Timezone DB update: tzdb_update.md
       - Changelog: https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md
-      - releasing.md
