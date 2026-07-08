@@ -642,10 +642,6 @@ void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writ
     }
 
     writer("has_time_restrictions", has_time_restrictions);
-    // The has_toll/has_highway/has_ferry booleans above are accumulated from the maneuvers, which
-    // don't exist when directions_type is "none". Fall back to the leg summary (populated in
-    // TripLegBuilder from the edges themselves) so the flags are correct regardless of
-    // directions_type. See https://github.com/valhalla/valhalla/issues/6151
     writer("has_toll", has_toll || directions_leg.summary().has_toll());
     writer("has_highway", has_highway || directions_leg.summary().has_highway());
     writer("has_ferry", has_ferry || directions_leg.summary().has_ferry());
