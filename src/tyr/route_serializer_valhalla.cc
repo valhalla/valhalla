@@ -642,9 +642,9 @@ void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writ
     }
 
     writer("has_time_restrictions", has_time_restrictions);
-    writer("has_toll", has_toll);
-    writer("has_highway", has_highway);
-    writer("has_ferry", has_ferry);
+    writer("has_toll", has_toll || directions_leg.summary().has_toll());
+    writer("has_highway", has_highway || directions_leg.summary().has_highway());
+    writer("has_ferry", has_ferry || directions_leg.summary().has_ferry());
     writer.set_precision(tyr::kCoordinatePrecision);
     writer("min_lat", directions_leg.summary().bbox().min_ll().lat());
     writer("min_lon", directions_leg.summary().bbox().min_ll().lng());
