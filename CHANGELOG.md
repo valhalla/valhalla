@@ -1,12 +1,14 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: Python `get_config()` raised `KeyError('logging')` since 3.7.0 by writing the removed `mjolnir.logging` key after logging config moved to the top level in #5976 [#6185](https://github.com/valhalla/valhalla/pull/6185)
 * **Enhancement**
 
 ## Release Date: 2026-07-06 Valhalla 3.8.1
 * **Removed**
 * **Bug Fix**
    * FIXED: `cibuildhweel` had configuration issues preventing PyPI release; added CI protection for Linux wheels [#6179](https://github.com/valhalla/valhalla/issues/6179)
+   * FIXED: check for spatialite-tools at cmake config time if `ENABLE_DATA_TOOLS = ON` [#2202](https://github.com/valhalla/valhalla/issues/2202)
 * **Enhancement**
 
 ## Release Date: 2026-07-06 Valhalla 3.8.0
