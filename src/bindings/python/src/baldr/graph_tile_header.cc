@@ -120,10 +120,22 @@ void init_graphtileheader(nb::module_& m) {
       .def_prop_ro("transfercount", &vb::GraphTileHeader::transfercount,
                    "Number of transit transfers.")
       .def_prop_ro("end_offset", &vb::GraphTileHeader::end_offset, "Tile size in bytes.")
-      .def_prop_ro("tile_checksum", &vb::GraphTileHeader::tile_checksum,
-                   "Integer checksum (48 bit) of the tile's data.")
-      .def_prop_ro("build_id", &vb::GraphTileHeader::build_id,
-                   "Integer additive checksum (16 bit) of the tileset.")
+      .def_prop_rw(
+          "tile_checksum", &vb::GraphTileHeader::tile_checksum,
+          [](vb::GraphTileHeader& h, uint64_t checksum) {
+            if (checksum >> vb::kTileHashBits)
+              throw std::invalid_argument("tile_checksum exceeds 48 bits");
+            h.set_raw_checksum((static_cast<uint64_t>(h.build_id()) << vb::kTileHashBits) | checksum);
+          },
+          "Integer checksum (48 bit) of the tile's data. Setting it keeps the build_id.")
+      .def_prop_rw(
+          "build_id", &vb::GraphTileHeader::build_id,
+          [](vb::GraphTileHeader& h, uint16_t build_id) {
+            h.set_raw_checksum((static_cast<uint64_t>(build_id) << vb::kTileHashBits) |
+                               h.tile_checksum());
+          },
+          "Integer additive checksum (16 bit) of the tileset. Setting it keeps the "
+          "tile_checksum.")
       .def_static(
           "byte_size", []() { return kHeaderSize; },
           "Size of the on-disk header in bytes (the header span at the start of a tile).")

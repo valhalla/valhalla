@@ -40,6 +40,28 @@ class TestGraphTileHeaderBuilder(unittest.TestCase):
         self.assertEqual(h.tile_checksum, TILE_CHECKSUM)
         self.assertEqual(h.build_id, BUILD_ID)
 
+    def test_checksum_convenience_setters_keep_the_other_half(self):
+        h = make_header()
+        h.build_id = 0  # the normalize shape
+        self.assertEqual(h.build_id, 0)
+        self.assertEqual(h.tile_checksum, TILE_CHECKSUM)
+
+        h.build_id = BUILD_ID  # the stamp shape
+        self.assertEqual(h.raw_checksum, RAW_CHECKSUM)
+
+        h.tile_checksum = 1234
+        self.assertEqual(h.tile_checksum, 1234)
+        self.assertEqual(h.build_id, BUILD_ID)
+
+    def test_checksum_setters_range_checked(self):
+        h = make_header()
+        with self.assertRaises(ValueError):
+            h.tile_checksum = 1 << 48  # more than the 48 hash bits
+        with self.assertRaises((TypeError, ValueError, OverflowError)):
+            h.build_id = 1 << 16  # more than the 16 build id bits
+        # failed sets must not have clobbered anything
+        self.assertEqual(h.raw_checksum, RAW_CHECKSUM)
+
     def test_everything_else_stays_read_only(self):
         h = GraphTileHeader()
         for attr, value in (
@@ -81,7 +103,7 @@ class TestGraphTileHeaderBuilder(unittest.TestCase):
             # the normalize/stamp shape: load, mutate ids, save in place
             h = GraphTileHeader.from_file(tile)
             h.dataset_id = 0
-            h.raw_checksum = h.tile_checksum  # zero the build id, keep the hash
+            h.build_id = 0  # keeps the tile_checksum
             h.save(tile)
 
             reread = GraphTileHeader.from_file(tile)

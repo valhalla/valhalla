@@ -246,11 +246,21 @@ class GraphTileHeader:
 
     @property
     def tile_checksum(self) -> int:
-        """Integer checksum (48 bit) of the tile's data."""
+        """
+        Integer checksum (48 bit) of the tile's data. Setting it keeps the build_id.
+        """
+
+    @tile_checksum.setter
+    def tile_checksum(self, arg: int, /) -> None: ...
 
     @property
     def build_id(self) -> int:
-        """Integer additive checksum (16 bit) of the tileset."""
+        """
+        Integer additive checksum (16 bit) of the tileset. Setting it keeps the tile_checksum.
+        """
+
+    @build_id.setter
+    def build_id(self, arg: int, /) -> None: ...
 
     @staticmethod
     def byte_size() -> int:
