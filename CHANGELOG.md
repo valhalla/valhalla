@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
