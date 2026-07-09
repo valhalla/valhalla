@@ -24,6 +24,16 @@ void init_graphid(nb::module_& m) {
            "Constructs a GraphId from its integer value, e.g. 118931 == 3/14866/0.")
       .def(nb::init<std::string>(),
            "Constructs a GraphId from its string representation, e.g. \"2/71944/0\".")
+      .def_static(
+          "from_tile_path", [](const std::string& path) { return vb::GraphTile::GetTileId(path); },
+          nb::arg("path"),
+          "Parses a graph tile's file path into its base GraphId, e.g.\n"
+          "\"2/000/820/135.gph\" (relative or absolute, any file extension) -> 2/820135/0.\n"
+          "The inverse of os.fspath(graph_id); the path must contain at least one\n"
+          "path separator.\n\n"
+          ":param path: The tile's file path.\n"
+          ":returns: The tile's base GraphId (the within-tile id portion is 0).\n"
+          ":raises RuntimeError: The path doesn't encode a (potentially) valid tile id.")
       .def_ro("value", &vb::GraphId::value, "The integer representation of the bit-fielded GraphId.")
       .def("tileid", &vb::GraphId::tileid, "Gets the tile Id.")
       .def("level", &vb::GraphId::level, "Gets the hierarchy level.")
