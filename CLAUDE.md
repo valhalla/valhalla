@@ -136,7 +136,7 @@ OSM PBF → lua/graph.lua (tag transformation)
   → ElevationBuilder → RestrictionBuilder → GraphValidator
 ```
 
-The Lua layer (`lua/graph.lua`) controls tag-to-attribute mapping without recompilation — key tables: `highway`, `road_class`, `default_speed`, `restriction`. Intermediate data flows through `OSMData` and temporary `.bin` files. See `docs/docs/mjolnir/tag_parsing.md` for the full Lua ↔ C++ tag flow and debugging tips.
+The Lua layer (`lua/graph.lua`) controls tag-to-attribute mapping without recompilation — key tables: `highway`, `road_class`, `default_speed`, `restriction`. Intermediate data flows through `OSMData` and temporary `.bin` files. See `docs/docs/contributing/architecture/mjolnir/tag-parsing.md` for the full Lua ↔ C++ tag flow and debugging tips.
 
 ## Where to Look
 
@@ -147,8 +147,8 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | OSM tag parsing, which tags produce which attributes | `lua/graph.lua`, `src/mjolnir/pbfgraphparser.cc` |
 | How edges/nodes get their properties during tile build | `src/mjolnir/graphbuilder.cc`, `src/mjolnir/graphenhancer.cc` |
 | Adding new per-edge data to tiles | `TaggedValue` enum in `valhalla/baldr/graphconstants.h`, stored in `EdgeInfo` name/tag list (`valhalla/baldr/edgeinfo.h`) |
-| Whether a vehicle type can use an edge, costing weights | `src/sif/` — each model has its own file (e.g., `autocost.cc`, `bicyclecost.cc`). See `docs/docs/sif/dynamic-costing.md` |
-| Routing algorithm behavior | `src/thor/bidirectional_astar.cc`, `unidirectional_astar.cc`, `timedep_forward.cc`, `timedep_reverse.cc`. See `docs/docs/thor/path-algorithm.md` |
+| Whether a vehicle type can use an edge, costing weights | `src/sif/` — each model has its own file (e.g., `autocost.cc`, `bicyclecost.cc`). See `docs/docs/concepts/costing/dynamic-costing.md` |
+| Routing algorithm behavior | `src/thor/bidirectional_astar.cc`, `unidirectional_astar.cc`, `timedep_forward.cc`, `timedep_reverse.cc`. See `docs/docs/contributing/architecture/thor/path-algorithm.md` |
 | Algorithm selection and time-dependent fallback | `src/thor/route_action.cc` — BidirectionalAStar by default; UnidirectionalAStar for `depart_at`/`arrive_by` under `max_timedep_distance` (default 500 km) |
 | Adding new top-level request parameters | Add field to `Options` in `proto/options.proto`, parse from JSON in `src/worker.cc` (around the `matrix_locations` / `avoid_polygons` section). Costing-specific params go in `Costing.Options` and are parsed in `src/sif/dynamiccost.cc` (`ParseBaseCostOptions`) or individual costing files |
 | How lat/lon maps to graph edges | `src/loki/search.cc` (bin search → projection → filtering → reachability) |
@@ -161,11 +161,11 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Protobuf message definitions | `proto/` — root message is `Api` in `api.proto` |
 | Live traffic | Separate overlay (`traffic.tar`), format in `valhalla/baldr/traffictile.h`. Test via `test::customize_live_traffic_data()` |
 | Historical/predicted speeds | Full profiles: `valhalla_add_predicted_traffic` → `valhalla/baldr/predictedspeeds.h`. Lightweight: `free_flow_speed`/`constrained_flow_speed` on `DirectedEdge`. Test via `test::customize_historical_traffic()` |
-| Speed resolution at runtime | `GraphTile::GetSpeed()` — live → predicted → constrained → freeflow → base. See `docs/docs/speeds.md` |
+| Speed resolution at runtime | `GraphTile::GetSpeed()` — live → predicted → constrained → freeflow → base. See `docs/docs/concepts/speeds.md` |
 | Time-dependent routing | `depart_at`/`arrive_by` params; timezone data from `tz.sqlite` |
-| Route API request/response format | `docs/docs/api/turn-by-turn/api-reference.md` |
-| Speed assignment (maxspeed, highway defaults, density) | `docs/docs/speeds.md` |
-| Domain terminology (cost vs penalty vs factor) | `docs/docs/terminology.md` |
+| Route API request/response format | `docs/docs/api/route/api-reference.md` |
+| Speed assignment (maxspeed, highway defaults, density) | `docs/docs/concepts/speeds.md` |
+| Domain terminology (cost vs penalty vs factor) | `docs/docs/start/terminology.md` |
 | Map matching (Meili) data flow | `src/meili/map_matcher.cc` (`OfflineMatch`) → `src/meili/match_route.cc` (`ConstructRoute`) → `src/thor/map_matcher.cc` (`FormPath`) → `src/thor/trace_route_action.cc` (`build_trace`) → `src/thor/triplegbuilder.cc` (`TripLegBuilder::Build`). Candidates: `src/meili/candidate_search.cc`. Viterbi: `src/meili/viterbi_search.cc` |
 | Behavior affected by `include_pedestrian`/`bicycle`/`driving: false` | `src/mjolnir/graphfilter.cc` (`FilterTiles`, `AggregateTiles`). Filtering happens AFTER parsing — shared nodes between filtered ways create intersections that split edges during parsing. After filtering removes those edges, aggregation merges nodes that have only 2 remaining edges back together, which can change edge topology. Check `ExpandFromNodeInner` for the aggregation walk |
 | Anything in `src/bindings/python/...` — adding/modifying a `.def(...)` call, debugging pyvalhalla install/wheel issues, `.pyi` stub generation | [src/bindings/python/CLAUDE.md](src/bindings/python/CLAUDE.md) |
@@ -200,7 +200,7 @@ Edges touched per route — shows why per-edge overhead matters:
 
 **Unit tests** (`test/*.cc`) — target name = filename. Test individual functions/modules. Many use pre-built tilesets from `test/data/` (utrecht, whitelion, roma, etc.).
 
-**Gurka integration tests** (`test/gurka/test_*.cc`) — target `gurka_<name>`. Build ASCII road maps → generate tiles → run full API → verify. Use for testing routing behavior, access restrictions, turn restrictions, costing, maneuvers — anything requiring multiple modules. See `docs/docs/test/gurka.md` for the full framework reference including map construction, relations, assertions, and debugging with GeoJSON.
+**Gurka integration tests** (`test/gurka/test_*.cc`) — target `gurka_<name>`. Build ASCII road maps → generate tiles → run full API → verify. Use for testing routing behavior, access restrictions, turn restrictions, costing, maneuvers — anything requiring multiple modules. See `docs/docs/contributing/gurka.md` for the full framework reference including map construction, relations, assertions, and debugging with GeoJSON.
 
 ### Gurka Test Pattern
 
@@ -225,7 +225,7 @@ TEST(MyFeature, BasicCase) {
 }
 ```
 
-Key helpers: `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `gurka::findEdgeByNodes()`, `gurka::assert::raw::expect_path()`, `gurka::assert::raw::expect_maneuvers()`, `gurka::assert::osrm::expect_steps()`. Test utilities in `test/test.h`. Full framework reference in `docs/docs/test/gurka.md`.
+Key helpers: `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `gurka::findEdgeByNodes()`, `gurka::assert::raw::expect_path()`, `gurka::assert::raw::expect_maneuvers()`, `gurka::assert::osrm::expect_steps()`. Test utilities in `test/test.h`. Full framework reference in `docs/docs/contributing/gurka.md`.
 
 ### Partial Tile Builds in Gurka
 
@@ -374,17 +374,17 @@ The `docs/docs/` directory contains detailed documentation. The most useful for 
 
 | Document | What It Covers |
 |----------|---------------|
-| `route_overview.md` | End-to-end route computation pipeline (Loki → Thor → Odin → Tyr) |
-| `terminology.md` | Domain glossary: cost vs penalty vs factor, edge, maneuver, trip |
-| `sif/dynamic-costing.md` | Costing design: EdgeCost, TransitionCost, turn penalties, name consistency |
-| `thor/path-algorithm.md` | A*, BidirectionalA*, MultiModal, hierarchy levels, edge labeling, shortcuts |
-| `tiles.md` | Tile math: GraphId layout, lat/lon ↔ tile index, bounding box queries |
-| `speeds.md` | Speed assignment: maxspeed tags, highway defaults, urban/rural density |
-| `mjolnir/tag_parsing.md` | OSM tag flow: Lua → C++ marshalling, debugging route quality issues |
-| `test/gurka.md` | Gurka framework: ASCII maps, ways/nodes/relations, assertions, GeoJSON debugging |
-| `decoding.md` | Polyline6 encoding/decoding with examples in multiple languages |
-| `api/turn-by-turn/api-reference.md` | Route API: request format, costing options, response structure |
-| `building.md` | Building from source and running Valhalla server on all platforms |
+| `concepts/index.md` (route pipeline) | End-to-end route computation pipeline (Loki → Thor → Odin → Tyr) |
+| `start/terminology.md` | Domain glossary: cost vs penalty vs factor, edge, maneuver, trip |
+| `concepts/costing/dynamic-costing.md` | Costing design: EdgeCost, TransitionCost, turn penalties, name consistency |
+| `contributing/architecture/thor/path-algorithm.md` | A*, BidirectionalA*, MultiModal, hierarchy levels, edge labeling, shortcuts |
+| `concepts/tiles.md` | Tile math: GraphId layout, lat/lon ↔ tile index, bounding box queries |
+| `concepts/speeds.md` | Speed assignment: maxspeed tags, highway defaults, urban/rural density |
+| `contributing/architecture/mjolnir/tag-parsing.md` | OSM tag flow: Lua → C++ marshalling, debugging route quality issues |
+| `contributing/gurka.md` | Gurka framework: ASCII maps, ways/nodes/relations, assertions, GeoJSON debugging |
+| `api/decoding.md` | Polyline6 encoding/decoding with examples in multiple languages |
+| `api/route/api-reference.md` | Route API: request format, costing options, response structure |
+| `start/building.md` | Building from source and running Valhalla server on all platforms |
 
 ### Running a Route Locally
 
@@ -424,7 +424,7 @@ Valhalla encodes route geometries as polyline strings with **6 digits of precisi
 
 When a code change affects route geometry, paste the encoded `shape` string from the response into the [Valhalla polyline decoder](https://valhalla.github.io/demos/polyline/?unescape=true&polyline6=true) to visually verify the route on a map.
 
-See `docs/docs/decoding.md` for decode implementations in C++, Python, JavaScript, Go, and Rust.
+See `docs/docs/api/decoding.md` for decode implementations in C++, Python, JavaScript, Go, and Rust.
 
 ## Maintaining This Document
 
