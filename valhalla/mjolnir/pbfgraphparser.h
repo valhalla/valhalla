@@ -49,6 +49,13 @@ public:
                              const std::string& complex_restriction_to_file,
                              OSMData& osmdata);
 
+  // TODO: doxygen comment
+  static void ParseAreaWays(const boost::property_tree::ptree& pt,
+                            const std::vector<std::string>& input_files,
+                            const std::string& ways_file,
+                            const std::string& way_nodes_file,
+                            OSMData& osmdata);
+
   /**
    * Loads given input files
    * @param  pt                             properties file
