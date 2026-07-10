@@ -66,12 +66,10 @@ if(WIN32)
     file(GLOB _these "${_dir}/*.dll")
     list(APPEND _pybind_dlls ${_these})
   endforeach()
-  foreach(_tgt IN ITEMS _valhalla _graph_utils predicted_speeds)
-    add_custom_command(TARGET ${_tgt} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_RUNTIME_DLLS:${_tgt}> ${_pybind_dlls} $<TARGET_FILE_DIR:${_tgt}>
-      COMMAND_EXPAND_LISTS)
-  endforeach()
+  add_custom_command(TARGET _valhalla POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_RUNTIME_DLLS:_valhalla> ${_pybind_dlls} $<TARGET_FILE_DIR:_valhalla>
+    COMMAND_EXPAND_LISTS)
 endif()
 
 # Generate Python type stubs (.pyi) from the compiled extension modules.
