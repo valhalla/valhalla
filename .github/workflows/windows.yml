@@ -217,6 +217,14 @@ jobs:
           cmake --build build --target actor -- -k 0 || true
           [ -f "${ws}/build/test/actor.exe" ] || { echo "MISSING actor.exe (build failed?)"; exit 1; }
 
+          # EXPERIMENT: actor.exe is built with toolset 14.44 but System32 has VCRUNTIME140_1 14.51, and
+          # the AV is in that runtime's _CxxFrameHandler4 during unwind. app-local deploy the MATCHING 14.44
+          # runtime next to the exe (loader prefers the exe dir over System32 for these non-KnownDLLs) to
+          # test whether the unwind crash is runtime version skew -- if it vanishes, the fix is deployment.
+          redist=$(ls -d "/c/Program Files/Microsoft Visual Studio/2022"/*/VC/Redist/MSVC/14.44*/x64/Microsoft.VC14*.CRT 2>/dev/null | tail -1)
+          echo "toolset redist dir: ${redist:-<none found>}"
+          [ -n "$redist" ] && cp -v "$redist"/vcruntime140.dll "$redist"/vcruntime140_1.dll "$redist"/msvcp140*.dll "${ws}/build/test/" || echo "WARN: no 14.44 redist found; running against System32 runtime"
+
           # let the fault go UNHANDLED (gtest_catch_exceptions=0) so cdb stops at the real crash instead of
           # gtest's SEH handler swallowing it. sxd av lets the AV reach second chance, then the inline
           # commands dump fault context + stack + a minidump -- the sxe -c "..." form drops its command
