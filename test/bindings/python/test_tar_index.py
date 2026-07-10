@@ -80,7 +80,7 @@ class TestTarIndex(unittest.TestCase):
         with self.assertRaises(ValueError):
             write_tar_index(self.tar_path)
 
-    def test_rejects_mis_sized_placeholder(self):
+    def test_rejects_wrong_size_placeholder(self):
         build_extract(self.tar_path, self.tiles, index_entries=len(self.tiles) - 1)
         with self.assertRaises(ValueError):
             write_tar_index(self.tar_path)
