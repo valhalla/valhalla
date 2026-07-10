@@ -552,7 +552,7 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
 }
 
 // Get the tile Id given the full path to the file, from URL, tar or local file
-// Also platfrom-agnostic behavior for POSIX/Win style paths
+// Also platform-agnostic behavior for POSIX/Win style paths
 GraphId GraphTile::GetTileId(const std::filesystem::path& fname) {
   // path::generic_string() layout is sadly a STL mess, so we need this dance
   constexpr std::string_view kSeparators = "/\\";
