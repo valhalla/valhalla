@@ -120,6 +120,45 @@ jobs:
       - name: Setup Developer Command Prompt for VS
         uses: ilammy/msvc-dev-cmd@v1
 
+      # TEMP: standalone repro -- does throw-through-a-scoped-cleanup AV in plain C++ with the same
+      # toolset/flags, with no valhalla? crashes -> MSVC/OS bug; clean "OK" -> our code is involved.
+      - name: Minimal EH repro
+        shell: bash
+        run: |
+          set -x
+          export MSYS_NO_PATHCONV=1
+          cat > eh.cpp <<'EOF'
+          #include <cstdio>
+          #include <stdexcept>
+          template <class F> struct Finally { F f; ~Finally() { f(); } };
+          template <class F> Finally<F> make_finally(F f) { return Finally<F>{std::move(f)}; }
+          struct Worker { void cleanup() { std::puts("worker cleanup"); } };
+          struct Actor {
+            Worker w; bool auto_cleanup = true;
+            void cleanup() { w.cleanup(); }
+            void route() {
+              auto scoped = make_finally([this] { if (auto_cleanup) cleanup(); });
+              throw std::runtime_error("no edges");
+            }
+          };
+          int main() {
+            Actor a;
+            try { a.route(); } catch (const std::exception& e) { std::printf("caught: %s\n", e.what()); }
+            std::puts("OK");
+            return 0;
+          }
+          EOF
+          cl /nologo /EHsc /Od /Zi /MD eh.cpp
+          echo "=== plain run ==="; ./eh.exe; echo "exit=$?"
+
+          ws="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
+          export _NT_SYMBOL_PATH="cache*${ws}/symcache;srv*https://msdl.microsoft.com/download/symbols"
+          CDB="/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
+          [ -x "$CDB" ] || CDB="cdb"
+          DUMP='.echo ===CRASH===; .lastevent; .echo ===EXCEPTION RECORD===; .exr -1; .echo ===REGISTERS===; r; .echo ===FAULTING INSTR===; u @rip-10 L8; .echo ===STACK===; kn 200; .echo ===MODULE===; lmvm eh; lmvm vcruntime140_1; .echo ===ANALYZE===; !analyze -v; q'
+          echo "=== under cdb (sxd av, unhandled) ==="
+          "$CDB" -g -G -c "sxd av; g; ${DUMP}" "${ws}/eh.exe" || true
+
       - name: Get version modifier
         id: version-modifier
         if: github.ref == 'refs/heads/master'
