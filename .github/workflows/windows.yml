@@ -217,6 +217,11 @@ jobs:
           cmake --build build --target actor -- -k 0 || true
           [ -f "${ws}/build/test/actor.exe" ] || { echo "MISSING actor.exe (build failed?)"; exit 1; }
 
+          # what toolsets/runtimes are actually on the runner -- decides how we align to one version:
+          # if a 14.51 toolset exists we can compile to match System32; if not, we pin the runtime to 14.44.
+          echo "=== installed MSVC toolsets ==="; ls "/c/Program Files/Microsoft Visual Studio/2022"/*/VC/Tools/MSVC/ 2>/dev/null
+          echo "=== selected VCToolsVersion: ${VCToolsVersion:-<unset in bash>} ==="
+
           # EXPERIMENT: actor.exe is built with toolset 14.44 but System32 has VCRUNTIME140_1 14.51, and
           # the AV is in that runtime's _CxxFrameHandler4 during unwind. app-local deploy the MATCHING 14.44
           # runtime next to the exe (loader prefers the exe dir over System32 for these non-KnownDLLs) to
