@@ -45,7 +45,9 @@ class TestTarIndex(unittest.TestCase):
         written = write_tar_index(self.tar_path)
 
         self.assertEqual(decode_tar_index(self.tar_path), written)
-        self.assertEqual([entry.tile_id for entry in written], [GraphId.from_tile_path(rel) for rel in TILES])
+        self.assertEqual(
+            [entry.tile_id for entry in written], [GraphId.from_tile_path(rel) for rel in TILES]
+        )
         self.assertEqual([entry.size for entry in written], [len(self.tiles[rel]) for rel in TILES])
         # offsets point at each tile's data: reading there yields the tile bytes
         with open(self.tar_path, "rb") as tar_file:

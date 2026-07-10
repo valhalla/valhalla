@@ -78,23 +78,23 @@ def write_tar_index(tar_path: Union[str, Path]) -> list[TarIndexEntry]:
     """
     entries = []
     with tarfile.open(tar_path, "r") as tar:
-        first = tar.next()
-        if first is None or first.name != INDEX_FILE:
+        index_tar_file = tar.next()
+        if index_tar_file is None or index_tar_file.name != INDEX_FILE:
             raise ValueError(
-                f"first tar member is {first.name if first else 'missing'!r}, expected {INDEX_FILE!r}"
+                f"first tar member is {index_tar_file.name if index_tar_file else 'missing'!r}, expected {INDEX_FILE!r}"
             )
         for member in tar.getmembers():
             if member.name.endswith(".gph"):
                 entries.append(
                     TarIndexEntry(member.offset_data, GraphId.from_tile_path(member.name), member.size)
                 )
-    if first.size != len(entries) * INDEX_BIN_SIZE:
+    if index_tar_file.size != len(entries) * INDEX_BIN_SIZE:
         raise ValueError(
-            f"{INDEX_FILE} placeholder holds {first.size // INDEX_BIN_SIZE} entries, need {len(entries)}"
+            f"{INDEX_FILE} placeholder holds {index_tar_file.size // INDEX_BIN_SIZE} entries, need {len(entries)}"
         )
 
     with open(tar_path, "r+b") as tar_file:
-        tar_file.seek(first.offset_data)
+        tar_file.seek(index_tar_file.offset_data)
         for entry in entries:
             tar_file.write(struct.pack(INDEX_BIN_FORMAT, entry.offset, entry.tile_id.value, entry.size))
     return entries
