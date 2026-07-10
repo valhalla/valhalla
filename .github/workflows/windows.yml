@@ -218,11 +218,12 @@ jobs:
           [ -f "${ws}/build/test/actor.exe" ] || { echo "MISSING actor.exe (build failed?)"; exit 1; }
 
           # let the fault go UNHANDLED (gtest_catch_exceptions=0) so cdb stops at the real crash instead of
-          # gtest's SEH handler swallowing it; on the first-chance AV dump fault context + stack + a minidump.
-          # build is /Od /Ob0 /INCREMENTAL:NO so frames + symbols are trustworthy.
-          AV_CMDS='.echo ===== EXCEPTION RECORD =====; .exr -1; .echo ===== REGISTERS @ FAULT =====; .ecxr; r; .echo ===== FAULTING INSTR =====; u @rip-10 L8; .echo ===== STACK =====; kn 200; .echo ===== MODULE =====; lmvm actor; lmvm vcruntime140_1; lmvm vcruntime140; .echo ===== DUMP =====; .dump /ma D:/a/valhalla/valhalla/build/test/actor_nodata.dmp; .echo ===== ANALYZE =====; !analyze -v; q'
+          # gtest's SEH handler swallowing it. sxd av lets the AV reach second chance, then the inline
+          # commands dump fault context + stack + a minidump -- the sxe -c "..." form drops its command
+          # payload under the nested workflow/bash/cdb quoting, so nothing printed. build is /Od /Ob0.
+          DUMP='.echo ===CRASH===; .lastevent; .echo ===EXCEPTION RECORD===; .exr -1; .echo ===REGISTERS===; r; .echo ===FAULTING INSTR===; u @rip-10 L8; .echo ===STACK===; kn 200; .echo ===MODULE===; lmvm actor; lmvm vcruntime140_1; .echo ===DUMP===; .dump /ma D:/a/valhalla/valhalla/build/test/actor_nodata.dmp; .echo ===ANALYZE===; !analyze -v; q'
           echo "================== cdb: actor / Actor.NoDataYieldsNoEdgesError (no tiles, unhandled) =================="
-          "$CDB" -g -G -c "sxe -c \"${AV_CMDS}\" av; g" \
+          "$CDB" -g -G -c "sxd av; g; ${DUMP}" \
             "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 || true
 
       # TEMP debug: keep the minidump for offline (WinDbg/TTD-style) analysis.
