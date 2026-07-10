@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <sstream>
 #include <vector>
 
@@ -57,9 +58,16 @@ TEST(Graphtile, IdFromString) {
   EXPECT_EQ(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002"),
             GraphId(1000002, 3, 0));
   EXPECT_EQ(GraphTile::GetTileId("2/000/791/317.gph.gz"), GraphId(791317, 2, 0));
+  // the platform's preferred separator works too (backslashes on windows)
+  EXPECT_EQ(GraphTile::GetTileId(std::filesystem::path{"foo/2/000/791/317.gph"}.make_preferred()),
+            GraphId(791317, 2, 0));
 
   EXPECT_THROW(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/1/000/002/.gph"),
                std::runtime_error);
+  EXPECT_THROW(GraphTile::GetTileId("002.gph"), std::runtime_error);
+  EXPECT_THROW(GraphTile::GetTileId("foo/1.gph"), std::runtime_error);
+  EXPECT_THROW(GraphTile::GetTileId("000/002.gph"), std::runtime_error);
+  EXPECT_THROW(GraphTile::GetTileId("9/000/002.gph"), std::runtime_error);
   EXPECT_THROW(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/0/004/050.gph"),
                std::runtime_error);
   EXPECT_THROW(GraphTile::GetTileId("foo/bar/0/004/0-1.gph"), std::runtime_error);

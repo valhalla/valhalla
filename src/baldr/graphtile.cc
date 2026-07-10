@@ -11,11 +11,15 @@
 #include "midgard/tiles.h"
 #include "midgard/util.h"
 
+#include <algorithm>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <ranges>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -547,107 +551,70 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
   return std::to_string(graphid.level()) + tile_id_str + fname_suffix;
 }
 
-// Get the tile Id given the full path to the file.
-GraphId GraphTile::GetTileId(const std::string& fname) {
-  std::unordered_set<std::string::value_type> allowed{std::filesystem::path::preferred_separator,
-                                                      '0',
-                                                      '1',
-                                                      '2',
-                                                      '3',
-                                                      '4',
-                                                      '5',
-                                                      '6',
-                                                      '7',
-                                                      '8',
-                                                      '9'};
+// Get the tile Id given the full path to the file, from URL, tar or local file
+// Also platfrom-agnostic behavior for POSIX/Win style paths
+GraphId GraphTile::GetTileId(const std::filesystem::path& fname) {
+  // path::generic_string() layout is sadly a STL mess, so we need this dance
+  constexpr std::string_view kSeparators = "/\\";
+  const auto path = fname.string();
+  const auto invalid_path = [&path] { return std::runtime_error("Invalid tile path: " + path); };
+
   // we require slashes
-  auto pos = fname.find_last_of(std::filesystem::path::preferred_separator);
-  if (pos == fname.npos) {
-    throw std::runtime_error("Invalid tile path: " + fname);
+  const auto last_sep = path.find_last_of(kSeparators);
+  if (last_sep == std::string::npos) {
+    throw invalid_path();
   }
 
-  // swallow numbers until you reach the end or a dot
-  for (; pos < fname.size(); ++pos) {
-    if (allowed.find(fname[pos]) == allowed.cend()) {
+  // strip the file extension(s), e.g. .gph or .gph.gz
+  auto path_no_ext = std::string_view{path}.substr(0, path.find('.', last_sep));
+
+  // walk the path components backwards: 3-digit tile id groups below the single-digit level
+  std::vector<uint32_t> groups;
+  uint32_t level = 0;
+  while (true) {
+    const auto sep = path_no_ext.find_last_of(kSeparators);
+    const auto group = sep == std::string_view::npos ? path_no_ext : path_no_ext.substr(sep + 1);
+    if (!std::ranges::all_of(group, [](char c) { return c >= '0' && c <= '9'; })) {
+      throw invalid_path();
+    }
+    // the level is always a single digit
+    if (group.size() == 1) {
+      level = group.front() - '0';
       break;
     }
-  }
-  allowed.erase(static_cast<std::string::value_type>(std::filesystem::path::preferred_separator));
-
-  // if you didnt reach the end and it wasnt a dot then this isnt valid
-  if (pos != fname.size() && fname[pos] != '.') {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // run backwards while you find an allowed char but stop if not 3 digits between slashes
-  std::vector<uint32_t> digits;
-  auto last = pos;
-  while (--pos < last) {
-    auto c = fname[pos];
-    // invalid char showed up
-    if (allowed.find(c) == allowed.cend()) {
-      throw std::runtime_error("Invalid tile path: " + fname);
+    if (group.size() != 3 || sep == std::string_view::npos) {
+      throw invalid_path();
     }
-
-    // if its the last thing or the next one is a separator thats another digit
-    if (pos == 0 || fname[pos - 1] == std::filesystem::path::preferred_separator) {
-      // this is not 3 or 1 digits so its wrong
-      auto dist = last - pos;
-      if (dist != 3 && dist != 1) {
-        throw std::runtime_error("Invalid tile path: " + fname);
-      }
-      // we'll keep this
-      auto i = atoi(fname.substr(pos, dist).c_str());
-      digits.push_back(i);
-      // and we'll stop if it was the level (always a single digit see GraphId)
-      if (dist == 1) {
-        break;
-      }
-      // next
-      last = --pos;
-    }
+    uint32_t digits = 0;
+    std::from_chars(group.data(), group.data() + group.size(), digits);
+    groups.push_back(digits);
+    path_no_ext = path_no_ext.substr(0, sep);
   }
 
-  // if the first thing isnt a valid level bail
-  if (digits.back() >= TileHierarchy::levels().size() &&
-      digits.back() != TileHierarchy::GetTransitLevel().level) {
-    throw std::runtime_error("Invalid tile path: " + fname);
+  // bail if the level doesnt exist
+  if (level >= TileHierarchy::levels().size() && level != TileHierarchy::GetTransitLevel().level) {
+    throw invalid_path();
   }
-
-  // get the level info
-  uint32_t level = digits.back();
-  digits.pop_back();
   const auto& tile_level = level == TileHierarchy::GetTransitLevel().level
                                ? TileHierarchy::GetTransitLevel()
                                : TileHierarchy::levels()[level];
 
-  // get the number of sub directories that we should have
-  uint32_t max_id = static_cast<uint32_t>(tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1);
-  size_t parts = static_cast<size_t>(std::log10(std::max(1u, max_id))) + 1;
-  if (parts % 3 != 0) {
-    parts += 3 - (parts % 3);
-  }
-  parts /= 3;
-
-  // bail if its the wrong number of sub dirs
-  if (digits.size() != parts) {
-    throw std::runtime_error("Invalid tile path: " + fname);
+  // the level's max tile id dictates how many 3-digit groups the path must have
+  const auto max_id =
+      static_cast<uint32_t>(tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1);
+  if (groups.size() != (std::to_string(max_id).size() + 2) / 3) {
+    throw invalid_path();
   }
 
-  // parse the id of the tile
-  int multiplier = 1;
+  // assemble the tile id, the deepest path component is the least significant
   uint32_t id = 0;
-  for (auto digit : digits) {
-    id += digit * multiplier;
-    multiplier *= 1000;
+  for (const auto group : groups | std::views::reverse) {
+    id = id * 1000 + group;
   }
-
-  // if after parsing them the number is out of bounds bail
   if (id > max_id) {
-    throw std::runtime_error("Invalid tile path: " + fname);
+    throw invalid_path();
   }
 
-  // you've passed the test enjoy your id
   return {id, level, 0};
 }
 

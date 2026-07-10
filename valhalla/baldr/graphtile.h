@@ -225,11 +225,12 @@ public:
                                 const TileLevel* tiles = nullptr);
 
   /**
-   * Get the tile Id given the full path to the file.
+   * Get the tile Id given the full path to the file. Both forward slashes and the
+   * platform's preferred separator are accepted, so tar/URL style paths work everywhere.
    * @param  fname    Filename with complete path.
    * @return  Returns the tile Id.
    */
-  static GraphId GetTileId(const std::string& fname);
+  static GraphId GetTileId(const std::filesystem::path& fname);
 
   /**
    * Get the bounding box of this graph tile.
