@@ -2,7 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
-   * ADDED: more convenience bindings for Python [#XXXX](https://github.com/valhalla/valhalla/pull/XXXX)
+   * ADDED: more convenience bindings for Python [#6197](https://github.com/valhalla/valhalla/pull/6197)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
