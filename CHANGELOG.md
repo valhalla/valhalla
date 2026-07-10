@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * FIXED: `GraphTile::GetTileId` supports now Win-style paths as input [#6198](https://github.com/valhalla/valhalla/issues/6198)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
