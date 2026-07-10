@@ -107,8 +107,9 @@ jobs:
           # retry: a transient S3 transfer abort on the ~1GB object otherwise goes cold
           retry: true
           retry-count: 3
-          # vcpkg-configuration.json (our deps), compiler version or vcpkg cli version will trigger cache misses
-          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          # bust the cache whenever vcpkg changes: deps/features (vcpkg.json), baseline/registries
+          # (vcpkg-configuration.json), overlay ports, the compiler, or the vcpkg cli version
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlay-ports-vcpkg/**') }}
           path: |
             vcpkg/*
             !vcpkg/downloads
@@ -162,7 +163,7 @@ jobs:
           bucket: gha-cache-2
           retry: true
           retry-count: 3
-          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlay-ports-vcpkg/**') }}
           path: |
             vcpkg/*
             !vcpkg/downloads
@@ -194,52 +195,42 @@ jobs:
           Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022\*\VC\Redist\MSVC\*\x64\Microsoft.VC14*.CRT\VCRUNTIME140_1.dll' -ErrorAction SilentlyContinue |
             ForEach-Object { "  " + $_.VersionInfo.FileVersion + "  " + $_.FullName }
 
-      # TEMP debug: build the crashing exes + their data with symbols and run them under
-      # cdb, breaking on the access violation to print a symbolized stack. Remove once diagnosed.
-      - name: Stack-trace crashing tests
+      # TEMP debug: run the no-data test under cdb, breaking on the access violation to print a
+      # symbolized stack. Confirms whether the actor_t scoped-cleanup unwind AVs when tiles are
+      # absent, or fails gracefully (171/170). Remove once diagnosed.
+      - name: Stack-trace no-data crash
         shell: bash
         run: |
           set -x
           export MSYS_NO_PATHCONV=1
           ws="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
           vcpkg_bin="${ws}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
-          # spatialite-tools on PATH: utrecht_tiles -> build_timezones shells out to it for tz.sqlite
-          export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
+          # actor.exe's vcpkg DLLs (prime_server.dll etc.). the no-data case needs NO tiles and NO
+          # tz.sqlite, so this probe is independent of the spatialite/vcpkg-cache situation.
+          export PATH="$PATH:${vcpkg_bin}/bin"
           # public symbol server (+ local cache) so system frames in the stack resolve too
           export _NT_SYMBOL_PATH="cache*${ws}/symcache;srv*https://msdl.microsoft.com/download/symbols"
           CDB="/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
           [ -x "$CDB" ] || CDB="cdb"
-          # the crash reproduces against VALID tiles, so build the tileset the test reads. running with
-          # tiles absent would crash in a different place (tile loading) than the routing code we're after.
-          cmake --build build --target multimodal_astar matrix utrecht_tiles -- -k 0 || true
-          ls "${ws}/build/test/data/utrecht_tiles"/*/ >/dev/null 2>&1 \
-            && echo "utrecht_tiles present" || echo "WARN: utrecht_tiles missing -> crash site may differ"
+          # build just the test exe -- no tiles, no tz.sqlite. the no-data path (empty/missing tile_dir)
+          # must fail gracefully (171/170) through the actor_t scoped-cleanup unwind, not AV.
+          cmake --build build --target actor -- -k 0 || true
+          [ -f "${ws}/build/test/actor.exe" ] || { echo "MISSING actor.exe (build failed?)"; exit 1; }
 
-          # on first-chance AV: dump real fault context (instruction/registers/r15 provenance), then quit.
-          # build is /Od /Ob0 /INCREMENTAL:NO so frames + symbols are trustworthy now.
-          AV_CMDS='.echo ===== EXCEPTION RECORD =====; .exr -1; .echo ===== REGISTERS @ FAULT =====; .ecxr; r; .echo ===== FAULTING INSTR =====; u @rip-10 L8; .echo ===== R15 LOADED BY =====; ub @rip L20; .echo ===== STACK =====; kn 200; .echo ===== MODULE =====; lmvm matrix; lmvm vcruntime140_1; lmvm vcruntime140; .echo ===== ANALYZE =====; !analyze -v; q'
-          run_cdb() { # $1=exe, rest=args
-            local exe="$1"; shift
-            [ -f "$exe" ] || { echo "MISSING EXE: $exe (build failed?)"; return; }
-            "$CDB" -g -G -c "sxe -c \"${AV_CMDS}\" av; g" "$exe" "$@" || true
-          }
-          echo "================== cdb: multimodal_astar / Standalone.UtrechtMultiModalAStar =================="
-          run_cdb "${ws}/build/test/multimodal_astar.exe" --gtest_filter='Standalone.UtrechtMultiModalAStar'
+          # let the fault go UNHANDLED (gtest_catch_exceptions=0) so cdb stops at the real crash instead of
+          # gtest's SEH handler swallowing it; on the first-chance AV dump fault context + stack + a minidump.
+          # build is /Od /Ob0 /INCREMENTAL:NO so frames + symbols are trustworthy.
+          AV_CMDS='.echo ===== EXCEPTION RECORD =====; .exr -1; .echo ===== REGISTERS @ FAULT =====; .ecxr; r; .echo ===== FAULTING INSTR =====; u @rip-10 L8; .echo ===== STACK =====; kn 200; .echo ===== MODULE =====; lmvm actor; lmvm vcruntime140_1; lmvm vcruntime140; .echo ===== DUMP =====; .dump /ma D:/a/valhalla/valhalla/build/test/actor_nodata.dmp; .echo ===== ANALYZE =====; !analyze -v; q'
+          echo "================== cdb: actor / Actor.NoDataYieldsNoEdgesError (no tiles, unhandled) =================="
+          "$CDB" -g -G -c "sxe -c \"${AV_CMDS}\" av; g" \
+            "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 || true
 
-          # isolate the ONE crashing test and let its fault go UNHANDLED (gtest_catch_exceptions=0) so cdb
-          # stops at the real second-chance crash. dps dumps the RAW stack (bypasses the heuristic kn walk
-          # that's unreliable mid-unwind), and we save a full minidump for offline analysis.
-          echo "================== cdb: matrix / Matrix.slim_matrix (unhandled, raw stack) =================="
-          DUMP='.echo ===CRASH===; .lastevent; .exr -1; .echo ===REGISTERS===; r; .echo ===RAW STACK (dps @rsp)===; dps @rsp L120; .echo ===HEURISTIC WALK===; kn 200; .echo ===MODULE===; lmvm matrix; .dump /ma D:/a/valhalla/valhalla/build/test/slim_matrix.dmp; .echo ===ANALYZE===; !analyze -v; q'
-          "$CDB" -g -G -c "sxd av; g; ${DUMP}" \
-            "${ws}/build/test/matrix.exe" --gtest_filter='Matrix.slim_matrix' --gtest_catch_exceptions=0 || true
-
-      # TEMP debug: keep the slim_matrix minidump for offline (WinDbg/TTD-style) analysis.
+      # TEMP debug: keep the minidump for offline (WinDbg/TTD-style) analysis.
       - name: Upload crash minidump
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: slim_matrix-dump
+          name: actor-nodata-dump
           path: build/test/*.dmp
           if-no-files-found: ignore
 
