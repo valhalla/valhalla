@@ -10,7 +10,7 @@ import numpy
 from numpy.typing import NDArray
 
 
-VALHALLA_PRINT_VERSION: str = '3.8.2-1ac1b44c9'
+VALHALLA_PRINT_VERSION: str = '3.8.2'
 
 class ValhallaError(RuntimeError):
     """
@@ -84,7 +84,7 @@ class GraphId:
         Parses a graph tile's file path into its base GraphId, e.g.
         "2/000/820/135.gph" (relative or absolute, any file extension) -> 2/820135/0.
         The inverse of os.fspath(graph_id); the path must contain at least one
-        path separator.
+        path separator (forward slashes work on every platform).
 
         :param path: The tile's file path.
         :returns: The tile's base GraphId (the within-tile id portion is 0).

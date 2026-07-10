@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from valhalla.baldr import GraphId, GraphTileHeader
-from valhalla.baldr.utils import INDEX_FILE, decode_tar_index, read_tar_index, write_tar_index
+from valhalla.baldr.utils import INDEX_FILE, decode_tar_index, write_tar_index
 from valhalla.baldr.utils.tar_index import INDEX_BIN_SIZE
 
 TILES = ("0/003/015.gph", "1/047/701.gph", "2/000/820/135.gph")
@@ -44,7 +44,7 @@ class TestTarIndex(unittest.TestCase):
 
         written = write_tar_index(self.tar_path)
 
-        self.assertEqual(read_tar_index(self.tar_path), written)
+        self.assertEqual(decode_tar_index(self.tar_path), written)
         self.assertEqual([entry.tile_id for entry in written], [GraphId.from_tile_path(rel) for rel in TILES])
         self.assertEqual([entry.size for entry in written], [len(self.tiles[rel]) for rel in TILES])
         # offsets point at each tile's data: reading there yields the tile bytes
@@ -53,7 +53,7 @@ class TestTarIndex(unittest.TestCase):
                 tar_file.seek(entry.offset)
                 self.assertEqual(tar_file.read(entry.size), self.tiles[rel])
 
-    def test_decode_raw_bytes(self):
+    def test_reads_raw_bytes(self):
         build_extract(self.tar_path, self.tiles)
         entries = write_tar_index(self.tar_path)
 
@@ -74,7 +74,7 @@ class TestTarIndex(unittest.TestCase):
             tar.addfile(info, io.BytesIO(data))
 
         with self.assertRaises(ValueError):
-            read_tar_index(self.tar_path)
+            decode_tar_index(self.tar_path)
         with self.assertRaises(ValueError):
             write_tar_index(self.tar_path)
 

@@ -7,6 +7,8 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 
+#include <filesystem>
+
 namespace nb = nanobind;
 namespace vb = valhalla::baldr;
 
@@ -25,12 +27,18 @@ void init_graphid(nb::module_& m) {
       .def(nb::init<std::string>(),
            "Constructs a GraphId from its string representation, e.g. \"2/71944/0\".")
       .def_static(
-          "from_tile_path", [](const std::string& path) { return vb::GraphTile::GetTileId(path); },
+          "from_tile_path",
+          [](const std::string& path) {
+            // GetTileId expects the platform's preferred separator, but tile paths
+            // in tars, manifests and URLs use forward slashes on every platform:
+            // make_preferred() converts them on Windows and is a no-op elsewhere
+            return vb::GraphTile::GetTileId(std::filesystem::path(path).make_preferred().string());
+          },
           nb::arg("path"),
           "Parses a graph tile's file path into its base GraphId, e.g.\n"
           "\"2/000/820/135.gph\" (relative or absolute, any file extension) -> 2/820135/0.\n"
           "The inverse of os.fspath(graph_id); the path must contain at least one\n"
-          "path separator.\n\n"
+          "path separator (forward slashes work on every platform).\n\n"
           ":param path: The tile's file path.\n"
           ":returns: The tile's base GraphId (the within-tile id portion is 0).\n"
           ":raises RuntimeError: The path doesn't encode a (potentially) valid tile id.")

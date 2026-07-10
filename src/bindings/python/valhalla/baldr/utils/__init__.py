@@ -15,7 +15,7 @@ from ..._valhalla import (
     get_tile_ids_from_ring,
 )
 from .graph_utils import GraphUtils
-from .tar_index import INDEX_FILE, TarIndexEntry, decode_tar_index, read_tar_index, write_tar_index
+from .tar_index import INDEX_FILE, TarIndexEntry, decode_tar_index, write_tar_index
 
 __all__ = [
     # graph_reader
@@ -29,7 +29,6 @@ __all__ = [
     "INDEX_FILE",
     "TarIndexEntry",
     "decode_tar_index",
-    "read_tar_index",
     "write_tar_index",
     # predicted_speeds
     "compress_speed_buckets",
