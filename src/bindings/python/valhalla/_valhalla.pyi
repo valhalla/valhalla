@@ -10,7 +10,7 @@ import numpy
 from numpy.typing import NDArray
 
 
-VALHALLA_PRINT_VERSION: str = '3.8.2-aabbccdd'
+VALHALLA_PRINT_VERSION: str = '3.8.2'
 
 class ValhallaError(RuntimeError):
     """
