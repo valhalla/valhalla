@@ -6,6 +6,9 @@
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "mjolnir/osmdata.h"
+#include "mjolnir/osmway.h"
 #include "mjolnir/util.h"
 #include "proto/trip.pb.h"
 #include "test.h"
@@ -232,7 +235,9 @@ inline void build_pbf(const nodelayout& node_locations,
                       const nodes& nodes,
                       const relations& relations,
                       const std::string& filename,
-                      const bool strict) {
+                      const bool strict,
+                      std::unordered_map<std::string, uint64_t>* node_osm_ids,
+                      std::unordered_map<std::string, uint64_t>* way_osm_ids) {
 
   const size_t initial_buffer_size = 10000;
   osmium::memory::Buffer buffer{initial_buffer_size, osmium::memory::Buffer::auto_grow::yes};
@@ -360,6 +365,11 @@ inline void build_pbf(const nodelayout& node_locations,
                                   osmium::builder::attr::_tags(tags));
   }
 
+  if (node_osm_ids)
+    *node_osm_ids = node_osm_id_map;
+  if (way_osm_ids)
+    *way_osm_ids = way_osm_id_map;
+
   // Create header and set generator.
   osmium::io::Header header;
   header.set("generator", "valhalla-test-creator");
@@ -427,6 +437,30 @@ std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result) {
   return paths;
 }
 
+template <typename Pred>
+mjolnir::OSMWay find_way(const map& map, const std::string& what, Pred pred) {
+  auto tile_dir = map.config.get<std::string>("mjolnir.tile_dir");
+  // linear scan as the file's sort order is not guaranteed, it's tiny in tests anyway
+  midgard::sequence<mjolnir::OSMWay> ways(tile_dir + "/ways.bin");
+  for (const auto& way : ways) {
+    if (pred(way))
+      return way;
+  }
+  throw std::runtime_error("Could not find way " + what);
+}
+
+template <typename Pred> std::vector<mjolnir::OSMWayNode> find_way_nodes(const map& map, Pred pred) {
+  auto tile_dir = map.config.get<std::string>("mjolnir.tile_dir");
+  // linear scan as the file's sort order changes between build stages
+  midgard::sequence<mjolnir::OSMWayNode> way_nodes(tile_dir + "/way_nodes.bin");
+  std::vector<mjolnir::OSMWayNode> found;
+  for (const auto& way_node : way_nodes) {
+    if (pred(way_node))
+      found.push_back(way_node);
+  }
+  return found;
+}
+
 } // namespace detail
 
 /**
@@ -438,16 +472,20 @@ map buildtiles(const nodelayout& layout,
                const nodes& nodes,
                const relations& relations,
                const std::string& workdir,
-               const std::unordered_map<std::string, std::string>& config_options) {
+               const std::unordered_map<std::string, std::string>& config_options,
+               mjolnir::BuildStage start_stage,
+               mjolnir::BuildStage end_stage) {
   auto config = test::make_config(workdir, config_options);
-  return buildtiles(layout, ways, nodes, relations, config);
+  return buildtiles(layout, ways, nodes, relations, config, start_stage, end_stage);
 }
 
 map buildtiles(const nodelayout& layout,
                const ways& ways,
                const nodes& nodes,
                const relations& relations,
-               const boost::property_tree::ptree& config) {
+               const boost::property_tree::ptree& config,
+               mjolnir::BuildStage start_stage,
+               mjolnir::BuildStage end_stage) {
 
   map result{config, layout};
   auto workdir = config.get<std::string>("mjolnir.tile_dir");
@@ -457,19 +495,24 @@ map buildtiles(const nodelayout& layout,
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (std::filesystem::exists(workdir))
-    std::filesystem::remove_all(workdir);
-  std::filesystem::create_directories(workdir);
-
   auto pbf_filename = workdir + "/map.pbf";
-  std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
-  detail::build_pbf(result.nodes, ways, nodes, relations, pbf_filename);
+  if (start_stage == mjolnir::BuildStage::kInitialize) {
+    if (std::filesystem::exists(workdir))
+      std::filesystem::remove_all(workdir);
+    std::filesystem::create_directories(workdir);
+
+    std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
+    detail::build_pbf(result.nodes, ways, nodes, relations, pbf_filename, true, &result.node_osm_ids,
+                      &result.way_osm_ids);
+  } else if (!std::filesystem::exists(pbf_filename)) {
+    throw std::runtime_error("Can't resume from stage " + mjolnir::to_string(start_stage) +
+                             ", no previous partial build in " + workdir);
+  }
   std::cerr << "[          ] building tiles in " << result.config.get<std::string>("mjolnir.tile_dir")
             << std::endl;
   midgard::logging::Configure({{"type", ""}});
 
-  mjolnir::build_tile_set(result.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
-                          mjolnir::BuildStage::kValidate);
+  mjolnir::build_tile_set(result.config, {pbf_filename}, start_stage, end_stage);
 
   return result;
 }
@@ -626,6 +669,29 @@ baldr::GraphId findNode(valhalla::baldr::GraphReader& reader,
     }
   }
   throw std::runtime_error("Could not find node " + node_name);
+}
+
+mjolnir::OSMWay findWay(const map& map, const std::string& way_name) {
+  auto found = map.way_osm_ids.find(way_name);
+  if (found == map.way_osm_ids.end())
+    throw std::runtime_error("Could not find way " + way_name);
+  return findWay(map, found->second);
+}
+
+mjolnir::OSMWay findWay(const map& map, uint64_t way_id) {
+  return detail::find_way(map, std::to_string(way_id),
+                          [&](const auto& way) { return way.way_id() == way_id; });
+}
+
+std::vector<mjolnir::OSMWayNode> findWayNodes(const map& map, const std::string& node_name) {
+  auto found = map.node_osm_ids.find(node_name);
+  if (found == map.node_osm_ids.end())
+    throw std::runtime_error("Could not find node " + node_name);
+  return findWayNodes(map, found->second);
+}
+
+std::vector<mjolnir::OSMWayNode> findWayNodes(const map& map, uint64_t node_id) {
+  return detail::find_way_nodes(map, [&](const auto& wn) { return wn.node.osmid_ == node_id; });
 }
 
 std::string

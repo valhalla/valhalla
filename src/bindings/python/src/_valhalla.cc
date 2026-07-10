@@ -1,138 +1,22 @@
-#include "baldr/rapidjson_utils.h"
+#include "baldr/module.h"
+#include "baldr/utils/module.h"
 #include "config.h"
-#include "exceptions.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "tyr/actor.h"
+#include "midgard/utils/module.h"
+#include "module.h"
 
-#include <boost/property_tree/ptree.hpp>
 #include <nanobind/nanobind.h>
-#include <nanobind/stl/string.h>
-
-#include <string>
-
-namespace vt = valhalla::tyr;
-namespace nb = nanobind;
-namespace {
-
-// configuring multiple times is wasteful/ineffectual but not harmful
-// TODO: make this threadsafe just in case its abused
-const boost::property_tree::ptree configure(const std::string& config) {
-  boost::property_tree::ptree pt;
-  try {
-    // parse the config and configure logging
-    rapidjson::read_json(config, pt);
-
-    valhalla::midgard::logging::ConfigureFromPtree(pt);
-  } catch (...) { throw std::runtime_error("Failed to load config from: " + config); }
-
-  return pt;
-}
-} // namespace
 
 NB_MODULE(_valhalla, m) {
-  // Add these constants in C++ to avoid creating another shim python module, as they
-  // are needed at runtime of the python library and need to be set during the build
+  // Add this constant in C++ to avoid creating another shim python module, as it
+  // is needed at runtime of the python library and must be set during the build.
   m.attr("VALHALLA_PRINT_VERSION") = VALHALLA_PRINT_VERSION;
 
-  // Custom exception that exposes valhalla_exception_t fields to Python.
-  // We create the type manually (instead of nb::exception) so that the translator
-  // can populate structured attributes (code, http_code, etc.) on the instance.
-  static PyObject* ValhallaError =
-      PyErr_NewExceptionWithDoc("_valhalla.ValhallaError",
-                                "Exception raised when a Valhalla operation fails.\n\n"
-                                ":ivar code: Valhalla-internal error code.\n"
-                                ":vartype code: int\n"
-                                ":ivar message: Human-readable error message.\n"
-                                ":vartype message: str\n"
-                                ":ivar http_code: Corresponding HTTP status code.\n"
-                                ":vartype http_code: int\n"
-                                ":ivar http_message: Corresponding HTTP status message.\n"
-                                ":vartype http_message: str\n",
-                                PyExc_RuntimeError, nullptr);
-  // don't increase refcount, it's static
-  m.attr("ValhallaError") = nb::borrow(ValhallaError);
-
-  // nanobind calls registered translators when a C++ exception escapes into Python.
-  // The second arg (ValhallaError) is passed as payload to the lambda.
-  // Other C++ exceptions (e.g. std::runtime_error) fall through to nanobind's
-  // default translators.
-  nb::register_exception_translator(
-      [](const std::exception_ptr& p, void* payload) {
-        try {
-          std::rethrow_exception(p);
-        } catch (const valhalla::valhalla_exception_t& e) {
-          auto* type = reinterpret_cast<PyObject*>(payload);
-          // Construct a ValhallaError instance: equivalent to `ValhallaError(e.what())` in Python
-          nb::object exc = nb::steal(PyObject_CallFunction(type, "s", e.what()));
-          if (exc.ptr()) {
-            exc.attr("code") = nb::int_(e.code);
-            exc.attr("message") = nb::str(e.message.c_str());
-            exc.attr("http_code") = nb::int_(e.http_code);
-            exc.attr("http_message") = nb::str(e.http_message.c_str());
-            // Set the Python error indicator: raise exc
-            PyErr_SetObject(type, exc.ptr());
-          }
-        }
-      },
-      ValhallaError);
-
-  // User-facing docstrings (class + each method) live on the Python `Actor`
-  // wrapper in actor.py as string literals — Pyright/Pylance reads them
-  // statically and does not walk the MRO, so the C++ docstrings would not
-  // show up on hover in VSCode.
-  nb::class_<vt::actor_t>(m, "_Actor")
-      .def(
-          "__init__",
-          [](vt::actor_t* self, const std::string& config) {
-            new (self) vt::actor_t(configure(config), true);
-          },
-          nb::arg("config"))
-      .def(
-          "route", [](vt::actor_t& self, std::string& req) { return self.route(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "locate", [](vt::actor_t& self, std::string& req) { return self.locate(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "optimized_route",
-          [](vt::actor_t& self, std::string& req) { return self.optimized_route(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "matrix", [](vt::actor_t& self, std::string& req) { return self.matrix(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "isochrone", [](vt::actor_t& self, std::string& req) { return self.isochrone(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "trace_route", [](vt::actor_t& self, std::string& req) { return self.trace_route(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "trace_attributes",
-          [](vt::actor_t& self, std::string& req) { return self.trace_attributes(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "height", [](vt::actor_t& self, std::string& req) { return self.height(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "transit_available",
-          [](vt::actor_t& self, std::string& req) { return self.transit_available(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "expansion", [](vt::actor_t& self, std::string& req) { return self.expansion(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "centroid", [](vt::actor_t& self, std::string& req) { return self.centroid(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "status", [](vt::actor_t& self, std::string& req) { return self.status(req); },
-          nb::call_guard<nb::gil_scoped_release>())
-      .def("tile", [](vt::actor_t& self, std::string& req) -> nb::bytes {
-        std::string result;
-        {
-          nb::gil_scoped_release release;
-          result = self.tile(req);
-        }
-        return nb::bytes(result.c_str(), result.size());
-      });
+  pyvalhalla::init_exceptions(m);
+  pyvalhalla::init_actor(m);
+  pyvalhalla::baldr::init_graphid(m);
+  pyvalhalla::baldr::init_graphtileheader(m);
+  pyvalhalla::baldr::utils::init_graphreader(m);
+  pyvalhalla::baldr::utils::init_graphtile(m);
+  pyvalhalla::baldr::utils::init_predicted_speeds(m);
+  pyvalhalla::midgard::utils::init_polyline(m);
 }

@@ -36,7 +36,7 @@ jobs:
             echo "new_tag=${{ inputs.new_tag }}" >> $GITHUB_OUTPUT
           else
             latest_tag=$(git describe --tags --abbrev=0)
-            new_tag=$(echo "$latest_tag" | awk -F. -v OFS=. '{$3 = $3 + 1; print}')
+            new_tag=$(echo "$latest_tag" | awk -F. -v OFS=. '{$2 = $2 + 1; $3 = 0; print}')
             echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
           fi
 
@@ -49,9 +49,10 @@ jobs:
 
           new_tag="${{ steps.get_tag.outputs.new_tag }}"
 
-          # set the new patch version in valhalla/valhalla.h
-          patch_version=$(echo "$new_tag" | rev | cut -c1)
-          sed -i "s/^\(#define VALHALLA_VERSION_PATCH \).*/\1${patch_version}/" valhalla/valhalla.h
+          # set the new minor version in valhalla/valhalla.h and reset patch to 0
+          minor_version=$(echo "$new_tag" | cut -d. -f2)
+          sed -i "s/^\(#define VALHALLA_VERSION_MINOR \).*/\1${minor_version}/" valhalla/valhalla.h
+          sed -i "s/^\(#define VALHALLA_VERSION_PATCH \).*/\10/" valhalla/valhalla.h
 
           # update CHANGELOG.md
           sed -i "0,/^## UNRELEASED/s//## Release Date: $(date +%Y-%m-%d) Valhalla $new_tag/" CHANGELOG.md
@@ -65,6 +66,6 @@ jobs:
 
           gh pr create \
             --title "Release ${{ steps.get_tag.outputs.new_tag }}" \
-            --body "Auto-generated release ${new_tag}. May need to elevate to minor release." \
+            --body "Auto-generated release ${new_tag}. May need to demote to patch release." \
             --base master \
             --head "$branch"

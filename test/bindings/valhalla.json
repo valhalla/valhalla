@@ -11,7 +11,6 @@
     "lru_mem_cache_hard_control": false,
     "use_simple_mem_cache": false,
     "tile_dir": "test/data/utrecht_tiles",
-    "tile_extract": "test/data/utrecht_tiles/tiles.tar",
     "traffic_extract": "/data/valhalla/traffic.tar",
     "admin": "/data/valhalla/admin.sqlite",
     "landmarks": "/data/valhalla/landmarks.sqlite",

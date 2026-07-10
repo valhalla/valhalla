@@ -165,7 +165,7 @@ TEST(Traffic, CutGeoms) {
   {
     auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
-    tyr::actor_t actor(map.config, *clean_reader);
+    tyr::actor_t actor(map.config, *clean_reader, true);
     valhalla::Api api;
     actor.route(
         R"({"locations":[
@@ -230,7 +230,7 @@ TEST(Traffic, CutGeoms) {
     test::customize_live_traffic_data(map.config, cb_setter_speed);
 
     auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-    tyr::actor_t actor(map.config, *clean_reader);
+    tyr::actor_t actor(map.config, *clean_reader, true);
     valhalla::Api api;
     actor.route(
         R"({"locations":[
@@ -305,7 +305,7 @@ TEST(Traffic, CutGeoms) {
     }
 
     auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-    tyr::actor_t actor(map.config, *clean_reader);
+    tyr::actor_t actor(map.config, *clean_reader, true);
     valhalla::Api api;
     actor.route(
         R"({"locations":[
@@ -388,7 +388,7 @@ TEST(Traffic, CutGeoms) {
     }
 
     auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-    tyr::actor_t actor(map.config, *clean_reader);
+    tyr::actor_t actor(map.config, *clean_reader, true);
     valhalla::Api api;
     {
       // Test the full edge CE
@@ -507,7 +507,7 @@ TEST(Traffic, CutGeoms) {
       }
 
       auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-      tyr::actor_t actor(map.config, *clean_reader);
+      tyr::actor_t actor(map.config, *clean_reader, true);
       valhalla::Api api;
       {
         // Test the full edge CE
@@ -749,7 +749,7 @@ TEST(Traffic, CutGeoms) {
       }
 
       auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-      tyr::actor_t actor(map.config, *clean_reader);
+      tyr::actor_t actor(map.config, *clean_reader, true);
       valhalla::Api api;
       {
         // Test the full edge CE

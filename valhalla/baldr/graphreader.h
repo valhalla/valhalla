@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -988,7 +989,8 @@ protected:
   const std::string tile_url_;
   const std::filesystem::path url_id_txt_path_;
   const bool is_tar_url_;
-  const uint64_t url_id_txt_checksum_;
+  // tileset build id recorded in id.txt; unset until the first downloaded tile establishes it
+  const std::optional<uint64_t> url_id_txt_checksum_;
 
   // for remote tar's we grab the index.bin when loading the remote_tar_offsets
   // so we know all tiles' offset & size
@@ -1009,14 +1011,15 @@ protected:
   bool enable_incidents_;
 
   /**
-   * Loads the tile_dir/id.txt URL & MD5 hash and validates whether the URLs match
+   * Loads the tile_dir/id.txt, validates its URL matches the configured one, and returns the build
+   * id on the 2nd line.
    *
    * @param id_txt_path the filesystem::path to the id.txt
    * @param tile_url    the tile url in the config to match to the one in id.txt
-   * @return the checksum on the 2nd line of id.txt
+   * @return the build id on the 2nd line of id.txt, or nullopt if id.txt has none yet
    */
-  uint64_t load_id_txt_checksum(const std::filesystem::path& id_txt_path,
-                                const std::string& tile_url);
+  std::optional<uint64_t> load_id_txt_checksum(const std::filesystem::path& id_txt_path,
+                                               const std::string& tile_url);
 };
 
 class LimitedGraphReader {

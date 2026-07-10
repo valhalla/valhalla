@@ -156,6 +156,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | API response serialization (pbf → JSON/GPX/pbf output) | `src/tyr/` — `route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc`, and other `*_serializer.cc`. New output fields must be added to the `.proto` definition first, then to the serializer |
 | Error handling | `valhalla_exception_t` in `valhalla/exceptions.h`, codes in `src/exceptions.cc` (100s=Loki, 200s=Odin, 300s=Skadi, 400s=Thor, 500s=Tyr) |
 | Tile build warnings, data quality counters | `build_stats` singleton in `valhalla/mjolnir/util.h` — enum+array counters with `static_assert` safety. `log_stage()` in `src/mjolnir/util.cc` emits per-stage deltas to LOG_WARN + statsd gauges. Increment via `build_stats::get().increment(build_stats::kCounterName)` from any file |
+| Tile checksum / build id (cache validation) | `GraphTileHeader::checksum_` packs `build_id<<48 \| per_tile_data_hash` (`kTileHashBits` in `valhalla/baldr/graphconstants.h`); `header->tile_checksum()` returns the low-48 data hash, `header->build_id()` the high-16 tileset id a `tile_url` client compares against `id.txt`. Primitives in `src/mjolnir/util.cc`: `set_tile_checksum(path)` (refresh one tile's hash, keep build id) and `set_tileset_build_id(tile_dir)` (recompute the build id from stored hashes). **Any new tool that rewrites existing tiles MUST re-hash:** call `set_tileset_build_id` once at the end.|
 | Configuration | `boost::property_tree::ptree`, JSON format. Generate defaults: `valhalla_build_config`. Access: `config.get<T>("section.key")` |
 | Protobuf message definitions | `proto/` — root message is `Api` in `api.proto` |
 | Live traffic | Separate overlay (`traffic.tar`), format in `valhalla/baldr/traffictile.h`. Test via `test::customize_live_traffic_data()` |
@@ -225,6 +226,22 @@ TEST(MyFeature, BasicCase) {
 ```
 
 Key helpers: `gurka::buildtiles()`, `gurka::do_action()`, `gurka::findEdge()`, `gurka::findEdgeByNodes()`, `gurka::assert::raw::expect_path()`, `gurka::assert::raw::expect_maneuvers()`, `gurka::assert::osrm::expect_steps()`. Test utilities in `test/test.h`. Full framework reference in `docs/docs/test/gurka.md`.
+
+### Partial Tile Builds in Gurka
+
+**When changing tile build stages (mjolnir parsing, graph building, anything in `BuildStage`), consider testing the intermediate stage output directly** instead of (or in addition to) asserting on routing results — end-to-end assertions can mask whether a bug is in parsing or in a later stage. `gurka::buildtiles()` takes optional `start_stage`/`end_stage` (`mjolnir::BuildStage`, defaults run the full pipeline):
+
+```cpp
+// stop after parsing ways — temp *.bin files stay in workdir for inspection
+auto map = gurka::buildtiles(layout, ways, {}, {}, workdir, opts,
+                             mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kParseWays);
+auto way = gurka::findWay(map, 100);           // OSMWay from ways.bin, throws if missing
+auto way_nodes = gurka::findWayNodes(map, 20); // all OSMWayNode entries from way_nodes.bin
+// then resume — start_stage > kInitialize keeps the PBF and *.bin files
+gurka::buildtiles(layout, ways, {}, {}, workdir, opts, mjolnir::BuildStage::kParseRelations);
+```
+
+Pin deterministic OSM IDs via an `osm_id` tag on gurka ways/nodes. Example tests: `test/gurka/test_parse_osm.cc`. Stage outputs (all `midgard::sequence<T>`, structs in `valhalla/mjolnir/osm*.h`): `kParseWays` → `ways.bin` (`OSMWay`), `way_nodes.bin` (`OSMWayNode`, no coords yet), `access.bin`; `kParseRelations` → `complex_from_restrictions.bin`/`complex_to_restrictions.bin` (`OSMRestriction`); `kParseNodes` → `way_nodes.bin` (now with coords/node attrs), `bss_nodes.bin`, `linguistics_node.bin`; `kConstructEdges` → `edges.bin`, `nodes.bin`. For bins without a gurka helper yet, read them directly with `midgard::sequence<T>` (precedent: `test/graphparser.cc`) — and prefer adding a typed `gurka::find*` helper over hardcoding filenames in tests.
 
 **When a gurka ASCII map doesn't reproduce a real-world issue**, the problem likely depends on specific OSM data or tile build configuration that the ASCII map doesn't capture. Use real OSM data to understand the exact conditions, then design the ASCII map to match:
 

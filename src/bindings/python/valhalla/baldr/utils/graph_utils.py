@@ -3,29 +3,10 @@
 from pathlib import Path
 from typing import Union
 
-from ..config import parse_and_validate_config
-from ._graph_utils import (
-    GraphId as _GraphId,
-)
-from ._graph_utils import (
-    _GraphUtils,
-    get_tile_base_lon_lat,
-    get_tile_id_from_lon_lat,
-    get_tile_ids_from_bbox,
-    get_tile_ids_from_ring,
-)
+from ..._valhalla import _GraphUtils
+from ...config import parse_and_validate_config
 
-__all__ = [
-    "GraphId",
-    "GraphUtils",
-    "get_tile_base_lon_lat",
-    "get_tile_id_from_lon_lat",
-    "get_tile_ids_from_bbox",
-    "get_tile_ids_from_ring",
-]
-
-# Re-export GraphId unchanged
-GraphId = _GraphId
+__all__ = ["GraphUtils"]
 
 
 class GraphUtils(_GraphUtils):

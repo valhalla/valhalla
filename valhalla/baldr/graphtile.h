@@ -40,6 +40,7 @@
 #include <iterator>
 #include <list>
 #include <memory>
+#include <optional>
 
 namespace valhalla {
 namespace baldr {
@@ -183,7 +184,7 @@ public:
    * @param  range_offset HTTP range offsete in case of a tar URL
    * @param  range_size HTTP range offsete in case of a tar URL
    * @param  id_txt_path the file path to the tile_dir's id.txt
-   * @param  id_creation_time the timestamp according to the id.txt
+   * @param  id_checksum the (optional) expected checksum of the tileset
    * @return the graph tile or nullptr
    */
 
@@ -194,7 +195,7 @@ public:
                                      uint64_t range_offset = 0,
                                      uint64_t range_size = 0,
                                      const std::filesystem::path& id_txt_path = "",
-                                     uint64_t id_checksum = 0);
+                                     std::optional<uint64_t> id_checksum = std::nullopt);
 
   /**
    * Construct a tile given a url for the tile using curl

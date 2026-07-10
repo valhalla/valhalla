@@ -121,5 +121,9 @@ int main(int argc, char** argv) {
   config.erase("statsd");
   ElevationBuilder::Build(config, tile_ids);
   build_stats::get().log_stage(BuildStage::kElevation, config);
+
+  // the builder refreshed each touched tile's data hash
+  set_tileset_build_id(config.get<std::string>("mjolnir.tile_dir"));
+
   return EXIT_SUCCESS;
 }

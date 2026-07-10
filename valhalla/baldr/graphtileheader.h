@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHTILEHEADER_H_
 #define VALHALLA_BALDR_GRAPHTILEHEADER_H_
 
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/midgard/logging.h>
@@ -248,6 +249,13 @@ public:
     directededgecount_ = count;
   }
 
+  /**
+   * Checks for the presence of bounding circles.
+   *
+   * @return false if the bounding circle offset is
+   * either 0 or equal to the overall tile size (during early Valhalla 3.x versions, unused offset
+   * slots were set to tile_size), else true.
+   */
   bool has_bounding_circles() const {
     return boundingcircles_offset_ != 0 && boundingcircles_offset_ != tile_size_;
   }
@@ -605,19 +613,29 @@ public:
   }
 
   /**
-   * Get the checksum hash of the tile
-   * @return return the 64bit hash of tile's input checksum
+   * Get the per-tile data hash, the low bits of checksum_. Unique per tile but reproducible across
+   * builds of the same data.
+   * @return the 48-bit hash of the tile's data
    */
-  uint64_t checksum() const {
-    return checksum_;
+  uint64_t tile_checksum() const {
+    return checksum_ & ((uint64_t(1) << kTileHashBits) - 1);
   }
 
   /**
-   * Sets the checksum hash of the tile
-   * @param checksum the 64bit hash for tile's input checksum
+   * Sets the raw checksum_ field:
+   * build id packed in the high bits, per-tile data hash in the low bits.
+   * @param checksum the 64bit value for the tile's checksum_
    */
-  void set_checksum(uint64_t checksum) {
+  void set_raw_checksum(uint64_t checksum) {
     checksum_ = checksum;
+  }
+
+  /**
+   * Returns the tileset build id packed into the high bits of checksum_.
+   * It stays the same across every tile of a build.
+   */
+  uint16_t build_id() const {
+    return static_cast<uint16_t>(checksum_ >> kTileHashBits);
   }
 
 protected:
@@ -722,7 +740,9 @@ protected:
   // GraphTile data size in bytes
   uint32_t tile_size_ = 0;
 
+  // Offset to the start of the bounding circles; 0 means no bounding circles are present
   uint32_t boundingcircles_offset_ = 0;
+
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,
   // simply add a uint32_t some_offset_; just above empty_slots_ and decrease

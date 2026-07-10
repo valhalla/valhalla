@@ -4,6 +4,7 @@
 #include "baldr/predictedspeeds.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
@@ -164,6 +165,7 @@ ParseTrafficFile(const std::vector<std::string>& filenames, TrafficStats& stat) 
 
   return ts;
 }
+
 void UpdateTile(const std::string& tile_dir,
                 const GraphId& tile_id,
                 const std::unordered_map<uint32_t, TrafficSpeeds>& speeds,
@@ -214,6 +216,7 @@ void UpdateTile(const std::string& tile_dir,
   // Write the new tile with updated directed edges and the predicted speeds
   tile_builder.UpdatePredictedSpeeds(directededges);
 }
+
 /**
  * Read both the constrained and freeflow speed CSV files
  * We expect the files to be named as <quadtreeID>.constrained.csv and
@@ -242,6 +245,7 @@ void UpdateTiles(const std::string& tile_dir,
 
   result.set_value(stat);
 }
+
 std::vector<std::pair<GraphId, std::vector<std::string>>>
 PrepareTrafficTiles(const std::filesystem::path& traffic_tile_dir) {
   std::unordered_map<GraphId, std::vector<std::string>> files_per_tile;
@@ -387,6 +391,9 @@ void ProcessTrafficTiles(const std::string& tile_dir,
   // Wait for threads to complete
   for (auto& thread : threads)
     thread->join();
+
+  // the tileset changed, so refresh the build id from the now-current per-tile hashes
+  set_tileset_build_id(tile_dir);
 
   // Aggregate thread results
   TrafficStats final_stats{};

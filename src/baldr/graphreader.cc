@@ -510,12 +510,11 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
       static std::mutex mutex;
       std::lock_guard lock{mutex};
       if (!std::filesystem::exists(url_id_txt_path_)) {
-        // no id.txt, then create it in the current tile_dir
+        // no id.txt, then create it in the current tile_dir; the build id line is added once the
+        // first tile is downloaded
         std::filesystem::create_directories(tile_dir_);
         std::ofstream out_url_file(url_id_txt_path_, std::ios::binary);
         out_url_file << tile_url_ << std::endl;
-        // we write 0 so the next thread will find a valid MD5 hash
-        out_url_file << url_id_txt_checksum_ << std::endl;
       }
     }
   }
@@ -1073,27 +1072,27 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
   return {itile, begin_index, end_index};
 }
 
-uint64_t GraphReader::load_id_txt_checksum(const std::filesystem::path& id_txt_path,
-                                           const std::string& tile_url) {
+std::optional<uint64_t> GraphReader::load_id_txt_checksum(const std::filesystem::path& id_txt_path,
+                                                          const std::string& tile_url) {
   std::ifstream in_id_txt_file(id_txt_path);
-  std::string file_checksum = "0";
-  // if no cache wanted, never mind
-  if (!tile_dir_.empty() && in_id_txt_file) {
-    std::string file_url;
-    // validate that the expected lines and values are present
-    if (!std::getline(in_id_txt_file, file_url)) {
-      throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
-                               id_txt_path.string());
-    } else if (file_url != tile_url) {
-      throw std::runtime_error("Tile URL changed, configure a different mjolnir.tile_dir");
-    }
-
-    if (!std::getline(in_id_txt_file, file_checksum)) {
-      throw std::runtime_error("Couldn't find MD5 hash on the second line in " +
-                               id_txt_path.string());
-    }
+  // if no cache wanted or no id.txt yet, there's no build id to compare against
+  if (tile_dir_.empty() || !in_id_txt_file) {
+    return std::nullopt;
   }
 
+  std::string file_url;
+  if (!std::getline(in_id_txt_file, file_url)) {
+    throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
+                             id_txt_path.string());
+  } else if (file_url != tile_url) {
+    throw std::runtime_error("Tile URL changed, configure a different mjolnir.tile_dir");
+  }
+
+  // the build id is only written once the first tile has been downloaded
+  std::string file_checksum;
+  if (!std::getline(in_id_txt_file, file_checksum) || file_checksum.empty()) {
+    return std::nullopt;
+  }
   return std::stoull(file_checksum);
 };
 

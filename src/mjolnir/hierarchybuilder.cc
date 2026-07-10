@@ -187,7 +187,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
     // Copy the data version & checksum
     tilebuilder->header_builder().set_dataset_id(tile->header()->dataset_id());
-    tilebuilder->header_builder().set_checksum(tile->header()->checksum());
+    tilebuilder->header_builder().set_raw_checksum(tile->header()->tile_checksum());
 
     // Copy node information and set the node lat,lon offsets within the new tile
     NodeInfo baseni = *(tile->node(base_node.id()));

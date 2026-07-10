@@ -42,16 +42,16 @@ TEST(Standalone, DestinationOnlyHGV) {
   )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}}},
-      {"BC", {{"highway", "residential"}}},
-      {"CD", {{"highway", "residential"}}},
-      {"DE", {{"highway", "residential"}}},
-      {"EF", {{"highway", "residential"}}},
-      {"FG", {{"highway", "residential"}}},
-      {"GH", {{"highway", "residential"}}},
-      {"HI", {{"highway", "residential"}}},
-      {"DG", {{"highway", "residential"}, {"hgv", "destination"}}},
-      {"BI", {{"highway", "residential"}, {"access", "private"}}},
+      {"AB", {{"highway", "unclassified"}}},
+      {"BC", {{"highway", "unclassified"}}},
+      {"CD", {{"highway", "unclassified"}}},
+      {"DE", {{"highway", "unclassified"}}},
+      {"EF", {{"highway", "unclassified"}}},
+      {"FG", {{"highway", "unclassified"}}},
+      {"GH", {{"highway", "unclassified"}}},
+      {"HI", {{"highway", "unclassified"}}},
+      {"DG", {{"highway", "unclassified"}, {"hgv", "destination"}}},
+      {"BI", {{"highway", "unclassified"}, {"access", "private"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
