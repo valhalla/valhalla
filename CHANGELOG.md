@@ -2,8 +2,8 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
-   * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#XXXX](https://github.com/valhalla/valhalla/pull/XXXX)
-   * FIXED: use the new `GraphReader::GetGraphTileHeader` in `baldr/utils/graph_reader.cc:get_graph_tile_header` to prevent loading entire tiles into RAM [#XXXX](https://github.com/valhalla/valhalla/pull/XXXX)
+   * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
+   * FIXED: use the new `GraphReader::GetGraphTileHeader` in `baldr/utils/graph_reader.cc:get_graph_tile_header` to prevent loading entire tiles into RAM [#6200](https://github.com/valhalla/valhalla/pull/6200)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
