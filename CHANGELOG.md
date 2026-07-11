@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
