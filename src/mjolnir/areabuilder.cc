@@ -213,7 +213,7 @@ void AreaBuilder::GenerateMedialAxis(const GEOSGeometry* polygon,
   std::map<std::pair<int64_t, int64_t>, int> vertex_ids;
   std::vector<midgard::Point2d> vertex_coords;
 
-  // lamda function to set and return the id of a vertex from its coords
+  // lambda function to set and return the id of a vertex from its coords
   auto get_vertex_id = [&](const std::pair<int64_t, int64_t>& key, double x, double y) {
     auto it = vertex_ids.find(key);
     if (it != vertex_ids.end()) {
