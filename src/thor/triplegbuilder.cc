@@ -722,8 +722,11 @@ void SetElevation(TripLeg_Edge* trip_edge,
     return static_cast<float>((elevation[index] * (1.0 - pct)) + (elevation[index + 1] * pct));
   };
 
-  // Add the elevation at the start node to the elevation vector
-  float h1 = start_node->elevation();
+  // Encoded elevation deltas are relative to the directed edge's physical begin node.
+  graph_tile_ptr begin_tile = tile;
+  const auto begin_node_id = graphreader.GetBeginNodeId(edge, begin_tile);
+  const float h1 = begin_node_id.is_valid() ? begin_tile->node(begin_node_id)->elevation()
+                                            : start_node->elevation();
 
   // Get encoded elevation from EdgeInfo edge
   auto encoded = tile->edgeinfo(edge).encoded_elevation(edge->length(), interval);
