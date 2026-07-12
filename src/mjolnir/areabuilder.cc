@@ -2,6 +2,8 @@
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
+#include "midgard/point2.h"
+#include "midgard/polyline2.h"
 #include "midgard/sequence.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/osmway.h"
@@ -9,16 +11,23 @@
 
 #include <geos_c.h>
 
+#include <algorithm>
+#include <cmath>
+#include <map>
+#include <set>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace valhalla {
 namespace mjolnir {
 
+// TODO: make this a config option
 constexpr double kMinAreaSquareMeters = 100.0;
 constexpr double kDensifyToleranceMeters = 1.0;
+constexpr double kSimplifyToleranceMeters = 1.5;
 
-void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
+void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
                              const std::string& ways_file,
                              const std::string& way_nodes_file,
                              OSMData& osmdata) {
@@ -154,8 +163,8 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
 }
 
 void AreaBuilder::GenerateMedialAxis(const GEOSGeometry* polygon,
-                                     const midgard::PointLL& center,
-                                     double meters_per_lng_degree) {
+                                     const midgard::PointLL& /*center*/,
+                                     double /*meters_per_lng_degree*/) {
 
   initGEOS(nullptr, nullptr);
   double area = 0;
@@ -196,7 +205,187 @@ void AreaBuilder::GenerateMedialAxis(const GEOSGeometry* polygon,
   fprintf(stderr, "medial axis: %zu edges inside the polygon (raw medial axis)\n",
           medial_edges.size());
 
-  // TODO: prune, simplify
+  // round the coordinates so that vertices that are the same point share a key
+  auto vertex_key = [](double x, double y) {
+    return std::make_pair(std::llround(x * 1000.0), std::llround(y * 1000.0));
+  };
+
+  std::map<std::pair<int64_t, int64_t>, int> vertex_ids;
+  std::vector<midgard::Point2d> vertex_coords;
+
+  // lamda function to set and return the id of a vertex from its coords
+  auto get_vertex_id = [&](const std::pair<int64_t, int64_t>& key, double x, double y) {
+    auto it = vertex_ids.find(key);
+    if (it != vertex_ids.end()) {
+      return it->second;
+    }
+    int id = static_cast<int>(vertex_ids.size());
+    vertex_ids.emplace(key, id);
+    vertex_coords.push_back({x, y});
+    return id;
+  };
+
+  std::vector<std::pair<int, int>> segments;
+  std::set<std::pair<int, int>> seen;
+
+  // iterate through the edges, to fill segments vector with vertices ids
+  for (const GEOSGeometry* edge : medial_edges) {
+    const GEOSCoordSequence* seq = GEOSGeom_getCoordSeq(edge);
+    unsigned int num_points = 0;
+    GEOSCoordSeq_getSize(seq, &num_points);
+    // itarate points in a edge in pairs
+    for (unsigned int p = 0; p + 1 < num_points; ++p) {
+      double x1, y1, x2, y2;
+      GEOSCoordSeq_getXY(seq, p, &x1, &y1);
+      GEOSCoordSeq_getXY(seq, p + 1, &x2, &y2);
+      const auto k1 = vertex_key(x1, y1);
+      const auto k2 = vertex_key(x2, y2);
+      if (k1 == k2) {
+        continue;
+      }
+      const int v1 = get_vertex_id(k1, x1, y1);
+      const int v2 = get_vertex_id(k2, x2, y2);
+      // dedup, an undirected segment is the same in both directions
+      const auto key = std::minmax(v1, v2);
+      if (!seen.emplace(key.first, key.second).second) {
+        continue;
+      }
+      segments.push_back({v1, v2});
+    }
+  }
+
+  // incident segments of each vertex, the degrees are computed once and never updated
+  std::vector<std::vector<int>> incident(vertex_ids.size());
+  for (size_t s = 0; s < segments.size(); ++s) {
+    incident[segments[s].first].push_back(static_cast<int>(s));
+    incident[segments[s].second].push_back(static_cast<int>(s));
+  }
+
+  // the degree of a vertex is the size of the list
+  size_t deg1 = 0, deg2 = 0, deg3plus = 0;
+  for (const auto& inc : incident) {
+    if (inc.size() == 1) {
+      deg1++;
+    } else if (inc.size() == 2) {
+      deg2++;
+    } else if (inc.size() >= 3) {
+      deg3plus++;
+    }
+  }
+  fprintf(stderr, "medial axis: %zu vertices, %zu segments (deg1=%zu deg2=%zu deg3+=%zu)",
+          vertex_ids.size(), segments.size(), deg1, deg2, deg3plus);
+
+  // prune the branches, walk from each degree 1 vertex until a fork is reached
+  std::vector<bool> removed(segments.size(), false);
+  for (size_t v = 0; v < incident.size(); ++v) {
+    if (incident[v].size() != 1) {
+      continue;
+    }
+    int current_vertex = static_cast<int>(v);
+    int current_segment = incident[v].front();
+    while (true) {
+      removed[current_segment] = true;
+      const auto& seg = segments[current_segment];
+      const int next_vertex = (seg.first == current_vertex) ? seg.second : seg.first;
+      // stop at a fork, continue at degree 2 vertex
+      if (incident[next_vertex].size() != 2) {
+        break;
+      }
+      // keep walking along the branch
+      int next_segment = -1;
+      for (int s : incident[next_vertex]) {
+        if (s != current_segment) {
+          next_segment = s;
+          break;
+        }
+      }
+      if (next_segment == -1 || removed[next_segment]) {
+        break;
+      }
+      current_vertex = next_vertex;
+      current_segment = next_segment;
+    }
+  }
+
+  size_t kept = 0;
+  for (bool r : removed) {
+    if (!r) {
+      kept++;
+    }
+  }
+  fprintf(stderr, " after prune removed %zu)\n", segments.size() - kept);
+
+  // stitch the surviving segments into chains, cutting at forks and endpoints
+  std::vector<bool> used(segments.size(), false);
+  std::vector<std::vector<midgard::Point2d>> chains;
+
+  // a vertex is important if it is not a pass through vertex
+  auto is_important = [&](int v) { return incident[v].size() != 2; };
+
+  // walks a chain from an important vertex until it reaches another one
+  auto walk_chain = [&](int start_vertex, int start_segment) {
+    std::vector<midgard::Point2d> chain;
+    chain.push_back(vertex_coords[start_vertex]);
+    // similar logic as the prune, but instead of removing, collecting
+    int current_vertex = start_vertex;
+    int current_segment = start_segment;
+    while (true) {
+      used[current_segment] = true;
+      const auto& seg = segments[current_segment];
+      const int next_vertex = (seg.first == current_vertex) ? seg.second : seg.first;
+      chain.push_back(vertex_coords[next_vertex]);
+      if (is_important(next_vertex)) {
+        break;
+      }
+      // pass through vertex, keep walking through the other segment
+      int next_segment = -1;
+      for (int s : incident[next_vertex]) {
+        if (s != current_segment && !removed[s] && !used[s]) {
+          next_segment = s;
+          break;
+        }
+      }
+      if (next_segment == -1) {
+        break;
+      }
+      current_vertex = next_vertex;
+      current_segment = next_segment;
+    }
+    return chain;
+  };
+
+  // start the chains from the important vertices
+  for (size_t v = 0; v < incident.size(); ++v) {
+    if (!is_important(static_cast<int>(v))) {
+      continue;
+    }
+    for (int s : incident[v]) {
+      if (removed[s] || used[s]) {
+        continue;
+      }
+      chains.push_back(walk_chain(static_cast<int>(v), s));
+    }
+  }
+
+  // any segment still unused belongs to a cycle with no important vertices
+  for (size_t s = 0; s < segments.size(); ++s) {
+    if (removed[s] || used[s]) {
+      continue;
+    }
+    chains.push_back(walk_chain(segments[s].first, static_cast<int>(s)));
+  }
+
+  // simplify with douglas peucker to eliminate redundant points
+  size_t points_before = 0;
+  size_t points_after = 0;
+  for (auto& chain : chains) {
+    points_before += chain.size();
+    midgard::Polyline2<midgard::Point2d>::Generalize(chain, kSimplifyToleranceMeters);
+    points_after += chain.size();
+  }
+
+  fprintf(stderr, "medial axis: %zu chains from %zu simplified from %zu to %zu points\n",
+          chains.size(), kept, points_before, points_after);
 
   // clean up the kept edges
   for (GEOSGeometry* edge : medial_edges) {
