@@ -330,9 +330,11 @@ class _GraphUtils:
         """
         Get the GraphTileHeader for the tile that contains this GraphId.
 
+        Reads only the header span from the tile_dir file or the mmapped extract; the tile only gzipped or remote tilesets might load the GraphTile into memory.
+
         :param tile_id: GraphId of (or within) the tile
         :returns: GraphTileHeader with the tile's summary metadata
-        :raises RuntimeError: When the tile is or edge not found
+        :raises RuntimeError: When the tile is not found
         """
 
 def get_tile_base_lon_lat(graph_id: GraphId) -> tuple:
