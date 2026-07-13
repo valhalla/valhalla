@@ -9,6 +9,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdio> // TEMP debug prints
+#include <functional> // TEMP experiment: std::function-wrapped cleanup
 #include <sstream>
 
 using namespace valhalla;
@@ -35,16 +36,13 @@ struct actor_t::pimpl_t {
     odin_worker.set_interrupt(interrupt_function);
   }
   void cleanup() {
-    // TEMP EXPERIMENT: cleanup() is still called from the funclet, but the worker cleanup calls are
-    // commented out. if the test now passes, it's the nested member-cleanup calls (not the funclet
-    // firing) that trip the unwind. we already know auto_cleanup=false (empty funclet) is clean.
     std::fprintf(stderr, "[DBG] pimpl_t::cleanup enter\n"); std::fflush(stderr);
-    std::fprintf(stderr, "[DBG]  -> loki_worker.cleanup (COMMENTED OUT)\n"); std::fflush(stderr);
-    // loki_worker.cleanup();
-    std::fprintf(stderr, "[DBG]  -> thor_worker.cleanup (COMMENTED OUT)\n"); std::fflush(stderr);
-    // thor_worker.cleanup();
-    std::fprintf(stderr, "[DBG]  -> odin_worker.cleanup (COMMENTED OUT)\n"); std::fflush(stderr);
-    // odin_worker.cleanup();
+    std::fprintf(stderr, "[DBG]  -> loki_worker.cleanup\n"); std::fflush(stderr);
+    loki_worker.cleanup();
+    std::fprintf(stderr, "[DBG]  -> thor_worker.cleanup\n"); std::fflush(stderr);
+    thor_worker.cleanup();
+    std::fprintf(stderr, "[DBG]  -> odin_worker.cleanup\n"); std::fflush(stderr);
+    odin_worker.cleanup();
     std::fprintf(stderr, "[DBG] pimpl_t::cleanup done\n"); std::fflush(stderr);
   }
   std::shared_ptr<baldr::GraphReader> reader;
@@ -104,10 +102,10 @@ std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
 
 std::string
 actor_t::route(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -128,10 +126,10 @@ actor_t::route(const std::string& request_str, const std::function<void()>* inte
 
 std::string
 actor_t::locate(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -148,10 +146,10 @@ actor_t::locate(const std::string& request_str, const std::function<void()>* int
 
 std::string
 actor_t::matrix(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -171,10 +169,10 @@ actor_t::matrix(const std::string& request_str, const std::function<void()>* int
 std::string actor_t::optimized_route(const std::string& request_str,
                                      const std::function<void()>* interrupt,
                                      Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -195,10 +193,10 @@ std::string actor_t::optimized_route(const std::string& request_str,
 
 std::string
 actor_t::isochrone(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -218,10 +216,10 @@ actor_t::isochrone(const std::string& request_str, const std::function<void()>* 
 std::string actor_t::trace_route(const std::string& request_str,
                                  const std::function<void()>* interrupt,
                                  Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -243,10 +241,10 @@ std::string actor_t::trace_route(const std::string& request_str,
 std::string actor_t::trace_attributes(const std::string& request_str,
                                       const std::function<void()>* interrupt,
                                       Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -265,10 +263,10 @@ std::string actor_t::trace_attributes(const std::string& request_str,
 
 std::string
 actor_t::height(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -286,10 +284,10 @@ actor_t::height(const std::string& request_str, const std::function<void()>* int
 std::string actor_t::transit_available(const std::string& request_str,
                                        const std::function<void()>* interrupt,
                                        Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -306,10 +304,10 @@ std::string actor_t::transit_available(const std::string& request_str,
 
 std::string
 actor_t::expansion(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -334,10 +332,10 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
 
 std::string
 actor_t::centroid(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -358,10 +356,10 @@ actor_t::centroid(const std::string& request_str, const std::function<void()>* i
 
 std::string
 actor_t::status(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -384,10 +382,10 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
 
 std::string
 actor_t::tile(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
+  auto scoped_cleaner = make_finally(std::function<void()>([this]() {
     if (auto_cleanup)
       cleanup();
-  });
+  }));
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
