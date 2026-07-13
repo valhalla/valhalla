@@ -165,6 +165,7 @@ The following options are available for `truck` costing.
 | `axle_load` | The axle load of the truck (in metric tons). Default 9.07. |
 | `axle_count` | The axle count of the truck. Default 5. |
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
+| `adr_tunnel_code` | The ADR 8.6.4 tunnel restriction code of the load, e.g. `B`, `B1000C`, `B/D`, `B/E`, `C`, `C5000D`, `C/D`, `C/E`, `D`, `D/E` or `E` (case-insensitive; `(—)`, `-` or `none` declare an explicitly unrestricted load). Only takes effect when `hazmat` is true: passage is then denied through tunnels whose ADR category (derived from OSM `hazmat:adr_tunnel_cat`, `hazmat:tunnel_cat` or `hazmat:B..E=no` exclusion tagging) is at or above the code's first letter, assuming the worst case for quantity- and tank/bulk-conditional clauses. A hazmat truck with no code is conservatively treated as code `B` (denied through every categorised tunnel). Default empty. |
 | `hgv_no_access_penalty` | A penalty applied to roads with no HGV/truck access. If set to a value less than 43200 seconds, HGV will be allowed on these roads and the penalty applies. Default 43200, i.e. trucks are not allowed. |
 | `low_class_penalty` | A penalty (in seconds) which is applied when transitioning down onto residential or service roads. Default is 30 seconds. |
 | `low_class_factor` | A factor which is applied to residential or service roads. Default is 1.5. |

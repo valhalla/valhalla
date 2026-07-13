@@ -7,6 +7,10 @@
 #include "proto_conversions.h"
 #include "sif/osrm_car_duration.h"
 
+#include <algorithm>
+#include <cctype>
+#include <unordered_map>
+
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
@@ -36,6 +40,67 @@ constexpr float kDefaultUseTracks = 0.f; // Avoid tracks by default. Factor betw
 constexpr float kDefaultUseLivingStreets =
     0.f;                                    // Avoid living streets by default. Factor between 0 and 1
 constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
+
+// Parses an ADR 8.6.4 tunnel restriction code (UNECE,
+// https://unece.org/transport/dangerous-goods) into the least tunnel
+// category (AdrTunnelCategory numeric value) the load is forbidden from.
+// The router does not know net explosive mass or tank/bulk carriage, so the
+// quantity-conditional (B1000C, C5000D) and carriage-conditional (B/D, B/E,
+// C/D, C/E, D/E) clauses are assumed to apply (worst case); every code then
+// collapses to a single threshold - its first letter - and passage is
+// forbidden through a tunnel of category cat iff cat >= threshold.
+//
+// Accepted spellings: the canonical ADR notation, case-insensitively, with
+// surrounding whitespace ignored and one pair of parentheses stripped (ADR
+// Table A column (15) prints codes in parentheses). The "no restriction"
+// code parses from "(—)", "—" (em dash), "–" (en dash), "-",
+// "none" or a whitespace-only string, and returns 0 (never forbidden).
+// Unrecognised input returns the category B threshold (the most conservative
+// non-quantity code) and reports validity through the optional out param.
+uint8_t ParseAdrTunnelCode(const std::string& raw, bool* valid = nullptr) {
+  if (valid) {
+    *valid = true;
+  }
+  const std::string whitespace = " \t\r\n";
+  auto trim = [&whitespace](const std::string& s) -> std::string {
+    auto b = s.find_first_not_of(whitespace);
+    if (b == std::string::npos) {
+      return "";
+    }
+    auto e = s.find_last_not_of(whitespace);
+    return s.substr(b, e - b + 1);
+  };
+  std::string code = trim(raw);
+  if (code.size() >= 2 && code.front() == '(' && code.back() == ')') {
+    code = trim(code.substr(1, code.size() - 2));
+  }
+  std::transform(code.begin(), code.end(), code.begin(),
+                 [](unsigned char c) { return std::toupper(c); });
+  if (code.empty() || code == "-" || code == "—" || code == "–" || code == "NONE") {
+    return 0;
+  }
+  static const std::unordered_map<std::string, uint8_t> kAdrCodeThresholds = {
+      {"B", static_cast<uint8_t>(AdrTunnelCategory::kB)},
+      {"B1000C", static_cast<uint8_t>(AdrTunnelCategory::kB)},
+      {"B/D", static_cast<uint8_t>(AdrTunnelCategory::kB)},
+      {"B/E", static_cast<uint8_t>(AdrTunnelCategory::kB)},
+      {"C", static_cast<uint8_t>(AdrTunnelCategory::kC)},
+      {"C5000D", static_cast<uint8_t>(AdrTunnelCategory::kC)},
+      {"C/D", static_cast<uint8_t>(AdrTunnelCategory::kC)},
+      {"C/E", static_cast<uint8_t>(AdrTunnelCategory::kC)},
+      {"D", static_cast<uint8_t>(AdrTunnelCategory::kD)},
+      {"D/E", static_cast<uint8_t>(AdrTunnelCategory::kD)},
+      {"E", static_cast<uint8_t>(AdrTunnelCategory::kE)},
+  };
+  auto found = kAdrCodeThresholds.find(code);
+  if (found != kAdrCodeThresholds.end()) {
+    return found->second;
+  }
+  if (valid) {
+    *valid = false;
+  }
+  return static_cast<uint8_t>(AdrTunnelCategory::kB);
+}
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -333,6 +398,10 @@ public:
   float highway_factor_;         // Factor applied when road is a motorway or trunk
   float non_truck_route_factor_; // Factor applied when road is not part of a designated truck route
   uint8_t axle_count_;           // Vehicle axle count
+  uint8_t adr_tunnel_threshold_; // Least ADR tunnel category (AdrTunnelCategory
+                                 // value) this vehicle is forbidden from; 0 when
+                                 // tunnel categories never block it (not carrying
+                                 // hazmat, or an explicitly unrestricted load)
 
   // determine if we should allow hgv=no edges and penalize them instead
   float no_hgv_access_penalty_;
@@ -363,6 +432,19 @@ TruckCost::TruckCost(const Costing& costing)
   width_ = costing_options.width();
   length_ = costing_options.length();
   axle_count_ = costing_options.axle_count();
+
+  // ADR tunnel restriction: precompute the least tunnel category the load is
+  // forbidden from (ADR 8.6.4, worst-case reading). Only dangerous-goods
+  // loads are subject to tunnel categories; a hazmat load with no declared
+  // tunnel restriction code is treated conservatively as code "B" (forbidden
+  // through every categorised B-E tunnel, allowed through A/uncategorised).
+  if (!hazmat_) {
+    adr_tunnel_threshold_ = 0;
+  } else if (costing_options.adr_tunnel_code().empty()) {
+    adr_tunnel_threshold_ = static_cast<uint8_t>(AdrTunnelCategory::kB);
+  } else {
+    adr_tunnel_threshold_ = ParseAdrTunnelCode(costing_options.adr_tunnel_code());
+  }
 
   // Create speed cost table
   // Preference to use highways. Is a value from 0 to 1
@@ -467,6 +549,9 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && (!ignore_turn_restrictions_)) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly_hgv()) ||
+      // ADR: passage through a tunnel of category >= the load's threshold is
+      // a legal ban (hard block), like a physical height gate
+      (adr_tunnel_threshold_ && edge->adr_tunnel_category() >= adr_tunnel_threshold_) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || CheckExclusions<true>(edge, pred)) {
     return false;
@@ -492,6 +577,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly_hgv()) ||
+      // ADR tunnel categories are direction-independent; identical rule to Allowed()
+      (adr_tunnel_threshold_ && opp_edge->adr_tunnel_category() >= adr_tunnel_threshold_) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
       CheckExclusions<false>(opp_edge, pred)) {
@@ -750,6 +837,21 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kLowClassFactorRange, json, "/low_class_factor", low_class_factor,
                           warnings);
   JSON_PBF_DEFAULT_V2(co, false, json, "/hazmat", hazmat);
+  // ADR 8.6.4 tunnel restriction code of the load (empty = not declared; a
+  // hazmat load without a declared code is treated conservatively as "B")
+  co->set_adr_tunnel_code(
+      rapidjson::get<std::string>(json, "/adr_tunnel_code", co->adr_tunnel_code()));
+  {
+    bool adr_code_valid = true;
+    ParseAdrTunnelCode(co->adr_tunnel_code(), &adr_code_valid);
+    if (!adr_code_valid) {
+      auto warning = warnings.Add();
+      warning->set_code(500);
+      warning->set_description("'adr_tunnel_code' '" + co->adr_tunnel_code() +
+                               "' is not an ADR 8.6.4 tunnel restriction code; "
+                               "treating it conservatively as 'B'");
+    }
+  }
   JSON_PBF_RANGED_DEFAULT(co, kTruckAxleLoadRange, json, "/axle_load", axle_load, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways, warnings);

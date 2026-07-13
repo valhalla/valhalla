@@ -5,6 +5,7 @@
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236) 
+   * ADDED: `truck` costing option `adr_tunnel_code` restricting passage through tunnels by ADR tunnel category (ADR 8.6.4), with categories extracted from OSM `hazmat:adr_tunnel_cat`/`hazmat:tunnel_cat` tags and, on tunnels, from `hazmat:B..E=no` exclusion tagging
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**

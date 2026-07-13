@@ -362,6 +362,11 @@ message Costing {
     oneof has_low_class_factor {
       float low_class_factor = 97;
     }
+    // ADR 8.6.4 tunnel restriction code of the load for truck costing, e.g.
+    // "B", "B1000C", "B/D", "C", "C5000D", "C/D", "D", "D/E", "E"; "(—)",
+    // "-" or "none" declare an explicitly unrestricted load. Empty = no code
+    // declared (a hazmat load is then treated conservatively as code "B").
+    string adr_tunnel_code = 98;
   }
 
   oneof has_options {
