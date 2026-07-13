@@ -39,7 +39,8 @@ std::string get_tile_url(const bool is_tar) {
 boost::property_tree::ptree make_conf(const std::string& tile_dir,
                                       const bool tile_url_gz,
                                       const bool is_tar,
-                                      const std::string& upw) {
+                                      const std::string& upw,
+                                      const bool use_connectivity = false) {
 
   auto conf = test::make_config(tile_dir, {{"mjolnir.user_agent", "MapboxNavigationNative"}});
 
@@ -52,7 +53,7 @@ boost::property_tree::ptree make_conf(const std::string& tile_dir,
   }
 
   conf.put("mjolnir.tile_url_gz", tile_url_gz);
-  conf.put("loki.use_connectivity", false);
+  conf.put("loki.use_connectivity", use_connectivity);
   return conf;
 }
 
@@ -107,6 +108,35 @@ protected:
 
 TEST_F(HttpTilesWithCache, test_tar_cache) {
   test_route("url_tile_cache", false, true);
+}
+
+TEST_F(HttpTilesWithCache, test_connectivity_map_empty_cache) {
+  // tile lazy-loading enabled: no tiles on disk at startup
+  auto conf = make_conf("url_tile_cache", false, false, "", /*use_connectivity=*/true);
+  tyr::actor_t actor(conf);
+
+  auto route_json = actor.route(R"({"locations":[{"lat":52.09620,"lon": 5.11909,"type":"break"},
+          {"lat":52.09585,"lon":5.11934,"type":"break"}],"costing":"auto"})");
+  actor.cleanup();
+
+  EXPECT_NE(route_json.find("Wijckskade"), std::string::npos);
+  EXPECT_NE(route_json.find("Lauwerstraat"), std::string::npos);
+}
+
+TEST_F(HttpTilesWithCache, test_connectivity_map_partial_cache) {
+  // tile lazy-loading enabled: one tile already on disk at startup, the other two only reachable via a lazy fetch
+  std::filesystem::create_directories("url_tile_cache/0/003");
+  std::filesystem::copy_file(tile_source_dir + "/0/003/196.gph", "url_tile_cache/0/003/196.gph");
+
+  auto conf = make_conf("url_tile_cache", false, false, "", /*use_connectivity=*/true);
+  tyr::actor_t actor(conf);
+
+  auto route_json = actor.route(R"({"locations":[{"lat":52.09620,"lon": 5.11909,"type":"break"},
+          {"lat":52.09585,"lon":5.11934,"type":"break"}],"costing":"auto"})");
+  actor.cleanup();
+
+  EXPECT_NE(route_json.find("Wijckskade"), std::string::npos);
+  EXPECT_NE(route_json.find("Lauwerstraat"), std::string::npos);
 }
 
 TEST_F(HttpTilesWithCache, test_tar_cache_outdated) {

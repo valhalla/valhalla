@@ -21,6 +21,21 @@ using namespace valhalla::loki;
 
 namespace {
 constexpr std::string_view kDefaultMaxAge = "1800";
+
+// if connectivity is explicitly disabled or if we're lazy-loading tiles, skip connectivity-map
+std::shared_ptr<baldr::connectivity_map_t>
+make_connectivity_map(const boost::property_tree::ptree& config,
+                      const std::shared_ptr<baldr::GraphReader>& reader) {
+  if (!config.get<bool>("loki.use_connectivity", true)) {
+    LOG_INFO("Connectivity map disabled: loki.use_connectivity is false");
+    return nullptr;
+  }
+  if (!config.get<std::string>("mjolnir.tile_url", "").empty()) {
+    LOG_INFO("Connectivity map disabled: mjolnir.tile_url is set");
+    return nullptr;
+  }
+  return std::make_shared<baldr::connectivity_map_t>(config.get_child("mjolnir"), reader);
+}
 }
 
 namespace valhalla {
@@ -227,9 +242,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
       search_(*reader),
-      connectivity_map(config.get<bool>("loki.use_connectivity", true)
-                           ? new connectivity_map_t(config.get_child("mjolnir"), reader)
-                           : nullptr),
+      connectivity_map(make_connectivity_map(config, reader)),
       max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
       max_contour_min(config.get<size_t>("service_limits.isochrone.max_time_contour")),
       max_contour_km(config.get<size_t>("service_limits.isochrone.max_distance_contour")),
