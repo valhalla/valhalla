@@ -139,6 +139,30 @@ TEST_F(HttpTilesWithCache, test_connectivity_map_partial_cache) {
   EXPECT_NE(route_json.find("Lauwerstraat"), std::string::npos);
 }
 
+TEST_F(HttpTilesWithCache, test_connectivity_map_with_tile_extract) {
+  // tile lazy-loading config ambiguity: if both a tar-extract and tile-url are configured, tar-extract takes priority
+  const std::string log_path = "url_tile_cache/connectivity.log";
+  std::filesystem::remove(log_path);
+  midgard::logging::Configure({{"type", "file"}, {"file_name", log_path}});
+
+  auto conf = test::make_config(tile_source_dir, {{"mjolnir.tile_extract", tar_path}});
+  conf.put("mjolnir.tile_url", "http://127.0.0.1:1/{tilePath}");
+  conf.put("loki.use_connectivity", true);
+  tyr::actor_t actor(conf);
+
+  auto route_json = actor.route(R"({"locations":[{"lat":52.09620,"lon": 5.11909,"type":"break"},
+          {"lat":52.09585,"lon":5.11934,"type":"break"}],"costing":"auto"})");
+  actor.cleanup();
+
+  midgard::logging::Configure({{"type", "std_out"}});
+  std::ifstream log_file(log_path);
+  std::string log_contents((std::istreambuf_iterator<char>(log_file)), std::istreambuf_iterator<char>());
+
+  EXPECT_NE(route_json.find("Wijckskade"), std::string::npos);
+  EXPECT_NE(route_json.find("Lauwerstraat"), std::string::npos);
+  EXPECT_EQ(log_contents.find("Connectivity map disabled"), std::string::npos) << log_contents;
+}
+
 TEST_F(HttpTilesWithCache, test_tar_cache_outdated) {
   // create a fake id.txt with a bogus checksum and let GetGraphTile fail
   const std::string id_txt_path = "url_tile_cache/id.txt";

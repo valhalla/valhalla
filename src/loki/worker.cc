@@ -30,7 +30,7 @@ make_connectivity_map(const boost::property_tree::ptree& config,
     LOG_INFO("Connectivity map disabled: loki.use_connectivity is false");
     return nullptr;
   }
-  if (!config.get<std::string>("mjolnir.tile_url", "").empty()) {
+  if (reader->tile_extract().empty() && !config.get<std::string>("mjolnir.tile_url", "").empty()) {
     LOG_INFO("Connectivity map disabled: mjolnir.tile_url is set");
     return nullptr;
   }
