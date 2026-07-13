@@ -9,8 +9,7 @@ This is not a changelog. `CHANGELOG.md` is the human-facing record of what chang
 ## Entry shape
 
 ```markdown
-- **#N** (state) — one-line load-bearing takeaway. Parent: #X. Winner: #Y.
-  Superseded by: #Z. See: <pointer>. [tags: subsystem, subsystem]
+- **#N** (state) — one-line load-bearing takeaway. Parent: #X. Winner: #Y. Superseded by: #Z. See: <pointer>. [tags: subsystem, subsystem]
 ```
 
 - `#N` and `(state)` are required. The takeaway is one sentence, present-tense, focused on the **rule that survived**, not the diff.
