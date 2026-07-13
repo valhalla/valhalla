@@ -201,6 +201,17 @@ void DirectedEdge::set_tunnel(const bool tunnel) {
   tunnel_ = tunnel;
 }
 
+// Sets the ADR (dangerous goods) tunnel category of this edge
+// (0 = no category / category A, 1-4 = ADR categories B-E).
+void DirectedEdge::set_adr_tunnel_category(const uint8_t category) {
+  if (category > static_cast<uint8_t>(AdrTunnelCategory::kE)) {
+    LOG_WARN("Exceeding max ADR tunnel category: " + std::to_string(category));
+    adr_tunnel_cat_ = static_cast<uint8_t>(AdrTunnelCategory::kE);
+  } else {
+    adr_tunnel_cat_ = category;
+  }
+}
+
 // Sets the flag indicating this edge has is a bridge of part of a bridge.
 void DirectedEdge::set_bridge(const bool bridge) {
   bridge_ = bridge;
@@ -624,6 +635,7 @@ void DirectedEdge::json(rapidjson::writer_wrapper_t& writer) const {
   writer("destination_only", static_cast<bool>(dest_only_));
   writer("destination_only_hgv", static_cast<bool>(dest_only_hgv_));
   writer("tunnel", static_cast<bool>(tunnel_));
+  writer("adr_tunnel_category", static_cast<uint64_t>(adr_tunnel_cat_));
   writer("bridge", static_cast<bool>(bridge_));
   writer("round_about", static_cast<bool>(roundabout_));
   writer("traffic_signal", static_cast<bool>(traffic_signal_));

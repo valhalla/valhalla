@@ -303,6 +303,24 @@ public:
   void set_dest_only_hgv(const bool destonly_hgv);
 
   /**
+   * ADR (dangerous goods) tunnel category of this edge. 0 means no category
+   * is assigned or the tunnel is category A (never restricted); values 1-4
+   * correspond to ADR tunnel categories B-E (see AdrTunnelCategory in
+   * graphconstants.h).
+   * @return  Returns the AdrTunnelCategory numeric value (0-4).
+   */
+  uint8_t adr_tunnel_category() const {
+    return adr_tunnel_cat_;
+  }
+
+  /**
+   * Sets the ADR (dangerous goods) tunnel category of this edge.
+   * @param  category  AdrTunnelCategory numeric value: 0 = no category or
+   *                   category A, 1-4 = ADR tunnel categories B-E.
+   */
+  void set_adr_tunnel_category(const uint8_t category);
+
+  /**
    * Is this edge part of a tunnel?
    * @return  Returns true if this edge is part of a tunnel, false if not.
    */
@@ -1268,7 +1286,7 @@ protected:
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
   uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
-  uint64_t spare4_ : 3;
+  uint64_t adr_tunnel_cat_ : 3; // ADR tunnel category (0 = none/A, 1-4 = B-E)
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

@@ -776,6 +776,21 @@ constexpr unsigned int kMaxWeightMask = 16;
 constexpr unsigned int kMaxAxleLoadMask = 32;
 constexpr unsigned int kMaxAxlesMask = 64;
 
+// ADR (dangerous goods) tunnel category assigned to a tunnel edge, per the
+// ADR agreement 1.9.5.2.2 (https://unece.org/transport/dangerous-goods) and
+// the OSM hazmat tagging scheme (https://wiki.openstreetmap.org/wiki/Key:hazmat).
+// Categories are totally ordered A < B < C < D < E, where E is the most
+// restrictive. kNone doubles as category A: category A tunnels carry no
+// dangerous-goods restriction, so for routing they are indistinguishable
+// from uncategorised tunnels.
+enum class AdrTunnelCategory : uint8_t {
+  kNone = 0, // no category assigned, or category A (never restricted)
+  kB = 1,
+  kC = 2,
+  kD = 3,
+  kE = 4,
+};
+
 // convert between the enum value and the corresponding mask
 constexpr std::array<uint8_t, 32> populate_access_restriction_masks() {
   std::array<uint8_t, 32> masks{};
