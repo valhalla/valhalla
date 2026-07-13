@@ -9,16 +9,21 @@ description: >-
 # Valhalla issue
 
 1. Read `README.md`'s "Generative AI usage" section and `CONTRIBUTING.md`.
-2. Search open and closed issues for duplicates. Link a matching or closely related issue.
-3. For a bug, identify the remote pointing to `valhalla/valhalla`, fetch `master`, and reproduce
+2. Read `docs/learnings.md` first. Use its prior decisions to narrow the GitHub search and carry
+   settled project context into the issue.
+3. Search open and closed issues and Discussions for duplicates and prior decisions. Inspect merged
+   or closed pull requests when the same subsystem, path, or symbol appears. Link the most relevant
+   source so the next participant starts with the same context.
+4. For a bug, identify the remote pointing to `valhalla/valhalla`, fetch `master`, and reproduce
    against it. If it cannot be reproduced, say so; do not invent a cause.
-4. Keep only the minimal reproduction, expected and actual behavior, and relevant version or
+5. Keep only the minimal reproduction, expected and actual behavior, and relevant version or
    environment details.
-5. Use plain, concise English. A simple bug normally needs no headings: state the problem, show
+6. Use plain, concise English. A simple bug normally needs no headings: state the problem, show
    the reproduction, then state expected and actual behavior.
-6. Do not include background, likely causes, proposed fixes, validation plans, alternatives,
-   performance results, or product and company context unless a maintainer asks for them. For a
-   feature request, describe the need and desired behavior without designing the implementation.
+7. Keep a bug report centered on observable behavior. Add likely causes, proposed fixes,
+   validation plans, alternatives, or performance results when a maintainer asks for them. For a
+   feature request, describe the need and desired behavior while leaving implementation design to
+   the follow-up discussion.
 
 If an agent drafts the title or body, start the body with exactly:
 

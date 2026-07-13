@@ -8,8 +8,8 @@ description: >-
 
 # Valhalla pull request
 
-1. Read `README.md`'s "Generative AI usage" section, `CONTRIBUTING.md`, `CLAUDE.md`, and
-   `.github/pull_request_template.md`.
+1. Read `README.md`'s "Generative AI usage" section, `CONTRIBUTING.md`, `CLAUDE.md`,
+   `docs/learnings.md`, and `.github/pull_request_template.md`.
 2. Confirm that the PR links an issue. Use `/valhalla-issue` first if an issue is needed.
 3. Identify the remote pointing to `valhalla/valhalla`, fetch `master`, and confirm the branch is
    based on the current upstream branch.
@@ -25,11 +25,16 @@ description: >-
 6. Build and run every affected test and related test. On x86_64, use `make check -j$(nproc)` as a
    final check when feasible. On arm64, avoid the unreliable full suite and run the relevant tests
    named in `CLAUDE.md` instead.
-7. Report the exact commands and results. Name any CI jobs that cannot be reproduced locally;
-   never claim that the full CI passed unless the same matrix was actually run.
+7. Report the exact commands and results. Name CI jobs that remain for GitHub when their matrix
+   cannot be reproduced locally.
 8. Fill the existing PR template without adding a file summary or repeating the diff. State the
    problem in one sentence, the fix in one sentence, and why it works in one or two sentences.
-9. Do not force-push after the first review.
+9. Read `docs/learnings.md`'s admission rule. If the work establishes a decision-changing lesson,
+   add its one-line entry to the relevant section. Keep routine fixes and release history in
+   `CHANGELOG.md` rather than the agent-facing learnings index.
+10. Run `CLAUDE.md`'s pre-push agent review against the full branch diff. Resolve every valid
+    finding, including project-local formatting and style, and commit the fixes before pushing.
+11. After the first review, preserve review history by adding commits and pushing normally.
 
 If an agent drafts the title or body, start the body with exactly:
 

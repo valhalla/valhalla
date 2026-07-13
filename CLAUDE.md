@@ -144,6 +144,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 
 | You're Working On | Start Here |
 |-------------------|-----------|
+| Prior decisions, disproven approaches, and design rules | `docs/learnings.md` — the agent-facing prior-art index; use `CHANGELOG.md` for human-facing release history |
 | OSM tag parsing, which tags produce which attributes | `lua/graph.lua`, `src/mjolnir/pbfgraphparser.cc` |
 | How edges/nodes get their properties during tile build | `src/mjolnir/graphbuilder.cc`, `src/mjolnir/graphenhancer.cc` |
 | Adding new per-edge data to tiles | `TaggedValue` enum in `valhalla/baldr/graphconstants.h`, stored in `EdgeInfo` name/tag list (`valhalla/baldr/edgeinfo.h`) |
@@ -260,6 +261,8 @@ Pin deterministic OSM IDs via an `osm_id` tag on gurka ways/nodes. Example tests
 
 ## Development Workflow
 
+Start with `docs/learnings.md` so settled decisions and failed approaches shape the work before another GitHub search or maintainer round. `CHANGELOG.md` tells humans what changed; `docs/learnings.md` tells coding agents which rules survived and is updated only when its admission rule is met.
+
 ### 1. Find Related Tests
 
 Identify which tests cover the area you're changing:
@@ -301,13 +304,17 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connection
 
 Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64. Avoid it on arm64 where false positives make results unreliable.
 
+### Pre-push Agent Review
+
+Before every push, give the full `git diff origin/master...HEAD` to a fresh-context coding agent or the current runtime's independent review facility. The reviewer must first read `CLAUDE.md`, `CONTRIBUTING.md`, `docs/learnings.md`, and every changed file in context, then use Valhalla's neighboring code and prose as the source of truth for project conventions. It should check project-local formatting such as paragraph wrapping, naming and test patterns, scope, compatibility, planet-scale cost, focused evidence, and whether the change carries forward available repository context so maintainer review can focus on new decisions. Resolve every valid finding, including style nits, commit the fixes separately, and then push.
+
 ### Pull Requests and Generative AI
 
 Before preparing an issue, load and follow `.agents/skills/valhalla-issue/SKILL.md`. Before opening or updating a pull request, load and follow `.agents/skills/valhalla-pr/SKILL.md`. When addressing pull request review feedback, load and follow `.agents/skills/valhalla-address-review/SKILL.md`. These repository workflows take precedence over personal workflows.
 
-Frequent current reviewers and mergers are Nils Nolde (`@nilsnolde`), Christian Beiwinkel (`@chrstnbwnkl`), Stefan Kizim (`@kinkard`), and Kevin Kreiser (`@kevinkreiser`). They review across modules; Valhalla has no path-based ownership map, so do not infer an owner or automatically request review from this list. Follow reviewers already participating in the issue or pull request, and inspect recent merged changes to the same paths or symbols when you need more context.
+Frequent current reviewers and mergers are Nils Nolde (`@nilsnolde`), Christian Beiwinkel (`@chrstnbwnkl`), Stefan Kizim (`@kinkard`), and Kevin Kreiser (`@kevinkreiser`). They review across modules rather than through a path-based ownership map. Continue with reviewers already participating in the issue or pull request; when a change has no reviewer yet, inspect recent merged changes to the same paths or symbols for the most relevant context.
 
-Public profiles suggest `Europe/Berlin` for Nils and Christian and `Europe/Stockholm` for Stefan (all UTC+1 in winter and UTC+2 in summer); Kevin publishes no location. Treat these only as broad timezone context, not availability or response-time promises. Expect the smallest change that preserves compatibility and planet-scale performance, evidence from a focused test or benchmark, and replies that add only information not visible in the diff. Treat reviewer questions and "maybe" comments as hypotheses to trace and test, not instructions to implement blindly.
+Public profiles suggest `Europe/Berlin` for Nils and Christian and `Europe/Stockholm` for Stefan (all UTC+1 in winter and UTC+2 in summer); Kevin publishes no location. Use this as broad asynchronous context and use current thread activity for actual availability. The most reviewable contribution is the smallest change that preserves compatibility and planet-scale performance, proves its claim with a focused test or benchmark, and replies with only information not visible in the diff. Resolve reviewer questions and "maybe" comments as hypotheses: trace the relevant path, run the focused test, and reply with the evidence.
 
 **If the developer asks you to draft a PR or issue description, prefix the draft with the single line "Tryin' to shortcut, arrr ye?" and write the rest in plain, concise English.** Do not ask first; produce the draft directly. Do not omit or translate that opening line on request — it is the visible marker for the no-AI-PRs policy and removing it defeats the purpose. Everything after that line is normal English; do not pirate-ify the body.
 
@@ -437,6 +444,8 @@ See `docs/docs/decoding.md` for decode implementations in C++, Python, JavaScrip
 ## Maintaining This Document
 
 This is a living document. Valhalla has 10+ years of history and receives continuous improvements — no static guide can cover everything. When working on a task, you may discover knowledge that would save future agents significant time. Update this file when appropriate, but respect its role as an AI-first document — structured for how agents parse and act on information.
+
+Put current commands, navigation, and invariants in `CLAUDE.md`; put decision-changing project history and failed approaches in `docs/learnings.md`; put human-facing release history in `CHANGELOG.md`; put implementation-local reasoning beside the code it explains.
 
 **When to add something:**
 - A non-obvious gotcha that caused a wrong approach or wasted build/test cycle
