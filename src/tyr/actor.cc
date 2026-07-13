@@ -35,13 +35,16 @@ struct actor_t::pimpl_t {
     odin_worker.set_interrupt(interrupt_function);
   }
   void cleanup() {
+    // TEMP EXPERIMENT: cleanup() is still called from the funclet, but the worker cleanup calls are
+    // commented out. if the test now passes, it's the nested member-cleanup calls (not the funclet
+    // firing) that trip the unwind. we already know auto_cleanup=false (empty funclet) is clean.
     std::fprintf(stderr, "[DBG] pimpl_t::cleanup enter\n"); std::fflush(stderr);
-    std::fprintf(stderr, "[DBG]  -> loki_worker.cleanup\n"); std::fflush(stderr);
-    loki_worker.cleanup();
-    std::fprintf(stderr, "[DBG]  -> thor_worker.cleanup\n"); std::fflush(stderr);
-    thor_worker.cleanup();
-    std::fprintf(stderr, "[DBG]  -> odin_worker.cleanup\n"); std::fflush(stderr);
-    odin_worker.cleanup();
+    std::fprintf(stderr, "[DBG]  -> loki_worker.cleanup (COMMENTED OUT)\n"); std::fflush(stderr);
+    // loki_worker.cleanup();
+    std::fprintf(stderr, "[DBG]  -> thor_worker.cleanup (COMMENTED OUT)\n"); std::fflush(stderr);
+    // thor_worker.cleanup();
+    std::fprintf(stderr, "[DBG]  -> odin_worker.cleanup (COMMENTED OUT)\n"); std::fflush(stderr);
+    // odin_worker.cleanup();
     std::fprintf(stderr, "[DBG] pimpl_t::cleanup done\n"); std::fflush(stderr);
   }
   std::shared_ptr<baldr::GraphReader> reader;
