@@ -62,6 +62,7 @@ TEST(GraphBuilder, TestConstructEdges) {
                    {}, /* via_set */
                    {}, /* access_restrictions */
                    {}, /* bike_relations */
+                   {}, /* area_relations */
                    {}, /* way_ref */
                    {}, /* way_ref_rev */
                    {}, /* node_names */
@@ -108,6 +109,7 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
                    {}, /* via_set */
                    {}, /* access_restrictions */
                    {}, /* bike_relations */
+                   {}, /* area_relations */
                    {}, /* way_ref */
                    {}, /* way_ref_rev */
                    {}, /* node_names */

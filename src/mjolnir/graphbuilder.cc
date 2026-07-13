@@ -181,6 +181,12 @@ void ConstructEdges(const std::string& ways_file,
     const auto last_way_node_index =
         first_way_node_index + way.node_count() - way_node.way_shape_node_index - 1;
 
+    // If the way is part of an area, make sure it does not generate edges
+    if (way.area()) {
+      current_way_node_index = last_way_node_index + 1;
+      continue;
+    }
+
     // Validate - make sure all nodes for this edge are valid
     bool valid = true;
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {

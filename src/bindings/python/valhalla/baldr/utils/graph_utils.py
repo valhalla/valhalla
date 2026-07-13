@@ -22,6 +22,9 @@ class GraphUtils(_GraphUtils):
     - Python dict
 
     For dict input, the config is serialized to JSON internally.
+
+    CAUTION: if used with ``tile_dir`` and no strict memory handling, operations in
+    this class can easily cause OOM if too many tiles were loaded.
     """
 
     def __init__(self, config: Union[Path, str, dict]):

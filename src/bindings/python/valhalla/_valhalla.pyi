@@ -3,13 +3,14 @@
 # See src/bindings/python/README.md ("Type stubs") for the regeneration workflow.
 
 from collections.abc import Sequence
+import os
 from typing import Annotated, overload
 
 import numpy
 from numpy.typing import NDArray
 
 
-VALHALLA_PRINT_VERSION: str = '3.7.0'
+VALHALLA_PRINT_VERSION: str = '3.8.2'
 
 class ValhallaError(RuntimeError):
     """
@@ -129,6 +130,164 @@ class GraphId:
 
     def __setstate__(self, arg: tuple[int], /) -> None: ...
 
+class GraphTileHeader:
+    """
+    Header of a graph tile. Read one via GraphUtils.get_graph_tile_header(), from_file() or from_bytes(), or default-construct one. The tileset identity fields (dataset_id, date_created, raw_checksum) are writable; everything else is read-only — it identifies the tile or is derived from its data. save() patches the header span of an existing tile file in place.
+    """
+
+    def __init__(self) -> None: ...
+
+    @property
+    def graphid(self) -> GraphId:
+        """GraphId (tile id + level) of this tile."""
+
+    @property
+    def base_ll(self) -> tuple[float, float]:
+        """(lon, lat) of the tile's south-western corner, in degrees."""
+
+    @property
+    def version(self) -> str:
+        """Tile format version string."""
+
+    @property
+    def dataset_id(self) -> int:
+        """Data set id (e.g. latest OSM changeset id)."""
+
+    @dataset_id.setter
+    def dataset_id(self, arg: int, /) -> None: ...
+
+    @property
+    def date_created(self) -> int:
+        """Tile creation date (days since the pivot date)."""
+
+    @date_created.setter
+    def date_created(self, arg: int, /) -> None: ...
+
+    @property
+    def raw_checksum(self) -> int:
+        """
+        Raw 64-bit checksum field: tileset build id in the high 16 bits, the tile's 48-bit data hash in the low bits. See also the derived tile_checksum and build_id.
+        """
+
+    @raw_checksum.setter
+    def raw_checksum(self, arg: int, /) -> None: ...
+
+    @property
+    def density(self) -> int:
+        """Relative road density (0-15)."""
+
+    @property
+    def has_elevation(self) -> bool:
+        """True if the tile carries edge elevation data."""
+
+    @property
+    def has_ext_directededge(self) -> bool:
+        """True if the tile carries extended directed-edge attributes."""
+
+    @property
+    def has_bounding_circles(self) -> bool:
+        """True if the tile carries node bounding circles."""
+
+    @property
+    def nodecount(self) -> int:
+        """Number of nodes."""
+
+    @property
+    def directededgecount(self) -> int:
+        """Number of directed edges."""
+
+    @property
+    def transitioncount(self) -> int:
+        """Number of node transitions."""
+
+    @property
+    def signcount(self) -> int:
+        """Number of signs."""
+
+    @property
+    def access_restriction_count(self) -> int:
+        """Number of access restriction records."""
+
+    @property
+    def admincount(self) -> int:
+        """Number of admin records."""
+
+    @property
+    def turnlane_count(self) -> int:
+        """Number of turn lane records."""
+
+    @property
+    def predictedspeeds_count(self) -> int:
+        """Number of predicted speed records."""
+
+    @property
+    def departurecount(self) -> int:
+        """Number of transit departures."""
+
+    @property
+    def stopcount(self) -> int:
+        """Number of transit stops."""
+
+    @property
+    def routecount(self) -> int:
+        """Number of transit routes."""
+
+    @property
+    def schedulecount(self) -> int:
+        """Number of transit schedules."""
+
+    @property
+    def transfercount(self) -> int:
+        """Number of transit transfers."""
+
+    @property
+    def end_offset(self) -> int:
+        """Tile size in bytes."""
+
+    @property
+    def tile_checksum(self) -> int:
+        """
+        Integer checksum (48 bit) of the tile's data. Setting it keeps the build_id.
+        """
+
+    @tile_checksum.setter
+    def tile_checksum(self, arg: int, /) -> None: ...
+
+    @property
+    def build_id(self) -> int:
+        """
+        Integer additive checksum (16 bit) of the tileset. Setting it keeps the tile_checksum.
+        """
+
+    @build_id.setter
+    def build_id(self, arg: int, /) -> None: ...
+
+    @staticmethod
+    def byte_size() -> int:
+        """
+        Size of the on-disk header in bytes (the header span at the start of a tile).
+        """
+
+    @staticmethod
+    def from_bytes(data: bytes) -> GraphTileHeader:
+        """
+        Read a header from a buffer (a whole tile or just its first byte_size() bytes).
+        """
+
+    @staticmethod
+    def from_file(path: str | os.PathLike) -> GraphTileHeader:
+        """Read the header of a graph tile file."""
+
+    def to_bytes(self) -> bytes:
+        """Serialize the header to its byte_size() on-disk bytes."""
+
+    def save(self, path: str | os.PathLike) -> None:
+        """
+        Patch this header over the header span of an existing graph tile file, in place. The file must already exist and hold at least byte_size() bytes.
+        """
+
+    def __repr__(self) -> str: ...
+
 class _GraphUtils:
     """
     C++ binding for GraphUtils (internal use - prefer GraphUtils wrapper).
@@ -152,6 +311,17 @@ class _GraphUtils:
         :param edge_id: GraphId of the edge
         :returns: List of (lon, lat) tuples representing the edge geometry
         :raises RuntimeError: When the tile or edge is not found
+        """
+
+    def get_graph_tile_header(self, tile_id: GraphId) -> GraphTileHeader:
+        """
+        Get the GraphTileHeader for the tile that contains this GraphId.
+
+        Reads only the header span from the tile_dir file or the mmapped extract; the tile only gzipped or remote tilesets might load the GraphTile into memory.
+
+        :param tile_id: GraphId of (or within) the tile
+        :returns: GraphTileHeader with the tile's summary metadata
+        :raises RuntimeError: When the tile is not found
         """
 
 def get_tile_base_lon_lat(graph_id: GraphId) -> tuple:
