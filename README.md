@@ -33,7 +33,7 @@ While we absolutely accept AI usage for Valhalla (and its related projects), we 
 
 2. & 3. are pretty subjective, where we have a lot more patience. However, PRs ignoring these guidelines entirely, might be closed without further notice.
 
-Repository-specific workflows for coding agents are available in `.agents/skills/valhalla-issue` and `.agents/skills/valhalla-pr`.
+Repository-specific workflows for coding agents are available in `.agents/skills`: `valhalla-issue`, `valhalla-pr`, and `valhalla-address-review`.
 
 ## License
 
