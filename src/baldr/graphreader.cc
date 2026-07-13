@@ -57,7 +57,7 @@ size_t load_tiles(valhalla::midgard::tar& tar,
     } catch (...) {
       // It's possible to put non-tile files inside the tarfile.  As we're only
       // parsing the file *name* as a GraphId here, we will just silently skip
-      // any file paths that can't be parsed by GraphId::GetTileId()
+      // any file paths that can't be parsed by GraphTile::GetTileId()
       // If we end up with *no* recognizable tile files in the tarball at all,
       // checks lower down will warn on that.
     }
@@ -979,7 +979,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
           if (i->is_regular_file() || i->is_symlink()) {
             // add it if it can be parsed as a valid tile file name
             try {
-              tiles.emplace(GraphTile::GetTileId(i->path().string()));
+              tiles.emplace(GraphTile::GetTileId(i->path()));
             } catch (...) {}
           }
         }
@@ -1011,7 +1011,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
         if (i->is_regular_file() || i->is_symlink()) {
           // add it if it can be parsed as a valid tile file name
           try {
-            tiles.emplace(GraphTile::GetTileId(i->path().string()));
+            tiles.emplace(GraphTile::GetTileId(i->path()));
           } catch (...) {}
         }
       }

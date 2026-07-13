@@ -251,13 +251,9 @@ PrepareTrafficTiles(const std::filesystem::path& traffic_tile_dir) {
   std::unordered_map<GraphId, std::vector<std::string>> files_per_tile;
   for (std::filesystem::recursive_directory_iterator i(traffic_tile_dir), end; i != end; ++i) {
     if (i->is_regular_file()) {
-      // remove any extension
-      auto file_name = i->path().string();
-      auto pos = file_name.rfind(std::filesystem::path::preferred_separator);
-      file_name = file_name.substr(0, file_name.find('.', pos == std::string::npos ? 0 : pos));
       try {
         // parse it into a tile id and store the file path with it
-        auto id = GraphTile::GetTileId(file_name);
+        auto id = GraphTile::GetTileId(i->path());
         files_per_tile[id].push_back(i->path().string());
       } catch (...) {}
     }
