@@ -1044,6 +1044,14 @@ struct graph_parser {
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["adr_tunnel_cat"] = [this]() {
+      // ADR tunnel category emitted by the lua transform ("A".."E").
+      // Category A carries no dangerous-goods restriction (ADR 1.9.5.2.2),
+      // so it collapses to AdrTunnelCategory::kNone.
+      if (tag_.second.size() == 1 && tag_.second[0] >= 'B' && tag_.second[0] <= 'E') {
+        way_.set_adr_tunnel_category(static_cast<uint8_t>(tag_.second[0] - 'A'));
+      }
+    };
     tag_handlers_["maxheight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxHeight);

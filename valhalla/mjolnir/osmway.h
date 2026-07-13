@@ -1659,6 +1659,23 @@ struct OSMWay {
   }
 
   /**
+   * Sets the ADR (dangerous goods) tunnel category of the way.
+   * @param  category  AdrTunnelCategory numeric value: 0 = no category or
+   *                   category A, 1-4 = ADR tunnel categories B-E.
+   */
+  void set_adr_tunnel_category(const uint8_t category) {
+    adr_tunnel_category_ = category;
+  }
+
+  /**
+   * Get the ADR (dangerous goods) tunnel category of the way.
+   * @return  Returns 0 for no category / category A, 1-4 for categories B-E.
+   */
+  uint8_t adr_tunnel_category() const {
+    return adr_tunnel_category_;
+  }
+
+  /**
    * Sets the has_user_tags flag.
    * @param  has_user_tags   Did a user enter the access tags?
    */
@@ -2725,7 +2742,8 @@ struct OSMWay {
   uint16_t lit_ : 1;
   uint16_t destination_only_hgv_ : 1;
   uint16_t area_ : 1;
-  uint16_t spare2_ : 1;
+  uint16_t adr_tunnel_category_ : 3; // ADR tunnel category (0 = none/A, 1-4 = B-E)
+  uint16_t spare2_ : 13;
 
   uint16_t nodecount_;
 

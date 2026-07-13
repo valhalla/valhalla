@@ -71,6 +71,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   }
 
   set_dest_only_hgv(way.destination_only_hgv());
+  set_adr_tunnel_category(way.adr_tunnel_category());
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());
   set_sac_scale(way.sac_scale());
