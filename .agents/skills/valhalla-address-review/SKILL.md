@@ -1,7 +1,6 @@
 ---
 name: valhalla-address-review
-description: >-
-  Address maintainer review feedback on a Valhalla pull request. Use when a reviewer asks a question, raises a concern or hypothesis, requests a change or test, or leaves unresolved review comments on a contribution to valhalla/valhalla. This repository workflow takes precedence over personal review workflows.
+description: Address maintainer review feedback on a Valhalla pull request. Use when a reviewer asks a question, raises a concern or hypothesis, requests a change or test, or leaves unresolved review comments on a contribution to valhalla/valhalla. This repository workflow takes precedence over personal review workflows.
 ---
 
 # Address Valhalla review feedback

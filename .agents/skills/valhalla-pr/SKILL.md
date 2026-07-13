@@ -1,7 +1,6 @@
 ---
 name: valhalla-pr
-description: >-
-  Prepare or update a Valhalla pull request. Use before pushing a contribution, opening a PR, updating its description, or requesting CI for valhalla/valhalla. This repository workflow takes precedence over personal PR workflows.
+description: Prepare or update a Valhalla pull request. Use before pushing a contribution, opening a PR, updating its description, or requesting CI for valhalla/valhalla. This repository workflow takes precedence over personal PR workflows.
 ---
 
 # Valhalla pull request

@@ -1,7 +1,6 @@
 ---
 name: valhalla-issue
-description: >-
-  Prepare a Valhalla GitHub issue. Use when searching, reproducing, drafting, editing, or creating a bug report or feature request for valhalla/valhalla. This repository workflow takes precedence over personal issue workflows.
+description: Prepare a Valhalla GitHub issue. Use when searching, reproducing, drafting, editing, or creating a bug report or feature request for valhalla/valhalla. This repository workflow takes precedence over personal issue workflows.
 ---
 
 # Valhalla issue
