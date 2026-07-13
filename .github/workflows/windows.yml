@@ -216,7 +216,7 @@ jobs:
           # a folded/thunked symbol (what made earlier frames misattribute to actor_t::tile). LINK/CL env
           # inject the flags without a reconfigure. no tiles/tz.sqlite needed for the no-data path.
           export CL="/guard:cf-"
-          export LINK="/OPT:NOICF /OPT:NOREF /guard:cf-"
+          export LINK="/OPT:NOICF /OPT:NOREF /GUARD:NO"
           cmake --build build --target actor -- -k 0 || true
           [ -f "${ws}/build/test/actor.exe" ] || { echo "MISSING actor.exe (build failed?)"; exit 1; }
 
