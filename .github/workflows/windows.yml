@@ -220,11 +220,17 @@ jobs:
           cmake --build build --target actor -- -k 0 || true
           [ -f "${ws}/build/test/actor.exe" ] || { echo "MISSING actor.exe (build failed?)"; exit 1; }
 
+          # control: same no-data path with auto_cleanup=false -> no cleanup funclet runs during unwind.
+          # should exit 0 (clean throw+catch). if it does while the auto_cleanup=true run AVs, the cleanup
+          # funclet is the trigger.
+          echo "================== plain: actor / Actor.NoDataNoAutoCleanup (auto_cleanup=false) =================="
+          "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataNoAutoCleanup'; echo "exit=$?"
+
           # break at FIRST chance (sxe av) -- the true fault site, before the unwinder walks further and
           # scrambles the stack. sxe av only stops on the AV, not the earlier C++ throw. gtest_catch_exceptions=0
-          # so gtest's SEH filter doesn't swallow it. build is /Od /Ob0 so frames + symbols are trustworthy.
+          # so gtest's SEH filter doesn't swallow it. the [DBG] print trail shows how far cleanup gets.
           DUMP='.echo ===CRASH===; .lastevent; .echo ===EXCEPTION RECORD===; .exr -1; .echo ===REGISTERS===; r; .echo ===FAULTING INSTR===; u @rip-10 L8; .echo ===STACK===; kn 200; .echo ===MODULE===; lmvm actor; .echo ===DUMP===; .dump /ma D:/a/valhalla/valhalla/build/test/actor_nodata.dmp; .echo ===ANALYZE===; !analyze -v; q'
-          echo "================== cdb: actor / Actor.NoDataYieldsNoEdgesError (first-chance) =================="
+          echo "================== cdb: actor / Actor.NoDataYieldsNoEdgesError (auto_cleanup=true, first-chance) =================="
           "$CDB" -g -G -c "sxe av; g; ${DUMP}" \
             "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 || true
 

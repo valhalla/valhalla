@@ -7,6 +7,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
+#include <cstdio> // TEMP debug prints
 #include <format>
 #include <functional>
 #include <stdexcept>
@@ -376,6 +377,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 }
 
 void loki_worker_t::cleanup() {
+  std::fprintf(stderr, "[DBG] loki_worker_t::cleanup enter\n"); std::fflush(stderr); // TEMP
   service_worker_t::cleanup();
   if (reader->OverCommitted()) {
     reader->Trim();

@@ -8,6 +8,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include <cstdio> // TEMP debug prints
 #include <sstream>
 
 using namespace valhalla;
@@ -34,9 +35,14 @@ struct actor_t::pimpl_t {
     odin_worker.set_interrupt(interrupt_function);
   }
   void cleanup() {
+    std::fprintf(stderr, "[DBG] pimpl_t::cleanup enter\n"); std::fflush(stderr);
+    std::fprintf(stderr, "[DBG]  -> loki_worker.cleanup\n"); std::fflush(stderr);
     loki_worker.cleanup();
+    std::fprintf(stderr, "[DBG]  -> thor_worker.cleanup\n"); std::fflush(stderr);
     thor_worker.cleanup();
+    std::fprintf(stderr, "[DBG]  -> odin_worker.cleanup\n"); std::fflush(stderr);
     odin_worker.cleanup();
+    std::fprintf(stderr, "[DBG] pimpl_t::cleanup done\n"); std::fflush(stderr);
   }
   std::shared_ptr<baldr::GraphReader> reader;
   loki::loki_worker_t loki_worker;
