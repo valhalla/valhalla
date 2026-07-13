@@ -98,10 +98,9 @@ TEST(Standalone, ElevationCompareToSkadi) {
   layout.insert({"Q", {-76.4957235, 40.6502434}});
   layout.insert({"R", {-76.4950865, 40.6501919}});
   layout.insert({"S", {-76.4944069, 40.6502916}});
-  // A long edge with a mid-edge shape node exercises encoded edge elevation.
-  layout.insert({"T", {-76.8, 40.2}});
-  layout.insert({"3", {-76.79, 40.21}});
-  layout.insert({"U", {-76.78, 40.22}});
+  layout.insert({"T", {-76.8000000, 40.2000000}});
+  layout.insert({"3", {-76.7900000, 40.2100000}});
+  layout.insert({"U", {-76.7800000, 40.2200000}});
 
   // create a fake elevation tile over the gurka map area
   midgard::PointLL bottom_left(-77, 40), upper_right(-76, 41);
