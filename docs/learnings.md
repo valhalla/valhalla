@@ -1,5 +1,3 @@
-<!-- markdownlint-disable MD013 -- entries are single-line takeaways; soft-wrap on render. -->
-
 # Learnings
 
 Hand-curated index of design lessons from Valhalla's GitHub issues, pull requests, and discussions. Coding agents read this before searching the full project history so maintainers and reviewers do not have to repeat settled context.
