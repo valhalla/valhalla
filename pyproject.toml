@@ -11,6 +11,15 @@ license-files = ["COPYING"]
 [project.optional-dependencies]
 typing = ["numpy>=2.0.0,<3.0.0"]  # only needed for .pyi typing
 
+[dependency-groups]
+docs = [
+    # pin below the 2.0 rewrite: it drops the plugin system and has no migration path
+    # consider zensical (still too early in dev)
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.7,<10",
+    "mkdocstrings[python]>=0.27,<2",
+]
+
 [project.urls]
 Homepage = "https://github.com/valhalla/valhalla"
 Documentation = "https://valhalla.github.io/valhalla/"
@@ -83,7 +92,7 @@ lint.ignore = ["E731", "F811"]
 [tool.cibuildwheel]
 # it's enough here to know it's importable, actual test is run on other CI
 # mostly to avoid building utrecht tiles within the bindings build
-test-command = "python -c \"from valhalla.utils.graph_utils import GraphId; g = GraphId(); assert g.is_valid() == False\""
+test-command = "python -c \"from valhalla.baldr import GraphId; g = GraphId(); assert g.is_valid() == False\""
 # find out current defaults: cibuildwheel --print-build-identifiers --platform linux
 build = "cp*"
 skip = "*musllinux*"

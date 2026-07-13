@@ -96,16 +96,18 @@ void init_graphreader(nb::module_& m) {
       .def(
           "get_graph_tile_header",
           [](vb::GraphReader& self, const vb::GraphId& tile_id) -> vb::GraphTileHeader {
-            auto tile = self.GetGraphTile(tile_id);
-            if (!tile) {
+            auto header = self.GetGraphTileHeader(tile_id);
+            if (!header) {
               throw std::runtime_error("Tile not found: " + std::to_string(tile_id));
             }
-            return *tile->header();
+            return *header;
           },
           nb::arg("tile_id"), nb::call_guard<nb::gil_scoped_release>(),
           "Get the GraphTileHeader for the tile that contains this GraphId.\n\n"
+          "Reads only the header span from the tile_dir file or the mmapped extract; the tile "
+          "only gzipped or remote tilesets might load the GraphTile into memory.\n\n"
           ":param tile_id: GraphId of (or within) the tile\n"
           ":returns: GraphTileHeader with the tile's summary metadata\n"
-          ":raises RuntimeError: When the tile is or edge not found");
+          ":raises RuntimeError: When the tile is not found");
 }
 } // namespace pyvalhalla::baldr::utils
