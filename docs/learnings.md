@@ -65,7 +65,7 @@ Routine bug fixes, dependency bumps, release notes, and shipped features without
 
 - **#2843** (not-planned) — Arbitrary per-request graph additions require rebuilding and reloading affected tiles; known variants can be prebuilt and disabled with avoid locations, while interactive local scenarios can rebuild a tiny extract quickly. *[tags: tiles, dynamic-graph, deployment]*
 - **#1705** (merged) — Tile construction remains one ordered pipeline with configurable begin/end stages, allowing restarts from durable intermediate `.bin` files without splitting stage ownership across executables. *[tags: mjolnir, build, pipeline]*
-- **#3938** (won't-fix) — Tile-directory and tile-extract hot swaps are cache-unsafe because worker threads cannot detect invalidated graph caches; a safe design needs generation consistency plus cache warming or request quiescence during the swap. *[tags: tiles, cache, deployment]*
+- **#3938** (not-planned) — Tile-directory and tile-extract hot swaps are cache-unsafe because worker threads cannot detect invalidated graph caches; a safe design needs generation consistency plus cache warming or request quiescence during the swap. *[tags: tiles, cache, deployment]*
 - **Discussion #3323** (answered) — Remote lazy loading uses an empty `tile_dir` plus `tile_url`, not a tar extract; requested tiles persist on disk, cold requests pay network latency, and cached tiles from different generations cannot be mixed. See: https://github.com/valhalla/valhalla/discussions/3323. *[tags: tiles, cache, deployment]*
 
 ## Testing, process & documentation

@@ -306,7 +306,7 @@ Never skip this step. The full suite (`make check`) is too slow for iterative de
 
 ### Pre-push Agent Review
 
-Before every push, give the full `git diff origin/master...HEAD` to a fresh-context coding agent or the current runtime's independent review facility. The reviewer must first read `CLAUDE.md`, `CONTRIBUTING.md`, `docs/learnings.md`, and every changed file in context, then use Valhalla's neighboring code and prose as the source of truth for project conventions. It should check project-local formatting such as paragraph wrapping, naming and test patterns, scope, compatibility, planet-scale cost, focused evidence, and whether the change carries forward available repository context so maintainer review can focus on new decisions. Resolve every valid finding, including style nits, commit the fixes separately, and then push.
+Before every push, use the current coding agent's native delegation or review mechanism to give the full `git diff origin/master...HEAD` to a fresh context. Fresh context provides the independent review boundary; Valhalla provides the review method. The reviewer must first read `CLAUDE.md`, `CONTRIBUTING.md`, `docs/learnings.md`, and every changed file in context, then derive project conventions from neighboring Valhalla files and recent accepted changes to the same area. Check project-local formatting such as paragraph wrapping, naming and test patterns, scope, compatibility, planet-scale cost, focused evidence, and whether the change carries forward available repository context so maintainer review can focus on new decisions. Resolve every valid finding, including style nits, commit the fixes separately, and then push.
 
 ### Pull Requests and Generative AI
 
