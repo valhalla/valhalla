@@ -28,8 +28,9 @@ description: >-
 7. Commit review changes separately and push normally. Never amend or force-push after the first
    review.
 8. Re-read every review thread after pushing so no question or new comment is missed.
-9. Reply inline in plain, concise English. State the answer or finding, the change if any, and the
-   exact test result. Do not repeat the review comment or summarize the pull request.
+9. Reply inline with only information that is not already visible in the diff. Do not restate the
+   code, list validation results, repeat the review comment, or summarize the pull request unless
+   the reviewer asks. One short sentence is enough for a self-explanatory change.
 
 Leave maintainer threads open for the reviewer to confirm unless they ask the contributor to resolve
 them.
