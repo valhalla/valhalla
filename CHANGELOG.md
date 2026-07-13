@@ -1,8 +1,8 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
-   * FIXED: `surface=laterite` and `surface=clay` fell through the graph parser's surface substring-match chain unclassified (`has_surface_ = false`) instead of being bucketed with `dirt`/`earth`/`ground`/`mud` [#6171](https://github.com/valhalla/valhalla/issues/6171)
 * **Enhancement**
+   * ADDED: classify `surface=laterite` and `surface=clay` as `Surface::kDirt` [#6171](https://github.com/valhalla/valhalla/issues/6171)
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
    * FIXED: use the new `GraphReader::GetGraphTileHeader` in `baldr/utils/graph_reader.cc:get_graph_tile_header` to prevent loading entire tiles into RAM [#6200](https://github.com/valhalla/valhalla/pull/6200)
