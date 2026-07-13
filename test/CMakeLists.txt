@@ -129,6 +129,11 @@ foreach(test ${tests})
   endif()
 endforeach()
 
+# TEMP: standalone Windows unwind-funclet AV repro slice. builds with the suite's compiler/linker
+# flags but links nothing, to isolate whether the flags alone reproduce the crash.
+add_executable(eh_slice EXCLUDE_FROM_ALL eh_slice.cc)
+set_target_properties(eh_slice PROPERTIES FOLDER "Tests")
+
 ## Cost tests
 set(cost_inline_test_sources
   ${VALHALLA_SOURCE_DIR}/src/sif/autocost.cc
