@@ -120,22 +120,6 @@ jobs:
       - name: Setup Developer Command Prompt for VS
         uses: ilammy/msvc-dev-cmd@v1
 
-      # TEMP: is Time Travel Debugging available (or installable) on the runner? just probe, don't record yet.
-      - name: Probe for TTD
-        shell: pwsh
-        run: |
-          Write-Host "=== TTD.exe on PATH? ==="
-          Get-Command TTD.exe -ErrorAction SilentlyContinue | Format-List *
-          Write-Host "=== TTD under Debugging Tools / WinDbg installs ==="
-          Get-ChildItem -Path 'C:\Program Files*','C:\Program Files (x86)*' -Recurse -Filter 'TTD.exe' -ErrorAction SilentlyContinue |
-            ForEach-Object { $_.FullName }
-          Write-Host "=== cdb present? ==="
-          Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe' -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
-          Write-Host "=== can we install TTD via winget/store CLI? ==="
-          Get-Command winget -ErrorAction SilentlyContinue | ForEach-Object { $_.Source }
-          Write-Host "=== is the WinDbg (which bundles TTD) MSIX present? ==="
-          Get-AppxPackage -ErrorAction SilentlyContinue *WinDbg* | Format-List Name,Version,InstallLocation
-
       - name: Get version modifier
         id: version-modifier
         if: github.ref == 'refs/heads/master'
@@ -228,31 +212,20 @@ jobs:
           export _NT_SYMBOL_PATH="cache*${ws}/symcache;srv*https://msdl.microsoft.com/download/symbols"
           CDB="/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
           [ -x "$CDB" ] || CDB="cdb"
-          # build just the test exe -- no tiles, no tz.sqlite. the no-data path (empty/missing tile_dir)
-          # must fail gracefully (171/170) through the actor_t scoped-cleanup unwind, not AV.
+          # build actor with ICF + CFG OFF so the unwind funclet resolves to the REAL function instead of
+          # a folded/thunked symbol (what made earlier frames misattribute to actor_t::tile). LINK/CL env
+          # inject the flags without a reconfigure. no tiles/tz.sqlite needed for the no-data path.
+          export CL="/guard:cf-"
+          export LINK="/OPT:NOICF /OPT:NOREF /guard:cf-"
           cmake --build build --target actor -- -k 0 || true
           [ -f "${ws}/build/test/actor.exe" ] || { echo "MISSING actor.exe (build failed?)"; exit 1; }
 
-          # what toolsets/runtimes are actually on the runner -- decides how we align to one version:
-          # if a 14.51 toolset exists we can compile to match System32; if not, we pin the runtime to 14.44.
-          echo "=== installed MSVC toolsets ==="; ls "/c/Program Files/Microsoft Visual Studio/2022"/*/VC/Tools/MSVC/ 2>/dev/null
-          echo "=== selected VCToolsVersion: ${VCToolsVersion:-<unset in bash>} ==="
-
-          # EXPERIMENT: actor.exe is built with toolset 14.44 but System32 has VCRUNTIME140_1 14.51, and
-          # the AV is in that runtime's _CxxFrameHandler4 during unwind. app-local deploy the MATCHING 14.44
-          # runtime next to the exe (loader prefers the exe dir over System32 for these non-KnownDLLs) to
-          # test whether the unwind crash is runtime version skew -- if it vanishes, the fix is deployment.
-          redist=$(ls -d "/c/Program Files/Microsoft Visual Studio/2022"/*/VC/Redist/MSVC/14.44*/x64/Microsoft.VC14*.CRT 2>/dev/null | tail -1)
-          echo "toolset redist dir: ${redist:-<none found>}"
-          [ -n "$redist" ] && cp -v "$redist"/vcruntime140.dll "$redist"/vcruntime140_1.dll "$redist"/msvcp140*.dll "${ws}/build/test/" || echo "WARN: no 14.44 redist found; running against System32 runtime"
-
-          # let the fault go UNHANDLED (gtest_catch_exceptions=0) so cdb stops at the real crash instead of
-          # gtest's SEH handler swallowing it. sxd av lets the AV reach second chance, then the inline
-          # commands dump fault context + stack + a minidump -- the sxe -c "..." form drops its command
-          # payload under the nested workflow/bash/cdb quoting, so nothing printed. build is /Od /Ob0.
-          DUMP='.echo ===CRASH===; .lastevent; .echo ===EXCEPTION RECORD===; .exr -1; .echo ===REGISTERS===; r; .echo ===FAULTING INSTR===; u @rip-10 L8; .echo ===STACK===; kn 200; .echo ===MODULE===; lmvm actor; lmvm vcruntime140_1; .echo ===DUMP===; .dump /ma D:/a/valhalla/valhalla/build/test/actor_nodata.dmp; .echo ===ANALYZE===; !analyze -v; q'
-          echo "================== cdb: actor / Actor.NoDataYieldsNoEdgesError (no tiles, unhandled) =================="
-          "$CDB" -g -G -c "sxd av; g; ${DUMP}" \
+          # break at FIRST chance (sxe av) -- the true fault site, before the unwinder walks further and
+          # scrambles the stack. sxe av only stops on the AV, not the earlier C++ throw. gtest_catch_exceptions=0
+          # so gtest's SEH filter doesn't swallow it. build is /Od /Ob0 so frames + symbols are trustworthy.
+          DUMP='.echo ===CRASH===; .lastevent; .echo ===EXCEPTION RECORD===; .exr -1; .echo ===REGISTERS===; r; .echo ===FAULTING INSTR===; u @rip-10 L8; .echo ===STACK===; kn 200; .echo ===MODULE===; lmvm actor; .echo ===DUMP===; .dump /ma D:/a/valhalla/valhalla/build/test/actor_nodata.dmp; .echo ===ANALYZE===; !analyze -v; q'
+          echo "================== cdb: actor / Actor.NoDataYieldsNoEdgesError (first-chance) =================="
+          "$CDB" -g -G -c "sxe av; g; ${DUMP}" \
             "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 || true
 
       # TEMP debug: keep the minidump for offline (WinDbg/TTD-style) analysis.
