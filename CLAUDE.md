@@ -306,9 +306,9 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connection
 
 Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64. Avoid it on arm64 where false positives make results unreliable.
 
-### Pre-push Agent Review
+### Contributor-agent gate
 
-Before every push, use the current coding agent's native delegation or review mechanism to give the full `git diff origin/master...HEAD` to a fresh context. Fresh context provides the independent review boundary; Valhalla provides the review method. The reviewer must first read `CLAUDE.md`, `CONTRIBUTING.md`, `docs/learnings.md`, and every changed file in context, then derive project conventions from neighboring Valhalla files and recent accepted changes to the same area. Check project-local formatting such as paragraph wrapping, naming and test patterns, scope, compatibility, planet-scale cost, focused evidence, and whether the change carries forward available repository context so maintainer review can focus on new decisions. Resolve every valid finding, including style nits, commit the fixes separately, and then push.
+Before creating or updating a pull request, the contributor's coding agent must review the full `git diff origin/master...HEAD` itself. This is the baseline gate: it requires no separate reviewer agent or external review tool, though either may supplement it. Re-read `CLAUDE.md`, `CONTRIBUTING.md`, `docs/learnings.md`, and every changed file in context; compare neighboring Valhalla code and recent accepted changes to the same area; then check formatting, naming and test patterns, scope, compatibility, planet-scale cost, focused evidence, documentation, and the pull request body. Resolve every finding, ask the contributor about intent only when repository evidence cannot settle it, commit fixes separately, and create or update the pull request only after the gate is clean.
 
 ### Pull Requests and Generative AI
 
