@@ -17,6 +17,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
 
+#include <cstdio> // TEMP debug prints
 #include <sstream>
 
 using namespace valhalla;
@@ -1669,10 +1670,13 @@ void service_worker_t::set_interrupt(const std::function<void()>* interrupt_func
   interrupt = interrupt_function;
 }
 void service_worker_t::cleanup() {
+  std::fprintf(stderr, "[DBG] service::cleanup enter this=%p has_statsd=%d\n", (void*)this, (int)(bool)statsd_client); std::fflush(stderr);
   if (statsd_client) {
+    std::fprintf(stderr, "[DBG] service::cleanup statsd flush\n"); std::fflush(stderr);
     // sends metrics to statsd server over udp
     statsd_client->flush();
   }
+  std::fprintf(stderr, "[DBG] service::cleanup done\n"); std::fflush(stderr);
 }
 void service_worker_t::enqueue_statistics(Api& api) const {
   // nothing to do without stats
