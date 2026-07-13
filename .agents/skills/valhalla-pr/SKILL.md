@@ -37,5 +37,7 @@ If an agent drafts the title or body, start the body with exactly:
 
 If the agent authored any content, stop before creating or updating the PR and remind the developer
 to rewrite it in their own words. If the developer supplies the final wording, use it unchanged.
-The only exception is translating developer-written text into idiomatic English as commonly written
-on GitHub without adding, removing, or reorganizing content.
+The only exception is translating text the developer wrote in another language. Translate for
+meaning, not style: preserve their voice, order, level of detail, and non-idiomatic wording that
+remains understandable. Do not polish, summarize, expand, or add transitions. Ask about ambiguous
+wording instead of guessing.

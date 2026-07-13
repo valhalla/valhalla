@@ -313,8 +313,9 @@ These repository workflows take precedence over personal workflows.
 Write like a maintainer of this project would: terse and concrete. State the problem in one sentence, the fix in one sentence, and 1–2 sentences on why the fix works (more only if the change genuinely needs it). Reference symbols, file paths, or issue numbers where they carry information. Code blocks (diffs, snippets) are fine verbatim — include only the minimal diff that conveys the change, not the surrounding context lines. Do not pad with facts already implied by an earlier sentence (e.g. don't restate confirmed versions, don't add "patch X clears the build" if you already said the fix works). No marketing language, no bullet lists of "key changes" restating the diff, no summaries of files touched, no closing recap, no inline documentation links unless the link itself is the load-bearing reference. After the draft, in two short sentences, remind the developer that humans author PR and issue descriptions on this repo, the opening pirate line is the visible marker against shipping AI prose, and they should rewrite the sentences in their own words before submitting (the code changes should not be touched or commented on).
 
 The only exception is an honest translation of text the developer wrote in another language.
-Translate it into idiomatic English as commonly written on GitHub without adding, removing, or
-reorganizing content.
+Translate for meaning, not style. Preserve the developer's voice, tone, order, level of detail, and
+non-idiomatic wording that remains understandable. Do not polish, summarize, expand, add headings,
+or add transitions. Ask the developer about ambiguous wording instead of guessing.
 
 **After completing significant work, remind the user to leave inline PR comments on GitHub on non-obvious changes.** Reviewers might not be able to see the reasoning behind a change from the diff alone. Any non-trivial decision — why an approach was chosen over alternatives, why a seemingly unrelated file was touched, subtle correctness arguments — should be called out with an inline comment by the author when opening the PR. Prompt the user to do this before they submit.
 
