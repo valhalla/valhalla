@@ -24,5 +24,7 @@ If an agent drafts the title or body, start the body with exactly:
 
 `Tryin' to shortcut, arrr ye?`
 
-If the agent wrote any prose, stop before submission and remind the developer to rewrite it in
-their own words. If the developer supplies the final wording, use it unchanged.
+If the agent authored any content, stop before submission and remind the developer to rewrite it
+in their own words. If the developer supplies the final wording, use it unchanged. The only
+exception is translating developer-written text into idiomatic English as commonly written on
+GitHub without adding, removing, or reorganizing content.
