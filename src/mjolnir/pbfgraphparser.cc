@@ -1515,8 +1515,7 @@ struct graph_parser {
                  value.find("natural") != std::string::npos ||
                  value.find("earth") != std::string::npos ||
                  value.find("ground") != std::string::npos ||
-                 value.find("mud") != std::string::npos ||
-                 value.find("clay") != std::string::npos ||
+                 value.find("mud") != std::string::npos || value.find("clay") != std::string::npos ||
                  value.find("laterite") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
