@@ -24,8 +24,6 @@ constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
 constexpr uint32_t kMaxLocationReservation = 25; // the default config for max matrix locations
 constexpr uint32_t kDefaultMinIterations = 100;
 constexpr uint32_t kDefaultMaxIterations = 2800;
-constexpr uint32_t kDefaultReachedMapReservation =
-    200000; // the default config for max matrix locations
 
 /**
  * Checks whether an edge of the source (target) correlation is present with the same percent_along in
@@ -105,10 +103,6 @@ public:
     storage_.clear();
   }
 
-  void reserve(size_t n) {
-    storage_.reserve(n);
-  }
-
 private:
   std::pmr::unsynchronized_pool_resource pool_;
   std::pmr::polymorphic_allocator<uint32_t> vec_alloc_;
@@ -123,17 +117,15 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
       check_reverse_connection_(config.get<bool>("costmatrix.check_reverse_connection", true)),
-      max_reached_map_reservation_(config.get<uint32_t>("costmatrix.max_reached_map_reservation",
-                                                        kDefaultReachedMapReservation)),
       min_iterations_(
           std::max(config.get<uint32_t>("costmatrix.min_iterations", kDefaultMinIterations),
                    static_cast<uint32_t>(1))),
       max_iterations_(
           std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultMaxIterations),
                    static_cast<uint32_t>(1))),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -143,11 +135,18 @@ CostMatrix::~CostMatrix() {
 // construction.
 void CostMatrix::Clear() {
   // Clear the target edge markings
-  targets_->clear();
-  targets_->reserve(max_reached_map_reservation_);
+  if (clear_reserved_memory_) {
+    targets_ = std::make_unique<ReachedMap>();
+  } else {
+    targets_->clear();
+  }
+
   if (check_reverse_connection_) {
-    sources_->clear();
-    sources_->reserve(max_reached_map_reservation_);
+    if (clear_reserved_memory_) {
+      sources_ = std::make_unique<ReachedMap>();
+    } else {
+      sources_->clear();
+    }
   }
 
   // Clear all adjacency lists, edge labels, and edge status

@@ -109,7 +109,6 @@ protected:
   uint32_t max_reserved_labels_count_;
   uint32_t max_reserved_locations_count_;
   bool check_reverse_connection_;
-  uint32_t max_reached_map_reservation_;
 
   // lower and upper bounds for the number of additional iterations per expansion once a connection
   // has been found
