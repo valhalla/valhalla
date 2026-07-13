@@ -27,7 +27,7 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 While we absolutely accept AI usage for Valhalla (and its related projects), we require the following guidelines to be followed:
 
 1. The human developer understood every line of code written and verifies that the proposed implementation is actually working
-2. PR description (re-)written by a human is non-negotiable; an agent may translate human-written text into understandable English, but must preserve the author's voice rather than polish, expand, or summarize it
+2. PR description (re-)written by a human is non-negotiable
 3. contrived AI logic with weird generic variable names should be rewritten to match human perception
 4. non-obvious code changes should be commented on _inline_ (not in the PR description!)
 
