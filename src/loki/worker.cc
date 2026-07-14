@@ -31,7 +31,7 @@ make_connectivity_map(const boost::property_tree::ptree& config,
     return nullptr;
   }
   if (reader->tile_extract().empty() && !config.get<std::string>("mjolnir.tile_url", "").empty()) {
-    LOG_INFO("Connectivity map disabled: mjolnir.tile_url is set");
+    LOG_INFO("Connectivity map disabled: tile source is lazy loaded via HTTP, i.e. mjolnir.tile_url is set");
     return nullptr;
   }
   return std::make_shared<baldr::connectivity_map_t>(config.get_child("mjolnir"), reader);

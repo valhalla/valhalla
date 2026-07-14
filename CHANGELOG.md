@@ -1,7 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
-   * FIXED: Disable connectivity-map feature when `tile_url` tile source is set and no tar-extract exists. `GetTileSet` returns no tiles (due to empty `tile_dir` on startup) for this case, so the connectivity map initializes empty and stays empty for its entire lifecycle.
+   * FIXED: Disable connectivity-map when tile source is lazy loading HTTP (from tiles or remote-tar) [#6208](https://github.com/valhalla/valhalla/pull/6208)
 * **Enhancement**
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
