@@ -1,10 +1,11 @@
-file(GLOB locale_jsons ${VALHALLA_SOURCE_DIR}/locales *.json)
+file(GLOB locale_pos ${VALHALLA_SOURCE_DIR}/locales/*.po)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/locales.h
-  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
+  COMMAND ${PYTHON_INTERPRETER} ${VALHALLA_SOURCE_DIR}/locales/po_tools.py po2json --out ${CMAKE_CURRENT_BINARY_DIR}/locales
+  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake ${CMAKE_CURRENT_BINARY_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
-  COMMENT "Compiling locales/*.json to locales.h"
-  DEPENDS ${locale_jsons}
+  COMMENT "Generating locale JSONs from locales/*.po and compiling to locales.h"
+  DEPENDS ${locale_pos} ${VALHALLA_SOURCE_DIR}/locales/en-US.json ${VALHALLA_SOURCE_DIR}/locales/po_tools.py
   VERBATIM)
 
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/odin/*.h)

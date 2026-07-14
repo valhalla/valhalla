@@ -41,3 +41,33 @@ jobs:
         uses: crate-ci/typos@v1.15.7
         with:
           config: ./.github/workflows/typos.toml
+
+  locales:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Checkout polib
+        run: git submodule update --init third_party/polib
+
+      - name: Install gettext
+        run: sudo apt-get update && sudo apt-get install -y gettext
+
+      - name: Validate .po syntax
+        run: for f in locales/*.po; do msgfmt --check -o /dev/null "$f"; done
+
+      - name: Check placeholder tokens
+        run: python3 locales/po_tools.py lint
+
+      - name: Check valhalla.pot is in sync with en-US.json
+        run: |
+          python3 locales/po_tools.py json2pot
+          if ! git diff --exit-code locales/valhalla.pot; then
+            printf "\x1b[31;1mvalhalla.pot is stale. After changing en-US.json, run:\x1b[0m\n"
+            printf "\x1b[33;1m  python3 locales/po_tools.py update\x1b[0m\n"
+            printf "\x1b[33;1mand commit the .pot and .po changes (see docs/docs/locales.md).\x1b[0m\n"
+            exit 1
+          fi
+
+      - name: Check the JSONs can be generated
+        run: python3 locales/po_tools.py po2json --out /tmp/locales-json

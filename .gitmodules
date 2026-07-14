@@ -43,3 +43,6 @@
 [submodule "third_party/nanobind"]
 	path = third_party/nanobind
 	url = https://github.com/wjakob/nanobind
+[submodule "third_party/polib"]
+	path = third_party/polib
+	url = https://github.com/izimobil/polib.git

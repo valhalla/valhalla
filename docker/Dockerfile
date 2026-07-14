@@ -52,7 +52,7 @@ RUN cmake -B build -DCMAKE_BUILD_TYPE=${BUILD_TYPE-"Release"} -DCMAKE_C_COMPILER
 # we wont leave the source around but we'll drop the commit hash and we'll also keep the locales
 WORKDIR /usr/local/src
 RUN echo "$VERSION_MODIFIER" > /usr/local/valhalla_version && \
-  for f in /src/valhalla/locales/*.json; do cat ${f} | python3 -c 'import sys; import json; print(json.load(sys.stdin)["posix_locale"])'; done > valhalla_locales
+  python3 /src/valhalla/locales/po_tools.py posix-locales > valhalla_locales
 
 # the binaries are huge with all the symbols so we strip them but keep the debug there if we need it
 #WORKDIR /usr/local/bin

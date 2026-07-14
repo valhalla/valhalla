@@ -1,6 +1,8 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: Transifex and the committed locale JSONs; translations are now managed as gettext `.po` files in `locales/`, from which the build generates the embedded JSONs (`locales/po_tools.py`, new `polib` submodule, python3 now required to build) [#6206](https://github.com/valhalla/valhalla/pull/6206)
 * **Bug Fix**
+   * FIXED: bg-BG spoke the literal text `<STREET_NAME>` in slight-turn verbal instructions due to a misspelled placeholder; CI now lints placeholder tokens in all translations [#6206](https://github.com/valhalla/valhalla/pull/6206)
 * **Enhancement**
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
