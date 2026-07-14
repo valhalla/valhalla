@@ -1,77 +1,35 @@
-// Vertical slice reproducing the Windows unwind-funclet AV in isolation: a Finally (copied from
-// midgard) runs a this-capturing cleanup during exception unwind, and that cleanup makes nested
-// virtual member calls into polymorphic worker objects. Built as a normal test target so it uses
-// the same compiler/linker flags as the rest of the suite. Names are generic on purpose.
-//
-// Trivial versions (raw lambda + one plain cleanup) do NOT crash, so this adds, incrementally, the
-// shape of the real code: a virtual base cleanup, several workers, a message-list member. If this
-// AVs on Windows the same way actor.exe does, it's a self-contained MSVC repro.
-#include <prime_server/zmq_helpers.hpp> // option 2: real zmq::message_t (prime_server, header-defined)
+// Vertical slice, grown to the real thing: construct an actual loki_worker_t and call its cleanup()
+// from a midgard::Finally funclet during exception unwind, in a fully-linked binary (valhalla_test).
+// The generic/zmq slices were clean on Windows; this isolates whether the REAL worker type + full
+// libvalhalla link reproduces the AV. No tiles/tz.sqlite needed (the config points at a missing dir).
+#include "loki/worker.h"
+#include "midgard/util.h"
+#include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
 
 #include <cstdio>
-#include <list>
-#include <string>
-#include <utility>
 
-template <typename T> struct Finally {
-  T t;
-  explicit Finally(T t) : t(std::move(t)) {}
-  Finally() = delete;
-  Finally(Finally&&) = default;
-  Finally(const Finally&) = delete;
-  Finally& operator=(const Finally&) = delete;
-  Finally& operator=(Finally&&) = delete;
-  ~Finally() {
-    t();
-  }
-};
-template <typename T> Finally<T> make_finally(T t) {
-  return Finally<T>(std::move(t));
-}
+using namespace valhalla;
 
 struct my_error {
-  std::string msg;
-};
-
-// stand-in for service_worker_t: virtual cleanup + a real std::list<zmq::message_t> member (the
-// type in the crash symbol), populated so its message_t dtors are real.
-struct base_worker {
-  std::list<zmq::message_t> messages;
-  base_worker() {
-    messages.emplace_back(size_t(4));
-    messages.emplace_back(size_t(8));
-  }
-  virtual ~base_worker() = default;
-  virtual void cleanup() {
-    std::fprintf(stderr, "[DBG] base_worker::cleanup this=%p msgs=%zu\n", (void*)this, messages.size());
-    std::fflush(stderr);
-    if (!messages.empty())
-      (void)messages.front().size(); // force std::list<zmq::message_t>::front instantiation
-  }
-};
-struct derived_worker : base_worker {
-  void cleanup() override {
-    std::fprintf(stderr, "[DBG] derived_worker::cleanup enter this=%p\n", (void*)this);
-    std::fflush(stderr);
-    base_worker::cleanup();
-  }
+  const char* msg;
 };
 
 struct slice_actor {
   bool auto_cleanup;
-  derived_worker a, b, c;
-  explicit slice_actor(bool ac) : auto_cleanup(ac) {}
+  loki::loki_worker_t worker;
+  slice_actor(bool ac, const boost::property_tree::ptree& cfg) : auto_cleanup(ac), worker(cfg) {
+  }
   void cleanup() {
-    std::fprintf(stderr, "[DBG] slice_actor::cleanup enter\n");
+    std::fprintf(stderr, "[DBG] slice_actor::cleanup -> worker.cleanup\n");
     std::fflush(stderr);
-    a.cleanup();
-    b.cleanup();
-    c.cleanup();
+    worker.cleanup();
     std::fprintf(stderr, "[DBG] slice_actor::cleanup done\n");
     std::fflush(stderr);
   }
   void route() {
-    auto scoped = make_finally([this]() {
+    auto scoped = midgard::make_finally([this]() {
       if (auto_cleanup)
         cleanup();
     });
@@ -80,11 +38,12 @@ struct slice_actor {
 };
 
 int main() {
-  slice_actor act(true);
+  auto cfg = test::make_config("no_such_tiles");
+  slice_actor act(true, cfg);
   try {
     act.route();
   } catch (const my_error& e) {
-    std::printf("caught: %s\n", e.msg.c_str());
+    std::printf("caught: %s\n", e.msg);
   }
   std::puts("OK");
   return 0;
