@@ -6,6 +6,8 @@
 // Trivial versions (raw lambda + one plain cleanup) do NOT crash, so this adds, incrementally, the
 // shape of the real code: a virtual base cleanup, several workers, a message-list member. If this
 // AVs on Windows the same way actor.exe does, it's a self-contained MSVC repro.
+#include <prime_server/zmq_helpers.hpp> // option 2: real zmq::message_t (prime_server, header-defined)
+
 #include <cstdio>
 #include <list>
 #include <string>
@@ -31,13 +33,20 @@ struct my_error {
   std::string msg;
 };
 
-// stand-in for service_worker_t: virtual cleanup + a message-list member like the zmq one.
+// stand-in for service_worker_t: virtual cleanup + a real std::list<zmq::message_t> member (the
+// type in the crash symbol), populated so its message_t dtors are real.
 struct base_worker {
-  std::list<std::string> messages;
+  std::list<zmq::message_t> messages;
+  base_worker() {
+    messages.emplace_back(size_t(4));
+    messages.emplace_back(size_t(8));
+  }
   virtual ~base_worker() = default;
   virtual void cleanup() {
-    std::fprintf(stderr, "[DBG] base_worker::cleanup this=%p\n", (void*)this);
+    std::fprintf(stderr, "[DBG] base_worker::cleanup this=%p msgs=%zu\n", (void*)this, messages.size());
     std::fflush(stderr);
+    if (!messages.empty())
+      (void)messages.front().size(); // force std::list<zmq::message_t>::front instantiation
   }
 };
 struct derived_worker : base_worker {
