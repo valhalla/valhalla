@@ -16,6 +16,6 @@ description: Address maintainer review feedback on a Valhalla pull request. Use 
 6. Run `./scripts/format.sh`, `pre-commit run --all-files`, any focused regression test, and every related test identified during the investigation.
 7. Commit review changes separately and push normally. Never amend or force-push after the first review.
 8. Re-read every review thread after pushing so no question or new comment is missed.
-9. Reply inline with only information that is not already visible in the diff. Do not restate the code, list validation results, repeat the review comment, or summarize the pull request unless the reviewer asks. One short sentence is enough for a self-explanatory change.
+9. Reply inline with only information that is not already visible in the diff. Do not restate the code, repeat the review comment, or summarize the pull request unless the reviewer asks; include concise validation evidence when it resolves the thread. One short sentence is enough for a self-explanatory change.
 
 Leave maintainer threads open for the reviewer to confirm unless they ask the contributor to resolve them.
