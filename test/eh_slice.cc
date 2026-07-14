@@ -1,86 +1,84 @@
-// Minimal repro attempt going the RIGHT way: NO valhalla. Generic Finally + this-capturing cleanup
-// + nested virtual worker cleanups (the shape that was clean as a bare main), now wrapped in a gtest
-// TEST and run through gtest exactly like the crashing actor test -- so the throw unwinds through
-// gtest's frames (Test::Run -> HandleExceptionsInMethodIfSupported). Isolates whether the gtest
-// wrapper is the missing variable. Links only gtest.
+// Byte-faithful copy of actor_t::pimpl_t + actor_t::route into a single test TU, using the REAL
+// types (loki/thor/odin workers, shared GraphReader, proto Api, ParseApi, midgard::Finally) and run
+// through gtest exactly like the real actor test. The real actor_t::route AVs on Windows; every
+// less-faithful slice was clean. If this AVs, the crash lives entirely in this function's shape and
+// we have a self-contained repro; if not, the only remaining difference is that actor.cc is a
+// different TU (with identical Windows flags), which would itself be the finding.
+#include "baldr/graphreader.h"
+#include "loki/worker.h"
+#include "midgard/util.h"
+#include "odin/worker.h"
+#include "test.h"
+#include "thor/worker.h"
+#include "worker.h" // ParseApi, Api
+
+#include <boost/property_tree/ptree.hpp>
 #include <gtest/gtest.h>
 
-#include <cstdio>
-#include <list>
+#include <functional>
 #include <memory>
 #include <string>
-#include <utility>
 
-template <typename T> struct Finally {
-  T t;
-  explicit Finally(T t) : t(std::move(t)) {}
-  Finally() = delete;
-  Finally(Finally&&) = default;
-  Finally(const Finally&) = delete;
-  Finally& operator=(const Finally&) = delete;
-  Finally& operator=(Finally&&) = delete;
-  ~Finally() {
-    t();
-  }
-};
-template <typename T> Finally<T> make_finally(T t) {
-  return Finally<T>(std::move(t));
-}
+using namespace valhalla;
 
-struct my_error {
-  const char* msg;
-};
-
-struct base_worker {
-  std::list<std::string> messages;
-  virtual ~base_worker() = default;
-  virtual void cleanup() {
-    std::fprintf(stderr, "[DBG] base_worker::cleanup this=%p\n", (void*)this);
-    std::fflush(stderr);
-  }
-};
-struct derived_worker : base_worker {
-  void cleanup() override {
-    std::fprintf(stderr, "[DBG] derived_worker::cleanup this=%p\n", (void*)this);
-    std::fflush(stderr);
-    base_worker::cleanup();
-  }
-};
-
+// verbatim actor_t::pimpl_t
 struct slice_pimpl {
-  derived_worker a, b, c;
-  void cleanup() {
-    std::fprintf(stderr, "[DBG] slice_pimpl::cleanup enter\n");
-    std::fflush(stderr);
-    a.cleanup();
-    b.cleanup();
-    c.cleanup();
-    std::fprintf(stderr, "[DBG] slice_pimpl::cleanup done\n");
-    std::fflush(stderr);
+  slice_pimpl(const boost::property_tree::ptree& config)
+      : reader(new baldr::GraphReader(config.get_child("mjolnir"))), loki_worker(config, reader),
+        thor_worker(config, reader), odin_worker(config) {
   }
+  void set_interrupts(const std::function<void()>* interrupt_function) {
+    loki_worker.set_interrupt(interrupt_function);
+    thor_worker.set_interrupt(interrupt_function);
+    odin_worker.set_interrupt(interrupt_function);
+  }
+  void cleanup() {
+    loki_worker.cleanup();
+    thor_worker.cleanup();
+    odin_worker.cleanup();
+  }
+  std::shared_ptr<baldr::GraphReader> reader;
+  loki::loki_worker_t loki_worker;
+  thor::thor_worker_t thor_worker;
+  odin::odin_worker_t odin_worker;
 };
 
+// verbatim actor_t + actor_t::route
 struct slice_actor {
   std::unique_ptr<slice_pimpl> pimpl;
   bool auto_cleanup;
-  explicit slice_actor(bool ac) : pimpl(new slice_pimpl()), auto_cleanup(ac) {}
+  slice_actor(const boost::property_tree::ptree& config, bool ac)
+      : pimpl(new slice_pimpl(config)), auto_cleanup(ac) {
+  }
   void cleanup() {
     pimpl->cleanup();
   }
-  void route() {
-    auto scoped = make_finally([this]() {
+  std::string route(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+    auto scoped_cleaner = midgard::make_finally([this]() {
       if (auto_cleanup)
         cleanup();
     });
-    throw my_error{"no edges"};
+    pimpl->set_interrupts(interrupt);
+    Api dummy;
+    if (!api) {
+      api = &dummy;
+    }
+    ParseApi(request_str, Options::route, *api);
+    pimpl->loki_worker.route(*api);
+    pimpl->thor_worker.route(*api);
+    auto bytes = pimpl->odin_worker.narrate(*api);
+    return bytes;
   }
 };
 
 TEST(Slice, NoData) {
-  slice_actor act(true);
+  auto cfg = test::make_config("no_such_tiles");
+  slice_actor act(cfg, true);
+  const std::string request =
+      R"({"locations":[{"lat":52.0,"lon":5.0},{"lat":52.1,"lon":5.1}],"costing":"auto"})";
   try {
-    act.route();
-  } catch (const my_error& e) {
-    std::printf("caught: %s\n", e.msg);
+    act.route(request, nullptr, nullptr);
+  } catch (const std::exception& e) {
+    std::printf("caught: %s\n", e.what());
   }
 }

@@ -36,10 +36,8 @@ struct actor_t::pimpl_t {
   }
   void cleanup() {
     std::fprintf(stderr, "[DBG] pimpl_t::cleanup enter\n"); std::fflush(stderr);
-    // TEMP EXPERIMENT: only loki commented out; do thor+odin still AV? -> is it loki-specific or
-    // any/first worker call from the funclet?
-    std::fprintf(stderr, "[DBG]  -> loki_worker.cleanup (COMMENTED OUT)\n"); std::fflush(stderr);
-    // loki_worker.cleanup();
+    std::fprintf(stderr, "[DBG]  -> loki_worker.cleanup\n"); std::fflush(stderr);
+    loki_worker.cleanup();
     std::fprintf(stderr, "[DBG]  -> thor_worker.cleanup\n"); std::fflush(stderr);
     thor_worker.cleanup();
     std::fprintf(stderr, "[DBG]  -> odin_worker.cleanup\n"); std::fflush(stderr);
