@@ -6,6 +6,7 @@
 #include "loki/worker.h"
 #include "midgard/util.h"
 #include "test.h"
+#include "worker.h" // ParseApi
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -13,10 +14,6 @@
 #include <memory>
 
 using namespace valhalla;
-
-struct my_error {
-  const char* msg;
-};
 
 // mirror actor_t::pimpl_t: heap-allocated, owns the workers, cleanup calls each in turn.
 struct slice_pimpl {
@@ -46,12 +43,17 @@ struct slice_actor {
     std::fflush(stderr);
     pimpl->cleanup();
   }
+  // mirror actor_t::route: arm the Finally, ParseApi, then loki route -- which throws 171 DEEP inside
+  // search (no data), so the unwind traverses the real loki frames before the Finally runs cleanup.
   void route() {
     auto scoped = midgard::make_finally([this]() {
       if (auto_cleanup)
         cleanup();
     });
-    throw my_error{"no edges"};
+    Api api;
+    ParseApi(R"({"locations":[{"lat":52.0,"lon":5.0},{"lat":52.1,"lon":5.1}],"costing":"auto"})",
+             Options::route, api);
+    pimpl->a.route(api);
   }
 };
 
@@ -60,8 +62,8 @@ int main() {
   slice_actor act(cfg, true);
   try {
     act.route();
-  } catch (const my_error& e) {
-    std::printf("caught: %s\n", e.msg);
+  } catch (const std::exception& e) {
+    std::printf("caught: %s\n", e.what());
   }
   std::puts("OK");
   return 0;
