@@ -6,7 +6,7 @@ description: Prepare a Valhalla GitHub issue. Use when searching, reproducing, d
 # Valhalla issue
 
 1. Read `README.md`'s "Generative AI usage" section, `CONTRIBUTING.md`, and `CLAUDE.md`.
-2. Read `docs/learnings.md` first. Use its prior decisions to narrow the GitHub search and carry settled project context into the issue.
+2. Read `docs/learnings.md`. Use its prior decisions to narrow the GitHub search and carry settled project context into the issue.
 3. Search open and closed issues and Discussions for duplicates and prior decisions. Inspect merged or closed pull requests when the same subsystem, path, or symbol appears. Link the most relevant source so the next participant starts with the same context.
 4. For a bug, identify the remote pointing to `valhalla/valhalla`, fetch `master`, and reproduce against it. If it cannot be reproduced, say so; do not invent a cause.
 5. Treat the initial issue as the start of a conversation. It needs enough verified context to discuss, not a comprehensive investigation. Assume maintainers know the project background: link established context instead of restating it, then add only the new observation, reproduction, or question; expand when the discussion exposes a gap.
