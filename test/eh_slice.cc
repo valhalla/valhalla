@@ -1,25 +1,54 @@
-// Vertical slice mirroring actor_t as faithfully as possible in one file: a unique_ptr-held pimpl
-// owning several real loki_worker_t's, cleanup delegating actor->pimpl->workers, driven by a
-// midgard::Finally funclet capturing `this` (the ORIGINAL pattern) that throws through it. Linked
-// against full libvalhalla. Isolates whether the pimpl indirection + multiple real workers is what
-// the earlier (single-worker) slices lacked to reproduce the Windows unwind AV. No tiles needed.
-#include "loki/worker.h"
-#include "midgard/util.h"
-#include "test.h"
-#include "worker.h" // ParseApi
-
-#include <boost/property_tree/ptree.hpp>
+// Minimal repro attempt going the RIGHT way: NO valhalla. Generic Finally + this-capturing cleanup
+// + nested virtual worker cleanups (the shape that was clean as a bare main), now wrapped in a gtest
+// TEST and run through gtest exactly like the crashing actor test -- so the throw unwinds through
+// gtest's frames (Test::Run -> HandleExceptionsInMethodIfSupported). Isolates whether the gtest
+// wrapper is the missing variable. Links only gtest.
+#include <gtest/gtest.h>
 
 #include <cstdio>
+#include <list>
 #include <memory>
+#include <string>
+#include <utility>
 
-using namespace valhalla;
-
-// mirror actor_t::pimpl_t: heap-allocated, owns the workers, cleanup calls each in turn.
-struct slice_pimpl {
-  loki::loki_worker_t a, b, c;
-  explicit slice_pimpl(const boost::property_tree::ptree& cfg) : a(cfg), b(cfg), c(cfg) {
+template <typename T> struct Finally {
+  T t;
+  explicit Finally(T t) : t(std::move(t)) {}
+  Finally() = delete;
+  Finally(Finally&&) = default;
+  Finally(const Finally&) = delete;
+  Finally& operator=(const Finally&) = delete;
+  Finally& operator=(Finally&&) = delete;
+  ~Finally() {
+    t();
   }
+};
+template <typename T> Finally<T> make_finally(T t) {
+  return Finally<T>(std::move(t));
+}
+
+struct my_error {
+  const char* msg;
+};
+
+struct base_worker {
+  std::list<std::string> messages;
+  virtual ~base_worker() = default;
+  virtual void cleanup() {
+    std::fprintf(stderr, "[DBG] base_worker::cleanup this=%p\n", (void*)this);
+    std::fflush(stderr);
+  }
+};
+struct derived_worker : base_worker {
+  void cleanup() override {
+    std::fprintf(stderr, "[DBG] derived_worker::cleanup this=%p\n", (void*)this);
+    std::fflush(stderr);
+    base_worker::cleanup();
+  }
+};
+
+struct slice_pimpl {
+  derived_worker a, b, c;
   void cleanup() {
     std::fprintf(stderr, "[DBG] slice_pimpl::cleanup enter\n");
     std::fflush(stderr);
@@ -31,40 +60,27 @@ struct slice_pimpl {
   }
 };
 
-// mirror actor_t: unique_ptr pimpl, cleanup delegates through it, route arms a Finally then throws.
 struct slice_actor {
   std::unique_ptr<slice_pimpl> pimpl;
   bool auto_cleanup;
-  slice_actor(const boost::property_tree::ptree& cfg, bool ac)
-      : pimpl(new slice_pimpl(cfg)), auto_cleanup(ac) {
-  }
+  explicit slice_actor(bool ac) : pimpl(new slice_pimpl()), auto_cleanup(ac) {}
   void cleanup() {
-    std::fprintf(stderr, "[DBG] slice_actor::cleanup -> pimpl->cleanup\n");
-    std::fflush(stderr);
     pimpl->cleanup();
   }
-  // mirror actor_t::route: arm the Finally, ParseApi, then loki route -- which throws 171 DEEP inside
-  // search (no data), so the unwind traverses the real loki frames before the Finally runs cleanup.
   void route() {
-    auto scoped = midgard::make_finally([this]() {
+    auto scoped = make_finally([this]() {
       if (auto_cleanup)
         cleanup();
     });
-    Api api;
-    ParseApi(R"({"locations":[{"lat":52.0,"lon":5.0},{"lat":52.1,"lon":5.1}],"costing":"auto"})",
-             Options::route, api);
-    pimpl->a.route(api);
+    throw my_error{"no edges"};
   }
 };
 
-int main() {
-  auto cfg = test::make_config("no_such_tiles");
-  slice_actor act(cfg, true);
+TEST(Slice, NoData) {
+  slice_actor act(true);
   try {
     act.route();
-  } catch (const std::exception& e) {
-    std::printf("caught: %s\n", e.what());
+  } catch (const my_error& e) {
+    std::printf("caught: %s\n", e.msg);
   }
-  std::puts("OK");
-  return 0;
 }

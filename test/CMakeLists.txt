@@ -133,7 +133,7 @@ endforeach()
 # flags but links nothing, to isolate whether the flags alone reproduce the crash.
 add_executable(eh_slice EXCLUDE_FROM_ALL eh_slice.cc)
 set_target_properties(eh_slice PROPERTIES FOLDER "Tests")
-target_link_libraries(eh_slice valhalla_test)
+target_link_libraries(eh_slice gtest gtest_main)
 
 ## Cost tests
 set(cost_inline_test_sources
