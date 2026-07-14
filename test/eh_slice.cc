@@ -1,7 +1,8 @@
-// Vertical slice, grown to the real thing: construct an actual loki_worker_t and call its cleanup()
-// from a midgard::Finally funclet during exception unwind, in a fully-linked binary (valhalla_test).
-// The generic/zmq slices were clean on Windows; this isolates whether the REAL worker type + full
-// libvalhalla link reproduces the AV. No tiles/tz.sqlite needed (the config points at a missing dir).
+// Vertical slice mirroring actor_t as faithfully as possible in one file: a unique_ptr-held pimpl
+// owning several real loki_worker_t's, cleanup delegating actor->pimpl->workers, driven by a
+// midgard::Finally funclet capturing `this` (the ORIGINAL pattern) that throws through it. Linked
+// against full libvalhalla. Isolates whether the pimpl indirection + multiple real workers is what
+// the earlier (single-worker) slices lacked to reproduce the Windows unwind AV. No tiles needed.
 #include "loki/worker.h"
 #include "midgard/util.h"
 #include "test.h"
@@ -9,6 +10,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdio>
+#include <memory>
 
 using namespace valhalla;
 
@@ -16,17 +18,33 @@ struct my_error {
   const char* msg;
 };
 
-struct slice_actor {
-  bool auto_cleanup;
-  loki::loki_worker_t worker;
-  slice_actor(bool ac, const boost::property_tree::ptree& cfg) : auto_cleanup(ac), worker(cfg) {
+// mirror actor_t::pimpl_t: heap-allocated, owns the workers, cleanup calls each in turn.
+struct slice_pimpl {
+  loki::loki_worker_t a, b, c;
+  explicit slice_pimpl(const boost::property_tree::ptree& cfg) : a(cfg), b(cfg), c(cfg) {
   }
   void cleanup() {
-    std::fprintf(stderr, "[DBG] slice_actor::cleanup -> worker.cleanup\n");
+    std::fprintf(stderr, "[DBG] slice_pimpl::cleanup enter\n");
     std::fflush(stderr);
-    worker.cleanup();
-    std::fprintf(stderr, "[DBG] slice_actor::cleanup done\n");
+    a.cleanup();
+    b.cleanup();
+    c.cleanup();
+    std::fprintf(stderr, "[DBG] slice_pimpl::cleanup done\n");
     std::fflush(stderr);
+  }
+};
+
+// mirror actor_t: unique_ptr pimpl, cleanup delegates through it, route arms a Finally then throws.
+struct slice_actor {
+  std::unique_ptr<slice_pimpl> pimpl;
+  bool auto_cleanup;
+  slice_actor(const boost::property_tree::ptree& cfg, bool ac)
+      : pimpl(new slice_pimpl(cfg)), auto_cleanup(ac) {
+  }
+  void cleanup() {
+    std::fprintf(stderr, "[DBG] slice_actor::cleanup -> pimpl->cleanup\n");
+    std::fflush(stderr);
+    pimpl->cleanup();
   }
   void route() {
     auto scoped = midgard::make_finally([this]() {
@@ -39,7 +57,7 @@ struct slice_actor {
 
 int main() {
   auto cfg = test::make_config("no_such_tiles");
-  slice_actor act(true, cfg);
+  slice_actor act(cfg, true);
   try {
     act.route();
   } catch (const my_error& e) {

@@ -9,6 +9,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdio> // TEMP debug prints
+#include <functional> // TEMP experiment: capture cleanup as a std::function, not this
 #include <sstream>
 
 using namespace valhalla;
@@ -103,9 +104,14 @@ std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
 
 std::string
 actor_t::route(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -127,9 +133,14 @@ actor_t::route(const std::string& request_str, const std::function<void()>* inte
 
 std::string
 actor_t::locate(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -147,9 +158,14 @@ actor_t::locate(const std::string& request_str, const std::function<void()>* int
 
 std::string
 actor_t::matrix(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -170,9 +186,14 @@ actor_t::matrix(const std::string& request_str, const std::function<void()>* int
 std::string actor_t::optimized_route(const std::string& request_str,
                                      const std::function<void()>* interrupt,
                                      Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -194,9 +215,14 @@ std::string actor_t::optimized_route(const std::string& request_str,
 
 std::string
 actor_t::isochrone(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -217,9 +243,14 @@ actor_t::isochrone(const std::string& request_str, const std::function<void()>* 
 std::string actor_t::trace_route(const std::string& request_str,
                                  const std::function<void()>* interrupt,
                                  Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -242,9 +273,14 @@ std::string actor_t::trace_route(const std::string& request_str,
 std::string actor_t::trace_attributes(const std::string& request_str,
                                       const std::function<void()>* interrupt,
                                       Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -264,9 +300,14 @@ std::string actor_t::trace_attributes(const std::string& request_str,
 
 std::string
 actor_t::height(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -285,9 +326,14 @@ actor_t::height(const std::string& request_str, const std::function<void()>* int
 std::string actor_t::transit_available(const std::string& request_str,
                                        const std::function<void()>* interrupt,
                                        Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -305,9 +351,14 @@ std::string actor_t::transit_available(const std::string& request_str,
 
 std::string
 actor_t::expansion(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -333,9 +384,14 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
 
 std::string
 actor_t::centroid(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -357,9 +413,14 @@ actor_t::centroid(const std::string& request_str, const std::function<void()>* i
 
 std::string
 actor_t::status(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -383,9 +444,14 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
 
 std::string
 actor_t::tile(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
+  // TEMP EXPERIMENT: bind cleanup into a std::function on this (good) frame, then have the funclet
+  // capture only that functor + a bool by value -- NO `this` in the funclet, and the direct
+  // intra-module cleanup() call now lives in the functor's target (invoked indirectly), not in the
+  // unwind funclet's own code.
+  std::function<void()> cleaner = [this]() { cleanup(); };
+  auto scoped_cleaner = make_finally([cleaner, ac = auto_cleanup]() {
+    if (ac)
+      cleaner();
   });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
