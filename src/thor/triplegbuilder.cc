@@ -722,11 +722,8 @@ void SetElevation(TripLeg_Edge* trip_edge,
     return static_cast<float>((elevation[index] * (1.0 - pct)) + (elevation[index + 1] * pct));
   };
 
-  // Encoded elevation deltas are relative to the directed edge's physical begin node.
-  graph_tile_ptr begin_tile = tile;
-  const auto begin_node_id = graphreader.GetBeginNodeId(edge, begin_tile);
-  const float h1 = begin_node_id.is_valid() ? begin_tile->node(begin_node_id)->elevation()
-                                            : start_node->elevation();
+  // Add the elevation at the start node to the elevation vector
+  float h1 = start_node->elevation();
 
   // Get encoded elevation from EdgeInfo edge
   auto encoded = tile->edgeinfo(edge).encoded_elevation(edge->length(), interval);
@@ -2256,8 +2253,11 @@ void TripLegBuilder::Build(
 
     ////////////// Prepare for the next iteration
 
-    // Set the endnode of this directed edge as the startnode of the next edge.
-    startnode = directededge->endnode();
+    // Set the endnode of this directed edge as the startnode of the next edge, unless that edge is
+    // repeated because of a mid-edge intermediate location.
+    if (const auto next = std::next(edge_itr); next == path_end || next->edgeid != edge) {
+      startnode = directededge->endnode();
+    }
 
     // Save the opposing edge as the previous DirectedEdge (for name consistency)
     if (!directededge->IsTransitLine()) {

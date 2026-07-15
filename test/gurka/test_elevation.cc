@@ -175,12 +175,8 @@ TEST(Standalone, ElevationCompareToSkadi) {
     auto through_elevation = rapidjson::get_child_optional(through_result, "/trip/legs/0/elevation");
     auto through_shape = rapidjson::get_child_optional(through_result, "/trip/legs/0/shape");
 
-    EXPECT_TRUE(through_elevation && through_elevation->IsArray());
-    EXPECT_TRUE(through_shape && through_shape->IsString());
-    if (!through_elevation || !through_elevation->IsArray() || !through_shape ||
-        !through_shape->IsString()) {
-      continue;
-    }
+    ASSERT_TRUE(through_elevation && through_elevation->IsArray());
+    ASSERT_TRUE(through_shape && through_shape->IsString());
 
     std::string height_json;
     std::string request = R"({"height_precision":1,"resample_distance":30,"encoded_polyline":")" +
@@ -190,15 +186,9 @@ TEST(Standalone, ElevationCompareToSkadi) {
     rapidjson::Document height_result;
     height_result.Parse(height_json.c_str());
     auto height_elevation = rapidjson::get_child_optional(height_result, "/height");
-    EXPECT_TRUE(height_elevation && height_elevation->IsArray());
-    if (!height_elevation || !height_elevation->IsArray()) {
-      continue;
-    }
+    ASSERT_TRUE(height_elevation && height_elevation->IsArray());
 
-    EXPECT_EQ(through_elevation->Size(), height_elevation->Size());
-    if (through_elevation->Size() != height_elevation->Size()) {
-      continue;
-    }
+    ASSERT_EQ(through_elevation->Size(), height_elevation->Size());
 
     for (rapidjson::SizeType i = 0; i < through_elevation->Size(); ++i) {
       EXPECT_NEAR((*through_elevation)[i].GetFloat(), (*height_elevation)[i].GetFloat(), 0.5f);
