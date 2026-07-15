@@ -136,8 +136,8 @@ jobs:
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG /fsanitize=address" \
-            -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG /fsanitize=address" \
+            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
+            -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
             -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
             -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
@@ -241,12 +241,38 @@ jobs:
           echo "================== plain: actor / Actor.NoDataNoAutoCleanup (auto_cleanup=false) =================="
           "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataNoAutoCleanup'; echo "exit=$?"
 
-          # ASan (/fsanitize=address on valhalla+test, vcpkg deps uninstrumented -> disable container
-          # overflow to avoid mixed-instrumentation false positives). run the crashing no-data test plain
-          # so any ASan report (upstream heap corruption feeding the bad unwind) prints to the log.
-          export ASAN_OPTIONS="detect_container_overflow=0:abort_on_error=0:print_stats=0:handle_segv=1"
-          echo "================== ASan: actor / Actor.NoDataYieldsNoEdgesError =================="
-          "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 2>&1 | head -150; echo "asan exit=${PIPESTATUS[0]}"
+          # TIME TRAVEL DEBUGGING: record the crashing no-data run, then replay and step BACKWARD from the
+          # first-chance AV to the instruction that produced the bad value at the fault. TTD isn't
+          # preinstalled and the store is blocked, so download the standalone package and extract it (no
+          # install): aka.ms/ttd/download -> .msixbundle (zip) -> per-arch .msix (zip) -> TTD.exe + amd64/.
+          echo "================== fetch + extract standalone TTD =================="
+          curl -L -s -o "${ws}/ttd.msixbundle" https://aka.ms/ttd/download || echo "TTD download failed"
+          pwsh -NoProfile -Command "
+            \$ws='${ws}';
+            Expand-Archive -Force \$ws/ttd.msixbundle \$ws/ttd_bundle;
+            \$msix = Get-ChildItem \$ws/ttd_bundle -Filter '*x64*.msix' | Select-Object -First 1;
+            if (-not \$msix) { \$msix = Get-ChildItem \$ws/ttd_bundle -Filter '*.msix' | Select-Object -First 1 }
+            Write-Host 'msix:' \$msix.FullName;
+            Expand-Archive -Force \$msix.FullName \$ws/ttd;
+            Get-ChildItem -Recurse \$ws/ttd -Filter 'TTD.exe' | ForEach-Object { \$_.FullName }
+          " || echo "TTD extract failed"
+          TTD=$(find "${ws}/ttd" -iname TTD.exe 2>/dev/null | head -1)
+          echo "TTD.exe = ${TTD:-<not found>}"
+
+          if [ -n "$TTD" ]; then
+            echo "================== TTD record: actor no-data =================="
+            "$TTD" -accepteula -out "${ws}/nodata.run" -- "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 2>&1 | tail -30 || true
+            TRACE=$(ls "${ws}"/nodata*.run 2>/dev/null | head -1)
+            echo "trace = ${TRACE:-<none>}"
+            if [ -n "$TRACE" ]; then
+              # replay: run to the AV, then reverse-execute to the last write of the faulting pointer.
+              # ba r1 @rax on the deref, g- (go back) finds who set rax; dx @$curthread.TTD.Position timestamps.
+              TT='.echo ===AV===; g; r; .echo ===FAULT INSTR===; u @rip-8 L6; .echo ===WHO WROTE [rsp+38h]===; ba w8 @rsp+0x38 \"r; kn 8; g-\"; g-; .echo ===DONE===; q'
+              "$CDB" -c "$TT" -z "$TRACE" 2>&1 | sed -n '1,200p' || true
+            fi
+          else
+            echo "TTD unavailable -> falling back on next iteration"
+          fi
 
           # break at FIRST chance (sxe av) -- the true fault site, before the unwinder walks further and
           # scrambles the stack. sxe av only stops on the AV, not the earlier C++ throw. gtest_catch_exceptions=0
