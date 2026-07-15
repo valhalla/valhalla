@@ -259,6 +259,22 @@ jobs:
           echo "================== unwind info: eh_slice.exe (clean) =================="
           "$CDB" -c "${UNW_SLICE}" "${ws}/build/test/eh_slice.exe" || true
 
+          # raw .xdata + FH4 EH scope-table bytes for route (the funclet-dispatch metadata .fnent only
+          # summarizes). two passes: get UnwindInfoAddress RVA, then db module+RVA (ASLR-stable). diff
+          # actor(crashing) vs slice(clean) -- if these differ, THAT is the concrete defect.
+          dump_fh4() {  # $1=exe  $2=symbol
+            local exe="$1" sym="$2" mod rva
+            mod=$(basename "$exe" .exe)
+            rva=$("$CDB" -c ".fnent ${mod}!${sym}; q" "$exe" 2>/dev/null | tr -d '\r`' | grep -i "UnwindInfoAddress" | grep -oiE "[0-9a-f]+ *$" | tr -d ' ' | tail -1)
+            echo "--- ${mod}!${sym}  UnwindInfoAddress RVA=${rva} ---"
+            "$CDB" -c "db ${mod}+0x${rva} L140; q" "$exe" 2>/dev/null | tr -d '\r' | grep -iE "^[0-9a-f]{8}"
+          }
+          echo "================== raw FH4 EH data: route (actor vs slice) =================="
+          dump_fh4 "${ws}/build/test/actor.exe" "valhalla::tyr::actor_t::route" | tee "${ws}/fh4_actor.txt"
+          dump_fh4 "${ws}/build/test/eh_slice.exe" "slice_actor::route" | tee "${ws}/fh4_slice.txt"
+          echo "================== FH4 diff (byte cols only) =================="
+          diff <(awk '{$1=""; print}' "${ws}/fh4_actor.txt") <(awk '{$1=""; print}' "${ws}/fh4_slice.txt") && echo "FH4 BYTES IDENTICAL" || echo "FH4 BYTES DIFFER (see above)"
+
       # TEMP debug: keep the minidump for offline (WinDbg/TTD-style) analysis.
       - name: Upload crash minidump
         if: always()
