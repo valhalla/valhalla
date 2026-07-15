@@ -101,10 +101,22 @@ std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
 
 std::string
 actor_t::route(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
-  });
+  // TEMP DIAGNOSTIC: bespoke, uniquely-coded scoped cleaner (NOT make_finally) with a real heap
+  // new/delete, so route()'s unwind cleanup funclet is guaranteed distinct from every other funclet
+  // in this TU and cannot be shared/folded with any other code path. if this stops the AV, identical
+  // funclet sharing was the mechanism; if it still AVs, sharing is ruled out.
+  struct route_scoped_cleaner_t {
+    actor_t* self;
+    bool ac;
+    int* uniq;
+    ~route_scoped_cleaner_t() {
+      if (ac)
+        self->cleanup();
+      delete uniq;
+    }
+  };
+  int* uniq = new int(0xF1);
+  route_scoped_cleaner_t scoped_cleaner{this, auto_cleanup, uniq};
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
