@@ -13,7 +13,7 @@ back to English.
   po_tools.py po2json [--out DIR] [lang ...] .pot/.po -> locale JSONs (build step)
   po_tools.py update                         msgmerge valhalla.pot into every .po
   po_tools.py lint [lang ...]                placeholder token check
-  po_tools.py posix-locales                  print every language's posix_locale (for localedef)
+  po_tools.py print-posix-locales            print every language's posix_locale (for localedef)
 
 po2json and lint accept language tags (e.g. de-DE) to limit the run to those
 files; without any, all locales/*.po are processed.
@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -40,7 +41,10 @@ except ImportError:
 
 # the hand-maintained English source; also the msginit template for new languages
 POT_FILE = LOCALES_DIR / "valhalla.pot"
+
+# matches the phrase placeholders, e.g. <STREET_NAMES> or <TIME>
 TOKEN = re.compile(r"<[A-Z][A-Z_0-9]*>")
+
 # NarrativeDictionary looks these up by numeric string key; every other
 # container whose path segments are numeric is a real JSON array
 NUMERIC_KEY_DICTS = ("phrases",)
@@ -53,66 +57,92 @@ def parse_po(path: Path) -> tuple[dict[str, polib.POEntry], dict[str, str]]:
 
 
 def parse_pot() -> tuple[list[polib.POEntry], dict[str, str]]:
-    """Returns ([POEntry] in file order, header metadata dict)."""
+    """Returns ([POEntry] in file order, header metadata dict), skipping obsolete entries."""
     pot = polib.pofile(str(POT_FILE))
+    # filters obsolete entries, but keeps fuzzy (untranslated) entries (defaults to en-US)
     return [e for e in pot if not e.obsolete and e.msgctxt], pot.metadata
 
 
-def listify(key: str | None, node: Any) -> Any:
+def convert_to_json(key: str | None, node: Any) -> Any:
     """Turn all-numeric-key dicts into arrays, except the ones odin reads by key."""
     if not isinstance(node, dict):
         return node
     if node and all(k.isdigit() for k in node) and key not in NUMERIC_KEY_DICTS:
-        return [listify(key, node[k]) for k in sorted(node, key=int)]
-    return {k: listify(k, v) for k, v in node.items()}
+        return [convert_to_json(key, node[k]) for k in sorted(node, key=int)]
+    return {k: convert_to_json(k, v) for k, v in node.items()}
 
 
 def build_locale(
     pot_entries: list[polib.POEntry], entries: dict[str, polib.POEntry], meta: dict[str, str]
 ) -> dict[str, Any]:
     """Rebuild one language's JSON structure from the msgctxt paths."""
-    root = {}
+    po_root = {}
+
+    # parse the .po files, but only if that string is not "fuzzy", i.e. not translated
     for pot_entry in pot_entries:
         e = entries.get(pot_entry.msgctxt)
+        # fuzzy = translation needs review after its English source changed
+        # use English until then
         translated = e.msgstr if e and e.msgstr and not e.fuzzy else pot_entry.msgid
         parts = pot_entry.msgctxt.split(".")
-        node = root
+        node = po_root
         for part in parts[:-1]:
             node = node.setdefault(part, {})
         node[parts[-1]] = translated
-    out = listify(None, root)
-    out["posix_locale"] = meta["X-Valhalla-Posix-Locale"]
-    out["aliases"] = [a for a in meta.get("X-Valhalla-Aliases", "").split(",") if a]
-    return out
+
+    # generate the output json compatible with our odin headers
+    out_json = convert_to_json(None, po_root)
+    out_json["posix_locale"] = meta["X-Valhalla-Posix-Locale"]
+    out_json["aliases"] = [a for a in meta.get("X-Valhalla-Aliases", "").split(",") if a]
+
+    return out_json
 
 
 def po_paths(langs: list[str] | None) -> list[Path]:
-    if langs:
-        return [LOCALES_DIR / f"{lang}.po" for lang in langs]
-    return sorted(p for p in LOCALES_DIR.glob("*.po"))
+    """
+    Returns the .po files for ``langs``, or all of LOCALES_DIR's .po files if empty.
+    Bails on language tags with no .po file.
+    """
+    if not langs:
+        return sorted(p for p in LOCALES_DIR.glob("*.po"))
+    paths = [p for lang in langs if (p := LOCALES_DIR / f"{lang}.po").exists()]
+
+    # be nice and print what's actually available
+    if len(paths) != len(langs):
+        missing = sorted(set(langs).difference(p.stem for p in paths))
+        available = ", ".join(sorted(p.stem for p in LOCALES_DIR.glob("*.po")))
+        sys.exit(f"no .po file for: {', '.join(missing)}\navailable: {available}")
+    return paths
 
 
 def write_json(out_dir: Path, name: str, locale: dict[str, Any]) -> None:
+    """Writes the output json the odin headers consume."""
     out_path = out_dir / f"{name}.json"
     out_path.write_text(json.dumps(locale, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {out_path.name}")
 
 
 def cmd_po2json(args: argparse.Namespace) -> None:
+    """
+    Converts .po files to our previous .json structure so that
+    odin headers are staying compatible with old source code.
+    """
     pot_entries, pot_meta = parse_pot()
     args.out.mkdir(parents=True, exist_ok=True)
-    # drop leftovers of removed languages so the build doesn't embed them
+    # first drop all .json before regenerating from actual .po files
     for stale in args.out.glob("*.json"):
         if stale.stem != "en-US" and not (LOCALES_DIR / f"{stale.stem}.po").exists():
             stale.unlink()
+
+    # write the en-US first with _all_ entries, not filtered since it's the root
     write_json(args.out, "en-US", build_locale(pot_entries, {}, pot_meta))
     for po in po_paths(args.langs):
         entries, meta = parse_po(po)
         write_json(args.out, po.stem, build_locale(pot_entries, entries, meta))
 
 
-def cmd_posix_locales(_: argparse.Namespace) -> None:
-    "Parses X-Valhalla-Posix-Locale header and returns"
+def cmd_print_posix_locales(_: argparse.Namespace) -> None:
+    "Parses X-Valhalla-Posix-Locale header and prints each locale"
     locales = {parse_pot()[1]["X-Valhalla-Posix-Locale"]}
     for po in po_paths(None):
         locales.add(polib.pofile(str(po)).metadata["X-Valhalla-Posix-Locale"])
@@ -120,6 +150,9 @@ def cmd_posix_locales(_: argparse.Namespace) -> None:
 
 
 def cmd_update(_: argparse.Namespace) -> None:
+    """Merges valhalla.pot changes into every .po, flagging changed entries fuzzy."""
+    if not shutil.which("msgmerge"):
+        sys.exit("msgmerge not found - install gettext")
     for po in po_paths(None):
         subprocess.run(
             ["msgmerge", "--update", "--no-wrap", "--backup=off", str(po), str(POT_FILE)], check=True
@@ -128,33 +161,58 @@ def cmd_update(_: argparse.Namespace) -> None:
 
 
 def cmd_lint(args: argparse.Namespace) -> None:
-    # NarrativeBuilder replaces every tag of an instruction subset regardless of
-    # which phrase was selected, so a translation may legitimately use any token
-    # that appears somewhere in its subset (error only outside that union, since
-    # such tokens end up verbatim in user-facing instructions).
+    # how NarrativeBuilder treats <TOKENS> at runtime, and what we make of it here:
+    # - it picks one phrase of an instruction (e.g. instructions.bear_verbal), then runs
+    #   replace_all for EVERY token that instruction knows, not just those in the picked phrase
+    # - so a translation may use any token appearing anywhere in its instruction's English
+    #   phrases, even ones the picked English phrase doesn't have -> "cross-phrase" warning only
+    # - a token outside that set is never replaced and reaches users verbatim -> ERROR
+    # - a translation dropping a token loses info but renders fine -> warning only
+
     pot_entries, _ = parse_pot()
+
+    # every token an instruction knows, e.g. "instructions.bear" -> {<RELATIVE_DIRECTION>, ...},
+    # collected over all of its English phrases
     subset_tokens = {}
     for pot_entry in pot_entries:
+        # e.g. "instructions.bear_verbal.phrases.2" -> "instructions.bear_verbal"
         subset = ".".join(pot_entry.msgctxt.split(".")[:2])
+        # collect all tokens/placeholders which are held by this subset
         subset_tokens.setdefault(subset, set()).update(TOKEN.findall(pot_entry.msgid))
 
     errors = warnings = 0
     for po in po_paths(args.langs):
         entries, _ = parse_po(po)
         for path, e in entries.items():
+            # untranslated/fuzzy entries fall back to English, nothing to check
             if not e.msgstr or e.fuzzy:
                 continue
-            want, got = set(TOKEN.findall(e.msgid)), set(TOKEN.findall(e.msgstr))
-            allowed = subset_tokens.get(".".join(path.split(".")[:2]), set())
-            if got - allowed:
-                print(f"ERROR {po.name} [{path}]: unknown placeholder(s) {sorted(got - allowed)}")
+            # tokens in the English phrase vs in its translation
+            po_en_tokens, po_lang_tokens = set(TOKEN.findall(e.msgid)), set(TOKEN.findall(e.msgstr))
+            # the instruction's full token set, e.g. "instructions.bear_verbal.phrases.2"
+            # -> subset_tokens["instructions.bear_verbal"]
+            allowed_pot_tokens = subset_tokens.get(".".join(path.split(".")[:2]), set())
+
+            # if there's a diff between the .pot (i.e. en-US.po) and the lang tokens -> bail
+            if po_lang_tokens.difference(allowed_pot_tokens):
+                print(
+                    f"ERROR {po.name} [{path}]: unknown placeholder(s) {sorted(po_lang_tokens.difference(allowed_pot_tokens))}"
+                )
                 errors += 1
-            elif got - want:
-                print(f"warning {po.name} [{path}]: cross-phrase placeholder(s) {sorted(got - want)}")
+            # if there is a diff between the .po's "msgid" and the "msgtxt" -> warn
+            # msgid = en-US, msgtxt = lang; this is core "gettext" design
+            elif po_lang_tokens.difference(po_en_tokens):
+                print(
+                    f"warning {po.name} [{path}]: cross-phrase placeholder(s) {sorted(po_lang_tokens.difference(po_en_tokens))}"
+                )
                 warnings += 1
-            if want - got:
-                print(f"warning {po.name} [{path}]: dropped placeholder(s) {sorted(want - got)}")
+            # we dropped a token compared to english -> warn
+            if po_en_tokens.difference(po_lang_tokens):
+                print(
+                    f"warning {po.name} [{path}]: dropped placeholder(s) {sorted(po_en_tokens.difference(po_lang_tokens))}"
+                )
                 warnings += 1
+
     print(f"{errors} errors, {warnings} warnings")
     sys.exit(1 if errors else 0)
 
@@ -169,7 +227,7 @@ def main() -> None:
     sub = parser.add_subparsers(required=True)
     # neat way to pass args directly to a function
     sub.add_parser("update").set_defaults(func=cmd_update)
-    sub.add_parser("posix-locales").set_defaults(func=cmd_posix_locales)
+    sub.add_parser("print-posix-locales").set_defaults(func=cmd_print_posix_locales)
 
     po2json = sub.add_parser("po2json")
     # if there's no args, we assume the files in LOCALES_DIR as input
@@ -177,6 +235,8 @@ def main() -> None:
     po2json.add_argument("--out", type=Path, default=LOCALES_DIR)
     po2json.set_defaults(func=cmd_po2json)
 
+    # compare .pot tokens with lang tokens
+    # also cross-compare msgid & msgtxt of each entry
     lint = sub.add_parser("lint")
     lint.add_argument("langs", nargs="*")
     lint.set_defaults(func=cmd_lint)

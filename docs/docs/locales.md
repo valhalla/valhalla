@@ -45,7 +45,7 @@ All state lives in the `.pot`/`.po` files — no external service involved.
 | `po_tools.py update` | `msgmerge` the `valhalla.pot` template into every `.po` |
 | `po_tools.py po2json [--out DIR]` | Generate the JSONs from the gettext files (fuzzy/empty → English); run by CMake at build time |
 | `po_tools.py lint` | Check placeholder tokens; errors on tokens Odin would never substitute |
-| `po_tools.py posix-locales` | Print every language's POSIX locale; used by the `localedef` test target |
+| `po_tools.py print-posix-locales` | Print every language's POSIX locale; used by the `localedef` test target |
 | `msgattrib --untranslated --fuzzy <lang>.po` | List what needs work in a language |
 | `msgfmt --check --statistics <lang>.po` | Validate syntax, show translation coverage |
 

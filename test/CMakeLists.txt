@@ -300,7 +300,7 @@ set_target_properties(nh_ar_tiles PROPERTIES FOLDER "Tests")
 
 file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.po" "${VALHALLA_SOURCE_DIR}/locales/valhalla.pot")
 add_custom_command(OUTPUT .locales.timestamp
-  COMMAND /bin/bash -c "for loc in $(${PYTHON_INTERPRETER} po_tools.py posix-locales); do \
+  COMMAND /bin/bash -c "for loc in $(${PYTHON_INTERPRETER} po_tools.py print-posix-locales); do \
        $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
        $<$<BOOL:${APPLE}>:         localedef -i /usr/share/locale/$\{loc\} ./$\{loc\} || true ; > \
      done \
