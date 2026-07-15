@@ -13,6 +13,7 @@
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/pbfgraphparser.h"
+#include "mjolnir/pedestrian_name_enricher.h"
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/transitbuilder.h"
@@ -772,6 +773,14 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
                         cr_to_bin, linguistic_node_bin, tiles);
     log_stage(BuildStage::kBuild);
+  }
+
+  // Enrich unnamed pedestrian edges
+  if (start_stage <= BuildStage::kEnrichNames && BuildStage::kEnrichNames <= end_stage) {
+    if (config.get<bool>("mjolnir.enrich_pedestrian_names", false)) {
+      EnrichPedestrianEdgeNames(config);
+      log_stage(BuildStage::kEnrichNames);
+    }
   }
 
   // Enhance the local level of the graph. This adds information to the local

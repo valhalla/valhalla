@@ -1,16 +1,18 @@
-#include "mjolnir/graphtilebuilder.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
 #include "baldr/predictedspeeds.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "mjolnir/edgeinfobuilder.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
 
 #include <boost/format.hpp>
 #include <openssl/evp.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -1520,6 +1522,68 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
     }
   }
   edgeinfo_offset_map_ = std::move(new_edgeinfo_offset_map_);
+}
+
+void GraphTileBuilder::AddNameToEdge(const GraphId& edge_id, const std::string& name) {
+  // check the edge id makes sense
+  if (header_builder_.graphid().tile_base() != edge_id.tile_base()) {
+    throw std::runtime_error("Tile id doesn't match with the current builder");
+  }
+  if (header_builder_.directededgecount() <= edge_id.id()) {
+    throw std::runtime_error("Given edge doesn't exist");
+  }
+
+  // get the edge info / edge info builder
+  const DirectedEdge& edge = directededges_builder_[edge_id.id()];
+  const uint64_t original_offset = edge.edgeinfo_offset();
+  auto edge_info_it = edgeinfo_offset_map_.find(original_offset);
+
+  if (edge_info_it == edgeinfo_offset_map_.end()) {
+    throw std::runtime_error("Couldn't find edge info for edge: " + std::to_string(edge_id));
+  }
+
+  uint32_t name_offset = AddName(name);
+
+  // avoid adding duplicate name to edges
+  if (edge_info_it->second->has_name_info(name_offset)) {
+    return;
+  }
+
+  NameInfo name_info{name_offset, 0, 0, 0};
+  edge_info_it->second->AddNameInfo(name_info);
+}
+
+void GraphTileBuilder::RecomputeEdgeInfoOffsets() {
+  // build reverse map: EdgeInfoBuilder* -> old offset
+  std::unordered_map<EdgeInfoBuilder*, uint32_t> builder_to_old_offset;
+  for (auto& [offset, builder] : edgeinfo_offset_map_) {
+    builder_to_old_offset[builder] = offset;
+  }
+
+  // walk edgeinfo_list_ in order, assign new offsets based on actual sizes
+  std::unordered_map<uint32_t, uint32_t> old_to_new_offset;
+  std::unordered_map<uint32_t, EdgeInfoBuilder*> new_offset_map;
+  uint32_t new_offset = 0;
+
+  for (EdgeInfoBuilder& edge_info_builder : edgeinfo_list_) {
+    auto it = builder_to_old_offset.find(&edge_info_builder);
+    if (it != builder_to_old_offset.end()) {
+      old_to_new_offset[it->second] = new_offset;
+      new_offset_map[new_offset] = &edge_info_builder;
+    }
+    new_offset += edge_info_builder.SizeOf();
+  }
+
+  // update all directed edges in one pass
+  for (DirectedEdge& directed_edge : directededges_builder_) {
+    auto it = old_to_new_offset.find(directed_edge.edgeinfo_offset());
+    if (it != old_to_new_offset.end()) {
+      directed_edge.set_edgeinfo_offset(it->second);
+    }
+  }
+
+  edgeinfo_offset_map_ = std::move(new_offset_map);
+  edge_info_offset_ = new_offset;
 }
 
 bool GraphTileBuilder::OpposingEdgeInfoDiffers(const graph_tile_ptr& tile, const DirectedEdge* edge) {
