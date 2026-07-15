@@ -39,8 +39,7 @@ std::string get_tile_url(const bool is_tar) {
 boost::property_tree::ptree make_conf(const std::string& tile_dir,
                                       const bool tile_url_gz,
                                       const bool is_tar,
-                                      const std::string& upw,
-                                      const bool use_connectivity = false) {
+                                      const std::string& upw) {
 
   auto conf = test::make_config(tile_dir, {{"mjolnir.user_agent", "MapboxNavigationNative"}});
 
@@ -53,7 +52,6 @@ boost::property_tree::ptree make_conf(const std::string& tile_dir,
   }
 
   conf.put("mjolnir.tile_url_gz", tile_url_gz);
-  conf.put("loki.use_connectivity", use_connectivity);
   return conf;
 }
 
@@ -112,7 +110,9 @@ TEST_F(HttpTilesWithCache, test_tar_cache) {
 
 TEST_F(HttpTilesWithCache, test_connectivity_map_empty_cache) {
   // tile lazy-loading enabled: no tiles on disk at startup
-  auto conf = make_conf("url_tile_cache", false, false, "", /*use_connectivity=*/true);
+  auto conf = make_conf("url_tile_cache", false, false, "");
+  conf.put("loki.use_connectivity", true);
+
   tyr::actor_t actor(conf);
 
   auto route_json = actor.route(R"({"locations":[{"lat":52.09620,"lon": 5.11909,"type":"break"},
@@ -128,7 +128,9 @@ TEST_F(HttpTilesWithCache, test_connectivity_map_partial_cache) {
   std::filesystem::create_directories("url_tile_cache/0/003");
   std::filesystem::copy_file(tile_source_dir + "/0/003/196.gph", "url_tile_cache/0/003/196.gph");
 
-  auto conf = make_conf("url_tile_cache", false, false, "", /*use_connectivity=*/true);
+  auto conf = make_conf("url_tile_cache", false, false, "");
+  conf.put("loki.use_connectivity", true);
+
   tyr::actor_t actor(conf);
 
   auto route_json = actor.route(R"({"locations":[{"lat":52.09620,"lon": 5.11909,"type":"break"},
@@ -148,6 +150,7 @@ TEST_F(HttpTilesWithCache, test_connectivity_map_with_tile_extract) {
   auto conf = test::make_config(tile_source_dir, {{"mjolnir.tile_extract", tar_path}});
   conf.put("mjolnir.tile_url", "http://127.0.0.1:1/{tilePath}");
   conf.put("loki.use_connectivity", true);
+
   tyr::actor_t actor(conf);
 
   auto route_json = actor.route(R"({"locations":[{"lat":52.09620,"lon": 5.11909,"type":"break"},
