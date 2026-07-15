@@ -10,6 +10,7 @@ aliases) lives in the .pot header, every other language's in its .po header
 from all of that by po2json; fuzzy ("needs work") and empty entries fall
 back to English.
 
+  po_tools.py init <lang>                    start a new language: <lang>.po from the template
   po_tools.py po2json [--out DIR] [lang ...] .pot/.po -> locale JSONs (build step)
   po_tools.py update                         msgmerge valhalla.pot into every .po
   po_tools.py lint [lang ...]                placeholder token check
@@ -149,6 +150,36 @@ def cmd_print_posix_locales(_: argparse.Namespace) -> None:
     print("\n".join(sorted(locales)))
 
 
+def cmd_init(args: argparse.Namespace) -> None:
+    """Creates locales/<lang>.po from valhalla.pot, replacing msginit (no gettext needed)."""
+    path = LOCALES_DIR / f"{args.lang}.po"
+    if path.exists():
+        sys.exit(f"{path.name} already exists")
+
+    # locales must be unique; first add en-US and its alias(es)
+    found_locales = set(("en-US",))
+    found_locales.update(a for a in parse_pot()[1].get("X-Valhalla-Aliases", "").split(",") if a)
+
+    # then add all langs + their alias(es)
+    for po_file in po_paths(None):
+        found_locales.add(po_file.stem)
+        po_meta = polib.pofile(str(po_file)).metadata
+        found_locales.update(a for a in po_meta.get("X-Valhalla-Aliases", "").split(",") if a)
+
+    # verify that the new alias(es) don't clash with existing ones
+    new_aliases = args.aliases if args.aliases is not None else args.lang.split("-")[0]
+    if clashes := set(a for a in new_aliases.split(",") if a).intersection(found_locales):
+        sys.exit(f"alias(es) already taken: {', '.join(sorted(clashes))} - pass --aliases (may be '')")
+
+    # generate the new .po file from the valhalla.pot file
+    po = polib.pofile(str(POT_FILE), wrapwidth=0)
+    po.metadata["Language"] = args.lang.replace("-", "_")
+    po.metadata["X-Valhalla-Posix-Locale"] = args.posix_locale or f"{args.lang.replace('-', '_')}.UTF-8"
+    po.metadata["X-Valhalla-Aliases"] = new_aliases
+    po.save(str(path))
+    print(f"wrote {path.name}, see locales/README.md for the next steps")
+
+
 def cmd_update(_: argparse.Namespace) -> None:
     """Merges valhalla.pot changes into every .po, flagging changed entries fuzzy."""
     if not shutil.which("msgmerge"):
@@ -228,6 +259,14 @@ def main() -> None:
     # neat way to pass args directly to a function
     sub.add_parser("update").set_defaults(func=cmd_update)
     sub.add_parser("print-posix-locales").set_defaults(func=cmd_print_posix_locales)
+
+    # verifies input is not colliding with existing locales/aliases
+    # and writes the new .po file from the valhalla.pot template
+    init = sub.add_parser("init")
+    init.add_argument("lang")
+    init.add_argument("--aliases", help="comma-separated, defaults to the bare language code")
+    init.add_argument("--posix-locale", help="defaults to <lang>.UTF-8 with underscores")
+    init.set_defaults(func=cmd_init)
 
     po2json = sub.add_parser("po2json")
     # if there's no args, we assume the files in LOCALES_DIR as input
