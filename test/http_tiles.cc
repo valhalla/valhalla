@@ -52,6 +52,7 @@ boost::property_tree::ptree make_conf(const std::string& tile_dir,
   }
 
   conf.put("mjolnir.tile_url_gz", tile_url_gz);
+  conf.put("loki.use_connectivity", false);
   return conf;
 }
 
