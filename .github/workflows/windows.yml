@@ -138,7 +138,7 @@ jobs:
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
             -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
             -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
-            -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO /OPT:NOICF" \
+            -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO /OPT:NOICF /VERBOSE:ICF" \
             -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO /OPT:NOICF" \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
             -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
@@ -228,7 +228,11 @@ jobs:
             echo "MISSING eh_slice.exe (slice build failed?)"
           fi
 
-          cmake --build build --target actor -- -k 0 || true
+          # -v echoes the actual link command so we can confirm /OPT:NOICF reaches link.exe; /VERBOSE:ICF
+          # (linker flag above) lists every function ICF folds. capture + grep both.
+          cmake --build build --target actor -v -- -k 0 2>&1 | tee "${ws}/actor_link.log" >/dev/null || true
+          echo "=== actor link command + ICF fold report ==="
+          grep -iE "link\.exe|/OPT:|/VERBOSE|ICF|folded|identical" "${ws}/actor_link.log" | head -60 || true
           [ -f "${ws}/build/test/actor.exe" ] || { echo "MISSING actor.exe (build failed?)"; exit 1; }
 
           # control: same no-data path with auto_cleanup=false -> no cleanup funclet runs during unwind.
