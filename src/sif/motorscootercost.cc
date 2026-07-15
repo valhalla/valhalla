@@ -472,7 +472,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   factor *= EdgeFactor(edgeid);
-  return {sec * factor, sec};
+  return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -645,7 +645,7 @@ namespace {
 
 class TestMotorScooterCost : public MotorScooterCost {
 public:
-  TestMotorScooterCost(const Costing& costing_options) : MotorScooterCost(costing_options){};
+  TestMotorScooterCost(const Costing& costing_options) : MotorScooterCost(costing_options) {};
 
   using MotorScooterCost::alley_penalty_;
   using MotorScooterCost::country_crossing_cost_;

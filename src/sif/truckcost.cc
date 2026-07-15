@@ -565,7 +565,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
   factor *= EdgeFactor(edgeid);
 
-  return {sec * factor, sec};
+  return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -636,6 +636,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
     }
     c.cost += seconds;
   }
+  // c.cost *= inv_distance_factor_;
   return c;
 }
 
@@ -715,6 +716,10 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
     }
     c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  // c.cost *= inv_distance_factor_;
+
   return c;
 }
 
@@ -779,7 +784,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options){};
+  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options) {};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;

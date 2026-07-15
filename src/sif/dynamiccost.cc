@@ -103,6 +103,8 @@ constexpr float kDefaultServiceFactor = 1.0f;
 // Default penalty factor for avoiding closures (increases the cost of an edge as if its being
 // traversed at kMinSpeedKph)
 constexpr float kDefaultClosureFactor = 9.0f;
+constexpr float kDefaultUseDistance = 0.f; // Default preference of using distance vs time 0-1
+
 // Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not
 // penalize closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the
 // non-closure end
@@ -157,8 +159,8 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
     : dest_only_penalty_{0.f, kDefaultDestinationOnlyPenalty, kMaxPenalty},
       maneuver_penalty_{0.f, kDefaultManeuverPenalty, kMaxPenalty},
       alley_penalty_{0.f, kDefaultAlleyPenalty, kMaxPenalty},
-      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty}, gate_penalty_{0.f, kDefaultGatePenalty,
-                                                                    kMaxPenalty},
+      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty},
+      gate_penalty_{0.f, kDefaultGatePenalty, kMaxPenalty},
       private_access_penalty_{0.f, kDefaultPrivateAccessPenalty, kMaxPenalty},
       country_crossing_cost_{0.f, kDefaultCountryCrossingCost, kMaxPenalty},
       country_crossing_penalty_{0.f, kDefaultCountryCrossingPenalty, kMaxPenalty},
@@ -166,18 +168,18 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       toll_booth_penalty_{0.f, kDefaultTollBoothPenalty, kMaxPenalty},
       ferry_cost_{0.f, kDefaultFerryCost, kMaxPenalty}, use_ferry_{0.f, kDefaultUseFerry, 1.f},
       rail_ferry_cost_{0.f, kDefaultRailFerryCost, kMaxPenalty},
-      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f}, service_penalty_{0.f, kDefaultServicePenalty,
-                                                                        kMaxPenalty},
-      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
-                                                                                  kDefaultUseTracks,
-                                                                                  1.f},
+      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f},
+      service_penalty_{0.f, kDefaultServicePenalty, kMaxPenalty},
+      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor},
+      use_tracks_{0.f, kDefaultUseTracks, 1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
       closure_factor_{kClosureFactorRange}, speed_penalty_factor_{kSpeedPenaltyFactorRange},
       exclude_unpaved_(false), exclude_bridges_(false), exclude_tunnels_(false),
       exclude_tolls_(false), exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
       include_hov3_{false}, height_{0.f, kDefaultHeight, 10.0f}, width_{0.f, kDefaultWidth, 10.0f},
-      length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f} {
+      length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f},
+      use_distance_{0.f, kDefaultUseDistance, 1.f} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -188,6 +190,8 @@ DynamicCost::DynamicCost(const Costing& costing,
       allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
       closure_factor_(kDefaultClosureFactor), speed_penalty_factor_(kDefaultSpeedPenaltyFactor),
       flow_mask_(kDefaultFlowMask), shortest_(costing.options().shortest()),
+      distance_factor_(costing.options().use_distance() * kInvMedianSpeed),
+      inv_distance_factor_(1.f - costing.options().use_distance()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
       ignore_non_vehicular_restrictions_(costing.options().ignore_non_vehicular_restrictions()),
       ignore_turn_restrictions_(costing.options().ignore_restrictions() ||
@@ -484,9 +488,12 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   for (const auto& level : TileHierarchy::levels()) {
     std::string hierarchy_limits_path = "/hierarchy_limits/" + std::to_string(level.level);
 
-    unsigned int max_up_transitions = rapidjson::get<decltype(
-        max_up_transitions)>(json, std::string(hierarchy_limits_path + "/max_up_transitions").c_str(),
-                             kUnlimitedTransitions);
+    unsigned int max_up_transitions =
+        rapidjson::get<decltype(max_up_transitions)>(json,
+                                                     std::string(hierarchy_limits_path +
+                                                                 "/max_up_transitions")
+                                                         .c_str(),
+                                                     kUnlimitedTransitions);
     float expand_within_distance =
         rapidjson::get<decltype(expand_within_distance)>(json,
                                                          std::string(hierarchy_limits_path +
@@ -578,6 +585,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty,
                           warnings);
 
+  JSON_PBF_RANGED_DEFAULT(co, cfg.use_distance_, json, "/use_distance", use_distance, warnings);
   // service_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_factor_, json, "/service_factor", service_factor, warnings);
 

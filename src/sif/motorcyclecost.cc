@@ -446,7 +446,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   factor *= EdgeFactor(edgeid);
 
-  return {sec * factor, sec};
+  return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -508,6 +508,7 @@ Cost MotorcycleCost::TransitionCost(
     }
     c.cost += seconds;
   }
+  c.cost *= inv_distance_factor_;
   return c;
 }
 
@@ -582,6 +583,7 @@ Cost MotorcycleCost::TransitionCostReverse(
     }
     c.cost += seconds;
   }
+  c.cost *= inv_distance_factor_;
   return c;
 }
 
@@ -621,7 +623,7 @@ namespace {
 
 class TestMotorcycleCost : public MotorcycleCost {
 public:
-  TestMotorcycleCost(const Costing& costing_options) : MotorcycleCost(costing_options){};
+  TestMotorcycleCost(const Costing& costing_options) : MotorcycleCost(costing_options) {};
 
   using MotorcycleCost::alley_penalty_;
   using MotorcycleCost::country_crossing_cost_;

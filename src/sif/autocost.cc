@@ -33,7 +33,6 @@ constexpr float kDefaultServicePenalty = 75.0f; // Seconds
 constexpr float kDefaultUseHighways = 0.5f; // Default preference of using a motorway or trunk 0-1
 constexpr float kDefaultUseTolls = 0.5f;    // Default preference of using toll roads 0-1
 constexpr float kDefaultUseTracks = 0.f;    // Default preference of using tracks 0-1
-constexpr float kDefaultUseDistance = 0.f;  // Default preference of using distance vs time 0-1
 constexpr uint32_t kDefaultRestrictionProbability = 100; // Default percentage of allowing probable
                                                          // restrictions 0% means do not include them
 
@@ -70,7 +69,6 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
-constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
@@ -95,15 +93,6 @@ constexpr float kSurfaceFactor[] = {
     0.5f, // kGravel
     1.0f  // kPath
 };
-
-// The basic costing for an edge is a trade off between time and distance. We allow the user to
-// specify which one is more important to them and then we use a linear combination to combine the two
-// into a final metric. The problem is that time in seconds and length in meters have two wildly
-// different ranges, so the linear combination always favors length vs time. What we do to combat this
-// is to change length units into time units by multiplying by the reciprocal of a constant speed.
-// This means basically changes the units of distance to be more in the same ballpark as the units of
-// time and makes the linear combination make more sense.
-constexpr float kInvMedianSpeed = 1.f / 16.f; // about 37mph
 
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
@@ -345,13 +334,11 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
-  VehicleType type_;          // Vehicle type: car (default), motorcycle, etc
-  float highway_factor_;      // Factor applied when road is a motorway or trunk
-  float alley_factor_;        // Avoid alleys factor.
-  float toll_factor_;         // Factor applied when road has a toll
-  float surface_factor_;      // How much the surface factors are applied.
-  float distance_factor_;     // How much distance factors in overall favorability
-  float inv_distance_factor_; // How much time factors in overall favorability
+  VehicleType type_;     // Vehicle type: car (default), motorcycle, etc
+  float highway_factor_; // Factor applied when road is a motorway or trunk
+  float alley_factor_;   // Avoid alleys factor.
+  float toll_factor_;    // Factor applied when road has a toll
+  float surface_factor_; // How much the surface factors are applied.
 
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
@@ -389,10 +376,6 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
     float f = 1.0f - (use_highways * 2.0f);
     highway_factor_ = kMaxHighwayBiasFactor * (f * f);
   }
-
-  // Preference for distance vs time
-  distance_factor_ = costing_options.use_distance() * kInvMedianSpeed;
-  inv_distance_factor_ = 1.f - costing_options.use_distance();
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
@@ -714,7 +697,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kAlleyFactorRange, json, "/alley_factor", alley_factor, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls, warnings);
-  JSON_PBF_RANGED_DEFAULT(co, kUseDistanceRange, json, "/use_distance", use_distance, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
                           restriction_probability, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed, warnings);
@@ -999,7 +981,7 @@ public:
 
     factor *= EdgeFactor(edgeid);
 
-    return Cost(sec * factor, sec);
+    return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
   }
 };
 
@@ -1085,7 +1067,7 @@ namespace {
 
 class TestAutoCost : public AutoCost {
 public:
-  TestAutoCost(const Costing& costing_options) : AutoCost(costing_options){};
+  TestAutoCost(const Costing& costing_options) : AutoCost(costing_options) {};
 
   using AutoCost::alley_penalty_;
   using AutoCost::country_crossing_cost_;
