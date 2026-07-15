@@ -153,7 +153,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Adding new top-level request parameters | Add field to `Options` in `proto/options.proto`, parse from JSON in `src/worker.cc` (around the `matrix_locations` / `avoid_polygons` section). Costing-specific params go in `Costing.Options` and are parsed in `src/sif/dynamiccost.cc` (`ParseBaseCostOptions`) or individual costing files |
 | How lat/lon maps to graph edges | `src/loki/search.cc` (bin search → projection → filtering → reachability) |
 | Turn-by-turn maneuver generation | `src/odin/maneuversbuilder.cc`, `src/odin/narrativebuilder.cc` |
-| Translations / narrative languages | gettext `.po` files in `locales/` are the only committed translation artifact (parsed with the `third_party/polib` submodule); the build generates per-language JSONs from them (`locales/po_tools.py po2json --out <builddir>`) and embeds them into `locales.h` (`src/odin/CMakeLists.txt`). Only `en-US.json` (the English source) is committed. After changing `en-US.json`, run `python3 locales/po_tools.py update`. CI (`lint.yml` `locales` job) enforces `.po` syntax, placeholder lint, pot sync. Full workflow: `docs/docs/locales.md` |
+| Translations / narrative languages | gettext files in `locales/` are the only committed translation artifacts: `valhalla.pot` is the hand-maintained English source (msgctxt = JSON path, en-US metadata in its header), one `.po` per language (parsed with the `third_party/polib` submodule). The build reconstructs per-language JSONs from them (`locales/po_tools.py po2json --out <builddir>`) and embeds them into `locales.h` (`src/odin/CMakeLists.txt`) — no JSON in the repo. To change English phrases: edit `valhalla.pot`, then `python3 locales/po_tools.py update`. CI (`lint.yml` `locales` job) enforces `.pot`/`.po` syntax + placeholder lint. Full workflow: `docs/docs/locales.md` |
 | API response serialization (pbf → JSON/GPX/pbf output) | `src/tyr/` — `route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc`, and other `*_serializer.cc`. New output fields must be added to the `.proto` definition first, then to the serializer |
 | Error handling | `valhalla_exception_t` in `valhalla/exceptions.h`, codes in `src/exceptions.cc` (100s=Loki, 200s=Odin, 300s=Skadi, 400s=Thor, 500s=Tyr) |
 | Tile build warnings, data quality counters | `build_stats` singleton in `valhalla/mjolnir/util.h` — enum+array counters with `static_assert` safety. `log_stage()` in `src/mjolnir/util.cc` emits per-stage deltas to LOG_WARN + statsd gauges. Increment via `build_stats::get().increment(build_stats::kCounterName)` from any file |
@@ -356,7 +356,7 @@ test/              # Unit tests + test helpers (test.h/test.cc)
   gurka/           # Integration test framework (~136 tests)
   data/            # Test fixtures: OSM PBFs, admin DBs, traffic CSVs
 lua/               # OSM tag parsing scripts (graph.lua, admin.lua)
-locales/           # Translations: gettext .po files (~30 languages) + en-US.json (English source)
+locales/           # Translations: valhalla.pot (English source) + gettext .po files (~30 languages)
 third_party/       # Vendored deps: rapidjson, date, googletest, etc.
 scripts/           # Dev scripts: format.sh, valhalla_build_config, CI
 ```

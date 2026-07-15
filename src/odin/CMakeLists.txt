@@ -5,7 +5,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/locales.h
   COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake ${CMAKE_CURRENT_BINARY_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
   COMMENT "Generating locale JSONs from locales/*.po and compiling to locales.h"
-  DEPENDS ${locale_pos} ${VALHALLA_SOURCE_DIR}/locales/en-US.json ${VALHALLA_SOURCE_DIR}/locales/po_tools.py
+  DEPENDS ${locale_pos} ${VALHALLA_SOURCE_DIR}/locales/valhalla.pot ${VALHALLA_SOURCE_DIR}/locales/po_tools.py
   VERBATIM)
 
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/odin/*.h)

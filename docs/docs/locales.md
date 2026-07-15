@@ -2,7 +2,7 @@
 
 Valhalla supports localized instructions in multiple languages for both textual and verbal phrases. Translations are managed as gettext `.po` files in the [locales](https://github.com/valhalla/valhalla/tree/master/locales) directory — one per language, e.g. `de-DE.po`. We rely on external contributors to provide translations of these phrases.
 
-The `.po` files are the only committed translation artifact. At build time, CMake converts them into per-language JSONs (`locales/po_tools.py po2json`, which parses the `.po` files with the `third_party/polib` submodule) and embeds those into `libvalhalla` — there are no committed JSONs to keep in sync. `en-US.json` is the exception: it is the hand-maintained English source all other languages translate from.
+The gettext files are the only committed translation artifacts: `valhalla.pot` is the hand-maintained English source (msgids plus `#. e.g. ...` example-phrase comments; its header carries the en-US metadata), and each language has a `.po` with the translations. At build time, CMake reconstructs the per-language JSONs odin expects from them (`locales/po_tools.py po2json`, which parses the gettext files with the `third_party/polib` submodule) and embeds those into `libvalhalla` — no JSON exists in the repo at all.
 
 ## Contributing translations
 
@@ -28,27 +28,25 @@ What to know while translating:
 
 ### Changing or adding English phrases
 
-1. Edit `locales/en-US.json` — the JSON keys are used by `narrative_builder` to select the instruction template.
-2. Propagate to the template and all languages (requires gettext):
+1. Edit `locales/valhalla.pot` directly. Each entry is the `msgctxt` path (`instructions.<instruction>.phrases.<n>` — `narrative_builder` selects the phrase by that key), the English `msgid`, an empty `msgstr`, and optional `#. e.g. ...` example-phrase comments for translators. Path segments that are numbers become JSON arrays in the generated files, except under `phrases`, which odin reads by numeric string key.
+2. Propagate to all languages (requires gettext):
    ```
    python3 locales/po_tools.py update
    ```
    `msgmerge` keeps every existing translation. Entries whose English changed keep the old translation but are flagged fuzzy (with the previous English kept as a `#|` comment), so each language's translators see exactly what needs review; new phrases appear untranslated. Both fall back to English until translated.
-3. Commit the changed `en-US.json`, `valhalla.pot` and `*.po` files together.
+3. Commit the changed `valhalla.pot` and `*.po` files together.
 
 ### Tooling reference
 
-All state lives in the `.po` files — no external service involved.
+All state lives in the `.pot`/`.po` files — no external service involved.
 
 | Command | Purpose |
 |---------|---------|
-| `po_tools.py update` | Regenerate `valhalla.pot` from `en-US.json` and `msgmerge` it into every `.po` |
-| `po_tools.py po2json [--out DIR]` | Generate the JSONs from the `.po` files (fuzzy/empty → English); run by CMake at build time |
+| `po_tools.py update` | `msgmerge` the `valhalla.pot` template into every `.po` |
+| `po_tools.py po2json [--out DIR]` | Generate the JSONs from the gettext files (fuzzy/empty → English); run by CMake at build time |
 | `po_tools.py lint` | Check placeholder tokens; errors on tokens Odin would never substitute |
 | `po_tools.py posix-locales` | Print every language's POSIX locale; used by the `localedef` test target |
-| `po_tools.py json2pot` | Regenerate only the `.pot` template |
-| `po_tools.py json2po [lang ...]` | One-time import of a translated JSON into a `.po` (used for the Transifex migration) |
 | `msgattrib --untranslated --fuzzy <lang>.po` | List what needs work in a language |
 | `msgfmt --check --statistics <lang>.po` | Validate syntax, show translation coverage |
 
-CI (`lint.yml`, `locales` job) enforces: valid `.po` syntax, placeholder correctness, and that `valhalla.pot` is in sync with `en-US.json`.
+CI (`lint.yml`, `locales` job) enforces: valid `.pot`/`.po` syntax, placeholder correctness, and that the JSONs generate cleanly.
