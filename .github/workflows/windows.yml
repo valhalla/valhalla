@@ -47,11 +47,14 @@ env:
 jobs:
   release_build:
     name: Release build
-    runs-on: windows-2022
+    runs-on: windows-2025
     env:
       # TEMP: RelWithDebInfo for symbols so the cdb stack-trace step is useful; revert to Release
       BUILD_TYPE: RelWithDebInfo
-      MSVC_VERSION: "2022"
+      # TEMP: bumped 2022->2025 to roll the MSVC toolchain (newer VS on windows-2025) AND bust the
+      # vcpkg cache so deps rebuild with the same toolset -- testing if a newer toolchain dodges the
+      # layout-dependent unwind AV. this string only feeds the cache key.
+      MSVC_VERSION: "2025"
       # Keep aligned with VCPKG_VERSION in osx_win_python_builds.yml to share the vcpkg cache.
       VCPKG_VERSION: "66c0373d"
       VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
@@ -241,6 +244,16 @@ jobs:
           echo "================== cdb: actor / Actor.NoDataYieldsNoEdgesError (auto_cleanup=true, first-chance) =================="
           "$CDB" -g -G -c "sxe av; g; ${DUMP}" \
             "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 || true
+
+          # dump the unwind info (.pdata/.xdata via .fnent) + funclet disasm (uf) for the cleanup chain,
+          # so we can diff the CRASHING actor.exe funclet vs the CLEAN eh_slice.exe funclet -- concrete
+          # metadata instead of guessing. no run, just load + dump. x lists funclet symbol names too.
+          UNW_ACTOR='.echo ==X route==; x actor!valhalla::tyr::actor_t::route*; .echo ==X pimpl cleanup==; x actor!valhalla::tyr::actor_t::pimpl_t::cleanup*; .echo ==X finally/dtor funclets==; x actor!*actor_t*dtor*; x actor!*actor_t*fin*; .echo ==FNENT route==; .fnent actor!valhalla::tyr::actor_t::route; .echo ==UF route==; uf actor!valhalla::tyr::actor_t::route; .echo ==FNENT pimpl cleanup==; .fnent actor!valhalla::tyr::actor_t::pimpl_t::cleanup; .echo ==UF pimpl cleanup==; uf actor!valhalla::tyr::actor_t::pimpl_t::cleanup; q'
+          echo "================== unwind info: actor.exe (crashing) =================="
+          "$CDB" -c "${UNW_ACTOR}" "${ws}/build/test/actor.exe" || true
+          UNW_SLICE='.echo ==X route==; x eh_slice!slice_actor::route*; .echo ==X pimpl cleanup==; x eh_slice!slice_pimpl::cleanup*; .echo ==X finally/dtor funclets==; x eh_slice!*slice_actor*dtor*; x eh_slice!*slice_actor*fin*; .echo ==FNENT route==; .fnent eh_slice!slice_actor::route; .echo ==UF route==; uf eh_slice!slice_actor::route; .echo ==FNENT pimpl cleanup==; .fnent eh_slice!slice_pimpl::cleanup; .echo ==UF pimpl cleanup==; uf eh_slice!slice_pimpl::cleanup; q'
+          echo "================== unwind info: eh_slice.exe (clean) =================="
+          "$CDB" -c "${UNW_SLICE}" "${ws}/build/test/eh_slice.exe" || true
 
       # TEMP debug: keep the minidump for offline (WinDbg/TTD-style) analysis.
       - name: Upload crash minidump
