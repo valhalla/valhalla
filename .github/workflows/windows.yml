@@ -136,10 +136,10 @@ jobs:
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
-            -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
-            -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO /OPT:NOICF /VERBOSE:ICF" \
-            -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO /OPT:NOICF" \
+            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG /fsanitize=address" \
+            -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG /fsanitize=address" \
+            -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
+            -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
             -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
             -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
@@ -240,6 +240,13 @@ jobs:
           # funclet is the trigger.
           echo "================== plain: actor / Actor.NoDataNoAutoCleanup (auto_cleanup=false) =================="
           "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataNoAutoCleanup'; echo "exit=$?"
+
+          # ASan (/fsanitize=address on valhalla+test, vcpkg deps uninstrumented -> disable container
+          # overflow to avoid mixed-instrumentation false positives). run the crashing no-data test plain
+          # so any ASan report (upstream heap corruption feeding the bad unwind) prints to the log.
+          export ASAN_OPTIONS="detect_container_overflow=0:abort_on_error=0:print_stats=0:handle_segv=1"
+          echo "================== ASan: actor / Actor.NoDataYieldsNoEdgesError =================="
+          "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 2>&1 | head -150; echo "asan exit=${PIPESTATUS[0]}"
 
           # break at FIRST chance (sxe av) -- the true fault site, before the unwinder walks further and
           # scrambles the stack. sxe av only stops on the AV, not the earlier C++ throw. gtest_catch_exceptions=0
