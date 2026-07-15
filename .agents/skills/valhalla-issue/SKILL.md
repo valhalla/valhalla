@@ -11,7 +11,7 @@ description: Prepare a Valhalla GitHub issue. Use when searching, reproducing, d
 4. For a bug, identify the remote pointing to `valhalla/valhalla`, fetch `master`, and reproduce against it. If it cannot be reproduced, say so; do not invent a cause.
 5. Treat the initial issue as the start of a conversation. It needs enough verified context to discuss, not a comprehensive investigation. Assume maintainers know the project background: link established context instead of restating it, then add only the new observation, reproduction, or question; expand when the discussion exposes a gap.
 6. Keep only the minimal reproduction, expected and actual behavior, and relevant version or environment details.
-7. Use plain, concise English. A simple bug normally needs no headings: state the problem, show the reproduction, then state expected and actual behavior.
+7. Use plain, concise English. Before submission, edit agent-written prose to sound like ordinary casual GitHub writing: replace stock AI phrasing and uncommon punctuation such as en dashes or em dashes with simple wording, commas, colons, parentheses, or separate sentences. Apply this cleanup only to wording the agent introduced; preserve code, identifiers, links, and direct quotes. A simple bug normally needs no headings: state the problem, show the reproduction, then state expected and actual behavior.
 8. Keep a bug report centered on observable behavior. Add likely causes, proposed fixes, validation plans, alternatives, or performance results when a maintainer asks for them. For a feature request, describe the need and desired behavior while leaving implementation design to the follow-up discussion.
 
 If an agent drafts or translates the title or body, start the body with exactly:
