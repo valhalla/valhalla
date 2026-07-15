@@ -47,14 +47,11 @@ env:
 jobs:
   release_build:
     name: Release build
-    runs-on: windows-2025
+    runs-on: windows-2022
     env:
       # TEMP: RelWithDebInfo for symbols so the cdb stack-trace step is useful; revert to Release
       BUILD_TYPE: RelWithDebInfo
-      # TEMP: bumped 2022->2025 to roll the MSVC toolchain (newer VS on windows-2025) AND bust the
-      # vcpkg cache so deps rebuild with the same toolset -- testing if a newer toolchain dodges the
-      # layout-dependent unwind AV. this string only feeds the cache key.
-      MSVC_VERSION: "2025"
+      MSVC_VERSION: "2022"
       # Keep aligned with VCPKG_VERSION in osx_win_python_builds.yml to share the vcpkg cache.
       VCPKG_VERSION: "66c0373d"
       VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
