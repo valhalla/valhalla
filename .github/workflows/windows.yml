@@ -269,8 +269,9 @@ jobs:
 
           if [ -n "$TTD" ]; then
             echo "================== TTD record: actor no-data =================="
-            "$TTD" -accepteula -out "${ws}/nodata.run" -- "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 2>&1 | tail -30 || true
-            TRACE=$(ls "${ws}"/nodata*.run 2>/dev/null | head -1 || true)
+            mkdir -p "${ws}/ttdout"
+            "$TTD" -accepteula -out "${ws}/ttdout" -launch "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 2>&1 | tail -40 || true
+            TRACE=$(ls "${ws}"/ttdout/*.run 2>/dev/null | head -1 || true)
             echo "trace = ${TRACE:-<none>}"
             if [ -n "$TRACE" ]; then
               # replay: run to the AV, then reverse-execute to the last write of the faulting pointer.
