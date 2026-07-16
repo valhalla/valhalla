@@ -1,11 +1,13 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: embedded route elevation decoding after a mid-edge `through` location [#6202](https://github.com/valhalla/valhalla/issues/6202)
 * **Enhancement**
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
    * FIXED: use the new `GraphReader::GetGraphTileHeader` in `baldr/utils/graph_reader.cc:get_graph_tile_header` to prevent loading entire tiles into RAM [#6200](https://github.com/valhalla/valhalla/pull/6200)
    * ADDED: classify `surface=laterite` and `surface=clay` as `Surface::kDirt` [#6171](https://github.com/valhalla/valhalla/issues/6171)
+   * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
