@@ -274,10 +274,12 @@ jobs:
             TRACE=$(ls "${ws}"/ttdout/*.run 2>/dev/null | head -1 || true)
             echo "trace = ${TRACE:-<none>}"
             if [ -n "$TRACE" ]; then
-              # replay: run to the AV, then reverse-execute to the last write of the faulting pointer.
-              # ba r1 @rax on the deref, g- (go back) finds who set rax; dx @$curthread.TTD.Position timestamps.
-              TT='.echo ===AV===; g; r; .echo ===FAULT INSTR===; u @rip-8 L6; .echo ===WHO WROTE [rsp+38h]===; ba w8 @rsp+0x38 \"r; kn 8; g-\"; g-; .echo ===DONE===; q'
-              "$CDB" -c "$TT" -z "$TRACE" 2>&1 | sed -n '1,200p' || true
+              TRACE_WIN=$(cygpath -w "$TRACE")
+              echo "trace(win) = ${TRACE_WIN}"
+              # replay: break at first-chance AV, show the fault, then set a write breakpoint on the
+              # faulting stack slot and g- (reverse-execute) to the instruction that wrote the bad value.
+              TT='sxe av; g; .echo ===FAULT===; r; u @rip-10 L8; .echo ===WHO WROTE rsp+38===; ba w8 @rsp+0x38; g-; .echo ===WRITER===; r; kn 15; .echo ===DONE===; q'
+              "$CDB" -c "$TT" -z "$TRACE_WIN" 2>&1 | sed -n '1,240p' || true
             fi
           else
             echo "TTD unavailable -> falling back on next iteration"
