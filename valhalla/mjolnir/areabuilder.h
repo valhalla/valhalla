@@ -23,9 +23,7 @@ public:
 
 private:
   // TODO: doxygen comment
-  static void GenerateMedialAxis(const GEOSGeometry* polygon,
-                                 const midgard::PointLL& center,
-                                 double meters_per_lng_degree);
+  static std::vector<std::vector<midgard::Point2d>> GenerateMedialAxis(const GEOSGeometry* polygon);
 };
 
 } // namespace mjolnir

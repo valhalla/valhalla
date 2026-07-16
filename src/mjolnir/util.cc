@@ -728,7 +728,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Second pass over the ways to collect the geometry of ways that
   // are members of pedestrian area relations
   if (start_stage <= BuildStage::kParseAreaWays && BuildStage::kParseAreaWays <= end_stage) {
-    if (config.get<bool>("mjolnir.pedestrian_areas", false)) {
+    if (config.get<bool>("mjolnir.pedestrian_areas", false) &&
+        config.get<bool>("mjolnir.include_pedestrian", true)) {
       PBFGraphParser::ParseAreaWays(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
                                     osm_data);
 
@@ -756,7 +757,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
   // Builds pedestrian areas
   if (start_stage <= BuildStage::kBuildAreas && BuildStage::kBuildAreas <= end_stage) {
-    if (config.get<bool>("mjolnir.pedestrian_areas", false)) {
+    if (config.get<bool>("mjolnir.pedestrian_areas", false) &&
+        config.get<bool>("mjolnir.include_pedestrian", true)) {
       AreaBuilder::BuildAreas(config.get_child("mjolnir"), ways_bin, way_nodes_bin, osm_data);
 
       // Write the OSMData to files if the end stage is less than enhancing

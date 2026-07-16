@@ -161,25 +161,36 @@ TEST(area_routing, area_relations_collected) {
 
 TEST(area_routing, area_polygons_assembled) {
   const std::string ascii_map = R"(
-    A-----------------B
-    |                 |
-    |  E----F   I-J   |
-    |  |    |   | |   |
-    |  G----H   K-L   |
-    |                 |
-    D-----------------C
+    W         X      Y         Z
+    |         |      |         |
+    A---------B      M---------N
+    |         |      |         |
+    |  E---F  |      |  Q---R  |
+    |  |   |  |      |  |   |  |
+    |  G---H  |      |  S---T  |
+    |         |      |         |
+    D---------C      P---------O
   )";
 
   const gurka::ways ways = {
       {"ABCDA", {}},
       {"EFHGE", {}},
-      {"IJLKI", {}},
+      {"MNO", {}},
+      {"OPM", {}},
+      {"QRTSQ", {}},
+      {"WA", {{"highway", "footway"}}},
+      {"XB", {{"highway", "footway"}}},
+      {"YM", {{"highway", "footway"}}},
+      {"ZN", {{"highway", "footway"}}},
   };
+
   const gurka::relations relations = {
       {{{
            {gurka::way_member, "ABCDA", "outer"},
            {gurka::way_member, "EFHGE", "inner"},
-           {gurka::way_member, "IJLKI", "inner"},
+           {gurka::way_member, "MNO", "outer"},
+           {gurka::way_member, "OPM", "outer"},
+           {gurka::way_member, "QRTSQ", "inner"},
        }},
        {{"type", "multipolygon"}, {"highway", "pedestrian"}, {"area", "yes"}}},
   };
