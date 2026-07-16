@@ -244,22 +244,28 @@ jobs:
           # install): aka.ms/ttd/download -> .msixbundle (zip) -> per-arch .msix (zip) -> TTD.exe + amd64/.
           echo "================== fetch + extract standalone TTD =================="
           curl -L -s -o "${ws}/ttd.msixbundle" https://aka.ms/ttd/download || echo "TTD download failed"
+          # Expand-Archive rejects non-.zip extensions; use ZipFile (extension-agnostic) for the
+          # .msixbundle and the inner per-arch .msix. print sizes so we catch a bad/HTML download.
           pwsh -NoProfile -Command "
             \$ws='${ws}';
-            Expand-Archive -Force \$ws/ttd.msixbundle \$ws/ttd_bundle;
-            \$msix = Get-ChildItem \$ws/ttd_bundle -Filter '*x64*.msix' | Select-Object -First 1;
-            if (-not \$msix) { \$msix = Get-ChildItem \$ws/ttd_bundle -Filter '*.msix' | Select-Object -First 1 }
-            Write-Host 'msix:' \$msix.FullName;
-            Expand-Archive -Force \$msix.FullName \$ws/ttd;
-            Get-ChildItem -Recurse \$ws/ttd -Filter 'TTD.exe' | ForEach-Object { \$_.FullName }
+            Add-Type -AssemblyName System.IO.Compression.FileSystem;
+            \$f = \"\$ws/ttd.msixbundle\";
+            Write-Host ('bundle bytes: ' + (Get-Item \$f).Length);
+            Remove-Item -Recurse -Force \$ws/ttd_bundle,\$ws/ttd -ErrorAction SilentlyContinue;
+            [System.IO.Compression.ZipFile]::ExtractToDirectory(\$f, \"\$ws/ttd_bundle\");
+            \$msix = Get-ChildItem \$ws/ttd_bundle -Recurse -Filter '*.msix' | Where-Object { \$_.Name -match 'x64|amd64' } | Select-Object -First 1;
+            if (-not \$msix) { \$msix = Get-ChildItem \$ws/ttd_bundle -Recurse -Filter '*.msix' | Select-Object -First 1 }
+            Write-Host ('msix: ' + \$msix.FullName + '  bytes: ' + \$msix.Length);
+            [System.IO.Compression.ZipFile]::ExtractToDirectory(\$msix.FullName, \"\$ws/ttd\");
+            Get-ChildItem -Recurse \$ws/ttd -Filter 'TTD.exe' | ForEach-Object { Write-Host ('found: ' + \$_.FullName) }
           " || echo "TTD extract failed"
-          TTD=$(find "${ws}/ttd" -iname TTD.exe 2>/dev/null | head -1)
+          TTD=$(find "${ws}/ttd" -iname TTD.exe 2>/dev/null | head -1 || true)
           echo "TTD.exe = ${TTD:-<not found>}"
 
           if [ -n "$TTD" ]; then
             echo "================== TTD record: actor no-data =================="
             "$TTD" -accepteula -out "${ws}/nodata.run" -- "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 2>&1 | tail -30 || true
-            TRACE=$(ls "${ws}"/nodata*.run 2>/dev/null | head -1)
+            TRACE=$(ls "${ws}"/nodata*.run 2>/dev/null | head -1 || true)
             echo "trace = ${TRACE:-<none>}"
             if [ -n "$TRACE" ]; then
               # replay: run to the AV, then reverse-execute to the last write of the faulting pointer.
