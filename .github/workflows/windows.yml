@@ -47,11 +47,11 @@ env:
 jobs:
   release_build:
     name: Release build
-    runs-on: windows-2022
+    runs-on: windows-2025
     env:
       # TEMP: RelWithDebInfo for symbols so the cdb stack-trace step is useful; revert to Release
       BUILD_TYPE: RelWithDebInfo
-      MSVC_VERSION: "2022"
+      MSVC_VERSION: "2025"
       # Keep aligned with VCPKG_VERSION in osx_win_python_builds.yml to share the vcpkg cache.
       VCPKG_VERSION: "66c0373d"
       VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
@@ -80,8 +80,8 @@ jobs:
           echo "VCPKG_TRIPLET_PATH=${workspace}/vcpkg/triplets/x64-windows.cmake" >> $GITHUB_ENV
           echo "VCPKG_DEFAULT_BINARY_CACHE=${workspace}/vcpkg/archives" >> $GITHUB_ENV
 
-      - name: Install GNU make & awk
-        run: choco install gawk make
+      - name: Install GNU make, awk, grep
+        run: choco install -y --no-progress --source="https://community.chocolatey.org/api/v2/" gawk make grep
 
       - name: Install vcpkg
         shell: bash
