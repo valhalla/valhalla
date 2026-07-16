@@ -243,7 +243,12 @@ jobs:
           # preinstalled and the store is blocked, so download the standalone package and extract it (no
           # install): aka.ms/ttd/download -> .msixbundle (zip) -> per-arch .msix (zip) -> TTD.exe + amd64/.
           echo "================== fetch + extract standalone TTD =================="
-          curl -L -s -o "${ws}/ttd.msixbundle" https://aka.ms/ttd/download || echo "TTD download failed"
+          # aka.ms/ttd/download redirects to a .appinstaller XML that points at the real .msixbundle;
+          # parse the bundle URL out of it (not hardcoded, survives version bumps).
+          curl -L -s -o "${ws}/ttd.appinstaller" https://aka.ms/ttd/download || echo "appinstaller download failed"
+          bundle_url=$(grep -oiE 'https://[^"]+\.msixbundle' "${ws}/ttd.appinstaller" | head -1 || true)
+          echo "bundle url = ${bundle_url:-<none parsed>}"
+          curl -L -s -o "${ws}/ttd.msixbundle" "${bundle_url}" || echo "TTD download failed"
           # Expand-Archive rejects non-.zip extensions; use ZipFile (extension-agnostic) for the
           # .msixbundle and the inner per-arch .msix. print sizes so we catch a bad/HTML download.
           pwsh -NoProfile -Command "
