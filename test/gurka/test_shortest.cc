@@ -137,11 +137,14 @@ TEST_F(ShortestTest, TaxiUseDistance) {
           {{"/costing_options/" + costing + "/use_distance", "1"}});
 }
 
-// TEST_F(ShortestTest, MotorcycleUseDistance) {
-//   std::string costing = "motorcycle";
-//   doTests(costing, {"ABDE", "BFGD", "ABDE"},
-//           {{"/costing_options/" + costing + "/use_distance", "1"}});
-// }
+TEST_F(ShortestTest, MotorcycleUseDistance) {
+  std::string costing = "motorcycle";
+  doTests(costing, {"ABDE", "BFGD", "ABDE"},
+          {
+              {"/costing_options/" + costing + "/use_distance", "1"},
+              {"/costing_options/" + costing + "/use_trails", "0.5"},
+          });
+}
 
 TEST_F(ShortestTest, MotorScooterUseDistance) {
   std::string costing = "motor_scooter";
