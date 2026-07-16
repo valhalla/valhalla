@@ -277,11 +277,12 @@ jobs:
               TRACE_WIN=$(cygpath -w "$TRACE")
               echo "trace(win) = ${TRACE_WIN}"
               # kit cdb's built-in TTD replay is older than the standalone recorder (v1.11) -> "invalid
-              # file format". put the package's replay DLLs (TTDReplay*.dll) on PATH so cdb loads the
-              # matching-version engine. list what the package shipped so we can see them.
+              # file format". dbgeng loads TTDReplayCPU.dll from ITS OWN dir (not PATH), so copy the
+              # package's matching-version replay DLLs next to cdb.exe/dbgeng.dll.
               ttddir=$(dirname "$TTD")
-              echo "=== TTD package dlls ==="; find "$ttddir" -iname "*.dll" 2>/dev/null | sed "s#${ttddir}/##" | head -40
-              export PATH="${ttddir}:${ttddir}/amd64:${PATH}"
+              cdbdir=$(dirname "$CDB")
+              echo "=== TTD package dlls ==="; find "$ttddir" -iname "TTDReplay*.dll" 2>/dev/null
+              cp -f "${ttddir}"/TTDReplay.dll "${ttddir}"/TTDReplayCPU.dll "${cdbdir}"/ 2>&1 || echo "copy replay dll failed"
               # replay: break at first-chance AV, show the fault, then set a write breakpoint on the
               # faulting stack slot and g- (reverse-execute) to the instruction that wrote the bad value.
               TT='sxe av; g; .echo ===FAULT===; r; u @rip-10 L8; .echo ===WHO WROTE rsp+38===; ba w8 @rsp+0x38; g-; .echo ===WRITER===; r; kn 15; .echo ===DONE===; q'
