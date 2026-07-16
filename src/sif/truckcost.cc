@@ -30,7 +30,7 @@ constexpr float kDefaultServicePenalty = 0.0f; // Seconds
 
 // Other options
 constexpr float kDefaultLowClassPenalty = 15.0f; // Seconds
-constexpr float kDefaultLowClassFactor = 0.5f;
+constexpr float kDefaultLowClassFactor = 1.5f;
 constexpr float kDefaultUseTolls = 0.5f; // Factor between 0 and 1
 constexpr float kDefaultUseTracks = 0.f; // Avoid tracks by default. Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets =
@@ -349,7 +349,7 @@ TruckCost::TruckCost(const Costing& costing)
   get_base_costs(costing);
 
   low_class_penalty_ = costing_options.low_class_penalty();
-  low_class_factor_ = 1.f - costing_options.low_class_factor();
+  low_class_factor_ = costing_options.low_class_factor() - 1.f; // gets added to the base factor
   non_truck_route_factor_ =
       costing_options.use_truck_route() < 0.5f
           ? kMinNonTruckRouteFactor + 2.f * costing_options.use_truck_route()
@@ -785,7 +785,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options){};
+  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options) {};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;
