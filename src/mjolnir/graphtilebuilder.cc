@@ -1238,7 +1238,7 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
 
     std::optional<circle_t> bounding_circle;
     if (build_bounding_circles) {
-      bounding_circle = minimum_bounding_circle(shape, std::numeric_limits<double>::max());
+      bounding_circle = minimum_bounding_circle(shape, kMaxCircleBbox);
     }
 
     // for each bin that got intersected
