@@ -239,14 +239,30 @@ jobs:
           "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataNoAutoCleanup'; echo "exit=$?"
 
           # TIME TRAVEL DEBUGGING: record the crashing no-data run, then replay and step BACKWARD from the
-          # first-chance AV to the instruction that produced the bad value. use the SDK-bundled TTD.exe so
-          # its trace format matches this Kit's cdb/dbgeng replay (the downloaded standalone is newer and
-          # cdb rejects it as "invalid file format").
-          echo "================== locate SDK-bundled TTD.exe =================="
-          TTD=$(find "/c/Program Files (x86)/Windows Kits/10/Debuggers" -iname TTD.exe 2>/dev/null | grep -i x64 | head -1 || true)
-          echo "TTD.exe = ${TTD:-<not found>}"
+          # first-chance AV to the instruction that produced the bad value. this SDK image ships cdb but
+          # NOT TTD, and the SDK cdb is too old to replay a standalone (v1.11) trace. WinDbg standalone
+          # bundles a VERSION-MATCHED TTD.exe (record) + cdb.exe/dbgeng (replay) -- fetch and use those.
+          echo "================== fetch WinDbg standalone (matched TTD + cdb) =================="
+          curl -L -s -o "${ws}/windbg.appinstaller" https://aka.ms/windbg/download || echo "appinstaller dl failed"
+          wbundle=$(grep -oiE 'https://[^"]+\.msixbundle' "${ws}/windbg.appinstaller" | head -1 || true)
+          echo "windbg bundle = ${wbundle:-<none>}"
+          curl -L -s -o "${ws}/windbg.msixbundle" "${wbundle}" || echo "windbg dl failed"
+          pwsh -NoProfile -Command "
+            \$ws='${ws}';
+            Add-Type -AssemblyName System.IO.Compression.FileSystem;
+            Write-Host ('windbg bundle bytes: ' + (Get-Item \"\$ws/windbg.msixbundle\").Length);
+            Remove-Item -Recurse -Force \$ws/wb_bundle,\$ws/windbg -ErrorAction SilentlyContinue;
+            [System.IO.Compression.ZipFile]::ExtractToDirectory(\"\$ws/windbg.msixbundle\", \"\$ws/wb_bundle\");
+            \$m = Get-ChildItem \$ws/wb_bundle -Recurse -Filter '*.msix' | Where-Object { \$_.Name -match 'x64|amd64' } | Select-Object -First 1;
+            if (-not \$m) { \$m = Get-ChildItem \$ws/wb_bundle -Recurse -Filter '*.msix' | Select-Object -First 1 }
+            [System.IO.Compression.ZipFile]::ExtractToDirectory(\$m.FullName, \"\$ws/windbg\");
+          " || echo "windbg extract failed"
+          echo "=== windbg cdb/TTD/dbgeng ==="; find "${ws}/windbg" -iregex '.*\(cdb\|TTD\|dbgeng\|TTDReplay\)[^/]*\.\(exe\|dll\)' 2>/dev/null | grep -iv x86 | sed "s#${ws}/windbg/##" | head -30
+          TTD=$(find "${ws}/windbg" -iname TTD.exe 2>/dev/null | grep -iv x86 | head -1 || true)
+          WCDB=$(find "${ws}/windbg" -iname cdb.exe 2>/dev/null | grep -iv x86 | head -1 || true)
+          echo "TTD = ${TTD:-<none>}"; echo "WinDbg cdb = ${WCDB:-<none>}"
 
-          if [ -n "$TTD" ]; then
+          if [ -n "$TTD" ] && [ -n "$WCDB" ]; then
             echo "================== TTD record: actor no-data =================="
             mkdir -p "${ws}/ttdout"
             "$TTD" -accepteula -out "${ws}/ttdout" -launch "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 2>&1 | tail -40 || true
@@ -254,21 +270,13 @@ jobs:
             echo "trace = ${TRACE:-<none>}"
             if [ -n "$TRACE" ]; then
               TRACE_WIN=$(cygpath -w "$TRACE")
-              echo "trace(win) = ${TRACE_WIN}"
-              # kit cdb's built-in TTD replay is older than the standalone recorder (v1.11) -> "invalid
-              # file format". dbgeng loads TTDReplayCPU.dll from ITS OWN dir (not PATH), so copy the
-              # package's matching-version replay DLLs next to cdb.exe/dbgeng.dll.
-              ttddir=$(dirname "$TTD")
-              cdbdir=$(dirname "$CDB")
-              echo "=== TTD package dlls ==="; find "$ttddir" -iname "TTDReplay*.dll" 2>/dev/null
-              cp -f "${ttddir}"/TTDReplay.dll "${ttddir}"/TTDReplayCPU.dll "${cdbdir}"/ 2>&1 || echo "copy replay dll failed"
-              # replay: break at first-chance AV, show the fault, then set a write breakpoint on the
-              # faulting stack slot and g- (reverse-execute) to the instruction that wrote the bad value.
+              # replay with WinDbg's OWN cdb (matched to its TTD): break at first-chance AV, then set a
+              # write breakpoint on the faulting stack slot and g- (reverse) to the writer of the bad value.
               TT='sxe av; g; .echo ===FAULT===; r; u @rip-10 L8; .echo ===WHO WROTE rsp+38===; ba w8 @rsp+0x38; g-; .echo ===WRITER===; r; kn 15; .echo ===DONE===; q'
-              "$CDB" -c "$TT" -z "$TRACE_WIN" 2>&1 | sed -n '1,240p' || true
+              "$WCDB" -c "$TT" -z "$TRACE_WIN" 2>&1 | sed -n '1,240p' || true
             fi
           else
-            echo "TTD unavailable -> falling back on next iteration"
+            echo "WinDbg TTD/cdb not found -> inspect the listing above"
           fi
 
           # break at FIRST chance (sxe av) -- the true fault site, before the unwinder walks further and
