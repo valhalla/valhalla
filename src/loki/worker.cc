@@ -7,7 +7,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
-#include <cstdio> // TEMP debug prints
 #include <format>
 #include <functional>
 #include <stdexcept>
@@ -377,19 +376,12 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 }
 
 void loki_worker_t::cleanup() {
-  std::fprintf(stderr, "[DBG] loki::cleanup enter this=%p reader=%p\n", (void*)this, (void*)reader.get()); std::fflush(stderr);
   service_worker_t::cleanup();
-  std::fprintf(stderr, "[DBG] loki::cleanup after service_worker::cleanup\n"); std::fflush(stderr);
-  std::fprintf(stderr, "[DBG] loki::cleanup before reader->OverCommitted()\n"); std::fflush(stderr);
   if (reader->OverCommitted()) {
-    std::fprintf(stderr, "[DBG] loki::cleanup reader->Trim()\n"); std::fflush(stderr);
     reader->Trim();
   }
-  std::fprintf(stderr, "[DBG] loki::cleanup before bbox clear\n"); std::fflush(stderr);
   bbox_intersection_.clear();
-  std::fprintf(stderr, "[DBG] loki::cleanup before search clear\n"); std::fflush(stderr);
   search_.clear();
-  std::fprintf(stderr, "[DBG] loki::cleanup done\n"); std::fflush(stderr);
 }
 
 void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {

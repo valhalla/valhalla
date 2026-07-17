@@ -49,8 +49,8 @@ jobs:
     name: Release build
     runs-on: windows-2025
     env:
-      # TEMP: RelWithDebInfo for symbols so the cdb stack-trace step is useful; revert to Release
-      BUILD_TYPE: RelWithDebInfo
+      # for native crash debugging flip to RelWithDebInfo so the cdb/TTD steps below get symbols
+      BUILD_TYPE: Release
       MSVC_VERSION: "2025"
       # Keep aligned with VCPKG_VERSION in osx_win_python_builds.yml to share the vcpkg cache.
       VCPKG_VERSION: "66c0373d"
@@ -130,13 +130,15 @@ jobs:
         shell: bash
         run: |
           set -x
+          # for crash debugging (BUILD_TYPE=RelWithDebInfo) add unoptimized codegen + full pdbs:
+          #   -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
+          #   -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
+          #   -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
+          #   -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
+          # NOTE: use DASH form (-Od not /Od), msys bash mangles /X flags into paths
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
-            -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
-            -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
-            -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
             -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
             -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
@@ -172,7 +174,6 @@ jobs:
             vcpkg/downloads/tools
 
       - name: Build Valhalla
-        if: false  # TEMP: skip full build/install during crash diagnosis (cdb step builds what it needs)
         shell: bash
         run: |
           set -x
@@ -184,148 +185,108 @@ jobs:
           cmake --build build -- -k 0
           cmake --build build --target install
 
-      # TEMP debug: is the system C runtime older than the toolset we built with? if these differ,
-      # the FH4 unwind crash is a redist mismatch (fix = app-local deploy the toolset CRT).
-      - name: VC runtime versions (System32 vs toolset redist)
-        shell: pwsh
-        run: |
-          "System32 VCRUNTIME140_1.dll: " + (Get-Item C:\Windows\System32\VCRUNTIME140_1.dll).VersionInfo.FileVersion
-          "System32 VCRUNTIME140.dll:   " + (Get-Item C:\Windows\System32\VCRUNTIME140.dll).VersionInfo.FileVersion
-          "Toolset redist copies:"
-          Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022\*\VC\Redist\MSVC\*\x64\Microsoft.VC14*.CRT\VCRUNTIME140_1.dll' -ErrorAction SilentlyContinue |
-            ForEach-Object { "  " + $_.VersionInfo.FileVersion + "  " + $_.FullName }
-
-      # TEMP debug: run the no-data test under cdb, breaking on the access violation to print a
-      # symbolized stack. Confirms whether the actor_t scoped-cleanup unwind AVs when tiles are
-      # absent, or fails gracefully (171/170). Remove once diagnosed.
-      - name: Stack-trace no-data crash
-        shell: bash
-        run: |
-          set -x
-          export MSYS_NO_PATHCONV=1
-          ws="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
-          vcpkg_bin="${ws}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
-          # actor.exe's vcpkg DLLs (prime_server.dll etc.). the no-data case needs NO tiles and NO
-          # tz.sqlite, so this probe is independent of the spatialite/vcpkg-cache situation.
-          export PATH="$PATH:${vcpkg_bin}/bin"
-          # public symbol server (+ local cache) so system frames in the stack resolve too
-          export _NT_SYMBOL_PATH="cache*${ws}/symcache;srv*https://msdl.microsoft.com/download/symbols"
-          CDB="/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
-          [ -x "$CDB" ] || CDB="cdb"
-          # slice: NO valhalla -- generic Finally + cleanup, but now wrapped in a gtest TEST and run like
-          # the actor test (--gtest_catch_exceptions=0) so the throw unwinds through gtest's frames.
-          cmake --build build --target eh_slice -- -k 0 || true
-          if [ -f "${ws}/build/test/eh_slice.exe" ]; then
-            echo "================== plain: eh_slice (gtest, catch_exceptions=0) =================="
-            "${ws}/build/test/eh_slice.exe" --gtest_catch_exceptions=0; echo "slice exit=$?"
-            SLICE='.echo ===SLICE CRASH===; .lastevent; .exr -1; .echo ===REGISTERS===; r; .echo ===STACK===; kn 80; .echo ===MODULE===; lmvm eh_slice; .echo ===ANALYZE===; !analyze -v; q'
-            echo "================== cdb: eh_slice (first-chance) =================="
-            "$CDB" -g -G -c "sxe av; g; ${SLICE}" "${ws}/build/test/eh_slice.exe" --gtest_filter='Slice.NoData' --gtest_catch_exceptions=0 || true
-          else
-            echo "MISSING eh_slice.exe (slice build failed?)"
-          fi
-
-          # -v echoes the actual link command so we can confirm /OPT:NOICF reaches link.exe; /VERBOSE:ICF
-          # (linker flag above) lists every function ICF folds. capture + grep both.
-          cmake --build build --target actor -v -- -k 0 2>&1 | tee "${ws}/actor_link.log" >/dev/null || true
-          echo "=== actor link command + ICF fold report ==="
-          grep -iE "link\.exe|/OPT:|/VERBOSE|ICF|folded|identical" "${ws}/actor_link.log" | head -60 || true
-          [ -f "${ws}/build/test/actor.exe" ] || { echo "MISSING actor.exe (build failed?)"; exit 1; }
-
-          # full actor suite plain: with the vtable fix every cleanup/set_interrupt dispatch is correct,
-          # so all 7 tests should pass with exit 0
-          echo "================== plain: actor (full suite) =================="
-          "${ws}/build/test/actor.exe"; echo "full suite exit=$?"
-
-          # control: same no-data path with auto_cleanup=false -> no cleanup funclet runs during unwind.
-          # should exit 0 (clean throw+catch). if it does while the auto_cleanup=true run AVs, the cleanup
-          # funclet is the trigger.
-          echo "================== plain: actor / Actor.NoDataNoAutoCleanup (auto_cleanup=false) =================="
-          "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataNoAutoCleanup'; echo "exit=$?"
-
-          # TIME TRAVEL DEBUGGING: record the crashing no-data run, then replay and step BACKWARD from the
-          # first-chance AV to the instruction that produced the bad value. this SDK image ships cdb but
-          # NOT TTD, and the SDK cdb is too old to replay a standalone (v1.11) trace. WinDbg standalone
-          # bundles a VERSION-MATCHED TTD.exe (record) + cdb.exe/dbgeng (replay) -- fetch and use those.
-          echo "================== fetch WinDbg standalone (matched TTD + cdb) =================="
-          curl -L -s -o "${ws}/windbg.appinstaller" https://aka.ms/windbg/download || echo "appinstaller dl failed"
-          wbundle=$(grep -oiE 'https://[^"]+\.msixbundle' "${ws}/windbg.appinstaller" | head -1 || true)
-          echo "windbg bundle = ${wbundle:-<none>}"
-          curl -L -s -o "${ws}/windbg.msixbundle" "${wbundle}" || echo "windbg dl failed"
-          pwsh -NoProfile -Command "
-            \$ws='${ws}';
-            Add-Type -AssemblyName System.IO.Compression.FileSystem;
-            Write-Host ('windbg bundle bytes: ' + (Get-Item \"\$ws/windbg.msixbundle\").Length);
-            Remove-Item -Recurse -Force \$ws/wb_bundle,\$ws/windbg -ErrorAction SilentlyContinue;
-            [System.IO.Compression.ZipFile]::ExtractToDirectory(\"\$ws/windbg.msixbundle\", \"\$ws/wb_bundle\");
-            \$m = Get-ChildItem \$ws/wb_bundle -Recurse -Filter '*.msix' | Where-Object { \$_.Name -match 'x64|amd64' } | Select-Object -First 1;
-            if (-not \$m) { \$m = Get-ChildItem \$ws/wb_bundle -Recurse -Filter '*.msix' | Select-Object -First 1 }
-            [System.IO.Compression.ZipFile]::ExtractToDirectory(\$m.FullName, \"\$ws/windbg\");
-          " || echo "windbg extract failed"
-          echo "=== windbg cdb/TTD/dbgeng ==="; find "${ws}/windbg" -iregex '.*\(cdb\|TTD\|dbgeng\|TTDReplay\)[^/]*\.\(exe\|dll\)' 2>/dev/null | grep -iv x86 | sed "s#${ws}/windbg/##" | head -30
-          TTD=$(find "${ws}/windbg" -iname TTD.exe 2>/dev/null | grep -iv x86 | head -1 || true)
-          WCDB=$(find "${ws}/windbg" -iname cdb.exe 2>/dev/null | grep -iv x86 | head -1 || true)
-          echo "TTD = ${TTD:-<none>}"; echo "WinDbg cdb = ${WCDB:-<none>}"
-
-          if [ -n "$TTD" ] && [ -n "$WCDB" ]; then
-            echo "================== TTD record: actor no-data =================="
-            mkdir -p "${ws}/ttdout"
-            "$TTD" -accepteula -out "${ws}/ttdout" -launch "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 2>&1 | tail -40 || true
-            TRACE=$(ls "${ws}"/ttdout/*.run 2>/dev/null | head -1 || true)
-            echo "trace = ${TRACE:-<none>}"
-            if [ -n "$TRACE" ]; then
-              TRACE_WIN=$(cygpath -w "$TRACE")
-              # replay with WinDbg's OWN cdb (matched to its TTD): break at first-chance AV, then set a
-              # write breakpoint on the faulting stack slot and g- (reverse) to the writer of the bad value.
-              TT='sxe av; g; .echo ===FAULT===; r; u @rip-10 L8; .echo ===WHO WROTE rsp+38===; ba w8 @rsp+0x38; g-; .echo ===WRITER===; r; kn 15; .echo ===DONE===; q'
-              "$WCDB" -c "$TT" -z "$TRACE_WIN" 2>&1 | sed -n '1,240p' || true
-            fi
-          else
-            echo "WinDbg TTD/cdb not found -> inspect the listing above"
-          fi
-
-          # break at FIRST chance (sxe av) -- the true fault site, before the unwinder walks further and
-          # scrambles the stack. sxe av only stops on the AV, not the earlier C++ throw. gtest_catch_exceptions=0
-          # so gtest's SEH filter doesn't swallow it. the [DBG] print trail shows how far cleanup gets.
-          DUMP='.echo ===CRASH===; .lastevent; .echo ===EXCEPTION RECORD===; .exr -1; .echo ===REGISTERS===; r; .echo ===FAULTING INSTR===; u @rip-10 L8; .echo ===STACK===; kn 200; .echo ===MODULE===; lmvm actor; .echo ===DUMP===; .dump /ma D:/a/valhalla/valhalla/build/test/actor_nodata.dmp; .echo ===ANALYZE===; !analyze -v; q'
-          echo "================== cdb: actor / Actor.NoDataYieldsNoEdgesError (auto_cleanup=true, first-chance) =================="
-          "$CDB" -g -G -c "sxe av; g; ${DUMP}" \
-            "${ws}/build/test/actor.exe" --gtest_filter='Actor.NoDataYieldsNoEdgesError' --gtest_catch_exceptions=0 || true
-
-          # dump the unwind info (.pdata/.xdata via .fnent) + funclet disasm (uf) for the cleanup chain,
-          # so we can diff the CRASHING actor.exe funclet vs the CLEAN eh_slice.exe funclet -- concrete
-          # metadata instead of guessing. no run, just load + dump. x lists funclet symbol names too.
-          UNW_ACTOR='.echo ==X route==; x actor!valhalla::tyr::actor_t::route*; .echo ==X pimpl cleanup==; x actor!valhalla::tyr::actor_t::pimpl_t::cleanup*; .echo ==X finally/dtor funclets==; x actor!*actor_t*dtor*; x actor!*actor_t*fin*; .echo ==FNENT route==; .fnent actor!valhalla::tyr::actor_t::route; .echo ==UF route==; uf actor!valhalla::tyr::actor_t::route; .echo ==FNENT pimpl cleanup==; .fnent actor!valhalla::tyr::actor_t::pimpl_t::cleanup; .echo ==UF pimpl cleanup==; uf actor!valhalla::tyr::actor_t::pimpl_t::cleanup; q'
-          echo "================== unwind info: actor.exe (crashing) =================="
-          "$CDB" -c "${UNW_ACTOR}" "${ws}/build/test/actor.exe" || true
-          UNW_SLICE='.echo ==X route==; x eh_slice!slice_actor::route*; .echo ==X pimpl cleanup==; x eh_slice!slice_pimpl::cleanup*; .echo ==X finally/dtor funclets==; x eh_slice!*slice_actor*dtor*; x eh_slice!*slice_actor*fin*; .echo ==FNENT route==; .fnent eh_slice!slice_actor::route; .echo ==UF route==; uf eh_slice!slice_actor::route; .echo ==FNENT pimpl cleanup==; .fnent eh_slice!slice_pimpl::cleanup; .echo ==UF pimpl cleanup==; uf eh_slice!slice_pimpl::cleanup; q'
-          echo "================== unwind info: eh_slice.exe (clean) =================="
-          "$CDB" -c "${UNW_SLICE}" "${ws}/build/test/eh_slice.exe" || true
-
-          # raw .xdata + FH4 EH scope-table bytes for route (the funclet-dispatch metadata .fnent only
-          # summarizes). two passes: get UnwindInfoAddress RVA, then db module+RVA (ASLR-stable). diff
-          # actor(crashing) vs slice(clean) -- if these differ, THAT is the concrete defect.
-          dump_fh4() {  # $1=exe  $2=symbol
-            local exe="$1" sym="$2" mod rva
-            mod=$(basename "$exe" .exe)
-            rva=$("$CDB" -c ".fnent ${mod}!${sym}; q" "$exe" 2>/dev/null | tr -d '\r`' | grep -i "UnwindInfoAddress" | grep -oiE "[0-9a-f]+ *$" | tr -d ' ' | tail -1)
-            echo "--- ${mod}!${sym}  UnwindInfoAddress RVA=${rva} ---"
-            "$CDB" -c "db ${mod}+0x${rva} L140; q" "$exe" 2>/dev/null | tr -d '\r' | grep -iE "^[0-9a-f]{8}"
-          }
-          echo "================== raw FH4 EH data: route (actor vs slice) =================="
-          dump_fh4 "${ws}/build/test/actor.exe" "valhalla::tyr::actor_t::route" | tee "${ws}/fh4_actor.txt"
-          dump_fh4 "${ws}/build/test/eh_slice.exe" "slice_actor::route" | tee "${ws}/fh4_slice.txt"
-          echo "================== FH4 diff (byte cols only) =================="
-          diff <(awk '{$1=""; print}' "${ws}/fh4_actor.txt") <(awk '{$1=""; print}' "${ws}/fh4_slice.txt") && echo "FH4 BYTES IDENTICAL" || echo "FH4 BYTES DIFFER (see above)"
-
-      # TEMP debug: keep the minidump for offline (WinDbg/TTD-style) analysis.
-      - name: Upload crash minidump
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: actor-nodata-dump
-          path: build/test/*.dmp
-          if-no-files-found: ignore
+      # ------------------------------------------------------------------------------------------
+      # CRASH DEBUGGING CHEATSHEET
+      # to reuse: set BUILD_TYPE=RelWithDebInfo + the -Od configure flags above, uncomment the 
+      # steps below, and adapt exe names / gtest filters / symbols to the failure under
+      # investigation. what these give you:
+      #   - cdb (preinstalled SDK kit) first-chance AV stack traces + minidump
+      #   - time travel debugging: SDK cdb canNOT replay standalone TTD traces; fetch WinDbg
+      #     standalone (aka.ms/windbg/download -> appinstaller xml -> msixbundle url -> extract
+      #     with ZipFile, Expand-Archive rejects it) for a version-matched TTD.exe + cdb.exe;
+      #     record with its TTD, replay with ITS cdb: 'sxe av; g' then 'ba w8 <slot>; g-' walks
+      #     BACKWARD to whoever wrote the bad value
+      #   - .fnent/uf dumps of unwind metadata + disasm (the 'call [vptr+8]' seen in uf output
+      #     was the ground truth that cracked the vtable-layout bug; trust disasm over symbols)
+      #   - MSYS_NO_PATHCONV=1 everywhere or msys mangles /flags and C:\ paths
+      # ------------------------------------------------------------------------------------------
+      # # is the system C runtime older than the toolset we built with? if these differ,
+      # # a crash inside the unwinder can be a redist mismatch (fix = app-local deploy the toolset CRT).
+      # - name: VC runtime versions (System32 vs toolset redist)
+      #   shell: pwsh
+      #   run: |
+      #     "System32 VCRUNTIME140_1.dll: " + (Get-Item C:\Windows\System32\VCRUNTIME140_1.dll).VersionInfo.FileVersion
+      #     "System32 VCRUNTIME140.dll:   " + (Get-Item C:\Windows\System32\VCRUNTIME140.dll).VersionInfo.FileVersion
+      #     "Toolset redist copies:"
+      #     Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022\*\VC\Redist\MSVC\*\x64\Microsoft.VC14*.CRT\VCRUNTIME140_1.dll' -ErrorAction SilentlyContinue |
+      #       ForEach-Object { "  " + $_.VersionInfo.FileVersion + "  " + $_.FullName }
+      #
+      # - name: Stack-trace a crashing test
+      #   shell: bash
+      #   run: |
+      #     set -x
+      #     export MSYS_NO_PATHCONV=1
+      #     ws="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
+      #     # which test to debug (target name = test filename without extension) and which cases
+      #     TEST_TARGET=actor
+      #     GTEST_FILTER='*'
+      #     EXE="${ws}/build/test/${TEST_TARGET}.exe"
+      #     # test exes need the vcpkg-installed DLLs on PATH
+      #     export PATH="$PATH:${ws}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin"
+      #     CDB="/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
+      #     [ -x "$CDB" ] || CDB="cdb"
+      #     # public symbol server (+ local cache) so system frames in the stack resolve too
+      #     export _NT_SYMBOL_PATH="cache*${ws}/symcache;srv*https://msdl.microsoft.com/download/symbols"
+      #     cmake --build build --target "$TEST_TARGET" -- -k 0 || true
+      #     [ -f "$EXE" ] || { echo "MISSING $EXE (build failed?)"; exit 1; }
+      #
+      #     # plain run first: exit code + output up to the crash
+      #     echo "================== plain run =================="
+      #     "$EXE" --gtest_filter="$GTEST_FILTER"; echo "exit=$?"
+      #
+      #     # cdb run, breaking at FIRST chance (sxe av) -- the true fault site, before the unwinder
+      #     # walks further and scrambles the stack. sxe av only stops on the AV, not any earlier C++
+      #     # throw. gtest_catch_exceptions=0 so gtest's SEH filter doesn't swallow it. also writes a
+      #     # minidump for offline analysis (uploaded by the artifact step below).
+      #     DUMP='.echo ===CRASH===; .lastevent; .echo ===EXCEPTION RECORD===; .exr -1; .echo ===REGISTERS===; r; .echo ===FAULTING INSTR===; u @rip-10 L8; .echo ===STACK===; kn 200; .echo ===DUMP===; .dump /ma D:/a/valhalla/valhalla/build/test/crash.dmp; .echo ===ANALYZE===; !analyze -v; q'
+      #     echo "================== cdb first-chance AV =================="
+      #     "$CDB" -g -G -c "sxe av; g; ${DUMP}" "$EXE" --gtest_filter="$GTEST_FILTER" --gtest_catch_exceptions=0 || true
+      #
+      #     # static unwind metadata + disasm of suspect code, no run needed: x finds mangled names,
+      #     # .fnent dumps the .pdata/.xdata unwind info, uf disassembles. adapt the symbols.
+      #     "$CDB" -c "x ${TEST_TARGET}!valhalla::tyr::actor_t::*; .fnent ${TEST_TARGET}!valhalla::tyr::actor_t::route; uf ${TEST_TARGET}!valhalla::tyr::actor_t::route; q" "$EXE" || true
+      #
+      #     # TIME TRAVEL DEBUGGING: record the crash, then replay and step BACKWARD from the fault
+      #     # to whoever produced the bad value. see the cheatsheet above for why WinDbg standalone.
+      #     echo "================== fetch WinDbg standalone (matched TTD + cdb) =================="
+      #     curl -L -s -o "${ws}/windbg.appinstaller" https://aka.ms/windbg/download || echo "appinstaller dl failed"
+      #     wbundle=$(grep -oiE 'https://[^"]+\.msixbundle' "${ws}/windbg.appinstaller" | head -1 || true)
+      #     curl -L -s -o "${ws}/windbg.msixbundle" "${wbundle}" || echo "windbg dl failed"
+      #     pwsh -NoProfile -Command "
+      #       \$ws='${ws}';
+      #       Add-Type -AssemblyName System.IO.Compression.FileSystem;
+      #       Remove-Item -Recurse -Force \$ws/wb_bundle,\$ws/windbg -ErrorAction SilentlyContinue;
+      #       [System.IO.Compression.ZipFile]::ExtractToDirectory(\"\$ws/windbg.msixbundle\", \"\$ws/wb_bundle\");
+      #       \$m = Get-ChildItem \$ws/wb_bundle -Recurse -Filter '*.msix' | Where-Object { \$_.Name -match 'x64|amd64' } | Select-Object -First 1;
+      #       [System.IO.Compression.ZipFile]::ExtractToDirectory(\$m.FullName, \"\$ws/windbg\");
+      #     " || echo "windbg extract failed"
+      #     TTD=$(find "${ws}/windbg" -iname TTD.exe 2>/dev/null | grep -iv x86 | head -1 || true)
+      #     WCDB=$(find "${ws}/windbg" -iname cdb.exe 2>/dev/null | grep -iv x86 | head -1 || true)
+      #
+      #     if [ -n "$TTD" ] && [ -n "$WCDB" ]; then
+      #       echo "================== TTD record + reverse replay =================="
+      #       mkdir -p "${ws}/ttdout"
+      #       "$TTD" -accepteula -out "${ws}/ttdout" -launch "$EXE" --gtest_filter="$GTEST_FILTER" --gtest_catch_exceptions=0 2>&1 | tail -40 || true
+      #       TRACE=$(ls "${ws}"/ttdout/*.run 2>/dev/null | head -1 || true)
+      #       if [ -n "$TRACE" ]; then
+      #         # replay with WinDbg's OWN cdb (matched to its TTD): run to the first-chance AV, put
+      #         # a write breakpoint on the faulting slot (adapt @rsp+0x38 to the bad operand), then
+      #         # g- reverse-executes to the instruction that wrote it. r/kn show who and from where.
+      #         TT='sxe av; g; .echo ===FAULT===; r; u @rip-10 L8; .echo ===WHO WROTE IT===; ba w8 @rsp+0x38; g-; .echo ===WRITER===; r; kn 15; .echo ===DONE===; q'
+      #         "$WCDB" -c "$TT" -z "$(cygpath -w "$TRACE")" 2>&1 | sed -n '1,240p' || true
+      #       fi
+      #     else
+      #       echo "WinDbg TTD/cdb not found"
+      #     fi
+      #
+      # # keep the minidump for offline (windbg) analysis
+      # - name: Upload crash minidump
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: crash-dump
+      #     path: build/test/*.dmp
+      #     if-no-files-found: ignore
 
       - name: Show commit under test
         shell: bash
@@ -338,7 +299,6 @@ jobs:
           echo "=================================================================="
 
       - name: Run tests
-        if: false  # TEMP: skip full check during crash diagnosis
         shell: bash
         run: |
           set -x

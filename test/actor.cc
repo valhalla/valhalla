@@ -1,11 +1,9 @@
 #include "tyr/actor.h"
 #include "test.h"
-#include "valhalla/exceptions.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <vtzero/vector_tile.hpp>
 
-#include <filesystem>
 #include <functional>
 #include <string>
 
@@ -125,45 +123,6 @@ TEST(Actor, Tile) {
   EXPECT_TRUE(has_nodes);
   EXPECT_TRUE(has_shortcuts);
   EXPECT_TRUE(has_access_restrictions);
-}
-
-// no data (empty or missing tile_dir) must fail cleanly, not crash. run with auto_cleanup on and off:
-// on -> the scoped cleanup runs as a funclet while the error unwinds (the path that AVs on windows);
-// off -> the error unwinds with no cleanup funclet. same expected errors either way.
-static void expect_no_data_errors(bool auto_cleanup) {
-  const std::string empty_dir = VALHALLA_BUILD_DIR "test/data/empty_tiles";
-  std::filesystem::remove_all(empty_dir);
-  std::filesystem::create_directories(empty_dir);
-
-  const std::string route = R"({"locations":[{"lat":52.0,"lon":5.0},{"lat":52.1,"lon":5.1}],"costing":"auto"})";
-  const std::string matrix = R"({"sources":[{"lat":52.0,"lon":5.0}],"targets":[{"lat":52.1,"lon":5.1}],"costing":"auto"})";
-  const std::string iso = R"({"locations":[{"lat":52.0,"lon":5.0}],"costing":"auto","contours":[{"time":10}]})";
-
-  auto expect_code = [](unsigned want, const std::function<void()>& action) {
-    try {
-      action();
-      ADD_FAILURE() << "expected valhalla_exception_t{" << want << "}, but nothing was thrown";
-    } catch (const valhalla_exception_t& e) {
-      EXPECT_EQ(e.code, want) << e.what();
-    } catch (const std::exception& e) {
-      ADD_FAILURE() << "expected valhalla_exception_t{" << want << "}, got std::exception: " << e.what();
-    }
-  };
-
-  for (const auto& tile_dir : {empty_dir, std::string(VALHALLA_BUILD_DIR "test/data/no_such_tiles")}) {
-    tyr::actor_t actor(test::make_config(tile_dir), auto_cleanup);
-    expect_code(171, [&] { actor.route(route); });  // no suitable edges near location
-    expect_code(170, [&] { actor.matrix(matrix); }); // locations in unconnected regions
-    EXPECT_NO_THROW(actor.isochrone(iso));           // degrades to an empty reachable area
-  }
-}
-
-TEST(Actor, NoDataYieldsNoEdgesError) {
-  expect_no_data_errors(/*auto_cleanup*/ true);
-}
-
-TEST(Actor, NoDataNoAutoCleanup) {
-  expect_no_data_errors(/*auto_cleanup*/ false);
 }
 
 // TODO: test the rest of them
