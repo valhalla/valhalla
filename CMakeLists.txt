@@ -274,17 +274,19 @@ if(ENABLE_SERVICES)
   find_package(libprime_server 0.11.0 CONFIG QUIET)
   if(libprime_server_FOUND)
     set(libprime_server_targets libprime_server::prime_server)
-    target_compile_definitions(libprime_server::prime_server INTERFACE ENABLE_SERVICES)
   else()
     pkg_check_modules(libprime_server IMPORTED_TARGET libprime_server>=0.6.3)
     if(libprime_server_FOUND)
       set(libprime_server_targets PkgConfig::libprime_server)
-      target_compile_definitions(PkgConfig::libprime_server INTERFACE ENABLE_SERVICES)
     else()
       set(ENABLE_SERVICES OFF)
       message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
     endif()
   endif()
+  # must be defined globally, not per target: service_worker_t in worker.h grows a
+  # virtual work() under this define, so any tu compiled without it sees a different
+  # vtable layout and virtual calls dispatch to the wrong slot
+  add_compile_definitions(ENABLE_SERVICES)
 endif()
 
 

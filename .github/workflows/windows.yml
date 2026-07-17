@@ -232,6 +232,11 @@ jobs:
           grep -iE "link\.exe|/OPT:|/VERBOSE|ICF|folded|identical" "${ws}/actor_link.log" | head -60 || true
           [ -f "${ws}/build/test/actor.exe" ] || { echo "MISSING actor.exe (build failed?)"; exit 1; }
 
+          # full actor suite plain: with the vtable fix every cleanup/set_interrupt dispatch is correct,
+          # so all 7 tests should pass with exit 0
+          echo "================== plain: actor (full suite) =================="
+          "${ws}/build/test/actor.exe"; echo "full suite exit=$?"
+
           # control: same no-data path with auto_cleanup=false -> no cleanup funclet runs during unwind.
           # should exit 0 (clean throw+catch). if it does while the auto_cleanup=true run AVs, the cleanup
           # funclet is the trigger.
