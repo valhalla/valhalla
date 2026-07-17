@@ -564,7 +564,10 @@ void build_live_traffic_data(const boost::property_tree::ptree& config,
 
       /* Write strings to files `test1.txt` and `test2.txt` */
       std::string blanktile = buffer.str();
-      std::string filename = valhalla::baldr::GraphTile::FileSuffix(tile_id);
+      // tar entries always use forward slash, even on windows
+      std::string filename =
+          valhalla::baldr::GraphTile::FileSuffix(tile_id, valhalla::baldr::SUFFIX_NON_COMPRESSED,
+                                                 false);
       auto e1 = mtar_write_file_header(&tar, filename.c_str(), blanktile.size());
       if (e1 != MTAR_ESUCCESS) {
         throw std::runtime_error("Could not write tar-file header");

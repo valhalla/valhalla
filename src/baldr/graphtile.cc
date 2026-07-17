@@ -549,19 +549,12 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
 
 // Get the tile Id given the full path to the file.
 GraphId GraphTile::GetTileId(const std::string& fname) {
-  std::unordered_set<std::string::value_type> allowed{std::filesystem::path::preferred_separator,
-                                                      '0',
-                                                      '1',
-                                                      '2',
-                                                      '3',
-                                                      '4',
-                                                      '5',
-                                                      '6',
-                                                      '7',
-                                                      '8',
-                                                      '9'};
+  // accept both separators regardless of platform: disk paths may use the native one
+  // while tar entries always use forward slash
+  std::unordered_set<std::string::value_type> allowed{'/', '\\', '0', '1', '2', '3', '4',
+                                                      '5', '6',  '7', '8', '9'};
   // we require slashes
-  auto pos = fname.find_last_of(std::filesystem::path::preferred_separator);
+  auto pos = fname.find_last_of("/\\");
   if (pos == fname.npos) {
     throw std::runtime_error("Invalid tile path: " + fname);
   }
@@ -572,7 +565,8 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
       break;
     }
   }
-  allowed.erase(static_cast<std::string::value_type>(std::filesystem::path::preferred_separator));
+  allowed.erase('/');
+  allowed.erase('\\');
 
   // if you didnt reach the end and it wasnt a dot then this isnt valid
   if (pos != fname.size() && fname[pos] != '.') {
@@ -590,7 +584,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
     }
 
     // if its the last thing or the next one is a separator thats another digit
-    if (pos == 0 || fname[pos - 1] == std::filesystem::path::preferred_separator) {
+    if (pos == 0 || fname[pos - 1] == '/' || fname[pos - 1] == '\\') {
       // this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
       if (dist != 3 && dist != 1) {

@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <sstream>
 #include <vector>
 
@@ -28,11 +29,15 @@ struct testable_graphtile : public valhalla::baldr::GraphTile {
 };
 
 TEST(Graphtile, FileSuffix) {
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(2, 2, 0)), "2/000/000/002.gph");
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(4, 2, 0)), "2/000/000/004.gph");
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(64799, 1, 0)), "1/064/799.gph");
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(49, 0, 0)), "0/000/049.gph");
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1000000, 3, 1)), "3/001/000/000.gph");
+  // file paths use the native separator
+  auto native = [](const std::string& p) {
+    return std::filesystem::path(p).make_preferred().string();
+  };
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(2, 2, 0)), native("2/000/000/002.gph"));
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(4, 2, 0)), native("2/000/000/004.gph"));
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(64799, 1, 0)), native("1/064/799.gph"));
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(49, 0, 0)), native("0/000/049.gph"));
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1000000, 3, 1)), native("3/001/000/000.gph"));
   EXPECT_THROW(GraphTile::FileSuffix(GraphId(64800, 1, 0)), std::runtime_error);
   EXPECT_THROW(GraphTile::FileSuffix(GraphId(1337, 6, 0)), std::runtime_error);
   EXPECT_THROW(GraphTile::FileSuffix(GraphId(1036800, 2, 0)), std::runtime_error);
@@ -57,6 +62,9 @@ TEST(Graphtile, IdFromString) {
   EXPECT_EQ(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002"),
             GraphId(1000002, 3, 0));
   EXPECT_EQ(GraphTile::GetTileId("2/000/791/317.gph.gz"), GraphId(791317, 2, 0));
+  // windows style and mixed separators parse too
+  EXPECT_EQ(GraphTile::GetTileId("foo\\bar\\1\\000\\002.gph"), GraphId(2, 1, 0));
+  EXPECT_EQ(GraphTile::GetTileId("foo\\bar/2/001\\000/002.gph"), GraphId(1000002, 2, 0));
 
   EXPECT_THROW(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/1/000/002/.gph"),
                std::runtime_error);

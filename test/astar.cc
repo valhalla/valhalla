@@ -222,7 +222,8 @@ void make_tile() {
 
   auto tile = GraphTile::Create(test_dir, tile_id);
   ASSERT_TRUE(tile);
-  ASSERT_EQ(tile->FileSuffix(tile_id), std::string("2/000/519/120.gph"))
+  ASSERT_EQ(tile->FileSuffix(tile_id),
+            std::filesystem::path("2/000/519/120.gph").make_preferred().string())
       << "Tile ID didn't match the expected filename";
 
   std::filesystem::path tile_path{test_dir};
