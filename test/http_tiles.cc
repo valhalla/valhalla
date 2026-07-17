@@ -125,7 +125,7 @@ TEST_F(HttpTilesWithCache, test_connectivity_map_empty_cache) {
 }
 
 TEST_F(HttpTilesWithCache, test_connectivity_map_partial_cache) {
-  // tile lazy-loading enabled: one tile already on disk at startup, the other two only reachable via a lazy fetch
+  // tile lazy-loading enabled: one tile on disk at startup, others only reachable via lazy fetch
   std::filesystem::create_directories("url_tile_cache/0/003");
   std::filesystem::copy_file(tile_source_dir + "/0/003/196.gph", "url_tile_cache/0/003/196.gph");
 
@@ -143,7 +143,7 @@ TEST_F(HttpTilesWithCache, test_connectivity_map_partial_cache) {
 }
 
 TEST_F(HttpTilesWithCache, test_connectivity_map_with_tile_extract) {
-  // tile lazy-loading config ambiguity: if both a tar-extract and tile-url are configured, tar-extract takes priority
+  // tile lazy-loading ambiguity: both tar-extract and tile-url configured, tar-extract has priority
   const std::string log_path = "url_tile_cache/connectivity.log";
   std::filesystem::remove(log_path);
   midgard::logging::Configure({{"type", "file"}, {"file_name", log_path}});
@@ -160,7 +160,8 @@ TEST_F(HttpTilesWithCache, test_connectivity_map_with_tile_extract) {
 
   midgard::logging::Configure({{"type", "std_out"}});
   std::ifstream log_file(log_path);
-  std::string log_contents((std::istreambuf_iterator<char>(log_file)), std::istreambuf_iterator<char>());
+  std::string log_contents((std::istreambuf_iterator<char>(log_file)),
+                           std::istreambuf_iterator<char>());
 
   EXPECT_NE(route_json.find("Wijckskade"), std::string::npos);
   EXPECT_NE(route_json.find("Lauwerstraat"), std::string::npos);
