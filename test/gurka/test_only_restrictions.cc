@@ -100,6 +100,45 @@ TEST(OnlyRestrictions, DumpGraphStats) {
     printf("[STATS] tile %u edges=%u fwd_cr_bytes=%zu rev_cr_bytes=%zu "
            "start_restr_edges=%d end_restr_edges=%d complex_edges=%d\n",
            tile_id.tileid(), h->directededgecount(), fwd_bytes, rev_bytes, n_start, n_end, n_complex);
+
+    // raw walk of the stored forward-restriction bytes (independent of any edge-id match), so we
+    // see the actual serialized content even if GetComplexRestrictions matches nothing.
+    {
+      const char* base = reinterpret_cast<const char*>(h);
+      const char* p = base + h->complex_restriction_forward_offset();
+      const char* end = base + h->complex_restriction_reverse_offset();
+      while (p < end) {
+        const auto* cr = reinterpret_cast<const baldr::ComplexRestriction*>(p);
+        printf("[STATS]   raw fwd cr: from=%llu to=%llu modes=%u via_count=%u sizeof=%zu\n",
+               (unsigned long long)cr->from_graphid(), (unsigned long long)cr->to_graphid(),
+               cr->modes(), cr->via_count(), cr->SizeOf());
+        p += cr->SizeOf();
+      }
+    }
+
+    // dump the actual restriction content the router would read, per edge, both directions. this
+    // tells us whether GetComplexRestrictions returns the restriction and whether its stored
+    // graphids/modes are sane (vs present-but-garbage bytes).
+    for (uint32_t i = 0; i < h->directededgecount(); ++i) {
+      baldr::GraphId edgeid(tile_id.tileid(), tile_id.level(), i);
+      for (bool forward : {true, false}) {
+        auto crs = tile->GetComplexRestrictions(forward, edgeid, baldr::kAllAccess);
+        for (const auto& cr : crs) {
+          uint32_t nvias = 0;
+          baldr::GraphId first_via;
+          cr.WalkVias([&](const baldr::GraphId* v) {
+            if (nvias == 0)
+              first_via = *v;
+            ++nvias;
+            return baldr::WalkingVia::KeepWalking;
+          });
+          printf("[STATS]   edge=%u %s cr: from=%llu to=%llu modes=%u via_count=%u first_via=%llu\n",
+                 i, forward ? "fwd" : "rev", (unsigned long long)cr.from_graphid(),
+                 (unsigned long long)cr.to_graphid(), cr.modes(), nvias,
+                 (unsigned long long)first_via);
+        }
+      }
+    }
   }
 }
 

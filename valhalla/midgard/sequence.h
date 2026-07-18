@@ -209,6 +209,15 @@ public:
   void unmap() {
     // has to be something to unmap
     if (ptr) {
+      // flush dirty pages to disk before unmapping. on windows UnmapViewOfFile does not
+      // guarantee the backing file is updated in time for a fresh handle to read it back,
+      // so writes made through the mapping (e.g. sort) can be invisible to a later reopen.
+      // posix munmap already flushes MAP_SHARED, so this is only needed on windows
+#if defined(_WIN32)
+      if (count) {
+        ::FlushViewOfFile(ptr, count * sizeof(T));
+      }
+#endif
       // unmap
       auto un = munmap(ptr, count * sizeof(T));
       if (un == -1) {
