@@ -1071,3 +1071,68 @@ TEST(Standalone, ShortTurnLanesForks) {
                                {2, "[ through | *slight_right* ACTIVE ]"},
                                {0, ""}});
 }
+
+// Regression guard for issue #6170: ProcessTurnLanes walked curr_man / next_man
+// in lockstep, so on the final (destination) maneuver of a driving route
+// next_man == maneuvers.end(), and the two ActivateTurnLanes(..., next_man->type())
+// calls read past the end of the maneuver list. The destination maneuver of a
+// driving route is itself kDrive, so the "only driving maneuvers" filter did not
+// spare it. The read is silent UB (garbage type, no crash), which is why every
+// pre-existing turn-lane test still passed while the deref was live.
+//
+// This test drives an "auto" route that ends at a destination whose final
+// approach edge carries turn:lanes (including a non-directional "none" lane),
+// forcing ProcessTurnLanes through the next_man == end() iteration, and locks
+// the deterministic turn-lane rendering on that final edge.
+//
+// HONEST BOUND: this is a behaviour-lock / path-exercise test, not a
+// fail-before-the-fix test. At the destination maneuver GetExpectedTurnLaneDirection
+// returns kTurnLaneNone, and ActivateTurnLanes(kTurnLaneNone, ...) can activate
+// no lane (a matching lane makes HasNonDirectionalTurnLane() true -> early return;
+// a non-matching lane simply does not match), so the past-the-end value is dead:
+// garbage and the kNone sentinel yield identical observable output. The value of
+// the test is that it exercises the exact #6170 code path deterministically (it
+// would catch the past-the-end read under a sanitizer/valgrind build, and would
+// catch a future refactor that makes next_maneuver_type live at the destination
+// edge). See PR discussion for the full dataflow analysis.
+TEST(Standalone, TurnLanesDestinationFinalEdge) {
+
+  const std::string ascii_map = R"(
+    A----B----C
+         |
+         D)";
+
+  // Way ABC carries turn:lanes with a non-directional "none" lane; the B->C edge
+  // is the final approach edge to destination C. Way DB feeds the right turn at B.
+  const gurka::ways ways =
+      {{"ABC",
+        {{"highway", "primary"}, {"lanes", "3"}, {"turn:lanes", "through|none|right"}}},
+       {"DB",
+        {{"highway", "primary"},
+         {"lanes:forward", "2"},
+         {"lanes:backward", "0"},
+         {"turn:lanes", "left|right"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_13");
+
+  // Driving route D -> B (right turn) -> C (destination); final edge B->C
+  // carries turn:lanes and arrives at the destination maneuver.
+  auto result = gurka::do_action(valhalla::Options::route, map, {"D", "C"}, "auto");
+
+  gurka::assert::osrm::expect_steps(result, {"DB", "ABC"});
+  gurka::assert::raw::expect_path(result, {"DB", "ABC"});
+
+  // The route must terminate in a destination maneuver -- this is the maneuver on
+  // which next_man == end() and the past-the-end read used to occur.
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kRight,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Deterministic turn-lane state. Second entry is the final edge (B->C) arriving
+  // at destination C: no lane is activated there (destination -> kTurnLaneNone).
+  validate_turn_lanes(result, {
+                                  {2, "[ left | *right* ACTIVE ]"},
+                                  {3, "[ through | through | right ]"},
+                              });
+}

@@ -3605,6 +3605,15 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
     // Only process driving maneuvers
     if (curr_man->travel_mode() == TravelMode::kDrive) {
 
+      // The destination maneuver of a driving route is itself kDrive, and
+      // curr_man / next_man advance in lockstep, so when curr_man reaches the
+      // final maneuver next_man == end(). Read the next maneuver's type only
+      // when a next maneuver exists; for the final maneuver use the kNone
+      // sentinel instead of dereferencing end() (past-the-end read).
+      const DirectionsLeg_Maneuver_Type next_maneuver_type =
+          (next_man != maneuvers.end()) ? next_man->type()
+                                        : DirectionsLeg_Maneuver_Type_kNone;
+
       // Walk maneuvers by node (prev_edge of node has the turn lane info)
       // Assign turn lane at transition point
       auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
@@ -3615,7 +3624,7 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
                (curr_man->type() == DirectionsLeg_Maneuver_Type_kStayRight) ||
                (curr_man->type() == DirectionsLeg_Maneuver_Type_kStayStraight)))) {
           prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(prev_edge, *(curr_man)),
-                                       curr_man->length(), curr_man->type(), next_man->type());
+                                       curr_man->length(), curr_man->type(), next_maneuver_type);
         }
       }
 
@@ -3660,7 +3669,7 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
                 !has_directional_intersecting_edge && turn_lane_direction != kTurnLaneNone) {
               // Activate lanes matching upcoming turn direction
               prev_edge->ActivateTurnLanes(turn_lane_direction, curr_man->length(), curr_man->type(),
-                                           next_man->type());
+                                           next_maneuver_type);
             } else {
               // Activate through lanes
               prev_edge->ActivateTurnLanes(kTurnLaneThrough, remaining_step_distance,
