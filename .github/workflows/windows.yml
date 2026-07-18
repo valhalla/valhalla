@@ -180,7 +180,10 @@ jobs:
           export MSYS_NO_PATHCONV=1
           # nanobind's .pyi stub generation runs Python to import the .pyd, which
           # transitively loads prime_server.dll + the other vcpkg-installed DLLs.
-          export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin"
+          vcpkg_bin="${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
+          # spatialite-tools too: the gurka target's build_timezones dep builds tz.sqlite, which
+          # shells out to spatialite
+          export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
           # TEMP: iterating on the restriction failures -- build only the one gurka test target
           # (pulls in libvalhalla) instead of the whole tree. restore the full build below when done.
           cmake --build build --target gurka_only_restrictions -- -k 0
