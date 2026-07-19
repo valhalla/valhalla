@@ -3838,10 +3838,29 @@ struct graph_parser {
     }
     last_relation_ = osmid;
 
+    // TEMP diagnostic: what osmium handed us going INTO the lua transform (raw tags + members)
+    fprintf(stderr, "[REL] osmid=%llu raw_tag_count=%d member_count=%d\n",
+            (unsigned long long)osmid, (int)relation.tags().size(),
+            (int)relation.members().size());
+    for (const auto& t : relation.tags())
+      fprintf(stderr, "[REL]   in  %s=%s\n", t.key(), t.value());
+    for (const auto& m : relation.members())
+      fprintf(stderr, "[REL]   member type=%d ref=%lld role='%s'\n", (int)m.type(),
+              (long long)m.ref(), m.role());
+    fflush(stderr);
+
     // Get tags
     const Tags tags = relation.tags().empty()
                           ? empty_relation_tags_
                           : lua_.Transform(OSMType::kRelation, osmid, relation.tags());
+
+    // TEMP diagnostic: what the lua transform produced coming OUT
+    fprintf(stderr, "[REL] osmid=%llu transformed_tag_count=%zu\n", (unsigned long long)osmid,
+            tags.size());
+    for (const auto& kv : tags)
+      fprintf(stderr, "[REL]   out %s=%s\n", kv.first.c_str(), kv.second.c_str());
+    fflush(stderr);
+
     if (tags.empty()) {
       return;
     }
