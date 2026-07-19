@@ -4304,6 +4304,11 @@ struct graph_parser {
           to_restriction.set_modes(restriction.modes());
           complex_restrictions_to_->push_back(to_restriction);
           complex_restrictions_from_->push_back(restriction);
+          fprintf(stderr, "[CR] wrote from=%llu to=%llu modes=%u; from_seq_size=%zu to_seq_size=%zu\n",
+                  (unsigned long long)restriction.from(), (unsigned long long)restriction.to(),
+                  restriction.modes(), complex_restrictions_from_->size(),
+                  complex_restrictions_to_->size());
+          fflush(stderr);
         } else { // simple restriction
           osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
         }
@@ -5350,6 +5355,8 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   LOG_INFO("Sorting complex restrictions by from id...");
   {
     sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
+    fprintf(stderr, "[CR] sort reopened cr_from, size=%zu\n", complex_restrictions_from.size());
+    fflush(stderr);
     complex_restrictions_from.sort(
         [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
   }
