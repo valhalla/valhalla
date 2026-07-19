@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: embedded route elevation decoding after a mid-edge `through` location [#6202](https://github.com/valhalla/valhalla/issues/6202)
+   * FIXED: Disable connectivity-map when tile source is lazy loading HTTP (from tiles or remote-tar) [#6208](https://github.com/valhalla/valhalla/pull/6208)
 * **Enhancement**
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
