@@ -3838,29 +3838,10 @@ struct graph_parser {
     }
     last_relation_ = osmid;
 
-    // TEMP diagnostic: what osmium handed us going INTO the lua transform (raw tags + members)
-    fprintf(stderr, "[REL] osmid=%llu raw_tag_count=%d member_count=%d\n",
-            (unsigned long long)osmid, (int)relation.tags().size(),
-            (int)relation.members().size());
-    for (const auto& t : relation.tags())
-      fprintf(stderr, "[REL]   in  %s=%s\n", t.key(), t.value());
-    for (const auto& m : relation.members())
-      fprintf(stderr, "[REL]   member type=%d ref=%lld role='%s'\n", (int)m.type(),
-              (long long)m.ref(), m.role());
-    fflush(stderr);
-
     // Get tags
     const Tags tags = relation.tags().empty()
                           ? empty_relation_tags_
                           : lua_.Transform(OSMType::kRelation, osmid, relation.tags());
-
-    // TEMP diagnostic: what the lua transform produced coming OUT
-    fprintf(stderr, "[REL] osmid=%llu transformed_tag_count=%zu\n", (unsigned long long)osmid,
-            tags.size());
-    for (const auto& kv : tags)
-      fprintf(stderr, "[REL]   out %s=%s\n", kv.first.c_str(), kv.second.c_str());
-    fflush(stderr);
-
     if (tags.empty()) {
       return;
     }
@@ -4028,10 +4009,6 @@ struct graph_parser {
       }
     } // for (const auto& tag : results)
 
-    fprintf(stderr, "[CRDBG] osmid=%llu isRestriction=%d hasRestriction=%d isTypeRestriction=%d\n",
-            (unsigned long long)osmid, isRestriction, hasRestriction, isTypeRestriction);
-    fflush(stderr);
-
     if (isProbable) {
       RestrictionType type = restriction.type();
       if (type == RestrictionType::kOnlyRightTurn || type == RestrictionType::kOnlyLeftTurn ||
@@ -4180,12 +4157,6 @@ struct graph_parser {
                  std::to_string(osmid));
         from_way_id = 0;
       }
-      fprintf(stderr,
-              "[CRDBG] osmid=%llu after members: from_way=%llu to=%llu via_node=%llu vias_size=%zu\n",
-              (unsigned long long)osmid, (unsigned long long)from_way_id,
-              (unsigned long long)restriction.to(), (unsigned long long)restriction.via(),
-              vias.size());
-      fflush(stderr);
       // Add the restriction to the list.
       if (from_way_id != 0 && (restriction.via() || vias.size()) && restriction.to()) {
         // check for exceptions
@@ -4314,11 +4285,6 @@ struct graph_parser {
           to_restriction.set_modes(restriction.modes());
           complex_restrictions_to_->push_back(to_restriction);
           complex_restrictions_from_->push_back(restriction);
-          fprintf(stderr, "[CR] wrote from=%llu to=%llu modes=%u; from_seq_size=%zu to_seq_size=%zu\n",
-                  (unsigned long long)restriction.from(), (unsigned long long)restriction.to(),
-                  restriction.modes(), complex_restrictions_from_->size(),
-                  complex_restrictions_to_->size());
-          fflush(stderr);
         } else { // simple restriction
           osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
         }
@@ -5365,8 +5331,6 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   LOG_INFO("Sorting complex restrictions by from id...");
   {
     sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
-    fprintf(stderr, "[CR] sort reopened cr_from, size=%zu\n", complex_restrictions_from.size());
-    fflush(stderr);
     complex_restrictions_from.sort(
         [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
   }
