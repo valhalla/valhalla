@@ -28,13 +28,13 @@ cd build && cmake --build . -j$(nproc) --target directededge && ./test/directede
 # Gurka integration test — target gurka_<name> from test/gurka/test_<name>.cc
 cd build && cmake --build . -j$(nproc) --target gurka_filter && ./test/gurka/gurka_filter
 
-# All Gurka tests
-cd build && cmake --build . --target run-gurka
+# All gurka integration tests
+cd build && cmake --build . -j$(nproc) --target run-gurka
 
 # Single GoogleTest case
 ./test/gurka/gurka_access --gtest_filter="*YourTestName*"
 
-# Multiple related tests
+# Several related tests
 cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_route
 
@@ -44,7 +44,7 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
 
 **Build parallelism:** `-j$(nproc)` works on Linux; on macOS use `-j$(sysctl -n hw.logicalcpu)` or install `coreutils` for `nproc`. Alternatively, configure CMake with Ninja (`cmake -G Ninja ..` or `CMAKE_GENERATOR=Ninja`), which parallelizes automatically without needing `-j`.
 
-**IMPORTANT:** Avoid `make check` — extremely slow for development loop. Run only the relevant tests.
+**IMPORTANT:** Avoid `make check` — it's extremely slow for the development loop. Run only the relevant tests.
 
 ### Key CMake Options
 
@@ -261,45 +261,52 @@ Pin deterministic OSM IDs via an `osm_id` tag on gurka ways/nodes. Example tests
 
 ## Development Workflow
 
+### 0. Baseline
+
+To make sure the repo setup, system dependencies, and so on are correct, run all tests **before** touching anything.
+
+```bash
+cmake --build build -j$(nproc) --target check
+```
+
+This runs all unit tests, all gurka tests, all Python script tests, and all binding tests (if bindings are enabled via CMake).
+
 ### 1. Find Related Tests
 
 Identify which tests cover the area you're changing:
 - `test/gurka/` — integration tests by feature (e.g., `test_access.cc` → `gurka_access`, `test_route.cc` → `gurka_route`)
 - `test/` — unit tests by module (e.g., `directededge.cc` → `directededge`)
 
-### 2. Baseline Before Changing
-
-```bash
-# example — replace gurka_access with whatever tests are relevant to your change
-cd build && cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access
-```
-
-### 3. Add a Failing Test
+### 2. Add a Failing Test
 
 Write a `TEST` that demonstrates the expected behavior — it should fail before your fix and pass after:
 ```bash
 cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
 ```
 
-### 4. Trace the Pipeline and Fix
+### 3. Trace the Pipeline and Fix
 
 Use the "Where to Look" table above to find the right file. The pipeline flows left to right: tag parsing → graph building → parse costing → routing → maneuvers → serialization.
 
-### 5. Iterate Until Green
+### 4. Iterate Until Green
 
 ```bash
 cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
 ```
 
-### 6. Verify Related Tests
-
-**IMPORTANT:** Run tests for all functionality your changes touch, not just the test you started with. For example, if you started with `gurka_access` for a ferry fix but also modified costing or graph building, run `gurka_ferry_connections`, `gurka_route`, and any other tests covering the affected code:
+**IMPORTANT:** Run tests for all functionality your changes touch, not just the test you started with. For example, if you started with `gurka_access` that reproduces a particular ferry problem, but then you touched costing or graph building, run `gurka_ferry_connections`, `gurka_route`, and any other tests covering the affected code:
 ```bash
 cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connections --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_ferry_connections && ./test/gurka/gurka_route
 ```
 
-Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64.
+### 5. Verify
+
+```bash
+cd build && cmake --build . -j$(nproc) --target run-gurka
+```
+
+Never skip this step. Once the milestone is done, also run `run-gurka` (all integration tests) plus the unit tests covering your change as a final guard against accidental side effects. For work related to scripts or bindings, run `run-scripts` or `run-python_valhalla`/`run-nodejs_valhalla`. If unsure, run `cd build && cmake --build . -j$(nproc) --target check` to run all tests. N.B.: that takes quite a while, so do it only once a milestone is reached.
 
 ### Pull Requests and Generative AI
 
