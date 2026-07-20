@@ -1,5 +1,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/curl_tilegetter.h"
+#include "exceptions.h"
 #include "incident_singleton.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -486,10 +487,8 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
       tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
       tile_url_(pt.get<std::string>("tile_url", "")),
-      url_id_txt_path_(std::filesystem::path(tile_dir_) / "id.txt"),
       is_tar_url_(!tile_url_.empty() &&
                   tile_url_.find(GraphTile::kTilePathPattern) == std::string::npos),
-      url_id_txt_checksum_(load_id_txt_checksum(url_id_txt_path_, tile_url_)),
       cache_(TileCacheFactory::createTileCache(pt)) {
 
   if (!tile_url_.empty()) {
@@ -503,21 +502,6 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
     }
     if (is_tar_url_) {
       load_remote_tar_offsets();
-    }
-    // we allow to not cache tiles locally from URL
-    if (!tile_dir_.empty()) {
-      // load & validate the id.txt if available
-      // need to lock from here on since there's often many GraphReaders initializing at the same
-      // time
-      static std::mutex mutex;
-      std::lock_guard lock{mutex};
-      if (!std::filesystem::exists(url_id_txt_path_)) {
-        // no id.txt, then create it in the current tile_dir; the build id line is added once the
-        // first tile is downloaded
-        std::filesystem::create_directories(tile_dir_);
-        std::ofstream out_url_file(url_id_txt_path_, std::ios::binary);
-        out_url_file << tile_url_ << std::endl;
-      }
     }
   }
   // Reserve cache (based on whether using individual tile files or shared,
@@ -650,7 +634,7 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
     // either we find its tar offset or it's a plain tiles URL
     if (tar_has_tile || !is_tar_url_) {
       tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_, tar_offset,
-                                     tar_size, url_id_txt_path_, url_id_txt_checksum_);
+                                     tar_size);
     }
 
     if (!tile) {
@@ -662,6 +646,10 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
     // LOG_DEBUG("Url cache hit " + GraphTile::FileSuffix(base));
   } else {
     // LOG_DEBUG("Disk cache hit " + GraphTile::FileSuffix(base));
+  }
+
+  if (tile_getter_) {
+    validate_build_id(*tile->header());
   }
 
   // Keep a copy in the cache and return it
@@ -1115,29 +1103,25 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
   return {itile, begin_index, end_index};
 }
 
-std::optional<uint64_t> GraphReader::load_id_txt_checksum(const std::filesystem::path& id_txt_path,
-                                                          const std::string& tile_url) {
-  std::ifstream in_id_txt_file(id_txt_path);
-  // if no cache wanted or no id.txt yet, there's no build id to compare against
-  if (tile_dir_.empty() || !in_id_txt_file) {
-    return std::nullopt;
+void GraphReader::validate_build_id(const GraphTileHeader& header) {
+  const uint32_t build_id = header.build_id();
+  if (build_id == 0 && header.tile_checksum() == 0) {
+    // nothing to compare against, the tileset predates the checksum field
+    if (!warned_missing_build_id_.test_and_set()) {
+      LOG_WARN("Tileset is missing the checksum attribute, please update the tile building "
+               "valhalla instance");
+    }
+    return;
   }
 
-  std::string file_url;
-  if (!std::getline(in_id_txt_file, file_url)) {
-    throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
-                             id_txt_path.string());
-  } else if (file_url != tile_url) {
-    throw std::runtime_error("Tile URL changed, configure a different mjolnir.tile_dir");
+  uint32_t expected = kUnseededBuildId;
+  if (url_build_id_.compare_exchange_strong(expected, build_id) || expected == build_id) {
+    return;
   }
 
-  // the build id is only written once the first tile has been downloaded
-  std::string file_checksum;
-  if (!std::getline(in_id_txt_file, file_checksum) || file_checksum.empty()) {
-    return std::nullopt;
-  }
-  return std::stoull(file_checksum);
-};
+  LOG_ERROR("Remote tileset has changed, remove the tile_dir and restart.");
+  throw valhalla_exception_t(446);
+}
 
 graph_tile_ptr LimitedGraphReader::GetGraphTile(const GraphId& graphid) {
   return reader_.GetGraphTile(graphid);

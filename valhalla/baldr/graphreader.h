@@ -9,6 +9,7 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -996,10 +997,12 @@ protected:
   std::unique_ptr<tile_getter_t> tile_getter_;
   const size_t max_concurrent_users_;
   const std::string tile_url_;
-  const std::filesystem::path url_id_txt_path_;
   const bool is_tar_url_;
-  // tileset build id recorded in id.txt; unset until the first downloaded tile establishes it
-  const std::optional<uint64_t> url_id_txt_checksum_;
+  // build id of the remote tileset, seeded by the first tile we see. holds kUnseededBuildId until
+  // then, which is out of the 16 bit range a real build id occupies, so 0 stays a valid one
+  static constexpr uint32_t kUnseededBuildId = 1 << 16;
+  std::atomic<uint32_t> url_build_id_{kUnseededBuildId};
+  std::atomic_flag warned_missing_build_id_;
 
   // for remote tar's we grab the index.bin when loading the remote_tar_offsets
   // so we know all tiles' offset & size
@@ -1020,15 +1023,13 @@ protected:
   bool enable_incidents_;
 
   /**
-   * Loads the tile_dir/id.txt, validates its URL matches the configured one, and returns the build
-   * id on the 2nd line.
-   *
-   * @param id_txt_path the filesystem::path to the id.txt
-   * @param tile_url    the tile url in the config to match to the one in id.txt
-   * @return the build id on the 2nd line of id.txt, or nullopt if id.txt has none yet
+   * Asserts that a tile obtained from a remote tileset belongs to the same build as every other
+   * tile this reader handed out, throwing valhalla_exception_t(446) if it doesn't. The first tile
+   * seen establishes the build id, no matter whether it came from the URL or the local tile_dir
+   * cache, so a cache left over from a previous build is caught on the first fresh download.
+   * Tilesets predating the checksum field have no build id at all and can only be warned about.
    */
-  std::optional<uint64_t> load_id_txt_checksum(const std::filesystem::path& id_txt_path,
-                                               const std::string& tile_url);
+  void validate_build_id(const GraphTileHeader& header);
 };
 
 class LimitedGraphReader {

@@ -74,15 +74,6 @@ void test_route(const std::string& tile_dir,
   EXPECT_NE(route_json.find("Lauwerstraat"), std::string::npos);
 }
 
-class HttpTilesNoCache : public ::testing::Test {
-protected:
-  void TearDown() override {
-    if (std::filesystem::exists(tile_source_dir + "/id.txt")) {
-      std::filesystem::remove(tile_source_dir + "/id.txt");
-    }
-  }
-};
-
 TEST(HttpTilesNoCache, test_tar_tiles_no_cache) {
   test_route("", false, true);
 }
@@ -110,16 +101,27 @@ TEST_F(HttpTilesWithCache, test_tar_cache) {
 }
 
 TEST_F(HttpTilesWithCache, test_tar_cache_outdated) {
-  // create a fake id.txt with a bogus checksum and let GetGraphTile fail
-  const std::string id_txt_path = "url_tile_cache/id.txt";
-  std::filesystem::create_directories("url_tile_cache");
+  // populate the cache from the remote, then stamp a different build id into a single cached tile
+  // so it looks like it was left over from a previous build
+  test_route("url_tile_cache", false, true);
 
-  std::ofstream id_txt_file(id_txt_path, std::ios::binary);
-  if (id_txt_file) {
-    id_txt_file << get_tile_url(true) << std::endl;
-    id_txt_file << 1234 << std::endl;
+  std::vector<std::filesystem::path> cached_tiles;
+  for (const auto& entry : std::filesystem::recursive_directory_iterator("url_tile_cache")) {
+    if (entry.is_regular_file() && entry.path().extension() == ".gph") {
+      cached_tiles.push_back(entry.path());
+    }
   }
-  id_txt_file.close();
+  ASSERT_GT(cached_tiles.size(), 1) << "need more than one tile to detect a build id mismatch";
+
+  std::fstream tile_file(cached_tiles.front(), std::ios::binary | std::ios::in | std::ios::out);
+  ASSERT_TRUE(tile_file);
+  baldr::GraphTileHeader header;
+  tile_file.read(reinterpret_cast<char*>(&header), sizeof(header));
+  const uint64_t bogus_build_id = header.build_id() == 1 ? 2 : 1;
+  header.set_raw_checksum(header.tile_checksum() | (bogus_build_id << baldr::kTileHashBits));
+  tile_file.seekp(0);
+  tile_file.write(reinterpret_cast<const char*>(&header), sizeof(header));
+  tile_file.close();
 
   try {
     test_route("url_tile_cache", false, true);
