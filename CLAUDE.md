@@ -12,8 +12,6 @@ Read this section first. Violating these constraints causes real damage at plane
 
 **Costing functions are the hottest path.** `EdgeCost()`, `TransitionCost()`, `Allowed()` in `src/sif/` are called millions of times per request.
 
-**arm64 (Apple Silicon) instability.** Some tests fail on Apple Silicon due to numeric differences from x86_64. Always run relevant tests **before** making changes to establish a baseline.
-
 ## Addressing the Developer
 
 Address the developer as **"respected Sir"** where it makes sense — opening a response to a new request, when delivering a completed change, when asking a clarifying question, or when flagging something important. Do not append it to every comment, code review note, or short follow-up; that becomes noise. Use it as a human would use a respectful form of address: at natural turn boundaries, not as a suffix on every sentence.
@@ -30,6 +28,9 @@ cd build && cmake --build . -j$(nproc) --target directededge && ./test/directede
 # Gurka integration test — target gurka_<name> from test/gurka/test_<name>.cc
 cd build && cmake --build . -j$(nproc) --target gurka_filter && ./test/gurka/gurka_filter
 
+# All Gurka tests
+cd build && cmake --build . --target run-gurka
+
 # Single GoogleTest case
 ./test/gurka/gurka_access --gtest_filter="*YourTestName*"
 
@@ -43,7 +44,7 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
 
 **Build parallelism:** `-j$(nproc)` works on Linux; on macOS use `-j$(sysctl -n hw.logicalcpu)` or install `coreutils` for `nproc`. Alternatively, configure CMake with Ninja (`cmake -G Ninja ..` or `CMAKE_GENERATOR=Ninja`), which parallelizes automatically without needing `-j`.
 
-**IMPORTANT:** Avoid `make check` — extremely slow and produces false positives on arm64. Run only the relevant tests.
+**IMPORTANT:** Avoid `make check` — extremely slow for development loop. Run only the relevant tests.
 
 ### Key CMake Options
 
@@ -268,7 +269,6 @@ Identify which tests cover the area you're changing:
 
 ### 2. Baseline Before Changing
 
-**IMPORTANT:** Always run related tests before any code changes to establish a baseline (some tests have pre-existing arm64 failures):
 ```bash
 # example — replace gurka_access with whatever tests are relevant to your change
 cd build && cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access
@@ -299,7 +299,7 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connection
   ./test/gurka/gurka_access && ./test/gurka/gurka_ferry_connections && ./test/gurka/gurka_route
 ```
 
-Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64. Avoid it on arm64 where false positives make results unreliable.
+Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64.
 
 ### Pull Requests and Generative AI
 
