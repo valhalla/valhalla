@@ -261,16 +261,6 @@ Pin deterministic OSM IDs via an `osm_id` tag on gurka ways/nodes. Example tests
 
 ## Development Workflow
 
-### 0. Baseline
-
-To make sure the repo setup, system dependencies, and so on are correct, run all tests **before** touching anything.
-
-```bash
-cmake --build build -j$(nproc) --target check
-```
-
-This runs all unit tests, all gurka tests, all Python script tests, and all binding tests (if bindings are enabled via CMake).
-
 ### 1. Find Related Tests
 
 Identify which tests cover the area you're changing:
