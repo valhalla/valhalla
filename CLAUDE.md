@@ -197,11 +197,15 @@ Edges touched per route — shows why per-edge overhead matters:
 
 ## Testing
 
-### Unit Tests vs Gurka Integration Tests
+### Test Suites
 
 **Unit tests** (`test/*.cc`) — target name = filename. Test individual functions/modules. Many use pre-built tilesets from `test/data/` (utrecht, whitelion, roma, etc.).
 
-**Gurka integration tests** (`test/gurka/test_*.cc`) — target `gurka_<name>`. Build ASCII road maps → generate tiles → run full API → verify. Use for testing routing behavior, access restrictions, turn restrictions, costing, maneuvers — anything requiring multiple modules. See `docs/docs/contributing/gurka.md` for the full framework reference including map construction, relations, assertions, and debugging with GeoJSON.
+**Gurka integration tests** (`test/gurka/test_*.cc`) — target `gurka_<name>`. Build ASCII road maps → generate tiles → run full API → verify. Use for testing routing behavior, access restrictions, turn restrictions, costing, maneuvers — anything requiring multiple modules. See `docs/docs/contributing/gurka.md` for the full framework reference including map construction, relations, assertions, and debugging with GeoJSON. `run-gurka` target runs all of them. 
+
+**Bindings tests** (`test/bindings/python/`, `test/bindings/nodejs/`) — targets `run-python_valhalla` and `run-nodejs_valhalla`. Exercise the Python / Node.js bindings against `libvalhalla`; only built when `ENABLE_PYTHON_BINDINGS` / `ENABLE_NODE_BINDINGS` are on (Node.js also needs a `node` binary).
+
+**Python script tests** (`test/scripts/test_*.py`) — target `run-scripts`. Test the `valhalla_build_*` helper scripts (config, extract, elevation). Some need system deps not in the build (e.g. `shapely`) and fail if those aren't installed.
 
 ### Gurka Test Pattern
 
@@ -289,14 +293,6 @@ cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access --
 cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connections --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_ferry_connections && ./test/gurka/gurka_route
 ```
-
-### 5. Verify
-
-```bash
-cd build && cmake --build . -j$(nproc) --target run-gurka
-```
-
-Never skip this step. Once the milestone is done, also run `run-gurka` (all integration tests) plus the unit tests covering your change as a final guard against accidental side effects. For work related to scripts or bindings, run `run-scripts` or `run-python_valhalla`/`run-nodejs_valhalla`. If unsure, run `cd build && cmake --build . -j$(nproc) --target check` to run all tests. N.B.: that takes quite a while, so do it only once a milestone is reached.
 
 ### Pull Requests and Generative AI
 
