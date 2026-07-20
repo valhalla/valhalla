@@ -9,6 +9,17 @@ There are many ways to make meaningful contributions to the project:
 - contribute feature implementations, for larger features/changes its best to **open an issue asking for feedback before starting implementation**
 - improve translations on [Transifex](https://explore.transifex.com/valhalla/valhalla-phrases/)
 
+## Generative AI usage
+
+While we absolutely accept AI usage for Valhalla (and its related projects), we require the following guidelines to be followed:
+
+1. The human developer understood every line of code written and verifies that the proposed implementation is actually working
+2. PR description (re-)written by a human is non-negotiable
+3. contrived AI logic with weird generic variable names should be rewritten to match human perception
+4. non-obvious code changes should be commented on _inline_ (not in the PR description!)
+
+2. & 3. are pretty subjective, where we have a lot more patience. However, PRs ignoring these guidelines entirely, might be closed without further notice.
+
 ## Code contributions
 
 > First time? Read [Contributing to a project](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project).
@@ -42,7 +53,7 @@ export ASAN_OPTIONS=detect_leaks=0
 
 ### Unit/integration Tests
 
-We highly encourage running and updating the tests to make sure no regressions have been made. We use the [GoogleTest](https://google.github.io/googletest/) suite and also created our own test framework called "gurka" (the Norsk counterpart to OSRM's "cucumber"), to easily test custom-built maps. Check out more information in the [test docs](https://github.com/valhalla/valhalla/blob/master/docs/docs/test/gurka.md).
+We highly encourage running and updating the tests to make sure no regressions have been made. We use the [GoogleTest](https://google.github.io/googletest/) suite and also created our own test framework called "gurka" (the Norsk counterpart to OSRM's "cucumber"), to easily test custom-built maps. Check out more information in the [test docs](https://github.com/valhalla/valhalla/blob/master/docs/docs/contributing/gurka.md).
 
 To build and run all tests:
 
@@ -89,13 +100,24 @@ To use this, add your executable(s) code, they will be picked up automatically b
 
 Valhalla currently supports almost 30 languages with > 95% translation coverage. If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. We're using [Transifex](https://explore.transifex.com/valhalla/valhalla-phrases/) to manage translations and try to download all improvements before each release.
 
-You can find more information in the [dedicated doc](https://github.com/valhalla/valhalla/blob/master/docs/docs/locales.md).
+You can find more information in the [dedicated doc](https://github.com/valhalla/valhalla/blob/master/docs/docs/contributing/locales.md).
 
 ## Documentation contributions
 
 Valhalla uses [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) to create project documentation. All relevant files are in the `docs/` directory.
 
 Additionally, some pages are made to be shown on GitHub (`README.md`, `CONTRIBUTING.md`, etc). See [About writing and formatting on GitHub](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/about-writing-and-formatting-on-github) for more info.
+
+### Building locally
+
+The documentation dependencies are defined in the `docs` dependency group in `pyproject.toml`. Install them and serve the site with live reload:
+
+```bash
+pip install --group docs
+mkdocs serve -f docs/mkdocs.yml
+```
+
+The site is then available at `http://localhost:8000`. Run `mkdocs build --strict` to catch broken links and invalid navigation before pushing.
 
 ### Publishing
 

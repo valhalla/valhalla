@@ -259,6 +259,36 @@ void trim_shape(float start,
   }
 }
 
+void trim_shape(float start_pct, float end_pct, std::vector<PointLL>& shape) {
+  if (shape.size() < 2 || (start_pct == 0.f && end_pct == 1.f)) {
+    return;
+  }
+
+  // compute total length and the absolute distances
+  float total = midgard::length(shape);
+  float start_dist = start_pct * total;
+  float end_dist = end_pct * total;
+
+  // find the interpolated start/end vertices
+  PointLL start_vertex, end_vertex;
+  float accumulated = 0.f;
+  for (size_t i = 1; i < shape.size(); i++) {
+    float seg_len = shape[i - 1].Distance(shape[i]);
+    if (!start_vertex.IsValid() && accumulated + seg_len >= start_dist) {
+      float pct = (seg_len > 0.f) ? (start_dist - accumulated) / seg_len : 0.f;
+      start_vertex = shape[i - 1].PointAlongSegment(shape[i], pct);
+    }
+    if (accumulated + seg_len >= end_dist) {
+      float pct = (seg_len > 0.f) ? (end_dist - accumulated) / seg_len : 0.f;
+      end_vertex = shape[i - 1].PointAlongSegment(shape[i], pct);
+      break;
+    }
+    accumulated += seg_len;
+  }
+
+  trim_shape(start_dist, start_vertex, end_dist, end_vertex, shape);
+}
+
 float tangent_angle(size_t index,
                     const PointLL& point,
                     const std::vector<PointLL>& shape,
@@ -1022,7 +1052,8 @@ std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& poin
   std::vector<Point2d> boundary;
 
   // welzl's expects shuffled input
-  std::shuffle(pts.begin(), pts.end(), std::mt19937{std::random_device{}()});
+  thread_local std::mt19937 shuffle_rng{std::random_device{}()};
+  std::shuffle(pts.begin(), pts.end(), shuffle_rng);
 
   projected_circle_t result = welzl_impl(std::span(pts), boundary);
 
