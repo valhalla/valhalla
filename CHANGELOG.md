@@ -1,12 +1,28 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: embedded route elevation decoding after a mid-edge `through` location [#6202](https://github.com/valhalla/valhalla/issues/6202)
+   * FIXED: guard opposing edge lookup for transit edges in Loki reachability [#6222](https://github.com/valhalla/valhalla/pull/6222)
 * **Enhancement**
+   * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
+   * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
+   * FIXED: use the new `GraphReader::GetGraphTileHeader` in `baldr/utils/graph_reader.cc:get_graph_tile_header` to prevent loading entire tiles into RAM [#6200](https://github.com/valhalla/valhalla/pull/6200)
+   * ADDED: classify `surface=laterite` and `surface=clay` as `Surface::kDirt` [#6171](https://github.com/valhalla/valhalla/issues/6171)
+   * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
+
+## Release Date: 2026-07-08 Valhalla 3.8.2
+* **Removed**
+* **Bug Fix**
+   * FIXED: Python `get_config()` raised `KeyError('logging')` since 3.7.0 by writing the removed `mjolnir.logging` key after logging config moved to the top level in #5976 [#6185](https://github.com/valhalla/valhalla/pull/6185)
+   * FIXED: Per-leg `has_toll`/`has_highway`/`has_ferry` in the Valhalla JSON output were always `false` with `directions_type=none` because they were accumulated from maneuvers; fall back to the leg summary instead [#6151](https://github.com/valhalla/valhalla/issues/6151)
+* **Enhancement**
+   * ADDED: write support for metadata fields in graph tile headers in the python bindings [#6194](https://github.com/valhalla/valhalla/pull/6194)
 
 ## Release Date: 2026-07-06 Valhalla 3.8.1
 * **Removed**
 * **Bug Fix**
    * FIXED: `cibuildhweel` had configuration issues preventing PyPI release; added CI protection for Linux wheels [#6179](https://github.com/valhalla/valhalla/issues/6179)
+   * FIXED: check for spatialite-tools at cmake config time if `ENABLE_DATA_TOOLS = ON` [#2202](https://github.com/valhalla/valhalla/issues/2202)
 * **Enhancement**
 
 ## Release Date: 2026-07-06 Valhalla 3.8.0
@@ -33,6 +49,7 @@
    * ADDED: Bounding circles for faster loki (not yet enabled) [#5103](https://github.com/valhalla/valhalla/pull/5103)
    * ADDED: OpenAPI documentation [#6088](https://github.com/valhalla/valhalla/pull/6088)
    * ADDED: `dataset_id` config to optionally set an arbitrary number to each tile's `dataset_id` header field [#6126](https://github.com/valhalla/valhalla/pull/6126)
+   * ADDED: Detect pedestrian areas (highway=pedestrian + area=yes) both as simple ways or multipolygon relations and avoid them generating edges[#6127](https://github.com/valhalla/valhalla/pull/6127)
    * ADDED: partial gurka tile build and `findWay` & `findWayNodes` gurka lookups for temp .bin files [#6136](https://github.com/valhalla/valhalla/pull/6136)
    * CHANGED: `checksum_` field in GraphTileHeader reflects now global tileset ID & tile data checksum [#6123](https://github.com/valhalla/valhalla/pull/6123)
    * BREAKING: overhauled `pyvalhalla` package layout, some `valhalla.utils` imports will break [#6133](https://github.com/valhalla/valhalla/pull/6133)

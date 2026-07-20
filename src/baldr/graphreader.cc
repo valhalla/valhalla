@@ -8,7 +8,9 @@
 
 #include <sys/stat.h>
 
+#include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <span>
 #include <string>
 #include <utility>
@@ -665,6 +667,47 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
   // Keep a copy in the cache and return it
   const size_t size = tile->header()->end_offset();
   return cache_->Put(base, std::move(tile), size);
+}
+
+std::optional<GraphTileHeader> GraphReader::GetGraphTileHeader(const GraphId& graphid) {
+  if (!graphid.is_valid()) {
+    return std::nullopt;
+  }
+
+  auto base = graphid.tile_base();
+  if (const auto& cached = cache_->Get(base)) {
+    return *cached->header();
+  }
+
+  // straight out of the mmapped extract, without constructing or caching the tile
+  if (!tile_extract_->tiles.empty()) {
+    auto t = tile_extract_->tiles.find(base);
+    if (t == tile_extract_->tiles.cend() || t->second.second < sizeof(GraphTileHeader)) {
+      return std::nullopt;
+    }
+    GraphTileHeader header;
+    memcpy(&header, t->second.first, sizeof(GraphTileHeader));
+    return header;
+  }
+
+  // just the header span of the file in tile_dir
+  if (!tile_dir_.empty()) {
+    std::string file_location = tile_dir_;
+    file_location += std::filesystem::path::preferred_separator;
+    file_location += GraphTile::FileSuffix(base);
+    std::ifstream file(file_location, std::ios::in | std::ios::binary);
+    GraphTileHeader header;
+    if (file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader)) &&
+        file.gcount() == sizeof(GraphTileHeader)) {
+      return header;
+    }
+  }
+
+  // gzipped and remote tiles require materializing the whole tile
+  if (auto tile = GetGraphTile(base)) {
+    return *tile->header();
+  }
+  return std::nullopt;
 }
 
 // Convenience method to get an opposing directed edge graph Id.
