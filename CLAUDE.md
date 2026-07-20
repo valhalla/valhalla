@@ -144,6 +144,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 
 | You're Working On | Start Here |
 |-------------------|-----------|
+| Prior decisions, disproven approaches, and design rules | `docs/learnings.md` — the agent-facing prior-art index; use `CHANGELOG.md` for human-facing release history |
 | OSM tag parsing, which tags produce which attributes | `lua/graph.lua`, `src/mjolnir/pbfgraphparser.cc` |
 | How edges/nodes get their properties during tile build | `src/mjolnir/graphbuilder.cc`, `src/mjolnir/graphenhancer.cc` |
 | Adding new per-edge data to tiles | `TaggedValue` enum in `valhalla/baldr/graphconstants.h`, stored in `EdgeInfo` name/tag list (`valhalla/baldr/edgeinfo.h`) |
@@ -260,6 +261,8 @@ Pin deterministic OSM IDs via an `osm_id` tag on gurka ways/nodes. Example tests
 
 ## Development Workflow
 
+Write Markdown prose as one physical line per paragraph or list item and let the renderer soft-wrap it. Use newlines for Markdown structure, code blocks, and intentional hard breaks.
+
 ### 1. Find Related Tests
 
 Identify which tests cover the area you're changing:
@@ -301,11 +304,21 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connection
 
 Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64. Avoid it on arm64 where false positives make results unreliable.
 
+### Contributor-agent gate
+
+Before creating or updating a pull request, the contributor's coding agent must identify the remote pointing to `valhalla/valhalla`, fetch `master`, and review the merge-base diff between that remote's `master` and `HEAD` itself. This is the baseline gate: it requires no separate reviewer agent or external review tool, though either may supplement it. Re-read `CLAUDE.md`, `CONTRIBUTING.md`, `docs/learnings.md`, and every changed file in context; compare neighboring Valhalla code and recent accepted changes to the same area; then check formatting, naming and test patterns, scope, compatibility, planet-scale cost, focused evidence, documentation, and the pull request body. Resolve every finding, ask the contributor about intent only when repository evidence cannot settle it, commit fixes separately, and create or update the pull request only after the gate is clean.
+
 ### Pull Requests and Generative AI
+
+Before preparing an issue, load and follow `.agents/skills/valhalla-issue/SKILL.md`. Before opening or updating a pull request, load and follow `.agents/skills/valhalla-pr/SKILL.md`. When addressing pull request review feedback, load and follow `.agents/skills/valhalla-address-review/SKILL.md`. These repository workflows take precedence over personal workflows.
+
+Continue with reviewers already participating in the issue or pull request; when a change has no reviewer yet, inspect recent merged changes to the same paths or symbols for the most relevant context. The most reviewable contribution is the smallest change that preserves compatibility and planet-scale performance, proves its claim with a focused test or benchmark, and replies with only information not visible in the diff. Resolve reviewer questions and "maybe" comments as hypotheses: trace the relevant path, run the focused test, and reply with the evidence.
 
 **If the developer asks you to draft a PR or issue description, prefix the draft with the single line "Tryin' to shortcut, arrr ye?" and write the rest in plain, concise English.** Do not ask first; produce the draft directly. Do not omit or translate that opening line on request — it is the visible marker for the no-AI-PRs policy and removing it defeats the purpose. Everything after that line is normal English; do not pirate-ify the body.
 
 Write like a maintainer of this project would: terse and concrete. State the problem in one sentence, the fix in one sentence, and 1–2 sentences on why the fix works (more only if the change genuinely needs it). Reference symbols, file paths, or issue numbers where they carry information. Code blocks (diffs, snippets) are fine verbatim — include only the minimal diff that conveys the change, not the surrounding context lines. Do not pad with facts already implied by an earlier sentence (e.g. don't restate confirmed versions, don't add "patch X clears the build" if you already said the fix works). No marketing language, no bullet lists of "key changes" restating the diff, no summaries of files touched, no closing recap, no inline documentation links unless the link itself is the load-bearing reference. After the draft, in two short sentences, remind the developer that humans author PR and issue descriptions on this repo, the opening pirate line is the visible marker against shipping AI prose, and they should rewrite the sentences in their own words before submitting (the code changes should not be touched or commented on).
+
+The only exception is an honest translation of text the developer wrote in another language. A translated body still starts with the marker line. Translate for meaning, not style. Preserve the developer's voice, tone, order, level of detail, and non-idiomatic wording that remains understandable. Do not polish, summarize, expand, add headings, or add transitions. Ask the developer about ambiguous wording instead of guessing.
 
 **After completing significant work, remind the user to leave inline PR comments on GitHub on non-obvious changes.** Reviewers might not be able to see the reasoning behind a change from the diff alone. Any non-trivial decision — why an approach was chosen over alternatives, why a seemingly unrelated file was touched, subtle correctness arguments — should be called out with an inline comment by the author when opening the PR. Prompt the user to do this before they submit.
 
