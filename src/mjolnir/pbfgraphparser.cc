@@ -4028,6 +4028,10 @@ struct graph_parser {
       }
     } // for (const auto& tag : results)
 
+    fprintf(stderr, "[CRDBG] osmid=%llu isRestriction=%d hasRestriction=%d isTypeRestriction=%d\n",
+            (unsigned long long)osmid, isRestriction, hasRestriction, isTypeRestriction);
+    fflush(stderr);
+
     if (isProbable) {
       RestrictionType type = restriction.type();
       if (type == RestrictionType::kOnlyRightTurn || type == RestrictionType::kOnlyLeftTurn ||
@@ -4176,6 +4180,12 @@ struct graph_parser {
                  std::to_string(osmid));
         from_way_id = 0;
       }
+      fprintf(stderr,
+              "[CRDBG] osmid=%llu after members: from_way=%llu to=%llu via_node=%llu vias_size=%zu\n",
+              (unsigned long long)osmid, (unsigned long long)from_way_id,
+              (unsigned long long)restriction.to(), (unsigned long long)restriction.via(),
+              vias.size());
+      fflush(stderr);
       // Add the restriction to the list.
       if (from_way_id != 0 && (restriction.via() || vias.size()) && restriction.to()) {
         // check for exceptions
