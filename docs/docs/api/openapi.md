@@ -107,4 +107,4 @@ curl -s http://localhost:8002/route \
 
 ## Keeping the spec in sync
 
-The spec lives alongside the docs in `docs/docs/api/openapi.yaml`. When you add or change an API parameter, update both the relevant Markdown reference (e.g. `api/turn-by-turn/api-reference.md`) and the corresponding schema in `openapi.yaml`.
+The spec lives alongside the docs in `docs/docs/api/openapi.yaml`. When you add or change an API parameter, update both the relevant Markdown reference (e.g. `api/route/api-reference.md`) and the corresponding schema in `openapi.yaml`.
