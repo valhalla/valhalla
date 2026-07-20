@@ -831,3 +831,65 @@ INSTANTIATE_TEST_SUITE_P(ExcludeFerry,
 INSTANTIATE_TEST_SUITE_P(FerryConnectionTest,
                          FerryTest,
                          ::testing::Values("motorcar", "hgv", "moped", "motorcycle", "taxi", "bus"));
+
+// A single short ferry whose land connections are service roads — the
+// Kamenari-Lepetane (Bay of Kotor) shape, where the crossing is under a
+// kilometre but skipping it means a 35 km detour around the bay.
+//
+// Note this differs from the ShortFerry case above: there the crossing is
+// mapped as two ferry ways meeting at a node, which ShortFerry treats as
+// "not short" out of caution, so those connections are reclassified. Here
+// one ferry way joins land at both ends, so the length test actually
+// decides, and by default the connections stay on the local hierarchy
+// where long routes can never reach them.
+class ShortFerryReclassification : public ::testing::Test {
+protected:
+  // Builds the map with the given config overrides and reports whether the
+  // ferry's land connections reached the highway hierarchy level.
+  static bool
+  connections_on_highway_level(const std::unordered_map<std::string, std::string>& config_options) {
+    const std::string ascii_map = R"(
+          A--B--C==D--E--F
+    )";
+
+    const gurka::ways ways = {{"AB", {{"highway", "trunk"}}},
+                              {"BC", {{"highway", "service"}}},
+                              {"CD",
+                               {{"motor_vehicle", "yes"},
+                                {"motorcar", "yes"},
+                                {"route", "ferry"},
+                                {"name", "Short Strait Ferry"}}},
+                              {"DE", {{"highway", "service"}}},
+                              {"EF", {{"highway", "trunk"}}}};
+
+    // 100 m per character: the ferry way spans three cells, so ~300 m —
+    // far below the 2000 m default cutoff, and the same order as the
+    // 972 m crossing that motivated this.
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+    auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_short_ferry_reclassification",
+                                 config_options);
+    baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+    auto BC_edge_id = std::get<0>(gurka::findEdgeByNodes(graph_reader, layout, "B", "C"));
+    auto DE_edge_id = std::get<0>(gurka::findEdgeByNodes(graph_reader, layout, "D", "E"));
+    return BC_edge_id.level() == LEVEL_O && DE_edge_id.level() == LEVEL_O;
+  }
+};
+
+TEST_F(ShortFerryReclassification, DefaultLeavesShortFerryConnectionsLocal) {
+  EXPECT_FALSE(connections_on_highway_level({{"mjolnir.concurrency", "1"}}))
+      << "upstream default (2000 m) must be unchanged when the option is unset";
+}
+
+TEST_F(ShortFerryReclassification, ZeroLengthCutoffReclassifiesEveryFerry) {
+  EXPECT_TRUE(connections_on_highway_level(
+      {{"mjolnir.concurrency", "1"}, {"mjolnir.short_ferry_max_length", "0"}}))
+      << "with the exclusion disabled a short ferry's connections must reach the "
+         "highway hierarchy so long routes can still find the crossing";
+}
+
+TEST_F(ShortFerryReclassification, CutoffBelowFerryLengthReclassifies) {
+  // The ferry is ~300 m; a 50 m cutoff puts it above "minor crossing".
+  EXPECT_TRUE(connections_on_highway_level(
+      {{"mjolnir.concurrency", "1"}, {"mjolnir.short_ferry_max_length", "50"}}));
+}

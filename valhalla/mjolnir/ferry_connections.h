@@ -30,6 +30,13 @@ constexpr uint32_t kTemporary = 2;
 
 constexpr uint32_t kFerryUpClass = static_cast<uint32_t>(baldr::RoadClass::kPrimary);
 
+// Ferry edges shorter than this (metres) are treated as minor crossings
+// (a river punt rather than a strait crossing) and their land connections
+// are left at their original classification. Configurable via
+// mjolnir.short_ferry_max_length; 0 disables the exclusion so every ferry
+// has its connections reclassified.
+constexpr float kDefaultShortFerryMaxLength = 2000.0f;
+
 // NodeLabel - for simple shortest path
 struct NodeLabel {
   float cost;
@@ -61,7 +68,8 @@ struct NodeStatusInfo {
 void ReclassifyFerryConnections(const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& nodes_file,
-                                const std::string& edges_file);
+                                const std::string& edges_file,
+                                const float short_ferry_max_length = kDefaultShortFerryMaxLength);
 
 } // namespace mjolnir
 } // namespace valhalla

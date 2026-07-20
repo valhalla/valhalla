@@ -5,6 +5,7 @@
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236) 
+   * ADDED: `mjolnir.short_ferry_max_length` config option to make the short-ferry reclassification cutoff configurable; the default of 2000 m keeps current behaviour and 0 reclassifies every ferry connection [#6245](https://github.com/valhalla/valhalla/pull/6245)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**

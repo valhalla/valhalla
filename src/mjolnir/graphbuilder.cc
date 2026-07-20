@@ -1541,7 +1541,9 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // Do not reclassify ferry connection edges if no hierarchies are built. If reclassifying,
   // we use RoadClass::kPrimary (highway classification) as cutoff.
   if (pt.get<bool>("mjolnir.hierarchy", true)) {
-    ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
+    ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
+                               pt.get<float>("mjolnir.short_ferry_max_length",
+                                             kDefaultShortFerryMaxLength));
   } else {
     LOG_WARN("Not reclassifying ferry connections since no hierarches are being created");
   }

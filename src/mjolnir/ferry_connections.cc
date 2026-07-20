@@ -264,7 +264,8 @@ bool ShortFerry(const uint32_t node_index,
                 node_bundle& bundle,
                 sequence<Edge>& edges,
                 sequence<Node>& nodes,
-                sequence<OSMWayNode>& way_nodes) {
+                sequence<OSMWayNode>& way_nodes,
+                const float short_ferry_max_length) {
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
   const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
@@ -300,7 +301,7 @@ bool ShortFerry(const uint32_t node_index,
       // If the end node has a non-ferry edge check the length of the edge
       if (bundle2.node.non_ferry_edge_) {
         auto shape = EdgeShape(edge.first.llindex_, edge.first.attributes.llcount);
-        if (midgard::length(shape) < 2000.0f) {
+        if (midgard::length(shape) < short_ferry_max_length) {
           short_edge = true;
         }
       } else {
@@ -316,7 +317,8 @@ bool ShortFerry(const uint32_t node_index,
 void ReclassifyFerryConnections(const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& nodes_file,
-                                const std::string& edges_file) {
+                                const std::string& edges_file,
+                                const float short_ferry_max_length) {
   SCOPED_TIMER();
   LOG_INFO("Reclassifying ferry connection graph edges...");
 
@@ -338,7 +340,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.ferry_edge_ && bundle.node.non_ferry_edge_ &&
         GetBestNonFerryClass(bundle.node_edges) > kFerryUpClass &&
-        !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes)) {
+        !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes, short_ferry_max_length)) {
       bool inbound_path_found = false;
       bool outbound_path_found = false;
       [[maybe_unused]] const PointLL ll = (*nodes[node_itr.position()]).node.latlng();
