@@ -54,10 +54,10 @@
    * ADDED: enabled bounding circles for faster candidate search in `/locate` and `/tile` [#6141/](https://github.com/valhalla/valhalla/pull/6141) 
    * BREAKING: add `low_class_factor` for truck costing (impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
    * ADDED: `get_graph_tile_header` & `GraphTileHeader` bindings [#6134](https://github.com/valhalla/valhalla/pull/6134)
-   * UPDATED: Faster `exclude_polygons` [#6156](https://github.com/valhalla/valhalla/pull/6156)
-   * BREAKING: new parameter `max_exclude_polygons_vertices`, defaulting to 100 [#6156](https://github.com/valhalla/valhalla/pull/6156)
    * ADDED: support for multiple --region args in valhalla_build_extract [#6172](https://github.com/valhalla/valhalla/pull/6172)
+   * BREAKING: new parameter `max_exclude_polygons_vertices`, defaulting to 100 [#6156](https://github.com/valhalla/valhalla/pull/6156)
    * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
+   * UPDATED: Faster `exclude_polygons` [#6156](https://github.com/valhalla/valhalla/pull/6156)
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**
