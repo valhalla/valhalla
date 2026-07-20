@@ -123,12 +123,14 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
     if (!reader.GetGraphTile(node_id, tile))
       continue;
 
-    for (const auto& edge : tile->GetDirectedEdges(node_id)) {
+    const auto node_tile = tile;
+    auto edge_id = GraphId(node_id.tileid(), node_id.level(), node_tile->node(node_id)->edge_index());
+    for (const auto& edge : node_tile->GetDirectedEdges(node_id)) {
       // get the opposing edge
-      if (!reader.GetGraphTile(edge.endnode(), tile))
+      const auto* opp_edge = reader.GetOpposingEdge(edge_id, tile);
+      ++edge_id;
+      if (!opp_edge)
         continue;
-      const auto* node = tile->node(edge.endnode());
-      const auto* opp_edge = tile->directededge(node->edge_index() + edge.opp_index());
 
       // NOTE: we can go through the end of the restriction because only the start would mark a
       // potential stopping point (maybe a path followed the restriction). We also have to stop
