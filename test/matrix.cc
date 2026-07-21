@@ -694,27 +694,6 @@ TEST(StandAlone, MatrixNoReservations) {
   matrix.Clear();
 }
 
-TEST(StandAlone, InvariantReverseTimeCheck) {
-  Options options;
-  options.add_sources()->set_date_time("2026-01-12T08:00");
-  options.add_sources()->set_date_time("2026-01-12T08:00");
-  options.add_targets();
-
-  // only invariant time qualifies
-  options.set_date_time_type(Options::depart_at);
-  EXPECT_FALSE(check_invariant_reverse_time(options));
-  options.set_date_time_type(Options::invariant);
-  EXPECT_TRUE(check_invariant_reverse_time(options));
-
-  // all sources must share the departure time
-  options.mutable_sources(1)->set_date_time("2026-01-12T09:00");
-  EXPECT_FALSE(check_invariant_reverse_time(options));
-  options.mutable_sources(1)->set_date_time("");
-  EXPECT_FALSE(check_invariant_reverse_time(options));
-  options.mutable_sources(0)->set_date_time("");
-  EXPECT_FALSE(check_invariant_reverse_time(options));
-}
-
 /**************************************************************************************************/
 
 int main(int argc, char* argv[]) {

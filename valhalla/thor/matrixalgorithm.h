@@ -10,7 +10,6 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <algorithm>
 #include <functional>
 
 namespace valhalla {
@@ -245,22 +244,6 @@ struct Destination {
     dest_edges_available.clear();
   }
 };
-
-// return true if the reverse trees may use time-dependent speeds: with invariant time the
-// clock never advances along the path, so edge costs don't depend on when a tree reaches
-// them. A reverse tree is shared by all sources, so they must all depart at the same time;
-// equal date_time strings can still resolve to different instants across timezones, which
-// CostMatrix rechecks once the time infos are resolved against the graph.
-inline bool check_invariant_reverse_time(const Options& options) {
-  if (options.date_time_type() != Options::invariant || options.sources().empty() ||
-      options.sources(0).date_time().empty()) {
-    return false;
-  }
-  return std::all_of(options.sources().begin() + 1, options.sources().end(),
-                     [&options](const valhalla::Location& source) {
-                       return source.date_time() == options.sources(0).date_time();
-                     });
-}
 
 // return true if any location had a valid time set
 // return false if it doesn't make sense computationally and add warnings accordingly

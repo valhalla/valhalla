@@ -61,6 +61,22 @@ inline const valhalla::PathEdge* find_correlated_edge(const valhalla::Location& 
 
   throw std::logic_error("Could not find candidate edge used for label");
 }
+
+// return true if the reverse trees may use time-dependent speeds: with invariant time the
+// clock never advances along the path, so edge costs don't depend on when a tree reaches
+// them. A reverse tree is shared by all sources, so they must all depart at the same time;
+// equal date_time strings can still resolve to different instants across timezones, which
+// gets rechecked once the time infos are resolved against the graph.
+bool check_invariant_reverse_time(const valhalla::Options& options) {
+  if (options.date_time_type() != valhalla::Options::invariant || options.sources().empty() ||
+      options.sources(0).date_time().empty()) {
+    return false;
+  }
+  return std::all_of(options.sources().begin() + 1, options.sources().end(),
+                     [&options](const valhalla::Location& source) {
+                       return source.date_time() == options.sources(0).date_time();
+                     });
+}
 } // namespace
 
 namespace valhalla {
