@@ -2,6 +2,7 @@
 if (Python_FOUND)
   add_custom_command(OUTPUT scripts.log
       COMMAND
+        ${CMAKE_COMMAND} -E env
         LOCPATH=${VALHALLA_SOURCE_DIR}/locales
         ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
         bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/scripts -v > ${CMAKE_BINARY_DIR}/test/scripts.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/scripts.log && exit 1)"
