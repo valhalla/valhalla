@@ -8,7 +8,6 @@
 
 #include <array>
 #include <cstdint>
-#include <cstdio>
 #include <unordered_map>
 
 // Factors used to adjust speed assignments
@@ -212,9 +211,11 @@ public:
           if (code.empty())
             throw std::runtime_error("Cannot have empty country code");
           if (cs.HasMember("iso3166-2")) {
-            code.push_back('.');
-            if (code.size() == (code += cs["iso3166-2"].GetString()).size())
+            std::string state = cs["iso3166-2"].GetString();
+            if (state.empty())
               throw std::runtime_error("Cannot have empty state code");
+            code.push_back('.');
+            code += state;
           }
         }
         if (tables.count(code))
@@ -227,19 +228,13 @@ public:
       }
     } // something went wrong with parsing or opening the file
     catch (const std::exception& e) {
-      fprintf(stderr, "[SPEEDCFG] parse failed for %s: %s\n", config_file->c_str(), e.what());
-      fflush(stderr);
       LOG_WARN(std::string("Disabled default speeds assignment from config: ") + e.what());
       tables.clear();
     } // something else was thrown
     catch (...) {
-      fprintf(stderr, "[SPEEDCFG] parse failed for %s: unknown error\n", config_file->c_str());
-      fflush(stderr);
       LOG_WARN("Disabled default speeds assignment from config: unknown error");
       tables.clear();
     }
-    fprintf(stderr, "[SPEEDCFG] loaded %s -> tables=%zu\n", config_file->c_str(), tables.size());
-    fflush(stderr);
     LOG_INFO("Enabled default speeds assignment from config: " + *config_file);
   }
 

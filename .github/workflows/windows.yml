@@ -307,12 +307,14 @@ jobs:
         timeout-minutes: 5
         run: |
           $env:PATH += ";${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin;${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/tools/spatialite-tools"
+          # test exes are built by the check target, not the default all, so build it here first
+          cmake --build build --target loki_service
           $exe = "${{ github.workspace }}/build/test/loki_service.exe"
           Write-Host "=== exists? ==="; Test-Path $exe
           Write-Host "=== dumpbin /dependents loki_service ==="
-          & dumpbin /dependents $exe
+          dumpbin /dependents $exe
           Write-Host "=== dumpbin /dependents actor (passing, for diff) ==="
-          & dumpbin /dependents "${{ github.workspace }}/build/test/actor.exe"
+          dumpbin /dependents "${{ github.workspace }}/build/test/actor.exe"
           Write-Host "=== run loki_service.exe directly, capture streams + exit code ==="
           & $exe *>&1 | Select-Object -First 40
           Write-Host "native exit code = $LASTEXITCODE (0xC0000135 = STATUS_DLL_NOT_FOUND)"
