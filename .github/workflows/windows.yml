@@ -302,26 +302,6 @@ jobs:
           git log -3 --oneline
           echo "=================================================================="
 
-      # TEMP: diagnose why loki_service.exe exits 127 with an empty log. run it directly (the bash
-      # wrapper swallows the real error) to get the native exit code + streams, and diff its dll
-      # dependencies against a passing exe (actor.exe).
-      - name: Diagnose loki_service
-        shell: pwsh
-        continue-on-error: true
-        timeout-minutes: 5
-        run: |
-          $env:PATH += ";${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin;${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/tools/spatialite-tools"
-          # test exes are built by the check target, not the default all, so build it here first
-          cmake --build build --target loki_service
-          $exe = "${{ github.workspace }}/build/test/loki_service.exe"
-          Write-Host "=== run loki_service.exe directly, capture streams + exit code ==="
-          & $exe *>&1 | Select-Object -First 40
-          Write-Host "native exit code = $LASTEXITCODE (0xC0000409 = fail-fast: terminate/abort/GS)"
-          Write-Host "=== cdb: run to the crash and dump the stack ==="
-          $cdb = "C:/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
-          $env:_NT_SYMBOL_PATH = "srv*https://msdl.microsoft.com/download/symbols"
-          & $cdb -g -c "g; .echo ===CRASH===; .lastevent; kn 60; .echo ===ANALYZE===; !analyze -v; q" $exe *>&1 | Select-Object -First 120
-
       - name: Run tests
         shell: bash
         run: |

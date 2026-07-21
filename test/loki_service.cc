@@ -388,7 +388,7 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
   if (!std::filesystem::is_directory(run_dir) && !std::filesystem::create_directories(run_dir))
     throw std::runtime_error("Couldnt make directory to run from");
 
-  auto config = test::make_config(run_dir.string(),
+  auto config = test::make_config(run_dir.generic_string(),
                                   {{"service_limits.skadi.max_shape", "100"},
                                    {"service_limits.max_exclude_locations", "0"},
                                    {"httpd.service.listen", "tcp://127.0.0.1:8003"}},
