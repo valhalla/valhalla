@@ -1911,17 +1911,44 @@ function filter_tags_generic(kv)
 
   --ADR tunnel category (https://wiki.openstreetmap.org/wiki/Key:hazmat):
   --explicit hazmat:adr_tunnel_cat wins over the generic hazmat:tunnel_cat;
-  --otherwise, on ways tagged tunnel=yes only (checked before the tunnel
-  --value is normalised below), infer the category from hazmat:B..E=no
-  --exclusions. the category is the highest letter excluded (scan E->B): a
-  --load of restriction group X is only forbidden in tunnels of category >= X,
-  --so hazmat:E=no can only be true of a category E tunnel while hazmat:B=no
-  --alone implies (at minimum) category B
+  --otherwise infer the category from the per-code hazmat:B..E sub-keys. the
+  --category is the highest letter excluded (scan E->B): a load of
+  --restriction group X is only forbidden in tunnels of category >= X, so
+  --hazmat:E=no can only be true of a category E way while hazmat:B=no alone
+  --implies (at minimum) category B. the inference is deliberately NOT
+  --limited to tunnel=yes ways: signed ADR tunnel restrictions are tagged on
+  --whole corridors (verified against the Beneluxtunnel and Botlektunnel,
+  --whose A4/A15 approach ways carry hazmat:B=no + hazmat:C=no +
+  --hazmat:D=yes + hazmat:E=yes without tunnel=yes; gating on tunnel=yes
+  --left those ways on the blanket hazmat ban below, blanket-detouring
+  --every hazmat load regardless of its declared code). two tagging styles
+  --feed the inference:
+  --  * exclusion style: hazmat:B=no .. hazmat:E=yes - excluded letters are
+  --    tagged no
+  --  * blanket-plus-allowance style: hazmat=no refined by hazmat:D=yes /
+  --    hazmat:E=yes - the blanket ban excludes every letter not explicitly
+  --    allowed
+  --plain hazmat=no with NO per-code sub-keys derives nothing and stays a
+  --binary hazmat ban (conservative: it may ban dangerous goods generally,
+  --not only by ADR tunnel code)
   local adr_cat = parse_adr_tunnel_cat(kv["hazmat:adr_tunnel_cat"]) or
                   parse_adr_tunnel_cat(kv["hazmat:tunnel_cat"])
-  if adr_cat == nil and kv["tunnel"] == "yes" then
+  local adr_subkeys = false
+  local adr_allowance = false
+  for _, letter in ipairs({"B", "C", "D", "E"}) do
+    local sub = hazmat[kv["hazmat:" .. letter]]
+    if sub ~= nil then
+      adr_subkeys = true
+      if sub == "true" then
+        adr_allowance = true
+      end
+    end
+  end
+  if adr_cat == nil and adr_subkeys then
+    local blanket_ban = hazmat[kv["hazmat"]] == "false"
     for _, letter in ipairs({"E", "D", "C", "B"}) do
-      if kv["hazmat:" .. letter] == "no" then
+      local sub = hazmat[kv["hazmat:" .. letter]]
+      if sub == "false" or (blanket_ban and sub ~= "true") then
         adr_cat = letter
         break
       end
@@ -1965,14 +1992,24 @@ function filter_tags_generic(kv)
   --when the hazmat:B..E exclusions expressed a tunnel categorisation (see
   --above) they must not double as a blanket hazmat ban: the tunnel category
   --carries their meaning instead. hazmat=true trucks remain excluded from
-  --such tunnels because an undeclared tunnel restriction code is treated
+  --such ways because an undeclared tunnel restriction code is treated
   --as the most conservative code B at costing time
   local hazmat_b_to_e = nil
   if kv["adr_tunnel_cat"] == nil then
     hazmat_b_to_e = hazmat[kv["hazmat:B"]] or hazmat[kv["hazmat:C"]] or
                     hazmat[kv["hazmat:D"]] or hazmat[kv["hazmat:E"]]
   end
-  kv["hazmat"] = hazmat[kv["hazmat"]] or hazmat[kv["hazmat:water"]] or hazmat[kv["hazmat:A"]] or hazmat_b_to_e
+  --likewise, when plain hazmat=no was refined by per-code allowances
+  --(hazmat=no + hazmat:E=yes and the like), the blanket key is the crude
+  --summary of a graded restriction the derived category now carries with
+  --per-code granularity; keep it only when no allowance shows graded
+  --intent. hazmat:water and hazmat:A bans are unrelated to ADR tunnel
+  --categories and are always kept
+  local hazmat_plain = hazmat[kv["hazmat"]]
+  if adr_cat ~= nil and adr_allowance and hazmat_plain == "false" then
+    hazmat_plain = nil
+  end
+  kv["hazmat"] = hazmat_plain or hazmat[kv["hazmat:water"]] or hazmat[kv["hazmat:A"]] or hazmat_b_to_e
   kv["hazmat_forward"] = hazmat[kv["hazmat:forward"]] or hazmat[kv["hazmat:water:forward"]] or hazmat[kv["hazmat:A:forward"]] or hazmat[kv["hazmat:B:forward"]] or
                  hazmat[kv["hazmat:C:forward"]] or hazmat[kv["hazmat:D:forward"]] or hazmat[kv["hazmat:E:forward"]]
   kv["hazmat_backward"] = hazmat[kv["hazmat:backward"]] or hazmat[kv["hazmat:water:backward"]] or hazmat[kv["hazmat:A:backward"]] or hazmat[kv["hazmat:B:backward"]] or

@@ -181,7 +181,8 @@ protected:
         {"AB", {{"highway", "residential"}}},
         {"BC",
          {{"highway", "residential"}, {"tunnel", "yes"}, {"hazmat:B", "no"}, {"hazmat:E", "no"}}},
-        // hazmat exclusion off a tunnel: no category, blanket hazmat ban
+        // hazmat exclusion off a tunnel: same inference (ADR corridors are
+        // tagged on approach ways too), category C
         {"DE", {{"highway", "residential"}}},
         {"EF", {{"highway", "residential"}, {"hazmat:C", "no"}}},
         // hazmat:X=yes is not an exclusion: no category, no ban
@@ -215,11 +216,19 @@ TEST_F(TruckAdrInferenceTest, ExclusionInferenceHighestLetterWins) {
   gurka::assert::raw::expect_path(route, {"AB", "BC"});
 }
 
-TEST_F(TruckAdrInferenceTest, HazmatExclusionOffTunnelStaysBlanketBan) {
-  // hazmat:C=no without tunnel=yes derives no category; the pre-existing
-  // blanket hazmat access restriction applies to every hazmat load, even an
-  // explicitly unrestricted one
-  expect_no_path(map, {"D", "F"}, hazmat_options("(—)"));
+TEST_F(TruckAdrInferenceTest, HazmatExclusionOffTunnelDerivesCategory) {
+  // hazmat:C=no without tunnel=yes derives category C all the same: signed
+  // ADR restrictions are tagged on whole corridors (approach ways included),
+  // so the inference is not limited to tunnel=yes ways. A code-C load is
+  // blocked, a code-D load and an explicitly unrestricted load pass, and a
+  // hazmat load with no declared code stays conservatively excluded.
+  expect_no_path(map, {"D", "F"}, hazmat_options("C"));
+  expect_no_path(map, {"D", "F"}, hazmat_options(""));
+  auto route_d = gurka::do_action(Options::route, map, {"D", "F"}, "truck", hazmat_options("D"));
+  gurka::assert::raw::expect_path(route_d, {"DE", "EF"});
+  auto route_unrestricted =
+      gurka::do_action(Options::route, map, {"D", "F"}, "truck", hazmat_options("(—)"));
+  gurka::assert::raw::expect_path(route_unrestricted, {"DE", "EF"});
   auto route = gurka::do_action(Options::route, map, {"D", "F"}, "truck");
   gurka::assert::raw::expect_path(route, {"DE", "EF"});
 }
@@ -303,4 +312,127 @@ TEST_F(TruckAdrDetourTest, HeightAloneKeepsTunnelOpen) {
   auto route = gurka::do_action(Options::route, map, {"A", "D"}, "truck",
                                 {{"/costing_options/truck/height", "4.5"}});
   gurka::assert::raw::expect_path(route, {"AB", "BC", "CD"});
+}
+
+// Real-world corridor tagging, mirroring the Beneluxtunnel (Rotterdam, OSM
+// ways 29245400/34886842) and the Botlektunnel style named in the OSM hazmat
+// scheme: the signed ADR restriction is tagged per-code on the approach ways
+// (no tunnel=yes, no explicit category key) as well as on the tunnel way
+// itself. Every way of the corridor must derive the same category or the
+// blanket hazmat ban on the approaches blanket-detours every code alike.
+class TruckAdrCorridorTest : public ::testing::Test {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 100;
+
+    // Every restricted edge sits BEHIND an unrestricted approach edge:
+    // costing (blanket hazmat restriction and ADR category alike) binds in
+    // Allowed()/AllowedReverse() when the search EXPANDS onto an edge, while
+    // origin/destination edges are correlated by loki's plain access filter.
+    // A single-edge corridor would make every route trivial and bypass the
+    // very checks under test.
+    const std::string ascii_map = R"(
+      A----B----C----D
+      E----F----K
+      G----H----L
+      I----J----M
+    )";
+
+    const gurka::ways ways = {
+        // the Beneluxtunnel corridor: approaches AB/CD carry the per-code
+        // tags with no tunnel and no explicit category; the tunnel way BC
+        // carries the identical tags plus tunnel=yes and the explicit
+        // category, exactly as the real ways do. Everything derives/reads
+        // category C.
+        {"AB",
+         {{"highway", "residential"},
+          {"hazmat:B", "no"},
+          {"hazmat:C", "no"},
+          {"hazmat:D", "yes"},
+          {"hazmat:E", "yes"}}},
+        {"BC",
+         {{"highway", "residential"},
+          {"tunnel", "yes"},
+          {"hazmat:adr_tunnel_cat", "C"},
+          {"hazmat:B", "no"},
+          {"hazmat:C", "no"},
+          {"hazmat:D", "yes"},
+          {"hazmat:E", "yes"}}},
+        {"CD",
+         {{"highway", "residential"},
+          {"hazmat:B", "no"},
+          {"hazmat:C", "no"},
+          {"hazmat:D", "yes"},
+          {"hazmat:E", "yes"}}},
+        // blanket-plus-allowance style: hazmat=no refined by hazmat:E=yes is
+        // a graded restriction - category D (the highest letter not
+        // explicitly allowed), with the crude blanket ban suppressed
+        {"EF", {{"highway", "residential"}}},
+        {"FK", {{"highway", "residential"}, {"hazmat", "no"}, {"hazmat:E", "yes"}}},
+        // plain hazmat=no with no per-code sub-keys: no category, binary ban
+        {"GH", {{"highway", "residential"}}},
+        {"HL", {{"highway", "residential"}, {"hazmat", "no"}}},
+        // blanket plus an exclusion but no allowance: category E derives,
+        // yet without graded intent the blanket ban is conservatively kept
+        {"IJ", {{"highway", "residential"}}},
+        {"JM", {{"highway", "residential"}, {"hazmat", "no"}, {"hazmat:E", "no"}}},
+    };
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/truck_adr_corridor");
+  }
+};
+
+gurka::map TruckAdrCorridorTest::map = {};
+
+TEST_F(TruckAdrCorridorTest, PerCodeCorridorGrantsGranularPassage) {
+  // the Beneluxtunnel granularity case: codes D and E (and an explicitly
+  // unrestricted load) pass the whole category-C corridor
+  for (const auto* code : {"D", "E", "(—)"}) {
+    SCOPED_TRACE(std::string("code ") + code);
+    auto route = gurka::do_action(Options::route, map, {"A", "D"}, "truck", hazmat_options(code));
+    gurka::assert::raw::expect_path(route, {"AB", "BC", "CD"});
+  }
+}
+
+TEST_F(TruckAdrCorridorTest, PerCodeCorridorStillBlocksItsCategory) {
+  // codes B and C - and a hazmat load with no declared code - stay barred
+  for (const auto* code : {"B", "C", ""}) {
+    SCOPED_TRACE(std::string("code '") + code + "'");
+    expect_no_path(map, {"A", "D"}, hazmat_options(code));
+  }
+}
+
+TEST_F(TruckAdrCorridorTest, PerCodeCorridorIgnoredWithoutHazmat) {
+  auto route = gurka::do_action(Options::route, map, {"A", "D"}, "truck");
+  gurka::assert::raw::expect_path(route, {"AB", "BC", "CD"});
+}
+
+TEST_F(TruckAdrCorridorTest, BlanketPlusAllowanceDerivesCategory) {
+  // hazmat=no + hazmat:E=yes is category D: a code-E load passes, a code-D
+  // load is blocked, an unrestricted load passes (the blanket is suppressed)
+  auto route_e = gurka::do_action(Options::route, map, {"E", "K"}, "truck", hazmat_options("E"));
+  gurka::assert::raw::expect_path(route_e, {"EF", "FK"});
+  expect_no_path(map, {"E", "K"}, hazmat_options("D"));
+  auto route_unrestricted =
+      gurka::do_action(Options::route, map, {"E", "K"}, "truck", hazmat_options("(—)"));
+  gurka::assert::raw::expect_path(route_unrestricted, {"EF", "FK"});
+}
+
+TEST_F(TruckAdrCorridorTest, PlainBlanketStaysBinary) {
+  // plain hazmat=no with no per-code sub-keys keeps banning every hazmat
+  // load, even an explicitly unrestricted one
+  expect_no_path(map, {"G", "L"}, hazmat_options("(—)"));
+  auto route = gurka::do_action(Options::route, map, {"G", "L"}, "truck");
+  gurka::assert::raw::expect_path(route, {"GH", "HL"});
+}
+
+TEST_F(TruckAdrCorridorTest, ExclusionWithoutAllowanceKeepsBlanket) {
+  // hazmat=no + hazmat:E=no shows no graded intent (no allowance), so the
+  // conservative blanket ban stays even though category E derives
+  expect_no_path(map, {"I", "M"}, hazmat_options("(—)"));
+  auto route = gurka::do_action(Options::route, map, {"I", "M"}, "truck");
+  gurka::assert::raw::expect_path(route, {"IJ", "JM"});
 }
