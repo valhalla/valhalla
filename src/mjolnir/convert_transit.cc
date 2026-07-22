@@ -131,7 +131,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
   // for each tile.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     if (std::filesystem::is_regular_file(transit_file_itr->path())) {
-      std::string fname = transit_file_itr->path().string();
+      std::string fname = transit_file_itr->path().generic_string();
       std::string ext = transit_file_itr->path().extension().string();
       std::string file_name = fname.substr(0, fname.size() - ext.size());
 
@@ -145,7 +145,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           if (ext == ".pbf") {
             curr_tile_pbf = tile_pbf;
           } else {
-            curr_tile_pbf = read_pbf(transit_file_itr->path().string(), lock);
+            curr_tile_pbf = read_pbf(transit_file_itr->path().generic_string(), lock);
           }
         }
 
@@ -1203,7 +1203,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     auto tile_path = transit_file_itr->path();
     if (std::filesystem::is_regular_file(transit_file_itr->path()) &&
         (tile_path.extension() == ".pbf" || std::isdigit(tile_path.string().back()))) {
-      all_tiles.emplace(GraphTile::GetTileId(tile_path.string()));
+      all_tiles.emplace(GraphTile::GetTileId(tile_path));
     }
   }
 
