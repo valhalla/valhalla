@@ -599,6 +599,25 @@ TEST(TimeParsing, HolidayTolerance) {
   EXPECT_TRUE(get_time_range(" PH off)").empty());
 }
 
+// nth weekday of every month, with no month context
+TEST(TimeParsing, NthWeekdayOfEveryMonth) {
+  ASSERT_EQ(get_time_range("Mon[-1]").size(), 1); // the last Monday of every month
+  TryConditionalRestrictions("Mon[-1]", 0, 1, 2, {0, 0, 5, 0, 0}, {0, 0, 0, 0, 0});
+  ASSERT_EQ(get_time_range("Tue[2]").size(), 1); // the second Tuesday of every month
+  TryConditionalRestrictions("Tue[2]", 0, 1, 4, {0, 0, 2, 0, 0}, {0, 0, 0, 0, 0});
+}
+
+// range shapes without times attached
+TEST(TimeParsing, BareRanges) {
+  // a range within one month
+  TryConditionalRestrictions("Feb 2-14", 0, 0, 0, {2, 2, 0, 0, 0}, {2, 14, 0, 0, 0});
+  // a weekday range wrapping around the end of the week
+  TryConditionalRestrictions("Th - Tu", 0, 0, 119, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
+  // nth weekday ranges on both ends
+  TryConditionalRestrictions("Oct Su[-1]-Mar Su[4] Su 09:00-16:00", 0, 1, 1, {10, 1, 5, 9, 0},
+                             {3, 1, 4, 16, 0});
+}
+
 // callers pass whole tag values: the parser separates the rules at ';' itself and keeps
 // them isolated from each other
 TEST(TimeParsing, WholeValueWithoutExternalSplit) {
