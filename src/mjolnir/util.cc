@@ -37,6 +37,8 @@ namespace {
 // Temporary files used during tile building
 const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
+const std::string edge_shapes_file = "edge_shapes.bin";
+const std::string edge_node_ids_file = "edge_node_ids.bin";
 const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
 const std::string tile_manifest_file = "tile_manifest.json";
@@ -682,6 +684,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Set up the temporary (*.bin) files used during processing
   std::string ways_bin = tile_dir + ways_file;
   std::string way_nodes_bin = tile_dir + way_nodes_file;
+  std::string edge_shapes_bin = tile_dir + edge_shapes_file;
+  std::string edge_node_ids_bin = tile_dir + edge_node_ids_file;
   std::string nodes_bin = tile_dir + nodes_file;
   std::string edges_bin = tile_dir + edges_file;
   std::string tile_manifest = tile_dir + tile_manifest_file;
@@ -769,8 +773,9 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     }
 
     // Build the graph using the OSMNodes and OSMWays from the parser
-    GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin, linguistic_node_bin, tiles);
+    GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin,
+                        edge_shapes_bin, edge_node_ids_bin, cr_from_bin, cr_to_bin,
+                        linguistic_node_bin, tiles);
     log_stage(BuildStage::kBuild);
   }
 
@@ -858,6 +863,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     LOG_INFO("Cleaning up temporary *.bin files within " + tile_dir);
     remove_temp_file(ways_bin);
     remove_temp_file(way_nodes_bin);
+    remove_temp_file(edge_shapes_bin);
+    remove_temp_file(edge_node_ids_bin);
     remove_temp_file(nodes_bin);
     remove_temp_file(edges_bin);
     remove_temp_file(access_bin);
