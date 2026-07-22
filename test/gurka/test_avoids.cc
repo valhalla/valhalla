@@ -624,11 +624,13 @@ TEST_F(LargeAvoidTest, TestAvoidHugePolygon) {
   auto value = get_avoid_polys(rings, allocator);
   auto req = build_route_request(doc, allocator, lls, "auto", value, "/exclude_polygons");
 
-  // with a polygon this large, it should miss edges in non-line-intersecting bins
+  // with a polygon this large, it should miss edges in non-line-intersecting bins. Now that loki
+  // rejects excluded edges at snap time, there's no non-excluded edge left near the origin either,
+  // so it fails during correlation (171) instead of failing to route through a bad candidate (442)
   try {
     gurka::do_action(Options::route, avoid_map, req);
     FAIL() << "Expected to fail";
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 171); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }
@@ -669,10 +671,12 @@ TEST_F(LargeAvoidTest, TestAvoidHugePolygonWithLevels) {
   levels = {{1.f}};
   value = build_exclude_level_polygons(rings, levels, allocator);
   req = build_route_request(doc, allocator, lls, "pedestrian", value, "/exclude_polygons");
+  // see TestAvoidHugePolygon: loki now rejects the excluded candidates at snap time, so this fails
+  // during correlation (171) instead of failing to route through a bad candidate (442)
   try {
     gurka::do_action(Options::route, avoid_map, req);
     FAIL() << "Expected to fail";
-  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 171); } catch (...) {
     FAIL() << "Expected valhalla_exception_t";
   };
 }
@@ -706,6 +710,42 @@ TEST(StandAlone, SuperTrivialExcludedConnection) {
     auto value = get_avoid_polys(rings, allocator);
     auto req = build_matrix_request(doc, allocator, lls, lls, "auto", value, "/exclude_polygons");
     auto res = gurka::do_action(valhalla::Options::sources_to_targets, map, req);
-    EXPECT_EQ(res.matrix().distances(0), 100000000); // kMaxCost
+    // x used to sit on the excluded BC edge, so a trivial same-point matrix entry incorrectly
+    // reported it as reachable (0) despite the edge being excluded, hence kMaxCost was expected.
+    // Now that loki rejects excluded edges at snap time, x correlates onto AB/CD instead, so the
+    // trivial connection is genuinely reachable
+    EXPECT_EQ(res.matrix().distances(0), 0);
   }
+}
+
+TEST(StandAlone, SnapAwayFromExcludedEdge) {
+  // x is the nearest point on Top to both A and B, and closer to Top than to Bottom (90m vs 60m).
+  // Excluding x's location excludes Top. A location that would otherwise correlate onto Top must
+  // now correlate onto Bottom (the next nearest edge) instead of snapping onto the excluded Top
+  // and then failing to route with a 442, the same way it already works for geofenced edges.
+  const std::string ascii_map = R"(
+    A--x--B
+    |     |
+    C-----D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"name", "Top"}}},
+      {"CD", {{"highway", "residential"}, {"name", "Bottom"}}},
+      {"AC", {{"highway", "residential"}, {"name", "Left"}}},
+      {"BD", {{"highway", "residential"}, {"name", "Right"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 30);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/gurka_snap_away_excluded");
+
+  std::vector<PointLL> avoid_locs{map.nodes["x"]};
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto value = get_avoid_locs(avoid_locs, allocator);
+  auto req = build_route_request(doc, allocator, {map.nodes["x"], map.nodes["D"]}, "auto", value,
+                                 "/exclude_locations");
+
+  auto route = gurka::do_action(Options::route, map, req);
+  gurka::assert::raw::expect_path(route, {"Bottom"});
 }

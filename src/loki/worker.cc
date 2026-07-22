@@ -214,6 +214,22 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   }
 
+  // The costing objects above were built before exclude_polygons/exclude_locations got resolved
+  // into exclude_edges, so their avoid sets are still empty. Sync the resolved avoid edges into
+  // the costing instance used for correlating locations, so loki::Search's search_filter rejects
+  // them already while snapping, instead of a location correlating onto an excluded edge and then
+  // failing to find a route.
+  auto& costing = mode_costing[static_cast<size_t>(mode)];
+  auto co_it = options.costings().find(options.costing_type());
+  if (costing && co_it != options.costings().end() && co_it->second.options().exclude_edges_size()) {
+    std::vector<sif::AvoidEdge> avoid_edges;
+    avoid_edges.reserve(co_it->second.options().exclude_edges_size());
+    for (const auto& edge : co_it->second.options().exclude_edges()) {
+      avoid_edges.push_back({GraphId(edge.id()), edge.percent_along()});
+    }
+    costing->AddUserAvoidEdges(avoid_edges);
+  }
+
   // If more alternates are requested than we support we cap it
   if (options.action() != Options::trace_attributes && options.alternates() > max_alternates)
     options.set_alternates(max_alternates);
