@@ -1,10 +1,11 @@
-#include "mjolnir/areabuilder.h"
+#include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/point2.h"
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
+#include "mjolnir/areabuilder.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/osmway.h"
 #include "scoped_timer.h"
@@ -22,13 +23,29 @@
 
 namespace valhalla {
 namespace mjolnir {
+namespace {
+// can two points be joined by a straight segment that stays inside the polygon?
+bool visible_within(const GEOSGeometry* poly, const midgard::Point2d& a, const midgard::Point2d& b) {
+  GEOSCoordSequence* seq = GEOSCoordSeq_create(2, 2);
+  GEOSCoordSeq_setXY(seq, 0, a.x(), a.y());
+  GEOSCoordSeq_setXY(seq, 1, b.x(), b.y());
+  GEOSGeometry* segment = GEOSGeom_createLineString(seq);
+  const bool visible = segment && GEOSContains(poly, segment) == 1;
+  if (segment) {
+    GEOSGeom_destroy(segment);
+  }
+  return visible;
+}
+} // namespace
 
 constexpr double kMinAreaSquareMeters = 100.0;
 constexpr double kDensifyToleranceMeters = 1.0;
 constexpr double kSimplifyToleranceMeters = 1.5;
 constexpr double kEntranceToleranceMeters = 0.5;
+constexpr float kTraversalSpeedKph = 12.0f;
+constexpr double kEntranceGroupingMeters = 3.0;
 
-void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
+void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
                              const std::string& ways_file,
                              const std::string& way_nodes_file,
                              OSMData& osmdata) {
@@ -45,7 +62,24 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
 
   std::unordered_map<uint64_t, std::vector<std::vector<midgard::PointLL>>> area_ways;
   std::unordered_map<uint64_t, std::vector<std::pair<uint64_t, midgard::PointLL>>> area_shared_nodes;
-  std::unordered_set<uint64_t> pedestrian_nodes;
+  std::unordered_map<uint64_t, uint32_t> area_name_indices;
+  std::unordered_map<uint64_t, std::vector<size_t>> area_way_indices;
+
+  // for each intersection node, which pedestrian ways pass through it and at which
+  // position, to detect ways that cross through an area
+  struct WayVisit {
+    uint64_t way_id;
+    uint32_t position;
+  };
+  std::unordered_map<uint64_t, std::vector<WayVisit>> pedestrian_node_ways;
+
+  // where each pedestrian way's nodes live in the way_nodes file, to fetch the
+  // in-between nodes of crossing candidates later
+  struct WaySpan {
+    size_t first_index;
+    size_t last_index;
+  };
+  std::unordered_map<uint64_t, WaySpan> pedestrian_way_spans;
 
   // grab the way and its first node
   size_t current_way_node_index = 0;
@@ -60,7 +94,10 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
     if (way.area()) {
       auto it = way_to_relation.find(way.way_id());
       uint64_t area_key = (it != way_to_relation.end()) ? it->second : way.way_id();
-
+      if (way.name_index() != 0) {
+        area_name_indices[area_key] = way.name_index();
+      }
+      area_way_indices[area_key].push_back(way_node.way_index);
       std::vector<midgard::PointLL> shape;
       for (auto node_idx = first_way_node_index; node_idx <= last_way_node_index; node_idx++) {
         const auto& node = (*way_nodes[node_idx]).node;
@@ -72,8 +109,13 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
       area_ways[area_key].push_back(std::move(shape));
 
     } else if (way.pedestrian_forward() || way.pedestrian_backward()) {
+      pedestrian_way_spans[way.way_id()] = {first_way_node_index, last_way_node_index};
       for (auto node_idx = first_way_node_index; node_idx <= last_way_node_index; node_idx++) {
-        pedestrian_nodes.insert((*way_nodes[node_idx]).node.osmid_);
+        const auto& node = (*way_nodes[node_idx]).node;
+        if (node.intersection()) {
+          pedestrian_node_ways[node.osmid_].push_back(
+              {way.way_id(), static_cast<uint32_t>(node_idx - first_way_node_index)});
+        }
       }
     }
     current_way_node_index = last_way_node_index + 1;
@@ -81,18 +123,19 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
 
   initGEOS(nullptr, nullptr);
 
+  uint64_t next_synthetic_osm_id = osmdata.max_way_id + 1;
   for (const auto& [relation_id, shapes] : area_ways) {
     if (shapes.empty() || shapes.front().empty()) {
       continue;
     }
 
-    std::vector<midgard::PointLL> entrances;
+    std::vector<std::pair<uint64_t, midgard::PointLL>> entrances;
     std::unordered_set<uint64_t> seen_entrances;
     auto shared_it = area_shared_nodes.find(relation_id);
     if (shared_it != area_shared_nodes.end()) {
       for (const auto& [node_id, ll] : shared_it->second) {
-        if (pedestrian_nodes.count(node_id) && seen_entrances.insert(node_id).second) {
-          entrances.push_back(ll);
+        if (pedestrian_node_ways.count(node_id) && seen_entrances.insert(node_id).second) {
+          entrances.push_back({node_id, ll});
         }
       }
     }
@@ -100,18 +143,42 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
       continue;
     }
 
+    // detect footways that may cross through the area boundary
+    std::unordered_map<uint64_t, std::vector<uint32_t>> way_hits;
+    for (const auto& [node_id, ll] : entrances) {
+      auto ways_it = pedestrian_node_ways.find(node_id);
+      if (ways_it == pedestrian_node_ways.end()) {
+        continue;
+      }
+      for (const auto& visit : ways_it->second) {
+        way_hits[visit.way_id].push_back(visit.position);
+      }
+    }
+    std::vector<uint64_t> crossing_candidates;
+    for (auto& [way_id, positions] : way_hits) {
+      if (positions.size() < 2) {
+        continue;
+      }
+      std::sort(positions.begin(), positions.end());
+      for (size_t i = 0; i + 1 < positions.size(); ++i) {
+        if (positions[i + 1] - positions[i] > 1) {
+          crossing_candidates.push_back(way_id);
+          break;
+        }
+      }
+    }
     // reference point for the local projection, first point of the first way
     const midgard::PointLL center = shapes.front().front();
     midgard::DistanceApproximator<midgard::PointLL> aprox(center);
     const double meter_per_lng = aprox.GetMetersPerLngDegree();
 
     // project the entrances to meters and build a GEOS point for each one
-    std::vector<midgard::Point2d> entrances_m;
+    std::vector<std::pair<uint64_t, midgard::Point2d>> entrances_m;
     std::vector<GEOSGeometry*> entrance_points;
-    for (const auto& entrance : entrances) {
+    for (const auto& [node_id, entrance] : entrances) {
       const double x = (entrance.lng() - center.lng()) * meter_per_lng;
       const double y = (entrance.lat() - center.lat()) * midgard::kMetersPerDegreeLat;
-      entrances_m.push_back({x, y});
+      entrances_m.push_back({node_id, {x, y}});
       entrance_points.push_back(GEOSGeom_createPointFromXY(x, y));
     }
 
@@ -171,9 +238,10 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
       }
     }
 
-    fprintf(stderr, "area %lu: %zu ways -> %d raw polygon(s) -> %zu final polygon(s)\n", relation_id,
-            lines.size(), num_polygons, final_polygons.size());
+    LOG_DEBUG("area " + std::to_string(relation_id) + ": " + std::to_string(lines.size()) +
+              " ways -> " + std::to_string(final_polygons.size()) + " polygon(s)");
 
+    bool generated_any = false;
     for (GEOSGeometry* poly : final_polygons) {
       double area = 0;
       GEOSArea(poly, &area);
@@ -183,7 +251,7 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
       }
 
       // a relation can hold several polygons, so keep the entrances lying on this one
-      std::vector<midgard::Point2d> poly_entrances;
+      std::vector<std::pair<uint64_t, midgard::Point2d>> poly_entrances;
       for (size_t i = 0; i < entrance_points.size(); ++i) {
         double distance = 0;
         GEOSDistance(poly, entrance_points[i], &distance);
@@ -192,44 +260,123 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
         }
       }
 
-      fprintf(stderr, "   polygon with %d hole(s) and %zu of the %zu entrance(s)\n",
-              GEOSGetNumInteriorRings(poly), poly_entrances.size(), entrances_m.size());
-
       // an area nobody can reach is not worth generating
       if (poly_entrances.empty()) {
         continue;
       }
 
+      // does any in-between node of the way fall strictly inside this polygon?
+      // if so the area already has its paths mapped, so we skip it
+      bool has_interior_paths = false;
+      for (const uint64_t candidate : crossing_candidates) {
+        const auto span_it = pedestrian_way_spans.find(candidate);
+        if (span_it == pedestrian_way_spans.end()) {
+          continue;
+        }
+        for (size_t idx = span_it->second.first_index;
+             idx <= span_it->second.last_index && !has_interior_paths; ++idx) {
+          const auto& node_ll = (*way_nodes[idx]).node.latlng();
+          const double x = (node_ll.lng() - center.lng()) * meter_per_lng;
+          const double y = (node_ll.lat() - center.lat()) * midgard::kMetersPerDegreeLat;
+          GEOSGeometry* point = GEOSGeom_createPointFromXY(x, y);
+          if (GEOSContains(poly, point) == 1) {
+            has_interior_paths = true;
+          }
+          GEOSGeom_destroy(point);
+        }
+        if (has_interior_paths) {
+          break;
+        }
+      }
+      if (has_interior_paths) {
+        LOG_DEBUG("area " + std::to_string(relation_id) +
+                  ": polygon already has mapped paths inside, skipping");
+        continue;
+      }
+
+      // group entrances that sit within kEntranceGroupingMeters of each other,
+      // keeping per group the real entrance closest to the group centroid
+      {
+        const double group_dist_sq = kEntranceGroupingMeters * kEntranceGroupingMeters;
+        std::vector<int> group_of(poly_entrances.size(), -1);
+        int num_groups = 0;
+        for (size_t i = 0; i < poly_entrances.size(); ++i) {
+          for (size_t j = 0; j < i && group_of[i] == -1; ++j) {
+            const double dx = poly_entrances[i].second.x() - poly_entrances[j].second.x();
+            const double dy = poly_entrances[i].second.y() - poly_entrances[j].second.y();
+            if (dx * dx + dy * dy < group_dist_sq &&
+                visible_within(poly, poly_entrances[i].second, poly_entrances[j].second)) {
+              group_of[i] = group_of[j];
+            }
+          }
+          if (group_of[i] == -1) {
+            group_of[i] = num_groups++;
+          }
+        }
+        if (num_groups < static_cast<int>(poly_entrances.size())) {
+          std::vector<double> cx(num_groups, 0.0), cy(num_groups, 0.0);
+          std::vector<int> count(num_groups, 0);
+          for (size_t i = 0; i < poly_entrances.size(); ++i) {
+            cx[group_of[i]] += poly_entrances[i].second.x();
+            cy[group_of[i]] += poly_entrances[i].second.y();
+            count[group_of[i]]++;
+          }
+          std::vector<int> representative(num_groups, -1);
+          std::vector<double> best(num_groups, std::numeric_limits<double>::max());
+          for (size_t i = 0; i < poly_entrances.size(); ++i) {
+            const int g = group_of[i];
+            const double dx = poly_entrances[i].second.x() - cx[g] / count[g];
+            const double dy = poly_entrances[i].second.y() - cy[g] / count[g];
+            const double d = dx * dx + dy * dy;
+            if (d < best[g]) {
+              best[g] = d;
+              representative[g] = static_cast<int>(i);
+            }
+          }
+          std::vector<std::pair<uint64_t, midgard::Point2d>> grouped;
+          grouped.reserve(num_groups);
+          for (int g = 0; g < num_groups; ++g) {
+            grouped.push_back(poly_entrances[representative[g]]);
+          }
+          poly_entrances = std::move(grouped);
+        }
+      }
       auto medial_axis = GenerateMedialAxis(poly);
       std::unordered_map<size_t, std::unordered_set<size_t>> protected_points;
       const size_t original_chains = medial_axis.size();
 
-      // connect each entrance to the nearest existing vertex of the medial axis
-      for (const auto& entrance : poly_entrances) {
-        double best_dist_sq = std::numeric_limits<double>::max();
-        size_t best_chain = 0;
-        size_t best_index = 0;
+      // connect each entrance to the nearest vertex it can reach without leaving the polygon
+      for (const auto& [entrance_id, entrance] : poly_entrances) {
+        // all skeleton vertices as candidates, sorted by distance to the entrance
+        std::vector<std::tuple<double, size_t, size_t>> candidates;
         for (size_t c = 0; c < original_chains; ++c) {
           for (size_t i = 0; i < medial_axis[c].size(); ++i) {
             const auto& p = medial_axis[c][i];
             const double dx = p.x() - entrance.x();
             const double dy = p.y() - entrance.y();
-            const double d = dx * dx + dy * dy;
-            if (d < best_dist_sq) {
-              best_dist_sq = d;
-              best_chain = c;
-              best_index = i;
-            }
+            candidates.emplace_back(dx * dx + dy * dy, c, i);
           }
         }
-        const auto& target = medial_axis[best_chain][best_index];
-        // remember this point must survive simplification
-        protected_points[best_chain].insert(best_index);
-        medial_axis.push_back({{entrance.x(), entrance.y()}, target});
-      }
+        std::sort(candidates.begin(), candidates.end());
 
-      fprintf(stderr, "   %zu chains after connecting %zu entrances\n", medial_axis.size(),
-              poly_entrances.size());
+        bool connected = false;
+        // take the closest one whose connecting segment stays inside the polygon
+        for (const auto& [dist_sq, c, i] : candidates) {
+          const auto& target = medial_axis[c][i];
+          if (!visible_within(poly, {entrance.x(), entrance.y()}, target)) {
+            continue;
+          }
+          // remember this point must survive simplification
+          protected_points[c].insert(i);
+          medial_axis.push_back({{entrance.x(), entrance.y()}, target});
+          connected = true;
+          break;
+        }
+        if (!connected) {
+          LOG_WARN("Area entrance " + std::to_string(entrance_id) +
+                   " could not see any medial axis vertex, skipping it");
+        }
+      }
 
       // simplify each chain, protecting the points where entrances connect
       for (size_t c = 0; c < medial_axis.size(); ++c) {
@@ -242,12 +389,98 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
                                                          keep);
       }
 
-      size_t total_points = 0;
-      for (const auto& chain : medial_axis) {
-        total_points += chain.size();
+      std::map<std::pair<int64_t, int64_t>, uint64_t> point_ids;
+      for (const auto& [entrance_id, entrance] : poly_entrances) {
+        point_ids.emplace(std::make_pair(std::llround(entrance.x() * 1000.0),
+                                         std::llround(entrance.y() * 1000.0)),
+                          entrance_id);
       }
-      fprintf(stderr, "   simplified to %zu chains, %zu points total\n", medial_axis.size(),
-              total_points);
+
+      // build the traversal lines as node id + lat/lon, projecting back as we go
+      std::vector<std::vector<std::pair<uint64_t, midgard::PointLL>>> traversal_lines;
+      for (const auto& chain : medial_axis) {
+        if (chain.size() < 2) {
+          continue;
+        }
+        std::vector<std::pair<uint64_t, midgard::PointLL>> line;
+        for (const auto& p : chain) {
+          const auto key = std::make_pair(std::llround(p.x() * 1000.0), std::llround(p.y() * 1000.0));
+          auto inserted = point_ids.emplace(key, next_synthetic_osm_id);
+          if (inserted.second) {
+            ++next_synthetic_osm_id;
+          }
+          const midgard::PointLL ll(center.lng() + p.x() / meter_per_lng,
+                                    center.lat() + p.y() / midgard::kMetersPerDegreeLat);
+          line.push_back({inserted.first->second, ll});
+        }
+        traversal_lines.push_back(std::move(line));
+      }
+
+      LOG_DEBUG("polygon: " + std::to_string(poly_entrances.size()) + " entrance(s), " +
+                std::to_string(traversal_lines.size()) + " traversal line(s)");
+
+      // a node shared by more than one line is a junction, and so is every line end
+      std::unordered_map<uint64_t, uint32_t> node_use_count;
+      for (const auto& line : traversal_lines) {
+        for (const auto& [node_id, ll] : line) {
+          ++node_use_count[node_id];
+        }
+      }
+
+      // the entrance nodes are real OSM nodes, everything else we generated
+      std::unordered_set<uint64_t> entrance_ids;
+      for (const auto& [entrance_id, entrance] : poly_entrances) {
+        entrance_ids.insert(entrance_id);
+      }
+
+      // materialise each line as a way, ConstructEdges turns them into edges later
+      for (const auto& line : traversal_lines) {
+        const uint32_t way_index = static_cast<uint32_t>(ways.size());
+        for (size_t i = 0; i < line.size(); ++i) {
+          const auto& [node_id, ll] = line[i];
+          OSMNode osm_node{node_id};
+          // the coordinates must be set here, ParseNodes already ran
+          osm_node.set_latlng(ll.lng(), ll.lat());
+          const bool is_synthetic = entrance_ids.count(node_id) == 0;
+          osm_node.set_synthetic(is_synthetic);
+          if (is_synthetic) {
+            osm_node.set_access(baldr::kPedestrianAccess | baldr::kWheelchairAccess);
+          }
+          osm_node.intersection_ = i == 0 || i == line.size() - 1 || node_use_count[node_id] > 1;
+
+          way_nodes.push_back({osm_node, way_index, static_cast<uint32_t>(i)});
+        }
+        OSMWay w{next_synthetic_osm_id++};
+        w.set_node_count(line.size());
+        w.set_road_class(baldr::RoadClass::kServiceOther);
+        w.set_use(baldr::Use::kFootway);
+        w.set_speed(kTraversalSpeedKph);
+        w.set_pedestrian_forward(true);
+        w.set_pedestrian_backward(true);
+        auto name_it = area_name_indices.find(relation_id);
+        if (name_it != area_name_indices.end()) {
+          w.set_name_index(name_it->second);
+        }
+        ways.push_back(w);
+      }
+      generated_any = true;
+    }
+    // no traversal was generated for this area (too small or unreachable), so give its perimeter back
+    // to the graph
+    if (!generated_any) {
+      auto indices_it = area_way_indices.find(relation_id);
+      if (indices_it != area_way_indices.end()) {
+        for (size_t way_index : indices_it->second) {
+          auto way = *ways[way_index];
+          way.set_area(false);
+          way.set_road_class(baldr::RoadClass::kServiceOther);
+          way.set_use(baldr::Use::kFootway);
+          way.set_speed(kTraversalSpeedKph);
+          way.set_pedestrian_forward(true);
+          way.set_pedestrian_backward(true);
+          ways[way_index] = way;
+        }
+      }
     }
 
     // clean up
@@ -271,22 +504,11 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& pt,
 std::vector<std::vector<midgard::Point2d>>
 AreaBuilder::GenerateMedialAxis(const GEOSGeometry* polygon) {
 
-  double area = 0;
-  GEOSArea(polygon, &area);
-  fprintf(stderr, "generating medial axis for polygon with area %f\n", area);
-
   // densify the polygon boundary so the voronoi diagram has enough points
   GEOSGeometry* densified = GEOSDensify(polygon, kDensifyToleranceMeters);
   if (!densified) {
     return {};
   }
-
-  // count the points before and after to verify the densification, just for testing
-  const GEOSGeometry* exterior = GEOSGetExteriorRing(densified);
-  int num_points = GEOSGeomGetNumPoints(exterior);
-  int n_points = GEOSGeomGetNumPoints(GEOSGetExteriorRing(polygon));
-  fprintf(stderr, "medial axis: densified polygon exterior has %d points, and the no densified %d \n",
-          num_points, n_points);
 
   // compute the voronoi diagram using the densified polygon vertices
   GEOSGeometry* voronoi = GEOSVoronoiDiagram(densified, nullptr, 0.0, GEOS_VORONOI_ONLY_EDGES);
@@ -305,9 +527,6 @@ AreaBuilder::GenerateMedialAxis(const GEOSGeometry* polygon) {
       medial_edges.push_back(GEOSGeom_clone(edge));
     }
   }
-
-  fprintf(stderr, "medial axis: %zu edges inside the polygon (raw medial axis)\n",
-          medial_edges.size());
 
   // round the coordinates so that vertices that are the same point share a key
   auto vertex_key = [](double x, double y) {
@@ -365,20 +584,6 @@ AreaBuilder::GenerateMedialAxis(const GEOSGeometry* polygon) {
     incident[segments[s].second].push_back(static_cast<int>(s));
   }
 
-  // the degree of a vertex is the size of the list
-  size_t deg1 = 0, deg2 = 0, deg3plus = 0;
-  for (const auto& inc : incident) {
-    if (inc.size() == 1) {
-      deg1++;
-    } else if (inc.size() == 2) {
-      deg2++;
-    } else if (inc.size() >= 3) {
-      deg3plus++;
-    }
-  }
-  fprintf(stderr, "medial axis: %zu vertices, %zu segments (deg1=%zu deg2=%zu deg3+=%zu)",
-          vertex_ids.size(), segments.size(), deg1, deg2, deg3plus);
-
   // prune the branches, walk from each degree 1 vertex until a fork is reached
   std::vector<bool> removed(segments.size(), false);
   for (size_t v = 0; v < incident.size(); ++v) {
@@ -410,14 +615,6 @@ AreaBuilder::GenerateMedialAxis(const GEOSGeometry* polygon) {
       current_segment = next_segment;
     }
   }
-
-  size_t kept = 0;
-  for (bool r : removed) {
-    if (!r) {
-      kept++;
-    }
-  }
-  fprintf(stderr, " after prune removed %zu)\n", segments.size() - kept);
 
   // stitch the surviving segments into chains, cutting at forks and endpoints
   std::vector<bool> used(segments.size(), false);

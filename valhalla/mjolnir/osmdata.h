@@ -103,9 +103,10 @@ struct OSMData {
    */
   static void cleanup_temp_files(const std::string& tile_dir);
 
-  uint64_t max_changeset_id_;     // The largest/newest changeset id encountered when parsing OSM data
-  uint64_t osm_node_count;        // Count of osm nodes
-  uint64_t osm_way_count;         // Count of osm ways
+  uint64_t max_changeset_id_; // The largest/newest changeset id encountered when parsing OSM data
+  uint64_t max_way_id = 0; // Highest way id seen while parsing. Synthetic ids are assigned above it
+  uint64_t osm_node_count; // Count of osm nodes
+  uint64_t osm_way_count;  // Count of osm ways
   uint64_t osm_way_node_count;    // Count of osm nodes on osm ways
   uint64_t node_count;            // Count of all nodes in the graph
   uint64_t edge_count;            // Estimated count of edges in the graph

@@ -1,3 +1,4 @@
+#include "baldr/graphreader.h"
 #include "gurka.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/osmway.h"
@@ -40,10 +41,17 @@ TEST(area_routing, square_skipped_routes_around) {
   EXPECT_THROW(gurka::findEdgeByNodes(*reader, map.nodes, "C", "D"), std::runtime_error);
   EXPECT_THROW(gurka::findEdgeByNodes(*reader, map.nodes, "D", "A"), std::runtime_error);
 
-  // if the square is correctly skipped it should route around the outside (F -> G -> H -> E).
-  // once area routing is implemented the route should cross the square
+  // the route crosses the square through the generated traversal
   auto result = gurka::do_action(valhalla::Options::route, map, {"F", "E"}, "pedestrian");
-  gurka::assert::raw::expect_path(result, {"top", "right", "bottom"});
+  auto names = gurka::detail::get_paths(result).front();
+  ASSERT_FALSE(names.empty());
+  EXPECT_EQ(names.front(), "entry");
+  EXPECT_EQ(names.back(), "exit");
+  for (const auto& n : names) {
+    EXPECT_NE(n, "top");
+    EXPECT_NE(n, "right");
+    EXPECT_NE(n, "bottom");
+  }
 }
 
 TEST(area_routing, area_bit_is_set) {
@@ -159,9 +167,9 @@ TEST(area_routing, area_relations_collected) {
   EXPECT_TRUE(found_outer);
 }
 
-TEST(area_routing, area_polygons_assembled) {
+TEST(area_routing, relation_routes_through) {
   const std::string ascii_map = R"(
-    W         X      Y         Z
+    W---------X------Y---------Z
     |         |      |         |
     A---------B      M---------N
     |         |      |         |
@@ -178,10 +186,13 @@ TEST(area_routing, area_polygons_assembled) {
       {"MNO", {}},
       {"OPM", {}},
       {"QRTSQ", {}},
-      {"WA", {{"highway", "footway"}}},
-      {"XB", {{"highway", "footway"}}},
-      {"YM", {{"highway", "footway"}}},
-      {"ZN", {{"highway", "footway"}}},
+      {"WX", {{"highway", "footway"}, {"name", "wx"}}},
+      {"XY", {{"highway", "footway"}, {"name", "xy"}}},
+      {"YZ", {{"highway", "footway"}, {"name", "yz"}}},
+      {"WA", {{"highway", "footway"}, {"name", "wa"}}},
+      {"XB", {{"highway", "footway"}, {"name", "xb"}}},
+      {"YM", {{"highway", "footway"}, {"name", "ym"}}},
+      {"ZN", {{"highway", "footway"}, {"name", "zn"}}},
   };
 
   const gurka::relations relations = {
@@ -197,9 +208,151 @@ TEST(area_routing, area_polygons_assembled) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
 
-  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/gurka_area_polygons",
-                               {{"mjolnir.concurrency", "1"}, {"mjolnir.pedestrian_areas", "true"}},
-                               mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kBuildAreas);
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/gurka_area_relation_route",
+                               {{"mjolnir.concurrency", "1"}, {"mjolnir.pedestrian_areas", "true"}});
 
-  SUCCEED();
+  const auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  // a route from one entrance of the left plaza to the other should cross it
+  // through the traversal instead of going around via the top street if it is shorter
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "pedestrian");
+  auto names = gurka::detail::get_paths(result).front();
+  ASSERT_FALSE(names.empty());
+  for (const auto& n : names) {
+    EXPECT_NE(n, "wx");
+    EXPECT_NE(n, "xy");
+    EXPECT_NE(n, "yz");
+    EXPECT_NE(n, "wa");
+    EXPECT_NE(n, "xb");
+  }
+}
+
+TEST(area_routing, hole_is_avoided) {
+  const std::string ascii_map = R"(
+    F------------G
+    |            |
+    A------------B
+    |            |
+    |   I----J   |
+    |   |    |   |
+    |   L----K   |
+    |            |
+    D------------C
+    |            |
+    E------------H
+  )";
+
+  const gurka::ways ways = {
+      {"ABCDA", {}},
+      {"IJKLI", {}},
+      {"FG", {{"highway", "footway"}, {"name", "top"}}},
+      {"EH", {{"highway", "footway"}, {"name", "bottom"}}},
+      {"FA", {{"highway", "footway"}, {"name", "entry"}}},
+      {"DE", {{"highway", "footway"}, {"name", "exit"}}},
+  };
+
+  const gurka::relations relations = {
+      {{{
+           {gurka::way_member, "ABCDA", "outer"},
+           {gurka::way_member, "IJKLI", "inner"},
+       }},
+       {{"type", "multipolygon"}, {"highway", "pedestrian"}, {"area", "yes"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20);
+
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/gurka_area_hole",
+                               {{"mjolnir.concurrency", "1"}, {"mjolnir.pedestrian_areas", "true"}});
+
+  // the route crosses the square but the shape must go around the fountain,
+  // never through it: no shape point may fall inside the inner ring
+  auto result = gurka::do_action(valhalla::Options::route, map, {"F", "E"}, "pedestrian");
+  auto shape =
+      midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
+
+  const double min_lng = map.nodes.at("L").lng(), max_lng = map.nodes.at("J").lng();
+  const double min_lat = map.nodes.at("L").lat(), max_lat = map.nodes.at("J").lat();
+  for (const auto& p : shape) {
+    const bool inside_hole =
+        p.lng() > min_lng && p.lng() < max_lng && p.lat() > min_lat && p.lat() < max_lat;
+    EXPECT_FALSE(inside_hole) << "route shape crosses the fountain at " << p.lng() << "," << p.lat();
+  }
+}
+
+TEST(area_routing, tiny_area_keeps_perimeter) {
+  const std::string ascii_map = R"(
+    F---G
+    A-B |
+    | | |
+    D-C |
+    E---H
+  )";
+
+  const gurka::ways ways = {
+      {"ABCDA", {{"highway", "pedestrian"}, {"area", "yes"}, {"name", "tiny"}}},
+      {"FG", {{"highway", "footway"}, {"name", "top"}}},
+      {"GH", {{"highway", "footway"}, {"name", "right"}}},
+      {"EH", {{"highway", "footway"}, {"name", "bottom"}}},
+      {"FA", {{"highway", "footway"}, {"name", "entry"}}},
+      {"CE", {{"highway", "footway"}, {"name", "exit"}}},
+  };
+
+  // grid size below the 100 m2 threshold
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 2);
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_area_tiny",
+                               {{"mjolnir.concurrency", "1"}, {"mjolnir.pedestrian_areas", "true"}});
+
+  const auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  // too small for a traversal, so the perimeter must be routable again: the area
+  // bit was cleared and the perimeter generates edges between the entrances
+  // (A and C are the graph nodes; B and D are just shape points of those edges)
+  EXPECT_NO_THROW(gurka::findEdgeByNodes(*reader, map.nodes, "A", "C"));
+  // and a route between the entrances uses the perimeter instead of a traversal
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian");
+  auto names = gurka::detail::get_paths(result).front();
+  for (const auto& n : names) {
+    EXPECT_EQ(n, "tiny");
+  }
+}
+
+TEST(area_routing, mapped_paths_inside_skip_generation) {
+  const std::string ascii_map = R"(
+    F--------G
+    |        |
+    A----B   |
+    | \  |   |
+    |  M |   |
+    |   \|   |
+    D----C   |
+         |   |
+         E---H
+  )";
+
+  const gurka::ways ways = {
+      {"ABCDA", {{"highway", "pedestrian"}, {"area", "yes"}, {"name", "square"}}},
+      // a footway already mapped across the square, entering at A and leaving at C
+      {"AMC", {{"highway", "footway"}, {"name", "shortcut"}}},
+      {"FG", {{"highway", "footway"}, {"name", "top"}}},
+      {"GH", {{"highway", "footway"}, {"name", "right"}}},
+      {"EH", {{"highway", "footway"}, {"name", "bottom"}}},
+      {"FA", {{"highway", "footway"}, {"name", "entry"}}},
+      {"CE", {{"highway", "footway"}, {"name", "exit"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_area_mapped_paths",
+                               {{"mjolnir.concurrency", "1"}, {"mjolnir.pedestrian_areas", "true"}});
+
+  // the existing shortcut is used, no traversal was generated on top of it
+  auto result = gurka::do_action(valhalla::Options::route, map, {"F", "E"}, "pedestrian");
+  auto names = gurka::detail::get_paths(result).front();
+  bool used_shortcut = false;
+  for (const auto& n : names) {
+    if (n == "shortcut") {
+      used_shortcut = true;
+    }
+  }
+  EXPECT_TRUE(used_shortcut);
 }
