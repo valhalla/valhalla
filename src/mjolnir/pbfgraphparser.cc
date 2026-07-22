@@ -998,15 +998,11 @@ struct graph_parser {
         }
       }
 
-      std::vector<std::string> conditions = GetTagTokens(tokens.at(1), ';');
-      for (const auto& c : conditions) {
-        std::vector<uint64_t> values = get_time_range(c);
-        for (const auto& v : values) {
-          ConditionalSpeedLimit limit = {};
-          limit.td_ = TimeDomain(v);
-          limit.speed_ = speed;
-          osmdata_.conditional_speeds.emplace(osmid_, limit);
-        }
+      for (const auto& v : get_time_range(tokens.at(1))) {
+        ConditionalSpeedLimit limit = {};
+        limit.td_ = TimeDomain(v);
+        limit.speed_ = speed;
+        osmdata_.conditional_speeds.emplace(osmid_, limit);
       }
     };
     tag_handlers_["truck_route"] = [this]() {
@@ -2670,20 +2666,12 @@ struct graph_parser {
           } else if (tag_.first.starts_with("emergency:conditional")) {
             mode = kEmergencyAccess;
           }
-          std::string tmp = tokens.at(1);
-          boost::algorithm::trim(tmp);
-          std::vector<std::string> conditions = GetTagTokens(tmp, ';');
-
-          for (const auto& condition : conditions) {
-            std::vector<uint64_t> values = get_time_range(condition);
-
-            for (const auto& v : values) {
-              OSMAccessRestriction restriction;
-              restriction.set_type(static_cast<AccessType>(type));
-              restriction.set_modes(mode);
-              restriction.set_value(v);
-              osmdata_.access_restrictions.insert({osmid_, restriction});
-            }
+          for (const auto& v : get_time_range(tokens.at(1))) {
+            OSMAccessRestriction restriction;
+            restriction.set_type(static_cast<AccessType>(type));
+            restriction.set_modes(mode);
+            restriction.set_value(v);
+            osmdata_.access_restrictions.insert({osmid_, restriction});
           }
         }
       } else if (!is_lang_pronunciation) {
@@ -4242,28 +4230,25 @@ struct graph_parser {
               } // else
             }   // if (condition.empty())
 
-            std::vector<std::string> conditions = GetTagTokens(condition, ';');
-
-            if (conditions.size()) {
-              restriction.set_from(from_way_id);
-              restriction.set_vias(vias);
-              // for bi-directional we need to create the restriction in reverse.  flip the to and
-              // from. also in order to avoid duplicate data in the from and to restrictions, we
-              // only need to store the mode, from, and to for the to_restrictions.
-              to_restriction.set_from(restriction.to());
-              to_restriction.set_to(from_way_id);
-              to_restriction.set_modes(restriction.modes());
-              complex_restrictions_to_->push_back(to_restriction);
-            } else {
+            // could have multiple time domains
+            const std::vector<uint64_t> values = get_time_range(condition);
+            if (values.empty()) {
               return; // bad data
             }
 
-            for (const auto& c : conditions) {
-              std::vector<uint64_t> values = get_time_range(c);
-              for (const auto& v : values) { // could have multiple time domains
-                restriction.set_time_domain(v);
-                complex_restrictions_from_->push_back(restriction);
-              }
+            restriction.set_from(from_way_id);
+            restriction.set_vias(vias);
+            // for bi-directional we need to create the restriction in reverse.  flip the to and
+            // from. also in order to avoid duplicate data in the from and to restrictions, we
+            // only need to store the mode, from, and to for the to_restrictions.
+            to_restriction.set_from(restriction.to());
+            to_restriction.set_to(from_way_id);
+            to_restriction.set_modes(restriction.modes());
+            complex_restrictions_to_->push_back(to_restriction);
+
+            for (const auto& v : values) {
+              restriction.set_time_domain(v);
+              complex_restrictions_from_->push_back(restriction);
             }
             return;
           } // if (isConditional)

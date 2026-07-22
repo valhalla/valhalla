@@ -599,6 +599,27 @@ TEST(TimeParsing, HolidayTolerance) {
   EXPECT_TRUE(get_time_range(" PH off)").empty());
 }
 
+// callers pass whole tag values: the parser separates the rules at ';' itself and keeps
+// them isolated from each other
+TEST(TimeParsing, WholeValueWithoutExternalSplit) {
+  // a skipped holiday rule in the middle must not affect its neighbors
+  const std::string mixed = "Mo-Fr 07:00-19:00; PH off; Sa 08:00-12:00";
+  ASSERT_EQ(get_time_range(mixed).size(), 2);
+  TryConditionalRestrictions(mixed, 0, 0, 62, {0, 0, 0, 7, 0}, {0, 0, 0, 19, 0});
+  TryConditionalRestrictions(mixed, 1, 0, 64, {0, 0, 0, 8, 0}, {0, 0, 0, 12, 0});
+
+  // an unparseable or unsupported rule is dropped alone, the rest of the value still works
+  const std::string broken = "qwerty; Sa 08:00-12:00; 2023 Jan-Nov";
+  ASSERT_EQ(get_time_range(broken).size(), 1);
+  TryConditionalRestrictions(broken, 0, 0, 64, {0, 0, 0, 8, 0}, {0, 0, 0, 12, 0});
+
+  const std::string value =
+      "(Jan 01-Jun 15 Mo-Fr 07:00-18:00; PH -1 day off; PH off; Aug 15-Dec 31 Mo-Fr 00:00-24:00)";
+  ASSERT_EQ(get_time_range(value).size(), 2);
+  TryConditionalRestrictions(value, 0, 0, 62, {1, 1, 0, 7, 0}, {6, 15, 0, 18, 0});
+  TryConditionalRestrictions(value, 1, 0, 62, {8, 15, 0, 0, 0}, {12, 31, 0, 0, 0});
+}
+
 // conditions that don't fit TimeDomain or are not about time must be rejected in one piece,
 // without exceptions and without half parsed leftovers
 TEST(TimeParsing, UnsupportedConditionsRejected) {
