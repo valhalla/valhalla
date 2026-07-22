@@ -152,8 +152,10 @@ struct OSMRestriction {
   // Via is a node. When parsing OSM this is stored as an OSM node Id.
   // It later gets changed into a GraphId.
   union ViaNode {
+    ViaNode() : osmid(0) {
+    }
     baldr::GraphId id;
-    uint64_t osmid = 0;
+    uint64_t osmid;
   };
   ViaNode via_;
 
