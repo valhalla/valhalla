@@ -553,7 +553,7 @@ GraphId GraphTile::GetTileId(const std::filesystem::path& path) {
   // so we only ever parse a single separator
   const std::string fname = path.generic_string();
   std::unordered_set<std::string::value_type> allowed{'/', '0', '1', '2', '3', '4',
-                                                       '5', '6', '7', '8', '9'};
+                                                      '5', '6', '7', '8', '9'};
   // we require slashes
   auto pos = fname.find_last_of('/');
   if (pos == fname.npos) {
