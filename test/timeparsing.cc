@@ -530,6 +530,91 @@ TEST(TimeParsing, TestConditionalMaxspeed) {
   EXPECT_TRUE(get_time_range("winter").empty());
 }
 
+// Mappers commonly put spaces around dashes or between a range and its times
+TEST(TimeParsing, WhitespaceTolerance) {
+  ASSERT_EQ(get_time_range("Mo - Fr 06:00 - 11:00").size(), 1);
+  TryConditionalRestrictions("Mo - Fr 06:00 - 11:00", 0, 0, 62, {0, 0, 0, 6, 0}, {0, 0, 0, 11, 0});
+  TryConditionalRestrictions("Mo-Fr 07:00 - 18:00", 0, 0, 62, {0, 0, 0, 7, 0}, {0, 0, 0, 18, 0});
+  TryConditionalRestrictions("(Mar 20 - Jul 15)", 0, 0, 0, {3, 20, 0, 0, 0}, {7, 15, 0, 0, 0});
+  TryConditionalRestrictions("08:00 - 18:00", 0, 0, 0, {0, 0, 0, 8, 0}, {0, 0, 0, 18, 0});
+}
+
+// ... or no space between the month and the day at all
+TEST(TimeParsing, MissingSpaceAfterMonth) {
+  ASSERT_EQ(get_time_range("Jul15 - Nov15").size(), 1);
+  TryConditionalRestrictions("Jul15 - Nov15", 0, 0, 0, {7, 15, 0, 0, 0}, {11, 15, 0, 0, 0});
+  TryConditionalRestrictions("Dec24-Dec26", 0, 0, 0, {12, 24, 0, 0, 0}, {12, 26, 0, 0, 0});
+}
+
+// ... or a unicode dash instead of the ascii one
+TEST(TimeParsing, UnicodeDashes) {
+  ASSERT_EQ(get_time_range("Mo–Fr 06:00-11:00").size(), 1); // en dash
+  TryConditionalRestrictions("Mo–Fr 06:00-11:00", 0, 0, 62, {0, 0, 0, 6, 0}, {0, 0, 0, 11, 0});
+}
+
+TEST(TimeParsing, FullDayNames) {
+  TryConditionalRestrictions("Monday-Friday 06:00-11:00", 0, 0, 62, {0, 0, 0, 6, 0},
+                             {0, 0, 0, 11, 0});
+  TryConditionalRestrictions("Wednesday 12:00-18:00", 0, 0, 8, {0, 0, 0, 12, 0}, {0, 0, 0, 18, 0});
+}
+
+// 24/7 means the condition always holds: an all week domain, not an unparsed condition
+TEST(TimeParsing, AlwaysActive) {
+  ASSERT_EQ(get_time_range("24/7").size(), 1);
+  TryConditionalRestrictions("24/7", 0, 0, 127, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
+  // quoted comments are noise
+  TryConditionalRestrictions("24/7 \"see https://example.com\"", 0, 0, 127, {0, 0, 0, 0, 0},
+                             {0, 0, 0, 0, 0});
+}
+
+// an open ended time lasts until the end of the day, 24:00 is stored as 0
+TEST(TimeParsing, OpenEndedTime) {
+  ASSERT_EQ(get_time_range("18:00+").size(), 1);
+  TryConditionalRestrictions("18:00+", 0, 0, 0, {0, 0, 0, 18, 0}, {0, 0, 0, 0, 0});
+  TryConditionalRestrictions("Mo-Fr 20:00+", 0, 0, 62, {0, 0, 0, 20, 0}, {0, 0, 0, 0, 0});
+}
+
+// a comma can also separate whole rules, not only lists of days or times
+TEST(TimeParsing, MultipleRulesInOneCondition) {
+  const std::string condition = "Oct-Mar 18:00-08:00, Apr-Sep 21:00-07:00";
+  ASSERT_EQ(get_time_range(condition).size(), 2);
+  TryConditionalRestrictions(condition, 0, 0, 0, {10, 0, 0, 18, 0}, {3, 0, 0, 8, 0});
+  TryConditionalRestrictions(condition, 1, 0, 0, {4, 0, 0, 21, 0}, {9, 0, 0, 7, 0});
+
+  // the whole tag value parses in one go, without splitting at ';' upfront
+  const std::string rules = "Mo-Fr 06:00-11:00,17:00-19:00; Sa 03:30-19:00";
+  ASSERT_EQ(get_time_range(rules).size(), 3);
+  TryConditionalRestrictions(rules, 0, 0, 62, {0, 0, 0, 6, 0}, {0, 0, 0, 11, 0});
+  TryConditionalRestrictions(rules, 1, 0, 62, {0, 0, 0, 17, 0}, {0, 0, 0, 19, 0});
+  TryConditionalRestrictions(rules, 2, 0, 64, {0, 0, 0, 3, 30}, {0, 0, 0, 19, 0});
+}
+
+// public holidays can't be resolved into dates but must not fail the rest of the rule
+TEST(TimeParsing, HolidayTolerance) {
+  TryConditionalRestrictions("Mo-Fr,PH 08:00-18:00", 0, 0, 62, {0, 0, 0, 8, 0}, {0, 0, 0, 18, 0});
+  TryConditionalRestrictions("PH,Mo-Fr 08:00-18:00", 0, 0, 62, {0, 0, 0, 8, 0}, {0, 0, 0, 18, 0});
+  EXPECT_TRUE(get_time_range("PH").empty());
+  EXPECT_TRUE(get_time_range("PH off").empty());
+  // splitting the tag at ';' upstream leaves stray parens behind
+  EXPECT_TRUE(get_time_range(" PH off)").empty());
+}
+
+// conditions that don't fit TimeDomain or are not about time must be rejected in one piece,
+// without exceptions and without half parsed leftovers
+TEST(TimeParsing, UnsupportedConditionsRejected) {
+  // years of temporary construction closures don't fit into TimeDomain
+  EXPECT_TRUE(get_time_range("2023 Jul 10-2023 Sep 04").empty());
+  EXPECT_TRUE(get_time_range("(2026 May 04-2026 Jul 31)").empty());
+  EXPECT_TRUE(get_time_range("2025 Jun 23- 2026 Dec 15").empty());
+  // sun events can't be resolved into fixed hours at parse time
+  EXPECT_TRUE(get_time_range("sunset-sunrise").empty());
+  EXPECT_TRUE(get_time_range("Nov-Feb 08:00-dusk").empty());
+  // vehicle and road state conditions are not about time at all
+  EXPECT_TRUE(get_time_range("wet").empty());
+  EXPECT_TRUE(get_time_range("weight>7.5").empty());
+  EXPECT_TRUE(get_time_range("fuel=diesel AND emissions<euro_6").empty());
+}
+
 int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

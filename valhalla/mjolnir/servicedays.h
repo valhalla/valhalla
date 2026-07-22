@@ -66,15 +66,6 @@ uint64_t remove_service_day(const uint64_t& days,
  */
 uint64_t shift_service_day(const uint64_t& days);
 
-/**
- * Get the month from the input string.Try to handle most inputs.
- * @param   month entered by a user
- * @return MONTH
- */
-baldr::MONTH get_month(const std::string& month);
-
-std::vector<uint64_t> get_time_range(const std::string& condition);
-
 } // namespace mjolnir
 } // namespace valhalla
 #endif // VALHALLA_MJOLNIR_SERVICEDAYS_H

@@ -1,111 +1,532 @@
 #include "mjolnir/timeparsing.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
 #include "mjolnir/util.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/range/algorithm/remove_if.hpp>
-
-#include <ctime>
-#include <regex>
-#include <sstream>
+#include <algorithm>
+#include <cctype>
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 
 namespace {
-// Dec Su[-1]-Mar 3 => Dec#Su#[5]-Mar#3
-const std::pair<std::regex, std::string> kBeginWeekdayOfTheMonth =
-    {std::regex(
-         "(?:(January|February|March|April|May|June|July|"
-         "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-         "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
-         "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\])-"
-         "(?:(January|February|March|April|May|June|July|August|September|October|November"
-         "|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)) (\\d{1,2}))",
-         std::regex_constants::icase),
-     "$1#$2#$3-$4#$5"};
 
-// Mar 3-Dec Su[-1] => Mar#3-Dec#Su#[5]
-const std::pair<std::regex, std::string> kEndWeedkayOfTheMonth =
-    {std::regex(
-         "(?:(January|February|March|April|May|June|July|August|"
-         "September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|"
-         "Nov|Dec)) (\\d{1,2})-(?:(January|February|March|April|May|June|July|"
-         "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-         "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
-         "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\])"
-         ")",
-         std::regex_constants::icase),
-     "$1#$2-$3#$4#$5"};
+// A single lexical piece of a condition. Tokenizing first keeps the grammar rules readable
+// and tolerant to the free form spacing and punctuation mappers use.
+enum class TokenKind : uint8_t {
+  kMonth,   // value is 1 (January) to 12 (December)
+  kWeekday, // value is 1 (Sunday) to 7 (Saturday), as baldr::DOW
+  kNumber,  // a bare number, e.g. a day of the month or a year
+  kTime,    // value is minutes since midnight
+  kNth,     // [n] or [-n], the nth weekday of a month, negative counts from the end
+  kDash,
+  kComma,
+  kSemicolon,
+  kPlus,
+  kAlways,   // 24/7
+  kHoliday,  // PH or SH
+  kSunEvent, // sunrise, sunset, dawn or dusk
+  kOff,      // off or closed
+  kNoise,    // filler words like "and", skipped entirely
+  kUnknown,  // anything else, fails the rule it appears in
+  kEnd,
+};
 
-// Dec Su[-1] => Dec#Su#[5]
-const std::pair<std::regex, std::string> kWeekdayOfTheMonth =
-    {std::regex("(?:(January|February|March|April|May|June|July|"
-                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-                "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
-                "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]"
-                "\\]))",
-                std::regex_constants::icase),
-     "$1#$2#$3"};
+struct Token {
+  TokenKind kind;
+  int32_t value;
+};
 
-// Mon[-1] => Mon#[5], Tue[2] => Tue#[2]
-const std::pair<std::regex, std::string> kWeekdayOfEveryMonth =
-    {std::regex("(?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
-                "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|"
-                "Su)(\\[-?[0-9]\\]))",
-                std::regex_constants::icase),
-     "$1#$2"};
+// Month and weekday names with common mapper variations, holidays and keywords
+const std::unordered_map<std::string_view, Token> kWords = {
+    {"jan", {TokenKind::kMonth, 1}},        {"january", {TokenKind::kMonth, 1}},
+    {"feb", {TokenKind::kMonth, 2}},        {"february", {TokenKind::kMonth, 2}},
+    {"mar", {TokenKind::kMonth, 3}},        {"march", {TokenKind::kMonth, 3}},
+    {"apr", {TokenKind::kMonth, 4}},        {"april", {TokenKind::kMonth, 4}},
+    {"may", {TokenKind::kMonth, 5}},        {"jun", {TokenKind::kMonth, 6}},
+    {"june", {TokenKind::kMonth, 6}},       {"jul", {TokenKind::kMonth, 7}},
+    {"july", {TokenKind::kMonth, 7}},       {"aug", {TokenKind::kMonth, 8}},
+    {"august", {TokenKind::kMonth, 8}},     {"sep", {TokenKind::kMonth, 9}},
+    {"sept", {TokenKind::kMonth, 9}},       {"september", {TokenKind::kMonth, 9}},
+    {"oct", {TokenKind::kMonth, 10}},       {"october", {TokenKind::kMonth, 10}},
+    {"nov", {TokenKind::kMonth, 11}},       {"november", {TokenKind::kMonth, 11}},
+    {"dec", {TokenKind::kMonth, 12}},       {"december", {TokenKind::kMonth, 12}},
 
-// Feb 16-Oct 15 09:00-18:30 => Feb#16-Oct#15 09:00-18:30
-const std::pair<std::regex, std::string> kMonthDay =
-    {std::regex("(?:(January|February|March|April|May|June|July|"
-                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-                "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})",
-                std::regex_constants::icase),
-     "$1#$2"};
+    {"su", {TokenKind::kWeekday, 1}},       {"sun", {TokenKind::kWeekday, 1}},
+    {"sunday", {TokenKind::kWeekday, 1}},   {"mo", {TokenKind::kWeekday, 2}},
+    {"mon", {TokenKind::kWeekday, 2}},      {"monday", {TokenKind::kWeekday, 2}},
+    {"tu", {TokenKind::kWeekday, 3}},       {"tue", {TokenKind::kWeekday, 3}},
+    {"tues", {TokenKind::kWeekday, 3}},     {"tuesday", {TokenKind::kWeekday, 3}},
+    {"we", {TokenKind::kWeekday, 4}},       {"wed", {TokenKind::kWeekday, 4}},
+    {"weds", {TokenKind::kWeekday, 4}},     {"wednesday", {TokenKind::kWeekday, 4}},
+    {"th", {TokenKind::kWeekday, 5}},       {"thu", {TokenKind::kWeekday, 5}},
+    {"thur", {TokenKind::kWeekday, 5}},     {"thurs", {TokenKind::kWeekday, 5}},
+    {"thursday", {TokenKind::kWeekday, 5}}, {"fr", {TokenKind::kWeekday, 6}},
+    {"fri", {TokenKind::kWeekday, 6}},      {"friday", {TokenKind::kWeekday, 6}},
+    {"sa", {TokenKind::kWeekday, 7}},       {"sat", {TokenKind::kWeekday, 7}},
+    {"saturday", {TokenKind::kWeekday, 7}},
 
-// Feb 2-14 => Feb#2-Feb#14
-const std::pair<std::regex, std::string> kRangeWithinMonth =
-    {std::regex("(?:(January|February|March|April|May|June|July|"
-                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-                "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})-(\\d{1,2})",
-                std::regex_constants::icase),
-     "$1#$2-$1#$3"};
+    {"ph", {TokenKind::kHoliday, 0}},       {"sh", {TokenKind::kHoliday, 0}},
+    {"off", {TokenKind::kOff, 0}},          {"closed", {TokenKind::kOff, 0}},
+    {"sunrise", {TokenKind::kSunEvent, 0}}, {"sunset", {TokenKind::kSunEvent, 0}},
+    {"dawn", {TokenKind::kSunEvent, 0}},    {"dusk", {TokenKind::kSunEvent, 0}},
+    {"and", {TokenKind::kNoise, 0}},
+};
 
-// Nov - Mar => Nov-Mar
-const std::pair<std::regex, std::string> kMonthRange =
-    {std::regex("(?:(January|February|March|April|May|June|July|"
-                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-                "Sep|Sept|Oct|Nov|Dec)) - (?:(January|February|March|April|May|June|July|"
-                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-                "Sep|Sept|Oct|Nov|Dec))",
-                std::regex_constants::icase),
-     "$1-$2"};
+// Recognizes a word of the condition regardless of its case
+Token word_token(std::string_view word) {
+  // longest recognized word is "wednesday"
+  char buffer[10];
+  if (word.size() >= sizeof(buffer)) {
+    return {TokenKind::kUnknown, 0};
+  }
+  std::transform(word.begin(), word.end(), buffer, [](char c) { return std::tolower(c); });
 
-// fifth is the equivalent of last week in month (-1)
-const std::pair<std::regex, std::string> kLastWeekday = {std::regex("\\[-1\\]"), "[5]"};
+  auto found = kWords.find(std::string_view(buffer, word.size()));
+  return found != kWords.end() ? found->second : Token{TokenKind::kUnknown, 0};
+}
 
-std::vector<std::string> GetTokens(const std::string& tag_value, char delim) {
-  std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value,
-                          std::bind(std::equal_to<char>(), delim, std::placeholders::_1),
-                          boost::algorithm::token_compress_on);
+std::vector<Token> tokenize(std::string_view str) {
+  std::vector<Token> tokens;
+  size_t i = 0;
+  const size_t n = str.size();
+  while (i < n) {
+    const char c = str[i];
+    // parens and stray colons carry no meaning, quoted comments are skipped entirely
+    if (c == ' ' || c == '\t' || c == '(' || c == ')' || c == ':') {
+      ++i;
+    } else if (c == '"') {
+      i = str.find('"', i + 1);
+      i = (i == std::string_view::npos) ? n : i + 1;
+    } else if (str.compare(i, 6, "&quot;") == 0) {
+      i = str.find("&quot;", i + 6);
+      i = (i == std::string_view::npos) ? n : i + 6;
+    } else if (c == '-') {
+      tokens.push_back({TokenKind::kDash, 0});
+      ++i;
+    } else if (str.compare(i, 3, "\xE2\x80\x93") == 0 || str.compare(i, 3, "\xE2\x80\x94") == 0 ||
+               str.compare(i, 3, "\xE2\x88\x92") == 0) {
+      // en dash, em dash and the minus sign are all dashes
+      tokens.push_back({TokenKind::kDash, 0});
+      i += 3;
+    } else if (str.compare(i, 2, "\xC2\xA0") == 0) { // non breaking space
+      i += 2;
+    } else if (c == ',') {
+      tokens.push_back({TokenKind::kComma, 0});
+      ++i;
+    } else if (c == ';') {
+      tokens.push_back({TokenKind::kSemicolon, 0});
+      ++i;
+    } else if (c == '+') {
+      tokens.push_back({TokenKind::kPlus, 0});
+      ++i;
+    } else if (c == '[') {
+      // [n] or [-n]
+      size_t j = i + 1;
+      bool negative = (j < n && str[j] == '-');
+      j += negative;
+      int32_t value = 0;
+      size_t digits = 0;
+      while (j < n && std::isdigit(static_cast<unsigned char>(str[j])) && digits < 2) {
+        value = value * 10 + (str[j] - '0');
+        ++j, ++digits;
+      }
+      if (digits > 0 && j < n && str[j] == ']') {
+        tokens.push_back({TokenKind::kNth, negative ? -value : value});
+        i = j + 1;
+      } else {
+        tokens.push_back({TokenKind::kUnknown, 0});
+        ++i;
+      }
+    } else if (std::isdigit(static_cast<unsigned char>(c))) {
+      int32_t value = 0;
+      size_t digits = 0;
+      while (i < n && std::isdigit(static_cast<unsigned char>(str[i])) && digits < 6) {
+        value = value * 10 + (str[i] - '0');
+        ++i, ++digits;
+      }
+      if (i < n && str[i] == ':' && i + 1 < n &&
+          std::isdigit(static_cast<unsigned char>(str[i + 1]))) {
+        // hh:mm
+        int32_t minutes = 0;
+        size_t mm_digits = 0;
+        ++i;
+        while (i < n && std::isdigit(static_cast<unsigned char>(str[i])) && mm_digits < 2) {
+          minutes = minutes * 10 + (str[i] - '0');
+          ++i, ++mm_digits;
+        }
+        if (value <= 48 && minutes <= 59) {
+          tokens.push_back({TokenKind::kTime, value * 60 + minutes});
+        } else {
+          tokens.push_back({TokenKind::kUnknown, 0});
+        }
+      } else if (value == 24 && i + 1 < n && str[i] == '/' && str[i + 1] == '7' &&
+                 (i + 2 == n || !std::isdigit(static_cast<unsigned char>(str[i + 2])))) {
+        tokens.push_back({TokenKind::kAlways, 0});
+        i += 2;
+      } else {
+        tokens.push_back({TokenKind::kNumber, value});
+      }
+    } else if (std::isalpha(static_cast<unsigned char>(c))) {
+      size_t j = i;
+      while (j < n && std::isalpha(static_cast<unsigned char>(str[j]))) {
+        ++j;
+      }
+      const Token token = word_token(str.substr(i, j - i));
+      if (token.kind != TokenKind::kNoise) {
+        tokens.push_back(token);
+      }
+      i = j;
+    } else {
+      tokens.push_back({TokenKind::kUnknown, 0});
+      ++i;
+    }
+  }
   return tokens;
 }
 
-bool RegexFound(const std::string& source, const std::regex& regex) {
-  auto begin = std::sregex_iterator(source.begin(), source.end(), regex);
-  auto end = std::sregex_iterator();
-  return std::distance(begin, end);
+// dow mask bit for a DOW value: Sunday (1) -> kSunday (1), Saturday (7) -> kSaturday (64)
+uint8_t dow_mask_bit(int32_t dow) {
+  return 1 << (dow - 1);
 }
 
-std::string FormatCondition(const std::string& source,
-                            const std::pair<std::regex, std::string>& regex_pattern) {
-  return std::regex_replace(source, regex_pattern.first, regex_pattern.second);
+// A rule either parses in full, uses something TimeDomain can't represent (years, sun
+// events, semantic inversion with "off"), or is not a valid time condition at all
+enum class RuleResult : uint8_t { kOk, kUnsupported, kFailed };
+
+// The parse position within the token stream, shared by the rule parsing functions below
+struct TokenCursor {
+  const std::vector<Token>& tokens;
+  size_t pos = 0;
+
+  TokenKind kind(size_t ahead = 0) const {
+    return pos + ahead < tokens.size() ? tokens[pos + ahead].kind : TokenKind::kEnd;
+  }
+
+  int32_t value() const {
+    return tokens[pos].value;
+  }
+
+  int32_t eat() {
+    return tokens[pos++].value;
+  }
+};
+
+bool at_rule_end(const TokenCursor& t) {
+  return t.kind() == TokenKind::kSemicolon || t.kind() == TokenKind::kComma ||
+         t.kind() == TokenKind::kEnd;
+}
+
+// consume the rest of the rule, the next one starts after a semicolon
+void skip_rule(TokenCursor& t) {
+  while (t.kind() != TokenKind::kSemicolon && t.kind() != TokenKind::kEnd) {
+    ++t.pos;
+  }
+}
+
+// A date point within a range: either a day of the month or the nth weekday of it
+struct DatePoint {
+  int32_t month = 0;
+  int32_t day = 0;
+  int32_t weekday = 0;
+  int32_t week = 0;
+};
+
+RuleResult parse_date_point(TokenCursor& t, DatePoint& point, bool expect_month) {
+  if (expect_month) {
+    if (t.kind() != TokenKind::kMonth) {
+      return RuleResult::kFailed;
+    }
+    point.month = t.eat();
+  }
+  if (t.kind() == TokenKind::kNumber) {
+    if (t.value() >= 1000) { // a year
+      return RuleResult::kUnsupported;
+    }
+    if (t.value() < 1 || t.value() > 31) {
+      return RuleResult::kFailed;
+    }
+    point.day = t.eat();
+  } else if (t.kind() == TokenKind::kWeekday && t.kind(1) == TokenKind::kNth) {
+    point.weekday = t.eat();
+    const int32_t nth = t.eat();
+    if (nth >= 1 && nth <= 5) {
+      point.week = nth;
+    } else if (nth == -1) { // the last week of the month
+      point.week = 5;
+    } else {
+      return RuleResult::kUnsupported;
+    }
+  }
+  return RuleResult::kOk;
+}
+
+RuleResult parse_dates(TokenCursor& t, TimeDomain& td) {
+  DatePoint begin;
+  RuleResult result = parse_date_point(t, begin, true);
+  if (result != RuleResult::kOk) {
+    return result;
+  }
+
+  DatePoint end;
+  if (t.kind() == TokenKind::kDash) {
+    ++t.pos;
+    if (t.kind() == TokenKind::kMonth) {
+      result = parse_date_point(t, end, true);
+      if (result != RuleResult::kOk) {
+        return result;
+      }
+    } else if (t.kind() == TokenKind::kNumber && begin.day != 0) {
+      // a range within one month, e.g. May 16-31
+      result = parse_date_point(t, end, false);
+      if (result != RuleResult::kOk) {
+        return result;
+      }
+      end.month = begin.month;
+    } else {
+      return RuleResult::kFailed;
+    }
+  } else {
+    // a single point spans onto itself, e.g. Dec or May 15 or Dec Su[-1]
+    end.month = begin.month;
+    end.day = begin.day;
+    end.week = begin.week;
+  }
+
+  if (begin.weekday != 0 || end.weekday != 0) {
+    // the nth weekday of a month is its own domain type. Until a weekday selector says
+    // otherwise, assume the restriction covers the entire week
+    td.set_type(kNthDow);
+    td.set_dow(kAllDaysOfWeek);
+    td.set_begin_month(begin.month);
+    td.set_begin_day_dow(begin.weekday != 0 ? begin.weekday : begin.day);
+    td.set_begin_week(begin.week);
+    td.set_end_month(end.month);
+    td.set_end_day_dow(end.weekday != 0 ? end.weekday : end.day);
+    td.set_end_week(end.week);
+  } else {
+    td.set_type(kYMD);
+    td.set_begin_month(begin.month);
+    td.set_begin_day_dow(begin.day);
+    td.set_end_month(end.month);
+    td.set_end_day_dow(end.day);
+  }
+  return RuleResult::kOk;
+}
+
+RuleResult parse_weekdays(TokenCursor& t, TimeDomain& td) {
+  // wipe out the assumption that an nth weekday restriction covers the entire week
+  uint8_t mask = (td.type() == kNthDow && td.dow() == kAllDaysOfWeek) ? 0 : td.dow();
+
+  const int32_t first = t.eat();
+  if (t.kind() == TokenKind::kNth) {
+    // Su[1] is the first Sunday of every month
+    const int32_t nth = t.eat();
+    if (nth == -1) {
+      td.set_begin_week(5);
+    } else if (nth >= 1 && nth <= 5) {
+      td.set_begin_week(nth);
+    } else {
+      return RuleResult::kUnsupported;
+    }
+    td.set_type(kNthDow);
+    td.set_dow(mask | dow_mask_bit(first));
+    return RuleResult::kOk;
+  }
+
+  if (t.kind() == TokenKind::kDash) {
+    ++t.pos;
+    if (t.kind() != TokenKind::kWeekday) {
+      return RuleResult::kFailed;
+    }
+    int32_t from = first;
+    const int32_t to = t.eat();
+    if (from > to) { // Th-Tu wraps around the end of the week
+      for (; from <= 7; ++from) {
+        mask |= dow_mask_bit(from);
+      }
+      from = 1;
+    }
+    for (; from <= to; ++from) {
+      mask |= dow_mask_bit(from);
+    }
+  } else {
+    mask |= dow_mask_bit(first);
+    // a list of days, holidays in it are ignored
+    while (t.kind() == TokenKind::kComma &&
+           (t.kind(1) == TokenKind::kWeekday || t.kind(1) == TokenKind::kHoliday)) {
+      ++t.pos;
+      if (t.kind() == TokenKind::kHoliday) {
+        ++t.pos;
+      } else {
+        mask |= dow_mask_bit(t.eat());
+      }
+    }
+  }
+  // a holiday appended after a range is ignored too, e.g. Mo-Fr,PH
+  while (t.kind() == TokenKind::kComma && t.kind(1) == TokenKind::kHoliday) {
+    t.pos += 2;
+  }
+  td.set_dow(mask);
+  return RuleResult::kOk;
+}
+
+RuleResult parse_times(TokenCursor& t,
+                       const TimeDomain& td,
+                       std::vector<uint64_t>& time_domains,
+                       bool& emitted) {
+  while (true) {
+    const int32_t begin = t.eat();
+    int32_t end;
+    if (t.kind() == TokenKind::kDash) {
+      ++t.pos;
+      if (t.kind() == TokenKind::kSunEvent) {
+        return RuleResult::kUnsupported;
+      }
+      if (t.kind() != TokenKind::kTime) {
+        return RuleResult::kFailed;
+      }
+      end = t.eat();
+    } else if (t.kind() == TokenKind::kPlus) {
+      // an open ended time lasts until the end of the day
+      ++t.pos;
+      end = 24 * 60;
+    } else {
+      return RuleResult::kFailed;
+    }
+
+    // every time range becomes its own restriction
+    TimeDomain range = td;
+    range.set_begin_hrs(begin / 60);
+    range.set_begin_mins(begin % 60);
+    range.set_end_hrs(end / 60);
+    range.set_end_mins(end % 60);
+    time_domains.push_back(range.td_value());
+    emitted = true;
+
+    if (t.kind() == TokenKind::kComma && t.kind(1) == TokenKind::kTime) {
+      ++t.pos;
+      continue;
+    }
+    return RuleResult::kOk;
+  }
+}
+
+RuleResult parse_rule(TokenCursor& t, std::vector<uint64_t>& time_domains) {
+  TimeDomain td(0);
+
+  // public and school holidays can't be resolved into dates: a rule about them alone is
+  // skipped in one piece, in a list with weekdays they are simply ignored
+  if (t.kind() == TokenKind::kHoliday &&
+      !(t.kind(1) == TokenKind::kComma && t.kind(2) == TokenKind::kWeekday)) {
+    skip_rule(t);
+    return RuleResult::kOk;
+  }
+
+  if (t.kind() == TokenKind::kSunEvent) {
+    return RuleResult::kUnsupported;
+  }
+
+  // years of temporary restrictions don't fit into TimeDomain
+  if (t.kind() == TokenKind::kNumber && t.value() >= 1000) {
+    return RuleResult::kUnsupported;
+  }
+
+  if (t.kind() == TokenKind::kMonth) {
+    const RuleResult result = parse_dates(t, td);
+    if (result != RuleResult::kOk) {
+      return result;
+    }
+  }
+
+  // holidays listed in front of the weekdays are ignored, e.g. PH,Sat
+  while (t.kind() == TokenKind::kHoliday && t.kind(1) == TokenKind::kComma &&
+         t.kind(2) == TokenKind::kWeekday) {
+    t.pos += 2;
+  }
+
+  while (t.kind() == TokenKind::kWeekday) {
+    const RuleResult result = parse_weekdays(t, td);
+    if (result != RuleResult::kOk) {
+      return result;
+    }
+  }
+
+  // 24/7 always holds: alone it means the whole week, after a date range it adds nothing
+  if (t.kind() == TokenKind::kAlways) {
+    ++t.pos;
+    if (td.td_value() == 0) {
+      td.set_dow(kAllDaysOfWeek);
+    }
+  }
+
+  bool emitted = false;
+  if (t.kind() == TokenKind::kTime) {
+    const RuleResult result = parse_times(t, td, time_domains, emitted);
+    if (result != RuleResult::kOk) {
+      return result;
+    }
+  }
+
+  // "off" inverts the meaning of the rule, which the callers can't represent
+  if (t.kind() == TokenKind::kOff) {
+    return RuleResult::kUnsupported;
+  }
+
+  if (!at_rule_end(t)) {
+    // trailing junk voids the rule unless the times have already been parsed: unquoted
+    // free text comments are common enough to tolerate
+    if (!emitted) {
+      return RuleResult::kFailed;
+    }
+    // a date, weekday or time here starts another rule, e.g. Mo-Fr 18:00-11:00 AND Sa
+    // 00:00-10:00, anything else is a tail comment
+    if (t.kind() != TokenKind::kWeekday && t.kind() != TokenKind::kMonth &&
+        t.kind() != TokenKind::kTime) {
+      skip_rule(t);
+    }
+  }
+
+  if (!emitted) {
+    if (td.td_value() == 0) {
+      return RuleResult::kFailed;
+    }
+    time_domains.push_back(td.td_value());
+  }
+  return RuleResult::kOk;
+}
+
+std::vector<uint64_t> parse_conditions(const std::vector<Token>& tokens) {
+  std::vector<uint64_t> time_domains;
+  TokenCursor t{tokens};
+  while (t.kind() != TokenKind::kEnd) {
+    if (t.kind() == TokenKind::kSemicolon || t.kind() == TokenKind::kComma) {
+      ++t.pos; // an empty rule or a separator the previous rule stopped at
+      continue;
+    }
+    const size_t rule_start = time_domains.size();
+    RuleResult result;
+    try {
+      result = parse_rule(t, time_domains);
+    } catch (...) {
+      // TimeDomain setters throw on out of range values
+      result = RuleResult::kFailed;
+    }
+    if (result != RuleResult::kOk) {
+      time_domains.resize(rule_start);
+      build_stats::get().increment(result == RuleResult::kFailed
+                                       ? build_stats::kFailedOSMTimeRange
+                                       : build_stats::kUnsupportedOSMTimeRange);
+      skip_rule(t);
+    }
+  }
+  return time_domains;
 }
 
 } // namespace
@@ -113,540 +534,8 @@ std::string FormatCondition(const std::string& source,
 namespace valhalla {
 namespace mjolnir {
 
-// get the dow mask from the provided string.  try to handle most inputs
-uint8_t get_dow_mask(const std::string& dow) {
-
-  std::string str = dow;
-  std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-  str.erase(boost::remove_if(str, boost::is_any_of(":")), str.end());
-
-  if (str == "SUNDAY" || str == "SUN" || str == "SU") {
-    return kSunday;
-
-  } else if (str == "MONDAY" || str == "MON" || str == "MO") {
-    return kMonday;
-
-  } else if (str == "TUESDAY" || str == "TUES" || str == "TUE" || str == "TU") {
-    return kTuesday;
-
-  } else if (str == "WEDNESDAY" || str == "WEDS" || str == "WED" || str == "WE") {
-    return kWednesday;
-
-  } else if (str == "THURSDAY" || str == "THURS" || str == "THUR" || str == "TH") {
-    return kThursday;
-
-  } else if (str == "FRIDAY" || str == "FRI" || str == "FR") {
-    return kFriday;
-
-  } else if (str == "SATURDAY" || str == "SAT" || str == "SA") {
-    return kSaturday;
-  }
-  return kDOWNone;
-}
-
-// get the dow from the provided string.  try to handle most inputs
-DOW get_dow(const std::string& dow) {
-
-  std::string str = dow;
-  std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-  str.erase(boost::remove_if(str, boost::is_any_of(":")), str.end());
-
-  if (str == "SUNDAY" || str == "SUN" || str == "SU") {
-    return DOW::kSunday;
-
-  } else if (str == "MONDAY" || str == "MON" || str == "MO") {
-    return DOW::kMonday;
-
-  } else if (str == "TUESDAY" || str == "TUES" || str == "TUE" || str == "TU") {
-    return DOW::kTuesday;
-
-  } else if (str == "WEDNESDAY" || str == "WEDS" || str == "WED" || str == "WE") {
-    return DOW::kWednesday;
-
-  } else if (str == "THURSDAY" || str == "THURS" || str == "THUR" || str == "TH") {
-    return DOW::kThursday;
-
-  } else if (str == "FRIDAY" || str == "FRI" || str == "FR") {
-    return DOW::kFriday;
-
-  } else if (str == "SATURDAY" || str == "SAT" || str == "SA") {
-    return DOW::kSaturday;
-  }
-  return DOW::kNone;
-}
-
-// Get the month from the input string.Try to handle most inputs
-MONTH get_month(const std::string& month) {
-
-  std::string str = month;
-  std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-  str.erase(boost::remove_if(str, boost::is_any_of(":")), str.end());
-
-  if (str == "JANUARY" || str == "JAN") {
-    return MONTH::kJan;
-
-  } else if (str == "FEBRUARY" || str == "FEB") {
-    return MONTH::kFeb;
-
-  } else if (str == "MARCH" || str == "MAR") {
-    return MONTH::kMar;
-
-  } else if (str == "APRIL" || str == "APR") {
-    return MONTH::kApr;
-
-  } else if (str == "MAY") {
-    return MONTH::kMay;
-
-  } else if (str == "JUNE" || str == "JUN") {
-    return MONTH::kJun;
-
-  } else if (str == "JULY" || str == "JUL") {
-    return MONTH::kJul;
-
-  } else if (str == "AUGUST" || str == "AUG") {
-    return MONTH::kAug;
-
-  } else if (str == "SEPTEMBER" || str == "SEP" || str == "SEPT") {
-    return MONTH::kSep;
-
-  } else if (str == "OCTOBER" || str == "OCT") {
-    return MONTH::kOct;
-
-  } else if (str == "NOVEMBER" || str == "NOV") {
-    return MONTH::kNov;
-
-  } else if (str == "DECEMBER" || str == "DEC") {
-    return MONTH::kDec;
-  }
-  return MONTH::kNone;
-}
-
-std::vector<uint64_t> get_time_range(const std::string& str) {
-
-  std::vector<uint64_t> time_domains;
-
-  TimeDomain timedomain(0);
-  // rm ()
-  try {
-    std::string condition = str;
-    condition.erase(boost::remove_if(condition, boost::is_any_of("()")), condition.end());
-
-    // rm white space at both ends
-    boost::algorithm::trim(condition);
-
-    // Holidays and school hours skip for now
-    if (condition.starts_with("PH") || condition.starts_with("SH")) {
-      return time_domains;
-    }
-
-    // Dec Su[-1]-Mar 3 => Dec#Su#[5]-Mar#3
-    if (RegexFound(condition, kBeginWeekdayOfTheMonth.first)) {
-      condition = FormatCondition(condition, kBeginWeekdayOfTheMonth);
-      condition = FormatCondition(condition, kLastWeekday);
-    } else {
-
-      // Mar 3-Dec Su[-1] => Mar#3-Dec#Su#[5]
-      if (RegexFound(condition, kEndWeedkayOfTheMonth.first)) {
-        condition = FormatCondition(condition, kEndWeedkayOfTheMonth);
-        condition = FormatCondition(condition, kLastWeekday);
-      } else {
-
-        // Dec Su[-1] => Dec#Su#[5]
-        if (RegexFound(condition, kWeekdayOfTheMonth.first)) {
-          condition = FormatCondition(condition, kWeekdayOfTheMonth);
-          condition = FormatCondition(condition, kLastWeekday);
-        } else {
-
-          // Mon[-1] => Mon#[5], Tue[2] => Tue#[2]
-          if (RegexFound(condition, kWeekdayOfEveryMonth.first)) {
-            condition = FormatCondition(condition, kWeekdayOfEveryMonth);
-            condition = FormatCondition(condition, kLastWeekday);
-          } else {
-
-            // Feb 16-Oct 15 09:00-18:30 => Feb#16-Oct#15 09:00-18:30
-            if (RegexFound(condition, kMonthDay.first)) {
-              condition = FormatCondition(condition, kMonthDay);
-            } else {
-
-              // Feb 2-14 => Feb#2-Feb#14
-              if (RegexFound(condition, kRangeWithinMonth.first)) {
-                condition = FormatCondition(condition, kRangeWithinMonth);
-              } else {
-
-                // Nov - Mar => Nov-Mar
-                if (RegexFound(condition, kMonthRange.first)) {
-                  condition = FormatCondition(condition, kMonthRange);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    std::size_t found = condition.find(",PH");
-    if (found != std::string::npos)
-      condition.erase(found, 3);
-
-    found = condition.find("PH,");
-    if (found != std::string::npos)
-      condition.erase(found, 3);
-
-    std::vector<std::string> months_dow_times = GetTokens(condition, ' ');
-
-    if (months_dow_times.size() == 1 && condition.find('#') != std::string::npos &&
-        std::count(condition.begin(), condition.end(), '#') == 1) {
-      months_dow_times = GetTokens(condition, '#');
-    }
-
-    if (months_dow_times.size() == 1) {
-      // no dow just times
-      // 06:00-11:00,17:00-19:00
-      if (months_dow_times.at(0).find('-') != std::string::npos &&
-          months_dow_times.at(0).find(':') != std::string::npos) {
-
-        std::vector<std::string> times = GetTokens(months_dow_times.at(0), ',');
-        // is this data looking good enough to try to process?
-        if (times.size()) {
-
-        } else {
-          return time_domains;
-        }
-
-        // multiple times are saved as multiple restrictions
-        for (const auto& t : times) {
-
-          std::vector<std::string> on_off = GetTokens(t, '-');
-
-          // do we have an hour on and hour off?
-          if (on_off.size() == 2) {
-
-            // process the hour on
-            std::size_t found = on_off.at(0).find(':');
-            if (found == std::string::npos) {
-              return time_domains;
-            }
-
-            std::stringstream stream(on_off.at(0));
-            uint32_t hour, min;
-
-            stream >> hour;
-            stream.ignore();
-            stream >> min;
-
-            timedomain.set_begin_hrs(hour);
-            timedomain.set_begin_mins(min);
-
-            // process the hour off
-            found = on_off.at(1).find(':');
-            if (found == std::string::npos) {
-              return time_domains;
-            }
-
-            stream.str("");
-            stream.clear();
-            stream.str(on_off.at(1));
-
-            stream >> hour;
-            stream.ignore();
-            stream >> min;
-
-            timedomain.set_end_hrs(hour);
-            timedomain.set_end_mins(min);
-
-            time_domains.push_back(timedomain.td_value());
-          }
-        }
-        return time_domains;
-      }
-    }
-    // Mo-Fr 06:00-11:00,17:00-19:00; Sa 03:30-19:00
-    // Apr-Sep: Mo-Fr 09:00-13:00,14:00-18:00; Apr-Sep: Sa 10:00-13:00
-    // Mo,We,Th,Fr 12:00-18:00; Sa-Su 12:00-17:00
-    // Feb#16-Oct#15 09:00-18:30; Oct#16-Nov#15: 09:00-17:30; Nov#16-Feb#15: 09:00-16:30
-    // and etc.
-    for (auto& mdt : months_dow_times) {
-      // rm white space at both ends
-      boost::algorithm::trim(mdt);
-
-      std::vector<std::string> months_dow;
-      bool is_range = false;
-      bool is_date = false;
-      bool is_nth_week = false;
-      bool ends_nth_week = false;
-
-      if (mdt.find(',') != std::string::npos) {
-        months_dow = GetTokens(mdt, ',');
-      } else if (mdt.find('-') != std::string::npos) {
-        months_dow = GetTokens(mdt, '-');
-        is_range = true;
-
-        if (months_dow.size() && mdt.find('#') != std::string::npos &&
-            mdt.find('[') != std::string::npos && mdt.find(']') != std::string::npos) {
-          is_date = true;
-          is_nth_week = true;
-
-          std::vector<std::string> tmp, result;
-          for (auto& md : months_dow) {
-            tmp = GetTokens(md, '#');
-            result.insert(std::end(result), std::begin(tmp), std::end(tmp));
-          }
-          months_dow = result;
-        }
-        // Feb#16-Oct#15
-        else if (months_dow.size() && mdt.find('#') != std::string::npos) {
-          is_date = true;
-          std::vector<std::string> tmp, result;
-          for (auto& md : months_dow) {
-            tmp = GetTokens(md, '#');
-            result.insert(std::end(result), std::begin(tmp), std::end(tmp));
-          }
-          months_dow = result;
-        }
-        // Dec Su[-1] Su-Sa 15:00-17:00
-      } else if (mdt.find('#') != std::string::npos && mdt.find('[') != std::string::npos &&
-                 mdt.find(']') != std::string::npos) {
-        is_date = true;
-        is_nth_week = true;
-        months_dow = GetTokens(mdt, '#');
-      } else if (mdt.find('#') != std::string::npos) { // May#15
-        is_date = true;
-        months_dow = GetTokens(mdt, '#');
-      } else {
-        months_dow.push_back(mdt); // just one day: Th or month
-      }
-
-      // dealing with months?
-      if (get_month(months_dow.at(0)) != MONTH::kNone) {
-        for (auto& md : months_dow) {
-
-          // Feb#16-Oct#15
-          if (months_dow.size() == 4 && is_date && is_range) {
-            timedomain.set_type(kYMD);
-            timedomain.set_begin_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
-            timedomain.set_begin_day_dow(to_int(months_dow.at(1)));
-
-            timedomain.set_end_month(static_cast<uint8_t>(get_month(months_dow.at(2))));
-            timedomain.set_end_day_dow(to_int(months_dow.at(3)));
-
-            break;
-          } // May 16-31
-          else if (months_dow.size() == 3 && is_date && is_range) {
-            timedomain.set_type(kYMD);
-            timedomain.set_begin_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
-            timedomain.set_begin_day_dow(to_int(months_dow.at(1)));
-
-            timedomain.set_end_month(timedomain.begin_month());
-            timedomain.set_end_day_dow(to_int(months_dow.at(2)));
-            break;
-          }
-          // Apr-Sep or May 15
-          else if (months_dow.size() == 2) {
-
-            timedomain.set_begin_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
-            baldr::MONTH month = get_month(months_dow.at(1));
-
-            if (month != MONTH::kNone) {
-              timedomain.set_type(kYMD);
-              timedomain.set_end_month(static_cast<uint8_t>(month));
-            } else if (is_date) { // May 15
-              timedomain.set_type(kYMD);
-              timedomain.set_begin_day_dow(to_int(months_dow.at(1)));
-              timedomain.set_end_month(timedomain.begin_month());
-              timedomain.set_end_day_dow(timedomain.begin_day_dow());
-            } else {
-              return time_domains;
-            }
-
-            break;
-          } else if (months_dow.size() == 1) { // May
-            timedomain.set_type(kYMD);
-            timedomain.set_begin_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
-            timedomain.set_end_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
-            break;
-          } else if (is_nth_week) { // Oct Su[-1]-Mar Su[4] Su 09:00-16:00
-            if (get_month(md) != MONTH::kNone) {
-
-              timedomain.set_type(kNthDow);
-              if (timedomain.begin_month() == 0) {
-
-                // assume the restriction is the entire week.
-                timedomain.set_dow(kAllDaysOfWeek);
-
-                timedomain.set_begin_month(static_cast<uint8_t>(get_month(md)));
-                // assume no range.  Dec Su[-1] Su-Sa 15:00-17:00 starts on the last week
-                // in Dec and ends in the last week in Dec
-                if (!is_range) {
-                  timedomain.set_end_month(timedomain.begin_month());
-                }
-              } else {
-                timedomain.set_end_month(static_cast<uint8_t>(get_month(md)));
-
-                if (is_range && is_date &&
-                    md != months_dow.at(months_dow.size() - 1)) { // Dec Su[-1]-Mar 3 Sat
-
-                  if (months_dow.at(months_dow.size() - 1).find('[') == std::string::npos) {
-                    timedomain.set_end_day_dow(to_int(months_dow.at(months_dow.size() - 1)));
-                    break;
-                  } else {
-                    ends_nth_week = true;
-                  }
-                }
-              }
-
-            } else if (get_dow(md) != DOW::kNone) {
-
-              if (timedomain.begin_day_dow() == 0) {
-                timedomain.set_begin_day_dow(static_cast<uint8_t>(get_dow(md)));
-              } else {
-                timedomain.set_end_day_dow(static_cast<uint8_t>(get_dow(md)));
-              }
-
-            } else if (md.find('[') != std::string::npos && md.find(']') != std::string::npos) {
-              md.erase(boost::remove_if(md, boost::is_any_of("[]")), md.end());
-
-              if (timedomain.begin_week() == 0 && !ends_nth_week) {
-                timedomain.set_begin_week(to_int(md));
-                // assume no range.  Dec Su[-1] Su-Sa 15:00-17:00 starts on the last week
-                // in Dec and ends in the last week in Dec
-                if (!is_range) {
-                  timedomain.set_end_week(timedomain.begin_week());
-                }
-              } else {
-                timedomain.set_end_week(to_int(md));
-              }
-            } else if (is_date && is_range && timedomain.begin_month() != 0 &&
-                       timedomain.end_month() == 0) { // Mar 3-Dec Su[-1] Sat
-              timedomain.set_begin_day_dow(to_int(md));
-            }
-          }
-        }
-      }
-      // dealing with dow
-      else if (get_dow(months_dow.at(0)) != DOW::kNone) {
-        // Mo,We,Th,Fr
-        if (!is_range) {
-          // wipe out assumption that this restriction is for the entire week.
-          if (timedomain.type() == kNthDow) {
-            timedomain.set_dow(0);
-          }
-
-          for (auto& md : months_dow) {
-            timedomain.set_dow(timedomain.dow() + get_dow_mask(md));
-          }
-
-          if (months_dow_times.size() == 2) {
-            std::string week = months_dow_times.at(1);
-            // Su[1] every 1st Sunday of every month.
-            if (week.find('[') != std::string::npos && week.find(']') != std::string::npos) {
-              timedomain.set_type(kNthDow);
-              week.erase(boost::remove_if(week, boost::is_any_of("[]")), week.end());
-              timedomain.set_begin_week(to_int(week));
-              break;
-            }
-          }
-          // Mo-Fr
-        } else if (months_dow.size() == 2) {
-          // wipe out assumption that this restriction is for the entire week.
-          if (timedomain.type() == kNthDow) {
-            timedomain.set_dow(0);
-          }
-
-          uint8_t b_index = static_cast<uint8_t>(get_dow(months_dow.at(0)));
-          uint8_t e_index = static_cast<uint8_t>(get_dow(months_dow.at(1)));
-
-          if (b_index > e_index) { // Th - Tu
-
-            while (b_index <= static_cast<uint8_t>(DOW::kSaturday)) {
-              timedomain.set_dow(timedomain.dow() + (1 << (b_index - 1)));
-              b_index++;
-            }
-            b_index = static_cast<uint8_t>(DOW::kSunday);
-          }
-
-          while (b_index <= e_index) {
-            timedomain.set_dow(timedomain.dow() + (1 << (b_index - 1)));
-            b_index++;
-          }
-
-        } else {
-          return time_domains;
-        }
-      } else {
-
-        std::vector<std::string> on_off;
-
-        for (const auto& time : months_dow) {
-          // is this data looking good enough to try to process?
-          if (time.find('-') != std::string::npos && time.find(':') != std::string::npos) {
-
-            // multiple times are saved as multiple restrictions
-            on_off = GetTokens(time, '-');
-
-          } else if (is_range && months_dow.size() == 2) {
-            on_off.insert(std::end(on_off), std::begin(months_dow), std::end(months_dow));
-          } else {
-            continue;
-          }
-
-          // do we have an hour on and hour off?
-          if (on_off.size() == 2) {
-
-            // process the hour on
-            std::size_t found = on_off.at(0).find(':');
-            if (found == std::string::npos) {
-              return time_domains;
-            }
-
-            std::stringstream stream(on_off.at(0));
-            uint32_t hour, min;
-
-            stream >> hour;
-            stream.ignore();
-            stream >> min;
-
-            timedomain.set_begin_hrs(hour);
-            timedomain.set_begin_mins(min);
-
-            // process the hour off
-            found = on_off.at(1).find(':');
-            if (found == std::string::npos) {
-              return time_domains;
-            }
-
-            stream.str("");
-            stream.clear();
-            stream.str(on_off.at(1));
-
-            stream >> hour;
-            stream.ignore();
-            stream >> min;
-
-            timedomain.set_end_hrs(hour);
-            timedomain.set_end_mins(min);
-
-            time_domains.push_back(timedomain.td_value());
-          }
-        }
-      }
-    }
-
-    // no time.
-    if (time_domains.size() == 0 && timedomain.td_value()) {
-      time_domains.push_back(timedomain.td_value());
-    }
-  } catch (const std::invalid_argument& arg) {
-    LOG_DEBUG("invalid_argument thrown for condition " + str);
-    build_stats::get().increment(build_stats::kFailedOSMTimeRange);
-  } catch (const std::out_of_range& oor) {
-    LOG_DEBUG("out_of_range thrown for condition: " + str);
-    build_stats::get().increment(build_stats::kFailedOSMTimeRange);
-  } catch (const std::runtime_error& oor) {
-    build_stats::get().increment(build_stats::kFailedOSMTimeRangeUnknown);
-    LOG_DEBUG("runtime_error thrown for condition: " + str);
-    // TODO deal with these.  For now toss.
-  }
-  return time_domains;
+std::vector<uint64_t> get_time_range(std::string_view str) {
+  return parse_conditions(tokenize(str));
 }
 
 } // namespace mjolnir
