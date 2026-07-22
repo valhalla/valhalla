@@ -288,7 +288,7 @@ void EnrichWorker(const boost::property_tree::ptree& pt,
 
     size_t enriched_edges = 0;
 
-    size_t nb_tiles_treated = 0;
+    [[maybe_unused]] size_t nb_tiles_treated = 0;
     while (true) {
       // Each thread grabs the next available tile
       size_t tile_num = next_tile.fetch_add(1);
@@ -318,9 +318,9 @@ void EnrichWorker(const boost::property_tree::ptree& pt,
       std::vector<Enrichment> enrichments;
       enrichments.reserve(edge_count / 4);
 
-      auto t_build_start = std::chrono::steady_clock::now();
+      [[maybe_unused]] auto t_build_start = std::chrono::steady_clock::now();
       NamedEdgesTree index = BuildNamedEdgesTree(tile, edge_count, cos_lat);
-      auto t_build_end = std::chrono::steady_clock::now();
+      [[maybe_unused]] auto t_build_end = std::chrono::steady_clock::now();
 
       std::vector<rtree_value_t> results;
       results.reserve(kMaxSamplePointsToTest);
@@ -355,7 +355,7 @@ void EnrichWorker(const boost::property_tree::ptree& pt,
           enrichments.push_back({edge_num, name});
       }
 
-      auto t_search_end = std::chrono::steady_clock::now();
+      [[maybe_unused]] auto t_search_end = std::chrono::steady_clock::now();
 
       // apply all enrichments
       if (!enrichments.empty()) {
@@ -369,7 +369,7 @@ void EnrichWorker(const boost::property_tree::ptree& pt,
         tilebuilder.StoreTileData();
       }
 
-      auto t_apply_end = std::chrono::steady_clock::now();
+      [[maybe_unused]] auto t_apply_end = std::chrono::steady_clock::now();
 
       LOG_DEBUG("Tile {} (Thread {}), : build={}ms, search={}ms, apply={}ms, enriched={}", tile_num,
                 thread_num,
@@ -381,18 +381,9 @@ void EnrichWorker(const boost::property_tree::ptree& pt,
                     .count(),
                 enriched_edges_in_tile);
 
-      // avoid warnings because used only in LOG_DEBUG
-      (void)t_build_start;
-      (void)t_build_end;
-      (void)t_search_end;
-      (void)t_apply_end;
-
       enriched_edges += enriched_edges_in_tile;
       nb_tiles_treated++;
     }
-
-    // avoid warnings because used only in LOG_DEBUG
-    (void)nb_tiles_treated;
 
     LOG_DEBUG("Thread " + std::to_string(thread_num) + " finished: it enriched " +
               std::to_string(enriched_edges) + " pedestrian edges in " +
