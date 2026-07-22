@@ -1549,6 +1549,7 @@ void GraphTileBuilder::AddNameToEdge(const GraphId& edge_id, const std::string& 
     return;
   }
 
+  // TODO: complete name_info with additional_fields_, is_route_num_, tagged_
   NameInfo name_info{name_offset, 0, 0, 0};
   edge_info_it->second->AddNameInfo(name_info);
 }
