@@ -608,7 +608,7 @@ TEST(TimeParsing, WholeValueWithoutExternalSplit) {
   TryConditionalRestrictions(mixed, 0, 0, 62, {0, 0, 0, 7, 0}, {0, 0, 0, 19, 0});
   TryConditionalRestrictions(mixed, 1, 0, 64, {0, 0, 0, 8, 0}, {0, 0, 0, 12, 0});
 
-  // an unparseable or unsupported rule is dropped alone, the rest of the value still works
+  // an unparsable or unsupported rule is dropped alone, the rest of the value still works
   const std::string broken = "qwerty; Sa 08:00-12:00; 2023 Jan-Nov";
   ASSERT_EQ(get_time_range(broken).size(), 1);
   TryConditionalRestrictions(broken, 0, 0, 64, {0, 0, 0, 8, 0}, {0, 0, 0, 12, 0});
