@@ -524,7 +524,7 @@ void BuildTileSet(const std::string& ways_file,
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
       shape.emplace_back(node.latlng());
-      if (keep_all_nodes || (graph_nodes_only && (i == 0 || i == count - 1))) {
+      if (!node.synthetic() && (keep_all_nodes || (graph_nodes_only && (i == 0 || i == count - 1)))) {
         osm_node_ids.push_back(node.osmid_);
       }
     }
@@ -941,9 +941,10 @@ void BuildTileSet(const std::string& ways_file,
               bike_network = w.bike_network();
             }
 
+            const uint64_t wayid = w.way_id() > osmdata.max_way_id ? 0 : w.way_id();
             edge_info_offset =
                 graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                      (*nodes[target]).graph_id, w.way_id(), kNoElevationData,
+                                      (*nodes[target]).graph_id, wayid, kNoElevationData,
                                       bike_network, speed_limit, shape, names, tagged_values,
                                       linguistics, types, added, (diff_names || dual_refs));
 
