@@ -55,8 +55,6 @@ namespace baldr {
 
 // Default constructor
 DirectedEdge::DirectedEdge() {
-  memset(this, 0, sizeof(DirectedEdge));
-  weighted_grade_ = 6;
 }
 
 // Sets the end node of this directed edge.

@@ -499,42 +499,42 @@ protected:
 
   // 26 bits for lat,lon offset allows 7 digits of precision even in 4 degree tiles
   // to stay backwards compatible we have to break 6 digits and the 7th digit into two parts
-  uint64_t lat_offset_ : 22; // Latitude offset from tile base latitude in int 6 digit precision
-  uint64_t lat_offset7_ : 4; // Latitude offset 7th digit of precision
-  uint64_t lon_offset_ : 22; // Longitude offset from tile base longitude in int 6 digit precision
-  uint64_t lon_offset7_ : 4; // Longitude offset 7th digit of precision
-  uint64_t access_ : 12;     // Access through the node - bit field
+  uint64_t lat_offset_ : 22 = 0; // Latitude offset from tile base latitude in int 6 digit precision
+  uint64_t lat_offset7_ : 4 = 0; // Latitude offset 7th digit of precision
+  uint64_t lon_offset_ : 22 = 0; // Longitude offset from tile base longitude in int 6 digit precision
+  uint64_t lon_offset7_ : 4 = 0; // Longitude offset 7th digit of precision
+  uint64_t access_ : 12 = 0;     // Access through the node - bit field
 
-  uint64_t edge_index_ : 21;    // Index within the node's tile of its first outbound directed edge
-  uint64_t edge_count_ : 7;     // Number of outbound edges (on this level)
-  uint64_t admin_index_ : 12;   // Index into this tile's administrative information list
-  uint64_t timezone_ : 9;       // Time zone
-  uint64_t intersection_ : 4;   // Intersection type (see graphconstants.h)
-  uint64_t type_ : 4;           // NodeType (see graphconstants.h)
-  uint64_t density_ : 4;        // Relative road density
-  uint64_t traffic_signal_ : 1; // Traffic signal
-  uint64_t mode_change_ : 1;    // Mode change allowed?
-                                // Also used for aggregation of edges at filter stage
-  uint64_t named_ : 1;          // Is this a named intersection?
+  uint64_t edge_index_ : 21 = 0;    // Index within the node's tile of its first outbound directed edge
+  uint64_t edge_count_ : 7 = 0;     // Number of outbound edges (on this level)
+  uint64_t admin_index_ : 12 = 0;   // Index into this tile's administrative information list
+  uint64_t timezone_ : 9 = 0;       // Time zone
+  uint64_t intersection_ : 4 = 0;   // Intersection type (see graphconstants.h)
+  uint64_t type_ : 4 = 0;           // NodeType (see graphconstants.h)
+  uint64_t density_ : 4 = 0;        // Relative road density
+  uint64_t traffic_signal_ : 1 = 0; // Traffic signal
+  uint64_t mode_change_ : 1 = 0;    // Mode change allowed?
+                                    // Also used for aggregation of edges at filter stage
+  uint64_t named_ : 1 = 0;          // Is this a named intersection?
 
-  uint64_t transition_index_ : 21;   // Index into the node transitions to the first transition
-                                     // (used to store transit stop index for transit level)
-  uint64_t transition_count_ : 3;    // Number of transitions from this node
-  uint64_t local_driveability_ : 16; // Driveability for regular edges (up to
-                                     // kMaxLocalEdgeIndex+1 edges)
-  uint64_t local_edge_count_ : 3;    // # of regular edges across all levels
-                                     // (up to kMaxLocalEdgeIndex+1)
-  uint64_t drive_on_right_ : 1;      // Driving side. Right if true (false=left)
-  uint64_t tagged_access_ : 1;       // Was access initially tagged?
-  uint64_t private_access_ : 1;      // Is the access private?
-  uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
-  uint64_t elevation_ : 15;          // Encoded elevation (meters)
-  uint64_t timezone_ext_1_ : 1;      // To keep compatibility when new timezones are added
+  uint64_t transition_index_ : 21 = 0;   // Index into the node transitions to the first transition
+                                         // (used to store transit stop index for transit level)
+  uint64_t transition_count_ : 3 = 0;    // Number of transitions from this node
+  uint64_t local_driveability_ : 16 = 0; // Driveability for regular edges (up to
+                                         // kMaxLocalEdgeIndex+1 edges)
+  uint64_t local_edge_count_ : 3 = 0;    // # of regular edges across all levels
+                                         // (up to kMaxLocalEdgeIndex+1)
+  uint64_t drive_on_right_ : 1 = 0;      // Driving side. Right if true (false=left)
+  uint64_t tagged_access_ : 1 = 0;       // Was access initially tagged?
+  uint64_t private_access_ : 1 = 0;      // Is the access private?
+  uint64_t cash_only_toll_ : 1 = 0;      // Is this toll cash only?
+  uint64_t elevation_ : 15 = 0;          // Encoded elevation (meters)
+  uint64_t timezone_ext_1_ : 1 = 0;      // To keep compatibility when new timezones are added
   // uncomment a new timezone ever gets created from a previously new
   // timezone (reference release is 2023c)
   // uint64_t timezone_ext_2_ : 1;
 
-  uint64_t spare2_ : 1;
+  uint64_t spare2_ : 1 = 0;
 
   // For not transit levels its the headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to
   // nearest 2 degrees)for all other levels.
@@ -542,7 +542,7 @@ protected:
   // Also for transit levels (while building data only) it can be used for either the connecting way
   // id for matching the connection point of the station to the edge or an encoded lon lat pair for
   // the exact connection point. If the highest bit is set its a lon lat otherwise its a way id
-  uint64_t headings_;
+  uint64_t headings_ = 0;
 };
 
 } // namespace baldr
