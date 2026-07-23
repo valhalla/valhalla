@@ -13,6 +13,8 @@ constexpr unsigned int kCoordinateBits = 13;
 constexpr unsigned int kRadiiBits = 32 - kCoordinateBits * 2;
 constexpr unsigned int kRadiiCount = 1 << kRadiiBits;
 constexpr uint32_t kMaxOffsetValue = (1 << kCoordinateBits) - 1;
+constexpr double kMaxCircleRadius = 2500.0;
+constexpr double kMaxCircleBbox = 2.0 * 1.41421356 * kMaxCircleRadius + 1.0; // +1 for numerical error
 
 struct DiscretizedBoundingCircle {
 
