@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cmath>
 #include <map>
+#include <optional>
 #include <thread>
 
 using namespace valhalla::baldr;
@@ -43,9 +44,9 @@ constexpr unsigned long kMaxEnrichDistance = 50;
 // R-tree types for spatial indexing of named edges
 // We use cartesian coordinates instead geographical because it is clearly faster.
 // To approximate coordinates, we just multiply the longitudes by a tile-constant cos(lat).
-// Moreover, we use float in the tree (not double) because it increase search and build speed.
+// Moreover, we use float in the tree (not double) because it increases search and build speed.
 using rtree_point_t = boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian>;
-using rtree_value_t = std::pair<rtree_point_t, uint32_t>; // point + edge_idx
+using rtree_value_t = std::pair<rtree_point_t, uint32_t>; // point + candidate_idx
 using rtree_t = boost::geometry::index::rtree<rtree_value_t, boost::geometry::index::rstar<16>>;
 
 // Returns true if the edge `use` is a road-specific type
@@ -69,11 +70,16 @@ bool IsRoadUse(Use use) {
   }
 }
 
-// R-tree struct with assossiated names and shapes
+// Stores the name and full geometry needed to score one road candidate.
+struct NamedEdgeCandidate {
+  std::string name;
+  std::vector<PointLL> shape;
+};
+
+// R-tree struct with associated candidates
 struct NamedEdgesTree {
   rtree_t rtree;
-  std::vector<std::string> names;           // indexed by edge_num, empty string if not named
-  std::vector<std::vector<PointLL>> shapes; // indexed by edge_num
+  std::vector<NamedEdgeCandidate> candidates;
 };
 
 // Returns the midpoint along the polyline (at 50% of cumulative distance).
@@ -90,53 +96,115 @@ PointLL PolylineMidpoint(const std::vector<PointLL>& shape) {
   return PointLL(midpoints.front());
 }
 
-// Builds a spatial index of named road edges for fast nearest-neighbor lookup.
-// Each road is resampled into points spaced at most kSampleStepMeters apart; every
-// sample point is indexed in the R-tree and maps back to its edge. Names/shapes are
-// stored per edge for later scoring.
-NamedEdgesTree
-BuildNamedEdgesTree(const graph_tile_ptr& tile, uint32_t edge_count, const float cos_lat) {
+// Builds an R-tree of named road candidates near the target pedestrian edges.
+// Loads existing tiles intersecting candidate bounding box across all hierarchy levels,
+// rejects road shapes outside candidate bounding box, and indexes only samples inside
+// sample bounding box. Candidate names/shapes are stored for later scoring.
+//
+// Known limitation: candidate tiles are selected spatially from sample bounding box. A long edge
+// stored in a more distant origin tile may therefore be missed even if its shape later crosses
+// candidate bounding box.
+NamedEdgesTree BuildNamedEdgesTree(GraphReader& reader,
+                                   const AABB2<PointLL>& candidate_bb,
+                                   const AABB2<PointLL>& sample_bb,
+                                   float cos_lat) {
   NamedEdgesTree tree;
-  tree.names.resize(edge_count); // empty strings by default
-  tree.shapes.resize(edge_count);
+
+  const auto candidate_tile_ids = TileHierarchy::GetGraphIds(sample_bb);
+
+  [[maybe_unused]] const size_t candidate_tiles_found = candidate_tile_ids.size();
+  [[maybe_unused]] size_t candidate_tiles_loaded = 0;
+  [[maybe_unused]] size_t candidate_edges_examined = 0;
+  [[maybe_unused]] size_t shapes_intersecting_candidate_bb = 0;
+  [[maybe_unused]] size_t generated_samples = 0;
+  [[maybe_unused]] size_t retained_samples = 0;
+  [[maybe_unused]] size_t candidates_without_retained_sample = 0;
 
   std::vector<rtree_value_t> named_edge_values;
-  named_edge_values.reserve(edge_count / 4);
 
-  for (uint32_t candidate_edge_idx = 0; candidate_edge_idx < edge_count; ++candidate_edge_idx) {
-    const DirectedEdge* candidate_directed_edge = tile->directededge(candidate_edge_idx);
-
-    // skip shortcut edges
-    if (candidate_directed_edge->is_shortcut())
+  for (const auto& candidate_tile_id : candidate_tile_ids) {
+    // skip hierarchy tiles that do not exist at the current build stage
+    if (!reader.DoesTileExist(candidate_tile_id))
       continue;
 
-    // only process road edges
-    if (!IsRoadUse(candidate_directed_edge->use()))
+    auto candidate_tile = reader.GetGraphTile(candidate_tile_id);
+    if (!candidate_tile)
       continue;
 
-    EdgeInfo candidate_edgeinfo = tile->edgeinfo(candidate_directed_edge);
+    candidate_tiles_loaded++;
 
-    // skip unnamed edges
-    auto names = candidate_edgeinfo.GetNames();
-    if (names.empty())
-      continue;
+    const uint32_t edge_count = candidate_tile->header()->directededgecount();
 
-    // skip empty shapes
-    const auto& candidate_shape = candidate_edgeinfo.shape();
-    if (candidate_shape.empty())
-      continue;
+    for (uint32_t candidate_edge_idx = 0; candidate_edge_idx < edge_count; ++candidate_edge_idx) {
+      candidate_edges_examined++;
 
-    // resample the road into points spaced at most kSampleStepMeters apart (keeping the
-    // original vertices), and index each of them pointing back to this edge
-    auto sampled_points =
-        valhalla::midgard::resample_spherical_polyline(candidate_shape, kSampleStepMeters, true);
-    for (const auto& sample : sampled_points) {
-      named_edge_values.emplace_back(rtree_point_t(sample.lng() * cos_lat, sample.lat()),
-                                     candidate_edge_idx);
+      const DirectedEdge* candidate_directed_edge = candidate_tile->directededge(candidate_edge_idx);
+
+      // skip shortcut edges
+      if (candidate_directed_edge->is_shortcut())
+        continue;
+
+      // only process road edges
+      if (!IsRoadUse(candidate_directed_edge->use()))
+        continue;
+
+      EdgeInfo candidate_edgeinfo = candidate_tile->edgeinfo(candidate_directed_edge);
+
+      // skip unnamed edges
+      auto names = candidate_edgeinfo.GetNames();
+      if (names.empty())
+        continue;
+
+      // skip empty shapes
+      const auto& candidate_shape = candidate_edgeinfo.shape();
+      if (candidate_shape.empty())
+        continue;
+
+      // skip road shapes that cannot intersect the maximum candidate area
+      AABB2<PointLL> shape_bb(candidate_shape);
+      if (!shape_bb.Intersects(candidate_bb))
+        continue;
+
+      shapes_intersecting_candidate_bb++;
+
+      // resample the road and index only points close enough to the target pedestrian edges;
+      // each retained sample points back to the compact candidate index
+      const uint32_t candidate_idx = static_cast<uint32_t>(tree.candidates.size());
+      const size_t values_before = named_edge_values.size();
+
+      const auto sampled_points =
+          resample_spherical_polyline(candidate_shape, kSampleStepMeters, true);
+
+      generated_samples += sampled_points.size();
+
+      for (const auto& sample : sampled_points) {
+        if (!sample_bb.Contains(sample))
+          continue;
+
+        ++retained_samples;
+        named_edge_values.emplace_back(rtree_point_t(sample.lng() * cos_lat, sample.lat()),
+                                       candidate_idx);
+      }
+
+      // discard candidates with no sampled point inside the buffered sample area
+      if (named_edge_values.size() == values_before) {
+        ++candidates_without_retained_sample;
+        continue;
+      }
+
+      tree.candidates.push_back({
+          names.front(),
+          candidate_shape,
+      });
     }
-    tree.names[candidate_edge_idx] = names[0];
-    tree.shapes[candidate_edge_idx] = candidate_shape;
   }
+
+  LOG_DEBUG("Named-road R-Tree: tiles_found={}, tiles_loaded={}, edges_examined={}, "
+            "shapes_in_bb={}, generated_samples={}, retained_samples={}, "
+            "candidates_without_sample={}, indexed_candidates={}",
+            candidate_tiles_found, candidate_tiles_loaded, candidate_edges_examined,
+            shapes_intersecting_candidate_bb, generated_samples, retained_samples,
+            candidates_without_retained_sample, tree.candidates.size());
 
   // bulk-load the R-tree (faster than individual inserts in the for loop)
   tree.rtree = rtree_t(named_edge_values.begin(), named_edge_values.end());
@@ -228,20 +296,18 @@ std::string FindNearestName(const NamedEdgesTree& tree,
                                                    kMaxSamplePointsToTest),
                    std::back_inserter(results));
 
-  // group distinct candidate edges by street name (several sample points may map to the
-  // same edge, and several edges may share the same street name)
-  std::set<uint32_t> tested_edges;
+  // group distinct candidates by street name; several samples may map to the
+  // same candidate, and several candidates may share the same street name
+  std::set<uint32_t> tested_candidates;
   std::map<std::string, std::vector<const std::vector<PointLL>*>> shapes_by_name;
-  for (const auto& [pt, edge_idx] : results) {
+  for (const auto& [pt, candidate_idx] : results) {
     // already grouped this edge through another sample point
-    if (tested_edges.count(edge_idx))
+    if (tested_candidates.count(candidate_idx))
       continue;
-    tested_edges.insert(edge_idx);
+    tested_candidates.insert(candidate_idx);
 
-    const auto& named_shape = tree.shapes[edge_idx];
-    if (named_shape.empty())
-      continue;
-    shapes_by_name[tree.names[edge_idx]].push_back(&named_shape);
+    const auto& candidate = tree.candidates[candidate_idx];
+    shapes_by_name[candidate.name].push_back(&candidate.shape);
   }
 
   // the street name with the best aggregated score wins
@@ -275,6 +341,48 @@ bool IsPedestrianUseToEnrich(Use use) {
   }
 }
 
+// Stores target pedestrian edges indices and their aggregate geographic bounding box.
+struct PedestrianTargets {
+  std::vector<uint32_t> edge_indices;
+  std::optional<AABB2<PointLL>> bounding_box;
+};
+
+// Collects unnamed pedestrian edges to enrich and computes their aggregate bounding box.
+PedestrianTargets CollectPedestrianTargets(const graph_tile_ptr& tile) {
+  PedestrianTargets targets;
+
+  for (uint32_t edge_idx = 0; edge_idx < tile->header()->directededgecount(); ++edge_idx) {
+    const auto* edge = tile->directededge(edge_idx);
+
+    // skip shortcuts and edge uses that are not eligible for enrichment
+    if (edge->is_shortcut() || !IsPedestrianUseToEnrich(edge->use()))
+      continue;
+
+    auto edge_info = tile->edgeinfo(edge);
+
+    // skip pedestrian edges that already have a name
+    if (!edge_info.GetNames().empty())
+      continue;
+
+    // skip pedestrian edges without usable geometry
+    const auto& shape = edge_info.shape();
+    if (shape.empty())
+      continue;
+
+    targets.edge_indices.push_back(edge_idx);
+    AABB2<PointLL> shape_bb(shape);
+    if (targets.bounding_box) {
+      // extend the aggregate bounding box with the current pedestrian shape
+      targets.bounding_box->Expand(shape_bb);
+    } else {
+      // initialize the aggregate bounding box from the first pedestrian shape
+      targets.bounding_box = shape_bb;
+    }
+  }
+
+  return targets;
+}
+
 // Worker function that processes a subset of tiles
 void EnrichWorker(const boost::property_tree::ptree& pt,
                   const std::vector<GraphId>& tileset,
@@ -301,8 +409,6 @@ void EnrichWorker(const boost::property_tree::ptree& pt,
       const GraphId tile_id = tileset[tile_num];
       GraphTileBuilder tilebuilder(tile_dir, tile_id, true, false);
 
-      const uint32_t edge_count = tilebuilder.header_builder().directededgecount();
-
       // Load the tile via GraphReader to access edge info
       graph_tile_ptr tile;
       tile = reader.GetGraphTile(tile_id);
@@ -310,33 +416,40 @@ void EnrichWorker(const boost::property_tree::ptree& pt,
         continue;
       }
 
+      // collect target pedestrian edges and their aggregate bounding box
+      auto targets = CollectPedestrianTargets(tile);
+      LOG_DEBUG("Target tile level={}, tileid={}: sidewalks_to_enrich={}",
+                static_cast<unsigned int>(tile_id.level()), tile_id.tileid(),
+                targets.edge_indices.size());
+      if (targets.edge_indices.empty())
+        continue;
+
+      // expand by the maximum accepted distance to include nearby named-road candidates
+      const auto candidate_bb = ExpandMeters(*targets.bounding_box, kMaxEnrichDistance);
+      // expand by one sample step to retain samples around the candidate-area boundary
+      const auto sample_bb = ExpandMeters(candidate_bb, kSampleStepMeters);
+
       // tile-constant cos_lat to approximate coord as cartesian coordinates,
-      // using the center of the tile
+      // using the center of the target tile
       auto bounds = TileHierarchy::levels().back().tiles.TileBounds(tile_id.tileid());
       const float cos_lat = std::cos((bounds.miny() + bounds.maxy()) * 0.5 * M_PI / 180.0);
 
       std::vector<Enrichment> enrichments;
-      enrichments.reserve(edge_count / 4);
+      enrichments.reserve(targets.edge_indices.size());
 
       [[maybe_unused]] auto t_build_start = std::chrono::steady_clock::now();
-      NamedEdgesTree index = BuildNamedEdgesTree(tile, edge_count, cos_lat);
+      // build one candidate tree shared by all target pedestrian edges in this tile
+      NamedEdgesTree tree = BuildNamedEdgesTree(reader, candidate_bb, sample_bb, cos_lat);
       [[maybe_unused]] auto t_build_end = std::chrono::steady_clock::now();
 
       std::vector<rtree_value_t> results;
       results.reserve(kMaxSamplePointsToTest);
-      for (uint32_t edge_num = 0; edge_num < edge_count; ++edge_num) {
-        DirectedEdge& directededge = tilebuilder.directededges()[edge_num];
 
-        // skip shortcut edges
-        if (directededge.is_shortcut()) {
-          continue;
-        }
+      [[maybe_unused]] size_t queries_with_results = 0;
+      [[maybe_unused]] size_t queries_without_name = 0;
 
-        // only process certain pedestrian edges
-        if (!IsPedestrianUseToEnrich(directededge.use())) {
-          continue;
-        }
-
+      // find the best road name for each previously collected pedestrian edge
+      for (const uint32_t edge_num : targets.edge_indices) {
         const DirectedEdge* directed_edge = tile->directededge(edge_num);
         EdgeInfo edge_info = tile->edgeinfo(directed_edge);
 
@@ -350,10 +463,24 @@ void EnrichWorker(const boost::property_tree::ptree& pt,
           continue;
         }
 
-        auto name = FindNearestName(index, shape, results, cos_lat);
-        if (!name.empty())
+        auto name = FindNearestName(tree, shape, results, cos_lat);
+
+        if (!results.empty())
+          ++queries_with_results;
+
+        if (name.empty()) {
+          ++queries_without_name;
+          continue;
+        } else {
           enrichments.push_back({edge_num, name});
+        }
       }
+
+      LOG_DEBUG("Target tile level={}, tileid={}: targets={}, queries_with_results={}, "
+                "queries_without_name={}, enrichments={}",
+                static_cast<unsigned int>(tile_id.level()), tile_id.tileid(),
+                targets.edge_indices.size(), queries_with_results, queries_without_name,
+                enrichments.size());
 
       [[maybe_unused]] auto t_search_end = std::chrono::steady_clock::now();
 
