@@ -40,4 +40,5 @@ trans.sl_SI = locales/sl-SI.json
 trans.sv_SE = locales/sv-SE.json
 trans.tr_TR = locales/tr-TR.json
 trans.uk_UA = locales/uk-UA.json
+trans.uz_UZ = locales/uz-UZ.json
 trans.vi_VN = locales/vi-VN.json
