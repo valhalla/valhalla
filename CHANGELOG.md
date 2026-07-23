@@ -10,6 +10,7 @@
    * ADDED: classify `surface=laterite` and `surface=clay` as `Surface::kDirt` [#6171](https://github.com/valhalla/valhalla/issues/6171)
    * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
    * CHANGED: Speedup sequence sort by using PSRS algorithm [#6226](https://github.com/valhalla/valhalla/pull/6226)
+   * CHANGED: Add Rent and Return bike share maneuvers. [#5770](https://github.com/valhalla/valhalla/pull/5770)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**

@@ -2319,6 +2319,20 @@
         ]
       }
     },
+    "bike_share_verbal": {
+      "phrases": {
+        "0": "Louez un vélo à la station de vélos en libre-service.",
+        "1": "Remettez le vélo à la station de vélos en libre-service."
+      },
+      "example_phrases": {
+        "0": [
+          "Louez un vélo à la station de vélos en libre-service."
+        ],
+        "1": [
+          "Remettez le vélo à la station de vélos en libre-service."
+        ]
+      }
+    },
     "enter_building": {
       "phrases": {
         "0": "Đi vào toà nhà.",
