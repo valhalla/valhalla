@@ -189,6 +189,24 @@ jobs:
           cmake --build build -- -k 0
           cmake --build build --target install
 
+      # TEMP: build an all-features (services on) windows python wheel to try out, ungated so it
+      # runs on this commit rather than only on master/tag. remove after.
+      - name: Build Python wheel (all features)
+        uses: pypa/cibuildwheel@v2.23.3
+        env:
+          CIBW_BUILD: cp312-*
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            CMAKE_ARGS="-DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_HTTP=ON -DENABLE_SERVICES=ON
+            -DENABLE_TESTS=OFF -DVCPKG_MANIFEST_FEATURES=services
+            -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_TOOLCHAIN_FILE }}
+            -DVCPKG_TARGET_TRIPLET=${{ env.VCPKG_DEFAULT_TRIPLET }}"
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: valhalla-windows-wheel-all-features
+          path: wheelhouse/*.whl
+
       # ------------------------------------------------------------------------------------------
       # CRASH DEBUGGING CHEATSHEET
       # to reuse: set BUILD_TYPE=RelWithDebInfo + the -Od configure flags above, uncomment the 
