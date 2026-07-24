@@ -31,16 +31,17 @@ enum class BuildStage : int8_t {
   kParseNodes = 3,
   kConstructEdges = 4,
   kBuild = 5,
-  kEnhance = 6,
-  kFilter = 7,
-  kTransit = 8,
-  kBss = 9,
-  kHierarchy = 10,
-  kShortcuts = 11,
-  kRestrictions = 12,
-  kElevation = 13,
-  kValidate = 14,
-  kCleanup = 15
+  kEnrichNames = 6,
+  kEnhance = 7,
+  kFilter = 8,
+  kTransit = 9,
+  kBss = 10,
+  kHierarchy = 11,
+  kShortcuts = 12,
+  kRestrictions = 13,
+  kElevation = 14,
+  kValidate = 15,
+  kCleanup = 16
 };
 
 constexpr uint8_t kMinor = 1;
@@ -56,6 +57,7 @@ inline BuildStage string_to_buildstage(const std::string& s) {
        {"parsenodes", BuildStage::kParseNodes},
        {"constructedges", BuildStage::kConstructEdges},
        {"build", BuildStage::kBuild},
+       {"enrichnames", BuildStage::kEnrichNames},
        {"enhance", BuildStage::kEnhance},
        {"filter", BuildStage::kFilter},
        {"transit", BuildStage::kTransit},
@@ -80,6 +82,7 @@ inline std::string to_string(BuildStage stg) {
        {static_cast<int8_t>(BuildStage::kParseNodes), "parsenodes"},
        {static_cast<int8_t>(BuildStage::kConstructEdges), "constructedges"},
        {static_cast<int8_t>(BuildStage::kBuild), "build"},
+       {static_cast<int8_t>(BuildStage::kEnrichNames), "enrichnames"},
        {static_cast<int8_t>(BuildStage::kEnhance), "enhance"},
        {static_cast<int8_t>(BuildStage::kFilter), "filter"},
        {static_cast<int8_t>(BuildStage::kTransit), "transit"},

@@ -520,6 +520,21 @@ public:
   void AddLandmark(const baldr::GraphId& edge_id, const baldr::Landmark& landmark);
 
   /**
+   * Adds a name to the given edge's EdgeInfo. Does not update offsets:
+   * RecomputeEdgeInfoOffsets() must be called after all modifications.
+   *
+   * @param edge_id  the edge id to modify (must belong to this tile)
+   * @param name     the street name to associate to the edge
+   */
+  void AddNameToEdge(const baldr::GraphId& edge_id, const std::string& name);
+
+  /**
+   * Recomputes all edgeinfo offsets by walking edgeinfo_list_ in order.
+   * Call after batch modifications via AddNameToEdge().
+   */
+  void RecomputeEdgeInfoOffsets();
+
+  /**
    * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
    * must be in the same tile as the directed edge.  This is called during the building of the
    * tiles; therefore, we can't use GetOpposingEdgeId as it has not been set yet.

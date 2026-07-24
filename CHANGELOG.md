@@ -11,6 +11,7 @@
    * ADDED: classify `surface=laterite` and `surface=clay` as `Surface::kDirt` [#6171](https://github.com/valhalla/valhalla/issues/6171)
    * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
    * CHANGED: Speedup sequence sort by using PSRS algorithm [#6226](https://github.com/valhalla/valhalla/pull/6226)
+   * ADDED: Enrich unnamed sidewalk edges with the name of the nearest street [#6216](https://github.com/valhalla/valhalla/pull/6216)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
