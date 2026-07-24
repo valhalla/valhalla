@@ -14,10 +14,7 @@ namespace baldr {
  */
 class DirectedEdge {
 public:
-  /**
-   * Constructor
-   */
-  DirectedEdge();
+  DirectedEdge() = default;
 
   /**
    * Gets the end node of this directed edge.
@@ -1217,8 +1214,8 @@ protected:
   // 2nd 8 byte word
   uint64_t edgeinfo_offset_ : 25 = 0;    // Offset to edge data
   uint64_t access_restriction_ : 12 = 0; // General restriction or access condition (per mode)
-  uint64_t start_restriction_ : 12 = 0;  // Complex restriction (per mode) starts on this directed edge
-  uint64_t end_restriction_ : 12 = 0;    // Complex restriction (per mode) ends on this directed edge
+  uint64_t start_restriction_ : 12 = 0; // Complex restriction (per mode) starts on this directed edge
+  uint64_t end_restriction_ : 12 = 0;   // Complex restriction (per mode) ends on this directed edge
   uint64_t complex_restriction_ : 1 = 0; // Edge is part of a complex restriction
   uint64_t dest_only_ : 1 = 0;           // Access allowed to destination only (e.g., private)
   uint64_t not_thru_ : 1 = 0;            // Edge leads to "no-through" region

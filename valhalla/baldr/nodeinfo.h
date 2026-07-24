@@ -44,7 +44,7 @@ public:
   /**
    * Constructor
    */
-  NodeInfo();
+  NodeInfo() = default;
 
   /**
    * Constructor with arguments
@@ -505,13 +505,13 @@ protected:
   uint64_t lon_offset7_ : 4 = 0; // Longitude offset 7th digit of precision
   uint64_t access_ : 12 = 0;     // Access through the node - bit field
 
-  uint64_t edge_index_ : 21 = 0;    // Index within the node's tile of its first outbound directed edge
-  uint64_t edge_count_ : 7 = 0;     // Number of outbound edges (on this level)
-  uint64_t admin_index_ : 12 = 0;   // Index into this tile's administrative information list
-  uint64_t timezone_ : 9 = 0;       // Time zone
-  uint64_t intersection_ : 4 = 0;   // Intersection type (see graphconstants.h)
-  uint64_t type_ : 4 = 0;           // NodeType (see graphconstants.h)
-  uint64_t density_ : 4 = 0;        // Relative road density
+  uint64_t edge_index_ : 21 = 0;  // Index within the node's tile of its first outbound directed edge
+  uint64_t edge_count_ : 7 = 0;   // Number of outbound edges (on this level)
+  uint64_t admin_index_ : 12 = 0; // Index into this tile's administrative information list
+  uint64_t timezone_ : 9 = 0;     // Time zone
+  uint64_t intersection_ : 4 = 0; // Intersection type (see graphconstants.h)
+  uint64_t type_ : 4 = 0;         // NodeType (see graphconstants.h)
+  uint64_t density_ : 4 = 0;      // Relative road density
   uint64_t traffic_signal_ : 1 = 0; // Traffic signal
   uint64_t mode_change_ : 1 = 0;    // Mode change allowed?
                                     // Also used for aggregation of edges at filter stage
