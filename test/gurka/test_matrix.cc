@@ -907,6 +907,35 @@ TEST_P(TestConnectionCheck, MatrixSecondPass) {
   }
 }
 
+TEST(StandAlone, MatrixSecondPassUsesFilteredEdges) {
+  // "o" is a real intersection: "Ao" is oneway towards A only (so once there, there's no legal
+  // way back out - a true dead end, not just a costly detour), "oC" leads straight to the target.
+  // A heading of 0 (north, "towards A") passes only the dead-end edge into candidate edges, while
+  // the useful towards-C direction (heading ~90, 90 degrees off the requested 0, over the default
+  // 60 tolerance) gets heading-filtered into filtered_edges. The first pass can only expand into
+  // the dead end and never finds C; the second pass must merge the filtered edge back into the
+  // candidate set (like route_action does) to find the direct connection.
+  const std::string ascii_map = R"(
+    A
+    |
+    o---C
+  )";
+  const gurka::ways ways = {
+      {"Ao", {{"highway", "residential"}, {"oneway", "-1"}}},
+      {"oC", {{"highway", "residential"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
+  const auto map = gurka::buildtiles(layout, ways, {}, {},
+                                     VALHALLA_BUILD_DIR "test/data/matrix_second_pass_filtered_edges",
+                                     {{"thor.costmatrix.allow_second_pass", "1"}});
+
+  auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"o"}, {"C"}, "auto",
+                              {{"/sources/0/heading", "0"}});
+  EXPECT_TRUE(api.matrix().second_pass(0));
+  EXPECT_GT(api.matrix().distances(0), 0);
+  EXPECT_LT(api.matrix().distances(0), 100000000); // not kMaxCost
+}
+
 TEST_P(TestConnectionCheck, CostMatrixTrivialRoutes) {
   const std::string ascii_map = R"(
     A---B--2->-1--C---D

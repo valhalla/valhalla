@@ -3,6 +3,7 @@
 * **Bug Fix**
    * FIXED: embedded route elevation decoding after a mid-edge `through` location [#6202](https://github.com/valhalla/valhalla/issues/6202)
    * FIXED: guard opposing edge lookup for transit edges in Loki reachability [#6222](https://github.com/valhalla/valhalla/pull/6222)
+   * FIXED: CostMatrix's second pass didn't merge `filtered_edges` back into candidate edges for sources/targets, so connections that were only reachable via a heading-filtered edge stayed unfound even with `thor.costmatrix.allow_second_pass` enabled, unlike `/route`'s second pass
 * **Enhancement**
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
