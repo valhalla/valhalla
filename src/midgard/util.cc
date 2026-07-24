@@ -1053,7 +1053,8 @@ std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& poin
   std::vector<Point2d> boundary;
 
   // welzl's expects shuffled input
-  std::shuffle(pts.begin(), pts.end(), std::mt19937{std::random_device{}()});
+  thread_local std::mt19937 shuffle_rng{std::random_device{}()};
+  std::shuffle(pts.begin(), pts.end(), shuffle_rng);
 
   projected_circle_t result = welzl_impl(std::span(pts), boundary);
 
