@@ -24,7 +24,6 @@ class TarIndexEntry(NamedTuple):
     """The tile's size in bytes."""
 
 
-# pythonic overloads (since 3.5) for decode a tar index from file or bytes
 @overload
 def decode_tar_index(source: Union[bytes, bytearray, memoryview]) -> list[TarIndexEntry]: ...
 @overload
