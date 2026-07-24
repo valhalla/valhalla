@@ -32,6 +32,7 @@ std::string loki_worker_t::locate(Api& request) {
     google::protobuf::RepeatedPtrField<Location> start_loc(locations->begin(),
                                                            locations->begin() + 1);
     search_.search(start_loc, mode_costing[static_cast<size_t>(TravelMode::kDrive)]);
+    search_.clear();
     google::protobuf::RepeatedPtrField<Location> end_loc(locations->begin() + 1,
                                                          locations->begin() + 2);
     search_.search(end_loc, mode_costing[static_cast<size_t>(TravelMode::kPedestrian)]);
