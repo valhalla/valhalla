@@ -47,25 +47,25 @@ TEST(Graphtile, FileSuffix) {
 }
 
 TEST(Graphtile, IdFromString) {
-  EXPECT_EQ(GraphTile::GetTileId("foo/bar/baz/qux/corge/1/000/002.gph"), GraphId(2, 1, 0));
-  EXPECT_EQ(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/1/000/002.gph"),
+  EXPECT_EQ(GraphId::FromTilePath("foo/bar/baz/qux/corge/1/000/002.gph"), GraphId(2, 1, 0));
+  EXPECT_EQ(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/1/000/002.gph"),
             GraphId(2, 1, 0));
-  EXPECT_EQ(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/2/001/000/002.gph"),
+  EXPECT_EQ(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/2/001/000/002.gph"),
             GraphId(1000002, 2, 0));
-  EXPECT_EQ(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002.gph"),
+  EXPECT_EQ(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002.gph"),
             GraphId(1000002, 3, 0));
-  EXPECT_EQ(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002"),
+  EXPECT_EQ(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002"),
             GraphId(1000002, 3, 0));
-  EXPECT_EQ(GraphTile::GetTileId("2/000/791/317.gph.gz"), GraphId(791317, 2, 0));
+  EXPECT_EQ(GraphId::FromTilePath("2/000/791/317.gph.gz"), GraphId(791317, 2, 0));
 
-  EXPECT_THROW(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/1/000/002/.gph"),
+  EXPECT_THROW(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/1/000/002/.gph"),
                std::runtime_error);
-  EXPECT_THROW(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/0/004/050.gph"),
+  EXPECT_THROW(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/0/004/050.gph"),
                std::runtime_error);
-  EXPECT_THROW(GraphTile::GetTileId("foo/bar/0/004/0-1.gph"), std::runtime_error);
-  EXPECT_THROW(GraphTile::GetTileId("foo/bar/0/004//001.gph"), std::runtime_error);
-  EXPECT_THROW(GraphTile::GetTileId("foo/bar/1/000/004/001.gph"), std::runtime_error);
-  EXPECT_THROW(GraphTile::GetTileId("00/002.gph"), std::runtime_error);
+  EXPECT_THROW(GraphId::FromTilePath("foo/bar/0/004/0-1.gph"), std::runtime_error);
+  EXPECT_THROW(GraphId::FromTilePath("foo/bar/0/004//001.gph"), std::runtime_error);
+  EXPECT_THROW(GraphId::FromTilePath("foo/bar/1/000/004/001.gph"), std::runtime_error);
+  EXPECT_THROW(GraphId::FromTilePath("00/002.gph"), std::runtime_error);
 }
 
 TEST(Graphtile, Bin) {

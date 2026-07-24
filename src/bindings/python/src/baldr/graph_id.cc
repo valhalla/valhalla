@@ -29,10 +29,10 @@ void init_graphid(nb::module_& m) {
       .def_static(
           "from_tile_path",
           [](const std::string& path) {
-            // GetTileId expects the platform's preferred separator, but tile paths
+            // FromFilePath expects the platform's preferred separator, but tile paths
             // in tars, manifests and URLs use forward slashes on every platform:
             // make_preferred() converts them on Windows and is a no-op elsewhere
-            return vb::GraphTile::GetTileId(std::filesystem::path(path).make_preferred().string());
+            return vb::GraphId::FromTilePath(std::filesystem::path(path).make_preferred().string());
           },
           nb::arg("path"),
           "Parses a graph tile's file path into its base GraphId, e.g.\n"
