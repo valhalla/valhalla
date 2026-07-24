@@ -3,6 +3,7 @@
 * **Bug Fix**
    * FIXED: embedded route elevation decoding after a mid-edge `through` location [#6202](https://github.com/valhalla/valhalla/issues/6202)
    * FIXED: guard opposing edge lookup for transit edges in Loki reachability [#6222](https://github.com/valhalla/valhalla/pull/6222)
+   * FIXED: clear loki search when calling it multiple times [#6231](https://github.com/valhalla/valhalla/pull/6231)
 * **Enhancement**
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
