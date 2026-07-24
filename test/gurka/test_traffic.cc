@@ -4,12 +4,6 @@
 #include "test.h"
 #include "tyr/actor.h"
 
-#ifndef _WIN32
-#include <sys/mman.h>
-#endif
-
-#include <sys/stat.h>
-
 #include <cmath>
 
 using namespace valhalla;

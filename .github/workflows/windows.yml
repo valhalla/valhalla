@@ -1,0 +1,339 @@
+name: Build Windows
+
+on:
+  push:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
+        required: false
+        default: false
+
+# Cancel CI runs on a branch when new commits were pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  SETUP_TMATE: ${{ ((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) && (github.repository_owner == 'valhalla') }}
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
+jobs:
+  release_build:
+    name: Release build
+    runs-on: windows-2025
+    env:
+      # for native crash debugging flip to RelWithDebInfo so the cdb/TTD steps below get symbols
+      BUILD_TYPE: Release
+      MSVC_VERSION: "2025"
+      # Keep aligned with VCPKG_VERSION in osx_win_python_builds.yml to share the vcpkg cache.
+      VCPKG_VERSION: "66c0373d"
+      VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
+      VCPKG_DISABLE_COMPILER_TRACKING: ON
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          fetch-tags: true
+
+      # Needed by run-scripts and python_valhalla under --target check. 3.12 matches the wheel job.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # python deps the script tests need, matching linux.yml / osx_win_python_builds.yml
+      - name: Install python test deps
+        run: python -m pip install requests shapely numpy
+
+      # Same vcpkg env as osx_win_python_builds.yml for shared cache.
+      - name: Configure vcpkg env
+        shell: bash
+        run: |
+          set -x
+          workspace="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
+          echo "VCPKG_INSTALLATION_ROOT=${workspace}/vcpkg" >> $GITHUB_ENV
+          echo "VCPKG_TOOLCHAIN_FILE=${workspace}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_TRIPLET=x64-windows" >> $GITHUB_ENV
+          echo "VCPKG_TRIPLET_PATH=${workspace}/vcpkg/triplets/x64-windows.cmake" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_BINARY_CACHE=${workspace}/vcpkg/archives" >> $GITHUB_ENV
+
+      - name: Install GNU make, awk, grep
+        run: choco install -y --no-progress --source="https://community.chocolatey.org/api/v2/" gawk make grep
+
+      - name: Install vcpkg
+        shell: bash
+        run: |
+          set -x
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          git checkout $VCPKG_VERSION
+          mkdir archives
+          echo "set(VCPKG_BUILD_TYPE release)" >> "$VCPKG_TRIPLET_PATH"
+          echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$VCPKG_TRIPLET_PATH"
+          cmd.exe //c bootstrap-vcpkg.bat  # //c avoids MSYS path conversion
+          test -x ./vcpkg.exe || { echo "bootstrap-vcpkg.bat did not produce vcpkg.exe"; exit 1; }
+
+      - name: Restore vcpkg packages
+        uses: tespkg/actions-cache/restore@v1
+        id: vcpkg_restore
+        with:
+          endpoint: fsn1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache-2
+          # retry: a transient S3 transfer abort on the ~1GB object otherwise goes cold
+          retry: true
+          retry-count: 3
+          # bust the cache whenever vcpkg changes: deps/features (vcpkg.json), baseline/registries
+          # (vcpkg-configuration.json), overlay ports, the compiler, or the vcpkg cli version
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlay-ports-vcpkg/**') }}
+          path: |
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
+
+      - name: Setup Developer Command Prompt for VS
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Get version modifier
+        id: version-modifier
+        if: github.ref == 'refs/heads/master'
+        shell: bash
+        run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          set -x
+          # for crash debugging (BUILD_TYPE=RelWithDebInfo) add unoptimized codegen + full pdbs:
+          #   -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
+          #   -DCMAKE_C_FLAGS_RELWITHDEBINFO="-Od -Ob0 -DNDEBUG" \
+          #   -DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
+          #   -DCMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO="-debug -INCREMENTAL:NO" \
+          # NOTE: use DASH form (-Od not /Od), msys bash mangles /X flags into paths
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
+            -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
+            -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
+            -DVCPKG_MANIFEST_FEATURES="services" \
+            -DENABLE_DATA_TOOLS=ON \
+            -DENABLE_TOOLS=ON \
+            -DENABLE_PYTHON_BINDINGS=ON \
+            -DENABLE_HTTP=ON \
+            -DENABLE_SERVICES=ON \
+            -DENABLE_TESTS=ON \
+            -DENABLE_CCACHE=OFF \
+            -DPREFER_EXTERNAL_DEPS=ON \
+            -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
+
+      # Save after Configure CMake so vcpkg/archives includes every manifest-mode-installed
+      # port (gdal, spatialite, prime-server, etc.).
+      - name: Save vcpkg packages
+        if: steps.vcpkg_restore.outputs.cache-hit != 'true'
+        uses: tespkg/actions-cache/save@v1
+        with:
+          endpoint: fsn1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache-2
+          retry: true
+          retry-count: 3
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlay-ports-vcpkg/**') }}
+          path: |
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
+
+      - name: Build Valhalla
+        shell: bash
+        run: |
+          set -x
+          export MSYS_NO_PATHCONV=1
+          # nanobind's .pyi stub generation runs Python to import the .pyd, which
+          # transitively loads prime_server.dll + the other vcpkg-installed DLLs.
+          export PATH="$PATH:${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin"
+          # -k 0: keep building after failures so one run surfaces every error
+          cmake --build build -- -k 0
+          cmake --build build --target install
+
+      # TEMP: build an all-features (services on) windows python wheel to try out, ungated so it
+      # runs on this commit rather than only on master/tag. remove after.
+      - name: Build Python wheel (all features)
+        uses: pypa/cibuildwheel@v2.23.3
+        env:
+          CIBW_BUILD: cp312-*
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            CMAKE_ARGS="-DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_HTTP=ON -DENABLE_SERVICES=ON
+            -DENABLE_TESTS=OFF -DVCPKG_MANIFEST_FEATURES=services
+            -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_TOOLCHAIN_FILE }}
+            -DVCPKG_TARGET_TRIPLET=${{ env.VCPKG_DEFAULT_TRIPLET }}"
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: valhalla-windows-wheel-all-features
+          path: wheelhouse/*.whl
+
+      # ------------------------------------------------------------------------------------------
+      # CRASH DEBUGGING CHEATSHEET
+      # to reuse: set BUILD_TYPE=RelWithDebInfo + the -Od configure flags above, uncomment the 
+      # steps below, and adapt exe names / gtest filters / symbols to the failure under
+      # investigation. what these give you:
+      #   - cdb (preinstalled SDK kit) first-chance AV stack traces + minidump
+      #   - time travel debugging: SDK cdb canNOT replay standalone TTD traces; fetch WinDbg
+      #     standalone (aka.ms/windbg/download -> appinstaller xml -> msixbundle url -> extract
+      #     with ZipFile, Expand-Archive rejects it) for a version-matched TTD.exe + cdb.exe;
+      #     record with its TTD, replay with ITS cdb: 'sxe av; g' then 'ba w8 <slot>; g-' walks
+      #     BACKWARD to whoever wrote the bad value
+      #   - .fnent/uf dumps of unwind metadata + disasm (the 'call [vptr+8]' seen in uf output
+      #     was the ground truth that cracked the vtable-layout bug; trust disasm over symbols)
+      #   - MSYS_NO_PATHCONV=1 everywhere or msys mangles /flags and C:\ paths
+      # ------------------------------------------------------------------------------------------
+      # # is the system C runtime older than the toolset we built with? if these differ,
+      # # a crash inside the unwinder can be a redist mismatch (fix = app-local deploy the toolset CRT).
+      # - name: VC runtime versions (System32 vs toolset redist)
+      #   shell: pwsh
+      #   run: |
+      #     "System32 VCRUNTIME140_1.dll: " + (Get-Item C:\Windows\System32\VCRUNTIME140_1.dll).VersionInfo.FileVersion
+      #     "System32 VCRUNTIME140.dll:   " + (Get-Item C:\Windows\System32\VCRUNTIME140.dll).VersionInfo.FileVersion
+      #     "Toolset redist copies:"
+      #     Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022\*\VC\Redist\MSVC\*\x64\Microsoft.VC14*.CRT\VCRUNTIME140_1.dll' -ErrorAction SilentlyContinue |
+      #       ForEach-Object { "  " + $_.VersionInfo.FileVersion + "  " + $_.FullName }
+      #
+      # - name: Stack-trace a crashing test
+      #   shell: bash
+      #   run: |
+      #     set -x
+      #     export MSYS_NO_PATHCONV=1
+      #     ws="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
+      #     # which test to debug (target name = test filename without extension) and which cases
+      #     TEST_TARGET=actor
+      #     GTEST_FILTER='*'
+      #     EXE="${ws}/build/test/${TEST_TARGET}.exe"
+      #     # test exes need the vcpkg-installed DLLs on PATH
+      #     export PATH="$PATH:${ws}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}/bin"
+      #     CDB="/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
+      #     [ -x "$CDB" ] || CDB="cdb"
+      #     # public symbol server (+ local cache) so system frames in the stack resolve too
+      #     export _NT_SYMBOL_PATH="cache*${ws}/symcache;srv*https://msdl.microsoft.com/download/symbols"
+      #     cmake --build build --target "$TEST_TARGET" -- -k 0 || true
+      #     [ -f "$EXE" ] || { echo "MISSING $EXE (build failed?)"; exit 1; }
+      #
+      #     # plain run first: exit code + output up to the crash
+      #     echo "================== plain run =================="
+      #     "$EXE" --gtest_filter="$GTEST_FILTER"; echo "exit=$?"
+      #
+      #     # cdb run, breaking at FIRST chance (sxe av) -- the true fault site, before the unwinder
+      #     # walks further and scrambles the stack. sxe av only stops on the AV, not any earlier C++
+      #     # throw. gtest_catch_exceptions=0 so gtest's SEH filter doesn't swallow it. also writes a
+      #     # minidump for offline analysis (uploaded by the artifact step below).
+      #     DUMP='.echo ===CRASH===; .lastevent; .echo ===EXCEPTION RECORD===; .exr -1; .echo ===REGISTERS===; r; .echo ===FAULTING INSTR===; u @rip-10 L8; .echo ===STACK===; kn 200; .echo ===DUMP===; .dump /ma D:/a/valhalla/valhalla/build/test/crash.dmp; .echo ===ANALYZE===; !analyze -v; q'
+      #     echo "================== cdb first-chance AV =================="
+      #     "$CDB" -g -G -c "sxe av; g; ${DUMP}" "$EXE" --gtest_filter="$GTEST_FILTER" --gtest_catch_exceptions=0 || true
+      #
+      #     # static unwind metadata + disasm of suspect code, no run needed: x finds mangled names,
+      #     # .fnent dumps the .pdata/.xdata unwind info, uf disassembles. adapt the symbols.
+      #     "$CDB" -c "x ${TEST_TARGET}!valhalla::tyr::actor_t::*; .fnent ${TEST_TARGET}!valhalla::tyr::actor_t::route; uf ${TEST_TARGET}!valhalla::tyr::actor_t::route; q" "$EXE" || true
+      #
+      #     # TIME TRAVEL DEBUGGING: record the crash, then replay and step BACKWARD from the fault
+      #     # to whoever produced the bad value. see the cheatsheet above for why WinDbg standalone.
+      #     echo "================== fetch WinDbg standalone (matched TTD + cdb) =================="
+      #     curl -L -s -o "${ws}/windbg.appinstaller" https://aka.ms/windbg/download || echo "appinstaller dl failed"
+      #     wbundle=$(grep -oiE 'https://[^"]+\.msixbundle' "${ws}/windbg.appinstaller" | head -1 || true)
+      #     curl -L -s -o "${ws}/windbg.msixbundle" "${wbundle}" || echo "windbg dl failed"
+      #     pwsh -NoProfile -Command "
+      #       \$ws='${ws}';
+      #       Add-Type -AssemblyName System.IO.Compression.FileSystem;
+      #       Remove-Item -Recurse -Force \$ws/wb_bundle,\$ws/windbg -ErrorAction SilentlyContinue;
+      #       [System.IO.Compression.ZipFile]::ExtractToDirectory(\"\$ws/windbg.msixbundle\", \"\$ws/wb_bundle\");
+      #       \$m = Get-ChildItem \$ws/wb_bundle -Recurse -Filter '*.msix' | Where-Object { \$_.Name -match 'x64|amd64' } | Select-Object -First 1;
+      #       [System.IO.Compression.ZipFile]::ExtractToDirectory(\$m.FullName, \"\$ws/windbg\");
+      #     " || echo "windbg extract failed"
+      #     TTD=$(find "${ws}/windbg" -iname TTD.exe 2>/dev/null | grep -iv x86 | head -1 || true)
+      #     WCDB=$(find "${ws}/windbg" -iname cdb.exe 2>/dev/null | grep -iv x86 | head -1 || true)
+      #
+      #     if [ -n "$TTD" ] && [ -n "$WCDB" ]; then
+      #       echo "================== TTD record + reverse replay =================="
+      #       mkdir -p "${ws}/ttdout"
+      #       "$TTD" -accepteula -out "${ws}/ttdout" -launch "$EXE" --gtest_filter="$GTEST_FILTER" --gtest_catch_exceptions=0 2>&1 | tail -40 || true
+      #       TRACE=$(ls "${ws}"/ttdout/*.run 2>/dev/null | head -1 || true)
+      #       if [ -n "$TRACE" ]; then
+      #         # replay with WinDbg's OWN cdb (matched to its TTD): run to the first-chance AV, put
+      #         # a write breakpoint on the faulting slot (adapt @rsp+0x38 to the bad operand), then
+      #         # g- reverse-executes to the instruction that wrote it. r/kn show who and from where.
+      #         TT='sxe av; g; .echo ===FAULT===; r; u @rip-10 L8; .echo ===WHO WROTE IT===; ba w8 @rsp+0x38; g-; .echo ===WRITER===; r; kn 15; .echo ===DONE===; q'
+      #         "$WCDB" -c "$TT" -z "$(cygpath -w "$TRACE")" 2>&1 | sed -n '1,240p' || true
+      #       fi
+      #     else
+      #       echo "WinDbg TTD/cdb not found"
+      #     fi
+      #
+      # # keep the minidump for offline (windbg) analysis
+      # - name: Upload crash minidump
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: crash-dump
+      #     path: build/test/*.dmp
+      #     if-no-files-found: ignore
+
+      - name: Show commit under test
+        shell: bash
+        run: |
+          echo "=================================================================="
+          echo "CHECKED-OUT HEAD (merge commit on PR events): $(git rev-parse HEAD)"
+          echo "PR head sha:                                  ${{ github.event.pull_request.head.sha }}"
+          echo "------------------------------------------------------------------"
+          git log -3 --oneline
+          echo "=================================================================="
+
+      - name: Run tests
+        shell: bash
+        run: |
+          set -x
+          export MSYS_NO_PATHCONV=1
+          # PATH needs the spatialite/spatialite_tool executables the tz.sqlite build invokes;
+          # test-binary DLLs (prime_server.dll etc.) are deployed next to the exes by vcpkg applocal.
+          vcpkg_bin="${{ github.workspace }}/build/vcpkg_installed/${{ env.VCPKG_DEFAULT_TRIPLET }}"
+          export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
+          # -k 0: run every test/target before giving up so one run surfaces all failures
+          cmake --build build --target check -- -k 0
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
+        with:
+          detached: true

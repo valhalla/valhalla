@@ -49,6 +49,30 @@ endif()
 set_target_properties(_valhalla PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla)
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+# Windows: Python 3.8+ disabled PATH-based DLL search for extension modules.
+# Copy runtime DLLs next to each .pyd so stubgen (and any in-tree import) finds
+# them via Windows' default DLL search. Linux/macOS use RPATH instead.
+# TARGET_RUNTIME_DLLS misses transitive PRIVATE deps of imported SHARED libraries
+# (e.g., libsodium that libzmq pulls in privately), so glob vcpkg's bin and any
+# CMAKE_PREFIX_PATH bin dir as a backstop.
+if(WIN32)
+  set(_pybind_dll_dirs "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin")
+  foreach(_prefix IN LISTS CMAKE_PREFIX_PATH)
+    if(IS_DIRECTORY "${_prefix}/bin")
+      list(APPEND _pybind_dll_dirs "${_prefix}/bin")
+    endif()
+  endforeach()
+  set(_pybind_dlls)
+  foreach(_dir IN LISTS _pybind_dll_dirs)
+    file(GLOB _these "${_dir}/*.dll")
+    list(APPEND _pybind_dlls ${_these})
+  endforeach()
+  add_custom_command(TARGET _valhalla POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_RUNTIME_DLLS:_valhalla> ${_pybind_dlls} $<TARGET_FILE_DIR:_valhalla>
+    COMMAND_EXPAND_LISTS)
+endif()
+
 # Generate Python type stubs (.pyi) from the compiled extension modules.
 # Stubs are committed to the source tree and refreshed on every build;
 # INCLUDE_PRIVATE keeps "_"-prefixed members in the output; the POST_BUILD

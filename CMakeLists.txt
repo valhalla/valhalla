@@ -8,6 +8,23 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   add_link_options("-Wl,--disable-new-dtags")
 endif()
 
+if(WIN32)
+  # require the SDK to provide FileRenameInfoEx (Win10 1709 SDK) rather than pinning a target version
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles(
+    "#include <windows.h>\nint main() { (void)FileRenameInfoEx; return 0; }"
+    HAVE_FILE_RENAME_INFO_EX)
+  if(NOT HAVE_FILE_RENAME_INFO_EX)
+    message(FATAL_ERROR "Valhalla on Windows needs a Windows 10 1709 SDK or newer (FileRenameInfoEx)")
+  endif()
+
+  # /Z7 (embedded debug info) instead of /Zi: no mspdbsrv serialization under Ninja, sccache-friendly
+  if(POLICY CMP0141)
+    cmake_policy(SET CMP0141 NEW)
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+  endif()
+endif()
+
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
@@ -255,18 +272,26 @@ endif()
 
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 
-# libprime_server
-# see https://gitlab.kitware.com/cmake/cmake/-/issues/19467
+# libprime_server: prefer the CMake config (>=0.11.0) so transitive deps come through
+# as proper imported targets; fall back to pkg-config for older installs.
 set(libprime_server_targets "")
 if(ENABLE_SERVICES)
-  pkg_check_modules(libprime_server IMPORTED_TARGET libprime_server>=0.6.3)
-  if (libprime_server_FOUND)
-    target_compile_definitions(PkgConfig::libprime_server INTERFACE ENABLE_SERVICES)
-    set(libprime_server_targets PkgConfig::libprime_server)
+  find_package(libprime_server 0.11.0 CONFIG QUIET)
+  if(libprime_server_FOUND)
+    set(libprime_server_targets libprime_server::prime_server)
   else()
-    set(ENABLE_SERVICES OFF)
-    message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
+    pkg_check_modules(libprime_server IMPORTED_TARGET libprime_server>=0.6.3)
+    if(libprime_server_FOUND)
+      set(libprime_server_targets PkgConfig::libprime_server)
+    else()
+      set(ENABLE_SERVICES OFF)
+      message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
+    endif()
   endif()
+  # must be defined globally, not per target: service_worker_t in worker.h grows a
+  # virtual work() under this define, so any tu compiled without it sees a different
+  # vtable layout and virtual calls dispatch to the wrong slot
+  add_compile_definitions(ENABLE_SERVICES)
 endif()
 
 

@@ -74,34 +74,20 @@ void DoConfig() {
 }
 
 // must do clean up here vs TearDown() as we are building data
-// in the same directory multiple times
+// in the same directory multiple times. Use the error_code overload so an
+// in-use file (Windows holds open handles until sequences in this scope
+// destruct) doesn't throw; next test truncates these files on open anyway.
 void CleanUp() {
-  if (std::filesystem::exists(ways_file))
-    std::filesystem::remove(ways_file);
-
-  if (std::filesystem::exists(way_nodes_file))
-    std::filesystem::remove(way_nodes_file);
-
-  if (std::filesystem::exists(nodes_file))
-    std::filesystem::remove(nodes_file);
-
-  if (std::filesystem::exists(edges_file))
-    std::filesystem::remove(edges_file);
-
-  if (std::filesystem::exists(access_file))
-    std::filesystem::remove(access_file);
-
-  if (std::filesystem::exists(from_restriction_file))
-    std::filesystem::remove(from_restriction_file);
-
-  if (std::filesystem::exists(to_restriction_file))
-    std::filesystem::remove(to_restriction_file);
-
-  if (std::filesystem::exists(bss_nodes_file))
-    std::filesystem::remove(bss_nodes_file);
-
-  if (std::filesystem::exists(linguistic_node_file))
-    std::filesystem::remove(linguistic_node_file);
+  std::error_code ec;
+  std::filesystem::remove(ways_file, ec);
+  std::filesystem::remove(way_nodes_file, ec);
+  std::filesystem::remove(nodes_file, ec);
+  std::filesystem::remove(edges_file, ec);
+  std::filesystem::remove(access_file, ec);
+  std::filesystem::remove(from_restriction_file, ec);
+  std::filesystem::remove(to_restriction_file, ec);
+  std::filesystem::remove(bss_nodes_file, ec);
+  std::filesystem::remove(linguistic_node_file, ec);
 }
 
 void BollardsGatesAndAccess(const std::string& config_file) {

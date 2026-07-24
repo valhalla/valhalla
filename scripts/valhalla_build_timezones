@@ -28,6 +28,11 @@ curl -L -s -o ./timezones-with-oceans-1970.shapefile.zip ${url} || error_exit "c
 unzip ./timezones-with-oceans-1970.shapefile.zip 1>&2 || error_exit "unzip failed"
 
 tz_file=$(mktemp)
+# native windows tools (spatialite) can't resolve msys /tmp paths; hand them a
+# drive-letter path with forward slashes instead
+if command -v cygpath >/dev/null 2>&1; then
+    tz_file=$(cygpath -m "${tz_file}")
+fi
 spatialite_tool -i -shp "./combined-shapefile-with-oceans-1970" -d "${tz_file}" -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
 spatialite ${tz_file} "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed"
 spatialite ${tz_file} "VACUUM;" 1>&2 || error_exit "VACUUM failed"

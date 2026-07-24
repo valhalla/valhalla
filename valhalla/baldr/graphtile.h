@@ -226,10 +226,10 @@ public:
 
   /**
    * Get the tile Id given the full path to the file.
-   * @param  fname    Filename with complete path.
+   * @param  path    Filesystem path to the tile file.
    * @return  Returns the tile Id.
    */
-  static GraphId GetTileId(const std::string& fname);
+  static GraphId GetTileId(const std::filesystem::path& path);
 
   /**
    * Get the bounding box of this graph tile.

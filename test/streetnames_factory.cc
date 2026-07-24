@@ -21,15 +21,22 @@ void TryCreate(const std::string& country_code,
 }
 
 TEST(StreetnamesFactory, Create) {
+#ifdef _MSC_VER
+  // MSVC's typeid().name() returns a demangled string, not the Itanium ABI mangling
+  const std::string us_name = "class valhalla::baldr::StreetNamesUs";
+  const std::string de_name = "class valhalla::baldr::StreetNames";
+#else
+  const std::string us_name = "N8valhalla5baldr13StreetNamesUsE";
+  const std::string de_name = "N8valhalla5baldr11StreetNamesE";
+#endif
+
   // US - should be StreetNamesUs
-  TryCreate("US", {{"Main Street", false}}, "N8valhalla5baldr13StreetNamesUsE");
-  TryCreate("US", {{"Hershey Road", false}, {"PA 743 North", true}},
-            "N8valhalla5baldr13StreetNamesUsE");
+  TryCreate("US", {{"Main Street", false}}, us_name);
+  TryCreate("US", {{"Hershey Road", false}, {"PA 743 North", true}}, us_name);
 
   // DE - should be default StreetNames
-  TryCreate("DE", {{"Mittelstraße", false}}, "N8valhalla5baldr11StreetNamesE");
-  TryCreate("DE", {{"Unter den Linden", false}, {"B 2", true}, {"B 5", true}},
-            "N8valhalla5baldr11StreetNamesE");
+  TryCreate("DE", {{"Mittelstraße", false}}, de_name);
+  TryCreate("DE", {{"Unter den Linden", false}, {"B 2", true}, {"B 5", true}}, de_name);
 }
 
 } // namespace

@@ -18,9 +18,9 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 
 ## Build Status
 
-| Linux | macOS & Windows | Code Coverage | Timezone DB
-| ----- | --------------- | ------------- | -----------
-| [![Build Linux](https://github.com/valhalla/valhalla/actions/workflows/linux.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/linux.yml) | [![Windows & macOS CI](https://github.com/valhalla/valhalla/actions/workflows/osx_win_python_builds.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/osx_win_python_builds.yml) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) | [![timezone_db](https://img.shields.io/badge/tzdb%20version-2025c-blue.svg)](https://github.com/valhalla/valhalla/actions/workflows/publish_tz_db.yml)
+| Linux | macOS | Windows | Code Coverage | Timezone DB |
+| ----- | ----- | ------- | ------------- | ----------- |
+| [![Build Linux](https://github.com/valhalla/valhalla/actions/workflows/linux.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/linux.yml) | [![Build OSX & Python wheels](https://github.com/valhalla/valhalla/actions/workflows/osx_win_python_builds.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/osx_win_python_builds.yml) | [![Build Windows](https://github.com/valhalla/valhalla/actions/workflows/windows.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/windows.yml) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) | [![timezone_db](https://img.shields.io/badge/tzdb%20version-2025c-blue.svg)](https://github.com/valhalla/valhalla/actions/workflows/publish_tz_db.yml) |
 
 ## Generative AI usage
 

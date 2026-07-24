@@ -9,9 +9,9 @@
   },
   "httpd": {
     "service": {
-      "interrupt": "ipc:///tmp/interrupt",
+      "interrupt": "tcp://127.0.0.1:8008",
       "listen": "tcp://*:8002",
-      "loopback": "ipc:///tmp/loopback"
+      "loopback": "tcp://127.0.0.1:8007"
     }
   },
   "loki": {
@@ -31,7 +31,7 @@
       "tile"
     ],
     "service": {
-      "proxy": "ipc:///tmp/loki"
+      "proxy": "tcp://127.0.0.1:8003"
     },
     "service_defaults": {
       "minimum_reachability": 50,
@@ -91,7 +91,7 @@
       "turn_penalty_factor": 100
     },
     "service": {
-      "proxy": "ipc:///tmp/meili"
+      "proxy": "tcp://127.0.0.1:8006"
     },
     "verbose": false
   },
@@ -110,7 +110,7 @@
   },
   "odin": {
     "service": {
-      "proxy": "ipc:///tmp/odin"
+      "proxy": "tcp://127.0.0.1:8005"
     }
   },
   "service_limits": {
@@ -228,7 +228,7 @@
   },
   "thor": {
     "service": {
-      "proxy": "ipc:///tmp/thor"
+      "proxy": "tcp://127.0.0.1:8004"
     },
     "source_to_target_algorithm": "select_optimal",
     "costmatrix": {

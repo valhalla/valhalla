@@ -1625,6 +1625,12 @@ to_response(const std::string& data,
   return result;
 }
 
+// if we shared zmq context across threads we can use inproc:// (shared mem) endpoints
+zmq::context_t& zmq_context() {
+  static zmq::context_t ctx;
+  return ctx;
+}
+
 #endif
 
 // TODO: when we want to use this in mjolnir too we can move this into a private header

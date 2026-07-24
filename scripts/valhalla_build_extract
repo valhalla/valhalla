@@ -350,7 +350,7 @@ def get_tiles_with_bbox(tile_resolver_: TileResolver, bbox_str: str):
 
 def get_tile_level_id(path: str) -> List[str]:
     """Returns both level and tile ID"""
-    return path[:-4].split("/", 1)
+    return path[:-4].replace("\\", "/").split("/", 1)
 
 
 def get_tile_id(path: str) -> int:

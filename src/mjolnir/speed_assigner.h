@@ -211,9 +211,11 @@ public:
           if (code.empty())
             throw std::runtime_error("Cannot have empty country code");
           if (cs.HasMember("iso3166-2")) {
-            code.push_back('.');
-            if (code.size() == (code += cs["iso3166-2"].GetString()).size())
+            std::string state = cs["iso3166-2"].GetString();
+            if (state.empty())
               throw std::runtime_error("Cannot have empty state code");
+            code.push_back('.');
+            code += state;
           }
         }
         if (tables.count(code))

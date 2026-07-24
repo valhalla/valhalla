@@ -10,6 +10,8 @@
 
 #include <gtest/gtest.h>
 
+#include <numeric>
+
 using namespace valhalla;
 using namespace valhalla::thor;
 using namespace valhalla::midgard;

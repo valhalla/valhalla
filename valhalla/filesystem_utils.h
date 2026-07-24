@@ -25,13 +25,25 @@ inline std::time_t last_write_time_t(const std::filesystem::path& p) {
   return FS_MTIME(s);
 }
 
-struct has_data_impl {
-  template <typename T, typename Data = decltype(std::declval<const T&>().data())>
-  static std::true_type test(int);
-  template <typename...> static std::false_type test(...);
+// satisfied by contiguous containers that expose a raw byte pointer via .data()
+template <typename T> concept has_data = requires(const T& t) {
+  t.data();
 };
 
-template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
+/**
+ * Renames `from` to `to`, replacing `to` if it exists, mirroring POSIX rename:
+ * readers still holding the old `to` open keep reading it while new opens see the new
+ * file. On Windows this uses POSIX-semantics rename, falling back to a non-atomic
+ * replace on filesystems that lack it (FAT/exFAT, some SMB shares). Cannot replace a
+ * memory-mapped target.
+ *
+ * @param from the existing file to rename
+ * @param to   the destination path, replaced if it already exists
+ * @param ec   set to the failure reason, cleared on success
+ */
+void rename_replace(const std::filesystem::path& from,
+                    const std::filesystem::path& to,
+                    std::error_code& ec);
 
 /**
  * Saves data to the supplied path. Will replace the contents in case fpath already exists.
@@ -42,10 +54,8 @@ template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
  *
  * @returns A boolean indicating whether saving the file was successful.
  * */
-template <typename Container>
-typename std::enable_if<has_data<Container>::value, bool>::type inline save(
-    const std::filesystem::path& fpath,
-    const Container& data = {}) {
+template <has_data Container>
+inline bool save(const std::filesystem::path& fpath, const Container& data = {}) {
   if (fpath.empty())
     return false;
 
@@ -82,7 +92,8 @@ typename std::enable_if<has_data<Container>::value, bool>::type inline save(
   }
 
   std::error_code ec;
-  if (std::filesystem::rename(tmp_location, fpath, ec); ec) {
+  rename_replace(tmp_location, fpath, ec);
+  if (ec) {
     std::filesystem::remove(tmp_location);
     return false;
   }

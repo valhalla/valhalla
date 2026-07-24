@@ -1,4 +1,4 @@
-file(GLOB locale_jsons ${VALHALLA_SOURCE_DIR}/locales *.json)
+file(GLOB locale_jsons ${VALHALLA_SOURCE_DIR}/locales/*.json)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/locales.h
   COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
