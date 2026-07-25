@@ -1,11 +1,11 @@
 #include "mjolnir/timeparsing.h"
 #include "baldr/timedomain.h"
 
-#include <boost/algorithm/string/split.hpp>
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -13,35 +13,10 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-std::vector<std::string> GetTagTokens(const std::string& tag_value, const char delim) {
-  std::vector<std::string> tokens;
-  boost::algorithm::split(
-      tokens, tag_value, [delim](const char c) { return c == delim; },
-      boost::algorithm::token_compress_on);
-  return tokens;
-}
-
+// expected values are packed TimeDomain encodings, one per parsed rule of the condition
 void TryConditionalRestrictions(const std::string& condition,
                                 const std::vector<uint64_t>& expected_values) {
-
-  std::vector<uint64_t> results = get_time_range(condition);
-
-  for (uint32_t x = 0; x < results.size(); x++) {
-    TimeDomain res = TimeDomain(results.at(x));
-
-    /* used for creating new tests.
-    std::cout << condition << " type " << res.type() << " dow " << res.dow() << " begin month " <<
-    res.begin_month() << " begin day " << res.begin_day() << " begin week " <<
-    res.begin_week() << " begin hrs " << res.begin_hrs() << " begin mins " <<
-    res.begin_mins() << " end month " << res.end_month() << " end day " <<
-    res.end_day() << " end week " << res.end_week() << " end hrs " <<
-    res.end_hrs() << " end mins " << res.end_mins() << std::endl;*/
-
-    EXPECT_EQ(res.td_value(), expected_values.at(x))
-        << "Time domain " + condition +
-               " test failed.  Expected: " + std::to_string(expected_values.at(x)) +
-               " but received " + std::to_string(res.td_value());
-  }
+  EXPECT_EQ(get_time_range(condition), expected_values) << "Time domain " << condition;
 }
 
 struct DateTimePoint {
@@ -83,377 +58,116 @@ void TryConditionalRestrictions(const std::string& condition,
 
 } // namespace
 
+// whole tag values go through get_time_range in one piece, exactly as production callers pass them
 TEST(TimeParsing, TestConditionalRestrictions) {
 
   std::string str = "Mo-Fr 06:00-11:00,17:00-19:00;Sa 03:30-19:00";
-  std::vector<std::string> conditions = GetTagTokens(str, ';');
-
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-
-    if (x == 0) { // Mo-Fr 06:00-11:00,17:00-19:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(23622321788);
-      expected_values.push_back(40802193788);
-
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 62, {0, 0, 0, 6, 0}, {0, 0, 0, 11, 0});
-      TryConditionalRestrictions(conditions.at(x), 1, 0, 62, {0, 0, 0, 17, 0}, {0, 0, 0, 19, 0});
-
-    } else if (x == 1) { // Sa 03:30-19:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(40802435968);
-
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 64, {0, 0, 0, 3, 30}, {0, 0, 0, 19, 0});
-    }
-  }
+  TryConditionalRestrictions(str, {23622321788, 40802193788, 40802435968});
+  TryConditionalRestrictions(str, 0, 0, 62, {0, 0, 0, 6, 0}, {0, 0, 0, 11, 0});
+  TryConditionalRestrictions(str, 1, 0, 62, {0, 0, 0, 17, 0}, {0, 0, 0, 19, 0});
+  TryConditionalRestrictions(str, 2, 0, 64, {0, 0, 0, 3, 30}, {0, 0, 0, 19, 0});
 
   str = "Mo,We,Th,Fr 12:00-18:00; Sa-Su 12:00-17:00";
-  conditions = GetTagTokens(str, ';');
-
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-
-    if (x == 0) { // Mo,We,Th,Fr 12:00-18:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(38654708852);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 58, {0, 0, 0, 12, 0}, {0, 0, 0, 18, 0});
-
-    } else if (x == 1) { // Sa-Su 12:00-17:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(36507225218);
-
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 65, {0, 0, 0, 12, 0}, {0, 0, 0, 17, 0});
-    }
-  }
+  TryConditionalRestrictions(str, {38654708852, 36507225218});
+  TryConditionalRestrictions(str, 0, 0, 58, {0, 0, 0, 12, 0}, {0, 0, 0, 18, 0});
+  TryConditionalRestrictions(str, 1, 0, 65, {0, 0, 0, 12, 0}, {0, 0, 0, 17, 0});
 
   str = "July 23-Aug 21 Sa 14:00-20:00;JUL 23-jUl 28 Fr,PH 10:00-20:00";
-  conditions = GetTagTokens(str, ';');
-
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-
-    if (x == 0) { // July 23-Aug 21 Sa 14:00-20:00;
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(1512971146104448);
-
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 64, {7, 23, 0, 14, 0}, {8, 21, 0, 20, 0});
-
-    } else if (x == 1) { // JUL 23-jUl 28 Fr,PH 10:00-20:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(2001154308835904);
-
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 32, {7, 23, 0, 10, 0}, {7, 28, 0, 20, 0});
-    }
-  }
+  TryConditionalRestrictions(str, {1512971146104448, 2001154308835904});
+  TryConditionalRestrictions(str, 0, 0, 64, {7, 23, 0, 14, 0}, {8, 21, 0, 20, 0});
+  TryConditionalRestrictions(str, 1, 0, 32, {7, 23, 0, 10, 0}, {7, 28, 0, 20, 0});
 
   str = "Apr-Sep Mo-Fr 09:00-13:00,14:00-18:00; Apr-Sep Sa 10:00-13:00";
-  conditions = GetTagTokens(str, ';');
-
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // Apr-Sep Mo-Fr 09:00-13:00,14:00-18:00;
-
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(39610337986940);
-      expected_values.push_back(39621075406460);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-
-    } else if (x == 1) { // Apr-Sep Sa 10:00-13:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(39610337987200);
-
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 64, {4, 0, 0, 10, 0}, {9, 0, 0, 13, 0});
-    }
-  }
+  TryConditionalRestrictions(str, {39610337986940, 39621075406460, 39610337987200});
+  TryConditionalRestrictions(str, 2, 0, 64, {4, 0, 0, 10, 0}, {9, 0, 0, 13, 0});
 
   str = "Apr-Sep: Monday-Fr 09:00-13:00,14:00-18:00; ApRil-Sept: Sa 10:00-13:00";
-  conditions = GetTagTokens(str, ';');
-
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // Apr-Sep: Monday-Fr 09:00-13:00,14:00-18:00;
-
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(39610337986940);
-      expected_values.push_back(39621075406460);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-
-    } else if (x == 1) { // ApRil-Sept: Sa 10:00-13:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(39610337987200);
-
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 64, {4, 0, 0, 10, 0}, {9, 0, 0, 13, 0});
-    }
-  }
+  TryConditionalRestrictions(str, {39610337986940, 39621075406460, 39610337987200});
+  TryConditionalRestrictions(str, 2, 0, 64, {4, 0, 0, 10, 0}, {9, 0, 0, 13, 0});
 
   str = "06:00-11:00,17:00-19:45";
-  conditions = GetTagTokens(str, ';');
-
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // 06:00-11:00,17:00-19:45
-
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(23622321664);
-      expected_values.push_back(3133178646784);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 0, {0, 0, 0, 6, 0}, {0, 0, 0, 11, 0});
-      TryConditionalRestrictions(conditions.at(x), 1, 0, 0, {0, 0, 0, 17, 0}, {0, 0, 0, 19, 45});
-    }
-  }
+  TryConditionalRestrictions(str, {23622321664, 3133178646784});
+  TryConditionalRestrictions(str, 0, 0, 0, {0, 0, 0, 6, 0}, {0, 0, 0, 11, 0});
+  TryConditionalRestrictions(str, 1, 0, 0, {0, 0, 0, 17, 0}, {0, 0, 0, 19, 45});
 
   str = " Feb 16-Oct 15 09:00-18:30; Oct 16-Nov 15: 09:00-17:30; Nov 16-Feb 15: 09:00-16:30";
-  conditions = GetTagTokens(str, ';');
-
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // Feb 16-Oct 15 09:00-18:30
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(1101612002052352);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-    } else if (x == 1) { // Oct 16-Nov 15: 09:00-17:30
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(1106007905274112);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 0, {10, 16, 0, 9, 0}, {11, 15, 0, 17, 30});
-
-    } else if (x == 2) { // Nov 16-Feb 15: 09:00-16:30
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(1066423339714816);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 0, {11, 16, 0, 9, 0}, {02, 15, 0, 16, 30});
-    }
-  }
+  TryConditionalRestrictions(str, {1101612002052352, 1106007905274112, 1066423339714816});
+  TryConditionalRestrictions(str, 1, 0, 0, {10, 16, 0, 9, 0}, {11, 15, 0, 17, 30});
+  TryConditionalRestrictions(str, 2, 0, 0, {11, 16, 0, 9, 0}, {02, 15, 0, 16, 30});
 
   str = "th 07:00-08:30; th-friday 06:00-09:30; May 15 09:00-11:30; May 07:00-08:30; May 16-31 "
         "11:00-13:30";
-  conditions = GetTagTokens(str, ';');
-
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // th 07:00-08:30
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(2078764173088);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 16, {0, 0, 0, 7, 0}, {0, 0, 0, 8, 30});
-    } else if (x == 1) { // th-friday 06:00-09:30
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(2080911656544);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 48, {0, 0, 0, 6, 0}, {0, 0, 0, 9, 30});
-    } else if (x == 2) { // May 15 09:00-11:30
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(1079606730295552);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 0, {5, 15, 0, 9, 0}, {5, 15, 0, 11, 30});
-    } else if (x == 3) { // May 07:00-08:30
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(24068999350016);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 0, {5, 0, 0, 7, 0}, {5, 0, 0, 8, 30});
-    } else if (x == 4) { // May 16-31 11:00-13:30
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(2205510940494592);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 0, {5, 16, 0, 11, 0}, {5, 31, 0, 13, 30});
-    }
-  }
+  TryConditionalRestrictions(str, {2078764173088, 2080911656544, 1079606730295552, 24068999350016,
+                                   2205510940494592});
+  TryConditionalRestrictions(str, 0, 0, 16, {0, 0, 0, 7, 0}, {0, 0, 0, 8, 30});
+  TryConditionalRestrictions(str, 1, 0, 48, {0, 0, 0, 6, 0}, {0, 0, 0, 9, 30});
+  TryConditionalRestrictions(str, 2, 0, 0, {5, 15, 0, 9, 0}, {5, 15, 0, 11, 30});
+  TryConditionalRestrictions(str, 3, 0, 0, {5, 0, 0, 7, 0}, {5, 0, 0, 8, 30});
+  TryConditionalRestrictions(str, 4, 0, 0, {5, 16, 0, 11, 0}, {5, 31, 0, 13, 30});
 
   str = "(Sep-Jun Mo,Tu,Th,Fr 08:15-08:45,15:20-15:50;Sep-Jun We 08:15-08:45,11:55-12:35)";
-  conditions = GetTagTokens(str, ';');
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // Sep-Jun Mo,Tu,Th,Fr 08:15-08:45,15:20-15:50)
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(29497840232556);
-      expected_values.push_back(29856470044524);
+  TryConditionalRestrictions(str, {29497840232556, 29856470044524, 29497840232464, 28819235728144});
+  TryConditionalRestrictions(str, 0, 0, 54, {9, 0, 0, 8, 15}, {6, 0, 0, 8, 45});
+  TryConditionalRestrictions(str, 1, 0, 54, {9, 0, 0, 15, 20}, {6, 0, 0, 15, 50});
+  TryConditionalRestrictions(str, 2, 0, 8, {9, 0, 0, 8, 15}, {6, 0, 0, 8, 45});
+  TryConditionalRestrictions(str, 3, 0, 8, {9, 0, 0, 11, 55}, {6, 0, 0, 12, 35});
 
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 54, {9, 0, 0, 8, 15}, {6, 0, 0, 8, 45});
-      TryConditionalRestrictions(conditions.at(x), 1, 0, 54, {9, 0, 0, 15, 20}, {6, 0, 0, 15, 50});
-    } else if (x == 1) { // Sep-Jun We 08:15-08:45,11:55-12:35
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(29497840232464);
-      expected_values.push_back(28819235728144);
-
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 8, {9, 0, 0, 8, 15}, {6, 0, 0, 8, 45});
-      TryConditionalRestrictions(conditions.at(x), 1, 0, 8, {9, 0, 0, 11, 55}, {6, 0, 0, 12, 35});
-    }
-  }
-
+  // the holiday rules inside the paren groups are dropped, the date range rules survive
   str = "Oct Su[-1]-Mar th[4] (Su 09:00-16:00; PH 09:00-16:00);Mar Su[-1]-Oct Su[-1] (Su "
         "09:00-18:00; PH 09:00-18:00)";
-  conditions = GetTagTokens(str, ';');
-
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // Oct Su[-1]-Mar th[4] (Su 09:00-16:00; PH 09:00-16:00)
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(9372272830712067);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 1, {10, 1, 5, 9, 0}, {3, 5, 4, 16, 0});
-    } else if (x == 1) { // PH 09:00-16:00  Holidays are tossed for now
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(0);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-    } else if (x == 2) { // Mar Su[-1]-Oct Su[-1] (Su 09:00-18:00; PH 09:00-18:00)
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(11373388284561667);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 1, {3, 1, 5, 9, 0}, {10, 1, 5, 18, 0});
-    } else if (x == 3) { // PH 09:00-18:00  Holidays are tossed for now
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(0);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-    }
-  }
+  TryConditionalRestrictions(str, {9372272830712067, 11373388284561667});
+  TryConditionalRestrictions(str, 0, 1, 1, {10, 1, 5, 9, 0}, {3, 5, 4, 16, 0});
+  TryConditionalRestrictions(str, 1, 1, 1, {3, 1, 5, 9, 0}, {10, 1, 5, 18, 0});
 
   str = "Dec Fr[-1]-Jan Sa[3] Su,Sat 09:00-16:00, 15:00-17:00; Dec Su[-1] Su-Sa 15:00-17:00";
-  conditions = GetTagTokens(str, ';');
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // Sep-Jun Mo,Tu,Th,Fr 08:15-08:45,15:20-15:50)
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(7252414455351683);
-      expected_values.push_back(7252416602836867);
-
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 65, {12, 6, 5, 9, 0}, {1, 7, 3, 16, 0});
-      TryConditionalRestrictions(conditions.at(x), 1, 1, 65, {12, 6, 5, 15, 0}, {1, 7, 3, 17, 0});
-    } else if (x == 1) { // Dec Su[-1] Su-Sa 15:00-17:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(11311813490642943);
-
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 127, {12, 1, 5, 15, 0}, {12, 0, 5, 17, 0});
-    }
-  }
+  TryConditionalRestrictions(str, {7252414455351683, 7252416602836867, 11311813490642943});
+  TryConditionalRestrictions(str, 0, 1, 65, {12, 6, 5, 9, 0}, {1, 7, 3, 16, 0});
+  TryConditionalRestrictions(str, 1, 1, 65, {12, 6, 5, 15, 0}, {1, 7, 3, 17, 0});
+  TryConditionalRestrictions(str, 2, 1, 127, {12, 1, 5, 15, 0}, {12, 0, 5, 17, 0});
 
   str =
       "Sun 09:00-16:00; Su[1]; Dec; Dec Su[-1] 15:00-17:00; Dec Su[-1] Th 15:00-17:00;"
       "Dec Su[-1]; Dec Su[-1]-Mar 3 Sat;Mar 3-Dec Su[-1] Sat;Dec Su[-1]-Mar 3 Sat 15:00-17:00;"
       "Mar 3-Dec Su[-1] Sat 15:00-17:00; Mar 3-Dec Su[-1] Sat,PH 15:00-17:00; Mar 3-Dec Su[-1] PH,Sat 15:00-17:00";
-  conditions = GetTagTokens(str, ';');
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // Sun 09:00-16:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(34359740674);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 1, {0, 0, 0, 9, 0}, {0, 0, 0, 16, 0});
-    } else if (x == 1) { // Su[1]
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(268435459);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 1, {0, 0, 1, 0, 0}, {0, 0, 0, 0, 0});
-    } else if (x == 2) { // Dec
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(52776564424704);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 0, {12, 0, 0, 0, 0}, {12, 0, 0, 0, 0});
-    } else if (x == 3) { // Dec Su[-1] 15:00-17:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(11311813490642943);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 127, {12, 1, 5, 15, 0}, {12, 0, 5, 17, 0});
-    } else if (x == 4) { // Dec Su[-1] Th 15:00-17:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(11311813490642721);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 16, {12, 1, 5, 15, 0}, {12, 0, 5, 17, 0});
-    } else if (x == 5) { // Dec Su[-1]
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(11311776983417087);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 127, {12, 1, 5, 0, 0}, {12, 0, 5, 0, 0});
-    } else if (x == 6) { // Dec Su[-1]-Mar 3 Sat
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(224301728923777);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 64, {12, 1, 5, 0, 0}, {3, 3, 0, 0, 0});
-    } else if (x == 7) { // Mar 3-Dec Su[-1] Sat
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(11382144397475969);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 64, {3, 3, 0, 0, 0}, {12, 1, 5, 0, 0});
-    } else if (x == 8) { // Dec Su[-1]-Mar 3 Sat 15:00-17:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(224338236149633);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 64, {12, 1, 5, 15, 0}, {3, 3, 0, 17, 0});
-    } else if (x == 9) { // Mar 3-Dec Su[-1] Sat 15:00-17:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(11382180904701825);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 64, {3, 3, 0, 15, 0}, {12, 1, 5, 17, 0});
-    } else if (x == 10) { // Mar 3-Dec Su[-1] Sat,PH 15:00-17:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(11382180904701825);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 64, {3, 3, 0, 15, 0}, {12, 1, 5, 17, 0});
-    } else if (x == 11) { // Mar 3-Dec Su[-1] PH,Sat 15:00-17:00
-      std::vector<uint64_t> expected_values;
-      expected_values.push_back(11382180904701825);
-      TryConditionalRestrictions(conditions.at(x), expected_values);
-      TryConditionalRestrictions(conditions.at(x), 0, 1, 64, {3, 3, 0, 15, 0}, {12, 1, 5, 17, 0});
-    }
-  }
+  TryConditionalRestrictions(str, {34359740674, 268435459, 52776564424704, 11311813490642943,
+                                   11311813490642721, 11311776983417087, 224301728923777,
+                                   11382144397475969, 224338236149633, 11382180904701825,
+                                   11382180904701825, 11382180904701825});
+  TryConditionalRestrictions(str, 0, 0, 1, {0, 0, 0, 9, 0}, {0, 0, 0, 16, 0});
+  TryConditionalRestrictions(str, 1, 1, 1, {0, 0, 1, 0, 0}, {0, 0, 0, 0, 0});
+  TryConditionalRestrictions(str, 2, 0, 0, {12, 0, 0, 0, 0}, {12, 0, 0, 0, 0});
+  TryConditionalRestrictions(str, 3, 1, 127, {12, 1, 5, 15, 0}, {12, 0, 5, 17, 0});
+  TryConditionalRestrictions(str, 4, 1, 16, {12, 1, 5, 15, 0}, {12, 0, 5, 17, 0});
+  TryConditionalRestrictions(str, 5, 1, 127, {12, 1, 5, 0, 0}, {12, 0, 5, 0, 0});
+  TryConditionalRestrictions(str, 6, 1, 64, {12, 1, 5, 0, 0}, {3, 3, 0, 0, 0});
+  TryConditionalRestrictions(str, 7, 1, 64, {3, 3, 0, 0, 0}, {12, 1, 5, 0, 0});
+  TryConditionalRestrictions(str, 8, 1, 64, {12, 1, 5, 15, 0}, {3, 3, 0, 17, 0});
+  TryConditionalRestrictions(str, 9, 1, 64, {3, 3, 0, 15, 0}, {12, 1, 5, 17, 0});
+  TryConditionalRestrictions(str, 10, 1, 64, {3, 3, 0, 15, 0}, {12, 1, 5, 17, 0});
+  TryConditionalRestrictions(str, 11, 1, 64, {3, 3, 0, 15, 0}, {12, 1, 5, 17, 0});
 
   str = "Mon;Wed;Fr;Friday-Friday";
-  conditions = GetTagTokens(str, ';');
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) {
-      TryConditionalRestrictions(conditions.at(x), {4});
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 2, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
-    } else if (x == 1) {
-      TryConditionalRestrictions(conditions.at(x), {16});
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 8, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
-    } else if (x == 2 || x == 3) {
-      TryConditionalRestrictions(conditions.at(x), {64});
-      TryConditionalRestrictions(conditions.at(x), 0, 0, 32, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
-    }
-  }
+  TryConditionalRestrictions(str, {4, 16, 64, 64});
+  TryConditionalRestrictions(str, 0, 0, 2, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
+  TryConditionalRestrictions(str, 1, 0, 8, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
+  TryConditionalRestrictions(str, 2, 0, 32, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
+  TryConditionalRestrictions(str, 3, 0, 32, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
 
-  str = "-Friday"; // Invalid input, no start day is provided.
-  conditions = GetTagTokens(str, ';');
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    TryConditionalRestrictions(conditions.at(x), {});
-  }
+  // invalid input, no start day is provided
+  TryConditionalRestrictions("-Friday", {});
 
   str = "monday-friday 7:00-9:30,13:00-15:00";
-  conditions = GetTagTokens(str, ';');
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    TryConditionalRestrictions(conditions.at(x), {2080911656828, 32212258172});
-    TryConditionalRestrictions(conditions.at(x), 0, 0, 62, {0, 0, 0, 7, 0}, {0, 0, 0, 9, 30});
-    TryConditionalRestrictions(conditions.at(x), 1, 0, 62, {0, 0, 0, 13, 0}, {0, 0, 0, 15, 0});
-  }
+  TryConditionalRestrictions(str, {2080911656828, 32212258172});
+  TryConditionalRestrictions(str, 0, 0, 62, {0, 0, 0, 7, 0}, {0, 0, 0, 9, 30});
+  TryConditionalRestrictions(str, 1, 0, 62, {0, 0, 0, 13, 0}, {0, 0, 0, 15, 0});
 
   // includes end of year
   str = "Jan 04-Jan 01 Mo-Sa;Jan 04-Jan 01 22:00-24:00;Jan 04-Jan 01";
-  conditions = GetTagTokens(str, ';');
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // Jan 04-Jan 01 Mo-Sa
-      TryConditionalRestrictions(conditions.at(x), {74766824767740});
-    } else if (x == 1) { // Jan 04-Jan 01 22:00-24:00
-      TryConditionalRestrictions(conditions.at(x), {74766824773120});
-    } else if (x == 2) { // Jan 04-Jan 01
-      TryConditionalRestrictions(conditions.at(x), {74766824767488});
-    }
-  }
+  TryConditionalRestrictions(str, {74766824767740, 74766824773120, 74766824767488});
 
   // ranges without time
   str = "Mon-Friday;Mo,Wed;March-May;March 18-April 30";
-  conditions = GetTagTokens(str, ';');
-  for (uint32_t x = 0; x < conditions.size(); x++) {
-    if (x == 0) { // Mon-Friday
-      TryConditionalRestrictions(conditions.at(x), {124});
-    } else if (x == 1) { // Mo,Wed
-      TryConditionalRestrictions(conditions.at(x), {20});
-    } else if (x == 2) { // March-May
-      TryConditionalRestrictions(conditions.at(x), {21990234128384});
-    } else if (x == 3) { // March 18-April 30
-      TryConditionalRestrictions(conditions.at(x), {2128654663942144});
-    }
-  }
+  TryConditionalRestrictions(str, {124, 20, 21990234128384, 2128654663942144});
 }
 
 // A test case with exotic conditions extracted from `maxspeed:conditional` OSM field.
@@ -478,19 +192,10 @@ TEST(TimeParsing, TestConditionalMaxspeed) {
   TryConditionalRestrictions(condition, 0, 0, 0b01011010, {0, 0, 0, 7, 0}, {0, 0, 0, 15, 0});
 
   condition = "(Mo-Sa 07:00-20:00,07:00-20:00; Su 00:00-24:00; PH 00:00-24:00)";
-  {
-    const auto conditions = GetTagTokens(condition, ';');
-    ASSERT_EQ(conditions.size(), 3);
-
-    ASSERT_EQ(get_time_range(conditions[0]).size(), 2);
-    TryConditionalRestrictions(conditions[0], 0, 0, 126, {0, 0, 0, 7, 0}, {0, 0, 0, 20, 0});
-    TryConditionalRestrictions(conditions[0], 1, 0, 126, {0, 0, 0, 7, 0}, {0, 0, 0, 20, 0});
-
-    ASSERT_EQ(get_time_range(conditions[1]).size(), 1);
-    TryConditionalRestrictions(conditions[1], 0, 0, 1, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
-
-    EXPECT_EQ(get_time_range(conditions[2]).size(), 0);
-  }
+  ASSERT_EQ(get_time_range(condition).size(), 3);
+  TryConditionalRestrictions(condition, 0, 0, 126, {0, 0, 0, 7, 0}, {0, 0, 0, 20, 0});
+  TryConditionalRestrictions(condition, 1, 0, 126, {0, 0, 0, 7, 0}, {0, 0, 0, 20, 0});
+  TryConditionalRestrictions(condition, 2, 0, 1, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
 
   TryConditionalRestrictions("Jun-Aug", 0, 0, 0, {6, 0, 0, 0, 0}, {8, 0, 0, 0, 0});
   TryConditionalRestrictions("(Nov - Mar)", 0, 0, 0, {11, 0, 0, 0, 0}, {3, 0, 0, 0, 0});
@@ -504,30 +209,12 @@ TEST(TimeParsing, TestConditionalMaxspeed) {
 
   condition =
       "(Jan 01-Jun 15 Mo-Fr 07:00-18:00; PH -1 day off; PH off; Aug 15-Dec 31 Mo-Fr 00:00-24:00; PH -1 day off; PH off)";
-  {
-    const auto conditions = GetTagTokens(condition, ';');
-    ASSERT_EQ(conditions.size(), 6);
-
-    ASSERT_EQ(get_time_range(conditions[0]).size(), 1);
-    TryConditionalRestrictions(conditions[0], 0, 0, 62, {1, 1, 0, 7, 0}, {6, 15, 0, 18, 0});
-
-    ASSERT_EQ(get_time_range(conditions[1]).size(), 0);
-    ASSERT_EQ(get_time_range(conditions[2]).size(), 0);
-
-    ASSERT_EQ(get_time_range(conditions[3]).size(), 1);
-    TryConditionalRestrictions(conditions[3], 0, 0, 62, {8, 15, 0, 0, 0}, {12, 31, 0, 0, 0});
-
-    ASSERT_EQ(get_time_range(conditions[4]).size(), 0);
-    ASSERT_EQ(get_time_range(conditions[5]).size(), 0);
-  }
+  ASSERT_EQ(get_time_range(condition).size(), 2);
+  TryConditionalRestrictions(condition, 0, 0, 62, {1, 1, 0, 7, 0}, {6, 15, 0, 18, 0});
+  TryConditionalRestrictions(condition, 1, 0, 62, {8, 15, 0, 0, 0}, {12, 31, 0, 0, 0});
 
   TryConditionalRestrictions("(Jun 1-Aug 31 00:00-24:00)", 0, 0, 0, {6, 1, 0, 0, 0},
                              {8, 31, 0, 0, 0});
-
-  // At this level of abstraction we lost the information in which hemisphere the tag we are parsing
-  // right now is located in, so we can't resolve the season into a month range.
-  EXPECT_TRUE(get_time_range("summer").empty());
-  EXPECT_TRUE(get_time_range("winter").empty());
 }
 
 // Mappers commonly put spaces around dashes or between a range and its times
@@ -580,13 +267,6 @@ TEST(TimeParsing, MultipleRulesInOneCondition) {
   ASSERT_EQ(get_time_range(condition).size(), 2);
   TryConditionalRestrictions(condition, 0, 0, 0, {10, 0, 0, 18, 0}, {3, 0, 0, 8, 0});
   TryConditionalRestrictions(condition, 1, 0, 0, {4, 0, 0, 21, 0}, {9, 0, 0, 7, 0});
-
-  // the whole tag value parses in one go, without splitting at ';' upfront
-  const std::string rules = "Mo-Fr 06:00-11:00,17:00-19:00; Sa 03:30-19:00";
-  ASSERT_EQ(get_time_range(rules).size(), 3);
-  TryConditionalRestrictions(rules, 0, 0, 62, {0, 0, 0, 6, 0}, {0, 0, 0, 11, 0});
-  TryConditionalRestrictions(rules, 1, 0, 62, {0, 0, 0, 17, 0}, {0, 0, 0, 19, 0});
-  TryConditionalRestrictions(rules, 2, 0, 64, {0, 0, 0, 3, 30}, {0, 0, 0, 19, 0});
 }
 
 // public holidays can't be resolved into dates but must not fail the rest of the rule
@@ -595,8 +275,6 @@ TEST(TimeParsing, HolidayTolerance) {
   TryConditionalRestrictions("PH,Mo-Fr 08:00-18:00", 0, 0, 62, {0, 0, 0, 8, 0}, {0, 0, 0, 18, 0});
   EXPECT_TRUE(get_time_range("PH").empty());
   EXPECT_TRUE(get_time_range("PH off").empty());
-  // splitting the tag at ';' upstream leaves stray parens behind
-  EXPECT_TRUE(get_time_range(" PH off)").empty());
 }
 
 // nth weekday of every month, with no month context
@@ -618,27 +296,6 @@ TEST(TimeParsing, BareRanges) {
                              {3, 1, 4, 16, 0});
 }
 
-// callers pass whole tag values: the parser separates the rules at ';' itself and keeps
-// them isolated from each other
-TEST(TimeParsing, WholeValueWithoutExternalSplit) {
-  // a skipped holiday rule in the middle must not affect its neighbors
-  const std::string mixed = "Mo-Fr 07:00-19:00; PH off; Sa 08:00-12:00";
-  ASSERT_EQ(get_time_range(mixed).size(), 2);
-  TryConditionalRestrictions(mixed, 0, 0, 62, {0, 0, 0, 7, 0}, {0, 0, 0, 19, 0});
-  TryConditionalRestrictions(mixed, 1, 0, 64, {0, 0, 0, 8, 0}, {0, 0, 0, 12, 0});
-
-  // an unparsable or unsupported rule is dropped alone, the rest of the value still works
-  const std::string broken = "qwerty; Sa 08:00-12:00; 2023 Jan-Nov";
-  ASSERT_EQ(get_time_range(broken).size(), 1);
-  TryConditionalRestrictions(broken, 0, 0, 64, {0, 0, 0, 8, 0}, {0, 0, 0, 12, 0});
-
-  const std::string value =
-      "(Jan 01-Jun 15 Mo-Fr 07:00-18:00; PH -1 day off; PH off; Aug 15-Dec 31 Mo-Fr 00:00-24:00)";
-  ASSERT_EQ(get_time_range(value).size(), 2);
-  TryConditionalRestrictions(value, 0, 0, 62, {1, 1, 0, 7, 0}, {6, 15, 0, 18, 0});
-  TryConditionalRestrictions(value, 1, 0, 62, {8, 15, 0, 0, 0}, {12, 31, 0, 0, 0});
-}
-
 // conditions that don't fit TimeDomain or are not about time must be rejected in one piece,
 // without exceptions and without half parsed leftovers
 TEST(TimeParsing, UnsupportedConditionsRejected) {
@@ -649,10 +306,17 @@ TEST(TimeParsing, UnsupportedConditionsRejected) {
   // sun events can't be resolved into fixed hours at parse time
   EXPECT_TRUE(get_time_range("sunset-sunrise").empty());
   EXPECT_TRUE(get_time_range("Nov-Feb 08:00-dusk").empty());
+  // seasons can't be resolved into a month range without knowing the hemisphere
+  EXPECT_TRUE(get_time_range("summer").empty());
+  EXPECT_TRUE(get_time_range("winter").empty());
   // vehicle and road state conditions are not about time at all
   EXPECT_TRUE(get_time_range("wet").empty());
   EXPECT_TRUE(get_time_range("weight>7.5").empty());
   EXPECT_TRUE(get_time_range("fuel=diesel AND emissions<euro_6").empty());
+  // an unparsable or unsupported rule is dropped alone, the rest of the value still works
+  const std::string broken = "qwerty; Sa 08:00-12:00; 2023 Jan-Nov";
+  ASSERT_EQ(get_time_range(broken).size(), 1);
+  TryConditionalRestrictions(broken, 0, 0, 64, {0, 0, 0, 8, 0}, {0, 0, 0, 12, 0});
 }
 
 int main(int argc, char* argv[]) {
