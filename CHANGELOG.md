@@ -1,6 +1,11 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2026-07-24 Valhalla 3.8.3
+* **Removed**
+* **Bug Fix**
    * FIXED: embedded route elevation decoding after a mid-edge `through` location [#6202](https://github.com/valhalla/valhalla/issues/6202)
    * FIXED: guard opposing edge lookup for transit edges in Loki reachability [#6222](https://github.com/valhalla/valhalla/pull/6222)
    * FIXED: clear loki search when calling it multiple times [#6231](https://github.com/valhalla/valhalla/pull/6231)
