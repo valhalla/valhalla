@@ -2,6 +2,8 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
+
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
