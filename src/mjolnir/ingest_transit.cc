@@ -928,7 +928,7 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
   for (const auto& dir_entry : transit_file_itr) {
     if (std::filesystem::is_regular_file(dir_entry.path()) &&
         dir_entry.path().extension() == ".pbf") {
-      all_tiles.emplace(GraphTile::GetTileId(dir_entry.path().string()));
+      all_tiles.emplace(GraphId::FromTilePath(dir_entry.path().string()));
     }
   }
 
