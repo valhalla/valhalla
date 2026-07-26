@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: Smaller `edge_shapes.bin` file for faster reads during tiles build [#6234](https://github.com/valhalla/valhalla/pull/6234)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
