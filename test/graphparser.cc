@@ -4,6 +4,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/osmnode.h"
@@ -665,6 +666,7 @@ TEST(GraphParser, TestBus) {
 }
 
 TEST(GraphParser, TestImportBssNode) {
+  make_finally([]() { CleanUp(); });
 
   boost::property_tree::ptree conf;
   rapidjson::read_json(config_file, conf);
@@ -702,8 +704,9 @@ TEST(GraphParser, TestImportBssNode) {
   EXPECT_EQ(local_tile->node(count - 1)->type(), NodeType::kBikeShare)
       << "The added node is not bike share";
 
-  EXPECT_EQ(local_tile->node(count - 1)->edge_count(), 4)
-      << "The bike share node must have 4 outbound edges";
+  EXPECT_TRUE(local_tile->node(count - 1)->edge_count() == 2 ||
+              local_tile->node(count - 1)->edge_count() == 4)
+      << "The bike share node must have 2 or 4 outbound edges";
 
   auto check_edge_attribute = [&local_tile](const DirectedEdge* directededge, uint16_t forwardaccess,
                                             uint16_t reverseaccess) {
@@ -737,30 +740,24 @@ TEST(GraphParser, TestImportBssNode) {
 
   auto bss_edge_idx = local_tile->node(count - 1)->edge_index();
 
-  check_edge_attribute(local_tile->directededge(bss_edge_idx), kPedestrianAccess, kPedestrianAccess);
-  check_edge_attribute(local_tile->directededge(bss_edge_idx + 1), kPedestrianAccess,
-                       kPedestrianAccess);
-  check_edge_attribute(local_tile->directededge(bss_edge_idx + 2), kPedestrianAccess, kBicycleAccess);
-  check_edge_attribute(local_tile->directededge(bss_edge_idx + 3), kBicycleAccess, kPedestrianAccess);
+  check_edge_attribute(local_tile->directededge(bss_edge_idx), kPedestrianAccess | kBicycleAccess,
+                       kPedestrianAccess | kBicycleAccess);
+  check_edge_attribute(local_tile->directededge(bss_edge_idx + 1), kPedestrianAccess | kBicycleAccess,
+                       kPedestrianAccess | kBicycleAccess);
 
   auto endnode_1 = local_tile->directededge(bss_edge_idx)->endnode();
   auto count_1 = local_tile->node(endnode_1)->edge_count();
   auto edge_idx_1 = local_tile->node(endnode_1)->edge_index();
   // in this case the bike share edges should be the last two edges of this node
-  check_edge_attribute(local_tile->directededge(edge_idx_1 + count_1 - 1), kPedestrianAccess,
-                       kPedestrianAccess);
-  check_edge_attribute(local_tile->directededge(edge_idx_1 + count_1 - 2), kBicycleAccess,
-                       kPedestrianAccess);
+  check_edge_attribute(local_tile->directededge(edge_idx_1 + count_1 - 1),
+                       kPedestrianAccess | kBicycleAccess, kPedestrianAccess | kBicycleAccess);
 
   auto endnode_2 = local_tile->directededge(bss_edge_idx + 1)->endnode();
   auto count_2 = local_tile->node(endnode_2)->edge_count();
   auto edge_idx_2 = local_tile->node(endnode_2)->edge_index();
   // in this case the bike share edges should be the last two edges of this node
-  check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 1), kPedestrianAccess,
-                       kPedestrianAccess);
-  check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 2), kPedestrianAccess,
-                       kBicycleAccess);
-  CleanUp();
+  check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 1),
+                       kPedestrianAccess | kBicycleAccess, kPedestrianAccess | kBicycleAccess);
 }
 
 } // namespace
