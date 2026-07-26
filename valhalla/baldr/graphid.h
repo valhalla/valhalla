@@ -99,6 +99,15 @@ public:
   }
 
   /**
+   * Constructs a tile's base GraphId (tileid and level, within-tile id 0) from the full path to
+   * a tile file. The path must use the platform's preferred separator and contain at least one.
+   * @param  fname  Full path to the tile file.
+   * @return Returns the tile's base GraphId.
+   * @throws std::runtime_error if the path does not encode a (potentially) valid tile id.
+   */
+  static GraphId FromTilePath(const std::string& fname);
+
+  /**
    * Gets the tile Id.
    * @return   Returns the tile Id.
    */
