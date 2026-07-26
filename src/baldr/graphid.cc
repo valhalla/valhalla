@@ -13,17 +13,9 @@ namespace baldr {
 
 // Get the tile Id given the full path to the file.
 GraphId GraphId::FromTilePath(const std::string& fname) {
-  std::unordered_set<std::string::value_type> allowed{std::filesystem::path::preferred_separator,
-                                                      '0',
-                                                      '1',
-                                                      '2',
-                                                      '3',
-                                                      '4',
-                                                      '5',
-                                                      '6',
-                                                      '7',
-                                                      '8',
-                                                      '9'};
+  std::unordered_set<std::string::value_type> allowed{
+      std::filesystem::path::preferred_separator, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  };
   // we require slashes
   auto pos = fname.find_last_of(std::filesystem::path::preferred_separator);
   if (pos == fname.npos) {
