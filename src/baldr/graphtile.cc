@@ -283,6 +283,9 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
   if (!tile_getter->gzipped()) {
     // inspect the header for the checksum
     // it's a POD type and thus trivially copyable
+    if (result.bytes_.size() < sizeof(GraphTileHeader)) {
+        return nullptr;
+    }
     GraphTileHeader header;
     std::memcpy(&header, result.bytes_.data(), sizeof(header));
     check_tile_checksum(header);
