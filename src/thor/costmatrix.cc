@@ -24,6 +24,7 @@ constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
 constexpr uint32_t kMaxLocationReservation = 25; // the default config for max matrix locations
 constexpr uint32_t kDefaultMinIterations = 100;
 constexpr uint32_t kDefaultMaxIterations = 2800;
+constexpr uint32_t kDefaultDijkstraRadius = 0;
 
 /**
  * Checks whether an edge of the source (target) correlation is present with the same percent_along in
@@ -139,9 +140,10 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_iterations_(
           std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultMaxIterations),
                    static_cast<uint32_t>(1))),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      dijkstra_radius_(config.get<uint32_t>("costmatrix.dijkstra_radius", kDefaultDijkstraRadius)),
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -445,7 +447,8 @@ void CostMatrix::Initialize(
       // TODO(nils): previously we'd estimate the bucket range by the max matrix distance,
       // which would lead to tons of RAM if a high value was chosen in the config; ideally
       // this would be chosen based on the request (e.g. some factor to the A* distance)
-      adjacency_[is_fwd][i].reuse(min_heuristic, range, bucketsize, &edgelabel_[is_fwd][i]);
+      adjacency_[is_fwd][i].reuse(dijkstra_radius_ ? 0.f : min_heuristic, range, bucketsize,
+                                  &edgelabel_[is_fwd][i]);
     }
   }
 
@@ -656,7 +659,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                             opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
   }
   auto newsortcost =
-      GetAstarHeuristic<expansion_direction>(index, t2->get_node_ll(meta.edge->endnode()));
+      GetAstarHeuristic<expansion_direction>(index, t2->get_node_ll(meta.edge->endnode()), pred_dist);
   edgelabels.back().SetSortCost(newcost.cost + newsortcost);
   adj.add(idx);
 
@@ -1120,9 +1123,10 @@ void CostMatrix::SetSources(GraphReader& graphreader,
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()),
                              directededge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
-      auto newsortcost =
-          GetAstarHeuristic<MatrixExpansionType::forward>(index, opp_tile->get_node_ll(
-                                                                     directededge->endnode()));
+      auto newsortcost = GetAstarHeuristic<MatrixExpansionType::forward>(index,
+                                                                         opp_tile->get_node_ll(
+                                                                             directededge->endnode()),
+                                                                         d);
       edge_label.SetSortCost(edgecost.cost + newsortcost);
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
@@ -1231,7 +1235,8 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
 
       auto newsortcost =
           GetAstarHeuristic<MatrixExpansionType::reverse>(index,
-                                                          tile->get_node_ll(opp_dir_edge->endnode()));
+                                                          tile->get_node_ll(opp_dir_edge->endnode()),
+                                                          d);
       edge_label.SetSortCost(edgecost.cost + newsortcost);
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
@@ -1414,8 +1419,11 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 }
 
 template <const MatrixExpansionType expansion_direction, const bool FORWARD>
-float CostMatrix::GetAstarHeuristic(const uint32_t loc_idx, const PointLL& ll) const {
-  if (locs_status_[FORWARD][loc_idx].unfound_connections.empty()) {
+float CostMatrix::GetAstarHeuristic(const uint32_t loc_idx,
+                                    const PointLL& ll,
+                                    const uint32_t path_distance) const {
+  if (path_distance < dijkstra_radius_ ||
+      locs_status_[FORWARD][loc_idx].unfound_connections.empty()) {
     return 0.f;
   }
 

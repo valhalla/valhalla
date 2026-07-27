@@ -228,6 +228,7 @@ config = {
             "max_reserved_locations": 25,
             "max_iterations": 2800,
             "min_iterations": 100,
+            "dijkstra_radius": 0,
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": 400,
@@ -554,6 +555,7 @@ help_text = {
             "max_reserved_locations": "Maximum amount of locations allowed to to keep reserved between requests for CostMatrix",
             "max_iterations": "Upper bound on the number of iterations per expansion once a path has been found. Must be a positive integer",
             "min_iterations": "Lower bound on the number of iterations per expansion once a path has been found. Must be a positive integer",
+            "dijkstra_radius": "Distance in meters from a source/target within which its tree expands with a zero heuristic, i.e. like Dijkstra. Makes the found connections independent of where the other locations lie, at the cost of expanding more edges. 0 disables it",
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": "The default maximum up transitions for level 1 in CostMatrix",
