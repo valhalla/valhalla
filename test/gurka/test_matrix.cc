@@ -908,13 +908,8 @@ TEST_P(TestConnectionCheck, MatrixSecondPass) {
 }
 
 TEST(StandAlone, MatrixSecondPassUsesFilteredEdges) {
-  // "o" is a real intersection: "Ao" is oneway towards A only (so once there, there's no legal
-  // way back out - a true dead end, not just a costly detour), "oC" leads straight to the target.
-  // A heading of 0 (north, "towards A") passes only the dead-end edge into candidate edges, while
-  // the useful towards-C direction (heading ~90, 90 degrees off the requested 0, over the default
-  // 60 tolerance) gets heading-filtered into filtered_edges. The first pass can only expand into
-  // the dead end and never finds C; the second pass must merge the filtered edge back into the
-  // candidate set (like route_action does) to find the direct connection.
+  // a source heading of 0 leaves only the dead-end edge "Ao" as a candidate and puts "oC" into
+  // filtered_edges, so C is only reachable if the second pass merges the filtered edges back in
   const std::string ascii_map = R"(
     A
     |

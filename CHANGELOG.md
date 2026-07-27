@@ -3,7 +3,6 @@
 * **Bug Fix**
    * FIXED: embedded route elevation decoding after a mid-edge `through` location [#6202](https://github.com/valhalla/valhalla/issues/6202)
    * FIXED: guard opposing edge lookup for transit edges in Loki reachability [#6222](https://github.com/valhalla/valhalla/pull/6222)
-   * FIXED: CostMatrix's second pass didn't merge `filtered_edges` back into candidate edges for sources/targets, so connections that were only reachable via a heading-filtered edge stayed unfound even with `thor.costmatrix.allow_second_pass` enabled, unlike `/route`'s second pass
    * FIXED: clear loki search when calling it multiple times [#6231](https://github.com/valhalla/valhalla/pull/6231)
 * **Enhancement**
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
@@ -12,6 +11,7 @@
    * ADDED: classify `surface=laterite` and `surface=clay` as `Surface::kDirt` [#6171](https://github.com/valhalla/valhalla/issues/6171)
    * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
    * CHANGED: Speedup sequence sort by using PSRS algorithm [#6226](https://github.com/valhalla/valhalla/pull/6226)
+   * CHANGED: CostMatrix's second pass now merges `filtered_edges` back into candidate edges for sources/targets, like `/route`'s second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
