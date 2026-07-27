@@ -3,7 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
-
+   * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236) 
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
@@ -19,7 +19,6 @@
    * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
    * CHANGED: Speedup sequence sort by using PSRS algorithm [#6226](https://github.com/valhalla/valhalla/pull/6226)
    * ADDED: more convenience bindings for Python [#6197](https://github.com/valhalla/valhalla/pull/6197)
-   * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236) 
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
