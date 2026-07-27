@@ -624,13 +624,11 @@ TEST_F(LargeAvoidTest, TestAvoidHugePolygon) {
   auto value = get_avoid_polys(rings, allocator);
   auto req = build_route_request(doc, allocator, lls, "auto", value, "/exclude_polygons");
 
-  // with a polygon this large, it should miss edges in non-line-intersecting bins. Now that loki
-  // rejects excluded edges at snap time, there's no non-excluded edge left near the origin either,
-  // so it fails during correlation (171) instead of failing to route through a bad candidate (442)
+  // with a polygon this large, it should miss edges in non-line-intersecting bins
   try {
     gurka::do_action(Options::route, avoid_map, req);
     FAIL() << "Expected to fail";
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 171); } catch (...) {
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }
@@ -671,12 +669,10 @@ TEST_F(LargeAvoidTest, TestAvoidHugePolygonWithLevels) {
   levels = {{1.f}};
   value = build_exclude_level_polygons(rings, levels, allocator);
   req = build_route_request(doc, allocator, lls, "pedestrian", value, "/exclude_polygons");
-  // see TestAvoidHugePolygon: loki now rejects the excluded candidates at snap time, so this fails
-  // during correlation (171) instead of failing to route through a bad candidate (442)
   try {
     gurka::do_action(Options::route, avoid_map, req);
     FAIL() << "Expected to fail";
-  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 171); } catch (...) {
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
     FAIL() << "Expected valhalla_exception_t";
   };
 }
@@ -710,19 +706,16 @@ TEST(StandAlone, SuperTrivialExcludedConnection) {
     auto value = get_avoid_polys(rings, allocator);
     auto req = build_matrix_request(doc, allocator, lls, lls, "auto", value, "/exclude_polygons");
     auto res = gurka::do_action(valhalla::Options::sources_to_targets, map, req);
-    // x used to sit on the excluded BC edge, so a trivial same-point matrix entry incorrectly
-    // reported it as reachable (0) despite the edge being excluded, hence kMaxCost was expected.
-    // Now that loki rejects excluded edges at snap time, x correlates onto AB/CD instead, so the
-    // trivial connection is genuinely reachable
-    EXPECT_EQ(res.matrix().distances(0), 0);
+    EXPECT_EQ(res.matrix().distances(0), 100000000); // kMaxCost
   }
 }
 
 TEST(StandAlone, SnapAwayFromExcludedEdge) {
   // x is the nearest point on Top to both A and B, and closer to Top than to Bottom (90m vs 60m).
-  // Excluding x's location excludes Top. A location that would otherwise correlate onto Top must
-  // now correlate onto Bottom (the next nearest edge) instead of snapping onto the excluded Top
-  // and then failing to route with a 442, the same way it already works for geofenced edges.
+  // Excluding x's location excludes Top. By default a location at x still correlates onto the
+  // excluded Top and routing fails with 442; with search_filter.exclude_avoided_edges it
+  // correlates onto Bottom (the next nearest non-excluded edge) instead, the same way it already
+  // works for e.g. closed edges.
   const std::string ascii_map = R"(
     A--x--B
     |     |
@@ -746,6 +739,20 @@ TEST(StandAlone, SnapAwayFromExcludedEdge) {
   auto req = build_route_request(doc, allocator, {map.nodes["x"], map.nodes["D"]}, "auto", value,
                                  "/exclude_locations");
 
-  auto route = gurka::do_action(Options::route, map, req);
+  // default behavior: the origin snaps onto the excluded edge and there's no path from it
+  try {
+    gurka::do_action(Options::route, map, req);
+    FAIL() << "Expected to fail";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t";
+  }
+
+  // opting in via the search filter snaps the origin away from the excluded edge
+  rapidjson::Pointer("/locations/0/search_filter/exclude_avoided_edges").Set(doc, true);
+  rapidjson::StringBuffer sb;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+  doc.Accept(writer);
+
+  auto route = gurka::do_action(Options::route, map, sb.GetString());
   gurka::assert::raw::expect_path(route, {"Bottom"});
 }

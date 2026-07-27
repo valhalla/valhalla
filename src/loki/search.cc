@@ -68,10 +68,10 @@ bool search_filter(const DirectedEdge* edge,
          (filter.exclude_closures() && (costing.flow_mask() & kCurrentFlowMask) &&
           tile->IsClosed(edge)) ||
          (filter.level() != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level())) ||
-         // reject edges the user asked to avoid (exclude_locations/exclude_polygons) so a location
-         // correlates onto the nearest non-excluded edge instead of onto an excluded one, which
-         // would later fail to route
-         costing.IsUserAvoidEdge(edgeid);
+         // if the location opted in, reject edges the request excluded via
+         // exclude_locations/exclude_polygons so it correlates onto the nearest non-excluded edge
+         // instead of onto an excluded one, which would later fail to route
+         (filter.exclude_avoided_edges() && costing.IsUserAvoidEdge(edgeid));
 }
 
 bool side_filter(const valhalla::PathEdge& edge, const Location& location, GraphReader& reader) {

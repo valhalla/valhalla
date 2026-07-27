@@ -3,8 +3,8 @@
 * **Bug Fix**
    * FIXED: embedded route elevation decoding after a mid-edge `through` location [#6202](https://github.com/valhalla/valhalla/issues/6202)
    * FIXED: guard opposing edge lookup for transit edges in Loki reachability [#6222](https://github.com/valhalla/valhalla/pull/6222)
-   * FIXED: a location could correlate onto an edge excluded via `exclude_locations`/`exclude_polygons`, since the resolved avoid-edges were never synced into the costing used for snapping; it now rejects those edges at snap time
 * **Enhancement**
+   * ADDED: `search_filter.exclude_avoided_edges` location option to snap a location onto the nearest edge not excluded via `exclude_locations`/`exclude_polygons` instead of correlating onto an excluded edge and failing to route [#6229](https://github.com/valhalla/valhalla/pull/6229)
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
    * FIXED: use the new `GraphReader::GetGraphTileHeader` in `baldr/utils/graph_reader.cc:get_graph_tile_header` to prevent loading entire tiles into RAM [#6200](https://github.com/valhalla/valhalla/pull/6200)
