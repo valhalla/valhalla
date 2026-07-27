@@ -232,7 +232,8 @@ size_t get_word_count(const std::string& street_name) {
 
   while (pos != end) {
     // Skip over space, white space, and punctuation
-    while (pos != end && ((*pos == ' ') || std::isspace(*pos) || std::ispunct(*pos))) {
+    while (pos != end && ((*pos == ' ') || std::isspace(static_cast<unsigned char>(*pos)) ||
+                          std::ispunct(static_cast<unsigned char>(*pos)))) {
       ++pos;
     }
 
@@ -240,7 +241,8 @@ size_t get_word_count(const std::string& street_name) {
     word_count += (pos != end);
 
     // Skip over letters in word
-    while (pos != end && ((*pos != ' ') && (!std::isspace(*pos)) && (!std::ispunct(*pos)))) {
+    while (pos != end && ((*pos != ' ') && (!std::isspace(static_cast<unsigned char>(*pos))) &&
+                          (!std::ispunct(static_cast<unsigned char>(*pos))))) {
       ++pos;
     }
   }
