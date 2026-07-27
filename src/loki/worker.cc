@@ -214,12 +214,8 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   }
 
-  // The costing objects above were built before exclude_polygons/exclude_locations got resolved
-  // into exclude_edges, so their avoid sets are still empty. Sync the resolved avoid edges into
-  // the costing instance used for correlating locations, so loki::Search's search_filter can
-  // reject them while snapping for locations that opted in via
-  // search_filter.exclude_avoided_edges. Note this doesn't affect locations that didn't opt in:
-  // the Allowed(edge, tile, disallow_mask) overload loki uses does not consult the avoid set.
+  // the costing was built before exclude_polygons/exclude_locations were resolved into
+  // exclude_edges, so sync them into its avoid set for search_filter.exclude_avoided_edges
   auto& costing = mode_costing[static_cast<size_t>(mode)];
   auto co_it = options.costings().find(options.costing_type());
   if (costing && co_it != options.costings().end() && co_it->second.options().exclude_edges_size()) {

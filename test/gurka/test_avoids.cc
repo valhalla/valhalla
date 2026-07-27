@@ -711,11 +711,8 @@ TEST(StandAlone, SuperTrivialExcludedConnection) {
 }
 
 TEST(StandAlone, SnapAwayFromExcludedEdge) {
-  // x is the nearest point on Top to both A and B, and closer to Top than to Bottom (90m vs 60m).
-  // Excluding x's location excludes Top. By default a location at x still correlates onto the
-  // excluded Top and routing fails with 442; with search_filter.exclude_avoided_edges it
-  // correlates onto Bottom (the next nearest non-excluded edge) instead, the same way it already
-  // works for e.g. closed edges.
+  // excluding x's location excludes Top; by default a location at x still snaps onto Top and
+  // fails to route, with search_filter.exclude_avoided_edges it snaps onto Bottom instead
   const std::string ascii_map = R"(
     A--x--B
     |     |
