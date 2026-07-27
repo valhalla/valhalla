@@ -173,7 +173,7 @@ Bcp47Locale parse_string_into_locale(const std::string& locale_string) {
     if (matches[kScriptIndex].matched) {
       locale.script = matches[kScriptIndex].str();
       if (!locale.script.empty()) {
-        locale.script[0] = std::toupper(locale.script[0]);
+        locale.script[0] = std::toupper(static_cast<unsigned char>(locale.script[0]));
         locale.langtag += "-";
         locale.langtag += locale.script;
       }

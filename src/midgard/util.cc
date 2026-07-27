@@ -369,7 +369,9 @@ memory_status::memory_status(const std::unordered_set<std::string>& interest) {
       }
       // try to get the number of bytes
       line.erase(std::remove_if(line.begin(), line.end(),
-                                [](const char c) { return !std::isdigit(c); }),
+                                [](const char c) {
+                                  return !std::isdigit(static_cast<unsigned char>(c));
+                                }),
                  line.end());
       if (line.size() == 0) {
         continue;
