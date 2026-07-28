@@ -61,6 +61,22 @@ inline const valhalla::PathEdge* find_correlated_edge(const valhalla::Location& 
 
   throw std::logic_error("Could not find candidate edge used for label");
 }
+
+// return true if the reverse trees may use time-dependent speeds: with invariant time the
+// clock never advances along the path, so edge costs don't depend on when a tree reaches
+// them. A reverse tree is shared by all sources, so they must all depart at the same time;
+// equal date_time strings can still resolve to different instants across timezones, which
+// gets rechecked once the time infos are resolved against the graph.
+bool check_invariant_reverse_time(const valhalla::Options& options) {
+  if (options.date_time_type() != valhalla::Options::invariant || options.sources().empty() ||
+      options.sources(0).date_time().empty()) {
+    return false;
+  }
+  return std::all_of(options.sources().begin() + 1, options.sources().end(),
+                     [&options](const valhalla::Location& source) {
+                       return source.date_time() == options.sources(0).date_time();
+                     });
+}
 } // namespace
 
 namespace valhalla {
@@ -209,15 +225,24 @@ bool CostMatrix::SourceToTarget(Api& request,
 
   auto time_infos = SetOriginTimes(source_location_list, graphreader);
 
+  // anchor the reverse trees on the frozen departure time if the request allows it and the
+  // sources' date_times resolved to the same instant (their timezones may differ)
+  auto reverse_time_info = baldr::TimeInfo::invalid();
+  if (check_invariant_reverse_time(request.options()) &&
+      std::all_of(time_infos.begin(), time_infos.end(), [&time_infos](const baldr::TimeInfo& ti) {
+        return ti.valid && ti.local_time == time_infos.front().local_time;
+      })) {
+    reverse_time_info = time_infos.front();
+  }
+
   // Initialize best connections and status. Any locations that are the
   // same get set to 0 time, distance and are not added to the remaining
   // location set.
   Initialize(source_location_list, target_location_list, request.matrix());
 
   // Set the source and target locations
-  // TODO: for now we only allow depart_at/current date_time
   SetSources(graphreader, source_location_list, time_infos, target_location_list);
-  SetTargets(graphreader, target_location_list, source_location_list);
+  SetTargets(graphreader, target_location_list, reverse_time_info, source_location_list);
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
@@ -231,7 +256,8 @@ bool CostMatrix::SourceToTarget(Api& request,
     for (uint32_t i = 0; i < locs_count_[MATRIX_REV]; i++) {
       if (locs_status_[MATRIX_REV][i].threshold > 0) {
         locs_status_[MATRIX_REV][i].threshold--;
-        Expand<MatrixExpansionType::reverse>(i, n, graphreader, request.options());
+        Expand<MatrixExpansionType::reverse>(i, n, graphreader, request.options(), reverse_time_info,
+                                             invariant);
         // if we exhausted this search
         if (locs_status_[MATRIX_REV][i].threshold == 0) {
           for (uint32_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
@@ -1131,6 +1157,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 // these locations.
 void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+                            const baldr::TimeInfo& time_info,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& sources) {
 
   std::unordered_multimap<GraphId, double> source_edges;
@@ -1183,8 +1210,8 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // along the destination edge.
       uint8_t flow_sources;
 
-      Cost edgecost = costing_->PartialEdgeCost(directededge, edgeid, tile, TimeInfo::invalid(),
-                                                flow_sources, 0, edge.percent_along());
+      Cost edgecost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                                0, edge.percent_along());
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
