@@ -12,8 +12,6 @@ Read this section first. Violating these constraints causes real damage at plane
 
 **Costing functions are the hottest path.** `EdgeCost()`, `TransitionCost()`, `Allowed()` in `src/sif/` are called millions of times per request.
 
-**arm64 (Apple Silicon) instability.** Some tests fail on Apple Silicon due to numeric differences from x86_64. Always run relevant tests **before** making changes to establish a baseline.
-
 ## Addressing the Developer
 
 Address the developer as **"respected Sir"** where it makes sense — opening a response to a new request, when delivering a completed change, when asking a clarifying question, or when flagging something important. Do not append it to every comment, code review note, or short follow-up; that becomes noise. Use it as a human would use a respectful form of address: at natural turn boundaries, not as a suffix on every sentence.
@@ -30,10 +28,13 @@ cd build && cmake --build . -j$(nproc) --target directededge && ./test/directede
 # Gurka integration test — target gurka_<name> from test/gurka/test_<name>.cc
 cd build && cmake --build . -j$(nproc) --target gurka_filter && ./test/gurka/gurka_filter
 
+# All gurka integration tests
+cd build && cmake --build . -j$(nproc) --target run-gurka
+
 # Single GoogleTest case
 ./test/gurka/gurka_access --gtest_filter="*YourTestName*"
 
-# Multiple related tests
+# Several related tests
 cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_route
 
@@ -43,7 +44,7 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
 
 **Build parallelism:** `-j$(nproc)` works on Linux; on macOS use `-j$(sysctl -n hw.logicalcpu)` or install `coreutils` for `nproc`. Alternatively, configure CMake with Ninja (`cmake -G Ninja ..` or `CMAKE_GENERATOR=Ninja`), which parallelizes automatically without needing `-j`.
 
-**IMPORTANT:** Avoid `make check` — extremely slow and produces false positives on arm64. Run only the relevant tests.
+**IMPORTANT:** Avoid `make check` — it's extremely slow for the development loop. Run only the relevant tests.
 
 ### Key CMake Options
 
@@ -196,11 +197,15 @@ Edges touched per route — shows why per-edge overhead matters:
 
 ## Testing
 
-### Unit Tests vs Gurka Integration Tests
+### Test Suites
 
 **Unit tests** (`test/*.cc`) — target name = filename. Test individual functions/modules. Many use pre-built tilesets from `test/data/` (utrecht, whitelion, roma, etc.).
 
-**Gurka integration tests** (`test/gurka/test_*.cc`) — target `gurka_<name>`. Build ASCII road maps → generate tiles → run full API → verify. Use for testing routing behavior, access restrictions, turn restrictions, costing, maneuvers — anything requiring multiple modules. See `docs/docs/contributing/gurka.md` for the full framework reference including map construction, relations, assertions, and debugging with GeoJSON.
+**Gurka integration tests** (`test/gurka/test_*.cc`) — target `gurka_<name>`. Build ASCII road maps → generate tiles → run full API → verify. Use for testing routing behavior, access restrictions, turn restrictions, costing, maneuvers — anything requiring multiple modules. See `docs/docs/contributing/gurka.md` for the full framework reference including map construction, relations, assertions, and debugging with GeoJSON. `run-gurka` target runs all of them. 
+
+**Bindings tests** (`test/bindings/python/`, `test/bindings/nodejs/`) — targets `run-python_valhalla` and `run-nodejs_valhalla`. Exercise the Python / Node.js bindings against `libvalhalla`; only built when `ENABLE_PYTHON_BINDINGS` / `ENABLE_NODE_BINDINGS` are on (Node.js also needs a `node` binary).
+
+**Python script tests** (`test/scripts/test_*.py`) — target `run-scripts`. Test the `valhalla_build_*` helper scripts (config, extract, elevation). Some need system deps not in the build (e.g. `shapely`) and fail if those aren't installed.
 
 ### Gurka Test Pattern
 
@@ -266,40 +271,28 @@ Identify which tests cover the area you're changing:
 - `test/gurka/` — integration tests by feature (e.g., `test_access.cc` → `gurka_access`, `test_route.cc` → `gurka_route`)
 - `test/` — unit tests by module (e.g., `directededge.cc` → `directededge`)
 
-### 2. Baseline Before Changing
-
-**IMPORTANT:** Always run related tests before any code changes to establish a baseline (some tests have pre-existing arm64 failures):
-```bash
-# example — replace gurka_access with whatever tests are relevant to your change
-cd build && cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access
-```
-
-### 3. Add a Failing Test
+### 2. Add a Failing Test
 
 Write a `TEST` that demonstrates the expected behavior — it should fail before your fix and pass after:
 ```bash
 cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
 ```
 
-### 4. Trace the Pipeline and Fix
+### 3. Trace the Pipeline and Fix
 
 Use the "Where to Look" table above to find the right file. The pipeline flows left to right: tag parsing → graph building → parse costing → routing → maneuvers → serialization.
 
-### 5. Iterate Until Green
+### 4. Iterate Until Green
 
 ```bash
 cmake --build . -j$(nproc) --target gurka_access && ./test/gurka/gurka_access --gtest_filter="*YourNewTest*"
 ```
 
-### 6. Verify Related Tests
-
-**IMPORTANT:** Run tests for all functionality your changes touch, not just the test you started with. For example, if you started with `gurka_access` for a ferry fix but also modified costing or graph building, run `gurka_ferry_connections`, `gurka_route`, and any other tests covering the affected code:
+**IMPORTANT:** Run tests for all functionality your changes touch, not just the test you started with. For example, if you started with `gurka_access` that reproduces a particular ferry problem, but then you touched costing or graph building, run `gurka_ferry_connections`, `gurka_route`, and any other tests covering the affected code:
 ```bash
 cmake --build . -j$(nproc) --target gurka_access --target gurka_ferry_connections --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_ferry_connections && ./test/gurka/gurka_route
 ```
-
-Never skip this step. The full suite (`make check`) is too slow for iterative development but fine as a final check on x86_64. Avoid it on arm64 where false positives make results unreliable.
 
 ### Pull Requests and Generative AI
 

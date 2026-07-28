@@ -122,10 +122,10 @@ void BollardsGatesAndAccess(const std::string& config_file) {
                              way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   // bus access tests.
   auto way_85744121 = GetWay(85744121, ways);
@@ -274,7 +274,7 @@ void RemovableBollards(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   // Is a bollard=rising is saved as a gate...with foot flag and bike set.
   auto node = GetNode(2425784125, way_nodes);
@@ -304,7 +304,7 @@ void Exits(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   auto node = GetNode(33698177, way_nodes);
   EXPECT_TRUE(node.intersection());
@@ -342,7 +342,7 @@ void Baltimore(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   // bike_forward and reverse is set to false by default.  Meaning defaults for
   // highway = pedestrian.  Bike overrides bicycle=designated and/or cycleway=shared_lane
@@ -413,7 +413,7 @@ void Baltimore(const std::string& config_file) {
   EXPECT_TRUE(way_192573108.bike_backward());
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false, true);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
   auto node = GetNode(49473254, way_nodes);
 
   EXPECT_TRUE(node.intersection()) << "Toll Booth 49473254";
@@ -456,7 +456,7 @@ void Bike(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   // http://www.openstreetmap.org/way/6885577#map=14/51.9774/5.7718
   // direction of this way for oneway is flipped.  Confirmed on opencyclemap.org.
@@ -539,7 +539,7 @@ void Bus(const std::string& config_file) {
                              way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   auto way_14327599 = GetWay(14327599, ways);
   EXPECT_FALSE(way_14327599.auto_forward());
@@ -608,7 +608,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
                              way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   auto node = GetNode(42439096, way_nodes);
   EXPECT_TRUE(node.intersection());

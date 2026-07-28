@@ -1,14 +1,25 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: don't advance bounding-circle iterator past the end [#6241](https://github.com/valhalla/valhalla/pull/6241)
+* **Enhancement**
+   * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
+   * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236) 
+
+## Release Date: 2026-07-24 Valhalla 3.8.3
+* **Removed**
+* **Bug Fix**
    * FIXED: embedded route elevation decoding after a mid-edge `through` location [#6202](https://github.com/valhalla/valhalla/issues/6202)
    * FIXED: guard opposing edge lookup for transit edges in Loki reachability [#6222](https://github.com/valhalla/valhalla/pull/6222)
+   * FIXED: clear loki search when calling it multiple times [#6231](https://github.com/valhalla/valhalla/pull/6231)
 * **Enhancement**
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
    * FIXED: use the new `GraphReader::GetGraphTileHeader` in `baldr/utils/graph_reader.cc:get_graph_tile_header` to prevent loading entire tiles into RAM [#6200](https://github.com/valhalla/valhalla/pull/6200)
    * ADDED: classify `surface=laterite` and `surface=clay` as `Surface::kDirt` [#6171](https://github.com/valhalla/valhalla/issues/6171)
    * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
+   * CHANGED: Speedup sequence sort by using PSRS algorithm [#6226](https://github.com/valhalla/valhalla/pull/6226)
+   * ADDED: more convenience bindings for Python [#6197](https://github.com/valhalla/valhalla/pull/6197)
    * ADDED: Add use_distance to truck, bus, taxi, motorcycle and motor_scooter cost [#6214](https://github.com/valhalla/valhalla/pull/6214)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
@@ -53,9 +64,10 @@
    * ADDED: partial gurka tile build and `findWay` & `findWayNodes` gurka lookups for temp .bin files [#6136](https://github.com/valhalla/valhalla/pull/6136)
    * CHANGED: `checksum_` field in GraphTileHeader reflects now global tileset ID & tile data checksum [#6123](https://github.com/valhalla/valhalla/pull/6123)
    * BREAKING: overhauled `pyvalhalla` package layout, some `valhalla.utils` imports will break [#6133](https://github.com/valhalla/valhalla/pull/6133)
-   * ADDED: enabled bounding circles for faster candidate search in `/locate` and `/tile` [#6141/](https://github.com/valhalla/valhalla/pull/6141) 
+   * ADDED: enabled bounding circles for faster candidate search in `/locate` and `/tile` [#6141/](https://github.com/valhalla/valhalla/pull/6141)
    * BREAKING: add `low_class_factor` for truck costing (impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
    * ADDED: `get_graph_tile_header` & `GraphTileHeader` bindings [#6134](https://github.com/valhalla/valhalla/pull/6134)
+   * CHANGED: `CostMatrix` reverse trees use time-dependent speeds with `invariant` date_time [#6168](https://github.com/valhalla/valhalla/pull/6168)
    * ADDED: support for multiple --region args in valhalla_build_extract [#6172](https://github.com/valhalla/valhalla/pull/6172)
    * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
 
