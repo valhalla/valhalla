@@ -535,6 +535,10 @@ Cost MotorScooterCost::TransitionCost(
     }
     c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  c.cost *= inv_distance_factor_;
+
   return c;
 }
 
@@ -607,6 +611,10 @@ Cost MotorScooterCost::TransitionCostReverse(
     }
     c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  c.cost *= inv_distance_factor_;
+
   return c;
 }
 
@@ -645,7 +653,7 @@ namespace {
 
 class TestMotorScooterCost : public MotorScooterCost {
 public:
-  TestMotorScooterCost(const Costing& costing_options) : MotorScooterCost(costing_options){};
+  TestMotorScooterCost(const Costing& costing_options) : MotorScooterCost(costing_options) {};
 
   using MotorScooterCost::alley_penalty_;
   using MotorScooterCost::country_crossing_cost_;
