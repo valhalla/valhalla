@@ -5,6 +5,7 @@
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
    * FIXED: use the new `GraphReader::GetGraphTileHeader` in `baldr/utils/graph_reader.cc:get_graph_tile_header` to prevent loading entire tiles into RAM [#6200](https://github.com/valhalla/valhalla/pull/6200)
+   * CHANGED: Optionally construct fresh `ReachedMap`s in `CostMatrix::Clear()` [#5978](https://github.com/valhalla/valhalla/pull/5978) 
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
@@ -36,7 +37,6 @@
    * FIXED: JSON serialization of NaN values [#6147](https://github.com/valhalla/valhalla/pull/6147)
    * BREAKING: apply `low_class_penalty` only when transitioning from a higher class road in `TruckCost::TransitionCost`(impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
    * FIXED: bounding circle precision issues [#6169](https://github.com/valhalla/valhalla/pull/6169)
-   * FIXED: Optionally construct fresh `ReachedMap`s in `CostMatrix::Clear()` [#5978](https://github.com/valhalla/valhalla/pull/5978) 
 * **Enhancement**
    * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
    * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
