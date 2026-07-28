@@ -28,7 +28,8 @@ nanobind_add_module(_valhalla
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/graph_reader.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/graph_tile.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/predicted_speeds.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/midgard/utils/polyline.cc)
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/midgard/utils/polyline.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/mjolnir/util.cc)
 
 # force abi3.so extension
 nanobind_extension_abi3(_valhalla)
@@ -80,8 +81,10 @@ set(py_srcs
   valhalla/baldr/__init__.py
   valhalla/baldr/utils/__init__.py
   valhalla/baldr/utils/graph_utils.py
+  valhalla/baldr/utils/tar_index.py
   valhalla/midgard/__init__.py
   valhalla/midgard/utils/__init__.py
+  valhalla/mjolnir/__init__.py
   valhalla/utils/__init__.py)
 
 # scikit-build-core does a different build than CMake
