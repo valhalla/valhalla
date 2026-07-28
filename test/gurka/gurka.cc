@@ -132,8 +132,8 @@ std::vector<std::string> splitter(const std::string& in_pattern, const std::stri
 }
 
 namespace {
-bool is_not_space(int ch) {
-  return !std::isspace(static_cast<unsigned char>(ch));
+bool is_not_space(unsigned char ch) {
+  return !std::isspace(ch);
 }
 } // namespace
 
