@@ -351,6 +351,15 @@ bool build_tile_set(const boost::property_tree::ptree& config,
                     const BuildStage end_stage = BuildStage::kValidate);
 
 /**
+ * Compute the tileset-wide build id from the per-tile data hashes already stored in each tile
+ * header (no re-hashing): their sum, folded to 16 bits. Read-only; the folding is order
+ * independent, so the build id doesn't depend on the walk.
+ * @param tile_dir directory holding the .gph tiles
+ * @return the 16-bit tileset build id
+ */
+uint16_t compute_tileset_build_id(const std::string& tile_dir);
+
+/**
  * Recompute the tileset-wide build id from the per-tile data hashes already stored in each tile
  * header (no re-hashing) and stamp it into the high bits of every tile's checksum. Call this after a
  * tool has rewritten a subset of tiles (e.g. adding predicted traffic) so URL clients see a changed
