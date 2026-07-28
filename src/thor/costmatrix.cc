@@ -151,9 +151,19 @@ CostMatrix::~CostMatrix() {
 // construction.
 void CostMatrix::Clear() {
   // Clear the target edge markings
-  targets_->clear();
-  if (check_reverse_connection_)
-    sources_->clear();
+  if (clear_reserved_memory_) {
+    targets_ = std::make_unique<ReachedMap>();
+  } else {
+    targets_->clear();
+  }
+
+  if (check_reverse_connection_) {
+    if (clear_reserved_memory_) {
+      sources_ = std::make_unique<ReachedMap>();
+    } else {
+      sources_->clear();
+    }
+  }
 
   // Clear all adjacency lists, edge labels, and edge status
   // Resize and shrink_to_fit so all capacity is reduced.
