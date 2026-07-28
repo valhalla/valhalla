@@ -5271,7 +5271,8 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   LOG_INFO("Sorting osm access tags by way id...");
   {
     sequence<OSMAccess> access(access_file, false);
-    access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); });
+    access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); },
+                concurrency);
   }
 
   LOG_INFO("Finished");
@@ -5327,20 +5328,25 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
   parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
+  const auto concurrency =
+      std::max<size_t>(1, pt.get<size_t>("concurrency", std::thread::hardware_concurrency()));
+
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
   {
     sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
-    complex_restrictions_from.sort(
-        [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
+    complex_restrictions_from.sort([](const OSMRestriction& a,
+                                      const OSMRestriction& b) { return a < b; },
+                                   concurrency);
   }
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by to id...");
   {
     sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
-    complex_restrictions_to.sort(
-        [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
+    complex_restrictions_to.sort([](const OSMRestriction& a,
+                                    const OSMRestriction& b) { return a < b; },
+                                 concurrency);
   }
   LOG_INFO("Finished");
 }
@@ -5398,11 +5404,15 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
   // using much mem, the scoping makes sure to let it go when done sorting
+  const auto concurrency =
+      std::max<size_t>(1, pt.get<size_t>("concurrency", std::thread::hardware_concurrency()));
+
   LOG_INFO("Sorting osm way node references by node id...");
   {
     sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-    way_nodes.sort(
-        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; });
+    way_nodes.sort([](const OSMWayNode& a,
+                      const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; },
+                   concurrency);
   }
 
   // Parse node in all the input files. Skip any that are not marked from
@@ -5434,13 +5444,15 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   LOG_INFO("Sorting osm way node references by way index and node shape index...");
   {
     sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-    way_nodes.sort([](const OSMWayNode& a, const OSMWayNode& b) {
-      if (a.way_index == b.way_index) {
-        // TODO: if its equal we have screwed something up, should we check and throw here?
-        return a.way_shape_node_index < b.way_shape_node_index;
-      }
-      return a.way_index < b.way_index;
-    });
+    way_nodes.sort(
+        [](const OSMWayNode& a, const OSMWayNode& b) {
+          if (a.way_index == b.way_index) {
+            // TODO: if its equal we have screwed something up, should we check and throw here?
+            return a.way_shape_node_index < b.way_shape_node_index;
+          }
+          return a.way_index < b.way_index;
+        },
+        concurrency);
   }
 
   // Some OSM extracts do not have changeset Ids. For these set the max changeset Id
