@@ -106,6 +106,7 @@ protected:
     bool cost = false;
     bool expansion_type = false;
     bool travel_mode = false;
+    bool expansion_index = false;
 
     const std::unordered_map<std::string, int> prop_count;
     for (const auto& prop : props) {
@@ -133,6 +134,9 @@ protected:
       if (prop == "travel_mode") {
         travel_mode = true;
       }
+      if (prop == "expansion_index") {
+        expansion_index = true;
+      }
     }
     ASSERT_EQ(parsed_api.expansion().geometries_size(), exp_feats);
     ASSERT_EQ(parsed_api.expansion().edge_status_size(), edge_status ? exp_feats : 0);
@@ -143,6 +147,7 @@ protected:
     ASSERT_EQ(parsed_api.expansion().costs_size(), cost ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().expansion_type_size(), expansion_type ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().travel_modes_size(), travel_mode ? exp_feats : 0);
+    ASSERT_EQ(parsed_api.expansion().expansion_index_size(), expansion_index ? exp_feats : 0);
   }
   void check_result_json(const std::string& action,
                          const std::vector<std::string>& waypoints,
@@ -311,7 +316,62 @@ INSTANTIATE_TEST_SUITE_P(ExpandPropsTest,
                                            std::vector<std::string>{"distance", "duration",
                                                                     "pred_edge_id", "expansion_type"},
                                            std::vector<std::string>{"edge_id", "cost"},
-                                           std::vector<std::string>{"edge_id", "travel_mode"}));
+                                           std::vector<std::string>{"edge_id", "travel_mode"},
+                                           std::vector<std::string>{"expansion_index",
+                                                                    "expansion_type"}));
+
+TEST(Standalone, MatrixExpansionIndex) {
+  const std::string ascii_map = R"(
+      A--B--C--D--E--F--G
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}}, {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}}, {"FG", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/gurka_matrix_expansion_index");
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  std::unordered_map<std::string, std::string> options = {
+      {"/action", "sources_to_targets"},
+      {"/expansion_properties/0", "expansion_index"},
+      {"/expansion_properties/1", "expansion_type"},
+      {"/expansion_properties/2", "edge_id"},
+  };
+  auto result =
+      gurka::do_action(valhalla::Options::expansion, map, {"A", "C"}, {"E", "G"}, "auto", options);
+
+  const auto& expansion = result.expansion();
+  ASSERT_GT(expansion.expansion_index_size(), 0);
+  ASSERT_EQ(expansion.expansion_index_size(), expansion.geometries_size());
+  ASSERT_EQ(expansion.expansion_type_size(), expansion.geometries_size());
+
+  // the first source's edge is only ever expanded in the first source's tree
+  auto first_source_edge = std::get<0>(gurka::findEdge(*reader, layout, "AB", "B"));
+
+  std::set<uint32_t> source_indices, target_indices;
+  bool saw_first_source_edge = false;
+  for (int i = 0; i < expansion.expansion_index_size(); ++i) {
+    const auto index = expansion.expansion_index(i);
+    if (expansion.expansion_type(i) == Expansion_ExpansionType_forward) {
+      source_indices.insert(index);
+      if (expansion.edge_id(i) == first_source_edge) {
+        saw_first_source_edge = true;
+        EXPECT_EQ(index, 0);
+      }
+    } else {
+      target_indices.insert(index);
+    }
+  }
+
+  EXPECT_TRUE(saw_first_source_edge);
+  EXPECT_EQ(source_indices, (std::set<uint32_t>{0, 1}));
+  EXPECT_EQ(target_indices, (std::set<uint32_t>{0, 1}));
+}
 
 TEST(StandAlone, MultiModalAStarModes) {
   const std::string ascii_map = R"(

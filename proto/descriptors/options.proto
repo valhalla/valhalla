@@ -436,6 +436,7 @@ message Options {
     expansion_type = 6;
     flow_sources = 7;
     travel_mode = 8;
+    expansion_index = 9;
   }
 
   enum ReverseTimeTracking {
