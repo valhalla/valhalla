@@ -1359,6 +1359,14 @@ components:
                 and 1 indicates that streets not marked as truck routes should be avoided. This information is derived from 
                 the `hgv=designated` tag. Note that even with values near 1, there is no guarantee the returned route will include 
                 streets marked as truck routes.
+            use_distance:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0
+              description: >
+                A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account 
+                and 1 only distance. A factor of 0.5 will weigh them roughly equally.  
 
     MotorcycleCostingOptions:
       allOf:
@@ -1395,6 +1403,14 @@ components:
               description: >
                 Top speed the vehicle can go in km/h. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 km/h. The default value is 140 km/h 
                 for motorcycle. 
+            use_distance:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0
+              description: >
+                A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account 
+                and 1 only distance. A factor of 0.5 will weigh them roughly equally.  
 
     MotorScooterCostingOptions:
       allOf:
@@ -1429,6 +1445,14 @@ components:
                 A rider's propensity to use primary roads. This is a range of values from 0 to 1, where 0 attempts to avoid primary roads, and 1 indicates the rider is more comfortable
                 riding on primary roads. Based on the `use_primary` factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding 
                 the best path.
+            use_distance:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0
+              description: >
+                A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account 
+                and 1 only distance. A factor of 0.5 will weigh them roughly equally.  
 
     TransitFilterOptions:
       type: object

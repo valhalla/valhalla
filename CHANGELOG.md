@@ -5,6 +5,7 @@
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236) 
+   * ADDED: Add use_distance to truck, bus, taxi, motorcycle and motor_scooter cost [#6214](https://github.com/valhalla/valhalla/pull/6214)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
