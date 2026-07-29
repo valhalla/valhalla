@@ -121,8 +121,6 @@ public:
    * @param  expansion_callback  the functor to call back when the algorithm makes progress
    *                             on a given edge
    */
-  // the last argument is the index of the source or target the expansion belongs to, which only
-  // matrix algorithms can report, hence the extra argument over the other algorithms' callback
   using expansion_callback_t = std::function<void(baldr::GraphReader&,
                                                   const baldr::GraphId,
                                                   const baldr::GraphId,
