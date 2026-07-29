@@ -47,7 +47,7 @@ void serialize_cost(const valhalla::Matrix& matrix,
                     const size_t td_count) {
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for cost in matrix result
-    if (matrix.times()[i] != kMaxCost) {
+    if (matrix.costs()[i] != kMaxCost) {
       writer(static_cast<double>(matrix.costs()[i]));
     } else {
       writer(nullptr);
