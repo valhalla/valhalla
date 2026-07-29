@@ -388,6 +388,7 @@ bool CostMatrix::SourceToTarget(Api& request,
     matrix.mutable_to_indices()->Set(connection_idx, target_idx);
     matrix.mutable_distances()->Set(connection_idx, best_connection.distance);
     matrix.mutable_times()->Set(connection_idx, time);
+    matrix.mutable_costs()->Set(connection_idx, best_connection.cost.cost);
     *matrix.mutable_shapes(connection_idx) = shape;
   }
 

@@ -41,6 +41,20 @@ void serialize_distance(const valhalla::Matrix& matrix,
   }
 }
 
+void serialize_cost(const valhalla::Matrix& matrix,
+                    rapidjson::writer_wrapper_t& writer,
+                    size_t start_td,
+                    const size_t td_count) {
+  for (size_t i = start_td; i < start_td + td_count; ++i) {
+    // check to make sure a route was found; if not, return null for cost in matrix result
+    if (matrix.times()[i] != kMaxCost) {
+      writer(static_cast<double>(matrix.costs()[i]));
+    } else {
+      writer(nullptr);
+    }
+  }
+}
+
 void serialize_shape(const valhalla::Matrix& matrix,
                      rapidjson::writer_wrapper_t& writer,
                      const size_t start_td,
@@ -159,6 +173,7 @@ void serialize_row(const valhalla::Matrix& matrix,
       writer("to_index", target_index + (i - start_td));
       writer("time", static_cast<uint64_t>(time));
       writer("distance", static_cast<double>(matrix.distances()[i] * distance_scale));
+      writer("cost", static_cast<double>(matrix.costs()[i]));
       if (!date_time.empty()) {
         writer("date_time", date_time);
       }
@@ -212,6 +227,7 @@ void serialize_row(const valhalla::Matrix& matrix,
       writer("to_index", target_index + (i - start_td));
       writer("time", nullptr);
       writer("distance", nullptr);
+      writer("cost", nullptr);
     }
     writer.end_object();
   }
@@ -256,6 +272,15 @@ std::string serialize(const Api& request, double distance_scale) {
       const auto first_td = source_index * options.targets_size();
       writer.start_array();
       serialize_distance(request.matrix(), writer, first_td, options.targets_size(), distance_scale);
+      writer.end_array();
+    }
+    writer.end_array();
+
+    writer.start_array("costs");
+    for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
+      const auto first_td = source_index * options.targets_size();
+      writer.start_array();
+      serialize_cost(request.matrix(), writer, first_td, options.targets_size());
       writer.end_array();
     }
     writer.end_array();
