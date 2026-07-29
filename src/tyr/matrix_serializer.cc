@@ -276,15 +276,6 @@ std::string serialize(const Api& request, double distance_scale) {
     }
     writer.end_array();
 
-    writer.start_array("costs");
-    for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
-      const auto first_td = source_index * options.targets_size();
-      writer.start_array();
-      serialize_cost(request.matrix(), writer, first_td, options.targets_size());
-      writer.end_array();
-    }
-    writer.end_array();
-
     if (!(options.shape_format() == no_shape ||
           (request.matrix().algorithm() != Matrix::CostMatrix))) {
       writer.start_array("shapes");
