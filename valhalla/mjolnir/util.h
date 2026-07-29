@@ -184,7 +184,7 @@ struct build_stats {
        BuildStage::kConstructEdges, true},
       {"failed_osm_time_range", "OSM time range conditions that could not be parsed",
        BuildStage::kParseWays, true},
-      {"unsupported_osm_time_range",
+      {"failed_osm_time_range_unknown",
        "OSM time range conditions with unsupported features (years, sun events, ...)",
        BuildStage::kParseWays, true},
       {"invalid_hov_type", "ways with invalid HOV type", BuildStage::kParseWays, true},
