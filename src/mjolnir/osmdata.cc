@@ -651,6 +651,7 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
   file.write(reinterpret_cast<const char*>(&node_exit_to_count), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&node_linguistic_count), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&max_way_id), sizeof(uint64_t));
+  file.write(reinterpret_cast<const char*>(&max_node_id), sizeof(uint64_t));
   file.close();
 
   // Write the rest of OSMData
@@ -700,6 +701,7 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
   file.read(reinterpret_cast<char*>(&node_exit_to_count), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&node_linguistic_count), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&max_way_id), sizeof(uint64_t));
+  file.read(reinterpret_cast<char*>(&max_node_id), sizeof(uint64_t));
   file.close();
 
   // Read the other data

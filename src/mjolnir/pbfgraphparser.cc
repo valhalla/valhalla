@@ -5370,9 +5370,11 @@ void PBFGraphParser::ParseAreaWays(const boost::property_tree::ptree& pt,
     return;
 
   // collect the way ids we need (outer and inner members of the area relations)
-  std::unordered_set<uint64_t> needed_way_ids;
-  for (const auto& entry : osmdata.area_relations)
+  ankerl::unordered_dense::set<uint64_t> needed_way_ids;
+  needed_way_ids.reserve(osmdata.area_relations.size());
+  for (const auto& entry : osmdata.area_relations) {
     needed_way_ids.insert(entry.second.way_id);
+  }
 
   LOG_INFO("Parsing area ways... looking for " + std::to_string(needed_way_ids.size()) + " ways");
 
@@ -5537,6 +5539,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // Note, we also allow dataset_id to be set by config, which happens at tile build
   if (osmdata.max_changeset_id_ == 0) {
     osmdata.max_changeset_id_ = max_osm_id;
+    osmdata.max_node_id = max_osm_id;
     LOG_INFO("Finished: max_osm_id " + std::to_string(osmdata.max_changeset_id_));
   } else {
     LOG_INFO("Finished: changeset id " + std::to_string(osmdata.max_changeset_id_));

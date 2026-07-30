@@ -49,6 +49,8 @@ TEST(GraphBuilder, TestConstructEdges) {
   config.put("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
   OSMData osm_data{0,  /* max_changeset_id_ */
+                   0,  /* max_way_id */
+                   0,  /* max_node_id*/
                    0,  /* osm_node_count */
                    0,  /* osm_way_count */
                    0,  /* osm_way_node_count */
@@ -96,6 +98,8 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
   config.put<std::string>("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
   OSMData osm_data{0,  /* max_changeset_id_ */
+                   0,  /* max_way_id */
+                   0,  /* max_node_id */
                    0,  /* osm_node_count */
                    0,  /* osm_way_count */
                    0,  /* osm_way_node_count */
