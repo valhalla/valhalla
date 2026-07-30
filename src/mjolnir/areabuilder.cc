@@ -41,7 +41,7 @@ bool visible_within(const GEOSPreparedGeometry* prepared,
 } // namespace
 
 constexpr double kMinAreaSquareMeters = 100.0;
-constexpr double kDensifyToleranceMeters = 1.0;
+constexpr double kDensifyToleranceMeters = 4.0;
 constexpr double kSimplifyToleranceMeters = 1.5;
 constexpr double kEntranceToleranceMeters = 0.5;
 constexpr float kTraversalSpeedKph = 12.0f;
