@@ -173,7 +173,7 @@ Bcp47Locale parse_string_into_locale(const std::string& locale_string) {
     if (matches[kScriptIndex].matched) {
       locale.script = matches[kScriptIndex].str();
       if (!locale.script.empty()) {
-        locale.script[0] = std::toupper(locale.script[0]);
+        locale.script[0] = std::toupper(static_cast<unsigned char>(locale.script[0]));
         locale.langtag += "-";
         locale.langtag += locale.script;
       }
@@ -232,7 +232,8 @@ size_t get_word_count(const std::string& street_name) {
 
   while (pos != end) {
     // Skip over space, white space, and punctuation
-    while (pos != end && ((*pos == ' ') || std::isspace(*pos) || std::ispunct(*pos))) {
+    while (pos != end && ((*pos == ' ') || std::isspace(static_cast<unsigned char>(*pos)) ||
+                          std::ispunct(static_cast<unsigned char>(*pos)))) {
       ++pos;
     }
 
@@ -240,7 +241,8 @@ size_t get_word_count(const std::string& street_name) {
     word_count += (pos != end);
 
     // Skip over letters in word
-    while (pos != end && ((*pos != ' ') && (!std::isspace(*pos)) && (!std::ispunct(*pos)))) {
+    while (pos != end && ((*pos != ' ') && (!std::isspace(static_cast<unsigned char>(*pos))) &&
+                          (!std::ispunct(static_cast<unsigned char>(*pos))))) {
       ++pos;
     }
   }

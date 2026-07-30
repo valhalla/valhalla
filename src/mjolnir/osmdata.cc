@@ -739,7 +739,7 @@ void OSMData::add_to_name_map(const uint64_t member_id,
 
   std::string dir = direction;
   boost::algorithm::to_lower(dir);
-  dir[0] = std::toupper(dir[0]);
+  dir[0] = std::toupper(static_cast<unsigned char>(dir[0]));
 
   // TODO:  network=e-road with int_ref=E #
   if ((dir.starts_with("North (") || dir.starts_with("South (") || dir.starts_with("East (") ||

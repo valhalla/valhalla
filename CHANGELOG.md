@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: don't advance bounding-circle iterator past the end [#6241](https://github.com/valhalla/valhalla/pull/6241)
+   * FIXED: fix assertion when checking non-ascii signed char [#6243](https://github.com/valhalla/valhalla/pull/6243)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236) 
