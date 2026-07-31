@@ -79,9 +79,11 @@ jobs:
       # TODO: can we move this to manylinux image?
       - name: Setup Python alias (Linux)
         if: matrix.os == 'linux'
-        run: ln -s $(which python3.12) /usr/local/bin/python
+        run: |
+          ln -sf $(which python3.12) /usr/local/bin/python
+          ln -sf $(which python3.12) /usr/local/bin/python3
 
-      # translation lib for popo files
+      # translation lib for the .po files (locales/po_tools.py, run by CMake at build time)
       - name: Install polib
         run: python3 -m pip install --break-system-packages polib || python3 -m pip install polib
 
