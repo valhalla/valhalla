@@ -179,6 +179,10 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
         way_hits[visit.way_id].push_back(visit.position);
       }
     }
+    // TODO: a pedestrian way that runs exactly along the perimeter, or crosses in
+    // a straight line with only two nodes, isn't detected as a mapped path. Its
+    // perimeter hits are consecutive and it has no in-between node inside the
+    // polygon.
     std::vector<uint64_t> crossing_candidates;
     for (auto& [way_id, positions] : way_hits) {
       if (positions.size() < 2) {
@@ -468,6 +472,10 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
       // materialise each line as a way, ConstructEdges turns them into edges later
       for (const auto& line : traversal_lines) {
         const uint32_t way_index = static_cast<uint32_t>(ways.size());
+        // TODO: entrance nodes and restored-perimeter ways get generic pedestrian
+        // attributes instead of preserving their original OSM tags. Re-emitting an
+        // entrance from scratch loses whatever the real node had; a proper fix would
+        // look up the original and merge, rather than overwrite.
         for (size_t i = 0; i < line.size(); ++i) {
           const auto& [node_id, ll] = line[i];
           OSMNode osm_node{node_id};
@@ -498,6 +506,11 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
     }
     // no traversal was generated for this area (too small), so give its perimeter back
     // to the graph
+
+    // TODO: for now we only give the perimeter back for small areas. Areas skipped
+    // for other reasons (no entrances, mapped paths inside) are dropped entirely.
+    // Some of those, especially ones with mapped paths, might still want their
+    // perimeter routable
     if (!generated_any && restore_perimeter) {
       auto indices_it = area_way_indices.find(relation_id);
       if (indices_it != area_way_indices.end()) {
