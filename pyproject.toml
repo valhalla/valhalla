@@ -49,7 +49,9 @@ requires = [
     "cmake",
     "ninja",
     "nanobind>=2.9.0",
-    "auditwheel"
+    "auditwheel",
+    # translation lib for popo files
+    "polib",
 ]
 build-backend = "scikit_build_core.build"
 

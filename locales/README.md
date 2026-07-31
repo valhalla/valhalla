@@ -2,7 +2,7 @@
 
 Valhalla supports localized instructions in multiple languages for both textual and verbal phrases. Translations are managed as gettext `.po` files in the [locales](https://github.com/valhalla/valhalla/tree/master/locales) directory — one per language, e.g. `de-DE.po`. We rely on external contributors to provide translations of these phrases.
 
-The `gettext` files are the only committed translation artifacts: `valhalla.pot` is the hand-maintained English source (`msgid`s plus `#. e.g. ...` example-phrase comments; its header carries the en-US metadata), and each language has a `.po` with the translations. At build time, CMake reconstructs the per-language JSONs odin expects from them (`locales/po_tools.py po2json`, which parses the gettext files with the `third_party/polib` submodule) and embeds those into `libvalhalla` — no JSON exists in the repo at all.
+The `gettext` files are the only committed translation artifacts: `valhalla.pot` is the hand-maintained English source (`msgid`s plus `#. e.g. ...` example-phrase comments; its header carries the en-US metadata), and each language has a `.po` with the translations. At build time, CMake reconstructs the per-language JSONs odin expects from them (`locales/po_tools.py po2json`, which parses the gettext files with [polib](https://pypi.org/project/polib/) — `pip install polib`) and embeds those into `libvalhalla` — no JSON exists in the repo at all.
 
 ## Contributing translations
 

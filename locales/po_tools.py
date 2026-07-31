@@ -33,12 +33,10 @@ from typing import Any
 
 LOCALES_DIR = Path(__file__).parent
 
-# try to import the submodule polib
-sys.path.insert(0, str(LOCALES_DIR.parent / "third_party" / "polib"))
 try:
     import polib
 except ImportError:
-    sys.exit("polib not found - initialize submodules: git submodule update --init third_party/polib")
+    sys.exit("polib not found - install it: pip install polib")
 
 # the hand-maintained English source; also the msginit template for new languages
 POT_FILE = LOCALES_DIR / "valhalla.pot"

@@ -47,8 +47,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Checkout polib
-        run: git submodule update --init third_party/polib
+      - name: Install polib
+        run: pip install polib
 
       - name: Install gettext
         run: sudo apt-get update && sudo apt-get install -y gettext

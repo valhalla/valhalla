@@ -81,6 +81,10 @@ jobs:
         if: matrix.os == 'linux'
         run: ln -s $(which python3.12) /usr/local/bin/python
 
+      # translation lib for popo files
+      - name: Install polib
+        run: python3 -m pip install --break-system-packages polib || python3 -m pip install polib
+
       - name: Build Valhalla with Node.js bindings
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
