@@ -79,13 +79,16 @@ jobs:
       # TODO: can we move this to manylinux image?
       - name: Setup Python alias (Linux)
         if: matrix.os == 'linux'
-        run: |
-          ln -sf $(which python3.12) /usr/local/bin/python
-          ln -sf $(which python3.12) /usr/local/bin/python3
+        run: ln -sf $(which python3.12) /usr/local/bin/python
 
-      # translation lib for the .po files (locales/po_tools.py, run by CMake at build time)
+      # locales/po_tools.py (run by CMake's po2json at build time) needs polib. Pin the exact
+      # interpreter we install into and hand it to CMake below via -DPYTHON_INTERPRETER, so the
+      # pip target and the interpreter CMake actually runs are guaranteed to be the same one.
       - name: Install polib
-        run: python3 -m pip install --break-system-packages polib || python3 -m pip install polib
+        run: |
+          PY=$(command -v python3.12 || command -v python3)
+          echo "PYTHON_BIN=$PY" >> "$GITHUB_ENV"
+          "$PY" -m pip install --break-system-packages polib || "$PY" -m pip install polib
 
       - name: Build Valhalla with Node.js bindings
         run: |
@@ -95,6 +98,7 @@ jobs:
           -DENABLE_NODE_BINDINGS=ON \
           -DENABLE_SERVICES=OFF \
           -DENABLE_TESTS=OFF \
+          -DPYTHON_INTERPRETER="$PYTHON_BIN" \
           -DVALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD) \
           -DENABLE_SINGLE_FILES_WERROR=OFF
           cmake --build build -j${{ matrix.os == 'macos' && '$(sysctl -n hw.logicalcpu)' || '$(nproc)' }}
