@@ -400,7 +400,7 @@ uint32_t GetStopImpact(uint32_t from,
 namespace valhalla {
 namespace mjolnir {
 
-void set_tileset_build_id(const std::string& tile_dir) {
+uint16_t compute_tileset_build_id(const std::string& tile_dir) {
   // sum the per-tile data hashes already stored in each header's low bits, no re-hashing needed.
   // addition is order independent, so the build id doesn't depend on the walk
   uint64_t build_id_acc = 0;
@@ -411,10 +411,14 @@ void set_tileset_build_id(const std::string& tile_dir) {
     build_id_acc += header.tile_checksum();
   });
 
-  // fold to 16 bits (enough for URL based deployments) and stamp into every tile's high bits
-  uint16_t build_id =
-      build_id_acc ^ (build_id_acc >> 16) ^ (build_id_acc >> 32) ^ (build_id_acc >> 48);
-  const uint64_t build_id_bits = static_cast<uint64_t>(build_id) << kTileHashBits;
+  // fold to 16 bits (enough for URL based deployments)
+  return build_id_acc ^ (build_id_acc >> 16) ^ (build_id_acc >> 32) ^ (build_id_acc >> 48);
+}
+
+void set_tileset_build_id(const std::string& tile_dir) {
+  // stamp the computed build id into every tile's high bits
+  const uint64_t build_id_bits = static_cast<uint64_t>(compute_tileset_build_id(tile_dir))
+                                 << kTileHashBits;
   for_each_tile(tile_dir, [&](const std::filesystem::path& p) {
     update_tile_header(p, [&](GraphTileHeader& h) {
       h.set_raw_checksum(h.tile_checksum() | build_id_bits);

@@ -24,6 +24,8 @@ constexpr std::array<double, kRadiiCount> kBoundingCircleRadii =
      160., 170., 180., 190., 200., 210., 220., 230., 240.,  250.,  275.,  300., 325.,
      350., 375., 400., 500., 550., 600., 700., 800., 1000., 1500., 2000., 2500.};
 
+static_assert(kMaxCircleRadius == kBoundingCircleRadii.back(), "kMaxCircleRadius mismatch");
+
 constexpr uint32_t kInvalidRadiusIndex = kBoundingCircleRadii.size();
 
 // the maximum offset in the x and y axis we support is derived from

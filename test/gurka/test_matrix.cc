@@ -907,6 +907,30 @@ TEST_P(TestConnectionCheck, MatrixSecondPass) {
   }
 }
 
+TEST(StandAlone, MatrixSecondPassUsesFilteredEdges) {
+  // a source heading of 0 leaves only the dead-end edge "Ao" as a candidate and puts "oC" into
+  // filtered_edges, so C is only reachable if the second pass merges the filtered edges back in
+  const std::string ascii_map = R"(
+    A
+    |
+    o---C
+  )";
+  const gurka::ways ways = {
+      {"Ao", {{"highway", "residential"}, {"oneway", "-1"}}},
+      {"oC", {{"highway", "residential"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
+  const auto map = gurka::buildtiles(layout, ways, {}, {},
+                                     VALHALLA_BUILD_DIR "test/data/matrix_second_pass_filtered_edges",
+                                     {{"thor.costmatrix.allow_second_pass", "1"}});
+
+  auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"o"}, {"C"}, "auto",
+                              {{"/sources/0/heading", "0"}});
+  EXPECT_TRUE(api.matrix().second_pass(0));
+  EXPECT_GT(api.matrix().distances(0), 0);
+  EXPECT_LT(api.matrix().distances(0), 100000000); // not kMaxCost
+}
+
 TEST_P(TestConnectionCheck, CostMatrixTrivialRoutes) {
   const std::string ascii_map = R"(
     A---B--2->-1--C---D
@@ -1370,6 +1394,63 @@ TEST(StandAlone, TrivialCorrelation) {
       gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto", {}, nullptr);
 
   EXPECT_EQ(result.matrix().distances(0), 0);
+}
+
+TEST(StandAlone, CostMatrixInvariantReverseTree) {
+  // with invariant time and a single departure instant shared by all sources, the reverse
+  // trees cost edges with time-dependent speeds too, so path selection near the targets
+  // respects predicted traffic at the departure time
+  const std::string ascii_map = R"(
+    A----B----C----D
+         |         |
+         E---------F
+  )";
+  // the maxspeed 100 edges are the direct route; they get congested predicted speeds below
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"BC", {{"highway", "primary"}, {"maxspeed", "100"}}},
+      {"CD", {{"highway", "primary"}, {"maxspeed", "100"}}},
+      {"BE", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"EF", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"FD", {{"highway", "primary"}, {"maxspeed", "60"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_invariant_reverse",
+                               {{"service_limits.max_timedep_distance_matrix", "50000"},
+                                {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
+                                {"mjolnir.shortcuts", "0"}});
+
+  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
+    std::array<float, baldr::kBucketsPerWeek> historical;
+    historical.fill(e.speed() >= 90 ? 5 : 40);
+    return historical;
+  });
+
+  std::unordered_map<std::string, std::string> options = {
+      {"/costing_options/auto/speed_types/0", "predicted"},
+      {"/date_time/type", "3"},
+      {"/date_time/value", "2021-11-08T08:00"},
+      {"/prioritize_bidirectional", "1"},
+  };
+
+  // A-B-C-D is shorter (1.5 km) and wins with non-temporal speeds, but its BC/CD edges
+  // crawl at 5 km/h in predicted traffic; the detour A-B-E-F-D (1.9 km at 40 km/h) is the
+  // correct path at the departure time. The reverse tree starts at D on the congested CD,
+  // so it must see predicted speeds for the detour to win.
+  auto bidir =
+      gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"D"}, "auto", options);
+  EXPECT_EQ(bidir.matrix().algorithm(), Matrix::CostMatrix);
+  EXPECT_NEAR(bidir.matrix().distances(0), 1900, 10);
+
+  // the exact unidirectional algorithm agrees on both path and duration
+  options.erase("/prioritize_bidirectional");
+  auto exact =
+      gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"D"}, "auto", options);
+  EXPECT_EQ(exact.matrix().algorithm(), Matrix::TimeDistanceMatrix);
+  EXPECT_NEAR(exact.matrix().distances(0), 1900, 10);
+  EXPECT_NEAR(bidir.matrix().times(0), exact.matrix().times(0), 5);
 }
 
 TEST(StandAlone, MaxDistanceCutoff) {
