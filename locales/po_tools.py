@@ -206,7 +206,7 @@ def cmd_init(args: argparse.Namespace) -> None:
     po.metadata["X-Valhalla-Posix-Locale"] = args.posix_locale or f"{args.lang.replace('-', '_')}.UTF-8"
     po.metadata["X-Valhalla-Aliases"] = new_aliases
     po.save(str(path))
-    print(f"wrote {path.name}, see locales/README.md for the next steps")
+    print(f"wrote {path.name}, see docs/docs/contributing/locales.md for the next steps")
 
 
 def cmd_update(_: argparse.Namespace) -> None:
