@@ -13,11 +13,12 @@ back to English.
   po_tools.py init <lang>                    start a new language: <lang>.po from the template
   po_tools.py po2json [--out DIR] [lang ...] .pot/.po -> locale JSONs (build step)
   po_tools.py update                         msgmerge valhalla.pot into every .po
-  po_tools.py lint [lang ...]                placeholder token check
+  po_tools.py lint [lang ...] [--fix]        placeholder token check + sort check (--fix sorts)
+  po_tools.py stats [lang ...]               per-language translation coverage
   po_tools.py print-posix-locales            print every language's posix_locale (for localedef)
 
-po2json and lint accept language tags (e.g. de-DE) to limit the run to those
-files; without any, all locales/*.po are processed.
+po2json, lint, stats and prune-english accept language tags (e.g. de-DE) to
+limit the run to those files; without any, all locales/*.po are processed.
 """
 
 from __future__ import annotations
@@ -114,6 +115,36 @@ def po_paths(langs: list[str] | None) -> list[Path]:
     return paths
 
 
+def ctxt_key(msgctxt: str) -> list[int | str]:
+    # natural order: numeric path segments sort as ints, so phrases.2 precedes phrases.10
+    return [int(s) if s.isdigit() else s for s in msgctxt.split(".")]
+
+
+def ctxt_sort_key(entry: polib.POEntry) -> list[int | str]:
+    return ctxt_key(entry.msgctxt or "")
+
+
+def is_sorted(path: Path) -> bool:
+    """True if the file's entries are already in natural msgctxt order."""
+    ctxts = [e.msgctxt for e in polib.pofile(str(path)) if e.msgctxt and not e.obsolete]
+    return ctxts == sorted(ctxts, key=ctxt_key)
+
+
+def sort_file(path: Path) -> bool:
+    """Sort a .pot/.po in place by msgctxt; returns True if the order changed.
+
+    Sorting the .pot matters too: msgmerge (update) reorders every .po to match it.
+    wrapwidth=0 preserves no-wrap style.
+    """
+    po = polib.pofile(str(path), wrapwidth=0)
+    before = [e.msgctxt for e in po]
+    po.sort(key=ctxt_sort_key)
+    if [e.msgctxt for e in po] == before:
+        return False
+    po.save(str(path))
+    return True
+
+
 def write_json(out_dir: Path, name: str, locale: dict[str, Any]) -> None:
     """Writes the output json the odin headers consume."""
     out_path = out_dir / f"{name}.json"
@@ -190,13 +221,13 @@ def cmd_update(_: argparse.Namespace) -> None:
 
 
 def cmd_lint(args: argparse.Namespace) -> None:
-    # how NarrativeBuilder treats <TOKENS> at runtime, and what we make of it here:
-    # - it picks one phrase of an instruction (e.g. instructions.bear_verbal), then runs
-    #   replace_all for EVERY token that instruction knows, not just those in the picked phrase
-    # - so a translation may use any token appearing anywhere in its instruction's English
-    #   phrases, even ones the picked English phrase doesn't have -> "cross-phrase" warning only
-    # - a token outside that set is never replaced and reaches users verbatim -> ERROR
-    # - a translation dropping a token loses info but renders fine -> warning only
+    # we lint specifically for NarrativeBuilder here:
+    # - when replacing the tokens in e.g. phrase-dependent logic, we replace _all_ available
+    #   tokens for _any_ phrase
+    # - means a translation can use any tokens from any phrase, even if the english phrase
+    #   doesn't have them: "cross-phrase warning"
+    # - tokens appearing in translations which are not part of its phrase group: ERROR
+    # - tokens being dropped in translations: warning
 
     pot_entries, _ = parse_pot()
 
@@ -242,8 +273,45 @@ def cmd_lint(args: argparse.Namespace) -> None:
                 )
                 warnings += 1
 
+    # entries must stay in natural msgctxt order; --fix sorts in place, otherwise it's an error
+    for path in [POT_FILE, *po_paths(args.langs)]:
+        if is_sorted(path):
+            continue
+        if args.fix:
+            sort_file(path)
+            print(f"sorted {path.name}")
+        else:
+            print(f"ERROR {path.name}: not sorted - run: po_tools.py lint --fix")
+            errors += 1
+
     print(f"{errors} errors, {warnings} warnings")
     sys.exit(1 if errors else 0)
+
+
+def cmd_stats(args: argparse.Namespace) -> None:
+    # en-X variants are horribly underestimated (seem untranslated)
+    pot_entries, _ = parse_pot()
+    total = len(pot_entries)
+
+    stats = {}
+    for po in po_paths(args.langs):
+        entries, _ = parse_po(po)
+        translated = fuzzy = 0
+        for pot_entry in pot_entries:
+            e = entries.get(pot_entry.msgctxt)
+            if e and e.fuzzy:
+                fuzzy += 1
+            elif e and e.msgstr and e.msgstr != e.msgid:
+                translated += 1
+        stats[po.stem] = {
+            "translated": translated,
+            "fuzzy": fuzzy,
+            "untranslated": total - translated - fuzzy,
+            "total": total,
+            "percent": round(100 * translated / total, 1),
+        }
+
+    print(json.dumps(stats, indent=2))
 
 
 def main() -> None:
@@ -276,7 +344,15 @@ def main() -> None:
     # also cross-compare msgid & msgtxt of each entry
     lint = sub.add_parser("lint")
     lint.add_argument("langs", nargs="*")
+    lint.add_argument(
+        "--fix", action="store_true", help="sort unsorted files in place instead of erroring"
+    )
     lint.set_defaults(func=cmd_lint)
+
+    # per-language translation coverage (fuzzy counted separately, not as translated)
+    stats = sub.add_parser("stats")
+    stats.add_argument("langs", nargs="*")
+    stats.set_defaults(func=cmd_stats)
 
     args = parser.parse_args()
     args.func(args)

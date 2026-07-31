@@ -4,7 +4,7 @@ Valhalla supports localized instructions in multiple languages for both textual 
 
 The `gettext` files are the only committed translation artifacts: `valhalla.pot` is the hand-maintained English source (`msgid`s plus `#. e.g. ...` example-phrase comments; its header carries the en-US metadata), and each language has a `.po` with the translations. At build time, CMake reconstructs the per-language JSONs odin expects from them (`locales/po_tools.py po2json`, which parses the gettext files with [polib](https://pypi.org/project/polib/) — `pip install polib`) and embeds those into `libvalhalla` — no JSON exists in the repo at all.
 
-## Contributing translations
+## Contributing to existing translations
 
 Edit your language's `.po` file with [Poedit](https://poedit.net/) (recommended), any other gettext editor, or a plain text editor, then open a PR with just that file.
 
@@ -27,13 +27,19 @@ What to know while translating:
 
 ### Changing or adding English phrases
 
-1. Edit `locales/valhalla.pot` directly. Each entry is the `msgctxt` path (`instructions.<instruction>.phrases.<n>` — `narrative_builder` selects the phrase by that key), the English `msgid`, an empty `msgstr`, and optional `#. e.g. ...` example-phrase comments for translators. Path segments that are numbers become JSON arrays in the generated files, except under `phrases`, which odin reads by numeric string key.
+#### CLI
+
+1. Edit `locales/valhalla.pot` directly. Path segments that are numbers become JSON arrays in the generated files, except under `phrases`, which odin reads by numeric string key.
 2. Propagate to all languages (requires gettext):
    ```
    python3 locales/po_tools.py update
    ```
-   `msgmerge` keeps every existing translation. Entries whose English changed keep the old translation but are flagged fuzzy (with the previous English kept as a `#|` comment), so each language's translators see exactly what needs review; new phrases appear untranslated. Both fall back to English until translated.
+   `msgmerge` keeps every existing translation. Entries whose English changed keep the old translation but are flagged fuzzy (with the previous English kept as a `#|` comment), so each language's translators see exactly what needs review; new phrases appear untranslated. Both fall back to English until translated. `msgmerge` reorders each `.po` to the `.pot`'s entry order, so the files stay sorted as long as the `.pot` is (run `po_tools.py lint --fix` if you added entries out of order).
 3. Commit the changed `valhalla.pot` and `*.po` files together.
+
+#### `poedit`
+
+The same can be achieved with `poedit` in its GUI.
 
 ### Tooling reference
 
@@ -44,9 +50,10 @@ All state lives in the `.pot`/`.po` files — no external service involved.
 | `po_tools.py init <lang>` | Start a new language: create `<lang>.po` from the template with the header filled in |
 | `po_tools.py update` | `msgmerge` the `valhalla.pot` template into every `.po` |
 | `po_tools.py po2json [--out DIR]` | Generate the JSONs from the gettext files (fuzzy/empty → English); run by CMake at build time |
-| `po_tools.py lint` | Check placeholder tokens; errors on tokens Odin would never substitute |
+| `po_tools.py lint [--fix]` | Check placeholder tokens (errors on tokens Odin would never substitute) and that `.pot`/`.po` are sorted; `--fix` sorts unsorted files in place instead of erroring. |
+| `po_tools.py stats [langs]` | Per-language coverage as JSON (object per language: translated/fuzzy/untranslated/total/percent); "translated" = non-fuzzy msgstr that differs from English (carry-overs and fuzzy don't count). Understates English variants (en-GB/en-AU) |
 | `po_tools.py print-posix-locales` | Print every language's POSIX locale; used by the `localedef` test target |
 | `msgattrib --untranslated --fuzzy <lang>.po` | List what needs work in a language |
 | `msgfmt --check --statistics <lang>.po` | Validate syntax, show translation coverage |
 
-CI (`lint.yml`, `locales` job) enforces: valid `.pot`/`.po` syntax, placeholder correctness, and that the JSONs generate cleanly.
+CI enforces: valid `.pot`/`.po` syntax, placeholder correctness, and that the JSONs generate cleanly.

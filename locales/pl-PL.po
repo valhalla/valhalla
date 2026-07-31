@@ -1,3 +1,4 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: valhalla\n"
@@ -6,8 +7,64 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Valhalla-Posix-Locale: pl_PL.UTF-8\n"
 "X-Valhalla-Aliases: pl\n"
+"X-Valhalla-Posix-Locale: pl_PL.UTF-8\n"
+
+#: instructions.approach_verbal_alert.metric_lengths.0
+msgctxt "instructions.approach_verbal_alert.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> km"
+
+#: instructions.approach_verbal_alert.metric_lengths.1
+msgctxt "instructions.approach_verbal_alert.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 km"
+
+#: instructions.approach_verbal_alert.metric_lengths.2
+msgctxt "instructions.approach_verbal_alert.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> m"
+
+#: instructions.approach_verbal_alert.metric_lengths.3
+msgctxt "instructions.approach_verbal_alert.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "mniej niż 10 metrów"
+
+#. e.g. In a quarter mile, Turn right onto North Gay Street.
+#: instructions.approach_verbal_alert.phrases.0
+msgctxt "instructions.approach_verbal_alert.phrases.0"
+msgid "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+msgstr "Za <LENGTH>: <CURRENT_VERBAL_CUE>"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.0
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.0"
+msgid "<MILES> miles"
+msgstr "<MILES> mil"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.1
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.1"
+msgid "1 mile"
+msgstr "1 milę"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.2
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.2"
+msgid "a half mile"
+msgstr "pół mili"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.3
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.3"
+msgid "a quarter mile"
+msgstr "ćwierć mili"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.4
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.4"
+msgid "<FEET> feet"
+msgstr "<FEET> stóp"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.5
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.5"
+msgid "less than 10 feet"
+msgstr "mniej niż 10 stóp"
 
 #. e.g. Arrive: 8:02 AM.
 #: instructions.arrive.phrases.0
@@ -32,6 +89,41 @@ msgstr "Na miejsce dotrzesz o <TIME>."
 msgctxt "instructions.arrive_verbal.phrases.1"
 msgid "Arrive at <TIME> at <TRANSIT_STOP>."
 msgstr "O <TIME> dotrzesz do <TRANSIT_STOP>."
+
+#: instructions.bear.empty_street_name_labels.0
+msgctxt "instructions.bear.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.bear.empty_street_name_labels.1
+msgctxt "instructions.bear.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.bear.empty_street_name_labels.2
+msgctxt "instructions.bear.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.bear.empty_street_name_labels.3
+msgctxt "instructions.bear.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.bear.empty_street_name_labels.4
+msgctxt "instructions.bear.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.bear.empty_street_name_labels.5
+msgctxt "instructions.bear.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.bear.empty_street_name_labels.6
+msgctxt "instructions.bear.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
 
 #. e.g. Bear right.
 #: instructions.bear.phrases.0
@@ -69,41 +161,6 @@ msgctxt "instructions.bear.phrases.5"
 msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Skręć <RELATIVE_DIRECTION>, kierunek: <TOWARD_SIGN>."
 
-#: instructions.bear.empty_street_name_labels.0
-msgctxt "instructions.bear.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.bear.empty_street_name_labels.1
-msgctxt "instructions.bear.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.bear.empty_street_name_labels.2
-msgctxt "instructions.bear.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.bear.empty_street_name_labels.3
-msgctxt "instructions.bear.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.bear.empty_street_name_labels.4
-msgctxt "instructions.bear.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.bear.empty_street_name_labels.5
-msgctxt "instructions.bear.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.bear.empty_street_name_labels.6
-msgctxt "instructions.bear.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
 #: instructions.bear.relative_directions.0
 msgctxt "instructions.bear.relative_directions.0"
 msgid "left"
@@ -113,6 +170,41 @@ msgstr "w lewo"
 msgctxt "instructions.bear.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
+
+#: instructions.bear_verbal.empty_street_name_labels.0
+msgctxt "instructions.bear_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.bear_verbal.empty_street_name_labels.1
+msgctxt "instructions.bear_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.bear_verbal.empty_street_name_labels.2
+msgctxt "instructions.bear_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.bear_verbal.empty_street_name_labels.3
+msgctxt "instructions.bear_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.bear_verbal.empty_street_name_labels.4
+msgctxt "instructions.bear_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.bear_verbal.empty_street_name_labels.5
+msgctxt "instructions.bear_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.bear_verbal.empty_street_name_labels.6
+msgctxt "instructions.bear_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
 
 #. e.g. Bear right.
 #: instructions.bear_verbal.phrases.0
@@ -150,41 +242,6 @@ msgctxt "instructions.bear_verbal.phrases.5"
 msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Skręć <RELATIVE_DIRECTION>, kierunek: <TOWARD_SIGN>."
 
-#: instructions.bear_verbal.empty_street_name_labels.0
-msgctxt "instructions.bear_verbal.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.bear_verbal.empty_street_name_labels.1
-msgctxt "instructions.bear_verbal.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.bear_verbal.empty_street_name_labels.2
-msgctxt "instructions.bear_verbal.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.bear_verbal.empty_street_name_labels.3
-msgctxt "instructions.bear_verbal.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.bear_verbal.empty_street_name_labels.4
-msgctxt "instructions.bear_verbal.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.bear_verbal.empty_street_name_labels.5
-msgctxt "instructions.bear_verbal.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.bear_verbal.empty_street_name_labels.6
-msgctxt "instructions.bear_verbal.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
 #: instructions.bear_verbal.relative_directions.0
 msgctxt "instructions.bear_verbal.relative_directions.0"
 msgid "left"
@@ -206,30 +263,6 @@ msgstr "<PREVIOUS_STREET_NAMES> przechodzi w: <STREET_NAMES>."
 msgctxt "instructions.becomes_verbal.phrases.0"
 msgid "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
 msgstr "<PREVIOUS_STREET_NAMES> przechodzi w: <STREET_NAMES>."
-
-#. e.g. Continue.
-#: instructions.continue.phrases.0
-msgctxt "instructions.continue.phrases.0"
-msgid "Continue."
-msgstr "Podążaj prosto."
-
-#. e.g. Continue on 10th Avenue.
-#: instructions.continue.phrases.1
-msgctxt "instructions.continue.phrases.1"
-msgid "Continue on <STREET_NAMES>."
-msgstr "Kontynuuj wzdłuż: <STREET_NAMES>."
-
-#. e.g. Continue at Mannenbashi East.
-#: instructions.continue.phrases.2
-msgctxt "instructions.continue.phrases.2"
-msgid "Continue at <JUNCTION_NAME>."
-msgstr "Podążaj prosto przez <JUNCTION_NAME>."
-
-#. e.g. Continue toward Baltimore.
-#: instructions.continue.phrases.3
-msgctxt "instructions.continue.phrases.3"
-msgid "Continue toward <TOWARD_SIGN>."
-msgstr "Podążaj prosto, kierunek: <TOWARD_SIGN>."
 
 #: instructions.continue.empty_street_name_labels.0
 msgctxt "instructions.continue.empty_street_name_labels.0"
@@ -267,52 +300,28 @@ msgid "the tunnel"
 msgstr "tunel"
 
 #. e.g. Continue.
-#: instructions.continue_verbal.phrases.0
-msgctxt "instructions.continue_verbal.phrases.0"
+#: instructions.continue.phrases.0
+msgctxt "instructions.continue.phrases.0"
 msgid "Continue."
 msgstr "Podążaj prosto."
 
-#. e.g. Continue for 300 feet.
-#: instructions.continue_verbal.phrases.1
-msgctxt "instructions.continue_verbal.phrases.1"
-msgid "Continue for <LENGTH>."
-msgstr "Podążaj prosto przez <LENGTH>."
-
 #. e.g. Continue on 10th Avenue.
-#: instructions.continue_verbal.phrases.2
-msgctxt "instructions.continue_verbal.phrases.2"
+#: instructions.continue.phrases.1
+msgctxt "instructions.continue.phrases.1"
 msgid "Continue on <STREET_NAMES>."
 msgstr "Kontynuuj wzdłuż: <STREET_NAMES>."
 
-#. e.g. Continue on 10th Avenue for 3 miles.
-#: instructions.continue_verbal.phrases.3
-msgctxt "instructions.continue_verbal.phrases.3"
-msgid "Continue on <STREET_NAMES> for <LENGTH>."
-msgstr "Kontynuuj wzdłuż: <STREET_NAMES> przez <LENGTH>."
-
 #. e.g. Continue at Mannenbashi East.
-#: instructions.continue_verbal.phrases.4
-msgctxt "instructions.continue_verbal.phrases.4"
+#: instructions.continue.phrases.2
+msgctxt "instructions.continue.phrases.2"
 msgid "Continue at <JUNCTION_NAME>."
 msgstr "Podążaj prosto przez <JUNCTION_NAME>."
 
-#. e.g. Continue at Mannenbashi East for 2 miles.
-#: instructions.continue_verbal.phrases.5
-msgctxt "instructions.continue_verbal.phrases.5"
-msgid "Continue at <JUNCTION_NAME> for <LENGTH>."
-msgstr "Podążaj prosto przez <JUNCTION_NAME> przez <LENGTH>."
-
 #. e.g. Continue toward Baltimore.
-#: instructions.continue_verbal.phrases.6
-msgctxt "instructions.continue_verbal.phrases.6"
+#: instructions.continue.phrases.3
+msgctxt "instructions.continue.phrases.3"
 msgid "Continue toward <TOWARD_SIGN>."
 msgstr "Podążaj prosto, kierunek: <TOWARD_SIGN>."
-
-#. e.g. Continue toward Baltimore for 5 miles.
-#: instructions.continue_verbal.phrases.7
-msgctxt "instructions.continue_verbal.phrases.7"
-msgid "Continue toward <TOWARD_SIGN> for <LENGTH>."
-msgstr "Podążaj prosto przez <LENGTH>, kierunek: <TOWARD_SIGN>."
 
 #: instructions.continue_verbal.empty_street_name_labels.0
 msgctxt "instructions.continue_verbal.empty_street_name_labels.0"
@@ -369,6 +378,54 @@ msgctxt "instructions.continue_verbal.metric_lengths.3"
 msgid "less than 10 meters"
 msgstr "mniej niż 10 metrów"
 
+#. e.g. Continue.
+#: instructions.continue_verbal.phrases.0
+msgctxt "instructions.continue_verbal.phrases.0"
+msgid "Continue."
+msgstr "Podążaj prosto."
+
+#. e.g. Continue for 300 feet.
+#: instructions.continue_verbal.phrases.1
+msgctxt "instructions.continue_verbal.phrases.1"
+msgid "Continue for <LENGTH>."
+msgstr "Podążaj prosto przez <LENGTH>."
+
+#. e.g. Continue on 10th Avenue.
+#: instructions.continue_verbal.phrases.2
+msgctxt "instructions.continue_verbal.phrases.2"
+msgid "Continue on <STREET_NAMES>."
+msgstr "Kontynuuj wzdłuż: <STREET_NAMES>."
+
+#. e.g. Continue on 10th Avenue for 3 miles.
+#: instructions.continue_verbal.phrases.3
+msgctxt "instructions.continue_verbal.phrases.3"
+msgid "Continue on <STREET_NAMES> for <LENGTH>."
+msgstr "Kontynuuj wzdłuż: <STREET_NAMES> przez <LENGTH>."
+
+#. e.g. Continue at Mannenbashi East.
+#: instructions.continue_verbal.phrases.4
+msgctxt "instructions.continue_verbal.phrases.4"
+msgid "Continue at <JUNCTION_NAME>."
+msgstr "Podążaj prosto przez <JUNCTION_NAME>."
+
+#. e.g. Continue at Mannenbashi East for 2 miles.
+#: instructions.continue_verbal.phrases.5
+msgctxt "instructions.continue_verbal.phrases.5"
+msgid "Continue at <JUNCTION_NAME> for <LENGTH>."
+msgstr "Podążaj prosto przez <JUNCTION_NAME> przez <LENGTH>."
+
+#. e.g. Continue toward Baltimore.
+#: instructions.continue_verbal.phrases.6
+msgctxt "instructions.continue_verbal.phrases.6"
+msgid "Continue toward <TOWARD_SIGN>."
+msgstr "Podążaj prosto, kierunek: <TOWARD_SIGN>."
+
+#. e.g. Continue toward Baltimore for 5 miles.
+#: instructions.continue_verbal.phrases.7
+msgctxt "instructions.continue_verbal.phrases.7"
+msgid "Continue toward <TOWARD_SIGN> for <LENGTH>."
+msgstr "Podążaj prosto przez <LENGTH>, kierunek: <TOWARD_SIGN>."
+
 #: instructions.continue_verbal.us_customary_lengths.0
 msgctxt "instructions.continue_verbal.us_customary_lengths.0"
 msgid "<MILES> miles"
@@ -398,30 +455,6 @@ msgstr "<FEET> ft"
 msgctxt "instructions.continue_verbal.us_customary_lengths.5"
 msgid "less than 10 feet"
 msgstr "mniej niż 10 stóp"
-
-#. e.g. Continue.
-#: instructions.continue_verbal_alert.phrases.0
-msgctxt "instructions.continue_verbal_alert.phrases.0"
-msgid "Continue."
-msgstr "Podążaj prosto."
-
-#. e.g. Continue on 10th Avenue.
-#: instructions.continue_verbal_alert.phrases.1
-msgctxt "instructions.continue_verbal_alert.phrases.1"
-msgid "Continue on <STREET_NAMES>."
-msgstr "Kontynuuj wzdłuż: <STREET_NAMES>."
-
-#. e.g. Continue at Mannenbashi East.
-#: instructions.continue_verbal_alert.phrases.2
-msgctxt "instructions.continue_verbal_alert.phrases.2"
-msgid "Continue at <JUNCTION_NAME>."
-msgstr "Podążaj prosto przez <JUNCTION_NAME>."
-
-#. e.g. Continue toward Baltimore.
-#: instructions.continue_verbal_alert.phrases.3
-msgctxt "instructions.continue_verbal_alert.phrases.3"
-msgid "Continue toward <TOWARD_SIGN>."
-msgstr "Podążaj prosto, kierunek: <TOWARD_SIGN>."
 
 #: instructions.continue_verbal_alert.empty_street_name_labels.0
 msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.0"
@@ -457,6 +490,30 @@ msgstr "most"
 msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr "tunel"
+
+#. e.g. Continue.
+#: instructions.continue_verbal_alert.phrases.0
+msgctxt "instructions.continue_verbal_alert.phrases.0"
+msgid "Continue."
+msgstr "Podążaj prosto."
+
+#. e.g. Continue on 10th Avenue.
+#: instructions.continue_verbal_alert.phrases.1
+msgctxt "instructions.continue_verbal_alert.phrases.1"
+msgid "Continue on <STREET_NAMES>."
+msgstr "Kontynuuj wzdłuż: <STREET_NAMES>."
+
+#. e.g. Continue at Mannenbashi East.
+#: instructions.continue_verbal_alert.phrases.2
+msgctxt "instructions.continue_verbal_alert.phrases.2"
+msgid "Continue at <JUNCTION_NAME>."
+msgstr "Podążaj prosto przez <JUNCTION_NAME>."
+
+#. e.g. Continue toward Baltimore.
+#: instructions.continue_verbal_alert.phrases.3
+msgctxt "instructions.continue_verbal_alert.phrases.3"
+msgid "Continue toward <TOWARD_SIGN>."
+msgstr "Podążaj prosto, kierunek: <TOWARD_SIGN>."
 
 #. e.g. Depart: 8:02 AM.
 #: instructions.depart.phrases.0
@@ -587,29 +644,49 @@ msgctxt "instructions.destination_verbal_alert.relative_directions.1"
 msgid "right"
 msgstr "prawej"
 
-#. e.g. Take the Ferry.
-#: instructions.enter_ferry.phrases.0
-msgctxt "instructions.enter_ferry.phrases.0"
-msgid "Take the Ferry."
-msgstr "Wsiądź na prom."
+#. e.g. Take the elevator.
+#: instructions.elevator.phrases.0
+msgctxt "instructions.elevator.phrases.0"
+msgid "Take the elevator."
+msgstr "Skorzystaj z windy."
 
-#. e.g. Take the Millersburg Ferry.
-#: instructions.enter_ferry.phrases.1
-msgctxt "instructions.enter_ferry.phrases.1"
-msgid "Take the <STREET_NAMES>."
-msgstr "Wsiądź na: <STREET_NAMES>."
+#. e.g. Take the elevator to Level 1.
+#: instructions.elevator.phrases.1
+msgctxt "instructions.elevator.phrases.1"
+msgid "Take the elevator to <LEVEL>."
+msgstr "Skorzystaj z windy na <LEVEL>."
 
-#. e.g. Take the Bridgeport - Port Jefferson Ferry.
-#: instructions.enter_ferry.phrases.2
-msgctxt "instructions.enter_ferry.phrases.2"
-msgid "Take the <STREET_NAMES> <FERRY_LABEL>."
-msgstr "Wsiądź na <FERRY_LABEL> na: <STREET_NAMES>."
+#: instructions.enter_building.empty_street_name_labels.0
+msgctxt "instructions.enter_building.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
 
-#. e.g. Take the ferry toward Cape May.
-#: instructions.enter_ferry.phrases.3
-msgctxt "instructions.enter_ferry.phrases.3"
-msgid "Take the ferry toward <TOWARD_SIGN>."
-msgstr "Wsiądź na prom, kierunek: <TOWARD_SIGN>."
+#: instructions.enter_building.empty_street_name_labels.1
+msgctxt "instructions.enter_building.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.enter_building.empty_street_name_labels.2
+msgctxt "instructions.enter_building.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.enter_building.empty_street_name_labels.3
+msgctxt "instructions.enter_building.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#. e.g. Enter the building.
+#: instructions.enter_building.phrases.0
+msgctxt "instructions.enter_building.phrases.0"
+msgid "Enter the building."
+msgstr "Wejdź do budynku."
+
+#. e.g. Enter the building, and continue on the walkway.
+#: instructions.enter_building.phrases.1
+msgctxt "instructions.enter_building.phrases.1"
+msgid "Enter the building, and continue on <STREET_NAMES>."
+msgstr "Wejdź do budynku i idź dalej na <STREET_NAMES>."
 
 #: instructions.enter_ferry.empty_street_name_labels.0
 msgctxt "instructions.enter_ferry.empty_street_name_labels.0"
@@ -652,26 +729,26 @@ msgid "Ferry"
 msgstr "prom"
 
 #. e.g. Take the Ferry.
-#: instructions.enter_ferry_verbal.phrases.0
-msgctxt "instructions.enter_ferry_verbal.phrases.0"
+#: instructions.enter_ferry.phrases.0
+msgctxt "instructions.enter_ferry.phrases.0"
 msgid "Take the Ferry."
 msgstr "Wsiądź na prom."
 
 #. e.g. Take the Millersburg Ferry.
-#: instructions.enter_ferry_verbal.phrases.1
-msgctxt "instructions.enter_ferry_verbal.phrases.1"
+#: instructions.enter_ferry.phrases.1
+msgctxt "instructions.enter_ferry.phrases.1"
 msgid "Take the <STREET_NAMES>."
 msgstr "Wsiądź na: <STREET_NAMES>."
 
 #. e.g. Take the Bridgeport - Port Jefferson Ferry.
-#: instructions.enter_ferry_verbal.phrases.2
-msgctxt "instructions.enter_ferry_verbal.phrases.2"
+#: instructions.enter_ferry.phrases.2
+msgctxt "instructions.enter_ferry.phrases.2"
 msgid "Take the <STREET_NAMES> <FERRY_LABEL>."
 msgstr "Wsiądź na <FERRY_LABEL> na: <STREET_NAMES>."
 
 #. e.g. Take the ferry toward Cape May.
-#: instructions.enter_ferry_verbal.phrases.3
-msgctxt "instructions.enter_ferry_verbal.phrases.3"
+#: instructions.enter_ferry.phrases.3
+msgctxt "instructions.enter_ferry.phrases.3"
 msgid "Take the ferry toward <TOWARD_SIGN>."
 msgstr "Wsiądź na prom, kierunek: <TOWARD_SIGN>."
 
@@ -714,6 +791,115 @@ msgstr "tunel"
 msgctxt "instructions.enter_ferry_verbal.ferry_label"
 msgid "Ferry"
 msgstr "prom"
+
+#. e.g. Take the Ferry.
+#: instructions.enter_ferry_verbal.phrases.0
+msgctxt "instructions.enter_ferry_verbal.phrases.0"
+msgid "Take the Ferry."
+msgstr "Wsiądź na prom."
+
+#. e.g. Take the Millersburg Ferry.
+#: instructions.enter_ferry_verbal.phrases.1
+msgctxt "instructions.enter_ferry_verbal.phrases.1"
+msgid "Take the <STREET_NAMES>."
+msgstr "Wsiądź na: <STREET_NAMES>."
+
+#. e.g. Take the Bridgeport - Port Jefferson Ferry.
+#: instructions.enter_ferry_verbal.phrases.2
+msgctxt "instructions.enter_ferry_verbal.phrases.2"
+msgid "Take the <STREET_NAMES> <FERRY_LABEL>."
+msgstr "Wsiądź na <FERRY_LABEL> na: <STREET_NAMES>."
+
+#. e.g. Take the ferry toward Cape May.
+#: instructions.enter_ferry_verbal.phrases.3
+msgctxt "instructions.enter_ferry_verbal.phrases.3"
+msgid "Take the ferry toward <TOWARD_SIGN>."
+msgstr "Wsiądź na prom, kierunek: <TOWARD_SIGN>."
+
+#: instructions.enter_roundabout.empty_street_name_labels.0
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.enter_roundabout.empty_street_name_labels.1
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.enter_roundabout.empty_street_name_labels.2
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.enter_roundabout.empty_street_name_labels.3
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.enter_roundabout.empty_street_name_labels.4
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.enter_roundabout.empty_street_name_labels.5
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.enter_roundabout.empty_street_name_labels.6
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
+
+#: instructions.enter_roundabout.ordinal_values.0
+msgctxt "instructions.enter_roundabout.ordinal_values.0"
+msgid "1st"
+msgstr "pierwszego"
+
+#: instructions.enter_roundabout.ordinal_values.1
+msgctxt "instructions.enter_roundabout.ordinal_values.1"
+msgid "2nd"
+msgstr "drugiego"
+
+#: instructions.enter_roundabout.ordinal_values.2
+msgctxt "instructions.enter_roundabout.ordinal_values.2"
+msgid "3rd"
+msgstr "trzeciego"
+
+#: instructions.enter_roundabout.ordinal_values.3
+msgctxt "instructions.enter_roundabout.ordinal_values.3"
+msgid "4th"
+msgstr "czwartego"
+
+#: instructions.enter_roundabout.ordinal_values.4
+msgctxt "instructions.enter_roundabout.ordinal_values.4"
+msgid "5th"
+msgstr "piątego"
+
+#: instructions.enter_roundabout.ordinal_values.5
+msgctxt "instructions.enter_roundabout.ordinal_values.5"
+msgid "6th"
+msgstr "szóstego"
+
+#: instructions.enter_roundabout.ordinal_values.6
+msgctxt "instructions.enter_roundabout.ordinal_values.6"
+msgid "7th"
+msgstr "siódmego"
+
+#: instructions.enter_roundabout.ordinal_values.7
+msgctxt "instructions.enter_roundabout.ordinal_values.7"
+msgid "8th"
+msgstr "ósmego"
+
+#: instructions.enter_roundabout.ordinal_values.8
+msgctxt "instructions.enter_roundabout.ordinal_values.8"
+msgid "9th"
+msgstr "dziewiątego"
+
+#: instructions.enter_roundabout.ordinal_values.9
+msgctxt "instructions.enter_roundabout.ordinal_values.9"
+msgid "10th"
+msgstr "dziesiątego"
 
 #. e.g. Enter the roundabout.
 #: instructions.enter_roundabout.phrases.0
@@ -820,90 +1006,90 @@ msgctxt "instructions.enter_roundabout.phrases.15"
 msgid "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
 msgstr "Wjedź na: <STREET_NAMES> i skorzystaj ze zjazdu, kierunek: <TOWARD_SIGN>."
 
-#: instructions.enter_roundabout.ordinal_values.0
-msgctxt "instructions.enter_roundabout.ordinal_values.0"
-msgid "1st"
-msgstr "pierwszego"
-
-#: instructions.enter_roundabout.ordinal_values.1
-msgctxt "instructions.enter_roundabout.ordinal_values.1"
-msgid "2nd"
-msgstr "drugiego"
-
-#: instructions.enter_roundabout.ordinal_values.2
-msgctxt "instructions.enter_roundabout.ordinal_values.2"
-msgid "3rd"
-msgstr "trzeciego"
-
-#: instructions.enter_roundabout.ordinal_values.3
-msgctxt "instructions.enter_roundabout.ordinal_values.3"
-msgid "4th"
-msgstr "czwartego"
-
-#: instructions.enter_roundabout.ordinal_values.4
-msgctxt "instructions.enter_roundabout.ordinal_values.4"
-msgid "5th"
-msgstr "piątego"
-
-#: instructions.enter_roundabout.ordinal_values.5
-msgctxt "instructions.enter_roundabout.ordinal_values.5"
-msgid "6th"
-msgstr "szóstego"
-
-#: instructions.enter_roundabout.ordinal_values.6
-msgctxt "instructions.enter_roundabout.ordinal_values.6"
-msgid "7th"
-msgstr "siódmego"
-
-#: instructions.enter_roundabout.ordinal_values.7
-msgctxt "instructions.enter_roundabout.ordinal_values.7"
-msgid "8th"
-msgstr "ósmego"
-
-#: instructions.enter_roundabout.ordinal_values.8
-msgctxt "instructions.enter_roundabout.ordinal_values.8"
-msgid "9th"
-msgstr "dziewiątego"
-
-#: instructions.enter_roundabout.ordinal_values.9
-msgctxt "instructions.enter_roundabout.ordinal_values.9"
-msgid "10th"
-msgstr "dziesiątego"
-
-#: instructions.enter_roundabout.empty_street_name_labels.0
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.0"
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.0
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "chodnik"
 
-#: instructions.enter_roundabout.empty_street_name_labels.1
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.1"
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.1
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "ścieżka rowerowa"
 
-#: instructions.enter_roundabout.empty_street_name_labels.2
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.2"
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.2
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "górski szlak rowerowy"
 
-#: instructions.enter_roundabout.empty_street_name_labels.3
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.3"
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.3
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "przejście dla pieszych"
 
-#: instructions.enter_roundabout.empty_street_name_labels.4
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.4"
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.4
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "schody"
 
-#: instructions.enter_roundabout.empty_street_name_labels.5
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.5"
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.5
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "most"
 
-#: instructions.enter_roundabout.empty_street_name_labels.6
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.6"
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.6
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr "tunel"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.0
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.0"
+msgid "1st"
+msgstr "pierwszego"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.1
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.1"
+msgid "2nd"
+msgstr "drugiego"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.2
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.2"
+msgid "3rd"
+msgstr "trzeciego"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.3
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.3"
+msgid "4th"
+msgstr "czwartego"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.4
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.4"
+msgid "5th"
+msgstr "piątego"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.5
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.5"
+msgid "6th"
+msgstr "szóstego"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.6
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.6"
+msgid "7th"
+msgstr "siódmego"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.7
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.7"
+msgid "8th"
+msgstr "ósmego"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.8
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.8"
+msgid "9th"
+msgstr "dziewiątego"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.9
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.9"
+msgid "10th"
+msgstr "dziesiątego"
 
 #. e.g. Enter the roundabout.
 #: instructions.enter_roundabout_verbal.phrases.0
@@ -1010,90 +1196,17 @@ msgctxt "instructions.enter_roundabout_verbal.phrases.15"
 msgid "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
 msgstr "Wjedź na: <STREET_NAMES> i skorzystaj ze zjazdu, kierunek: <TOWARD_SIGN>."
 
-#: instructions.enter_roundabout_verbal.ordinal_values.0
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.0"
-msgid "1st"
-msgstr "pierwszego"
+#. e.g. Take the escalator.
+#: instructions.escalator.phrases.0
+msgctxt "instructions.escalator.phrases.0"
+msgid "Take the escalator."
+msgstr "Skorzystaj z ruchomych schodów."
 
-#: instructions.enter_roundabout_verbal.ordinal_values.1
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.1"
-msgid "2nd"
-msgstr "drugiego"
-
-#: instructions.enter_roundabout_verbal.ordinal_values.2
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.2"
-msgid "3rd"
-msgstr "trzeciego"
-
-#: instructions.enter_roundabout_verbal.ordinal_values.3
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.3"
-msgid "4th"
-msgstr "czwartego"
-
-#: instructions.enter_roundabout_verbal.ordinal_values.4
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.4"
-msgid "5th"
-msgstr "piątego"
-
-#: instructions.enter_roundabout_verbal.ordinal_values.5
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.5"
-msgid "6th"
-msgstr "szóstego"
-
-#: instructions.enter_roundabout_verbal.ordinal_values.6
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.6"
-msgid "7th"
-msgstr "siódmego"
-
-#: instructions.enter_roundabout_verbal.ordinal_values.7
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.7"
-msgid "8th"
-msgstr "ósmego"
-
-#: instructions.enter_roundabout_verbal.ordinal_values.8
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.8"
-msgid "9th"
-msgstr "dziewiątego"
-
-#: instructions.enter_roundabout_verbal.ordinal_values.9
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.9"
-msgid "10th"
-msgstr "dziesiątego"
-
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.0
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.1
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.2
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.3
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.4
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.5
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.6
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
+#. e.g. Take the escalator to Level 3.
+#: instructions.escalator.phrases.1
+msgctxt "instructions.escalator.phrases.1"
+msgid "Take the escalator to <LEVEL>."
+msgstr "Skorzystaj z ruchomych schodów na <LEVEL>."
 
 #. e.g. Take the exit on the left.
 #. e.g. Take the exit on the right.
@@ -1250,29 +1363,37 @@ msgctxt "instructions.exit.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
 
-#. e.g. Exit the roundabout.
-#: instructions.exit_roundabout.phrases.0
-msgctxt "instructions.exit_roundabout.phrases.0"
-msgid "Exit the roundabout."
-msgstr "Zjedź z ronda."
+#: instructions.exit_building.empty_street_name_labels.0
+msgctxt "instructions.exit_building.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
 
-#. e.g. Exit the roundabout onto Philadelphia Road/MD 7.
-#: instructions.exit_roundabout.phrases.1
-msgctxt "instructions.exit_roundabout.phrases.1"
-msgid "Exit the roundabout onto <STREET_NAMES>."
-msgstr "Zjedź z ronda na: <STREET_NAMES>."
+#: instructions.exit_building.empty_street_name_labels.1
+msgctxt "instructions.exit_building.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
 
-#. e.g. Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.
-#: instructions.exit_roundabout.phrases.2
-msgctxt "instructions.exit_roundabout.phrases.2"
-msgid "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "Zjedź z ronda na: <BEGIN_STREET_NAMES>. Kontynuuj wzdłuż: <STREET_NAMES>."
+#: instructions.exit_building.empty_street_name_labels.2
+msgctxt "instructions.exit_building.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
 
-#. e.g. Exit the roundabout toward Baltimore.
-#: instructions.exit_roundabout.phrases.3
-msgctxt "instructions.exit_roundabout.phrases.3"
-msgid "Exit the roundabout toward <TOWARD_SIGN>."
-msgstr "Zjedź z ronda, kierunek: <TOWARD_SIGN>."
+#: instructions.exit_building.empty_street_name_labels.3
+msgctxt "instructions.exit_building.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#. e.g. Exit the building.
+#: instructions.exit_building.phrases.0
+msgctxt "instructions.exit_building.phrases.0"
+msgid "Exit the building."
+msgstr "Opuść budynek."
+
+#. e.g. Exit the building, and continue on the walkway.
+#: instructions.exit_building.phrases.1
+msgctxt "instructions.exit_building.phrases.1"
+msgid "Exit the building, and continue on <STREET_NAMES>."
+msgstr "Wyjdź z budynku i idź dalej na <STREET_NAMES>."
 
 #: instructions.exit_roundabout.empty_street_name_labels.0
 msgctxt "instructions.exit_roundabout.empty_street_name_labels.0"
@@ -1310,26 +1431,26 @@ msgid "the tunnel"
 msgstr "tunel"
 
 #. e.g. Exit the roundabout.
-#: instructions.exit_roundabout_verbal.phrases.0
-msgctxt "instructions.exit_roundabout_verbal.phrases.0"
+#: instructions.exit_roundabout.phrases.0
+msgctxt "instructions.exit_roundabout.phrases.0"
 msgid "Exit the roundabout."
 msgstr "Zjedź z ronda."
 
-#. e.g. Exit the roundabout onto Philadelphia Road, Maryland 7.
-#: instructions.exit_roundabout_verbal.phrases.1
-msgctxt "instructions.exit_roundabout_verbal.phrases.1"
+#. e.g. Exit the roundabout onto Philadelphia Road/MD 7.
+#: instructions.exit_roundabout.phrases.1
+msgctxt "instructions.exit_roundabout.phrases.1"
 msgid "Exit the roundabout onto <STREET_NAMES>."
 msgstr "Zjedź z ronda na: <STREET_NAMES>."
 
-#. e.g. Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.
-#: instructions.exit_roundabout_verbal.phrases.2
-msgctxt "instructions.exit_roundabout_verbal.phrases.2"
-msgid "Exit the roundabout onto <BEGIN_STREET_NAMES>."
-msgstr "Zjedź z ronda na: <BEGIN_STREET_NAMES>."
+#. e.g. Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.
+#: instructions.exit_roundabout.phrases.2
+msgctxt "instructions.exit_roundabout.phrases.2"
+msgid "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+msgstr "Zjedź z ronda na: <BEGIN_STREET_NAMES>. Kontynuuj wzdłuż: <STREET_NAMES>."
 
 #. e.g. Exit the roundabout toward Baltimore.
-#: instructions.exit_roundabout_verbal.phrases.3
-msgctxt "instructions.exit_roundabout_verbal.phrases.3"
+#: instructions.exit_roundabout.phrases.3
+msgctxt "instructions.exit_roundabout.phrases.3"
 msgid "Exit the roundabout toward <TOWARD_SIGN>."
 msgstr "Zjedź z ronda, kierunek: <TOWARD_SIGN>."
 
@@ -1367,6 +1488,30 @@ msgstr "most"
 msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr "tunel"
+
+#. e.g. Exit the roundabout.
+#: instructions.exit_roundabout_verbal.phrases.0
+msgctxt "instructions.exit_roundabout_verbal.phrases.0"
+msgid "Exit the roundabout."
+msgstr "Zjedź z ronda."
+
+#. e.g. Exit the roundabout onto Philadelphia Road, Maryland 7.
+#: instructions.exit_roundabout_verbal.phrases.1
+msgctxt "instructions.exit_roundabout_verbal.phrases.1"
+msgid "Exit the roundabout onto <STREET_NAMES>."
+msgstr "Zjedź z ronda na: <STREET_NAMES>."
+
+#. e.g. Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.
+#: instructions.exit_roundabout_verbal.phrases.2
+msgctxt "instructions.exit_roundabout_verbal.phrases.2"
+msgid "Exit the roundabout onto <BEGIN_STREET_NAMES>."
+msgstr "Zjedź z ronda na: <BEGIN_STREET_NAMES>."
+
+#. e.g. Exit the roundabout toward Baltimore.
+#: instructions.exit_roundabout_verbal.phrases.3
+msgctxt "instructions.exit_roundabout_verbal.phrases.3"
+msgid "Exit the roundabout toward <TOWARD_SIGN>."
+msgstr "Zjedź z ronda, kierunek: <TOWARD_SIGN>."
 
 #. e.g. Take the exit on the left.
 #. e.g. Take the exit on the right.
@@ -1529,6 +1674,41 @@ msgctxt "instructions.exit_visual.phrases.0"
 msgid "Exit <EXIT_NUMBERS>"
 msgstr "Zjazd <EXIT_NUMBERS>"
 
+#: instructions.keep.empty_street_name_labels.0
+msgctxt "instructions.keep.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.keep.empty_street_name_labels.1
+msgctxt "instructions.keep.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.keep.empty_street_name_labels.2
+msgctxt "instructions.keep.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.keep.empty_street_name_labels.3
+msgctxt "instructions.keep.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.keep.empty_street_name_labels.4
+msgctxt "instructions.keep.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.keep.empty_street_name_labels.5
+msgctxt "instructions.keep.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.keep.empty_street_name_labels.6
+msgctxt "instructions.keep.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
+
 #. e.g. Keep left at the fork.
 #. e.g. Keep straight at the fork.
 #. e.g. Keep right at the fork.
@@ -1579,41 +1759,6 @@ msgctxt "instructions.keep.phrases.7"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
 msgstr "Trzymaj się <RELATIVE_DIRECTION>, aby skorzystać ze zjazdu <NUMBER_SIGN> w: <STREET_NAMES>, kierunek: <TOWARD_SIGN>."
 
-#: instructions.keep.empty_street_name_labels.0
-msgctxt "instructions.keep.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.keep.empty_street_name_labels.1
-msgctxt "instructions.keep.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.keep.empty_street_name_labels.2
-msgctxt "instructions.keep.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.keep.empty_street_name_labels.3
-msgctxt "instructions.keep.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.keep.empty_street_name_labels.4
-msgctxt "instructions.keep.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.keep.empty_street_name_labels.5
-msgctxt "instructions.keep.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.keep.empty_street_name_labels.6
-msgctxt "instructions.keep.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
 #: instructions.keep.relative_directions.0
 msgctxt "instructions.keep.relative_directions.0"
 msgid "left"
@@ -1628,32 +1773,6 @@ msgstr "środka drogi"
 msgctxt "instructions.keep.relative_directions.2"
 msgid "right"
 msgstr "prawej strony"
-
-#. e.g. Keep left to stay on I 95 South.
-#. e.g. Keep straight to stay on I 95 South.
-#. e.g. Keep right to stay on I 95 South.
-#: instructions.keep_to_stay_on.phrases.0
-msgctxt "instructions.keep_to_stay_on.phrases.0"
-msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "Trzymaj się <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>."
-
-#. e.g. Keep left to take exit 62 to stay on I 95 South.
-#: instructions.keep_to_stay_on.phrases.1
-msgctxt "instructions.keep_to_stay_on.phrases.1"
-msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
-msgstr "Trzymaj się <RELATIVE_DIRECTION>, aby skorzystać ze zjazdu <NUMBER_SIGN>, pozostając na: <STREET_NAMES>."
-
-#. e.g. Keep left to stay on I 95 South toward Baltimore.
-#: instructions.keep_to_stay_on.phrases.2
-msgctxt "instructions.keep_to_stay_on.phrases.2"
-msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "Trzymaj się <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>, kierunek: <TOWARD_SIGN>."
-
-#. e.g. Keep left to take exit 62 to stay on I 95 South toward Baltimore.
-#: instructions.keep_to_stay_on.phrases.3
-msgctxt "instructions.keep_to_stay_on.phrases.3"
-msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "Trzymaj się <RELATIVE_DIRECTION>, aby skorzystać ze zjazdu <NUMBER_SIGN>, pozostając na: <STREET_NAMES>, kierunek: <TOWARD_SIGN>."
 
 #: instructions.keep_to_stay_on.empty_street_name_labels.0
 msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.0"
@@ -1690,6 +1809,32 @@ msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr "tunel"
 
+#. e.g. Keep left to stay on I 95 South.
+#. e.g. Keep straight to stay on I 95 South.
+#. e.g. Keep right to stay on I 95 South.
+#: instructions.keep_to_stay_on.phrases.0
+msgctxt "instructions.keep_to_stay_on.phrases.0"
+msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+msgstr "Trzymaj się <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>."
+
+#. e.g. Keep left to take exit 62 to stay on I 95 South.
+#: instructions.keep_to_stay_on.phrases.1
+msgctxt "instructions.keep_to_stay_on.phrases.1"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
+msgstr "Trzymaj się <RELATIVE_DIRECTION>, aby skorzystać ze zjazdu <NUMBER_SIGN>, pozostając na: <STREET_NAMES>."
+
+#. e.g. Keep left to stay on I 95 South toward Baltimore.
+#: instructions.keep_to_stay_on.phrases.2
+msgctxt "instructions.keep_to_stay_on.phrases.2"
+msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Trzymaj się <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>, kierunek: <TOWARD_SIGN>."
+
+#. e.g. Keep left to take exit 62 to stay on I 95 South toward Baltimore.
+#: instructions.keep_to_stay_on.phrases.3
+msgctxt "instructions.keep_to_stay_on.phrases.3"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Trzymaj się <RELATIVE_DIRECTION>, aby skorzystać ze zjazdu <NUMBER_SIGN>, pozostając na: <STREET_NAMES>, kierunek: <TOWARD_SIGN>."
+
 #: instructions.keep_to_stay_on.relative_directions.0
 msgctxt "instructions.keep_to_stay_on.relative_directions.0"
 msgid "left"
@@ -1704,32 +1849,6 @@ msgstr "środka drogi"
 msgctxt "instructions.keep_to_stay_on.relative_directions.2"
 msgid "right"
 msgstr "prawej strony"
-
-#. e.g. Keep left to stay on Interstate 95 South.
-#. e.g. Keep straight to stay on Interstate 95 South.
-#. e.g. Keep right to stay on Interstate 95 South.
-#: instructions.keep_to_stay_on_verbal.phrases.0
-msgctxt "instructions.keep_to_stay_on_verbal.phrases.0"
-msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "Trzymaj się <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>."
-
-#. e.g. Keep left to take exit 62 to stay on Interstate 95 South.
-#: instructions.keep_to_stay_on_verbal.phrases.1
-msgctxt "instructions.keep_to_stay_on_verbal.phrases.1"
-msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
-msgstr "Trzymaj się <RELATIVE_DIRECTION>, aby skorzystać ze zjazdu <NUMBER_SIGN>, pozostając na: <STREET_NAMES>."
-
-#. e.g. Keep left to stay on I 95 South toward Baltimore.
-#: instructions.keep_to_stay_on_verbal.phrases.2
-msgctxt "instructions.keep_to_stay_on_verbal.phrases.2"
-msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "Trzymaj się <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>, kierunek: <TOWARD_SIGN>."
-
-#. e.g. Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore.
-#: instructions.keep_to_stay_on_verbal.phrases.3
-msgctxt "instructions.keep_to_stay_on_verbal.phrases.3"
-msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "Trzymaj się <RELATIVE_DIRECTION>, aby skorzystać ze zjazdu <NUMBER_SIGN>, pozostając na: <STREET_NAMES>, kierunek: <TOWARD_SIGN>."
 
 #: instructions.keep_to_stay_on_verbal.empty_street_name_labels.0
 msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.0"
@@ -1766,6 +1885,32 @@ msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr "tunel"
 
+#. e.g. Keep left to stay on Interstate 95 South.
+#. e.g. Keep straight to stay on Interstate 95 South.
+#. e.g. Keep right to stay on Interstate 95 South.
+#: instructions.keep_to_stay_on_verbal.phrases.0
+msgctxt "instructions.keep_to_stay_on_verbal.phrases.0"
+msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+msgstr "Trzymaj się <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>."
+
+#. e.g. Keep left to take exit 62 to stay on Interstate 95 South.
+#: instructions.keep_to_stay_on_verbal.phrases.1
+msgctxt "instructions.keep_to_stay_on_verbal.phrases.1"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
+msgstr "Trzymaj się <RELATIVE_DIRECTION>, aby skorzystać ze zjazdu <NUMBER_SIGN>, pozostając na: <STREET_NAMES>."
+
+#. e.g. Keep left to stay on I 95 South toward Baltimore.
+#: instructions.keep_to_stay_on_verbal.phrases.2
+msgctxt "instructions.keep_to_stay_on_verbal.phrases.2"
+msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Trzymaj się <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>, kierunek: <TOWARD_SIGN>."
+
+#. e.g. Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore.
+#: instructions.keep_to_stay_on_verbal.phrases.3
+msgctxt "instructions.keep_to_stay_on_verbal.phrases.3"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Trzymaj się <RELATIVE_DIRECTION>, aby skorzystać ze zjazdu <NUMBER_SIGN>, pozostając na: <STREET_NAMES>, kierunek: <TOWARD_SIGN>."
+
 #: instructions.keep_to_stay_on_verbal.relative_directions.0
 msgctxt "instructions.keep_to_stay_on_verbal.relative_directions.0"
 msgid "left"
@@ -1780,6 +1925,41 @@ msgstr "środka drogi"
 msgctxt "instructions.keep_to_stay_on_verbal.relative_directions.2"
 msgid "right"
 msgstr "prawej strony"
+
+#: instructions.keep_verbal.empty_street_name_labels.0
+msgctxt "instructions.keep_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.keep_verbal.empty_street_name_labels.1
+msgctxt "instructions.keep_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.keep_verbal.empty_street_name_labels.2
+msgctxt "instructions.keep_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.keep_verbal.empty_street_name_labels.3
+msgctxt "instructions.keep_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.keep_verbal.empty_street_name_labels.4
+msgctxt "instructions.keep_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.keep_verbal.empty_street_name_labels.5
+msgctxt "instructions.keep_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.keep_verbal.empty_street_name_labels.6
+msgctxt "instructions.keep_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
 
 #. e.g. Keep left at the fork.
 #. e.g. Keep straight at the fork.
@@ -1831,41 +2011,6 @@ msgctxt "instructions.keep_verbal.phrases.7"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
 msgstr "Trzymaj się <RELATIVE_DIRECTION>, aby skorzystać ze zjazdu <NUMBER_SIGN> w: <STREET_NAMES>, kierunek: <TOWARD_SIGN>."
 
-#: instructions.keep_verbal.empty_street_name_labels.0
-msgctxt "instructions.keep_verbal.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.keep_verbal.empty_street_name_labels.1
-msgctxt "instructions.keep_verbal.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.keep_verbal.empty_street_name_labels.2
-msgctxt "instructions.keep_verbal.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.keep_verbal.empty_street_name_labels.3
-msgctxt "instructions.keep_verbal.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.keep_verbal.empty_street_name_labels.4
-msgctxt "instructions.keep_verbal.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.keep_verbal.empty_street_name_labels.5
-msgctxt "instructions.keep_verbal.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.keep_verbal.empty_street_name_labels.6
-msgctxt "instructions.keep_verbal.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
 #: instructions.keep_verbal.relative_directions.0
 msgctxt "instructions.keep_verbal.relative_directions.0"
 msgid "left"
@@ -1880,6 +2025,47 @@ msgstr "środka drogi"
 msgctxt "instructions.keep_verbal.relative_directions.2"
 msgid "right"
 msgstr "prawej strony"
+
+#. e.g. Continue to Level 2.
+#: instructions.level_change.phrases.0
+msgctxt "instructions.level_change.phrases.0"
+msgid "Continue to <LEVEL>."
+msgstr ""
+
+#: instructions.merge.empty_street_name_labels.0
+msgctxt "instructions.merge.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.merge.empty_street_name_labels.1
+msgctxt "instructions.merge.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.merge.empty_street_name_labels.2
+msgctxt "instructions.merge.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.merge.empty_street_name_labels.3
+msgctxt "instructions.merge.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.merge.empty_street_name_labels.4
+msgctxt "instructions.merge.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.merge.empty_street_name_labels.5
+msgctxt "instructions.merge.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.merge.empty_street_name_labels.6
+msgctxt "instructions.merge.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
 
 #. e.g. Merge.
 #: instructions.merge.phrases.0
@@ -1927,38 +2113,38 @@ msgctxt "instructions.merge.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
 
-#: instructions.merge.empty_street_name_labels.0
-msgctxt "instructions.merge.empty_street_name_labels.0"
+#: instructions.merge_verbal.empty_street_name_labels.0
+msgctxt "instructions.merge_verbal.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "chodnik"
 
-#: instructions.merge.empty_street_name_labels.1
-msgctxt "instructions.merge.empty_street_name_labels.1"
+#: instructions.merge_verbal.empty_street_name_labels.1
+msgctxt "instructions.merge_verbal.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "ścieżka rowerowa"
 
-#: instructions.merge.empty_street_name_labels.2
-msgctxt "instructions.merge.empty_street_name_labels.2"
+#: instructions.merge_verbal.empty_street_name_labels.2
+msgctxt "instructions.merge_verbal.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "górski szlak rowerowy"
 
-#: instructions.merge.empty_street_name_labels.3
-msgctxt "instructions.merge.empty_street_name_labels.3"
+#: instructions.merge_verbal.empty_street_name_labels.3
+msgctxt "instructions.merge_verbal.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "przejście dla pieszych"
 
-#: instructions.merge.empty_street_name_labels.4
-msgctxt "instructions.merge.empty_street_name_labels.4"
+#: instructions.merge_verbal.empty_street_name_labels.4
+msgctxt "instructions.merge_verbal.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "schody"
 
-#: instructions.merge.empty_street_name_labels.5
-msgctxt "instructions.merge.empty_street_name_labels.5"
+#: instructions.merge_verbal.empty_street_name_labels.5
+msgctxt "instructions.merge_verbal.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "most"
 
-#: instructions.merge.empty_street_name_labels.6
-msgctxt "instructions.merge.empty_street_name_labels.6"
+#: instructions.merge_verbal.empty_street_name_labels.6
+msgctxt "instructions.merge_verbal.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr "tunel"
 
@@ -2008,40 +2194,37 @@ msgctxt "instructions.merge_verbal.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
 
-#: instructions.merge_verbal.empty_street_name_labels.0
-msgctxt "instructions.merge_verbal.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
+#. e.g. Park your vehicle.
+#: instructions.park_vehicle.phrases.0
+msgctxt "instructions.park_vehicle.phrases.0"
+msgid "Park your vehicle"
+msgstr ""
 
-#: instructions.merge_verbal.empty_street_name_labels.1
-msgctxt "instructions.merge_verbal.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
+#: instructions.pass.object_labels.0
+msgctxt "instructions.pass.object_labels.0"
+msgid "the gate"
+msgstr "bramę"
 
-#: instructions.merge_verbal.empty_street_name_labels.2
-msgctxt "instructions.merge_verbal.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
+#: instructions.pass.object_labels.1
+msgctxt "instructions.pass.object_labels.1"
+msgid "the bollards"
+msgstr "słupki"
 
-#: instructions.merge_verbal.empty_street_name_labels.3
-msgctxt "instructions.merge_verbal.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
+#: instructions.pass.object_labels.2
+msgctxt "instructions.pass.object_labels.2"
+msgid "ways intersection"
+msgstr "skrzyżowanie dróg"
 
-#: instructions.merge_verbal.empty_street_name_labels.4
-msgctxt "instructions.merge_verbal.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
+#. e.g. Pass the gate.
+#: instructions.pass.phrases.0
+msgctxt "instructions.pass.phrases.0"
+msgid "Pass <OBJECT_LABEL>."
+msgstr "Przejdź <OBJECT_LABEL>."
 
-#: instructions.merge_verbal.empty_street_name_labels.5
-msgctxt "instructions.merge_verbal.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.merge_verbal.empty_street_name_labels.6
-msgctxt "instructions.merge_verbal.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
+#: instructions.pass.phrases.1
+msgctxt "instructions.pass.phrases.1"
+msgid "Pass traffic signals on <OBJECT_LABEL>."
+msgstr "Przejdź na światłach <OBJECT_LABEL>."
 
 #. e.g. Travel 1 stop.
 #. e.g. Travel 3 stops.
@@ -2059,20 +2242,6 @@ msgstr "przystanku"
 msgctxt "instructions.post_transition_transit_verbal.transit_stop_count_labels.other"
 msgid "stops"
 msgstr "przystanku"
-
-#. e.g. Continue for 300 feet.
-#. e.g. Continue for 9 miles.
-#: instructions.post_transition_verbal.phrases.0
-msgctxt "instructions.post_transition_verbal.phrases.0"
-msgid "Continue for <LENGTH>."
-msgstr "Podążaj prosto przez <LENGTH>."
-
-#. e.g. Continue on Pennsylvania 7 43 for 6.2 miles.
-#. e.g. Continue on Main Street, Vermont 30 for 1 tenth of a mile.
-#: instructions.post_transition_verbal.phrases.1
-msgctxt "instructions.post_transition_verbal.phrases.1"
-msgid "Continue on <STREET_NAMES> for <LENGTH>."
-msgstr "Kontynuuj wzdłuż: <STREET_NAMES> przez <LENGTH>."
 
 #: instructions.post_transition_verbal.empty_street_name_labels.0
 msgctxt "instructions.post_transition_verbal.empty_street_name_labels.0"
@@ -2128,6 +2297,20 @@ msgstr "<METERS> m"
 msgctxt "instructions.post_transition_verbal.metric_lengths.3"
 msgid "less than 10 meters"
 msgstr "mniej niż 10 metrów"
+
+#. e.g. Continue for 300 feet.
+#. e.g. Continue for 9 miles.
+#: instructions.post_transition_verbal.phrases.0
+msgctxt "instructions.post_transition_verbal.phrases.0"
+msgid "Continue for <LENGTH>."
+msgstr "Podążaj prosto przez <LENGTH>."
+
+#. e.g. Continue on Pennsylvania 7 43 for 6.2 miles.
+#. e.g. Continue on Main Street, Vermont 30 for 1 tenth of a mile.
+#: instructions.post_transition_verbal.phrases.1
+msgctxt "instructions.post_transition_verbal.phrases.1"
+msgid "Continue on <STREET_NAMES> for <LENGTH>."
+msgstr "Kontynuuj wzdłuż: <STREET_NAMES> przez <LENGTH>."
 
 #: instructions.post_transition_verbal.us_customary_lengths.0
 msgctxt "instructions.post_transition_verbal.us_customary_lengths.0"
@@ -2423,6 +2606,41 @@ msgctxt "instructions.ramp_verbal.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
 
+#: instructions.sharp.empty_street_name_labels.0
+msgctxt "instructions.sharp.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.sharp.empty_street_name_labels.1
+msgctxt "instructions.sharp.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.sharp.empty_street_name_labels.2
+msgctxt "instructions.sharp.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.sharp.empty_street_name_labels.3
+msgctxt "instructions.sharp.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.sharp.empty_street_name_labels.4
+msgctxt "instructions.sharp.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.sharp.empty_street_name_labels.5
+msgctxt "instructions.sharp.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.sharp.empty_street_name_labels.6
+msgctxt "instructions.sharp.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
+
 #. e.g. Make a sharp left.
 #: instructions.sharp.phrases.0
 msgctxt "instructions.sharp.phrases.0"
@@ -2459,41 +2677,6 @@ msgctxt "instructions.sharp.phrases.5"
 msgid "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Skręć ostro <RELATIVE_DIRECTION>, kierunek: <TOWARD_SIGN>."
 
-#: instructions.sharp.empty_street_name_labels.0
-msgctxt "instructions.sharp.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.sharp.empty_street_name_labels.1
-msgctxt "instructions.sharp.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.sharp.empty_street_name_labels.2
-msgctxt "instructions.sharp.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.sharp.empty_street_name_labels.3
-msgctxt "instructions.sharp.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.sharp.empty_street_name_labels.4
-msgctxt "instructions.sharp.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.sharp.empty_street_name_labels.5
-msgctxt "instructions.sharp.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.sharp.empty_street_name_labels.6
-msgctxt "instructions.sharp.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
 #: instructions.sharp.relative_directions.0
 msgctxt "instructions.sharp.relative_directions.0"
 msgid "left"
@@ -2503,6 +2686,41 @@ msgstr "w lewo"
 msgctxt "instructions.sharp.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
+
+#: instructions.sharp_verbal.empty_street_name_labels.0
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.sharp_verbal.empty_street_name_labels.1
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.sharp_verbal.empty_street_name_labels.2
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.sharp_verbal.empty_street_name_labels.3
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.sharp_verbal.empty_street_name_labels.4
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.sharp_verbal.empty_street_name_labels.5
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.sharp_verbal.empty_street_name_labels.6
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
 
 #. e.g. Make a sharp left.
 #: instructions.sharp_verbal.phrases.0
@@ -2540,41 +2758,6 @@ msgctxt "instructions.sharp_verbal.phrases.5"
 msgid "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Skręć ostro <RELATIVE_DIRECTION>, kierunek: <TOWARD_SIGN>."
 
-#: instructions.sharp_verbal.empty_street_name_labels.0
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.sharp_verbal.empty_street_name_labels.1
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.sharp_verbal.empty_street_name_labels.2
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.sharp_verbal.empty_street_name_labels.3
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.sharp_verbal.empty_street_name_labels.4
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.sharp_verbal.empty_street_name_labels.5
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.sharp_verbal.empty_street_name_labels.6
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
 #: instructions.sharp_verbal.relative_directions.0
 msgctxt "instructions.sharp_verbal.relative_directions.0"
 msgid "left"
@@ -2584,6 +2767,81 @@ msgstr "w lewo"
 msgctxt "instructions.sharp_verbal.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
+
+#: instructions.start.cardinal_directions.0
+msgctxt "instructions.start.cardinal_directions.0"
+msgid "north"
+msgstr "na północ"
+
+#: instructions.start.cardinal_directions.1
+msgctxt "instructions.start.cardinal_directions.1"
+msgid "northeast"
+msgstr "na północny wschód"
+
+#: instructions.start.cardinal_directions.2
+msgctxt "instructions.start.cardinal_directions.2"
+msgid "east"
+msgstr "na wschód"
+
+#: instructions.start.cardinal_directions.3
+msgctxt "instructions.start.cardinal_directions.3"
+msgid "southeast"
+msgstr "na południowy wschód"
+
+#: instructions.start.cardinal_directions.4
+msgctxt "instructions.start.cardinal_directions.4"
+msgid "south"
+msgstr "na południe"
+
+#: instructions.start.cardinal_directions.5
+msgctxt "instructions.start.cardinal_directions.5"
+msgid "southwest"
+msgstr "na południowy zachód"
+
+#: instructions.start.cardinal_directions.6
+msgctxt "instructions.start.cardinal_directions.6"
+msgid "west"
+msgstr "na zachód"
+
+#: instructions.start.cardinal_directions.7
+msgctxt "instructions.start.cardinal_directions.7"
+msgid "northwest"
+msgstr "na północny zachód"
+
+#: instructions.start.empty_street_name_labels.0
+msgctxt "instructions.start.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.start.empty_street_name_labels.1
+msgctxt "instructions.start.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.start.empty_street_name_labels.2
+msgctxt "instructions.start.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.start.empty_street_name_labels.3
+msgctxt "instructions.start.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.start.empty_street_name_labels.4
+msgctxt "instructions.start.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.start.empty_street_name_labels.5
+msgctxt "instructions.start.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.start.empty_street_name_labels.6
+msgctxt "instructions.start.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
 
 #. e.g. Head east.
 #. e.g. Head north.
@@ -2667,80 +2925,100 @@ msgctxt "instructions.start.phrases.18"
 msgid "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 msgstr "Jedź <CARDINAL_DIRECTION> w stronę: <BEGIN_STREET_NAMES>. Kontynuuj wzdłuż: <STREET_NAMES>."
 
-#: instructions.start.cardinal_directions.0
-msgctxt "instructions.start.cardinal_directions.0"
+#: instructions.start_verbal.cardinal_directions.0
+msgctxt "instructions.start_verbal.cardinal_directions.0"
 msgid "north"
 msgstr "na północ"
 
-#: instructions.start.cardinal_directions.1
-msgctxt "instructions.start.cardinal_directions.1"
+#: instructions.start_verbal.cardinal_directions.1
+msgctxt "instructions.start_verbal.cardinal_directions.1"
 msgid "northeast"
 msgstr "na północny wschód"
 
-#: instructions.start.cardinal_directions.2
-msgctxt "instructions.start.cardinal_directions.2"
+#: instructions.start_verbal.cardinal_directions.2
+msgctxt "instructions.start_verbal.cardinal_directions.2"
 msgid "east"
 msgstr "na wschód"
 
-#: instructions.start.cardinal_directions.3
-msgctxt "instructions.start.cardinal_directions.3"
+#: instructions.start_verbal.cardinal_directions.3
+msgctxt "instructions.start_verbal.cardinal_directions.3"
 msgid "southeast"
 msgstr "na południowy wschód"
 
-#: instructions.start.cardinal_directions.4
-msgctxt "instructions.start.cardinal_directions.4"
+#: instructions.start_verbal.cardinal_directions.4
+msgctxt "instructions.start_verbal.cardinal_directions.4"
 msgid "south"
 msgstr "na południe"
 
-#: instructions.start.cardinal_directions.5
-msgctxt "instructions.start.cardinal_directions.5"
+#: instructions.start_verbal.cardinal_directions.5
+msgctxt "instructions.start_verbal.cardinal_directions.5"
 msgid "southwest"
 msgstr "na południowy zachód"
 
-#: instructions.start.cardinal_directions.6
-msgctxt "instructions.start.cardinal_directions.6"
+#: instructions.start_verbal.cardinal_directions.6
+msgctxt "instructions.start_verbal.cardinal_directions.6"
 msgid "west"
 msgstr "na zachód"
 
-#: instructions.start.cardinal_directions.7
-msgctxt "instructions.start.cardinal_directions.7"
+#: instructions.start_verbal.cardinal_directions.7
+msgctxt "instructions.start_verbal.cardinal_directions.7"
 msgid "northwest"
 msgstr "na północny zachód"
 
-#: instructions.start.empty_street_name_labels.0
-msgctxt "instructions.start.empty_street_name_labels.0"
+#: instructions.start_verbal.empty_street_name_labels.0
+msgctxt "instructions.start_verbal.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "chodnik"
 
-#: instructions.start.empty_street_name_labels.1
-msgctxt "instructions.start.empty_street_name_labels.1"
+#: instructions.start_verbal.empty_street_name_labels.1
+msgctxt "instructions.start_verbal.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "ścieżka rowerowa"
 
-#: instructions.start.empty_street_name_labels.2
-msgctxt "instructions.start.empty_street_name_labels.2"
+#: instructions.start_verbal.empty_street_name_labels.2
+msgctxt "instructions.start_verbal.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "górski szlak rowerowy"
 
-#: instructions.start.empty_street_name_labels.3
-msgctxt "instructions.start.empty_street_name_labels.3"
+#: instructions.start_verbal.empty_street_name_labels.3
+msgctxt "instructions.start_verbal.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "przejście dla pieszych"
 
-#: instructions.start.empty_street_name_labels.4
-msgctxt "instructions.start.empty_street_name_labels.4"
+#: instructions.start_verbal.empty_street_name_labels.4
+msgctxt "instructions.start_verbal.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "schody"
 
-#: instructions.start.empty_street_name_labels.5
-msgctxt "instructions.start.empty_street_name_labels.5"
+#: instructions.start_verbal.empty_street_name_labels.5
+msgctxt "instructions.start_verbal.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "most"
 
-#: instructions.start.empty_street_name_labels.6
-msgctxt "instructions.start.empty_street_name_labels.6"
+#: instructions.start_verbal.empty_street_name_labels.6
+msgctxt "instructions.start_verbal.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr "tunel"
+
+#: instructions.start_verbal.metric_lengths.0
+msgctxt "instructions.start_verbal.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> km"
+
+#: instructions.start_verbal.metric_lengths.1
+msgctxt "instructions.start_verbal.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 km"
+
+#: instructions.start_verbal.metric_lengths.2
+msgctxt "instructions.start_verbal.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> m"
+
+#: instructions.start_verbal.metric_lengths.3
+msgctxt "instructions.start_verbal.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "mniej niż 10 metrów"
 
 #. e.g. Head east.
 #. e.g. Head north.
@@ -2870,101 +3148,6 @@ msgctxt "instructions.start_verbal.phrases.19"
 msgid "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 msgstr "Jedź <CARDINAL_DIRECTION> w stronę: <BEGIN_STREET_NAMES>."
 
-#: instructions.start_verbal.cardinal_directions.0
-msgctxt "instructions.start_verbal.cardinal_directions.0"
-msgid "north"
-msgstr "na północ"
-
-#: instructions.start_verbal.cardinal_directions.1
-msgctxt "instructions.start_verbal.cardinal_directions.1"
-msgid "northeast"
-msgstr "na północny wschód"
-
-#: instructions.start_verbal.cardinal_directions.2
-msgctxt "instructions.start_verbal.cardinal_directions.2"
-msgid "east"
-msgstr "na wschód"
-
-#: instructions.start_verbal.cardinal_directions.3
-msgctxt "instructions.start_verbal.cardinal_directions.3"
-msgid "southeast"
-msgstr "na południowy wschód"
-
-#: instructions.start_verbal.cardinal_directions.4
-msgctxt "instructions.start_verbal.cardinal_directions.4"
-msgid "south"
-msgstr "na południe"
-
-#: instructions.start_verbal.cardinal_directions.5
-msgctxt "instructions.start_verbal.cardinal_directions.5"
-msgid "southwest"
-msgstr "na południowy zachód"
-
-#: instructions.start_verbal.cardinal_directions.6
-msgctxt "instructions.start_verbal.cardinal_directions.6"
-msgid "west"
-msgstr "na zachód"
-
-#: instructions.start_verbal.cardinal_directions.7
-msgctxt "instructions.start_verbal.cardinal_directions.7"
-msgid "northwest"
-msgstr "na północny zachód"
-
-#: instructions.start_verbal.empty_street_name_labels.0
-msgctxt "instructions.start_verbal.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.start_verbal.empty_street_name_labels.1
-msgctxt "instructions.start_verbal.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.start_verbal.empty_street_name_labels.2
-msgctxt "instructions.start_verbal.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.start_verbal.empty_street_name_labels.3
-msgctxt "instructions.start_verbal.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.start_verbal.empty_street_name_labels.4
-msgctxt "instructions.start_verbal.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.start_verbal.empty_street_name_labels.5
-msgctxt "instructions.start_verbal.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.start_verbal.empty_street_name_labels.6
-msgctxt "instructions.start_verbal.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
-#: instructions.start_verbal.metric_lengths.0
-msgctxt "instructions.start_verbal.metric_lengths.0"
-msgid "<KILOMETERS> kilometers"
-msgstr "<KILOMETERS> km"
-
-#: instructions.start_verbal.metric_lengths.1
-msgctxt "instructions.start_verbal.metric_lengths.1"
-msgid "1 kilometer"
-msgstr "1 km"
-
-#: instructions.start_verbal.metric_lengths.2
-msgctxt "instructions.start_verbal.metric_lengths.2"
-msgid "<METERS> meters"
-msgstr "<METERS> m"
-
-#: instructions.start_verbal.metric_lengths.3
-msgctxt "instructions.start_verbal.metric_lengths.3"
-msgid "less than 10 meters"
-msgstr "mniej niż 10 metrów"
-
 #: instructions.start_verbal.us_customary_lengths.0
 msgctxt "instructions.start_verbal.us_customary_lengths.0"
 msgid "<MILES> miles"
@@ -2995,20 +3178,17 @@ msgctxt "instructions.start_verbal.us_customary_lengths.5"
 msgid "less than 10 feet"
 msgstr "mniej niż 10 stóp"
 
-#. e.g. Take the New Haven. (1 stop)
-#. e.g. Take the metro. (2 stops)
-#. e.g. Take the bus. (12 stops)
-#: instructions.transit.phrases.0
-msgctxt "instructions.transit.phrases.0"
-msgid "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
-msgstr "Wybierz <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
+#. e.g. Take the stairs.
+#: instructions.steps.phrases.0
+msgctxt "instructions.steps.phrases.0"
+msgid "Take the stairs."
+msgstr "Użyj schodów."
 
-#. e.g. Take the F toward JAMAICA - 179 ST. (10 stops)
-#. e.g. Take the ferry toward Staten Island. (1 stop)
-#: instructions.transit.phrases.1
-msgctxt "instructions.transit.phrases.1"
-msgid "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
-msgstr "Wybierz <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
+#. e.g. Take the stairs to Level 2.
+#: instructions.steps.phrases.1
+msgctxt "instructions.steps.phrases.1"
+msgid "Take the stairs to <LEVEL>."
+msgstr "Skorzystaj ze schodów na <LEVEL>."
 
 #: instructions.transit.empty_transit_name_labels.0
 msgctxt "instructions.transit.empty_transit_name_labels.0"
@@ -3018,7 +3198,7 @@ msgstr "tramwaj"
 #: instructions.transit.empty_transit_name_labels.1
 msgctxt "instructions.transit.empty_transit_name_labels.1"
 msgid "metro"
-msgstr "metro"
+msgstr ""
 
 #: instructions.transit.empty_transit_name_labels.2
 msgctxt "instructions.transit.empty_transit_name_labels.2"
@@ -3049,6 +3229,21 @@ msgstr "gondolę"
 msgctxt "instructions.transit.empty_transit_name_labels.7"
 msgid "funicular"
 msgstr "kolejkę linowo-terenową"
+
+#. e.g. Take the New Haven. (1 stop)
+#. e.g. Take the metro. (2 stops)
+#. e.g. Take the bus. (12 stops)
+#: instructions.transit.phrases.0
+msgctxt "instructions.transit.phrases.0"
+msgid "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Wybierz <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
+
+#. e.g. Take the F toward JAMAICA - 179 ST. (10 stops)
+#. e.g. Take the ferry toward Staten Island. (1 stop)
+#: instructions.transit.phrases.1
+msgctxt "instructions.transit.phrases.1"
+msgid "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Wybierz <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
 
 #: instructions.transit.transit_stop_count_labels.one
 msgctxt "instructions.transit.transit_stop_count_labels.one"
@@ -3198,19 +3393,6 @@ msgctxt "instructions.transit_connection_transfer_verbal.station_label"
 msgid "Station"
 msgstr "stacji"
 
-#. e.g. Remain on the New Haven. (1 stop)
-#. e.g. Remain on the train. (3 stops)
-#: instructions.transit_remain_on.phrases.0
-msgctxt "instructions.transit_remain_on.phrases.0"
-msgid "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
-msgstr "Pozostań <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
-
-#. e.g. Remain on the F toward JAMAICA - 179 ST. (10 stops)
-#: instructions.transit_remain_on.phrases.1
-msgctxt "instructions.transit_remain_on.phrases.1"
-msgid "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
-msgstr "Pozostań <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
-
 #: instructions.transit_remain_on.empty_transit_name_labels.0
 msgctxt "instructions.transit_remain_on.empty_transit_name_labels.0"
 msgid "tram"
@@ -3251,6 +3433,19 @@ msgctxt "instructions.transit_remain_on.empty_transit_name_labels.7"
 msgid "funicular"
 msgstr "w kolejce linowo-terenowej"
 
+#. e.g. Remain on the New Haven. (1 stop)
+#. e.g. Remain on the train. (3 stops)
+#: instructions.transit_remain_on.phrases.0
+msgctxt "instructions.transit_remain_on.phrases.0"
+msgid "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Pozostań <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
+
+#. e.g. Remain on the F toward JAMAICA - 179 ST. (10 stops)
+#: instructions.transit_remain_on.phrases.1
+msgctxt "instructions.transit_remain_on.phrases.1"
+msgid "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Pozostań <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
+
 #: instructions.transit_remain_on.transit_stop_count_labels.one
 msgctxt "instructions.transit_remain_on.transit_stop_count_labels.one"
 msgid "stop"
@@ -3260,18 +3455,6 @@ msgstr "Przystanki"
 msgctxt "instructions.transit_remain_on.transit_stop_count_labels.other"
 msgid "stops"
 msgstr "Przystanki"
-
-#. e.g. Remain on the New Haven.
-#: instructions.transit_remain_on_verbal.phrases.0
-msgctxt "instructions.transit_remain_on_verbal.phrases.0"
-msgid "Remain on the <TRANSIT_NAME>."
-msgstr "Pozostań <TRANSIT_NAME>."
-
-#. e.g. Remain on the F toward JAMAICA - 179 ST.
-#: instructions.transit_remain_on_verbal.phrases.1
-msgctxt "instructions.transit_remain_on_verbal.phrases.1"
-msgid "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
-msgstr "Pozostań <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>."
 
 #: instructions.transit_remain_on_verbal.empty_transit_name_labels.0
 msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.0"
@@ -3313,18 +3496,17 @@ msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.7"
 msgid "funicular"
 msgstr "w kolejce linowo-terenowej"
 
-#. e.g. Transfer to take the New Haven. (1 stop)
-#. e.g. Transfer to take the tram. (4 stops)
-#: instructions.transit_transfer.phrases.0
-msgctxt "instructions.transit_transfer.phrases.0"
-msgid "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
-msgstr "Przesiądź się i wybierz <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
+#. e.g. Remain on the New Haven.
+#: instructions.transit_remain_on_verbal.phrases.0
+msgctxt "instructions.transit_remain_on_verbal.phrases.0"
+msgid "Remain on the <TRANSIT_NAME>."
+msgstr "Pozostań <TRANSIT_NAME>."
 
-#. e.g. Transfer to take the F toward JAMAICA - 179 ST. (10 stops)
-#: instructions.transit_transfer.phrases.1
-msgctxt "instructions.transit_transfer.phrases.1"
-msgid "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
-msgstr "Przesiądź się i wybierz <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
+#. e.g. Remain on the F toward JAMAICA - 179 ST.
+#: instructions.transit_remain_on_verbal.phrases.1
+msgctxt "instructions.transit_remain_on_verbal.phrases.1"
+msgid "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+msgstr "Pozostań <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>."
 
 #: instructions.transit_transfer.empty_transit_name_labels.0
 msgctxt "instructions.transit_transfer.empty_transit_name_labels.0"
@@ -3334,7 +3516,7 @@ msgstr "tramwaj"
 #: instructions.transit_transfer.empty_transit_name_labels.1
 msgctxt "instructions.transit_transfer.empty_transit_name_labels.1"
 msgid "metro"
-msgstr "metro"
+msgstr ""
 
 #: instructions.transit_transfer.empty_transit_name_labels.2
 msgctxt "instructions.transit_transfer.empty_transit_name_labels.2"
@@ -3366,6 +3548,19 @@ msgctxt "instructions.transit_transfer.empty_transit_name_labels.7"
 msgid "funicular"
 msgstr "kolejkę linowo-terenową"
 
+#. e.g. Transfer to take the New Haven. (1 stop)
+#. e.g. Transfer to take the tram. (4 stops)
+#: instructions.transit_transfer.phrases.0
+msgctxt "instructions.transit_transfer.phrases.0"
+msgid "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Przesiądź się i wybierz <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
+
+#. e.g. Transfer to take the F toward JAMAICA - 179 ST. (10 stops)
+#: instructions.transit_transfer.phrases.1
+msgctxt "instructions.transit_transfer.phrases.1"
+msgid "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Przesiądź się i wybierz <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT_LABEL>: <TRANSIT_STOP_COUNT>)"
+
 #: instructions.transit_transfer.transit_stop_count_labels.one
 msgctxt "instructions.transit_transfer.transit_stop_count_labels.one"
 msgid "stop"
@@ -3376,18 +3571,6 @@ msgctxt "instructions.transit_transfer.transit_stop_count_labels.other"
 msgid "stops"
 msgstr "Przystanki"
 
-#. e.g. Transfer to take the New Haven.
-#: instructions.transit_transfer_verbal.phrases.0
-msgctxt "instructions.transit_transfer_verbal.phrases.0"
-msgid "Transfer to take the <TRANSIT_NAME>."
-msgstr "Przesiądź się i wybierz <TRANSIT_NAME>."
-
-#. e.g. Transfer to take the F toward JAMAICA - 179 ST.
-#: instructions.transit_transfer_verbal.phrases.1
-msgctxt "instructions.transit_transfer_verbal.phrases.1"
-msgid "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
-msgstr "Przesiądź się i wybierz <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>."
-
 #: instructions.transit_transfer_verbal.empty_transit_name_labels.0
 msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.0"
 msgid "tram"
@@ -3396,7 +3579,7 @@ msgstr "tramwaj"
 #: instructions.transit_transfer_verbal.empty_transit_name_labels.1
 msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.1"
 msgid "metro"
-msgstr "metro"
+msgstr ""
 
 #: instructions.transit_transfer_verbal.empty_transit_name_labels.2
 msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.2"
@@ -3428,17 +3611,17 @@ msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.7"
 msgid "funicular"
 msgstr "kolejkę linowo-terenową"
 
-#. e.g. Take the New Haven.
-#: instructions.transit_verbal.phrases.0
-msgctxt "instructions.transit_verbal.phrases.0"
-msgid "Take the <TRANSIT_NAME>."
-msgstr "Wybierz <TRANSIT_NAME>."
+#. e.g. Transfer to take the New Haven.
+#: instructions.transit_transfer_verbal.phrases.0
+msgctxt "instructions.transit_transfer_verbal.phrases.0"
+msgid "Transfer to take the <TRANSIT_NAME>."
+msgstr "Przesiądź się i wybierz <TRANSIT_NAME>."
 
-#. e.g. Take the F toward JAMAICA - 179 ST.
-#: instructions.transit_verbal.phrases.1
-msgctxt "instructions.transit_verbal.phrases.1"
-msgid "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
-msgstr "Wybierz <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>."
+#. e.g. Transfer to take the F toward JAMAICA - 179 ST.
+#: instructions.transit_transfer_verbal.phrases.1
+msgctxt "instructions.transit_transfer_verbal.phrases.1"
+msgid "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+msgstr "Przesiądź się i wybierz <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>."
 
 #: instructions.transit_verbal.empty_transit_name_labels.0
 msgctxt "instructions.transit_verbal.empty_transit_name_labels.0"
@@ -3448,7 +3631,7 @@ msgstr "tramwaj"
 #: instructions.transit_verbal.empty_transit_name_labels.1
 msgctxt "instructions.transit_verbal.empty_transit_name_labels.1"
 msgid "metro"
-msgstr "metro"
+msgstr ""
 
 #: instructions.transit_verbal.empty_transit_name_labels.2
 msgctxt "instructions.transit_verbal.empty_transit_name_labels.2"
@@ -3479,6 +3662,53 @@ msgstr "gondolę"
 msgctxt "instructions.transit_verbal.empty_transit_name_labels.7"
 msgid "funicular"
 msgstr "kolejkę linowo-terenową"
+
+#. e.g. Take the New Haven.
+#: instructions.transit_verbal.phrases.0
+msgctxt "instructions.transit_verbal.phrases.0"
+msgid "Take the <TRANSIT_NAME>."
+msgstr "Wybierz <TRANSIT_NAME>."
+
+#. e.g. Take the F toward JAMAICA - 179 ST.
+#: instructions.transit_verbal.phrases.1
+msgctxt "instructions.transit_verbal.phrases.1"
+msgid "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+msgstr "Wybierz <TRANSIT_NAME>, kierunek: <TRANSIT_HEADSIGN>."
+
+#: instructions.turn.empty_street_name_labels.0
+msgctxt "instructions.turn.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.turn.empty_street_name_labels.1
+msgctxt "instructions.turn.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.turn.empty_street_name_labels.2
+msgctxt "instructions.turn.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.turn.empty_street_name_labels.3
+msgctxt "instructions.turn.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.turn.empty_street_name_labels.4
+msgctxt "instructions.turn.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.turn.empty_street_name_labels.5
+msgctxt "instructions.turn.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.turn.empty_street_name_labels.6
+msgctxt "instructions.turn.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
 
 #. e.g. Turn left.
 #: instructions.turn.phrases.0
@@ -3516,41 +3746,6 @@ msgctxt "instructions.turn.phrases.5"
 msgid "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Skręć <RELATIVE_DIRECTION>, kierunek: <TOWARD_SIGN>."
 
-#: instructions.turn.empty_street_name_labels.0
-msgctxt "instructions.turn.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.turn.empty_street_name_labels.1
-msgctxt "instructions.turn.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.turn.empty_street_name_labels.2
-msgctxt "instructions.turn.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.turn.empty_street_name_labels.3
-msgctxt "instructions.turn.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.turn.empty_street_name_labels.4
-msgctxt "instructions.turn.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.turn.empty_street_name_labels.5
-msgctxt "instructions.turn.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.turn.empty_street_name_labels.6
-msgctxt "instructions.turn.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
 #: instructions.turn.relative_directions.0
 msgctxt "instructions.turn.relative_directions.0"
 msgid "left"
@@ -3560,6 +3755,41 @@ msgstr "w lewo"
 msgctxt "instructions.turn.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
+
+#: instructions.turn_verbal.empty_street_name_labels.0
+msgctxt "instructions.turn_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.turn_verbal.empty_street_name_labels.1
+msgctxt "instructions.turn_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.turn_verbal.empty_street_name_labels.2
+msgctxt "instructions.turn_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.turn_verbal.empty_street_name_labels.3
+msgctxt "instructions.turn_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.turn_verbal.empty_street_name_labels.4
+msgctxt "instructions.turn_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.turn_verbal.empty_street_name_labels.5
+msgctxt "instructions.turn_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.turn_verbal.empty_street_name_labels.6
+msgctxt "instructions.turn_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
 
 #. e.g. Turn left.
 #: instructions.turn_verbal.phrases.0
@@ -3597,41 +3827,6 @@ msgctxt "instructions.turn_verbal.phrases.5"
 msgid "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Skręć <RELATIVE_DIRECTION>, kierunek: <TOWARD_SIGN>."
 
-#: instructions.turn_verbal.empty_street_name_labels.0
-msgctxt "instructions.turn_verbal.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.turn_verbal.empty_street_name_labels.1
-msgctxt "instructions.turn_verbal.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.turn_verbal.empty_street_name_labels.2
-msgctxt "instructions.turn_verbal.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.turn_verbal.empty_street_name_labels.3
-msgctxt "instructions.turn_verbal.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.turn_verbal.empty_street_name_labels.4
-msgctxt "instructions.turn_verbal.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.turn_verbal.empty_street_name_labels.5
-msgctxt "instructions.turn_verbal.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.turn_verbal.empty_street_name_labels.6
-msgctxt "instructions.turn_verbal.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
 #: instructions.turn_verbal.relative_directions.0
 msgctxt "instructions.turn_verbal.relative_directions.0"
 msgid "left"
@@ -3641,6 +3836,41 @@ msgstr "w lewo"
 msgctxt "instructions.turn_verbal.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
+
+#: instructions.uturn.empty_street_name_labels.0
+msgctxt "instructions.uturn.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.uturn.empty_street_name_labels.1
+msgctxt "instructions.uturn.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.uturn.empty_street_name_labels.2
+msgctxt "instructions.uturn.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.uturn.empty_street_name_labels.3
+msgctxt "instructions.uturn.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.uturn.empty_street_name_labels.4
+msgctxt "instructions.uturn.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.uturn.empty_street_name_labels.5
+msgctxt "instructions.uturn.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.uturn.empty_street_name_labels.6
+msgctxt "instructions.uturn.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
 
 #. e.g. Make a left U-turn.
 #: instructions.uturn.phrases.0
@@ -3690,41 +3920,6 @@ msgctxt "instructions.uturn.phrases.7"
 msgid "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
 msgstr "Zawróć <RELATIVE_DIRECTION>, kierunek: <TOWARD_SIGN>."
 
-#: instructions.uturn.empty_street_name_labels.0
-msgctxt "instructions.uturn.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.uturn.empty_street_name_labels.1
-msgctxt "instructions.uturn.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.uturn.empty_street_name_labels.2
-msgctxt "instructions.uturn.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.uturn.empty_street_name_labels.3
-msgctxt "instructions.uturn.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.uturn.empty_street_name_labels.4
-msgctxt "instructions.uturn.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.uturn.empty_street_name_labels.5
-msgctxt "instructions.uturn.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.uturn.empty_street_name_labels.6
-msgctxt "instructions.uturn.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
 #: instructions.uturn.relative_directions.0
 msgctxt "instructions.uturn.relative_directions.0"
 msgid "left"
@@ -3734,6 +3929,41 @@ msgstr "w lewo"
 msgctxt "instructions.uturn.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
+
+#: instructions.uturn_verbal.empty_street_name_labels.0
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "chodnik"
+
+#: instructions.uturn_verbal.empty_street_name_labels.1
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "ścieżka rowerowa"
+
+#: instructions.uturn_verbal.empty_street_name_labels.2
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "górski szlak rowerowy"
+
+#: instructions.uturn_verbal.empty_street_name_labels.3
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "przejście dla pieszych"
+
+#: instructions.uturn_verbal.empty_street_name_labels.4
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "schody"
+
+#: instructions.uturn_verbal.empty_street_name_labels.5
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "most"
+
+#: instructions.uturn_verbal.empty_street_name_labels.6
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunel"
 
 #. e.g. Make a left U-turn.
 #: instructions.uturn_verbal.phrases.0
@@ -3783,41 +4013,6 @@ msgctxt "instructions.uturn_verbal.phrases.7"
 msgid "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
 msgstr "Zawróć <RELATIVE_DIRECTION>, kierunek: <TOWARD_SIGN>."
 
-#: instructions.uturn_verbal.empty_street_name_labels.0
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.uturn_verbal.empty_street_name_labels.1
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.uturn_verbal.empty_street_name_labels.2
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.uturn_verbal.empty_street_name_labels.3
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#: instructions.uturn_verbal.empty_street_name_labels.4
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "schody"
-
-#: instructions.uturn_verbal.empty_street_name_labels.5
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "most"
-
-#: instructions.uturn_verbal.empty_street_name_labels.6
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "tunel"
-
 #: instructions.uturn_verbal.relative_directions.0
 msgctxt "instructions.uturn_verbal.relative_directions.0"
 msgid "left"
@@ -3827,18 +4022,6 @@ msgstr "w lewo"
 msgctxt "instructions.uturn_verbal.relative_directions.1"
 msgid "right"
 msgstr "w prawo"
-
-#. e.g. Bear right onto East Fayette Street. Then Turn right onto North Gay Street.
-#: instructions.verbal_multi_cue.phrases.0
-msgctxt "instructions.verbal_multi_cue.phrases.0"
-msgid "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
-msgstr "<CURRENT_VERBAL_CUE> Następnie: <NEXT_VERBAL_CUE>"
-
-#. e.g. Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street.
-#: instructions.verbal_multi_cue.phrases.1
-msgctxt "instructions.verbal_multi_cue.phrases.1"
-msgid "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
-msgstr "<CURRENT_VERBAL_CUE> Następnie za <LENGTH>: <NEXT_VERBAL_CUE>"
 
 #: instructions.verbal_multi_cue.metric_lengths.0
 msgctxt "instructions.verbal_multi_cue.metric_lengths.0"
@@ -3859,6 +4042,18 @@ msgstr "<METERS> m"
 msgctxt "instructions.verbal_multi_cue.metric_lengths.3"
 msgid "less than 10 meters"
 msgstr "mniej niż 10 metrów"
+
+#. e.g. Bear right onto East Fayette Street. Then Turn right onto North Gay Street.
+#: instructions.verbal_multi_cue.phrases.0
+msgctxt "instructions.verbal_multi_cue.phrases.0"
+msgid "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+msgstr "<CURRENT_VERBAL_CUE> Następnie: <NEXT_VERBAL_CUE>"
+
+#. e.g. Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street.
+#: instructions.verbal_multi_cue.phrases.1
+msgctxt "instructions.verbal_multi_cue.phrases.1"
+msgid "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+msgstr "<CURRENT_VERBAL_CUE> Następnie za <LENGTH>: <NEXT_VERBAL_CUE>"
 
 #: instructions.verbal_multi_cue.us_customary_lengths.0
 msgctxt "instructions.verbal_multi_cue.us_customary_lengths.0"
@@ -3889,197 +4084,3 @@ msgstr "<FEET> stóp"
 msgctxt "instructions.verbal_multi_cue.us_customary_lengths.5"
 msgid "less than 10 feet"
 msgstr "mniej niż 10 stóp"
-
-#. e.g. In a quarter mile, Turn right onto North Gay Street.
-#: instructions.approach_verbal_alert.phrases.0
-msgctxt "instructions.approach_verbal_alert.phrases.0"
-msgid "In <LENGTH>, <CURRENT_VERBAL_CUE>"
-msgstr "Za <LENGTH>: <CURRENT_VERBAL_CUE>"
-
-#: instructions.approach_verbal_alert.metric_lengths.0
-msgctxt "instructions.approach_verbal_alert.metric_lengths.0"
-msgid "<KILOMETERS> kilometers"
-msgstr "<KILOMETERS> km"
-
-#: instructions.approach_verbal_alert.metric_lengths.1
-msgctxt "instructions.approach_verbal_alert.metric_lengths.1"
-msgid "1 kilometer"
-msgstr "1 km"
-
-#: instructions.approach_verbal_alert.metric_lengths.2
-msgctxt "instructions.approach_verbal_alert.metric_lengths.2"
-msgid "<METERS> meters"
-msgstr "<METERS> m"
-
-#: instructions.approach_verbal_alert.metric_lengths.3
-msgctxt "instructions.approach_verbal_alert.metric_lengths.3"
-msgid "less than 10 meters"
-msgstr "mniej niż 10 metrów"
-
-#: instructions.approach_verbal_alert.us_customary_lengths.0
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.0"
-msgid "<MILES> miles"
-msgstr "<MILES> mil"
-
-#: instructions.approach_verbal_alert.us_customary_lengths.1
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.1"
-msgid "1 mile"
-msgstr "1 milę"
-
-#: instructions.approach_verbal_alert.us_customary_lengths.2
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.2"
-msgid "a half mile"
-msgstr "pół mili"
-
-#: instructions.approach_verbal_alert.us_customary_lengths.3
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.3"
-msgid "a quarter mile"
-msgstr "ćwierć mili"
-
-#: instructions.approach_verbal_alert.us_customary_lengths.4
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.4"
-msgid "<FEET> feet"
-msgstr "<FEET> stóp"
-
-#: instructions.approach_verbal_alert.us_customary_lengths.5
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.5"
-msgid "less than 10 feet"
-msgstr "mniej niż 10 stóp"
-
-#. e.g. Pass the gate.
-#: instructions.pass.phrases.0
-msgctxt "instructions.pass.phrases.0"
-msgid "Pass <OBJECT_LABEL>."
-msgstr "Przejdź <OBJECT_LABEL>."
-
-#: instructions.pass.phrases.1
-msgctxt "instructions.pass.phrases.1"
-msgid "Pass traffic signals on <OBJECT_LABEL>."
-msgstr "Przejdź na światłach <OBJECT_LABEL>."
-
-#: instructions.pass.object_labels.0
-msgctxt "instructions.pass.object_labels.0"
-msgid "the gate"
-msgstr "bramę"
-
-#: instructions.pass.object_labels.1
-msgctxt "instructions.pass.object_labels.1"
-msgid "the bollards"
-msgstr "słupki"
-
-#: instructions.pass.object_labels.2
-msgctxt "instructions.pass.object_labels.2"
-msgid "ways intersection"
-msgstr "skrzyżowanie dróg"
-
-#. e.g. Take the elevator.
-#: instructions.elevator.phrases.0
-msgctxt "instructions.elevator.phrases.0"
-msgid "Take the elevator."
-msgstr "Skorzystaj z windy."
-
-#. e.g. Take the elevator to Level 1.
-#: instructions.elevator.phrases.1
-msgctxt "instructions.elevator.phrases.1"
-msgid "Take the elevator to <LEVEL>."
-msgstr "Skorzystaj z windy na <LEVEL>."
-
-#. e.g. Take the stairs.
-#: instructions.steps.phrases.0
-msgctxt "instructions.steps.phrases.0"
-msgid "Take the stairs."
-msgstr "Użyj schodów."
-
-#. e.g. Take the stairs to Level 2.
-#: instructions.steps.phrases.1
-msgctxt "instructions.steps.phrases.1"
-msgid "Take the stairs to <LEVEL>."
-msgstr "Skorzystaj ze schodów na <LEVEL>."
-
-#. e.g. Take the escalator.
-#: instructions.escalator.phrases.0
-msgctxt "instructions.escalator.phrases.0"
-msgid "Take the escalator."
-msgstr "Skorzystaj z ruchomych schodów."
-
-#. e.g. Take the escalator to Level 3.
-#: instructions.escalator.phrases.1
-msgctxt "instructions.escalator.phrases.1"
-msgid "Take the escalator to <LEVEL>."
-msgstr "Skorzystaj z ruchomych schodów na <LEVEL>."
-
-#. e.g. Continue to Level 2.
-#: instructions.level_change.phrases.0
-msgctxt "instructions.level_change.phrases.0"
-msgid "Continue to <LEVEL>."
-msgstr "Continue to <LEVEL>."
-
-#. e.g. Enter the building.
-#: instructions.enter_building.phrases.0
-msgctxt "instructions.enter_building.phrases.0"
-msgid "Enter the building."
-msgstr "Wejdź do budynku."
-
-#. e.g. Enter the building, and continue on the walkway.
-#: instructions.enter_building.phrases.1
-msgctxt "instructions.enter_building.phrases.1"
-msgid "Enter the building, and continue on <STREET_NAMES>."
-msgstr "Wejdź do budynku i idź dalej na <STREET_NAMES>."
-
-#: instructions.enter_building.empty_street_name_labels.0
-msgctxt "instructions.enter_building.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.enter_building.empty_street_name_labels.1
-msgctxt "instructions.enter_building.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.enter_building.empty_street_name_labels.2
-msgctxt "instructions.enter_building.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.enter_building.empty_street_name_labels.3
-msgctxt "instructions.enter_building.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#. e.g. Exit the building.
-#: instructions.exit_building.phrases.0
-msgctxt "instructions.exit_building.phrases.0"
-msgid "Exit the building."
-msgstr "Opuść budynek."
-
-#. e.g. Exit the building, and continue on the walkway.
-#: instructions.exit_building.phrases.1
-msgctxt "instructions.exit_building.phrases.1"
-msgid "Exit the building, and continue on <STREET_NAMES>."
-msgstr "Wyjdź z budynku i idź dalej na <STREET_NAMES>."
-
-#: instructions.exit_building.empty_street_name_labels.0
-msgctxt "instructions.exit_building.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "chodnik"
-
-#: instructions.exit_building.empty_street_name_labels.1
-msgctxt "instructions.exit_building.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "ścieżka rowerowa"
-
-#: instructions.exit_building.empty_street_name_labels.2
-msgctxt "instructions.exit_building.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "górski szlak rowerowy"
-
-#: instructions.exit_building.empty_street_name_labels.3
-msgctxt "instructions.exit_building.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "przejście dla pieszych"
-
-#. e.g. Park your vehicle.
-#: instructions.park_vehicle.phrases.0
-msgctxt "instructions.park_vehicle.phrases.0"
-msgid "Park your vehicle"
-msgstr "Park your vehicle"
