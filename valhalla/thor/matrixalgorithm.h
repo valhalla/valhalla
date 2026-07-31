@@ -167,12 +167,14 @@ protected:
       matrix.mutable_to_indices()->Resize(size, 0U);
       matrix.mutable_distances()->Resize(size, 0U);
       matrix.mutable_times()->Resize(size, 0U);
+      matrix.mutable_costs()->Resize(size, 0.f);
       matrix.mutable_second_pass()->Resize(size, false);
 #else
       matrix.mutable_from_indices()->resize(size, 0U);
       matrix.mutable_to_indices()->resize(size, 0U);
       matrix.mutable_distances()->resize(size, 0U);
       matrix.mutable_times()->resize(size, 0U);
+      matrix.mutable_costs()->resize(size, 0.f);
       matrix.mutable_second_pass()->resize(size, false);
 #endif
 
