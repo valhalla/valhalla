@@ -59,5 +59,14 @@ jobs:
       - name: Check placeholder tokens
         run: python3 locales/po_tools.py lint
 
+      # ratchet: languages that are currently warning-free must stay that way
+      - name: Check healthy placeholder langs (`--strict`)
+        run: |
+          warnings="ar-SA bg-BG ca-ES de-DE el-GR hi-IN mn-MN sk-SK"
+          strict=$(comm -23 \
+            <(ls locales/*.po | xargs -n1 basename | sed 's/\.po$//' | sort) \
+            <(printf '%s\n' $warnings | sort))
+          python3 locales/po_tools.py lint --strict $strict
+
       - name: Check the JSONs can be generated
         run: python3 locales/po_tools.py po2json --out /tmp/locales-json

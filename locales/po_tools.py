@@ -13,7 +13,7 @@ back to English.
   po_tools.py init <lang>                    start a new language: <lang>.po from the template
   po_tools.py po2json [--out DIR] [lang ...] .pot/.po -> locale JSONs (build step)
   po_tools.py update                         msgmerge valhalla.pot into every .po
-  po_tools.py lint [lang ...] [--fix]        placeholder token check + sort check (--fix sorts)
+  po_tools.py lint [lang ...] [--fix] [--strict]  token + sort check (--fix sorts, --strict warns=errors)
   po_tools.py stats [lang ...]               per-language translation coverage
   po_tools.py print-posix-locales            print every language's posix_locale (for localedef)
 
@@ -285,7 +285,8 @@ def cmd_lint(args: argparse.Namespace) -> None:
             errors += 1
 
     print(f"{errors} errors, {warnings} warnings")
-    sys.exit(1 if errors else 0)
+    # --strict gates already-clean languages against regressions: any warning fails too
+    sys.exit(1 if errors or (args.strict and warnings) else 0)
 
 
 def cmd_stats(args: argparse.Namespace) -> None:
@@ -347,6 +348,7 @@ def main() -> None:
     lint.add_argument(
         "--fix", action="store_true", help="sort unsorted files in place instead of erroring"
     )
+    lint.add_argument("--strict", action="store_true", help="treat placeholder warnings as errors")
     lint.set_defaults(func=cmd_lint)
 
     # per-language translation coverage (fuzzy counted separately, not as translated)
