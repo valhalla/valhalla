@@ -255,7 +255,7 @@ void materialise_traversals(
     }
   }
 
-    for (const auto& line : traversal_lines) {
+  for (const auto& line : traversal_lines) {
     // where this way will land in the file, which is what its nodes reference
     const uint32_t way_index = static_cast<uint32_t>(ways.size());
     // TODO: entrance nodes and restored-perimeter ways get generic pedestrian
@@ -778,4 +778,3 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
 }
 } // namespace mjolnir
 } // namespace valhalla
-
