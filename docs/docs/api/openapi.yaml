@@ -406,7 +406,7 @@ components:
       description: >
         GeoJSON property key to include in the expansion response. Each additional property
         increases output size by roughly 10%. By default an empty properties object is returned.
-      enum: [durations, costs, distances, statuses, edge_ids, pred_edge_ids, expansion_type, flow_sources, travel_mode]
+      enum: [durations, costs, distances, statuses, edge_ids, pred_edge_ids, expansion_type, flow_sources, travel_mode, expansion_index]
       example: durations
       x-enumDescriptions:
         durations: Cumulative travel time (seconds) to reach the edge.
@@ -418,6 +418,7 @@ components:
         expansion_type: Whether this edge belongs to a forward or reverse expansion.
         flow_sources: Speed sources used (free_flow, constrained, predicted, current).
         travel_mode: Travel mode (drive, pedestrian, bicycle, transit).
+        expansion_index: Index of the source or target whose tree the edge belongs to, only set by CostMatrix.
 
     # -------------------------------------------------------------------------
     # Location
