@@ -1191,6 +1191,15 @@ function filter_tags_generic(kv)
     kv["motorcycle_forward"] = "true"
   end
 
+  --footways and pedestrian ways without any explicit bicycle tagging can be crossed by
+  --dismounted cyclists wherever pedestrians may walk; data_processing.bicycle_dismount_on_pedestrian_ways
+  --decides whether this becomes access at walking pace, mirroring the resolved per-direction
+  --pedestrian access
+  if (kv["highway"] == "footway" or kv["highway"] == "pedestrian") and
+     kv["bike_tag"] == nil and kv["bicycle"] == nil and kv["smoothness"] ~= "impassable" then
+    kv["bike_dismount_default"] = "true"
+  end
+
   --check the oneway-ness and traversability against the direction of the geom
   if ((kv["oneway"] == "yes" and kv["oneway:bicycle"] == "no") or kv["bicycle:backward"] == "yes" or kv["bicycle:backward"] == "no") then
     kv["bike_backward"] = "true"

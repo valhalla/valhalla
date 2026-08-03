@@ -114,6 +114,7 @@ constexpr float kDefaultBicycle_CountryCrossingCost = 600.0f;  // Seconds
 constexpr float kDefaultBicycle_CountryCrossingPenalty = 0.0f; // Seconds
 constexpr float kDefaultBicycle_UseRoad = 0.25f;               // Factor between 0 and 1
 constexpr float kDefaultBicycle_UseFerry = 0.5f;               // Factor between 0 and 1
+constexpr float kDefaultBicycle_DismountFactor = 2.0f;         // Factor between 1 and 25
 constexpr float kDefaultBicycle_UseHills = 0.25f;
 constexpr float kDefaultBicycle_AvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultBicycle_UseLivingStreets = 0.5f;  // Factor between 0 and 1
@@ -613,6 +614,7 @@ void test_default_bicycle_cost_options(const Costing::Type costing_type,
   validate("use_ferry", kDefaultBicycle_UseFerry, options.use_ferry());
   validate("use_roads", kDefaultBicycle_UseRoad, options.use_roads());
   validate("use_hills", kDefaultBicycle_UseHills, options.use_hills());
+  validate("dismount_factor", kDefaultBicycle_DismountFactor, options.dismount_factor());
   validate("avoid_bad_surfaces", kDefaultBicycle_AvoidBadSurfaces, options.avoid_bad_surfaces());
   validate("use_living_streets", kDefaultBicycle_UseLivingStreets, options.use_living_streets());
   validate("service_penalty", kDefaultBicycle_ServicePenalty, options.service_penalty());
@@ -1231,6 +1233,22 @@ void test_use_roads_parsing(const Costing::Type costing_type,
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
   const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_roads());
+}
+
+void test_dismount_factor_parsing(const Costing::Type costing_type,
+                                  const float specified_value,
+                                  const float expected_value,
+                                  const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing_type);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "dismount_factor";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  const auto& options = request.options().costings().find(costing_type)->second.options();
+  validate(key, expected_value, options.dismount_factor());
 }
 
 void test_avoid_bad_surfaces_parsing(const Costing::Type costing_type,
@@ -2630,6 +2648,17 @@ TEST(ParseRequest, test_use_roads) {
   test_use_roads_parsing(costing, 0.5f, 0.5f);
   test_use_roads_parsing(costing, -2.f, default_value);
   test_use_roads_parsing(costing, 2.f, default_value);
+}
+
+TEST(ParseRequest, test_dismount_factor) {
+  Costing::Type costing = Costing::bicycle;
+  float default_value = kDefaultBicycle_DismountFactor;
+  test_dismount_factor_parsing(costing, default_value, default_value);
+  test_dismount_factor_parsing(costing, 1.f, 1.f);
+  test_dismount_factor_parsing(costing, 10.f, 10.f);
+  test_dismount_factor_parsing(costing, 25.f, 25.f);
+  test_dismount_factor_parsing(costing, 0.5f, default_value);
+  test_dismount_factor_parsing(costing, 50.f, default_value);
 }
 
 TEST(ParseRequest, test_avoid_bad_surfaces) {

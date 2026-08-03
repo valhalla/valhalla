@@ -26,6 +26,8 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         |               |
         |  K--------L   |
         |               |
+        |  M--------N   |
+        |               |
         F-------E-------D
   )";
 
@@ -34,7 +36,8 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
       {{"ABCDEFA", {}},
        {"GH", {{"highway", "footway"}}},
        {"IJ", {{"highway", "footway"}, {"footway", "sidewalk"}}},
-       {"KL", {{"highway", "footway"}, {"crossing", "zebra"}, {"footway", "crossing"}}}};
+       {"KL", {{"highway", "footway"}, {"crossing", "zebra"}, {"footway", "crossing"}}},
+       {"MN", {{"highway", "footway"}, {"bicycle", "dismount"}}}};
 
   const gurka::relations relations = {{{{{gurka::way_member, "ABCDEFA", "outer"}}},
                                        {{"type", "boundary"},
@@ -213,4 +216,25 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
 
   EXPECT_EQ(LK_edge->forwardaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
   EXPECT_EQ(LK_edge->reverseaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+
+  // Belarus grants proper riding access on footways, so the dismount default from
+  // bicycle_dismount_on_pedestrian_ways does not apply on the untagged ways while an explicit
+  // bicycle=dismount is preserved.
+  for (const auto* edge : {GH_edge, HG_edge, IJ_edge, JI_edge, KL_edge, LK_edge}) {
+    EXPECT_FALSE(edge->dismount());
+  }
+
+  GraphId MN_edge_id;
+  const DirectedEdge* MN_edge = nullptr;
+  GraphId NM_edge_id;
+  const DirectedEdge* NM_edge = nullptr;
+  std::tie(MN_edge_id, MN_edge, NM_edge_id, NM_edge) =
+      findEdge(graph_reader, admin_map.nodes, "MN", "N");
+  EXPECT_NE(MN_edge, nullptr);
+  EXPECT_NE(NM_edge, nullptr);
+
+  EXPECT_TRUE(MN_edge->forwardaccess() & kBicycleAccess);
+  EXPECT_TRUE(NM_edge->forwardaccess() & kBicycleAccess);
+  EXPECT_TRUE(MN_edge->dismount());
+  EXPECT_TRUE(NM_edge->dismount());
 }
