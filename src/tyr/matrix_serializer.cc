@@ -159,6 +159,7 @@ void serialize_row(const valhalla::Matrix& matrix,
       writer("to_index", target_index + (i - start_td));
       writer("time", static_cast<uint64_t>(time));
       writer("distance", static_cast<double>(matrix.distances()[i] * distance_scale));
+      writer("cost", static_cast<double>(matrix.costs()[i]));
       if (!date_time.empty()) {
         writer("date_time", date_time);
       }
@@ -212,6 +213,7 @@ void serialize_row(const valhalla::Matrix& matrix,
       writer("to_index", target_index + (i - start_td));
       writer("time", nullptr);
       writer("distance", nullptr);
+      writer("cost", nullptr);
     }
     writer.end_object();
   }

@@ -907,6 +907,30 @@ TEST_P(TestConnectionCheck, MatrixSecondPass) {
   }
 }
 
+TEST(StandAlone, MatrixSecondPassUsesFilteredEdges) {
+  // a source heading of 0 leaves only the dead-end edge "Ao" as a candidate and puts "oC" into
+  // filtered_edges, so C is only reachable if the second pass merges the filtered edges back in
+  const std::string ascii_map = R"(
+    A
+    |
+    o---C
+  )";
+  const gurka::ways ways = {
+      {"Ao", {{"highway", "residential"}, {"oneway", "-1"}}},
+      {"oC", {{"highway", "residential"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
+  const auto map = gurka::buildtiles(layout, ways, {}, {},
+                                     VALHALLA_BUILD_DIR "test/data/matrix_second_pass_filtered_edges",
+                                     {{"thor.costmatrix.allow_second_pass", "1"}});
+
+  auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"o"}, {"C"}, "auto",
+                              {{"/sources/0/heading", "0"}});
+  EXPECT_TRUE(api.matrix().second_pass(0));
+  EXPECT_GT(api.matrix().distances(0), 0);
+  EXPECT_LT(api.matrix().distances(0), 100000000); // not kMaxCost
+}
+
 TEST_P(TestConnectionCheck, CostMatrixTrivialRoutes) {
   const std::string ascii_map = R"(
     A---B--2->-1--C---D
