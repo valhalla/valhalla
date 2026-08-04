@@ -108,7 +108,8 @@ private = {
 ["customers"] = "true",
 ["delivery"] = "true",
 ["permit"] = "true",
-["residents"] = "true"
+["residents"] = "true",
+["unknown"] = "true"
 }
 
 no_thru_traffic = {
