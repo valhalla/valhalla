@@ -116,7 +116,7 @@ protected:
   uint32_t max_iterations_;
 
   // path distance (meters) from a location within which its tree expands with a zero heuristic
-  uint32_t dijkstra_radius_;
+  uint32_t dijkstra_distance_;
 
   // Access mode used by the costing method
   uint32_t access_mode_;
@@ -288,7 +288,7 @@ protected:
    * Get the minimum AStar heuristic for a given source/target, i.e. for a source we get
    * the minimum heuristic of all targets for the forward expansion, so that we direct
    * the search towards the closest target/source. Returns 0 while the expansion is still
-   * within dijkstra_radius_ of its own location, which makes it expand by true cost only.
+   * within dijkstra_distance_ of its own location, which makes it expand by true cost only.
    *
    * @param loc_idx        either the source or target index
    * @param node_ll        the current edge's end node's lat/lon
