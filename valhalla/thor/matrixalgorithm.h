@@ -29,7 +29,7 @@ public:
    * Constructor
    */
   MatrixAlgorithm(const boost::property_tree::ptree& config)
-      : interrupt_(nullptr), has_time_(false), not_thru_pruning_(true), expansion_callback_(),
+      : interrupt_(nullptr), not_thru_pruning_(true), expansion_callback_(),
         clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
   }
 
@@ -71,14 +71,6 @@ public:
    * @return the name of the algorithm
    */
   virtual const std::string& name() = 0;
-
-  /**
-   * Returns the name of the algorithm
-   * @return the name of the algorithm
-   */
-  void set_has_time(const bool has_time) {
-    has_time_ = has_time;
-  };
 
   /**
    *
@@ -139,9 +131,6 @@ public:
 
 protected:
   const std::function<void()>* interrupt_;
-
-  // whether time was specified
-  bool has_time_;
 
   // Indicates whether to allow access into a not-thru region.
   bool not_thru_pruning_;

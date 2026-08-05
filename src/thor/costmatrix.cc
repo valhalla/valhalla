@@ -1271,8 +1271,7 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
                                        const baldr::TimeInfo& time_info,
                                        const bool invariant) {
   // no need to look at source == target or missing connectivity
-  if ((!has_time_ && request.options().shape_format() == no_shape && !request.options().verbose()) ||
-      connection.distance == kMaxCost) {
+  if (connection.distance == kMaxCost) {
     return "";
   }
 
@@ -1337,28 +1336,31 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
   float source_pct = static_cast<float>(source_edge->percent_along());
   float target_pct = static_cast<float>(target_edge->percent_along());
 
-  // recost the path if this was a time-dependent expansion
-  if (has_time_) {
-    auto edge_itr = path_edges.begin();
-    const auto edge_cb = [&edge_itr, &path_edges]() {
-      return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
-    };
+  // the labels' cost can't be reported directly: the two trees needn't share a time basis, and a
+  // shortcut's cost omits the transitions at the nodes it collapsed
+  auto edge_itr = path_edges.begin();
+  const auto edge_cb = [&edge_itr, &path_edges]() {
+    return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
+  };
 
-    Cost new_cost{0.f, 0.f};
-    const auto label_cb = [&new_cost](const EdgeLabel& label) { new_cost = label.cost(); };
+  Cost new_cost{0.f, 0.f};
+  uint32_t new_distance = 0;
+  const auto label_cb = [&new_cost, &new_distance](const EdgeLabel& label) {
+    new_cost = label.cost();
+    new_distance = label.path_distance();
+  };
 
-    // recost edges in final path; ignore access restrictions
-    try {
-      sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct,
-                          time_info, invariant, true);
-    } catch (const std::exception& e) {
-      LOG_ERROR(std::string("CostMatrix failed to recost final paths: ") + e.what());
-      return "";
-    }
-
-    // update the existing best_connection cost
-    connection.cost = new_cost;
+  // recost edges in final path; ignore access restrictions
+  try {
+    sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct, time_info,
+                        invariant, true);
+  } catch (const std::exception& e) {
+    LOG_ERROR(std::string("CostMatrix failed to recost final paths: ") + e.what());
+    return "";
   }
+
+  connection.cost = new_cost;
+  connection.distance = new_distance;
   if (request.options().verbose()) {
 
     request.mutable_matrix()->mutable_begin_lat()->Set(connection_idx, source_edge->ll().lat());

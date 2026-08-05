@@ -21,8 +21,9 @@ void thor_worker_t::optimized_route(Api& request) {
   controller = AttributesController(options);
 
   costmatrix_.set_interrupt(interrupt);
-  // Use CostMatrix to find costs from each location to every other location
-  costmatrix_.set_has_time(check_matrix_time(request, Matrix::CostMatrix));
+  // Use CostMatrix to find costs from each location to every other location.
+  // warns if the requested date_time can't be honoured.
+  check_matrix_time(request, Matrix::CostMatrix);
   costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
                              max_matrix_distance.find(costing)->second);
 

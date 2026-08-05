@@ -104,7 +104,6 @@ std::string thor_worker_t::matrix(Api& request) {
            &time_distance_bss_matrix_,
        }) {
     alg->set_interrupt(interrupt);
-    alg->set_has_time(has_time);
   }
 
   auto* algo = get_matrix_algorithm(request, has_time, costing);
