@@ -55,11 +55,6 @@ OverwriteBits(const uint32_t dst, const uint32_t src, const uint32_t pos, const 
 namespace valhalla {
 namespace baldr {
 
-// Default constructor. Initialize to all 0's.
-NodeInfo::NodeInfo() {
-  memset(this, 0, sizeof(NodeInfo));
-}
-
 NodeInfo::NodeInfo(const PointLL& tile_corner,
                    const PointLL& ll,
                    const uint32_t access,
@@ -68,7 +63,6 @@ NodeInfo::NodeInfo(const PointLL& tile_corner,
                    const bool tagged_access,
                    const bool private_access,
                    const bool cash_only_toll) {
-  memset(this, 0, sizeof(NodeInfo));
   set_latlng(tile_corner, ll);
   set_access(access);
   set_type(type);
