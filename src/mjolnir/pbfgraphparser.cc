@@ -5415,7 +5415,9 @@ void PBFGraphParser::ParseAreaWays(const boost::property_tree::ptree& pt,
           way_nodes.push_back({osm_node, way_index, static_cast<uint32_t>(i)});
         }
 
-        // build the way with the area bit set, no lua transform needed
+        // emitted only partially filled. The area bit keeps ConstructEdges from turning
+        // these into edges, so the routing attributes (access, road class, speed) are
+        // left for BuildAreas to fill in if it decides to keep the perimeter
         OSMWay w{static_cast<uint64_t>(osm_way.id())};
         w.set_node_count(nodes.size());
         w.set_area(true);
