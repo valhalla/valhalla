@@ -7,6 +7,7 @@
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
    * ADDED: `cost` in verbose matrix output [#6249](https://github.com/valhalla/valhalla/pull/6249)
    * ADDED: `expansion_index` expansion property [#6251](https://github.com/valhalla/valhalla/pull/6251)
+   * CHANGED: Rewrite conditional time range parsing without regex [#6230](https://github.com/valhalla/valhalla/pull/6230)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
