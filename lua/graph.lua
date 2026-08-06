@@ -964,7 +964,7 @@ function filter_tags_generic(kv)
     end
 
     -- expects access=private not to be combined with other values
-    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
+    if kv["impassable"] == "yes" or access == "false" then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
@@ -1063,7 +1063,7 @@ function filter_tags_generic(kv)
     local default_val = "true"
 
     -- handle inverse access cases like access=no + foot=yes
-    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
+    if kv["impassable"] == "yes" or access == "false" then
       default_val = "false"
     end
 
@@ -2049,7 +2049,7 @@ function nodes_proc (kv, nokeys)
   local access = initial_access or "true"
 
   -- expect access=private not to be combined with other values
-  if (kv["impassable"] == "yes" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
+  if kv["impassable"] == "yes" then
     access = "false"
   end
 
