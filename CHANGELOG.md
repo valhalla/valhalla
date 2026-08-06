@@ -23,6 +23,7 @@
    * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
    * CHANGED: Speedup sequence sort by using PSRS algorithm [#6226](https://github.com/valhalla/valhalla/pull/6226)
    * ADDED: more convenience bindings for Python [#6197](https://github.com/valhalla/valhalla/pull/6197)
+   * ADDED: `search_filter.exclude_avoided_edges` location option to snap a location onto the nearest edge not excluded via `exclude_locations`/`exclude_polygons` instead of correlating onto an excluded edge and failing to route [#6229](https://github.com/valhalla/valhalla/pull/6229)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
