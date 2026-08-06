@@ -1,0 +1,56 @@
+[
+	{
+		"input_lat": 52.519011,
+		"input_lon": 13.433188,
+		"edges": [
+			{
+				"way_id": 316869462,
+				"correlated_lat": 52.519011,
+				"correlated_lon": 13.433186,
+				"side_of_street": "neither",
+				"percent_along": 0.88604
+			},
+			{
+				"way_id": 316869462,
+				"correlated_lat": 52.519011,
+				"correlated_lon": 13.433186,
+				"side_of_street": "neither",
+				"percent_along": 0.11395
+			},
+			{
+				"way_id": 1107965737,
+				"correlated_lat": 52.518964,
+				"correlated_lon": 13.43317,
+				"side_of_street": "right",
+				"percent_along": 0.0
+			},
+			{
+				"way_id": 1107965737,
+				"correlated_lat": 52.518964,
+				"correlated_lon": 13.43317,
+				"side_of_street": "left",
+				"percent_along": 1.0
+			},
+			{
+				"way_id": 316869462,
+				"correlated_lat": 52.518964,
+				"correlated_lon": 13.433171,
+				"side_of_street": "neither",
+				"percent_along": 0.0
+			},
+			{
+				"way_id": 316869462,
+				"correlated_lat": 52.518964,
+				"correlated_lon": 13.433171,
+				"side_of_street": "neither",
+				"percent_along": 1.0
+			}
+		],
+		"nodes": [
+			{
+				"lon": 13.433171,
+				"lat": 52.518964
+			}
+		]
+	}
+]

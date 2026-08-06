@@ -1,0 +1,19 @@
+{
+	"version": "3.7.0",
+	"tileset_last_modified": 1760272576,
+	"available_actions": [
+		"tile",
+		"status",
+		"centroid",
+		"expansion",
+		"transit_available",
+		"trace_attributes",
+		"trace_route",
+		"isochrone",
+		"optimized_route",
+		"sources_to_targets",
+		"height",
+		"route",
+		"locate"
+	]
+}
