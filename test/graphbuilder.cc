@@ -41,6 +41,8 @@ const std::string to_restriction_file = "test_to_complex_restrictions_harrisburg
 const std::string way_nodes_file = "test_way_nodes_harrisburg.bin";
 const std::string ways_file = "test_ways_harrisburg.bin";
 const std::string linguistic_node_file = "test_linguistic_node_harrisburg.bin";
+const std::string edge_shapes_file = "test_edge_shapes_harrisburg.bin";
+const std::string edge_node_ids_file = "test_edge_node_ids_harrisburg.bin";
 
 // Test output from construct edges and that the expected number of tiles are produced from the
 // build tiles step that follows.
@@ -82,7 +84,8 @@ TEST(GraphBuilder, TestConstructEdges) {
   // This directory should be empty
   std::filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
+                      edge_shapes_file, edge_node_ids_file, from_restriction_file,
+                      to_restriction_file, linguistic_node_file, tiles);
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 4);
   // Clear the tile directory so it doesn't interfere with the next test with graphreader.
@@ -126,7 +129,8 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
   // This directory should be empty
   std::filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
+                      edge_shapes_file, edge_node_ids_file, from_restriction_file,
+                      to_restriction_file, linguistic_node_file, tiles);
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 1);
   EXPECT_TRUE(reader.DoesTileExist(GraphId{5993698}));
@@ -258,7 +262,8 @@ TEST(GraphBuilder, ConfigDatasetId) {
   const auto build_and_check = [&](uint64_t expected) {
     std::filesystem::remove_all(tile_dir);
     GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
-                        from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
+                        edge_shapes_file, edge_node_ids_file, from_restriction_file,
+                        to_restriction_file, linguistic_node_file, tiles);
     GraphReader reader(config.get_child("mjolnir"));
     for (auto tile_id : reader.GetTileSet())
       EXPECT_EQ(reader.GetGraphTile(tile_id)->header()->dataset_id(), expected);

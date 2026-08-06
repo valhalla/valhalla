@@ -25,6 +25,21 @@ struct OSMWayNode {
   uint32_t way_shape_node_index = 0;
 };
 
+// Node coordinate for faster traversal where only shapes are needed.
+struct OSMWayNodeShape {
+  uint32_t lng7 = std::numeric_limits<uint32_t>::max();
+  uint32_t lat7 = std::numeric_limits<uint32_t>::max();
+
+  midgard::PointLL latlng() const {
+    // if either coord is borked we return invalid ll
+    if (lng7 == std::numeric_limits<uint32_t>::max() ||
+        lat7 == std::numeric_limits<uint32_t>::max()) {
+      return {};
+    }
+    return {lng7 * 1e-7 - 180, lat7 * 1e-7 - 90};
+  }
+};
+
 // Structure to store OSM node information for BSS
 struct OSMBSSNode {
   OSMNode node;
