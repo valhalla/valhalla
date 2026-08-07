@@ -1098,6 +1098,17 @@ components:
                 longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads 
                 based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is 
                 not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas).            
+            dismount_factor:
+              type: number
+              minimum: 1
+              maximum: 25
+              default: 2
+              description: >
+                A factor that describes how much the cyclist minds getting off the bike and pushing it where riding is not allowed,
+                such as untagged footways, pedestrian ways and crossings or ways tagged `bicycle=dismount`. Pushed sections are always
+                traversed at walking speed; this factor additionally multiplies their cost, so a value of 2 means a minute spent pushing
+                weighs like two minutes riding in the same environment. A value of 1 only accounts for the lower speed while 25 makes
+                pushing a last resort.
             avoid_bad_surfaces:
               type: number
               minimum: 0

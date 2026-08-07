@@ -807,8 +807,9 @@ TEST(Standalone, HighwayPedestrian) {
                                build_config);
 
   for (auto& c : costing) {
-    // All except pedestrian costing should fail due to highway=pedestrian
-    if (c == "pedestrian") {
+    // All except pedestrian costing should fail due to highway=pedestrian; bicycles get
+    // dismounted access by default
+    if (c == "pedestrian" || c == "bicycle") {
       EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "D"}, c)) << c;
     } else {
       EXPECT_ANY_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "D"}, c)) << c;
@@ -860,4 +861,174 @@ TEST_F(CombinedRestrictionTagValues, DeniedCombinedValueAccess) {
   const gurka::map map =
       gurka::buildtiles(layout, ways, {}, {}, "test/data/combined_restriction_tag_values");
   check_auto_path(map, {});
+}
+
+// With data_processing.bicycle_dismount_on_pedestrian_ways, footways and pedestrian ways without
+// explicit bicycle tagging get bicycle access at walking pace (dismount) so the bicycle network is
+// not severed at crossings and pedestrian zones. Pushing a bike follows pedestrian access rules:
+// redundant foot/access tagging keeps the default as long as pedestrian access remains (access=no
+// + foot=yes stays walkable, hence pushable).
+TEST(Standalone, BicycleDismountDefault) {
+  const std::string ascii_map = R"(
+      A--B-C--D-E--F-G--H-I--J-K--L-M--N-O--P
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "cycleway"}}},
+      {"BC", {{"highway", "footway"}, {"footway", "crossing"}}},
+      {"CD", {{"highway", "cycleway"}}},
+      {"DE", {{"highway", "footway"}, {"footway", "sidewalk"}}},
+      {"EF", {{"highway", "cycleway"}}},
+      {"FG", {{"highway", "pedestrian"}}},
+      {"GH", {{"highway", "cycleway"}}},
+      {"HI", {{"highway", "footway"}, {"foot", "yes"}}},
+      {"IJ", {{"highway", "cycleway"}}},
+      {"JK", {{"highway", "footway"}, {"access", "no"}, {"foot", "yes"}}},
+      {"KL", {{"highway", "cycleway"}}},
+      {"LM", {{"highway", "footway"}, {"bicycle", "dismount"}}},
+      {"MN", {{"highway", "cycleway"}}},
+      {"NO", {{"highway", "footway"}, {"bicycle", "yes"}}},
+      {"OP", {{"highway", "cycleway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/bicycle_dismount_default");
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  for (const std::string way : {"BC", "DE", "FG", "HI", "JK", "LM"}) {
+    const auto* edge = std::get<1>(gurka::findEdge(reader, map.nodes, way, way.substr(1)));
+    ASSERT_NE(edge, nullptr) << way;
+    EXPECT_TRUE(edge->forwardaccess() & baldr::kBicycleAccess) << way;
+    EXPECT_TRUE(edge->reverseaccess() & baldr::kBicycleAccess) << way;
+    EXPECT_TRUE(edge->dismount()) << way;
+  }
+
+  // an explicit bicycle=yes means riding, not pushing
+  const auto* ridable = std::get<1>(gurka::findEdge(reader, map.nodes, "NO", "O"));
+  ASSERT_NE(ridable, nullptr);
+  EXPECT_TRUE(ridable->forwardaccess() & baldr::kBicycleAccess);
+  EXPECT_FALSE(ridable->dismount());
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "P"}, "bicycle");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI", "IJ", "JK",
+                                           "KL", "LM", "MN", "NO", "OP"});
+}
+
+// Explicit tagging that forbids bicycles or pedestrians wins over the dismount default, including
+// bicycle values without an access mapping (e.g. discouraged).
+TEST(Standalone, BicycleDismountDefaultRespectsProhibitions) {
+  const std::string ascii_map = R"(
+      A--B-C--D-E--F-G--H-I--J-K--L-M--N
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "cycleway"}}},
+      {"BC", {{"highway", "footway"}, {"bicycle", "no"}}},
+      {"CD", {{"highway", "cycleway"}}},
+      {"DE", {{"highway", "footway"}, {"bicycle", "discouraged"}}},
+      {"EF", {{"highway", "cycleway"}}},
+      {"FG", {{"highway", "footway"}, {"foot", "no"}}},
+      {"GH", {{"highway", "cycleway"}}},
+      {"HI", {{"highway", "footway"}, {"access", "no"}}},
+      {"IJ", {{"highway", "cycleway"}}},
+      {"JK", {{"highway", "footway"}, {"vehicle", "no"}}},
+      {"KL", {{"highway", "cycleway"}}},
+      {"LM", {{"highway", "footway"}, {"smoothness", "impassable"}}},
+      {"MN", {{"highway", "cycleway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/bicycle_dismount_prohibited");
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  for (const std::string way : {"BC", "DE", "FG", "HI", "JK", "LM"}) {
+    // ways that lose all access do not become edges at all, which is just as inaccessible
+    const auto* edge = std::get<1>(gurka::findEdge(reader, map.nodes, way, way.substr(1)));
+    if (edge) {
+      EXPECT_FALSE(edge->forwardaccess() & baldr::kBicycleAccess) << way;
+      EXPECT_FALSE(edge->reverseaccess() & baldr::kBicycleAccess) << way;
+    }
+  }
+
+  EXPECT_ANY_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "N"}, "bicycle"));
+}
+
+// Pushing a bike is walking, so when include_pedestrian=false excludes pedestrian edges from the
+// graph the dismount default does not apply and footways are filtered out as before, while
+// explicit riding access keeps them alive.
+TEST(Standalone, BicycleDismountDefaultNoPedestrians) {
+  const std::string ascii_map = R"(
+      A--B-C--D-E--F
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "cycleway"}}}, {"BC", {{"highway", "footway"}, {"footway", "crossing"}}},
+      {"CD", {{"highway", "cycleway"}}}, {"DE", {{"highway", "footway"}, {"bicycle", "yes"}}},
+      {"EF", {{"highway", "cycleway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/bicycle_dismount_no_pedestrian",
+                               {{"mjolnir.include_pedestrian", "false"}});
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  const auto* crossing = std::get<1>(gurka::findEdge(reader, map.nodes, "BC", "C"));
+  EXPECT_EQ(crossing, nullptr);
+
+  const auto* ridable = std::get<1>(gurka::findEdge(reader, map.nodes, "DE", "E"));
+  ASSERT_NE(ridable, nullptr);
+  EXPECT_TRUE(ridable->forwardaccess() & baldr::kBicycleAccess);
+}
+
+// dismount_factor controls how expensive pushing the bike is relative to riding: the default
+// takes a short pushed link over a long road detour, a high factor rides around instead.
+TEST(Standalone, BicycleDismountFactor) {
+  const std::string ascii_map = R"(
+      B--------------------A
+      |                    |
+      |                    |
+      |                    |
+      C--------------------D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"AD", {{"highway", "footway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/bicycle_dismount_factor");
+
+  auto pushed = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "bicycle");
+  gurka::assert::raw::expect_path(pushed, {"AD"});
+
+  auto ridden = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "bicycle",
+                                 {{"/costing_options/bicycle/dismount_factor", "25"}});
+  gurka::assert::raw::expect_path(ridden, {"AB", "BC", "CD"});
+}
+
+// Opting out via the config option restores the previous behavior: untagged footways stay
+// inaccessible to bicycles while an explicit bicycle=dismount keeps working.
+TEST(Standalone, BicycleDismountDefaultOff) {
+  const std::string ascii_map = R"(
+      A--B-C--D-E--F
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "cycleway"}}}, {"BC", {{"highway", "footway"}, {"footway", "crossing"}}},
+      {"CD", {{"highway", "cycleway"}}}, {"DE", {{"highway", "footway"}, {"bicycle", "dismount"}}},
+      {"EF", {{"highway", "cycleway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/bicycle_dismount_default_off",
+                        {{"mjolnir.data_processing.bicycle_dismount_on_pedestrian_ways", "false"}});
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  const auto* crossing = std::get<1>(gurka::findEdge(reader, map.nodes, "BC", "C"));
+  ASSERT_NE(crossing, nullptr);
+  EXPECT_FALSE(crossing->forwardaccess() & baldr::kBicycleAccess);
+  EXPECT_FALSE(crossing->reverseaccess() & baldr::kBicycleAccess);
+  EXPECT_FALSE(crossing->dismount());
+
+  const auto* dismount = std::get<1>(gurka::findEdge(reader, map.nodes, "DE", "E"));
+  ASSERT_NE(dismount, nullptr);
+  EXPECT_TRUE(dismount->forwardaccess() & baldr::kBicycleAccess);
+  EXPECT_TRUE(dismount->reverseaccess() & baldr::kBicycleAccess);
+  EXPECT_TRUE(dismount->dismount());
+
+  EXPECT_ANY_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "bicycle"));
 }

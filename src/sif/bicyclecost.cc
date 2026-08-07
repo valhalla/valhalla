@@ -35,6 +35,7 @@ constexpr float kDefaultBssPenalty = 0.0f;    // Seconds
 constexpr float kDefaultUseRoad = 0.25f;          // Factor between 0 and 1
 constexpr float kDefaultAvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets = 0.5f;  // Factor between 0 and 1
+constexpr float kDefaultDismountFactor = 2.0f;    // Factor between 1 and 25
 const std::string kDefaultBicycleType = "hybrid"; // Bicycle type
 
 // Default turn costs - modified by the stop impact.
@@ -203,6 +204,7 @@ constexpr float kBicycleNetworkFactor = 0.95f;
 constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadSurfaces, 1.0f};
+constexpr ranged_default_t<float> kDismountFactorRange{1.0f, kDefaultDismountFactor, 25.0f};
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
@@ -407,6 +409,7 @@ public:
   float livingstreet_factor_; // Factor to use for living streets
   float track_factor_;        // Factor to use tracks
   float avoid_bad_surfaces_;  // Preference of avoiding bad surfaces for the bike type
+  float dismount_factor_;     // Cost factor for edges where the bicycle must be pushed
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -498,6 +501,9 @@ BicycleCost::BicycleCost(const Costing& costing)
   // Willingness to use roads. Make sure this is within range [0, 1].
   use_roads_ = costing_options.use_roads();
   avoid_roads_ = 1.0f - use_roads_;
+
+  // Cost factor for edges where the bicycle has to be pushed
+  dismount_factor_ = costing_options.dismount_factor();
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
@@ -716,6 +722,12 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                               kGradeBasedSpeedFactor[edge->weighted_grade()]) +
                              0.5f);
 
+  // Time spent pushing the bicycle counts for more than the same time riding in the same
+  // environment
+  if (edge->dismount()) {
+    factor *= dismount_factor_;
+  }
+
   factor *= EdgeFactor(edgeid);
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
@@ -886,6 +898,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kUseRoadRange, json, "/use_roads", use_roads, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kDismountFactorRange, json, "/dismount_factor", dismount_factor,
+                          warnings);
   JSON_PBF_RANGED_DEFAULT(co, kAvoidBadSurfacesRange, json, "/avoid_bad_surfaces", avoid_bad_surfaces,
                           warnings);
   JSON_PBF_DEFAULT(co, kDefaultBicycleType, json, "/bicycle_type", transport_type);

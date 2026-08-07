@@ -362,6 +362,9 @@ message Costing {
     oneof has_low_class_factor {
       float low_class_factor = 97;
     }
+    oneof has_dismount_factor {
+      float dismount_factor = 98;
+    }
   }
 
   oneof has_options {

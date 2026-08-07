@@ -185,6 +185,11 @@ void SetCountryAccess(DirectedEdge& directededge,
     reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kFootway)),
                         f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
 
+    // a defaulted dismount does not apply where the country grants proper riding access
+    if (!user_access.bike_tag() &&
+        (country_access.at(static_cast<uint32_t>(AccessTypes::kFootway)) & kBicycleAccess)) {
+      directededge.set_dismount(false);
+    }
   } else if (directededge.use() == Use::kPedestrian &&
              country_access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)) != -1) {
 
@@ -192,6 +197,12 @@ void SetCountryAccess(DirectedEdge& directededge,
                         r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
     reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)),
                         f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
+
+    // a defaulted dismount does not apply where the country grants proper riding access
+    if (!user_access.bike_tag() &&
+        (country_access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)) & kBicycleAccess)) {
+      directededge.set_dismount(false);
+    }
   } else if (directededge.use() == Use::kBridleway &&
              country_access.at(static_cast<uint32_t>(AccessTypes::kBridleway)) != -1) {
     forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kBridleway)),

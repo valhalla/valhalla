@@ -7,6 +7,8 @@
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
    * ADDED: `cost` in verbose matrix output [#6249](https://github.com/valhalla/valhalla/pull/6249)
    * ADDED: `expansion_index` expansion property [#6251](https://github.com/valhalla/valhalla/pull/6251)
+   * ADDED: bicycle access at walking pace (dismount) on footways and pedestrian ways without explicit bicycle tagging, can be disabled via `mjolnir.data_processing.bicycle_dismount_on_pedestrian_ways` [#6253](https://github.com/valhalla/valhalla/pull/6253)
+   * ADDED: `dismount_factor` bicycle costing option controlling the willingness to get off and push the bike [#6253](https://github.com/valhalla/valhalla/pull/6253)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**

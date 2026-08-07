@@ -184,6 +184,11 @@ struct graph_parser {
     use_urban_tag_ = pt.get<bool>("data_processing.use_urban_tag", false);
     use_rest_area_ = pt.get<bool>("data_processing.use_rest_area", false);
     use_admin_db_ = pt.get<bool>("data_processing.use_admin_db", true);
+    // pushing a bike is walking, so the dismount default only applies when pedestrian edges are
+    // part of the graph
+    bicycle_dismount_on_pedestrian_ways_ =
+        pt.get<bool>("data_processing.bicycle_dismount_on_pedestrian_ways", true) &&
+        pt.get<bool>("include_pedestrian", true);
 
     empty_node_tags_ = lua_.Transform(OSMType::kNode, 0, {});
     empty_relation_tags_ = lua_.Transform(OSMType::kRelation, 0, {});
@@ -3016,6 +3021,19 @@ struct graph_parser {
       }
     }
 
+    // untagged footways and pedestrian ways optionally allow dismounted bicycles wherever
+    // pedestrians may walk
+    if (bicycle_dismount_on_pedestrian_ways_ && !way_.bike_forward() && !way_.bike_backward()) {
+      auto dismount_default = tags.find("bike_dismount_default");
+      if (dismount_default != tags.end() && dismount_default->second == "true") {
+        way_.set_bike_forward(way_.pedestrian_forward());
+        way_.set_bike_backward(way_.pedestrian_backward());
+        if (way_.bike_forward() || way_.bike_backward()) {
+          way_.set_dismount(true);
+        }
+      }
+    }
+
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface_) {
       if (tags.find("sac_scale") != tags.end()) {
@@ -5077,6 +5095,10 @@ struct graph_parser {
   // Configuration option indicating whether or not to process the direction key on the ways or
   // utilize the guidance relation tags during the parsing phase
   bool use_direction_on_ways_;
+
+  // Configuration option indicating whether or not footways and pedestrian ways without explicit
+  // bicycle tagging get dismounted bicycle access
+  bool bicycle_dismount_on_pedestrian_ways_;
 
   // Configuration option indicating whether or not to process the alt_name key on the ways during the
   // parsing phase
