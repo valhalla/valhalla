@@ -7,6 +7,7 @@
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
    * ADDED: `cost` in verbose matrix output [#6249](https://github.com/valhalla/valhalla/pull/6249)
    * ADDED: `expansion_index` expansion property [#6251](https://github.com/valhalla/valhalla/pull/6251)
+   * ADDED: `thor.costmatrix.dijkstra_distance` config parameter [#6257](https://github.com/valhalla/valhalla/pull/6257)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
