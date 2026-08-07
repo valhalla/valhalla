@@ -5,6 +5,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "mjolnir/areabuilder.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphbuilder.h"
@@ -34,6 +35,7 @@ using namespace valhalla::mjolnir;
 namespace {
 
 // Temporary files used during tile building
+const std::string max_way_id_file = "max_way_id.bin";
 const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
 const std::string nodes_file = "nodes.bin";
@@ -737,6 +739,22 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     log_stage(BuildStage::kParseRelations);
   }
 
+  // Second pass over the ways to collect the geometry of ways that
+  // are members of pedestrian area relations
+  if (start_stage <= BuildStage::kParseAreaWays && BuildStage::kParseAreaWays <= end_stage) {
+    if (config.get<bool>("mjolnir.pedestrian_areas", false) &&
+        config.get<bool>("mjolnir.include_pedestrian", true)) {
+      PBFGraphParser::ParseAreaWays(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
+                                    osm_data);
+
+      // Write the OSMData to files if the end stage is less than enhancing
+      if (end_stage <= BuildStage::kEnhance) {
+        osm_data.write_to_temp_files(tile_dir);
+      }
+    }
+    log_stage(BuildStage::kParseAreaWays);
+  }
+
   // Parse OSM data
   if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for nodes
@@ -749,6 +767,20 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
       osm_data.write_to_temp_files(tile_dir);
     }
     log_stage(BuildStage::kParseNodes);
+  }
+
+  // Builds pedestrian areas
+  if (start_stage <= BuildStage::kBuildAreas && BuildStage::kBuildAreas <= end_stage) {
+    if (config.get<bool>("mjolnir.pedestrian_areas", false) &&
+        config.get<bool>("mjolnir.include_pedestrian", true)) {
+      AreaBuilder::BuildAreas(config.get_child("mjolnir"), ways_bin, way_nodes_bin, osm_data);
+
+      // Write the OSMData to files if the end stage is less than enhancing
+      if (end_stage <= BuildStage::kEnhance) {
+        osm_data.write_to_temp_files(tile_dir);
+      }
+    }
+    log_stage(BuildStage::kBuildAreas);
   }
 
   // Construct edges
