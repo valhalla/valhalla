@@ -209,6 +209,31 @@ TEST_F(Search, PartialAlongAD) {
   EXPECT_TRUE(has_edge(api, "D", "A"));
 }
 
+// preferred_edge_ids: supplying the A->D edge id at a mid-edge point must correlate to
+// exactly that one edge, skipping the spatial search that would otherwise also return D->A.
+TEST_F(Search, PreferredEdgeIdResolvesSingleEdge) {
+  GraphReader reader(map.config.get_child("mjolnir"));
+  auto [ad_id, ad_edge] = gurka::findEdgeByNodes(reader, layout, "A", "D");
+  ASSERT_TRUE(ad_id.is_valid());
+
+  auto api = do_locate(pt("3"), [&](valhalla::Location& loc) {
+    loc.add_preferred_edge_ids(ad_id.value);
+  });
+
+  EXPECT_EQ(edge_count(api), 1);
+  EXPECT_TRUE(has_edge(api, "A", "D"));
+  EXPECT_FALSE(has_edge(api, "D", "A"));
+}
+
+// An invalid preferred edge id must fall back to the normal spatial search, which at a
+// mid-edge point returns both directed edges.
+TEST_F(Search, PreferredEdgeIdInvalidFallsBack) {
+  auto api =
+      do_locate(pt("3"), [](valhalla::Location& loc) { loc.add_preferred_edge_ids(0); });
+  EXPECT_TRUE(has_edge(api, "A", "D"));
+  EXPECT_TRUE(has_edge(api, "D", "A"));
+}
+
 TEST_F(Search, HeadingEastSelectsForwardEdge) {
   auto api = do_locate(pt("4"), [](valhalla::Location& loc) { loc.set_heading(90); });
   EXPECT_TRUE(has_edge(api, "A", "D"));

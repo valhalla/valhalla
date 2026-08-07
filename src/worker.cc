@@ -376,6 +376,14 @@ void parse_location(valhalla::Location* location,
   if (!location->search_filter().has_level_case())
     location->mutable_search_filter()->set_level(baldr::kMaxLevel);
 
+  auto preferred_edge_ids = rapidjson::get_child_optional(r_loc, "/preferred_edge_ids");
+  if (preferred_edge_ids && preferred_edge_ids->IsArray()) {
+    for (const auto& id_val : preferred_edge_ids->GetArray()) {
+      if (id_val.IsUint64())
+        location->add_preferred_edge_ids(id_val.GetUint64());
+    }
+  }
+
   float waiting_secs = rapidjson::get<float>(r_loc, "/waiting", 0.f);
   switch (location->type()) {
     case Location_Type_kBreak:

@@ -175,6 +175,10 @@ message Location {
   oneof has_minimum_outbound_reachability {
     uint32 minimum_outbound_reachability = 32;
   }
+  // Optional list of edge GraphId values (as uint64) the caller believes the location is on.
+  // Loki will project the coordinate onto each valid edge and skip the spatial bin search.
+  // Falls back to normal search if none of the IDs resolve to a valid, allowed edge.
+  repeated uint64 preferred_edge_ids = 33;
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
   Correlation correlation = 90;
   string time_zone_offset = 91;
