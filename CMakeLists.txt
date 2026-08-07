@@ -130,6 +130,12 @@ add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 
+# interpreter for generating the narrative locale JSONs from locales/*.po
+find_program(PYTHON_INTERPRETER NAMES python3 python)
+if(NOT PYTHON_INTERPRETER)
+  message(FATAL_ERROR "python3 is required to generate narrative locales from locales/*.po")
+endif()
+
 # resolve vendored libraries
 set(date_include_dir ${VALHALLA_SOURCE_DIR}/third_party/date/include)
 set(rapidjson_include_dir ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include)

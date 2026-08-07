@@ -1,0 +1,4086 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: valhalla\n"
+"Report-Msgid-Bugs-To: https://github.com/valhalla/valhalla/issues\n"
+"Language: et_EE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Valhalla-Aliases: et\n"
+"X-Valhalla-Posix-Locale: et_EE.UTF-8\n"
+
+#: instructions.approach_verbal_alert.metric_lengths.0
+msgctxt "instructions.approach_verbal_alert.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> kilomeetrit"
+
+#: instructions.approach_verbal_alert.metric_lengths.1
+msgctxt "instructions.approach_verbal_alert.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 kilomeeter"
+
+#: instructions.approach_verbal_alert.metric_lengths.2
+msgctxt "instructions.approach_verbal_alert.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> meetrit"
+
+#: instructions.approach_verbal_alert.metric_lengths.3
+msgctxt "instructions.approach_verbal_alert.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "vähem kui 10 meetrit"
+
+#. e.g. In a quarter mile, Turn right onto North Gay Street.
+#: instructions.approach_verbal_alert.phrases.0
+msgctxt "instructions.approach_verbal_alert.phrases.0"
+msgid "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+msgstr "<LENGTH> kaugusel <CURRENT_VERBAL_CUE>"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.0
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.0"
+msgid "<MILES> miles"
+msgstr "<MILES> miili"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.1
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.1"
+msgid "1 mile"
+msgstr "1 miil"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.2
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.2"
+msgid "a half mile"
+msgstr "pool miili"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.3
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.3"
+msgid "a quarter mile"
+msgstr "veerand miili"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.4
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.4"
+msgid "<FEET> feet"
+msgstr "<FEET> jalga"
+
+#: instructions.approach_verbal_alert.us_customary_lengths.5
+msgctxt "instructions.approach_verbal_alert.us_customary_lengths.5"
+msgid "less than 10 feet"
+msgstr "vähem kui 10 jalga"
+
+#. e.g. Arrive: 8:02 AM.
+#: instructions.arrive.phrases.0
+msgctxt "instructions.arrive.phrases.0"
+msgid "Arrive: <TIME>."
+msgstr "Saabumisaeg: <TIME>."
+
+#. e.g. Arrive: 8:02 AM at 8 St - NYU.
+#: instructions.arrive.phrases.1
+msgctxt "instructions.arrive.phrases.1"
+msgid "Arrive: <TIME> at <TRANSIT_STOP>."
+msgstr "Saabud <TIME> vahepeatusesse <TRANSIT_STOP>."
+
+#. e.g. Arrive at 8:02 AM.
+#: instructions.arrive_verbal.phrases.0
+msgctxt "instructions.arrive_verbal.phrases.0"
+msgid "Arrive at <TIME>."
+msgstr "Saabumisaeg <TIME>."
+
+#. e.g. Arrive at 8:02 AM at 8 St - NYU.
+#: instructions.arrive_verbal.phrases.1
+msgctxt "instructions.arrive_verbal.phrases.1"
+msgid "Arrive at <TIME> at <TRANSIT_STOP>."
+msgstr "Saabud <TIME> vahepeatusesse <TRANSIT_STOP>."
+
+#: instructions.bear.empty_street_name_labels.0
+msgctxt "instructions.bear.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.bear.empty_street_name_labels.1
+msgctxt "instructions.bear.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.bear.empty_street_name_labels.2
+msgctxt "instructions.bear.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.bear.empty_street_name_labels.3
+msgctxt "instructions.bear.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurada"
+
+#: instructions.bear.empty_street_name_labels.4
+msgctxt "instructions.bear.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.bear.empty_street_name_labels.5
+msgctxt "instructions.bear.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.bear.empty_street_name_labels.6
+msgctxt "instructions.bear.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Bear right.
+#: instructions.bear.phrases.0
+msgctxt "instructions.bear.phrases.0"
+msgid "Bear <RELATIVE_DIRECTION>."
+msgstr "Võta suunaks <RELATIVE_DIRECTION>."
+
+#. e.g. Bear left onto Arlen Road.
+#: instructions.bear.phrases.1
+msgctxt "instructions.bear.phrases.1"
+msgid "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+msgstr "Võta suunaks <RELATIVE_DIRECTION> <STREET_NAMES> teele."
+
+#. e.g. Bear right onto Belair Road/US 1 Business. Continue on US 1 Business.
+#: instructions.bear.phrases.2
+msgctxt "instructions.bear.phrases.2"
+msgid "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+msgstr "Võta suunaks <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> teed mööda. Jätka piki <STREET_NAMES>."
+
+#. e.g. Bear left to stay on US 15 South.
+#: instructions.bear.phrases.3
+msgctxt "instructions.bear.phrases.3"
+msgid "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+msgstr "Võta suunaks <RELATIVE_DIRECTION> ja jää <STREET_NAMES> teele."
+
+#. e.g. Bear right at Mannenbashi East.
+#: instructions.bear.phrases.4
+msgctxt "instructions.bear.phrases.4"
+msgid "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
+msgstr "<JUNCTION_NAME> teeristis võta suunaks <RELATIVE_DIRECTION>."
+
+#. e.g. Bear left toward Baltimore.
+#: instructions.bear.phrases.5
+msgctxt "instructions.bear.phrases.5"
+msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Võta suunaks <RELATIVE_DIRECTION> <TOWARD_SIGN> poole."
+
+#: instructions.bear.relative_directions.0
+msgctxt "instructions.bear.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.bear.relative_directions.1
+msgctxt "instructions.bear.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#: instructions.bear_verbal.empty_street_name_labels.0
+msgctxt "instructions.bear_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.bear_verbal.empty_street_name_labels.1
+msgctxt "instructions.bear_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.bear_verbal.empty_street_name_labels.2
+msgctxt "instructions.bear_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.bear_verbal.empty_street_name_labels.3
+msgctxt "instructions.bear_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.bear_verbal.empty_street_name_labels.4
+msgctxt "instructions.bear_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.bear_verbal.empty_street_name_labels.5
+msgctxt "instructions.bear_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.bear_verbal.empty_street_name_labels.6
+msgctxt "instructions.bear_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Bear right.
+#: instructions.bear_verbal.phrases.0
+msgctxt "instructions.bear_verbal.phrases.0"
+msgid "Bear <RELATIVE_DIRECTION>."
+msgstr "Võta suunaks <RELATIVE_DIRECTION>."
+
+#. e.g. Bear left onto Arlen Road.
+#: instructions.bear_verbal.phrases.1
+msgctxt "instructions.bear_verbal.phrases.1"
+msgid "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+msgstr "Võta suunaks <RELATIVE_DIRECTION> <STREET_NAMES> teele."
+
+#. e.g. Bear right onto Belair Road, U.S. 1 Business.
+#: instructions.bear_verbal.phrases.2
+msgctxt "instructions.bear_verbal.phrases.2"
+msgid "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."
+msgstr "Võta suunaks <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> teele."
+
+#. e.g. Bear left to stay on U.S. 15 South.
+#: instructions.bear_verbal.phrases.3
+msgctxt "instructions.bear_verbal.phrases.3"
+msgid "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+msgstr "Võta suunaks <RELATIVE_DIRECTION> ja jää <STREET_NAMES> teele."
+
+#. e.g. Bear right at Mannenbashi East.
+#: instructions.bear_verbal.phrases.4
+msgctxt "instructions.bear_verbal.phrases.4"
+msgid "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
+msgstr "<JUNCTION_NAME> teeristis võta suunaks <RELATIVE_DIRECTION>."
+
+#. e.g. Bear left toward Baltimore.
+#: instructions.bear_verbal.phrases.5
+msgctxt "instructions.bear_verbal.phrases.5"
+msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Võta suunaks <RELATIVE_DIRECTION> <TOWARD_SIGN> poole."
+
+#: instructions.bear_verbal.relative_directions.0
+msgctxt "instructions.bear_verbal.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.bear_verbal.relative_directions.1
+msgctxt "instructions.bear_verbal.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#. e.g. Vine Street becomes Middletown Road.
+#: instructions.becomes.phrases.0
+msgctxt "instructions.becomes.phrases.0"
+msgid "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
+msgstr "Senise <PREVIOUS_STREET_NAMES> nimi on nüüd <STREET_NAMES>."
+
+#. e.g. Vine Street becomes Middletown Road.
+#: instructions.becomes_verbal.phrases.0
+msgctxt "instructions.becomes_verbal.phrases.0"
+msgid "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
+msgstr "Senise <PREVIOUS_STREET_NAMES> nimi on nüüd <STREET_NAMES>."
+
+#: instructions.continue.empty_street_name_labels.0
+msgctxt "instructions.continue.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.continue.empty_street_name_labels.1
+msgctxt "instructions.continue.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.continue.empty_street_name_labels.2
+msgctxt "instructions.continue.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.continue.empty_street_name_labels.3
+msgctxt "instructions.continue.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.continue.empty_street_name_labels.4
+msgctxt "instructions.continue.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.continue.empty_street_name_labels.5
+msgctxt "instructions.continue.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.continue.empty_street_name_labels.6
+msgctxt "instructions.continue.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Continue.
+#: instructions.continue.phrases.0
+msgctxt "instructions.continue.phrases.0"
+msgid "Continue."
+msgstr "Jätka."
+
+#. e.g. Continue on 10th Avenue.
+#: instructions.continue.phrases.1
+msgctxt "instructions.continue.phrases.1"
+msgid "Continue on <STREET_NAMES>."
+msgstr "Jätka mööda <STREET_NAMES> tänavat."
+
+#. e.g. Continue at Mannenbashi East.
+#: instructions.continue.phrases.2
+msgctxt "instructions.continue.phrases.2"
+msgid "Continue at <JUNCTION_NAME>."
+msgstr "Jätka <JUNCTION_NAME> teeristis."
+
+#. e.g. Continue toward Baltimore.
+#: instructions.continue.phrases.3
+msgctxt "instructions.continue.phrases.3"
+msgid "Continue toward <TOWARD_SIGN>."
+msgstr "Jätka <TOWARD_SIGN> suunas."
+
+#: instructions.continue_verbal.empty_street_name_labels.0
+msgctxt "instructions.continue_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.continue_verbal.empty_street_name_labels.1
+msgctxt "instructions.continue_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.continue_verbal.empty_street_name_labels.2
+msgctxt "instructions.continue_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.continue_verbal.empty_street_name_labels.3
+msgctxt "instructions.continue_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.continue_verbal.empty_street_name_labels.4
+msgctxt "instructions.continue_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.continue_verbal.empty_street_name_labels.5
+msgctxt "instructions.continue_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.continue_verbal.empty_street_name_labels.6
+msgctxt "instructions.continue_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#: instructions.continue_verbal.metric_lengths.0
+msgctxt "instructions.continue_verbal.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> kilomeetrit"
+
+#: instructions.continue_verbal.metric_lengths.1
+msgctxt "instructions.continue_verbal.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 kilomeeter"
+
+#: instructions.continue_verbal.metric_lengths.2
+msgctxt "instructions.continue_verbal.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> meetrit"
+
+#: instructions.continue_verbal.metric_lengths.3
+msgctxt "instructions.continue_verbal.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "vähem kui 10 meetrit"
+
+#. e.g. Continue.
+#: instructions.continue_verbal.phrases.0
+msgctxt "instructions.continue_verbal.phrases.0"
+msgid "Continue."
+msgstr "Jätka."
+
+#. e.g. Continue for 300 feet.
+#: instructions.continue_verbal.phrases.1
+msgctxt "instructions.continue_verbal.phrases.1"
+msgid "Continue for <LENGTH>."
+msgstr "Jätka veel <LENGTH>."
+
+#. e.g. Continue on 10th Avenue.
+#: instructions.continue_verbal.phrases.2
+msgctxt "instructions.continue_verbal.phrases.2"
+msgid "Continue on <STREET_NAMES>."
+msgstr "Jätka mööda <STREET_NAMES> tänavat."
+
+#. e.g. Continue on 10th Avenue for 3 miles.
+#: instructions.continue_verbal.phrases.3
+msgctxt "instructions.continue_verbal.phrases.3"
+msgid "Continue on <STREET_NAMES> for <LENGTH>."
+msgstr "Jätka <STREET_NAMES> tänavale veel <LENGTH>."
+
+#. e.g. Continue at Mannenbashi East.
+#: instructions.continue_verbal.phrases.4
+msgctxt "instructions.continue_verbal.phrases.4"
+msgid "Continue at <JUNCTION_NAME>."
+msgstr "Jätka <JUNCTION_NAME> teeristis."
+
+#. e.g. Continue at Mannenbashi East for 2 miles.
+#: instructions.continue_verbal.phrases.5
+msgctxt "instructions.continue_verbal.phrases.5"
+msgid "Continue at <JUNCTION_NAME> for <LENGTH>."
+msgstr "Jätka <JUNCTION_NAME> teeristist veel <LENGTH>."
+
+#. e.g. Continue toward Baltimore.
+#: instructions.continue_verbal.phrases.6
+msgctxt "instructions.continue_verbal.phrases.6"
+msgid "Continue toward <TOWARD_SIGN>."
+msgstr "Jätka <TOWARD_SIGN> suunas."
+
+#. e.g. Continue toward Baltimore for 5 miles.
+#: instructions.continue_verbal.phrases.7
+msgctxt "instructions.continue_verbal.phrases.7"
+msgid "Continue toward <TOWARD_SIGN> for <LENGTH>."
+msgstr "Jätka <TOWARD_SIGN> suunas veel <LENGTH>."
+
+#: instructions.continue_verbal.us_customary_lengths.0
+msgctxt "instructions.continue_verbal.us_customary_lengths.0"
+msgid "<MILES> miles"
+msgstr "<MILES> miili"
+
+#: instructions.continue_verbal.us_customary_lengths.1
+msgctxt "instructions.continue_verbal.us_customary_lengths.1"
+msgid "1 mile"
+msgstr "1 miil"
+
+#: instructions.continue_verbal.us_customary_lengths.2
+msgctxt "instructions.continue_verbal.us_customary_lengths.2"
+msgid "a half mile"
+msgstr "pool miili"
+
+#: instructions.continue_verbal.us_customary_lengths.3
+msgctxt "instructions.continue_verbal.us_customary_lengths.3"
+msgid "a quarter mile"
+msgstr "veerand miili"
+
+#: instructions.continue_verbal.us_customary_lengths.4
+msgctxt "instructions.continue_verbal.us_customary_lengths.4"
+msgid "<FEET> feet"
+msgstr "<FEET> jalga"
+
+#: instructions.continue_verbal.us_customary_lengths.5
+msgctxt "instructions.continue_verbal.us_customary_lengths.5"
+msgid "less than 10 feet"
+msgstr "vähem kui 10 jalga"
+
+#: instructions.continue_verbal_alert.empty_street_name_labels.0
+msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.continue_verbal_alert.empty_street_name_labels.1
+msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.continue_verbal_alert.empty_street_name_labels.2
+msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.continue_verbal_alert.empty_street_name_labels.3
+msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.continue_verbal_alert.empty_street_name_labels.4
+msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.continue_verbal_alert.empty_street_name_labels.5
+msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.continue_verbal_alert.empty_street_name_labels.6
+msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Continue.
+#: instructions.continue_verbal_alert.phrases.0
+msgctxt "instructions.continue_verbal_alert.phrases.0"
+msgid "Continue."
+msgstr "Jätka."
+
+#. e.g. Continue on 10th Avenue.
+#: instructions.continue_verbal_alert.phrases.1
+msgctxt "instructions.continue_verbal_alert.phrases.1"
+msgid "Continue on <STREET_NAMES>."
+msgstr "Jätka mööda <STREET_NAMES> tänavat."
+
+#. e.g. Continue at Mannenbashi East.
+#: instructions.continue_verbal_alert.phrases.2
+msgctxt "instructions.continue_verbal_alert.phrases.2"
+msgid "Continue at <JUNCTION_NAME>."
+msgstr "Jätka <JUNCTION_NAME> teeristis."
+
+#. e.g. Continue toward Baltimore.
+#: instructions.continue_verbal_alert.phrases.3
+msgctxt "instructions.continue_verbal_alert.phrases.3"
+msgid "Continue toward <TOWARD_SIGN>."
+msgstr "Jätka <TOWARD_SIGN> suunas."
+
+#. e.g. Depart: 8:02 AM.
+#: instructions.depart.phrases.0
+msgctxt "instructions.depart.phrases.0"
+msgid "Depart: <TIME>."
+msgstr "Väljumisaeg: <TIME>."
+
+#. e.g. Depart: 8:02 AM from 8 St - NYU.
+#: instructions.depart.phrases.1
+msgctxt "instructions.depart.phrases.1"
+msgid "Depart: <TIME> from <TRANSIT_STOP>."
+msgstr "Väljud <TIME> vahepeatusest <TRANSIT_STOP>."
+
+#. e.g. Depart at 8:02 AM.
+#: instructions.depart_verbal.phrases.0
+msgctxt "instructions.depart_verbal.phrases.0"
+msgid "Depart at <TIME>."
+msgstr "Väljumisaeg <TIME>."
+
+#. e.g. Depart at 8:02 AM from 8 St - NYU.
+#: instructions.depart_verbal.phrases.1
+msgctxt "instructions.depart_verbal.phrases.1"
+msgid "Depart at <TIME> from <TRANSIT_STOP>."
+msgstr "Väljud <TIME> vahepeatusest <TRANSIT_STOP>."
+
+#. e.g. You have arrived at your destination.
+#: instructions.destination.phrases.0
+msgctxt "instructions.destination.phrases.0"
+msgid "You have arrived at your destination."
+msgstr "Sa oled saabunud oma sihtkohta."
+
+#. e.g. You have arrived at 3206 Powelton Avenue.
+#: instructions.destination.phrases.1
+msgctxt "instructions.destination.phrases.1"
+msgid "You have arrived at <DESTINATION>."
+msgstr "Sa oled saabunud sihtkohta <DESTINATION>."
+
+#. e.g. Your destination is on the left.
+#. e.g. Your destination is on the right.
+#: instructions.destination.phrases.2
+msgctxt "instructions.destination.phrases.2"
+msgid "Your destination is on the <RELATIVE_DIRECTION>."
+msgstr "Sinu sihtkoht asub <RELATIVE_DIRECTION>."
+
+#. e.g. Lancaster Brewing Company is on the left.
+#: instructions.destination.phrases.3
+msgctxt "instructions.destination.phrases.3"
+msgid "<DESTINATION> is on the <RELATIVE_DIRECTION>."
+msgstr "<DESTINATION> asub <RELATIVE_DIRECTION>."
+
+#: instructions.destination.relative_directions.0
+msgctxt "instructions.destination.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.destination.relative_directions.1
+msgctxt "instructions.destination.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#. e.g. You have arrived at your destination.
+#: instructions.destination_verbal.phrases.0
+msgctxt "instructions.destination_verbal.phrases.0"
+msgid "You have arrived at your destination."
+msgstr "Sa oled saabunud oma sihtkohta."
+
+#. e.g. You have arrived at 32 o6 Powelton Avenue.
+#: instructions.destination_verbal.phrases.1
+msgctxt "instructions.destination_verbal.phrases.1"
+msgid "You have arrived at <DESTINATION>."
+msgstr "Sa oled saabunud sihtkohta <DESTINATION>."
+
+#. e.g. Your destination is on the left.
+#. e.g. Your destination is on the right.
+#: instructions.destination_verbal.phrases.2
+msgctxt "instructions.destination_verbal.phrases.2"
+msgid "Your destination is on the <RELATIVE_DIRECTION>."
+msgstr "Sinu sihtkoht asub <RELATIVE_DIRECTION>."
+
+#. e.g. Lancaster Brewing Company is on the left.
+#: instructions.destination_verbal.phrases.3
+msgctxt "instructions.destination_verbal.phrases.3"
+msgid "<DESTINATION> is on the <RELATIVE_DIRECTION>."
+msgstr "<DESTINATION> asub <RELATIVE_DIRECTION>."
+
+#: instructions.destination_verbal.relative_directions.0
+msgctxt "instructions.destination_verbal.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.destination_verbal.relative_directions.1
+msgctxt "instructions.destination_verbal.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#. e.g. You will arrive at your destination.
+#: instructions.destination_verbal_alert.phrases.0
+msgctxt "instructions.destination_verbal_alert.phrases.0"
+msgid "You will arrive at your destination."
+msgstr "Sa saabud oma sihtkohta."
+
+#. e.g. You will arrive at 32 o6 Powelton Avenue.
+#: instructions.destination_verbal_alert.phrases.1
+msgctxt "instructions.destination_verbal_alert.phrases.1"
+msgid "You will arrive at <DESTINATION>."
+msgstr "Sa saabud sihtkohta <DESTINATION>."
+
+#. e.g. Your destination will be on the left.
+#. e.g. Your destination will be on the right.
+#: instructions.destination_verbal_alert.phrases.2
+msgctxt "instructions.destination_verbal_alert.phrases.2"
+msgid "Your destination will be on the <RELATIVE_DIRECTION>."
+msgstr "Sinu sihtkoht asub <RELATIVE_DIRECTION>."
+
+#. e.g. Lancaster Brewing Company will be on the left.
+#: instructions.destination_verbal_alert.phrases.3
+msgctxt "instructions.destination_verbal_alert.phrases.3"
+msgid "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
+msgstr "<DESTINATION> asub <RELATIVE_DIRECTION>."
+
+#: instructions.destination_verbal_alert.relative_directions.0
+msgctxt "instructions.destination_verbal_alert.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.destination_verbal_alert.relative_directions.1
+msgctxt "instructions.destination_verbal_alert.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#. e.g. Take the elevator.
+#: instructions.elevator.phrases.0
+msgctxt "instructions.elevator.phrases.0"
+msgid "Take the elevator."
+msgstr "Astu lifti."
+
+#. e.g. Take the elevator to Level 1.
+#: instructions.elevator.phrases.1
+msgctxt "instructions.elevator.phrases.1"
+msgid "Take the elevator to <LEVEL>."
+msgstr "Sõida liftiga kuni <LEVEL>."
+
+#: instructions.enter_building.empty_street_name_labels.0
+msgctxt "instructions.enter_building.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.enter_building.empty_street_name_labels.1
+msgctxt "instructions.enter_building.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.enter_building.empty_street_name_labels.2
+msgctxt "instructions.enter_building.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.enter_building.empty_street_name_labels.3
+msgctxt "instructions.enter_building.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#. e.g. Enter the building.
+#: instructions.enter_building.phrases.0
+msgctxt "instructions.enter_building.phrases.0"
+msgid "Enter the building."
+msgstr "Sisene hoonesse."
+
+#. e.g. Enter the building, and continue on the walkway.
+#: instructions.enter_building.phrases.1
+msgctxt "instructions.enter_building.phrases.1"
+msgid "Enter the building, and continue on <STREET_NAMES>."
+msgstr "Sisene hoonesse ja jätka kulgemist mööda <STREET_NAMES>."
+
+#: instructions.enter_ferry.empty_street_name_labels.0
+msgctxt "instructions.enter_ferry.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.enter_ferry.empty_street_name_labels.1
+msgctxt "instructions.enter_ferry.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.enter_ferry.empty_street_name_labels.2
+msgctxt "instructions.enter_ferry.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.enter_ferry.empty_street_name_labels.3
+msgctxt "instructions.enter_ferry.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.enter_ferry.empty_street_name_labels.4
+msgctxt "instructions.enter_ferry.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.enter_ferry.empty_street_name_labels.5
+msgctxt "instructions.enter_ferry.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.enter_ferry.empty_street_name_labels.6
+msgctxt "instructions.enter_ferry.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#: instructions.enter_ferry.ferry_label
+msgctxt "instructions.enter_ferry.ferry_label"
+msgid "Ferry"
+msgstr "Praam"
+
+#. e.g. Take the Ferry.
+#: instructions.enter_ferry.phrases.0
+msgctxt "instructions.enter_ferry.phrases.0"
+msgid "Take the Ferry."
+msgstr "Mine praamile"
+
+#. e.g. Take the Millersburg Ferry.
+#: instructions.enter_ferry.phrases.1
+msgctxt "instructions.enter_ferry.phrases.1"
+msgid "Take the <STREET_NAMES>."
+msgstr "Pööra <STREET_NAMES> tänavale."
+
+#. e.g. Take the Bridgeport - Port Jefferson Ferry.
+#: instructions.enter_ferry.phrases.2
+msgctxt "instructions.enter_ferry.phrases.2"
+msgid "Take the <STREET_NAMES> <FERRY_LABEL>."
+msgstr "Minnes <FERRY_LABEL> praamile pööra <STREET_NAMES> tänavale."
+
+#. e.g. Take the ferry toward Cape May.
+#: instructions.enter_ferry.phrases.3
+msgctxt "instructions.enter_ferry.phrases.3"
+msgid "Take the ferry toward <TOWARD_SIGN>."
+msgstr "Mine praamile <TOWARD_SIGN> suunas."
+
+#: instructions.enter_ferry_verbal.empty_street_name_labels.0
+msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.enter_ferry_verbal.empty_street_name_labels.1
+msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.enter_ferry_verbal.empty_street_name_labels.2
+msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.enter_ferry_verbal.empty_street_name_labels.3
+msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.enter_ferry_verbal.empty_street_name_labels.4
+msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.enter_ferry_verbal.empty_street_name_labels.5
+msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.enter_ferry_verbal.empty_street_name_labels.6
+msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#: instructions.enter_ferry_verbal.ferry_label
+msgctxt "instructions.enter_ferry_verbal.ferry_label"
+msgid "Ferry"
+msgstr "Praam"
+
+#. e.g. Take the Ferry.
+#: instructions.enter_ferry_verbal.phrases.0
+msgctxt "instructions.enter_ferry_verbal.phrases.0"
+msgid "Take the Ferry."
+msgstr "Mine praamile"
+
+#. e.g. Take the Millersburg Ferry.
+#: instructions.enter_ferry_verbal.phrases.1
+msgctxt "instructions.enter_ferry_verbal.phrases.1"
+msgid "Take the <STREET_NAMES>."
+msgstr "Pööra <STREET_NAMES> tänavale."
+
+#. e.g. Take the Bridgeport - Port Jefferson Ferry.
+#: instructions.enter_ferry_verbal.phrases.2
+msgctxt "instructions.enter_ferry_verbal.phrases.2"
+msgid "Take the <STREET_NAMES> <FERRY_LABEL>."
+msgstr "Minnes <FERRY_LABEL> praamile pööra <STREET_NAMES> tänavale."
+
+#. e.g. Take the ferry toward Cape May.
+#: instructions.enter_ferry_verbal.phrases.3
+msgctxt "instructions.enter_ferry_verbal.phrases.3"
+msgid "Take the ferry toward <TOWARD_SIGN>."
+msgstr "Mine praamile <TOWARD_SIGN> suunas."
+
+#: instructions.enter_roundabout.empty_street_name_labels.0
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.enter_roundabout.empty_street_name_labels.1
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.enter_roundabout.empty_street_name_labels.2
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.enter_roundabout.empty_street_name_labels.3
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.enter_roundabout.empty_street_name_labels.4
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.enter_roundabout.empty_street_name_labels.5
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.enter_roundabout.empty_street_name_labels.6
+msgctxt "instructions.enter_roundabout.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#: instructions.enter_roundabout.ordinal_values.0
+msgctxt "instructions.enter_roundabout.ordinal_values.0"
+msgid "1st"
+msgstr "1."
+
+#: instructions.enter_roundabout.ordinal_values.1
+msgctxt "instructions.enter_roundabout.ordinal_values.1"
+msgid "2nd"
+msgstr "2."
+
+#: instructions.enter_roundabout.ordinal_values.2
+msgctxt "instructions.enter_roundabout.ordinal_values.2"
+msgid "3rd"
+msgstr "3."
+
+#: instructions.enter_roundabout.ordinal_values.3
+msgctxt "instructions.enter_roundabout.ordinal_values.3"
+msgid "4th"
+msgstr "4."
+
+#: instructions.enter_roundabout.ordinal_values.4
+msgctxt "instructions.enter_roundabout.ordinal_values.4"
+msgid "5th"
+msgstr "5."
+
+#: instructions.enter_roundabout.ordinal_values.5
+msgctxt "instructions.enter_roundabout.ordinal_values.5"
+msgid "6th"
+msgstr "6."
+
+#: instructions.enter_roundabout.ordinal_values.6
+msgctxt "instructions.enter_roundabout.ordinal_values.6"
+msgid "7th"
+msgstr "7."
+
+#: instructions.enter_roundabout.ordinal_values.7
+msgctxt "instructions.enter_roundabout.ordinal_values.7"
+msgid "8th"
+msgstr "8."
+
+#: instructions.enter_roundabout.ordinal_values.8
+msgctxt "instructions.enter_roundabout.ordinal_values.8"
+msgid "9th"
+msgstr "9."
+
+#: instructions.enter_roundabout.ordinal_values.9
+msgctxt "instructions.enter_roundabout.ordinal_values.9"
+msgid "10th"
+msgstr "10."
+
+#. e.g. Enter the roundabout.
+#: instructions.enter_roundabout.phrases.0
+msgctxt "instructions.enter_roundabout.phrases.0"
+msgid "Enter the roundabout."
+msgstr "Sõida ringteele."
+
+#. e.g. Enter the roundabout and take the 1st exit.
+#. e.g. Enter the roundabout and take the 2nd exit.
+#. e.g. Enter the roundabout and take the 3rd exit.
+#. e.g. Enter the roundabout and take the 4th exit.
+#. e.g. Enter the roundabout and take the 5th exit.
+#. e.g. Enter the roundabout and take the 6th exit.
+#. e.g. Enter the roundabout and take the 7th exit.
+#. e.g. Enter the roundabout and take the 8th exit.
+#. e.g. Enter the roundabout and take the 9th exit.
+#. e.g. Enter the roundabout and take the 10th exit.
+#: instructions.enter_roundabout.phrases.1
+msgctxt "instructions.enter_roundabout.phrases.1"
+msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit."
+msgstr "Sõida ringteele ja välju sealt <ORDINAL_VALUE> ärapöördest."
+
+#. e.g. Enter the roundabout and take the 3rd exit onto Main Street.
+#: instructions.enter_roundabout.phrases.2
+msgctxt "instructions.enter_roundabout.phrases.2"
+msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida ringteele ja <ORDINAL_VALUE>ärapöördest liigu <ROUNDABOUT_EXIT_STREET_NAMES> teele."
+
+#. e.g. Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322.
+#: instructions.enter_roundabout.phrases.3
+msgctxt "instructions.enter_roundabout.phrases.3"
+msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida ringteele ja <ORDINAL_VALUE> ärapöördest liigu <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> teele. Jätka mööda <ROUNDABOUT_EXIT_STREET_NAMES> teed."
+
+#. e.g. Enter the roundabout and take the 3rd exit toward Baltimore.
+#: instructions.enter_roundabout.phrases.4
+msgctxt "instructions.enter_roundabout.phrases.4"
+msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
+msgstr "Sõida ringteele ja <ORDINAL_VALUE> ärapöördest liigu <TOWARD_SIGN> suunas."
+
+#. e.g. Enter the roundabout and take the exit onto Main Street.
+#: instructions.enter_roundabout.phrases.5
+msgctxt "instructions.enter_roundabout.phrases.5"
+msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida ringteele ja pööra ära <ROUNDABOUT_EXIT_STREET_NAMES> teele."
+
+#. e.g. Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322.
+#: instructions.enter_roundabout.phrases.6
+msgctxt "instructions.enter_roundabout.phrases.6"
+msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida ringteele ja pööra ära <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> teele. Jätka mööda <ROUNDABOUT_EXIT_STREET_NAMES> teed."
+
+#. e.g. Enter the roundabout and take the exit toward Baltimore.
+#: instructions.enter_roundabout.phrases.7
+msgctxt "instructions.enter_roundabout.phrases.7"
+msgid "Enter the roundabout and take the exit toward <TOWARD_SIGN>."
+msgstr "Sõida ringteele ja pööra ära <TOWARD_SIGN> suunas."
+
+#. e.g. Enter Dupont Circle.
+#: instructions.enter_roundabout.phrases.8
+msgctxt "instructions.enter_roundabout.phrases.8"
+msgid "Enter <STREET_NAMES>"
+msgstr "Liigu <STREET_NAMES> tänavale"
+
+#. e.g. Enter Dupont Circle and take the 1st exit.
+#: instructions.enter_roundabout.phrases.9
+msgctxt "instructions.enter_roundabout.phrases.9"
+msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."
+msgstr "Liigu <STREET_NAMES> tänavale ja lahku sealt <ORDINAL_VALUE> ärapöördest. "
+
+#. e.g. Enter Dupont Circle and take the 3rd exit onto Main Street.
+#: instructions.enter_roundabout.phrases.10
+msgctxt "instructions.enter_roundabout.phrases.10"
+msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida <STREET_NAMES> tänavale ja <ORDINAL_VALUE> ärapöördest suundu <ROUNDABOUT_EXIT_STREET_NAMES> tänavale."
+
+#. e.g. Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322.
+#: instructions.enter_roundabout.phrases.11
+msgctxt "instructions.enter_roundabout.phrases.11"
+msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida <STREET_NAMES> tänavale ja <ORDINAL_VALUE> ärapöördest suundu <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> tänavale. Jätka mööda <ROUNDABOUT_EXIT_STREET_NAMES> tänavat."
+
+#. e.g. Enter Dupont Circle and take the 3rd exit toward Baltimore.
+#: instructions.enter_roundabout.phrases.12
+msgctxt "instructions.enter_roundabout.phrases.12"
+msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
+msgstr "Liigu <STREET_NAMES> tänavale ja lahku sealt <ORDINAL_VALUE> ärapöördest <TOWARD_SIGN> suunas."
+
+#. e.g. Enter Dupont Circle and take the exit onto Main Street.
+#: instructions.enter_roundabout.phrases.13
+msgctxt "instructions.enter_roundabout.phrases.13"
+msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida <STREET_NAMES> tänavale ja pööra siis <ROUNDABOUT_EXIT_STREET_NAMES> tänavale."
+
+#. e.g. Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322.
+#: instructions.enter_roundabout.phrases.14
+msgctxt "instructions.enter_roundabout.phrases.14"
+msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida <STREET_NAMES> tänavale ja pööra siis <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> tänavale. Jätka mööda <ROUNDABOUT_EXIT_STREET_NAMES> tänavat."
+
+#. e.g. Enter Dupont Circle and take the exit toward Baltimore.
+#: instructions.enter_roundabout.phrases.15
+msgctxt "instructions.enter_roundabout.phrases.15"
+msgid "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+msgstr "Liigu <STREET_NAMES> tänavale ja lahku seakt <TOWARD_SIGN> suunas."
+
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.0
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.1
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.2
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.3
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.4
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.5
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.enter_roundabout_verbal.empty_street_name_labels.6
+msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#: instructions.enter_roundabout_verbal.ordinal_values.0
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.0"
+msgid "1st"
+msgstr "1."
+
+#: instructions.enter_roundabout_verbal.ordinal_values.1
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.1"
+msgid "2nd"
+msgstr "2."
+
+#: instructions.enter_roundabout_verbal.ordinal_values.2
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.2"
+msgid "3rd"
+msgstr "3."
+
+#: instructions.enter_roundabout_verbal.ordinal_values.3
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.3"
+msgid "4th"
+msgstr "4."
+
+#: instructions.enter_roundabout_verbal.ordinal_values.4
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.4"
+msgid "5th"
+msgstr "5."
+
+#: instructions.enter_roundabout_verbal.ordinal_values.5
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.5"
+msgid "6th"
+msgstr "6."
+
+#: instructions.enter_roundabout_verbal.ordinal_values.6
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.6"
+msgid "7th"
+msgstr "7."
+
+#: instructions.enter_roundabout_verbal.ordinal_values.7
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.7"
+msgid "8th"
+msgstr "8."
+
+#: instructions.enter_roundabout_verbal.ordinal_values.8
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.8"
+msgid "9th"
+msgstr "9."
+
+#: instructions.enter_roundabout_verbal.ordinal_values.9
+msgctxt "instructions.enter_roundabout_verbal.ordinal_values.9"
+msgid "10th"
+msgstr "10."
+
+#. e.g. Enter the roundabout.
+#: instructions.enter_roundabout_verbal.phrases.0
+msgctxt "instructions.enter_roundabout_verbal.phrases.0"
+msgid "Enter the roundabout."
+msgstr "Sõida ringteele."
+
+#. e.g. Enter the roundabout and take the 1st exit.
+#. e.g. Enter the roundabout and take the 2nd exit.
+#. e.g. Enter the roundabout and take the 3rd exit.
+#. e.g. Enter the roundabout and take the 4th exit.
+#. e.g. Enter the roundabout and take the 5th exit.
+#. e.g. Enter the roundabout and take the 6th exit.
+#. e.g. Enter the roundabout and take the 7th exit.
+#. e.g. Enter the roundabout and take the 8th exit.
+#. e.g. Enter the roundabout and take the 9th exit.
+#. e.g. Enter the roundabout and take the 10th exit.
+#: instructions.enter_roundabout_verbal.phrases.1
+msgctxt "instructions.enter_roundabout_verbal.phrases.1"
+msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit."
+msgstr "Sõida ringteele ja välju sealt <ORDINAL_VALUE> ärapöördest."
+
+#. e.g. Enter the roundabout and take the 3rd exit onto Main Street.
+#: instructions.enter_roundabout_verbal.phrases.2
+msgctxt "instructions.enter_roundabout_verbal.phrases.2"
+msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida ringteele ja <ORDINAL_VALUE>ärapöördest liigu <ROUNDABOUT_EXIT_STREET_NAMES> teele."
+
+#. e.g. Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street.
+#: instructions.enter_roundabout_verbal.phrases.3
+msgctxt "instructions.enter_roundabout_verbal.phrases.3"
+msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
+msgstr "Sõida ringteele ja <ORDINAL_VALUE> ärapöördest liigu <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> teele."
+
+#. e.g. Enter the roundabout and take the 3rd exit toward Baltimore.
+#: instructions.enter_roundabout_verbal.phrases.4
+msgctxt "instructions.enter_roundabout_verbal.phrases.4"
+msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
+msgstr "Sõida ringteele ja <ORDINAL_VALUE> ärapöördest liigu <TOWARD_SIGN> suunas."
+
+#. e.g. Enter the roundabout and take the exit onto Main Street.
+#: instructions.enter_roundabout_verbal.phrases.5
+msgctxt "instructions.enter_roundabout_verbal.phrases.5"
+msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida ringteele ja pööra ära <ROUNDABOUT_EXIT_STREET_NAMES> teele."
+
+#. e.g. Enter the roundabout and take the exit onto U.S. 3 22/Main Street.
+#: instructions.enter_roundabout_verbal.phrases.6
+msgctxt "instructions.enter_roundabout_verbal.phrases.6"
+msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
+msgstr "Sõida ringteele ja pööra ära <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> teele."
+
+#. e.g. Enter the roundabout and take the exit toward Baltimore.
+#: instructions.enter_roundabout_verbal.phrases.7
+msgctxt "instructions.enter_roundabout_verbal.phrases.7"
+msgid "Enter the roundabout and take the exit toward <TOWARD_SIGN>."
+msgstr "Sõida ringteele ja pööra ära <TOWARD_SIGN> suunas."
+
+#. e.g. Enter Dupont Circle.
+#: instructions.enter_roundabout_verbal.phrases.8
+msgctxt "instructions.enter_roundabout_verbal.phrases.8"
+msgid "Enter <STREET_NAMES>"
+msgstr "Liigu <STREET_NAMES> tänavale"
+
+#. e.g. Enter Dupont Circle and take the 1st exit.
+#: instructions.enter_roundabout_verbal.phrases.9
+msgctxt "instructions.enter_roundabout_verbal.phrases.9"
+msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."
+msgstr "Liigu <STREET_NAMES> tänavale ja lahku sealt <ORDINAL_VALUE> ärapöördest. "
+
+#. e.g. Enter Dupont Circle and take the 3rd exit onto Main Street.
+#: instructions.enter_roundabout_verbal.phrases.10
+msgctxt "instructions.enter_roundabout_verbal.phrases.10"
+msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida <STREET_NAMES> tänavale ja <ORDINAL_VALUE> ärapöördest suundu <ROUNDABOUT_EXIT_STREET_NAMES> tänavale."
+
+#. e.g. Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street.
+#: instructions.enter_roundabout_verbal.phrases.11
+msgctxt "instructions.enter_roundabout_verbal.phrases.11"
+msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
+msgstr "Sõida <STREET_NAMES> tänavale ja <ORDINAL_VALUE> ärapöördest suundu <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> tänavale."
+
+#. e.g. Enter Dupont Circle and take the 3rd exit toward Baltimore.
+#: instructions.enter_roundabout_verbal.phrases.12
+msgctxt "instructions.enter_roundabout_verbal.phrases.12"
+msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
+msgstr "Liigu <STREET_NAMES> tänavale ja lahku sealt <ORDINAL_VALUE> ärapöördest <TOWARD_SIGN> suunas."
+
+#. e.g. Enter Dupont Circle and take the exit onto Main Street.
+#: instructions.enter_roundabout_verbal.phrases.13
+msgctxt "instructions.enter_roundabout_verbal.phrases.13"
+msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
+msgstr "Sõida <STREET_NAMES> tänavale ja pööra siis <ROUNDABOUT_EXIT_STREET_NAMES> tänavale."
+
+#. e.g. Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street.
+#: instructions.enter_roundabout_verbal.phrases.14
+msgctxt "instructions.enter_roundabout_verbal.phrases.14"
+msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
+msgstr "Sõida <STREET_NAMES> tänavale ja pööra siis <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> tänavale."
+
+#. e.g. Enter Dupont Circle and take the exit toward Baltimore.
+#: instructions.enter_roundabout_verbal.phrases.15
+msgctxt "instructions.enter_roundabout_verbal.phrases.15"
+msgid "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+msgstr "Liigu <STREET_NAMES> tänavale ja lahku seakt <TOWARD_SIGN> suunas."
+
+#. e.g. Take the escalator.
+#: instructions.escalator.phrases.0
+msgctxt "instructions.escalator.phrases.0"
+msgid "Take the escalator."
+msgstr "Astu eskalaatorile."
+
+#. e.g. Take the escalator to Level 3.
+#: instructions.escalator.phrases.1
+msgctxt "instructions.escalator.phrases.1"
+msgid "Take the escalator to <LEVEL>."
+msgstr "Sõida eskalaatoriga kuni <LEVEL>."
+
+#. e.g. Take the exit on the left.
+#. e.g. Take the exit on the right.
+#: instructions.exit.phrases.0
+msgctxt "instructions.exit.phrases.0"
+msgid "Take the exit on the <RELATIVE_DIRECTION>."
+msgstr "Kasuta ärapööret <RELATIVE_DIRECTION>."
+
+#. e.g. Take exit 67 B-A on the right.
+#: instructions.exit.phrases.1
+msgctxt "instructions.exit.phrases.1"
+msgid "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION>."
+
+#. e.g. Take the US 322 West exit on the right.
+#: instructions.exit.phrases.2
+msgctxt "instructions.exit.phrases.2"
+msgid "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>."
+msgstr "Kasuta <BRANCH_SIGN> ärapööret <RELATIVE_DIRECTION>."
+
+#. e.g. Take exit 67 B-A on the right onto US 322 West.
+#: instructions.exit.phrases.3
+msgctxt "instructions.exit.phrases.3"
+msgid "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> suunas."
+
+#. e.g. Take the exit on the right toward Lewistown.
+#: instructions.exit.phrases.4
+msgctxt "instructions.exit.phrases.4"
+msgid "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Kasuta ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#. e.g. Take exit 67 B-A on the right toward Lewistown.
+#: instructions.exit.phrases.5
+msgctxt "instructions.exit.phrases.5"
+msgid "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#. e.g. Take the US 322 West exit on the right toward Lewistown.
+#: instructions.exit.phrases.6
+msgctxt "instructions.exit.phrases.6"
+msgid "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Kasuta <BRANCH_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#. e.g. Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College.
+#: instructions.exit.phrases.7
+msgctxt "instructions.exit.phrases.7"
+msgid "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> ja <TOWARD_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit on the left.
+#: instructions.exit.phrases.8
+msgctxt "instructions.exit.phrases.8"
+msgid "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION>."
+
+#. e.g. Take the White Marsh Boulevard exit on the left onto MD 43 East.
+#: instructions.exit.phrases.10
+msgctxt "instructions.exit.phrases.10"
+msgid "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit on the left toward White Marsh.
+#: instructions.exit.phrases.12
+msgctxt "instructions.exit.phrases.12"
+msgid "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh.
+#: instructions.exit.phrases.14
+msgctxt "instructions.exit.phrases.14"
+msgid "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> teele <TOWARD_SIGN> suunas."
+
+#. e.g. Take the exit.
+#: instructions.exit.phrases.15
+msgctxt "instructions.exit.phrases.15"
+msgid "Take the exit."
+msgstr "Pööra ära."
+
+#. e.g. Take exit 67 B-A.
+#: instructions.exit.phrases.16
+msgctxt "instructions.exit.phrases.16"
+msgid "Take exit <NUMBER_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret."
+
+#. e.g. Take the US 322 West exit.
+#: instructions.exit.phrases.17
+msgctxt "instructions.exit.phrases.17"
+msgid "Take the <BRANCH_SIGN> exit."
+msgstr "Kasuta <BRANCH_SIGN> ärapööret."
+
+#. e.g. Take exit 67 B-A onto US 322 West.
+#: instructions.exit.phrases.18
+msgctxt "instructions.exit.phrases.18"
+msgid "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <BRANCH_SIGN> suunas."
+
+#. e.g. Take the exit toward Lewistown.
+#: instructions.exit.phrases.19
+msgctxt "instructions.exit.phrases.19"
+msgid "Take the exit toward <TOWARD_SIGN>."
+msgstr "Pööra ära <TOWARD_SIGN> suunas."
+
+#. e.g. Take exit 67 B-A toward Lewistown.
+#: instructions.exit.phrases.20
+msgctxt "instructions.exit.phrases.20"
+msgid "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <TOWARD_SIGN> suunas."
+
+#. e.g. Take the US 322 West exit toward Lewistown.
+#: instructions.exit.phrases.21
+msgctxt "instructions.exit.phrases.21"
+msgid "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>."
+msgstr "Kasuta <BRANCH_SIGN> ärapööret <TOWARD_SIGN> suunas."
+
+#. e.g. Take exit 67 B-A onto US 322 West toward Lewistown/State College.
+#: instructions.exit.phrases.22
+msgctxt "instructions.exit.phrases.22"
+msgid "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <BRANCH_SIGN> ja <TOWARD_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit.
+#: instructions.exit.phrases.23
+msgctxt "instructions.exit.phrases.23"
+msgid "Take the <NAME_SIGN> exit."
+msgstr "Kasuta <NAME_SIGN> ärapööret."
+
+#. e.g. Take the White Marsh Boulevard exit onto MD 43 East.
+#: instructions.exit.phrases.25
+msgctxt "instructions.exit.phrases.25"
+msgid "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <BRANCH_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit toward White Marsh.
+#: instructions.exit.phrases.27
+msgctxt "instructions.exit.phrases.27"
+msgid "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <TOWARD_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh.
+#: instructions.exit.phrases.29
+msgctxt "instructions.exit.phrases.29"
+msgid "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <BRANCH_SIGN> ja <TOWARD_SIGN> suunas."
+
+#: instructions.exit.relative_directions.0
+msgctxt "instructions.exit.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.exit.relative_directions.1
+msgctxt "instructions.exit.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#: instructions.exit_building.empty_street_name_labels.0
+msgctxt "instructions.exit_building.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.exit_building.empty_street_name_labels.1
+msgctxt "instructions.exit_building.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.exit_building.empty_street_name_labels.2
+msgctxt "instructions.exit_building.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.exit_building.empty_street_name_labels.3
+msgctxt "instructions.exit_building.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#. e.g. Exit the building.
+#: instructions.exit_building.phrases.0
+msgctxt "instructions.exit_building.phrases.0"
+msgid "Exit the building."
+msgstr "Välju hoonest."
+
+#. e.g. Exit the building, and continue on the walkway.
+#: instructions.exit_building.phrases.1
+msgctxt "instructions.exit_building.phrases.1"
+msgid "Exit the building, and continue on <STREET_NAMES>."
+msgstr "Välju hoonest ja jätka kulgemist mööda <STREET_NAMES>."
+
+#: instructions.exit_roundabout.empty_street_name_labels.0
+msgctxt "instructions.exit_roundabout.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.exit_roundabout.empty_street_name_labels.1
+msgctxt "instructions.exit_roundabout.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.exit_roundabout.empty_street_name_labels.2
+msgctxt "instructions.exit_roundabout.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.exit_roundabout.empty_street_name_labels.3
+msgctxt "instructions.exit_roundabout.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.exit_roundabout.empty_street_name_labels.4
+msgctxt "instructions.exit_roundabout.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.exit_roundabout.empty_street_name_labels.5
+msgctxt "instructions.exit_roundabout.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.exit_roundabout.empty_street_name_labels.6
+msgctxt "instructions.exit_roundabout.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Exit the roundabout.
+#: instructions.exit_roundabout.phrases.0
+msgctxt "instructions.exit_roundabout.phrases.0"
+msgid "Exit the roundabout."
+msgstr "Sõida ringteelt ära."
+
+#. e.g. Exit the roundabout onto Philadelphia Road/MD 7.
+#: instructions.exit_roundabout.phrases.1
+msgctxt "instructions.exit_roundabout.phrases.1"
+msgid "Exit the roundabout onto <STREET_NAMES>."
+msgstr "Sõida ringteelt ära <STREET_NAMES> teele."
+
+#. e.g. Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.
+#: instructions.exit_roundabout.phrases.2
+msgctxt "instructions.exit_roundabout.phrases.2"
+msgid "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+msgstr "Sõida ringteelt ära <BEGIN_STREET_NAMES> teele. Jätka mööda <STREET_NAMES> teed."
+
+#. e.g. Exit the roundabout toward Baltimore.
+#: instructions.exit_roundabout.phrases.3
+msgctxt "instructions.exit_roundabout.phrases.3"
+msgid "Exit the roundabout toward <TOWARD_SIGN>."
+msgstr "Sõida ringteelt ära <TOWARD_SIGN> suunas."
+
+#: instructions.exit_roundabout_verbal.empty_street_name_labels.0
+msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.exit_roundabout_verbal.empty_street_name_labels.1
+msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.exit_roundabout_verbal.empty_street_name_labels.2
+msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.exit_roundabout_verbal.empty_street_name_labels.3
+msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.exit_roundabout_verbal.empty_street_name_labels.4
+msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.exit_roundabout_verbal.empty_street_name_labels.5
+msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.exit_roundabout_verbal.empty_street_name_labels.6
+msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Exit the roundabout.
+#: instructions.exit_roundabout_verbal.phrases.0
+msgctxt "instructions.exit_roundabout_verbal.phrases.0"
+msgid "Exit the roundabout."
+msgstr "Sõida ringteelt ära."
+
+#. e.g. Exit the roundabout onto Philadelphia Road, Maryland 7.
+#: instructions.exit_roundabout_verbal.phrases.1
+msgctxt "instructions.exit_roundabout_verbal.phrases.1"
+msgid "Exit the roundabout onto <STREET_NAMES>."
+msgstr "Sõida ringteelt ära <STREET_NAMES> teele."
+
+#. e.g. Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.
+#: instructions.exit_roundabout_verbal.phrases.2
+msgctxt "instructions.exit_roundabout_verbal.phrases.2"
+msgid "Exit the roundabout onto <BEGIN_STREET_NAMES>."
+msgstr "Sõida ringteelt ära <BEGIN_STREET_NAMES> teele."
+
+#. e.g. Exit the roundabout toward Baltimore.
+#: instructions.exit_roundabout_verbal.phrases.3
+msgctxt "instructions.exit_roundabout_verbal.phrases.3"
+msgid "Exit the roundabout toward <TOWARD_SIGN>."
+msgstr "Sõida ringteelt ära <TOWARD_SIGN> suunas."
+
+#. e.g. Take the exit on the left.
+#. e.g. Take the exit on the right.
+#: instructions.exit_verbal.phrases.0
+msgctxt "instructions.exit_verbal.phrases.0"
+msgid "Take the exit on the <RELATIVE_DIRECTION>."
+msgstr "Kasuta ärapööret <RELATIVE_DIRECTION>."
+
+#. e.g. Take exit 67 B-A on the right.
+#: instructions.exit_verbal.phrases.1
+msgctxt "instructions.exit_verbal.phrases.1"
+msgid "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION>."
+
+#. e.g. Take the U.S. 3 22 West exit on the right.
+#: instructions.exit_verbal.phrases.2
+msgctxt "instructions.exit_verbal.phrases.2"
+msgid "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>."
+msgstr "Kasuta <BRANCH_SIGN> ärapööret <RELATIVE_DIRECTION>."
+
+#. e.g. Take exit 67 B-A on the right onto U.S. 3 22 West.
+#: instructions.exit_verbal.phrases.3
+msgctxt "instructions.exit_verbal.phrases.3"
+msgid "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> suunas."
+
+#. e.g. Take the exit on the right toward Lewistown.
+#: instructions.exit_verbal.phrases.4
+msgctxt "instructions.exit_verbal.phrases.4"
+msgid "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Kasuta ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#. e.g. Take exit 67 B-A on the right toward Lewistown.
+#: instructions.exit_verbal.phrases.5
+msgctxt "instructions.exit_verbal.phrases.5"
+msgid "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#. e.g. Take the U.S. 3 22 West exit on the right toward Lewistown.
+#: instructions.exit_verbal.phrases.6
+msgctxt "instructions.exit_verbal.phrases.6"
+msgid "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Kasuta <BRANCH_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#. e.g. Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College.
+#: instructions.exit_verbal.phrases.7
+msgctxt "instructions.exit_verbal.phrases.7"
+msgid "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> ja <TOWARD_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit on the left.
+#: instructions.exit_verbal.phrases.8
+msgctxt "instructions.exit_verbal.phrases.8"
+msgid "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION>."
+
+#. e.g. Take the White Marsh Boulevard exit on the left onto Maryland 43 East.
+#: instructions.exit_verbal.phrases.10
+msgctxt "instructions.exit_verbal.phrases.10"
+msgid "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit on the left toward White Marsh.
+#: instructions.exit_verbal.phrases.12
+msgctxt "instructions.exit_verbal.phrases.12"
+msgid "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh.
+#: instructions.exit_verbal.phrases.14
+msgctxt "instructions.exit_verbal.phrases.14"
+msgid "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> teele <TOWARD_SIGN> suunas."
+
+#. e.g. Take the exit.
+#: instructions.exit_verbal.phrases.15
+msgctxt "instructions.exit_verbal.phrases.15"
+msgid "Take the exit."
+msgstr "Pööra ära."
+
+#. e.g. Take exit 67 B-A.
+#: instructions.exit_verbal.phrases.16
+msgctxt "instructions.exit_verbal.phrases.16"
+msgid "Take exit <NUMBER_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret."
+
+#. e.g. Take the US 322 West exit.
+#: instructions.exit_verbal.phrases.17
+msgctxt "instructions.exit_verbal.phrases.17"
+msgid "Take the <BRANCH_SIGN> exit."
+msgstr "Kasuta <BRANCH_SIGN> ärapööret."
+
+#. e.g. Take exit 67 B-A onto US 322 West.
+#: instructions.exit_verbal.phrases.18
+msgctxt "instructions.exit_verbal.phrases.18"
+msgid "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <BRANCH_SIGN> suunas."
+
+#. e.g. Take the exit toward Lewistown.
+#: instructions.exit_verbal.phrases.19
+msgctxt "instructions.exit_verbal.phrases.19"
+msgid "Take the exit toward <TOWARD_SIGN>."
+msgstr "Pööra ära <TOWARD_SIGN> suunas."
+
+#. e.g. Take exit 67 B-A toward Lewistown.
+#: instructions.exit_verbal.phrases.20
+msgctxt "instructions.exit_verbal.phrases.20"
+msgid "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <TOWARD_SIGN> suunas."
+
+#. e.g. Take the US 322 West exit toward Lewistown.
+#: instructions.exit_verbal.phrases.21
+msgctxt "instructions.exit_verbal.phrases.21"
+msgid "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>."
+msgstr "Kasuta <BRANCH_SIGN> ärapööret <TOWARD_SIGN> suunas."
+
+#. e.g. Take exit 67 B-A onto US 322 West toward Lewistown/State College.
+#: instructions.exit_verbal.phrases.22
+msgctxt "instructions.exit_verbal.phrases.22"
+msgid "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NUMBER_SIGN> ärapööret <BRANCH_SIGN> ja <TOWARD_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit.
+#: instructions.exit_verbal.phrases.23
+msgctxt "instructions.exit_verbal.phrases.23"
+msgid "Take the <NAME_SIGN> exit."
+msgstr "Kasuta <NAME_SIGN> ärapööret."
+
+#. e.g. Take the White Marsh Boulevard exit onto MD 43 East.
+#: instructions.exit_verbal.phrases.25
+msgctxt "instructions.exit_verbal.phrases.25"
+msgid "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <BRANCH_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit toward White Marsh.
+#: instructions.exit_verbal.phrases.27
+msgctxt "instructions.exit_verbal.phrases.27"
+msgid "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <TOWARD_SIGN> suunas."
+
+#. e.g. Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh.
+#: instructions.exit_verbal.phrases.29
+msgctxt "instructions.exit_verbal.phrases.29"
+msgid "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+msgstr "Kasuta <NAME_SIGN> ärapööret <BRANCH_SIGN> ja <TOWARD_SIGN> suunas."
+
+#: instructions.exit_verbal.relative_directions.0
+msgctxt "instructions.exit_verbal.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.exit_verbal.relative_directions.1
+msgctxt "instructions.exit_verbal.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#. e.g. Exit 1A
+#: instructions.exit_visual.phrases.0
+msgctxt "instructions.exit_visual.phrases.0"
+msgid "Exit <EXIT_NUMBERS>"
+msgstr "Ärapööre <EXIT_NUMBERS>"
+
+#: instructions.keep.empty_street_name_labels.0
+msgctxt "instructions.keep.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.keep.empty_street_name_labels.1
+msgctxt "instructions.keep.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.keep.empty_street_name_labels.2
+msgctxt "instructions.keep.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.keep.empty_street_name_labels.3
+msgctxt "instructions.keep.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.keep.empty_street_name_labels.4
+msgctxt "instructions.keep.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.keep.empty_street_name_labels.5
+msgctxt "instructions.keep.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.keep.empty_street_name_labels.6
+msgctxt "instructions.keep.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Keep left at the fork.
+#. e.g. Keep straight at the fork.
+#. e.g. Keep right at the fork.
+#: instructions.keep.phrases.0
+msgctxt "instructions.keep.phrases.0"
+msgid "Keep <RELATIVE_DIRECTION> at the fork."
+msgstr "Tee hargnemisel hoia <RELATIVE_DIRECTION> suunas."
+
+#. e.g. Keep right to take exit 62.
+#: instructions.keep.phrases.1
+msgctxt "instructions.keep.phrases.1"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja kasuta ärapööret <NUMBER_SIGN>."
+
+#. e.g. Keep right to take I 895 South.
+#: instructions.keep.phrases.2
+msgctxt "instructions.keep.phrases.2"
+msgid "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja liigu <STREET_NAMES> tänavale."
+
+#. e.g. Keep right to take exit 62 onto I 895 South.
+#: instructions.keep.phrases.3
+msgctxt "instructions.keep.phrases.3"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."
+msgstr "Hoia <RELATIVE_DIRECTION> kasutades ärapööret <NUMBER_SIGN> <STREET_NAMES> tänavale."
+
+#. e.g. Keep right toward Annapolis.
+#: instructions.keep.phrases.4
+msgctxt "instructions.keep.phrases.4"
+msgid "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#. e.g. Keep right to take exit 62 toward Annapolis.
+#: instructions.keep.phrases.5
+msgctxt "instructions.keep.phrases.5"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret <TOWARD_SIGN> suunas."
+
+#. e.g. Keep right to take I 895 South toward Annapolis.
+#: instructions.keep.phrases.6
+msgctxt "instructions.keep.phrases.6"
+msgid "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja liigu <STREET_NAMES> tänavale <TOWARD_SIGN> poole."
+
+#. e.g. Keep right to take exit 62 onto I 895 South toward Annapolis.
+#: instructions.keep.phrases.7
+msgctxt "instructions.keep.phrases.7"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret <STREET_NAMES> tänavale <TOWARD_SIGN> poole."
+
+#: instructions.keep.relative_directions.0
+msgctxt "instructions.keep.relative_directions.0"
+msgid "left"
+msgstr "vasakule"
+
+#: instructions.keep.relative_directions.1
+msgctxt "instructions.keep.relative_directions.1"
+msgid "straight"
+msgstr "otse"
+
+#: instructions.keep.relative_directions.2
+msgctxt "instructions.keep.relative_directions.2"
+msgid "right"
+msgstr "paremale"
+
+#: instructions.keep_to_stay_on.empty_street_name_labels.0
+msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.keep_to_stay_on.empty_street_name_labels.1
+msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.keep_to_stay_on.empty_street_name_labels.2
+msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.keep_to_stay_on.empty_street_name_labels.3
+msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.keep_to_stay_on.empty_street_name_labels.4
+msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.keep_to_stay_on.empty_street_name_labels.5
+msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.keep_to_stay_on.empty_street_name_labels.6
+msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Keep left to stay on I 95 South.
+#. e.g. Keep straight to stay on I 95 South.
+#. e.g. Keep right to stay on I 95 South.
+#: instructions.keep_to_stay_on.phrases.0
+msgctxt "instructions.keep_to_stay_on.phrases.0"
+msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja jätka mööda <STREET_NAMES> tänavat."
+
+#. e.g. Keep left to take exit 62 to stay on I 95 South.
+#: instructions.keep_to_stay_on.phrases.1
+msgctxt "instructions.keep_to_stay_on.phrases.1"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret ning püsi <STREET_NAMES> tänaval."
+
+#. e.g. Keep left to stay on I 95 South toward Baltimore.
+#: instructions.keep_to_stay_on.phrases.2
+msgctxt "instructions.keep_to_stay_on.phrases.2"
+msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja jätka <STREET_NAMES> tänaval <TOWARD_SIGN> suunas."
+
+#. e.g. Keep left to take exit 62 to stay on I 95 South toward Baltimore.
+#: instructions.keep_to_stay_on.phrases.3
+msgctxt "instructions.keep_to_stay_on.phrases.3"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret et jätkata <STREET_NAMES> tänaval <TOWARD_SIGN> suunas."
+
+#: instructions.keep_to_stay_on.relative_directions.0
+msgctxt "instructions.keep_to_stay_on.relative_directions.0"
+msgid "left"
+msgstr "vasakule"
+
+#: instructions.keep_to_stay_on.relative_directions.1
+msgctxt "instructions.keep_to_stay_on.relative_directions.1"
+msgid "straight"
+msgstr "otse"
+
+#: instructions.keep_to_stay_on.relative_directions.2
+msgctxt "instructions.keep_to_stay_on.relative_directions.2"
+msgid "right"
+msgstr "paremale"
+
+#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.0
+msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.1
+msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.2
+msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.3
+msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.4
+msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.5
+msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.6
+msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Keep left to stay on Interstate 95 South.
+#. e.g. Keep straight to stay on Interstate 95 South.
+#. e.g. Keep right to stay on Interstate 95 South.
+#: instructions.keep_to_stay_on_verbal.phrases.0
+msgctxt "instructions.keep_to_stay_on_verbal.phrases.0"
+msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja jätka mööda <STREET_NAMES> tänavat."
+
+#. e.g. Keep left to take exit 62 to stay on Interstate 95 South.
+#: instructions.keep_to_stay_on_verbal.phrases.1
+msgctxt "instructions.keep_to_stay_on_verbal.phrases.1"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret ning püsi <STREET_NAMES> tänaval."
+
+#. e.g. Keep left to stay on I 95 South toward Baltimore.
+#: instructions.keep_to_stay_on_verbal.phrases.2
+msgctxt "instructions.keep_to_stay_on_verbal.phrases.2"
+msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja jätka <STREET_NAMES> tänaval <TOWARD_SIGN> suunas."
+
+#. e.g. Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore.
+#: instructions.keep_to_stay_on_verbal.phrases.3
+msgctxt "instructions.keep_to_stay_on_verbal.phrases.3"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret et jätkata <STREET_NAMES> tänaval <TOWARD_SIGN> suunas."
+
+#: instructions.keep_to_stay_on_verbal.relative_directions.0
+msgctxt "instructions.keep_to_stay_on_verbal.relative_directions.0"
+msgid "left"
+msgstr "vasakule"
+
+#: instructions.keep_to_stay_on_verbal.relative_directions.1
+msgctxt "instructions.keep_to_stay_on_verbal.relative_directions.1"
+msgid "straight"
+msgstr "otse"
+
+#: instructions.keep_to_stay_on_verbal.relative_directions.2
+msgctxt "instructions.keep_to_stay_on_verbal.relative_directions.2"
+msgid "right"
+msgstr "paremale"
+
+#: instructions.keep_verbal.empty_street_name_labels.0
+msgctxt "instructions.keep_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.keep_verbal.empty_street_name_labels.1
+msgctxt "instructions.keep_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.keep_verbal.empty_street_name_labels.2
+msgctxt "instructions.keep_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.keep_verbal.empty_street_name_labels.3
+msgctxt "instructions.keep_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.keep_verbal.empty_street_name_labels.4
+msgctxt "instructions.keep_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.keep_verbal.empty_street_name_labels.5
+msgctxt "instructions.keep_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.keep_verbal.empty_street_name_labels.6
+msgctxt "instructions.keep_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Keep left at the fork.
+#. e.g. Keep straight at the fork.
+#. e.g. Keep right at the fork.
+#: instructions.keep_verbal.phrases.0
+msgctxt "instructions.keep_verbal.phrases.0"
+msgid "Keep <RELATIVE_DIRECTION> at the fork."
+msgstr "Tee hargnemisel hoia <RELATIVE_DIRECTION> suunas."
+
+#. e.g. Keep right to take exit 62.
+#: instructions.keep_verbal.phrases.1
+msgctxt "instructions.keep_verbal.phrases.1"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja kasuta ärapööret <NUMBER_SIGN>."
+
+#. e.g. Keep right to take Interstate 8 95 South.
+#: instructions.keep_verbal.phrases.2
+msgctxt "instructions.keep_verbal.phrases.2"
+msgid "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja liigu <STREET_NAMES> tänavale."
+
+#. e.g. Keep right to take exit 62 onto Interstate 8 95 South.
+#: instructions.keep_verbal.phrases.3
+msgctxt "instructions.keep_verbal.phrases.3"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."
+msgstr "Hoia <RELATIVE_DIRECTION> kasutades ärapööret <NUMBER_SIGN> <STREET_NAMES> tänavale."
+
+#. e.g. Keep right toward Annapolis.
+#: instructions.keep_verbal.phrases.4
+msgctxt "instructions.keep_verbal.phrases.4"
+msgid "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#. e.g. Keep right to take exit 62 toward Annapolis.
+#: instructions.keep_verbal.phrases.5
+msgctxt "instructions.keep_verbal.phrases.5"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret <TOWARD_SIGN> suunas."
+
+#. e.g. Keep right to take Interstate 8 95 South toward Annapolis.
+#: instructions.keep_verbal.phrases.6
+msgctxt "instructions.keep_verbal.phrases.6"
+msgid "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja liigu <STREET_NAMES> tänavale <TOWARD_SIGN> poole."
+
+#. e.g. Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis.
+#: instructions.keep_verbal.phrases.7
+msgctxt "instructions.keep_verbal.phrases.7"
+msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+msgstr "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret <STREET_NAMES> tänavale <TOWARD_SIGN> poole."
+
+#: instructions.keep_verbal.relative_directions.0
+msgctxt "instructions.keep_verbal.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.keep_verbal.relative_directions.1
+msgctxt "instructions.keep_verbal.relative_directions.1"
+msgid "straight"
+msgstr "otse"
+
+#: instructions.keep_verbal.relative_directions.2
+msgctxt "instructions.keep_verbal.relative_directions.2"
+msgid "right"
+msgstr "paremal"
+
+#. e.g. Continue to Level 2.
+#: instructions.level_change.phrases.0
+msgctxt "instructions.level_change.phrases.0"
+msgid "Continue to <LEVEL>."
+msgstr "Jätka: <LEVEL>."
+
+#: instructions.merge.empty_street_name_labels.0
+msgctxt "instructions.merge.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.merge.empty_street_name_labels.1
+msgctxt "instructions.merge.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.merge.empty_street_name_labels.2
+msgctxt "instructions.merge.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.merge.empty_street_name_labels.3
+msgctxt "instructions.merge.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.merge.empty_street_name_labels.4
+msgctxt "instructions.merge.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.merge.empty_street_name_labels.5
+msgctxt "instructions.merge.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.merge.empty_street_name_labels.6
+msgctxt "instructions.merge.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Merge.
+#: instructions.merge.phrases.0
+msgctxt "instructions.merge.phrases.0"
+msgid "Merge."
+msgstr "Liitu sõidurajaga."
+
+#. e.g. Merge left.
+#: instructions.merge.phrases.1
+msgctxt "instructions.merge.phrases.1"
+msgid "Merge <RELATIVE_DIRECTION>."
+msgstr "Liitu sõidurajaga <RELATIVE_DIRECTION>."
+
+#. e.g. Merge onto I 76 West/Pennsylvania Turnpike.
+#: instructions.merge.phrases.2
+msgctxt "instructions.merge.phrases.2"
+msgid "Merge onto <STREET_NAMES>."
+msgstr "Liitu sõidurajaga <STREET_NAMES> teel."
+
+#. e.g. Merge right onto I 83 South.
+#: instructions.merge.phrases.3
+msgctxt "instructions.merge.phrases.3"
+msgid "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+msgstr "Liitu sõidurajaga <RELATIVE_DIRECTION> <STREET_NAMES> teel."
+
+#. e.g. Merge toward Baltimore.
+#: instructions.merge.phrases.4
+msgctxt "instructions.merge.phrases.4"
+msgid "Merge toward <TOWARD_SIGN>."
+msgstr "Liitu sõidurajaga <TOWARD_SIGN> suunas."
+
+#. e.g. Merge right toward Baltimore.
+#: instructions.merge.phrases.5
+msgctxt "instructions.merge.phrases.5"
+msgid "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Liitu sõidurajaga <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#: instructions.merge.relative_directions.0
+msgctxt "instructions.merge.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.merge.relative_directions.1
+msgctxt "instructions.merge.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#: instructions.merge_verbal.empty_street_name_labels.0
+msgctxt "instructions.merge_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.merge_verbal.empty_street_name_labels.1
+msgctxt "instructions.merge_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.merge_verbal.empty_street_name_labels.2
+msgctxt "instructions.merge_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.merge_verbal.empty_street_name_labels.3
+msgctxt "instructions.merge_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.merge_verbal.empty_street_name_labels.4
+msgctxt "instructions.merge_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.merge_verbal.empty_street_name_labels.5
+msgctxt "instructions.merge_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.merge_verbal.empty_street_name_labels.6
+msgctxt "instructions.merge_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Merge.
+#: instructions.merge_verbal.phrases.0
+msgctxt "instructions.merge_verbal.phrases.0"
+msgid "Merge."
+msgstr "Liitu sõidurajaga."
+
+#. e.g. Merge left.
+#: instructions.merge_verbal.phrases.1
+msgctxt "instructions.merge_verbal.phrases.1"
+msgid "Merge <RELATIVE_DIRECTION>."
+msgstr "Liitu sõidurajaga <RELATIVE_DIRECTION>."
+
+#. e.g. Merge onto I 76 West/Pennsylvania Turnpike.
+#: instructions.merge_verbal.phrases.2
+msgctxt "instructions.merge_verbal.phrases.2"
+msgid "Merge onto <STREET_NAMES>."
+msgstr "Liitu sõidurajaga <STREET_NAMES> teel."
+
+#. e.g. Merge right onto I 83 South.
+#: instructions.merge_verbal.phrases.3
+msgctxt "instructions.merge_verbal.phrases.3"
+msgid "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+msgstr "Liitu sõidurajaga <RELATIVE_DIRECTION> <STREET_NAMES> teel."
+
+#. e.g. Merge toward Baltimore.
+#: instructions.merge_verbal.phrases.4
+msgctxt "instructions.merge_verbal.phrases.4"
+msgid "Merge toward <TOWARD_SIGN>."
+msgstr "Liitu sõidurajaga <TOWARD_SIGN> suunas."
+
+#. e.g. Merge right toward Baltimore.
+#: instructions.merge_verbal.phrases.5
+msgctxt "instructions.merge_verbal.phrases.5"
+msgid "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Liitu sõidurajaga <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#: instructions.merge_verbal.relative_directions.0
+msgctxt "instructions.merge_verbal.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.merge_verbal.relative_directions.1
+msgctxt "instructions.merge_verbal.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#. e.g. Park your vehicle.
+#: instructions.park_vehicle.phrases.0
+msgctxt "instructions.park_vehicle.phrases.0"
+msgid "Park your vehicle"
+msgstr ""
+
+#: instructions.pass.object_labels.0
+msgctxt "instructions.pass.object_labels.0"
+msgid "the gate"
+msgstr "värav"
+
+#: instructions.pass.object_labels.1
+msgctxt "instructions.pass.object_labels.1"
+msgid "the bollards"
+msgstr "piirdetulbad"
+
+#: instructions.pass.object_labels.2
+msgctxt "instructions.pass.object_labels.2"
+msgid "ways intersection"
+msgstr "teede ristmik"
+
+#. e.g. Pass the gate.
+#: instructions.pass.phrases.0
+msgctxt "instructions.pass.phrases.0"
+msgid "Pass <OBJECT_LABEL>."
+msgstr "Möödu siit: <OBJECT_LABEL>."
+
+#: instructions.pass.phrases.1
+msgctxt "instructions.pass.phrases.1"
+msgid "Pass traffic signals on <OBJECT_LABEL>."
+msgstr "Möödu valgusfooridest <OBJECT_LABEL> teel."
+
+#. e.g. Travel 1 stop.
+#. e.g. Travel 3 stops.
+#: instructions.post_transition_transit_verbal.phrases.0
+msgctxt "instructions.post_transition_transit_verbal.phrases.0"
+msgid "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+msgstr "Sõida <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+
+#: instructions.post_transition_transit_verbal.transit_stop_count_labels.one
+msgctxt "instructions.post_transition_transit_verbal.transit_stop_count_labels.one"
+msgid "stop"
+msgstr "peatus"
+
+#: instructions.post_transition_transit_verbal.transit_stop_count_labels.other
+msgctxt "instructions.post_transition_transit_verbal.transit_stop_count_labels.other"
+msgid "stops"
+msgstr "peatused"
+
+#: instructions.post_transition_verbal.empty_street_name_labels.0
+msgctxt "instructions.post_transition_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.post_transition_verbal.empty_street_name_labels.1
+msgctxt "instructions.post_transition_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.post_transition_verbal.empty_street_name_labels.2
+msgctxt "instructions.post_transition_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.post_transition_verbal.empty_street_name_labels.3
+msgctxt "instructions.post_transition_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.post_transition_verbal.empty_street_name_labels.4
+msgctxt "instructions.post_transition_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.post_transition_verbal.empty_street_name_labels.5
+msgctxt "instructions.post_transition_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.post_transition_verbal.empty_street_name_labels.6
+msgctxt "instructions.post_transition_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#: instructions.post_transition_verbal.metric_lengths.0
+msgctxt "instructions.post_transition_verbal.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> kilomeetrit"
+
+#: instructions.post_transition_verbal.metric_lengths.1
+msgctxt "instructions.post_transition_verbal.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 kilomeeter"
+
+#: instructions.post_transition_verbal.metric_lengths.2
+msgctxt "instructions.post_transition_verbal.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> meetrit"
+
+#: instructions.post_transition_verbal.metric_lengths.3
+msgctxt "instructions.post_transition_verbal.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "vähem kui 10 meetrit"
+
+#. e.g. Continue for 300 feet.
+#. e.g. Continue for 9 miles.
+#: instructions.post_transition_verbal.phrases.0
+msgctxt "instructions.post_transition_verbal.phrases.0"
+msgid "Continue for <LENGTH>."
+msgstr "Jätka veel <LENGTH>."
+
+#. e.g. Continue on Pennsylvania 7 43 for 6.2 miles.
+#. e.g. Continue on Main Street, Vermont 30 for 1 tenth of a mile.
+#: instructions.post_transition_verbal.phrases.1
+msgctxt "instructions.post_transition_verbal.phrases.1"
+msgid "Continue on <STREET_NAMES> for <LENGTH>."
+msgstr "Jätka <STREET_NAMES> tänaval veel <LENGTH>."
+
+#: instructions.post_transition_verbal.us_customary_lengths.0
+msgctxt "instructions.post_transition_verbal.us_customary_lengths.0"
+msgid "<MILES> miles"
+msgstr "<MILES> miili"
+
+#: instructions.post_transition_verbal.us_customary_lengths.1
+msgctxt "instructions.post_transition_verbal.us_customary_lengths.1"
+msgid "1 mile"
+msgstr "1 miil"
+
+#: instructions.post_transition_verbal.us_customary_lengths.2
+msgctxt "instructions.post_transition_verbal.us_customary_lengths.2"
+msgid "a half mile"
+msgstr "pool miili"
+
+#: instructions.post_transition_verbal.us_customary_lengths.3
+msgctxt "instructions.post_transition_verbal.us_customary_lengths.3"
+msgid "a quarter mile"
+msgstr "veerand miili"
+
+#: instructions.post_transition_verbal.us_customary_lengths.4
+msgctxt "instructions.post_transition_verbal.us_customary_lengths.4"
+msgid "<FEET> feet"
+msgstr "<FEET> jalga"
+
+#: instructions.post_transition_verbal.us_customary_lengths.5
+msgctxt "instructions.post_transition_verbal.us_customary_lengths.5"
+msgid "less than 10 feet"
+msgstr "vähem kui 10 jalga"
+
+#. e.g. Take the ramp on the left.
+#. e.g. Take the ramp on the right.
+#: instructions.ramp.phrases.0
+msgctxt "instructions.ramp.phrases.0"
+msgid "Take the ramp on the <RELATIVE_DIRECTION>."
+msgstr "Sõida <RELATIVE_DIRECTION> kaldteele."
+
+#. e.g. Take the I 95 ramp on the right.
+#: instructions.ramp.phrases.1
+msgctxt "instructions.ramp.phrases.1"
+msgid "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>."
+msgstr "Sõida <RELATIVE_DIRECTION> kaldteele <BRANCH_SIGN> suunas."
+
+#. e.g. Take the ramp on the left toward JFK.
+#: instructions.ramp.phrases.2
+msgctxt "instructions.ramp.phrases.2"
+msgid "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Sõida <RELATIVE_DIRECTION> asuvale kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Take the South Conduit Avenue ramp on the left toward JFK.
+#: instructions.ramp.phrases.3
+msgctxt "instructions.ramp.phrases.3"
+msgid "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Sõida <RELATIVE_DIRECTION> asuvale <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Take the Gettysburg Pike ramp on the right.
+#: instructions.ramp.phrases.4
+msgctxt "instructions.ramp.phrases.4"
+msgid "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>."
+msgstr "Sõida <RELATIVE_DIRECTION> asuvale <NAME_SIGN> kaldteele."
+
+#. e.g. Turn left to take the ramp.
+#. e.g. Turn right to take the ramp.
+#: instructions.ramp.phrases.5
+msgctxt "instructions.ramp.phrases.5"
+msgid "Turn <RELATIVE_DIRECTION> to take the ramp."
+msgstr "Pööra <RELATIVE_DIRECTION> ja sõida kaldteele."
+
+#. e.g. Turn left to take the PA 283 West ramp.
+#: instructions.ramp.phrases.6
+msgctxt "instructions.ramp.phrases.6"
+msgid "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp."
+msgstr "Pööra <RELATIVE_DIRECTION> ja sõida <BRANCH_SIGN> kaldteele."
+
+#. e.g. Turn left to take the ramp toward Harrisburg/Harrisburg International Airport.
+#: instructions.ramp.phrases.7
+msgctxt "instructions.ramp.phrases.7"
+msgid "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>."
+msgstr "Pööra <RELATIVE_DIRECTION> ja sõida kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport.
+#: instructions.ramp.phrases.8
+msgctxt "instructions.ramp.phrases.8"
+msgid "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+msgstr "Pööra <RELATIVE_DIRECTION> ja sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Turn right to take the Gettysburg Pike ramp.
+#: instructions.ramp.phrases.9
+msgctxt "instructions.ramp.phrases.9"
+msgid "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+msgstr "Pööra <RELATIVE_DIRECTION> ja sõida <NAME_SIGN> kaldteele."
+
+#. e.g. Take the ramp.
+#: instructions.ramp.phrases.10
+msgctxt "instructions.ramp.phrases.10"
+msgid "Take the ramp."
+msgstr "Sõida kaldteele."
+
+#. e.g. Take the I 95 ramp.
+#: instructions.ramp.phrases.11
+msgctxt "instructions.ramp.phrases.11"
+msgid "Take the <BRANCH_SIGN> ramp."
+msgstr "Sõida <BRANCH_SIGN> kaldteele"
+
+#. e.g. Take the ramp toward JFK.
+#: instructions.ramp.phrases.12
+msgctxt "instructions.ramp.phrases.12"
+msgid "Take the ramp toward <TOWARD_SIGN>."
+msgstr "Sõida kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Take the Soutch Conduit Avenue ramp toward JFK.
+#: instructions.ramp.phrases.13
+msgctxt "instructions.ramp.phrases.13"
+msgid "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+msgstr "Sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Take the Gettysburg ramp.
+#: instructions.ramp.phrases.14
+msgctxt "instructions.ramp.phrases.14"
+msgid "Take the <NAME_SIGN> ramp."
+msgstr "Sõida <NAME_SIGN> kaldteele."
+
+#: instructions.ramp.relative_directions.0
+msgctxt "instructions.ramp.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.ramp.relative_directions.1
+msgctxt "instructions.ramp.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#. e.g. Stay straight to take the ramp.
+#: instructions.ramp_straight.phrases.0
+msgctxt "instructions.ramp_straight.phrases.0"
+msgid "Stay straight to take the ramp."
+msgstr "Jätka otse ning sõida kaldteele."
+
+#. e.g. Stay straight to take the US 322 East ramp.
+#: instructions.ramp_straight.phrases.1
+msgctxt "instructions.ramp_straight.phrases.1"
+msgid "Stay straight to take the <BRANCH_SIGN> ramp."
+msgstr "Jätka otse ning sõida <BRANCH_SIGN> kaldteele."
+
+#. e.g. Stay straight to take the ramp toward Hershey.
+#: instructions.ramp_straight.phrases.2
+msgctxt "instructions.ramp_straight.phrases.2"
+msgid "Stay straight to take the ramp toward <TOWARD_SIGN>."
+msgstr "Jätka otse ning sõida kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown.
+#: instructions.ramp_straight.phrases.3
+msgctxt "instructions.ramp_straight.phrases.3"
+msgid "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+msgstr "Jätka otse ning sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Stay straight to take the Gettysburg Pike ramp.
+#: instructions.ramp_straight.phrases.4
+msgctxt "instructions.ramp_straight.phrases.4"
+msgid "Stay straight to take the <NAME_SIGN> ramp."
+msgstr "Jätka otse ning sõida <NAME_SIGN> kaldteele."
+
+#. e.g. Stay straight to take the ramp.
+#: instructions.ramp_straight_verbal.phrases.0
+msgctxt "instructions.ramp_straight_verbal.phrases.0"
+msgid "Stay straight to take the ramp."
+msgstr "Jätka otse ning sõida kaldteele."
+
+#. e.g. Stay straight to take the U.S. 3 22 East ramp.
+#: instructions.ramp_straight_verbal.phrases.1
+msgctxt "instructions.ramp_straight_verbal.phrases.1"
+msgid "Stay straight to take the <BRANCH_SIGN> ramp."
+msgstr "Jätka otse ning sõida <BRANCH_SIGN> kaldteele."
+
+#. e.g. Stay straight to take the ramp toward Hershey.
+#: instructions.ramp_straight_verbal.phrases.2
+msgctxt "instructions.ramp_straight_verbal.phrases.2"
+msgid "Stay straight to take the ramp toward <TOWARD_SIGN>."
+msgstr "Jätka otse ning sõida kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale.
+#: instructions.ramp_straight_verbal.phrases.3
+msgctxt "instructions.ramp_straight_verbal.phrases.3"
+msgid "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+msgstr "Jätka otse ning sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Stay straight to take the Gettysburg Pike ramp.
+#: instructions.ramp_straight_verbal.phrases.4
+msgctxt "instructions.ramp_straight_verbal.phrases.4"
+msgid "Stay straight to take the <NAME_SIGN> ramp."
+msgstr "Jätka otse ning sõida <NAME_SIGN> kaldteele."
+
+#. e.g. Take the ramp on the left.
+#. e.g. Take the ramp on the right.
+#: instructions.ramp_verbal.phrases.0
+msgctxt "instructions.ramp_verbal.phrases.0"
+msgid "Take the ramp on the <RELATIVE_DIRECTION>."
+msgstr "Sõida <RELATIVE_DIRECTION> kaldteele."
+
+#. e.g. Take the Interstate 95 ramp on the right.
+#: instructions.ramp_verbal.phrases.1
+msgctxt "instructions.ramp_verbal.phrases.1"
+msgid "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>."
+msgstr "Sõida <RELATIVE_DIRECTION> kaldteele <BRANCH_SIGN> suunas."
+
+#. e.g. Take the ramp on the left toward JFK.
+#: instructions.ramp_verbal.phrases.2
+msgctxt "instructions.ramp_verbal.phrases.2"
+msgid "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Sõida <RELATIVE_DIRECTION> asuvale kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Take the South Conduit Avenue ramp on the left toward JFK.
+#: instructions.ramp_verbal.phrases.3
+msgctxt "instructions.ramp_verbal.phrases.3"
+msgid "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Sõida <RELATIVE_DIRECTION> asuvale <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Take the Gettysburg Pike ramp on the right.
+#: instructions.ramp_verbal.phrases.4
+msgctxt "instructions.ramp_verbal.phrases.4"
+msgid "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>."
+msgstr "Sõida <RELATIVE_DIRECTION> asuvale <NAME_SIGN> kaldteele."
+
+#. e.g. Turn left to take the ramp.
+#. e.g. Turn right to take the ramp.
+#: instructions.ramp_verbal.phrases.5
+msgctxt "instructions.ramp_verbal.phrases.5"
+msgid "Turn <RELATIVE_DIRECTION> to take the ramp."
+msgstr "Pööra <RELATIVE_DIRECTION> ja sõida kaldteele."
+
+#. e.g. Turn left to take the Pennsylvania 2 83 West ramp.
+#: instructions.ramp_verbal.phrases.6
+msgctxt "instructions.ramp_verbal.phrases.6"
+msgid "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp."
+msgstr "Pööra <RELATIVE_DIRECTION> ja sõida <BRANCH_SIGN> kaldteele."
+
+#. e.g. Turn left to take the ramp toward Harrisburg/Harrisburg International Airport.
+#: instructions.ramp_verbal.phrases.7
+msgctxt "instructions.ramp_verbal.phrases.7"
+msgid "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>."
+msgstr "Pööra <RELATIVE_DIRECTION> ja sõida kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport.
+#: instructions.ramp_verbal.phrases.8
+msgctxt "instructions.ramp_verbal.phrases.8"
+msgid "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+msgstr "Pööra <RELATIVE_DIRECTION> ja sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Turn right to take the Gettysburg Pike ramp.
+#: instructions.ramp_verbal.phrases.9
+msgctxt "instructions.ramp_verbal.phrases.9"
+msgid "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+msgstr "Pööra <RELATIVE_DIRECTION> ja sõida <NAME_SIGN> kaldteele."
+
+#. e.g. Take the ramp.
+#: instructions.ramp_verbal.phrases.10
+msgctxt "instructions.ramp_verbal.phrases.10"
+msgid "Take the ramp."
+msgstr "Sõida kaldteele."
+
+#. e.g. Take the Interstate 95 ramp.
+#: instructions.ramp_verbal.phrases.11
+msgctxt "instructions.ramp_verbal.phrases.11"
+msgid "Take the <BRANCH_SIGN> ramp."
+msgstr "Sõida <BRANCH_SIGN> kaldteele"
+
+#. e.g. Take the ramp toward JFK.
+#: instructions.ramp_verbal.phrases.12
+msgctxt "instructions.ramp_verbal.phrases.12"
+msgid "Take the ramp toward <TOWARD_SIGN>."
+msgstr "Sõida kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Take the South Conduit Avenue ramp toward JFK.
+#: instructions.ramp_verbal.phrases.13
+msgctxt "instructions.ramp_verbal.phrases.13"
+msgid "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+msgstr "Sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas."
+
+#. e.g. Take the Gettysburg Pike ramp.
+#: instructions.ramp_verbal.phrases.14
+msgctxt "instructions.ramp_verbal.phrases.14"
+msgid "Take the <NAME_SIGN> ramp."
+msgstr "Sõida <NAME_SIGN> kaldteele."
+
+#: instructions.ramp_verbal.relative_directions.0
+msgctxt "instructions.ramp_verbal.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.ramp_verbal.relative_directions.1
+msgctxt "instructions.ramp_verbal.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#: instructions.sharp.empty_street_name_labels.0
+msgctxt "instructions.sharp.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.sharp.empty_street_name_labels.1
+msgctxt "instructions.sharp.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.sharp.empty_street_name_labels.2
+msgctxt "instructions.sharp.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.sharp.empty_street_name_labels.3
+msgctxt "instructions.sharp.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.sharp.empty_street_name_labels.4
+msgctxt "instructions.sharp.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.sharp.empty_street_name_labels.5
+msgctxt "instructions.sharp.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.sharp.empty_street_name_labels.6
+msgctxt "instructions.sharp.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Make a sharp left.
+#: instructions.sharp.phrases.0
+msgctxt "instructions.sharp.phrases.0"
+msgid "Make a sharp <RELATIVE_DIRECTION>."
+msgstr "Pööra järsult <RELATIVE_DIRECTION>."
+
+#. e.g. Make a sharp right onto Flatbush Avenue.
+#: instructions.sharp.phrases.1
+msgctxt "instructions.sharp.phrases.1"
+msgid "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+msgstr "Pööra järsult <RELATIVE_DIRECTION> <STREET_NAMES> tänavale."
+
+#. e.g. Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.
+#: instructions.sharp.phrases.2
+msgctxt "instructions.sharp.phrases.2"
+msgid "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+msgstr "Pööra järsult <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> tänavale. Jätka mööda <STREET_NAMES> teed."
+
+#. e.g. Make a sharp right to stay on Sunstone Drive.
+#: instructions.sharp.phrases.3
+msgctxt "instructions.sharp.phrases.3"
+msgid "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+msgstr "Pööra järsult <RELATIVE_DIRECTION> ja jätka <STREET_NAMES> teel."
+
+#. e.g. Make a sharp right at Mannenbashi East.
+#: instructions.sharp.phrases.4
+msgctxt "instructions.sharp.phrases.4"
+msgid "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
+msgstr "<JUNCTION_NAME> teeristis pööra järsult <RELATIVE_DIRECTION>."
+
+#. e.g. Make a sharp left toward Baltimore.
+#: instructions.sharp.phrases.5
+msgctxt "instructions.sharp.phrases.5"
+msgid "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Pööra järsult <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#: instructions.sharp.relative_directions.0
+msgctxt "instructions.sharp.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.sharp.relative_directions.1
+msgctxt "instructions.sharp.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#: instructions.sharp_verbal.empty_street_name_labels.0
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.sharp_verbal.empty_street_name_labels.1
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.sharp_verbal.empty_street_name_labels.2
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.sharp_verbal.empty_street_name_labels.3
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.sharp_verbal.empty_street_name_labels.4
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.sharp_verbal.empty_street_name_labels.5
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.sharp_verbal.empty_street_name_labels.6
+msgctxt "instructions.sharp_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Make a sharp left.
+#: instructions.sharp_verbal.phrases.0
+msgctxt "instructions.sharp_verbal.phrases.0"
+msgid "Make a sharp <RELATIVE_DIRECTION>."
+msgstr "Pööra järsult <RELATIVE_DIRECTION>."
+
+#. e.g. Make a sharp right onto Flatbush Avenue.
+#: instructions.sharp_verbal.phrases.1
+msgctxt "instructions.sharp_verbal.phrases.1"
+msgid "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+msgstr "Pööra järsult <RELATIVE_DIRECTION> <STREET_NAMES> tänavale."
+
+#. e.g. Make a sharp left onto North Bond Street, U.S. 1 Business.
+#: instructions.sharp_verbal.phrases.2
+msgctxt "instructions.sharp_verbal.phrases.2"
+msgid "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."
+msgstr "Pööra järsult <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> teele."
+
+#. e.g. Make a sharp right to stay on Sunstone Drive.
+#: instructions.sharp_verbal.phrases.3
+msgctxt "instructions.sharp_verbal.phrases.3"
+msgid "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+msgstr "Pööra järsult <RELATIVE_DIRECTION> ja jätka <STREET_NAMES> teel."
+
+#. e.g. Make a sharp right at Mannenbashi East.
+#: instructions.sharp_verbal.phrases.4
+msgctxt "instructions.sharp_verbal.phrases.4"
+msgid "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
+msgstr "<JUNCTION_NAME> teeristis pööra järsult <RELATIVE_DIRECTION>."
+
+#. e.g. Make a sharp left toward Baltimore.
+#: instructions.sharp_verbal.phrases.5
+msgctxt "instructions.sharp_verbal.phrases.5"
+msgid "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Pööra järsult <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#: instructions.sharp_verbal.relative_directions.0
+msgctxt "instructions.sharp_verbal.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.sharp_verbal.relative_directions.1
+msgctxt "instructions.sharp_verbal.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#: instructions.start.cardinal_directions.0
+msgctxt "instructions.start.cardinal_directions.0"
+msgid "north"
+msgstr "põhja suunas"
+
+#: instructions.start.cardinal_directions.1
+msgctxt "instructions.start.cardinal_directions.1"
+msgid "northeast"
+msgstr "kirde suunas"
+
+#: instructions.start.cardinal_directions.2
+msgctxt "instructions.start.cardinal_directions.2"
+msgid "east"
+msgstr "ida suunas"
+
+#: instructions.start.cardinal_directions.3
+msgctxt "instructions.start.cardinal_directions.3"
+msgid "southeast"
+msgstr "kagu suunas"
+
+#: instructions.start.cardinal_directions.4
+msgctxt "instructions.start.cardinal_directions.4"
+msgid "south"
+msgstr "lõuna suunas"
+
+#: instructions.start.cardinal_directions.5
+msgctxt "instructions.start.cardinal_directions.5"
+msgid "southwest"
+msgstr "edela suunas"
+
+#: instructions.start.cardinal_directions.6
+msgctxt "instructions.start.cardinal_directions.6"
+msgid "west"
+msgstr "lääne suunas"
+
+#: instructions.start.cardinal_directions.7
+msgctxt "instructions.start.cardinal_directions.7"
+msgid "northwest"
+msgstr "loode suunas"
+
+#: instructions.start.empty_street_name_labels.0
+msgctxt "instructions.start.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.start.empty_street_name_labels.1
+msgctxt "instructions.start.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.start.empty_street_name_labels.2
+msgctxt "instructions.start.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.start.empty_street_name_labels.3
+msgctxt "instructions.start.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.start.empty_street_name_labels.4
+msgctxt "instructions.start.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.start.empty_street_name_labels.5
+msgctxt "instructions.start.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.start.empty_street_name_labels.6
+msgctxt "instructions.start.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Head east.
+#. e.g. Head north.
+#: instructions.start.phrases.0
+msgctxt "instructions.start.phrases.0"
+msgid "Head <CARDINAL_DIRECTION>."
+msgstr "Suundu <CARDINAL_DIRECTION>."
+
+#. e.g. Head southwest on 5th Avenue.
+#. e.g. Head west on the walkway
+#. e.g. Head east on the cycleway
+#. e.g. Head north on the mountain bike trail
+#: instructions.start.phrases.1
+msgctxt "instructions.start.phrases.1"
+msgid "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."
+msgstr "Suundu piki <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.
+#: instructions.start.phrases.2
+msgctxt "instructions.start.phrases.2"
+msgid "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+msgstr "Suundu piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>. Jätka mööda <STREET_NAMES>."
+
+#. e.g. Drive east.
+#. e.g. Drive north.
+#: instructions.start.phrases.4
+msgctxt "instructions.start.phrases.4"
+msgid "Drive <CARDINAL_DIRECTION>."
+msgstr "Sõida <CARDINAL_DIRECTION>."
+
+#. e.g. Drive southwest on 5th Avenue.
+#: instructions.start.phrases.5
+msgctxt "instructions.start.phrases.5"
+msgid "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."
+msgstr "Sõida piki <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.
+#: instructions.start.phrases.6
+msgctxt "instructions.start.phrases.6"
+msgid "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+msgstr "Sõida piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>. Jätka mööda <STREET_NAMES>."
+
+#. e.g. Walk east.
+#. e.g. Walk north.
+#: instructions.start.phrases.8
+msgctxt "instructions.start.phrases.8"
+msgid "Walk <CARDINAL_DIRECTION>."
+msgstr "Kõnni <CARDINAL_DIRECTION>."
+
+#. e.g. Walk southwest on 5th Avenue.
+#. e.g. Walk west on the walkway
+#: instructions.start.phrases.9
+msgctxt "instructions.start.phrases.9"
+msgid "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."
+msgstr "Kõnni piki <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.
+#: instructions.start.phrases.10
+msgctxt "instructions.start.phrases.10"
+msgid "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+msgstr "Kõnni piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>. Jätka mööda <STREET_NAMES>."
+
+#. e.g. Bike east.
+#. e.g. Bike north.
+#: instructions.start.phrases.16
+msgctxt "instructions.start.phrases.16"
+msgid "Bike <CARDINAL_DIRECTION>."
+msgstr "Sõida rattaga <CARDINAL_DIRECTION>."
+
+#. e.g. Bike southwest on 5th Avenue.
+#. e.g. Bike east on the cycleway
+#. e.g. Bike north on the mountain bike trail
+#: instructions.start.phrases.17
+msgctxt "instructions.start.phrases.17"
+msgid "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."
+msgstr "Sõida rattaga mööda <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.
+#: instructions.start.phrases.18
+msgctxt "instructions.start.phrases.18"
+msgid "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+msgstr "Sõida rattaga piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>. Jätka mööda <STREET_NAMES>."
+
+#: instructions.start_verbal.cardinal_directions.0
+msgctxt "instructions.start_verbal.cardinal_directions.0"
+msgid "north"
+msgstr "põhja suunas"
+
+#: instructions.start_verbal.cardinal_directions.1
+msgctxt "instructions.start_verbal.cardinal_directions.1"
+msgid "northeast"
+msgstr "kirde suunas"
+
+#: instructions.start_verbal.cardinal_directions.2
+msgctxt "instructions.start_verbal.cardinal_directions.2"
+msgid "east"
+msgstr "ida suunas"
+
+#: instructions.start_verbal.cardinal_directions.3
+msgctxt "instructions.start_verbal.cardinal_directions.3"
+msgid "southeast"
+msgstr "kagu suunas"
+
+#: instructions.start_verbal.cardinal_directions.4
+msgctxt "instructions.start_verbal.cardinal_directions.4"
+msgid "south"
+msgstr "lõuna suunas"
+
+#: instructions.start_verbal.cardinal_directions.5
+msgctxt "instructions.start_verbal.cardinal_directions.5"
+msgid "southwest"
+msgstr "edela suunas"
+
+#: instructions.start_verbal.cardinal_directions.6
+msgctxt "instructions.start_verbal.cardinal_directions.6"
+msgid "west"
+msgstr "lääne suunas"
+
+#: instructions.start_verbal.cardinal_directions.7
+msgctxt "instructions.start_verbal.cardinal_directions.7"
+msgid "northwest"
+msgstr "loode suunas"
+
+#: instructions.start_verbal.empty_street_name_labels.0
+msgctxt "instructions.start_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.start_verbal.empty_street_name_labels.1
+msgctxt "instructions.start_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.start_verbal.empty_street_name_labels.2
+msgctxt "instructions.start_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.start_verbal.empty_street_name_labels.3
+msgctxt "instructions.start_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.start_verbal.empty_street_name_labels.4
+msgctxt "instructions.start_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.start_verbal.empty_street_name_labels.5
+msgctxt "instructions.start_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.start_verbal.empty_street_name_labels.6
+msgctxt "instructions.start_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#: instructions.start_verbal.metric_lengths.0
+msgctxt "instructions.start_verbal.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> kilomeetrit"
+
+#: instructions.start_verbal.metric_lengths.1
+msgctxt "instructions.start_verbal.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 kilomeeter"
+
+#: instructions.start_verbal.metric_lengths.2
+msgctxt "instructions.start_verbal.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> meetrit"
+
+#: instructions.start_verbal.metric_lengths.3
+msgctxt "instructions.start_verbal.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "vähem kui 10 meetrit"
+
+#. e.g. Head east.
+#. e.g. Head north.
+#: instructions.start_verbal.phrases.0
+msgctxt "instructions.start_verbal.phrases.0"
+msgid "Head <CARDINAL_DIRECTION>."
+msgstr "Suundu <CARDINAL_DIRECTION>."
+
+#. e.g. Head east for a half mile.
+#. e.g. Head north for 1 kilometer.
+#: instructions.start_verbal.phrases.1
+msgctxt "instructions.start_verbal.phrases.1"
+msgid "Head <CARDINAL_DIRECTION> for <LENGTH>."
+msgstr "Suundu <LENGTH> <CARDINAL_DIRECTION>."
+
+#. e.g. Head southwest on 5th Avenue.
+#: instructions.start_verbal.phrases.2
+msgctxt "instructions.start_verbal.phrases.2"
+msgid "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."
+msgstr "Suundu piki <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Head southwest on 5th Avenue for 1 tenth of a mile.
+#: instructions.start_verbal.phrases.3
+msgctxt "instructions.start_verbal.phrases.3"
+msgid "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
+msgstr "Suundu <LENGTH> piki <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Head south on North Prince Street, U.S. 2 22.
+#: instructions.start_verbal.phrases.4
+msgctxt "instructions.start_verbal.phrases.4"
+msgid "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+msgstr "Suundu piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Drive east.
+#. e.g. Drive north.
+#: instructions.start_verbal.phrases.5
+msgctxt "instructions.start_verbal.phrases.5"
+msgid "Drive <CARDINAL_DIRECTION>."
+msgstr "Sõida <CARDINAL_DIRECTION>."
+
+#. e.g. Drive east for a half mile.
+#. e.g. Drive north for 1 kilometer.
+#: instructions.start_verbal.phrases.6
+msgctxt "instructions.start_verbal.phrases.6"
+msgid "Drive <CARDINAL_DIRECTION> for <LENGTH>."
+msgstr "Sõida <LENGTH> <CARDINAL_DIRECTION>."
+
+#. e.g. Drive southwest on 5th Avenue.
+#: instructions.start_verbal.phrases.7
+msgctxt "instructions.start_verbal.phrases.7"
+msgid "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."
+msgstr "Sõida piki <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Drive southwest on 5th Avenue for 1 tenth of a mile.
+#: instructions.start_verbal.phrases.8
+msgctxt "instructions.start_verbal.phrases.8"
+msgid "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
+msgstr "Sõida <LENGTH> piki <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Drive south on North Prince Street, U.S. 2 22.
+#: instructions.start_verbal.phrases.9
+msgctxt "instructions.start_verbal.phrases.9"
+msgid "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+msgstr "Sõida piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Walk east.
+#. e.g. Walk north.
+#: instructions.start_verbal.phrases.10
+msgctxt "instructions.start_verbal.phrases.10"
+msgid "Walk <CARDINAL_DIRECTION>."
+msgstr "Kõnni <CARDINAL_DIRECTION>."
+
+#. e.g. Walk east for a half mile.
+#. e.g. Walk north for 1 kilometer.
+#: instructions.start_verbal.phrases.11
+msgctxt "instructions.start_verbal.phrases.11"
+msgid "Walk <CARDINAL_DIRECTION> for <LENGTH>."
+msgstr "Kõnni <LENGTH> <CARDINAL_DIRECTION>."
+
+#. e.g. Walk southwest on 5th Avenue.
+#: instructions.start_verbal.phrases.12
+msgctxt "instructions.start_verbal.phrases.12"
+msgid "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."
+msgstr "Kõnni piki <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Walk southwest on 5th Avenue for 1 tenth of a mile.
+#: instructions.start_verbal.phrases.13
+msgctxt "instructions.start_verbal.phrases.13"
+msgid "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
+msgstr "Kõnni <LENGTH> piki <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Walk south on North Prince Street, U.S. 2 22.
+#: instructions.start_verbal.phrases.14
+msgctxt "instructions.start_verbal.phrases.14"
+msgid "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+msgstr "Kõnni piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Bike east.
+#. e.g. Bike north.
+#: instructions.start_verbal.phrases.15
+msgctxt "instructions.start_verbal.phrases.15"
+msgid "Bike <CARDINAL_DIRECTION>."
+msgstr "Sõida rattaga <CARDINAL_DIRECTION>."
+
+#. e.g. Bike east for a half mile.
+#. e.g. Bike north for 1 kilometer.
+#: instructions.start_verbal.phrases.16
+msgctxt "instructions.start_verbal.phrases.16"
+msgid "Bike <CARDINAL_DIRECTION> for <LENGTH>."
+msgstr "Sõida rattaga <LENGTH> <CARDINAL_DIRECTION>."
+
+#. e.g. Bike southwest on 5th Avenue.
+#: instructions.start_verbal.phrases.17
+msgctxt "instructions.start_verbal.phrases.17"
+msgid "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."
+msgstr "Sõida rattaga mööda <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Bike southwest on 5th Avenue for 1 tenth of a mile.
+#: instructions.start_verbal.phrases.18
+msgctxt "instructions.start_verbal.phrases.18"
+msgid "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
+msgstr "Sõida rattaga <LENGTH> mööda <STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#. e.g. Bike south on North Prince Street, U.S. 2 22.
+#: instructions.start_verbal.phrases.19
+msgctxt "instructions.start_verbal.phrases.19"
+msgid "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+msgstr "Sõida rattaga mööda <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>."
+
+#: instructions.start_verbal.us_customary_lengths.0
+msgctxt "instructions.start_verbal.us_customary_lengths.0"
+msgid "<MILES> miles"
+msgstr "<MILES> miili"
+
+#: instructions.start_verbal.us_customary_lengths.1
+msgctxt "instructions.start_verbal.us_customary_lengths.1"
+msgid "1 mile"
+msgstr "1 miil"
+
+#: instructions.start_verbal.us_customary_lengths.2
+msgctxt "instructions.start_verbal.us_customary_lengths.2"
+msgid "a half mile"
+msgstr "pool miili"
+
+#: instructions.start_verbal.us_customary_lengths.3
+msgctxt "instructions.start_verbal.us_customary_lengths.3"
+msgid "a quarter mile"
+msgstr "veerand miili"
+
+#: instructions.start_verbal.us_customary_lengths.4
+msgctxt "instructions.start_verbal.us_customary_lengths.4"
+msgid "<FEET> feet"
+msgstr "<FEET> jalga"
+
+#: instructions.start_verbal.us_customary_lengths.5
+msgctxt "instructions.start_verbal.us_customary_lengths.5"
+msgid "less than 10 feet"
+msgstr "vähem kui 10 jalga"
+
+#. e.g. Take the stairs.
+#: instructions.steps.phrases.0
+msgctxt "instructions.steps.phrases.0"
+msgid "Take the stairs."
+msgstr "Mine trepist üles."
+
+#. e.g. Take the stairs to Level 2.
+#: instructions.steps.phrases.1
+msgctxt "instructions.steps.phrases.1"
+msgid "Take the stairs to <LEVEL>."
+msgstr "Kõnni treppi mööda kuni <LEVEL>."
+
+#: instructions.transit.empty_transit_name_labels.0
+msgctxt "instructions.transit.empty_transit_name_labels.0"
+msgid "tram"
+msgstr "tramm"
+
+#: instructions.transit.empty_transit_name_labels.1
+msgctxt "instructions.transit.empty_transit_name_labels.1"
+msgid "metro"
+msgstr "metroo"
+
+#: instructions.transit.empty_transit_name_labels.2
+msgctxt "instructions.transit.empty_transit_name_labels.2"
+msgid "train"
+msgstr "rong"
+
+#: instructions.transit.empty_transit_name_labels.3
+msgctxt "instructions.transit.empty_transit_name_labels.3"
+msgid "bus"
+msgstr "buss"
+
+#: instructions.transit.empty_transit_name_labels.4
+msgctxt "instructions.transit.empty_transit_name_labels.4"
+msgid "ferry"
+msgstr "praam"
+
+#: instructions.transit.empty_transit_name_labels.5
+msgctxt "instructions.transit.empty_transit_name_labels.5"
+msgid "cable car"
+msgstr "köisraudtee"
+
+#: instructions.transit.empty_transit_name_labels.6
+msgctxt "instructions.transit.empty_transit_name_labels.6"
+msgid "gondola"
+msgstr "gondel"
+
+#: instructions.transit.empty_transit_name_labels.7
+msgctxt "instructions.transit.empty_transit_name_labels.7"
+msgid "funicular"
+msgstr "köisraudtee"
+
+#. e.g. Take the New Haven. (1 stop)
+#. e.g. Take the metro. (2 stops)
+#. e.g. Take the bus. (12 stops)
+#: instructions.transit.phrases.0
+msgctxt "instructions.transit.phrases.0"
+msgid "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Sõida <TRANSIT_NAME> liiniga (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+
+#. e.g. Take the F toward JAMAICA - 179 ST. (10 stops)
+#. e.g. Take the ferry toward Staten Island. (1 stop)
+#: instructions.transit.phrases.1
+msgctxt "instructions.transit.phrases.1"
+msgid "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Sõida <TRANSIT_NAME> liiniga <TRANSIT_HEADSIGN> suunas (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+
+#: instructions.transit.transit_stop_count_labels.one
+msgctxt "instructions.transit.transit_stop_count_labels.one"
+msgid "stop"
+msgstr "peatus"
+
+#: instructions.transit.transit_stop_count_labels.other
+msgctxt "instructions.transit.transit_stop_count_labels.other"
+msgid "stops"
+msgstr "peatused"
+
+#. e.g. Exit the station.
+#: instructions.transit_connection_destination.phrases.0
+msgctxt "instructions.transit_connection_destination.phrases.0"
+msgid "Exit the station."
+msgstr "Välju jaamast."
+
+#. e.g. Exit the Embarcadero Station.
+#: instructions.transit_connection_destination.phrases.1
+msgctxt "instructions.transit_connection_destination.phrases.1"
+msgid "Exit the <TRANSIT_STOP>."
+msgstr "Välju <TRANSIT_STOP> jaamast."
+
+#. e.g. Exit the 8 St - NYU Station.
+#: instructions.transit_connection_destination.phrases.2
+msgctxt "instructions.transit_connection_destination.phrases.2"
+msgid "Exit the <TRANSIT_STOP> <STATION_LABEL>."
+msgstr "Välju <TRANSIT_STOP> <STATION_LABEL> jaamast."
+
+#: instructions.transit_connection_destination.station_label
+msgctxt "instructions.transit_connection_destination.station_label"
+msgid "Station"
+msgstr "Jaam"
+
+#. e.g. Exit the station.
+#: instructions.transit_connection_destination_verbal.phrases.0
+msgctxt "instructions.transit_connection_destination_verbal.phrases.0"
+msgid "Exit the station."
+msgstr "Välju jaamast."
+
+#. e.g. Exit the Embarcadero Station.
+#: instructions.transit_connection_destination_verbal.phrases.1
+msgctxt "instructions.transit_connection_destination_verbal.phrases.1"
+msgid "Exit the <TRANSIT_STOP>."
+msgstr "Välju <TRANSIT_STOP> jaamast."
+
+#. e.g. Exit the 8 St - NYU Station.
+#: instructions.transit_connection_destination_verbal.phrases.2
+msgctxt "instructions.transit_connection_destination_verbal.phrases.2"
+msgid "Exit the <TRANSIT_STOP> <STATION_LABEL>."
+msgstr "Välju <TRANSIT_STOP> <STATION_LABEL> jaamast."
+
+#: instructions.transit_connection_destination_verbal.station_label
+msgctxt "instructions.transit_connection_destination_verbal.station_label"
+msgid "Station"
+msgstr "Jaam"
+
+#. e.g. Enter the station.
+#: instructions.transit_connection_start.phrases.0
+msgctxt "instructions.transit_connection_start.phrases.0"
+msgid "Enter the station."
+msgstr "Sisene jaama."
+
+#. e.g. Enter the Embarcadero Station.
+#: instructions.transit_connection_start.phrases.1
+msgctxt "instructions.transit_connection_start.phrases.1"
+msgid "Enter the <TRANSIT_STOP>."
+msgstr "Sisene <TRANSIT_STOP> jaama."
+
+#. e.g. Enter the 8 St - NYU Station.
+#: instructions.transit_connection_start.phrases.2
+msgctxt "instructions.transit_connection_start.phrases.2"
+msgid "Enter the <TRANSIT_STOP> <STATION_LABEL>."
+msgstr "Sisene <TRANSIT_STOP> <STATION_LABEL> jaama."
+
+#: instructions.transit_connection_start.station_label
+msgctxt "instructions.transit_connection_start.station_label"
+msgid "Station"
+msgstr "Jaam"
+
+#. e.g. Enter the station.
+#: instructions.transit_connection_start_verbal.phrases.0
+msgctxt "instructions.transit_connection_start_verbal.phrases.0"
+msgid "Enter the station."
+msgstr "Sisene jaama."
+
+#. e.g. Enter the Embarcadero Station.
+#: instructions.transit_connection_start_verbal.phrases.1
+msgctxt "instructions.transit_connection_start_verbal.phrases.1"
+msgid "Enter the <TRANSIT_STOP>."
+msgstr "Sisene <TRANSIT_STOP> jaama."
+
+#. e.g. Enter the 8 St - NYU Station.
+#: instructions.transit_connection_start_verbal.phrases.2
+msgctxt "instructions.transit_connection_start_verbal.phrases.2"
+msgid "Enter the <TRANSIT_STOP> <STATION_LABEL>."
+msgstr "Sisene <TRANSIT_STOP> <STATION_LABEL> jaama."
+
+#: instructions.transit_connection_start_verbal.station_label
+msgctxt "instructions.transit_connection_start_verbal.station_label"
+msgid "Station"
+msgstr "Jaam"
+
+#. e.g. Transfer at the station.
+#: instructions.transit_connection_transfer.phrases.0
+msgctxt "instructions.transit_connection_transfer.phrases.0"
+msgid "Transfer at the station."
+msgstr "Istu jaamas ümber."
+
+#. e.g. Transfer at the Embarcadero Station.
+#: instructions.transit_connection_transfer.phrases.1
+msgctxt "instructions.transit_connection_transfer.phrases.1"
+msgid "Transfer at the <TRANSIT_STOP>."
+msgstr "Istu <TRANSIT_STOP> jaamas ümber."
+
+#. e.g. Transfer at the 8 St - NYU Station.
+#: instructions.transit_connection_transfer.phrases.2
+msgctxt "instructions.transit_connection_transfer.phrases.2"
+msgid "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
+msgstr "Istu <TRANSIT_STOP> <STATION_LABEL> jaamas ümber."
+
+#: instructions.transit_connection_transfer.station_label
+msgctxt "instructions.transit_connection_transfer.station_label"
+msgid "Station"
+msgstr "Jaam"
+
+#. e.g. Transfer at the station.
+#: instructions.transit_connection_transfer_verbal.phrases.0
+msgctxt "instructions.transit_connection_transfer_verbal.phrases.0"
+msgid "Transfer at the station."
+msgstr "Istu jaamas ümber."
+
+#. e.g. Transfer at the Embarcadero Station.
+#: instructions.transit_connection_transfer_verbal.phrases.1
+msgctxt "instructions.transit_connection_transfer_verbal.phrases.1"
+msgid "Transfer at the <TRANSIT_STOP>."
+msgstr "Istu <TRANSIT_STOP> jaamas ümber."
+
+#. e.g. Transfer at the 8 St - NYU Station.
+#: instructions.transit_connection_transfer_verbal.phrases.2
+msgctxt "instructions.transit_connection_transfer_verbal.phrases.2"
+msgid "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
+msgstr "Istu <TRANSIT_STOP> <STATION_LABEL> jaamas ümber."
+
+#: instructions.transit_connection_transfer_verbal.station_label
+msgctxt "instructions.transit_connection_transfer_verbal.station_label"
+msgid "Station"
+msgstr "Jaam"
+
+#: instructions.transit_remain_on.empty_transit_name_labels.0
+msgctxt "instructions.transit_remain_on.empty_transit_name_labels.0"
+msgid "tram"
+msgstr "tramm"
+
+#: instructions.transit_remain_on.empty_transit_name_labels.1
+msgctxt "instructions.transit_remain_on.empty_transit_name_labels.1"
+msgid "metro"
+msgstr "metroo"
+
+#: instructions.transit_remain_on.empty_transit_name_labels.2
+msgctxt "instructions.transit_remain_on.empty_transit_name_labels.2"
+msgid "train"
+msgstr "rong"
+
+#: instructions.transit_remain_on.empty_transit_name_labels.3
+msgctxt "instructions.transit_remain_on.empty_transit_name_labels.3"
+msgid "bus"
+msgstr "buss"
+
+#: instructions.transit_remain_on.empty_transit_name_labels.4
+msgctxt "instructions.transit_remain_on.empty_transit_name_labels.4"
+msgid "ferry"
+msgstr "praam"
+
+#: instructions.transit_remain_on.empty_transit_name_labels.5
+msgctxt "instructions.transit_remain_on.empty_transit_name_labels.5"
+msgid "cable car"
+msgstr "köisraudtee"
+
+#: instructions.transit_remain_on.empty_transit_name_labels.6
+msgctxt "instructions.transit_remain_on.empty_transit_name_labels.6"
+msgid "gondola"
+msgstr "gondel"
+
+#: instructions.transit_remain_on.empty_transit_name_labels.7
+msgctxt "instructions.transit_remain_on.empty_transit_name_labels.7"
+msgid "funicular"
+msgstr "köisraudtee"
+
+#. e.g. Remain on the New Haven. (1 stop)
+#. e.g. Remain on the train. (3 stops)
+#: instructions.transit_remain_on.phrases.0
+msgctxt "instructions.transit_remain_on.phrases.0"
+msgid "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Jää <TRANSIT_NAME> liinile (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+
+#. e.g. Remain on the F toward JAMAICA - 179 ST. (10 stops)
+#: instructions.transit_remain_on.phrases.1
+msgctxt "instructions.transit_remain_on.phrases.1"
+msgid "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Liikudes <TRANSIT_HEADSIGN> suunas jää <TRANSIT_NAME> liinile (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+
+#: instructions.transit_remain_on.transit_stop_count_labels.one
+msgctxt "instructions.transit_remain_on.transit_stop_count_labels.one"
+msgid "stop"
+msgstr "peatus"
+
+#: instructions.transit_remain_on.transit_stop_count_labels.other
+msgctxt "instructions.transit_remain_on.transit_stop_count_labels.other"
+msgid "stops"
+msgstr "peatused"
+
+#: instructions.transit_remain_on_verbal.empty_transit_name_labels.0
+msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.0"
+msgid "tram"
+msgstr "tramm"
+
+#: instructions.transit_remain_on_verbal.empty_transit_name_labels.1
+msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.1"
+msgid "metro"
+msgstr "metroo"
+
+#: instructions.transit_remain_on_verbal.empty_transit_name_labels.2
+msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.2"
+msgid "train"
+msgstr "rong"
+
+#: instructions.transit_remain_on_verbal.empty_transit_name_labels.3
+msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.3"
+msgid "bus"
+msgstr "buss"
+
+#: instructions.transit_remain_on_verbal.empty_transit_name_labels.4
+msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.4"
+msgid "ferry"
+msgstr "praam"
+
+#: instructions.transit_remain_on_verbal.empty_transit_name_labels.5
+msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.5"
+msgid "cable car"
+msgstr "köisraudtee"
+
+#: instructions.transit_remain_on_verbal.empty_transit_name_labels.6
+msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.6"
+msgid "gondola"
+msgstr "gondel"
+
+#: instructions.transit_remain_on_verbal.empty_transit_name_labels.7
+msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.7"
+msgid "funicular"
+msgstr "köisraudtee"
+
+#. e.g. Remain on the New Haven.
+#: instructions.transit_remain_on_verbal.phrases.0
+msgctxt "instructions.transit_remain_on_verbal.phrases.0"
+msgid "Remain on the <TRANSIT_NAME>."
+msgstr "Jää <TRANSIT_NAME> liinile."
+
+#. e.g. Remain on the F toward JAMAICA - 179 ST.
+#: instructions.transit_remain_on_verbal.phrases.1
+msgctxt "instructions.transit_remain_on_verbal.phrases.1"
+msgid "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+msgstr "<TRANSIT_HEADSIGN> suunas jää <TRANSIT_NAME> liinile."
+
+#: instructions.transit_transfer.empty_transit_name_labels.0
+msgctxt "instructions.transit_transfer.empty_transit_name_labels.0"
+msgid "tram"
+msgstr "tramm"
+
+#: instructions.transit_transfer.empty_transit_name_labels.1
+msgctxt "instructions.transit_transfer.empty_transit_name_labels.1"
+msgid "metro"
+msgstr "metroo"
+
+#: instructions.transit_transfer.empty_transit_name_labels.2
+msgctxt "instructions.transit_transfer.empty_transit_name_labels.2"
+msgid "train"
+msgstr "rong"
+
+#: instructions.transit_transfer.empty_transit_name_labels.3
+msgctxt "instructions.transit_transfer.empty_transit_name_labels.3"
+msgid "bus"
+msgstr "buss"
+
+#: instructions.transit_transfer.empty_transit_name_labels.4
+msgctxt "instructions.transit_transfer.empty_transit_name_labels.4"
+msgid "ferry"
+msgstr "praam"
+
+#: instructions.transit_transfer.empty_transit_name_labels.5
+msgctxt "instructions.transit_transfer.empty_transit_name_labels.5"
+msgid "cable car"
+msgstr "köisraudtee"
+
+#: instructions.transit_transfer.empty_transit_name_labels.6
+msgctxt "instructions.transit_transfer.empty_transit_name_labels.6"
+msgid "gondola"
+msgstr "gondel"
+
+#: instructions.transit_transfer.empty_transit_name_labels.7
+msgctxt "instructions.transit_transfer.empty_transit_name_labels.7"
+msgid "funicular"
+msgstr "köisraudtee"
+
+#. e.g. Transfer to take the New Haven. (1 stop)
+#. e.g. Transfer to take the tram. (4 stops)
+#: instructions.transit_transfer.phrases.0
+msgctxt "instructions.transit_transfer.phrases.0"
+msgid "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "Istu ümber <TRANSIT_NAME> liinile (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>). "
+
+#. e.g. Transfer to take the F toward JAMAICA - 179 ST. (10 stops)
+#: instructions.transit_transfer.phrases.1
+msgctxt "instructions.transit_transfer.phrases.1"
+msgid "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+msgstr "<TRANSIT_HEADSIGN> suunas istu ümber <TRANSIT_NAME> liinile (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+
+#: instructions.transit_transfer.transit_stop_count_labels.one
+msgctxt "instructions.transit_transfer.transit_stop_count_labels.one"
+msgid "stop"
+msgstr "peatus"
+
+#: instructions.transit_transfer.transit_stop_count_labels.other
+msgctxt "instructions.transit_transfer.transit_stop_count_labels.other"
+msgid "stops"
+msgstr "peatused"
+
+#: instructions.transit_transfer_verbal.empty_transit_name_labels.0
+msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.0"
+msgid "tram"
+msgstr "tramm"
+
+#: instructions.transit_transfer_verbal.empty_transit_name_labels.1
+msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.1"
+msgid "metro"
+msgstr "metroo"
+
+#: instructions.transit_transfer_verbal.empty_transit_name_labels.2
+msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.2"
+msgid "train"
+msgstr "rong"
+
+#: instructions.transit_transfer_verbal.empty_transit_name_labels.3
+msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.3"
+msgid "bus"
+msgstr "buss"
+
+#: instructions.transit_transfer_verbal.empty_transit_name_labels.4
+msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.4"
+msgid "ferry"
+msgstr "praam"
+
+#: instructions.transit_transfer_verbal.empty_transit_name_labels.5
+msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.5"
+msgid "cable car"
+msgstr "köisraudtee"
+
+#: instructions.transit_transfer_verbal.empty_transit_name_labels.6
+msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.6"
+msgid "gondola"
+msgstr "gondel"
+
+#: instructions.transit_transfer_verbal.empty_transit_name_labels.7
+msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.7"
+msgid "funicular"
+msgstr "köisraudtee"
+
+#. e.g. Transfer to take the New Haven.
+#: instructions.transit_transfer_verbal.phrases.0
+msgctxt "instructions.transit_transfer_verbal.phrases.0"
+msgid "Transfer to take the <TRANSIT_NAME>."
+msgstr "Istu ümber <TRANSIT_NAME> liinile."
+
+#. e.g. Transfer to take the F toward JAMAICA - 179 ST.
+#: instructions.transit_transfer_verbal.phrases.1
+msgctxt "instructions.transit_transfer_verbal.phrases.1"
+msgid "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+msgstr "<TRANSIT_HEADSIGN> suunas istu ümber <TRANSIT_NAME> liinile."
+
+#: instructions.transit_verbal.empty_transit_name_labels.0
+msgctxt "instructions.transit_verbal.empty_transit_name_labels.0"
+msgid "tram"
+msgstr "tramm"
+
+#: instructions.transit_verbal.empty_transit_name_labels.1
+msgctxt "instructions.transit_verbal.empty_transit_name_labels.1"
+msgid "metro"
+msgstr "metroo"
+
+#: instructions.transit_verbal.empty_transit_name_labels.2
+msgctxt "instructions.transit_verbal.empty_transit_name_labels.2"
+msgid "train"
+msgstr "rong"
+
+#: instructions.transit_verbal.empty_transit_name_labels.3
+msgctxt "instructions.transit_verbal.empty_transit_name_labels.3"
+msgid "bus"
+msgstr "buss"
+
+#: instructions.transit_verbal.empty_transit_name_labels.4
+msgctxt "instructions.transit_verbal.empty_transit_name_labels.4"
+msgid "ferry"
+msgstr "praam"
+
+#: instructions.transit_verbal.empty_transit_name_labels.5
+msgctxt "instructions.transit_verbal.empty_transit_name_labels.5"
+msgid "cable car"
+msgstr "köisraudtee"
+
+#: instructions.transit_verbal.empty_transit_name_labels.6
+msgctxt "instructions.transit_verbal.empty_transit_name_labels.6"
+msgid "gondola"
+msgstr "gondel"
+
+#: instructions.transit_verbal.empty_transit_name_labels.7
+msgctxt "instructions.transit_verbal.empty_transit_name_labels.7"
+msgid "funicular"
+msgstr "köisraudtee"
+
+#. e.g. Take the New Haven.
+#: instructions.transit_verbal.phrases.0
+msgctxt "instructions.transit_verbal.phrases.0"
+msgid "Take the <TRANSIT_NAME>."
+msgstr "Kasuta <TRANSIT_NAME> liini."
+
+#. e.g. Take the F toward JAMAICA - 179 ST.
+#: instructions.transit_verbal.phrases.1
+msgctxt "instructions.transit_verbal.phrases.1"
+msgid "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+msgstr "<TRANSIT_HEADSIGN> suunas kasuta <TRANSIT_NAME> liini."
+
+#: instructions.turn.empty_street_name_labels.0
+msgctxt "instructions.turn.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.turn.empty_street_name_labels.1
+msgctxt "instructions.turn.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.turn.empty_street_name_labels.2
+msgctxt "instructions.turn.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.turn.empty_street_name_labels.3
+msgctxt "instructions.turn.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.turn.empty_street_name_labels.4
+msgctxt "instructions.turn.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.turn.empty_street_name_labels.5
+msgctxt "instructions.turn.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.turn.empty_street_name_labels.6
+msgctxt "instructions.turn.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Turn left.
+#: instructions.turn.phrases.0
+msgctxt "instructions.turn.phrases.0"
+msgid "Turn <RELATIVE_DIRECTION>."
+msgstr "Pööra <RELATIVE_DIRECTION>."
+
+#. e.g. Turn right onto Flatbush Avenue.
+#: instructions.turn.phrases.1
+msgctxt "instructions.turn.phrases.1"
+msgid "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+msgstr "Pööra <RELATIVE_DIRECTION> <STREET_NAMES> teele."
+
+#. e.g. Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.
+#: instructions.turn.phrases.2
+msgctxt "instructions.turn.phrases.2"
+msgid "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+msgstr "Pööra <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> teele. Liigu edasi mööda <STREET_NAMES> teed."
+
+#. e.g. Turn right to stay on Sunstone Drive.
+#: instructions.turn.phrases.3
+msgctxt "instructions.turn.phrases.3"
+msgid "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+msgstr "Pööra <RELATIVE_DIRECTION> ja jätka mööda <STREET_NAMES> teed."
+
+#. e.g. Turn right at Mannenbashi East.
+#: instructions.turn.phrases.4
+msgctxt "instructions.turn.phrases.4"
+msgid "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
+msgstr "<JUNCTION_NAME> teeristis pööra <RELATIVE_DIRECTION>."
+
+#. e.g. Turn left toward Baltimore.
+#: instructions.turn.phrases.5
+msgctxt "instructions.turn.phrases.5"
+msgid "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Pööra <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#: instructions.turn.relative_directions.0
+msgctxt "instructions.turn.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.turn.relative_directions.1
+msgctxt "instructions.turn.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#: instructions.turn_verbal.empty_street_name_labels.0
+msgctxt "instructions.turn_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.turn_verbal.empty_street_name_labels.1
+msgctxt "instructions.turn_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.turn_verbal.empty_street_name_labels.2
+msgctxt "instructions.turn_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.turn_verbal.empty_street_name_labels.3
+msgctxt "instructions.turn_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.turn_verbal.empty_street_name_labels.4
+msgctxt "instructions.turn_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.turn_verbal.empty_street_name_labels.5
+msgctxt "instructions.turn_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.turn_verbal.empty_street_name_labels.6
+msgctxt "instructions.turn_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Turn left.
+#: instructions.turn_verbal.phrases.0
+msgctxt "instructions.turn_verbal.phrases.0"
+msgid "Turn <RELATIVE_DIRECTION>."
+msgstr "Pööra <RELATIVE_DIRECTION>."
+
+#. e.g. Turn right onto Flatbush Avenue.
+#: instructions.turn_verbal.phrases.1
+msgctxt "instructions.turn_verbal.phrases.1"
+msgid "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+msgstr "Pööra <RELATIVE_DIRECTION> <STREET_NAMES> teele."
+
+#. e.g. Turn left onto North Bond Street, U.S. 1 Business.
+#: instructions.turn_verbal.phrases.2
+msgctxt "instructions.turn_verbal.phrases.2"
+msgid "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."
+msgstr "Pööra <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> teele."
+
+#. e.g. Turn right to stay on Sunstone Drive.
+#: instructions.turn_verbal.phrases.3
+msgctxt "instructions.turn_verbal.phrases.3"
+msgid "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+msgstr "Pööra <RELATIVE_DIRECTION> ja jätka mööda <STREET_NAMES> teed."
+
+#. e.g. Turn right at Mannenbashi East.
+#: instructions.turn_verbal.phrases.4
+msgctxt "instructions.turn_verbal.phrases.4"
+msgid "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
+msgstr "<JUNCTION_NAME> teeristis pööra <RELATIVE_DIRECTION>."
+
+#. e.g. Turn left toward Baltimore.
+#: instructions.turn_verbal.phrases.5
+msgctxt "instructions.turn_verbal.phrases.5"
+msgid "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+msgstr "Pööra <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+
+#: instructions.turn_verbal.relative_directions.0
+msgctxt "instructions.turn_verbal.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.turn_verbal.relative_directions.1
+msgctxt "instructions.turn_verbal.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#: instructions.uturn.empty_street_name_labels.0
+msgctxt "instructions.uturn.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.uturn.empty_street_name_labels.1
+msgctxt "instructions.uturn.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.uturn.empty_street_name_labels.2
+msgctxt "instructions.uturn.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.uturn.empty_street_name_labels.3
+msgctxt "instructions.uturn.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.uturn.empty_street_name_labels.4
+msgctxt "instructions.uturn.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.uturn.empty_street_name_labels.5
+msgctxt "instructions.uturn.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.uturn.empty_street_name_labels.6
+msgctxt "instructions.uturn.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Make a left U-turn.
+#: instructions.uturn.phrases.0
+msgctxt "instructions.uturn.phrases.0"
+msgid "Make a <RELATIVE_DIRECTION> U-turn."
+msgstr "<RELATIVE_DIRECTION> pööra tagasi."
+
+#. e.g. Make a right U-turn onto Bunker Hill Road.
+#: instructions.uturn.phrases.1
+msgctxt "instructions.uturn.phrases.1"
+msgid "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>."
+msgstr "<RELATIVE_DIRECTION> pööra tagasi <STREET_NAMES> teele."
+
+#. e.g. Make a left U-turn to stay on Bunker Hill Road.
+#: instructions.uturn.phrases.2
+msgctxt "instructions.uturn.phrases.2"
+msgid "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."
+msgstr "<RELATIVE_DIRECTION> pööra tagasi ja jätka mööda <STREET_NAMES> teed."
+
+#. e.g. Make a left U-turn at Devonshire Road.
+#: instructions.uturn.phrases.3
+msgctxt "instructions.uturn.phrases.3"
+msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
+msgstr "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi."
+
+#. e.g. Make a left U-turn at Devonshire Road onto Jonestown Road/US 22.
+#: instructions.uturn.phrases.4
+msgctxt "instructions.uturn.phrases.4"
+msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
+msgstr "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi <STREET_NAMES> teele."
+
+#. e.g. Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22.
+#: instructions.uturn.phrases.5
+msgctxt "instructions.uturn.phrases.5"
+msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+msgstr "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi ja jää <STREET_NAMES> teele."
+
+#. e.g. Make a right U-turn at Mannenbashi East.
+#: instructions.uturn.phrases.6
+msgctxt "instructions.uturn.phrases.6"
+msgid "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>."
+msgstr "<JUNCTION_NAME> teeristist pööra <RELATIVE_DIRECTION> tagasi."
+
+#. e.g. Make a left U-turn toward Baltimore.
+#: instructions.uturn.phrases.7
+msgctxt "instructions.uturn.phrases.7"
+msgid "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+msgstr "<RELATIVE_DIRECTION> pööra tagasi <TOWARD_SIGN> suunas."
+
+#: instructions.uturn.relative_directions.0
+msgctxt "instructions.uturn.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.uturn.relative_directions.1
+msgctxt "instructions.uturn.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#: instructions.uturn_verbal.empty_street_name_labels.0
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "läbipääs"
+
+#: instructions.uturn_verbal.empty_street_name_labels.1
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "rattatee"
+
+#: instructions.uturn_verbal.empty_street_name_labels.2
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "rada mägiratastele"
+
+#: instructions.uturn_verbal.empty_street_name_labels.3
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "ülekäigurajal"
+
+#: instructions.uturn_verbal.empty_street_name_labels.4
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "trepp"
+
+#: instructions.uturn_verbal.empty_street_name_labels.5
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "sild"
+
+#: instructions.uturn_verbal.empty_street_name_labels.6
+msgctxt "instructions.uturn_verbal.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "tunnel"
+
+#. e.g. Make a left U-turn.
+#: instructions.uturn_verbal.phrases.0
+msgctxt "instructions.uturn_verbal.phrases.0"
+msgid "Make a <RELATIVE_DIRECTION> U-turn."
+msgstr "<RELATIVE_DIRECTION> tee tagasipööre."
+
+#. e.g. Make a right U-turn onto Bunker Hill Road.
+#: instructions.uturn_verbal.phrases.1
+msgctxt "instructions.uturn_verbal.phrases.1"
+msgid "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>."
+msgstr "<RELATIVE_DIRECTION> pööra tagasi <STREET_NAMES> teele."
+
+#. e.g. Make a left U-turn to stay on Bunker Hill Road.
+#: instructions.uturn_verbal.phrases.2
+msgctxt "instructions.uturn_verbal.phrases.2"
+msgid "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."
+msgstr "<RELATIVE_DIRECTION> pööra tagasi ja jätka mööda <STREET_NAMES> teed."
+
+#. e.g. Make a left U-turn at Devonshire Road.
+#: instructions.uturn_verbal.phrases.3
+msgctxt "instructions.uturn_verbal.phrases.3"
+msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
+msgstr "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi."
+
+#. e.g. Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22.
+#: instructions.uturn_verbal.phrases.4
+msgctxt "instructions.uturn_verbal.phrases.4"
+msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
+msgstr "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi <STREET_NAMES> teele."
+
+#. e.g. Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22.
+#: instructions.uturn_verbal.phrases.5
+msgctxt "instructions.uturn_verbal.phrases.5"
+msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+msgstr "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi ja jää <STREET_NAMES> teele."
+
+#. e.g. Make a right U-turn at Mannenbashi East.
+#: instructions.uturn_verbal.phrases.6
+msgctxt "instructions.uturn_verbal.phrases.6"
+msgid "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>."
+msgstr "<JUNCTION_NAME> teeristis pööra <RELATIVE_DIRECTION> tagasi."
+
+#. e.g. Make a left U-turn toward Baltimore.
+#: instructions.uturn_verbal.phrases.7
+msgctxt "instructions.uturn_verbal.phrases.7"
+msgid "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+msgstr "<RELATIVE_DIRECTION> pööra tagasi <TOWARD_SIGN> suunas."
+
+#: instructions.uturn_verbal.relative_directions.0
+msgctxt "instructions.uturn_verbal.relative_directions.0"
+msgid "left"
+msgstr "vasakul"
+
+#: instructions.uturn_verbal.relative_directions.1
+msgctxt "instructions.uturn_verbal.relative_directions.1"
+msgid "right"
+msgstr "paremal"
+
+#: instructions.verbal_multi_cue.metric_lengths.0
+msgctxt "instructions.verbal_multi_cue.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> kilomeetrit"
+
+#: instructions.verbal_multi_cue.metric_lengths.1
+msgctxt "instructions.verbal_multi_cue.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 kilomeeter"
+
+#: instructions.verbal_multi_cue.metric_lengths.2
+msgctxt "instructions.verbal_multi_cue.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> meetrit"
+
+#: instructions.verbal_multi_cue.metric_lengths.3
+msgctxt "instructions.verbal_multi_cue.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "vähem kui 10 meetrit"
+
+#. e.g. Bear right onto East Fayette Street. Then Turn right onto North Gay Street.
+#: instructions.verbal_multi_cue.phrases.0
+msgctxt "instructions.verbal_multi_cue.phrases.0"
+msgid "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+msgstr "<CURRENT_VERBAL_CUE>, seejärel <NEXT_VERBAL_CUE>"
+
+#. e.g. Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street.
+#: instructions.verbal_multi_cue.phrases.1
+msgctxt "instructions.verbal_multi_cue.phrases.1"
+msgid "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+msgstr "<CURRENT_VERBAL_CUE>, seejärel <LENGTH> kaugusel <NEXT_VERBAL_CUE>"
+
+#: instructions.verbal_multi_cue.us_customary_lengths.0
+msgctxt "instructions.verbal_multi_cue.us_customary_lengths.0"
+msgid "<MILES> miles"
+msgstr "<MILES> miili"
+
+#: instructions.verbal_multi_cue.us_customary_lengths.1
+msgctxt "instructions.verbal_multi_cue.us_customary_lengths.1"
+msgid "1 mile"
+msgstr "1 miil"
+
+#: instructions.verbal_multi_cue.us_customary_lengths.2
+msgctxt "instructions.verbal_multi_cue.us_customary_lengths.2"
+msgid "a half mile"
+msgstr "pool miili"
+
+#: instructions.verbal_multi_cue.us_customary_lengths.3
+msgctxt "instructions.verbal_multi_cue.us_customary_lengths.3"
+msgid "a quarter mile"
+msgstr "veerand miili"
+
+#: instructions.verbal_multi_cue.us_customary_lengths.4
+msgctxt "instructions.verbal_multi_cue.us_customary_lengths.4"
+msgid "<FEET> feet"
+msgstr "<FEET> jalga"
+
+#: instructions.verbal_multi_cue.us_customary_lengths.5
+msgctxt "instructions.verbal_multi_cue.us_customary_lengths.5"
+msgid "less than 10 feet"
+msgstr "vähem kui 10 jalga"

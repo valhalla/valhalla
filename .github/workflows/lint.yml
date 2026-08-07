@@ -41,3 +41,32 @@ jobs:
         uses: crate-ci/typos@v1.15.7
         with:
           config: ./.github/workflows/typos.toml
+
+  locales:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install polib
+        run: pip install polib
+
+      - name: Install gettext
+        run: sudo apt-get update && sudo apt-get install -y gettext
+
+      - name: Validate .po/.pot syntax
+        run: for f in locales/*.po locales/valhalla.pot; do msgfmt --check -o /dev/null "$f"; done
+
+      - name: Check placeholder tokens
+        run: python3 locales/po_tools.py lint
+
+      # ratchet: languages that are currently warning-free must stay that way
+      - name: Check healthy placeholder langs (`--strict`)
+        run: |
+          warnings="ar-SA bg-BG ca-ES de-DE el-GR hi-IN mn-MN sk-SK"
+          strict=$(comm -23 \
+            <(ls locales/*.po | xargs -n1 basename | sed 's/\.po$//' | sort) \
+            <(printf '%s\n' $warnings | sort))
+          python3 locales/po_tools.py lint --strict $strict
+
+      - name: Check the JSONs can be generated
+        run: python3 locales/po_tools.py po2json --out /tmp/locales-json
