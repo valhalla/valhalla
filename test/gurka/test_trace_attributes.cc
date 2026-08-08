@@ -5,6 +5,9 @@
 
 #include <gtest/gtest.h>
 
+#include <iomanip>
+#include <sstream>
+
 using namespace valhalla;
 
 /*************************************************************/
@@ -604,5 +607,154 @@ TEST(Standalone, BackwardTraceOnOnewayEdge) {
   // Fully reversed on a one-way edge - Meili can't route any consecutive pair
   EXPECT_THROW(gurka::do_action(valhalla::Options::trace_attributes, map, {"4", "3", "2", "1"},
                                 "auto", {{"/elevation_interval", "30"}}),
+               std::exception);
+}
+
+/*************************************************************/
+// Edge walk accepts route shapes that include extra points from live traffic
+// breakpoints, while still refusing shapes that skip vertices or move off-edge.
+namespace {
+
+std::string edge_walk_request(const std::vector<midgard::PointLL>& shape) {
+  std::ostringstream json;
+  json << std::fixed << std::setprecision(9);
+  json << R"({"costing":"auto","shape_match":"edge_walk","shape":[)";
+  for (size_t i = 0; i < shape.size(); ++i) {
+    json << (i ? "," : "") << R"({"lat":)" << shape[i].lat() << R"(,"lon":)" << shape[i].lng() << "}";
+  }
+  json << "]}";
+  return json.str();
+}
+
+// A---B---C---D as a single way, so the edge A->D carries B and C as interior vertices.
+gurka::map interior_vertex_map(const std::string& tile_dir) {
+  const std::string ascii_map = R"(
+    A---B---C---D
+  )";
+  const gurka::ways ways = {{"ABCD", {{"highway", "primary"}, {"name", "Main St"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  return gurka::buildtiles(layout, ways, {}, {}, tile_dir);
+}
+
+std::vector<midgard::PointLL> node_shape(const gurka::map& map) {
+  return {map.nodes.at("A"), map.nodes.at("B"), map.nodes.at("C"), map.nodes.at("D")};
+}
+
+size_t walked_edge_count(const gurka::map& map, const std::vector<midgard::PointLL>& shape) {
+  std::string json;
+  gurka::do_action(valhalla::Options::trace_attributes, map, edge_walk_request(shape), {}, &json);
+  rapidjson::Document result;
+  result.Parse(json.c_str());
+  EXPECT_TRUE(result.HasMember("edges"));
+  return result["edges"].GetArray().Size();
+}
+
+std::vector<midgard::PointLL> traffic_split_route_shape(gurka::map& map,
+                                                        const std::string& tile_dir) {
+  map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
+  test::build_live_traffic_data(map.config);
+
+  baldr::TrafficSpeed traffic_speed{
+      baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+      baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+      baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+      baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+      0u,
+      0u,
+      0u,
+      0u,
+      0u,
+      0u,
+  };
+  traffic_speed.overall_encoded_speed = 30 >> 1;
+  traffic_speed.encoded_speed1 = 20 >> 1;
+  traffic_speed.breakpoint1 = 100;
+  traffic_speed.encoded_speed2 = 40 >> 1;
+  traffic_speed.breakpoint2 = 200;
+
+  test::customize_live_traffic_data(map.config,
+                                    [&traffic_speed](baldr::GraphReader&, baldr::TrafficTile&, int,
+                                                     baldr::TrafficSpeed* current) {
+                                      *current = traffic_speed;
+                                    });
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
+                                {{"/date_time/type", "0"},
+                                 {"/filters/action", "include"},
+                                 {"/filters/attributes/0", "shape"},
+                                 {"/filters/attributes/1", "shape_attributes.speed"}},
+                                reader);
+  return midgard::decode<std::vector<midgard::PointLL>>(route.trip().routes(0).legs(0).shape());
+}
+
+} // namespace
+
+// One point per vertex - unchanged behaviour.
+TEST(Standalone, EdgeWalkOnePointPerVertex) {
+  auto map = interior_vertex_map("test/data/edge_walk_one_point_per_vertex");
+  EXPECT_GE(walked_edge_count(map, node_shape(map)), 1u);
+}
+
+// Extra points between the vertices, lying on the edge. This is the shape a route
+// returns when live traffic splits an edge at a breakpoint.
+TEST(Standalone, EdgeWalkAcceptsExtraShapePoints) {
+  auto map = interior_vertex_map("test/data/edge_walk_extra_shape_points");
+  const auto exact = node_shape(map);
+
+  std::vector<midgard::PointLL> densified;
+  for (size_t i = 0; i + 1 < exact.size(); ++i) {
+    densified.push_back(exact[i]);
+    densified.push_back(exact[i].PointAlongSegment(exact[i + 1], 0.5));
+  }
+  densified.push_back(exact.back());
+  ASSERT_EQ(densified.size(), exact.size() * 2 - 1);
+
+  EXPECT_GE(walked_edge_count(map, densified), 1u);
+}
+
+// A breakpoint landing on an existing vertex makes the inserted point a duplicate.
+TEST(Standalone, EdgeWalkAcceptsDuplicateShapePoint) {
+  auto map = interior_vertex_map("test/data/edge_walk_duplicate_shape_point");
+  auto shape = node_shape(map);
+  shape.insert(shape.begin() + 2, shape[2]);
+
+  EXPECT_GE(walked_edge_count(map, shape), 1u);
+}
+
+// Route shapes with live traffic can contain split points that are not edge vertices.
+TEST(Standalone, EdgeWalkAcceptsTrafficSplitRouteShape) {
+  std::string tile_dir = "test/data/edge_walk_traffic_split_route_shape";
+  auto map = interior_vertex_map(tile_dir);
+  const auto shape = traffic_split_route_shape(map, tile_dir);
+
+  ASSERT_GT(shape.size(), node_shape(map).size());
+  EXPECT_GE(walked_edge_count(map, shape), 1u);
+}
+
+// Tolerating extra points must not tolerate points that leave the edge.
+TEST(Standalone, EdgeWalkRejectsPointOffEdge) {
+  auto map = interior_vertex_map("test/data/edge_walk_point_off_edge");
+  auto shape = node_shape(map);
+  shape[2] = midgard::PointLL(shape[2].lng(), shape[2].lat() + 0.00009); // ~10 m off
+
+  EXPECT_THROW(gurka::do_action(valhalla::Options::trace_attributes, map, edge_walk_request(shape)),
+               std::exception);
+}
+
+TEST(Standalone, EdgeWalkRejectsBackwardExtraShapePoint) {
+  auto map = interior_vertex_map("test/data/edge_walk_backward_extra_shape_point");
+  const auto exact = node_shape(map);
+
+  std::vector<midgard::PointLL> shape = {
+      exact[0],
+      exact[0].PointAlongSegment(exact[1], 0.75),
+      exact[0].PointAlongSegment(exact[1], 0.25),
+      exact[1],
+      exact[2],
+      exact[3],
+  };
+
+  EXPECT_THROW(gurka::do_action(valhalla::Options::trace_attributes, map, edge_walk_request(shape)),
                std::exception);
 }
