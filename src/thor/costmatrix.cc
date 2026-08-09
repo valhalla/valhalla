@@ -683,7 +683,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix",
                         Expansion_EdgeStatus_reached, newcost.secs, pred_dist, newcost.cost,
                         static_cast<Expansion_ExpansionType>(!static_cast<bool>(expansion_direction)),
-                        flow_sources, TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
+                        flow_sources, TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_, index);
   }
 
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
@@ -727,7 +727,7 @@ bool CostMatrix::Expand(const uint32_t index,
                         Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
                         pred.cost().cost,
                         static_cast<Expansion_ExpansionType>(!static_cast<bool>(expansion_direction)),
-                        kNoFlowMask, TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
+                        kNoFlowMask, TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_, index);
   }
 
   CheckConnections<expansion_direction>(index, pred, n, graphreader, options);
@@ -1025,7 +1025,7 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
       expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix",
                           Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
                           pred.cost().cost, static_cast<Expansion_ExpansionType>(!FORWARD),
-                          kNoFlowMask, TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_);
+                          kNoFlowMask, TravelMode::TravelMode_INT_MAX_SENTINEL_DO_NOT_USE_, loc_idx);
     }
   }
 

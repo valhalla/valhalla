@@ -25,7 +25,6 @@
 
 #include <filesystem>
 #include <format>
-#include <regex>
 
 using boost::property_tree::ptree;
 using namespace valhalla::baldr;
@@ -440,10 +439,20 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) 
 }
 
 std::vector<std::string> GetTagTokens(const std::string& tag_value, const std::string& delim_str) {
-  std::regex regex_str(delim_str);
-  std::vector<std::string> tokens(std::sregex_token_iterator(tag_value.begin(), tag_value.end(),
-                                                             regex_str, -1),
-                                  std::sregex_token_iterator());
+  std::vector<std::string> tokens;
+  if (delim_str.empty()) {
+    tokens.emplace_back(tag_value);
+    return tokens;
+  }
+  size_t start = 0, pos;
+  while ((pos = tag_value.find(delim_str, start)) != std::string::npos) {
+    tokens.emplace_back(tag_value, start, pos - start);
+    start = pos + delim_str.size();
+  }
+  // an empty token after the last delimiter is not emitted
+  if (start < tag_value.size()) {
+    tokens.emplace_back(tag_value, start);
+  }
   return tokens;
 }
 
