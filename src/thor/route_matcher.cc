@@ -98,7 +98,8 @@ bool check_shape(const graph_tile_ptr& tile,
                  const DirectedEdge* de,
                  const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                  uint32_t from,
-                 uint32_t to) {
+                 uint32_t to,
+                 bool require_end_vertex = true) {
   if (to - from == 1 && de->length() == 0) {
     return true;
   }
@@ -165,7 +166,7 @@ bool check_shape(const graph_tile_ptr& tile,
     }
     last_distance = distance_along;
   }
-  return next_vertex == n;
+  return !require_end_vertex || next_vertex == n;
 }
 
 // TODO: we need to stop relying on loki::Search to pre populate edge candidates for the first and
@@ -631,7 +632,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
     if (length <= de_length) {
       // Did not find the end of the origin edge. Check for trivial route on a single edge
       for (const auto& end : end_nodes) {
-        if (end.second.first.graph_id() == edge.graph_id()) {
+        if (end.second.first.graph_id() == edge.graph_id() &&
+            check_shape(begin_edge_tile, de, options.shape(), 0, options.shape_size() - 1, false)) {
           // Update the elapsed time based on edge cost
           uint8_t flow_sources;
           elapsed +=
