@@ -191,7 +191,6 @@ def mark_file(path: Path) -> bool:
     for e in po:
         new = marked_msgctxt(e.msgctxt) if e.msgctxt else None
         if new and new != e.msgctxt:
-            e.occurrences = [(new if occ == e.msgctxt else occ, ln) for occ, ln in e.occurrences]
             e.msgctxt = new
             changed = True
     if changed:

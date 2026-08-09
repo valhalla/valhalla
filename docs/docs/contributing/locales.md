@@ -30,7 +30,7 @@ What to know while translating:
 #### CLI
 
 1. Edit `locales/valhalla.pot` directly. Path segments that are numbers become JSON arrays in the generated files, except under `phrases`, which odin reads by numeric string key. 
-Non-`phrases` sub-keys (e.g. `relative_directions`, `empty_street_name_labels` etc) carry a `replacement` marker, e.g.`instructions.bear.replacement.relative_directions.0`, so alphabetical sort keeps them right after their `instructions.bear.phrases.*` block. `po2json` strips `replacement` when rebuilding the JSON, so odin's structure and lookup keys are unchanged. You don't write the marker by hand: add the natural path (`instructions.bear.relative_directions.2`) and `po_tools.py lint --fix` inserts it and sorts; CI's `lint` fails if you skip it.
+Non-`phrases` sub-keys (e.g. `relative_directions`, `empty_street_name_labels` etc) carry a `replacement` marker, e.g.`instructions.bear.replacement.relative_directions.0`, so alphabetical sort keeps them right after their `instructions.bear.phrases.*` block. `po_tools.py` takes care of the substitution and linting automatically.
 2. Propagate to all languages (requires gettext):
    ```
    python3 locales/po_tools.py update
