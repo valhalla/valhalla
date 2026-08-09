@@ -10,59 +10,59 @@ msgstr ""
 "X-Valhalla-Aliases: uk\n"
 "X-Valhalla-Posix-Locale: uk_UA.UTF-8\n"
 
-#: instructions.approach_verbal_alert.metric_lengths.0
-msgctxt "instructions.approach_verbal_alert.metric_lengths.0"
-msgid "<KILOMETERS> kilometers"
-msgstr "<KILOMETERS> кілометрів"
-
-#: instructions.approach_verbal_alert.metric_lengths.1
-msgctxt "instructions.approach_verbal_alert.metric_lengths.1"
-msgid "1 kilometer"
-msgstr "1 кілометр"
-
-#: instructions.approach_verbal_alert.metric_lengths.2
-msgctxt "instructions.approach_verbal_alert.metric_lengths.2"
-msgid "<METERS> meters"
-msgstr "<METERS> метрів"
-
-#: instructions.approach_verbal_alert.metric_lengths.3
-msgctxt "instructions.approach_verbal_alert.metric_lengths.3"
-msgid "less than 10 meters"
-msgstr "менше ніж 10 метрів"
-
 #. e.g. In a quarter mile, Turn right onto North Gay Street.
 #: instructions.approach_verbal_alert.phrases.0
 msgctxt "instructions.approach_verbal_alert.phrases.0"
 msgid "In <LENGTH>, <CURRENT_VERBAL_CUE>"
 msgstr "Через <LENGTH>, <CURRENT_VERBAL_CUE>"
 
-#: instructions.approach_verbal_alert.us_customary_lengths.0
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.0"
+#: instructions.approach_verbal_alert.replacement.metric_lengths.0
+msgctxt "instructions.approach_verbal_alert.replacement.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> кілометрів"
+
+#: instructions.approach_verbal_alert.replacement.metric_lengths.1
+msgctxt "instructions.approach_verbal_alert.replacement.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 кілометр"
+
+#: instructions.approach_verbal_alert.replacement.metric_lengths.2
+msgctxt "instructions.approach_verbal_alert.replacement.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> метрів"
+
+#: instructions.approach_verbal_alert.replacement.metric_lengths.3
+msgctxt "instructions.approach_verbal_alert.replacement.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "менше ніж 10 метрів"
+
+#: instructions.approach_verbal_alert.replacement.us_customary_lengths.0
+msgctxt "instructions.approach_verbal_alert.replacement.us_customary_lengths.0"
 msgid "<MILES> miles"
 msgstr "<MILES> милі"
 
-#: instructions.approach_verbal_alert.us_customary_lengths.1
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.1"
+#: instructions.approach_verbal_alert.replacement.us_customary_lengths.1
+msgctxt "instructions.approach_verbal_alert.replacement.us_customary_lengths.1"
 msgid "1 mile"
 msgstr "1 милю"
 
-#: instructions.approach_verbal_alert.us_customary_lengths.2
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.2"
+#: instructions.approach_verbal_alert.replacement.us_customary_lengths.2
+msgctxt "instructions.approach_verbal_alert.replacement.us_customary_lengths.2"
 msgid "a half mile"
 msgstr "півмилі"
 
-#: instructions.approach_verbal_alert.us_customary_lengths.3
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.3"
+#: instructions.approach_verbal_alert.replacement.us_customary_lengths.3
+msgctxt "instructions.approach_verbal_alert.replacement.us_customary_lengths.3"
 msgid "a quarter mile"
 msgstr "чверть милі"
 
-#: instructions.approach_verbal_alert.us_customary_lengths.4
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.4"
+#: instructions.approach_verbal_alert.replacement.us_customary_lengths.4
+msgctxt "instructions.approach_verbal_alert.replacement.us_customary_lengths.4"
 msgid "<FEET> feet"
 msgstr "<FEET> футів"
 
-#: instructions.approach_verbal_alert.us_customary_lengths.5
-msgctxt "instructions.approach_verbal_alert.us_customary_lengths.5"
+#: instructions.approach_verbal_alert.replacement.us_customary_lengths.5
+msgctxt "instructions.approach_verbal_alert.replacement.us_customary_lengths.5"
 msgid "less than 10 feet"
 msgstr "менше ніж 10 футів"
 
@@ -89,41 +89,6 @@ msgstr "Прибуття о <TIME>."
 msgctxt "instructions.arrive_verbal.phrases.1"
 msgid "Arrive at <TIME> at <TRANSIT_STOP>."
 msgstr "Прибуття о <TIME> до <TRANSIT_STOP>."
-
-#: instructions.bear.empty_street_name_labels.0
-msgctxt "instructions.bear.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "пішохідній доріжці"
-
-#: instructions.bear.empty_street_name_labels.1
-msgctxt "instructions.bear.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "велодоріжці"
-
-#: instructions.bear.empty_street_name_labels.2
-msgctxt "instructions.bear.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "шляху для гірських велосипедів"
-
-#: instructions.bear.empty_street_name_labels.3
-msgctxt "instructions.bear.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "пішохідному переході"
-
-#: instructions.bear.empty_street_name_labels.4
-msgctxt "instructions.bear.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "сходах"
-
-#: instructions.bear.empty_street_name_labels.5
-msgctxt "instructions.bear.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "мосту"
-
-#: instructions.bear.empty_street_name_labels.6
-msgctxt "instructions.bear.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr ""
 
 #. e.g. Bear right.
 #: instructions.bear.phrases.0
@@ -161,50 +126,50 @@ msgctxt "instructions.bear.phrases.5"
 msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Рухайтесь <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
 
-#: instructions.bear.relative_directions.0
-msgctxt "instructions.bear.relative_directions.0"
-msgid "left"
-msgstr "ліворуч"
-
-#: instructions.bear.relative_directions.1
-msgctxt "instructions.bear.relative_directions.1"
-msgid "right"
-msgstr "праворуч"
-
-#: instructions.bear_verbal.empty_street_name_labels.0
-msgctxt "instructions.bear_verbal.empty_street_name_labels.0"
+#: instructions.bear.replacement.empty_street_name_labels.0
+msgctxt "instructions.bear.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.bear_verbal.empty_street_name_labels.1
-msgctxt "instructions.bear_verbal.empty_street_name_labels.1"
+#: instructions.bear.replacement.empty_street_name_labels.1
+msgctxt "instructions.bear.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.bear_verbal.empty_street_name_labels.2
-msgctxt "instructions.bear_verbal.empty_street_name_labels.2"
+#: instructions.bear.replacement.empty_street_name_labels.2
+msgctxt "instructions.bear.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.bear_verbal.empty_street_name_labels.3
-msgctxt "instructions.bear_verbal.empty_street_name_labels.3"
+#: instructions.bear.replacement.empty_street_name_labels.3
+msgctxt "instructions.bear.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.bear_verbal.empty_street_name_labels.4
-msgctxt "instructions.bear_verbal.empty_street_name_labels.4"
+#: instructions.bear.replacement.empty_street_name_labels.4
+msgctxt "instructions.bear.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.bear_verbal.empty_street_name_labels.5
-msgctxt "instructions.bear_verbal.empty_street_name_labels.5"
+#: instructions.bear.replacement.empty_street_name_labels.5
+msgctxt "instructions.bear.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.bear_verbal.empty_street_name_labels.6
-msgctxt "instructions.bear_verbal.empty_street_name_labels.6"
+#: instructions.bear.replacement.empty_street_name_labels.6
+msgctxt "instructions.bear.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
+
+#: instructions.bear.replacement.relative_directions.0
+msgctxt "instructions.bear.replacement.relative_directions.0"
+msgid "left"
+msgstr "ліворуч"
+
+#: instructions.bear.replacement.relative_directions.1
+msgctxt "instructions.bear.replacement.relative_directions.1"
+msgid "right"
+msgstr "праворуч"
 
 #. e.g. Bear right.
 #: instructions.bear_verbal.phrases.0
@@ -242,13 +207,48 @@ msgctxt "instructions.bear_verbal.phrases.5"
 msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Рухайтесь <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
 
-#: instructions.bear_verbal.relative_directions.0
-msgctxt "instructions.bear_verbal.relative_directions.0"
+#: instructions.bear_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "пішохідній доріжці"
+
+#: instructions.bear_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "велодоріжці"
+
+#: instructions.bear_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "шляху для гірських велосипедів"
+
+#: instructions.bear_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "пішохідному переході"
+
+#: instructions.bear_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "сходах"
+
+#: instructions.bear_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "мосту"
+
+#: instructions.bear_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr ""
+
+#: instructions.bear_verbal.replacement.relative_directions.0
+msgctxt "instructions.bear_verbal.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.bear_verbal.relative_directions.1
-msgctxt "instructions.bear_verbal.relative_directions.1"
+#: instructions.bear_verbal.replacement.relative_directions.1
+msgctxt "instructions.bear_verbal.replacement.relative_directions.1"
 msgid "right"
 msgstr "праворуч"
 
@@ -263,41 +263,6 @@ msgstr "<PREVIOUS_STREET_NAMES> переходить у <STREET_NAMES>."
 msgctxt "instructions.becomes_verbal.phrases.0"
 msgid "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
 msgstr "<PREVIOUS_STREET_NAMES> переходить у <STREET_NAMES>."
-
-#: instructions.continue.empty_street_name_labels.0
-msgctxt "instructions.continue.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "пішохідній доріжці"
-
-#: instructions.continue.empty_street_name_labels.1
-msgctxt "instructions.continue.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "велодоріжці"
-
-#: instructions.continue.empty_street_name_labels.2
-msgctxt "instructions.continue.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "шляху для гірських велосипедів"
-
-#: instructions.continue.empty_street_name_labels.3
-msgctxt "instructions.continue.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "пішохідному переході"
-
-#: instructions.continue.empty_street_name_labels.4
-msgctxt "instructions.continue.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "сходах"
-
-#: instructions.continue.empty_street_name_labels.5
-msgctxt "instructions.continue.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "мосту"
-
-#: instructions.continue.empty_street_name_labels.6
-msgctxt "instructions.continue.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "тунелю"
 
 #. e.g. Continue.
 #: instructions.continue.phrases.0
@@ -323,60 +288,40 @@ msgctxt "instructions.continue.phrases.3"
 msgid "Continue toward <TOWARD_SIGN>."
 msgstr "Продовжуйте рух в напрямку <TOWARD_SIGN>."
 
-#: instructions.continue_verbal.empty_street_name_labels.0
-msgctxt "instructions.continue_verbal.empty_street_name_labels.0"
+#: instructions.continue.replacement.empty_street_name_labels.0
+msgctxt "instructions.continue.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.continue_verbal.empty_street_name_labels.1
-msgctxt "instructions.continue_verbal.empty_street_name_labels.1"
+#: instructions.continue.replacement.empty_street_name_labels.1
+msgctxt "instructions.continue.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.continue_verbal.empty_street_name_labels.2
-msgctxt "instructions.continue_verbal.empty_street_name_labels.2"
+#: instructions.continue.replacement.empty_street_name_labels.2
+msgctxt "instructions.continue.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.continue_verbal.empty_street_name_labels.3
-msgctxt "instructions.continue_verbal.empty_street_name_labels.3"
+#: instructions.continue.replacement.empty_street_name_labels.3
+msgctxt "instructions.continue.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.continue_verbal.empty_street_name_labels.4
-msgctxt "instructions.continue_verbal.empty_street_name_labels.4"
+#: instructions.continue.replacement.empty_street_name_labels.4
+msgctxt "instructions.continue.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.continue_verbal.empty_street_name_labels.5
-msgctxt "instructions.continue_verbal.empty_street_name_labels.5"
+#: instructions.continue.replacement.empty_street_name_labels.5
+msgctxt "instructions.continue.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.continue_verbal.empty_street_name_labels.6
-msgctxt "instructions.continue_verbal.empty_street_name_labels.6"
+#: instructions.continue.replacement.empty_street_name_labels.6
+msgctxt "instructions.continue.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr "тунелю"
-
-#: instructions.continue_verbal.metric_lengths.0
-msgctxt "instructions.continue_verbal.metric_lengths.0"
-msgid "<KILOMETERS> kilometers"
-msgstr "<KILOMETERS> кілометрів"
-
-#: instructions.continue_verbal.metric_lengths.1
-msgctxt "instructions.continue_verbal.metric_lengths.1"
-msgid "1 kilometer"
-msgstr "1 кілометр"
-
-#: instructions.continue_verbal.metric_lengths.2
-msgctxt "instructions.continue_verbal.metric_lengths.2"
-msgid "<METERS> meters"
-msgstr "<METERS> метрів"
-
-#: instructions.continue_verbal.metric_lengths.3
-msgctxt "instructions.continue_verbal.metric_lengths.3"
-msgid "less than 10 meters"
-msgstr "менше ніж 10 метрів"
 
 #. e.g. Continue.
 #: instructions.continue_verbal.phrases.0
@@ -426,70 +371,90 @@ msgctxt "instructions.continue_verbal.phrases.7"
 msgid "Continue toward <TOWARD_SIGN> for <LENGTH>."
 msgstr "Продовжуйте рух <TOWARD_SIGN> ще <LENGTH>."
 
-#: instructions.continue_verbal.us_customary_lengths.0
-msgctxt "instructions.continue_verbal.us_customary_lengths.0"
-msgid "<MILES> miles"
-msgstr "<MILES> милі"
-
-#: instructions.continue_verbal.us_customary_lengths.1
-msgctxt "instructions.continue_verbal.us_customary_lengths.1"
-msgid "1 mile"
-msgstr "1 милю"
-
-#: instructions.continue_verbal.us_customary_lengths.2
-msgctxt "instructions.continue_verbal.us_customary_lengths.2"
-msgid "a half mile"
-msgstr "півмилі"
-
-#: instructions.continue_verbal.us_customary_lengths.3
-msgctxt "instructions.continue_verbal.us_customary_lengths.3"
-msgid "a quarter mile"
-msgstr "чверть милі"
-
-#: instructions.continue_verbal.us_customary_lengths.4
-msgctxt "instructions.continue_verbal.us_customary_lengths.4"
-msgid "<FEET> feet"
-msgstr "<FEET> футів"
-
-#: instructions.continue_verbal.us_customary_lengths.5
-msgctxt "instructions.continue_verbal.us_customary_lengths.5"
-msgid "less than 10 feet"
-msgstr "менше ніж 10 футів"
-
-#: instructions.continue_verbal_alert.empty_street_name_labels.0
-msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.0"
+#: instructions.continue_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.continue_verbal_alert.empty_street_name_labels.1
-msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.1"
+#: instructions.continue_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.continue_verbal_alert.empty_street_name_labels.2
-msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.2"
+#: instructions.continue_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.continue_verbal_alert.empty_street_name_labels.3
-msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.3"
+#: instructions.continue_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.continue_verbal_alert.empty_street_name_labels.4
-msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.4"
+#: instructions.continue_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.continue_verbal_alert.empty_street_name_labels.5
-msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.5"
+#: instructions.continue_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.continue_verbal_alert.empty_street_name_labels.6
-msgctxt "instructions.continue_verbal_alert.empty_street_name_labels.6"
+#: instructions.continue_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr "тунелю"
+
+#: instructions.continue_verbal.replacement.metric_lengths.0
+msgctxt "instructions.continue_verbal.replacement.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> кілометрів"
+
+#: instructions.continue_verbal.replacement.metric_lengths.1
+msgctxt "instructions.continue_verbal.replacement.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 кілометр"
+
+#: instructions.continue_verbal.replacement.metric_lengths.2
+msgctxt "instructions.continue_verbal.replacement.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> метрів"
+
+#: instructions.continue_verbal.replacement.metric_lengths.3
+msgctxt "instructions.continue_verbal.replacement.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "менше ніж 10 метрів"
+
+#: instructions.continue_verbal.replacement.us_customary_lengths.0
+msgctxt "instructions.continue_verbal.replacement.us_customary_lengths.0"
+msgid "<MILES> miles"
+msgstr "<MILES> милі"
+
+#: instructions.continue_verbal.replacement.us_customary_lengths.1
+msgctxt "instructions.continue_verbal.replacement.us_customary_lengths.1"
+msgid "1 mile"
+msgstr "1 милю"
+
+#: instructions.continue_verbal.replacement.us_customary_lengths.2
+msgctxt "instructions.continue_verbal.replacement.us_customary_lengths.2"
+msgid "a half mile"
+msgstr "півмилі"
+
+#: instructions.continue_verbal.replacement.us_customary_lengths.3
+msgctxt "instructions.continue_verbal.replacement.us_customary_lengths.3"
+msgid "a quarter mile"
+msgstr "чверть милі"
+
+#: instructions.continue_verbal.replacement.us_customary_lengths.4
+msgctxt "instructions.continue_verbal.replacement.us_customary_lengths.4"
+msgid "<FEET> feet"
+msgstr "<FEET> футів"
+
+#: instructions.continue_verbal.replacement.us_customary_lengths.5
+msgctxt "instructions.continue_verbal.replacement.us_customary_lengths.5"
+msgid "less than 10 feet"
+msgstr "менше ніж 10 футів"
 
 #. e.g. Continue.
 #: instructions.continue_verbal_alert.phrases.0
@@ -514,6 +479,41 @@ msgstr "Продовжуйте рух через <JUNCTION_NAME>."
 msgctxt "instructions.continue_verbal_alert.phrases.3"
 msgid "Continue toward <TOWARD_SIGN>."
 msgstr "Продовжуйте рух в напрямку <TOWARD_SIGN>."
+
+#: instructions.continue_verbal_alert.replacement.empty_street_name_labels.0
+msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "пішохідній доріжці"
+
+#: instructions.continue_verbal_alert.replacement.empty_street_name_labels.1
+msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "велодоріжці"
+
+#: instructions.continue_verbal_alert.replacement.empty_street_name_labels.2
+msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "шляху для гірських велосипедів"
+
+#: instructions.continue_verbal_alert.replacement.empty_street_name_labels.3
+msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "пішохідному переході"
+
+#: instructions.continue_verbal_alert.replacement.empty_street_name_labels.4
+msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "сходах"
+
+#: instructions.continue_verbal_alert.replacement.empty_street_name_labels.5
+msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "мосту"
+
+#: instructions.continue_verbal_alert.replacement.empty_street_name_labels.6
+msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr "тунелю"
 
 #. e.g. Depart: 8:02 AM.
 #: instructions.depart.phrases.0
@@ -564,13 +564,13 @@ msgctxt "instructions.destination.phrases.3"
 msgid "<DESTINATION> is on the <RELATIVE_DIRECTION>."
 msgstr "<DESTINATION> знаходиться <RELATIVE_DIRECTION>."
 
-#: instructions.destination.relative_directions.0
-msgctxt "instructions.destination.relative_directions.0"
+#: instructions.destination.replacement.relative_directions.0
+msgctxt "instructions.destination.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.destination.relative_directions.1
-msgctxt "instructions.destination.relative_directions.1"
+#: instructions.destination.replacement.relative_directions.1
+msgctxt "instructions.destination.replacement.relative_directions.1"
 msgid "right"
 msgstr "праворуч"
 
@@ -599,13 +599,13 @@ msgctxt "instructions.destination_verbal.phrases.3"
 msgid "<DESTINATION> is on the <RELATIVE_DIRECTION>."
 msgstr "<DESTINATION> знаходиться <RELATIVE_DIRECTION>."
 
-#: instructions.destination_verbal.relative_directions.0
-msgctxt "instructions.destination_verbal.relative_directions.0"
+#: instructions.destination_verbal.replacement.relative_directions.0
+msgctxt "instructions.destination_verbal.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.destination_verbal.relative_directions.1
-msgctxt "instructions.destination_verbal.relative_directions.1"
+#: instructions.destination_verbal.replacement.relative_directions.1
+msgctxt "instructions.destination_verbal.replacement.relative_directions.1"
 msgid "right"
 msgstr "праворуч"
 
@@ -634,13 +634,13 @@ msgctxt "instructions.destination_verbal_alert.phrases.3"
 msgid "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
 msgstr "<DESTINATION> буде <RELATIVE_DIRECTION>."
 
-#: instructions.destination_verbal_alert.relative_directions.0
-msgctxt "instructions.destination_verbal_alert.relative_directions.0"
+#: instructions.destination_verbal_alert.replacement.relative_directions.0
+msgctxt "instructions.destination_verbal_alert.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.destination_verbal_alert.relative_directions.1
-msgctxt "instructions.destination_verbal_alert.relative_directions.1"
+#: instructions.destination_verbal_alert.replacement.relative_directions.1
+msgctxt "instructions.destination_verbal_alert.replacement.relative_directions.1"
 msgid "right"
 msgstr "праворуч"
 
@@ -656,26 +656,6 @@ msgctxt "instructions.elevator.phrases.1"
 msgid "Take the elevator to <LEVEL>."
 msgstr "Скористайтеся ліфтом до <LEVEL>."
 
-#: instructions.enter_building.empty_street_name_labels.0
-msgctxt "instructions.enter_building.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "пішохідної доріжки"
-
-#: instructions.enter_building.empty_street_name_labels.1
-msgctxt "instructions.enter_building.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "велодоріжки"
-
-#: instructions.enter_building.empty_street_name_labels.2
-msgctxt "instructions.enter_building.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "шляху для гірських велосипедів"
-
-#: instructions.enter_building.empty_street_name_labels.3
-msgctxt "instructions.enter_building.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "пішохідного переході"
-
 #. e.g. Enter the building.
 #: instructions.enter_building.phrases.0
 msgctxt "instructions.enter_building.phrases.0"
@@ -688,45 +668,25 @@ msgctxt "instructions.enter_building.phrases.1"
 msgid "Enter the building, and continue on <STREET_NAMES>."
 msgstr "Увійдіть в будівлю, та рухайтесь до <STREET_NAMES>."
 
-#: instructions.enter_ferry.empty_street_name_labels.0
-msgctxt "instructions.enter_ferry.empty_street_name_labels.0"
+#: instructions.enter_building.replacement.empty_street_name_labels.0
+msgctxt "instructions.enter_building.replacement.empty_street_name_labels.0"
 msgid "the walkway"
-msgstr "на пішохідній доріжці"
+msgstr "пішохідної доріжки"
 
-#: instructions.enter_ferry.empty_street_name_labels.1
-msgctxt "instructions.enter_ferry.empty_street_name_labels.1"
+#: instructions.enter_building.replacement.empty_street_name_labels.1
+msgctxt "instructions.enter_building.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
-msgstr "на велодоріжці"
+msgstr "велодоріжки"
 
-#: instructions.enter_ferry.empty_street_name_labels.2
-msgctxt "instructions.enter_ferry.empty_street_name_labels.2"
+#: instructions.enter_building.replacement.empty_street_name_labels.2
+msgctxt "instructions.enter_building.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
-msgstr "на шляху для гірських велосипедів"
+msgstr "шляху для гірських велосипедів"
 
-#: instructions.enter_ferry.empty_street_name_labels.3
-msgctxt "instructions.enter_ferry.empty_street_name_labels.3"
+#: instructions.enter_building.replacement.empty_street_name_labels.3
+msgctxt "instructions.enter_building.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr "на пішохідному переході"
-
-#: instructions.enter_ferry.empty_street_name_labels.4
-msgctxt "instructions.enter_ferry.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "на сходах"
-
-#: instructions.enter_ferry.empty_street_name_labels.5
-msgctxt "instructions.enter_ferry.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "на мосту"
-
-#: instructions.enter_ferry.empty_street_name_labels.6
-msgctxt "instructions.enter_ferry.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr "в тунелі"
-
-#: instructions.enter_ferry.ferry_label
-msgctxt "instructions.enter_ferry.ferry_label"
-msgid "Ferry"
-msgstr "Пором"
+msgstr "пішохідного переході"
 
 #. e.g. Take the Ferry.
 #: instructions.enter_ferry.phrases.0
@@ -752,43 +712,43 @@ msgctxt "instructions.enter_ferry.phrases.3"
 msgid "Take the ferry toward <TOWARD_SIGN>."
 msgstr "Скористайтеся поромом в напрямку <TOWARD_SIGN>."
 
-#: instructions.enter_ferry_verbal.empty_street_name_labels.0
-msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.0"
+#: instructions.enter_ferry.replacement.empty_street_name_labels.0
+msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "на пішохідній доріжці"
 
-#: instructions.enter_ferry_verbal.empty_street_name_labels.1
-msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.1"
+#: instructions.enter_ferry.replacement.empty_street_name_labels.1
+msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "на велодоріжці"
 
-#: instructions.enter_ferry_verbal.empty_street_name_labels.2
-msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.2"
+#: instructions.enter_ferry.replacement.empty_street_name_labels.2
+msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "на шляху для гірських велосипедів"
 
-#: instructions.enter_ferry_verbal.empty_street_name_labels.3
-msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.3"
+#: instructions.enter_ferry.replacement.empty_street_name_labels.3
+msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "на пішохідному переході"
 
-#: instructions.enter_ferry_verbal.empty_street_name_labels.4
-msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.4"
+#: instructions.enter_ferry.replacement.empty_street_name_labels.4
+msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "на сходах"
 
-#: instructions.enter_ferry_verbal.empty_street_name_labels.5
-msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.5"
+#: instructions.enter_ferry.replacement.empty_street_name_labels.5
+msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "на мосту"
 
-#: instructions.enter_ferry_verbal.empty_street_name_labels.6
-msgctxt "instructions.enter_ferry_verbal.empty_street_name_labels.6"
+#: instructions.enter_ferry.replacement.empty_street_name_labels.6
+msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr "в тунелі"
 
-#: instructions.enter_ferry_verbal.ferry_label
-msgctxt "instructions.enter_ferry_verbal.ferry_label"
+#: instructions.enter_ferry.replacement.ferry_label
+msgctxt "instructions.enter_ferry.replacement.ferry_label"
 msgid "Ferry"
 msgstr "Пором"
 
@@ -816,90 +776,45 @@ msgctxt "instructions.enter_ferry_verbal.phrases.3"
 msgid "Take the ferry toward <TOWARD_SIGN>."
 msgstr "Скористайтеся поромом в напрямку <TOWARD_SIGN>."
 
-#: instructions.enter_roundabout.empty_street_name_labels.0
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.0"
+#: instructions.enter_ferry_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
-msgstr "пішохідній доріжці"
+msgstr "на пішохідній доріжці"
 
-#: instructions.enter_roundabout.empty_street_name_labels.1
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.1"
+#: instructions.enter_ferry_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
-msgstr "велодоріжці"
+msgstr "на велодоріжці"
 
-#: instructions.enter_roundabout.empty_street_name_labels.2
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.2"
+#: instructions.enter_ferry_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
-msgstr "шляху для гірських велосипедів"
+msgstr "на шляху для гірських велосипедів"
 
-#: instructions.enter_roundabout.empty_street_name_labels.3
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.3"
+#: instructions.enter_ferry_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr "пішохідному переході"
+msgstr "на пішохідному переході"
 
-#: instructions.enter_roundabout.empty_street_name_labels.4
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.4"
+#: instructions.enter_ferry_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr "сходах"
+msgstr "на сходах"
 
-#: instructions.enter_roundabout.empty_street_name_labels.5
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.5"
+#: instructions.enter_ferry_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "мосту"
+msgstr "на мосту"
 
-#: instructions.enter_roundabout.empty_street_name_labels.6
-msgctxt "instructions.enter_roundabout.empty_street_name_labels.6"
+#: instructions.enter_ferry_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "в тунелі"
 
-#: instructions.enter_roundabout.ordinal_values.0
-msgctxt "instructions.enter_roundabout.ordinal_values.0"
-msgid "1st"
-msgstr "1-й"
-
-#: instructions.enter_roundabout.ordinal_values.1
-msgctxt "instructions.enter_roundabout.ordinal_values.1"
-msgid "2nd"
-msgstr "2-й"
-
-#: instructions.enter_roundabout.ordinal_values.2
-msgctxt "instructions.enter_roundabout.ordinal_values.2"
-msgid "3rd"
-msgstr "3-й"
-
-#: instructions.enter_roundabout.ordinal_values.3
-msgctxt "instructions.enter_roundabout.ordinal_values.3"
-msgid "4th"
-msgstr "4-й"
-
-#: instructions.enter_roundabout.ordinal_values.4
-msgctxt "instructions.enter_roundabout.ordinal_values.4"
-msgid "5th"
-msgstr "5-й"
-
-#: instructions.enter_roundabout.ordinal_values.5
-msgctxt "instructions.enter_roundabout.ordinal_values.5"
-msgid "6th"
-msgstr "6-й"
-
-#: instructions.enter_roundabout.ordinal_values.6
-msgctxt "instructions.enter_roundabout.ordinal_values.6"
-msgid "7th"
-msgstr "7-й"
-
-#: instructions.enter_roundabout.ordinal_values.7
-msgctxt "instructions.enter_roundabout.ordinal_values.7"
-msgid "8th"
-msgstr "8-й"
-
-#: instructions.enter_roundabout.ordinal_values.8
-msgctxt "instructions.enter_roundabout.ordinal_values.8"
-msgid "9th"
-msgstr "9-й"
-
-#: instructions.enter_roundabout.ordinal_values.9
-msgctxt "instructions.enter_roundabout.ordinal_values.9"
-msgid "10th"
-msgstr "10-й"
+#: instructions.enter_ferry_verbal.replacement.ferry_label
+msgctxt "instructions.enter_ferry_verbal.replacement.ferry_label"
+msgid "Ferry"
+msgstr "Пором"
 
 #. e.g. Enter the roundabout.
 #: instructions.enter_roundabout.phrases.0
@@ -1006,88 +921,88 @@ msgctxt "instructions.enter_roundabout.phrases.15"
 msgid "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
 msgstr "Рухайтесь по <STREET_NAMES> та поверніть в напрямку <TOWARD_SIGN>."
 
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.0
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.0"
+#: instructions.enter_roundabout.replacement.empty_street_name_labels.0
+msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.1
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.1"
+#: instructions.enter_roundabout.replacement.empty_street_name_labels.1
+msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.2
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.2"
+#: instructions.enter_roundabout.replacement.empty_street_name_labels.2
+msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.3
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.3"
+#: instructions.enter_roundabout.replacement.empty_street_name_labels.3
+msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.4
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.4"
+#: instructions.enter_roundabout.replacement.empty_street_name_labels.4
+msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.5
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.5"
+#: instructions.enter_roundabout.replacement.empty_street_name_labels.5
+msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.enter_roundabout_verbal.empty_street_name_labels.6
-msgctxt "instructions.enter_roundabout_verbal.empty_street_name_labels.6"
+#: instructions.enter_roundabout.replacement.empty_street_name_labels.6
+msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
 
-#: instructions.enter_roundabout_verbal.ordinal_values.0
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.0"
+#: instructions.enter_roundabout.replacement.ordinal_values.0
+msgctxt "instructions.enter_roundabout.replacement.ordinal_values.0"
 msgid "1st"
 msgstr "1-й"
 
-#: instructions.enter_roundabout_verbal.ordinal_values.1
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.1"
+#: instructions.enter_roundabout.replacement.ordinal_values.1
+msgctxt "instructions.enter_roundabout.replacement.ordinal_values.1"
 msgid "2nd"
 msgstr "2-й"
 
-#: instructions.enter_roundabout_verbal.ordinal_values.2
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.2"
+#: instructions.enter_roundabout.replacement.ordinal_values.2
+msgctxt "instructions.enter_roundabout.replacement.ordinal_values.2"
 msgid "3rd"
 msgstr "3-й"
 
-#: instructions.enter_roundabout_verbal.ordinal_values.3
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.3"
+#: instructions.enter_roundabout.replacement.ordinal_values.3
+msgctxt "instructions.enter_roundabout.replacement.ordinal_values.3"
 msgid "4th"
 msgstr "4-й"
 
-#: instructions.enter_roundabout_verbal.ordinal_values.4
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.4"
+#: instructions.enter_roundabout.replacement.ordinal_values.4
+msgctxt "instructions.enter_roundabout.replacement.ordinal_values.4"
 msgid "5th"
 msgstr "5-й"
 
-#: instructions.enter_roundabout_verbal.ordinal_values.5
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.5"
+#: instructions.enter_roundabout.replacement.ordinal_values.5
+msgctxt "instructions.enter_roundabout.replacement.ordinal_values.5"
 msgid "6th"
 msgstr "6-й"
 
-#: instructions.enter_roundabout_verbal.ordinal_values.6
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.6"
+#: instructions.enter_roundabout.replacement.ordinal_values.6
+msgctxt "instructions.enter_roundabout.replacement.ordinal_values.6"
 msgid "7th"
 msgstr "7-й"
 
-#: instructions.enter_roundabout_verbal.ordinal_values.7
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.7"
+#: instructions.enter_roundabout.replacement.ordinal_values.7
+msgctxt "instructions.enter_roundabout.replacement.ordinal_values.7"
 msgid "8th"
 msgstr "8-й"
 
-#: instructions.enter_roundabout_verbal.ordinal_values.8
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.8"
+#: instructions.enter_roundabout.replacement.ordinal_values.8
+msgctxt "instructions.enter_roundabout.replacement.ordinal_values.8"
 msgid "9th"
 msgstr "9-й"
 
-#: instructions.enter_roundabout_verbal.ordinal_values.9
-msgctxt "instructions.enter_roundabout_verbal.ordinal_values.9"
+#: instructions.enter_roundabout.replacement.ordinal_values.9
+msgctxt "instructions.enter_roundabout.replacement.ordinal_values.9"
 msgid "10th"
 msgstr "10-й"
 
@@ -1195,6 +1110,91 @@ msgstr "Рухайтесь по <STREET_NAMES> та поверніть на <ROU
 msgctxt "instructions.enter_roundabout_verbal.phrases.15"
 msgid "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
 msgstr "Рухайтесь по <STREET_NAMES> та поверніть в напрямку <TOWARD_SIGN>."
+
+#: instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "пішохідній доріжці"
+
+#: instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "велодоріжці"
+
+#: instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "шляху для гірських велосипедів"
+
+#: instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "пішохідному переході"
+
+#: instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "сходах"
+
+#: instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "мосту"
+
+#: instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr ""
+
+#: instructions.enter_roundabout_verbal.replacement.ordinal_values.0
+msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.0"
+msgid "1st"
+msgstr "1-й"
+
+#: instructions.enter_roundabout_verbal.replacement.ordinal_values.1
+msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.1"
+msgid "2nd"
+msgstr "2-й"
+
+#: instructions.enter_roundabout_verbal.replacement.ordinal_values.2
+msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.2"
+msgid "3rd"
+msgstr "3-й"
+
+#: instructions.enter_roundabout_verbal.replacement.ordinal_values.3
+msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.3"
+msgid "4th"
+msgstr "4-й"
+
+#: instructions.enter_roundabout_verbal.replacement.ordinal_values.4
+msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.4"
+msgid "5th"
+msgstr "5-й"
+
+#: instructions.enter_roundabout_verbal.replacement.ordinal_values.5
+msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.5"
+msgid "6th"
+msgstr "6-й"
+
+#: instructions.enter_roundabout_verbal.replacement.ordinal_values.6
+msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.6"
+msgid "7th"
+msgstr "7-й"
+
+#: instructions.enter_roundabout_verbal.replacement.ordinal_values.7
+msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.7"
+msgid "8th"
+msgstr "8-й"
+
+#: instructions.enter_roundabout_verbal.replacement.ordinal_values.8
+msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.8"
+msgid "9th"
+msgstr "9-й"
+
+#: instructions.enter_roundabout_verbal.replacement.ordinal_values.9
+msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.9"
+msgid "10th"
+msgstr "10-й"
 
 #. e.g. Take the escalator.
 #: instructions.escalator.phrases.0
@@ -1353,35 +1353,15 @@ msgctxt "instructions.exit.phrases.29"
 msgid "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
 msgstr "Рухайтесь на з'їзд <NAME_SIGN> на <BRANCH_SIGN> в напрямку <TOWARD_SIGN>."
 
-#: instructions.exit.relative_directions.0
-msgctxt "instructions.exit.relative_directions.0"
+#: instructions.exit.replacement.relative_directions.0
+msgctxt "instructions.exit.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.exit.relative_directions.1
-msgctxt "instructions.exit.relative_directions.1"
+#: instructions.exit.replacement.relative_directions.1
+msgctxt "instructions.exit.replacement.relative_directions.1"
 msgid "right"
 msgstr "праворуч"
-
-#: instructions.exit_building.empty_street_name_labels.0
-msgctxt "instructions.exit_building.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "пішохідної доріжки"
-
-#: instructions.exit_building.empty_street_name_labels.1
-msgctxt "instructions.exit_building.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "велодоріжки"
-
-#: instructions.exit_building.empty_street_name_labels.2
-msgctxt "instructions.exit_building.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "шляху для гірських велосипедів"
-
-#: instructions.exit_building.empty_street_name_labels.3
-msgctxt "instructions.exit_building.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "пішохідного переході"
 
 #. e.g. Exit the building.
 #: instructions.exit_building.phrases.0
@@ -1395,40 +1375,25 @@ msgctxt "instructions.exit_building.phrases.1"
 msgid "Exit the building, and continue on <STREET_NAMES>."
 msgstr "Вийдіть з будівлі, та рухайтесь до <STREET_NAMES>."
 
-#: instructions.exit_roundabout.empty_street_name_labels.0
-msgctxt "instructions.exit_roundabout.empty_street_name_labels.0"
+#: instructions.exit_building.replacement.empty_street_name_labels.0
+msgctxt "instructions.exit_building.replacement.empty_street_name_labels.0"
 msgid "the walkway"
-msgstr "пішохідній доріжці"
+msgstr "пішохідної доріжки"
 
-#: instructions.exit_roundabout.empty_street_name_labels.1
-msgctxt "instructions.exit_roundabout.empty_street_name_labels.1"
+#: instructions.exit_building.replacement.empty_street_name_labels.1
+msgctxt "instructions.exit_building.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
-msgstr "велодоріжці"
+msgstr "велодоріжки"
 
-#: instructions.exit_roundabout.empty_street_name_labels.2
-msgctxt "instructions.exit_roundabout.empty_street_name_labels.2"
+#: instructions.exit_building.replacement.empty_street_name_labels.2
+msgctxt "instructions.exit_building.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.exit_roundabout.empty_street_name_labels.3
-msgctxt "instructions.exit_roundabout.empty_street_name_labels.3"
+#: instructions.exit_building.replacement.empty_street_name_labels.3
+msgctxt "instructions.exit_building.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr "пішохідному переході"
-
-#: instructions.exit_roundabout.empty_street_name_labels.4
-msgctxt "instructions.exit_roundabout.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "сходах"
-
-#: instructions.exit_roundabout.empty_street_name_labels.5
-msgctxt "instructions.exit_roundabout.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "мосту"
-
-#: instructions.exit_roundabout.empty_street_name_labels.6
-msgctxt "instructions.exit_roundabout.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr ""
+msgstr "пішохідного переході"
 
 #. e.g. Exit the roundabout.
 #: instructions.exit_roundabout.phrases.0
@@ -1454,38 +1419,38 @@ msgctxt "instructions.exit_roundabout.phrases.3"
 msgid "Exit the roundabout toward <TOWARD_SIGN>."
 msgstr "Залишить кільце і рухайтесь в напрямку <TOWARD_SIGN>."
 
-#: instructions.exit_roundabout_verbal.empty_street_name_labels.0
-msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.0"
+#: instructions.exit_roundabout.replacement.empty_street_name_labels.0
+msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.exit_roundabout_verbal.empty_street_name_labels.1
-msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.1"
+#: instructions.exit_roundabout.replacement.empty_street_name_labels.1
+msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.exit_roundabout_verbal.empty_street_name_labels.2
-msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.2"
+#: instructions.exit_roundabout.replacement.empty_street_name_labels.2
+msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.exit_roundabout_verbal.empty_street_name_labels.3
-msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.3"
+#: instructions.exit_roundabout.replacement.empty_street_name_labels.3
+msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.exit_roundabout_verbal.empty_street_name_labels.4
-msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.4"
+#: instructions.exit_roundabout.replacement.empty_street_name_labels.4
+msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.exit_roundabout_verbal.empty_street_name_labels.5
-msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.5"
+#: instructions.exit_roundabout.replacement.empty_street_name_labels.5
+msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.exit_roundabout_verbal.empty_street_name_labels.6
-msgctxt "instructions.exit_roundabout_verbal.empty_street_name_labels.6"
+#: instructions.exit_roundabout.replacement.empty_street_name_labels.6
+msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
 
@@ -1512,6 +1477,41 @@ msgstr "Залишить кільце на <BEGIN_STREET_NAMES>."
 msgctxt "instructions.exit_roundabout_verbal.phrases.3"
 msgid "Exit the roundabout toward <TOWARD_SIGN>."
 msgstr "Залишить кільце і рухайтесь в напрямку <TOWARD_SIGN>."
+
+#: instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "пішохідній доріжці"
+
+#: instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "велодоріжці"
+
+#: instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "шляху для гірських велосипедів"
+
+#: instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "пішохідному переході"
+
+#: instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "сходах"
+
+#: instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "мосту"
+
+#: instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr ""
 
 #. e.g. Take the exit on the left.
 #. e.g. Take the exit on the right.
@@ -1658,13 +1658,13 @@ msgctxt "instructions.exit_verbal.phrases.29"
 msgid "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
 msgstr "Рухайтесь на з'їзд <NAME_SIGN> на <BRANCH_SIGN> в напрямку <TOWARD_SIGN>."
 
-#: instructions.exit_verbal.relative_directions.0
-msgctxt "instructions.exit_verbal.relative_directions.0"
+#: instructions.exit_verbal.replacement.relative_directions.0
+msgctxt "instructions.exit_verbal.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.exit_verbal.relative_directions.1
-msgctxt "instructions.exit_verbal.relative_directions.1"
+#: instructions.exit_verbal.replacement.relative_directions.1
+msgctxt "instructions.exit_verbal.replacement.relative_directions.1"
 msgid "right"
 msgstr "праворуч"
 
@@ -1673,41 +1673,6 @@ msgstr "праворуч"
 msgctxt "instructions.exit_visual.phrases.0"
 msgid "Exit <EXIT_NUMBERS>"
 msgstr "З'їзд <EXIT_NUMBERS>"
-
-#: instructions.keep.empty_street_name_labels.0
-msgctxt "instructions.keep.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "пішохідну доріжку"
-
-#: instructions.keep.empty_street_name_labels.1
-msgctxt "instructions.keep.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "велодоріжку"
-
-#: instructions.keep.empty_street_name_labels.2
-msgctxt "instructions.keep.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "шлях для гірських велосипедів"
-
-#: instructions.keep.empty_street_name_labels.3
-msgctxt "instructions.keep.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "пішохідному переході"
-
-#: instructions.keep.empty_street_name_labels.4
-msgctxt "instructions.keep.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "сходах"
-
-#: instructions.keep.empty_street_name_labels.5
-msgctxt "instructions.keep.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "мосту"
-
-#: instructions.keep.empty_street_name_labels.6
-msgctxt "instructions.keep.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr ""
 
 #. e.g. Keep left at the fork.
 #. e.g. Keep straight at the fork.
@@ -1759,55 +1724,55 @@ msgctxt "instructions.keep.phrases.7"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
 msgstr "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> на <STREET_NAMES> в напрямку <TOWARD_SIGN>."
 
-#: instructions.keep.relative_directions.0
-msgctxt "instructions.keep.relative_directions.0"
-msgid "left"
-msgstr "ліворуч"
-
-#: instructions.keep.relative_directions.1
-msgctxt "instructions.keep.relative_directions.1"
-msgid "straight"
-msgstr "прямо"
-
-#: instructions.keep.relative_directions.2
-msgctxt "instructions.keep.relative_directions.2"
-msgid "right"
-msgstr "праворуч"
-
-#: instructions.keep_to_stay_on.empty_street_name_labels.0
-msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.0"
+#: instructions.keep.replacement.empty_street_name_labels.0
+msgctxt "instructions.keep.replacement.empty_street_name_labels.0"
 msgid "the walkway"
-msgstr "пішохідній доріжці"
+msgstr "пішохідну доріжку"
 
-#: instructions.keep_to_stay_on.empty_street_name_labels.1
-msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.1"
+#: instructions.keep.replacement.empty_street_name_labels.1
+msgctxt "instructions.keep.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
-msgstr "велодоріжці"
+msgstr "велодоріжку"
 
-#: instructions.keep_to_stay_on.empty_street_name_labels.2
-msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.2"
+#: instructions.keep.replacement.empty_street_name_labels.2
+msgctxt "instructions.keep.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
-msgstr "шляху для гірських велосипедів"
+msgstr "шлях для гірських велосипедів"
 
-#: instructions.keep_to_stay_on.empty_street_name_labels.3
-msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.3"
+#: instructions.keep.replacement.empty_street_name_labels.3
+msgctxt "instructions.keep.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.keep_to_stay_on.empty_street_name_labels.4
-msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.4"
+#: instructions.keep.replacement.empty_street_name_labels.4
+msgctxt "instructions.keep.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.keep_to_stay_on.empty_street_name_labels.5
-msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.5"
+#: instructions.keep.replacement.empty_street_name_labels.5
+msgctxt "instructions.keep.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.keep_to_stay_on.empty_street_name_labels.6
-msgctxt "instructions.keep_to_stay_on.empty_street_name_labels.6"
+#: instructions.keep.replacement.empty_street_name_labels.6
+msgctxt "instructions.keep.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
+
+#: instructions.keep.replacement.relative_directions.0
+msgctxt "instructions.keep.replacement.relative_directions.0"
+msgid "left"
+msgstr "ліворуч"
+
+#: instructions.keep.replacement.relative_directions.1
+msgctxt "instructions.keep.replacement.relative_directions.1"
+msgid "straight"
+msgstr "прямо"
+
+#: instructions.keep.replacement.relative_directions.2
+msgctxt "instructions.keep.replacement.relative_directions.2"
+msgid "right"
+msgstr "праворуч"
 
 #. e.g. Keep left to stay on I 95 South.
 #. e.g. Keep straight to stay on I 95 South.
@@ -1835,55 +1800,55 @@ msgctxt "instructions.keep_to_stay_on.phrases.3"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
 msgstr "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> щоб залишатись на <STREET_NAMES> в напрямку <TOWARD_SIGN>."
 
-#: instructions.keep_to_stay_on.relative_directions.0
-msgctxt "instructions.keep_to_stay_on.relative_directions.0"
-msgid "left"
-msgstr "ліворуч"
-
-#: instructions.keep_to_stay_on.relative_directions.1
-msgctxt "instructions.keep_to_stay_on.relative_directions.1"
-msgid "straight"
-msgstr "прямо"
-
-#: instructions.keep_to_stay_on.relative_directions.2
-msgctxt "instructions.keep_to_stay_on.relative_directions.2"
-msgid "right"
-msgstr "праворуч"
-
-#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.0
-msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.0"
+#: instructions.keep_to_stay_on.replacement.empty_street_name_labels.0
+msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.1
-msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.1"
+#: instructions.keep_to_stay_on.replacement.empty_street_name_labels.1
+msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.2
-msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.2"
+#: instructions.keep_to_stay_on.replacement.empty_street_name_labels.2
+msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.3
-msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.3"
+#: instructions.keep_to_stay_on.replacement.empty_street_name_labels.3
+msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.4
-msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.4"
+#: instructions.keep_to_stay_on.replacement.empty_street_name_labels.4
+msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.5
-msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.5"
+#: instructions.keep_to_stay_on.replacement.empty_street_name_labels.5
+msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.keep_to_stay_on_verbal.empty_street_name_labels.6
-msgctxt "instructions.keep_to_stay_on_verbal.empty_street_name_labels.6"
+#: instructions.keep_to_stay_on.replacement.empty_street_name_labels.6
+msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
+
+#: instructions.keep_to_stay_on.replacement.relative_directions.0
+msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.0"
+msgid "left"
+msgstr "ліворуч"
+
+#: instructions.keep_to_stay_on.replacement.relative_directions.1
+msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.1"
+msgid "straight"
+msgstr "прямо"
+
+#: instructions.keep_to_stay_on.replacement.relative_directions.2
+msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.2"
+msgid "right"
+msgstr "праворуч"
 
 #. e.g. Keep left to stay on Interstate 95 South.
 #. e.g. Keep straight to stay on Interstate 95 South.
@@ -1911,55 +1876,55 @@ msgctxt "instructions.keep_to_stay_on_verbal.phrases.3"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
 msgstr "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> щоб залишатись на <STREET_NAMES> в напрямку <TOWARD_SIGN>."
 
-#: instructions.keep_to_stay_on_verbal.relative_directions.0
-msgctxt "instructions.keep_to_stay_on_verbal.relative_directions.0"
-msgid "left"
-msgstr "ліворуч"
-
-#: instructions.keep_to_stay_on_verbal.relative_directions.1
-msgctxt "instructions.keep_to_stay_on_verbal.relative_directions.1"
-msgid "straight"
-msgstr "прямо"
-
-#: instructions.keep_to_stay_on_verbal.relative_directions.2
-msgctxt "instructions.keep_to_stay_on_verbal.relative_directions.2"
-msgid "right"
-msgstr "праворуч"
-
-#: instructions.keep_verbal.empty_street_name_labels.0
-msgctxt "instructions.keep_verbal.empty_street_name_labels.0"
+#: instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
-msgstr "пішохідну доріжку"
+msgstr "пішохідній доріжці"
 
-#: instructions.keep_verbal.empty_street_name_labels.1
-msgctxt "instructions.keep_verbal.empty_street_name_labels.1"
+#: instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
-msgstr "велодоріжку"
+msgstr "велодоріжці"
 
-#: instructions.keep_verbal.empty_street_name_labels.2
-msgctxt "instructions.keep_verbal.empty_street_name_labels.2"
+#: instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
-msgstr "шлях для гірських велосипедів"
+msgstr "шляху для гірських велосипедів"
 
-#: instructions.keep_verbal.empty_street_name_labels.3
-msgctxt "instructions.keep_verbal.empty_street_name_labels.3"
+#: instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.keep_verbal.empty_street_name_labels.4
-msgctxt "instructions.keep_verbal.empty_street_name_labels.4"
+#: instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.keep_verbal.empty_street_name_labels.5
-msgctxt "instructions.keep_verbal.empty_street_name_labels.5"
+#: instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.keep_verbal.empty_street_name_labels.6
-msgctxt "instructions.keep_verbal.empty_street_name_labels.6"
+#: instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
+
+#: instructions.keep_to_stay_on_verbal.replacement.relative_directions.0
+msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.0"
+msgid "left"
+msgstr "ліворуч"
+
+#: instructions.keep_to_stay_on_verbal.replacement.relative_directions.1
+msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.1"
+msgid "straight"
+msgstr "прямо"
+
+#: instructions.keep_to_stay_on_verbal.replacement.relative_directions.2
+msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.2"
+msgid "right"
+msgstr "праворуч"
 
 #. e.g. Keep left at the fork.
 #. e.g. Keep straight at the fork.
@@ -2011,18 +1976,53 @@ msgctxt "instructions.keep_verbal.phrases.7"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
 msgstr "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> на <STREET_NAMES> в напрямку <TOWARD_SIGN>."
 
-#: instructions.keep_verbal.relative_directions.0
-msgctxt "instructions.keep_verbal.relative_directions.0"
+#: instructions.keep_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "пішохідну доріжку"
+
+#: instructions.keep_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "велодоріжку"
+
+#: instructions.keep_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "шлях для гірських велосипедів"
+
+#: instructions.keep_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "пішохідному переході"
+
+#: instructions.keep_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "сходах"
+
+#: instructions.keep_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "мосту"
+
+#: instructions.keep_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr ""
+
+#: instructions.keep_verbal.replacement.relative_directions.0
+msgctxt "instructions.keep_verbal.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.keep_verbal.relative_directions.1
-msgctxt "instructions.keep_verbal.relative_directions.1"
+#: instructions.keep_verbal.replacement.relative_directions.1
+msgctxt "instructions.keep_verbal.replacement.relative_directions.1"
 msgid "straight"
 msgstr "прямо"
 
-#: instructions.keep_verbal.relative_directions.2
-msgctxt "instructions.keep_verbal.relative_directions.2"
+#: instructions.keep_verbal.replacement.relative_directions.2
+msgctxt "instructions.keep_verbal.replacement.relative_directions.2"
 msgid "right"
 msgstr "праворуч"
 
@@ -2030,41 +2030,6 @@ msgstr "праворуч"
 #: instructions.level_change.phrases.0
 msgctxt "instructions.level_change.phrases.0"
 msgid "Continue to <LEVEL>."
-msgstr ""
-
-#: instructions.merge.empty_street_name_labels.0
-msgctxt "instructions.merge.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "пішохідній доріжці"
-
-#: instructions.merge.empty_street_name_labels.1
-msgctxt "instructions.merge.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "велодоріжці"
-
-#: instructions.merge.empty_street_name_labels.2
-msgctxt "instructions.merge.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "шляху для гірських велосипедів"
-
-#: instructions.merge.empty_street_name_labels.3
-msgctxt "instructions.merge.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "пішохідному переході"
-
-#: instructions.merge.empty_street_name_labels.4
-msgctxt "instructions.merge.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "сходах"
-
-#: instructions.merge.empty_street_name_labels.5
-msgctxt "instructions.merge.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "мосту"
-
-#: instructions.merge.empty_street_name_labels.6
-msgctxt "instructions.merge.empty_street_name_labels.6"
-msgid "the tunnel"
 msgstr ""
 
 #. e.g. Merge.
@@ -2103,50 +2068,50 @@ msgctxt "instructions.merge.phrases.5"
 msgid "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Приєднайтеся до потоку <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
 
-#: instructions.merge.relative_directions.0
-msgctxt "instructions.merge.relative_directions.0"
-msgid "left"
-msgstr "ліворуч"
-
-#: instructions.merge.relative_directions.1
-msgctxt "instructions.merge.relative_directions.1"
-msgid "right"
-msgstr "праворуч"
-
-#: instructions.merge_verbal.empty_street_name_labels.0
-msgctxt "instructions.merge_verbal.empty_street_name_labels.0"
+#: instructions.merge.replacement.empty_street_name_labels.0
+msgctxt "instructions.merge.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.merge_verbal.empty_street_name_labels.1
-msgctxt "instructions.merge_verbal.empty_street_name_labels.1"
+#: instructions.merge.replacement.empty_street_name_labels.1
+msgctxt "instructions.merge.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.merge_verbal.empty_street_name_labels.2
-msgctxt "instructions.merge_verbal.empty_street_name_labels.2"
+#: instructions.merge.replacement.empty_street_name_labels.2
+msgctxt "instructions.merge.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.merge_verbal.empty_street_name_labels.3
-msgctxt "instructions.merge_verbal.empty_street_name_labels.3"
+#: instructions.merge.replacement.empty_street_name_labels.3
+msgctxt "instructions.merge.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.merge_verbal.empty_street_name_labels.4
-msgctxt "instructions.merge_verbal.empty_street_name_labels.4"
+#: instructions.merge.replacement.empty_street_name_labels.4
+msgctxt "instructions.merge.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.merge_verbal.empty_street_name_labels.5
-msgctxt "instructions.merge_verbal.empty_street_name_labels.5"
+#: instructions.merge.replacement.empty_street_name_labels.5
+msgctxt "instructions.merge.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.merge_verbal.empty_street_name_labels.6
-msgctxt "instructions.merge_verbal.empty_street_name_labels.6"
+#: instructions.merge.replacement.empty_street_name_labels.6
+msgctxt "instructions.merge.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
+
+#: instructions.merge.replacement.relative_directions.0
+msgctxt "instructions.merge.replacement.relative_directions.0"
+msgid "left"
+msgstr "ліворуч"
+
+#: instructions.merge.replacement.relative_directions.1
+msgctxt "instructions.merge.replacement.relative_directions.1"
+msgid "right"
+msgstr "праворуч"
 
 #. e.g. Merge.
 #: instructions.merge_verbal.phrases.0
@@ -2184,13 +2149,48 @@ msgctxt "instructions.merge_verbal.phrases.5"
 msgid "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Приєднайтеся до потоку <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
 
-#: instructions.merge_verbal.relative_directions.0
-msgctxt "instructions.merge_verbal.relative_directions.0"
+#: instructions.merge_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "пішохідній доріжці"
+
+#: instructions.merge_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "велодоріжці"
+
+#: instructions.merge_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "шляху для гірських велосипедів"
+
+#: instructions.merge_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "пішохідному переході"
+
+#: instructions.merge_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "сходах"
+
+#: instructions.merge_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "мосту"
+
+#: instructions.merge_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr ""
+
+#: instructions.merge_verbal.replacement.relative_directions.0
+msgctxt "instructions.merge_verbal.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.merge_verbal.relative_directions.1
-msgctxt "instructions.merge_verbal.relative_directions.1"
+#: instructions.merge_verbal.replacement.relative_directions.1
+msgctxt "instructions.merge_verbal.replacement.relative_directions.1"
 msgid "right"
 msgstr "праворуч"
 
@@ -2198,21 +2198,6 @@ msgstr "праворуч"
 #: instructions.park_vehicle.phrases.0
 msgctxt "instructions.park_vehicle.phrases.0"
 msgid "Park your vehicle"
-msgstr ""
-
-#: instructions.pass.object_labels.0
-msgctxt "instructions.pass.object_labels.0"
-msgid "the gate"
-msgstr ""
-
-#: instructions.pass.object_labels.1
-msgctxt "instructions.pass.object_labels.1"
-msgid "the bollards"
-msgstr ""
-
-#: instructions.pass.object_labels.2
-msgctxt "instructions.pass.object_labels.2"
-msgid "ways intersection"
 msgstr ""
 
 #. e.g. Pass the gate.
@@ -2226,6 +2211,21 @@ msgctxt "instructions.pass.phrases.1"
 msgid "Pass traffic signals on <OBJECT_LABEL>."
 msgstr ""
 
+#: instructions.pass.replacement.object_labels.0
+msgctxt "instructions.pass.replacement.object_labels.0"
+msgid "the gate"
+msgstr ""
+
+#: instructions.pass.replacement.object_labels.1
+msgctxt "instructions.pass.replacement.object_labels.1"
+msgid "the bollards"
+msgstr ""
+
+#: instructions.pass.replacement.object_labels.2
+msgctxt "instructions.pass.replacement.object_labels.2"
+msgid "ways intersection"
+msgstr ""
+
 #. e.g. Travel 1 stop.
 #. e.g. Travel 3 stops.
 #: instructions.post_transition_transit_verbal.phrases.0
@@ -2233,70 +2233,15 @@ msgctxt "instructions.post_transition_transit_verbal.phrases.0"
 msgid "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
 msgstr "Проїдьте <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
 
-#: instructions.post_transition_transit_verbal.transit_stop_count_labels.one
-msgctxt "instructions.post_transition_transit_verbal.transit_stop_count_labels.one"
+#: instructions.post_transition_transit_verbal.replacement.transit_stop_count_labels.one
+msgctxt "instructions.post_transition_transit_verbal.replacement.transit_stop_count_labels.one"
 msgid "stop"
 msgstr "зупинку"
 
-#: instructions.post_transition_transit_verbal.transit_stop_count_labels.other
-msgctxt "instructions.post_transition_transit_verbal.transit_stop_count_labels.other"
+#: instructions.post_transition_transit_verbal.replacement.transit_stop_count_labels.other
+msgctxt "instructions.post_transition_transit_verbal.replacement.transit_stop_count_labels.other"
 msgid "stops"
 msgstr "зупинки"
-
-#: instructions.post_transition_verbal.empty_street_name_labels.0
-msgctxt "instructions.post_transition_verbal.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "пішохідній доріжці"
-
-#: instructions.post_transition_verbal.empty_street_name_labels.1
-msgctxt "instructions.post_transition_verbal.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "велодоріжці"
-
-#: instructions.post_transition_verbal.empty_street_name_labels.2
-msgctxt "instructions.post_transition_verbal.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "шляху для гірських велосипедів"
-
-#: instructions.post_transition_verbal.empty_street_name_labels.3
-msgctxt "instructions.post_transition_verbal.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr ""
-
-#: instructions.post_transition_verbal.empty_street_name_labels.4
-msgctxt "instructions.post_transition_verbal.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr ""
-
-#: instructions.post_transition_verbal.empty_street_name_labels.5
-msgctxt "instructions.post_transition_verbal.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr ""
-
-#: instructions.post_transition_verbal.empty_street_name_labels.6
-msgctxt "instructions.post_transition_verbal.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr ""
-
-#: instructions.post_transition_verbal.metric_lengths.0
-msgctxt "instructions.post_transition_verbal.metric_lengths.0"
-msgid "<KILOMETERS> kilometers"
-msgstr "<KILOMETERS> кілометрів"
-
-#: instructions.post_transition_verbal.metric_lengths.1
-msgctxt "instructions.post_transition_verbal.metric_lengths.1"
-msgid "1 kilometer"
-msgstr "1 кілометр"
-
-#: instructions.post_transition_verbal.metric_lengths.2
-msgctxt "instructions.post_transition_verbal.metric_lengths.2"
-msgid "<METERS> meters"
-msgstr "<METERS> метрів"
-
-#: instructions.post_transition_verbal.metric_lengths.3
-msgctxt "instructions.post_transition_verbal.metric_lengths.3"
-msgid "less than 10 meters"
-msgstr "менше ніж 10 метрів"
 
 #. e.g. Continue for 300 feet.
 #. e.g. Continue for 9 miles.
@@ -2312,33 +2257,88 @@ msgctxt "instructions.post_transition_verbal.phrases.1"
 msgid "Continue on <STREET_NAMES> for <LENGTH>."
 msgstr "Продовжуйте рух по <STREET_NAMES> ще <LENGTH>."
 
-#: instructions.post_transition_verbal.us_customary_lengths.0
-msgctxt "instructions.post_transition_verbal.us_customary_lengths.0"
+#: instructions.post_transition_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "пішохідній доріжці"
+
+#: instructions.post_transition_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "велодоріжці"
+
+#: instructions.post_transition_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "шляху для гірських велосипедів"
+
+#: instructions.post_transition_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr ""
+
+#: instructions.post_transition_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr ""
+
+#: instructions.post_transition_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr ""
+
+#: instructions.post_transition_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr ""
+
+#: instructions.post_transition_verbal.replacement.metric_lengths.0
+msgctxt "instructions.post_transition_verbal.replacement.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> кілометрів"
+
+#: instructions.post_transition_verbal.replacement.metric_lengths.1
+msgctxt "instructions.post_transition_verbal.replacement.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 кілометр"
+
+#: instructions.post_transition_verbal.replacement.metric_lengths.2
+msgctxt "instructions.post_transition_verbal.replacement.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> метрів"
+
+#: instructions.post_transition_verbal.replacement.metric_lengths.3
+msgctxt "instructions.post_transition_verbal.replacement.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "менше ніж 10 метрів"
+
+#: instructions.post_transition_verbal.replacement.us_customary_lengths.0
+msgctxt "instructions.post_transition_verbal.replacement.us_customary_lengths.0"
 msgid "<MILES> miles"
 msgstr "<MILES> милі"
 
-#: instructions.post_transition_verbal.us_customary_lengths.1
-msgctxt "instructions.post_transition_verbal.us_customary_lengths.1"
+#: instructions.post_transition_verbal.replacement.us_customary_lengths.1
+msgctxt "instructions.post_transition_verbal.replacement.us_customary_lengths.1"
 msgid "1 mile"
 msgstr "1 милю"
 
-#: instructions.post_transition_verbal.us_customary_lengths.2
-msgctxt "instructions.post_transition_verbal.us_customary_lengths.2"
+#: instructions.post_transition_verbal.replacement.us_customary_lengths.2
+msgctxt "instructions.post_transition_verbal.replacement.us_customary_lengths.2"
 msgid "a half mile"
 msgstr "півмилі"
 
-#: instructions.post_transition_verbal.us_customary_lengths.3
-msgctxt "instructions.post_transition_verbal.us_customary_lengths.3"
+#: instructions.post_transition_verbal.replacement.us_customary_lengths.3
+msgctxt "instructions.post_transition_verbal.replacement.us_customary_lengths.3"
 msgid "a quarter mile"
 msgstr "чверть милі"
 
-#: instructions.post_transition_verbal.us_customary_lengths.4
-msgctxt "instructions.post_transition_verbal.us_customary_lengths.4"
+#: instructions.post_transition_verbal.replacement.us_customary_lengths.4
+msgctxt "instructions.post_transition_verbal.replacement.us_customary_lengths.4"
 msgid "<FEET> feet"
 msgstr "<FEET> футів"
 
-#: instructions.post_transition_verbal.us_customary_lengths.5
-msgctxt "instructions.post_transition_verbal.us_customary_lengths.5"
+#: instructions.post_transition_verbal.replacement.us_customary_lengths.5
+msgctxt "instructions.post_transition_verbal.replacement.us_customary_lengths.5"
 msgid "less than 10 feet"
 msgstr "менше ніж 10 футів"
 
@@ -2434,13 +2434,13 @@ msgctxt "instructions.ramp.phrases.14"
 msgid "Take the <NAME_SIGN> ramp."
 msgstr "Скористайтесь з'їздом <NAME_SIGN>."
 
-#: instructions.ramp.relative_directions.0
-msgctxt "instructions.ramp.relative_directions.0"
+#: instructions.ramp.replacement.relative_directions.0
+msgctxt "instructions.ramp.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.ramp.relative_directions.1
-msgctxt "instructions.ramp.relative_directions.1"
+#: instructions.ramp.replacement.relative_directions.1
+msgctxt "instructions.ramp.replacement.relative_directions.1"
 msgid "right"
 msgstr "праворуч"
 
@@ -2596,50 +2596,15 @@ msgctxt "instructions.ramp_verbal.phrases.14"
 msgid "Take the <NAME_SIGN> ramp."
 msgstr "Скористайтесь з'їздом <NAME_SIGN>."
 
-#: instructions.ramp_verbal.relative_directions.0
-msgctxt "instructions.ramp_verbal.relative_directions.0"
+#: instructions.ramp_verbal.replacement.relative_directions.0
+msgctxt "instructions.ramp_verbal.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.ramp_verbal.relative_directions.1
-msgctxt "instructions.ramp_verbal.relative_directions.1"
+#: instructions.ramp_verbal.replacement.relative_directions.1
+msgctxt "instructions.ramp_verbal.replacement.relative_directions.1"
 msgid "right"
 msgstr "праворуч"
-
-#: instructions.sharp.empty_street_name_labels.0
-msgctxt "instructions.sharp.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "пішохідній доріжці"
-
-#: instructions.sharp.empty_street_name_labels.1
-msgctxt "instructions.sharp.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "велодоріжці"
-
-#: instructions.sharp.empty_street_name_labels.2
-msgctxt "instructions.sharp.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "шляху для гірських велосипедів"
-
-#: instructions.sharp.empty_street_name_labels.3
-msgctxt "instructions.sharp.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "пішохідному переході"
-
-#: instructions.sharp.empty_street_name_labels.4
-msgctxt "instructions.sharp.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "сходах"
-
-#: instructions.sharp.empty_street_name_labels.5
-msgctxt "instructions.sharp.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "мосту"
-
-#: instructions.sharp.empty_street_name_labels.6
-msgctxt "instructions.sharp.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr ""
 
 #. e.g. Make a sharp left.
 #: instructions.sharp.phrases.0
@@ -2677,50 +2642,50 @@ msgctxt "instructions.sharp.phrases.5"
 msgid "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Різко поверніть <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
 
-#: instructions.sharp.relative_directions.0
-msgctxt "instructions.sharp.relative_directions.0"
-msgid "left"
-msgstr "ліворуч"
-
-#: instructions.sharp.relative_directions.1
-msgctxt "instructions.sharp.relative_directions.1"
-msgid "right"
-msgstr "праворуч"
-
-#: instructions.sharp_verbal.empty_street_name_labels.0
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.0"
+#: instructions.sharp.replacement.empty_street_name_labels.0
+msgctxt "instructions.sharp.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.sharp_verbal.empty_street_name_labels.1
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.1"
+#: instructions.sharp.replacement.empty_street_name_labels.1
+msgctxt "instructions.sharp.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.sharp_verbal.empty_street_name_labels.2
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.2"
+#: instructions.sharp.replacement.empty_street_name_labels.2
+msgctxt "instructions.sharp.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.sharp_verbal.empty_street_name_labels.3
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.3"
+#: instructions.sharp.replacement.empty_street_name_labels.3
+msgctxt "instructions.sharp.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.sharp_verbal.empty_street_name_labels.4
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.4"
+#: instructions.sharp.replacement.empty_street_name_labels.4
+msgctxt "instructions.sharp.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.sharp_verbal.empty_street_name_labels.5
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.5"
+#: instructions.sharp.replacement.empty_street_name_labels.5
+msgctxt "instructions.sharp.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.sharp_verbal.empty_street_name_labels.6
-msgctxt "instructions.sharp_verbal.empty_street_name_labels.6"
+#: instructions.sharp.replacement.empty_street_name_labels.6
+msgctxt "instructions.sharp.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
+
+#: instructions.sharp.replacement.relative_directions.0
+msgctxt "instructions.sharp.replacement.relative_directions.0"
+msgid "left"
+msgstr "ліворуч"
+
+#: instructions.sharp.replacement.relative_directions.1
+msgctxt "instructions.sharp.replacement.relative_directions.1"
+msgid "right"
+msgstr "праворуч"
 
 #. e.g. Make a sharp left.
 #: instructions.sharp_verbal.phrases.0
@@ -2758,90 +2723,50 @@ msgctxt "instructions.sharp_verbal.phrases.5"
 msgid "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Різко поверніть <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
 
-#: instructions.sharp_verbal.relative_directions.0
-msgctxt "instructions.sharp_verbal.relative_directions.0"
-msgid "left"
-msgstr "ліворуч"
-
-#: instructions.sharp_verbal.relative_directions.1
-msgctxt "instructions.sharp_verbal.relative_directions.1"
-msgid "right"
-msgstr "праворуч"
-
-#: instructions.start.cardinal_directions.0
-msgctxt "instructions.start.cardinal_directions.0"
-msgid "north"
-msgstr "північ"
-
-#: instructions.start.cardinal_directions.1
-msgctxt "instructions.start.cardinal_directions.1"
-msgid "northeast"
-msgstr "північний схід"
-
-#: instructions.start.cardinal_directions.2
-msgctxt "instructions.start.cardinal_directions.2"
-msgid "east"
-msgstr "схід"
-
-#: instructions.start.cardinal_directions.3
-msgctxt "instructions.start.cardinal_directions.3"
-msgid "southeast"
-msgstr "південний схід"
-
-#: instructions.start.cardinal_directions.4
-msgctxt "instructions.start.cardinal_directions.4"
-msgid "south"
-msgstr "південь"
-
-#: instructions.start.cardinal_directions.5
-msgctxt "instructions.start.cardinal_directions.5"
-msgid "southwest"
-msgstr "південний захід"
-
-#: instructions.start.cardinal_directions.6
-msgctxt "instructions.start.cardinal_directions.6"
-msgid "west"
-msgstr "захід"
-
-#: instructions.start.cardinal_directions.7
-msgctxt "instructions.start.cardinal_directions.7"
-msgid "northwest"
-msgstr "північний захід"
-
-#: instructions.start.empty_street_name_labels.0
-msgctxt "instructions.start.empty_street_name_labels.0"
+#: instructions.sharp_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.start.empty_street_name_labels.1
-msgctxt "instructions.start.empty_street_name_labels.1"
+#: instructions.sharp_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.start.empty_street_name_labels.2
-msgctxt "instructions.start.empty_street_name_labels.2"
+#: instructions.sharp_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.start.empty_street_name_labels.3
-msgctxt "instructions.start.empty_street_name_labels.3"
+#: instructions.sharp_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.start.empty_street_name_labels.4
-msgctxt "instructions.start.empty_street_name_labels.4"
+#: instructions.sharp_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.start.empty_street_name_labels.5
-msgctxt "instructions.start.empty_street_name_labels.5"
+#: instructions.sharp_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.start.empty_street_name_labels.6
-msgctxt "instructions.start.empty_street_name_labels.6"
+#: instructions.sharp_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
+
+#: instructions.sharp_verbal.replacement.relative_directions.0
+msgctxt "instructions.sharp_verbal.replacement.relative_directions.0"
+msgid "left"
+msgstr "ліворуч"
+
+#: instructions.sharp_verbal.replacement.relative_directions.1
+msgctxt "instructions.sharp_verbal.replacement.relative_directions.1"
+msgid "right"
+msgstr "праворуч"
 
 #. e.g. Head east.
 #. e.g. Head north.
@@ -2925,100 +2850,80 @@ msgctxt "instructions.start.phrases.18"
 msgid "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 msgstr "Їдьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продовжуйте рух по <STREET_NAMES>."
 
-#: instructions.start_verbal.cardinal_directions.0
-msgctxt "instructions.start_verbal.cardinal_directions.0"
+#: instructions.start.replacement.cardinal_directions.0
+msgctxt "instructions.start.replacement.cardinal_directions.0"
 msgid "north"
 msgstr "північ"
 
-#: instructions.start_verbal.cardinal_directions.1
-msgctxt "instructions.start_verbal.cardinal_directions.1"
+#: instructions.start.replacement.cardinal_directions.1
+msgctxt "instructions.start.replacement.cardinal_directions.1"
 msgid "northeast"
 msgstr "північний схід"
 
-#: instructions.start_verbal.cardinal_directions.2
-msgctxt "instructions.start_verbal.cardinal_directions.2"
+#: instructions.start.replacement.cardinal_directions.2
+msgctxt "instructions.start.replacement.cardinal_directions.2"
 msgid "east"
 msgstr "схід"
 
-#: instructions.start_verbal.cardinal_directions.3
-msgctxt "instructions.start_verbal.cardinal_directions.3"
+#: instructions.start.replacement.cardinal_directions.3
+msgctxt "instructions.start.replacement.cardinal_directions.3"
 msgid "southeast"
 msgstr "південний схід"
 
-#: instructions.start_verbal.cardinal_directions.4
-msgctxt "instructions.start_verbal.cardinal_directions.4"
+#: instructions.start.replacement.cardinal_directions.4
+msgctxt "instructions.start.replacement.cardinal_directions.4"
 msgid "south"
 msgstr "південь"
 
-#: instructions.start_verbal.cardinal_directions.5
-msgctxt "instructions.start_verbal.cardinal_directions.5"
+#: instructions.start.replacement.cardinal_directions.5
+msgctxt "instructions.start.replacement.cardinal_directions.5"
 msgid "southwest"
 msgstr "південний захід"
 
-#: instructions.start_verbal.cardinal_directions.6
-msgctxt "instructions.start_verbal.cardinal_directions.6"
+#: instructions.start.replacement.cardinal_directions.6
+msgctxt "instructions.start.replacement.cardinal_directions.6"
 msgid "west"
 msgstr "захід"
 
-#: instructions.start_verbal.cardinal_directions.7
-msgctxt "instructions.start_verbal.cardinal_directions.7"
+#: instructions.start.replacement.cardinal_directions.7
+msgctxt "instructions.start.replacement.cardinal_directions.7"
 msgid "northwest"
 msgstr "північний захід"
 
-#: instructions.start_verbal.empty_street_name_labels.0
-msgctxt "instructions.start_verbal.empty_street_name_labels.0"
+#: instructions.start.replacement.empty_street_name_labels.0
+msgctxt "instructions.start.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.start_verbal.empty_street_name_labels.1
-msgctxt "instructions.start_verbal.empty_street_name_labels.1"
+#: instructions.start.replacement.empty_street_name_labels.1
+msgctxt "instructions.start.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.start_verbal.empty_street_name_labels.2
-msgctxt "instructions.start_verbal.empty_street_name_labels.2"
+#: instructions.start.replacement.empty_street_name_labels.2
+msgctxt "instructions.start.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.start_verbal.empty_street_name_labels.3
-msgctxt "instructions.start_verbal.empty_street_name_labels.3"
+#: instructions.start.replacement.empty_street_name_labels.3
+msgctxt "instructions.start.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.start_verbal.empty_street_name_labels.4
-msgctxt "instructions.start_verbal.empty_street_name_labels.4"
+#: instructions.start.replacement.empty_street_name_labels.4
+msgctxt "instructions.start.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.start_verbal.empty_street_name_labels.5
-msgctxt "instructions.start_verbal.empty_street_name_labels.5"
+#: instructions.start.replacement.empty_street_name_labels.5
+msgctxt "instructions.start.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.start_verbal.empty_street_name_labels.6
-msgctxt "instructions.start_verbal.empty_street_name_labels.6"
+#: instructions.start.replacement.empty_street_name_labels.6
+msgctxt "instructions.start.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
-
-#: instructions.start_verbal.metric_lengths.0
-msgctxt "instructions.start_verbal.metric_lengths.0"
-msgid "<KILOMETERS> kilometers"
-msgstr "<KILOMETERS> кілометрів"
-
-#: instructions.start_verbal.metric_lengths.1
-msgctxt "instructions.start_verbal.metric_lengths.1"
-msgid "1 kilometer"
-msgstr "1 кілометр"
-
-#: instructions.start_verbal.metric_lengths.2
-msgctxt "instructions.start_verbal.metric_lengths.2"
-msgid "<METERS> meters"
-msgstr "<METERS> метрів"
-
-#: instructions.start_verbal.metric_lengths.3
-msgctxt "instructions.start_verbal.metric_lengths.3"
-msgid "less than 10 meters"
-msgstr "менше ніж 10 метрів"
 
 #. e.g. Head east.
 #. e.g. Head north.
@@ -3148,33 +3053,128 @@ msgctxt "instructions.start_verbal.phrases.19"
 msgid "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 msgstr "Їдьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>."
 
-#: instructions.start_verbal.us_customary_lengths.0
-msgctxt "instructions.start_verbal.us_customary_lengths.0"
+#: instructions.start_verbal.replacement.cardinal_directions.0
+msgctxt "instructions.start_verbal.replacement.cardinal_directions.0"
+msgid "north"
+msgstr "північ"
+
+#: instructions.start_verbal.replacement.cardinal_directions.1
+msgctxt "instructions.start_verbal.replacement.cardinal_directions.1"
+msgid "northeast"
+msgstr "північний схід"
+
+#: instructions.start_verbal.replacement.cardinal_directions.2
+msgctxt "instructions.start_verbal.replacement.cardinal_directions.2"
+msgid "east"
+msgstr "схід"
+
+#: instructions.start_verbal.replacement.cardinal_directions.3
+msgctxt "instructions.start_verbal.replacement.cardinal_directions.3"
+msgid "southeast"
+msgstr "південний схід"
+
+#: instructions.start_verbal.replacement.cardinal_directions.4
+msgctxt "instructions.start_verbal.replacement.cardinal_directions.4"
+msgid "south"
+msgstr "південь"
+
+#: instructions.start_verbal.replacement.cardinal_directions.5
+msgctxt "instructions.start_verbal.replacement.cardinal_directions.5"
+msgid "southwest"
+msgstr "південний захід"
+
+#: instructions.start_verbal.replacement.cardinal_directions.6
+msgctxt "instructions.start_verbal.replacement.cardinal_directions.6"
+msgid "west"
+msgstr "захід"
+
+#: instructions.start_verbal.replacement.cardinal_directions.7
+msgctxt "instructions.start_verbal.replacement.cardinal_directions.7"
+msgid "northwest"
+msgstr "північний захід"
+
+#: instructions.start_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "пішохідній доріжці"
+
+#: instructions.start_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "велодоріжці"
+
+#: instructions.start_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "шляху для гірських велосипедів"
+
+#: instructions.start_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "пішохідному переході"
+
+#: instructions.start_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "сходах"
+
+#: instructions.start_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "мосту"
+
+#: instructions.start_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr ""
+
+#: instructions.start_verbal.replacement.metric_lengths.0
+msgctxt "instructions.start_verbal.replacement.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> кілометрів"
+
+#: instructions.start_verbal.replacement.metric_lengths.1
+msgctxt "instructions.start_verbal.replacement.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 кілометр"
+
+#: instructions.start_verbal.replacement.metric_lengths.2
+msgctxt "instructions.start_verbal.replacement.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> метрів"
+
+#: instructions.start_verbal.replacement.metric_lengths.3
+msgctxt "instructions.start_verbal.replacement.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "менше ніж 10 метрів"
+
+#: instructions.start_verbal.replacement.us_customary_lengths.0
+msgctxt "instructions.start_verbal.replacement.us_customary_lengths.0"
 msgid "<MILES> miles"
 msgstr "<MILES> милі"
 
-#: instructions.start_verbal.us_customary_lengths.1
-msgctxt "instructions.start_verbal.us_customary_lengths.1"
+#: instructions.start_verbal.replacement.us_customary_lengths.1
+msgctxt "instructions.start_verbal.replacement.us_customary_lengths.1"
 msgid "1 mile"
 msgstr "1 милю"
 
-#: instructions.start_verbal.us_customary_lengths.2
-msgctxt "instructions.start_verbal.us_customary_lengths.2"
+#: instructions.start_verbal.replacement.us_customary_lengths.2
+msgctxt "instructions.start_verbal.replacement.us_customary_lengths.2"
 msgid "a half mile"
 msgstr "півмилі"
 
-#: instructions.start_verbal.us_customary_lengths.3
-msgctxt "instructions.start_verbal.us_customary_lengths.3"
+#: instructions.start_verbal.replacement.us_customary_lengths.3
+msgctxt "instructions.start_verbal.replacement.us_customary_lengths.3"
 msgid "a quarter mile"
 msgstr "чверть милі"
 
-#: instructions.start_verbal.us_customary_lengths.4
-msgctxt "instructions.start_verbal.us_customary_lengths.4"
+#: instructions.start_verbal.replacement.us_customary_lengths.4
+msgctxt "instructions.start_verbal.replacement.us_customary_lengths.4"
 msgid "<FEET> feet"
 msgstr "<FEET> футів"
 
-#: instructions.start_verbal.us_customary_lengths.5
-msgctxt "instructions.start_verbal.us_customary_lengths.5"
+#: instructions.start_verbal.replacement.us_customary_lengths.5
+msgctxt "instructions.start_verbal.replacement.us_customary_lengths.5"
 msgid "less than 10 feet"
 msgstr "менше ніж 10 футів"
 
@@ -3189,46 +3189,6 @@ msgstr "Скористайтеся сходами."
 msgctxt "instructions.steps.phrases.1"
 msgid "Take the stairs to <LEVEL>."
 msgstr "Скористайтеся сходами до <LEVEL>."
-
-#: instructions.transit.empty_transit_name_labels.0
-msgctxt "instructions.transit.empty_transit_name_labels.0"
-msgid "tram"
-msgstr "трамвай"
-
-#: instructions.transit.empty_transit_name_labels.1
-msgctxt "instructions.transit.empty_transit_name_labels.1"
-msgid "metro"
-msgstr "метро"
-
-#: instructions.transit.empty_transit_name_labels.2
-msgctxt "instructions.transit.empty_transit_name_labels.2"
-msgid "train"
-msgstr "поїзд"
-
-#: instructions.transit.empty_transit_name_labels.3
-msgctxt "instructions.transit.empty_transit_name_labels.3"
-msgid "bus"
-msgstr "автобус"
-
-#: instructions.transit.empty_transit_name_labels.4
-msgctxt "instructions.transit.empty_transit_name_labels.4"
-msgid "ferry"
-msgstr "пором"
-
-#: instructions.transit.empty_transit_name_labels.5
-msgctxt "instructions.transit.empty_transit_name_labels.5"
-msgid "cable car"
-msgstr "канатну дорогу"
-
-#: instructions.transit.empty_transit_name_labels.6
-msgctxt "instructions.transit.empty_transit_name_labels.6"
-msgid "gondola"
-msgstr "гондолу"
-
-#: instructions.transit.empty_transit_name_labels.7
-msgctxt "instructions.transit.empty_transit_name_labels.7"
-msgid "funicular"
-msgstr "фунікулер"
 
 #. e.g. Take the New Haven. (1 stop)
 #. e.g. Take the metro. (2 stops)
@@ -3245,13 +3205,53 @@ msgctxt "instructions.transit.phrases.1"
 msgid "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
 msgstr "Сідайте <TRANSIT_NAME> в напрямку зупинки <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
 
-#: instructions.transit.transit_stop_count_labels.one
-msgctxt "instructions.transit.transit_stop_count_labels.one"
+#: instructions.transit.replacement.empty_transit_name_labels.0
+msgctxt "instructions.transit.replacement.empty_transit_name_labels.0"
+msgid "tram"
+msgstr "трамвай"
+
+#: instructions.transit.replacement.empty_transit_name_labels.1
+msgctxt "instructions.transit.replacement.empty_transit_name_labels.1"
+msgid "metro"
+msgstr "метро"
+
+#: instructions.transit.replacement.empty_transit_name_labels.2
+msgctxt "instructions.transit.replacement.empty_transit_name_labels.2"
+msgid "train"
+msgstr "поїзд"
+
+#: instructions.transit.replacement.empty_transit_name_labels.3
+msgctxt "instructions.transit.replacement.empty_transit_name_labels.3"
+msgid "bus"
+msgstr "автобус"
+
+#: instructions.transit.replacement.empty_transit_name_labels.4
+msgctxt "instructions.transit.replacement.empty_transit_name_labels.4"
+msgid "ferry"
+msgstr "пором"
+
+#: instructions.transit.replacement.empty_transit_name_labels.5
+msgctxt "instructions.transit.replacement.empty_transit_name_labels.5"
+msgid "cable car"
+msgstr "канатну дорогу"
+
+#: instructions.transit.replacement.empty_transit_name_labels.6
+msgctxt "instructions.transit.replacement.empty_transit_name_labels.6"
+msgid "gondola"
+msgstr "гондолу"
+
+#: instructions.transit.replacement.empty_transit_name_labels.7
+msgctxt "instructions.transit.replacement.empty_transit_name_labels.7"
+msgid "funicular"
+msgstr "фунікулер"
+
+#: instructions.transit.replacement.transit_stop_count_labels.one
+msgctxt "instructions.transit.replacement.transit_stop_count_labels.one"
 msgid "stop"
 msgstr "зупинка"
 
-#: instructions.transit.transit_stop_count_labels.other
-msgctxt "instructions.transit.transit_stop_count_labels.other"
+#: instructions.transit.replacement.transit_stop_count_labels.other
+msgctxt "instructions.transit.replacement.transit_stop_count_labels.other"
 msgid "stops"
 msgstr "зупинки"
 
@@ -3273,8 +3273,8 @@ msgctxt "instructions.transit_connection_destination.phrases.2"
 msgid "Exit the <TRANSIT_STOP> <STATION_LABEL>."
 msgstr "Вийдіть на <TRANSIT_STOP> <STATION_LABEL>."
 
-#: instructions.transit_connection_destination.station_label
-msgctxt "instructions.transit_connection_destination.station_label"
+#: instructions.transit_connection_destination.replacement.station_label
+msgctxt "instructions.transit_connection_destination.replacement.station_label"
 msgid "Station"
 msgstr "зупинці"
 
@@ -3296,8 +3296,8 @@ msgctxt "instructions.transit_connection_destination_verbal.phrases.2"
 msgid "Exit the <TRANSIT_STOP> <STATION_LABEL>."
 msgstr "Вийдіть на <TRANSIT_STOP> <STATION_LABEL>."
 
-#: instructions.transit_connection_destination_verbal.station_label
-msgctxt "instructions.transit_connection_destination_verbal.station_label"
+#: instructions.transit_connection_destination_verbal.replacement.station_label
+msgctxt "instructions.transit_connection_destination_verbal.replacement.station_label"
 msgid "Station"
 msgstr "зупинці"
 
@@ -3319,8 +3319,8 @@ msgctxt "instructions.transit_connection_start.phrases.2"
 msgid "Enter the <TRANSIT_STOP> <STATION_LABEL>."
 msgstr "Сідайте на <TRANSIT_STOP> <STATION_LABEL>."
 
-#: instructions.transit_connection_start.station_label
-msgctxt "instructions.transit_connection_start.station_label"
+#: instructions.transit_connection_start.replacement.station_label
+msgctxt "instructions.transit_connection_start.replacement.station_label"
 msgid "Station"
 msgstr "зупинці"
 
@@ -3342,8 +3342,8 @@ msgctxt "instructions.transit_connection_start_verbal.phrases.2"
 msgid "Enter the <TRANSIT_STOP> <STATION_LABEL>."
 msgstr "Сідайте на <TRANSIT_STOP> <STATION_LABEL>."
 
-#: instructions.transit_connection_start_verbal.station_label
-msgctxt "instructions.transit_connection_start_verbal.station_label"
+#: instructions.transit_connection_start_verbal.replacement.station_label
+msgctxt "instructions.transit_connection_start_verbal.replacement.station_label"
 msgid "Station"
 msgstr "зупинці"
 
@@ -3365,8 +3365,8 @@ msgctxt "instructions.transit_connection_transfer.phrases.2"
 msgid "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
 msgstr "Зробіть пересадку на <TRANSIT_STOP> <STATION_LABEL>."
 
-#: instructions.transit_connection_transfer.station_label
-msgctxt "instructions.transit_connection_transfer.station_label"
+#: instructions.transit_connection_transfer.replacement.station_label
+msgctxt "instructions.transit_connection_transfer.replacement.station_label"
 msgid "Station"
 msgstr "зупинці"
 
@@ -3388,50 +3388,10 @@ msgctxt "instructions.transit_connection_transfer_verbal.phrases.2"
 msgid "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
 msgstr "Зробіть пересадку на <TRANSIT_STOP> <STATION_LABEL>."
 
-#: instructions.transit_connection_transfer_verbal.station_label
-msgctxt "instructions.transit_connection_transfer_verbal.station_label"
+#: instructions.transit_connection_transfer_verbal.replacement.station_label
+msgctxt "instructions.transit_connection_transfer_verbal.replacement.station_label"
 msgid "Station"
 msgstr "зупинці"
-
-#: instructions.transit_remain_on.empty_transit_name_labels.0
-msgctxt "instructions.transit_remain_on.empty_transit_name_labels.0"
-msgid "tram"
-msgstr "трамваєм"
-
-#: instructions.transit_remain_on.empty_transit_name_labels.1
-msgctxt "instructions.transit_remain_on.empty_transit_name_labels.1"
-msgid "metro"
-msgstr "метро"
-
-#: instructions.transit_remain_on.empty_transit_name_labels.2
-msgctxt "instructions.transit_remain_on.empty_transit_name_labels.2"
-msgid "train"
-msgstr "поїздом"
-
-#: instructions.transit_remain_on.empty_transit_name_labels.3
-msgctxt "instructions.transit_remain_on.empty_transit_name_labels.3"
-msgid "bus"
-msgstr "автобусом"
-
-#: instructions.transit_remain_on.empty_transit_name_labels.4
-msgctxt "instructions.transit_remain_on.empty_transit_name_labels.4"
-msgid "ferry"
-msgstr "поромом"
-
-#: instructions.transit_remain_on.empty_transit_name_labels.5
-msgctxt "instructions.transit_remain_on.empty_transit_name_labels.5"
-msgid "cable car"
-msgstr "канатною дорогою"
-
-#: instructions.transit_remain_on.empty_transit_name_labels.6
-msgctxt "instructions.transit_remain_on.empty_transit_name_labels.6"
-msgid "gondola"
-msgstr "гондолою"
-
-#: instructions.transit_remain_on.empty_transit_name_labels.7
-msgctxt "instructions.transit_remain_on.empty_transit_name_labels.7"
-msgid "funicular"
-msgstr "фунікулером"
 
 #. e.g. Remain on the New Haven. (1 stop)
 #. e.g. Remain on the train. (3 stops)
@@ -3446,55 +3406,55 @@ msgctxt "instructions.transit_remain_on.phrases.1"
 msgid "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
 msgstr "Рухайтесь <TRANSIT_NAME> до зупинки <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
 
-#: instructions.transit_remain_on.transit_stop_count_labels.one
-msgctxt "instructions.transit_remain_on.transit_stop_count_labels.one"
-msgid "stop"
-msgstr "зупинку"
-
-#: instructions.transit_remain_on.transit_stop_count_labels.other
-msgctxt "instructions.transit_remain_on.transit_stop_count_labels.other"
-msgid "stops"
-msgstr "зупинки"
-
-#: instructions.transit_remain_on_verbal.empty_transit_name_labels.0
-msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.0"
+#: instructions.transit_remain_on.replacement.empty_transit_name_labels.0
+msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.0"
 msgid "tram"
 msgstr "трамваєм"
 
-#: instructions.transit_remain_on_verbal.empty_transit_name_labels.1
-msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.1"
+#: instructions.transit_remain_on.replacement.empty_transit_name_labels.1
+msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.1"
 msgid "metro"
 msgstr "метро"
 
-#: instructions.transit_remain_on_verbal.empty_transit_name_labels.2
-msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.2"
+#: instructions.transit_remain_on.replacement.empty_transit_name_labels.2
+msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.2"
 msgid "train"
 msgstr "поїздом"
 
-#: instructions.transit_remain_on_verbal.empty_transit_name_labels.3
-msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.3"
+#: instructions.transit_remain_on.replacement.empty_transit_name_labels.3
+msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.3"
 msgid "bus"
 msgstr "автобусом"
 
-#: instructions.transit_remain_on_verbal.empty_transit_name_labels.4
-msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.4"
+#: instructions.transit_remain_on.replacement.empty_transit_name_labels.4
+msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.4"
 msgid "ferry"
 msgstr "поромом"
 
-#: instructions.transit_remain_on_verbal.empty_transit_name_labels.5
-msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.5"
+#: instructions.transit_remain_on.replacement.empty_transit_name_labels.5
+msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.5"
 msgid "cable car"
 msgstr "канатною дорогою"
 
-#: instructions.transit_remain_on_verbal.empty_transit_name_labels.6
-msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.6"
+#: instructions.transit_remain_on.replacement.empty_transit_name_labels.6
+msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.6"
 msgid "gondola"
 msgstr "гондолою"
 
-#: instructions.transit_remain_on_verbal.empty_transit_name_labels.7
-msgctxt "instructions.transit_remain_on_verbal.empty_transit_name_labels.7"
+#: instructions.transit_remain_on.replacement.empty_transit_name_labels.7
+msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.7"
 msgid "funicular"
 msgstr "фунікулером"
+
+#: instructions.transit_remain_on.replacement.transit_stop_count_labels.one
+msgctxt "instructions.transit_remain_on.replacement.transit_stop_count_labels.one"
+msgid "stop"
+msgstr "зупинку"
+
+#: instructions.transit_remain_on.replacement.transit_stop_count_labels.other
+msgctxt "instructions.transit_remain_on.replacement.transit_stop_count_labels.other"
+msgid "stops"
+msgstr "зупинки"
 
 #. e.g. Remain on the New Haven.
 #: instructions.transit_remain_on_verbal.phrases.0
@@ -3508,45 +3468,45 @@ msgctxt "instructions.transit_remain_on_verbal.phrases.1"
 msgid "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 msgstr "Рухайтесь <TRANSIT_NAME> до зупинки <TRANSIT_HEADSIGN>."
 
-#: instructions.transit_transfer.empty_transit_name_labels.0
-msgctxt "instructions.transit_transfer.empty_transit_name_labels.0"
+#: instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.0
+msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.0"
 msgid "tram"
-msgstr "трамвай"
+msgstr "трамваєм"
 
-#: instructions.transit_transfer.empty_transit_name_labels.1
-msgctxt "instructions.transit_transfer.empty_transit_name_labels.1"
+#: instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.1
+msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.1"
 msgid "metro"
 msgstr "метро"
 
-#: instructions.transit_transfer.empty_transit_name_labels.2
-msgctxt "instructions.transit_transfer.empty_transit_name_labels.2"
+#: instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.2
+msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.2"
 msgid "train"
-msgstr "поїзд"
+msgstr "поїздом"
 
-#: instructions.transit_transfer.empty_transit_name_labels.3
-msgctxt "instructions.transit_transfer.empty_transit_name_labels.3"
+#: instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.3
+msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.3"
 msgid "bus"
-msgstr "автобус"
+msgstr "автобусом"
 
-#: instructions.transit_transfer.empty_transit_name_labels.4
-msgctxt "instructions.transit_transfer.empty_transit_name_labels.4"
+#: instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.4
+msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.4"
 msgid "ferry"
-msgstr "пором"
+msgstr "поромом"
 
-#: instructions.transit_transfer.empty_transit_name_labels.5
-msgctxt "instructions.transit_transfer.empty_transit_name_labels.5"
+#: instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.5
+msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.5"
 msgid "cable car"
-msgstr "канатну дорогу"
+msgstr "канатною дорогою"
 
-#: instructions.transit_transfer.empty_transit_name_labels.6
-msgctxt "instructions.transit_transfer.empty_transit_name_labels.6"
+#: instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.6
+msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.6"
 msgid "gondola"
-msgstr "гондолу"
+msgstr "гондолою"
 
-#: instructions.transit_transfer.empty_transit_name_labels.7
-msgctxt "instructions.transit_transfer.empty_transit_name_labels.7"
+#: instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.7
+msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.7"
 msgid "funicular"
-msgstr "фунікулер"
+msgstr "фунікулером"
 
 #. e.g. Transfer to take the New Haven. (1 stop)
 #. e.g. Transfer to take the tram. (4 stops)
@@ -3561,55 +3521,55 @@ msgctxt "instructions.transit_transfer.phrases.1"
 msgid "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
 msgstr "Пересядьте <TRANSIT_NAME> в напрямку зупинки <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
 
-#: instructions.transit_transfer.transit_stop_count_labels.one
-msgctxt "instructions.transit_transfer.transit_stop_count_labels.one"
-msgid "stop"
-msgstr "зупинка"
-
-#: instructions.transit_transfer.transit_stop_count_labels.other
-msgctxt "instructions.transit_transfer.transit_stop_count_labels.other"
-msgid "stops"
-msgstr "зупинки"
-
-#: instructions.transit_transfer_verbal.empty_transit_name_labels.0
-msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.0"
+#: instructions.transit_transfer.replacement.empty_transit_name_labels.0
+msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.0"
 msgid "tram"
 msgstr "трамвай"
 
-#: instructions.transit_transfer_verbal.empty_transit_name_labels.1
-msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.1"
+#: instructions.transit_transfer.replacement.empty_transit_name_labels.1
+msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.1"
 msgid "metro"
 msgstr "метро"
 
-#: instructions.transit_transfer_verbal.empty_transit_name_labels.2
-msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.2"
+#: instructions.transit_transfer.replacement.empty_transit_name_labels.2
+msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.2"
 msgid "train"
 msgstr "поїзд"
 
-#: instructions.transit_transfer_verbal.empty_transit_name_labels.3
-msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.3"
+#: instructions.transit_transfer.replacement.empty_transit_name_labels.3
+msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.3"
 msgid "bus"
 msgstr "автобус"
 
-#: instructions.transit_transfer_verbal.empty_transit_name_labels.4
-msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.4"
+#: instructions.transit_transfer.replacement.empty_transit_name_labels.4
+msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.4"
 msgid "ferry"
 msgstr "пором"
 
-#: instructions.transit_transfer_verbal.empty_transit_name_labels.5
-msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.5"
+#: instructions.transit_transfer.replacement.empty_transit_name_labels.5
+msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.5"
 msgid "cable car"
 msgstr "канатну дорогу"
 
-#: instructions.transit_transfer_verbal.empty_transit_name_labels.6
-msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.6"
+#: instructions.transit_transfer.replacement.empty_transit_name_labels.6
+msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.6"
 msgid "gondola"
 msgstr "гондолу"
 
-#: instructions.transit_transfer_verbal.empty_transit_name_labels.7
-msgctxt "instructions.transit_transfer_verbal.empty_transit_name_labels.7"
+#: instructions.transit_transfer.replacement.empty_transit_name_labels.7
+msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.7"
 msgid "funicular"
 msgstr "фунікулер"
+
+#: instructions.transit_transfer.replacement.transit_stop_count_labels.one
+msgctxt "instructions.transit_transfer.replacement.transit_stop_count_labels.one"
+msgid "stop"
+msgstr "зупинка"
+
+#: instructions.transit_transfer.replacement.transit_stop_count_labels.other
+msgctxt "instructions.transit_transfer.replacement.transit_stop_count_labels.other"
+msgid "stops"
+msgstr "зупинки"
 
 #. e.g. Transfer to take the New Haven.
 #: instructions.transit_transfer_verbal.phrases.0
@@ -3623,43 +3583,43 @@ msgctxt "instructions.transit_transfer_verbal.phrases.1"
 msgid "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 msgstr "Пересядьте <TRANSIT_NAME> в напрямку зупинки <TRANSIT_HEADSIGN>."
 
-#: instructions.transit_verbal.empty_transit_name_labels.0
-msgctxt "instructions.transit_verbal.empty_transit_name_labels.0"
+#: instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.0
+msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.0"
 msgid "tram"
 msgstr "трамвай"
 
-#: instructions.transit_verbal.empty_transit_name_labels.1
-msgctxt "instructions.transit_verbal.empty_transit_name_labels.1"
+#: instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.1
+msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.1"
 msgid "metro"
 msgstr "метро"
 
-#: instructions.transit_verbal.empty_transit_name_labels.2
-msgctxt "instructions.transit_verbal.empty_transit_name_labels.2"
+#: instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.2
+msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.2"
 msgid "train"
 msgstr "поїзд"
 
-#: instructions.transit_verbal.empty_transit_name_labels.3
-msgctxt "instructions.transit_verbal.empty_transit_name_labels.3"
+#: instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.3
+msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.3"
 msgid "bus"
 msgstr "автобус"
 
-#: instructions.transit_verbal.empty_transit_name_labels.4
-msgctxt "instructions.transit_verbal.empty_transit_name_labels.4"
+#: instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.4
+msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.4"
 msgid "ferry"
 msgstr "пором"
 
-#: instructions.transit_verbal.empty_transit_name_labels.5
-msgctxt "instructions.transit_verbal.empty_transit_name_labels.5"
+#: instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.5
+msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.5"
 msgid "cable car"
 msgstr "канатну дорогу"
 
-#: instructions.transit_verbal.empty_transit_name_labels.6
-msgctxt "instructions.transit_verbal.empty_transit_name_labels.6"
+#: instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.6
+msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.6"
 msgid "gondola"
 msgstr "гондолу"
 
-#: instructions.transit_verbal.empty_transit_name_labels.7
-msgctxt "instructions.transit_verbal.empty_transit_name_labels.7"
+#: instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.7
+msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.7"
 msgid "funicular"
 msgstr "фунікулер"
 
@@ -3675,40 +3635,45 @@ msgctxt "instructions.transit_verbal.phrases.1"
 msgid "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 msgstr "Сідайте <TRANSIT_NAME> в напрямку зупинки <TRANSIT_HEADSIGN>."
 
-#: instructions.turn.empty_street_name_labels.0
-msgctxt "instructions.turn.empty_street_name_labels.0"
-msgid "the walkway"
-msgstr "пішохідній доріжці"
+#: instructions.transit_verbal.replacement.empty_transit_name_labels.0
+msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.0"
+msgid "tram"
+msgstr "трамвай"
 
-#: instructions.turn.empty_street_name_labels.1
-msgctxt "instructions.turn.empty_street_name_labels.1"
-msgid "the cycleway"
-msgstr "велодоріжці"
+#: instructions.transit_verbal.replacement.empty_transit_name_labels.1
+msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.1"
+msgid "metro"
+msgstr "метро"
 
-#: instructions.turn.empty_street_name_labels.2
-msgctxt "instructions.turn.empty_street_name_labels.2"
-msgid "the mountain bike trail"
-msgstr "шляху для гірських велосипедів"
+#: instructions.transit_verbal.replacement.empty_transit_name_labels.2
+msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.2"
+msgid "train"
+msgstr "поїзд"
 
-#: instructions.turn.empty_street_name_labels.3
-msgctxt "instructions.turn.empty_street_name_labels.3"
-msgid "the crosswalk"
-msgstr "пішохідному переході"
+#: instructions.transit_verbal.replacement.empty_transit_name_labels.3
+msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.3"
+msgid "bus"
+msgstr "автобус"
 
-#: instructions.turn.empty_street_name_labels.4
-msgctxt "instructions.turn.empty_street_name_labels.4"
-msgid "the stairs"
-msgstr "сходах"
+#: instructions.transit_verbal.replacement.empty_transit_name_labels.4
+msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.4"
+msgid "ferry"
+msgstr "пором"
 
-#: instructions.turn.empty_street_name_labels.5
-msgctxt "instructions.turn.empty_street_name_labels.5"
-msgid "the bridge"
-msgstr "мосту"
+#: instructions.transit_verbal.replacement.empty_transit_name_labels.5
+msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.5"
+msgid "cable car"
+msgstr "канатну дорогу"
 
-#: instructions.turn.empty_street_name_labels.6
-msgctxt "instructions.turn.empty_street_name_labels.6"
-msgid "the tunnel"
-msgstr ""
+#: instructions.transit_verbal.replacement.empty_transit_name_labels.6
+msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.6"
+msgid "gondola"
+msgstr "гондолу"
+
+#: instructions.transit_verbal.replacement.empty_transit_name_labels.7
+msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.7"
+msgid "funicular"
+msgstr "фунікулер"
 
 #. e.g. Turn left.
 #: instructions.turn.phrases.0
@@ -3746,50 +3711,50 @@ msgctxt "instructions.turn.phrases.5"
 msgid "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Поверніть <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
 
-#: instructions.turn.relative_directions.0
-msgctxt "instructions.turn.relative_directions.0"
-msgid "left"
-msgstr "ліворуч"
-
-#: instructions.turn.relative_directions.1
-msgctxt "instructions.turn.relative_directions.1"
-msgid "right"
-msgstr "праворуч"
-
-#: instructions.turn_verbal.empty_street_name_labels.0
-msgctxt "instructions.turn_verbal.empty_street_name_labels.0"
+#: instructions.turn.replacement.empty_street_name_labels.0
+msgctxt "instructions.turn.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.turn_verbal.empty_street_name_labels.1
-msgctxt "instructions.turn_verbal.empty_street_name_labels.1"
+#: instructions.turn.replacement.empty_street_name_labels.1
+msgctxt "instructions.turn.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.turn_verbal.empty_street_name_labels.2
-msgctxt "instructions.turn_verbal.empty_street_name_labels.2"
+#: instructions.turn.replacement.empty_street_name_labels.2
+msgctxt "instructions.turn.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.turn_verbal.empty_street_name_labels.3
-msgctxt "instructions.turn_verbal.empty_street_name_labels.3"
+#: instructions.turn.replacement.empty_street_name_labels.3
+msgctxt "instructions.turn.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.turn_verbal.empty_street_name_labels.4
-msgctxt "instructions.turn_verbal.empty_street_name_labels.4"
+#: instructions.turn.replacement.empty_street_name_labels.4
+msgctxt "instructions.turn.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.turn_verbal.empty_street_name_labels.5
-msgctxt "instructions.turn_verbal.empty_street_name_labels.5"
+#: instructions.turn.replacement.empty_street_name_labels.5
+msgctxt "instructions.turn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.turn_verbal.empty_street_name_labels.6
-msgctxt "instructions.turn_verbal.empty_street_name_labels.6"
+#: instructions.turn.replacement.empty_street_name_labels.6
+msgctxt "instructions.turn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
+
+#: instructions.turn.replacement.relative_directions.0
+msgctxt "instructions.turn.replacement.relative_directions.0"
+msgid "left"
+msgstr "ліворуч"
+
+#: instructions.turn.replacement.relative_directions.1
+msgctxt "instructions.turn.replacement.relative_directions.1"
+msgid "right"
+msgstr "праворуч"
 
 #. e.g. Turn left.
 #: instructions.turn_verbal.phrases.0
@@ -3827,50 +3792,50 @@ msgctxt "instructions.turn_verbal.phrases.5"
 msgid "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 msgstr "Поверніть <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
 
-#: instructions.turn_verbal.relative_directions.0
-msgctxt "instructions.turn_verbal.relative_directions.0"
-msgid "left"
-msgstr "ліворуч"
-
-#: instructions.turn_verbal.relative_directions.1
-msgctxt "instructions.turn_verbal.relative_directions.1"
-msgid "right"
-msgstr "праворуч"
-
-#: instructions.uturn.empty_street_name_labels.0
-msgctxt "instructions.uturn.empty_street_name_labels.0"
+#: instructions.turn_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.uturn.empty_street_name_labels.1
-msgctxt "instructions.uturn.empty_street_name_labels.1"
+#: instructions.turn_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.uturn.empty_street_name_labels.2
-msgctxt "instructions.uturn.empty_street_name_labels.2"
+#: instructions.turn_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.uturn.empty_street_name_labels.3
-msgctxt "instructions.uturn.empty_street_name_labels.3"
+#: instructions.turn_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.uturn.empty_street_name_labels.4
-msgctxt "instructions.uturn.empty_street_name_labels.4"
+#: instructions.turn_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.uturn.empty_street_name_labels.5
-msgctxt "instructions.uturn.empty_street_name_labels.5"
+#: instructions.turn_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.uturn.empty_street_name_labels.6
-msgctxt "instructions.uturn.empty_street_name_labels.6"
+#: instructions.turn_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
+
+#: instructions.turn_verbal.replacement.relative_directions.0
+msgctxt "instructions.turn_verbal.replacement.relative_directions.0"
+msgid "left"
+msgstr "ліворуч"
+
+#: instructions.turn_verbal.replacement.relative_directions.1
+msgctxt "instructions.turn_verbal.replacement.relative_directions.1"
+msgid "right"
+msgstr "праворуч"
 
 #. e.g. Make a left U-turn.
 #: instructions.uturn.phrases.0
@@ -3920,50 +3885,50 @@ msgctxt "instructions.uturn.phrases.7"
 msgid "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
 msgstr "Розверніться <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
 
-#: instructions.uturn.relative_directions.0
-msgctxt "instructions.uturn.relative_directions.0"
-msgid "left"
-msgstr "ліворуч"
-
-#: instructions.uturn.relative_directions.1
-msgctxt "instructions.uturn.relative_directions.1"
-msgid "right"
-msgstr "праворуч"
-
-#: instructions.uturn_verbal.empty_street_name_labels.0
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.0"
+#: instructions.uturn.replacement.empty_street_name_labels.0
+msgctxt "instructions.uturn.replacement.empty_street_name_labels.0"
 msgid "the walkway"
 msgstr "пішохідній доріжці"
 
-#: instructions.uturn_verbal.empty_street_name_labels.1
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.1"
+#: instructions.uturn.replacement.empty_street_name_labels.1
+msgctxt "instructions.uturn.replacement.empty_street_name_labels.1"
 msgid "the cycleway"
 msgstr "велодоріжці"
 
-#: instructions.uturn_verbal.empty_street_name_labels.2
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.2"
+#: instructions.uturn.replacement.empty_street_name_labels.2
+msgctxt "instructions.uturn.replacement.empty_street_name_labels.2"
 msgid "the mountain bike trail"
 msgstr "шляху для гірських велосипедів"
 
-#: instructions.uturn_verbal.empty_street_name_labels.3
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.3"
+#: instructions.uturn.replacement.empty_street_name_labels.3
+msgctxt "instructions.uturn.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
 msgstr "пішохідному переході"
 
-#: instructions.uturn_verbal.empty_street_name_labels.4
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.4"
+#: instructions.uturn.replacement.empty_street_name_labels.4
+msgctxt "instructions.uturn.replacement.empty_street_name_labels.4"
 msgid "the stairs"
 msgstr "сходах"
 
-#: instructions.uturn_verbal.empty_street_name_labels.5
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.5"
+#: instructions.uturn.replacement.empty_street_name_labels.5
+msgctxt "instructions.uturn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
 msgstr "мосту"
 
-#: instructions.uturn_verbal.empty_street_name_labels.6
-msgctxt "instructions.uturn_verbal.empty_street_name_labels.6"
+#: instructions.uturn.replacement.empty_street_name_labels.6
+msgctxt "instructions.uturn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
 msgstr ""
+
+#: instructions.uturn.replacement.relative_directions.0
+msgctxt "instructions.uturn.replacement.relative_directions.0"
+msgid "left"
+msgstr "ліворуч"
+
+#: instructions.uturn.replacement.relative_directions.1
+msgctxt "instructions.uturn.replacement.relative_directions.1"
+msgid "right"
+msgstr "праворуч"
 
 #. e.g. Make a left U-turn.
 #: instructions.uturn_verbal.phrases.0
@@ -4013,35 +3978,50 @@ msgctxt "instructions.uturn_verbal.phrases.7"
 msgid "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
 msgstr "Розверніться <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
 
-#: instructions.uturn_verbal.relative_directions.0
-msgctxt "instructions.uturn_verbal.relative_directions.0"
+#: instructions.uturn_verbal.replacement.empty_street_name_labels.0
+msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.0"
+msgid "the walkway"
+msgstr "пішохідній доріжці"
+
+#: instructions.uturn_verbal.replacement.empty_street_name_labels.1
+msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.1"
+msgid "the cycleway"
+msgstr "велодоріжці"
+
+#: instructions.uturn_verbal.replacement.empty_street_name_labels.2
+msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.2"
+msgid "the mountain bike trail"
+msgstr "шляху для гірських велосипедів"
+
+#: instructions.uturn_verbal.replacement.empty_street_name_labels.3
+msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.3"
+msgid "the crosswalk"
+msgstr "пішохідному переході"
+
+#: instructions.uturn_verbal.replacement.empty_street_name_labels.4
+msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.4"
+msgid "the stairs"
+msgstr "сходах"
+
+#: instructions.uturn_verbal.replacement.empty_street_name_labels.5
+msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.5"
+msgid "the bridge"
+msgstr "мосту"
+
+#: instructions.uturn_verbal.replacement.empty_street_name_labels.6
+msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.6"
+msgid "the tunnel"
+msgstr ""
+
+#: instructions.uturn_verbal.replacement.relative_directions.0
+msgctxt "instructions.uturn_verbal.replacement.relative_directions.0"
 msgid "left"
 msgstr "ліворуч"
 
-#: instructions.uturn_verbal.relative_directions.1
-msgctxt "instructions.uturn_verbal.relative_directions.1"
+#: instructions.uturn_verbal.replacement.relative_directions.1
+msgctxt "instructions.uturn_verbal.replacement.relative_directions.1"
 msgid "right"
 msgstr "праворуч"
-
-#: instructions.verbal_multi_cue.metric_lengths.0
-msgctxt "instructions.verbal_multi_cue.metric_lengths.0"
-msgid "<KILOMETERS> kilometers"
-msgstr "<KILOMETERS> кілометрів"
-
-#: instructions.verbal_multi_cue.metric_lengths.1
-msgctxt "instructions.verbal_multi_cue.metric_lengths.1"
-msgid "1 kilometer"
-msgstr "1 кілометр"
-
-#: instructions.verbal_multi_cue.metric_lengths.2
-msgctxt "instructions.verbal_multi_cue.metric_lengths.2"
-msgid "<METERS> meters"
-msgstr "<METERS> метрів"
-
-#: instructions.verbal_multi_cue.metric_lengths.3
-msgctxt "instructions.verbal_multi_cue.metric_lengths.3"
-msgid "less than 10 meters"
-msgstr "менше ніж 10 метрів"
 
 #. e.g. Bear right onto East Fayette Street. Then Turn right onto North Gay Street.
 #: instructions.verbal_multi_cue.phrases.0
@@ -4055,32 +4035,52 @@ msgctxt "instructions.verbal_multi_cue.phrases.1"
 msgid "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
 msgstr "<CURRENT_VERBAL_CUE> Потім, через <LENGTH>, <NEXT_VERBAL_CUE>"
 
-#: instructions.verbal_multi_cue.us_customary_lengths.0
-msgctxt "instructions.verbal_multi_cue.us_customary_lengths.0"
+#: instructions.verbal_multi_cue.replacement.metric_lengths.0
+msgctxt "instructions.verbal_multi_cue.replacement.metric_lengths.0"
+msgid "<KILOMETERS> kilometers"
+msgstr "<KILOMETERS> кілометрів"
+
+#: instructions.verbal_multi_cue.replacement.metric_lengths.1
+msgctxt "instructions.verbal_multi_cue.replacement.metric_lengths.1"
+msgid "1 kilometer"
+msgstr "1 кілометр"
+
+#: instructions.verbal_multi_cue.replacement.metric_lengths.2
+msgctxt "instructions.verbal_multi_cue.replacement.metric_lengths.2"
+msgid "<METERS> meters"
+msgstr "<METERS> метрів"
+
+#: instructions.verbal_multi_cue.replacement.metric_lengths.3
+msgctxt "instructions.verbal_multi_cue.replacement.metric_lengths.3"
+msgid "less than 10 meters"
+msgstr "менше ніж 10 метрів"
+
+#: instructions.verbal_multi_cue.replacement.us_customary_lengths.0
+msgctxt "instructions.verbal_multi_cue.replacement.us_customary_lengths.0"
 msgid "<MILES> miles"
 msgstr "<MILES> милі"
 
-#: instructions.verbal_multi_cue.us_customary_lengths.1
-msgctxt "instructions.verbal_multi_cue.us_customary_lengths.1"
+#: instructions.verbal_multi_cue.replacement.us_customary_lengths.1
+msgctxt "instructions.verbal_multi_cue.replacement.us_customary_lengths.1"
 msgid "1 mile"
 msgstr "1 милю"
 
-#: instructions.verbal_multi_cue.us_customary_lengths.2
-msgctxt "instructions.verbal_multi_cue.us_customary_lengths.2"
+#: instructions.verbal_multi_cue.replacement.us_customary_lengths.2
+msgctxt "instructions.verbal_multi_cue.replacement.us_customary_lengths.2"
 msgid "a half mile"
 msgstr "півмилі"
 
-#: instructions.verbal_multi_cue.us_customary_lengths.3
-msgctxt "instructions.verbal_multi_cue.us_customary_lengths.3"
+#: instructions.verbal_multi_cue.replacement.us_customary_lengths.3
+msgctxt "instructions.verbal_multi_cue.replacement.us_customary_lengths.3"
 msgid "a quarter mile"
 msgstr "чверть милі"
 
-#: instructions.verbal_multi_cue.us_customary_lengths.4
-msgctxt "instructions.verbal_multi_cue.us_customary_lengths.4"
+#: instructions.verbal_multi_cue.replacement.us_customary_lengths.4
+msgctxt "instructions.verbal_multi_cue.replacement.us_customary_lengths.4"
 msgid "<FEET> feet"
 msgstr "<FEET> футів"
 
-#: instructions.verbal_multi_cue.us_customary_lengths.5
-msgctxt "instructions.verbal_multi_cue.us_customary_lengths.5"
+#: instructions.verbal_multi_cue.replacement.us_customary_lengths.5
+msgctxt "instructions.verbal_multi_cue.replacement.us_customary_lengths.5"
 msgid "less than 10 feet"
 msgstr "менше ніж 10 футів"

@@ -29,7 +29,8 @@ What to know while translating:
 
 #### CLI
 
-1. Edit `locales/valhalla.pot` directly. Path segments that are numbers become JSON arrays in the generated files, except under `phrases`, which odin reads by numeric string key.
+1. Edit `locales/valhalla.pot` directly. Path segments that are numbers become JSON arrays in the generated files, except under `phrases`, which odin reads by numeric string key. 
+Non-`phrases` sub-keys (e.g. `relative_directions`, `empty_street_name_labels` etc) carry a `replacement` marker, e.g.`instructions.bear.replacement.relative_directions.0`, so alphabetical sort keeps them right after their `instructions.bear.phrases.*` block. `po2json` strips `replacement` when rebuilding the JSON, so odin's structure and lookup keys are unchanged. You don't write the marker by hand: add the natural path (`instructions.bear.relative_directions.2`) and `po_tools.py lint --fix` inserts it and sorts; CI's `lint` fails if you skip it.
 2. Propagate to all languages (requires gettext):
    ```
    python3 locales/po_tools.py update
@@ -50,7 +51,7 @@ All state lives in the `.pot`/`.po` files — no external service involved.
 | `po_tools.py init <lang>` | Start a new language: create `<lang>.po` from the template with the header filled in |
 | `po_tools.py update` | `msgmerge` the `valhalla.pot` template into every `.po` |
 | `po_tools.py po2json [--out DIR]` | Generate the JSONs from the gettext files (fuzzy/empty → English); run by CMake at build time |
-| `po_tools.py lint [--fix] [--strict]` | Check placeholder tokens (errors on tokens Odin would never substitute) and that `.pot`/`.po` are sorted; `--fix` sorts unsorted files in place instead of erroring; `--strict` also fails on warnings. |
+| `po_tools.py lint [--fix] [--strict]` | Check placeholder tokens (errors on tokens Odin would never substitute), that non-`phrases` sub-keys carry the `replacement` sort marker, and that `.pot`/`.po` are sorted; `--fix` inserts missing markers and sorts in place instead of erroring; `--strict` also fails on warnings. |
 | `po_tools.py stats [langs]` | Per-language coverage as JSON (object per language: translated/fuzzy/untranslated/total/percent); "translated" = non-fuzzy msgstr that differs from English (carry-overs and fuzzy don't count). Understates English variants (en-GB/en-AU) |
 | `po_tools.py print-posix-locales` | Print every language's POSIX locale; used by the `localedef` test target |
 | `msgattrib --untranslated --fuzzy <lang>.po` | List what needs work in a language |

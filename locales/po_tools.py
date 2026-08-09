@@ -3,7 +3,10 @@
 
 valhalla.pot is the hand-maintained English source: msgctxt holds the JSON
 path (e.g. instructions.bear.phrases.1), msgid the English phrase, and
-"#. e.g. ..." comments carry example phrases shown to translators. The
+"#. e.g. ..." comments carry example phrases shown to translators. Non-phrases
+sub-keys carry a `replacement` marker segment (instructions.bear.replacement.
+relative_directions.0) so alphabetical sort keeps them right after their
+phrases block; po2json strips it, so odin's JSON is unchanged. The
 per-language .po files hold the translations; en-US metadata (posix locale,
 aliases) lives in the .pot header, every other language's in its .po header
 (X-Valhalla-* fields). The JSONs odin embeds at build time are generated
@@ -13,7 +16,7 @@ back to English.
   po_tools.py init <lang>                    start a new language: <lang>.po from the template
   po_tools.py po2json [--out DIR] [lang ...] .pot/.po -> locale JSONs (build step)
   po_tools.py update                         msgmerge valhalla.pot into every .po
-  po_tools.py lint [lang ...] [--fix] [--strict]  token + sort check (--fix sorts, --strict warns=errors)
+  po_tools.py lint [lang ...] [--fix] [--strict]  token + marker + sort check (--fix marks+sorts, --strict warns=errors)
   po_tools.py stats [lang ...]               per-language translation coverage
   po_tools.py print-posix-locales            print every language's posix_locale (for localedef)
 
@@ -45,9 +48,36 @@ POT_FILE = LOCALES_DIR / "valhalla.pot"
 # matches the phrase placeholders, e.g. <STREET_NAMES> or <TIME>
 TOKEN = re.compile(r"<[A-Z][A-Z_0-9]*>")
 
-# NarrativeDictionary looks these up by numeric string key; every other
-# container whose path segments are numeric is a real JSON array
-NUMERIC_KEY_DICTS = ("phrases",)
+# the phrases sub-key: NarrativeDictionary looks it up by numeric string key, so
+# it stays a dict; every other numeric-keyed container is a real JSON array
+PHRASES_KEY = "phrases"
+NUMERIC_KEY_DICTS = (PHRASES_KEY,)
+
+# msgctxt sort marker: non-phrases sub-keys carry `instructions.<x>.replacement.<key>`
+# so they sort right after the `.phrases.` block. Purely a .po-file sort aid;
+# json_parts strips it so odin's JSON is unchanged. lint --fix inserts it, so nobody
+# hand-writing a new msgctxt has to remember it.
+REPLACEMENT_MARKER = "replacement"
+
+
+def json_parts(msgctxt: str) -> list[str]:
+    """msgctxt path segments with the `replacement` sort marker removed."""
+    parts = msgctxt.split(".")
+    if len(parts) >= 3 and parts[2] == REPLACEMENT_MARKER:
+        del parts[2]
+    return parts
+
+
+def marked_ctxt(msgctxt: str) -> str:
+    """Inverse of json_parts: insert the sort marker for non-phrases sub-keys. Idempotent."""
+    parts = msgctxt.split(".")
+    if (
+        len(parts) >= 3
+        and parts[0] == "instructions"
+        and parts[2] not in (PHRASES_KEY, REPLACEMENT_MARKER)
+    ):
+        parts.insert(2, REPLACEMENT_MARKER)
+    return ".".join(parts)
 
 
 def parse_po(path: Path) -> tuple[dict[str, polib.POEntry], dict[str, str]]:
@@ -84,7 +114,7 @@ def build_locale(
         # fuzzy = translation needs review after its English source changed
         # use English until then
         translated = e.msgstr if e and e.msgstr and not e.fuzzy else pot_entry.msgid
-        parts = pot_entry.msgctxt.split(".")
+        parts = json_parts(pot_entry.msgctxt)
         node = po_root
         for part in parts[:-1]:
             node = node.setdefault(part, {})
@@ -143,6 +173,30 @@ def sort_file(path: Path) -> bool:
         return False
     po.save(str(path))
     return True
+
+
+def unmarked_ctxts(path: Path) -> list[str]:
+    """msgctxts missing the `replacement` sort marker (a new entry hand-written without it)."""
+    return [
+        e.msgctxt
+        for e in polib.pofile(str(path))
+        if e.msgctxt and not e.obsolete and marked_ctxt(e.msgctxt) != e.msgctxt
+    ]
+
+
+def mark_file(path: Path) -> bool:
+    """Insert missing `replacement` sort markers in place; returns True if anything changed."""
+    po = polib.pofile(str(path), wrapwidth=0)
+    changed = False
+    for e in po:
+        new = marked_ctxt(e.msgctxt) if e.msgctxt else None
+        if new and new != e.msgctxt:
+            e.occurrences = [(new if occ == e.msgctxt else occ, ln) for occ, ln in e.occurrences]
+            e.msgctxt = new
+            changed = True
+    if changed:
+        po.save(str(path))
+    return changed
 
 
 def write_json(out_dir: Path, name: str, locale: dict[str, Any]) -> None:
@@ -273,14 +327,22 @@ def cmd_lint(args: argparse.Namespace) -> None:
                 )
                 warnings += 1
 
-    # entries must stay in natural msgctxt order; --fix sorts in place, otherwise it's an error
+    # non-phrases sub-keys need the `replacement` marker, and entries must stay in
+    # natural msgctxt order; --fix inserts markers + sorts in place, else it's an error
     for path in [POT_FILE, *po_paths(args.langs)]:
-        if is_sorted(path):
-            continue
         if args.fix:
-            sort_file(path)
-            print(f"sorted {path.name}")
-        else:
+            if mark_file(path):
+                print(f"marked {path.name}")
+            if sort_file(path):
+                print(f"sorted {path.name}")
+            continue
+        if missing := unmarked_ctxts(path):
+            print(
+                f"ERROR {path.name}: {len(missing)} sub-key(s) missing '.{REPLACEMENT_MARKER}.' marker "
+                f"(e.g. {missing[0]}) - run: po_tools.py lint --fix"
+            )
+            errors += 1
+        if not is_sorted(path):
             print(f"ERROR {path.name}: not sorted - run: po_tools.py lint --fix")
             errors += 1
 
