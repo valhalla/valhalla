@@ -84,9 +84,6 @@ constexpr float kMaxPedestrianSpeed = 25.0f;
 // 2 cycleways or walkways cross
 constexpr uint32_t kCrossingCosts[] = {0, 0, 1, 1, 2, 3, 5, 15};
 
-constexpr float kMinFactor = 0.1f;
-constexpr float kMaxFactor = 100000.0f;
-
 const std::string kDefaultPedestrianType = "foot";
 
 // User propensity to use "hilly" roads. Ranges from a value of 0 (avoid

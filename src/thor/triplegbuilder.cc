@@ -2253,8 +2253,11 @@ void TripLegBuilder::Build(
 
     ////////////// Prepare for the next iteration
 
-    // Set the endnode of this directed edge as the startnode of the next edge.
-    startnode = directededge->endnode();
+    // Set the endnode of this directed edge as the startnode of the next edge, unless that edge is
+    // repeated because of a mid-edge intermediate location.
+    if (const auto next = std::next(edge_itr); next == path_end || next->edgeid != edge) {
+      startnode = directededge->endnode();
+    }
 
     // Save the opposing edge as the previous DirectedEdge (for name consistency)
     if (!directededge->IsTransitLine()) {

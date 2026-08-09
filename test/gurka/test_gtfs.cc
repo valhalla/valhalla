@@ -950,6 +950,17 @@ TEST(GtfsExample, MakeTile) {
   EXPECT_EQ(uses[Use::kRail], 3);
 }
 
+TEST(GtfsExample, bicycle_locate) {
+  std::string response;
+  gurka::do_action(valhalla::Options::locate, map, {"1"}, "bicycle", {}, {}, &response);
+
+  rapidjson::Document json;
+  json.Parse(response);
+  ASSERT_FALSE(json.HasParseError());
+  ASSERT_TRUE(json.IsArray());
+  EXPECT_EQ(json.Size(), 1);
+}
+
 TEST(GtfsExample, route_trip1) {
   // here we request with tmrw 05:50 am
   const auto tmrw_time =

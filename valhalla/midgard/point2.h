@@ -105,7 +105,7 @@ public:
    * @return  Returns the distance between this point and p.
    */
   PrecisionT Distance(const PointXY<PrecisionT>& p) const {
-    return sqrtf(DistanceSquared(p));
+    return std::sqrt(DistanceSquared(p));
   }
 
   /**

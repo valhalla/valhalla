@@ -22,6 +22,10 @@ constexpr uint32_t kMaxGraphTileId = 4194303;
 // Maximum id/index within a tile. 21 bits
 constexpr uint32_t kMaxGraphId = 2097151;
 
+// GraphTileHeader::checksum_ packs a 16-bit tileset build id in its high bits and a 48-bit per-tile
+// data hash in its low bits, used for remote tileset change detection/cache validation
+constexpr uint64_t kTileHashBits = 48;
+
 // Invalid edge label index
 constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
 

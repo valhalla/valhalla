@@ -90,7 +90,7 @@ At this point Valhalla is running, but there is no graph tiles yet. Follow the s
 
 #### Build Valhalla with transit
 
-Valhalla supports reading raw GTFS feeds to build transit into its graph, see the [docs](https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference/#sample-json-payloads-for-multimodal-requests-with-transit) for more details.
+Valhalla supports reading raw GTFS feeds to build transit into its graph, see the [docs](https://valhalla.github.io/valhalla/api/route/api-reference/#sample-json-payloads-for-multimodal-requests-with-transit) for more details.
 
 Put the unzipped GTFS feeds as subfolders in the main gtfs folder, e.g. `gtfs_feeds/berlin/`, otherwise the files will not be found.
 

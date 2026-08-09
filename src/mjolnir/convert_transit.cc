@@ -1203,7 +1203,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     auto tile_path = transit_file_itr->path();
     if (std::filesystem::is_regular_file(transit_file_itr->path()) &&
         (tile_path.extension() == ".pbf" || std::isdigit(tile_path.string().back()))) {
-      all_tiles.emplace(GraphTile::GetTileId(tile_path.string()));
+      all_tiles.emplace(GraphId::FromTilePath(tile_path.string()));
     }
   }
 

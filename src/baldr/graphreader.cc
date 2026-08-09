@@ -8,7 +8,9 @@
 
 #include <sys/stat.h>
 
+#include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <span>
 #include <string>
 #include <utility>
@@ -50,12 +52,12 @@ size_t load_tiles(valhalla::midgard::tar& tar,
     }
 
     try {
-      auto id = valhalla::baldr::GraphTile::GetTileId(name);
+      auto id = valhalla::baldr::GraphId::FromTilePath(name);
       tiles[id] = std::make_pair(const_cast<char*>(data), size);
     } catch (...) {
       // It's possible to put non-tile files inside the tarfile.  As we're only
       // parsing the file *name* as a GraphId here, we will just silently skip
-      // any file paths that can't be parsed by GraphId::GetTileId()
+      // any file paths that can't be parsed by GraphId::FromTilePath()
       // If we end up with *no* recognizable tile files in the tarball at all,
       // checks lower down will warn on that.
     }
@@ -510,12 +512,11 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
       static std::mutex mutex;
       std::lock_guard lock{mutex};
       if (!std::filesystem::exists(url_id_txt_path_)) {
-        // no id.txt, then create it in the current tile_dir
+        // no id.txt, then create it in the current tile_dir; the build id line is added once the
+        // first tile is downloaded
         std::filesystem::create_directories(tile_dir_);
         std::ofstream out_url_file(url_id_txt_path_, std::ios::binary);
         out_url_file << tile_url_ << std::endl;
-        // we write 0 so the next thread will find a valid MD5 hash
-        out_url_file << url_id_txt_checksum_ << std::endl;
       }
     }
   }
@@ -666,6 +667,47 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
   // Keep a copy in the cache and return it
   const size_t size = tile->header()->end_offset();
   return cache_->Put(base, std::move(tile), size);
+}
+
+std::optional<GraphTileHeader> GraphReader::GetGraphTileHeader(const GraphId& graphid) {
+  if (!graphid.is_valid()) {
+    return std::nullopt;
+  }
+
+  auto base = graphid.tile_base();
+  if (const auto& cached = cache_->Get(base)) {
+    return *cached->header();
+  }
+
+  // straight out of the mmapped extract, without constructing or caching the tile
+  if (!tile_extract_->tiles.empty()) {
+    auto t = tile_extract_->tiles.find(base);
+    if (t == tile_extract_->tiles.cend() || t->second.second < sizeof(GraphTileHeader)) {
+      return std::nullopt;
+    }
+    GraphTileHeader header;
+    memcpy(&header, t->second.first, sizeof(GraphTileHeader));
+    return header;
+  }
+
+  // just the header span of the file in tile_dir
+  if (!tile_dir_.empty()) {
+    std::string file_location = tile_dir_;
+    file_location += std::filesystem::path::preferred_separator;
+    file_location += GraphTile::FileSuffix(base);
+    std::ifstream file(file_location, std::ios::in | std::ios::binary);
+    GraphTileHeader header;
+    if (file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader)) &&
+        file.gcount() == sizeof(GraphTileHeader)) {
+      return header;
+    }
+  }
+
+  // gzipped and remote tiles require materializing the whole tile
+  if (auto tile = GetGraphTile(base)) {
+    return *tile->header();
+  }
+  return std::nullopt;
 }
 
 // Convenience method to get an opposing directed edge graph Id.
@@ -937,7 +979,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
           if (i->is_regular_file() || i->is_symlink()) {
             // add it if it can be parsed as a valid tile file name
             try {
-              tiles.emplace(GraphTile::GetTileId(i->path().string()));
+              tiles.emplace(GraphId::FromTilePath(i->path().string()));
             } catch (...) {}
           }
         }
@@ -969,7 +1011,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
         if (i->is_regular_file() || i->is_symlink()) {
           // add it if it can be parsed as a valid tile file name
           try {
-            tiles.emplace(GraphTile::GetTileId(i->path().string()));
+            tiles.emplace(GraphId::FromTilePath(i->path().string()));
           } catch (...) {}
         }
       }
@@ -1073,27 +1115,27 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
   return {itile, begin_index, end_index};
 }
 
-uint64_t GraphReader::load_id_txt_checksum(const std::filesystem::path& id_txt_path,
-                                           const std::string& tile_url) {
+std::optional<uint64_t> GraphReader::load_id_txt_checksum(const std::filesystem::path& id_txt_path,
+                                                          const std::string& tile_url) {
   std::ifstream in_id_txt_file(id_txt_path);
-  std::string file_checksum = "0";
-  // if no cache wanted, never mind
-  if (!tile_dir_.empty() && in_id_txt_file) {
-    std::string file_url;
-    // validate that the expected lines and values are present
-    if (!std::getline(in_id_txt_file, file_url)) {
-      throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
-                               id_txt_path.string());
-    } else if (file_url != tile_url) {
-      throw std::runtime_error("Tile URL changed, configure a different mjolnir.tile_dir");
-    }
-
-    if (!std::getline(in_id_txt_file, file_checksum)) {
-      throw std::runtime_error("Couldn't find MD5 hash on the second line in " +
-                               id_txt_path.string());
-    }
+  // if no cache wanted or no id.txt yet, there's no build id to compare against
+  if (tile_dir_.empty() || !in_id_txt_file) {
+    return std::nullopt;
   }
 
+  std::string file_url;
+  if (!std::getline(in_id_txt_file, file_url)) {
+    throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
+                             id_txt_path.string());
+  } else if (file_url != tile_url) {
+    throw std::runtime_error("Tile URL changed, configure a different mjolnir.tile_dir");
+  }
+
+  // the build id is only written once the first tile has been downloaded
+  std::string file_checksum;
+  if (!std::getline(in_id_txt_file, file_checksum) || file_checksum.empty()) {
+    return std::nullopt;
+  }
   return std::stoull(file_checksum);
 };
 

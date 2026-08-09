@@ -19,12 +19,10 @@ if [[ ! -f "${BUILD_DIR}/CMakeCache.txt" ]] \
   exit 1
 fi
 
-cmake --build "${BUILD_DIR}" --target _valhalla_stub _graph_utils_stub predicted_speeds_stub
+cmake --build "${BUILD_DIR}" --target _valhalla_stub
 
 PYI_FILES=(
   src/bindings/python/valhalla/_valhalla.pyi
-  src/bindings/python/valhalla/utils/_graph_utils.pyi
-  src/bindings/python/valhalla/utils/predicted_speeds.pyi
 )
 
 # Fail loudly if any committed .pyi changed (or is missing from HEAD entirely).

@@ -175,6 +175,7 @@ struct graph_parser {
     include_platforms_ = pt.get<bool>("include_platforms", false);
     include_driveways_ = pt.get<bool>("include_driveways", true);
     include_construction_ = pt.get<bool>("include_construction", false);
+    pedestrian_areas_ = pt.get<bool>("pedestrian_areas", false);
     infer_internal_intersections_ =
         pt.get<bool>("data_processing.infer_internal_intersections", true);
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
@@ -375,6 +376,9 @@ struct graph_parser {
       if (tag_.second == "yes") {
         amenity_ = tag_.second;
       }
+    };
+    tag_handlers_["pedestrian_area"] = [this]() {
+      way_.set_area(tag_.second == "true" ? true : false);
     };
 
     tag_handlers_["use"] = [this]() {
@@ -1511,7 +1515,8 @@ struct graph_parser {
                  value.find("natural") != std::string::npos ||
                  value.find("earth") != std::string::npos ||
                  value.find("ground") != std::string::npos ||
-                 value.find("mud") != std::string::npos) {
+                 value.find("mud") != std::string::npos || value.find("clay") != std::string::npos ||
+                 value.find("laterite") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
       } else if (value.find("gravel") != std::string::npos || // gravel, fine_gravel
@@ -2399,6 +2404,13 @@ struct graph_parser {
 
     const auto& nodes = way.nodes;
     const auto& tags = way.tags;
+
+    if (!pedestrian_areas_) {
+      auto pa = tags.find("pedestrian_area");
+      if (pa != tags.end() && pa->second == "true") {
+        return;
+      }
+    }
 
     try {
       // Throw away use if include_driveways_ is false
@@ -3840,6 +3852,7 @@ struct graph_parser {
     uint64_t from_way_id = 0;
     bool isRestriction = false, isTypeRestriction = false, hasRestriction = false;
     bool isRoad = false, isRoute = false, isBicycle = false, isConnectivity = false;
+    bool isMultipolygon = false, isPedestrian = false, isArea = false;
     bool isConditional = false, isProbable = false, has_multiple_times = false;
     uint32_t bike_network_mask = 0;
 
@@ -3857,6 +3870,8 @@ struct graph_parser {
           isRoute = true;
         } else if (tag.second == "connectivity") {
           isConnectivity = true;
+        } else if (tag.second == "multipolygon") {
+          isMultipolygon = true;
         }
       } else if (tag.first == "route") {
         if (tag.second == "road") {
@@ -3983,6 +3998,14 @@ struct graph_parser {
         to = tag.second;
       } else if (tag.first == "from") {
         from = tag.second;
+      } else if (tag.first == "highway") {
+        if (tag.second == "pedestrian") {
+          isPedestrian = true;
+        }
+      } else if (tag.first == "area") {
+        if (tag.second == "yes") {
+          isArea = true;
+        }
       }
     } // for (const auto& tag : results)
 
@@ -4264,6 +4287,19 @@ struct graph_parser {
           complex_restrictions_from_->push_back(restriction);
         } else { // simple restriction
           osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
+        }
+      }
+    } else if (isMultipolygon && isPedestrian && isArea && pedestrian_areas_) {
+      for (const auto& member : members) {
+        OSMAreaMember area_member;
+        if (member.role == "outer" && member.member_type == osmium::item_type::way) {
+          area_member.is_outer = true;
+          area_member.way_id = member.member_id;
+          osmdata_.area_relations.insert(AreaMultiMap::value_type(osmid, area_member));
+        } else if (member.role == "inner" && member.member_type == osmium::item_type::way) {
+          area_member.is_outer = false;
+          area_member.way_id = member.member_id;
+          osmdata_.area_relations.insert(AreaMultiMap::value_type(osmid, area_member));
         }
       }
     }
@@ -5034,6 +5070,10 @@ struct graph_parser {
   // enhancer phase or use the turn_channel key from the pbf
   bool infer_turn_channels_;
 
+  // Configuration option indicating whether or not to generate edges and route trough pedestrian
+  // areas
+  bool pedestrian_areas_;
+
   // Configuration option indicating whether or not to process the direction key on the ways or
   // utilize the guidance relation tags during the parsing phase
   bool use_direction_on_ways_;
@@ -5231,7 +5271,8 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   LOG_INFO("Sorting osm access tags by way id...");
   {
     sequence<OSMAccess> access(access_file, false);
-    access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); });
+    access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); },
+                concurrency);
   }
 
   LOG_INFO("Finished");
@@ -5287,20 +5328,25 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
   parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
+  const auto concurrency =
+      std::max<size_t>(1, pt.get<size_t>("concurrency", std::thread::hardware_concurrency()));
+
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
   {
     sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
-    complex_restrictions_from.sort(
-        [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
+    complex_restrictions_from.sort([](const OSMRestriction& a,
+                                      const OSMRestriction& b) { return a < b; },
+                                   concurrency);
   }
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by to id...");
   {
     sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
-    complex_restrictions_to.sort(
-        [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
+    complex_restrictions_to.sort([](const OSMRestriction& a,
+                                    const OSMRestriction& b) { return a < b; },
+                                 concurrency);
   }
   LOG_INFO("Finished");
 }
@@ -5358,11 +5404,15 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
   // using much mem, the scoping makes sure to let it go when done sorting
+  const auto concurrency =
+      std::max<size_t>(1, pt.get<size_t>("concurrency", std::thread::hardware_concurrency()));
+
   LOG_INFO("Sorting osm way node references by node id...");
   {
     sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-    way_nodes.sort(
-        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; });
+    way_nodes.sort([](const OSMWayNode& a,
+                      const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; },
+                   concurrency);
   }
 
   // Parse node in all the input files. Skip any that are not marked from
@@ -5394,13 +5444,15 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   LOG_INFO("Sorting osm way node references by way index and node shape index...");
   {
     sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-    way_nodes.sort([](const OSMWayNode& a, const OSMWayNode& b) {
-      if (a.way_index == b.way_index) {
-        // TODO: if its equal we have screwed something up, should we check and throw here?
-        return a.way_shape_node_index < b.way_shape_node_index;
-      }
-      return a.way_index < b.way_index;
-    });
+    way_nodes.sort(
+        [](const OSMWayNode& a, const OSMWayNode& b) {
+          if (a.way_index == b.way_index) {
+            // TODO: if its equal we have screwed something up, should we check and throw here?
+            return a.way_shape_node_index < b.way_shape_node_index;
+          }
+          return a.way_index < b.way_index;
+        },
+        concurrency);
   }
 
   // Some OSM extracts do not have changeset Ids. For these set the max changeset Id

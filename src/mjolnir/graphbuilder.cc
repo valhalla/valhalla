@@ -27,6 +27,7 @@
 #include <filesystem>
 #include <future>
 #include <memory>
+#include <queue>
 #include <thread>
 #include <utility>
 
@@ -40,22 +41,25 @@ namespace {
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
  * we also need to then update the edges that pointed to them
  */
-std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
+std::map<GraphId, size_t>
+SortGraph(const std::string& nodes_file, const std::string& edges_file, const uint32_t concurrency) {
   LOG_INFO("Sorting graph...");
 
   // Sort nodes by graphid then by grid within the tile. This sorts nodes geo-spatially which
   // helps performance by improving memory coherence.
   sequence<Node> nodes(nodes_file, false);
-  nodes.sort([](const Node& a, const Node& b) {
-    if (a.graph_id == b.graph_id) {
-      if (a.grid_id == b.grid_id) {
-        return a.node.osmid_ < b.node.osmid_;
-      } else {
-        return a.grid_id < b.grid_id;
-      }
-    }
-    return a.graph_id < b.graph_id;
-  });
+  nodes.sort(
+      [](const Node& a, const Node& b) {
+        if (a.graph_id == b.graph_id) {
+          if (a.grid_id == b.grid_id) {
+            return a.node.osmid_ < b.node.osmid_;
+          } else {
+            return a.grid_id < b.grid_id;
+          }
+        }
+        return a.graph_id < b.graph_id;
+      },
+      concurrency);
 
   // run through the sorted nodes, going back to the edges they reference and updating each edge
   // to point to the first (out of the duplicates) nodes index. at the end of this there will be
@@ -118,8 +122,8 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   auto cmp = [](const std::pair<uint32_t, uint32_t>& a, const std::pair<uint32_t, uint32_t>& b) {
     return a.first < b.first;
   };
-  starts->sort(cmp);
-  ends->sort(cmp);
+  starts->sort(cmp, concurrency);
+  ends->sort(cmp, concurrency);
 
   sequence<Edge> edges(edges_file, false);
 
@@ -180,6 +184,12 @@ void ConstructEdges(const std::string& ways_file,
     const auto first_way_node_index = current_way_node_index;
     const auto last_way_node_index =
         first_way_node_index + way.node_count() - way_node.way_shape_node_index - 1;
+
+    // If the way is part of an area, make sure it does not generate edges
+    if (way.area()) {
+      current_way_node_index = last_way_node_index + 1;
+      continue;
+    }
 
     // Validate - make sure all nodes for this edge are valid
     bool valid = true;
@@ -563,7 +573,7 @@ void BuildTileSet(const std::string& ways_file,
       // Information about tile creation (optionally by config)
       const auto dataset_id = pt.get<uint64_t>("dataset_id", osmdata.max_changeset_id_);
       graphtile.header_builder().set_dataset_id(dataset_id);
-      graphtile.header_builder().set_checksum(osmdata.pbf_checksum_);
+      graphtile.header_builder().set_raw_checksum(0);
 
       // Set the base lat,lon of the tile
       uint32_t id = tile_id.tileid();
@@ -1498,7 +1508,9 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
       },
       pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
-  return SortGraph(nodes_file, edges_file);
+  const uint32_t concurrency =
+      std::max(1u, pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+  return SortGraph(nodes_file, edges_file, concurrency);
 }
 
 // Build the graph from the input

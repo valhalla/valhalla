@@ -26,6 +26,7 @@ struct route_tester {
     Api request;
     ParseApi(request_json, Options::route, request);
     loki_worker.route(request);
+    loki_worker.cleanup();
     std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> results;
     thor_worker.route(request);
     response_json = odin_worker.narrate(request);

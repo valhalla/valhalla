@@ -121,8 +121,8 @@ TEST(GraphtileHeader, TestWriteRead) {
   EXPECT_THROW(hdr.bin_offset(kBinCount + 1), std::runtime_error);
 
   uint64_t checksum = 24189014;
-  hdr.set_checksum(checksum);
-  EXPECT_EQ(hdr.checksum(), checksum);
+  hdr.set_raw_checksum(checksum);
+  EXPECT_EQ(hdr.tile_checksum(), checksum);
 }
 
 } // namespace

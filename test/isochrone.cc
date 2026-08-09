@@ -564,6 +564,7 @@ TEST(Isochrones, test_geotiff_vertical_orientation) {
   Api request_pbf;
   ParseApi(request, Options::isochrone, request_pbf);
   loki_worker.isochrones(request_pbf);
+  loki_worker.cleanup();
   std::string geotiff = thor_worker.isochrones(request_pbf);
 
   std::string name = "/vsimem/test_isogrid_geotiff_d.tif";
@@ -598,6 +599,7 @@ int main(int argc, char* argv[]) {
     Api request;
     ParseApi(argv[1], Options::isochrone, request);
     loki_worker.isochrones(request);
+    loki_worker.cleanup();
     std::cout << thor_worker.isochrones(request) << std::endl;
     return EXIT_SUCCESS;
   }

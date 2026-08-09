@@ -75,9 +75,6 @@ constexpr float kMaxLivingStreetFactor = 3.f;
 // min factor to apply when use lit
 constexpr float kMinLitFactor = 1.f;
 
-constexpr float kMinFactor = 0.1f;
-constexpr float kMaxFactor = 100000.0f;
-
 // Base transition costs
 constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
 constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
