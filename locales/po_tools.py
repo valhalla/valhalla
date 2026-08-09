@@ -68,7 +68,7 @@ def json_parts(msgctxt: str) -> list[str]:
     return parts
 
 
-def marked_ctxt(msgctxt: str) -> str:
+def marked_msgctxt(msgctxt: str) -> str:
     """Inverse of json_parts: insert the sort marker for non-phrases sub-keys. Idempotent."""
     parts = msgctxt.split(".")
     if (
@@ -175,12 +175,12 @@ def sort_file(path: Path) -> bool:
     return True
 
 
-def unmarked_ctxts(path: Path) -> list[str]:
+def unmarked_msgctxts(path: Path) -> list[str]:
     """msgctxts missing the `replacement` sort marker (a new entry hand-written without it)."""
     return [
         e.msgctxt
         for e in polib.pofile(str(path))
-        if e.msgctxt and not e.obsolete and marked_ctxt(e.msgctxt) != e.msgctxt
+        if e.msgctxt and not e.obsolete and marked_msgctxt(e.msgctxt) != e.msgctxt
     ]
 
 
@@ -189,7 +189,7 @@ def mark_file(path: Path) -> bool:
     po = polib.pofile(str(path), wrapwidth=0)
     changed = False
     for e in po:
-        new = marked_ctxt(e.msgctxt) if e.msgctxt else None
+        new = marked_msgctxt(e.msgctxt) if e.msgctxt else None
         if new and new != e.msgctxt:
             e.occurrences = [(new if occ == e.msgctxt else occ, ln) for occ, ln in e.occurrences]
             e.msgctxt = new
@@ -336,7 +336,7 @@ def cmd_lint(args: argparse.Namespace) -> None:
             if sort_file(path):
                 print(f"sorted {path.name}")
             continue
-        if missing := unmarked_ctxts(path):
+        if missing := unmarked_msgctxts(path):
             print(
                 f"ERROR {path.name}: {len(missing)} sub-key(s) missing '.{REPLACEMENT_MARKER}.' marker "
                 f"(e.g. {missing[0]}) - run: po_tools.py lint --fix"
