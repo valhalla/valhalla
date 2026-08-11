@@ -6,6 +6,8 @@ The feature is enabled with the `mjolnir.pedestrian_areas` config option and is 
 
 ![A pedestrian route crossing an area instead of routing around its perimeter](images/pedestrian-areas.png)
 
+The example above is [Plaza de Santo Domingo](https://www.openstreetmap.org/relation/1525621) in Murcia, Spain.
+
 ## Enabling it
 
 Set the option in your config, or pass it when generating one:
@@ -29,7 +31,7 @@ An area is picked up picked up based on how its [tags are parsed](../contributin
 - a closed way with `highway=pedestrian` and `area=yes`
 - a relation with `type=multipolygon` and carrying the same pedestrian tagging as the closed way, whose member ways form the outer boundary (and any inner rings)
 
-Inner rings are treated as holes, so obstacles inside the area like a fountain, a building, or a monument are routed around.
+Inner rings are treated as holes, so obstacles inside the area like a fountain, a building, or a monument are routed around if they are mapped as such.
 
 ## How it works
 
