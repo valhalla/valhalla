@@ -41,7 +41,7 @@ Areas mapped as relations have member ways with no routable tags of their own, s
 
 ### Building the traversal
 
-For each area, the builder in the stage `kBuidAreas`:
+For each area, the builder in the stage `kBuildAreas`:
 
 1. Assembles the polygon(s) from the member ways, including any holes.
 2. Densifies the boundary and computes a Voronoi diagram of the resulting points, keeping only the edges that fall inside the polygon. This approximates the medial axis, the skeleton running down the middle of the shape.
