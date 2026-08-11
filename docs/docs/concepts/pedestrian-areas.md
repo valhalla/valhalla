@@ -26,7 +26,7 @@ Tiles then need to be rebuilt for the change to take effect.
 
 ## What counts as a pedestrian area
 
-An area is picked up picked up based on how its [tags are parsed](../contributing/architecture/mjolnir/tag-parsing.md):
+An area is picked up based on how its [tags are parsed](../contributing/architecture/mjolnir/tag-parsing.md):
 
 - a closed way with `highway=pedestrian` and `area=yes`
 - a relation with `type=multipolygon` and carrying the same pedestrian tagging as the closed way, whose member ways form the outer boundary (and any inner rings)
