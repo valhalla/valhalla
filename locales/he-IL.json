@@ -7,7 +7,7 @@
     "arrive": {
       "phrases": {
         "0": "הגעה: <TIME>.",
-        "1": "הגעה: <TIME> ב<TRANSIT_STOP>."
+        "1": "הגעה: <TIME> אל <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -21,7 +21,7 @@
     "arrive_verbal": {
       "phrases": {
         "0": "הגעה בשעה <TIME>.",
-        "1": "הגעה בשעה <TIME> ב<TRANSIT_STOP>."
+        "1": "הגעה בשעה <TIME> אל <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
