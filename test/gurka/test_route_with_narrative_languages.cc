@@ -78,6 +78,8 @@ const std::vector<std::pair<std::string, std::string>> RouteWithNarrativeLanguag
     {"fi-FI", "Käänny oikealle kadulle Main Street."},
     {"fr", "Tournez à droite dans Main Street."},
     {"fr-FR", "Tournez à droite dans Main Street."},
+    {"he", "פנה ימינה אל Main Street."},
+    {"he-IL", "פנה ימינה אל Main Street."},
     {"hi", "Main Street पर दाएँ मुड़ें."},
     {"hi-IN", "Main Street पर दाएँ मुड़ें."},
     {"hu", "Forduljon jobbra a(z) Main Street utcára."},

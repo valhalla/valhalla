@@ -22,6 +22,7 @@ trans.es_ES = locales/es-ES.json
 trans.et_EE = locales/et-EE.json
 trans.fi_FI = locales/fi-FI.json
 trans.fr_FR = locales/fr-FR.json
+trans.he_IL = locales/he-IL.json
 trans.hi_IN = locales/hi-IN.json
 trans.hu_HU = locales/hu-HU.json
 trans.it_IT = locales/it-IT.json
