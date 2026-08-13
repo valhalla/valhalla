@@ -277,6 +277,7 @@ config = {
             "beta",
             "max_route_distance_factor",
             "max_route_time_factor",
+            "breakage_distance",
         ],
         "verbose": False,
         "default": {

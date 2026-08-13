@@ -8,6 +8,7 @@
    * ADDED: `cost` in verbose matrix output [#6249](https://github.com/valhalla/valhalla/pull/6249)
    * ADDED: `expansion_index` expansion property [#6251](https://github.com/valhalla/valhalla/pull/6251)
    * ADDED: route through pedestrian areas via generated medial axis traversals, behind the `mjolnir.pedestrian_areas` config option [#6195](https://github.com/valhalla/valhalla/pull/6195)
+   * CHANGED: add `breakage_distance` to the default `meili.customizable` list so the documented `trace_options.breakage_distance` can be raised per request [#6270](https://github.com/valhalla/valhalla/pull/6270)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
