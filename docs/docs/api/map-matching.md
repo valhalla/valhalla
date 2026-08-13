@@ -55,9 +55,23 @@ You can also set `directions_options` to specify output units, language, and whe
 | `trace_options` | Additional options. |
 | `trace_options.search_radius` | Search radius in meters associated with supplied trace points. |
 | `trace_options.gps_accuracy` | GPS accuracy in meters associated with supplied trace points. |
-| `trace_options.breakage_distance` | Breaking distance in meters between trace points. |
+| `trace_options.breakage_distance` | Breaking distance in meters between trace points. Defaults to 2000. Subject to the `meili.customizable` allowlist described below: a supplied value can only *lower* the limit, never raise it. |
 | `trace_options.interpolation_distance` | Interpolation distance in meters beyond which trace points are merged together. |
 | `linear_references` | When present and `true`, the successful `trace_route` response will include a key `linear_references`. Its value is an array of base64-encoded [OpenLR location references][openlr], one for each graph edge of the road network matched by the input trace. |
+
+Not every `trace_options` entry can be set per request. The service configuration holds a
+`meili.customizable` allowlist, and any option outside it is **ignored rather than
+rejected** — the request succeeds and the configured value is used. The shipped default
+allows `search_radius`, `gps_accuracy`, `interpolation_distance`, `turn_penalty_factor`,
+`sigma_z`, `beta`, `max_route_distance_factor` and `max_route_time_factor`, but not
+`breakage_distance`, which is deliberately fixed so that public instances cannot be made to
+perform arbitrarily expensive searches. Raising it requires running your own instance and
+changing the configuration.
+
+Note that `breakage_distance` also bounds the route search between two consecutive points,
+so its configured value sets the largest spacing that can be matched at all: with the
+default of 2000 m, a trace whose points are more than 2 km apart along the road will not
+match. Raise it in configuration if your feed reports less often than that.
 
 [openlr]: https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
 
