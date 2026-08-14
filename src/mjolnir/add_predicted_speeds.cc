@@ -257,7 +257,7 @@ PrepareTrafficTiles(const std::filesystem::path& traffic_tile_dir) {
       file_name = file_name.substr(0, file_name.find('.', pos == std::string::npos ? 0 : pos));
       try {
         // parse it into a tile id and store the file path with it
-        auto id = GraphTile::GetTileId(file_name);
+        auto id = GraphId::FromTilePath(file_name);
         files_per_tile[id].push_back(i->path().string());
       } catch (...) {}
     }

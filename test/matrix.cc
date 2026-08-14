@@ -486,7 +486,7 @@ TEST(Matrix, default_matrix) {
   EXPECT_TRUE(json.HasMember("sources_to_targets"));
 
   // contains 10 keys
-  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 10);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 11);
 
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("distance"));
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("time"));

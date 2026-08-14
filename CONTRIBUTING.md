@@ -18,7 +18,7 @@ While we absolutely accept AI usage for Valhalla (and its related projects), we 
 3. contrived AI logic with weird generic variable names should be rewritten to match human perception
 4. non-obvious code changes should be commented on _inline_ (not in the PR description!)
 
-2. & 3. are pretty subjective, where we have a lot more patience. However, PRs ignoring these guidelines entirely, might be closed without further notice.
+2. & 3. are pretty subjective, where we have a lot more patience. However, PRs ignoring these guidelines entirely, might be closed without further notice. And the worst offenders might get blocked from the Valhalla organization.
 
 ## Code contributions
 

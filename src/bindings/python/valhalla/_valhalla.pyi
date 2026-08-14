@@ -10,7 +10,7 @@ import numpy
 from numpy.typing import NDArray
 
 
-VALHALLA_PRINT_VERSION: str = '3.8.2'
+VALHALLA_PRINT_VERSION: str = '3.8.3'
 
 class ValhallaError(RuntimeError):
     """
@@ -77,6 +77,19 @@ class GraphId:
     @overload
     def __init__(self, arg: str, /) -> None:
         """Constructs a GraphId from its string representation, e.g. "2/71944/0"."""
+
+    @staticmethod
+    def from_tile_path(path: str) -> GraphId:
+        """
+        Parses a graph tile's file path into its base GraphId, e.g.
+        "2/000/820/135.gph" (relative or absolute, any file extension) -> 2/820135/0.
+        The inverse of os.fspath(graph_id); the path must contain at least one
+        path separator (forward slashes work on every platform).
+
+        :param path: The tile's file path.
+        :returns: The tile's base GraphId (the within-tile id portion is 0).
+        :raises RuntimeError: The path doesn't encode a (potentially) valid tile id.
+        """
 
     @property
     def value(self) -> int:
@@ -417,4 +430,23 @@ def decode_polyline(polyline: str, precision: int = 6, order: str = 'lnglat') ->
     """
     Decodes an encoded polyline string with precision to a list of coordinate tuples.
     The coordinate order of the output can be lnglat or latlng.
+    """
+
+def compute_tileset_build_id(tile_dir: str) -> int:
+    """
+    Compute the tileset-wide 16-bit build id from the per-tile content hashes
+    already stored in each tile header (their sum, folded to 16 bits; no
+    re-hashing). Read-only companion of set_tileset_build_id.
+
+    :param tile_dir: Directory holding the .gph tiles.
+    :returns: The 16-bit tileset build id.
+    """
+
+def set_tileset_build_id(tile_dir: str) -> None:
+    """
+    Recompute the tileset-wide build id and stamp it into the high bits of every
+    tile's checksum, in place. Call this after a tool has rewritten a subset of
+    tiles (e.g. adding predicted traffic) so URL clients see a changed tileset.
+
+    :param tile_dir: Directory holding the .gph tiles; headers are patched in place.
     """

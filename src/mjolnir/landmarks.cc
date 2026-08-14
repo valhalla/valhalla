@@ -528,7 +528,7 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   seq_file.close();
 
   midgard::sequence<std::pair<GraphId, uint64_t>> merged_sequence_file(merged_seq_file, false);
-  merged_sequence_file.sort(sort_seq_file);
+  merged_sequence_file.sort(sort_seq_file, num_threads);
 
   LOG_INFO("Updating tiles...");
 

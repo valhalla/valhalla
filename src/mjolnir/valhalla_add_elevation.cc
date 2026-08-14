@@ -37,7 +37,7 @@ std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
   std::deque<GraphId> tilequeue;
   GraphReader reader(pt.get_child("mjolnir"));
   std::for_each(std::begin(tiles), std::end(tiles), [&](const auto& tile) {
-    auto tile_id = GraphTile::GetTileId(*tile_dir + tile);
+    auto tile_id = GraphId::FromTilePath(*tile_dir + tile);
     GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
     if (!reader.DoesTileExist(local_tile_id)) {
       LOG_WARN("Provided tile doesn't belong to the tile directory from config file");

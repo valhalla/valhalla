@@ -5,6 +5,7 @@
 #include <valhalla/baldr/rapidjson_fwd.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -97,6 +98,15 @@ public:
       throw std::logic_error("Tile string format does not match level/tile/id");
     *this = GraphId(values[1], values[0], values[2]);
   }
+
+  /**
+   * Constructs a tile's base GraphId (tileid and level, within-tile id 0) from the full path to
+   * a tile file. The path must use the platform's preferred separator and contain at least one.
+   * @param  fname  Full path to the tile file.
+   * @return Returns the tile's base GraphId.
+   * @throws std::runtime_error if the path does not encode a (potentially) valid tile id.
+   */
+  static GraphId FromTilePath(const std::filesystem::path& path);
 
   /**
    * Gets the tile Id.

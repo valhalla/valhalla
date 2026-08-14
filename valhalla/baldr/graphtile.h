@@ -225,13 +225,6 @@ public:
                                 const TileLevel* tiles = nullptr);
 
   /**
-   * Get the tile Id given the full path to the file.
-   * @param  path    Filesystem path to the tile file.
-   * @return  Returns the tile Id.
-   */
-  static GraphId GetTileId(const std::filesystem::path& path);
-
-  /**
    * Get the bounding box of this graph tile.
    * @return Returns the bounding box of the tile.
    */
