@@ -27,9 +27,8 @@ echo "downloading timezone polygon file." 1>&2
 curl -L -s -o ./timezones-with-oceans-1970.shapefile.zip ${url} || error_exit "curl failed for ${url}"
 unzip ./timezones-with-oceans-1970.shapefile.zip 1>&2 || error_exit "unzip failed"
 
+# on windows we need to patch tmp paths to contain the leading drive letter
 tz_file=$(mktemp)
-# native windows tools (spatialite) can't resolve msys /tmp paths; hand them a
-# drive-letter path with forward slashes instead
 if command -v cygpath >/dev/null 2>&1; then
     tz_file=$(cygpath -m "${tz_file}")
 fi

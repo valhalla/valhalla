@@ -48,12 +48,10 @@ endif()
 set_target_properties(_valhalla PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla)
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# Windows: Python 3.8+ disabled PATH-based DLL search for extension modules.
-# Copy runtime DLLs next to each .pyd so stubgen (and any in-tree import) finds
-# them via Windows' default DLL search. Linux/macOS use RPATH instead.
-# TARGET_RUNTIME_DLLS misses transitive PRIVATE deps of imported SHARED libraries
-# (e.g., libsodium that libzmq pulls in privately), so glob vcpkg's bin and any
-# CMAKE_PREFIX_PATH bin dir as a backstop.
+# On windows from python 3.8+ there is no more searching for dlls on path for your modules. the only thing
+# that seemed to work was copying them next to each .pyd file so that stubgen finds them using windows
+# default of looking at siblings in the directory. lLinux/mac use RPATH for this. because some deps have
+# private shared libs we copy with a glob because otherwise we dont know the names of those deps
 if(WIN32)
   set(_pybind_dll_dirs "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin")
   foreach(_prefix IN LISTS CMAKE_PREFIX_PATH)
