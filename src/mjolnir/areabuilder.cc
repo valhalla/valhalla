@@ -6,6 +6,7 @@
 #include "mjolnir/areabuilder.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/osmway.h"
+#include "mjolnir/util.h"
 #include "scoped_timer.h"
 
 #include <geos_c.h>
@@ -505,6 +506,7 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
       }
     }
     if (lines.empty()) {
+      build_stats::get().increment(build_stats::kFailedPedestrianAreas);
       for (GEOSGeometry* point : entrance_points) {
         GEOSGeom_destroy(point);
       }
@@ -519,6 +521,11 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
     final_polygons.reserve(num_polygons);
     for (int i = 0; i < num_polygons; ++i) {
       final_polygons.push_back(GEOSGeom_clone(GEOSGetGeometryN(polygons, i)));
+    }
+
+    // the area had reachable entrances and closed ways but nothing polygonized
+    if (final_polygons.empty()) {
+      build_stats::get().increment(build_stats::kFailedPedestrianAreas);
     }
 
     LOG_DEBUG("area " + std::to_string(area_id) + ": " + std::to_string(lines.size()) + " ways -> " +
@@ -721,8 +728,14 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
 
       materialise_traversals(traversal_lines, entrance_ids, name_index, next_synthetic_osm_id, ways,
                              way_nodes);
+      build_stats::get().increment(build_stats::kCountPedestrianAreaEdges,
+                                   static_cast<uint32_t>(traversal_lines.size()));
       generated_any = true;
       GEOSPreparedGeom_destroy(prepared_poly);
+    }
+
+    if (generated_any) {
+      build_stats::get().increment(build_stats::kCountPedestrianAreas);
     }
 
     // no traversal was generated for this area (too small), so give its perimeter back
