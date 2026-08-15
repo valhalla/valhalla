@@ -1,4 +1,4 @@
-name: Build OSX, Win & Python bindings
+name: python
 
 # this workflow:
 # - runs master & PR pushes for OSX & Win
@@ -62,7 +62,7 @@ jobs:
   # very annoying: env vars can't be referenced in job's "if" statements, so we have to do this
   # https://stackoverflow.com/questions/73797254/environment-variables-in-github-actions
   publish_pypi:
-    name: Whether to publish PyPI
+    name: should-publish
     runs-on: ubuntu-latest
     steps:
       - run: echo "Are we publishing to PyPI? ${{ env.PUBLISH_PYPI }}"
@@ -72,7 +72,7 @@ jobs:
   # we build the sdist (source distribution) first, so cibuildwheel below can build the wheel
   # from that; ensures the sdist is really self-contained (minus system dependencies)
   build_sdist:
-    name: Build sdist
+    name: sdist
     runs-on: ubuntu-latest
     needs: [publish_pypi]
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' || (github.event_name == 'push' && github.ref == 'refs/heads/master') }}
@@ -99,7 +99,7 @@ jobs:
           path: dist/*.tar.gz
 
   build_python_wheels_linux:
-    name: Build Linux Python wheels
+    name: linux
     runs-on: ${{ matrix.runner }}
     needs: [build_sdist]
     strategy:
@@ -203,8 +203,10 @@ jobs:
     # this is the arm64 image for macos-13
     # we want the lowest available version to build the Python bindings
     runs-on: macos-14
-    name: Build OSX & Python wheels
+    name: osx
     needs: [publish_pypi]
+    # osx build+test lives in osx.yml now; this job only builds+publishes the wheel on release
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -250,35 +252,6 @@ jobs:
       - name: Build & install Valhalla (for python bindings)
         run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
 
-      - name: Build Tests
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        run: make -C build -j$(sysctl -n hw.logicalcpu) tests
-
-      - name: Delete cache to save the latest
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        run: |
-          KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
-          gh cache delete ${KEY} || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Save ccache
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        uses: tespkg/actions-cache/save@v1
-        with:
-          endpoint: fsn1.your-objectstorage.com
-          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache-2
-          key: ccache-osx-${{ env.VALHALLA_BRANCH }}
-          path: ~/Library/Caches/ccache
-
-      - name: Run Tests
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        run: make -C build -j$(sysctl -n hw.logicalcpu) check
-      
-      # only package python bindings if it's not a PR
-      
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
         env:
@@ -306,9 +279,11 @@ jobs:
           detached: true
   
   build_win:
-    name: Build Win & Python wheels
+    name: windows
     runs-on: windows-2022
     needs: [publish_pypi]
+    # windows build+test lives in windows.yml now; this job only builds+publishes the wheel on release
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     env:
       BUILD_TYPE: Release
       MSVC_VERSION: "2022"
@@ -460,6 +435,7 @@ jobs:
           detached: true
 
   verify_wheels_linux:
+    name: verify-linux
     needs: [build_python_wheels_linux]
     runs-on: ${{  matrix.runner  }}
     container: python:3.13-slim-bookworm
@@ -486,6 +462,7 @@ jobs:
           ./src/bindings/python/test/test_pyvalhalla_package.sh
 
   verify_wheels_osx:
+    name: verify-osx
     needs: [build_osx]
     runs-on: macos-14
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
@@ -509,6 +486,7 @@ jobs:
           python -m valhalla valhalla_build_tiles -h
   
   verify_wheels_win:
+    name: verify-windows
     needs: [build_win]
     runs-on: windows-2022
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
@@ -532,7 +510,7 @@ jobs:
           python -m valhalla valhalla_build_tiles -h
 
   upload_all:
-    name: Upload if release
+    name: publish
     needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
     runs-on: ubuntu-latest
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' && github.event.inputs.python_test_publish != 'true' }}

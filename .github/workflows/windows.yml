@@ -1,4 +1,4 @@
-name: Build Windows
+name: windows
 
 on:
   push:
@@ -45,14 +45,18 @@ env:
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
 jobs:
+  lint:
+    uses: ./.github/workflows/format.yml
+
   release_build:
-    name: Release build
+    name: release
     runs-on: windows-2025
+    needs: [lint]
     env:
       # for native crash debugging flip to RelWithDebInfo so the cdb/TTD steps below get symbols
       BUILD_TYPE: Release
       MSVC_VERSION: "2025"
-      # Keep aligned with VCPKG_VERSION in osx_win_python_builds.yml to share the vcpkg cache.
+      # Keep aligned with VCPKG_VERSION in python-wheels-release.yml to share the vcpkg cache.
       VCPKG_VERSION: "66c0373d"
       VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
       VCPKG_DISABLE_COMPILER_TRACKING: ON
@@ -68,11 +72,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      # python deps the script tests need, matching linux.yml / osx_win_python_builds.yml
+      # python deps the script tests need, matching linux.yml / python-wheels-release.yml
       - name: Install python test deps
         run: python -m pip install requests shapely numpy
 
-      # Same vcpkg env as osx_win_python_builds.yml for shared cache.
+      # Same vcpkg env as python-wheels-release.yml for shared cache.
       - name: Configure vcpkg env
         shell: bash
         run: |
@@ -188,24 +192,6 @@ jobs:
           # -k 0: keep building after failures so one run surfaces every error
           cmake --build build -- -k 0
           cmake --build build --target install
-
-      # TEMP: build an all-features (services on) windows python wheel to try out, ungated so it
-      # runs on this commit rather than only on master/tag. remove after.
-      - name: Build Python wheel (all features)
-        uses: pypa/cibuildwheel@v2.23.3
-        env:
-          CIBW_BUILD: cp312-*
-          CIBW_ENVIRONMENT_WINDOWS: >-
-            CMAKE_ARGS="-DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_HTTP=ON -DENABLE_SERVICES=ON
-            -DENABLE_TESTS=OFF -DVCPKG_MANIFEST_FEATURES=services
-            -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_TOOLCHAIN_FILE }}
-            -DVCPKG_TARGET_TRIPLET=${{ env.VCPKG_DEFAULT_TRIPLET }}"
-
-      - name: Upload wheel
-        uses: actions/upload-artifact@v4
-        with:
-          name: valhalla-windows-wheel-all-features
-          path: wheelhouse/*.whl
 
       # ------------------------------------------------------------------------------------------
       # CRASH DEBUGGING CHEATSHEET
