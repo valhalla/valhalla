@@ -58,4 +58,11 @@ void rename_replace(const std::filesystem::path& from,
 #endif
 }
 
+void rename_replace(const std::filesystem::path& from, const std::filesystem::path& to) {
+  std::error_code ec;
+  rename_replace(from, to, ec);
+  if (ec)
+    throw std::filesystem::filesystem_error("rename_replace failed", from, to, ec);
+}
+
 } // namespace valhalla::filesystem_utils

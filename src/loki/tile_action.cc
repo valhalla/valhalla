@@ -862,13 +862,7 @@ std::string loki_worker_t::render_tile(Api& request) {
       LOG_WARN("Couldnt cache tile {}", tile_path.string());
     }
 
-    // best-effort cache publish; a failed replace just means the tile isn't cached
-    std::error_code ec;
-    valhalla::filesystem_utils::rename_replace(tmp, tile_path, ec);
-    if (ec) {
-      LOG_WARN("Couldnt cache tile {}", tile_path.string());
-      std::filesystem::remove(tmp, ec);
-    }
+    valhalla::filesystem_utils::rename_replace(tmp, tile_path);
   }
 
   if (return_verbose && exclude_layers.empty()) {

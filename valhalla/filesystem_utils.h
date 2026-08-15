@@ -46,6 +46,16 @@ void rename_replace(const std::filesystem::path& from,
                     std::error_code& ec);
 
 /**
+ * Throwing overload of rename_replace, mirroring std::filesystem::rename. See the ec overload
+ * above for the replace/reader semantics.
+ *
+ * @param from the existing file to rename
+ * @param to   the destination path, replaced if it already exists
+ * @throws std::filesystem::filesystem_error on failure
+ */
+void rename_replace(const std::filesystem::path& from, const std::filesystem::path& to);
+
+/**
  * Saves data to the supplied path. Will replace the contents in case fpath already exists.
  * Will create a new directory if directory did not exist before hand.
  *
