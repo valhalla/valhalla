@@ -268,7 +268,7 @@ protected:
             // concoct a file name from the tile_id
             auto file_location = inc_log_path;
             file_location.replace_filename(
-                valhalla::baldr::GraphTile::FileSuffix(tile_id, ".pbf", true));
+                valhalla::baldr::GraphTile::FileSuffix(tile_id, ".pbf"));
             // update the tile
             update_count += update_tile(state, tile_id, read_tile(file_location.string()));
           }

@@ -269,7 +269,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     // requesting plain tiles
     auto fname =
         valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
-                                               valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
+                                               valhalla::baldr::SUFFIX_NON_COMPRESSED);
     result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
   } else {
     // or HTTP range on a tar
@@ -487,7 +487,6 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
 
 std::string GraphTile::FileSuffix(const GraphId& graphid,
                                   const std::string& fname_suffix,
-                                  bool is_file_path,
                                   const TileLevel* tiles) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
@@ -529,7 +528,8 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
   const size_t tile_id_strlen = max_length + max_length / 3;
   assert(tile_id_strlen % 4 == 0);
 
-  const char separator = is_file_path ? std::filesystem::path::preferred_separator : '/';
+  // always forward slash: valid for windows file apis too, and required for urls and tar entries
+  const char separator = '/';
 
   std::string tile_id_str(tile_id_strlen, '0');
   size_t ind = tile_id_strlen - 1;

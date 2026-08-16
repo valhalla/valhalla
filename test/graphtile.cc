@@ -29,15 +29,11 @@ struct testable_graphtile : public valhalla::baldr::GraphTile {
 };
 
 TEST(Graphtile, FileSuffix) {
-  // file paths use the native separator
-  auto native = [](const std::string& p) {
-    return std::filesystem::path(p).make_preferred().string();
-  };
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(2, 2, 0)), native("2/000/000/002.gph"));
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(4, 2, 0)), native("2/000/000/004.gph"));
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(64799, 1, 0)), native("1/064/799.gph"));
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(49, 0, 0)), native("0/000/049.gph"));
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1000000, 3, 1)), native("3/001/000/000.gph"));
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(2, 2, 0)), "2/000/000/002.gph");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(4, 2, 0)), "2/000/000/004.gph");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(64799, 1, 0)), "1/064/799.gph");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(49, 0, 0)), "0/000/049.gph");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1000000, 3, 1)), "3/001/000/000.gph");
   EXPECT_THROW(GraphTile::FileSuffix(GraphId(64800, 1, 0)), std::runtime_error);
   EXPECT_THROW(GraphTile::FileSuffix(GraphId(1337, 6, 0)), std::runtime_error);
   EXPECT_THROW(GraphTile::FileSuffix(GraphId(1036800, 2, 0)), std::runtime_error);
@@ -47,8 +43,8 @@ TEST(Graphtile, FileSuffix) {
   TileLevel level{7, valhalla::baldr::RoadClass::kSecondary, "half_degree_is_a_multiple_of_3",
                   Tiles<PointLL>{{{-180, -90}, {180, 90}}, .5, 1}};
 
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1234, 7, 0), ".qux", false, &level), "7/001/234.qux");
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(123456, 7, 0), ".qux", false, &level), "7/123/456.qux");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1234, 7, 0), ".qux", &level), "7/001/234.qux");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(123456, 7, 0), ".qux", &level), "7/123/456.qux");
 }
 
 TEST(Graphtile, IdFromString) {
