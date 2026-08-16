@@ -2,6 +2,7 @@
 #include "gurka.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/osmway.h"
+#include "mjolnir/util.h"
 #include "test.h"
 
 #include <gtest/gtest.h>
@@ -9,7 +10,7 @@
 using namespace valhalla;
 using namespace valhalla::baldr;
 
-TEST(area_routing, square_skipped_routes_around) {
+TEST(area_routing, square_skipped_routes_around_and_statsd) {
   const std::string ascii_map = R"(
     F--------G
     |        |
@@ -30,8 +31,23 @@ TEST(area_routing, square_skipped_routes_around) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  // build_stats is a process-global singleton with no reset, so measure the delta
+  // this build contributes rather than an absolute value
+  using mjolnir::build_stats;
+  auto& stats = build_stats::get();
+  const uint32_t areas_before = stats.count(build_stats::kCountPedestrianAreas);
+  const uint32_t edges_before = stats.count(build_stats::kCountPedestrianAreaEdges);
+  const uint32_t failed_before = stats.count(build_stats::kFailedPedestrianAreas);
+
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_area_square",
                                {{"mjolnir.concurrency", "1"}, {"mjolnir.pedestrian_areas", "true"}});
+
+  // the square generates one traversal, so at least one area and one edge are counted,
+  // and a well-formed area is never reported as failed
+  EXPECT_GE(stats.count(build_stats::kCountPedestrianAreas) - areas_before, 1u);
+  EXPECT_GE(stats.count(build_stats::kCountPedestrianAreaEdges) - edges_before, 1u);
+  EXPECT_EQ(stats.count(build_stats::kFailedPedestrianAreas) - failed_before, 0u);
 
   const auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
