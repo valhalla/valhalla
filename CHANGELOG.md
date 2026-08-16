@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: don't advance bounding-circle iterator past the end [#6241](https://github.com/valhalla/valhalla/pull/6241)
+   * FIXED: `edge_walk` matching for route shapes with extra live traffic breakpoint points [#6261](https://github.com/valhalla/valhalla/issues/6261)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)

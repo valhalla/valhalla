@@ -36,6 +36,10 @@ constexpr float kTotalDistanceEpsilon = 5.0f;
 // Minimum tolerance for edge length
 constexpr float kMinLengthTolerance = 10.0f;
 
+// Small distance tolerance, in meters, used when comparing progress along an
+// edge shape after projecting trace points onto it.
+constexpr double kShapeProgressEpsilon = 0.25;
+
 // Get the length to compare to the edge length
 float length_comparison(const float length, const bool exact_match) {
   // Alter tolerance based on exact_match flag
@@ -51,29 +55,118 @@ float length_comparison(const float length, const bool exact_match) {
   return length + tolerance;
 }
 
-// check if the intermediate shape points are also on the edge
+// Project a trace point onto the directed edge shape, starting at the current segment cursor.
+template <class VertexFn>
+bool project_onto_shape(const VertexFn& vertex,
+                        const std::vector<double>& vertex_distance,
+                        const valhalla::midgard::PointLL& point,
+                        double min_distance,
+                        size_t& segment,
+                        double& distance_along) {
+  while (segment + 1 < vertex_distance.size()) {
+    // Skip segments that end before the previous matched point on this edge.
+    if (vertex_distance[segment + 1] + kShapeProgressEpsilon < min_distance) {
+      ++segment;
+      continue;
+    }
+
+    // The trace point is valid for this segment only if it projects back to itself.
+    const auto projected = point.Project(vertex(segment), vertex(segment + 1));
+    if (!point.ApproximatelyEqual(projected)) {
+      ++segment;
+      continue;
+    }
+
+    // Measure where the projected point lands along the whole edge shape, not
+    // just within this one segment.
+    const auto distance_along_shape = vertex_distance[segment] + vertex(segment).Distance(projected);
+    if (distance_along_shape + kShapeProgressEpsilon < min_distance) {
+      ++segment;
+      continue;
+    }
+
+    distance_along = distance_along_shape;
+    return true;
+  }
+  return false;
+}
+
+// Verify that the trace points for one directed edge walk monotonically along that edge's
+// shape. Extra points are allowed, e.g. route shapes split by live traffic breakpoints,
+// but real edge vertices must still appear in order.
 bool check_shape(const graph_tile_ptr& tile,
                  const DirectedEdge* de,
                  const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                  uint32_t from,
-                 uint32_t to) {
+                 uint32_t to,
+                 bool require_end_vertex = true) {
   if (to - from == 1 && de->length() == 0) {
     return true;
   }
+
   const auto edgeinfo = tile->edgeinfo(de);
   const auto& edge_shape = edgeinfo.shape();
-  int32_t i = edge_shape.size() - (to - from);
-  if (i < 1 || (from > 0 && i != 1)) {
+  if (edge_shape.size() < 2) {
     return false;
   }
-  bool forward = de->forward();
-  for (uint32_t j = from + 1; j < to; i++, j++) {
-    const uint32_t shape_idx = forward ? i : edge_shape.size() - 1 - i;
-    if (!to_ll(shape.Get(j).ll()).ApproximatelyEqual(edge_shape[shape_idx])) {
+
+  const size_t n = edge_shape.size();
+  const bool forward = de->forward();
+
+  // Read the stored shape in the same direction as the directed edge.
+  const auto vertex = [&edge_shape, forward, n](size_t k) {
+    return forward ? edge_shape[k] : edge_shape[n - 1 - k];
+  };
+
+  std::vector<double> vertex_distance;
+  vertex_distance.reserve(n);
+  vertex_distance.push_back(0.0);
+  for (size_t i = 1; i < n; ++i) {
+    vertex_distance.push_back(vertex_distance.back() + vertex(i - 1).Distance(vertex(i)));
+  }
+
+  // Track both trace progress and the next real edge vertex that must appear.
+  double last_distance = 0.0;
+  size_t segment = 0;
+  size_t next_vertex = 1;
+  const auto start = to_ll(shape.Get(from).ll());
+  // The origin can be correlated to the middle of an edge, so only the first
+  // checked edge is allowed to start after one or more stored vertices.
+  if (from == 0) {
+    if (!project_onto_shape(vertex, vertex_distance, start, 0.0, segment, last_distance)) {
       return false;
     }
+
+    while (next_vertex < n && vertex_distance[next_vertex] + kShapeProgressEpsilon < last_distance) {
+      ++next_vertex;
+    }
+    while (next_vertex < n && start.ApproximatelyEqual(vertex(next_vertex))) {
+      ++next_vertex;
+    }
   }
-  return true;
+
+  for (uint32_t j = from + 1; j <= to; ++j) {
+    const auto point = to_ll(shape.Get(j).ll());
+    double distance_along = 0.0;
+    if (!project_onto_shape(vertex, vertex_distance, point, last_distance, segment, distance_along)) {
+      return false;
+    }
+
+    // Extra points are allowed, but they must not replace any stored vertices
+    // from the edge geometry.
+    while (next_vertex < n && vertex_distance[next_vertex] < distance_along - kShapeProgressEpsilon) {
+      return false;
+    }
+    while (next_vertex < n && point.ApproximatelyEqual(vertex(next_vertex))) {
+      ++next_vertex;
+    }
+
+    if (distance_along + kShapeProgressEpsilon < last_distance) {
+      return false;
+    }
+    last_distance = distance_along;
+  }
+  return !require_end_vertex || next_vertex == n;
 }
 
 // TODO: we need to stop relying on loki::Search to pre populate edge candidates for the first and
@@ -539,7 +632,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
     if (length <= de_length) {
       // Did not find the end of the origin edge. Check for trivial route on a single edge
       for (const auto& end : end_nodes) {
-        if (end.second.first.graph_id() == edge.graph_id()) {
+        if (end.second.first.graph_id() == edge.graph_id() &&
+            check_shape(begin_edge_tile, de, options.shape(), 0, options.shape_size() - 1, false)) {
           // Update the elapsed time based on edge cost
           uint8_t flow_sources;
           elapsed +=
