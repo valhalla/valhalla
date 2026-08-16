@@ -286,7 +286,6 @@ jobs:
     # windows build+test lives in windows.yml now; this job only builds+publishes the wheel on release
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     env:
-      BUILD_TYPE: Release
       MSVC_VERSION: "2025"
       VCPKG_VERSION: "66c0373d"
       VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
@@ -327,7 +326,6 @@ jobs:
 
       - name: Restore vcpkg packages
         uses: tespkg/actions-cache/restore@v1
-        id: vcpkg_restore
         with:
           endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
@@ -351,67 +349,7 @@ jobs:
         if: ${{  github.ref == 'refs/heads/master'  }}
         run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - name: Configure CMake
-        shell: bash
-        run: |
-
-          cmake --version
-          cmake -B build \
-            -G "Visual Studio 17 2022" \
-            -A x64 \
-            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
-            -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
-            -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
-            -DVCPKG_MANIFEST_FEATURES="services" \
-            -DENABLE_DATA_TOOLS=ON \
-            -DENABLE_TOOLS=ON \
-            -DENABLE_PYTHON_BINDINGS=OFF \
-            -DENABLE_HTTP=ON \
-            -DENABLE_TESTS=OFF \
-            -DENABLE_CCACHE=OFF \
-            -DENABLE_SERVICES=ON \
-            -DPREFER_EXTERNAL_DEPS=ON \
-            -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
-
-      - name: Save vcpkg packages
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' && steps.vcpkg_restore.outputs.cache-hit != 'true' }}
-        uses: tespkg/actions-cache/save@v1
-        with:
-          endpoint: fsn1.your-objectstorage.com
-          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache-2
-          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlay-ports-vcpkg/**') }}
-          path: |
-            vcpkg/*
-            !vcpkg/downloads
-            !vcpkg/docs
-            !vcpkg/buildtrees
-            vcpkg/downloads/tools
-
-      - name: Build Valhalla
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        run: |
-          cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
-          cmake --build build --config Release --target install
-
-      - name: Test Executable
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        shell: bash
-        run: |
-          set PATH=$PATH:${{ github.workspace }}/build/vcpkg_installed/$BUILD_TYPE/bin
-          ./build/$BUILD_TYPE/valhalla_build_tiles.exe -c ./test/win/valhalla.json ./test/data/utrecht_netherlands.osm.pbf
-          ./build/$BUILD_TYPE/valhalla_service.exe ./test/win/valhalla.json isochrone "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
-        
-      - name: Print libs
-        shell: bash
-        run: |
-          ls -l build/vcpkg_installed/x64-windows/lib
-          ls -l build/vcpkg_installed/x64-windows/bin
-      
-      # only package python bindings if it's not a PR
-      
+      # the vcpkg restore above just warms cibuildwheel's dep cache (produced by windows.yml).
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
         env:
