@@ -130,6 +130,7 @@ struct build_stats {
     kFailedNodeInitialization,
     kFailedOSMTimeRange,
     kFailedOSMTimeRangeUnknown,
+    kFailedPedestrianAreas,
     kInvalidHovType,
     kInvalidLevel,
     kInvalidOSMTag,
@@ -138,6 +139,8 @@ struct build_stats {
     kCountComplexTurnRestrictions,
     kCountEdges,
     kCountNodes,
+    kCountPedestrianAreas,
+    kCountPedestrianAreaEdges,
     kCountShortcutEdgesLevel0,
     kCountShortcutEdgesLevel1,
     kCountShortcutsLevel0,
@@ -192,6 +195,8 @@ struct build_stats {
        BuildStage::kParseWays, true},
       {"failed_osm_time_range_unknown", "OSM time range causes an unknown runtime_error",
        BuildStage::kParseWays, true},
+      {"failed_pedestrian_areas", "pedestrian areas that failed polygon assembly",
+       BuildStage::kBuildAreas, true},
       {"invalid_hov_type", "ways with invalid HOV type", BuildStage::kParseWays, true},
       {"invalid_level", "ways with invalid level tags", BuildStage::kParseWays, true},
       {"invalid_osm_tag", "invalid OSM tag parse errors", BuildStage::kParseWays, true},
@@ -201,6 +206,10 @@ struct build_stats {
        false},
       {"count_edges", "amount of edges at Validate", BuildStage::kValidate, false},
       {"count_nodes", "amount of nodes at Validate", BuildStage::kValidate, false},
+      {"count_pedestrian_areas", "final amount of healthy pedestrian areas", BuildStage::kBuildAreas,
+       false},
+      {"count_pedestrian_area_edges", "total count of virtual edges for all pedestrian areas",
+       BuildStage::kBuildAreas, false},
       {"count_shortcut_edges_level_0", "level 0 edges in shortcuts", BuildStage::kShortcuts, false},
       {"count_shortcut_edges_level_1", "level 1 edges in shortcuts", BuildStage::kShortcuts, false},
       {"count_shortcuts_level_0", "level 0 shortcuts", BuildStage::kShortcuts, false},
@@ -213,6 +222,10 @@ struct build_stats {
 
   void increment(counter c, uint32_t by = 1) {
     counters_[c] += by;
+  }
+
+  uint32_t count(counter c) const {
+    return counters_[c].load();
   }
 
   // Increment the shortcut count and edge count for the given hierarchy level.
