@@ -190,15 +190,20 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
 add_custom_target(build_timezones DEPENDS ${CMAKE_BINARY_DIR}/test/data/tz.sqlite)
 set_target_properties(build_timezones PROPERTIES FOLDER "Tests")
 
+# the four configs below all feed the single utrecht traffic.tar command that follows
+# initialize/parseways stage (only one with the finer grid_divisions)
 valhalla_test_config(utrecht_tiles_initial
   [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","include_construction":true,"hierarchy":true,"shortcuts":true,"concurrency":1,"data_processing":{"grid_divisions_within_tile":32}}}]=]
   utrecht_tiles_initial_cfg)
+# parserelations, parsenodes and build-through-cleanup stages
 valhalla_test_config(utrecht_tiles_main
   [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","include_construction":true,"hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
   utrecht_tiles_main_cfg)
+# valhalla_add_predicted_traffic
 valhalla_test_config(utrecht_tiles_traffic
   [=[{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","concurrency":1}}]=]
   utrecht_tiles_traffic_cfg)
+# valhalla_build_extract
 valhalla_test_config(utrecht_tiles_extract
   [=[{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","tile_extract":"test/data/utrecht_tiles/tiles.tar","traffic_extract":"test/data/utrecht_tiles/traffic.tar","concurrency":1}}]=]
   utrecht_tiles_extract_cfg)
