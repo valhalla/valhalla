@@ -9,13 +9,15 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 if(WIN32)
-  # require the SDK to provide FileRenameInfoEx (Win10 1709 SDK) rather than pinning a target version
+  # posix-semantics rename (Win10 1709+) is required; exercise exactly what rename_replace uses
+  # (the enum value, both flags, and the FILE_RENAME_INFO::Flags member) so a too-old SDK or a
+  # too-low _WIN32_WINNT both fail here rather than deep in the build
   include(CheckCXXSourceCompiles)
   check_cxx_source_compiles(
-    "#include <windows.h>\nint main() { (void)FileRenameInfoEx; return 0; }"
+    "#include <windows.h>\nint main() {\n  FILE_RENAME_INFO i{};\n  i.Flags = FILE_RENAME_FLAG_REPLACE_IF_EXISTS | FILE_RENAME_FLAG_POSIX_SEMANTICS;\n  (void)FileRenameInfoEx; return 0;\n}"
     HAVE_FILE_RENAME_INFO_EX)
   if(NOT HAVE_FILE_RENAME_INFO_EX)
-    message(FATAL_ERROR "Valhalla on Windows needs a Windows 10 1709 SDK or newer (FileRenameInfoEx)")
+    message(FATAL_ERROR "Valhalla on Windows needs a Windows 10 1709 SDK or newer (posix-semantics rename)")
   endif()
 
   # /Z7 (embedded debug info) instead of /Zi: no mspdbsrv serialization under Ninja, sccache-friendly

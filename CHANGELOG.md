@@ -64,7 +64,6 @@
    * ADDED: Bounding circles for faster loki (not yet enabled) [#5103](https://github.com/valhalla/valhalla/pull/5103)
    * ADDED: OpenAPI documentation [#6088](https://github.com/valhalla/valhalla/pull/6088)
    * ADDED: `dataset_id` config to optionally set an arbitrary number to each tile's `dataset_id` header field [#6126](https://github.com/valhalla/valhalla/pull/6126)
-   * ADDED: full windows support via latest prime_server dependency [#6105](https://github.com/valhalla/valhalla/pull/6105)
    * ADDED: Detect pedestrian areas (highway=pedestrian + area=yes) both as simple ways or multipolygon relations and avoid them generating edges[#6127](https://github.com/valhalla/valhalla/pull/6127)
    * ADDED: partial gurka tile build and `findWay` & `findWayNodes` gurka lookups for temp .bin files [#6136](https://github.com/valhalla/valhalla/pull/6136)
    * CHANGED: `checksum_` field in GraphTileHeader reflects now global tileset ID & tile data checksum [#6123](https://github.com/valhalla/valhalla/pull/6123)
@@ -75,6 +74,8 @@
    * CHANGED: `CostMatrix` reverse trees use time-dependent speeds with `invariant` date_time [#6168](https://github.com/valhalla/valhalla/pull/6168)
    * ADDED: support for multiple --region args in valhalla_build_extract [#6172](https://github.com/valhalla/valhalla/pull/6172)
    * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
+   * ADDED: full windows support via latest prime_server dependency [#6105](https://github.com/valhalla/valhalla/pull/6105)
+
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**
