@@ -168,7 +168,7 @@ namespace valhalla {
 void test_tile_server_t::start(const std::string& tile_source_dir,
                                const std::string& tar_path,
                                zmq::context_t& context) {
-  // we use inproc (shared mem) as it works cross platform
+  // we use inproc as it works cross platform
   std::string result_endpoint{"inproc://http_test_result_endpoint" + m_url};
   std::string request_interrupt{"inproc://http_test_request_interrupt" + m_url};
   std::string proxy_endpoint{"inproc://http_test_proxy_endpoint" + m_url};
