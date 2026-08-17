@@ -267,9 +267,8 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
   tile_getter_t::GET_response_t result;
   if (range_size == 0) {
     // requesting plain tiles
-    auto fname =
-        valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
-                                               valhalla::baldr::SUFFIX_NON_COMPRESSED);
+    auto fname = valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
+                                                        valhalla::baldr::SUFFIX_NON_COMPRESSED);
     result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
   } else {
     // or HTTP range on a tar
