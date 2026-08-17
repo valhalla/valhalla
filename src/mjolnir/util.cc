@@ -35,7 +35,6 @@ using namespace valhalla::mjolnir;
 namespace {
 
 // Temporary files used during tile building
-const std::string max_way_id_file = "max_way_id.bin";
 const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
 const std::string nodes_file = "nodes.bin";
