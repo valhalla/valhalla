@@ -1345,7 +1345,11 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
     };
 
     Cost new_cost{0.f, 0.f};
-    const auto label_cb = [&new_cost](const EdgeLabel& label) { new_cost = label.cost(); };
+    uint32_t new_distance = 0;
+    const auto label_cb = [&new_cost, &new_distance](const EdgeLabel& label) {
+      new_cost = label.cost();
+      new_distance = label.path_distance();
+    };
 
     // recost edges in final path; ignore access restrictions
     try {
@@ -1358,6 +1362,7 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 
     // update the existing best_connection cost
     connection.cost = new_cost;
+    connection.distance = new_distance;
   }
   if (request.options().verbose()) {
 
