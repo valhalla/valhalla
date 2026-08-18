@@ -53,12 +53,6 @@ uint32_t OverwriteBit(const uint32_t dst, const uint32_t src, const uint32_t pos
 namespace valhalla {
 namespace baldr {
 
-// Default constructor
-DirectedEdge::DirectedEdge() {
-  memset(this, 0, sizeof(DirectedEdge));
-  weighted_grade_ = 6;
-}
-
 // Sets the end node of this directed edge.
 void DirectedEdge::set_endnode(const GraphId& endnode) {
   endnode_ = endnode.value;
