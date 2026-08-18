@@ -111,7 +111,7 @@ public:
           ostream_ << "\\t";
           break;
         default:
-          if (iscntrl(c)) {
+          if (iscntrl(static_cast<unsigned char>(c))) {
             // format changes for json hex
             ostream_.setf(std::ios::hex, std::ios::basefield);
             ostream_.setf(std::ios::uppercase);

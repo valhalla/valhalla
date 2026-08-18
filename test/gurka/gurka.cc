@@ -131,12 +131,17 @@ std::vector<std::string> splitter(const std::string& in_pattern, const std::stri
   return split_content;
 }
 
+namespace {
+bool is_not_space(unsigned char ch) {
+  return !std::isspace(ch);
+}
+} // namespace
+
 void ltrim(std::string& s) {
-  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), is_not_space));
 }
 void rtrim(std::string& s) {
-  s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(),
-          s.end());
+  s.erase(std::find_if(s.rbegin(), s.rend(), is_not_space).base(), s.end());
 }
 
 std::string trim(std::string s) {
@@ -185,8 +190,7 @@ nodelayout map_to_coordinates(const std::string& map,
     // be allowed to affect positioning
     if (trim(line).empty())
       continue;
-    auto pos =
-        std::find_if(line.begin(), line.end(), [](const auto& ch) { return !std::isspace(ch); });
+    auto pos = std::find_if(line.begin(), line.end(), is_not_space);
     min_whitespace = std::min(min_whitespace, static_cast<long>(std::distance(line.begin(), pos)));
     if (min_whitespace == 0) // No need to continue if something is up against the left
       break;
@@ -207,7 +211,7 @@ nodelayout map_to_coordinates(const std::string& map,
     for (std::size_t x = 0; x < lines[y].size(); x++) {
       auto ch = lines[y][x];
       // Only do A-Za-z0-9 for nodes - all other things are ignored
-      if (std::isalnum(ch)) {
+      if (std::isalnum(static_cast<unsigned char>(ch))) {
         // Always project west, then south, for consistency
         double lon = topleft.lng() + x2lon_m(x * gridsize_metres);
         double lat = topleft.lat() - y2lat_m(y * gridsize_metres);
