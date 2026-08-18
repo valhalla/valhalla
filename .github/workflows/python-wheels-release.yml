@@ -349,6 +349,22 @@ jobs:
         if: ${{  github.ref == 'refs/heads/master'  }}
         run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
+      # populate build/vcpkg_installed/x64-windows/bin (prime_server.dll etc.) so delvewheel can
+      # vendor the services runtime dlls; vcpkg installs from the restored cache so this is quick
+      - name: Populate vcpkg_installed for delvewheel
+        shell: bash
+        run: |
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
+            -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
+            -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
+            -DVCPKG_MANIFEST_FEATURES="services" \
+            -DENABLE_SERVICES=ON \
+            -DENABLE_PYTHON_BINDINGS=OFF \
+            -DENABLE_TESTS=OFF
+
       # the vcpkg restore above just warms cibuildwheel's dep cache (produced by windows.yml).
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
