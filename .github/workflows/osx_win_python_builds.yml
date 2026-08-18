@@ -355,7 +355,7 @@ jobs:
         shell: bash
         run: |
           cmake -B build \
-            -G "Visual Studio 17 2022" -A x64 \
+            -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
             -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
