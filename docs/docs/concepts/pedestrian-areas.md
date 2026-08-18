@@ -95,9 +95,11 @@ Beyond those, there are a few internal refinements marked in the source or raise
 
 - **Unifying the chain-walking logic.** The walk used for pruning the branches and the one used for stitching chains are nearly identical, and could be unified.
 
+- **Separating area ways into their own file.** Area member ways are currently emitted into the same file as completely processed ways but in an intentionally incomplete state. Keeping them in a separate file would make the two clearly distinct and the pipeline easier to follow.
+
 ## Performance
 
-Generating traversals adds some processing time to the tile build. These are the numbers from a full-planet build:
+Generating traversals adds some processing time to the tile build. These are the numbers from a full-planet build (August 2026):
 
 | Metric | Value |
 | :----- | :---- |
