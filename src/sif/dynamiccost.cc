@@ -103,6 +103,8 @@ constexpr float kDefaultServiceFactor = 1.0f;
 // Default penalty factor for avoiding closures (increases the cost of an edge as if its being
 // traversed at kMinSpeedKph)
 constexpr float kDefaultClosureFactor = 9.0f;
+constexpr float kDefaultUseDistance = 0.f; // Default preference of using distance vs time 0-1
+
 // Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not
 // penalize closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the
 // non-closure end
@@ -177,7 +179,8 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       exclude_tolls_(false), exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
       include_hov3_{false}, height_{0.f, kDefaultHeight, 10.0f}, width_{0.f, kDefaultWidth, 10.0f},
-      length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f} {
+      length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f},
+      use_distance_{0.f, kDefaultUseDistance, 1.f} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -188,6 +191,8 @@ DynamicCost::DynamicCost(const Costing& costing,
       allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
       closure_factor_(kDefaultClosureFactor), speed_penalty_factor_(kDefaultSpeedPenaltyFactor),
       flow_mask_(kDefaultFlowMask), shortest_(costing.options().shortest()),
+      distance_factor_(costing.options().use_distance() * kInvMedianSpeed),
+      inv_distance_factor_(1.f - costing.options().use_distance()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
       ignore_non_vehicular_restrictions_(costing.options().ignore_non_vehicular_restrictions()),
       ignore_turn_restrictions_(costing.options().ignore_restrictions() ||
@@ -578,6 +583,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty,
                           warnings);
 
+  JSON_PBF_RANGED_DEFAULT(co, cfg.use_distance_, json, "/use_distance", use_distance, warnings);
   // service_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_factor_, json, "/service_factor", service_factor, warnings);
 
