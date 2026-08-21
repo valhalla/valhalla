@@ -74,7 +74,7 @@ jobs:
 
       # python deps the script tests need, matching linux.yml / python-wheels-release.yml
       - name: Install python test deps
-        run: python -m pip install requests shapely numpy
+        run: python -m pip install requests shapely numpy polib
 
       # Same vcpkg env as python-wheels-release.yml for shared cache.
       - name: Configure vcpkg env
