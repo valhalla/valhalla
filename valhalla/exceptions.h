@@ -1,8 +1,10 @@
 #ifndef __VALHALLA_EXCEPTIONS_H__
 #define __VALHALLA_EXCEPTIONS_H__
 
+#include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace valhalla {
 class Api;
@@ -36,6 +38,9 @@ struct valhalla_exception_t : public std::runtime_error {
   std::string http_message;
   std::string osrm_error;
   std::string statsd_key;
+  // indices into the request's locations this error is about (171: unsnappable locations,
+  // 442: the two ends of the leg without a path); empty for every other error
+  std::vector<uint32_t> location_indices;
 };
 
 /**

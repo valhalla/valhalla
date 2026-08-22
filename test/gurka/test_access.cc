@@ -318,6 +318,13 @@ TEST_F(MultipleBarriers, BothClosed) {
   } catch (const std::runtime_error& e) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
   }
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C", "B"}, "auto");
+    gurka::assert::raw::expect_path(result, {}, "Unexpected path found");
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_EQ(e.code, 442);
+    EXPECT_EQ(e.location_indices, (std::vector<uint32_t>{1, 2}));
+  }
 }
 
 TEST_F(MultipleBarriers, BothPrivate) {
@@ -678,6 +685,7 @@ TEST(Standalone, ViaFerrataDefault) {
     gurka::assert::raw::expect_path(result, {}, "Unexpected path found");
   } catch (const valhalla_exception_t& e) {
     EXPECT_STREQ(e.what(), "No suitable edges near location");
+    EXPECT_EQ(e.location_indices, (std::vector<uint32_t>{0, 1}));
   }
 }
 

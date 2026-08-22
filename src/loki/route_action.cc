@@ -152,10 +152,16 @@ void loki_worker_t::route(Api& request) {
 
     // throw if there's a location we did not find any
     // candidates for
+    std::vector<uint32_t> unreachable;
     for (const auto& location : *locations) {
       if (location.correlation().edges().empty() && location.correlation().filtered_edges().empty()) {
-        throw valhalla_exception_t(171);
+        unreachable.push_back(location.correlation().original_index());
       }
+    }
+    if (!unreachable.empty()) {
+      valhalla_exception_t e{171};
+      e.location_indices = std::move(unreachable);
+      throw e;
     }
 
     if (connectivity_map) {

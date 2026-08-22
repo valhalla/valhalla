@@ -1347,6 +1347,13 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& request)
     json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
     json_error->emplace("error", std::string(exception.message));
     json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
+    if (!exception.location_indices.empty()) {
+      auto location_indices = baldr::json::array({});
+      for (auto index : exception.location_indices) {
+        location_indices->emplace_back(static_cast<uint64_t>(index));
+      }
+      json_error->emplace("location_indices", location_indices);
+    }
     body << *json_error;
   }
 

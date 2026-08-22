@@ -318,6 +318,13 @@ components:
               error:       { type: string }
               status_code: { type: integer }
               status:      { type: string }
+              location_indices:
+                type: array
+                items: { type: integer }
+                description: >-
+                  Positions in the request's `locations` the error is about. Only present for
+                  error 171 (the locations no road was found near) and 442 (the two ends of the
+                  leg no path was found for).
 
     RateLimited:
       description: |

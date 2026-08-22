@@ -105,7 +105,10 @@ except ValhallaError as e:
     print(e.message)       # "No suitable edges near location"
     print(e.http_code)     # 400
     print(e.http_message)  # "Bad Request"
+    print(e.location_indices)  # [0, 1]
 ```
+
+`location_indices` are positions in the request's `locations`: for error 171 the locations no road was found near, for error 442 the two ends of the leg no path was found for. It is empty for every other error.
 
 #### Graph Utilities
 

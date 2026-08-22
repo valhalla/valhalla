@@ -179,7 +179,27 @@ class TestBindings(unittest.TestCase):
         self.assertEqual(e.http_code, 400)
         self.assertEqual(e.message, "No suitable edges near location")
         self.assertEqual(e.http_message, "Bad Request")
+        self.assertEqual(e.location_indices, [0, 1])
         self.assertEqual(str(e), e.message)
+
+    def test_router_error_no_path(self):
+        # the last stop snaps onto a road stub the extract boundary cut off from the network
+        query = {
+            "locations": [
+                {"lat": 52.0907, "lon": 5.1214},
+                {"lat": 52.0950, "lon": 5.1150},
+                {"lat": 52.047005, "lon": 5.074808, "minimum_reachability": 0, "radius": 1},
+            ],
+            "costing": "auto"
+        }
+
+        with self.assertRaises(ValhallaError) as ctx:
+            self.actor.route(query)
+
+        e = ctx.exception
+        self.assertEqual(e.code, 442)
+        self.assertEqual(e.message, "No path could be found for input")
+        self.assertEqual(e.location_indices, [1, 2])
 
     def test_change_config(self):
         with NamedTemporaryFile('w+') as tmp:

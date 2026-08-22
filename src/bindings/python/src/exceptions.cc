@@ -23,7 +23,12 @@ void init_exceptions(nb::module_& m) {
                                 ":ivar http_code: Corresponding HTTP status code.\n"
                                 ":vartype http_code: int\n"
                                 ":ivar http_message: Corresponding HTTP status message.\n"
-                                ":vartype http_message: str\n",
+                                ":vartype http_message: str\n"
+                                ":ivar location_indices: Indices into the request's ``locations`` "
+                                "this error is about: the locations no road was found for "
+                                "(code 171), or the two ends of the leg no path was found for "
+                                "(code 442). Empty for other errors.\n"
+                                ":vartype location_indices: list[int]\n",
                                 PyExc_RuntimeError, nullptr);
   // don't increase refcount, it's static
   m.attr("ValhallaError") = nb::borrow(ValhallaError);
@@ -45,6 +50,11 @@ void init_exceptions(nb::module_& m) {
             exc.attr("message") = nb::str(e.message.c_str());
             exc.attr("http_code") = nb::int_(e.http_code);
             exc.attr("http_message") = nb::str(e.http_message.c_str());
+            nb::list location_indices;
+            for (auto index : e.location_indices) {
+              location_indices.append(nb::int_(index));
+            }
+            exc.attr("location_indices") = location_indices;
             // Set the Python error indicator: raise exc
             PyErr_SetObject(type, exc.ptr());
           }

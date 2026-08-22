@@ -123,6 +123,14 @@ template <typename Predicate> inline void remove_path_edges(valhalla::Location& 
       ->DeleteSubrange(start_idx, loc.correlation().filtered_edges_size() - start_idx);
 }
 
+valhalla_exception_t no_path_between(const valhalla::Location& origin,
+                                     const valhalla::Location& destination) {
+  valhalla_exception_t e{442};
+  e.location_indices = {origin.correlation().original_index(),
+                        destination.correlation().original_index()};
+  return e;
+}
+
 /**
 // removes any edges from the location that aren't connected to it (because of radius)
 void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& reader) {
@@ -702,6 +710,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   while (origin != correlated.rend()) {
     auto destination = std::prev(origin);
     if (!route_two_locations(origin, destination)) {
+      const auto no_path = no_path_between(*origin, *destination);
       // if routing failed because an intermediate waypoint was snapped to the low reachability road
       // (such road lies in a small connectivity component that is not connected to other locations)
       // we should leave only high reachability candidates and try to route again
@@ -717,7 +726,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
           // it doesn't make sense to continue if there are no more path edges
           if (loc->correlation().edges_size() == 0)
             // no route found
-            throw valhalla_exception_t{442};
+            throw no_path;
         }
         // resets the entire state of all the legs of the route and starts completely
         // over from the beginning doing all the legs over
@@ -731,7 +740,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         continue;
       }
       // no route found
-      throw valhalla_exception_t{442};
+      throw no_path;
     }
     ++origin;
   }
@@ -899,6 +908,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   while (destination != correlated.end()) {
     auto origin = std::prev(destination);
     if (!route_two_locations(origin, destination)) {
+      const auto no_path = no_path_between(*origin, *destination);
       // if routing failed because an intermediate waypoint was snapped to the low reachability road
       // (such road lies in a small connectivity component that is not connected to other locations)
       // we should leave only high reachability candidates and try to route again
@@ -914,7 +924,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
           // it doesn't make sense to continue if there are no more path edges
           if (loc->correlation().edges_size() == 0)
             // no route found
-            throw valhalla_exception_t{442};
+            throw no_path;
         }
         // resets the entire state of all the legs of the route and starts completely
         // over from the beginning doing all the legs over
@@ -928,7 +938,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         continue;
       }
       // no route found
-      throw valhalla_exception_t{442};
+      throw no_path;
     }
     ++destination;
   }

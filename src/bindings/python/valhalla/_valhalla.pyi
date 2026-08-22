@@ -24,6 +24,8 @@ class ValhallaError(RuntimeError):
     :vartype http_code: int
     :ivar http_message: Corresponding HTTP status message.
     :vartype http_message: str
+    :ivar location_indices: Indices into the request's ``locations`` this error is about: the locations no road was found for (code 171), or the two ends of the leg no path was found for (code 442). Empty for other errors.
+    :vartype location_indices: list[int]
     """
 
 class _Actor:
