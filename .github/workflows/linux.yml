@@ -78,7 +78,7 @@ jobs:
       - name: Install deps
         run: |
           ./scripts/install-linux-deps.sh
-          python -m pip install requests shapely numpy
+          python -m pip install requests shapely numpy polib
       
       - name: Get timestamp & ccache dir
         run: |
@@ -153,7 +153,7 @@ jobs:
       - name: Install deps
         run: |
           ./scripts/install-linux-deps.sh
-          python -m pip install requests shapely numpy
+          python -m pip install requests shapely numpy polib
 
       - name: Get timestamp & ccache dir
         run: |
@@ -237,7 +237,7 @@ jobs:
       - name: Install deps
         run: |
           ./scripts/install-linux-deps.sh
-          python -m pip install requests shapely numpy
+          python -m pip install requests shapely numpy polib
 
       - name: Get timestamp & ccache dir
         run: |
