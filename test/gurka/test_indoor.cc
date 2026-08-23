@@ -700,3 +700,51 @@ TEST(StandAlone, GenericLevelChange) {
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, 1, "Continue to Level 1.", "", "",
                                                             "", "");
 }
+
+TEST(Standalone, ElevatorNodeReverseSearchAcrossTiles) {
+  // 100m per character leaves C and D in one level 2 tile and puts A, B and E in the next one, so
+  // the two directions of CA live in different tiles. Riding the elevator node A crosses three
+  // levels, which the reverse search has to pay for; the detour CDEB is the cheaper way round.
+  constexpr double gridsize_metres = 100;
+
+  const std::string ascii_map = R"(
+      C---A---B
+      |       |
+      |       |
+      |       |
+      |       |
+      D-------E
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+      {"CA", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "0"}}},
+      {"CD", {{"highway", "corridor"}, {"indoor", "yes"}}},
+      {"DE", {{"highway", "corridor"}, {"indoor", "yes"}}},
+      {"EB", {{"highway", "corridor"}, {"indoor", "yes"}}},
+  };
+
+  const gurka::nodes nodes = {
+      {"A", {{"highway", "elevator"}, {"indoor", "yes"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0.2497, 0.1});
+  auto map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_elevator_cross_tile", build_config);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  ASSERT_NE(std::get<0>(gurka::findEdge(reader, layout, "CA", "A")).tileid(),
+            std::get<0>(gurka::findEdge(reader, layout, "CA", "C")).tileid());
+  ASSERT_EQ(reader.nodeinfo(gurka::findNode(reader, layout, "A"))->type(),
+            baldr::NodeType::kElevator);
+
+  // arrive_by keeps the search reverse only, so it reaches the elevator node A over the
+  // predecessor edge CA, whose two directions sit in different tiles. Reading CA through the
+  // wrong tile loses its level and makes the ride look like a single level, cheap enough to beat
+  // the detour.
+  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "C"}, "pedestrian",
+                                 {{"/date_time/type", "2"},
+                                  {"/date_time/value", "2024-01-01T10:00"},
+                                  {"/costing_options/pedestrian/elevator_penalty", "400"}});
+  gurka::assert::raw::expect_path(result, {"EB", "DE", "CD"});
+}

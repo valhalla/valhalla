@@ -847,8 +847,14 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     // call functor to get limited access to reader
     baldr::LimitedGraphReader reader = reader_getter();
     auto to_tile = reader.GetGraphTile(edge_id);
+    if (to_tile == nullptr) {
+      return {elevator_penalty_, 0.0f};
+    }
     auto levels = tile->edgeinfo(pred).levels();
-    auto prev_levels = to_tile->edgeinfo(edge).levels();
+    // edge is the opposing edge of edge_id, so it belongs to the tile of edge_id's end node and its
+    // edge info offset means nothing in to_tile. Both directions share the same edge info, so read
+    // it through edge_id itself.
+    auto prev_levels = to_tile->edgeinfo(to_tile->directededge(edge_id)).levels();
     unsigned int traversed_levels = levels.first.size() == 1 && prev_levels.first.size() == 1 &&
                                             levels.first[0].first == levels.first[0].second &&
                                             prev_levels.first[0].first == prev_levels.first[0].second
