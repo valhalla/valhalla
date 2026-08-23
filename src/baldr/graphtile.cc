@@ -693,7 +693,7 @@ std::string GraphTile::GetName(const uint32_t textlist_offset) const {
   if (textlist_offset < textlist_size_) {
     return textlist_ + textlist_offset;
   } else {
-    throw std::runtime_error(text_offset_error("GetName", textlist_offset, textlist_size_));
+    throw std::runtime_error(text_offset_error_msg("GetName", textlist_offset, textlist_size_));
   }
 }
 
@@ -769,7 +769,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
       }
     } else {
       throw std::runtime_error(
-          text_offset_error("GetSigns", signs_[found].text_offset(), textlist_size_));
+          text_offset_error_msg("GetSigns", signs_[found].text_offset(), textlist_size_));
     }
   }
 
@@ -872,7 +872,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
                            signs_[found].tagged(), false, 0, 0, text);
     } else {
       throw std::runtime_error(
-          text_offset_error("GetSigns", signs_[found].text_offset(), textlist_size_));
+          text_offset_error_msg("GetSigns", signs_[found].text_offset(), textlist_size_));
     }
   }
 

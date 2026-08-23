@@ -8,7 +8,6 @@
 #include <valhalla/midgard/pointll.h>
 
 #include <cstdint>
-#include <format>
 #include <map>
 #include <string>
 #include <tuple>
@@ -20,12 +19,6 @@ namespace baldr {
 
 constexpr size_t kMaxNamesPerEdge = 15;
 constexpr size_t kMaxEncodedShapeSize = 65535;
-
-// Message thrown when a stored text offset points past the end of a tile's text list.
-inline std::string text_offset_error(const char* method, uint32_t offset, size_t length) {
-  return std::format("{}: offset exceeds size of text list (offset={}, length={})", method, offset,
-                     length);
-}
 
 // Use elevation bins of 2 meters to store mean elevation. Clamp to a range
 // from -500 meters to 7683 meters.
