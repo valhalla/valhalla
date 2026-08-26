@@ -210,6 +210,15 @@ constexpr uint16_t kDisallowSimpleRestriction = 0x4;
 constexpr uint16_t kDisallowClosure = 0x8;
 constexpr uint16_t kDisallowShortcut = 0x10;
 
+// The basic costing for an edge is a trade off between time and distance. We allow the user to
+// specify which one is more important to them and then we use a linear combination to combine the two
+// into a final metric. The problem is that time in seconds and length in meters have two wildly
+// different ranges, so the linear combination always favors length vs time. What we do to combat this
+// is to change length units into time units by multiplying by the reciprocal of a constant speed.
+// This means basically changes the units of distance to be more in the same ballpark as the units of
+// time and makes the linear combination make more sense.
+constexpr float kInvMedianSpeed = 1.f / 16.f; // about 37mph
+
 constexpr std::array<float, 253> populate_speedfactor() {
   std::array<float, 253> speedfactor{};
   speedfactor[0] = midgard::kSecPerHour; // TODO - what to make speed=0?
@@ -1361,6 +1370,8 @@ protected:
   // Whether or not to do shortest (by length) routes
   // Note: hierarchy pruning means some costings (auto, truck, etc) won't do absolute shortest
   bool shortest_;
+  float distance_factor_;     // How much distance factors in overall favorability
+  float inv_distance_factor_; // How much time factors in overall favorability
 
   bool ignore_restrictions_{false};
   bool ignore_non_vehicular_restrictions_{false};
@@ -1627,6 +1638,7 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> width_;
   ranged_default_t<float> length_;
   ranged_default_t<float> weight_;
+  ranged_default_t<float> use_distance_;
 };
 
 /**
