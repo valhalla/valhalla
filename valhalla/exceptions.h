@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace valhalla {
 class Api;
@@ -56,7 +57,7 @@ void add_warning(valhalla::Api& api, unsigned code, const std::string& extra = "
  * @param offset  the offset read from the tile
  * @param length  the length of the text list the offset was checked against
  */
-std::string text_offset_error_msg(const char* method, uint32_t offset, size_t length);
+std::string text_offset_error_msg(std::string_view method, uint32_t offset, size_t length);
 } // namespace valhalla
 
 #endif //__VALHALLA_EXCEPTIONS_H__

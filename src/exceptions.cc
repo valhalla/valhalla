@@ -190,7 +190,7 @@ void add_warning(valhalla::Api& api, unsigned code, const std::string& extra) {
   }
 }
 
-std::string text_offset_error_msg(const char* method, uint32_t offset, size_t length) {
+std::string text_offset_error_msg(std::string_view method, uint32_t offset, size_t length) {
   return std::format("{}: offset exceeds size of text list (offset={}, length={})", method, offset,
                      length);
 }
