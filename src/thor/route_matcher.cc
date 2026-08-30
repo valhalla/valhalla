@@ -6,6 +6,7 @@
 #include "proto_conversions.h"
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 using namespace valhalla::baldr;
@@ -123,6 +124,34 @@ end_node_t GetEndEdges(GraphReader& reader, const valhalla::Location& destinatio
 // node and expands from there. Returns true once the end node has been found (and
 // distance is approximately what it should be). Returns false if expansion from this
 // node fails (cannot find edges that match the trace - either in position or distance).
+//
+// The walk is a depth-first search with backtracking that runs on an explicit stack of
+// frames instead of recursing: its depth grows with the number of edges the shape covers,
+// and a caller embedding the library gets whatever stack its worker threads have, commonly
+// ~1 MB, which cannot hold one call frame per edge of a long shape.
+struct ExpandFrame {
+  // What one invocation takes as input
+  size_t correlated_index;
+  graph_tile_ptr tile;
+  GraphId node;
+  bool from_transition;
+
+  // Where the frame picks its work back up after a child frame finishes
+  enum class Resume : uint8_t { kStart, kEdgeChild, kEdgeScan, kTransChild, kTransScan };
+  Resume resume = Resume::kStart;
+
+  // Loop state that survives while a child frame runs. The scans keep the counters and
+  // the edge/transition offsets separate on purpose: the counters start from the
+  // followed_edges bookmark while the offsets start from the node's first edge or
+  // transition, so the offset is counter minus bookmark.
+  const NodeInfo* nodeinfo = nullptr;
+  uint32_t edge_start = 0;  // followed_edges bookmark the edge scan started from
+  uint32_t edge_i = 0;      // counter of the directed edge being tried
+  Cost edge_cost{};         // cost the tried edge added to elapsed, unwound if the child fails
+  uint32_t trans_start = 0; // followed_edges bookmark the transition scan started from
+  uint32_t trans_i = 0;     // counter of the node transition being tried
+};
+
 bool expand_from_node(const mode_costing_t& mode_costing,
                       const valhalla::sif::TravelMode& mode,
                       GraphReader& reader,
@@ -141,148 +170,219 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                       GraphId& end_node,
                       followed_edges_t& followed_edges,
                       const bool use_shortcuts) {
-  // Done expanding when node equals stop node and the accumulated distance to that node
-  // plus the partial last edge distance is approximately equal to the total distance
-  auto n = end_nodes.find(node);
-  if (n != end_nodes.end() &&
-      valhalla::midgard::equal<float>((distances[correlated_index].second + n->second.second),
-                                      distances.back().second, kTotalDistanceEpsilon)) {
+  std::vector<ExpandFrame> stack;
+  stack.push_back({correlated_index, tile, node, from_transition});
+  // The popped frame's result. A frame that decides its own outcome assigns it; a frame whose
+  // outcome is its child's leaves the child's value in place, which is how a match reaches the root
+  bool matched = false;
 
-    if (!path_infos.back().is_shortcut) {
-      end_node = node;
-      return true;
-    } else { // can't end on a shortcut
-      return false;
-    }
-  }
-
-  // Get the last edge followed from this index
-  uint32_t level = node.level();
-  uint32_t start_de = followed_edges[correlated_index][level].first;
-
-  // Iterate through directed edges from this node
-  const NodeInfo* nodeinfo = tile->node(node);
-  GraphId edge_id(node.tileid(), level, nodeinfo->edge_index());
-  const DirectedEdge* de = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = start_de; i < nodeinfo->edge_count(); i++, de++, ++edge_id) {
-    // Mark the directed edge as already followed
-    followed_edges[correlated_index][level].first = i;
-
-    // Skip shortcuts and transit connection edges
-    // TODO - later might allow transit connections for multi-modal
-    if ((!use_shortcuts && de->is_shortcut()) || de->use() == Use::kTransitConnection) {
-      continue;
-    }
-
-    // Look back in path_infos by 1-2 edges to make sure we aren't in a loop.
-    // A loop can occur if we have edges shorter than the lat,lng tolerance.
-    uint32_t n = path_infos.size();
-    if (n > 1 && (edge_id == path_infos[n - 2].edgeid || edge_id == path_infos[n - 1].edgeid)) {
-      continue;
-    }
-
-    // Get the end node LL and set up the length comparison
-    graph_tile_ptr end_node_tile = reader.GetGraphTile(de->endnode());
-    if (end_node_tile == nullptr) {
-      continue;
-    }
-    valhalla::midgard::PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
-    float de_length = length_comparison(de->length(), true);
-
-    // Process current edge until shape matches end node or shape length is longer than
-    // the current edge. Increment to the next shape point after the correlated index.
-    size_t index = correlated_index + 1;
-    float length = 0.0f;
-    while (index < static_cast<size_t>(shape.size())) {
-      // Exclude edge if length along shape is longer than the edge length
-      length += distances.at(index).first;
-      if (length > de_length) {
-        break;
-      }
-
-      // Found a match if shape equals directed edge LL within tolerance
-      if (to_ll(shape.Get(index).ll()).ApproximatelyEqual(de_end_ll) &&
-          de->length() < length_comparison(length, true) &&
-          check_shape(tile, de, shape, correlated_index, index)) {
-
-        // Figure out what time it is right now, the first iteration is a no-op
-        auto offset_time_info = nodeinfo
-                                    ? time_info.forward(/*accumulated_elapsed.secs + */ elapsed.secs,
-                                                        nodeinfo->timezone())
-                                    : time_info;
-
-        // get the cost of traversing the node and the edge
-        auto& costing = mode_costing[static_cast<int>(mode)];
-        auto reader_getter = [&reader]() { return LimitedGraphReader(reader); };
-        auto transition_cost =
-            costing->TransitionCost(de, nodeinfo, prev_edge_label, tile, reader_getter);
-        uint8_t flow_sources;
-        auto cost =
-            transition_cost + costing->EdgeCost(de, edge_id, tile, offset_time_info, flow_sources);
-        elapsed += cost;
-        // overwrite time with timestamps
-        if (use_timestamps)
-          elapsed.secs = shape.Get(index).time() - shape.Get(0).time();
-
-        // Add edge and update correlated index
-        path_infos.emplace_back(mode, elapsed, edge_id, /*trip_id=*/0, /*path_distance=*/0.f,
-                                /*path_distance=*/-1, transition_cost,
-                                /*start_node_is_recovered=*/false, de->is_shortcut());
-
-        InternalTurn turn = nodeinfo
-                                ? costing->TurnType(prev_edge_label.opp_local_idx(), nodeinfo, de)
-                                : InternalTurn::kNoTurn;
-        // Set previous edge label
-        prev_edge_label = {kInvalidLabel,
-                           edge_id,
-                           de,
-                           {},
-                           0,
-                           mode,
-                           0,
-                           kInvalidRestriction,
-                           true,
-                           static_cast<bool>(flow_sources & kDefaultFlowMask),
-                           turn};
-
-        // Continue walking shape to find the end edge...
-        if (expand_from_node(mode_costing, mode, reader, shape, distances, time_info, use_timestamps,
-                             index, end_node_tile, de->endnode(), end_nodes, prev_edge_label, elapsed,
-                             path_infos, false, end_node, followed_edges, use_shortcuts)) {
-          return true;
-        } else {
-          // Match failed along this edge, pop the last entry off path_infos as well as what it
-          // contributed to the elapsed cost/time and try to keep going on the next edge
-          elapsed -= cost;
-          path_infos.pop_back();
-          break;
+  while (!stack.empty()) {
+    ExpandFrame& f = stack.back();
+    switch (f.resume) {
+      case ExpandFrame::Resume::kStart: {
+        // Done expanding when node equals stop node and the accumulated distance to that node
+        // plus the partial last edge distance is approximately equal to the total distance
+        auto n = end_nodes.find(f.node);
+        if (n != end_nodes.end() &&
+            valhalla::midgard::equal<float>((distances[f.correlated_index].second + n->second.second),
+                                            distances.back().second, kTotalDistanceEpsilon)) {
+          if (!path_infos.back().is_shortcut) {
+            end_node = f.node;
+            matched = true;
+          } else { // can't end on a shortcut
+            matched = false;
+          }
+          stack.pop_back();
+          continue;
         }
-      }
-      index++;
-    }
-  }
 
-  // Get the last transition followed from this index
-  uint32_t start_trans = followed_edges[correlated_index][level].second;
-
-  // Handle transitions - expand from the transition end nodes
-  if (!from_transition && nodeinfo->transition_count() > 0) {
-    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
-    for (uint32_t i = start_trans; i < nodeinfo->transition_count(); ++i, ++trans) {
-      followed_edges[correlated_index][level].second = i;
-      graph_tile_ptr end_node_tile = reader.GetGraphTile(trans->endnode());
-      if (end_node_tile == nullptr) {
+        f.nodeinfo = f.tile->node(f.node);
+        // Get the last edge followed from this index
+        f.edge_start = followed_edges[f.correlated_index][f.node.level()].first;
+        f.edge_i = f.edge_start;
+        f.resume = ExpandFrame::Resume::kEdgeScan;
         continue;
       }
-      if (expand_from_node(mode_costing, mode, reader, shape, distances, time_info, use_timestamps,
-                           correlated_index, end_node_tile, trans->endnode(), end_nodes,
-                           prev_edge_label, elapsed, path_infos, true, end_node, followed_edges,
-                           use_shortcuts)) {
-        return true;
+
+      case ExpandFrame::Resume::kEdgeChild: {
+        if (matched) {
+          stack.pop_back();
+          continue;
+        }
+        // Match failed along this edge, pop the last entry off path_infos as well as what it
+        // contributed to the elapsed cost/time and try to keep going on the next edge
+        elapsed -= f.edge_cost;
+        path_infos.pop_back();
+        ++f.edge_i;
+        f.resume = ExpandFrame::Resume::kEdgeScan;
+        continue;
+      }
+
+      case ExpandFrame::Resume::kEdgeScan: {
+        const uint32_t level = f.node.level();
+        const size_t corr_index = f.correlated_index;
+        // Iterate through directed edges from this node
+        // The accessor is bounds checked, so it is handed the node's first edge and the offset is
+        // added to the pointer: a resumed scan can sit one past the node's last edge, which is a
+        // pointer the loop condition rejects before anything reads it
+        const uint32_t de_offset = f.edge_i - f.edge_start;
+        GraphId edge_id(f.node.tileid(), level, f.nodeinfo->edge_index() + de_offset);
+        const DirectedEdge* de = f.tile->directededge(f.nodeinfo->edge_index()) + de_offset;
+        bool suspended = false;
+        for (uint32_t i = f.edge_i; i < f.nodeinfo->edge_count(); i++, de++, ++edge_id) {
+          // Mark the directed edge as already followed
+          followed_edges[corr_index][level].first = i;
+
+          // Skip shortcuts and transit connection edges
+          // TODO - later might allow transit connections for multi-modal
+          if ((!use_shortcuts && de->is_shortcut()) || de->use() == Use::kTransitConnection) {
+            continue;
+          }
+
+          // Look back in path_infos by 1-2 edges to make sure we aren't in a loop.
+          // A loop can occur if we have edges shorter than the lat,lng tolerance.
+          uint32_t n = path_infos.size();
+          if (n > 1 && (edge_id == path_infos[n - 2].edgeid || edge_id == path_infos[n - 1].edgeid)) {
+            continue;
+          }
+
+          // Get the end node LL and set up the length comparison
+          graph_tile_ptr end_node_tile = reader.GetGraphTile(de->endnode());
+          if (end_node_tile == nullptr) {
+            continue;
+          }
+          valhalla::midgard::PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
+          float de_length = length_comparison(de->length(), true);
+
+          // Process current edge until shape matches end node or shape length is longer than
+          // the current edge. Increment to the next shape point after the correlated index.
+          size_t index = corr_index + 1;
+          float length = 0.0f;
+          while (index < static_cast<size_t>(shape.size())) {
+            // Exclude edge if length along shape is longer than the edge length
+            length += distances.at(index).first;
+            if (length > de_length) {
+              break;
+            }
+
+            // Found a match if shape equals directed edge LL within tolerance
+            if (to_ll(shape.Get(index).ll()).ApproximatelyEqual(de_end_ll) &&
+                de->length() < length_comparison(length, true) &&
+                check_shape(f.tile, de, shape, corr_index, index)) {
+
+              // Figure out what time it is right now, the first iteration is a no-op
+              auto offset_time_info =
+                  f.nodeinfo ? time_info.forward(/*accumulated_elapsed.secs + */ elapsed.secs,
+                                                 f.nodeinfo->timezone())
+                             : time_info;
+
+              // get the cost of traversing the node and the edge
+              auto& costing = mode_costing[static_cast<int>(mode)];
+              auto reader_getter = [&reader]() { return LimitedGraphReader(reader); };
+              auto transition_cost =
+                  costing->TransitionCost(de, f.nodeinfo, prev_edge_label, f.tile, reader_getter);
+              uint8_t flow_sources;
+              auto cost = transition_cost +
+                          costing->EdgeCost(de, edge_id, f.tile, offset_time_info, flow_sources);
+              elapsed += cost;
+              // overwrite time with timestamps
+              if (use_timestamps)
+                elapsed.secs = shape.Get(index).time() - shape.Get(0).time();
+
+              // Add edge and update correlated index
+              path_infos.emplace_back(mode, elapsed, edge_id, /*trip_id=*/0, /*path_distance=*/0.f,
+                                      /*path_distance=*/-1, transition_cost,
+                                      /*start_node_is_recovered=*/false, de->is_shortcut());
+
+              InternalTurn turn =
+                  f.nodeinfo ? costing->TurnType(prev_edge_label.opp_local_idx(), f.nodeinfo, de)
+                             : InternalTurn::kNoTurn;
+              // Set previous edge label
+              prev_edge_label = {kInvalidLabel,
+                                 edge_id,
+                                 de,
+                                 {},
+                                 0,
+                                 mode,
+                                 0,
+                                 kInvalidRestriction,
+                                 true,
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 turn};
+
+              // Continue walking shape to find the end edge: suspend this frame and hand the
+              // walk to a child frame at the edge's end node. The push can move the frame, so
+              // it is not touched past this point.
+              f.edge_i = i;
+              f.edge_cost = cost;
+              f.resume = ExpandFrame::Resume::kEdgeChild;
+              GraphId next_node = de->endnode();
+              stack.push_back({index, std::move(end_node_tile), next_node, false});
+              suspended = true;
+              break;
+            }
+            index++;
+          }
+          if (suspended) {
+            break;
+          }
+        }
+        if (suspended) {
+          continue;
+        }
+
+        // Get the last transition followed from this index
+        f.trans_start = followed_edges[corr_index][level].second;
+        f.trans_i = f.trans_start;
+        f.resume = ExpandFrame::Resume::kTransScan;
+        continue;
+      }
+
+      case ExpandFrame::Resume::kTransChild: {
+        if (matched) {
+          stack.pop_back();
+          continue;
+        }
+        ++f.trans_i;
+        f.resume = ExpandFrame::Resume::kTransScan;
+        continue;
+      }
+
+      case ExpandFrame::Resume::kTransScan: {
+        // Handle transitions - expand from the transition end nodes
+        if (!f.from_transition && f.nodeinfo->transition_count() > 0) {
+          const uint32_t level = f.node.level();
+          const size_t corr_index = f.correlated_index;
+          // Same as the edge scan: base pointer through the checked accessor, offset added after
+          const NodeTransition* trans =
+              f.tile->transition(f.nodeinfo->transition_index()) + (f.trans_i - f.trans_start);
+          bool suspended = false;
+          for (uint32_t i = f.trans_i; i < f.nodeinfo->transition_count(); ++i, ++trans) {
+            followed_edges[corr_index][level].second = i;
+            graph_tile_ptr end_node_tile = reader.GetGraphTile(trans->endnode());
+            if (end_node_tile == nullptr) {
+              continue;
+            }
+            // Suspend this frame and expand from the transition's end node; the frame is not
+            // touched past the push.
+            f.trans_i = i;
+            f.resume = ExpandFrame::Resume::kTransChild;
+            GraphId next_node = trans->endnode();
+            stack.push_back({corr_index, std::move(end_node_tile), next_node, true});
+            suspended = true;
+            break;
+          }
+          if (suspended) {
+            continue;
+          }
+        }
+        matched = false;
+        stack.pop_back();
+        continue;
       }
     }
   }
-  return false;
+  return matched;
 }
 
 template <typename Options>
