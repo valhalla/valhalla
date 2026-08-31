@@ -6,6 +6,7 @@
    * FIXED: bg-BG spoke the literal text `<STREET_NAME>` in some case(s) [#6210](https://github.com/valhalla/valhalla/pull/6210)
    * FIXED: don't advance bounding-circle iterator past the end [#6241](https://github.com/valhalla/valhalla/pull/6241)
    * FIXED: update final path distance in recosting for `CostMatrix` [#6258](https://github.com/valhalla/valhalla/pull/6258)
+   * FIXED: Set `edge_index` for all interpolated points in `/trace_attributes` [#6278](https://github.com/valhalla/valhalla/pull/6278)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
