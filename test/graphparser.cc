@@ -731,10 +731,9 @@ public:
   void TearDown() override {
     // runs after every test body has returned, so the sequences are closed and
     // these unlink cleanly on all platforms
-    for (const auto& f :
-         {ways_file, way_nodes_file, nodes_file, edges_file, access_file, from_restriction_file,
-          to_restriction_file, bss_nodes_file, linguistic_node_file, edge_shapes_file,
-          edge_node_ids_file}) {
+    for (const auto& f : {ways_file, way_nodes_file, nodes_file, edges_file, access_file,
+                          from_restriction_file, to_restriction_file, bss_nodes_file,
+                          linguistic_node_file, edge_shapes_file, edge_node_ids_file}) {
       std::filesystem::remove(f);
     }
   }
