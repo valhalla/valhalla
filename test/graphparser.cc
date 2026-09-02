@@ -37,6 +37,8 @@ std::string access_file = "test_access.bin";
 std::string from_restriction_file = "test_from_complex_restrictions.bin";
 std::string to_restriction_file = "test_to_complex_restrictions.bin";
 std::string bss_nodes_file = "test_bss_nodes.bin";
+std::string edge_shapes_file = "test_edge_shapes.bin";
+std::string edge_node_ids_file = "test_edge_node_ids.bin";
 std::string linguistic_node_file = "test_linguistic_node.bin";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
@@ -645,7 +647,8 @@ TEST(GraphParser, TestImportBssNode) {
                                edges_file);
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
+                      edge_shapes_file, edge_node_ids_file, from_restriction_file,
+                      to_restriction_file, linguistic_node_file, tiles);
 
   BssBuilder::Build(conf, osmdata, bss_nodes_file);
 
@@ -730,7 +733,8 @@ public:
     // these unlink cleanly on all platforms
     for (const auto& f :
          {ways_file, way_nodes_file, nodes_file, edges_file, access_file, from_restriction_file,
-          to_restriction_file, bss_nodes_file, linguistic_node_file}) {
+          to_restriction_file, bss_nodes_file, linguistic_node_file, edge_shapes_file,
+          edge_node_ids_file}) {
       std::filesystem::remove(f);
     }
   }
