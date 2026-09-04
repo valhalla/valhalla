@@ -476,6 +476,10 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
 
     Cost newcost =
         pred.cost() - (pedestrian_costing_->PartialEdgeCost(edge, pred.edgeid(), tile, start, end));
+    // Guard against floating point issues when elevation causes edge cost to exceed
+    // the accumulated cost (can happen with steep downhill grades). Both cost and secs must be physically non-negative.
+    newcost.cost = std::max(newcost.cost, 0.0f);
+    newcost.secs = std::max(newcost.secs, 0.0f);
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);
