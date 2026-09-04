@@ -155,36 +155,12 @@ public:
   }
 
   /**
-   * Gets the speed limit in KPH.
+   * Gets the speed limit in KPH for one direction of travel.
+   * @param forward  Direction relative to the stored shape, i.e. DirectedEdge::forward(). The
+   *                 reverse direction falls back to the forward limit when no tag is stored.
    * @return  Returns the speed limit in KPH.
    */
-  uint32_t speed_limit() const {
-    return ei_.speed_limit_;
-  }
-
-  /**
-   * Gets the forward speed limit in KPH.
-   * @return  Returns the forward speed limit in KPH.
-   */
-  uint32_t forward_speed_limit() const {
-    return speed_limit();
-  }
-
-  /**
-   * Gets the reverse speed limit in KPH.
-   * If no reverse speed limit tag is present this returns the forward speed limit.
-   * @return  Returns the reverse speed limit in KPH.
-   */
-  uint32_t reverse_speed_limit() const;
-
-  /**
-   * Gets the speed limit in KPH for the specified direction.
-   * @param forward  True for forward direction, false for reverse direction.
-   * @return  Returns the directional speed limit in KPH.
-   */
-  uint32_t speed_limit(const bool forward) const {
-    return forward ? forward_speed_limit() : reverse_speed_limit();
-  }
+  uint32_t speed_limit(const bool forward) const;
 
   /**
    * Does this EdgeInfo have elevation data.

@@ -287,7 +287,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     eib.set_wayid(ei.wayid());
     eib.set_mean_elevation(ei.mean_elevation());
     eib.set_bike_network(ei.bike_network());
-    eib.set_speed_limit(ei.speed_limit());
+    eib.set_speed_limit(ei.speed_limit(true));
     for (uint32_t nm = 0; nm < ei.name_count(); nm++) {
       NameInfo info = ei.GetNameInfo(nm);
       name_info.insert(info);

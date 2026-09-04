@@ -492,17 +492,20 @@ std::vector<ConditionalSpeedLimit> EdgeInfo::conditional_speed_limits() const {
   return limits;
 }
 
-uint32_t EdgeInfo::reverse_speed_limit() const {
+uint32_t EdgeInfo::speed_limit(const bool forward) const {
+  if (forward) {
+    return ei_.speed_limit_;
+  }
   const auto& tags = GetTags();
   auto itr = tags.find(TaggedValue::kReverseSpeedLimit);
   if (itr == tags.end()) {
-    return speed_limit();
+    return ei_.speed_limit_;
   }
   const auto& value = itr->second;
-  if (value.size() != sizeof(uint8_t)) {
+  if (value.size() != 1) {
     throw std::runtime_error("reverse speed limit must contain 1-byte value");
   }
-  return static_cast<uint8_t>(static_cast<unsigned char>(value.front()));
+  return static_cast<uint8_t>(value.front());
 }
 
 int8_t EdgeInfo::layer() const {
@@ -590,12 +593,13 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     writer("mean_elevation", static_cast<int64_t>(elev));
   }
 
-  if (speed_limit() == kUnlimitedSpeedLimit) {
+  if (speed_limit(true) == kUnlimitedSpeedLimit) {
     writer("speed_limit", "unlimited");
   } else {
-    writer("speed_limit", static_cast<uint64_t>(speed_limit()));
+    writer("speed_limit", static_cast<uint64_t>(speed_limit(true)));
   }
 
+  std::vector<std::pair<std::string, uint64_t>> conditional_speed_limits;
   for (const auto& [tag, value] : GetTags()) {
     switch (tag) {
       case TaggedValue::kLayer:
@@ -645,9 +649,17 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
         writer.end_array();
         break;
       }
-      case TaggedValue::kConditionalSpeedLimits:
+      case TaggedValue::kConditionalSpeedLimits: {
+        const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
+        conditional_speed_limits.push_back({l->td_.to_string(), l->speed_});
         break;
+      }
       case TaggedValue::kReverseSpeedLimit:
+        if (speed_limit(false) == kUnlimitedSpeedLimit) {
+          writer("reverse_speed_limit", "unlimited");
+        } else {
+          writer("reverse_speed_limit", static_cast<uint64_t>(speed_limit(false)));
+        }
         break;
       case TaggedValue::kTunnel:
         break;
@@ -656,12 +668,10 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     }
   }
 
-  // Serialize conditional speed limits using the method as a one-liner
-  const auto csl = conditional_speed_limits();
-  if (!csl.empty()) {
+  if (!conditional_speed_limits.empty()) {
     writer.start_object("conditional_speed_limits");
-    for (const auto& limit : csl) {
-      writer(limit.td_.to_string(), limit.speed_);
+    for (auto& [condition, speed] : conditional_speed_limits) {
+      writer(condition, speed);
     }
     writer.end_object();
   }

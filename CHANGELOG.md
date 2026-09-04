@@ -8,6 +8,7 @@
    * FIXED: update final path distance in recosting for `CostMatrix` [#6258](https://github.com/valhalla/valhalla/pull/6258)
    * FIXED: Set `edge_index` for all interpolated points in `/trace_attributes` [#6278](https://github.com/valhalla/valhalla/pull/6278)
 * **Enhancement**
+   * ADDED: store the reverse speed limit as an `EdgeInfo` tagged value when `maxspeed:forward` and `maxspeed:backward` differ; `EdgeInfo::speed_limit(bool forward)` replaces `speed_limit()` and `/locate` verbose edge info gains `reverse_speed_limit` [#5983](https://github.com/valhalla/valhalla/pull/5983)
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
    * ADDED: `cost` in verbose matrix output [#6249](https://github.com/valhalla/valhalla/pull/6249)
@@ -103,7 +104,6 @@
    * FIXED: Do not crash on backwards traces over oneway edges [#6048](https://github.com/valhalla/valhalla/pull/6048)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
-   * CHANGED: Refactored conditional speed limits JSON serialization to use `conditional_speed_limits()` method for cleaner, more maintainable code
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906)
    * ADDED: `Cache-Control = public, max-age=N"` response header to `/tile` requests; also added RPATH to local debug builds to fix ldd resolving when libvalhalla is installed system-wide [#5902](https://github.com/valhalla/valhalla/pull/5902)

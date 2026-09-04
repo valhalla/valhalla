@@ -342,7 +342,8 @@ Here are some sample results with `verbose` set to `true`:
 | `access_restrictions` | A list of access restrictions that apply to the edge. Each entry contains information about its access mode mask, value, and more |
 | `edge_info` | Contains information stored in the edge's `EdgeInfo` struct |
 | `edge_info.conditional_speed_limits` | The key describes the time window during which the speed limit applies, the value is the limit |
-| `edge_info.speed_limit` | The edge's speed limit |
+| `edge_info.speed_limit` | The edge's speed limit in the direction the edge shape is stored in |
+| `edge_info.reverse_speed_limit` | The speed limit in the opposite direction, only present when it differs from `speed_limit` (e.g. from differing `maxspeed:forward` and `maxspeed:backward` tags) |
 | `edge_info.levels` | An array containing the edge's levels as derived from the `level=*` tag. Values are either numeric, or another array containing two elements, which denote the start and end of a range (inclusive) |
 | `shoulder` | A boolean value indicating whether the edge has shoulder (`true` or `false`). If `true` then the data has been tagged to indicate a shoulder is present. `false`, however, could mean either that the data is tagged as having no shoulder present OR the data is untagged and we assume no shoulder (which may be an incorrect assumption) |
 
