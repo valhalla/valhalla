@@ -298,9 +298,9 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/07
 add_custom_target(nh_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph)
 set_target_properties(nh_ar_tiles PROPERTIES FOLDER "Tests")
 
-file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
+file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.po" "${VALHALLA_SOURCE_DIR}/locales/valhalla.pot")
 add_custom_command(OUTPUT .locales.timestamp
-  COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
+  COMMAND /bin/bash -c "for loc in $(${PYTHON_INTERPRETER} po_tools.py print-posix-locales); do \
        $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
        $<$<BOOL:${APPLE}>:         localedef -i /usr/share/locale/$\{loc\} ./$\{loc\} || true ; > \
      done \
@@ -357,39 +357,41 @@ if(NOT APPLE)
   add_dependencies(run-narrativebuilder localedef)
 endif()
 
-add_dependencies(run-sample test_directories)
+add_dependencies(sample test_directories)
 if(ENABLE_DATA_TOOLS)
-  add_dependencies(run-actor utrecht_tiles)
-  add_dependencies(run-mapmatch utrecht_tiles)
-  add_dependencies(run-hierarchylimits utrecht_tiles)
-  add_dependencies(run-isochrone utrecht_tiles)
-  add_dependencies(run-matrix utrecht_tiles)
-  add_dependencies(run-matrix_bss paris_bss_tiles)
-  add_dependencies(run-timedep_paths utrecht_tiles)
-  add_dependencies(run-trivial_paths utrecht_tiles)
+  add_dependencies(actor utrecht_tiles)
+  add_dependencies(mapmatch utrecht_tiles)
+  add_dependencies(hierarchylimits utrecht_tiles)
+  add_dependencies(isochrone utrecht_tiles)
+  add_dependencies(matrix utrecht_tiles)
+  add_dependencies(matrix_bss paris_bss_tiles)
+  add_dependencies(timedep_paths utrecht_tiles)
+  add_dependencies(trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)
-  add_dependencies(run-multipoint_routes utrecht_tiles)
-  add_dependencies(run-reach utrecht_tiles)
-  add_dependencies(run-shape_attributes utrecht_tiles)
-  add_dependencies(run-summary utrecht_tiles)
-  add_dependencies(run-urban utrecht_tiles)
-  add_dependencies(run-thor_worker utrecht_tiles)
-  add_dependencies(run-recover_shortcut utrecht_tiles)
-  add_dependencies(run-minbb utrecht_tiles)
-  add_dependencies(run-multimodal_astar paris_bss_tiles utrecht_tiles)
-  add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
-  add_dependencies(run-alternates utrecht_tiles)
-  add_dependencies(run-tar_index utrecht_tiles)
-  add_dependencies(run-graphtile utrecht_tiles)
-  add_dependencies(run-graphbuilder build_timezones)
+  add_dependencies(multipoint_routes utrecht_tiles)
+  add_dependencies(reach utrecht_tiles)
+  add_dependencies(shape_attributes utrecht_tiles)
+  add_dependencies(summary utrecht_tiles)
+  add_dependencies(urban utrecht_tiles)
+  add_dependencies(thor_worker utrecht_tiles)
+  add_dependencies(recover_shortcut utrecht_tiles)
+  add_dependencies(minbb utrecht_tiles)
+  add_dependencies(worker_nullptr_tiles whitelion_tiles)
+  add_dependencies(multimodal_astar paris_bss_tiles utrecht_tiles)
+  add_dependencies(astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
+  add_dependencies(alternates utrecht_tiles)
+  add_dependencies(tar_index utrecht_tiles)
+  add_dependencies(graphtile utrecht_tiles)
+  add_dependencies(graphbuilder build_timezones)
   if(ENABLE_HTTP AND ENABLE_SERVICES)
-    # http_tiles needs the proper .tar file with index.bin
-    add_dependencies(run-http_tiles utrecht_tiles run-scripts)
+    # http_tiles needs the proper .tar file with index.bin; run-scripts is a run-time setup step
+    add_dependencies(http_tiles utrecht_tiles)
+    add_dependencies(run-http_tiles run-scripts)
   endif()
 endif()
 
 if(ENABLE_SERVICES)
-  add_dependencies(run-skadi_service test_directories)
+  add_dependencies(skadi_service test_directories)
 endif()
 
 # ENABLE_DATA_TOOLS is needed for utrecht_tiles
@@ -487,8 +489,6 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
       _valhalla
-      _graph_utils
-      predicted_speeds
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
   set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")
@@ -539,4 +539,3 @@ add_custom_target(tests DEPENDS ${tests} ${cost_tests} ${tyr_tests})
 set_target_properties(tests PROPERTIES FOLDER "Tests")
 add_subdirectory(gurka)
 add_subdirectory(scripts)
-

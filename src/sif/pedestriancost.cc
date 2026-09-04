@@ -84,9 +84,6 @@ constexpr float kMaxPedestrianSpeed = 25.0f;
 // 2 cycleways or walkways cross
 constexpr uint32_t kCrossingCosts[] = {0, 0, 1, 1, 2, 3, 5, 15};
 
-constexpr float kMinFactor = 0.1f;
-constexpr float kMaxFactor = 100000.0f;
-
 const std::string kDefaultPedestrianType = "foot";
 
 // User propensity to use "hilly" roads. Ranges from a value of 0 (avoid
@@ -982,7 +979,11 @@ make_distributor_from_range(const ranged_default_t<float>& range) {
 std::uniform_int_distribution<uint32_t>*
 make_distributor_from_range(const ranged_default_t<uint32_t>& range) {
   uint32_t rangeLength = range.max - range.min;
-  return new std::uniform_int_distribution<uint32_t>(range.min - rangeLength,
+  return new std::uniform_int_distribution<uint32_t>(std::numeric_limits<uint32_t>::min() +
+                                                                 rangeLength >
+                                                             range.min
+                                                         ? std::numeric_limits<uint32_t>::min()
+                                                         : range.min - rangeLength,
                                                      range.max + rangeLength);
 }
 
@@ -1176,13 +1177,13 @@ defaults.use_ferry_.max));
   }
 
   // transit_start_end_max_distance_
-  int_distributor.reset(make_distributor_from_range(kTransitStartEndMaxDistanceRange));
+  int_distributor.reset(make_distributor_from_range(kMultimodalStartEndMaxDistanceRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_pedestriancost_from_json("transit_start_end_max_distance",
                                                    (*int_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->transit_start_end_max_distance_,
-                test::IsBetween(kTransitStartEndMaxDistanceRange.min,
-                                kTransitStartEndMaxDistanceRange.max));
+                test::IsBetween(kMultimodalStartEndMaxDistanceRange.min,
+                                kMultimodalStartEndMaxDistanceRange.max));
   }
 
   // transit_transfer_max_distance_

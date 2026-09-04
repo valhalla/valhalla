@@ -553,6 +553,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
           // Add end edge
           path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, 0.f, -1);
+          options.mutable_shape(0)->mutable_correlation()->mutable_edges()->Add()->CopyFrom(edge);
+          options.mutable_shape()->rbegin()->mutable_correlation()->mutable_edges()->Add()->CopyFrom(
+              end.second.first);
           return true;
         }
       }

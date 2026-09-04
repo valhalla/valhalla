@@ -542,6 +542,7 @@ void TimeDistanceBSSMatrix::FormTimeDistanceMatrix(Api& request,
     matrix.mutable_to_indices()->Set(pbf_idx, forward ? i : origin_index);
     matrix.mutable_distances()->Set(pbf_idx, dest.distance);
     matrix.mutable_times()->Set(pbf_idx, time);
+    matrix.mutable_costs()->Set(pbf_idx, dest.best_cost.cost);
 
     // TODO - support date_time and time zones as in timedistancematrix.
     // For now, add empty strings (serializer requires this) to prevent crashing

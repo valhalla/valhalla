@@ -29,9 +29,10 @@ namespace {
 constexpr float kDefaultServicePenalty = 0.0f; // Seconds
 
 // Other options
-constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
-constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
-constexpr float kDefaultUseTracks = 0.f;         // Avoid tracks by default. Factor between 0 and 1
+constexpr float kDefaultLowClassPenalty = 15.0f; // Seconds
+constexpr float kDefaultLowClassFactor = 1.5f;
+constexpr float kDefaultUseTolls = 0.5f; // Factor between 0 and 1
+constexpr float kDefaultUseTracks = 0.f; // Avoid tracks by default. Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets =
     0.f;                                    // Avoid living streets by default. Factor between 0 and 1
 constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
@@ -92,6 +93,8 @@ constexpr float kSurfaceFactor[] = {
 
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kLowClassPenaltyRange{0.f, kDefaultLowClassPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kLowClassFactorRange{kMinFactor, kDefaultLowClassFactor,
+                                                       kMaxFactor};
 constexpr ranged_default_t<float> kTruckAxleLoadRange{0.f, kDefaultTruckAxleLoad, 40.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0.f, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<uint32_t> kAxleCountRange{2, kDefaultAxleCount, 20};
@@ -318,6 +321,7 @@ public:
   VehicleType type_;        // Vehicle type: truck
   float toll_factor_;       // Factor applied when road has a toll
   float low_class_penalty_; // Penalty (seconds) to go to residential or service road
+  float low_class_factor_;  // Factor applied when edge has low road class
 
   // Vehicle attributes (used for special restrictions and costing)
   bool hazmat_;                  // Carrying hazardous materials
@@ -345,6 +349,7 @@ TruckCost::TruckCost(const Costing& costing)
   get_base_costs(costing);
 
   low_class_penalty_ = costing_options.low_class_penalty();
+  low_class_factor_ = costing_options.low_class_factor() - 1.f; // gets added to the base factor
   non_truck_route_factor_ =
       costing_options.use_truck_route() < 0.5f
           ? kMinNonTruckRouteFactor + 2.f * costing_options.use_truck_route()
@@ -528,21 +533,20 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
       factor = rail_ferry_factor_;
       break;
     default:
-      factor = kDensityFactor[edge->density()] +
-               highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-               kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
-               SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
+      factor = kDensityFactor[edge->density()];
       break;
   }
+
+  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+            kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+            SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
+            edge->toll() * toll_factor_ +
+            (low_class_factor_ * (edge->classification() >= baldr::RoadClass::kResidential));
 
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
   } else {
     factor *= non_truck_route_factor_;
-  }
-
-  if (edge->toll()) {
-    factor += toll_factor_;
   }
 
   if (edge->use() == Use::kTrack) {
@@ -553,13 +557,14 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= service_factor_;
   }
 
+  factor *= EdgeFactor(edgeid);
+
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
-  factor *= EdgeFactor(edgeid);
 
-  return {sec * factor, sec};
+  return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -575,8 +580,8 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   c.secs += OSRMCarTurnDuration(edge, node, idx);
 
   // Penalty to transition onto low class roads.
-  if (edge->classification() == baldr::RoadClass::kResidential ||
-      edge->classification() == baldr::RoadClass::kServiceOther) {
+  if (!shortest_ && pred.classification() <= baldr::RoadClass::kUnclassified &&
+      edge->classification() >= baldr::RoadClass::kResidential) {
     c.cost += low_class_penalty_;
   }
 
@@ -630,6 +635,9 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
     }
     c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  c.cost *= inv_distance_factor_;
   return c;
 }
 
@@ -655,8 +663,8 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Penalty to transition onto low class roads.
-  if (edge->classification() == baldr::RoadClass::kResidential ||
-      edge->classification() == baldr::RoadClass::kServiceOther) {
+  if (!shortest_ && pred->classification() <= baldr::RoadClass::kUnclassified &&
+      edge->classification() >= baldr::RoadClass::kResidential) {
     c.cost += low_class_penalty_;
   }
 
@@ -709,6 +717,10 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
     }
     c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  c.cost *= inv_distance_factor_;
+
   return c;
 }
 
@@ -740,6 +752,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
 
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kLowClassPenaltyRange, json, "/low_class_penalty", low_class_penalty,
+                          warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kLowClassFactorRange, json, "/low_class_factor", low_class_factor,
                           warnings);
   JSON_PBF_DEFAULT_V2(co, false, json, "/hazmat", hazmat);
   JSON_PBF_RANGED_DEFAULT(co, kTruckAxleLoadRange, json, "/axle_load", axle_load, warnings);

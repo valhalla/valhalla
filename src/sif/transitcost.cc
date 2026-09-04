@@ -38,9 +38,6 @@ constexpr float kDefaultUseTransfers = 0.3f;
 
 Cost kImpossibleCost = {10000000.0f, 10000000.0f};
 
-constexpr float kMinFactor = 0.1f;
-constexpr float kMaxFactor = 100000.0f;
-
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kModeFactorRange{kMinFactor, kModeFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseBusRange{0, kDefaultUseBus, 1.0f};

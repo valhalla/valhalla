@@ -541,7 +541,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
       if (std::filesystem::is_regular_file(dir_entry.path()) &&
           dir_entry.path().string().find(".gph") == (dir_entry.path().string().size() - 4)) {
         // turn the id from the level 3 transit tile into the level 2 tile under it
-        auto graph_id = GraphTile::GetTileId(dir_entry.path().string());
+        auto graph_id = GraphId::FromTilePath(dir_entry.path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
         // if the level 2 tile exists
         if (reader.DoesTileExist(local_graph_id)) {

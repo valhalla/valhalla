@@ -36,7 +36,7 @@ option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find 
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 option(ENABLE_GEOTIFF "Whether to include libgeotiff; currently only used for raster serialization of isotile grid" ON)
-option(ENABLE_LZ4 "Enable LZ4 decompression support for elevation tiles" ON)
+option(ENABLE_LZ4 "Enable LZ4 decompression support for elevation tiles and OSM PBF files" ON)
 option(INSTALL_TEST_LIB "Install Valhalla's own test lib" OFF)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
@@ -129,6 +129,12 @@ add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
+
+# interpreter for generating the narrative locale JSONs from locales/*.po
+find_program(PYTHON_INTERPRETER NAMES python3 python)
+if(NOT PYTHON_INTERPRETER)
+  message(FATAL_ERROR "python3 is required to generate narrative locales from locales/*.po")
+endif()
 
 # resolve vendored libraries
 set(date_include_dir ${VALHALLA_SOURCE_DIR}/third_party/date/include)
@@ -228,6 +234,11 @@ set(GTIFF_TARGETS "")
 if (ENABLE_GEOTIFF AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDINGS OR ENABLE_NODE_BINDINGS))
   find_package(TIFF)
   find_package(GeoTIFF)
+  # libtiff >= 4.7 ships a cmake config whose target is TIFF::tiff, not the module's TIFF::TIFF
+  if (TIFF_FOUND AND NOT TARGET TIFF::TIFF AND TARGET TIFF::tiff)
+    add_library(TIFF::TIFF INTERFACE IMPORTED)
+    set_target_properties(TIFF::TIFF PROPERTIES INTERFACE_LINK_LIBRARIES TIFF::tiff)
+  endif()
   if (GeoTIFF_FOUND AND TIFF_FOUND)
     add_compile_definitions(ENABLE_GEOTIFF)
     set(GTIFF_TARGETS TIFF::TIFF geotiff_library)
@@ -272,6 +283,12 @@ if(ENABLE_DATA_TOOLS)
   # otherwise the system sqlite3 is found which doesn't allow for spatialite
   find_package(SQLite3 REQUIRED)
   pkg_check_modules(SpatiaLite REQUIRED IMPORTED_TARGET spatialite)
+  # make sure we can build tz.sqlite
+  find_program(SPATIALITE_TOOL_EXECUTABLE NAMES spatialite_tool)
+  find_program(SPATIALITE_EXECUTABLE NAMES spatialite)
+  if(NOT SPATIALITE_TOOL_EXECUTABLE OR NOT SPATIALITE_EXECUTABLE)
+    message(FATAL_ERROR "spatialite-tools not found: need both 'spatialite_tool' and 'spatialite', install the correct package for your system.")
+  endif()
   pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
   pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
   pkg_check_modules(OPENSSL REQUIRED IMPORTED_TARGET openssl)

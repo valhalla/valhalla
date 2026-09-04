@@ -314,7 +314,17 @@ public:
                                                            : tileid;
   }
 
-  std::pair<uint32_t, unsigned short> GetNeighbor(int global_x, int global_y, Neighbor which) const {
+  /**
+   * Identify a neighboring bin given a global (ie not tile local) bin.
+   *
+   * @param global_x the global column number of the input bin
+   * @param global_y the global row number of the input bin
+   * @param which    which neighbor to return
+   *
+   * @return the tile local bin given as a pair of tile id, tile local bin id.
+   */
+  std::pair<uint32_t, unsigned short>
+  GetNeighboringBin(int global_x, int global_y, Neighbor which) const {
     // starting at lower left, moving clockwise
 
     // clang-format off
@@ -334,28 +344,43 @@ public:
     return std::make_pair(new_tileid, new_binid);
   }
 
-  std::array<std::pair<uint32_t, unsigned short>, 8> GetNeighbors(uint32_t tileid,
-                                                                  short binid) const {
-    std::array<std::pair<uint32_t, unsigned short>, 8> neighbors;
+  /**
+   * Collects the neighboring bins for a given bin (subdivision).
+   *
+   * @param tileid   the tile of the input bin
+   * @param binid    the tile local bin identifier of the input bin
+   * @param four_way whether to return 4 or 8 (including diagonal) neighbors
+   *
+   * @return a vector of neighboring bins given as a pair of tile id and bin id, in clockwise order,
+   * starting from lower left.
+   */
+  template <bool four_way, int neighbour_count = four_way ? 4 : 8>
+  std::array<std::pair<uint32_t, unsigned short>, neighbour_count>
+  GetNeighboringBins(uint32_t tileid, short binid) const {
+    std::array<std::pair<uint32_t, unsigned short>, neighbour_count> neighbors;
 
     // tile coords
     int tx = tileid % ncolumns_;
     int ty = tileid / ncolumns_;
-
     // bin coords within tile
     int bx = binid % nsubdivisions_;
     int by = binid / nsubdivisions_;
-
     // global coords
     int global_x = tx * nsubdivisions_ + bx;
     int global_y = ty * nsubdivisions_ + by;
 
-    for (uint8_t i = 0; i < 8; ++i) {
-      neighbors[i] = GetNeighbor(global_x, global_y, static_cast<Neighbor>(i));
+    // skip diagonal neighbors in four way mode
+    constexpr auto start = four_way ? 1 : 0;
+    constexpr auto step = four_way ? 2 : 1;
+
+    int neighbor_idx = 0;
+    for (uint8_t i = start; i < 8; i += step) {
+      neighbors[neighbor_idx++] = GetNeighboringBin(global_x, global_y, static_cast<Neighbor>(i));
     }
 
     return neighbors;
   }
+
   /**
    * Get the neighboring tileid above or north.
    * @param  tileid   Tile Id.

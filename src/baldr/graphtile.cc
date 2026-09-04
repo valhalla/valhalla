@@ -230,29 +230,32 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        uint64_t range_offset,
                                        uint64_t range_size,
                                        const std::filesystem::path& id_txt_path,
-                                       uint64_t id_checksum) {
+                                       std::optional<uint64_t> id_checksum) {
   // Don't bother with invalid ids
   if (!graphid.is_valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
   }
 
-  auto check_tile_checksum = [&](uint64_t tile_checksum) {
-    if (tile_checksum == 0) {
+  auto check_tile_checksum = [&](const GraphTileHeader& header) {
+    // only the build id (identical across the tileset) tells us whether the remote was rebuilt; the
+    // per-tile hash differs from tile to tile
+    uint64_t build_id = header.build_id();
+    if (build_id == 0 && header.tile_checksum() == 0) {
       // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
       LOG_WARN(
           "Remote tile is missing the checksum attribute, please update the tile building valhalla instance");
     }
     if (!tile_dir.empty()) {
-      if (id_checksum == 0) {
-        // this is the first tile in a fresh tile_dir
+      if (!id_checksum) {
+        // first tile in a fresh tile_dir: record the URL & tileset build id
         static std::mutex mutex;
         std::lock_guard lock{mutex};
         std::ofstream id_txt_file(id_txt_path, std::ios::binary);
         if (id_txt_file) {
           id_txt_file << tile_url << std::endl;
-          id_txt_file << tile_checksum << std::endl;
+          id_txt_file << build_id << std::endl;
         }
-      } else if (tile_checksum != id_checksum) {
+      } else if (build_id != *id_checksum) {
         LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
         throw valhalla_exception_t(446);
       }
@@ -282,7 +285,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     // it's a POD type and thus trivially copyable
     GraphTileHeader header;
     std::memcpy(&header, result.bytes_.data(), sizeof(header));
-    check_tile_checksum(header.checksum());
+    check_tile_checksum(header);
   }
 
   // try to cache it on disk so we dont have to keep fetching it from url
@@ -291,7 +294,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
   // turn the memory into a tile
   if (tile_getter->gzipped()) {
     auto tile = DecompressTile(graphid, result.bytes_);
-    check_tile_checksum(tile.get()->header()->checksum());
+    check_tile_checksum(*tile.get()->header());
     return tile;
   }
 
@@ -385,6 +388,10 @@ void GraphTile::Initialize(const GraphId& graphid) {
 
   // Set a pointer to the edge bin list
   edge_bins_ = reinterpret_cast<GraphId*>(ptr);
+
+  // We store the bounding circles offset in the header
+  bounding_circles_ =
+      reinterpret_cast<DiscretizedBoundingCircle*>(tile_ptr + header_->bounding_circle_offset());
 
   // Start of forward restriction information and its size
   complex_restriction_forward_ = tile_ptr + header_->complex_restriction_forward_offset();
@@ -538,110 +545,6 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
   }
 
   return std::to_string(graphid.level()) + tile_id_str + fname_suffix;
-}
-
-// Get the tile Id given the full path to the file.
-GraphId GraphTile::GetTileId(const std::string& fname) {
-  std::unordered_set<std::string::value_type> allowed{std::filesystem::path::preferred_separator,
-                                                      '0',
-                                                      '1',
-                                                      '2',
-                                                      '3',
-                                                      '4',
-                                                      '5',
-                                                      '6',
-                                                      '7',
-                                                      '8',
-                                                      '9'};
-  // we require slashes
-  auto pos = fname.find_last_of(std::filesystem::path::preferred_separator);
-  if (pos == fname.npos) {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // swallow numbers until you reach the end or a dot
-  for (; pos < fname.size(); ++pos) {
-    if (allowed.find(fname[pos]) == allowed.cend()) {
-      break;
-    }
-  }
-  allowed.erase(static_cast<std::string::value_type>(std::filesystem::path::preferred_separator));
-
-  // if you didnt reach the end and it wasnt a dot then this isnt valid
-  if (pos != fname.size() && fname[pos] != '.') {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // run backwards while you find an allowed char but stop if not 3 digits between slashes
-  std::vector<uint32_t> digits;
-  auto last = pos;
-  while (--pos < last) {
-    auto c = fname[pos];
-    // invalid char showed up
-    if (allowed.find(c) == allowed.cend()) {
-      throw std::runtime_error("Invalid tile path: " + fname);
-    }
-
-    // if its the last thing or the next one is a separator thats another digit
-    if (pos == 0 || fname[pos - 1] == std::filesystem::path::preferred_separator) {
-      // this is not 3 or 1 digits so its wrong
-      auto dist = last - pos;
-      if (dist != 3 && dist != 1) {
-        throw std::runtime_error("Invalid tile path: " + fname);
-      }
-      // we'll keep this
-      auto i = atoi(fname.substr(pos, dist).c_str());
-      digits.push_back(i);
-      // and we'll stop if it was the level (always a single digit see GraphId)
-      if (dist == 1) {
-        break;
-      }
-      // next
-      last = --pos;
-    }
-  }
-
-  // if the first thing isnt a valid level bail
-  if (digits.back() >= TileHierarchy::levels().size() &&
-      digits.back() != TileHierarchy::GetTransitLevel().level) {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // get the level info
-  uint32_t level = digits.back();
-  digits.pop_back();
-  const auto& tile_level = level == TileHierarchy::GetTransitLevel().level
-                               ? TileHierarchy::GetTransitLevel()
-                               : TileHierarchy::levels()[level];
-
-  // get the number of sub directories that we should have
-  uint32_t max_id = static_cast<uint32_t>(tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1);
-  size_t parts = static_cast<size_t>(std::log10(std::max(1u, max_id))) + 1;
-  if (parts % 3 != 0) {
-    parts += 3 - (parts % 3);
-  }
-  parts /= 3;
-
-  // bail if its the wrong number of sub dirs
-  if (digits.size() != parts) {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // parse the id of the tile
-  int multiplier = 1;
-  uint32_t id = 0;
-  for (auto digit : digits) {
-    id += digit * multiplier;
-    multiplier *= 1000;
-  }
-
-  // if after parsing them the number is out of bounds bail
-  if (id > max_id) {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // you've passed the test enjoy your id
-  return {id, level, 0};
 }
 
 // Get the bounding box of this graph tile.
@@ -1270,6 +1173,25 @@ std::span<GraphId> GraphTile::GetBin(size_t column, size_t row) const {
 std::span<GraphId> GraphTile::GetBin(size_t index) const {
   auto offsets = header_->bin_offset(index);
   return std::span<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
+}
+
+// Get the array of bounding circles for the given bin
+std::span<DiscretizedBoundingCircle> GraphTile::GetBoundingCircles(size_t column, size_t row) const {
+  if (!header_->has_bounding_circles()) {
+    return std::span<DiscretizedBoundingCircle>{bounding_circles_, bounding_circles_};
+  }
+  auto offsets = header_->bin_offset(column, row);
+  return std::span<DiscretizedBoundingCircle>{bounding_circles_ + offsets.first,
+                                              bounding_circles_ + offsets.second};
+}
+
+std::span<DiscretizedBoundingCircle> GraphTile::GetBoundingCircles(size_t index) const {
+  if (!header_->has_bounding_circles()) {
+    return std::span<DiscretizedBoundingCircle>{bounding_circles_, bounding_circles_};
+  }
+  auto offsets = header_->bin_offset(index);
+  return std::span<DiscretizedBoundingCircle>{bounding_circles_ + offsets.first,
+                                              bounding_circles_ + offsets.second};
 }
 
 // Get turn lanes for this edge.

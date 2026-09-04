@@ -477,7 +477,7 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
       for (const auto& dir_entry : std::filesystem::recursive_directory_iterator(transit_dir)) {
         if (std::filesystem::is_regular_file(dir_entry.path()) &&
             dir_entry.path().extension() == ".gph") {
-          auto graph_id = GraphTile::GetTileId(dir_entry.path().string());
+          auto graph_id = GraphId::FromTilePath(dir_entry.path().string());
           GraphId transit_tile_id = GraphId(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
           all_tiles.emplace(transit_tile_id);
         }

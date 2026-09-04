@@ -31,13 +31,13 @@ While we absolutely accept AI usage for Valhalla (and its related projects), we 
 3. contrived AI logic with weird generic variable names should be rewritten to match human perception
 4. non-obvious code changes should be commented on _inline_ (not in the PR description!)
 
-2. & 3. are pretty subjective, where we have a lot more patience. However, PRs ignoring these guidelines entirely, might be closed without further notice.
+2. & 3. are pretty subjective, where we have a lot more patience. However, PRs ignoring these guidelines entirely, might be closed without further notice. And the worst offenders might get blocked from the Valhalla organization.
 
 ## License
 
 Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](https://github.com/valhalla/valhalla/blob/master/COPYING).  Avatar/logo by [Jordan](https://www.jaykaydraws.com/portfolio). 
 
-OpenStreetMap data in the `./test/data` is licensed under [ODbL](https://opendatacommons.org/licenses/odbl/) and [copyrighted](https://www.openstreetmap.org/copyright) by OSM contributors. Additional information on licenses and other requirements concerning the data sources most frequently used by Valhalla can be found in [the docs](https://valhalla.github.io/valhalla/mjolnir/data_sources/).
+OpenStreetMap data in the `./test/data` is licensed under [ODbL](https://opendatacommons.org/licenses/odbl/) and [copyrighted](https://www.openstreetmap.org/copyright) by OSM contributors. Additional information on licenses and other requirements concerning the data sources most frequently used by Valhalla can be found in [the docs](https://valhalla.github.io/valhalla/contributing/data/data-sources/).
 
 ## Overview
 
@@ -53,6 +53,9 @@ There are several key features that we hope can differentiate the Valhalla proje
 ## Demo Server
 
 [FOSSGIS e.V.](https://fossgis.de) hosts a demo server which is open to the public and includes a full planet graph with an [open-source web app](https://github.com/gis-ops/valhalla-app) on <https://valhalla.openstreetmap.de>. The HTTP API is accessible on a slightly different subdomain, e.g. <https://valhalla1.openstreetmap.de/isochrone>. Usage of the demo server follows the usual fair-usage policy as OSRM & Nominatim demo servers (somewhat enforced by [rate limits](https://github.com/valhalla/valhalla/discussions/3373#discussioncomment-1644713)).
+
+> [!NOTE]
+> In case you **publish apps to end users** (be it mobile, web or desktop) which request to the public demo server, we'd ask you to let us know via Github Discussions and to include an identifying `X-Client-Id` request header, e.g. `X-Client-Id: newroutingapp.io`.
 
 ## Platform Compatibility
 
@@ -91,7 +94,7 @@ For more information on binaries, see [Command Line Tools](#command-line-tools) 
 
 ### From source
 
-If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/building/).
+If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/start/building/).
 
 ### With docker
 
@@ -105,7 +108,7 @@ To run Valhalla locally or your own server, we recommend using one of our [Docke
 
 We publish our (very) high-level Python bindings to PyPI with [`pyvalhalla`](https://pypi.org/project/pyvalhalla/).
 
-The Python packages don't only contain the Python bindings, they also provide access to the C++ executables, e.g. in the form of `python -m valhalla valhalla_build_tiles -h`. For more details, see the [Python README](https://valhalla.github.io/valhalla/README_python).
+The Python packages don't only contain the Python bindings, they also provide access to the C++ executables, e.g. in the form of `python -m valhalla valhalla_build_tiles -h`. For more details, see the [Python README](https://valhalla.github.io/valhalla/bindings/python/).
 
 To install the native C++ executables one doesn't even need to have root permissions or even have Python installed. Simply download the desired wheel from [PyPI](https://pypi.org/project/pyvalhalla), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
 
@@ -123,14 +126,14 @@ For more details, see the [NodeJS README](https://github.com/valhalla/valhalla/b
 
 ## Contributing
 
-We :heart: contributions to Valhalla. They could be non-technical, e.g. translations into other languages via [Transifex](https://explore.transifex.com/valhalla/valhalla-phrases/) or documentation improvements, or technical ones like bug fixes or feature implementations. It's important to open an issue before setting out to work on a PR.
+We :heart: contributions to Valhalla. They could be non-technical, e.g. translations into other languages (see [`locales/`](https://github.com/valhalla/valhalla/tree/master/locales)) or documentation improvements, or technical ones like bug fixes or feature implementations. It's important to open an issue before setting out to work on a PR.
 
 Ideally, get familiar with our [Contribution guidelines](https://github.com/valhalla/valhalla/blob/master/CONTRIBUTING.md) first.
 
 ## Command Line Tools
 
 > [!TIP]
-> Easily install various Valhalla command line tools like `valhalla_build_tiles` or `valhalla_service` with the [Python bindings](https://valhalla.github.io/valhalla/README_python).
+> Easily install various Valhalla command line tools like `valhalla_build_tiles` or `valhalla_service` with the [Python bindings](https://valhalla.github.io/valhalla/bindings/python/).
 
 ### `valhalla_service` aka one-shot mode
 

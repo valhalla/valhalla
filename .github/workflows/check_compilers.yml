@@ -37,7 +37,7 @@ jobs:
 
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Install Linux compiler
       - name: Install ${{ matrix.c_compiler }}
