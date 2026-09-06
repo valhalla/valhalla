@@ -292,17 +292,19 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                   f.nodeinfo ? costing->TurnType(prev_edge_label.opp_local_idx(), f.nodeinfo, de)
                              : InternalTurn::kNoTurn;
               // Set previous edge label
-              prev_edge_label = {kInvalidLabel,
-                                 edge_id,
-                                 de,
-                                 {},
-                                 0,
-                                 mode,
-                                 0,
-                                 kInvalidRestriction,
-                                 true,
-                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 turn};
+              prev_edge_label = {
+                  kInvalidLabel,
+                  edge_id,
+                  de,
+                  {},
+                  0,
+                  mode,
+                  0,
+                  kInvalidRestriction,
+                  true,
+                  static_cast<bool>(flow_sources & kDefaultFlowMask),
+                  turn,
+              };
 
               // Continue walking shape to find the end edge. The push can move f, so it is
               // written before and not touched after
