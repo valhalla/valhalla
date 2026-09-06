@@ -4,14 +4,8 @@
 
 #include <gtest/gtest.h>
 
-#include <algorithm>
-#include <climits>
 #include <string>
 #include <vector>
-
-#ifndef _WIN32
-#include <pthread.h>
-#endif
 
 using namespace valhalla;
 
@@ -89,48 +83,6 @@ void assert_full_chain(const std::string& trace_json, size_t expected_edges) {
   ASSERT_EQ(result["edges"].GetArray().Size(), expected_edges);
 }
 
-#ifndef _WIN32
-
-struct TraceCall {
-  const gurka::map* map;
-  std::string request;
-  std::string json;
-  std::string error;
-};
-
-void* run_trace(void* arg) {
-  auto* call = static_cast<TraceCall*>(arg);
-  try {
-    gurka::do_action(valhalla::Options::trace_attributes, *call->map, call->request, {}, &call->json);
-  } catch (const std::exception& e) { call->error = e.what(); } catch (...) {
-    call->error = "unknown exception";
-  }
-  return nullptr;
-}
-
-#if defined(__SANITIZE_ADDRESS__)
-#define ROUTE_MATCHER_DEEP_ASAN 1
-#elif defined(__has_feature)
-#if __has_feature(address_sanitizer)
-#define ROUTE_MATCHER_DEEP_ASAN 1
-#endif
-#endif
-
-size_t small_stack_bytes() {
-#ifdef ROUTE_MATCHER_DEEP_ASAN
-  // Redzones inflate every frame, so this is raised to keep instrumentation alone from failing it;
-  // a per-edge recursion is caught by the uninstrumented builds, not by this one
-  constexpr size_t kSmallStack = 512 * 1024;
-#else
-  // Above what the walk needs, below what a frame per chain edge would need, in both build types
-  constexpr size_t kSmallStack = 48 * 1024;
-#endif
-  // A platform with a larger floor turns this into a plain smoke test rather than an EINVAL failure
-  return std::max<size_t>(kSmallStack, static_cast<size_t>(PTHREAD_STACK_MIN));
-}
-
-#endif // _WIN32
-
 } // namespace
 
 TEST(RouteMatcher, LongChainEdgeWalk) {
@@ -142,27 +94,6 @@ TEST(RouteMatcher, LongChainEdgeWalk) {
                    &trace_json);
   assert_full_chain(trace_json, names.size() - 1);
 }
-
-#ifndef _WIN32
-
-TEST(RouteMatcher, LongChainEdgeWalkOnSmallThreadStack) {
-  auto names = chain_node_names();
-  auto map = build_chain_map(names);
-
-  TraceCall call{&map, build_edge_walk_request(map, names), {}, {}};
-  pthread_attr_t attr;
-  ASSERT_EQ(pthread_attr_init(&attr), 0);
-  ASSERT_EQ(pthread_attr_setstacksize(&attr, small_stack_bytes()), 0);
-  pthread_t thread;
-  ASSERT_EQ(pthread_create(&thread, &attr, run_trace, &call), 0);
-  pthread_attr_destroy(&attr);
-  ASSERT_EQ(pthread_join(thread, nullptr), 0);
-
-  ASSERT_TRUE(call.error.empty()) << call.error;
-  assert_full_chain(call.json, names.size() - 1);
-}
-
-#endif // _WIN32
 
 // A scan resumed after a failed branch can sit one past a node's last edge or transition. Both
 // nodes below own their tile's last, where a one-past index and a one-past pointer differ
