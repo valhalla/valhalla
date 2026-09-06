@@ -17,9 +17,8 @@ using namespace valhalla;
 
 namespace {
 
-// gurka names a node with a single byte, so the chain runs over the graphic byte values: ASCII
-// 0x21-0x7E and Latin-1 0xA1-0xFF, which leaves out space, DEL, the C1 block and NBSP. The edge
-// walk takes one step per edge, so the chain length is what drives its depth.
+// gurka names a node with a single byte, so the chain runs over the graphic ones: ASCII 0x21-0x7E
+// and Latin-1 0xA1-0xFF. The walk takes one step per edge, so the length is what drives its depth
 std::vector<std::string> chain_node_names() {
   std::vector<std::string> names;
   for (int b = 0x21; b <= 0x7E; ++b) {
@@ -44,10 +43,8 @@ gurka::map build_chain_map(const std::vector<std::string>& names) {
   return gurka::buildtiles(layout, ways, {}, {}, "test/data/route_matcher_deep");
 }
 
-// gurka's request builder appends its own "shape_match": "map_snap" after it applies the options,
-// so reaching the edge walk through it leaves two keys in the request and relies on the first one
-// winning. Nothing asserted below would notice if the walk stopped running, so the request is built
-// here rather than resting on that.
+// Reaching edge_walk through gurka's request builder leaves two shape_match keys and relies on the
+// first winning; nothing asserted below would notice if the walk stopped running
 std::string build_edge_walk_request(const gurka::map& map, const std::vector<std::string>& names) {
   rapidjson::Document doc;
   doc.SetObject();
@@ -121,14 +118,11 @@ void* run_trace(void* arg) {
 
 size_t small_stack_bytes() {
 #ifdef ROUTE_MATCHER_DEEP_ASAN
-  // Redzones inflate every frame, the pipeline outside the walk included, so the stack is raised to
-  // keep instrumentation alone from failing this. A per-edge recursion is caught by the
-  // uninstrumented builds, not by this one
+  // Redzones inflate every frame, so this is raised to keep instrumentation alone from failing it;
+  // a per-edge recursion is caught by the uninstrumented builds, not by this one
   constexpr size_t kSmallStack = 512 * 1024;
 #else
-  // Below what one frame per chain edge would need, above what the request needs without that: on
-  // arm64 the whole call runs in under 24 KB here at -O0, while walking the same chain one frame
-  // per edge needs more than 192 KB
+  // Above what the walk needs, below what a frame per chain edge would need, in both build types
   constexpr size_t kSmallStack = 48 * 1024;
 #endif
   // A platform with a larger floor turns this into a plain smoke test rather than an EINVAL failure
@@ -170,10 +164,8 @@ TEST(RouteMatcher, LongChainEdgeWalkOnSmallThreadStack) {
 
 #endif // _WIN32
 
-// A node's edges and transitions are visited from a bookmark, so a scan that resumes after a failed
-// branch can sit one past the last of them. Both nodes below own the last edge, respectively the
-// last transition, of their tile, which is where a one-past index and a one-past pointer differ:
-// the index is rejected by the bounds-checked accessors, the pointer only by the loop condition.
+// A scan resumed after a failed branch can sit one past a node's last edge or transition. Both
+// nodes below own their tile's last, where a one-past index and a one-past pointer differ
 TEST(RouteMatcher, BacktrackPastLastEdgeOfTile) {
   gurka::nodelayout layout;
   layout["A"] = {5.10, 45.09};
@@ -196,8 +188,7 @@ TEST(RouteMatcher, BacktrackPastLastEdgeOfTile) {
   ASSERT_EQ(nodeinfo->edge_count(), 2u);
   ASSERT_GT(nodeinfo->transition_count(), 0u);
 
-  // A->N matches, N->B matches and then fails, and the walk has to come back and take N's
-  // transition to reach D
+  // N->B matches then fails, so the walk must come back and take N's transition to reach D
   std::string trace_json;
   gurka::do_action(valhalla::Options::trace_attributes, map,
                    build_edge_walk_request(map, {"A", "N", "B", "D"}), {}, &trace_json);

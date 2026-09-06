@@ -125,10 +125,8 @@ end_node_t GetEndEdges(GraphReader& reader, const valhalla::Location& destinatio
 // distance is approximately what it should be). Returns false if expansion from this
 // node fails (cannot find edges that match the trace - either in position or distance).
 //
-// The walk is a depth-first search with backtracking that runs on an explicit stack of
-// frames instead of recursing: its depth grows with the number of edges the shape covers,
-// and a caller embedding the library gets whatever stack its worker threads have, commonly
-// ~1 MB, which cannot hold one call frame per edge of a long shape.
+// One frame per expansion, on an explicit stack: the depth grows with the edges the shape
+// covers, and an embedded caller's worker thread cannot hold that many call frames.
 struct ExpandFrame {
   // What one invocation takes as input
   size_t correlated_index;
@@ -140,10 +138,8 @@ struct ExpandFrame {
   enum class Resume : uint8_t { kStart, kEdgeChild, kEdgeScan, kTransChild, kTransScan };
   Resume resume = Resume::kStart;
 
-  // Loop state that survives while a child frame runs. The scans keep the counters and
-  // the edge/transition offsets separate on purpose: the counters start from the
-  // followed_edges bookmark while the offsets start from the node's first edge or
-  // transition, so the offset is counter minus bookmark.
+  // Loop state kept across a child frame. Counters start at the followed_edges bookmark
+  // while the edge and transition offsets start at the node's first, so offset is the difference
   const NodeInfo* nodeinfo = nullptr;
   uint32_t edge_start = 0;  // followed_edges bookmark the edge scan started from
   uint32_t edge_i = 0;      // counter of the directed edge being tried
@@ -209,8 +205,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
           stack.pop_back();
           continue;
         }
-        // Match failed along this edge, pop the last entry off path_infos as well as what it
-        // contributed to the elapsed cost/time and try to keep going on the next edge
+        // Match failed along this edge: undo what it added and try the next one
         elapsed -= f.edge_cost;
         path_infos.pop_back();
         ++f.edge_i;
@@ -222,9 +217,8 @@ bool expand_from_node(const mode_costing_t& mode_costing,
         const uint32_t level = f.node.level();
         const size_t corr_index = f.correlated_index;
         // Iterate through directed edges from this node
-        // The accessor is bounds checked, so it is handed the node's first edge and the offset is
-        // added to the pointer: a resumed scan can sit one past the node's last edge, which is a
-        // pointer the loop condition rejects before anything reads it
+        // Offset added to the pointer, not to the checked index: a resumed scan can sit one past
+        // the node's last edge, which the loop condition rejects before anything reads it
         const uint32_t de_offset = f.edge_i - f.edge_start;
         GraphId edge_id(f.node.tileid(), level, f.nodeinfo->edge_index() + de_offset);
         const DirectedEdge* de = f.tile->directededge(f.nodeinfo->edge_index()) + de_offset;
@@ -310,9 +304,8 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  turn};
 
-              // Continue walking shape to find the end edge: suspend this frame and hand the
-              // walk to a child frame at the edge's end node. The push can move the frame, so
-              // it is not touched past this point.
+              // Continue walking shape to find the end edge. The push can move f, so it is
+              // written before and not touched after
               f.edge_i = i;
               f.edge_cost = cost;
               f.resume = ExpandFrame::Resume::kEdgeChild;
