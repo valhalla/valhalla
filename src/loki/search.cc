@@ -23,6 +23,7 @@ PointLL point_ll_from_latlng(const valhalla::LatLng& latlng) {
 }
 
 enum class CircleInBbox : uint8_t { OUTSIDE = 0, INSIDE = 1, INTERSECTS = 2 };
+
 CircleInBbox circle_intersects_bounds(const PointLL& center,
                                       float radius_deg,
                                       const AABB2<valhalla::midgard::PointLL>& box) {

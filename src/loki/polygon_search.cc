@@ -358,11 +358,10 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
     bool has_bounding_circles = tile->header()->has_bounding_circles();
     auto edges = tile->GetBin(bin.first);
     auto bounding_circles = tile->GetBoundingCircles(bin.first);
-    auto bounding_circle = bounding_circles.begin();
     auto minx = tiles.TileBounds(tileid).minx();
     auto miny = tiles.TileBounds(tileid).miny();
-    for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
-      auto edge_id = *edge_it;
+    for (size_t edge_index = 0; edge_index < edges.size(); ++edge_index) {
+      auto edge_id = edges[edge_index];
       if (avoid_edge_ids.count(edge_id) != 0) {
         continue;
       }
@@ -377,8 +376,8 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
             (bin.first % kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
         PointLL bin_center(minx + lng_offset, miny + lat_offset);
         auto bin_center_approximator = DistanceApproximator<PointLL>(bin_center);
-        if (has_bounding_circles && bounding_circle->is_valid())
-          circle = bounding_circle->get(bin_center_approximator, bin_center);
+        if (has_bounding_circles && bounding_circles[edge_index].is_valid())
+          circle = bounding_circles[edge_index].get(bin_center_approximator, bin_center);
         radius = circle.second;
         radius_sq = midgard::sqr(radius);
       }
