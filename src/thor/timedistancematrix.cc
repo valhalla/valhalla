@@ -617,6 +617,7 @@ void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
     matrix.mutable_to_indices()->Set(pbf_idx, forward ? i : origin_index);
     matrix.mutable_distances()->Set(pbf_idx, dest.distance);
     matrix.mutable_times()->Set(pbf_idx, dest.best_cost.secs);
+    matrix.mutable_costs()->Set(pbf_idx, dest.best_cost.cost);
 
     auto dt_info =
         DateTime::offset_date(origin_dt, origin_tz, reader.GetTimezoneFromEdge(edge_ids[i], tile),

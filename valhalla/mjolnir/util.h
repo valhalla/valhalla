@@ -28,19 +28,21 @@ enum class BuildStage : int8_t {
   kInitialize = 0,
   kParseWays = 1,
   kParseRelations = 2,
-  kParseNodes = 3,
-  kConstructEdges = 4,
-  kBuild = 5,
-  kEnhance = 6,
-  kFilter = 7,
-  kTransit = 8,
-  kBss = 9,
-  kHierarchy = 10,
-  kShortcuts = 11,
-  kRestrictions = 12,
-  kElevation = 13,
-  kValidate = 14,
-  kCleanup = 15
+  kParseAreaWays = 3,
+  kParseNodes = 4,
+  kBuildAreas = 5,
+  kConstructEdges = 6,
+  kBuild = 7,
+  kEnhance = 8,
+  kFilter = 9,
+  kTransit = 10,
+  kBss = 11,
+  kHierarchy = 12,
+  kShortcuts = 13,
+  kRestrictions = 14,
+  kElevation = 15,
+  kValidate = 16,
+  kCleanup = 17
 };
 
 constexpr uint8_t kMinor = 1;
@@ -53,7 +55,9 @@ inline BuildStage string_to_buildstage(const std::string& s) {
       {{"initialize", BuildStage::kInitialize},
        {"parseways", BuildStage::kParseWays},
        {"parserelations", BuildStage::kParseRelations},
+       {"parseareaways", BuildStage::kParseAreaWays},
        {"parsenodes", BuildStage::kParseNodes},
+       {"buildareas", BuildStage::kBuildAreas},
        {"constructedges", BuildStage::kConstructEdges},
        {"build", BuildStage::kBuild},
        {"enhance", BuildStage::kEnhance},
@@ -77,7 +81,9 @@ inline std::string to_string(BuildStage stg) {
       {{static_cast<int8_t>(BuildStage::kInitialize), "initialize"},
        {static_cast<int8_t>(BuildStage::kParseWays), "parseways"},
        {static_cast<int8_t>(BuildStage::kParseRelations), "parserelations"},
+       {static_cast<int8_t>(BuildStage::kParseAreaWays), "parseareaways"},
        {static_cast<int8_t>(BuildStage::kParseNodes), "parsenodes"},
+       {static_cast<int8_t>(BuildStage::kBuildAreas), "buildareas"},
        {static_cast<int8_t>(BuildStage::kConstructEdges), "constructedges"},
        {static_cast<int8_t>(BuildStage::kBuild), "build"},
        {static_cast<int8_t>(BuildStage::kEnhance), "enhance"},
@@ -124,6 +130,7 @@ struct build_stats {
     kFailedNodeInitialization,
     kFailedOSMTimeRange,
     kFailedOSMTimeRangeUnknown,
+    kFailedPedestrianAreas,
     kInvalidHovType,
     kInvalidLevel,
     kInvalidOSMTag,
@@ -132,6 +139,8 @@ struct build_stats {
     kCountComplexTurnRestrictions,
     kCountEdges,
     kCountNodes,
+    kCountPedestrianAreas,
+    kCountPedestrianAreaEdges,
     kCountShortcutEdgesLevel0,
     kCountShortcutEdgesLevel1,
     kCountShortcutsLevel0,
@@ -186,6 +195,8 @@ struct build_stats {
        BuildStage::kParseWays, true},
       {"failed_osm_time_range_unknown", "OSM time range causes an unknown runtime_error",
        BuildStage::kParseWays, true},
+      {"failed_pedestrian_areas", "pedestrian areas that failed polygon assembly",
+       BuildStage::kBuildAreas, true},
       {"invalid_hov_type", "ways with invalid HOV type", BuildStage::kParseWays, true},
       {"invalid_level", "ways with invalid level tags", BuildStage::kParseWays, true},
       {"invalid_osm_tag", "invalid OSM tag parse errors", BuildStage::kParseWays, true},
@@ -195,6 +206,10 @@ struct build_stats {
        false},
       {"count_edges", "amount of edges at Validate", BuildStage::kValidate, false},
       {"count_nodes", "amount of nodes at Validate", BuildStage::kValidate, false},
+      {"count_pedestrian_areas", "final amount of healthy pedestrian areas", BuildStage::kBuildAreas,
+       false},
+      {"count_pedestrian_area_edges", "total count of virtual edges for all pedestrian areas",
+       BuildStage::kBuildAreas, false},
       {"count_shortcut_edges_level_0", "level 0 edges in shortcuts", BuildStage::kShortcuts, false},
       {"count_shortcut_edges_level_1", "level 1 edges in shortcuts", BuildStage::kShortcuts, false},
       {"count_shortcuts_level_0", "level 0 shortcuts", BuildStage::kShortcuts, false},
@@ -207,6 +222,10 @@ struct build_stats {
 
   void increment(counter c, uint32_t by = 1) {
     counters_[c] += by;
+  }
+
+  uint32_t count(counter c) const {
+    return counters_[c].load();
   }
 
   // Increment the shortcut count and edge count for the given hierarchy level.
@@ -349,6 +368,15 @@ bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
                     const BuildStage end_stage = BuildStage::kValidate);
+
+/**
+ * Compute the tileset-wide build id from the per-tile data hashes already stored in each tile
+ * header (no re-hashing): their sum, folded to 16 bits. Read-only; the folding is order
+ * independent, so the build id doesn't depend on the walk.
+ * @param tile_dir directory holding the .gph tiles
+ * @return the 16-bit tileset build id
+ */
+uint16_t compute_tileset_build_id(const std::string& tile_dir);
 
 /**
  * Recompute the tileset-wide build id from the per-tile data hashes already stored in each tile

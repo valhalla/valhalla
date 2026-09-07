@@ -52,12 +52,12 @@ size_t load_tiles(valhalla::midgard::tar& tar,
     }
 
     try {
-      auto id = valhalla::baldr::GraphTile::GetTileId(name);
+      auto id = valhalla::baldr::GraphId::FromTilePath(name);
       tiles[id] = std::make_pair(const_cast<char*>(data), size);
     } catch (...) {
       // It's possible to put non-tile files inside the tarfile.  As we're only
       // parsing the file *name* as a GraphId here, we will just silently skip
-      // any file paths that can't be parsed by GraphId::GetTileId()
+      // any file paths that can't be parsed by GraphId::FromTilePath()
       // If we end up with *no* recognizable tile files in the tarball at all,
       // checks lower down will warn on that.
     }
@@ -979,7 +979,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
           if (i->is_regular_file() || i->is_symlink()) {
             // add it if it can be parsed as a valid tile file name
             try {
-              tiles.emplace(GraphTile::GetTileId(i->path().string()));
+              tiles.emplace(GraphId::FromTilePath(i->path().string()));
             } catch (...) {}
           }
         }
@@ -1011,7 +1011,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
         if (i->is_regular_file() || i->is_symlink()) {
           // add it if it can be parsed as a valid tile file name
           try {
-            tiles.emplace(GraphTile::GetTileId(i->path().string()));
+            tiles.emplace(GraphId::FromTilePath(i->path().string()));
           } catch (...) {}
         }
       }

@@ -603,13 +603,12 @@ struct bin_handler_t {
     bool has_bounding_circles = tile->header()->has_bounding_circles();
     auto edges = tile->GetBin(begin->bin_index);
     auto bounding_circles = tile->GetBoundingCircles(begin->bin_index);
-    auto bounding_circle = bounding_circles.begin();
-    for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
-      auto edge_id = *edge_it;
+    for (size_t edge_index = 0; edge_index < edges.size(); ++edge_index) {
+      auto edge_id = edges[edge_index];
       bool all_prefiltered = true;
       std::pair<PointLL, double> circle({0, 0}, 0.);
-      if (has_bounding_circles && bounding_circle->is_valid())
-        circle = bounding_circle->get(begin->bin_center_approximator, begin->bin_center);
+      if (has_bounding_circles && bounding_circles[edge_index].is_valid())
+        circle = bounding_circles[edge_index].get(begin->bin_center_approximator, begin->bin_center);
       double radius = circle.second;
 
       // reset the prefiltered flag, in order to not carry over information
@@ -1036,17 +1035,16 @@ void Search::edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
       tile = reader_.GetGraphTile(tileid);
       auto edges = tile->GetBin(bin);
       auto bounding_circles = tile->GetBoundingCircles(bin);
-      auto bounding_circle = bounding_circles.begin();
-      for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
-        auto edge_id = *edge_it;
+      for (size_t edge_index = 0; edge_index < edges.size(); ++edge_index) {
+        auto edge_id = edges[edge_index];
         tile = reader_.GetGraphTile(edge_id);
 
         if (!tile)
           continue;
 
         std::pair<PointLL, double> circle({0, 0}, 0);
-        if (has_bounding_circles && bounding_circle->is_valid())
-          circle = bounding_circle->get(bin_center_approximator, bin_center);
+        if (has_bounding_circles && bounding_circles[edge_index].is_valid())
+          circle = bounding_circles[edge_index].get(bin_center_approximator, bin_center);
         double radius = circle.second;
         if (radius != 0) {
           // we have a circle
