@@ -120,11 +120,6 @@ end_node_t GetEndEdges(GraphReader& reader, const valhalla::Location& destinatio
   return end_nodes;
 }
 
-// Expand from a correlated node. Walks the shape ahead to find the next correlated
-// node and expands from there. Returns true once the end node has been found (and
-// distance is approximately what it should be). Returns false if expansion from this
-// node fails (cannot find edges that match the trace - either in position or distance).
-//
 // One frame per expansion, on an explicit stack: the depth grows with the edges the shape
 // covers, and an embedded caller's worker thread cannot hold that many call frames.
 struct ExpandFrame {
@@ -148,6 +143,10 @@ struct ExpandFrame {
   uint32_t trans_i = 0;     // counter of the node transition being tried
 };
 
+// Expand from a correlated node. Walks the shape ahead to find the next correlated
+// node and expands from there. Returns true once the end node has been found (and
+// distance is approximately what it should be). Returns false if expansion from this
+// node fails (cannot find edges that match the trace - either in position or distance).
 bool expand_from_node(const mode_costing_t& mode_costing,
                       const valhalla::sif::TravelMode& mode,
                       GraphReader& reader,
@@ -167,6 +166,8 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                       followed_edges_t& followed_edges,
                       const bool use_shortcuts) {
   std::vector<ExpandFrame> stack;
+  // An edge child always takes a larger shape index, so the depth cannot outrun the shape
+  stack.reserve(shape.size());
   stack.push_back({correlated_index, tile, node, from_transition});
   // The popped frame's result. A frame that decides its own outcome assigns it; a frame whose
   // outcome is its child's leaves the child's value in place, which is how a match reaches the root
