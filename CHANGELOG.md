@@ -7,6 +7,7 @@
    * FIXED: don't advance bounding-circle iterator past the end [#6241](https://github.com/valhalla/valhalla/pull/6241)
    * FIXED: update final path distance in recosting for `CostMatrix` [#6258](https://github.com/valhalla/valhalla/pull/6258)
    * FIXED: Set `edge_index` for all interpolated points in `/trace_attributes` [#6278](https://github.com/valhalla/valhalla/pull/6278)
+   * FIXED: Shortcut/transit/etc. edges should use `kNoElevationData` (-500.0) instead of 0.0 [#6306](https://github.com/valhalla/valhalla/pull/6306)
 * **Enhancement**
    * ADDED: store the reverse speed limit as an `EdgeInfo` tagged value when `maxspeed:forward` and `maxspeed:backward` differ; `EdgeInfo::speed_limit(bool forward)` replaces `speed_limit()` and `/locate` verbose edge info gains `reverse_speed_limit` [#5983](https://github.com/valhalla/valhalla/pull/5983)
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
