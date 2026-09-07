@@ -489,15 +489,15 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
       // Test whether this shape is forward or reverse (in case an existing
-      // edge exists). Shortcuts use way Id = 0.Set mean elevation to 0 as a placeholder,
-      // set it later if adding elevation to this dataset. No need for names etc, shortcuts
-      // aren't used in guidance
+      // edge exists). Shortcuts use way Id = 0. ElevationBuilder runs after this stage and
+      // overwrites the mean elevation if the dataset has elevation. No need for names etc,
+      // shortcuts aren't used in guidance
       bool forward = true;
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
-          tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, {}, {}, {}, 0, forward, false);
-      ;
+          tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, kNoElevationData,
+                                  edgeinfo.bike_network(), edgeinfo.speed_limit(), shape, {}, {}, {},
+                                  0, forward, false);
 
       newedge.set_edgeinfo_offset(edge_info_offset);
 
