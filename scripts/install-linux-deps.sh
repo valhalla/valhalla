@@ -53,7 +53,6 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     python3-all-dev \
     python3-shapely \
     python3-requests \
-    python3-polib \
     python3-pip \
     python3-polib \
     spatialite-bin \
