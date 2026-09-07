@@ -704,6 +704,8 @@ TEST(StandAlone, GenericLevelChange) {
 TEST(StandAlone, ElevatorNodeReverseSearchAcrossTiles) {
   constexpr double gridsize_metres = 100;
 
+  // C and D lie west of the prime meridian, A, B and E east of it, so the tile boundary cuts the
+  // corridor CA in half: the elevator node A and its neighbour C end up in different tiles.
   const std::string ascii_map = R"(
       C---A---B
       |       |
@@ -725,16 +727,19 @@ TEST(StandAlone, ElevatorNodeReverseSearchAcrossTiles) {
       {"A", {{"highway", "elevator"}, {"indoor", "yes"}}},
   };
 
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0.2497, 0.1});
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-.001, .01});
   auto map =
       gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_elevator_cross_tile", build_config);
 
+  // both directions of CA, one per tile
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
   ASSERT_NE(std::get<0>(gurka::findEdge(reader, layout, "CA", "A")).tileid(),
             std::get<0>(gurka::findEdge(reader, layout, "CA", "C")).tileid());
   ASSERT_EQ(reader.nodeinfo(gurka::findNode(reader, layout, "A"))->type(),
             baldr::NodeType::kElevator);
 
+  // arrive_by walks the search backwards from C: over the elevator node A it needs the levels of
+  // CA, which the tile of A does not hold. The penalty then pushes the route around via D and E.
   auto result = gurka::do_action(valhalla::Options::route, map, {"B", "C"}, "pedestrian",
                                  {{"/date_time/type", "2"},
                                   {"/date_time/value", "2024-01-01T10:00"},
