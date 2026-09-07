@@ -54,7 +54,6 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     python3-shapely \
     python3-requests \
     python3-pip \
-    python3-polib \
     spatialite-bin \
     unzip \
     zlib1g-dev
