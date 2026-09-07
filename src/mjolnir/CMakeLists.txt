@@ -27,6 +27,7 @@ set(sources
   add_predicted_speeds.cc
   admin.cc
   adminbuilder.cc
+  areabuilder.cc
   bssbuilder.cc
   complexrestrictionbuilder.cc
   convert_transit.cc

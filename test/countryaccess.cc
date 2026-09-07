@@ -73,6 +73,8 @@ void CountryAccess(const std::string& config_file) {
   std::string cr_from_file = "test_from_cr_amsterdam.bin";
   std::string cr_to_file = "test_to_cr_amsterdam.bin";
   std::string bss_nodes_file = "test_bss_nodes_amsterdam.bin";
+  std::string edge_shapes_file = "test_edge_shapes_amsterdam.bin";
+  std::string edge_node_ids_file = "test_edge_node_ids_amsterdam.bin";
   std::string linguistic_node_file = "test_linguistic_node_amsterdam.bin";
 
   // Parse Amsterdam OSM data
@@ -93,8 +95,9 @@ void CountryAccess(const std::string& config_file) {
                                edges_file);
 
   // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, cr_from_file,
-                      cr_to_file, linguistic_node_file, tiles);
+  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
+                      edge_shapes_file, edge_node_ids_file, cr_from_file, cr_to_file,
+                      linguistic_node_file, tiles);
 
   // load a tile and test the default access.
   GraphId id(820099, 2, 0);
@@ -227,6 +230,8 @@ void CountryAccess(const std::string& config_file) {
   // Remove temporary files
   remove_temp_file(ways_file);
   remove_temp_file(way_nodes_file);
+  remove_temp_file(edge_shapes_file);
+  remove_temp_file(edge_node_ids_file);
   remove_temp_file(nodes_file);
   remove_temp_file(edges_file);
   remove_temp_file(access_file);

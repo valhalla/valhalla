@@ -37,6 +37,8 @@ std::string access_file = "test_access.bin";
 std::string from_restriction_file = "test_from_complex_restrictions.bin";
 std::string to_restriction_file = "test_to_complex_restrictions.bin";
 std::string bss_nodes_file = "test_bss_nodes.bin";
+std::string edge_shapes_file = "test_edge_shapes.bin";
+std::string edge_node_ids_file = "test_edge_node_ids.bin";
 std::string linguistic_node_file = "test_linguistic_node.bin";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
@@ -100,6 +102,12 @@ void CleanUp() {
   if (std::filesystem::exists(bss_nodes_file))
     std::filesystem::remove(bss_nodes_file);
 
+  if (std::filesystem::exists(edge_shapes_file))
+    std::filesystem::remove(edge_shapes_file);
+
+  if (std::filesystem::exists(edge_node_ids_file))
+    std::filesystem::remove(edge_node_ids_file);
+
   if (std::filesystem::exists(linguistic_node_file))
     std::filesystem::remove(linguistic_node_file);
 }
@@ -122,10 +130,10 @@ void BollardsGatesAndAccess(const std::string& config_file) {
                              way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   // bus access tests.
   auto way_85744121 = GetWay(85744121, ways);
@@ -274,7 +282,7 @@ void RemovableBollards(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   // Is a bollard=rising is saved as a gate...with foot flag and bike set.
   auto node = GetNode(2425784125, way_nodes);
@@ -304,7 +312,7 @@ void Exits(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   auto node = GetNode(33698177, way_nodes);
   EXPECT_TRUE(node.intersection());
@@ -342,7 +350,7 @@ void Baltimore(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   // bike_forward and reverse is set to false by default.  Meaning defaults for
   // highway = pedestrian.  Bike overrides bicycle=designated and/or cycleway=shared_lane
@@ -413,7 +421,7 @@ void Baltimore(const std::string& config_file) {
   EXPECT_TRUE(way_192573108.bike_backward());
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false, true);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
   auto node = GetNode(49473254, way_nodes);
 
   EXPECT_TRUE(node.intersection()) << "Toll Booth 49473254";
@@ -456,7 +464,7 @@ void Bike(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   // http://www.openstreetmap.org/way/6885577#map=14/51.9774/5.7718
   // direction of this way for oneway is flipped.  Confirmed on opencyclemap.org.
@@ -539,7 +547,7 @@ void Bus(const std::string& config_file) {
                              way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   auto way_14327599 = GetWay(14327599, ways);
   EXPECT_FALSE(way_14327599.auto_forward());
@@ -608,7 +616,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
                              way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   auto node = GetNode(42439096, way_nodes);
   EXPECT_TRUE(node.intersection());
@@ -690,7 +698,8 @@ TEST(GraphParser, TestImportBssNode) {
                                edges_file);
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
+                      edge_shapes_file, edge_node_ids_file, from_restriction_file,
+                      to_restriction_file, linguistic_node_file, tiles);
 
   BssBuilder::Build(conf, osmdata, bss_nodes_file);
 
