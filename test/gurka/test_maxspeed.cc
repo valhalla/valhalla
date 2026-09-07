@@ -116,7 +116,7 @@ TEST(Standalone, ReverseSpeedLimit) {
   EXPECT_EQ(leg.node(1).edge().speed_limit(), 90); // CB
   EXPECT_EQ(leg.node(2).edge().speed_limit(), 80); // BA
 
-  // locate reports both limits, the reverse one only when it is stored
+  // locate reports the limit for the direction of each returned edge
   std::string json;
   gurka::do_action(valhalla::Options::locate, map, {"A", "D"}, "auto", {}, nullptr, &json);
   rapidjson::Document root;
@@ -125,14 +125,9 @@ TEST(Standalone, ReverseSpeedLimit) {
   ASSERT_EQ(root.GetArray().Size(), 2);
 
   for (const auto& edge : root[0]["edges"].GetArray()) {
-    const auto& edge_info = edge["edge_info"];
-    EXPECT_EQ(edge_info["speed_limit"], 100);
-    ASSERT_TRUE(edge_info.HasMember("reverse_speed_limit"));
-    EXPECT_EQ(edge_info["reverse_speed_limit"], 80);
+    EXPECT_EQ(edge["edge_info"]["speed_limit"], edge["edge"]["forward"].GetBool() ? 100 : 80);
   }
   for (const auto& edge : root[1]["edges"].GetArray()) {
-    const auto& edge_info = edge["edge_info"];
-    EXPECT_EQ(edge_info["speed_limit"], 70);
-    EXPECT_FALSE(edge_info.HasMember("reverse_speed_limit"));
+    EXPECT_EQ(edge["edge_info"]["speed_limit"], 70);
   }
 }

@@ -322,9 +322,10 @@ public:
 
   /**
    * the json representation of the object
-   * @param writer The writer json object to represent the edge info
+   * @param writer  The writer json object to represent the edge info
+   * @param forward Direction relative to the stored shape for the speed limit, see speed_limit()
    */
-  void json(rapidjson::writer_wrapper_t& writer) const;
+  void json(rapidjson::writer_wrapper_t& writer, const bool forward) const;
 
   // Operator EqualTo based on nodea and nodeb.
   bool operator==(const EdgeInfo& rhs) const;

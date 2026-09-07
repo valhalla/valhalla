@@ -214,7 +214,7 @@ void serialize_edges(const Location& location,
         writer("inbound_reach", static_cast<int64_t>(edge.inbound_reach()));
 
         writer.start_object("edge_info");
-        edge_info.json(writer);
+        edge_info.json(writer, directed_edge->forward());
         writer.end_object();
 
         writer.start_object("edge");

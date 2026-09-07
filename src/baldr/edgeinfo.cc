@@ -572,7 +572,7 @@ std::vector<uint64_t> EdgeInfo::osm_node_ids() const {
   } catch (...) { throw std::runtime_error("failed to decode osm node ids"); };
 }
 
-void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
+void EdgeInfo::json(rapidjson::writer_wrapper_t& writer, const bool forward) const {
   writer("way_id", static_cast<uint64_t>(wayid()));
 
   writer.start_object("bike_network");
@@ -593,10 +593,10 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     writer("mean_elevation", static_cast<int64_t>(elev));
   }
 
-  if (speed_limit(true) == kUnlimitedSpeedLimit) {
+  if (speed_limit(forward) == kUnlimitedSpeedLimit) {
     writer("speed_limit", "unlimited");
   } else {
-    writer("speed_limit", static_cast<uint64_t>(speed_limit(true)));
+    writer("speed_limit", static_cast<uint64_t>(speed_limit(forward)));
   }
 
   std::vector<std::pair<std::string, uint64_t>> conditional_speed_limits;
@@ -655,11 +655,6 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
         break;
       }
       case TaggedValue::kReverseSpeedLimit:
-        if (speed_limit(false) == kUnlimitedSpeedLimit) {
-          writer("reverse_speed_limit", "unlimited");
-        } else {
-          writer("reverse_speed_limit", static_cast<uint64_t>(speed_limit(false)));
-        }
         break;
       case TaggedValue::kTunnel:
         break;

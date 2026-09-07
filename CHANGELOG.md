@@ -18,7 +18,7 @@
    * ADDED: documentation page for the pedestrian areas feature [#6266](https://github.com/valhalla/valhalla/pull/6266)
    * ADDED: Add use_distance to truck, bus, taxi, motorcycle and motor_scooter cost [#6214](https://github.com/valhalla/valhalla/pull/6214)
    * ADDED: limitations, future work and performance sections to the pedestrian areas documentation [#6279](https://github.com/valhalla/valhalla/pull/6279)
-   * ADDED: store the reverse speed limit as an `EdgeInfo` tagged value when `maxspeed:forward` and `maxspeed:backward` differ; `EdgeInfo::speed_limit(bool forward)` replaces `speed_limit()` and `/locate` verbose edge info gains `reverse_speed_limit` [#5983](https://github.com/valhalla/valhalla/pull/5983)
+   * ADDED: store the reverse speed limit as an `EdgeInfo` tagged value when `maxspeed:forward` and `maxspeed:backward` differ; `EdgeInfo::speed_limit(bool forward)` replaces `speed_limit()` and `/locate` reports `edge_info.speed_limit` for the direction of the edge [#5983](https://github.com/valhalla/valhalla/pull/5983)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
