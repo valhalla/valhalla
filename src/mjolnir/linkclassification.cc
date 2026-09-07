@@ -75,16 +75,16 @@ struct Data {
   Data(const std::string& nodes_file,
        const std::string& edges_file,
        const std::string& ways_file,
-       const std::string& way_nodes_file,
+       const std::string& edge_shapes_file,
        const OSMData& osmdata)
       : nodes(nodes_file, false), edges(edges_file, false), ways(ways_file, false),
-        way_nodes(way_nodes_file, false), osmdata(osmdata) {
+        edge_shapes(edge_shapes_file, false), osmdata(osmdata) {
   }
 
   sequence<Node> nodes;
   sequence<Edge> edges;
   sequence<OSMWay> ways;
-  sequence<OSMWayNode> way_nodes;
+  sequence<OSMWayNodeShape> edge_shapes;
   const OSMData& osmdata;
 };
 
@@ -93,8 +93,7 @@ std::vector<PointLL> EdgeShape(Data& data, const Edge& edge) {
   const size_t count = edge.attributes.llcount;
   std::vector<PointLL> shape;
   for (size_t i = 0; i < count; ++i) {
-    auto node = (*data.way_nodes[idx++]).node;
-    shape.emplace_back(node.latlng());
+    shape.emplace_back((*data.edge_shapes[idx++]).latlng());
   }
   return shape;
 }
@@ -899,14 +898,14 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
 void ReclassifyLinks(const std::string& ways_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
-                     const std::string& way_nodes_file,
+                     const std::string& edge_shapes_file,
                      const OSMData& osmdata,
                      bool reclassify_links,
                      bool infer_turn_channels) {
   SCOPED_TIMER();
   LOG_INFO("Reclassifying_V2 link graph edges...");
 
-  Data data(nodes_file, edges_file, ways_file, way_nodes_file, osmdata);
+  Data data(nodes_file, edges_file, ways_file, edge_shapes_file, osmdata);
   // Find list of exit nodes - nodes where drivable outbound links connect to
   // non-link edges. Group by best road class of the non-link connecting edges.
   nodelist_t exit_nodes = FormExitNodes(data.nodes, data.edges);
