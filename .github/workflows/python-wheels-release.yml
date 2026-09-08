@@ -18,22 +18,8 @@ on:
       - ".git*"
     branches:
       - master
-      - kk_prime_server_latest
     tags:
       - '*'
-  pull_request:
-    paths-ignore:
-      - "*.md"
-      - .circleci/
-      - docs/
-      - run_route_scripts/
-      - test_requests/
-      - test/check_compilers/
-      - .github/workflows/check_compilers.yml
-      - ".tx"
-      - ".git*"
-    branches:
-      - master
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -56,7 +42,8 @@ concurrency:
 env:
   # only run tmate if manually invoked and debug_enabled == true or a previous step failed
   SETUP_TMATE: ${{ ((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) && (github.repository_owner == 'valhalla') }}
-  PUBLISH_PYPI: ${{ (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
+  # PUBLISH_PYPI: ${{ (startsWith(github.ref, 'refs/tags') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
+  PUBLISH_PYPI: true
 
 jobs:
   # only publish to PyPI on tags, schedule or workflow_dispatch (only on master!)
