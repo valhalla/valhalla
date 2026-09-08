@@ -557,6 +557,29 @@ public:
   }
 
   /**
+   * Update an existing edge label with new predecessor and cost information.
+   * @param predecessor      Predecessor directed edge in the shortest path.
+   * @param cost             True cost (and elapsed time in seconds) to the edge.
+   * @param sortcost         Cost for sorting (includes A* heuristic).
+   * @param tc               Transition cost onto the edge.
+   * @param path_distance    Accumulated path distance.
+   * @param restriction_idx  If this label has restrictions, the index where the restriction is found
+   */
+  void Update(const uint32_t predecessor,
+              const Cost& cost,
+              const float sortcost,
+              const Cost& tc,
+              const uint32_t path_distance,
+              const uint8_t restriction_idx) {
+    predecessor_ = predecessor;
+    cost_ = cost;
+    sortcost_ = sortcost;
+    transition_cost_ = tc;
+    path_distance_ = path_distance;
+    restriction_idx_ = restriction_idx;
+  }
+
+  /**
    * Get the transition cost. This is used in the bidirectional A*
    * to determine the cost at the connection. But is also used for general stats
    * @return  Returns the transition cost (including penalties).

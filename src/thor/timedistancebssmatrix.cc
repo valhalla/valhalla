@@ -412,8 +412,7 @@ void TimeDistanceBSSMatrix::InitDestinations(
 
       // Mark the edge as having a destination on it and add the
       // destination index
-      d.edges_percent_along[edgeid] =
-          Destination::PartialEdge{.percent_along = static_cast<float>(percent_along)};
+      d.dest_edges_percent_along[edgeid] = percent_along;
       dest_edges_[edgeid].push_back(idx);
     }
     idx++;
@@ -453,7 +452,7 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
       }
       continue;
     }
-    auto dest_edge = dest.edges_percent_along.find(pred.edgeid());
+    auto dest_edge = dest.dest_edges_percent_along.find(pred.edgeid());
 
     // Skip case where destination is along the origin edge, there is no
     // predecessor, and the destination cannot be reached via trivial path.
@@ -464,7 +463,7 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
 
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
-    float remainder = dest_edge->second.percent_along;
+    float remainder = dest_edge->second;
     float start, end;
 
     if (FORWARD) {

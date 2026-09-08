@@ -11,6 +11,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <functional>
+#include <stdexcept>
 
 namespace valhalla {
 namespace thor {
@@ -238,18 +239,12 @@ struct Destination {
   // Set of still available correlated edges;
   std::unordered_set<uint64_t> dest_edges_available;
 
-  // global information which only needs to be set once or is reset for every origin in the
-  // algorithm
+  // global information which only needs to be set once or is reset for every origin in the algorithm
   uint32_t distance; // Path distance for the best cost path
   float threshold;   // Threshold above current best cost where no longer
                      // need to search for this destination.
-
-  // percent along for each correlated edge
-  struct PartialEdge {
-    float percent_along{0.f};
-    sif::Cost distance_penalty{0.f, 0.f};
-  };
-  std::unordered_map<uint64_t, PartialEdge> edges_percent_along;
+  // partial distance of correlated edges
+  std::unordered_map<uint64_t, float> dest_edges_percent_along;
 
   // Constructor - set best_cost to an absurdly high value so any new cost
   // will be lower.
@@ -263,6 +258,7 @@ struct Destination {
     dest_edges_available.clear();
   }
 };
+
 // return true if any location had a valid time set
 // return false if it doesn't make sense computationally and add warnings accordingly
 inline bool check_matrix_time(Api& request, const Matrix::Algorithm algo) {

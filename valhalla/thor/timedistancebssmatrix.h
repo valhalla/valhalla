@@ -211,7 +211,7 @@ protected:
   void SetDestinationEdges() {
     // the percent_along is set once at the beginning
     for (auto& dest : destinations_) {
-      for (const auto& idx : dest.edges_percent_along) {
+      for (const auto& idx : dest.dest_edges_percent_along) {
         dest.dest_edges_available.emplace(idx.first);
       }
     }

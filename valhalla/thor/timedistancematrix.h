@@ -99,10 +99,6 @@ protected:
   // List of destinations
   std::vector<Destination> destinations_;
 
-  // Distance penalty applied to each origin edge cost
-  // Used to get the true cost of super trivial paths
-  std::unordered_map<uint64_t, float> origin_edges_percent_along_;
-
   // Current costing mode
   sif::cost_ptr_t costing_;
 
@@ -209,7 +205,7 @@ protected:
   void SetDestinationEdges() {
     // the percent_along is set once at the beginning
     for (auto& dest : destinations_) {
-      for (const auto& idx : dest.edges_percent_along) {
+      for (const auto& idx : dest.dest_edges_percent_along) {
         dest.dest_edges_available.emplace(idx.first);
       }
     }
@@ -221,12 +217,13 @@ protected:
    * @param   origin        Location of the origin.
    * @param   locations     List of locations.
    * @param   destinations  Vector of destination indexes along this edge.
-   * @param   edge          Directed edge
+   * @param   traversal_edge  Edge the search labelled; the opposing edge in the reverse tree.
    * @param   pred          Predecessor information in shortest path.
    * @param   matrix_locations Count of locations that must be found. When provided it allows
    *                           a partial result to be returned (e.g. best 20 out of 50 locations).
    *                           When not supplied in the request this is set to max uint32_t value
    *                           so that all supplied locations must be settled.
+   * @param   invariant     Whether invariant time was requested.
    * @return  Returns true if all destinations have been settled.
    */
   template <const ExpansionType expansion_direction,
@@ -234,12 +231,13 @@ protected:
   bool UpdateDestinations(const valhalla::Location& origin,
                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                           std::vector<uint32_t>& destinations,
-                          const baldr::DirectedEdge* edge,
+                          const baldr::DirectedEdge* traversal_edge,
                           const baldr::graph_tile_ptr& tile,
                           baldr::GraphReader& reader,
                           const sif::PathEdgeLabel& pred,
                           const baldr::TimeInfo& time_info,
-                          const uint32_t matrix_locations);
+                          const uint32_t matrix_locations,
+                          const bool invariant);
 
   /**
    * Sets the date_time on the origin locations.
