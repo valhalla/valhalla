@@ -107,10 +107,10 @@ protected:
   std::unordered_map<uint64_t, std::vector<uint32_t>> dest_edges_;
 
   // Vector of edge labels (requires access by index).
-  std::vector<sif::EdgeLabel> edgelabels_;
+  std::vector<sif::PathEdgeLabel> edgelabels_;
 
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
+  baldr::DoubleBucketQueue<decltype(edgelabels_)::value_type> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
@@ -214,15 +214,17 @@ protected:
   /**
    * Update destinations along an edge that has been settled (lowest cost path
    * found to the end of edge).
-   * @param   origin        Location of the origin.
-   * @param   locations     List of locations.
-   * @param   destinations  Vector of destination indexes along this edge.
-   * @param   edge          Directed edge
-   * @param   pred          Predecessor information in shortest path.
+   * @param   origin           Location of the origin.
+   * @param   locations        List of locations.
+   * @param   destinations     Vector of destination indexes along this edge.
+   * @param   traversal_edge   The edge corresponding to the predecessor
+   * @param   pred             Predecessor information in shortest path.
    * @param   matrix_locations Count of locations that must be found. When provided it allows
    *                           a partial result to be returned (e.g. best 20 out of 50 locations).
    *                           When not supplied in the request this is set to max uint32_t value
    *                           so that all supplied locations must be settled.
+   * @param   invariant        Whether invariant time was requested.
+   *
    * @return  Returns true if all destinations have been settled.
    */
   template <const ExpansionType expansion_direction,
@@ -230,12 +232,13 @@ protected:
   bool UpdateDestinations(const valhalla::Location& origin,
                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                           std::vector<uint32_t>& destinations,
-                          const baldr::DirectedEdge* edge,
+                          const baldr::DirectedEdge* traversal_edge,
                           const baldr::graph_tile_ptr& tile,
                           baldr::GraphReader& reader,
-                          const sif::EdgeLabel& pred,
+                          const sif::PathEdgeLabel& pred,
                           const baldr::TimeInfo& time_info,
-                          const uint32_t matrix_locations);
+                          const uint32_t matrix_locations,
+                          const bool invariant);
 
   /**
    * Sets the date_time on the origin locations.

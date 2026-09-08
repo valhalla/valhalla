@@ -11,9 +11,20 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <functional>
+#include <stdexcept>
 
 namespace valhalla {
 namespace thor {
+
+inline const valhalla::PathEdge* find_correlated_edge(const valhalla::Location& location,
+                                                      const valhalla::baldr::GraphId& edge_id) {
+  for (const auto& e : location.correlation().edges()) {
+    if (e.graph_id() == edge_id)
+      return &e;
+  }
+
+  throw std::logic_error("Could not find candidate edge used for label");
+}
 
 // Default for time distance matrix is to find all locations
 constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();

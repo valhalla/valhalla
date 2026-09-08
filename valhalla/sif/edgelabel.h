@@ -535,7 +535,8 @@ public:
                 const InternalTurn internal_turn,
                 const uint8_t path_id = 0,
                 const bool destonly = false,
-                const bool hgv_access = false)
+                const bool hgv_access = false,
+                const uint8_t destonly_access_restr_mask = 0)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -549,9 +550,33 @@ public:
                   internal_turn,
                   path_id,
                   destonly,
-                  hgv_access),
+                  hgv_access,
+                  destonly_access_restr_mask),
         transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
+  }
+
+  /**
+   * Update an existing edge label with new predecessor and cost information.
+   * @param predecessor      Predecessor directed edge in the shortest path.
+   * @param cost             True cost (and elapsed time in seconds) to the edge.
+   * @param sortcost         Cost for sorting (includes A* heuristic).
+   * @param tc               Transition cost onto the edge.
+   * @param path_distance    Accumulated path distance.
+   * @param restriction_idx  If this label has restrictions, the index where the restriction is found
+   */
+  void Update(const uint32_t predecessor,
+              const Cost& cost,
+              const float sortcost,
+              const Cost& tc,
+              const uint32_t path_distance,
+              const uint8_t restriction_idx) {
+    predecessor_ = predecessor;
+    cost_ = cost;
+    sortcost_ = sortcost;
+    transition_cost_ = tc;
+    path_distance_ = path_distance;
+    restriction_idx_ = restriction_idx;
   }
 
   /**
