@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometers",
+        "1 kilometer",
+        "<METERS> meters",
+        "less than 10 meters"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "a half mile",
+        "a quarter mile",
+        "<FEET> feet",
+        "less than 10 feet"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Dock: <TIME>.",
+        "1": "Dock: <TIME> at <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Dock at <TIME>.",
+        "1": "Dock at <TIME> at <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Bear <RELATIVE_DIRECTION> me matey.",
+        "1": "Bear <RELATIVE_DIRECTION> me matey onto <STREET_NAMES>.",
+        "2": "Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> me matey at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> me matey toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "left",
+        "right"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Bear <RELATIVE_DIRECTION> me matey.",
+        "1": "Bear <RELATIVE_DIRECTION> me matey onto <STREET_NAMES>.",
+        "2": "Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>.",
+        "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> me matey at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "left",
+        "right"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Aye, continue.",
+        "1": "Heave ho on <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Aye, continue.",
+        "1": "Aye, continue fer <LENGTH>.",
+        "2": "Heave ho on <STREET_NAMES>",
+        "3": "Heave ho on <STREET_NAMES> fer <LENGTH>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometers",
+        "1 kilometer",
+        "<METERS> meters",
+        "less than 10 meters"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "a half mile",
+        "a quarter mile",
+        "<FEET> feet",
+        "less than 10 feet"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Aye, continue.",
+        "1": "Heave ho on <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Set sail: <TIME>.",
+        "1": "Set sail: <TIME> from <TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Set sail at <TIME>.",
+        "1": "Set sail at <TIME> from <TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Blimey! Ye have arrived at yer destination. Savvy?",
+        "1": "Shiver me timbers! Ye have arrived at <DESTINATION>. Savvy?",
+        "2": "Sink me! Yer destination be on th' <RELATIVE_DIRECTION>. Savvy?",
+        "3": "Aye <DESTINATION> be on th' <RELATIVE_DIRECTION>. Savvy?"
+      },
+      "relative_directions": [
+        "left",
+        "right"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Shiver me timbers! Ye have arrived at yer destination. Savvy?",
+        "1": "Blimey! Ye have arrived at <DESTINATION>. Savvy?",
+        "2": "Yer destination be on th' <RELATIVE_DIRECTION>. Savvy?",
+        "3": "<DESTINATION> be on th' <RELATIVE_DIRECTION>. Savvy?"
+      },
+      "relative_directions": [
+        "left",
+        "right"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Blimey! Ye will arrive at yer destination.",
+        "1": "Shiver me timbers! Ye will arrive at <DESTINATION>.",
+        "2": "Yer destination will be on the <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "left",
+        "right"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Take the elevator.",
+        "1": "Take the elevator to <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Enter the building.",
+        "1": "Enter the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "the mountain bike trail",
+        "the crosswalk"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Ahoy, me matey! Take the Black Pearl.",
+        "1": "Ahoy, me matey! Take the <STREET_NAMES>.",
+        "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ferry_label": "Ferry"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Ahoy, me matey! Take the Black Pearl.",
+        "1": "Ahoy, me matey! Take the <STREET_NAMES>.",
+        "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ferry_label": "Ferry"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Enter thee Cap'n wheel.",
+        "1": "Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ordinal_values": [
+        "1st",
+        "2nd",
+        "3rd",
+        "4th",
+        "5th",
+        "6th",
+        "7th",
+        "8th",
+        "9th",
+        "10th"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Enter thee Cap'n wheel.",
+        "1": "Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ordinal_values": [
+        "1st",
+        "2nd",
+        "3rd",
+        "4th",
+        "5th",
+        "6th",
+        "7th",
+        "8th",
+        "9th",
+        "10th"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Take the escalator.",
+        "1": "Take the escalator to <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Blimey! Take thee exit on th' <RELATIVE_DIRECTION>.",
+        "1": "Shiver me timbers! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION>.",
+        "2": "Blow me down! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION>.",
+        "3": "Yo ho ho! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+        "4": "Sink me! Take thee exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "5": "Avast ye, take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Blimey! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "7": "Sink me! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "8": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION>.",
+        "10": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+        "12": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "14": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "15": "Blimey! Take thee exit.",
+        "16": "Shiver me timbers! Take exit <NUMBER_SIGN>.",
+        "17": "Blow me down! Take thee <BRANCH_SIGN> exit.",
+        "18": "Yo ho ho! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
+        "19": "Sink me! Take thee exit toward <TOWARD_SIGN>.",
+        "20": "Avast ye, take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "21": "Blimey! Take thee <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
+        "22": "Sink me! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "23": "Blow me down! Take thee <NAME_SIGN> exit.",
+        "25": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN>.",
+        "27": "Blow me down! Take thee <NAME_SIGN> exit toward <TOWARD_SIGN>.",
+        "29": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Exit the building.",
+        "1": "Exit the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "the mountain bike trail",
+        "the crosswalk"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Exit thee wheel.",
+        "1": "Exit thee wheel onto <STREET_NAMES>.",
+        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Exit thee wheel.",
+        "1": "Exit thee wheel onto <STREET_NAMES>.",
+        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Blimey! Take thee exit on th' <RELATIVE_DIRECTION>.",
+        "1": "Shiver me timbers! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION>.",
+        "2": "Blow me down! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION>.",
+        "3": "Yo ho ho! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+        "4": "Sink me! Take thee exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "5": "Avast ye, take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Blimey! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "7": "Sink me! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "8": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION>.",
+        "10": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+        "12": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "14": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "15": "Blimey! Take thee exit.",
+        "16": "Shiver me timbers! Take exit <NUMBER_SIGN>.",
+        "17": "Blow me down! Take thee <BRANCH_SIGN> exit.",
+        "18": "Yo ho ho! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
+        "19": "Sink me! Take thee exit toward <TOWARD_SIGN>.",
+        "20": "Avast ye, take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "21": "Blimey! Take thee <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
+        "22": "Sink me! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "23": "Blow me down! Take thee <NAME_SIGN> exit.",
+        "25": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN>.",
+        "27": "Blow me down! Take thee <NAME_SIGN> exit toward <TOWARD_SIGN>.",
+        "29": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Exit <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> at the fork me hearties.",
+        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN>.",
+        "2": "Keep <RELATIVE_DIRECTION> me buccaneer to take <STREET_NAMES>.",
+        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
+        "4": "Keep <RELATIVE_DIRECTION> me bucko toward <TOWARD_SIGN>.",
+        "5": "Keep <RELATIVE_DIRECTION> ye scurvy dog to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "6": "Keep <RELATIVE_DIRECTION> me hearties to take <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "7": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "left",
+        "straight",
+        "right"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> me hearties to stay on <STREET_NAMES>.",
+        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
+        "2": "Keep <RELATIVE_DIRECTION> me bucko to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "left",
+        "straight",
+        "right"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> me hearties to stay on <STREET_NAMES>.",
+        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
+        "2": "Keep <RELATIVE_DIRECTION> me bucko to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "left",
+        "straight",
+        "right"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> at the fork me hearties.",
+        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN>.",
+        "2": "Keep <RELATIVE_DIRECTION> me buccaneer to take <STREET_NAMES>.",
+        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
+        "4": "Keep <RELATIVE_DIRECTION> me bucko toward <TOWARD_SIGN>.",
+        "5": "Keep <RELATIVE_DIRECTION> ye scurvy dog to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "6": "Keep <RELATIVE_DIRECTION> me hearties to take <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "7": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "left",
+        "straight",
+        "right"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Continue to <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Avast ye, merge.",
+        "1": "Avast ye, merge to th' <RELATIVE_DIRECTION>.",
+        "2": "Merge onto <STREET_NAMES> me matey.",
+        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "port",
+        "starboard"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Avast ye, merge.",
+        "1": "Avast ye, merge to th' <RELATIVE_DIRECTION>.",
+        "2": "Merge onto <STREET_NAMES> me matey.",
+        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "port",
+        "starboard"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Pass <OBJECT_LABEL>.",
+        "1": "Pass traffic signals on <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "the gate",
+        "the bollards",
+        "ways intersection"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Voyage <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "port",
+        "other": "ports"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Aye, continue fer <LENGTH>.",
+        "1": "Avast ye, continue on <STREET_NAMES> fer <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometers",
+        "1 kilometer",
+        "<METERS> meters",
+        "less than 10 meters"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "a half mile",
+        "a quarter mile",
+        "<FEET> feet",
+        "less than 10 feet"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Take thee gangplank on th' <RELATIVE_DIRECTION>.",
+        "1": "Take thee <BRANCH_SIGN> gangplank on th' <RELATIVE_DIRECTION>.",
+        "2": "Take thee gangplank on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "3": "Take thee <BRANCH_SIGN> gangplank on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "4": "Take thee <NAME_SIGN> gangplank on th' <RELATIVE_DIRECTION>.",
+        "5": "Turn <RELATIVE_DIRECTION> to take th' gangplank.",
+        "6": "Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank.",
+        "7": "Turn <RELATIVE_DIRECTION> to take th' gangplank toward <TOWARD_SIGN>.",
+        "8": "Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
+        "9": "Turn <RELATIVE_DIRECTION> to take th' <NAME_SIGN> gangplank.",
+        "10": "Take thee gangplank.",
+        "11": "Take thee <BRANCH_SIGN> gangplank.",
+        "12": "Take thee gangplank toward <TOWARD_SIGN>.",
+        "13": "Take thee <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
+        "14": "Take thee <NAME_SIGN> gangplank."
+      },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Keep yer head'n straight to take th' gangplank.",
+        "1": "Keep yer head'n straight to take th' <BRANCH_SIGN> gangplank.",
+        "2": "Keep yer head'n straight to take th' gangplank toward <TOWARD_SIGN>.",
+        "3": "Keep yer head'n straight to take th' <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
+        "4": "Keep yer head'n straight to take th' <NAME_SIGN> gangplank."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Keep yer head'n straight to take th' gangplank.",
+        "1": "Keep yer head'n straight to take th' <BRANCH_SIGN> gangplank.",
+        "2": "Keep yer head'n straight to take th' gangplank toward <TOWARD_SIGN>.",
+        "3": "Keep yer head'n straight to take th' <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
+        "4": "Keep yer head'n straight to take th' <NAME_SIGN> gangplank."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Take thee gangplank on th' <RELATIVE_DIRECTION>.",
+        "1": "Take thee <BRANCH_SIGN> gangplank on th' <RELATIVE_DIRECTION>.",
+        "2": "Take thee gangplank on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "3": "Take thee <BRANCH_SIGN> gangplank on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "4": "Take thee <NAME_SIGN> gangplank on th' <RELATIVE_DIRECTION>.",
+        "5": "Turn <RELATIVE_DIRECTION> to take th' gangplank.",
+        "6": "Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank.",
+        "7": "Turn <RELATIVE_DIRECTION> to take th' gangplank toward <TOWARD_SIGN>.",
+        "8": "Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
+        "9": "Turn <RELATIVE_DIRECTION> to take th' <NAME_SIGN> gangplank.",
+        "10": "Take thee gangplank.",
+        "11": "Take thee <BRANCH_SIGN> gangplank.",
+        "12": "Take thee gangplank toward <TOWARD_SIGN>.",
+        "13": "Take thee <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
+        "14": "Take thee <NAME_SIGN> gangplank."
+      },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Make a sharp <RELATIVE_DIRECTION> bucko.",
+        "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
+        "2": "Arrr, make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "3": "Make a sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "left",
+        "right"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Make a sharp <RELATIVE_DIRECTION> bucko.",
+        "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
+        "2": "Arrr, make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+        "3": "Make a sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "left",
+        "right"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "4": "Set sail <CARDINAL_DIRECTION>.",
+        "5": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES>.",
+        "6": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "8": "Saunter <CARDINAL_DIRECTION> on solid ground.",
+        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "16": "Ride <CARDINAL_DIRECTION>.",
+        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "north",
+        "northeast",
+        "east",
+        "southeast",
+        "south",
+        "southwest",
+        "west",
+        "northwest"
+      ],
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "2": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "3": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
+        "4": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "5": "Set sail <CARDINAL_DIRECTION>.",
+        "6": "Set sail <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "7": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES>.",
+        "8": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES> fer <LENGTH>.",
+        "9": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "10": "Saunter <CARDINAL_DIRECTION>.",
+        "11": "Saunter <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "12": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "13": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
+        "14": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "15": "Ride <CARDINAL_DIRECTION>.",
+        "16": "Ride <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "18": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
+        "19": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "north",
+        "northeast",
+        "east",
+        "southeast",
+        "south",
+        "southwest",
+        "west",
+        "northwest"
+      ],
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometers",
+        "1 kilometer",
+        "<METERS> meters",
+        "less than 10 meters"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "a half mile",
+        "a quarter mile",
+        "<FEET> feet",
+        "less than 10 feet"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Take the stairs.",
+        "1": "Take the stairs to <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Aye, take thee <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Heave ho on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "tram",
+        "metro",
+        "train",
+        "bus",
+        "ferry",
+        "cable car",
+        "gondola",
+        "funicular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "port",
+        "other": "ports"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Sink me! Exit thee station ye scallywag.",
+        "1": "Avast ye, exit thee <TRANSIT_STOP>.",
+        "2": "Exit thee <TRANSIT_STOP> <STATION_LABEL> me buccaneer."
+      },
+      "station_label": "Station"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Sink me! Exit thee station ye scallywag.",
+        "1": "Avast ye, exit thee <TRANSIT_STOP>.",
+        "2": "Exit thee <TRANSIT_STOP> <STATION_LABEL> me buccaneer."
+      },
+      "station_label": "Station"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Shiver me timbers! Enter thee station ye landlubber.",
+        "1": "Yo ho ho! Enter thee <TRANSIT_STOP>.",
+        "2": "Enter thee <TRANSIT_STOP> <STATION_LABEL> me hearties."
+      },
+      "station_label": "Station"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Shiver me timbers! Enter thee station ye landlubber.",
+        "1": "Yo ho ho! Enter thee <TRANSIT_STOP>.",
+        "2": "Enter thee <TRANSIT_STOP> <STATION_LABEL> me hearties."
+      },
+      "station_label": "Station"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Blimey! Transfer at thee station me buccaneer.",
+        "1": "Blow me down! Transfer at thee <TRANSIT_STOP>.",
+        "2": "Transfer at thee <TRANSIT_STOP> <STATION_LABEL> ye scurvy dog."
+      },
+      "station_label": "Station"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Blimey! Transfer at thee station me buccaneer.",
+        "1": "Blow me down! Transfer at thee <TRANSIT_STOP>.",
+        "2": "Transfer at thee <TRANSIT_STOP> <STATION_LABEL> ye scurvy dog."
+      },
+      "station_label": "Station"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Remain on thee <TRANSIT_NAME> ye landlubber. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Remain on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN> ye landlubber. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "tram",
+        "metro",
+        "train",
+        "bus",
+        "ferry",
+        "cable car",
+        "gondola",
+        "funicular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "port",
+        "other": "ports"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Remain on thee <TRANSIT_NAME> ye landlubber.",
+        "1": "Remain on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN> ye landlubber."
+      },
+      "empty_transit_name_labels": [
+        "tram",
+        "metro",
+        "train",
+        "bus",
+        "ferry",
+        "cable car",
+        "gondola",
+        "funicular"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Argh! Transfer to take thee <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Hang the Jib! Transfer to take thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "tram",
+        "metro",
+        "train",
+        "bus",
+        "ferry",
+        "cable car",
+        "gondola",
+        "funicular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "port",
+        "other": "ports"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Argh! Transfer to take thee <TRANSIT_NAME>.",
+        "1": "Hang the Jib! Transfer to take thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "tram",
+        "metro",
+        "train",
+        "bus",
+        "ferry",
+        "cable car",
+        "gondola",
+        "funicular"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Aye, take thee <TRANSIT_NAME>.",
+        "1": "Heave ho on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "tram",
+        "metro",
+        "train",
+        "bus",
+        "ferry",
+        "cable car",
+        "gondola",
+        "funicular"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "Turn <RELATIVE_DIRECTION> bucko.",
+        "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> me hearties.",
+        "2": "Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
+        "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "port",
+        "starboard"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Turn <RELATIVE_DIRECTION> bucko.",
+        "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> me hearties.",
+        "2": "Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+        "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "port",
+        "starboard"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Argh! Make a <RELATIVE_DIRECTION> U-turn.",
+        "1": "Argh! Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
+        "2": "Argh! Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
+        "3": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
+        "4": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
+        "5": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "port",
+        "starboard"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Argh! Make a <RELATIVE_DIRECTION> U-turn.",
+        "1": "Argh! Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
+        "2": "Argh! Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
+        "3": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
+        "4": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
+        "5": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "port",
+        "starboard"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometers",
+        "1 kilometer",
+        "<METERS> meters",
+        "less than 10 meters"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "a half mile",
+        "a quarter mile",
+        "<FEET> feet",
+        "less than 10 feet"
+      ]
+    }
+  },
+  "posix_locale": "en_US.UTF-8",
+  "aliases": [
+    "en-x-pirate"
+  ]
+}

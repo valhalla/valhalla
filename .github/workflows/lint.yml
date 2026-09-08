@@ -68,5 +68,11 @@ jobs:
             <(printf '%s\n' $warnings | sort))
           python3 locales/po_tools.py lint --strict $strict
 
-      - name: Check the JSONs can be generated
-        run: python3 locales/po_tools.py po2json --out /tmp/locales-json
+      - name: Check the committed locale JSONs match the gettext files
+        run: |
+          python3 locales/po_tools.py po2json
+          git add --intent-to-add locales
+          git diff --exit-code -- locales || {
+            echo "::error::locales/*.json are stale - run 'python3 locales/po_tools.py po2json' and commit the result"
+            exit 1
+          }

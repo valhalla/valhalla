@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Trong <LENGTH> nữa, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> ki-lô-mét",
+        "1 ki-lô-mét",
+        "<METERS> mét",
+        "ngắn hơn 10 mét"
+      ],
+      "us_customary_lengths": [
+        "<MILES> dặm",
+        "1 dặm",
+        "nửa dặm",
+        "1/4 dặm",
+        "<FEET> bước chân",
+        "ngắn hơn 10 bước chân"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Đến nơi: <TIME>.",
+        "1": "Đến nơi: <TIME> tại <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Đến nơi lúc <TIME>.",
+        "1": "Đi đến <TIME> lúc <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION>.",
+        "1": "Giữ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Giữ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để đi trên <STREET_NAMES>.",
+        "4": "Giữ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Giữ <RELATIVE_DIRECTION> về phía <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "bên trái",
+        "bên phải"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION>.",
+        "1": "Giữ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Giữ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để đi trên <STREET_NAMES>.",
+        "4": "Giữ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Giữ <RELATIVE_DIRECTION> về phía <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "bên trái",
+        "bên phải"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> đổi tên thành <STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> đổi tên thành <STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Đi tiếp.",
+        "1": "Tiếp tục đi trên <STREET_NAMES>.",
+        "2": "Tiếp tục đi tại <JUNCTION_NAME>.",
+        "3": "Tiếp tục đi về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Đi tiếp.",
+        "1": "Tiếp tục đi thêm <LENGTH>.",
+        "2": "Tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Tiếp tục đi trên <STREET_NAMES> <LENGTH> nữa.",
+        "4": "Tiếp tục đi tại <JUNCTION_NAME>.",
+        "5": "Tiếp tục đi tại <JUNCTION_NAME> <LENGTH> nữa.",
+        "6": "Tiếp tục đi về hướng <TOWARD_SIGN>.",
+        "7": "Tiếp tục đi về hướng <TOWARD_SIGN> <LENGTH> nữa ."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> ki-lô-mét",
+        "1 ki-lô-mét",
+        "<METERS> mét",
+        "ngắn hơn 10 mét"
+      ],
+      "us_customary_lengths": [
+        "<MILES> dặm",
+        "1 dặm",
+        "nửa dặm",
+        "1/4 dặm",
+        "<FEET> bước chân",
+        "ngắn hơn 10 bước chân"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Đi tiếp.",
+        "1": "Tiếp tục đi trên <STREET_NAMES>.",
+        "2": "Tiếp tục đi tại <JUNCTION_NAME>.",
+        "3": "Tiếp tục đi về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Khởi hành: <TIME>.",
+        "1": "Khởi hành: <TIME> từ <TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Khởi hành lúc <TIME>.",
+        "1": "Khởi hành lúc <TIME> từ <TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Bạn đã tới nơi.",
+        "1": "Bạn đã tới <DESTINATION>.",
+        "2": "Điểm đến của bạn nằm ở <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> nằm ở <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Bạn đã tới nơi.",
+        "1": "Bạn đã tới <DESTINATION>.",
+        "2": "Điểm đến của bạn nằm ở <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> nằm ở <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Bạn sẽ tới nơi.",
+        "1": "Bạn sẽ tới <DESTINATION>.",
+        "2": "Địa điểm của bạn sẽ nằm ở <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> sẽ nằm ở <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Đi thang máy.",
+        "1": "Đi thang máy đến tầng <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Đi vào toà nhà.",
+        "1": "Đi vào toà nhà, và tiếp tục đi trên <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Đi lên Phà.",
+        "1": "Đi lên <STREET_NAMES>.",
+        "2": "Đi lên <STREET_NAMES> chuyến <FERRY_LABEL>.",
+        "3": "Đi chuyến phà về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "ferry_label": "Phà"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Đi lên Phà.",
+        "1": "Đi vào <STREET_NAMES>.",
+        "2": "Đi lên <STREET_NAMES> chuyến <FERRY_LABEL>.",
+        "3": "Đi chuyến phà về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "ferry_label": "Phà"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Đi vào vòng xuyến.",
+        "1": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE>.",
+        "2": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Tiếp tục đi trên <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> về hướng <TOWARD_SIGN>.",
+        "5": "Đi vào vòng xuyến và rẽ ra ngoài vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Đi vào vòng xuyến và rẽ ra ngoài vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Tiếp tục đi trên <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Đi vào vòng xuyến và rẽ ra ngoài về hướng <TOWARD_SIGN>.",
+        "8": "Đi vào <STREET_NAMES>",
+        "9": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE>.",
+        "10": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Tiếp tục đi trên <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE> về hướng <TOWARD_SIGN>.",
+        "13": "Đi vào <STREET_NAMES> và rẽ ra ngoài vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Đi vào <STREET_NAMES> và rẽ ra ngoài vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Tiếp tục đi trên <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Đi vào <STREET_NAMES> và rẽ ra ngoài về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "ordinal_values": [
+        "thứ 1",
+        "thứ 2",
+        "thứ 3",
+        "thứ 4",
+        "thứ 5",
+        "thứ 6",
+        "thứ 7",
+        "thứ 8",
+        "thứ 9",
+        "thứ 10"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Đi vào vòng xuyến.",
+        "1": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE>.",
+        "2": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> về hướng <TOWARD_SIGN>.",
+        "5": "Đi vào vòng xuyến và rẽ ra ngoài vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Đi vào vòng xuyến và rẽ ra ngoài vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Đi vào vòng xuyến và rẽ ra ngoài về hướng <TOWARD_SIGN>.",
+        "8": "Đi vào <STREET_NAMES>",
+        "9": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE>.",
+        "10": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại lối rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE> về hướng <TOWARD_SIGN>.",
+        "13": "Đi vào <STREET_NAMES> và rẽ ra ngoài vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Đi vào <STREET_NAMES> và rẽ ra ngoài vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Đi vào <STREET_NAMES> và rẽ ra ngoài về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "ordinal_values": [
+        "thứ 1",
+        "thứ 2",
+        "thứ 3",
+        "thứ 4",
+        "thứ 5",
+        "thứ 6",
+        "thứ 7",
+        "thứ 8",
+        "thứ 9",
+        "thứ 10"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Đi thang cuốn.",
+        "1": "Đi thang cuốn đến tầng <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Rẽ ra ngoài tại đoạn rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION>.",
+        "2": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> phía <RELATIVE_DIRECTION>.",
+        "3": "Rẽ vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN>.",
+        "4": "Rẽ ra ngoài vào đoạn rẽ phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "5": "Rẽ vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "6": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "7": "Rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "8": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION>.",
+        "10": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN>.",
+        "12": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "14": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "15": "Rẽ ra ngoài.",
+        "16": "Rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN>.",
+        "17": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN>.",
+        "18": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <BRANCH_SIGN>.",
+        "19": "Rẽ ra ngoài về hướng <TOWARD_SIGN>.",
+        "20": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> về hướng <TOWARD_SIGN>.",
+        "21": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "22": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "23": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN>.",
+        "25": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> vào <BRANCH_SIGN>.",
+        "27": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> về hướng <TOWARD_SIGN>.",
+        "29": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Ra khỏi toà nhà.",
+        "1": "Ra khỏi toà nhà, và tiếp tục đi trên <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Rẽ ra khỏi vòng xuyến.",
+        "1": "Rẽ ra khỏi vòng xuyến vào <STREET_NAMES>.",
+        "2": "Rẽ ra khỏi vòng xuyến vào <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Rẽ ra khỏi vòng xuyến về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Rẽ ra khỏi vòng xuyến.",
+        "1": "Rẽ ra khỏi vòng xuyến vào <STREET_NAMES>.",
+        "2": "Rẽ ra khỏi vòng xuyến vào <BEGIN_STREET_NAMES>.",
+        "3": "Rẽ ra khỏi vòng xuyến về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Rẽ ra ngoài tại đoạn rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ vào đoạn rẽ <NUMBER_SIGN> ở <RELATIVE_DIRECTION>.",
+        "2": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> phía <RELATIVE_DIRECTION>.",
+        "3": "Rẽ vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN>.",
+        "4": "Rẽ ra ngoài vào đoạn rẽ phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "5": "Rẽ vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "6": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "7": "Rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "8": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION>.",
+        "10": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN>.",
+        "12": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "14": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "15": "Rẽ ra ngoài.",
+        "16": "Rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN>.",
+        "17": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN>.",
+        "18": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <BRANCH_SIGN>.",
+        "19": "Rẽ ra ngoài về hướng <TOWARD_SIGN>.",
+        "20": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> về hướng <TOWARD_SIGN>.",
+        "21": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "22": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "23": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN>.",
+        "25": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> vào <BRANCH_SIGN>.",
+        "27": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> về hướng <TOWARD_SIGN>.",
+        "29": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Rẽ ra khỏi <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION> tại điểm giao.",
+        "1": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN>.",
+        "2": "Giữ <RELATIVE_DIRECTION> để đi vào <STREET_NAMES>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <STREET_NAMES>.",
+        "4": "Giữ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "5": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN> về hướng <TOWARD_SIGN>.",
+        "6": "Giữ <RELATIVE_DIRECTION> để đi vào <STREET_NAMES> về hướng <TOWARD_SIGN>.",
+        "7": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <STREET_NAMES> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "thẳng",
+        "phải"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "1": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> để tiếp tục đi trên <STREET_NAMES>.",
+        "2": "Giữ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES> về hướng <TOWARD_SIGN>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> để tiếp tục đi trên <STREET_NAMES> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "thẳng",
+        "phải"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "1": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> để tiếp tục đi trên <STREET_NAMES>.",
+        "2": "Giữ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES> về hướng <TOWARD_SIGN>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> để tiếp tục đi trên <STREET_NAMES> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "thẳng",
+        "phải"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION> tại điểm giao.",
+        "1": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN>.",
+        "2": "Giữ <RELATIVE_DIRECTION> để đi vào <STREET_NAMES>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <STREET_NAMES>.",
+        "4": "Giữ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "5": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN> về hướng <TOWARD_SIGN>.",
+        "6": "Giữ <RELATIVE_DIRECTION> để đi vào <STREET_NAMES> về hướng <TOWARD_SIGN>.",
+        "7": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <STREET_NAMES> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "thẳng",
+        "phải"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Continue to <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Sáp nhập.",
+        "1": "Sáp nhập <RELATIVE_DIRECTION>.",
+        "2": "Sáp nhập vào <STREET_NAMES>.",
+        "3": "Sáp nhập <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "4": "Sáp nhập về hướng <TOWARD_SIGN>.",
+        "5": "Sáp nhập <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Sáp nhập.",
+        "1": "Sáp nhập <RELATIVE_DIRECTION>.",
+        "2": "Sáp nhập vào <STREET_NAMES>.",
+        "3": "Sáp nhập <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "4": "Sáp nhập về hướng <TOWARD_SIGN>.",
+        "5": "Sáp nhập <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Đi qua <OBJECT_LABEL>.",
+        "1": "Đi qua đèn giao thông trên <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "cổng",
+        "cột trụ",
+        "đường giao nhau"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Di chuyển qua <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "bến",
+        "other": "bến"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Tiếp tục đi thêm <LENGTH>.",
+        "1": "Tiếp tục đi trên <STREET_NAMES> <LENGTH> nữa."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> ki-lô-mét",
+        "1 ki-lô-mét",
+        "<METERS> mét",
+        "ngắn hơn 10 mét"
+      ],
+      "us_customary_lengths": [
+        "<MILES> dặm",
+        "1 dặm",
+        "nửa dặm",
+        "1/4 dặm",
+        "<FEET> bước chân",
+        "ngắn hơn 10 bước chân"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Đi vào đoạn đường nối phía <RELATIVE_DIRECTION>.",
+        "1": "Đi vào đoạn đường nối <BRANCH_SIGN> phía <RELATIVE_DIRECTION>.",
+        "2": "Đi vào đoạn đường nối phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "3": "Đi vào đoạn đường nối <BRANCH_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "4": "Đi vào đoạn đường nối <NAME_SIGN> phía <RELATIVE_DIRECTION>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối.",
+        "6": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <BRANCH_SIGN>.",
+        "7": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "8": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "9": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <NAME_SIGN>.",
+        "10": "Đi vào đoạn đường nối.",
+        "11": "Đi vào đoạn đường nối <BRANCH_SIGN>.",
+        "12": "Đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "13": "Đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "14": "Đi vào đoạn đường nối <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Đi thẳng để đi vào đoạn đường nối.",
+        "1": "Đi thẳng để rẽ vào đoạn đường nối <BRANCH_SIGN>.",
+        "2": "Đi thẳng để đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "3": "Đi thẳng để đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "4": "Đi thẳng để đi vào đoạn đường nối <NAME_SIGN>."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Đi thẳng để đi vào đoạn đường nối.",
+        "1": "Đi thẳng để rẽ vào đoạn đường nối <BRANCH_SIGN>.",
+        "2": "Đi thẳng để đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "3": "Đi thẳng để đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "4": "Đi thẳng để đi vào đoạn đường nối <NAME_SIGN>."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Đi vào đoạn đường nối phía <RELATIVE_DIRECTION>.",
+        "1": "Đi vào đoạn đường nối <BRANCH_SIGN> phía <RELATIVE_DIRECTION>.",
+        "2": "Đi vào đoạn đường nối phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "3": "Đi vào đoạn đường nối <BRANCH_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "4": "Đi vào đoạn đường nối <NAME_SIGN> phía <RELATIVE_DIRECTION>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối.",
+        "6": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <BRANCH_SIGN>.",
+        "7": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "8": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "9": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <NAME_SIGN>.",
+        "10": "Đi vào đoạn đường nối.",
+        "11": "Đi vào đoạn đường nối <BRANCH_SIGN>.",
+        "12": "Đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "13": "Đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "14": "Đi vào đoạn đường nối <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "Đi về phía <CARDINAL_DIRECTION>.",
+        "1": "Đi về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "2": "Đi về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "4": "Lái về phía <CARDINAL_DIRECTION>.",
+        "5": "Lái về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "6": "Lái về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "8": "Đi bộ về phía <CARDINAL_DIRECTION>.",
+        "9": "Đi bộ về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "10": "Đi bộ về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "16": "Đạp xe về phía <CARDINAL_DIRECTION>.",
+        "17": "Đạp xe về phía<CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "18": "Đạp xe về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "bắc",
+        "đông bắc",
+        "đông",
+        "đông nam",
+        "nam",
+        "tây nam",
+        "tây",
+        "tây bắc"
+      ],
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Đi về phía <CARDINAL_DIRECTION>.",
+        "1": "Đi về phía <CARDINAL_DIRECTION> <LENGTH> nữa.",
+        "2": "Đi về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "3": "Đi về phía <CARDINAL_DIRECTION> trên <STREET_NAMES> <LENGTH> nữa.",
+        "4": "Đi về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>.",
+        "5": "Lái về phía <CARDINAL_DIRECTION>.",
+        "6": "Lái về phía <CARDINAL_DIRECTION> <LENGTH> nữa.",
+        "7": "Lái về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "8": "Lái về phía <CARDINAL_DIRECTION> trên <STREET_NAMES> <LENGTH> nữa.",
+        "9": "Lái về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>.",
+        "10": "Đi bộ về phía <CARDINAL_DIRECTION>.",
+        "11": "Đi bộ vê phía <CARDINAL_DIRECTION> <LENGTH> nữa.",
+        "12": "Đi bộ về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "13": "Đi bộ về phía <CARDINAL_DIRECTION> trên <STREET_NAMES> <LENGTH> nữa.",
+        "14": "Đi bộ về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>.",
+        "15": "Đạp xe về phía <CARDINAL_DIRECTION>.",
+        "16": "Đạp xe về phía <CARDINAL_DIRECTION> <LENGTH> nữa.",
+        "17": "Đạp xe về phía<CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "18": "Đạp xe về phía <CARDINAL_DIRECTION> trên <STREET_NAMES> <LENGTH> nữa.",
+        "19": "Đạp xe về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "bắc",
+        "đông bắc",
+        "đông",
+        "đông nam",
+        "nam",
+        "tây nam",
+        "tây",
+        "tây bắc"
+      ],
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> ki-lô-mét",
+        "1 ki-lô-mét",
+        "<METERS> mét",
+        "ngắn hơn 10 mét"
+      ],
+      "us_customary_lengths": [
+        "<MILES> dặm",
+        "1 dặm",
+        "nửa dặm",
+        "1/4 dặm",
+        "<FEET> bước chân",
+        "ngắn hơn 10 bước chân"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Đi cầu thang.",
+        "1": "Đi cầu thang đến tầng <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Đi chuyến <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Đi chuyến <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bến",
+        "other": "bến"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Ra khỏi nhà ga.",
+        "1": "Ra khỏi <TRANSIT_STOP>.",
+        "2": "Ra khỏi <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Ra khỏi nhà ga.",
+        "1": "Ra khỏi <TRANSIT_STOP>.",
+        "2": "Ra khỏi <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Đi vào nhà ga.",
+        "1": "Đi vào<TRANSIT_STOP>.",
+        "2": "Đi vào <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Đi vào nhà ga.",
+        "1": "Đi vào<TRANSIT_STOP>.",
+        "2": "Đi vào <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Đổi chuyến tại nhà ga.",
+        "1": "Đổi chuyến tại <TRANSIT_STOP>.",
+        "2": "Đổi chuyến tại <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Đổi chuyến tại nhà ga.",
+        "1": "Đổi chuyến tại <TRANSIT_STOP>.",
+        "2": "Đổi chuyến tại <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Ở lại trên <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Ở lại trên <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bến",
+        "other": "bến"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Tiếp tục trên <TRANSIT_NAME>.",
+        "1": "Tiếp tục trên <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Đổi chuyến sang <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Đổi chuyến sang <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bến",
+        "other": "bến"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Đổi chuyến sang <TRANSIT_NAME>.",
+        "1": "Đổi chuyến sang <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Đi chuyến <TRANSIT_NAME>.",
+        "1": "Đi chuyến <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION> hình chữ U.",
+        "1": "Rẽ <RELATIVE_DIRECTION> hình chữ U vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> hình chữ U để tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES> vào <STREET_NAMES>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES> để đi tiếp trên <STREET_NAMES>.",
+        "6": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <JUNCTION_NAME>.",
+        "7": "Rẽ <RELATIVE_DIRECTION> hình chữ U về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION> hình chữ U.",
+        "1": "Rẽ <RELATIVE_DIRECTION> hình chữ U vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> hình chữ U để tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES> vào <STREET_NAMES>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES> để đi tiếp trên <STREET_NAMES>.",
+        "6": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <JUNCTION_NAME>.",
+        "7": "Rẽ <RELATIVE_DIRECTION> hình chữ U về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Rồi <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Rồi, trong <LENGTH> nữa, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> ki-lô-mét",
+        "1 ki-lô-mét",
+        "<METERS> mét",
+        "ngắn hơn 10 mét"
+      ],
+      "us_customary_lengths": [
+        "<MILES> dặm",
+        "1 dặm",
+        "nửa dặm",
+        "1/4 dặm",
+        "<FEET> bước chân",
+        "ngắn hơn 10 bước chân"
+      ]
+    }
+  },
+  "posix_locale": "vi_VN.UTF-8",
+  "aliases": [
+    "vi"
+  ]
+}
