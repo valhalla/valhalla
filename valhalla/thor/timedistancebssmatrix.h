@@ -240,6 +240,7 @@ protected:
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const baldr::graph_tile_ptr& tile,
+                          baldr::GraphReader& reader,
                           const sif::EdgeLabel& pred,
                           const uint32_t matrix_locations);
 

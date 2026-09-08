@@ -533,11 +533,19 @@ bool TimeDistanceMatrix::UpdateDestinations(
         pred.predecessor() == kInvalidLabel ? 0.f : edgelabels_[pred.predecessor()].cost().secs;
     auto offset_time =
         FORWARD ? time_info.forward(secs, timezone_index) : time_info.reverse(secs, timezone_index);
+
+    // In FORWARD mode, subtract using the edge as-is. In REVERSE mode, pred.cost() was
+    // accumulated in Expand using the opposing edge (opp_edge), so we must use that same
+    // opposing edge here to keep the subtraction consistent. Using the wrong edge on graded
+    // terrain (where uphill/downhill costs differ) is what caused negative time values (#4971).
+    const DirectedEdge* cost_edge = FORWARD ? edge : opp_tile->directededge(opp_edge_id);
+    const GraphId cost_edge_id = FORWARD ? pred.edgeid() : opp_edge_id;
+    const graph_tile_ptr& cost_tile = FORWARD ? tile : opp_tile;
+
     Cost newcost =
         pred.cost() -
-        (costing_->EdgeCost(edge, pred.edgeid(), tile, offset_time, flow_sources) * remainder);
-    // Guard against floating point issues when elevation causes edge cost to exceed
-    // the accumulated cost (can happen with steep downhill grades). Both cost and secs must be physically non-negative.
+        (costing_->EdgeCost(cost_edge, cost_edge_id, cost_tile, offset_time, flow_sources) * remainder);
+    // Safety clamp: guard against minor floating-point epsilon errors.
     newcost.cost = std::max(newcost.cost, 0.0f);
     newcost.secs = std::max(newcost.secs, 0.0f);
     if (newcost.cost < dest.best_cost.cost) {

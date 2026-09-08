@@ -236,7 +236,7 @@ bool TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
         tile = graphreader.GetGraphTile(pred.edgeid());
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
         if (UpdateDestinations<expansion_direction>(origin, destinations, destedge->second, edge,
-                                                    tile, pred, matrix_locations)) {
+                                                    tile, graphreader, pred, matrix_locations)) {
           FormTimeDistanceMatrix(request, FORWARD, origin_index);
           break;
         }
@@ -429,6 +429,7 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
     const graph_tile_ptr& tile,
+    baldr::GraphReader& reader,
     const EdgeLabel& pred,
     const uint32_t matrix_locations) {
   // For each destination along this edge
@@ -474,10 +475,19 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
       end = 1.f;
     }
 
+    // In FORWARD mode, subtract using the edge as-is. In REVERSE mode, pred.cost() was
+    // accumulated in Expand using the opposing edge (opp_edge), so we must use that same
+    // opposing edge here to keep the subtraction consistent. Using the wrong edge on graded
+    // terrain (where uphill/downhill costs differ) is what caused negative time values (#4971).
+    auto opp_edge_id = reader.GetOpposingEdgeId(pred.edgeid());
+    auto opp_tile = reader.GetGraphTile(opp_edge_id);
+    const DirectedEdge* cost_edge = FORWARD ? edge : opp_tile->directededge(opp_edge_id);
+    const GraphId cost_edge_id = FORWARD ? pred.edgeid() : opp_edge_id;
+    const graph_tile_ptr& cost_tile = FORWARD ? tile : opp_tile;
+
     Cost newcost =
-        pred.cost() - (pedestrian_costing_->PartialEdgeCost(edge, pred.edgeid(), tile, start, end));
-    // Guard against floating point issues when elevation causes edge cost to exceed
-    // the accumulated cost (can happen with steep downhill grades). Both cost and secs must be physically non-negative.
+        pred.cost() - (pedestrian_costing_->PartialEdgeCost(cost_edge, cost_edge_id, cost_tile, start, end));
+    // Safety clamp: guard against minor floating-point epsilon errors.
     newcost.cost = std::max(newcost.cost, 0.0f);
     newcost.secs = std::max(newcost.secs, 0.0f);
     if (newcost.cost < dest.best_cost.cost) {
