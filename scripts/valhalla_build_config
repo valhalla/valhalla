@@ -945,12 +945,13 @@ def main():
 
     # write output
     if args.output:
-        with args.output.open("w") as f:
+        with args.output.open("w", encoding="utf-8") as f:
             f.write(output_json)
             f.write("\n")
         print(f"Config written to: {args.output}", file=sys.stderr)
     else:
-        print(output_json)
+        sys.stdout.buffer.write(output_json.encode("utf-8"))
+        sys.stdout.buffer.write(b"\n")
 
 
 if __name__ == "__main__":
