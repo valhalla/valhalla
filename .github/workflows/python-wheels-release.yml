@@ -495,4 +495,4 @@ jobs:
         with:
           verbose: true
           # uncomment when testing!
-          # repository-url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/
