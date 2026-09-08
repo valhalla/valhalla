@@ -11,7 +11,11 @@ from . import PYVALHALLA_DIR
 PYVALHALLA_BIN_DIR = PYVALHALLA_DIR.joinpath("bin").resolve()
 IS_WIN = platform.system().lower() == "windows"
 
-WIN_LIB_DIR = str(Path(__file__).parent.parent.joinpath("pyvalhalla.libs").resolve()) + os.pathsep + os.environ.get("PATH", "")
+WIN_LIB_DIR = (
+    str(Path(__file__).parent.parent.joinpath("pyvalhalla.libs").resolve())
+    + os.pathsep
+    + os.environ.get("PATH", "")
+)
 
 
 def run(from_main=False) -> None:
