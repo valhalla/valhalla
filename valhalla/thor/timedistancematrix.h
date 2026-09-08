@@ -214,16 +214,17 @@ protected:
   /**
    * Update destinations along an edge that has been settled (lowest cost path
    * found to the end of edge).
-   * @param   origin        Location of the origin.
-   * @param   locations     List of locations.
-   * @param   destinations  Vector of destination indexes along this edge.
-   * @param   traversal_edge  Edge the search labelled; the opposing edge in the reverse tree.
-   * @param   pred          Predecessor information in shortest path.
+   * @param   origin           Location of the origin.
+   * @param   locations        List of locations.
+   * @param   destinations     Vector of destination indexes along this edge.
+   * @param   traversal_edge   The edge corresponding to the predecessor
+   * @param   pred             Predecessor information in shortest path.
    * @param   matrix_locations Count of locations that must be found. When provided it allows
    *                           a partial result to be returned (e.g. best 20 out of 50 locations).
    *                           When not supplied in the request this is set to max uint32_t value
    *                           so that all supplied locations must be settled.
-   * @param   invariant     Whether invariant time was requested.
+   * @param   invariant        Whether invariant time was requested.
+   *
    * @return  Returns true if all destinations have been settled.
    */
   template <const ExpansionType expansion_direction,
