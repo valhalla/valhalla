@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import platform
 from shutil import which
@@ -10,14 +11,14 @@ from . import PYVALHALLA_DIR
 PYVALHALLA_BIN_DIR = PYVALHALLA_DIR.joinpath("bin").resolve()
 IS_WIN = platform.system().lower() == "windows"
 
-VENDORED_LIB_DIR = Path(__file__).parent.parent.joinpath("pyvalhalla.libs").resolve()
+WIN_LIB_DIR = str(Path(__file__).parent.parent.joinpath("pyvalhalla.libs").resolve()) + os.pathsep + os.environ.get("PATH", "")
 
 
 def run(from_main=False) -> None:
     """
     Parses the command line arguments and runs the Valhalla executables with the
     provided arguments. Note, by default we assume this is not being called by
-    __main__.py via e.g. 'python -m valhalla ...', but directly with e.g.d
+    __main__.py via e.g. 'python -m valhalla ...', but directly with e.g.
     'valhalla_build_tiles -h'. sys.argv relates to different executables for
     both scenarios.
 
@@ -47,7 +48,7 @@ def run(from_main=False) -> None:
         stdout=subprocess.DEVNULL if is_quiet else sys.stdout,
         # on Win we need to add the path to vendored DLLs manually, see
         # https://github.com/adang1345/delvewheel/issues/62#issuecomment-2977988121
-        env=(dict(PATH=str(VENDORED_LIB_DIR)) if IS_WIN else None),
+        env=(dict(os.environ, PATH=WIN_LIB_DIR) if IS_WIN else None),
     )
 
     # raises CalledProcessError if not successful
