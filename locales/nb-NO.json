@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Om <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre enn 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> engelske mil",
+        "1 engelsk mil",
+        "en halv engelsk mil",
+        "en kvart engelsk mil",
+        "<FEET> fot",
+        "mindre enn 10 fot"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Ankomst: <TIME>.",
+        "1": "Ankomst: <TIME> på <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Ankomst kl. <TIME>.",
+        "1": "Ankomst kl. <TIME> på <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Hold til <RELATIVE_DIRECTION>.",
+        "1": "Hold til <RELATIVE_DIRECTION> inn på <STREET_NAMES>.",
+        "2": "Hold til <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
+        "4": "Hold til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Hold til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Hold til <RELATIVE_DIRECTION>.",
+        "1": "Hold til <RELATIVE_DIRECTION> inn på <STREET_NAMES>.",
+        "2": "Hold til <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
+        "4": "Hold til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Hold til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> blir til <STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> blir til <STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Fortsett.",
+        "1": "Fortsett på <STREET_NAMES>.",
+        "2": "Fortsett ved <JUNCTION_NAME>.",
+        "3": "Fortsett mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Fortsett.",
+        "1": "Fortsett <LENGTH>.",
+        "2": "Fortsett på <STREET_NAMES>.",
+        "3": "Fortsett <LENGTH> på <STREET_NAMES>.",
+        "4": "Fortsett ved <JUNCTION_NAME>.",
+        "5": "Fortsett <LENGTH> fra <JUNCTION_NAME>.",
+        "6": "Fortsett mot <TOWARD_SIGN>.",
+        "7": "Fortsett <LENGTH> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre enn 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> engelske mil",
+        "1 engelsk mil",
+        "en halv engelsk mil",
+        "en kvart engelsk mil",
+        "<FEET> fot",
+        "mindre enn 10 fot"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Fortsett.",
+        "1": "Fortsett på <STREET_NAMES>.",
+        "2": "Fortsett ved <JUNCTION_NAME>.",
+        "3": "Fortsett mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Avgang: <TIME>.",
+        "1": "Avgang: <TIME> fra <TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Avgang kl. <TIME>.",
+        "1": "Avgang kl. <TIME> fra <TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Du har ankommet destinasjonen.",
+        "1": "Du har ankommet <DESTINATION>.",
+        "2": "Destinasjonen er til <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> er til <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Du har ankommet destinasjonen.",
+        "1": "Du har ankommet <DESTINATION>.",
+        "2": "Destinasjonen er til <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> er til <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Du ankommer destinasjonen.",
+        "1": "Du ankommer <DESTINATION>.",
+        "2": "Destinasjonen kommer til å være til <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> kommer til å være til <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Take the elevator.",
+        "1": "Take the elevator to <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Enter the building.",
+        "1": "Enter the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Ta ferjen.",
+        "1": "Ta <STREET_NAMES>.",
+        "2": "Ta <FERRY_LABEL> fra <STREET_NAMES>.",
+        "3": "Ta ferjen mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ferry_label": "Ferje"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Ta ferjen.",
+        "1": "Ta <STREET_NAMES>.",
+        "2": "Ta <FERRY_LABEL> fra <STREET_NAMES>.",
+        "3": "Ta ferjen mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ferry_label": "Ferje"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Kjør inn i rundkjøringen.",
+        "1": "Kjør inn i rundkjøringen og ta <ORDINAL_VALUE> avkjørsel.",
+        "2": "Kjør inn i rundkjøringen og ta <ORDINAL_VALUE> avkjørsel inn på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Kjør inn i rundkjøringen og ta <ORDINAL_VALUE> avkjørsel inn på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsett på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Kjør inn i rundkjøringen og ta <ORDINAL_VALUE> avkjørsel mot <TOWARD_SIGN>.",
+        "5": "Kjør inn i rundkjøringen og ta avkjørselen inn på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Kjør inn i rundkjøringen og ta avkjørselen inn på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsett på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Kjør inn i rundkjøringen og ta avkjørselen mot <TOWARD_SIGN>.",
+        "8": "Kjør inn på <STREET_NAMES>",
+        "9": "Kjør inn på <STREET_NAMES> og ta <ORDINAL_VALUE> avkjørsel.",
+        "10": "Kjør inn på <STREET_NAMES> og ta <ORDINAL_VALUE> avkjørsel inn på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Kjør inn på <STREET_NAMES> og ta <ORDINAL_VALUE> avkjørsel inn på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsett på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Kjør inn på <STREET_NAMES> og ta <ORDINAL_VALUE> avkjørsel mot <TOWARD_SIGN>.",
+        "13": "Kjør inn på <STREET_NAMES> og ta avkjørselen inn på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Kjør inn på <STREET_NAMES> og ta avkjørselen inn på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsett på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Kjør inn på <STREET_NAMES> og ta avkjørselen mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ordinal_values": [
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Kjør inn i rundkjøringen.",
+        "1": "Kjør inn i rundkjøringen og ta <ORDINAL_VALUE> avkjørsel.",
+        "2": "Kjør inn i rundkjøringen og ta <ORDINAL_VALUE> avkjørsel inn på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Kjør inn i rundkjøringen og ta <ORDINAL_VALUE> avkjørsel inn på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Kjør inn i rundkjøringen og ta <ORDINAL_VALUE> avkjørsel mot <TOWARD_SIGN>.",
+        "5": "Kjør inn i rundkjøringen og ta avkjørselen inn på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Kjør inn i rundkjøringen og ta avkjørselen inn på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Kjør inn i rundkjøringen og ta avkjørselen mot <TOWARD_SIGN>.",
+        "8": "Kjør inn på <STREET_NAMES>",
+        "9": "Kjør inn på <STREET_NAMES> og ta <ORDINAL_VALUE> avkjørsel.",
+        "10": "Kjør inn på <STREET_NAMES> og ta <ORDINAL_VALUE> avkjørsel inn på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Kjør inn på <STREET_NAMES> og ta <ORDINAL_VALUE> avkjørsel inn på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Kjør inn på <STREET_NAMES> og ta <ORDINAL_VALUE> avkjørsel mot <TOWARD_SIGN>.",
+        "13": "Kjør inn på <STREET_NAMES> og ta avkjørselen inn på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Kjør inn på <STREET_NAMES> og ta avkjørselen inn på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Kjør inn på <STREET_NAMES> og ta avkjørselen mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ordinal_values": [
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Take the escalator.",
+        "1": "Take the escalator to <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Ta avkjørselen til <RELATIVE_DIRECTION>.",
+        "1": "Ta avkjørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION>.",
+        "2": "Ta avkjørselen til <BRANCH_SIGN> til <RELATIVE_DIRECTION>.",
+        "3": "Ta avkjørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> inn på <BRANCH_SIGN>.",
+        "4": "Ta avkjørselen til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "5": "Ta avkjørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "6": "Ta avkjørselen til <BRANCH_SIGN> til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "7": "Ta avkjørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> inn på <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "8": "Ta avkjørselen til <NAME_SIGN> til <RELATIVE_DIRECTION>.",
+        "10": "Ta avkjørselen til <NAME_SIGN> til <RELATIVE_DIRECTION> inn på <BRANCH_SIGN>.",
+        "12": "Ta avkjørselen til <NAME_SIGN> til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "14": "Ta avkjørselen til <NAME_SIGN> til <RELATIVE_DIRECTION> inn på <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "15": "Ta avkjørselen.",
+        "16": "Ta avkjørsel <NUMBER_SIGN>.",
+        "17": "Ta avkjørselen til <BRANCH_SIGN>.",
+        "18": "Ta avkjørsel <NUMBER_SIGN> inn på <BRANCH_SIGN>.",
+        "19": "Ta avkjørselen mot <TOWARD_SIGN>.",
+        "20": "Ta avkjørsel <NUMBER_SIGN> mot <TOWARD_SIGN>.",
+        "21": "Ta avkjørselen til <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "22": "Ta avkjørsel <NUMBER_SIGN> inn på <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "23": "Ta avkjørselen til <NAME_SIGN>.",
+        "25": "Ta avkjørselen til <NAME_SIGN> inn på <BRANCH_SIGN>.",
+        "27": "Ta avkjørselen til <NAME_SIGN> mot <TOWARD_SIGN>.",
+        "29": "Ta avkjørselen til <NAME_SIGN> inn på <BRANCH_SIGN> mot <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Exit the building.",
+        "1": "Exit the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Kjør ut av rundkjøringen.",
+        "1": "Kjør ut av rundkjøringen og inn på <STREET_NAMES>.",
+        "2": "Kjør ut av rundkjøringen og inn på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>.",
+        "3": "Kjør ut av rundkjøringen mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Kjør ut av rundkjøringen.",
+        "1": "Kjør ut av rundkjøringen og inn på <STREET_NAMES>.",
+        "2": "Kjør ut av rundkjøringen og inn på <BEGIN_STREET_NAMES>.",
+        "3": "Kjør ut av rundkjøringen mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Ta avkjørselen til <RELATIVE_DIRECTION>.",
+        "1": "Ta avkjørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION>.",
+        "2": "Ta avkjørselen til <BRANCH_SIGN> til <RELATIVE_DIRECTION>.",
+        "3": "Ta avkjørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> inn på <BRANCH_SIGN>.",
+        "4": "Ta avkjørselen til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "5": "Ta avkjørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "6": "Ta avkjørselen til <BRANCH_SIGN> til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "7": "Ta avkjørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> inn på <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "8": "Ta avkjørselen til <NAME_SIGN> til <RELATIVE_DIRECTION>.",
+        "10": "Ta avkjørselen til <NAME_SIGN> til <RELATIVE_DIRECTION> inn på <BRANCH_SIGN>.",
+        "12": "Ta avkjørselen til <NAME_SIGN> til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "14": "Ta avkjørselen til <NAME_SIGN> til <RELATIVE_DIRECTION> inn på <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "15": "Ta avkjørselen.",
+        "16": "Ta avkjørsel <NUMBER_SIGN>.",
+        "17": "Ta avkjørselen til <BRANCH_SIGN>.",
+        "18": "Ta avkjørsel <NUMBER_SIGN> inn på <BRANCH_SIGN>.",
+        "19": "Ta avkjørselen mot <TOWARD_SIGN>.",
+        "20": "Ta avkjørsel <NUMBER_SIGN> mot <TOWARD_SIGN>.",
+        "21": "Ta avkjørselen til <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "22": "Ta avkjørsel <NUMBER_SIGN> inn på <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "23": "Ta avkjørselen til <NAME_SIGN>.",
+        "25": "Ta avkjørselen til <NAME_SIGN> inn på <BRANCH_SIGN>.",
+        "27": "Ta avkjørselen til <NAME_SIGN> mot <TOWARD_SIGN>.",
+        "29": "Ta avkjørselen til <NAME_SIGN> inn på <BRANCH_SIGN> mot <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Avslutt <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Hold til <RELATIVE_DIRECTION> ved veiskillet.",
+        "1": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for å ta <STREET_NAMES>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN> inn på <STREET_NAMES>.",
+        "4": "Hold til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "5": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN> mot <TOWARD_SIGN>.",
+        "6": "Hold til <RELATIVE_DIRECTION> for å ta <STREET_NAMES> mot <TOWARD_SIGN>.",
+        "7": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN> inn på <STREET_NAMES> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "rett frem",
+        "høyre"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Hold til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
+        "1": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN> og holde deg på <STREET_NAMES>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES> mot <TOWARD_SIGN>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN> og holde deg på <STREET_NAMES> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "rett frem",
+        "høyre"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Hold til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
+        "1": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN> og holde deg på <STREET_NAMES>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES> mot <TOWARD_SIGN>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN> og holde deg på <STREET_NAMES> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "rett frem",
+        "høyre"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Hold til <RELATIVE_DIRECTION> ved veiskillet.",
+        "1": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for å ta <STREET_NAMES>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN> inn på <STREET_NAMES>.",
+        "4": "Hold til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "5": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN> mot <TOWARD_SIGN>.",
+        "6": "Hold til <RELATIVE_DIRECTION> for å ta <STREET_NAMES> mot <TOWARD_SIGN>.",
+        "7": "Hold til <RELATIVE_DIRECTION> for å ta avkjørsel <NUMBER_SIGN> inn på <STREET_NAMES> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "rett frem",
+        "høyre"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Continue to <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Flett.",
+        "1": "Flett til <RELATIVE_DIRECTION>.",
+        "2": "Flett inn på <STREET_NAMES>.",
+        "3": "Flett til <RELATIVE_DIRECTION> inn på <STREET_NAMES>.",
+        "4": "Flett mot <TOWARD_SIGN>.",
+        "5": "Flett til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Flett.",
+        "1": "Flett til <RELATIVE_DIRECTION>.",
+        "2": "Flett inn på <STREET_NAMES>.",
+        "3": "Flett til <RELATIVE_DIRECTION> inn på <STREET_NAMES>.",
+        "4": "Flett mot <TOWARD_SIGN>.",
+        "5": "Flett til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Pass <OBJECT_LABEL>.",
+        "1": "Pass traffic signals on <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "the gate",
+        "the bollards",
+        "ways intersection"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Reis <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "stopp",
+        "other": "stopp"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Fortsett <LENGTH>.",
+        "1": "Fortsett <LENGTH> på <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre enn 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> engelske mil",
+        "1 engelsk mil",
+        "en halv engelsk mil",
+        "en kvart engelsk mil",
+        "<FEET> fot",
+        "mindre enn 10 fot"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Kjør ut på rampen til <RELATIVE_DIRECTION>.",
+        "1": "Kjør ut på rampen til <BRANCH_SIGN> til <RELATIVE_DIRECTION>.",
+        "2": "Kjør ut på rampen til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "3": "Kjør ut på rampen til <BRANCH_SIGN> til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "4": "Kjør ut på rampen til <NAME_SIGN> til <RELATIVE_DIRECTION>.",
+        "5": "Ta til <RELATIVE_DIRECTION> for å kjøre ut på rampen.",
+        "6": "Ta til <RELATIVE_DIRECTION> for å kjøre ut på rampen til <BRANCH_SIGN>.",
+        "7": "Ta til <RELATIVE_DIRECTION> for å kjøre ut på rampen mot <TOWARD_SIGN>.",
+        "8": "Ta til <RELATIVE_DIRECTION> for å kjøre ut på rampen til <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "9": "Ta til <RELATIVE_DIRECTION> for å kjøre ut på rampen til <NAME_SIGN>.",
+        "10": "Kjør ut på rampen.",
+        "11": "Kjør ut på rampen til <BRANCH_SIGN>.",
+        "12": "Kjør ut på rampen mot <TOWARD_SIGN>.",
+        "13": "Kjør ut på rampen til <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "14": "Kjør ut på rampen til <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Fortsett rett frem for å kjøre ut på rampen.",
+        "1": "Fortsett rett frem for å kjøre ut på rampen til <BRANCH_SIGN>.",
+        "2": "Fortsett rett frem for å kjøre ut på rampen mot <TOWARD_SIGN>.",
+        "3": "Fortsett rett frem for å kjøre ut på rampen til <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "4": "Fortsett rett frem for å kjøre ut på rampen til <NAME_SIGN>."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Fortsett rett frem for å kjøre ut på rampen.",
+        "1": "Fortsett rett frem for å kjøre ut på rampen til <BRANCH_SIGN>.",
+        "2": "Fortsett rett frem for å kjøre ut på rampen mot <TOWARD_SIGN>.",
+        "3": "Fortsett rett frem for å kjøre ut på rampen til <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "4": "Fortsett rett frem for å kjøre ut på rampen til <NAME_SIGN>."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Kjør ut på rampen til <RELATIVE_DIRECTION>.",
+        "1": "Kjør ut på rampen til <BRANCH_SIGN> til <RELATIVE_DIRECTION>.",
+        "2": "Kjør ut på rampen til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "3": "Kjør ut på rampen til <BRANCH_SIGN> til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "4": "Kjør ut på rampen til <NAME_SIGN> til <RELATIVE_DIRECTION>.",
+        "5": "Ta til <RELATIVE_DIRECTION> for å kjøre ut på rampen.",
+        "6": "Ta til <RELATIVE_DIRECTION> for å kjøre ut på rampen til <BRANCH_SIGN>.",
+        "7": "Ta til <RELATIVE_DIRECTION> for å kjøre ut på rampen mot <TOWARD_SIGN>.",
+        "8": "Ta til <RELATIVE_DIRECTION> for å kjøre ut på rampen til <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "9": "Ta til <RELATIVE_DIRECTION> for å kjøre ut på rampen til <NAME_SIGN>.",
+        "10": "Kjør ut på rampen.",
+        "11": "Kjør ut på rampen til <BRANCH_SIGN>.",
+        "12": "Kjør ut på rampen mot <TOWARD_SIGN>.",
+        "13": "Kjør ut på rampen til <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "14": "Kjør ut på rampen til <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Ta en skarp sving mot <RELATIVE_DIRECTION>.",
+        "1": "Ta en skarp sving mot <RELATIVE_DIRECTION> inn på <STREET_NAMES>.",
+        "2": "Ta en skarp sving mot <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>.",
+        "3": "Ta en skarp sving mot <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
+        "4": "Ta en skarp sving mot <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Ta en skarp sving mot <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Ta en skarp sving mot <RELATIVE_DIRECTION>.",
+        "1": "Ta en skarp sving mot <RELATIVE_DIRECTION> inn på <STREET_NAMES>.",
+        "2": "Ta en skarp sving mot <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>.",
+        "3": "Ta en skarp sving mot <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
+        "4": "Ta en skarp sving mot <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Ta en skarp sving mot <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "Dra mot <CARDINAL_DIRECTION>.",
+        "1": "Dra mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "2": "Dra mot <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>.",
+        "4": "Kjør mot <CARDINAL_DIRECTION>.",
+        "5": "Kjør mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "6": "Kjør mot <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>.",
+        "8": "Gå mot <CARDINAL_DIRECTION>.",
+        "9": "Gå mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "10": "Gå mot <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>.",
+        "16": "Sykle mot <CARDINAL_DIRECTION>.",
+        "17": "Sykle mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "18": "Sykle mot <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "nord",
+        "nordøst",
+        "øst",
+        "sørøst",
+        "sør",
+        "sørvest",
+        "vest",
+        "nordvest"
+      ],
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Dra mot <CARDINAL_DIRECTION>.",
+        "1": "Dra <LENGTH> mot <CARDINAL_DIRECTION>.",
+        "2": "Dra mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "3": "Dra <LENGTH> mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "4": "Dra mot <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "5": "Kjør mot <CARDINAL_DIRECTION>.",
+        "6": "Kjør <LENGTH> mot <CARDINAL_DIRECTION>.",
+        "7": "Kjør mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "8": "Kjør <LENGTH> mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "9": "Kjør mot <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "10": "Gå mot <CARDINAL_DIRECTION>.",
+        "11": "Gå <LENGTH> mot <CARDINAL_DIRECTION>.",
+        "12": "Gå mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "13": "Gå <LENGTH> mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "14": "Gå mot <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "15": "Sykle mot <CARDINAL_DIRECTION>.",
+        "16": "Sykle <LENGTH> mot <CARDINAL_DIRECTION>.",
+        "17": "Sykle mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "18": "Sykle <LENGTH> mot <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "19": "Sykle mot <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "nord",
+        "nordøst",
+        "øst",
+        "sørøst",
+        "sør",
+        "sørvest",
+        "vest",
+        "nordvest"
+      ],
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre enn 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> engelske mil",
+        "1 engelsk mil",
+        "en halv engelsk mil",
+        "en kvart engelsk mil",
+        "<FEET> fot",
+        "mindre enn 10 fot"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Take the stairs.",
+        "1": "Take the stairs to <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Ta <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Ta <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "trikken",
+        "undergrunnsbanen",
+        "toget",
+        "bussen",
+        "ferjen",
+        "taubanen",
+        "gondolbanen",
+        "kabelbanen"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stopp",
+        "other": "stopp"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Gå ut av stasjonen.",
+        "1": "Gå ut av <TRANSIT_STOP>.",
+        "2": "Gå ut av <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasjon"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Gå ut av stasjonen.",
+        "1": "Gå ut av <TRANSIT_STOP>.",
+        "2": "Gå ut av <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasjon"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Gå inn på stasjonen.",
+        "1": "Gå inn på <TRANSIT_STOP>.",
+        "2": "Gå inn på <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasjon"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Gå inn på stasjonen.",
+        "1": "Gå inn på <TRANSIT_STOP>.",
+        "2": "Gå inn på <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasjon"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Bytt transportmiddel på stasjonen.",
+        "1": "Bytt transportmiddel på <TRANSIT_STOP>.",
+        "2": "Bytt transportmiddel på <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasjon"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Bytt transportmiddel på stasjonen.",
+        "1": "Bytt transportmiddel på <TRANSIT_STOP>.",
+        "2": "Bytt transportmiddel på <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasjon"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Bli værende på <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Bli værende på <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "trikken",
+        "undergrunnsbanen",
+        "toget",
+        "bussen",
+        "ferjen",
+        "taubanen",
+        "gondolbanen",
+        "kabelbanen"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stopp",
+        "other": "stopp"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Bli værende på <TRANSIT_NAME>.",
+        "1": "Bli værende på <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "trikken",
+        "undergrunnsbanen",
+        "toget",
+        "bussen",
+        "ferjen",
+        "taubanen",
+        "gondolbanen",
+        "kabelbanen"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Ta <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Ta <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "trikken",
+        "undergrunnsbanen",
+        "toget",
+        "bussen",
+        "ferjen",
+        "taubanen",
+        "gondolbanen",
+        "kabelbanen"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stopp",
+        "other": "stopp"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Ta <TRANSIT_NAME>.",
+        "1": "Ta <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "trikken",
+        "undergrunnsbanen",
+        "toget",
+        "bussen",
+        "ferjen",
+        "taubanen",
+        "gondolbanen",
+        "kabelbanen"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Ta <TRANSIT_NAME>.",
+        "1": "Ta <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "trikken",
+        "undergrunnsbanen",
+        "toget",
+        "bussen",
+        "ferjen",
+        "taubanen",
+        "gondolbanen",
+        "kabelbanen"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "Ta til <RELATIVE_DIRECTION>.",
+        "1": "Ta til <RELATIVE_DIRECTION> inn på <STREET_NAMES>.",
+        "2": "Ta til <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>.",
+        "3": "Ta til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
+        "4": "Ta til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Ta til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Ta til <RELATIVE_DIRECTION>.",
+        "1": "Ta til <RELATIVE_DIRECTION> inn på <STREET_NAMES>.",
+        "2": "Ta til <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>.",
+        "3": "Ta til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
+        "4": "Ta til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Ta til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Ta en U-sving mot <RELATIVE_DIRECTION>.",
+        "1": "Ta en U-sving mot <RELATIVE_DIRECTION> inn på <STREET_NAMES>.",
+        "2": "Ta en U-sving mot <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
+        "3": "Ta en U-sving mot <RELATIVE_DIRECTION> ved <CROSS_STREET_NAMES>.",
+        "4": "Ta en U-sving mot <RELATIVE_DIRECTION> ved <CROSS_STREET_NAMES> inn på <STREET_NAMES>.",
+        "5": "Ta en U-sving mot <RELATIVE_DIRECTION> ved <CROSS_STREET_NAMES> for å holde deg på <STREET_NAMES>.",
+        "6": "Ta en U-sving mot <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "7": "Ta en U-sving mot <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Ta en U-sving mot <RELATIVE_DIRECTION>.",
+        "1": "Ta en U-sving mot <RELATIVE_DIRECTION> inn på <STREET_NAMES>.",
+        "2": "Ta en U-sving mot <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
+        "3": "Ta en U-sving mot <RELATIVE_DIRECTION> ved <CROSS_STREET_NAMES>.",
+        "4": "Ta en U-sving mot <RELATIVE_DIRECTION> ved <CROSS_STREET_NAMES> inn på <STREET_NAMES>.",
+        "5": "Ta en U-sving mot <RELATIVE_DIRECTION> ved <CROSS_STREET_NAMES> for å holde deg på <STREET_NAMES>.",
+        "6": "Ta en U-sving mot <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "7": "Ta en U-sving mot <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "gangveien",
+        "sykkelveien",
+        "terrengsykkelstien",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "venstre",
+        "høyre"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Deretter <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Deretter, om <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre enn 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> engelske mil",
+        "1 engelsk mil",
+        "en halv engelsk mil",
+        "en kvart engelsk mil",
+        "<FEET> fot",
+        "mindre enn 10 fot"
+      ]
+    }
+  },
+  "posix_locale": "nb_NO.UTF-8",
+  "aliases": [
+    "nb"
+  ]
+}
