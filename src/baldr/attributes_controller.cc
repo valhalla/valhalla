@@ -85,6 +85,8 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeTransitRouteInfoOperatorUrl, true},
     {kEdgeId, true},
     {kEdgeWayId, true},
+    {kEdgeBeginOsmNodeId, true},
+    {kEdgeEndOsmNodeId, true},
     {kEdgeWeightedGrade, true},
     {kEdgeMaxUpwardGrade, true},
     {kEdgeMaxDownwardGrade, true},
@@ -104,6 +106,7 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeTruckRoute, true},
     {kEdgeDefaultSpeed, true},
     {kEdgeDestinationOnly, true},
+    {kEdgeDestinationOnlyHGV, false},
     {kEdgeIsUrban, false},
     {kEdgeTaggedValues, true},
     {kEdgeIndoor, true},
@@ -112,6 +115,46 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeForward, true},
     {kEdgeLevels, true},
     {kEdgeTrafficSignal, true},
+    {kEdgeHovType, false},
+    {kEdgeSpeedType, false},
+    {kEdgeRamp, false},
+    {kEdgeDismount, false},
+    {kEdgeUseSidepath, false},
+    {kEdgeSidewalkLeft, false},
+    {kEdgeSidewalkRight, false},
+    {kEdgeBSSConnection, false},
+    {kEdgeLit, false},
+    {kEdgeNotThru, false},
+    {kEdgePartComplexRestriction, false},
+    {kEdgeLayer, false},
+    {kEdgeShortcut, false},
+    {kEdgeLeavesTile, false},
+    {kEdgeCurvature, false},
+
+    // Mostly MVT relevant
+    {kEdgeSpeedFwd, false},
+    {kEdgeDeadendFwd, false},
+    {kEdgeLaneCountFwd, false},
+    {kEdgeTruckSpeedFwd, false},
+    {kEdgeSignalFwd, false},
+    {kEdgeStopSignFwd, false},
+    {kEdgeYieldFwd, false},
+    {kEdgeAccessFwd, false},
+    {kEdgeLiveSpeedFwd, false},
+    {kEdgeFreeflowSpeedFwd, false},
+    {kEdgeConstrainedSpeedFwd, false},
+
+    {kEdgeSpeedBwd, false},
+    {kEdgeDeadendBwd, false},
+    {kEdgeLaneCountBwd, false},
+    {kEdgeTruckSpeedBwd, false},
+    {kEdgeSignalBwd, false},
+    {kEdgeStopSignBwd, false},
+    {kEdgeYieldBwd, false},
+    {kEdgeAccessBwd, false},
+    {kEdgeLiveSpeedBwd, false},
+    {kEdgeFreeflowSpeedBwd, false},
+    {kEdgeConstrainedSpeedBwd, false},
 
     // Node keys
     {kIncidents, false},
@@ -148,6 +191,15 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kNodeTransitEgressInfoLatLon, true},
     {kNodeTimeZone, true},
     {kNodeTransitionTime, true},
+    {kNodeDriveOnRight, false},
+    {kNodeElevation, false},
+    {kNodeTaggedAccess, false},
+    {kNodePrivateAccess, false},
+    {kNodeCashOnlyToll, false},
+    {kNodeModeChangeAllowed, false},
+    {kNodeNamedIntersection, false},
+    {kNodeIsTransit, false},
+    {kNodeAccess, false},
 
     // Top level: admin list, full shape, and shape bounding box keys
     {kOsmChangeset, true},
@@ -172,6 +224,26 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kShapeAttributesSpeed, false},
     {kShapeAttributesSpeedLimit, false},
     {kShapeAttributesClosure, false},
+    {kShapeAttributesCongestion, false},
+
+    // Incidents properties
+    {kIncidentId, false},
+    {kIncidentType, false},
+    {kIncidentDescription, false},
+    {kIncidentSubType, false},
+    {kIncidentSubTypeDescription, false},
+    {kIncidentStartTime, false},
+    {kIncidentEndTime, false},
+    {kIncidentImpact, false},
+    {kIncidentRoadClosed, false},
+    {kIncidentCongestionValue, false},
+    {kIncidentCreationTime, false},
+    {kIncidentLongDescription, false},
+    {kIncidentClearLanes, false},
+    {kIncidentNumLanesBlocked, false},
+    {kIncidentLength, false},
+    {kIncidentIso31661Alpha2, false},
+    {kIncidentIso31661Alpha3, false},
 };
 
 const std::unordered_set<std::string_view> AttributesController::kDefaultEnabledCategories =
@@ -189,7 +261,7 @@ AttributesController::AttributesController(const Options& options, bool is_stric
   switch (options.filter_action()) {
     case (FilterAction::include): {
       if (is_strict_filter)
-        disable_all();
+        set_all(false);
       for (const auto& filter_attribute : options.filter_attributes()) {
         try {
           attributes.at(filter_attribute) = true;
@@ -198,6 +270,8 @@ AttributesController::AttributesController(const Options& options, bool is_stric
       break;
     }
     case (FilterAction::exclude): {
+      if (is_strict_filter)
+        set_all(true);
       for (const auto& filter_attribute : options.filter_attributes()) {
         try {
           attributes.at(filter_attribute) = false;
@@ -215,9 +289,9 @@ AttributesController::AttributesController(const Options& options, bool is_stric
   enabled_categories = PrecomputeEnabledCategories(attributes);
 }
 
-void AttributesController::disable_all() {
+void AttributesController::set_all(const bool value) {
   for (auto& pair : attributes) {
-    pair.second = false;
+    pair.second = value;
   }
 }
 

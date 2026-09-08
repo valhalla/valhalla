@@ -49,6 +49,8 @@ export class Actor {
 
   status(query: Query): Promise<Response>;
   status(query: string): Promise<string>;
+
+  tile(query: Query | string): Promise<Buffer>;
 }
 
 export interface ConfigOptions {
@@ -77,5 +79,74 @@ export interface ConfigOptions {
 
 export function getConfig(options?: ConfigOptions): Promise<ValhallaConfig>;
 
+
+export class GraphId {
+  /** Default constructor (creates invalid GraphId) */
+  constructor();
+  /** Construct from raw numeric value */
+  constructor(value: number);
+  /** Construct from string "level/tileid/id" */
+  constructor(value: string);
+  /** Construct from components */
+  constructor(tileid: number, level: number, id: number);
+
+  /** Raw numeric value */
+  readonly value: number;
+
+  /** Get the tile ID */
+  tileid(): number;
+  /** Get the hierarchy level */
+  level(): number;
+  /** Get the identifier within the level */
+  id(): number;
+  /** Check if this GraphId is valid */
+  is_valid(): boolean;
+  /** Get a GraphId with only tileid and level (id zeroed) */
+  tile_base(): GraphId;
+  /** Get the 32-bit tile value (level + tileid) */
+  tile_value(): number;
+  /** Create a new GraphId with the id advanced by offset */
+  add(offset: number): GraphId;
+  /** Check equality with another GraphId */
+  equals(other: GraphId): boolean;
+  /** String representation: "level/tileid/id" */
+  toString(): string;
+  /** JSON representation */
+  toJSON(): { level: number; tileid: number; id: number; value: number };
+}
+
+/**
+ * Get the base (lower-left corner) lon/lat of a tile.
+ * @param graphId - A GraphId identifying the tile
+ * @returns [lon, lat] coordinate pair of the tile's base corner
+ */
+export function getTileBaseLonLat(graphId: GraphId): [number, number];
+
+/**
+ * Get the tile GraphId for a given coordinate and hierarchy level.
+ * @param level - Hierarchy level
+ * @param coord - [lon, lat] coordinate pair
+ * @returns The tile-base GraphId containing the coordinate
+ */
+export function getTileIdFromLonLat(level: number, coord: [number, number]): GraphId;
+
+/**
+ * Get all tile GraphIds whose tiles intersect a bounding box.
+ * @param minx - Minimum longitude
+ * @param miny - Minimum latitude
+ * @param maxx - Maximum longitude
+ * @param maxy - Maximum latitude
+ * @param levels - Optional array of hierarchy levels (defaults to [0, 1, 2])
+ * @returns Array of tile-base GraphIds
+ */
+export function getTileIdsFromBbox(minx: number, miny: number, maxx: number, maxy: number, levels?: number[]): GraphId[];
+
+/**
+ * Get all tile GraphIds whose tiles intersect or are inside a polygon ring.
+ * @param ringCoords - Array of [lon, lat] coordinate pairs forming a polygon ring
+ * @param levels - Optional array of hierarchy levels (defaults to [0, 1, 2])
+ * @returns Array of tile-base GraphIds
+ */
+export function getTileIdsFromRing(ringCoords: [number, number][], levels?: number[]): GraphId[];
 
 export const VALHALLA_VERSION: string;

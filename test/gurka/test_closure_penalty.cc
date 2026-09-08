@@ -24,7 +24,7 @@ void close_dir_edge(baldr::GraphReader& reader,
                     const gurka::map& closure_map) {
   baldr::GraphId tile_id(tile.header->tile_id);
   auto edge = std::get<0>(gurka::findEdge(reader, closure_map.nodes, edge_name, end_node));
-  if (edge.Tile_Base() == tile_id && edge.id() == index) {
+  if (edge.tile_base() == tile_id && edge.id() == index) {
     SetLiveSpeed(current, 0);
   }
 }

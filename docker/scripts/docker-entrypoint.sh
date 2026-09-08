@@ -5,6 +5,11 @@ set -o errexit -o pipefail -o nounset
 # source the helpers for globals and functions
 . /valhalla/scripts/helpers.sh
 
+# logging valhalla version
+VALHALLA_VERSION=$(valhalla_service --version | tr -d '\n')
+echo "Valhalla version: ${VALHALLA_VERSION}"
+echo ""
+
 do_build_tar() {
   local build_tar_local=$1
   if ([[ "${build_tar_local}" == "True" && ! -f $TILE_TAR ]]) || [[ "${build_tar_local}" == "Force" ]]; then

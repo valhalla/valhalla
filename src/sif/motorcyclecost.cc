@@ -201,6 +201,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
@@ -257,7 +258,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return kSpeedFactor[top_speed_];
+    return kSpeedFactor[top_speed_] * min_linear_cost_factor_;
   }
 
   /**
@@ -364,7 +365,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_turn_restrictions_) ||
       (edge->surface() > kMinimumMotorcycleSurface) || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile)) || CheckExclusions(edge, pred)) {
+      (pred.closure_pruning() && IsClosed(edge, tile)) || CheckExclusions<true>(edge, pred)) {
     return false;
   }
 
@@ -389,7 +390,8 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
       (opp_edge->surface() > kMinimumMotorcycleSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile)) || CheckExclusions(opp_edge, pred)) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      CheckExclusions<false>(opp_edge, pred)) {
     return false;
   }
 
@@ -399,6 +401,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
+                              const baldr::GraphId& edgeid,
                               const graph_tile_ptr& tile,
                               const baldr::TimeInfo& time_info,
                               uint8_t& flow_sources) const {
@@ -441,7 +444,9 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= closure_factor_;
   }
 
-  return {sec * factor, sec};
+  factor *= EdgeFactor(edgeid);
+
+  return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -503,6 +508,9 @@ Cost MotorcycleCost::TransitionCost(
     }
     c.cost += seconds;
   }
+
+  c.cost *= inv_distance_factor_;
+
   return c;
 }
 
@@ -577,12 +585,16 @@ Cost MotorcycleCost::TransitionCostReverse(
     }
     c.cost += seconds;
   }
+
+  c.cost *= inv_distance_factor_;
+
   return c;
 }
 
 void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                Costing* c) {
+                                Costing* c,
+                                google::protobuf::RepeatedPtrField<CodedDescription>& warnings) {
   c->set_type(Costing::motorcycle);
   c->set_name(Costing_Enum_Name(c->type()));
   auto* co = c->mutable_options();
@@ -590,11 +602,11 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
-  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
-  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
-  JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
-  JSON_PBF_RANGED_DEFAULT(co, kMotorcycleSpeedRange, json, "/top_speed", top_speed);
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kMotorcycleSpeedRange, json, "/top_speed", top_speed, warnings);
 }
 
 cost_ptr_t CreateMotorcycleCost(const Costing& costing_options) {
@@ -787,10 +799,5 @@ EXPECT_THAT(ctorTester->use_tolls , test::IsBetween(kUseTollsRange.min, kUseToll
    **/
 }
 } // namespace
-
-int main(int argc, char* argv[]) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

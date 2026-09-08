@@ -1,5 +1,220 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: Transifex and all locale JSONs [#6210](https://github.com/valhalla/valhalla/pull/6210)
+* **Bug Fix**
+   * ADDED: .po file based translation workflow [#6210](https://github.com/valhalla/valhalla/pull/6210)
+   * FIXED: bg-BG spoke the literal text `<STREET_NAME>` in some case(s) [#6210](https://github.com/valhalla/valhalla/pull/6210)
+   * FIXED: don't advance bounding-circle iterator past the end [#6241](https://github.com/valhalla/valhalla/pull/6241)
+   * FIXED: update final path distance in recosting for `CostMatrix` [#6258](https://github.com/valhalla/valhalla/pull/6258)
+   * FIXED: Set `edge_index` for all interpolated points in `/trace_attributes` [#6278](https://github.com/valhalla/valhalla/pull/6278)
+   * FIXED: Shortcut/transit/etc. edges should use `kNoElevationData` (-500.0) instead of 0.0 [#6306](https://github.com/valhalla/valhalla/pull/6306)
+   * FIXED: Do not require Python for building libvalhalla [#6303](https://github.com/valhalla/valhalla/pull/6303)
+* **Enhancement**
+   * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
+   * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
+   * ADDED: `cost` in verbose matrix output [#6249](https://github.com/valhalla/valhalla/pull/6249)
+   * ADDED: `expansion_index` expansion property [#6251](https://github.com/valhalla/valhalla/pull/6251)
+   * CHANGED: Smaller `edge_shapes.bin` file for faster reads during tiles build [#6234](https://github.com/valhalla/valhalla/pull/6234)
+   * ADDED: route through pedestrian areas via generated medial axis traversals, behind the `mjolnir.pedestrian_areas` config option [#6195](https://github.com/valhalla/valhalla/pull/6195)
+   * ADDED: documentation page for the pedestrian areas feature [#6266](https://github.com/valhalla/valhalla/pull/6266)
+   * ADDED: Add use_distance to truck, bus, taxi, motorcycle and motor_scooter cost [#6214](https://github.com/valhalla/valhalla/pull/6214)
+   * ADDED: limitations, future work and performance sections to the pedestrian areas documentation [#6279](https://github.com/valhalla/valhalla/pull/6279)
+
+## Release Date: 2026-07-24 Valhalla 3.8.3
+* **Removed**
+* **Bug Fix**
+   * FIXED: embedded route elevation decoding after a mid-edge `through` location [#6202](https://github.com/valhalla/valhalla/issues/6202)
+   * FIXED: guard opposing edge lookup for transit edges in Loki reachability [#6222](https://github.com/valhalla/valhalla/pull/6222)
+   * FIXED: clear loki search when calling it multiple times [#6231](https://github.com/valhalla/valhalla/pull/6231)
+* **Enhancement**
+   * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
+   * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
+   * FIXED: use the new `GraphReader::GetGraphTileHeader` in `baldr/utils/graph_reader.cc:get_graph_tile_header` to prevent loading entire tiles into RAM [#6200](https://github.com/valhalla/valhalla/pull/6200)
+   * CHANGED: Optionally construct fresh `ReachedMap`s in `CostMatrix::Clear()` [#5978](https://github.com/valhalla/valhalla/pull/5978) 
+   * ADDED: classify `surface=laterite` and `surface=clay` as `Surface::kDirt` [#6171](https://github.com/valhalla/valhalla/issues/6171)
+   * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
+   * CHANGED: Speedup sequence sort by using PSRS algorithm [#6226](https://github.com/valhalla/valhalla/pull/6226)
+   * ADDED: more convenience bindings for Python [#6197](https://github.com/valhalla/valhalla/pull/6197)
+
+## Release Date: 2026-07-08 Valhalla 3.8.2
+* **Removed**
+* **Bug Fix**
+   * FIXED: Python `get_config()` raised `KeyError('logging')` since 3.7.0 by writing the removed `mjolnir.logging` key after logging config moved to the top level in #5976 [#6185](https://github.com/valhalla/valhalla/pull/6185)
+   * FIXED: Per-leg `has_toll`/`has_highway`/`has_ferry` in the Valhalla JSON output were always `false` with `directions_type=none` because they were accumulated from maneuvers; fall back to the leg summary instead [#6151](https://github.com/valhalla/valhalla/issues/6151)
+* **Enhancement**
+   * ADDED: write support for metadata fields in graph tile headers in the python bindings [#6194](https://github.com/valhalla/valhalla/pull/6194)
+
+## Release Date: 2026-07-06 Valhalla 3.8.1
+* **Removed**
+* **Bug Fix**
+   * FIXED: `cibuildhweel` had configuration issues preventing PyPI release; added CI protection for Linux wheels [#6179](https://github.com/valhalla/valhalla/issues/6179)
+   * FIXED: check for spatialite-tools at cmake config time if `ENABLE_DATA_TOOLS = ON` [#2202](https://github.com/valhalla/valhalla/issues/2202)
+* **Enhancement**
+
+## Release Date: 2026-07-06 Valhalla 3.8.0
+* **Removed**
+   * REMOVED: dead `thor.max_reserved_locations_costmatrix` help entry from `valhalla_build_config` (live key is `thor.costmatrix.max_reserved_locations`) [#6083](https://github.com/valhalla/valhalla/issues/6083)
+   * REMOVED: `json` request parameter, people can use CORS in 2026 [#6099](https://github.com/valhalla/valhalla/pull/6099)
+   * REMOVED: `date_created_` field from `baldr::GraphTileHeader` [#6115](https://github.com/valhalla/valhalla/pull/6115)
+* **Bug Fix**
+   * FIXED: wrong mode used in loki for `auto_pedestrian` [#6065](https://github.com/valhalla/valhalla/pull/6065)
+   * FIXED: Avoid creating loop edges during graph filtering [#6050](https://github.com/valhalla/valhalla/pull/6050)
+   * FIXED: UB in adminbuilder in `&inner_rings.front()` if `inner_rings` is empty [#6077](https://github.com/valhalla/valhalla/pull/6077)
+   * FIXED: duplicate config arg in `enhance` [#6095](https://github.com/valhalla/valhalla/pull/6095)
+   * FIXED: flood fill leak in polygon search [#6086](https://github.com/valhalla/valhalla/pull/6086)
+   * FIXED: Fix errors in cost_inline_tests [#6117](https://github.com/valhalla/valhalla/pull/6117)
+   * FIXED: JSON serialization of NaN values [#6147](https://github.com/valhalla/valhalla/pull/6147)
+   * BREAKING: apply `low_class_penalty` only when transitioning from a higher class road in `TruckCost::TransitionCost`(impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
+   * FIXED: bounding circle precision issues [#6169](https://github.com/valhalla/valhalla/pull/6169)
+* **Enhancement**
+   * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
+   * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
+   * ADDED: lz4 support for OSM PBF files [#6081](https://github.com/valhalla/valhalla/pull/6081)
+   * CHANGED: auto-generate .pyi stubs with cmake, needs a full build [#6101](https://github.com/valhalla/valhalla/pull/6101)
+   * ADDED: Bounding circles for faster loki (not yet enabled) [#5103](https://github.com/valhalla/valhalla/pull/5103)
+   * ADDED: OpenAPI documentation [#6088](https://github.com/valhalla/valhalla/pull/6088)
+   * ADDED: `dataset_id` config to optionally set an arbitrary number to each tile's `dataset_id` header field [#6126](https://github.com/valhalla/valhalla/pull/6126)
+   * ADDED: Detect pedestrian areas (highway=pedestrian + area=yes) both as simple ways or multipolygon relations and avoid them generating edges[#6127](https://github.com/valhalla/valhalla/pull/6127)
+   * ADDED: partial gurka tile build and `findWay` & `findWayNodes` gurka lookups for temp .bin files [#6136](https://github.com/valhalla/valhalla/pull/6136)
+   * CHANGED: `checksum_` field in GraphTileHeader reflects now global tileset ID & tile data checksum [#6123](https://github.com/valhalla/valhalla/pull/6123)
+   * BREAKING: overhauled `pyvalhalla` package layout, some `valhalla.utils` imports will break [#6133](https://github.com/valhalla/valhalla/pull/6133)
+   * ADDED: enabled bounding circles for faster candidate search in `/locate` and `/tile` [#6141/](https://github.com/valhalla/valhalla/pull/6141)
+   * BREAKING: add `low_class_factor` for truck costing (impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
+   * ADDED: `get_graph_tile_header` & `GraphTileHeader` bindings [#6134](https://github.com/valhalla/valhalla/pull/6134)
+   * CHANGED: `CostMatrix` reverse trees use time-dependent speeds with `invariant` date_time [#6168](https://github.com/valhalla/valhalla/pull/6168)
+   * ADDED: support for multiple --region args in valhalla_build_extract [#6172](https://github.com/valhalla/valhalla/pull/6172)
+   * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
+
+## Release Date: 2026-04-28 Valhalla 3.7.0
+* **Removed**
+   * REMOVED: Removed ability to set ISO:3166 country/state code per OSM Node [#5747](https://github.com/valhalla/valhalla/pull/5747)
+   * REMOVED: all module-level `logging` config in favor of a global one
+* **Bug Fix**
+   * FIXED: Clamp grades on bridges and tunnels. [#5728](https://github.com/valhalla/valhalla/pull/5728)
+   * FIXED: use pedestrian costing on end location in `auto_pedestrian` costing [#5903](https://github.com/valhalla/valhalla/pull/5903)
+   * FIXED: Point at `begin_shape_index` should be on the edge even if trace has discontinuities [#5908](https://github.com/valhalla/valhalla/pull/5908)
+   * FIXED: Empty "edges" in `/trace_attributes` response for `walk_or_snap`, that also causes SIGSEGV if elevation requested [#5945](https://github.com/valhalla/valhalla/pull/5945)
+   * FIXED: keep `highway=platform` routable while classifying it as `service_other` instead of `primary` [#5913](https://github.com/valhalla/valhalla/pull/5913)
+   * FIXED: Fix overestimated number of entries in `UnorderedIdTable::deserialize` [#5969](https://github.com/valhalla/valhalla/pull/5969)
+   * FIXED: cleanup pkg-config to set the right variables [#5965](https://github.com/valhalla/valhalla/pull/5965)
+   * FIXED: super trivial connections snapping to excluded edges in CostMatrix [#5996](https://github.com/valhalla/valhalla/pull/5996)
+   * FIXED: edge walking should not end on a shortcut [#6034](https://github.com/valhalla/valhalla/pull/6034)
+   * FIXED: Exclusion check in the reverse direction [#5375](https://github.com/valhalla/valhalla/pull/5375)
+   * FIXED: `edge_walk` returning error 443 for trivial single-edge traces [#6046](https://github.com/valhalla/valhalla/issues/6046)
+   * FIXED: set interrupt in optimized_route action [#6019](https://github.com/valhalla/valhalla/pull/6019)
+   * FIXED: Do not crash on backwards traces over oneway edges [#6048](https://github.com/valhalla/valhalla/pull/6048)
+* **Enhancement**
+   * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
+   * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906)
+   * ADDED: `Cache-Control = public, max-age=N"` response header to `/tile` requests; also added RPATH to local debug builds to fix ldd resolving when libvalhalla is installed system-wide [#5902](https://github.com/valhalla/valhalla/pull/5902)
+   * CHANGED: bump tz to 2026a [#5930](https://github.com/valhalla/valhalla/pull/5930)
+   * ADDED: `display_ll` field to incident meta [#5943](https://github.com/valhalla/valhalla/pull/5943)
+   * ADDED: relevant python build scripts to pyvalhalla [#5937](https://github.com/valhalla/valhalla/pull/5937)
+   * CHANGED: bump nanobind to v2.12.0 [#5949](https://github.com/valhalla/valhalla/pull/5949)
+   * ADDED: `expansion_max_distance` (in meters) after which an expansion is terminated [#5938](https://github.com/valhalla/valhalla/pull/5938)
+   * CHANGED: Optimize `get_service_days` in servicedays.cc [#5952](https://github.com/valhalla/valhalla/pull/5952)
+   * ADDED: OSM XML format support for tile building [#5934](https://github.com/valhalla/valhalla/pull/5934)
+   * ADDED: access restriction layer in MVT [#5912](https://github.com/valhalla/valhalla/pull/5912)
+   * ADDED: incidents to locate JSON response [#5968](https://github.com/valhalla/valhalla/pull/5968)
+   * ADDED: `--region` to `valhalla_build_extract` to create tars by Geofabrik region [#5964](https://github.com/valhalla/valhalla/pull/5964)
+   * ADDED: more warnings for clamped costing options, second pass, bidir fallback and matrix_locations for CostMatrix [#3833](https://github.com/valhalla/valhalla/pull/3833)
+   * ADDED: a global `logging` config to replace all module-level ones [#5976](https://github.com/valhalla/valhalla/pull/5976)
+   * ADDED: support for OSM tag 'junction=intersection' to explicitly mark internal intersection edges [#5980](https://github.com/valhalla/valhalla/pull/5980)
+   * BREAKING: added `filtered_edges` in `/locate` output (results previously in `edges` may now be in `filtered_edges`) [#5987](https://github.com/valhalla/valhalla/pull/5987)
+   * ADDED: `ValhallaError` which exposes `valhalla_exception_t` to the Python bindings [#5956](https://github.com/valhalla/valhalla/pull/5956)
+   * CHANGED: Make `lz4` system dependency optional [#5993](https://github.com/valhalla/valhalla/pull/5993)
+   * CHANGED: Drop file names of individual tiles once tile extract loaded [#5995](https://github.com/valhalla/valhalla/pull/5995)
+   * CHANGED: Deduplicate predicted speed profiles when updating tile [#5941](https://github.com/valhalla/valhalla/pull/5941)
+   * FIXED: `edge.curvature` attribute in `trace_attributes` always returned 0; wired `DirectedEdge::curvature()` through `TripLeg.Edge` proto and JSON serialization [#6012](https://github.com/valhalla/valhalla/pull/6012)
+   * ADDED: consolidated lots of mjolnir's LOG_WARN for less verbose default logging; added statsd support for `build_tile_set` [#5985](https://github.com/valhalla/valhalla/pull/5985)
+   * ADDED: mostly global graph attributes to mjolnir's statsd logging [#6021](https://github.com/valhalla/valhalla/pull/6021)
+   * ADDED: free flow and constrained flow speeds to mvt edge layer [#6014](https://github.com/valhalla/valhalla/pull/6014)
+   * CHANGED: perf(costmatrix): use `ankerl::unordered_dense::set` instead of `std::set` for `LocationStatus::unfound_connections` [#6013](https://github.com/valhalla/valhalla/pull/6013)
+
+## Release Date: 2026-02-19 Valhalla 3.6.3
+* **Removed**
+   * REMOVED: `tile_options.return_shortcuts` request parameter [#5849](https://github.com/valhalla/valhalla/pull/5849)
+* **Bug Fix**
+   * FIXED: access for backward edges in MVT contains data from the correct edge [#5834](https://github.com/valhalla/valhalla/pull/5834)
+   * FIXED: use correct edge for directional attributes in MVT [#5836](https://github.com/valhalla/valhalla/pull/5836)
+   * FIXED: Add numpy as optional runtime dependency for Python bindings [#5823](https://github.com/valhalla/valhalla/pull/5823)
+   * FIXED: MVT clipping bug where parts of edge were being dropped which crossed tile boundaries [#5843](https://github.com/valhalla/valhalla/pull/5843)
+   * FIXED: Removed UK country-specific admin overrides / UK countries will return correct admin data [#5847](https://github.com/valhalla/valhalla/pull/5847)
+   * FIXED: replace `shutting_seconds` with `shutdown_seconds` [#5854](https://github.com/valhalla/valhalla/pull/5854)
+   * FIXED: MVT attributes were erroneously cast to uint32_t for booleans and others [#5861](https://github.com/valhalla/valhalla/pull/5861)
+   * FIXED: small bug in valhalla_add_landmarks [#5859](https://github.com/valhalla/valhalla/pull/5859)
+   * FIXED: replace dry-run with report arg in `valhalla_build_config` [#5875](https://github.com/valhalla/valhalla/pull/5875)
+   * FIXED: Respect future hierarchy level during graph filtering [#5878](https://github.com/valhalla/valhalla/pull/5878)
+   * FIXED: UK had drive on right incorrectly set after admin changes [#5882](https://github.com/valhalla/valhalla/pull/5882)
+   * FIXED: set stop impact to 0 where there are only 2 edges at the 'intersection' [#5877](https://github.com/valhalla/valhalla/pull/5877)
+   * FIXED: Properly calculate ferry speed based on "duration" tag [#5885](https://github.com/valhalla/valhalla/pull/5885)
+   * Fix checksum validation for gzipped tiles [#5918](https://github.com/valhalla/valhalla/pull/5918)
+* **Enhancement**
+   * ADDED: `GraphUtils` class to Python bindings for low-level graph tile access [#5819](https://github.com/valhalla/valhalla/pull/5819)
+   * ADDED: `predicted_speeds` module to Python bindings for DCT-2 speed compression utilities [#5819](https://github.com/valhalla/valhalla/pull/5819)
+   * ADDED: Clean up boost::geometry types [#5818](https://github.com/valhalla/valhalla/pull/5818)
+   * CHANGED: Distance-based hierarchy limits in CostMatrix [#5812](https://github.com/valhalla/valhalla/pull/5812)
+   * CHANGED: Move location update in CostMatrix [#5813](https://github.com/valhalla/valhalla/pull/5813)
+   * ADDED: Geometry generalization for `edges` layer of `/tile` endpoint (#5809)(https://github.com/valhalla/valhalla/pull/5809)
+   * ADDED: sort operator for GraphId which is ideal for mmap & edge_id loop cache [#5839](https://github.com/valhalla/valhalla/pull/5839)
+   * ADDED: support for `filters` & `verbose` in `/tile` endpoint [#5806](https://github.com/valhalla/valhalla/pull/5806)
+   * ADDED: `tile_options.exclude_layers` to exclude MVT layers per request [#5855](https://github.com/valhalla/valhalla/pull/5855)
+   * CHANGED: Timestamp log format changed from year/mo/dy hr:mn:sc.micros to year-mo-dy hr:mn:sc.nanosecnd [#5856](https://github.com/valhalla/valhalla/pull/5856)
+   * CHANGED: Added `mjolnir.data_quality_dir` as optional config to control the directory for e.g. duplicateways.txt [#5860](https://github.com/valhalla/valhalla/pull/5860)
+   * CHANGED: extended `valhalla_build_config` script to optionally merge config with an existing one [#5857](https://github.com/valhalla/valhalla/pull/5857)
+   * ADDED: congestion in shape attributes [#5865](https://github.com/valhalla/valhalla/pull/5865)
+   * CHANGED: release GIL for Actor methods, `get_edge_shape` & `get_tile_ids_from_bbox` [#5868](https://github.com/valhalla/valhalla/pull/5868)
+   * CHANGED: don't throw a 442 error when matrix found no results [#5871](https://github.com/valhalla/valhalla/pull/5871)
+   * ADDED: added `GraphId` binding for the nodejs package [#5874](https://github.com/valhalla/valhalla/pull/5874)
+   * CHANGED: return trivial shape when source == target in CostMatrix [#5872](https://github.com/valhalla/valhalla/pull/5872)
+   * ADDED: docker-entrypoint logs Valhalla version on container start [#5884](https://github.com/valhalla/valhalla/pull/5884)
+   * ADDED: Expose start/end OSM nodeids in trace_attributes using EdgeInfo osmnodeids [#5783](https://github.com/valhalla/valhalla/pull/5783)
+   * CHANGED: added `shortcuts` layer and removed shortcuts from `edges` layer [#5849](https://github.com/valhalla/valhalla/pull/5849)
+   * ADDED: `get_tile_ids_from_ring` to query by polygon in the Python bindings [#5866](https://github.com/valhalla/valhalla/pull/5866)
+   * ADDED: `GraphId` convenience functions (as in Python bindings) to nodeJS bindings [#5880](https://github.com/valhalla/valhalla/pull/5880)
+   * CHANGED: Write tiles via temp file and then rename to avoid locking mutex [#5888](https://github.com/valhalla/valhalla/pull/5888)
+
+## Release Date: 2026-01-15 Valhalla 3.6.2
+* **Removed**
+* **Bug Fix**
+   * FIXED: remove `libgeotiff` from pkg-config file `Requires` [#5737](https://github.com/valhalla/valhalla/pull/5737)
+   * FIXED: Fix + prefix handling in to_int/to_float utilities [#5746](https://github.com/valhalla/valhalla/pull/5746)
+   * FIXED: Use a unique target name for generating symlinks. Fixes #5751. [#5752](https://github.com/valhalla/valhalla/pull/5752)
+   * FIXED: Resolve ambiguities with libc++-18. Fixes #5716. [#5754](https://github.com/valhalla/valhalla/pull/5754)
+   * FIXED: Access handling for unknown OSM Way types like `"disused:route=ferry"` [#5768](https://github.com/valhalla/valhalla/pull/5768)
+   * FIXED: `DirectedEdge index out of bounds` in transit tiles [#5782](https://github.com/valhalla/valhalla/pull/5782)
+   * FIXED: Add error code for isochrone requests exceeding distance contour limit [#5781](https://github.com/valhalla/valhalla/pull/5781)
+* **Enhancement**
+   * ADDED: Assign cost factors to linear features [#5584](https://github.com/valhalla/valhalla/pull/5584)
+   * ADDED: optional libvalhalla_test install target [#5719](https://github.com/valhalla/valhalla/pull/5719)
+   * CHANGED: Get rid of temporary std::vector in GraphTile::GetRestrictions [#5688](https://github.com/valhalla/valhalla/pull/5688)
+   * CHANGED: lower penalty for u-turns without name consistency [#5696](https://github.com/valhalla/valhalla/pull/5696)
+   * CHANGED: Use std::from_chars instead of std::stoi/stof/stod [#5704](https://github.com/valhalla/valhalla/pull/5704)
+   * CHANGED: Speed up transit feed ingestion with faster stop time look up via stop id [#5134](https://github.com/valhalla/valhalla/pull/5134)
+   * CHANGED: Avoid dynamic allocation in loki::Search [#5724](https://github.com/valhalla/valhalla/pull/5724)
+   * CHANGED: Get rid of temporary vector in GraphTile::GetAccessRestrictions [#5689](https://github.com/valhalla/valhalla/pull/5689)
+   * ADDED: more options for `valhalla_benchmark_loki` [#5730](https://github.com/valhalla/valhalla/pull/5730)
+   * CHANGED: Adjust speed penalty and add dimensions length and weight to auto costing [#5627](https://github.com/valhalla/valhalla/pull/5627)
+   * CHANGED: Microoptimisation in EdgeInfo. [#5733](https://github.com/valhalla/valhalla/pull/5733)
+   * CHANGED: Merge cost and tyr inline tests into single executable [#5735](https://github.com/valhalla/valhalla/pull/5735)
+   * ADDED: Add option `edge.hov_type` to trace attributes [#5741](https://github.com/valhalla/valhalla/pull/5741)
+   * ADDED: Proper time tracking in Bidirectional A* [#5640](https://github.com/valhalla/valhalla/pull/5640/)
+   * CHANGED: Templatize CostMatrix connection check [#5729](https://github.com/valhalla/valhalla/pull/5729)
+   * ADDED: /tile endpoint to serve MVT (BETA) [#5663](https://github.com/valhalla/valhalla/pull/5663)
+   * ADDED: `valhalla-dev` image [#5739](https://github.com/valhalla/valhalla/pull/5739)
+   * CHANGED: --version program options to print _only_ the version string and omit the program name [#5769](https://github.com/valhalla/valhalla/pull/5769)
+   * CHANGED: upgraded tz submodule to 2025c [#5766](https://github.com/valhalla/valhalla/pull/5766)
+   * FIXED: Omit debug symbols in docker image [#5777](https://github.com/valhalla/valhalla/pull/5777)
+   * ADDED: `timed_predicted_speed` on `/locate` response if location had a date time set [#5714](https://github.com/valhalla/valhalla/pull/5714)
+   * CHANGED: renamed `GraphId::Is_Valid()` -> `GraphId::is_valid()` and `GraphId::Tile_Base` -> `GraphId::tile_base` [#5678](https://github.com/valhalla/valhalla/pull/5678)
+   * UPDATED: translations from transifex [#5792](https://github.com/valhalla/valhalla/pull/5792)
+   * ADDED: support for server-side MVT caching [#5762](https://github.com/valhalla/valhalla/pull/5762)
+   * ADDED: NodeJS bindings support PBF outputs [#5794](https://github.com/valhalla/valhalla/pull/5794)
+   * ADDED: Handle `vehicle` tags for OSM Ways [#5802](https://github.com/valhalla/valhalla/pull/5802)
+   * ADDED: `matched_points` in `/trace_attributes` pbf response [#5803](https://github.com/valhalla/valhalla/pull/5803)
+
+## Release Date: 2025-11-14 Valhalla 3.6.1
+* **Removed**
    * REMOVED: ENABLE_GDAL define for **Linux-only** Python binding releases [#5642](https://github.com/valhalla/valhalla/pull/5642)
    * REMOVED: pyvalhalla-weekly PyPI package [#5673](https://github.com/valhalla/valhalla/pull/5673)
 * **Bug Fix**
@@ -9,12 +224,21 @@
    * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
    * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647)
    * UPGRADED: vcpkg to 0e39c10736341cc8135b560438229bbda3d3219a [#5654](https://github.com/valhalla/valhalla/pull/5654)
+   * ADDED: Add NodeJs bindings [#5621](https://github.com/valhalla/valhalla/pull/5621)
    * FIXED: returns GeoTIFF with Content-Type image/tiff header [#5665](https://github.com/valhalla/valhalla/pull/5665)
    * CHANGED: Improve logging using std::format [#5666](https://github.com/valhalla/valhalla/pull/5666)
    * CHANGED: Migrated from pybind11 to nanobind to release `abi3` wheels (Python version agnostic), also changes minimum version of PyPI packages to 3.12 [#5628](https://github.com/valhalla/valhalla/pull/5628)
    * CHANGED: Avoid temporary std::string in some places in serializers [#5674](https://github.com/valhalla/valhalla/pull/5674)
    * ADDED: linux-aarch64 wheel for Python releases [#5670](https://github.com/valhalla/valhalla/pull/5670)
    * ADDED: PyPI `sdist` for python to install the bindings from source [#5649](https://github.com/valhalla/valhalla/pull/5649)
+   * CHANGED: Refactor GraphTile::GetLaneConnectivity to return std::span instead of std::vector [#5683](https://github.com/valhalla/valhalla/pull/5683)
+   * CHANGED: Get rid of midgard::iterable_t in favor of std::span [#5682](https://github.com/valhalla/valhalla/pull/5682)
+   * CHANGED: Optimise CostMatrix::ReachedMap [#5690](https://github.com/valhalla/valhalla/pull/5690)
+   * ADDED: Make possible to use `-DCMAKE_UNITY_BUILD=ON` [#5691](https://github.com/valhalla/valhalla/pull/5691)
+   * CHANGED: make alternative_iterations_delta configurable [#5679](https://github.com/valhalla/valhalla/pull/5679)
+   * ADDED: `flow_sources` expansion property [#5697](https://github.com/valhalla/valhalla/pull/5697)
+   * CHANGED: Replace GDAL with libgeotiff, re-enable support for bindings [#5680](https://github.com/valhalla/valhalla/pull/5680)
+   * ADDED: Support for loading tiles from a remote tarball with optional HTTP basic auth [#5467](https://github.com/valhalla/valhalla/pull/5467)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
@@ -126,6 +350,7 @@
    * ADDED: Sqlite3 RAII wrapper around sqlite3* and spatielite connection [#5206](https://github.com/valhalla/valhalla/pull/5206)
    * CHANGED: Improved SQL statements when building admins [#5219](https://github.com/valhalla/valhalla/pull/5219)
    * CHANGED: Replace `boost::geometry` by GEOS for operations with admin/tz polygons and clip them by tile bbox [#5204](https://github.com/valhalla/valhalla/pull/5204)
+   * ADDED: support for per-level polygon exclusion [#5233](https://github.com/valhalla/valhalla/pull/5233/)
    * UPDATED: bump cxxopts [#5243](https://github.com/valhalla/valhalla/pull/5243)
    * ADDED: Make iterations limit configurable in costmatrix [#5221](https://github.com/valhalla/valhalla/pull/5221)
    * ADDED: Enforce the order of includes via `clang-format` [#5230](https://github.com/valhalla/valhalla/pull/5230)
@@ -164,6 +389,7 @@
    * CHANGED: Use rapidjson for transit_available serializer [#5430](https://github.com/valhalla/valhalla/pull/5430)
    * CHANGED: Switch from CircleCI to Github Actions [#5427](https://github.com/valhalla/valhalla/pull/5427)
    * CHANGED: Use rapidjson for isochrone serializer [#5429](https://github.com/valhalla/valhalla/pull/5429)
+   * ADDED: Support for storing osm node ids either just for graph nodes or also for all nodes (non-topological) [#5450](https://github.com/valhalla/valhalla/pull/5450)
    * ADDED: Allow pedestrian routing through highway=via_ferrata [#5480](https://github.com/valhalla/valhalla/pull/5480)
    * ADDED: generic level change maneuver [#5431](https://github.com/valhalla/valhalla/pull/5431)
    * ADDED: Publish timezone db on Github Actions artifacts [#5479](https://github.com/valhalla/valhalla/pull/5479)
@@ -188,7 +414,6 @@
    * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
    * CHANGED: added openssl as a linked library to all build configs when `ENABLE_DATA_TOOLS=ON` [#5626](https://github.com/valhalla/valhalla/pull/5626)
    * UPGRADED: C++17 to C++20 [#5575](https://github.com/valhalla/valhalla/pull/5575)
-   * ADDED: Add NodeJs bindings [#5621](https://github.com/valhalla/valhalla/pull/5621)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

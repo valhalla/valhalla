@@ -17,10 +17,6 @@ date_time_zonespec.csv
 mason/
 mason_packages/
 
-# scripts
-scripts/gdal-2.0.0/
-scripts/gdal-2.0.0.tar.gz
-
 # tools
 .cproject
 .project
@@ -34,9 +30,15 @@ CMakeLists.txt.user
 vcpkg*/
 *.log
 custom_files/
+redoc-static.html
 
 # python
 .venv
+venv
+
+# nodejs
+node_modules/
+*.node
 
 # clangd
 .cache/
@@ -52,3 +54,6 @@ src/bindings/python/valhalla/__version__.py
 **/*.egg-info
 dist
 wheelhouse
+proto/typescript/src
+proto/python/src
+proto/typescript/valhallajs-proto-*

@@ -9,10 +9,14 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
-#include <list>
+#include <array>
+#include <atomic>
 #include <map>
+#include <mutex>
+#include <span>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace valhalla {
@@ -24,19 +28,21 @@ enum class BuildStage : int8_t {
   kInitialize = 0,
   kParseWays = 1,
   kParseRelations = 2,
-  kParseNodes = 3,
-  kConstructEdges = 4,
-  kBuild = 5,
-  kEnhance = 6,
-  kFilter = 7,
-  kTransit = 8,
-  kBss = 9,
-  kHierarchy = 10,
-  kShortcuts = 11,
-  kRestrictions = 12,
-  kElevation = 13,
-  kValidate = 14,
-  kCleanup = 15
+  kParseAreaWays = 3,
+  kParseNodes = 4,
+  kBuildAreas = 5,
+  kConstructEdges = 6,
+  kBuild = 7,
+  kEnhance = 8,
+  kFilter = 9,
+  kTransit = 10,
+  kBss = 11,
+  kHierarchy = 12,
+  kShortcuts = 13,
+  kRestrictions = 14,
+  kElevation = 15,
+  kValidate = 16,
+  kCleanup = 17
 };
 
 constexpr uint8_t kMinor = 1;
@@ -49,7 +55,9 @@ inline BuildStage string_to_buildstage(const std::string& s) {
       {{"initialize", BuildStage::kInitialize},
        {"parseways", BuildStage::kParseWays},
        {"parserelations", BuildStage::kParseRelations},
+       {"parseareaways", BuildStage::kParseAreaWays},
        {"parsenodes", BuildStage::kParseNodes},
+       {"buildareas", BuildStage::kBuildAreas},
        {"constructedges", BuildStage::kConstructEdges},
        {"build", BuildStage::kBuild},
        {"enhance", BuildStage::kEnhance},
@@ -73,7 +81,9 @@ inline std::string to_string(BuildStage stg) {
       {{static_cast<int8_t>(BuildStage::kInitialize), "initialize"},
        {static_cast<int8_t>(BuildStage::kParseWays), "parseways"},
        {static_cast<int8_t>(BuildStage::kParseRelations), "parserelations"},
+       {static_cast<int8_t>(BuildStage::kParseAreaWays), "parseareaways"},
        {static_cast<int8_t>(BuildStage::kParseNodes), "parsenodes"},
+       {static_cast<int8_t>(BuildStage::kBuildAreas), "buildareas"},
        {static_cast<int8_t>(BuildStage::kConstructEdges), "constructedges"},
        {static_cast<int8_t>(BuildStage::kBuild), "build"},
        {static_cast<int8_t>(BuildStage::kEnhance), "enhance"},
@@ -90,6 +100,161 @@ inline std::string to_string(BuildStage stg) {
   auto i = BuildStageStrings.find(static_cast<int8_t>(stg));
   return (i == BuildStageStrings.cend()) ? "null" : i->second;
 }
+
+// Counters for warnings that fire per-item in hot loops during tile building.
+// Instead of logging each occurrence (which produces millions of lines on planet builds),
+// we accumulate counts and log a summary at the end. Full per-item detail is still
+// available at LOG_DEBUG level. Counters are atomic for thread safety.
+//
+// To add a new counter: add an enum value before kCount and a corresponding entry in
+// build_stats::meta (same order). The static_assert in util.cc will catch mismatches.
+struct build_stats {
+  enum counter : uint8_t {
+    kExceededElevationDiff,
+    kExceededMaxAssignerSpeed,
+    kExceededMaxDensity,
+    kExceededMaxLocalEdgeCount,
+    kExceededMaxNames,
+    kExceededMaxNodesPerWay,
+    kExceededMaxOSMSpeed,
+    kExceededMaxOSMSpeedLimit,
+    kExceededMaxOSMTruckSpeed,
+    kExceededMaxShapeSize,
+    kExceededMaxShortcutEdges,
+    kExceededMaxVias,
+    kExceededTurnRestrictionMask,
+    kFailedFerryReclassBoth,
+    kFailedFerryReclassInbound,
+    kFailedFerryReclassOutbound,
+    kFailedLaneConnectivity,
+    kFailedNodeInitialization,
+    kFailedOSMTimeRange,
+    kFailedOSMTimeRangeUnknown,
+    kFailedPedestrianAreas,
+    kInvalidHovType,
+    kInvalidLevel,
+    kInvalidOSMTag,
+    kMissingAccessTags,
+    // Graph summary counters (not warnings — totals for the built graph)
+    kCountComplexTurnRestrictions,
+    kCountEdges,
+    kCountNodes,
+    kCountPedestrianAreas,
+    kCountPedestrianAreaEdges,
+    kCountShortcutEdgesLevel0,
+    kCountShortcutEdgesLevel1,
+    kCountShortcutsLevel0,
+    kCountShortcutsLevel1,
+    kCountSimpleTurnRestrictions,
+    kCountTiles,
+    kCount // sentinel — must be last
+  };
+
+  struct meta_entry {
+    const char* statsd_key;
+    const char* log_label;
+    BuildStage stage; // the stage that owns this counter (for statsd emission)
+    bool is_warning;  // true = LOG_WARN, false = LOG_INFO
+  };
+  static constexpr meta_entry meta[] = {
+      // Warning counters (alphabetical)
+      {"exceeded_elevation_diff", "edges with elevation exceeding max difference",
+       BuildStage::kElevation, true},
+      {"exceeded_max_assigner_speed", "SpeedAssigner edges clamped to max", BuildStage::kEnhance,
+       true},
+      {"exceeded_max_density", "nodes exceeding max density", BuildStage::kEnhance, true},
+      {"exceeded_max_local_edge_count", "nodes exceeding max local edge count", BuildStage::kEnhance,
+       true},
+      {"exceeded_max_names", "edges exceeding max names", BuildStage::kBuild, true},
+      {"exceeded_max_nodes_per_way", "ways exceeding max nodes per way", BuildStage::kParseWays,
+       true},
+      {"exceeded_max_osm_speed", "ways with speed clamped to max", BuildStage::kParseWays, true},
+      {"exceeded_max_osm_speed_limit", "ways with speed limit clamped to max", BuildStage::kParseWays,
+       true},
+      {"exceeded_max_osm_truck_speed", "ways with truck speed clamped to max", BuildStage::kParseWays,
+       true},
+      {"exceeded_max_shape_size", "edges exceeding max encoded shape size", BuildStage::kBuild, true},
+      {"exceeded_max_shortcut_edges", "nodes exceeding max shortcut edges", BuildStage::kShortcuts,
+       true},
+      {"exceeded_max_vias", "restrictions exceeding max vias", BuildStage::kRestrictions, true},
+      {"exceeded_turn_restriction_mask", "simple turn restriction masks exceeding limit",
+       BuildStage::kBuild, true},
+      {"failed_ferry_reclass_both",
+       "ferry connections completely failing to reclassify edges to the next level 0 edge",
+       BuildStage::kBuild, true},
+      {"failed_ferry_reclass_inbound",
+       "inbound ferry connections failing to reclassify edges to the next level 0 edge",
+       BuildStage::kBuild, true},
+      {"failed_ferry_reclass_outbound",
+       "outbound ferry connections failing to reclassify edges to the next level 0 edge",
+       BuildStage::kBuild, true},
+      {"failed_lane_connectivity", "lane connectivity import failures", BuildStage::kBuild, true},
+      {"failed_node_initialization", "nodes with uninitialized coordinates",
+       BuildStage::kConstructEdges, true},
+      {"failed_osm_time_range", "OSM time range raises either invalid_argument or out_of_range",
+       BuildStage::kParseWays, true},
+      {"failed_osm_time_range_unknown", "OSM time range causes an unknown runtime_error",
+       BuildStage::kParseWays, true},
+      {"failed_pedestrian_areas", "pedestrian areas that failed polygon assembly",
+       BuildStage::kBuildAreas, true},
+      {"invalid_hov_type", "ways with invalid HOV type", BuildStage::kParseWays, true},
+      {"invalid_level", "ways with invalid level tags", BuildStage::kParseWays, true},
+      {"invalid_osm_tag", "invalid OSM tag parse errors", BuildStage::kParseWays, true},
+      {"missing_access_tags", "edges with missing access tags", BuildStage::kEnhance, true},
+      // Graph summary counters (alphabetical)
+      {"count_complex_turn_restrictions", "complex turn restrictions", BuildStage::kRestrictions,
+       false},
+      {"count_edges", "amount of edges at Validate", BuildStage::kValidate, false},
+      {"count_nodes", "amount of nodes at Validate", BuildStage::kValidate, false},
+      {"count_pedestrian_areas", "final amount of healthy pedestrian areas", BuildStage::kBuildAreas,
+       false},
+      {"count_pedestrian_area_edges", "total count of virtual edges for all pedestrian areas",
+       BuildStage::kBuildAreas, false},
+      {"count_shortcut_edges_level_0", "level 0 edges in shortcuts", BuildStage::kShortcuts, false},
+      {"count_shortcut_edges_level_1", "level 1 edges in shortcuts", BuildStage::kShortcuts, false},
+      {"count_shortcuts_level_0", "level 0 shortcuts", BuildStage::kShortcuts, false},
+      {"count_shortcuts_level_1", "level 1 shortcuts", BuildStage::kShortcuts, false},
+      {"count_simple_turn_restrictions", "simple turn restrictions", BuildStage::kBuild, false},
+      {"count_tiles", "amount of tiles with edges/nodes in them", BuildStage::kValidate, false},
+  };
+
+  static_assert(std::size(meta) == kCount, "build_stats::meta and counter enum are out of sync");
+
+  void increment(counter c, uint32_t by = 1) {
+    counters_[c] += by;
+  }
+
+  uint32_t count(counter c) const {
+    return counters_[c].load();
+  }
+
+  // Increment the shortcut count and edge count for the given hierarchy level.
+  void increment_shortcuts(uint8_t level, uint32_t shortcuts, uint32_t edges) {
+    counter scl = level == 0 ? kCountShortcutsLevel0 : kCountShortcutsLevel1;
+    counter ecl = level == 0 ? kCountShortcutEdgesLevel0 : kCountShortcutEdgesLevel1;
+    counters_[scl] += shortcuts;
+    counters_[ecl] += edges;
+  }
+
+  static build_stats& get() {
+    static build_stats instance;
+    return instance;
+  }
+
+  // Record a timing to be emitted with the next log_stage() call.
+  void record_timing(const std::string& key, uint64_t seconds);
+
+  // Log and emit to statsd what changed since last snapshot.
+  // Also emits any timings recorded since the last call.
+  void log_stage(BuildStage stage, const boost::property_tree::ptree& config) const;
+
+private:
+  std::array<std::atomic<uint32_t>, kCount> counters_{};
+
+  // are modified in const log_stage
+  mutable std::vector<std::pair<std::string, uint64_t>> pending_timings_;
+  mutable std::mutex timings_mutex_;
+};
 
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
@@ -185,7 +350,7 @@ void ProcessEdgeTransitions(const uint32_t idx,
  * @return Returns a curvature measure [0-15] where higher numbers indicate
  *         more curved and tighter turns.
  */
-uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
+uint32_t compute_curvature(const std::vector<midgard::PointLL>& shape);
 
 /**
  * Build an entire valhalla tileset give a config file and some input pbfs. The
@@ -203,6 +368,24 @@ bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
                     const BuildStage end_stage = BuildStage::kValidate);
+
+/**
+ * Compute the tileset-wide build id from the per-tile data hashes already stored in each tile
+ * header (no re-hashing): their sum, folded to 16 bits. Read-only; the folding is order
+ * independent, so the build id doesn't depend on the walk.
+ * @param tile_dir directory holding the .gph tiles
+ * @return the 16-bit tileset build id
+ */
+uint16_t compute_tileset_build_id(const std::string& tile_dir);
+
+/**
+ * Recompute the tileset-wide build id from the per-tile data hashes already stored in each tile
+ * header (no re-hashing) and stamp it into the high bits of every tile's checksum. Call this after a
+ * tool has rewritten a subset of tiles (e.g. adding predicted traffic) so URL clients see a changed
+ * tileset.
+ * @param tile_dir directory holding the .gph tiles
+ */
+void set_tileset_build_id(const std::string& tile_dir);
 
 // The tile manifest is a JSON-serializable index of tiles to be processed during the build stage of
 // valhalla_build_tiles'. It can be used to distribute shard keys when building tiles with

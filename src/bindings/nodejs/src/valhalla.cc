@@ -1,5 +1,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
+#include "exceptions.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "tyr/actor.h"
@@ -11,14 +12,22 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <utility>
+
+// Persistent reference to the ValhallaError JS constructor, initialized in Init()
+static Napi::FunctionReference ValhallaErrorConstructor;
+
+// Defined in graph_id.cc
+Napi::Object InitGraphId(Napi::Env env, Napi::Object exports);
 
 namespace vt = valhalla::tyr;
 
 namespace {
 
-// These bindings may be used from NodeJS's thread pool, so we need to guarantee that each actor is
-// used exclusively in its own thread. Since user is free to create as many actors as they want, we
-// use pointer to config object to distinguish between concrete actors
+// These bindings may be used from NodeJS's thread pool, so we need to guarantee
+// that each actor is used exclusively in its own thread. Since user is free to
+// create as many actors as they want, we use pointer to config object to
+// distinguish between concrete actors
 vt::actor_t* GetThreadLocalActor(const boost::property_tree::ptree* config) {
   using ActorMap = std::unordered_map<const void*, std::shared_ptr<vt::actor_t>>;
   static thread_local ActorMap actors;
@@ -38,31 +47,24 @@ const boost::property_tree::ptree configure(const std::string& config) {
     std::stringstream stream(config);
     rapidjson::read_json(stream, pt);
 
-    auto logging_subtree = pt.get_child_optional("mjolnir.logging");
-    if (logging_subtree) {
-      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                     std::unordered_map<std::string, std::string>>(
-          logging_subtree.get());
-      valhalla::midgard::logging::Configure(logging_config);
-    }
+    valhalla::midgard::logging::ConfigureFromPtree(pt);
   } catch (...) { throw std::runtime_error("Failed to load config"); }
 
   return pt;
 }
 
-} // namespace
-
-class ValhallaAsyncWorker : public Napi::AsyncWorker {
-public:
+struct ValhallaAsyncWorker : Napi::AsyncWorker {
   using ActorMethodFunction = std::function<std::string(vt::actor_t*, const std::string&)>;
 
   ValhallaAsyncWorker(const Napi::Env& env,
                       const boost::property_tree::ptree* config,
                       ActorMethodFunction method,
                       const std::string& request,
-                      const std::string& method_name)
+                      const std::string& method_name,
+                      bool return_binary = false)
       : Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), config_(config),
-        method_(method), request_(request), method_name_(method_name) {
+        method_(std::move(method)), request_(request), method_name_(method_name),
+        return_binary_(return_binary) {
   }
 
   Napi::Promise GetPromise() {
@@ -74,17 +76,41 @@ protected:
     try {
       auto* actor = GetThreadLocalActor(config_);
       result_ = method_(actor, request_);
+    } catch (const valhalla::valhalla_exception_t& e) {
+      // Store structured fields for OnError() to build a ValhallaError
+      exception_code_ = e.code;
+      exception_message_ = e.message;
+      exception_http_code_ = e.http_code;
+      exception_http_message_ = e.http_message;
+      SetError(e.message);
     } catch (const std::exception& e) {
       SetError(std::string(method_name_) + " error: " + e.what());
     } catch (...) { SetError(std::string(method_name_) + " error: unknown exception"); }
   }
 
   void OnOK() override {
-    deferred_.Resolve(Napi::String::New(Env(), result_));
+    Napi::Env env = Env();
+
+    if (return_binary_) {
+      auto buffer = Napi::Buffer<char>::Copy(env, result_.data(), result_.size());
+      deferred_.Resolve(buffer);
+    } else {
+      deferred_.Resolve(Napi::String::New(env, result_));
+    }
   }
 
   void OnError(const Napi::Error& e) override {
-    deferred_.Reject(e.Value());
+    // If this was a valhalla_exception_t, reject with a ValhallaError instance
+    if (exception_code_ > 0 && !ValhallaErrorConstructor.IsEmpty()) {
+      Napi::Env env = Env();
+      auto err = ValhallaErrorConstructor.New({Napi::String::New(env, exception_message_),
+                                               Napi::Number::New(env, exception_code_),
+                                               Napi::Number::New(env, exception_http_code_),
+                                               Napi::String::New(env, exception_http_message_)});
+      deferred_.Reject(err);
+    } else {
+      deferred_.Reject(e.Value());
+    }
   }
 
 private:
@@ -93,8 +119,17 @@ private:
   ActorMethodFunction method_;
   std::string request_;
   std::string method_name_;
+  bool return_binary_;
   std::string result_;
+  // valhalla_exception_t fields, stored in Execute() (worker thread) for use in OnError() (main
+  // thread)
+  unsigned exception_code_ = 0;
+  std::string exception_message_;
+  unsigned exception_http_code_ = 0;
+  std::string exception_http_message_;
 };
+
+} // namespace
 
 class Actor : public Napi::ObjectWrap<Actor> {
 public:
@@ -111,7 +146,7 @@ public:
                      InstanceMethod("transitAvailable", &Actor::TransitAvailable),
                      InstanceMethod("expansion", &Actor::Expansion),
                      InstanceMethod("centroid", &Actor::Centroid),
-                     InstanceMethod("status", &Actor::Status)});
+                     InstanceMethod("status", &Actor::Status), InstanceMethod("tile", &Actor::Tile)});
 
     // we don't need to delete it, it will be handled by Node
     Napi::FunctionReference* constructor = new Napi::FunctionReference();
@@ -156,9 +191,16 @@ private:
     }
 
     std::string request = info[0].As<Napi::String>().Utf8Value();
+    bool return_binary = false;
+
+    // Check for optional second argument: return_binary (boolean)
+    if (info.Length() > 1 && info[1].IsBoolean()) {
+      return_binary = info[1].As<Napi::Boolean>().Value();
+    }
 
     // we don't need to delete it, it will be handled by Node
-    auto* worker = new ValhallaAsyncWorker(env, &config_, method, request, method_name);
+    auto* worker = new ValhallaAsyncWorker(env, &config_, std::move(method), request, method_name,
+                                           return_binary);
     worker->Queue();
     return worker->GetPromise();
   }
@@ -246,13 +288,72 @@ private:
         info, [](vt::actor_t* actor, const std::string& request) { return actor->status(request); },
         "Status");
   }
+
+  Napi::Value Tile(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsString()) {
+      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    std::string request = info[0].As<Napi::String>().Utf8Value();
+
+    // Use CreateAsyncRequest approach but manually creating worker to force
+    // binary return.
+    auto* worker = new ValhallaAsyncWorker(
+        env, &config_,
+        [](vt::actor_t* actor, const std::string& request) { return actor->tile(request); }, request,
+        "Tile", true);
+    worker->Queue();
+    return worker->GetPromise();
+  }
 };
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "VALHALLA_VERSION"),
               Napi::String::New(env, VALHALLA_PRINT_VERSION));
 
+  // Define ValhallaError as a JS class extending Error.
+  // Constructor signature: new ValhallaError(message, code, httpCode, httpMessage)
+  auto routerErrorClass = Napi::Function::New(
+      env,
+      [](const Napi::CallbackInfo& info) {
+        Napi::Env env = info.Env();
+        Napi::Object self = info.This().As<Napi::Object>();
+
+        std::string message = info.Length() > 0 ? info[0].As<Napi::String>().Utf8Value() : "";
+        self.Set("message", Napi::String::New(env, message));
+        self.Set("code",
+                 info.Length() > 1 ? info[1] : static_cast<napi_value>(Napi::Number::New(env, 0)));
+        self.Set("httpCode",
+                 info.Length() > 2 ? info[2] : static_cast<napi_value>(Napi::Number::New(env, 0)));
+        self.Set("httpMessage",
+                 info.Length() > 3 ? info[3] : static_cast<napi_value>(Napi::String::New(env, "")));
+
+        // Capture stack trace
+        auto errorObj = Napi::Error::New(env, message);
+        self.Set("stack", errorObj.Get("stack"));
+      },
+      "ValhallaError");
+
+  // Set up prototype chain: ValhallaError.prototype = Object.create(Error.prototype)
+  auto global = env.Global();
+  auto errorCtor = global.Get("Error").As<Napi::Function>();
+  auto objectCtor = global.Get("Object").As<Napi::Function>();
+  auto objectCreate = objectCtor.Get("create").As<Napi::Function>();
+  auto errorProto = errorCtor.Get("prototype");
+
+  auto routerErrorProto = objectCreate.Call(objectCtor, {errorProto}).As<Napi::Object>();
+  routerErrorProto.Set("constructor", routerErrorClass);
+  routerErrorProto.Set("name", Napi::String::New(env, "ValhallaError"));
+  routerErrorClass.Set("prototype", routerErrorProto);
+
+  ValhallaErrorConstructor = Napi::Persistent(routerErrorClass);
+  ValhallaErrorConstructor.SuppressDestruct();
+
+  exports.Set("ValhallaError", routerErrorClass);
+
   Actor::Init(env, exports);
+  InitGraphId(env, exports);
   return exports;
 }
 

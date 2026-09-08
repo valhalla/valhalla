@@ -1,11 +1,13 @@
 #include "midgard/logging.h"
+#include "midgard/util.h"
 
-#include <cassert>
+#include <boost/property_tree/ptree.hpp>
+
 #include <chrono>
-#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 
@@ -15,38 +17,9 @@
 
 namespace {
 
-inline std::tm* get_gmtime(const std::time_t* time, std::tm* tm) {
-#ifdef _WIN32
-  // MSVC gmtime() already returns tm allocated in thread-local storage
-  if (gmtime_s(tm, time) == 0)
-    return tm;
-  else
-    return nullptr;
-#else
-  return gmtime_r(time, tm);
-#endif
-}
-
-// returns formatted to: 'year/mo/dy hr:mn:sc.xxxxxx'
-std::string TimeStamp() {
-  // get the time
-  std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
-  std::time_t tt = std::chrono::system_clock::to_time_t(tp);
-  std::tm gmt{};
-  get_gmtime(&tt, &gmt);
-  std::chrono::duration<double> fractional_seconds =
-      (tp - std::chrono::system_clock::from_time_t(tt)) + std::chrono::seconds(gmt.tm_sec);
-  // format the string
-  std::string buffer("year/mo/dy hr:mn:sc.xxxxxx0");
-  [[maybe_unused]] int ret =
-      snprintf(&buffer.front(), buffer.length(), "%04d/%02d/%02d %02d:%02d:%09.6f",
-               gmt.tm_year + 1900, gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min,
-               fractional_seconds.count());
-  assert(ret == static_cast<int>(buffer.length()) - 1);
-
-  // Remove trailing null terminator added by snprintf.
-  buffer.pop_back();
-  return buffer;
+// append current timestamp formatted as: "year-mo-dy hr:mn:sc.xxxxxxxxx"
+void append_timestamp(std::string& buffer) {
+  std::format_to(std::back_inserter(buffer), "{0:%F} {0:%T}", std::chrono::system_clock::now());
 }
 
 // the Log levels we support
@@ -148,7 +121,7 @@ public:
 #else
     std::string output;
     output.reserve(message.length() + 64);
-    output.append(TimeStamp());
+    append_timestamp(output);
     output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
@@ -178,7 +151,7 @@ class StdErrLogger : public StdOutLogger {
 #else
     std::string output;
     output.reserve(message.length() + 64);
-    output.append(TimeStamp());
+    append_timestamp(output);
     output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
@@ -232,7 +205,7 @@ public:
 
     if (archive_config != config.end() && !archive_config->second.empty()) {
       try {
-        max_archived_files = std::stoi(archive_config->second);
+        max_archived_files = midgard::to_int(archive_config->second);
         if (max_archived_files < 0) {
           throw std::runtime_error("max_archived_files must be greater than 0");
         }
@@ -257,7 +230,7 @@ public:
 
     std::string output;
     output.reserve(message.length() + 64);
-    output.append(TimeStamp());
+    append_timestamp(output);
     output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
@@ -393,6 +366,18 @@ void logging::Log(const std::string& message, const std::string& custom_directiv
 // statically configure logging
 void logging::Configure(const LoggingConfig& config) {
   GetLogger(config);
+}
+
+// configure logging from the top-level "logging" section of a boost property tree config
+// if the section is missing, uses the default logger (std_out with color)
+void logging::ConfigureFromPtree(const boost::property_tree::ptree& config) {
+  auto logging_subtree = config.get_child_optional("logging");
+  if (logging_subtree) {
+    Configure(ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string>>(
+        logging_subtree.get()));
+    return;
+  }
+  LOG_WARN("No top-level 'logging' section in config, using default logger.");
 }
 
 } // namespace midgard

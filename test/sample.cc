@@ -5,7 +5,9 @@
 #include "pixels.h"
 
 #include <gtest/gtest.h>
+#ifdef ENABLE_LZ4
 #include <lz4frame.h>
+#endif
 
 #include <cmath>
 #include <filesystem>
@@ -71,6 +73,7 @@ TEST(Sample, create_tile) {
   // gzip it
   EXPECT_TRUE(baldr::deflate(src_func, dst_func)) << "Can't write gzipped elevation tile";
 
+#ifdef ENABLE_LZ4
   // lz4 it
   std::vector<char> lz4_buffer(tile.size() * sizeof(int16_t) * 2, 0);
   size_t out_bytes =
@@ -80,6 +83,7 @@ TEST(Sample, create_tile) {
 
   std::ofstream lzfile("test/data/samplelz4/N40/N40W077.hgt.lz4", std::ios::binary | std::ios::trunc);
   lzfile.write(static_cast<const char*>(static_cast<void*>(lz4_buffer.data())), out_bytes);
+#endif
 }
 
 void _get(const std::string& location) {
@@ -115,9 +119,11 @@ TEST(Sample, getgz) {
   _get("test/data/samplegz");
 };
 
+#ifdef ENABLE_LZ4
 TEST(Sample, getlz4) {
   _get("test/data/samplelz4");
 };
+#endif
 
 struct testable_sample_t : public skadi::sample {
   testable_sample_t(const std::string& dir) : sample(dir) {

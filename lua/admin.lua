@@ -75,6 +75,7 @@ drive_on_right = {
 ["Turks and Caicos Islands"] = "false",
 ["Tuvalu"] = "false",
 ["Uganda"] = "false",
+["United Kingdom"] = "false",
 ["United States Virgin Islands"] = "false",
 ["Viti"] = "false",
 ["Cymru / Wales"] = "false",
@@ -165,8 +166,8 @@ function rels_proc (kv, nokeys)
        return 1, kv
      end
 
-     if kv["admin_level"] == "2" then 
-        if kv["name"] ==  "France" or kv["name"] == "United Kingdom" then
+     if kv["admin_level"] == "2" then
+        if kv["name"] == "France" then
           return 1, kv
         elseif kv["name:en"] == "Abkhazia" or kv["name:en"] == "South Ossetia" then
           kv["admin_level"] = "4"
@@ -212,9 +213,6 @@ function rels_proc (kv, nokeys)
              kv["iso_code"] = string.sub(kv["ISO3166-2"], 3)
            end
          end
-       end
-       if kv["name"] == "England" or kv["name"] == "Alba / Scotland" or kv["name"] == "Cymru / Wales" or kv["name"] == "Northern Ireland" then
-         kv["admin_level"] = 2
        end
      end
 

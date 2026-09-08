@@ -27,21 +27,32 @@ COPY LICENSE.md .
 COPY CHANGELOG.md .
 COPY COPYING .
 COPY README.md .
+COPY test/test.h test/
+COPY test/test.cc test/
+COPY test/gurka/gurka.h test/gurka/
+COPY test/gurka/gurka.cc test/gurka/
+COPY test/tile_server.h test/
+COPY test/tile_server.cc test/
+COPY test/CMakeLists.txt test/
 
 ARG CONCURRENCY
 ARG ADDITIONAL_TARGETS
+ARG INSTALL_TEST_LIB
+ARG BUILD_TYPE
 # this arg will always compile the full project on every build bcs it's a commit hash
 # but we only build the docker image in GHA if relevant files changed (extensive paths-ignore in GHA workflow)
 ARG VERSION_MODIFIER=""
+
 # switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
-RUN cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_TESTS=Off -DENABLE_SINGLE_FILES_WERROR=Off -DVALHALLA_VERSION_MODIFIER=${VERSION_MODIFIER} && \
+RUN cmake -B build -DCMAKE_BUILD_TYPE=${BUILD_TYPE-"Release"} -DCMAKE_C_COMPILER=gcc -DENABLE_TESTS=Off \
+  -DENABLE_SINGLE_FILES_WERROR=Off -DVALHALLA_VERSION_MODIFIER=${VERSION_MODIFIER} -DINSTALL_TEST_LIB=${INSTALL_TEST_LIB:-"Off"} && \
   make -C build all ${ADDITIONAL_TARGETS} -j${CONCURRENCY:-$(nproc)} && \
   make -C build install
 
 # we wont leave the source around but we'll drop the commit hash and we'll also keep the locales
 WORKDIR /usr/local/src
 RUN echo "$VERSION_MODIFIER" > /usr/local/valhalla_version && \
-  for f in /src/valhalla/locales/*.json; do cat ${f} | python3 -c 'import sys; import json; print(json.load(sys.stdin)["posix_locale"])'; done > valhalla_locales
+  python3 /src/valhalla/locales/po_tools.py print-posix-locales > valhalla_locales
 
 # the binaries are huge with all the symbols so we strip them but keep the debug there if we need it
 #WORKDIR /usr/local/bin
@@ -69,7 +80,7 @@ LABEL org.opencontainers.image.source="https://github.com/valhalla/valhalla"
 # install all the posix locales that we support
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
   apt install -y \
-  libcurl4 libczmq4 libluajit-5.1-2 libgdal34 \
+  libcurl4 libczmq4 libluajit-5.1-2 libgeotiff5 \
   libprotobuf-lite32 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
   curl locales parallel python3-minimal python-is-python3 python3-shapely python3-requests \
   spatialite-bin unzip wget

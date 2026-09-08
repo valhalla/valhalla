@@ -120,33 +120,8 @@ if test -f "${CONFIG_FILE}"; then
   if [[ "${update_existing_config}" == "True" ]]; then
     echo "INFO: Found existing valhalla.json. Updating possibly missing entries."
 
-    # create temporary default config
-    valhalla_build_config > ${TMP_CONFIG_FILE}
-
-    # collect additions to make from the temp config (treating arrays as atomic values)
-    additions=$(jq --slurpfile A "${TMP_CONFIG_FILE}" --slurpfile B "${CONFIG_FILE}" -n '
-      def push(p;k): p+[k];
-      def missing(a;b;p):
-        if a|type=="object" then
-          reduce (a|keys_unsorted[]) as $k ([];
-            .+(
-              if b|has($k)|not then [{path:push(p;$k), dot:(push(p;$k)|join(".")), value:a[$k]}]
-              elif (a[$k]|type=="object") and (b[$k]|type=="object") then missing(a[$k];b[$k];push(p;$k))
-              else [] end))
-        else [] end;
-      missing($A[0];$B[0];[])
-    ')
-
-    echo "$additions" | jq -r '.[] | "added \(.dot) with value \(.value)"'
-
-    # add all additions
-    jq --argjson additions "$additions" '
-      reduce $additions[] as $a (.;
-        setpath($a.path; $a.value)
-      )
-    ' "${CONFIG_FILE}" | sponge "${CONFIG_FILE}"
-
-    rm ${TMP_CONFIG_FILE}
+    # overwrite config file
+    valhalla_build_config --output "$CONFIG_FILE" --merge-config "$CONFIG_FILE" --report
   fi
 
   jq --arg d "${TILE_DIR}" '.mjolnir.tile_dir = $d' "${CONFIG_FILE}"| sponge "${CONFIG_FILE}"

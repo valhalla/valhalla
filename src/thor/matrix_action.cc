@@ -1,6 +1,8 @@
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
+#include <valhalla/worker.h>
+
 using namespace valhalla;
 using namespace valhalla::tyr;
 using namespace valhalla::midgard;
@@ -88,7 +90,7 @@ std::string thor_worker_t::matrix(Api& request) {
   auto _ = measure_scope_time(request);
 
   auto& options = *request.mutable_options();
-  adjust_scores(options);
+  adjust_locations(request);
   auto costing = parse_costing(request);
 
   bool has_time =
@@ -122,6 +124,11 @@ std::string thor_worker_t::matrix(Api& request) {
     return tyr::serializeMatrix(request);
   }
 
+  // no matrix_locations for CostMatrix
+  if (options.matrix_locations() != std::numeric_limits<uint32_t>::max()) {
+    add_warning(request, 211);
+  }
+
   // for costmatrix try a second pass if the first didn't work out
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
   cost->set_allow_destination_only(false);
@@ -132,7 +139,16 @@ std::string thor_worker_t::matrix(Api& request) {
       cost->AllowMultiPass() && costmatrix_allow_second_pass) {
     // NOTE: we only look for unfound connections in a second pass; but
     // if A -> B wasn't found and B -> A was, we still expand both for bidirectional efficiency
-    // TODO(nils): probably add filtered edges here too?
+
+    // add filtered edges (e.g. edges filtered by heading on the first pass) to the candidate
+    // edges for sources and targets, mirroring what route_action does for its second pass
+    for (auto& source : *options.mutable_sources()) {
+      source.mutable_correlation()->mutable_edges()->MergeFrom(source.correlation().filtered_edges());
+    }
+    for (auto& target : *options.mutable_targets()) {
+      target.mutable_correlation()->mutable_edges()->MergeFrom(target.correlation().filtered_edges());
+    }
+
     algo->Clear();
     cost->set_pass(1);
     cost->RelaxHierarchyLimits(true);

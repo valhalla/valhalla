@@ -1,6 +1,7 @@
 #include "mjolnir/osmway.h"
 #include "baldr/edgeinfo.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "mjolnir/util.h"
 
 #include <boost/algorithm/string.hpp>
@@ -54,7 +55,8 @@ namespace mjolnir {
 // Set the number of nodes for this way.
 void OSMWay::set_node_count(const uint32_t count) {
   if (count > kMaxNodesPerWay) {
-    LOG_WARN("Exceeded max nodes per way: " + std::to_string(count));
+    LOG_DEBUG("Exceeded max nodes per way: " + std::to_string(count));
+    build_stats::get().increment(build_stats::kExceededMaxNodesPerWay);
     nodecount_ = static_cast<uint16_t>(kMaxNodesPerWay);
   } else {
     nodecount_ = static_cast<uint16_t>(count);
@@ -64,7 +66,8 @@ void OSMWay::set_node_count(const uint32_t count) {
 // Sets the speed in KPH.
 void OSMWay::set_speed(const float speed) {
   if (speed > kMaxOSMSpeed) {
-    LOG_WARN("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    LOG_DEBUG("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    build_stats::get().increment(build_stats::kExceededMaxOSMSpeed);
     speed_ = kMaxOSMSpeed;
   } else {
     speed_ = static_cast<unsigned char>(speed + 0.5f);
@@ -76,7 +79,8 @@ void OSMWay::set_speed_limit(const float speed_limit) {
   if (speed_limit == kUnlimitedOSMSpeed) {
     speed_limit_ = kUnlimitedOSMSpeed;
   } else if (speed_limit > kMaxOSMSpeed) {
-    LOG_WARN("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    LOG_DEBUG("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    build_stats::get().increment(build_stats::kExceededMaxOSMSpeedLimit);
     speed_limit_ = kMaxOSMSpeed;
   } else {
     speed_limit_ = static_cast<unsigned char>(speed_limit + 0.5f);
@@ -86,7 +90,8 @@ void OSMWay::set_speed_limit(const float speed_limit) {
 // Sets the backward speed in KPH.
 void OSMWay::set_backward_speed(const float backward_speed) {
   if (backward_speed > kMaxOSMSpeed) {
-    LOG_WARN("Exceeded max backward speed for way id: " + std::to_string(osmwayid_));
+    LOG_DEBUG("Exceeded max backward speed for way id: " + std::to_string(osmwayid_));
+    build_stats::get().increment(build_stats::kExceededMaxOSMSpeed);
     backward_speed_ = kMaxOSMSpeed;
   } else {
     backward_speed_ = static_cast<unsigned char>(backward_speed + 0.5f);
@@ -96,7 +101,8 @@ void OSMWay::set_backward_speed(const float backward_speed) {
 // Sets the backward speed in KPH.
 void OSMWay::set_forward_speed(const float forward_speed) {
   if (forward_speed > kMaxOSMSpeed) {
-    LOG_WARN("Exceeded max forward speed for way id: " + std::to_string(osmwayid_));
+    LOG_DEBUG("Exceeded max forward speed for way id: " + std::to_string(osmwayid_));
+    build_stats::get().increment(build_stats::kExceededMaxOSMSpeed);
     forward_speed_ = kMaxOSMSpeed;
   } else {
     forward_speed_ = static_cast<unsigned char>(forward_speed + 0.5f);
@@ -106,7 +112,8 @@ void OSMWay::set_forward_speed(const float forward_speed) {
 // Sets the truck speed in KPH.
 void OSMWay::set_truck_speed(const float speed) {
   if (speed > kMaxOSMSpeed) {
-    LOG_WARN("Exceeded max truck speed for way id: " + std::to_string(osmwayid_));
+    LOG_DEBUG("Exceeded max truck speed for way id: " + std::to_string(osmwayid_));
+    build_stats::get().increment(build_stats::kExceededMaxOSMTruckSpeed);
     truck_speed_ = kMaxOSMSpeed;
   } else {
     truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
@@ -115,7 +122,8 @@ void OSMWay::set_truck_speed(const float speed) {
 
 void OSMWay::set_truck_speed_forward(const float truck_speed_forward) {
   if (truck_speed_forward > kMaxOSMSpeed) {
-    LOG_WARN("Exceeded max forward truck speed for way id: " + std::to_string(osmwayid_));
+    LOG_DEBUG("Exceeded max forward truck speed for way id: " + std::to_string(osmwayid_));
+    build_stats::get().increment(build_stats::kExceededMaxOSMTruckSpeed);
     truck_speed_forward_ = kMaxOSMSpeed;
   } else {
     truck_speed_forward_ = static_cast<unsigned char>(truck_speed_forward + 0.5f);
@@ -124,7 +132,8 @@ void OSMWay::set_truck_speed_forward(const float truck_speed_forward) {
 
 void OSMWay::set_truck_speed_backward(const float truck_speed_backward) {
   if (truck_speed_backward > kMaxOSMSpeed) {
-    LOG_WARN("Exceeded max backward truck speed for way id: " + std::to_string(osmwayid_));
+    LOG_DEBUG("Exceeded max backward truck speed for way id: " + std::to_string(osmwayid_));
+    build_stats::get().increment(build_stats::kExceededMaxOSMTruckSpeed);
     truck_speed_backward_ = kMaxOSMSpeed;
   } else {
     truck_speed_backward_ = static_cast<unsigned char>(truck_speed_backward + 0.5f);
@@ -1128,16 +1137,18 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
               precision = std::max(precision, static_cast<int>(match[1].str().size()));
             }
           }
-          range.first = std::stof(nums[0]);
-          range.second = std::stof(nums[1]);
+          range.first = midgard::to_float(nums[0]);
+          range.second = midgard::to_float(nums[1]);
         } catch (...) {
-          LOG_WARN("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
+          LOG_DEBUG("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
+          build_stats::get().increment(build_stats::kInvalidLevel);
           continue;
         }
 
         if (range.first > range.second) {
-          LOG_WARN("Invalid level range, " + std::to_string(range.first) + " - " +
-                   std::to_string(range.second) + "; way_id " + std::to_string(osmwayid_));
+          LOG_DEBUG("Invalid level range, " + std::to_string(range.first) + " - " +
+                    std::to_string(range.second) + "; way_id " + std::to_string(osmwayid_));
+          build_stats::get().increment(build_stats::kInvalidLevel);
           continue;
         }
 
@@ -1147,10 +1158,11 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
           if (std::regex_search(token, match, kFloatRegex)) {
             precision = std::max(precision, static_cast<int>(match[1].str().size()));
           }
-          range.first = std::stof(token);
+          range.first = midgard::to_float(token);
           range.second = range.first;
         } catch (...) {
-          LOG_WARN("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
+          LOG_DEBUG("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
+          build_stats::get().increment(build_stats::kInvalidLevel);
           continue;
         }
       }

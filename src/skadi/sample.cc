@@ -4,10 +4,13 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "valhalla/baldr/curl_tilegetter.h"
 
 #include <boost/property_tree/ptree.hpp>
+#ifdef ENABLE_LZ4
 #include <lz4frame.h>
+#endif
 #include <sys/stat.h>
 
 #include <cmath>
@@ -126,6 +129,7 @@ public:
         return false;
       }
     } else if (format == format_t::LZ4) {
+#ifdef ENABLE_LZ4
       LZ4F_decompressionContext_t decode;
       LZ4F_decompressOptions_t options;
       LZ4F_createDecompressionContext(&decode, LZ4F_VERSION);
@@ -147,6 +151,11 @@ public:
       } while (result != 0);
 
       LZ4F_freeDecompressionContext(decode);
+#else
+      LOG_WARN("LZ4 elevation data found but LZ4 support is not compiled in");
+      format = format_t::UNKNOWN;
+      return false;
+#endif
     } else {
       LOG_WARN("Corrupt elevation data of unknown type");
       format = format_t::UNKNOWN;
@@ -174,8 +183,8 @@ public:
         fmt = format_t::RAW;
       }
 
-      auto lon = std::stoi(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
-      auto lat = std::stoi(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
+      auto lon = valhalla::midgard::to_int(m[4].str()) * (m[3] == "E" ? 1 : -1) + 180;
+      auto lat = valhalla::midgard::to_int(m[2].str()) * (m[1] == "N" ? 1 : -1) + 90;
       if (lon >= 0 && lon < 360 && lat >= 0 && lat < 180) {
         return std::make_pair(uint16_t(lat * 360 + lon), fmt);
       }
@@ -423,10 +432,10 @@ sample::sample(const boost::property_tree::ptree& pt)
   url_ = pt.get<std::string>("additional_data.elevation_url", "");
 
   auto max_concurrent_users = pt.get<size_t>("mjolnir.max_concurrent_reader_users", 1);
-  remote_loader_ =
-      std::make_unique<baldr::curl_tile_getter_t>(max_concurrent_users,
-                                                  pt.get<std::string>("mjolnir.user_agent", ""),
-                                                  false);
+  remote_loader_ = std::make_unique<
+      baldr::curl_tile_getter_t>(max_concurrent_users, pt.get<std::string>("mjolnir.user_agent", ""),
+                                 false,
+                                 pt.get<std::string>("additional_data.elevation_url_user_pw", ""));
 
   // this line used only for testing, for more details check elevation_builder.cc
   remote_path_ = pt.get<std::string>("additional_data.elevation_dir", "");

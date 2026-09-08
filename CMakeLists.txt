@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
+# ensure build-tree executables find the local libvalhalla.so
+# use RPATH (not RUNPATH) so it takes precedence over system ldconfig cache
+set(CMAKE_BUILD_RPATH "${CMAKE_BINARY_DIR}/src")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  add_link_options("-Wl,--disable-new-dtags")
+endif()
+
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
@@ -28,7 +35,9 @@ option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for singl
 option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find the equivalent external package" OFF)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
-option(ENABLE_GDAL "Whether to include GDAL; currently only used for raster serialization of isotile grid" ON)
+option(ENABLE_GEOTIFF "Whether to include libgeotiff; currently only used for raster serialization of isotile grid" ON)
+option(ENABLE_LZ4 "Enable LZ4 decompression support for elevation tiles and OSM PBF files" ON)
+option(INSTALL_TEST_LIB "Install Valhalla's own test lib" OFF)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -95,7 +104,6 @@ include(ValhallaSourceGroups)
 # - CMake Find* modules are versioned with CMake, not the packages, see protobuf > 21.12
 # - it's more trivial to use custom installations via PKG_CONFIG_PATH env var
 pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
-pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
 
 # cURL
 set(curl_target "")
@@ -128,6 +136,7 @@ set(rapidjson_include_dir ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include)
 set(unordered_dense_include_dir ${VALHALLA_SOURCE_DIR}/third_party/unordered_dense/include)
 set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
 set(libosmium_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
+set(vtzero_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/vtzero/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
 set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
 if (PREFER_EXTERNAL_DEPS)
   # date
@@ -166,13 +175,21 @@ if (PREFER_EXTERNAL_DEPS)
   else()
     message(WARNING "No cxxopts found in system libraries, using vendored cxxopts...")
   endif()
-  # libosmium/protozero
-  find_path(OSMIUM_INCLUDE_DIRS "osmium/version.hpp")
+  # protozero is needed for libosmium & vtzero
   find_path(PROTOZERO_INCLUDE_DIRS "protozero/version.hpp")
+  # libosmium
+  find_path(OSMIUM_INCLUDE_DIRS "osmium/version.hpp")
   if (NOT OSMIUM_INCLUDE_DIRS OR NOT PROTOZERO_INCLUDE_DIRS)
     message(WARNING "libosmium or protozero not found in system libraries, using vendored libosmium and protozero...")
   else()
     set(libosmium_include_dirs ${OSMIUM_INCLUDE_DIRS} ${PROTOZERO_INCLUDE_DIRS})
+  endif()
+  # vtzero
+  find_path(VTZERO_INCLUDE_DIRS "vtzero/version.hpp")
+  if (NOT VTZERO_INCLUDE_DIRS OR NOT PROTOZERO_INCLUDE_DIRS)
+    message(WARNING "No vtzero or protozero found in system libraries, using vendored vtzero and protozero...")
+  else()
+    set(vtzero_include_dirs ${VTZERO_INCLUDE_DIRS} ${PROTOZERO_INCLUDE_DIRS})
   endif()
   # dirent
   if (WIN32)
@@ -207,15 +224,32 @@ endif()
 
 # unless you said you didnt want gdal we try to turn it on, if we cant we tell you
 # we don't need it to build tiles (yet)
-set(GDAL_TARGET "")
-if (ENABLE_GDAL AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_NODE_BINDINGS))
-  find_package(GDAL QUIET)
-  if (GDAL_FOUND)
-    set(GDAL_TARGET GDAL::GDAL)
-    add_compile_definitions(ENABLE_GDAL)
-    message(STATUS "Gdal support is enabled")
+set(GTIFF_TARGETS "")
+if (ENABLE_GEOTIFF AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDINGS OR ENABLE_NODE_BINDINGS))
+  find_package(TIFF)
+  find_package(GeoTIFF)
+  # libtiff >= 4.7 ships a cmake config whose target is TIFF::tiff, not the module's TIFF::TIFF
+  if (TIFF_FOUND AND NOT TARGET TIFF::TIFF AND TARGET TIFF::tiff)
+    add_library(TIFF::TIFF INTERFACE IMPORTED)
+    set_target_properties(TIFF::TIFF PROPERTIES INTERFACE_LINK_LIBRARIES TIFF::tiff)
+  endif()
+  if (GeoTIFF_FOUND AND TIFF_FOUND)
+    add_compile_definitions(ENABLE_GEOTIFF)
+    set(GTIFF_TARGETS TIFF::TIFF geotiff_library)
+    message(STATUS "libgeotiff support is enabled")
   else()
-    message(WARNING "Unable to enable gdal support")
+    message(WARNING "Unable to enable libgeotiff support")
+  endif()
+endif()
+
+set(lz4_target "")
+if (ENABLE_LZ4)
+  pkg_check_modules(LZ4 IMPORTED_TARGET liblz4)
+  if (LZ4_FOUND)
+    target_compile_definitions(PkgConfig::LZ4 INTERFACE ENABLE_LZ4)
+    set(lz4_target PkgConfig::LZ4)
+  else()
+    message(WARNING "Unable to enable liblz4 support")
   endif()
 endif()
 
@@ -243,9 +277,16 @@ if(ENABLE_DATA_TOOLS)
   # otherwise the system sqlite3 is found which doesn't allow for spatialite
   find_package(SQLite3 REQUIRED)
   pkg_check_modules(SpatiaLite REQUIRED IMPORTED_TARGET spatialite)
+  # make sure we can build tz.sqlite
+  find_program(SPATIALITE_TOOL_EXECUTABLE NAMES spatialite_tool)
+  find_program(SPATIALITE_EXECUTABLE NAMES spatialite)
+  if(NOT SPATIALITE_TOOL_EXECUTABLE OR NOT SPATIALITE_EXECUTABLE)
+    message(FATAL_ERROR "spatialite-tools not found: need both 'spatialite_tool' and 'spatialite', install the correct package for your system.")
+  endif()
   pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
   pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
   pkg_check_modules(OPENSSL REQUIRED IMPORTED_TARGET openssl)
+  pkg_check_modules(EXPAT IMPORTED_TARGET expat)
 endif()
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
@@ -262,9 +303,8 @@ endif()
 ## Executable targets
 
 ## Valhalla programs
-set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_benchmark_skadi
-  valhalla_run_isochrone valhalla_run_route valhalla_benchmark_adjacency_list valhalla_run_matrix
-  valhalla_path_comparison valhalla_export_edges valhalla_expand_bounding_box valhalla_service)
+set(valhalla_programs
+    valhalla_export_edges valhalla_expand_bounding_box valhalla_service)
 
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
@@ -365,7 +405,7 @@ if (WIN32)
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 endif()
 
-if(ENABLE_TESTS)
+if(ENABLE_TESTS OR INSTALL_TEST_LIB)
   add_subdirectory(test)
 endif()
 

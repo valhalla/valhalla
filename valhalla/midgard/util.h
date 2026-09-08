@@ -6,11 +6,15 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
 
+#include <charconv>
 #include <cstdint>
 #include <cstring>
 #include <limits>
 #include <list>
+#include <optional>
 #include <ostream>
+#include <random>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -23,19 +27,6 @@
 
 namespace valhalla {
 namespace midgard {
-
-// Holds a range plus a default value for that range
-template <class T> struct ranged_default_t {
-  T min, def, max;
-
-  // Returns the value snapped to the default if outside of the range
-  T operator()(const T& value) const {
-    if (value < min || value > max) {
-      return def;
-    }
-    return value;
-  }
-};
 
 /**
  * Compute time (seconds) given a length (km) and speed (km per hour)
@@ -276,6 +267,15 @@ void trim_shape(float start,
                 std::vector<PointLL>& shape);
 
 /**
+ * Trims shape (in-place) from start and end percent along.
+ *
+ * @param  start_pct     start percent along the edge from the start
+ * @param  end_pct     end percent along the edge from the start
+ * @param  shape         Shape, as vector of PointLLs
+ */
+void trim_shape(float start_pct, float end_pct, std::vector<PointLL>& shape);
+
+/**
  * Estimate the angle of the tangent at a point along a discretised curve. We attempt
  * to mostly use the shape coming into the point on the curve but if there
  * isn't enough there we will use the shape coming out of the it.
@@ -412,55 +412,13 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
                                                          const uint32_t n);
 
 /**
- * A class to wrap a primitive array in something iterable which is useful for loops mostly
- * Basically if you dont have a vector or list, this makes your array a bit more usable in
- * that it fakes up a container for the purpose of ripping through the array
- *
- * TODO: reverse iteration
- */
-template <class T> struct iterable_t {
-public:
-  using iterator = T*;
-  iterable_t(T* first, size_t size) : head(first), tail(first + size), count(size) {
-  }
-  iterable_t(T* first, T* end) : head(first), tail(end), count(tail - head) {
-  }
-  T* begin() {
-    return head;
-  }
-  T* end() {
-    return tail;
-  }
-  const T* begin() const {
-    return head;
-  }
-  const T* end() const {
-    return tail;
-  }
-  T& operator[](size_t index) {
-    return *(head + index);
-  }
-  const T& operator[](size_t index) const {
-    return *(head + index);
-  }
-  size_t size() const {
-    return count;
-  }
-
-protected:
-  T* head;
-  T* tail;
-  size_t count;
-};
-
-/**
  * Return the intersection of two infinite lines if any
  * @param u  first point on first line
  * @param v  second point on first line
  * @param a  first point on second line
  * @param b  second point on second line
  * @param i  the intersection point if there was one
- * @return true if there was an intersection false if now
+ * @return true if there was an intersection false if not
  */
 template <class coord_t>
 bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i);
@@ -578,8 +536,8 @@ polygon_t to_boundary(const std::unordered_set<uint32_t>& region, const Tiles<Po
  * both loki and in meili
  * */
 struct projector_t {
-  projector_t(const PointLL& ll)
-      : lon_scale(cos(ll.lat() * kRadPerDegD)), lat(ll.lat()), lng(ll.lng()), approx(ll) {
+  projector_t(const PointLL& ll) : lat(ll.lat()), lng(ll.lng()), approx(ll) {
+    lon_scale = approx.GetLngScale();
   }
 
   // non default constructible and move only type
@@ -726,6 +684,193 @@ template <typename numeric_t> bool is_invalid(numeric_t value) {
 template <typename numeric_t> bool is_valid(numeric_t value) {
   return value != invalid<numeric_t>();
 }
+
+/**
+ * Find the bounding circle for a container of lat,lng vertices.
+ * @return  Returns a vector with the center lat,lng and radius (meters).
+ */
+template <class container_t>
+std::tuple<PointLL, double> get_bounding_circle(const container_t& shape);
+
+/* Enumerate over a range, providing both index and value.
+ * This is a C++20-compatible alternative to C++23's std::views::enumerate.
+ *
+ * @param range The range to enumerate over
+ * @return A view that yields pairs of (index, value)
+ *
+ * Example:
+ *   for (auto [i, value] : enumerate(my_range)) {
+ *     // i is the index, value is the element
+ *   }
+ */
+template <std::ranges::viewable_range Range> auto enumerate(Range&& range) {
+  return std::views::transform(std::views::all(std::forward<Range>(range)),
+                               [i = size_t{0}](auto&& elem) mutable {
+                                 return std::pair{i++, std::forward<decltype(elem)>(elem)};
+                               });
+}
+
+namespace to_float_detail {
+// SFINAE helper to detect if std::from_chars supports floating-point type T,
+// some compilers (e.g. Clang) don't support it yet, so we need to fallback to std::stof
+template <typename T, typename = void> struct has_from_chars_for_float : std::false_type {};
+
+template <typename T>
+struct has_from_chars_for_float<T,
+                                std::void_t<decltype(std::from_chars(std::declval<const char*>(),
+                                                                     std::declval<const char*>(),
+                                                                     std::declval<T&>()))>>
+    : std::true_type {};
+
+template <typename T>
+inline constexpr bool has_from_chars_for_float_v = has_from_chars_for_float<T>::value;
+} // namespace to_float_detail
+
+/**
+ * Convert a string to a floating-point value.
+ * Uses std::from_chars if available for the type (faster, locale-independent),
+ * otherwise falls back to std::stof/std::stod (locale-dependent).
+ * @tparam  T      Floating-point type (float, double, or long double)
+ * @param   value  String representation of the floating-point number
+ * @return  Returns the parsed floating-point value
+ * @throws  std::invalid_argument if the string cannot be converted
+ */
+template <typename T = float,
+          std::enable_if_t<to_float_detail::has_from_chars_for_float_v<T>, int> = 0>
+T to_float(std::string_view value) {
+  static_assert(std::is_floating_point_v<T>, "T must be a floating-point type");
+  // `std::from_chars` does not support positive sign, so we need to handle it manually
+  const bool had_plus = value.starts_with('+');
+  if (had_plus) {
+    value.remove_prefix(1);
+  }
+  T result;
+  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+  if (ec != std::errc()) {
+    throw std::invalid_argument("Invalid float value: " + std::string(value));
+  }
+  // needed to return nullopt for cases like "+-1"
+  if (had_plus && result < 0) {
+    throw std::invalid_argument("Invalid float value: " + std::string(value));
+  }
+  return result;
+}
+
+template <typename T = float,
+          std::enable_if_t<!to_float_detail::has_from_chars_for_float_v<T>, int> = 0>
+T to_float(const std::string& value) {
+  static_assert(std::is_floating_point_v<T>, "T must be a floating-point type");
+  if constexpr (std::is_same_v<T, float>) {
+    return std::stof(value);
+  } else if constexpr (std::is_same_v<T, double>) {
+    return std::stod(value);
+  } else {
+    static_assert(!std::is_same_v<T, T>, "Unsupported floating-point type");
+  }
+}
+
+/**
+ * Try to convert a string to an integer value.
+ * Uses std::from_chars for fast, locale-independent parsing.
+ * @tparam  T      Integer type (int, int64_t, uint32_t, etc.)
+ * @param   value  String representation of the integer
+ * @return  Returns std::optional<T> containing the parsed value, or std::nullopt on failure
+ */
+template <typename T = int> std::optional<T> try_to_int(std::string_view value) noexcept {
+  // `std::from_chars` does not support positive sign, so we need to handle it manually
+  const bool had_plus = value.starts_with('+');
+  if (had_plus) {
+    value.remove_prefix(1);
+  }
+  T result;
+  auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+  if (ec != std::errc()) {
+    return std::nullopt;
+  }
+
+  // needed to return nullopt for cases like "+-1"
+  if (had_plus && result < 0) {
+    return std::nullopt;
+  }
+  return result;
+}
+
+/**
+ * Convert a string to an integer value.
+ * Uses std::from_chars for fast, locale-independent parsing.
+ * @tparam  T      Integer type (int, int64_t, uint32_t, etc.)
+ * @param   value  String representation of the integer
+ * @return  Returns the parsed integer value
+ * @throws  std::invalid_argument if the string cannot be converted
+ */
+template <typename T = int> T to_int(std::string_view value) {
+  auto result = try_to_int<T>(value);
+  if (!result) {
+    throw std::invalid_argument("Invalid int value: " + std::string(value));
+  }
+  return result.value();
+}
+
+/**
+ * Helper class to project points to the azimuthal equidistant projection given a center point.
+ * Assumes earth as a sphere for sake of simplicity.
+ *
+ * Reference: https://mathworld.wolfram.com/AzimuthalEquidistantProjection.html (formulas 1–4 for the
+ * forward projection, 5–7 for the inverse)
+ */
+class AzimuthalEquidistant {
+public:
+  /**
+   * Constructor. Takes a center point in unprojected lat/lon and calculates its radian conversion as
+   * well as the latitudes sin/cos to avoid unnecessary recomputation later.
+   */
+  AzimuthalEquidistant(const PointLL& center);
+  AzimuthalEquidistant() = delete;
+
+  /**
+   * Projects a point from lat/lon to azimuthal equidistant.
+   *
+   * @param ll the point to project in unprojected lat/lon
+   * @returns the projected point
+   */
+  Point2d project(const PointLL& ll) const;
+
+  /**
+   * Performs the inverse projection from a point in meters from the projection center back
+   * to lat/lon
+   *
+   * @param pt the point to project back to unprojected lat/lon; x/y must be in meters from the
+   * center.
+   *
+   * @returns lat/lon
+   */
+  PointLL project_inverse(const Point2d& pt) const;
+
+  PointLL center() const {
+    return center_;
+  };
+
+protected:
+  PointLL center_;
+  std::pair<double, double> center_rad_;
+  double sin_lat_center_;
+  double cos_lat_center_;
+};
+
+using circle_t = std::pair<PointLL, double>;
+/**
+ * Compute the minimum bounding circle of an edge shape. Projects points to azimuthal equidistant,
+ * using the shape's bbox center.
+ *
+ * @param points                the edge's shape in unprojected lat/lon
+ * @param distance_threshold    a size threshold for the shape's bounding box beyond which bounding
+ * circle computation is skipped
+ *
+ * @return optionally, a circle with center in lat/lon and a radius in meters. std::nullopt if the
+ * shape's bbox size exceeded distance_threshold or the shape is empty.
+ */
+std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
+                                                double distance_threshold);
 
 } // namespace midgard
 } // namespace valhalla

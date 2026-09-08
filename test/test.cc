@@ -174,6 +174,10 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
 
   std::string defaults = R"(
     {
+      "logging": {
+        "color": false,
+        "type": "std_out"
+      },
       "additional_data": {
         "elevation": "%%/elevation/"
       },
@@ -199,10 +203,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "centroid",
           "status"
         ],
-        "logging": {
-          "color": false,
-          "type": "std_out"
-        },
         "service": {
           "proxy": "ipc://%%/loki"
         },
@@ -213,7 +213,9 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "radius": 0,
           "search_cutoff": 35000,
           "street_side_max_distance": 1000,
-          "street_side_tolerance": 5
+          "street_side_tolerance": 5,
+          "mvt_min_zoom_road_class": [7, 7, 8, 10, 11, 11, 13, 14],
+          "mvt_cache_min_zoom": 11
         },
         "use_connectivity": true
       },
@@ -294,10 +296,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "include_construction": true,
         "include_driving": true,
         "include_pedestrian": true,
-        "logging": {
-          "color": false,
-          "type": "std_out"
-        },
         "lru_mem_cache_hard_control": false,
         "max_cache_size": 1000000000,
         "max_concurrent_reader_users": 1,
@@ -312,10 +310,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "use_lru_mem_cache": false
       },
       "odin": {
-        "logging": {
-          "color": false,
-          "type": "std_out"
-        },
         "service": {
           "proxy": "ipc://%%/odin"
         }
@@ -339,6 +333,11 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_matrix_distance": 200000.0,
           "max_matrix_location_pairs": 2500
         },
+        "auto_pedestrian": {
+          "max_distance": 500000.0,
+          "max_matrix_distance": 200000.0,
+          "max_matrix_location_pairs": 2500
+        },
         "bus": {
           "max_distance": 5000000.0,
           "max_locations": 50,
@@ -355,7 +354,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
                 "max_allowed_up_transitions": {
                     "1": 400,
                     "2": 100
-                }
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
             },
             "unidirectional_astar": {
                 "max_allowed_up_transitions": {
@@ -382,6 +382,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "max_alternates": 2,
         "max_exclude_locations": 50,
         "max_exclude_polygons_length": 10000,
+        "min_linear_cost_factor": 1,
+        "max_linear_cost_edges": 50000,
         "max_radius": 200,
         "max_reachability": 100,
         "max_timedep_distance": 500000,
@@ -409,8 +411,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
           "max_matrix_location_pairs": 2500,
-          "max_transit_walking_distance": 10000,
-          "min_transit_walking_distance": 1
+          "max_multimodal_walking_distance": 10000,
+          "min_multimodal_walking_distance": 1
         },
         "skadi": {
           "max_shape": 750000,
@@ -447,11 +449,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         }
       },
       "thor": {
-        "logging": {
-          "color": false,
-          "long_request": 110.0,
-          "type": "std_out"
-        },
         "service": {
           "proxy": "ipc://%%/thor"
         },

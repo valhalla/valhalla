@@ -28,7 +28,7 @@ init_time_info(const std::vector<valhalla::meili::EdgeSegment>& edge_segments,
   // We support either the epoch timestamp that came with the trace point or
   // a local date time which we convert to epoch by finding the first timezone
   for (const auto& s : edge_segments) {
-    if (!s.edgeid.Is_Valid() || !matcher->graphreader().GetGraphTile(s.edgeid, tile))
+    if (!s.edgeid.is_valid() || !matcher->graphreader().GetGraphTile(s.edgeid, tile))
       continue;
     directededge = tile->directededge(s.edgeid);
     if (matcher->graphreader().GetGraphTile(directededge->endnode(), tile)) {
@@ -88,7 +88,7 @@ interpolate_matches(const std::vector<valhalla::meili::MatchResult>& matches,
       // add distances for all the match points that happened on this edge
       for (; idx < matches.size(); ++idx) {
         // skip unroutable ones, we dont know what edge they were on
-        if (!matches[idx].edgeid.Is_Valid()) {
+        if (!matches[idx].edgeid.is_valid()) {
           continue;
           // if its a valid one that doesnt match we move on
         } else if (matches[idx].edgeid != segment->edgeid) {
@@ -212,7 +212,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
     // Check if connected to prior edge
     bool disconnected =
-        prev_segment != nullptr && prev_segment->edgeid.Is_Valid() && prev_segment->discontinuity;
+        prev_segment != nullptr && prev_segment->edgeid.is_valid() && prev_segment->discontinuity;
 
     bool break_point =
         edge_segment.first_match_idx >= 0 && results[edge_segment.first_match_idx].is_break_point;
@@ -251,8 +251,8 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
     uint8_t flow_sources;
     // Get time along the edge, handling partial distance along the first and last edge.
-    elapsed += costing->EdgeCost(directededge, tile, offset_time_info, flow_sources) *
-               (edge_segment.target - edge_segment.source);
+    elapsed += costing->PartialEdgeCost(directededge, edge_id, tile, offset_time_info, flow_sources,
+                                        edge_segment.source, edge_segment.target);
 
     // Use timestamps to update elapsed time. Use the timestamp at the interpolation
     // that no longer matches the edge_id (or the last interpolation if the edge id

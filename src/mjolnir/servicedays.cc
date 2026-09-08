@@ -12,6 +12,14 @@ std::string to_iso_extended_string(const date::sys_days& d) {
   iso_date_time << date::format("%F", d);
   return iso_date_time.str();
 }
+// Rotate dow_mask to align tile_header_date's day
+inline uint8_t align_week_mask(uint32_t dow_mask, uint8_t start_weekday) {
+  start_weekday %= 7;
+  if (start_weekday == 0) {
+    return dow_mask;
+  }
+  return ((dow_mask >> start_weekday) | (dow_mask << (7 - start_weekday))) & 0x7F;
+}
 
 // Get a formatted testing date.  Currently, next Tuesday @ 08:00.
 std::string get_testing_date_time() {
@@ -63,52 +71,23 @@ uint64_t get_service_days(date::sys_days& start_date,
     end_date = enddate;
   }
 
-  date::sys_days itr = tile_header_date;
-
-  uint32_t x = 0;
+  uint8_t start_weekday = (date::weekday(tile_header_date) - date::Sunday).count();
+  uint8_t rotated = align_week_mask(dow_mask, start_weekday);
   uint64_t bit_set = 0;
+  uint8_t week = 0;
+  uint32_t total_days = (end_date - tile_header_date).count();
 
-  // TODO: we dont have to loop over all days, we could take the week mask, shift it by the start
-  // date then use that weekly mask and shift it how ever many times a week fits into the 60 day
-  // interval loop over all the days
-  while (itr <= end_date) {
-
-    // figure out what day of the week we are at
-    uint8_t dow;
-    uint8_t wd = (date::weekday(itr) - date::Sunday).count();
-
-    switch (wd) {
-      case 0:
-        dow = kSunday;
-        break;
-      case 1:
-        dow = kMonday;
-        break;
-      case 2:
-        dow = kTuesday;
-        break;
-      case 3:
-        dow = kWednesday;
-        break;
-      case 4:
-        dow = kThursday;
-        break;
-      case 5:
-        dow = kFriday;
-        break;
-      case 6:
-        dow = kSaturday;
-        break;
-    }
-
-    // were we supposed to be on for this day?
-    // and are we at or after the start date?
-    if ((dow_mask & dow) && (itr >= start_date)) {
-      bit_set |= static_cast<uint64_t>(1) << x;
-    }
-
-    itr += date::days(1);
-    ++x;
+  // Build bit_set by repeating 7-bit weekly pattern
+  while (week * 7 <= total_days) {
+    bit_set |= static_cast<uint64_t>(rotated) << (week * 7);
+    ++week;
+  }
+  // removes days after the end
+  bit_set &= (static_cast<uint64_t>(1) << (total_days + 1)) - 1;
+  uint8_t days_before = (start_date - tile_header_date).count();
+  // removes days before it started
+  if (days_before > 0) {
+    bit_set &= ~((static_cast<uint64_t>(1) << days_before) - 1);
   }
   return bit_set;
 }

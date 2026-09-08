@@ -104,7 +104,7 @@ bool WalkTransitLines(const GraphId& n_graphId,
           }
 
           // get the new tile if needed.
-          if (endnodetile->id() != currentNode.Tile_Base()) {
+          if (endnodetile->id() != currentNode.tile_base()) {
             lock.lock();
             endnodetile = reader.GetGraphTile(currentNode);
             lock.unlock();
@@ -177,7 +177,7 @@ void validate(const boost::property_tree::ptree& pt,
     if (reader_transit_level.OverCommitted()) {
       reader_transit_level.Trim();
     }
-    GraphId tile_id = tile_start->Tile_Base();
+    GraphId tile_id = tile_start->tile_base();
 
     lock.lock();
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
@@ -477,7 +477,7 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
       for (const auto& dir_entry : std::filesystem::recursive_directory_iterator(transit_dir)) {
         if (std::filesystem::is_regular_file(dir_entry.path()) &&
             dir_entry.path().extension() == ".gph") {
-          auto graph_id = GraphTile::GetTileId(dir_entry.path().string());
+          auto graph_id = GraphId::FromTilePath(dir_entry.path().string());
           GraphId transit_tile_id = GraphId(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
           all_tiles.emplace(transit_tile_id);
         }

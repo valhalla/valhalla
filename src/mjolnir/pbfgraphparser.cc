@@ -20,6 +20,9 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
+#ifdef HAVE_EXPAT
+#include <osmium/io/xml_input.hpp>
+#endif
 
 #include <thread>
 #include <utility>
@@ -42,17 +45,14 @@ constexpr size_t kWaysChunksPerLua = 8;
 constexpr char kExceptDestinationRestrictionFlag = '~';
 
 // Convenience method to get a number from a string. Uses try/catch in case
-// stoi throws an exception
-int get_number(const std::string& tag, const std::string& value) { // NOLINT
-  int num = -1;
-  try {
-    num = stoi(value);
-  } catch (const std::invalid_argument& arg) {
-    LOG_DEBUG("invalid_argument thrown for " + tag + " value: " + value);
-  } catch (const std::out_of_range& oor) {
-    LOG_DEBUG("out_of_range exception thrown for " + tag + " value: " + value);
+// to_int throws an exception
+int get_number(std::string_view tag, const std::string& value) { // NOLINT
+  const auto num = try_to_int(value);
+  if (!num.has_value()) {
+    LOG_DEBUG("Cannot parse int for {} value: {}", tag, value);
+    return -1;
   }
-  return num;
+  return num.value();
 }
 
 void set_access_restriction_value(OSMAccessRestriction& restriction,
@@ -175,6 +175,7 @@ struct graph_parser {
     include_platforms_ = pt.get<bool>("include_platforms", false);
     include_driveways_ = pt.get<bool>("include_driveways", true);
     include_construction_ = pt.get<bool>("include_construction", false);
+    pedestrian_areas_ = pt.get<bool>("pedestrian_areas", false);
     infer_internal_intersections_ =
         pt.get<bool>("data_processing.infer_internal_intersections", true);
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
@@ -197,6 +198,9 @@ struct graph_parser {
         way_.set_internal(tag_.second == "true" ? true : false);
       }
     };
+    tag_handlers_["tagged_internal_intersection"] = [this]() {
+      way_.set_internal(tag_.second == "true");
+    };
     tag_handlers_["turn_channel"] = [this]() {
       if (!infer_turn_channels_) {
         way_.set_turn_channel(tag_.second == "true" ? true : false);
@@ -204,12 +208,12 @@ struct graph_parser {
     };
 
     tag_handlers_["layer"] = [this]() {
-      auto layer = static_cast<int8_t>(std::stoi(tag_.second));
+      auto layer = static_cast<int8_t>(to_int(tag_.second));
       way_.set_layer(layer);
     };
 
     tag_handlers_["road_class"] = [this]() {
-      RoadClass roadclass = (RoadClass)std::stoi(tag_.second);
+      RoadClass roadclass = (RoadClass)to_int(tag_.second);
       switch (roadclass) {
 
         case RoadClass::kMotorway:
@@ -373,9 +377,12 @@ struct graph_parser {
         amenity_ = tag_.second;
       }
     };
+    tag_handlers_["pedestrian_area"] = [this]() {
+      way_.set_area(tag_.second == "true" ? true : false);
+    };
 
     tag_handlers_["use"] = [this]() {
-      Use use = (Use)std::stoi(tag_.second);
+      Use use = (Use)to_int(tag_.second);
       switch (use) {
         case Use::kCycleway:
           way_.set_use(Use::kCycleway);
@@ -436,6 +443,10 @@ struct graph_parser {
           break;
         case Use::kOther:
           way_.set_use(Use::kOther);
+          break;
+        case Use::kPlatform:
+          way_.set_use(Use::kPlatform);
+          way_.set_road_class(RoadClass::kServiceOther);
           break;
         case Use::kConstruction:
           way_.set_use(Use::kConstruction);
@@ -900,7 +911,7 @@ struct graph_parser {
           // this way has an unlimited speed limit (german autobahn)
           max_speed_ = kUnlimitedSpeedLimit;
         } else {
-          max_speed_ = std::stof(tag_.second);
+          max_speed_ = to_float(tag_.second);
         }
         way_.set_tagged_speed(true);
         has_max_speed_ = true;
@@ -910,7 +921,7 @@ struct graph_parser {
     };
     tag_handlers_["average_speed"] = [this]() {
       try {
-        average_speed_ = std::stof(tag_.second);
+        average_speed_ = to_float(tag_.second);
         has_average_speed_ = true;
         way_.set_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
@@ -919,7 +930,7 @@ struct graph_parser {
     };
     tag_handlers_["advisory_speed"] = [this]() {
       try {
-        advisory_speed_ = std::stof(tag_.second);
+        advisory_speed_ = to_float(tag_.second);
         has_advisory_speed_ = true;
         way_.set_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
@@ -928,7 +939,7 @@ struct graph_parser {
     };
     tag_handlers_["forward_speed"] = [this]() {
       try {
-        way_.set_forward_speed(std::stof(tag_.second));
+        way_.set_forward_speed(to_float(tag_.second));
         way_.set_forward_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
@@ -936,7 +947,7 @@ struct graph_parser {
     };
     tag_handlers_["backward_speed"] = [this]() {
       try {
-        way_.set_backward_speed(std::stof(tag_.second));
+        way_.set_backward_speed(to_float(tag_.second));
         way_.set_backward_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
@@ -944,21 +955,21 @@ struct graph_parser {
     };
     tag_handlers_["maxspeed:hgv"] = [this]() {
       try {
-        way_.set_truck_speed(std::stof(tag_.second));
+        way_.set_truck_speed(to_float(tag_.second));
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
     tag_handlers_["maxspeed:hgv:forward"] = [this]() {
       try {
-        way_.set_truck_speed_forward(std::stof(tag_.second));
+        way_.set_truck_speed_forward(to_float(tag_.second));
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
     tag_handlers_["maxspeed:hgv:backward"] = [this]() {
       try {
-        way_.set_truck_speed_backward(std::stof(tag_.second));
+        way_.set_truck_speed_backward(to_float(tag_.second));
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
@@ -975,7 +986,7 @@ struct graph_parser {
         speed = kUnlimitedSpeedLimit;
       } else {
         try {
-          const float parsed = std::stof(tokens.at(0));
+          const float parsed = to_float(tokens.at(0));
           if (parsed > kMaxAssumedSpeed) {
             // LOG_WARN("Ignoring maxspeed:conditional that exceedes max for way id: " +
             //          std::to_string(osmid_));
@@ -1038,7 +1049,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxHeight);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1048,7 +1059,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1058,7 +1069,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1067,7 +1078,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxWidth);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1077,7 +1088,7 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1087,65 +1098,65 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxlength"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxlength_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxlength_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxweight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxweight_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxweight_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1154,7 +1165,7 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxAxleLoad);
       restriction.set_modes(kTruckAccess);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val) * 100; });
+                                   [](const std::string& val) { return to_float(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1162,7 +1173,7 @@ struct graph_parser {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxAxles);
       set_access_restriction_value(restriction, tag_.second,
-                                   [](const std::string& val) { return std::stof(val); });
+                                   [](const std::string& val) { return to_float(val); });
       restriction.set_modes(kTruckAccess);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1176,13 +1187,14 @@ struct graph_parser {
       } else if (hov_type == "HOV3") {
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       } else {
-        LOG_WARN("Unrecognized HOV type: " + hov_type);
+        LOG_DEBUG("Unrecognized HOV type: " + hov_type);
+        build_stats::get().increment(build_stats::kInvalidHovType);
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       }
     };
     tag_handlers_["default_speed"] = [this]() {
       try {
-        default_speed_ = std::stof(tag_.second);
+        default_speed_ = to_float(tag_.second);
         has_default_speed_ = true;
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
@@ -1503,7 +1515,8 @@ struct graph_parser {
                  value.find("natural") != std::string::npos ||
                  value.find("earth") != std::string::npos ||
                  value.find("ground") != std::string::npos ||
-                 value.find("mud") != std::string::npos) {
+                 value.find("mud") != std::string::npos || value.find("clay") != std::string::npos ||
+                 value.find("laterite") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
       } else if (value.find("gravel") != std::string::npos || // gravel, fine_gravel
@@ -1575,7 +1588,7 @@ struct graph_parser {
       way_.set_shoulder_left(tag_.second == "true" ? true : false);
     };
     tag_handlers_["cycle_lane_right"] = [this]() {
-      CycleLane cyclelane_right = (CycleLane)std::stoi(tag_.second);
+      CycleLane cyclelane_right = (CycleLane)to_int(tag_.second);
       switch (cyclelane_right) {
         case CycleLane::kDedicated:
           way_.set_cyclelane_right(CycleLane::kDedicated);
@@ -1593,7 +1606,7 @@ struct graph_parser {
       }
     };
     tag_handlers_["cycle_lane_left"] = [this]() {
-      CycleLane cyclelane_left = (CycleLane)std::stoi(tag_.second);
+      CycleLane cyclelane_left = (CycleLane)to_int(tag_.second);
       switch (cyclelane_left) {
         case CycleLane::kDedicated:
           way_.set_cyclelane_left(CycleLane::kDedicated);
@@ -1617,22 +1630,22 @@ struct graph_parser {
       way_.set_cyclelane_left_opposite(tag_.second == "true" ? true : false);
     };
     tag_handlers_["lanes"] = [this]() {
-      way_.set_lanes(std::stoi(tag_.second));
+      way_.set_lanes(to_int(tag_.second));
       way_.set_tagged_lanes(true);
     };
     tag_handlers_["forward_lanes"] = [this]() {
-      way_.set_forward_lanes(std::stoi(tag_.second));
+      way_.set_forward_lanes(to_int(tag_.second));
       way_.set_forward_tagged_lanes(true);
     };
     tag_handlers_["backward_lanes"] = [this]() {
-      way_.set_backward_lanes(std::stoi(tag_.second));
+      way_.set_backward_lanes(to_int(tag_.second));
       way_.set_backward_tagged_lanes(true);
     };
     tag_handlers_["tunnel"] = [this]() { way_.set_tunnel(tag_.second == "true" ? true : false); };
     tag_handlers_["toll"] = [this]() { way_.set_toll(tag_.second == "true" ? true : false); };
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
     tag_handlers_["indoor"] = [this]() { way_.set_indoor(tag_.second == "yes" ? true : false); };
-    tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
+    tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(to_int(tag_.second)); };
     //    tag_handlers_["bike_national_ref"] = [this]() {
     //      if (!tag_.second.empty())
     //        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
@@ -2025,7 +2038,9 @@ struct graph_parser {
     }
 
     std::string buffer;
-    bss_info.SerializeToString(&buffer);
+    if (!bss_info.SerializeToString(&buffer)) {
+      throw std::runtime_error("Failed to serialize BSS info");
+    }
     const uint32_t bss_info_index = osmdata_.node_names.index(buffer);
     ++osmdata_.node_name_count;
 
@@ -2113,17 +2128,7 @@ struct graph_parser {
       // TODO: instead of checking this, we should delete these tag/values completely in lua
       // and save our CPUs the wasted time of iterating over them again for nothing
       auto hasTag = !tag.second.empty();
-      if (tag.first == "iso:3166_1" && !use_admin_db_ && hasTag) {
-        // Add the country iso code to the unique node names list and store its index in the OSM
-        // node
-        n.set_country_iso_index(osmdata_.node_names.index(tag.second));
-        ++osmdata_.node_name_count;
-      } else if ((tag.first == "state_iso_code" && !use_admin_db_) && hasTag) {
-        // Add the state iso code to the unique node names list and store its index in the OSM
-        // node
-        n.set_state_iso_index(osmdata_.node_names.index(tag.second));
-        ++osmdata_.node_name_count;
-      } else if (tag.first == "highway") {
+      if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals");
         n.set_stop_sign(tag.second == "stop");
         n.set_yield_sign(tag.second == "give_way");
@@ -2182,6 +2187,10 @@ struct graph_parser {
         ref_katakana_ = tag.second;
       } else if (tag.first == "ref:pronunciation:jeita") {
         ref_jeita_ = tag.second;
+      } else if (tag.first == "amenity" && tag.second == "parking") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kParking);
       } else if (tag.first == "gate" && tag.second == "true") {
         osmdata_.edge_count += !intersection;
         intersection = true;
@@ -2220,9 +2229,9 @@ struct graph_parser {
         intersection = true;
         n.set_type(NodeType::kElevator);
       } else if (tag.first == "access_mask") {
-        n.set_access(std::stoi(tag.second));
+        n.set_access(to_int(tag.second));
       } else if (tag.first == "tagged_access") {
-        n.set_tagged_access(std::stoi(tag.second));
+        n.set_tagged_access(to_int(tag.second));
       } else if (tag.first == "private") {
         n.set_private_access(tag.second == "true");
       } else if (!is_lang_pronunciation) {
@@ -2396,11 +2405,18 @@ struct graph_parser {
     const auto& nodes = way.nodes;
     const auto& tags = way.tags;
 
+    if (!pedestrian_areas_) {
+      auto pa = tags.find("pedestrian_area");
+      if (pa != tags.end() && pa->second == "true") {
+        return;
+      }
+    }
+
     try {
       // Throw away use if include_driveways_ is false
       Tags::const_iterator use;
       if (!include_driveways_ && (use = tags.find("use")) != tags.end() &&
-          static_cast<Use>(std::stoi(use->second)) == Use::kDriveway) {
+          static_cast<Use>(to_int(use->second)) == Use::kDriveway) {
 
         // only private use.
         Tags::const_iterator priv;
@@ -2410,12 +2426,12 @@ struct graph_parser {
       }
       // Throw away constructions if include_construction_ is false
       if (!include_construction_ && (use = tags.find("use")) != tags.end() &&
-          static_cast<Use>(std::stoi(use->second)) == Use::kConstruction) {
+          static_cast<Use>(to_int(use->second)) == Use::kConstruction) {
         return;
       }
       // Throw away platforms if include_platforms_ is false
       if (!include_platforms_ && (use = tags.find("use")) != tags.end() &&
-          static_cast<Use>(std::stoi(use->second)) == Use::kPlatform) {
+          static_cast<Use>(to_int(use->second)) == Use::kPlatform) {
         return;
       }
     } catch (const std::invalid_argument& arg) {
@@ -2581,7 +2597,8 @@ struct graph_parser {
           std::stringstream ss;
           ss << "Error during parsing of `" << tag_.first << "` tag on the way " << osmid_ << ": "
              << std::string{ex.what()};
-          LOG_WARN(ss.str());
+          LOG_DEBUG(ss.str());
+          build_stats::get().increment(build_stats::kInvalidOSMTag);
         }
 
       }
@@ -2924,7 +2941,7 @@ struct graph_parser {
       int scale = get_number("mtb:scale", mtb_scale->second);
       if (scale >= 0) {
         // Set surface based on scale
-        uint32_t scale = stoi(mtb_scale->second);
+        uint32_t scale = to_int(mtb_scale->second);
         if (scale == 0) {
           way_.set_surface(Surface::kDirt);
         } else if (scale == 1) {
@@ -2951,7 +2968,7 @@ struct graph_parser {
       int scale = get_number("mtb:uphill:scale", mtb_uphill_scale->second);
       if (scale >= 0) {
         // Set surface based on scale (if no scale exists)
-        uint32_t scale = stoi(mtb_uphill_scale->second);
+        uint32_t scale = to_int(mtb_uphill_scale->second);
         if (!has_mtb_scale) {
           if (scale < 2) {
             way_.set_surface(Surface::kGravel);
@@ -3835,6 +3852,7 @@ struct graph_parser {
     uint64_t from_way_id = 0;
     bool isRestriction = false, isTypeRestriction = false, hasRestriction = false;
     bool isRoad = false, isRoute = false, isBicycle = false, isConnectivity = false;
+    bool isMultipolygon = false, isPedestrian = false, isArea = false;
     bool isConditional = false, isProbable = false, has_multiple_times = false;
     uint32_t bike_network_mask = 0;
 
@@ -3852,6 +3870,8 @@ struct graph_parser {
           isRoute = true;
         } else if (tag.second == "connectivity") {
           isConnectivity = true;
+        } else if (tag.second == "multipolygon") {
+          isMultipolygon = true;
         }
       } else if (tag.first == "route") {
         if (tag.second == "road") {
@@ -3866,7 +3886,7 @@ struct graph_parser {
         // probability=73
         std::vector<std::string> prob_tok = GetTagTokens(tag.second, '=');
         if (prob_tok.size() == 2) {
-          const auto& p = stoi(prob_tok.at(1));
+          const auto& p = to_int(prob_tok.at(1));
           if (p > 0) {
             isProbable = true;
             restriction.set_probability(p);
@@ -3914,7 +3934,7 @@ struct graph_parser {
           modes |= (kPedestrianAccess | kWheelchairAccess);
         }
 
-        RestrictionType type = (RestrictionType)std::stoi(tag.second);
+        RestrictionType type = (RestrictionType)to_int(tag.second);
 
         switch (type) {
 
@@ -3969,7 +3989,7 @@ struct graph_parser {
         isConditional = true;
         day_end = tag.second;
       } else if (tag.first == "bike_network_mask") {
-        bike_network_mask = std::stoi(tag.second);
+        bike_network_mask = to_int(tag.second);
       } else if (tag.first == "to:lanes") {
         to_lanes = tag.second;
       } else if (tag.first == "from:lanes") {
@@ -3978,6 +3998,14 @@ struct graph_parser {
         to = tag.second;
       } else if (tag.first == "from") {
         from = tag.second;
+      } else if (tag.first == "highway") {
+        if (tag.second == "pedestrian") {
+          isPedestrian = true;
+        }
+      } else if (tag.first == "area") {
+        if (tag.second == "yes") {
+          isArea = true;
+        }
       }
     } // for (const auto& tag : results)
 
@@ -4259,6 +4287,19 @@ struct graph_parser {
           complex_restrictions_from_->push_back(restriction);
         } else { // simple restriction
           osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
+        }
+      }
+    } else if (isMultipolygon && isPedestrian && isArea && pedestrian_areas_) {
+      for (const auto& member : members) {
+        OSMAreaMember area_member;
+        if (member.role == "outer" && member.member_type == osmium::item_type::way) {
+          area_member.is_outer = true;
+          area_member.way_id = member.member_id;
+          osmdata_.area_relations.insert(AreaMultiMap::value_type(osmid, area_member));
+        } else if (member.role == "inner" && member.member_type == osmium::item_type::way) {
+          area_member.is_outer = false;
+          area_member.way_id = member.member_id;
+          osmdata_.area_relations.insert(AreaMultiMap::value_type(osmid, area_member));
         }
       }
     }
@@ -5029,6 +5070,10 @@ struct graph_parser {
   // enhancer phase or use the turn_channel key from the pbf
   bool infer_turn_channels_;
 
+  // Configuration option indicating whether or not to generate edges and route trough pedestrian
+  // areas
+  bool pedestrian_areas_;
+
   // Configuration option indicating whether or not to process the direction key on the ways or
   // utilize the guidance relation tags during the parsing phase
   bool use_direction_on_ways_;
@@ -5220,13 +5265,17 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
+
+  osmdata.max_way_id = parser.last_way_;
+
   parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the access tags so that we can easily find them.
   LOG_INFO("Sorting osm access tags by way id...");
   {
     sequence<OSMAccess> access(access_file, false);
-    access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); });
+    access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); },
+                concurrency);
   }
 
   LOG_INFO("Finished");
@@ -5282,22 +5331,105 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
   parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
+  const auto concurrency =
+      std::max<size_t>(1, pt.get<size_t>("concurrency", std::thread::hardware_concurrency()));
+
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
   {
     sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
-    complex_restrictions_from.sort(
-        [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
+    complex_restrictions_from.sort([](const OSMRestriction& a,
+                                      const OSMRestriction& b) { return a < b; },
+                                   concurrency);
   }
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by to id...");
   {
     sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
-    complex_restrictions_to.sort(
-        [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
+    complex_restrictions_to.sort([](const OSMRestriction& a,
+                                    const OSMRestriction& b) { return a < b; },
+                                 concurrency);
   }
   LOG_INFO("Finished");
+}
+
+void PBFGraphParser::ParseAreaWays(const boost::property_tree::ptree& pt,
+                                   const std::vector<std::string>& input_files,
+                                   const std::string& ways_file,
+                                   const std::string& way_nodes_file,
+                                   OSMData& osmdata) {
+  SCOPED_TIMER();
+
+  // we need area_relations to know which ways to collect, read it from disk if needed
+  if (!osmdata.initialized)
+    osmdata.read_from_temp_files(pt.get<std::string>("tile_dir"));
+
+  // nothing to do if there are no area relations
+  if (osmdata.area_relations.empty())
+    return;
+
+  // collect the way ids we need (outer and inner members of the area relations)
+  ankerl::unordered_dense::set<uint64_t> needed_way_ids;
+  needed_way_ids.reserve(osmdata.area_relations.size());
+  for (const auto& entry : osmdata.area_relations) {
+    needed_way_ids.insert(entry.second.way_id);
+  }
+
+  LOG_INFO("Parsing area ways... looking for " + std::to_string(needed_way_ids.size()) + " ways");
+
+  // open the existing ways/way_nodes files
+  sequence<OSMWay> ways(ways_file, false);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
+
+  uint32_t found = 0;
+  for (const auto& file : input_files) {
+    osmium::io::Reader reader(file, osmium::osm_entity_bits::way);
+    while (osmium::memory::Buffer buffer = reader.read()) {
+      for (const auto& item : buffer) {
+        const auto& osm_way = static_cast<const osmium::Way&>(item);
+
+        // skip ways we don't care about
+        if (!needed_way_ids.count(static_cast<uint64_t>(osm_way.id())))
+          continue;
+
+        // gather the node ids of this way
+        std::vector<uint64_t> nodes;
+        nodes.reserve(osm_way.nodes().size());
+        for (const auto& node : osm_way.nodes()) {
+          nodes.push_back(node.ref());
+        }
+
+        // Do not add ways with < 2 nodes. Log error or add to a problem list
+        // TODO - find out if we do need these, why they exist...
+        if (nodes.size() < 2)
+          continue;
+
+        // the index this way will have in the ways file
+        uint32_t way_index = static_cast<uint32_t>(ways.size());
+
+        // store each node as a way node referencing this way by index
+        for (size_t i = 0; i < nodes.size(); ++i) {
+          OSMNode osm_node{nodes[i]};
+          osm_node.intersection_ = i == 0 || i == nodes.size() - 1;
+          way_nodes.push_back({osm_node, way_index, static_cast<uint32_t>(i)});
+        }
+
+        // emitted only partially filled. The area bit keeps ConstructEdges from turning
+        // these into edges, so the routing attributes (access, road class, speed) are
+        // left for BuildAreas to fill in if it decides to keep the perimeter
+        OSMWay w{static_cast<uint64_t>(osm_way.id())};
+        w.set_node_count(nodes.size());
+        w.set_area(true);
+        ways.push_back(w);
+        ++found;
+      }
+    }
+    reader.close();
+  }
+
+  LOG_INFO("Finished parsing area ways, found " + std::to_string(found) + " of " +
+           std::to_string(needed_way_ids.size()));
 }
 
 void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
@@ -5353,11 +5485,15 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
   // using much mem, the scoping makes sure to let it go when done sorting
+  const auto concurrency =
+      std::max<size_t>(1, pt.get<size_t>("concurrency", std::thread::hardware_concurrency()));
+
   LOG_INFO("Sorting osm way node references by node id...");
   {
     sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-    way_nodes.sort(
-        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; });
+    way_nodes.sort([](const OSMWayNode& a,
+                      const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; },
+                   concurrency);
   }
 
   // Parse node in all the input files. Skip any that are not marked from
@@ -5389,17 +5525,21 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   LOG_INFO("Sorting osm way node references by way index and node shape index...");
   {
     sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-    way_nodes.sort([](const OSMWayNode& a, const OSMWayNode& b) {
-      if (a.way_index == b.way_index) {
-        // TODO: if its equal we have screwed something up, should we check and throw here?
-        return a.way_shape_node_index < b.way_shape_node_index;
-      }
-      return a.way_index < b.way_index;
-    });
+    way_nodes.sort(
+        [](const OSMWayNode& a, const OSMWayNode& b) {
+          if (a.way_index == b.way_index) {
+            // TODO: if its equal we have screwed something up, should we check and throw here?
+            return a.way_shape_node_index < b.way_shape_node_index;
+          }
+          return a.way_index < b.way_index;
+        },
+        concurrency);
   }
 
   // Some OSM extracts do not have changeset Ids. For these set the max changeset Id
   // to the max OSM Id
+  // Note, we also allow dataset_id to be set by config, which happens at tile build
+  osmdata.max_node_id = max_osm_id;
   if (osmdata.max_changeset_id_ == 0) {
     osmdata.max_changeset_id_ = max_osm_id;
     LOG_INFO("Finished: max_osm_id " + std::to_string(osmdata.max_changeset_id_));

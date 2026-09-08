@@ -16,10 +16,11 @@ void thor_worker_t::optimized_route(Api& request) {
   auto _ = measure_scope_time(request);
 
   auto& options = *request.mutable_options();
-  adjust_scores(options);
+  adjust_locations(request);
   auto costing = parse_costing(request);
   controller = AttributesController(options);
 
+  costmatrix_.set_interrupt(interrupt);
   // Use CostMatrix to find costs from each location to every other location
   costmatrix_.set_has_time(check_matrix_time(request, Matrix::CostMatrix));
   costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
@@ -47,6 +48,7 @@ void thor_worker_t::optimized_route(Api& request) {
   }
 
   Optimizer optimizer;
+  optimizer.set_interrupt(interrupt);
   // returns the optimal order of the path_locations
   auto optimal_order = optimizer.Solve(correlated.size(), time_costs);
   // put the optimal order into the locations array

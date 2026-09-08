@@ -23,4 +23,3 @@ function getBinaryDir(baseDir) {
 module.exports = {
     getBinaryDir
 };
-

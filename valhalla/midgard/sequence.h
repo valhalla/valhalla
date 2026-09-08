@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <cerrno>
 #include <cmath>
 #include <cstdint>
@@ -10,10 +11,9 @@
 #include <functional>
 #include <iterator>
 #include <memory>
-#include <queue>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -319,57 +319,133 @@ public:
     return npos;
   }
 
-  // sort the file based on the predicate, and outputs to output_seq
-  //
-  // Strategy is to first sort sub-ranges of length buffer_size in place.
-  // These should all fit in memory. Then, merge the sub-ranges into the
-  // output sequence via priority queue.
-  void sort(const std::function<bool(const T&, const T&)>& predicate,
+  // "Parallel Sorting by Regular Sampling", Shi & Schaeffer 1992, the predicate must be thread-safe
+  template <class Predicate>
+  void sort(const Predicate& predicate,
+            size_t concurrency,
             size_t buffer_size = 1024 * 1024 * 512 / sizeof(T)) {
     flush();
     // if no elements we are done
     if (memmap.size() == 0) {
       return;
     }
+    buffer_size = std::max<size_t>(buffer_size, 1);
 
     // If there wont be any merging we may as well take the simple approach
-    if (buffer_size > memmap.size() + write_buffer.size()) {
+    if (buffer_size >= memmap.size() + write_buffer.size()) {
       std::sort(static_cast<T*>(memmap), static_cast<T*>(memmap) + memmap.size(), predicate);
       return;
+    }
+
+    // No more threads than chunks so every worker handles at least ~buffer_size elements
+    const size_t chunk_count = 1 + (memmap.size() - 1) / buffer_size;
+    concurrency = std::min(std::max(concurrency, size_t(1)), chunk_count);
+
+    // Sort the subsections in parallel
+    {
+      std::atomic<size_t> next_chunk(0); // self-scheduling counter to avoid a slow tail
+      std::vector<std::thread> threads;
+      threads.reserve(concurrency);
+      for (size_t i = 0; i < concurrency; ++i) {
+        threads.emplace_back([this, &predicate, buffer_size, &next_chunk, chunk_count]() {
+          for (size_t chunk = next_chunk++; chunk < chunk_count; chunk = next_chunk++) {
+            const size_t begin = chunk * buffer_size;
+            std::sort(static_cast<T*>(memmap) + begin,
+                      static_cast<T*>(memmap) + std::min(memmap.size(), begin + buffer_size),
+                      predicate);
+          }
+        });
+      }
+      for (auto& thread : threads) {
+        thread.join();
+      }
     }
 
     auto tmp_path = std::filesystem::path(file_name).replace_filename(
         std::filesystem::path(file_name).filename().string() + ".tmp");
     {
-      // we need a temporary sequence to merge the sorted subsections into
-      sequence<T> output_seq(tmp_path.string(), true);
+      // chunks are partitioned by value so each partition merges into its own output range
+      const T* data = static_cast<const T*>(memmap);
+      // one merge thread per partition
+      const size_t partition_count = concurrency;
 
-      // Comparator needs to be inverted for pq to provide constant time *smallest* lookup
-      // Pq keeps track of element and its index.
-      auto cmp = [&predicate](const std::pair<T, size_t>& a, std::pair<T, size_t>& b) {
-        return predicate(b.first, a.first);
-      };
-      std::priority_queue<std::pair<T, size_t>, std::vector<std::pair<T, size_t>>, decltype(cmp)> pq(
-          cmp);
-
-      // Sort the subsections
-      for (size_t i = 0; i < memmap.size(); i += buffer_size) {
-        std::sort(static_cast<T*>(memmap) + i,
-                  static_cast<T*>(memmap) + std::min(memmap.size(), i + buffer_size), predicate);
-        pq.emplace(*at(i), i);
-      }
-
-      // Perform the merge
-      while (!pq.empty()) {
-        auto tmp = pq.top();
-        pq.pop();
-        output_seq.push_back(tmp.first);
-        size_t new_idx = tmp.second + 1;
-        if (new_idx % buffer_size != 0 && new_idx < memmap.size()) {
-          pq.emplace(*at(new_idx), new_idx);
+      // splitters are quantiles of pooled per-chunk samples, no partition exceeds ~2x the average
+      std::vector<T> samples;
+      samples.reserve(chunk_count * (partition_count - 1));
+      for (size_t chunk = 0; chunk < chunk_count; ++chunk) {
+        const size_t begin = chunk * buffer_size;
+        const size_t len = std::min(memmap.size(), begin + buffer_size) - begin;
+        for (size_t k = 1; k < partition_count; ++k) {
+          samples.push_back(data[begin + k * len / partition_count]);
         }
       }
-      output_seq.flush();
+      std::sort(samples.begin(), samples.end(), predicate);
+
+      // per-chunk partition boundaries, partition_count + 1 monotonic indexes each
+      std::vector<std::vector<size_t>> boundaries(chunk_count);
+      for (size_t chunk = 0; chunk < chunk_count; ++chunk) {
+        const size_t end = std::min(memmap.size(), chunk * buffer_size + buffer_size);
+        auto& bounds = boundaries[chunk];
+        bounds.reserve(partition_count + 1);
+        bounds.push_back(chunk * buffer_size);
+        for (size_t k = 1; k < partition_count; ++k) {
+          const T& splitter = samples[k * samples.size() / partition_count];
+          // searching from the previous boundary keeps bounds monotonic for any predicate
+          bounds.push_back(std::lower_bound(data + bounds.back(), data + end, splitter, predicate) -
+                           data);
+        }
+        bounds.push_back(end);
+      }
+
+      // Exact start of each partition in the output
+      std::vector<size_t> output_offsets(partition_count, 0);
+      for (size_t k = 1; k < partition_count; ++k) {
+        output_offsets[k] = output_offsets[k - 1];
+        for (size_t chunk = 0; chunk < chunk_count; ++chunk) {
+          output_offsets[k] += boundaries[chunk][k] - boundaries[chunk][k - 1];
+        }
+      }
+
+      // The temporary file the merged output is written into, mapped at full size upfront
+      std::filesystem::remove(tmp_path); // drop stale bytes of a previously interrupted sort
+      mem_map<T> output;
+      output.create(tmp_path.string(), memmap.size());
+
+      // partitions are disjoint by value so each merges and writes its range without locking
+      auto merge_partition = [&](size_t k) {
+        std::vector<size_t> cursors(chunk_count);
+        // min-heap of chunk indexes ordered by each chunk's current front element
+        auto cmp = [&](size_t a, size_t b) { return predicate(data[cursors[b]], data[cursors[a]]); };
+        std::vector<size_t> heap;
+        heap.reserve(chunk_count);
+        for (size_t chunk = 0; chunk < chunk_count; ++chunk) {
+          cursors[chunk] = boundaries[chunk][k];
+          if (cursors[chunk] < boundaries[chunk][k + 1]) {
+            heap.push_back(chunk);
+          }
+        }
+        std::make_heap(heap.begin(), heap.end(), cmp);
+
+        T* out = static_cast<T*>(output) + output_offsets[k];
+        while (!heap.empty()) {
+          std::pop_heap(heap.begin(), heap.end(), cmp);
+          const size_t chunk = heap.back();
+          *out++ = data[cursors[chunk]];
+          if (++cursors[chunk] < boundaries[chunk][k + 1]) {
+            std::push_heap(heap.begin(), heap.end(), cmp);
+          } else {
+            heap.pop_back();
+          }
+        }
+      };
+      std::vector<std::thread> threads;
+      threads.reserve(partition_count);
+      for (size_t k = 0; k < partition_count; ++k) {
+        threads.emplace_back(merge_partition, k);
+      }
+      for (auto& thread : threads) {
+        thread.join();
+      }
     }
 
     // Forget about this file for a second so we can swap in the temp file
@@ -653,21 +729,10 @@ struct tar {
     }
   };
 
-  // all of the info about which tar is memory mapped and where each file within
-  // the tar is found in the map
   std::string tar_file;
   mem_map<char> mm;
-  using entry_name_t = std::string;
-  using entry_location_t = std::pair<const char*, size_t>;
-  std::unordered_map<entry_name_t, entry_location_t> contents;
-  size_t corrupt_blocks;
 
-  tar(const std::string& tar_file,
-      bool readonly = true,
-      bool regular_files_only = true,
-      const std::function<decltype(contents)(const std::string&, const char*, const char*, size_t)>&
-          from_index = nullptr)
-      : tar_file(tar_file), corrupt_blocks(0) {
+  tar(const std::string& tar_file, bool readonly = true) : tar_file(tar_file) {
     // get the file size
     struct stat s;
     if (stat(tar_file.c_str(), &s))
@@ -680,11 +745,18 @@ struct tar {
 
     // map the file
     mm.map(tar_file, s.st_size, POSIX_MADV_NORMAL, readonly);
+  }
 
+  // Callback per entry: (name, data_ptr, size). Return true to continue, false to stop.
+  using entry_visitor_t = std::function<bool(const std::string& name, const char* data, size_t size)>;
+
+  // Traverse all entries, calling visitor for each regular file.
+  // Returns the number of corrupt blocks encountered.
+  size_t for_each(const entry_visitor_t& visitor) {
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
     // lax about it and we'll count the ones we cant make sense of
-    bool tried_index = false;
+    size_t corrupt_blocks = 0;
     const char* position = mm.get();
     while (position < mm.get() + mm.size()) {
       // get the header for this file
@@ -696,29 +768,19 @@ struct tar {
         continue;
       }
       auto size = h->get_file_size();
-      // do we record entry file or not
-      if (!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0')) {
+      if (h->typeflag == '0' || h->typeflag == '\0') {
         // tar doesn't automatically update path separators based on OS, so we need to do it...
         std::filesystem::path filepath{h->name};
         filepath.make_preferred();
-        const std::string& name = filepath.string();
-        // the caller may be able to construct the contents via an index header let them try
-        if (!tried_index && from_index != nullptr) {
-          tried_index = true;
-          contents = from_index(name, position, mm.get(), size);
-          // if it was able to initialize from an index we bail
-          if (!contents.empty()) {
-            return;
-          }
+        if (!visitor(filepath.string(), position, size)) {
+          break;
         }
-        // otherwise we just get each item at a time
-        contents.emplace(std::piecewise_construct, std::forward_as_tuple(name),
-                         std::forward_as_tuple(position, size));
       }
       // every entry's data is rounded to the nearst header_t sized "block"
       auto blocks = static_cast<size_t>(std::ceil(static_cast<double>(size) / sizeof(header_t)));
       position += blocks * sizeof(header_t);
     }
+    return corrupt_blocks;
   }
 };
 

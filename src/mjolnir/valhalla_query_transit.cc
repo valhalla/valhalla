@@ -99,7 +99,7 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
 
           // Skip stop pair if either stop graph Id is invalid
           GraphId orig_graphid = GraphId(sp.origin_graphid());
-          if (!orig_graphid.Is_Valid() || !GraphId(sp.destination_graphid()).Is_Valid()) {
+          if (!orig_graphid.is_valid() || !GraphId(sp.destination_graphid()).is_valid()) {
             continue;
           }
 
@@ -268,7 +268,7 @@ void LogSchedule(const std::string& transit_dir,
 
           // Skip stop pair if either stop graph Id is invalid
           orig_graphid = GraphId(sp.origin_graphid());
-          if (!orig_graphid.Is_Valid() || !GraphId(sp.destination_graphid()).Is_Valid()) {
+          if (!orig_graphid.is_valid() || !GraphId(sp.destination_graphid()).is_valid()) {
             continue;
           }
           // do we have the correct stop?
@@ -320,7 +320,7 @@ void LogSchedule(const std::string& transit_dir,
           }
         }
 
-        while (originid.Is_Valid()) {
+        while (originid.is_valid()) {
 
           GraphId tile(originid.tileid(), local_level, 0);
           std::string file_name;
@@ -383,7 +383,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, true))
       return EXIT_SUCCESS;
 
     for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng"}) {

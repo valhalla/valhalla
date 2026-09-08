@@ -1,4 +1,3 @@
-#include <iostream>
 #include <type_traits>
 
 // a little helper to pretty-print _multiple_ static_assert failures

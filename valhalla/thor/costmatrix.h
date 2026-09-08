@@ -21,7 +21,7 @@
 namespace valhalla {
 namespace thor {
 
-enum class MatrixExpansionType { reverse = 0, forward = 1 };
+enum class MatrixExpansionType : uint8_t { reverse = 0, forward = 1 };
 constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
 constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
 
@@ -33,19 +33,6 @@ constexpr float kCostThresholdBicycleDivisor =
     56.0f; // 200 km distance threshold will result in a cost threshold of ~3600 (1 hour)
 constexpr float kCostThresholdPedestrianDivisor =
     28.0f; // 200 km distance threshold will result in a cost threshold of ~7200 (2 hours)
-
-/**
- * Status of a location. Tracks remaining locations to be found
- * and a threshold or iterations. When threshold goes to 0 expansion
- * stops for this location.
- */
-struct LocationStatus {
-  int threshold;
-  std::set<uint32_t> unfound_connections;
-
-  LocationStatus(const int t) : threshold(t) {
-  }
-};
 
 /**
  * Best connection. Information about the best connection found between
@@ -146,6 +133,7 @@ protected:
   // The path distance threshold being used for the currently executing query
   float current_pathdist_threshold_;
 
+  struct LocationStatus;
   // Status
   std::array<std::vector<LocationStatus>, 2> locs_status_;
 
@@ -186,11 +174,14 @@ protected:
    * @param  options     the request options to check for the position along origin and destination
    *                     edges
    */
-  void CheckForwardConnections(const uint32_t source,
-                               const sif::BDEdgeLabel& pred,
-                               const uint32_t n,
-                               baldr::GraphReader& graphreader,
-                               const valhalla::Options& options);
+
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
+  void CheckConnections(const uint32_t source,
+                        const sif::BDEdgeLabel& pred,
+                        const uint32_t n,
+                        baldr::GraphReader& graphreader,
+                        const valhalla::Options& options);
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
@@ -215,26 +206,12 @@ protected:
                    const baldr::TimeInfo& time_info);
 
   /**
-   * Check if the edge on the backward search connects to a reached edge
-   * on the reverse search tree.
-   * @param  target      target index.
-   * @param  pred        Edge label of the predecessor.
-   * @param  n           Iteration counter.
-   * @param  graphreader the graph reader instance
-   * @param  options     the request options to check for the position along origin and destination
-   *                     edges
-   */
-  void CheckReverseConnections(const uint32_t target,
-                               const sif::BDEdgeLabel& pred,
-                               const uint32_t n,
-                               baldr::GraphReader& graphreader,
-                               const valhalla::Options& options);
-
-  /**
    * Update status when a connection is found.
    * @param  source  Source index
    * @param  target  Target index
    */
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   void UpdateStatus(const uint32_t source, const uint32_t target);
 
   /**
@@ -255,10 +232,13 @@ protected:
    * these locations.
    * @param  graphreader  Graph reader for accessing routing graph.
    * @param  target       List of target locations.
+   * @param  time_info    Time info for the reverse trees; only valid with invariant
+   *                      time and a single departure time shared by all sources.
    * @param  source       List of source locations.
    */
   void SetTargets(baldr::GraphReader& graphreader,
                   const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+                  const baldr::TimeInfo& time_info,
                   const google::protobuf::RepeatedPtrField<valhalla::Location>& sources);
 
   /**

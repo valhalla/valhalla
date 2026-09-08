@@ -680,8 +680,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::list<PointLL> shape = {egress_ll, station_ll};
 
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_values, linguistics, 0, added);
+            tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, kNoElevationData,
+                                            0, 0, shape, names, tagged_values, linguistics, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -728,8 +728,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_values, linguistics, 0, added);
+            tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, kNoElevationData,
+                                            0, 0, shape, names, tagged_values, linguistics, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(false);
 
@@ -776,8 +776,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_values, linguistics, 0, added);
+            tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, kNoElevationData,
+                                            0, 0, shape, names, tagged_values, linguistics, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -855,8 +855,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     // TODO - these need to be valhalla graph Ids
     uint32_t edge_info_offset =
-        tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid, 0, 0, 0, 0, shape,
-                                        names, tagged_values, linguistics, 0, added);
+        tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid, 0, kNoElevationData, 0,
+                                        0, shape, names, tagged_values, linguistics, 0, added);
 
     directededge.set_edgeinfo_offset(edge_info_offset);
     directededge.set_forward(false);
@@ -870,7 +870,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Get the end node. Skip this directed edge if the Valhalla tile is
       // not valid (or empty)
       GraphId end_platform_graphid(transitedge.dest_pbf_graphid);
-      if (!end_platform_graphid.Is_Valid()) {
+      if (!end_platform_graphid.is_valid()) {
         LOG_ERROR("Unstitched stop pair detected with origin near " +
                   std::to_string(platform_ll.lat()) + ',' + std::to_string(platform_ll.lng()));
         continue;
@@ -879,7 +879,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Find the lat,lng of the end stop
       PointLL endll;
       std::string endstopname;
-      if (end_platform_graphid.Tile_Base() == tileid) {
+      if (end_platform_graphid.tile_base() == tileid) {
         // End stop is in the same pbf transit tile
         const Transit_Node& endplatform = tile_pbf.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
@@ -944,8 +944,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       uint32_t edge_info_offset =
           tilebuilder_transit.AddEdgeInfo(transitedge.routeid, platform_graphid, end_platform_graphid,
-                                          0, 0, 0, 0, shape, names, tagged_values, linguistics, 0,
-                                          added);
+                                          0, kNoElevationData, 0, 0, shape, names, tagged_values,
+                                          linguistics, 0, added);
 
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
@@ -1002,7 +1002,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     if (reader.OverCommitted()) {
       reader.Trim();
     }
-    GraphId tile_id = tile_start->Tile_Base();
+    GraphId tile_id = tile_start->tile_base();
 
     // Get transit pbf tile
     const std::string transit_dir = pt.get<std::string>("transit_dir");
@@ -1203,7 +1203,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     auto tile_path = transit_file_itr->path();
     if (std::filesystem::is_regular_file(transit_file_itr->path()) &&
         (tile_path.extension() == ".pbf" || std::isdigit(tile_path.string().back()))) {
-      all_tiles.emplace(GraphTile::GetTileId(tile_path.string()));
+      all_tiles.emplace(GraphId::FromTilePath(tile_path.string()));
     }
   }
 

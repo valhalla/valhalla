@@ -32,7 +32,7 @@ std::string odin_worker_t::narrate(Api& request) const {
   // get some annotated directions
   try {
     odin::DirectionsBuilder().Build(request, markup_formatter_);
-  } catch (...) { throw valhalla_exception_t{202}; }
+  } catch (const std::exception& e) { throw valhalla_exception_t{202, e.what()}; }
 
   // serialize those to the proper format
   return tyr::serializeDirections(request);
@@ -99,7 +99,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
 void run_service(const boost::property_tree::ptree& config) {
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
-                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+                        config.get<unsigned int>("httpd.service.shutdown_seconds", 1));
 
   // gets requests from odin proxy
   auto upstream_endpoint = config.get<std::string>("odin.service.proxy") + "_out";

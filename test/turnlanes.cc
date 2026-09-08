@@ -122,7 +122,7 @@ void test_turn_lanes(const std::string& filename,
 
   // Create the request from the path bytes
   valhalla::Api request;
-  request.ParseFromString(path_bytes);
+  ASSERT_TRUE(request.ParseFromString(path_bytes));
 
   // fix_request(filename, request);
 

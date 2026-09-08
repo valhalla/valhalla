@@ -1,4 +1,5 @@
 #include "midgard/util.h"
+#include "midgard/boost_geom_types.h"
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
@@ -24,6 +25,72 @@
 #include <vector>
 
 namespace {
+
+// ~0.00064m at kRadEarthMeters
+constexpr double kAngularDistEpsilon = 1e-10;
+
+using namespace valhalla;
+using namespace valhalla::midgard;
+
+using projected_circle_t = std::pair<Point2d, double>;
+
+projected_circle_t circumcircle1(const Point2d& a) {
+  return {a, 0.};
+}
+
+projected_circle_t circumcircle2(const Point2d& a, const Point2d& b) {
+  return {a.PointAlongSegment(b), a.Distance(b) / 2.};
+}
+
+projected_circle_t circumcircle3(const Point2d& a, const Point2d& b, const Point2d& c) {
+  auto midAB = a.PointAlongSegment(b);
+  auto midBC = b.PointAlongSegment(c);
+
+  // perpendicular direction to AB
+  const double dx0 = -(b.y() - a.y());
+  const double dy0 = b.x() - a.x();
+
+  // perpendicular direction to BC
+  const double dx1 = -(c.y() - b.y());
+  const double dy1 = c.x() - b.x();
+
+  // cross product of perpendiculars
+  const double denom = dx0 * dy1 - dy0 * dx1;
+
+  // distance along perpendicular of AB to the intersection with perpendicular of BC
+  const double t = ((midBC.x() - midAB.x()) * dy1 - (midBC.y() - midAB.y()) * dx1) / denom;
+
+  // use direction and distance from mid point of AB to get the center
+  const Point2d center = {midAB.x() + t * dx0, midAB.y() + t * dy0};
+  return {center, center.Distance(a)};
+}
+
+projected_circle_t welzl_impl(std::span<Point2d> points, std::vector<Point2d>& boundary) {
+
+  if (points.empty() || boundary.size() == 3) {
+    switch (boundary.size()) {
+      case 0:
+        return {{0, 0}, 0};
+      case 1:
+        return circumcircle1(boundary[0]);
+      case 2:
+        return circumcircle2(boundary[0], boundary[1]);
+      default:
+        return circumcircle3(boundary[0], boundary[1], boundary[2]);
+    }
+  }
+
+  const Point2d& pt = points.front();
+  projected_circle_t d = welzl_impl(points.subspan(1), boundary);
+
+  if (d.second + 1e-10 >= d.first.Distance(pt))
+    return d;
+
+  boundary.push_back(pt);
+  d = welzl_impl(points.subspan(1), boundary);
+  boundary.pop_back();
+  return d;
+}
 
 std::vector<valhalla::midgard::PointLL>
 resample_at_1hz(const std::vector<valhalla::midgard::gps_segment_t>& segments) {
@@ -190,6 +257,36 @@ void trim_shape(float start,
     *(current) = end_vertex;
     shape.erase(++current, shape.end());
   }
+}
+
+void trim_shape(float start_pct, float end_pct, std::vector<PointLL>& shape) {
+  if (shape.size() < 2 || (start_pct == 0.f && end_pct == 1.f)) {
+    return;
+  }
+
+  // compute total length and the absolute distances
+  float total = midgard::length(shape);
+  float start_dist = start_pct * total;
+  float end_dist = end_pct * total;
+
+  // find the interpolated start/end vertices
+  PointLL start_vertex, end_vertex;
+  float accumulated = 0.f;
+  for (size_t i = 1; i < shape.size(); i++) {
+    float seg_len = shape[i - 1].Distance(shape[i]);
+    if (!start_vertex.IsValid() && accumulated + seg_len >= start_dist) {
+      float pct = (seg_len > 0.f) ? (start_dist - accumulated) / seg_len : 0.f;
+      start_vertex = shape[i - 1].PointAlongSegment(shape[i], pct);
+    }
+    if (accumulated + seg_len >= end_dist) {
+      float pct = (seg_len > 0.f) ? (end_dist - accumulated) / seg_len : 0.f;
+      end_vertex = shape[i - 1].PointAlongSegment(shape[i], pct);
+      break;
+    }
+    accumulated += seg_len;
+  }
+
+  trim_shape(start_dist, start_vertex, end_dist, end_vertex, shape);
 }
 
 float tangent_angle(size_t index,
@@ -386,6 +483,7 @@ template std::list<PointLL>
 resample_spherical_polyline<std::list<PointLL>>(const std::list<PointLL>&, double, bool);
 template std::list<Point2>
 resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double, bool);
+template bg::ring_ll_t resample_spherical_polyline<bg::ring_ll_t>(const bg::ring_ll_t&, double, bool);
 
 /* Resample a polyline at uniform intervals using more accurate spherical interpolation between
  * points. The length and number of samples is specified. The interval is computed based on
@@ -641,6 +739,11 @@ template bool point_in_poly<valhalla::midgard::PointLL, std::list<valhalla::midg
     const valhalla::midgard::PointLL&,
     const std::list<valhalla::midgard::PointLL>&);
 
+template bool
+point_in_poly<valhalla::midgard::PointLL, boost::geometry::model::ring<valhalla::midgard::PointLL>>(
+    const valhalla::midgard::PointLL&,
+    const boost::geometry::model::ring<valhalla::midgard::PointLL>&);
+
 template <class container_t>
 typename container_t::value_type::first_type polygon_area(const container_t& polygon) {
   // Shoelace formula
@@ -659,6 +762,7 @@ template PointLL::first_type polygon_area(const std::list<PointLL>&);
 template PointLL::first_type polygon_area(const std::vector<PointLL>&);
 template Point2::first_type polygon_area(const std::list<Point2>&);
 template Point2::first_type polygon_area(const std::vector<Point2>&);
+template PointLL::first_type polygon_area(const bg::ring_ll_t&);
 
 std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& segments,
                                            std::vector<float>& accuracies,
@@ -855,6 +959,108 @@ std::string decode64(const std::string& encoded) {
   std::string decoded(Base64Decode(padded.begin()), Base64Decode(padded.end()));
   decoded.erase(decoded.end() - pad_chars, decoded.end());
   return decoded;
+}
+
+AzimuthalEquidistant::AzimuthalEquidistant(const PointLL& center)
+    : center_(center), center_rad_(center_.lng() * kRadPerDegD, center_.lat() * kRadPerDegD),
+      sin_lat_center_(std::sin(center_rad_.second)), cos_lat_center_(std::cos(center_rad_.second)) {
+}
+
+Point2d AzimuthalEquidistant::project(const PointLL& ll) const {
+
+  // convert to radians
+  const double lon = ll.lng() * kRadPerDegD;
+  const double lat = ll.lat() * kRadPerDegD;
+
+  const double sin_lat = std::sin(lat);
+  const double cos_lat = std::cos(lat);
+
+  const double dlon = lon - center_rad_.first;
+  const double cos_dlon = std::cos(dlon);
+
+  // angular distance from center c, guarded against acos domain issues
+  // (formula 4)
+  const double cos_c = sin_lat_center_ * sin_lat + cos_lat_center_ * cos_lat * cos_dlon;
+  const double c = std::acos(std::clamp(cos_c, -1.0, 1.0));
+
+  // k is c/sin(c), approaching 1 as c->0 (formula 3)
+  const double k = (c < kAngularDistEpsilon) ? 1.0 : c / std::sin(c);
+
+  // formula 1
+  const double x = k * cos_lat * std::sin(dlon);
+
+  // formula 2
+  const double y = k * (cos_lat_center_ * sin_lat - sin_lat_center_ * cos_lat * cos_dlon);
+
+  // scale from radians to meters using earth's radius
+  return {x * kRadEarthMetersD, y * kRadEarthMetersD};
+}
+
+PointLL AzimuthalEquidistant::project_inverse(const Point2d& pt) const {
+
+  // back to radians from meters
+  const double x = pt.x() / kRadEarthMetersD;
+  const double y = pt.y() / kRadEarthMetersD;
+
+  // formula 7: angular distance from center
+  const double c = std::sqrt(x * x + y * y);
+
+  // trivially finished if input point is the center point
+  if (c < 1e-10)
+    return center_;
+
+  const double sin_c = std::sin(c);
+  const double cos_c = std::cos(c);
+
+  // formula 5
+  double lat =
+      std::asin(std::clamp(cos_c * sin_lat_center_ + y * sin_c * cos_lat_center_ / c, -1.0, 1.0));
+
+  // formula 6 with special cases for center point at 90° or -90°
+  double lon;
+  if (std::abs(center_rad_.second - kPiOver2D) < 1e-10) {
+    lon = center_rad_.first + std::atan2(x, -y);
+  } else if (std::abs(center_rad_.second + kPiOver2D) < 1e-10) {
+    lon = center_rad_.first + std::atan2(x, y);
+  } else {
+    lon = center_rad_.first +
+          std::atan2(x * sin_c, c * cos_lat_center_ * cos_c - y * sin_lat_center_ * sin_c);
+  }
+
+  return {lon * kDegPerRadD, lat * kDegPerRadD};
+}
+
+std::optional<circle_t> minimum_bounding_circle(const std::vector<PointLL>& points,
+                                                double distance_threshold) {
+  if (points.empty())
+    return std::nullopt;
+
+  // bbox check, trivially finished
+  // if bbox is larger than the distance threshold
+  AABB2<PointLL> bbox(points);
+  if (bbox.minpt().Distance(bbox.maxpt()) > distance_threshold)
+    return std::nullopt;
+
+  const PointLL center_ll = bbox.Center();
+  auto azimuthal_equidistant = AzimuthalEquidistant(center_ll);
+
+  std::vector<Point2d> pts;
+  pts.reserve(points.size());
+  for (const auto& p : points)
+    pts.push_back(azimuthal_equidistant.project(p));
+
+  // a place to store the boundary
+  std::vector<Point2d> boundary;
+
+  // welzl's expects shuffled input
+  thread_local std::mt19937 shuffle_rng{std::random_device{}()};
+  std::shuffle(pts.begin(), pts.end(), shuffle_rng);
+
+  projected_circle_t result = welzl_impl(std::span(pts), boundary);
+
+  // finally reproject the center to lat/lon
+  const PointLL center = azimuthal_equidistant.project_inverse(result.first);
+  return circle_t{center, result.second};
 }
 
 } // namespace midgard

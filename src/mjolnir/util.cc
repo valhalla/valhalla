@@ -5,6 +5,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "mjolnir/areabuilder.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphbuilder.h"
@@ -21,10 +22,10 @@
 #include <boost/algorithm/string/constants.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <openssl/evp.h>
+#include <cpp-statsd-client/StatsdClient.hpp>
 
 #include <filesystem>
-#include <regex>
+#include <format>
 
 using boost::property_tree::ptree;
 using namespace valhalla::baldr;
@@ -36,6 +37,8 @@ namespace {
 // Temporary files used during tile building
 const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
+const std::string edge_shapes_file = "edge_shapes.bin";
+const std::string edge_node_ids_file = "edge_node_ids.bin";
 const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
 const std::string tile_manifest_file = "tile_manifest.json";
@@ -47,56 +50,29 @@ const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
 
-uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& tile_dir) {
-  std::sort(paths.begin(), paths.end());
-
-  // uses openssl's API which can build the digest from byte chunks to save memory
-  EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-  std::array<unsigned char, 16> digest{};
-  try {
-    EVP_DigestInit_ex(ctx, EVP_md5(), nullptr);
-
-    std::vector<char> buffer(1 << 26); // 64 MiB
-
-    for (const auto& p : paths) {
-      std::ifstream in(p, std::ios::binary);
-      if (!in) {
-        throw std::runtime_error("Failed to open: " + p);
-      }
-
-      while (in) {
-        in.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-        std::streamsize got = in.gcount();
-        if (got > 0) {
-          if (EVP_DigestUpdate(ctx, buffer.data(), static_cast<size_t>(got)) != 1) {
-            throw std::runtime_error("EVP_DigestUpdate failed");
-          }
-        }
-      }
-    }
-
-    unsigned int out_len = 0;
-    if (EVP_DigestFinal_ex(ctx, digest.data(), &out_len) != 1 || out_len != digest.size()) {
-      throw std::runtime_error("EVP_DigestFinal_ex failed");
-    }
-  } catch (...) {
-    EVP_MD_CTX_free(ctx);
-    throw;
+// read a tile's header, let the callback mutate it, write it back
+template <typename Fn> void update_tile_header(const std::filesystem::path& p, const Fn& mutate) {
+  std::fstream file(p, std::ios::in | std::ios::out | std::ios::binary);
+  if (!file.is_open()) {
+    throw std::runtime_error("Failed to open file " + p.string());
   }
-
-  EVP_MD_CTX_free(ctx);
-
-  // roll the 128 bit digest into a uint64
-  uint64_t lo = 0, hi = 0;
-  for (int i = 0; i < 8; ++i) {
-    lo = (lo << 8) | digest[i];
-    hi = (hi << 8) | digest[8 + i];
+  GraphTileHeader header;
+  file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
+  mutate(header);
+  file.seekp(0);
+  file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
+  if (!file) {
+    throw std::runtime_error("Failed to write to file " + p.string());
   }
+}
 
-  std::hash<uint64_t> hasher;
-  uint64_t checksum = lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
-
-  return checksum;
+// run a callback for every .gph tile under tile_dir
+template <typename Fn> void for_each_tile(const std::string& tile_dir, const Fn& fn) {
+  for (std::filesystem::recursive_directory_iterator it(tile_dir), end; it != end; ++it) {
+    if (it->is_regular_file() && it->path().extension() == ".gph") {
+      fn(it->path());
+    }
+  }
 }
 
 /**
@@ -285,6 +261,7 @@ uint32_t GetStopImpact(uint32_t from,
 
   // Get the highest classification of other roads at the intersection
   bool all_ramps = true;
+  bool found_other_edge = false;
   const DirectedEdge* edge = &edges[0];
   // kUnclassified,  kResidential, and kServiceOther are grouped
   // together for the stop_impact logic.
@@ -304,10 +281,25 @@ uint32_t GetStopImpact(uint32_t from,
       }
     }
 
+    // Track whether any other drivable edge exists at this node (in either direction).
+    // This detects real intersections even on one-way streets where the cross-street
+    // only has forward access from this node.
+    if (i != to && i != from && ((edge->reverseaccess() | edge->forwardaccess()) & kAutoAccess)) {
+      found_other_edge = true;
+    }
+
     // Check if not a ramp or turn channel
     if (!edge->link()) {
       all_ramps = false;
     }
+  }
+
+  // No other drivable edges means this is not a real intersection (for example the way id has
+  // changed so we need a new edge, but we're still on the same road with no other interfering
+  // traffic). Return 0 so we don't add phantom transition costs.
+  // Don't apply this to U-turns (from == to), as dead-end U-turns should retain their cost.
+  if (!found_other_edge && from != to) {
+    return 0;
   }
 
   // kUnclassified,  kResidential, and kServiceOther are grouped
@@ -410,6 +402,32 @@ uint32_t GetStopImpact(uint32_t from,
 namespace valhalla {
 namespace mjolnir {
 
+uint16_t compute_tileset_build_id(const std::string& tile_dir) {
+  // sum the per-tile data hashes already stored in each header's low bits, no re-hashing needed.
+  // addition is order independent, so the build id doesn't depend on the walk
+  uint64_t build_id_acc = 0;
+  for_each_tile(tile_dir, [&](const std::filesystem::path& p) {
+    std::ifstream in(p, std::ios::binary);
+    GraphTileHeader header;
+    in.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
+    build_id_acc += header.tile_checksum();
+  });
+
+  // fold to 16 bits (enough for URL based deployments)
+  return build_id_acc ^ (build_id_acc >> 16) ^ (build_id_acc >> 32) ^ (build_id_acc >> 48);
+}
+
+void set_tileset_build_id(const std::string& tile_dir) {
+  // stamp the computed build id into every tile's high bits
+  const uint64_t build_id_bits = static_cast<uint64_t>(compute_tileset_build_id(tile_dir))
+                                 << kTileHashBits;
+  for_each_tile(tile_dir, [&](const std::filesystem::path& p) {
+    update_tile_header(p, [&](GraphTileHeader& h) {
+      h.set_raw_checksum(h.tile_checksum() | build_id_bits);
+    });
+  });
+}
+
 /**
  * Splits a tag into a vector of strings.  Delim defaults to ;
  */
@@ -424,10 +442,20 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) 
 }
 
 std::vector<std::string> GetTagTokens(const std::string& tag_value, const std::string& delim_str) {
-  std::regex regex_str(delim_str);
-  std::vector<std::string> tokens(std::sregex_token_iterator(tag_value.begin(), tag_value.end(),
-                                                             regex_str, -1),
-                                  std::sregex_token_iterator());
+  std::vector<std::string> tokens;
+  if (delim_str.empty()) {
+    tokens.emplace_back(tag_value);
+    return tokens;
+  }
+  size_t start = 0, pos;
+  while ((pos = tag_value.find(delim_str, start)) != std::string::npos) {
+    tokens.emplace_back(tag_value, start, pos - start);
+    start = pos + delim_str.size();
+  }
+  // an empty token after the last delimiter is not emitted
+  if (start < tag_value.size()) {
+    tokens.emplace_back(tag_value, start);
+  }
   return tokens;
 }
 
@@ -455,7 +483,7 @@ std::string remove_double_quotes(const std::string& s) {
  * @return value between 0 and 15 representing the average curviness of the input shape. lower
  *         values indicate less curvy shapes and higher values indicate curvier shapes
  */
-uint32_t compute_curvature(const std::list<PointLL>& shape) {
+uint32_t compute_curvature(const std::vector<PointLL>& shape) {
   // Edges with just 2 shape points have no curvature.
   // TODO - perhaps a post-process to "average" curvature along adjacent edges
   // and smooth curvature on connected edges may be desirable?
@@ -662,9 +690,16 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     std::filesystem::create_directories(tile_dir);
   }
 
+  // Snapshot for per-stage delta reporting
+  auto log_stage = [&config](BuildStage stage) { build_stats::get().log_stage(stage, config); };
+  // nothing to report, but logic only works correctly if every stage is logged
+  log_stage(BuildStage::kInitialize);
+
   // Set up the temporary (*.bin) files used during processing
   std::string ways_bin = tile_dir + ways_file;
   std::string way_nodes_bin = tile_dir + way_nodes_file;
+  std::string edge_shapes_bin = tile_dir + edge_shapes_file;
+  std::string edge_node_ids_bin = tile_dir + edge_node_ids_file;
   std::string nodes_bin = tile_dir + nodes_file;
   std::string edges_bin = tile_dir + edges_file;
   std::string tile_manifest = tile_dir + tile_manifest_file;
@@ -684,12 +719,12 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
                                          way_nodes_bin, access_bin);
-    osm_data.pbf_checksum_ = get_pbf_checksum(input_files, tile_dir);
 
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    log_stage(BuildStage::kParseWays);
   }
 
   // Parse OSM data
@@ -704,6 +739,23 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    log_stage(BuildStage::kParseRelations);
+  }
+
+  // Second pass over the ways to collect the geometry of ways that
+  // are members of pedestrian area relations
+  if (start_stage <= BuildStage::kParseAreaWays && BuildStage::kParseAreaWays <= end_stage) {
+    if (config.get<bool>("mjolnir.pedestrian_areas", false) &&
+        config.get<bool>("mjolnir.include_pedestrian", true)) {
+      PBFGraphParser::ParseAreaWays(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
+                                    osm_data);
+
+      // Write the OSMData to files if the end stage is less than enhancing
+      if (end_stage <= BuildStage::kEnhance) {
+        osm_data.write_to_temp_files(tile_dir);
+      }
+    }
+    log_stage(BuildStage::kParseAreaWays);
   }
 
   // Parse OSM data
@@ -717,6 +769,21 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    log_stage(BuildStage::kParseNodes);
+  }
+
+  // Builds pedestrian areas
+  if (start_stage <= BuildStage::kBuildAreas && BuildStage::kBuildAreas <= end_stage) {
+    if (config.get<bool>("mjolnir.pedestrian_areas", false) &&
+        config.get<bool>("mjolnir.include_pedestrian", true)) {
+      AreaBuilder::BuildAreas(config.get_child("mjolnir"), ways_bin, way_nodes_bin, osm_data);
+
+      // Write the OSMData to files if the end stage is less than enhancing
+      if (end_stage <= BuildStage::kEnhance) {
+        osm_data.write_to_temp_files(tile_dir);
+      }
+    }
+    log_stage(BuildStage::kBuildAreas);
   }
 
   // Construct edges
@@ -731,6 +798,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Output manifest
     TileManifest manifest{tiles};
     manifest.LogToFile(tile_manifest);
+    log_stage(BuildStage::kConstructEdges);
   }
 
   // Build Valhalla routing tiles
@@ -749,8 +817,10 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     }
 
     // Build the graph using the OSMNodes and OSMWays from the parser
-    GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin, linguistic_node_bin, tiles);
+    GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin,
+                        edge_shapes_bin, edge_node_ids_bin, cr_from_bin, cr_to_bin,
+                        linguistic_node_bin, tiles);
+    log_stage(BuildStage::kBuild);
   }
 
   // Enhance the local level of the graph. This adds information to the local
@@ -762,16 +832,19 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
       osm_data.read_from_unique_names_file(tile_dir);
     }
     GraphEnhancer::Enhance(config, osm_data, access_bin);
+    log_stage(BuildStage::kEnhance);
   }
 
   // Perform optional edge filtering (remove edges and nodes for specific access modes)
   if (start_stage <= BuildStage::kFilter && BuildStage::kFilter <= end_stage) {
     GraphFilter::Filter(config);
+    log_stage(BuildStage::kFilter);
   }
 
   // Add transit
   if (start_stage <= BuildStage::kTransit && BuildStage::kTransit <= end_stage) {
     TransitBuilder::Build(config);
+    log_stage(BuildStage::kTransit);
   }
 
   // Build bike share stations
@@ -780,6 +853,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
       osm_data.read_from_unique_names_file(tile_dir);
     }
     BssBuilder::Build(config, osm_data, bss_nodes_bin);
+    log_stage(BuildStage::kBss);
   }
 
   // Builds additional hierarchies if specified within config file. Connections
@@ -788,6 +862,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (build_hierarchy) {
     if (start_stage <= BuildStage::kHierarchy && BuildStage::kHierarchy <= end_stage) {
       HierarchyBuilder::Build(config, new_to_old_bin, old_to_new_bin);
+      log_stage(BuildStage::kHierarchy);
     }
 
     // Build shortcuts if specified in the config file. Shortcuts can only be
@@ -796,6 +871,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (build_shortcuts) {
       if (start_stage <= BuildStage::kShortcuts && BuildStage::kShortcuts <= end_stage) {
         ShortcutBuilder::Build(config);
+        log_stage(BuildStage::kShortcuts);
       }
     } else {
       LOG_INFO("Skipping shortcut builder");
@@ -807,6 +883,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Add elevation to the tiles
   if (start_stage <= BuildStage::kElevation && BuildStage::kElevation <= end_stage) {
     ElevationBuilder::Build(config);
+    log_stage(BuildStage::kElevation);
   }
 
   // Build the Complex Restrictions
@@ -815,11 +892,14 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // within the tile. However, there is no serialization currently available for complex restrictions.
   if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
     RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
+    log_stage(BuildStage::kRestrictions);
   }
 
   // Validate the graph and add information that cannot be added until full graph is formed.
   if (start_stage <= BuildStage::kValidate && BuildStage::kValidate <= end_stage) {
     GraphValidator::Validate(config);
+    log_stage(BuildStage::kValidate);
+    set_tileset_build_id(tile_dir);
   }
 
   // Cleanup bin files
@@ -827,6 +907,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     LOG_INFO("Cleaning up temporary *.bin files within " + tile_dir);
     remove_temp_file(ways_bin);
     remove_temp_file(way_nodes_bin);
+    remove_temp_file(edge_shapes_bin);
+    remove_temp_file(edge_node_ids_bin);
     remove_temp_file(nodes_bin);
     remove_temp_file(edges_bin);
     remove_temp_file(access_bin);
@@ -838,6 +920,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(old_to_new_bin);
     remove_temp_file(tile_manifest);
     OSMData::cleanup_temp_files(tile_dir);
+    log_stage(BuildStage::kCleanup);
   }
   return true;
 }
@@ -881,6 +964,49 @@ TileManifest TileManifest::ReadFromFile(const std::string& filename) {
   LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
            filename);
   return TileManifest{tileset};
+}
+
+void build_stats::record_timing(const std::string& key, uint64_t seconds) {
+  std::lock_guard<std::mutex> lock(timings_mutex_);
+  pending_timings_.emplace_back(key, seconds);
+}
+
+void build_stats::log_stage(BuildStage stage, const boost::property_tree::ptree& config) const {
+  auto stage_name = to_string(stage);
+  std::vector<std::pair<std::string, uint32_t>> statsd_entries;
+  for (uint8_t i = 0; i < kCount; ++i) {
+    if (stage == meta[i].stage) {
+      uint32_t current = counters_[i].load();
+      statsd_entries.emplace_back(std::string("mjolnir.") + meta[i].statsd_key, current);
+      if (current > 0 && meta[i].is_warning) {
+        LOG_WARN(std::format("[{}] {} {}", stage_name, current, meta[i].log_label));
+      }
+    }
+  }
+
+  auto host = config.get<std::string>("statsd.host", "");
+  if (host.empty()) {
+    return;
+  }
+  Statsd::StatsdClient client(host, config.get<int>("statsd.port", 8125),
+                              config.get<std::string>("statsd.prefix", ""),
+                              config.get<uint64_t>("statsd.batch_size", 500), 0);
+  std::vector<std::string> tags;
+  auto added_tags = config.get_child_optional("statsd.tags");
+  if (added_tags) {
+    for (const auto& tag : *added_tags) {
+      tags.push_back(tag.second.data());
+    }
+  }
+  for (const auto& [key, count] : statsd_entries) {
+    client.gauge(key, count, 1.f, tags);
+  }
+  for (const auto& [key, seconds] : pending_timings_) {
+    client.gauge(key, seconds, 1.f, tags);
+  }
+  pending_timings_.clear();
+  client.gauge("mjolnir.stage", static_cast<int>(stage), 1.f, tags);
+  client.flush();
 }
 
 } // namespace mjolnir

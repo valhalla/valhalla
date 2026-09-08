@@ -9,7 +9,6 @@
 #include "test.h"
 #include "tile_server.h"
 
-#include <boost/property_tree/ptree.hpp>
 #include <prime_server/prime_server.hpp>
 
 #include <algorithm>
@@ -173,7 +172,7 @@ std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::st
   if (tile_dir.empty() || tile.empty())
     return {};
 
-  valhalla::mjolnir::GraphTileBuilder tilebuilder(tile_dir, GraphTile::GetTileId(tile_dir + tile),
+  valhalla::mjolnir::GraphTileBuilder tilebuilder(tile_dir, GraphId::FromTilePath(tile_dir + tile),
                                                   true);
   tilebuilder.header_builder().set_has_elevation(true);
 
@@ -325,7 +324,7 @@ std::string filename(const std::string& url) {
  * @return - full path to the downloaded file.
  * */
 std::string download(const std::string& url, const std::string& path) {
-  curl_tile_getter_t tile_getter(3, "", false);
+  curl_tile_getter_t tile_getter(3, "", false, "");
   std::int8_t repeat{3};
   auto result = tile_getter.get(url);
   while (--repeat > 0 && result.status_ != tile_getter_t::status_code_t::SUCCESS)

@@ -229,7 +229,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
   auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
   auto pbf_filename = workdir + "/map.pbf";
-  detail::build_pbf(node_layout, ways, nodes, relations, pbf_filename, 0, false);
+  detail::build_pbf(node_layout, ways, nodes, relations, pbf_filename, false);
 
   valhalla::gurka::map result;
   result.nodes = node_layout;
@@ -417,9 +417,9 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   // check a and c are in Germany
   {
     auto a_id = findNode(graph_reader, admin_map.nodes, "a");
-    EXPECT_TRUE(a_id.Is_Valid());
+    EXPECT_TRUE(a_id.is_valid());
     auto c_id = findNode(graph_reader, admin_map.nodes, "c");
-    EXPECT_TRUE(c_id.Is_Valid());
+    EXPECT_TRUE(c_id.is_valid());
     const auto* a = graph_reader.nodeinfo(a_id);
     EXPECT_EQ(a->drive_on_right(), true);
     EXPECT_EQ(a->named_intersection(), false);
@@ -437,7 +437,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   // b is in an austrian enclave
   {
     auto b_id = findNode(graph_reader, admin_map.nodes, "b");
-    EXPECT_TRUE(b_id.Is_Valid());
+    EXPECT_TRUE(b_id.is_valid());
     const auto* b = graph_reader.nodeinfo(b_id);
     EXPECT_EQ(b->drive_on_right(), true);
     EXPECT_EQ(b->named_intersection(), false);
@@ -449,7 +449,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   // 0 is in a belgian enclave
   {
     auto zero_id = findNode(graph_reader, admin_map.nodes, "0");
-    EXPECT_TRUE(zero_id.Is_Valid());
+    EXPECT_TRUE(zero_id.is_valid());
     const auto* zero = graph_reader.nodeinfo(zero_id);
     EXPECT_EQ(zero->drive_on_right(), true);
     EXPECT_EQ(zero->named_intersection(), false);
@@ -461,7 +461,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   // 1 is orphaned in an enclave of the netherlands with no admin coverage
   {
     auto one_id = findNode(graph_reader, admin_map.nodes, "1");
-    EXPECT_TRUE(one_id.Is_Valid());
+    EXPECT_TRUE(one_id.is_valid());
     const auto* one = graph_reader.nodeinfo(one_id);
     EXPECT_EQ(one->drive_on_right(), false);
     EXPECT_EQ(one->named_intersection(), false);

@@ -123,6 +123,9 @@ void locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
       writer.set_precision(tyr::kCoordinatePrecision);
       writer("lat", corr_ll.lat());
       writer("lon", corr_ll.lng());
+      if (!location.name().empty()) {
+        writer("name", location.name());
+      }
     }
     writer.end_object();
   }
@@ -156,6 +159,7 @@ void serialize_row(const valhalla::Matrix& matrix,
       writer("to_index", target_index + (i - start_td));
       writer("time", static_cast<uint64_t>(time));
       writer("distance", static_cast<double>(matrix.distances()[i] * distance_scale));
+      writer("cost", static_cast<double>(matrix.costs()[i]));
       if (!date_time.empty()) {
         writer("date_time", date_time);
       }
@@ -209,6 +213,7 @@ void serialize_row(const valhalla::Matrix& matrix,
       writer("to_index", target_index + (i - start_td));
       writer("time", nullptr);
       writer("distance", nullptr);
+      writer("cost", nullptr);
     }
     writer.end_object();
   }
@@ -295,12 +300,8 @@ namespace tyr {
 std::string serializeMatrix(Api& request) {
   double distance_scale = (request.options().units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
 
-  // error if we failed finding any connection
   // dont bother serializing in case of /expansion request
-  if (std::all_of(request.matrix().times().begin(), request.matrix().times().end(),
-                  [](const float& time) { return time == kMaxCost; })) {
-    throw valhalla_exception_t(442);
-  } else if (request.options().action() == Options_Action_expansion) {
+  if (request.options().action() == Options_Action_expansion) {
     return "";
   }
 

@@ -17,4 +17,4 @@ valhalla_module(NAME skadi
     valhalla::baldr
     Boost::boost
     PkgConfig::ZLIB
-    PkgConfig::LZ4)
+    ${lz4_target})
