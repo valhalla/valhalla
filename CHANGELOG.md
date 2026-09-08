@@ -7,6 +7,8 @@
    * FIXED: don't advance bounding-circle iterator past the end [#6241](https://github.com/valhalla/valhalla/pull/6241)
    * FIXED: update final path distance in recosting for `CostMatrix` [#6258](https://github.com/valhalla/valhalla/pull/6258)
    * FIXED: Set `edge_index` for all interpolated points in `/trace_attributes` [#6278](https://github.com/valhalla/valhalla/pull/6278)
+   * FIXED: Shortcut/transit/etc. edges should use `kNoElevationData` (-500.0) instead of 0.0 [#6306](https://github.com/valhalla/valhalla/pull/6306)
+   * FIXED: Do not require Python for building libvalhalla [#6303](https://github.com/valhalla/valhalla/pull/6303)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
@@ -17,8 +19,6 @@
    * ADDED: documentation page for the pedestrian areas feature [#6266](https://github.com/valhalla/valhalla/pull/6266)
    * ADDED: Add use_distance to truck, bus, taxi, motorcycle and motor_scooter cost [#6214](https://github.com/valhalla/valhalla/pull/6214)
    * ADDED: limitations, future work and performance sections to the pedestrian areas documentation [#6279](https://github.com/valhalla/valhalla/pull/6279)
-   * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236) 
-   * BREAKING: new parameter `max_exclude_polygons_vertices`, defaulting to 100 [#6156](https://github.com/valhalla/valhalla/pull/6156)
    * UPDATED: Faster `exclude_polygons` [#6156](https://github.com/valhalla/valhalla/pull/6156)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
@@ -35,6 +35,7 @@
    * ADDED: classify `surface=laterite` and `surface=clay` as `Surface::kDirt` [#6171](https://github.com/valhalla/valhalla/issues/6171)
    * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
    * CHANGED: Speedup sequence sort by using PSRS algorithm [#6226](https://github.com/valhalla/valhalla/pull/6226)
+   * ADDED: more convenience bindings for Python [#6197](https://github.com/valhalla/valhalla/pull/6197)
 
 ## Release Date: 2026-07-08 Valhalla 3.8.2
 * **Removed**
