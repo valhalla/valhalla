@@ -19,6 +19,7 @@
    * ADDED: documentation page for the pedestrian areas feature [#6266](https://github.com/valhalla/valhalla/pull/6266)
    * ADDED: Add use_distance to truck, bus, taxi, motorcycle and motor_scooter cost [#6214](https://github.com/valhalla/valhalla/pull/6214)
    * ADDED: limitations, future work and performance sections to the pedestrian areas documentation [#6279](https://github.com/valhalla/valhalla/pull/6279)
+   * ADDED: store the reverse speed limit as an `EdgeInfo` tagged value when `maxspeed:forward` and `maxspeed:backward` differ; `EdgeInfo::speed_limit(bool forward)` replaces `speed_limit()` and `/locate` reports `edge_info.speed_limit` for the direction of the edge [#5983](https://github.com/valhalla/valhalla/pull/5983)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
@@ -105,6 +106,7 @@
    * FIXED: Do not crash on backwards traces over oneway edges [#6048](https://github.com/valhalla/valhalla/pull/6048)
 * **Enhancement**
    * ADDED: multimodal costing `auto_pedestrian` [#5780](https://github.com/valhalla/valhalla/pull/5780)
+   * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906) 
    * CHANGED: remove `baldr::{Location,PathLocation}` and use their protobuf versions instead [#5906](https://github.com/valhalla/valhalla/pull/5906)
    * ADDED: `Cache-Control = public, max-age=N"` response header to `/tile` requests; also added RPATH to local debug builds to fix ldd resolving when libvalhalla is installed system-wide [#5902](https://github.com/valhalla/valhalla/pull/5902)
    * CHANGED: bump tz to 2026a [#5930](https://github.com/valhalla/valhalla/pull/5930)

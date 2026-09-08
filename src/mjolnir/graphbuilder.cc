@@ -734,7 +734,12 @@ void BuildTileSet(const std::string& ways_file,
           } else if (!forward && w.backward_tagged_speed()) {
             speed = w.backward_speed();
           }
-          uint32_t speed_limit = w.speed_limit();
+
+          // forward/backward speeds only come from maxspeed:forward/backward; EdgeInfo stores the
+          // way's forward limit, the reverse one is appended as a tagged value when it differs
+          uint32_t speed_limit = w.forward_tagged_speed() ? w.forward_speed() : w.speed_limit();
+          uint32_t reverse_speed_limit =
+              w.backward_tagged_speed() ? w.backward_speed() : w.speed_limit();
 
           const uint8_t directed_truck_speed =
               forward ? w.truck_speed_forward() : w.truck_speed_backward();
@@ -985,6 +990,15 @@ void BuildTileSet(const std::string& ways_file,
               value += static_cast<std::string::value_type>(TaggedValue::kConditionalSpeedLimits);
               value.append(reinterpret_cast<const std::string::value_type*>(&it->second),
                            sizeof(ConditionalSpeedLimit));
+              tagged_values.push_back(std::move(value));
+            }
+
+            // Append reverse speed limit as tagged value if forward/reverse speed limits differ
+            if (speed_limit != reverse_speed_limit) {
+              std::string value;
+              value.reserve(1 + sizeof(uint8_t));
+              value += static_cast<std::string::value_type>(TaggedValue::kReverseSpeedLimit);
+              value += static_cast<std::string::value_type>(reverse_speed_limit);
               tagged_values.push_back(std::move(value));
             }
 
