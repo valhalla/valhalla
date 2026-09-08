@@ -228,39 +228,11 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        tile_getter_t* tile_getter,
                                        const std::string& tile_dir,
                                        uint64_t range_offset,
-                                       uint64_t range_size,
-                                       const std::filesystem::path& id_txt_path,
-                                       std::optional<uint64_t> id_checksum) {
+                                       uint64_t range_size) {
   // Don't bother with invalid ids
   if (!graphid.is_valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
   }
-
-  auto check_tile_checksum = [&](const GraphTileHeader& header) {
-    // only the build id (identical across the tileset) tells us whether the remote was rebuilt; the
-    // per-tile hash differs from tile to tile
-    uint64_t build_id = header.build_id();
-    if (build_id == 0 && header.tile_checksum() == 0) {
-      // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
-      LOG_WARN(
-          "Remote tile is missing the checksum attribute, please update the tile building valhalla instance");
-    }
-    if (!tile_dir.empty()) {
-      if (!id_checksum) {
-        // first tile in a fresh tile_dir: record the URL & tileset build id
-        static std::mutex mutex;
-        std::lock_guard lock{mutex};
-        std::ofstream id_txt_file(id_txt_path, std::ios::binary);
-        if (id_txt_file) {
-          id_txt_file << tile_url << std::endl;
-          id_txt_file << build_id << std::endl;
-        }
-      } else if (build_id != *id_checksum) {
-        LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
-        throw valhalla_exception_t(446);
-      }
-    }
-  };
 
   LOG_INFO("Downloading tile " + std::to_string(graphid) + " from " + tile_url);
 
@@ -280,22 +252,12 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     return nullptr;
   }
 
-  if (!tile_getter->gzipped()) {
-    // inspect the header for the checksum
-    // it's a POD type and thus trivially copyable
-    GraphTileHeader header;
-    std::memcpy(&header, result.bytes_.data(), sizeof(header));
-    check_tile_checksum(header);
-  }
-
   // try to cache it on disk so we dont have to keep fetching it from url
   store(tile_dir, graphid, tile_getter, result.bytes_);
 
   // turn the memory into a tile
   if (tile_getter->gzipped()) {
-    auto tile = DecompressTile(graphid, result.bytes_);
-    check_tile_checksum(*tile.get()->header());
-    return tile;
+    return DecompressTile(graphid, result.bytes_);
   }
 
   return graph_tile_ptr{

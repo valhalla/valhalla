@@ -183,8 +183,6 @@ public:
    * @param  tile_dir the directory to cache graph tiles
    * @param  range_offset HTTP range offsete in case of a tar URL
    * @param  range_size HTTP range offsete in case of a tar URL
-   * @param  id_txt_path the file path to the tile_dir's id.txt
-   * @param  id_checksum the (optional) expected checksum of the tileset
    * @return the graph tile or nullptr
    */
 
@@ -193,9 +191,7 @@ public:
                                      tile_getter_t* tile_getter,
                                      const std::string& tile_dir,
                                      uint64_t range_offset = 0,
-                                     uint64_t range_size = 0,
-                                     const std::filesystem::path& id_txt_path = "",
-                                     std::optional<uint64_t> id_checksum = std::nullopt);
+                                     uint64_t range_size = 0);
 
   /**
    * Construct a tile given a url for the tile using curl
