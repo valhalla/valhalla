@@ -855,6 +855,8 @@ TEST(GtfsExample, MakeTile) {
     }
     for (const auto& edge : tile->GetDirectedEdges()) {
       uses[edge.use()]++;
+      // nothing here was built with elevation, so every edge has to carry the no-data sentinel
+      EXPECT_EQ(tile->edgeinfo(&edge).mean_elevation(), kNoElevationData);
       if (edge.use() == Use::kTransitConnection) {
         EXPECT_TRUE((edge.forwardaccess() & kPedestrianAccess) ||
                     (edge.reverseaccess() & kPedestrianAccess));

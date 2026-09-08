@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Saavu: <TIME>.",
+        "1": "Saavu: <TIME> pysäkille <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Saavu kello <TIME>.",
+        "1": "Saavu kello <TIME> pysäkille <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Jatka <RELATIVE_DIRECTION>.",
+        "1": "Jatka <RELATIVE_DIRECTION> kadulla <STREET_NAMES>.",
+        "2": "Jatka <RELATIVE_DIRECTION> kadulle <BEGIN_STREET_NAMES>. ‎Jatka eteenpäin kadulla <STREET_NAMES>.",
+        "3": "Jatka <RELATIVE_DIRECTION> Jatkaaksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Jatka <RELATIVE_DIRECTION> liittymässä <JUNCTION_NAME>.",
+        "5": "Jatka <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Jatka <RELATIVE_DIRECTION>.",
+        "1": "Jatka <RELATIVE_DIRECTION> kadulla <STREET_NAMES>.",
+        "2": "Jatka <RELATIVE_DIRECTION> kadulle ‎‎<BEGIN_STREET_NAMES>.",
+        "3": "Jatka<RELATIVE_DIRECTION> Jatkaaksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Jatka <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "5": "Jatka <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> vaihtuu kaduksi ‎‎<STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> vaihtuu kaduksi ‎‎<STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Jatka.",
+        "1": "Jatka kadulla <STREET_NAMES>.",
+        "2": "Jatka liittymässä <JUNCTION_NAME>.",
+        "3": "Jatka suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Jatka.",
+        "1": "Jatka <LENGTH>.",
+        "2": "Jatka kadulla <STREET_NAMES>.",
+        "3": "Jatka kadulla <STREET_NAMES> <LENGTH>.",
+        "4": "Jatka liittymässä <JUNCTION_NAME>.",
+        "5": "Jatka liittymässä <JUNCTION_NAME> <LENGTH>.",
+        "6": "Jatka suuntana <TOWARD_SIGN>.",
+        "7": "Jatka suuntana <TOWARD_SIGN> <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Jatka.",
+        "1": "Jatka kadulla <STREET_NAMES>.",
+        "2": "Jatka liittymässä <JUNCTION_NAME>.",
+        "3": "Jatka suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Lähde: <TIME>.",
+        "1": "Lähde: <TIME> pysäkiltä <TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Lähde kello <TIME>.",
+        "1": "Lähde kello <TIME> pysäkiltä <TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Olet saapunut määränpäähäsi.",
+        "1": "Olet saapunut määränpäähän <DESTINATION>.",
+        "2": "Määränpääsi on <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> on <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "vasemmalla",
+        "oikealla"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Olet saapunut määränpäähäsi.",
+        "1": "Olet saapunut määränpäähän <DESTINATION>.",
+        "2": "Määränpääsi on <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> on <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "vasemmalla",
+        "oikealla"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Saavut määränpäähäsi.",
+        "1": "Saavut määränpäähän <DESTINATION>.",
+        "2": "Määränpääsi on <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> on <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "vasemmalla",
+        "oikealla"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Take the elevator.",
+        "1": "Take the elevator to <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Enter the building.",
+        "1": "Enter the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Mene lautalle.",
+        "1": "Mene kadulle <STREET_NAMES>.",
+        "2": "Mene kadun <STREET_NAMES> lautalle <FERRY_LABEL>.",
+        "3": "Mene lautalle suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ferry_label": "Lautta"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Mene lautalle.",
+        "1": "Mene kadulle <STREET_NAMES>.",
+        "2": "Mene kadun <STREET_NAMES> lautalle ‎‎<FERRY_LABEL>.",
+        "3": "Mene lautalle suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ferry_label": "Lautta"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Mene kiertoliittymään.",
+        "1": "Mene kiertoliittymään ja valitse <ORDINAL_VALUE> ‎ulosmeno.",
+        "2": "Mene kiertoliittymään ja valitse <ORDINAL_VALUE> ‎ulosmeno kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Mene kiertoliittymään ja valitse <ORDINAL_VALUE> ‎ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Jatka kadulla ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Mene kiertoliittymään ja valitse <ORDINAL_VALUE> ‎ulosmeno suuntana <TOWARD_SIGN>.",
+        "5": "Mene kiertoliittymään ja valitse ulosmeno kadulle ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Mene kiertoliittymään ja valitse ulosmeno kadulle ‎‎<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Jatka kadulla ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Mene kiertoliittymään ja valitse ulosmeno suuntana ‎‎<TOWARD_SIGN>.",
+        "8": "Mene kadulle <STREET_NAMES>",
+        "9": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno.",
+        "10": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Jatka kadulla ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno suuntana <TOWARD_SIGN>.",
+        "13": "Mene kadulle <STREET_NAMES> ja valitse ulosmeno ‎kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Mene kadulle <STREET_NAMES> ja valitse ulosmeno ‎kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Jatka kadulla ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Mene kadulle <STREET_NAMES> ja valitse ulosmeno ‎suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ordinal_values": [
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Mene kiertoliittymään.",
+        "1": "Mene kiertoliittymään ja valitse ‎‎<ORDINAL_VALUE> ulosmeno.",
+        "2": "Mene kiertoliittymään ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Mene kiertoliittymään ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Mene kiertoliittymään ja valitse ‎‎<ORDINAL_VALUE> ulosmeno suuntana <TOWARD_SIGN>.",
+        "5": "Mene kiertoliittymään ja valitse ulosmeno kadulle ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Mene kiertoliittymään ja valitse ulosmeno kadulle ‎‎<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Mene kiertoliittymään ja valitse ulosmeno ‎suuntana <TOWARD_SIGN>.",
+        "8": "Mene kadulle <STREET_NAMES>",
+        "9": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno.",
+        "10": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno suuntana <TOWARD_SIGN>.",
+        "13": "Mene kadulle <STREET_NAMES> ja valitse ‎ulosmeno kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Mene kadulle <STREET_NAMES> ja valitse ‎ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Mene kadulle <STREET_NAMES> ja valitse ‎ulosmeno suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ordinal_values": [
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Take the escalator.",
+        "1": "Take the escalator to <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Valitse ulosmeno <RELATIVE_DIRECTION>.",
+        "1": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Valitse ulosmeno <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> haaraan ‎‎<BRANCH_SIGN>.",
+        "4": "Valitse ulosmeno <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "5": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "6": "Valitse ulosmeno <BRANCH_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "7": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> haaraan ‎‎<BRANCH_SIGN> ja suuntana <TOWARD_SIGN>.",
+        "8": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> haaraan ‎‎<BRANCH_SIGN>.",
+        "12": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "14": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> haaraan ‎‎<BRANCH_SIGN> ja suuntana <TOWARD_SIGN>.",
+        "15": "Valitse ulosmeno.",
+        "16": "Valitse ulosmeno <NUMBER_SIGN>.",
+        "17": "Valitse ulosmeno <BRANCH_SIGN>.",
+        "18": "Valitse ulosmeno <NUMBER_SIGN> haaraan <BRANCH_SIGN>.",
+        "19": "Valitse ulosmeno suuntana <TOWARD_SIGN>.",
+        "20": "Valitse ulosmeno <NUMBER_SIGN> suuntana <TOWARD_SIGN>.",
+        "21": "Valitse ulosmeno <BRANCH_SIGN> suuntana <TOWARD_SIGN>.",
+        "22": "Valitse ulosmeno <NUMBER_SIGN> haaraan <BRANCH_SIGN> ja ‎suuntana <TOWARD_SIGN>.",
+        "23": "Valitse ulosmeno <NAME_SIGN>.",
+        "25": "Valitse ulosmeno <NAME_SIGN> haaraan <BRANCH_SIGN>.",
+        "27": "Valitse ulosmeno <NAME_SIGN> suuntana <TOWARD_SIGN>.",
+        "29": "Valitse ulosmeno <NAME_SIGN> haaraan <BRANCH_SIGN> ja ‎suuntana <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Exit the building.",
+        "1": "Exit the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Poistu kiertoliittymästä.",
+        "1": "Poistu kiertoliittymästä kadulle <STREET_NAMES>.",
+        "2": "Poistu kiertoliittymästä kadulle <BEGIN_STREET_NAMES>. ‎Jatka kadulla <STREET_NAMES>.",
+        "3": "Poistu kiertoliittymästä suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Poistu kiertoliittymästä.",
+        "1": "Poistu kiertoliittymästä kadulle <STREET_NAMES>.",
+        "2": "Poistu kiertoliittymästä kadulle ‎‎<BEGIN_STREET_NAMES>.",
+        "3": "Poistu kiertoliittymästä suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Valitse ulosmeno <RELATIVE_DIRECTION>.",
+        "1": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Valitse ulosmeno <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> ‎haaraan <BRANCH_SIGN>.",
+        "4": "Valitse ulosmeno <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "5": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "6": "Valitse ulosmeno <BRANCH_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "7": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> ‎haaraan <BRANCH_SIGN> ja suuntana <TOWARD_SIGN>.",
+        "8": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> ‎haaraan <BRANCH_SIGN>.",
+        "12": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "14": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> ‎haaraan <BRANCH_SIGN> ja suuntana <TOWARD_SIGN>.",
+        "15": "Valitse ulosmeno.",
+        "16": "Valitse ulosmeno <NUMBER_SIGN>.",
+        "17": "Valitse ulosmeno <BRANCH_SIGN>.",
+        "18": "Valitse ulosmeno <NUMBER_SIGN> haaraan ‎‎<BRANCH_SIGN>.",
+        "19": "Valitse ulosmeno suuntana <TOWARD_SIGN>.",
+        "20": "Valitse ulosmeno <NUMBER_SIGN> suuntana ‎‎<TOWARD_SIGN>.",
+        "21": "Valitse ulosmeno <BRANCH_SIGN> suuntana ‎‎<TOWARD_SIGN>.",
+        "22": "Valitse ulosmeno <NUMBER_SIGN> haaraan ‎‎<BRANCH_SIGN> ja suuntana <TOWARD_SIGN>.",
+        "23": "Valitse ulosmeno <NAME_SIGN>.",
+        "25": "Valitse ulosmeno <NAME_SIGN> haaraan <BRANCH_SIGN>.",
+        "27": "Valitse ulosmeno <NAME_SIGN> suuntana ‎‎<TOWARD_SIGN>.",
+        "29": "Valitse ulosmeno <NAME_SIGN> haaraan <BRANCH_SIGN> ‎ja suuntana <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Ulosmeno <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Jatka Y-risteyksessä <RELATIVE_DIRECTION>.",
+        "1": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN>.",
+        "2": "Jatka <RELATIVE_DIRECTION> siirtyäksesi kadulle <STREET_NAMES>.",
+        "3": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> kadulle <STREET_NAMES>.",
+        "4": "Jatka <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>.",
+        "5": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> suuntana <TOWARD_SIGN>.",
+        "6": "Jatka <RELATIVE_DIRECTION> siirtyäksesi kadulle <STREET_NAMES> ‎suuntana <TOWARD_SIGN>.",
+        "7": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> kadulle <STREET_NAMES> suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalla",
+        "suoraan eteenpäin",
+        "oikealla"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Jatka <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "1": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> pysyäksesi kadulla <STREET_NAMES>.",
+        "2": "Jatka <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES> suuntana <TOWARD_SIGN>.",
+        "3": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> pysyäksesi kadulla <STREET_NAMES> suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalla",
+        "suoraan eteenpäin",
+        "oikealla"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Jatka <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "1": "Jatka <RELATIVE_DIRECTION> valitaksesi ‎ulosmenon <NUMBER_SIGN> pysyäksesi kadulla <STREET_NAMES>.",
+        "2": "Jatka <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES> suuntana <TOWARD_SIGN>.",
+        "3": "Jatka <RELATIVE_DIRECTION> valitaksesi ‎ulosmenon <NUMBER_SIGN> pysyäksesi kadulla <STREET_NAMES> suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalla",
+        "suoraan eteenpäin",
+        "oikealla"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Jatka Y-risteyksessä <RELATIVE_DIRECTION>.",
+        "1": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN>.",
+        "2": "Jatka <RELATIVE_DIRECTION> siirtyäksesi kadulle ‎‎<STREET_NAMES>.",
+        "3": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> kadulle <STREET_NAMES>.",
+        "4": "Jatka <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>.",
+        "5": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> suuntana <TOWARD_SIGN>.",
+        "6": "Jatka <RELATIVE_DIRECTION> siirtyäksesi kadulle ‎‎<STREET_NAMES> suuntana <TOWARD_SIGN>.",
+        "7": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> kadulle <STREET_NAMES> suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalla",
+        "suoraan eteenpäin",
+        "oikealla"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Continue to <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Liity.",
+        "1": "Liity <RELATIVE_DIRECTION>.",
+        "2": "Liity kadulle <STREET_NAMES>.",
+        "3": "Liity <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "4": "Liity suuntana <TOWARD_SIGN>.",
+        "5": "Liity <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Liity.",
+        "1": "Liity <RELATIVE_DIRECTION>.",
+        "2": "Liity kadulle <STREET_NAMES>.",
+        "3": "Liity <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "4": "Liity suuntana <TOWARD_SIGN>.",
+        "5": "Liity <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Pass <OBJECT_LABEL>.",
+        "1": "Pass traffic signals on <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "the gate",
+        "the bollards",
+        "ways intersection"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Matkusta <TRANSIT_STOP_COUNT> ‎‎<TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "pysäkinväli",
+        "other": "pysäkinväliä"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Jatka <LENGTH>.",
+        "1": "Jatka kadulla <STREET_NAMES> <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Valitse ramppi <RELATIVE_DIRECTION>.",
+        "1": "Valitse ramppi <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Valitse ramppi <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "3": "Valitse ramppi <BRANCH_SIGN> <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "4": "Valitse ramppi <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin.",
+        "6": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin ‎‎<BRANCH_SIGN>.",
+        "7": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin suuntana ‎‎<TOWARD_SIGN>.",
+        "8": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin ‎‎<BRANCH_SIGN> suuntana <TOWARD_SIGN>.",
+        "9": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin <NAME_SIGN>.",
+        "10": "Valitse ramppi.",
+        "11": "Valitse ramppi <BRANCH_SIGN>.",
+        "12": "Valitse ramppi suuntana <TOWARD_SIGN>.",
+        "13": "Valitse ramppi <BRANCH_SIGN> suuntana <TOWARD_SIGN>.",
+        "14": "Valitse ramppi <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Jatka suoraan eteenpäin valitaksesi rampin.",
+        "1": "Jatka suoraan eteenpäin valitaksesi rampin ‎‎<BRANCH_SIGN>.",
+        "2": "Jatka suoraan eteenpäin valitaksesi rampin suuntana ‎‎<TOWARD_SIGN>.",
+        "3": "Jatka suoraan eteenpäin valitaksesi rampin <BRANCH_SIGN> ‎suuntana <TOWARD_SIGN>.",
+        "4": "Jatka suoraan eteenpäin valitaksesi rampin <NAME_SIGN>."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Jatka suoraan eteenpäin valitaksesi rampin.",
+        "1": "Jatka suoraan eteenpäin valitaksesi rampin ‎‎<BRANCH_SIGN>.",
+        "2": "Jatka suoraan eteenpäin valitaksesi rampin suuntana ‎‎<TOWARD_SIGN>.",
+        "3": "Jatka suoraan eteenpäin valitaksesi rampin ‎‎<BRANCH_SIGN> suuntana <TOWARD_SIGN>.",
+        "4": "Jatka suoraan eteenpäin valitaksesi rampin ‎‎<NAME_SIGN>."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Valitse ramppi <RELATIVE_DIRECTION>.",
+        "1": "Valitse ramppi <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Valitse ramppi <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "3": "Valitse ramppi <BRANCH_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "4": "Valitse ramppi <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin.",
+        "6": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin ‎‎<BRANCH_SIGN>.",
+        "7": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin suuntana ‎‎<TOWARD_SIGN>.",
+        "8": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin ‎‎<BRANCH_SIGN> suuntana <TOWARD_SIGN>.",
+        "9": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin ‎‎<NAME_SIGN>.",
+        "10": "Valitse ramppi.",
+        "11": "Valitse ramppi <BRANCH_SIGN>.",
+        "12": "Valitse ramppi suuntana <TOWARD_SIGN>.",
+        "13": "Valitse ramppi <BRANCH_SIGN> suuntana ‎‎<TOWARD_SIGN>.",
+        "14": "Valitse ramppi <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Käänny tiukasti <RELATIVE_DIRECTION>.",
+        "1": "Käänny tiukasti <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "2": "Käänny tiukasti <RELATIVE_DIRECTION> kadulle ‎‎<BEGIN_STREET_NAMES>. Jatka kadulla <STREET_NAMES>.",
+        "3": "Käänny tiukasti <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Käänny tiukasti <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "5": "Käänny tiukasti <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Käänny tiukasti <RELATIVE_DIRECTION>.",
+        "1": "Käänny tiukasti <RELATIVE_DIRECTION> kadulle ‎‎<STREET_NAMES>.",
+        "2": "Käänny tiukasti <RELATIVE_DIRECTION> kadulle ‎‎<BEGIN_STREET_NAMES>.",
+        "3": "Käänny tiukasti <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Käänny tiukasti <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "5": "Käänny tiukasti <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "Suuntaa <CARDINAL_DIRECTION>.",
+        "1": "Suuntaa <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "2": "Suuntaa <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>. Jatka kadulla <STREET_NAMES>.",
+        "4": "Aja <CARDINAL_DIRECTION>.",
+        "5": "Aja <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "6": "Aja <CARDINAL_DIRECTION> kadulla <BEGIN_STREET_NAMES>. ‎Jatka kadulla <STREET_NAMES>.",
+        "8": "Kävele <CARDINAL_DIRECTION>.",
+        "9": "Kävele <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "10": "Kävele <CARDINAL_DIRECTION> kadulla <BEGIN_STREET_NAMES>. ‎Jatka kadulla <STREET_NAMES>.",
+        "16": "Pyöräile <CARDINAL_DIRECTION>.",
+        "17": "Pyöräile <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "18": "Pyöräile <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>. Jatka kadulla <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "pohjoiseen",
+        "koilliseen",
+        "itään",
+        "kaakkoon",
+        "etelään",
+        "lounaaseen",
+        "länteen",
+        "luoteeseen"
+      ],
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Suuntaa <CARDINAL_DIRECTION>.",
+        "1": "Suuntaa <CARDINAL_DIRECTION> <LENGTH>.",
+        "2": "Suuntaa <CARDINAL_DIRECTION> kadulla ‎‎<STREET_NAMES>.",
+        "3": "Suuntaa <CARDINAL_DIRECTION> kadulla <STREET_NAMES> ‎‎<LENGTH>.",
+        "4": "Suuntaa <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>.",
+        "5": "Aja <CARDINAL_DIRECTION>.",
+        "6": "Aja <CARDINAL_DIRECTION> <LENGTH>.",
+        "7": "Aja <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "8": "Aja <CARDINAL_DIRECTION> kadulla <STREET_NAMES> ‎‎<LENGTH>.",
+        "9": "Aja <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>.",
+        "10": "Kävele <CARDINAL_DIRECTION>.",
+        "11": "Kävele <CARDINAL_DIRECTION> <LENGTH>.",
+        "12": "Kävele <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "13": "Kävele <CARDINAL_DIRECTION> kadulla <STREET_NAMES> ‎‎<LENGTH>.",
+        "14": "Kävele <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>.",
+        "15": "Pyöräile <CARDINAL_DIRECTION>.",
+        "16": "Pyöräile <CARDINAL_DIRECTION> <LENGTH>.",
+        "17": "Pyöräile <CARDINAL_DIRECTION> kadulla ‎‎<STREET_NAMES>.",
+        "18": "Pyöräile <CARDINAL_DIRECTION> kadulla <STREET_NAMES> ‎‎<LENGTH>.",
+        "19": "Pyöräile <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "pohjoiseen",
+        "koilliseen",
+        "itään",
+        "kaakkoon",
+        "etelään",
+        "lounaaseen",
+        "länteen",
+        "luoteeseen"
+      ],
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Take the stairs.",
+        "1": "Take the stairs to <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Matkusta <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> ‎‎<TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Matkusta <TRANSIT_NAME> suuntana <TRANSIT_HEADSIGN>. ‎‎(<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
+      ],
+      "transit_stop_count_labels": {
+        "one": "pysäkinväli",
+        "other": "pysäkinväliä"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Poistu asemalta.",
+        "1": "Poistu pysäkiltä <TRANSIT_STOP>.",
+        "2": "Poistu pysäkiltä <TRANSIT_STOP> ‎‎<STATION_LABEL>."
+      },
+      "station_label": "Asema"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Poistu asemalta.",
+        "1": "Poistu pysäkiltä <TRANSIT_STOP>.",
+        "2": "Poistu pysäkiltä <TRANSIT_STOP> ‎‎<STATION_LABEL>."
+      },
+      "station_label": "Asema"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Mene asemalle.",
+        "1": "Mene pysäkille <TRANSIT_STOP>.",
+        "2": "Mene pysäkille <TRANSIT_STOP> ‎‎<STATION_LABEL>."
+      },
+      "station_label": "Asema"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Mene asemalle.",
+        "1": "Mene pysäkille <TRANSIT_STOP>.",
+        "2": "Mene pysäkille <TRANSIT_STOP> ‎‎<STATION_LABEL>."
+      },
+      "station_label": "Asema"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Vaihda asemalla.",
+        "1": "Vaihda pysäkillä <TRANSIT_STOP>.",
+        "2": "Vaihda pysäkillä <TRANSIT_STOP> ‎‎<STATION_LABEL>."
+      },
+      "station_label": "Asema"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Vaihda asemalla.",
+        "1": "Vaihda pysäkillä <TRANSIT_STOP>.",
+        "2": "Vaihda pysäkillä <TRANSIT_STOP> ‎‎<STATION_LABEL>."
+      },
+      "station_label": "Asema"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Jatka matkustamista <TRANSIT_NAME>. ‎‎(<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Jatka matkustamista <TRANSIT_NAME> suuntana ‎‎<TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
+      ],
+      "transit_stop_count_labels": {
+        "one": "pysäkinväli",
+        "other": "pysäkinväliä"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Jatka matkustamista <TRANSIT_NAME>.",
+        "1": "Jatka matkustamista <TRANSIT_NAME> ‎suuntana <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Vaihda matkustaaksesi <TRANSIT_NAME>. ‎‎(<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Vaihda matkustaaksesi <TRANSIT_NAME> suuntana ‎‎<TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
+      ],
+      "transit_stop_count_labels": {
+        "one": "pysäkinväli",
+        "other": "pysäkinväliä"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Vaihda matkustaaksesi <TRANSIT_NAME>.",
+        "1": "Vaihda matkustaaksesi <TRANSIT_NAME> ‎suuntana <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Matkusta <TRANSIT_NAME>.",
+        "1": "Matkusta <TRANSIT_NAME> suuntana ‎‎<TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "Käänny <RELATIVE_DIRECTION>.",
+        "1": "Käänny <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "2": "Käänny <RELATIVE_DIRECTION> kadulle <BEGIN_STREET_NAMES>. ‎Jatka kadulla <STREET_NAMES>.",
+        "3": "Käänny <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Käänny <RELATIVE_DIRECTION> liittymässä <JUNCTION_NAME>.",
+        "5": "Käänny <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Käänny <RELATIVE_DIRECTION>.",
+        "1": "Käänny <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "2": "Käänny <RELATIVE_DIRECTION> kadulle ‎‎<BEGIN_STREET_NAMES>.",
+        "3": "Käänny <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Käänny <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "5": "Käänny <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Tee U-käännös <RELATIVE_DIRECTION>.",
+        "1": "Tee U-käännös <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "2": "Tee U-käännös <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "3": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä.",
+        "4": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä kadulle <STREET_NAMES>.",
+        "5": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä pysyäksesi kadulla <STREET_NAMES>.",
+        "6": "Tee U-käännös <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "7": "Tee U-käännös <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Tee U-käännös <RELATIVE_DIRECTION>.",
+        "1": "Tee U-käännös <RELATIVE_DIRECTION> kadulle ‎‎<STREET_NAMES>.",
+        "2": "Tee U-käännös <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "3": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä.",
+        "4": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä kadulle <STREET_NAMES>.",
+        "5": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä pysyäksesi kadulla <STREET_NAMES>.",
+        "6": "Tee U-käännös <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "7": "Tee U-käännös <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "vasemmalle",
+        "oikealle"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Sitten <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Sitten, kun matkaa on kulunut ‎‎<LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
+      ]
+    }
+  },
+  "posix_locale": "fi_FI.UTF-8",
+  "aliases": [
+    "fi"
+  ]
+}
