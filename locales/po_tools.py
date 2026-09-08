@@ -22,6 +22,9 @@ back to English.
 
 po2json, lint, stats and prune-english accept language tags (e.g. de-DE) to
 limit the run to those files; without any, all locales/*.po are processed.
+
+Only init and lint --fix need polib (pip install polib), they write .po files;
+everything else, po2json included, reads them with this module's own parser.
 """
 
 from __future__ import annotations
@@ -32,15 +35,14 @@ import re
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import polib
 
 LOCALES_DIR = Path(__file__).parent
-
-try:
-    import polib
-except ImportError:
-    sys.exit("polib not found - install it: pip install polib")
 
 # the hand-maintained English source; also the msginit template for new languages
 POT_FILE = LOCALES_DIR / "valhalla.pot"
@@ -58,6 +60,31 @@ NUMERIC_KEY_DICTS = (PHRASES_KEY,)
 # json_parts strips it so odin's JSON is unchanged. lint --fix inserts it, so nobody
 # hand-writing a new msgctxt has to remember it.
 REPLACEMENT_MARKER = "replacement"
+
+# the escapes gettext writes inside quoted strings; any other escaped character stands for
+# itself, as it does in polib
+ESCAPES = {"n": "\n", "t": "\t", "r": "\r", "a": "\a", "b": "\b", "f": "\f", "v": "\v"}
+ESCAPED_CHAR = re.compile(r"\\(.)")
+
+# one quoted string, e.g. the `"In <LENGTH>, <CURRENT_VERBAL_CUE>"` of a msgid line
+QUOTED_STRING = re.compile(r'"((?:[^"\\]|\\.)*)"')
+
+# PoEntry's string fields, named after the gettext keywords that fill them
+PO_FIELDS = ("msgctxt", "msgid", "msgstr")
+
+
+def load_polib() -> Any:
+    """Imports polib on demand, with an install hint if it isn't there.
+
+    Only init and lint --fix, which write .po files, need it. Everything that just reads
+    them uses read_po - po2json above all, which CMake runs on every build, so building
+    valhalla needs no pip packages.
+    """
+    try:
+        import polib
+    except ImportError:
+        sys.exit("polib not found, needed by init and lint --fix - install it: pip install polib")
+    return polib
 
 
 def json_parts(msgctxt: str) -> list[str]:
@@ -80,17 +107,92 @@ def marked_msgctxt(msgctxt: str) -> str:
     return ".".join(parts)
 
 
-def parse_po(path: Path) -> tuple[dict[str, polib.POEntry], dict[str, str]]:
-    """Returns ({msgctxt: POEntry}, header metadata dict), skipping obsolete entries."""
-    po = polib.pofile(str(path))
-    return {e.msgctxt: e for e in po if not e.obsolete and e.msgctxt}, po.metadata
+@dataclass
+class PoEntry:
+    """A .pot/.po entry reduced to the fields the locale JSONs are built from."""
+
+    msgctxt: str | None = None
+    msgid: str = ""
+    msgstr: str = ""
+    fuzzy: bool = False
+    obsolete: bool = False
 
 
-def parse_pot() -> tuple[list[polib.POEntry], dict[str, str]]:
-    """Returns ([POEntry] in file order, header metadata dict), skipping obsolete entries."""
-    pot = polib.pofile(str(POT_FILE))
+def po_string(line: str) -> str:
+    """The first quoted string in ``line`` with its escapes resolved, empty if it has none."""
+    quoted = QUOTED_STRING.search(line)
+    if not quoted:
+        return ""
+    return ESCAPED_CHAR.sub(lambda m: ESCAPES.get(m.group(1), m.group(1)), quoted.group(1))
+
+
+def read_po(path: Path) -> tuple[list[PoEntry], dict[str, str]]:
+    """Parses a .pot/.po into ([PoEntry] in file order, header metadata dict).
+
+    Covers the gettext syntax our locales use: strings continued over several lines,
+    `#, fuzzy` flags, `#~` obsolete entries and the `msgid ""` header, whose msgstr holds
+    the `Key: value` metadata. Reading is all the build needs; writing stays with polib.
+    """
+    entries: list[PoEntry] = []
+    metadata: dict[str, str] = {}
+    entry, field = PoEntry(), ""
+
+    def flush() -> None:
+        """Closes the entry an empty line ended, keeping the header out of the entry list."""
+        nonlocal entry, field
+        if entry.msgctxt is not None or entry.msgid:
+            entries.append(entry)
+        elif entry.msgstr and not entries:
+            # the header: the file's first entry, `msgid ""` with the metadata in its msgstr
+            for header_line in entry.msgstr.splitlines():
+                key, sep, value = header_line.partition(":")
+                if sep:
+                    metadata[key.strip()] = value.strip()
+        entry, field = PoEntry(), ""
+
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line:
+            flush()
+            continue
+        if line.startswith("#~"):
+            # an entry msgmerge commented out, parsed so callers can skip it - except for its
+            # `#~|` previous-msgid lines, which are comments just like `#|` is
+            entry.obsolete = True
+            line = line[2:].strip()
+            if line.startswith("|"):
+                line = ""
+        elif line.startswith("#"):
+            # `#.`, `#:` and `#|` comments hold nothing we need, `#,` holds the flags
+            entry.fuzzy = entry.fuzzy or (line.startswith("#,") and "fuzzy" in line)
+            line = ""
+
+        keyword, _, rest = line.partition(" ")
+        if keyword in PO_FIELDS:
+            field = keyword
+            setattr(entry, field, po_string(rest))
+        elif field and line.startswith('"'):
+            # the field above, continued on this line
+            setattr(entry, field, getattr(entry, field) + po_string(line))
+        else:
+            # a comment, a plural form or anything else we ignore: the field ends here
+            field = ""
+
+    flush()
+    return entries, metadata
+
+
+def parse_po(path: Path) -> tuple[dict[str, PoEntry], dict[str, str]]:
+    """Returns ({msgctxt: PoEntry}, header metadata dict), skipping obsolete entries."""
+    entries, metadata = read_po(path)
+    return {e.msgctxt: e for e in entries if not e.obsolete and e.msgctxt}, metadata
+
+
+def parse_pot() -> tuple[list[PoEntry], dict[str, str]]:
+    """Returns ([PoEntry] in file order, header metadata dict), skipping obsolete entries."""
+    entries, metadata = read_po(POT_FILE)
     # filters obsolete entries, but keeps fuzzy (untranslated) entries (defaults to en-US)
-    return [e for e in pot if not e.obsolete and e.msgctxt], pot.metadata
+    return [e for e in entries if not e.obsolete and e.msgctxt], metadata
 
 
 def convert_to_json(key: str | None, node: Any) -> Any:
@@ -103,7 +205,7 @@ def convert_to_json(key: str | None, node: Any) -> Any:
 
 
 def build_locale(
-    pot_entries: list[polib.POEntry], entries: dict[str, polib.POEntry], meta: dict[str, str]
+    pot_entries: list[PoEntry], entries: dict[str, PoEntry], meta: dict[str, str]
 ) -> dict[str, Any]:
     """Rebuild one language's JSON structure from the msgctxt paths."""
     po_root = {}
@@ -156,7 +258,7 @@ def ctxt_sort_key(entry: polib.POEntry) -> list[int | str]:
 
 def is_sorted(path: Path) -> bool:
     """True if the file's entries are already in natural msgctxt order."""
-    ctxts = [e.msgctxt for e in polib.pofile(str(path)) if e.msgctxt and not e.obsolete]
+    ctxts = [e.msgctxt for e in read_po(path)[0] if e.msgctxt and not e.obsolete]
     return ctxts == sorted(ctxts, key=ctxt_key)
 
 
@@ -166,7 +268,7 @@ def sort_file(path: Path) -> bool:
     Sorting the .pot matters too: msgmerge (update) reorders every .po to match it.
     wrapwidth=0 preserves no-wrap style.
     """
-    po = polib.pofile(str(path), wrapwidth=0)
+    po = load_polib().pofile(str(path), wrapwidth=0)
     before = [e.msgctxt for e in po]
     po.sort(key=ctxt_sort_key)
     if [e.msgctxt for e in po] == before:
@@ -179,14 +281,14 @@ def unmarked_msgctxts(path: Path) -> list[str]:
     """msgctxts missing the `replacement` sort marker (a new entry hand-written without it)."""
     return [
         e.msgctxt
-        for e in polib.pofile(str(path))
+        for e in read_po(path)[0]
         if e.msgctxt and not e.obsolete and marked_msgctxt(e.msgctxt) != e.msgctxt
     ]
 
 
 def mark_file(path: Path) -> bool:
     """Insert missing `replacement` sort markers in place; returns True if anything changed."""
-    po = polib.pofile(str(path), wrapwidth=0)
+    po = load_polib().pofile(str(path), wrapwidth=0)
     changed = False
     for e in po:
         new = marked_msgctxt(e.msgctxt) if e.msgctxt else None
@@ -228,12 +330,13 @@ def cmd_print_posix_locales(_: argparse.Namespace) -> None:
     "Parses X-Valhalla-Posix-Locale header and prints each locale"
     locales = {parse_pot()[1]["X-Valhalla-Posix-Locale"]}
     for po in po_paths(None):
-        locales.add(polib.pofile(str(po)).metadata["X-Valhalla-Posix-Locale"])
+        locales.add(read_po(po)[1]["X-Valhalla-Posix-Locale"])
     print("\n".join(sorted(locales)))
 
 
 def cmd_init(args: argparse.Namespace) -> None:
     """Creates locales/<lang>.po from valhalla.pot, replacing msginit (no gettext needed)."""
+    polib = load_polib()
     path = LOCALES_DIR / f"{args.lang}.po"
     if path.exists():
         sys.exit(f"{path.name} already exists")
@@ -245,7 +348,7 @@ def cmd_init(args: argparse.Namespace) -> None:
     # then add all langs + their alias(es)
     for po_file in po_paths(None):
         found_locales.add(po_file.stem)
-        po_meta = polib.pofile(str(po_file)).metadata
+        po_meta = read_po(po_file)[1]
         found_locales.update(a for a in po_meta.get("X-Valhalla-Aliases", "").split(",") if a)
 
     # verify that the new alias(es) don't clash with existing ones
