@@ -535,7 +535,8 @@ public:
                 const InternalTurn internal_turn,
                 const uint8_t path_id = 0,
                 const bool destonly = false,
-                const bool hgv_access = false)
+                const bool hgv_access = false,
+                const uint8_t destonly_access_restr_mask = 0)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -549,7 +550,8 @@ public:
                   internal_turn,
                   path_id,
                   destonly,
-                  hgv_access),
+                  hgv_access,
+                  destonly_access_restr_mask),
         transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }

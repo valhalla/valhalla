@@ -99,6 +99,10 @@ protected:
   // List of destinations
   std::vector<Destination> destinations_;
 
+  // Distance penalty applied to each origin edge cost
+  // Used to get the true cost of super trivial paths
+  std::unordered_map<uint64_t, float> origin_edges_percent_along_;
+
   // Current costing mode
   sif::cost_ptr_t costing_;
 
@@ -107,10 +111,10 @@ protected:
   std::unordered_map<uint64_t, std::vector<uint32_t>> dest_edges_;
 
   // Vector of edge labels (requires access by index).
-  std::vector<sif::EdgeLabel> edgelabels_;
+  std::vector<sif::PathEdgeLabel> edgelabels_;
 
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
+  baldr::DoubleBucketQueue<decltype(edgelabels_)::value_type> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
@@ -205,7 +209,7 @@ protected:
   void SetDestinationEdges() {
     // the percent_along is set once at the beginning
     for (auto& dest : destinations_) {
-      for (const auto& idx : dest.dest_edges_percent_along) {
+      for (const auto& idx : dest.edges_percent_along) {
         dest.dest_edges_available.emplace(idx.first);
       }
     }
@@ -233,7 +237,7 @@ protected:
                           const baldr::DirectedEdge* edge,
                           const baldr::graph_tile_ptr& tile,
                           baldr::GraphReader& reader,
-                          const sif::EdgeLabel& pred,
+                          const sif::PathEdgeLabel& pred,
                           const baldr::TimeInfo& time_info,
                           const uint32_t matrix_locations);
 

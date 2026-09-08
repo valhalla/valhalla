@@ -15,6 +15,16 @@
 namespace valhalla {
 namespace thor {
 
+inline const valhalla::PathEdge* find_correlated_edge(const valhalla::Location& location,
+                                                      const valhalla::baldr::GraphId& edge_id) {
+  for (const auto& e : location.correlation().edges()) {
+    if (e.graph_id() == edge_id)
+      return &e;
+  }
+
+  throw std::logic_error("Could not find candidate edge used for label");
+}
+
 // Default for time distance matrix is to find all locations
 constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();
 constexpr float kInvalidHeading = std::numeric_limits<float>::max();
@@ -228,12 +238,18 @@ struct Destination {
   // Set of still available correlated edges;
   std::unordered_set<uint64_t> dest_edges_available;
 
-  // global information which only needs to be set once or is reset for every origin in the algorithm
+  // global information which only needs to be set once or is reset for every origin in the
+  // algorithm
   uint32_t distance; // Path distance for the best cost path
   float threshold;   // Threshold above current best cost where no longer
                      // need to search for this destination.
-  // partial distance of correlated edges
-  std::unordered_map<uint64_t, float> dest_edges_percent_along;
+
+  // percent along for each correlated edge
+  struct PartialEdge {
+    float percent_along{0.f};
+    sif::Cost distance_penalty{0.f, 0.f};
+  };
+  std::unordered_map<uint64_t, PartialEdge> edges_percent_along;
 
   // Constructor - set best_cost to an absurdly high value so any new cost
   // will be lower.
@@ -247,7 +263,6 @@ struct Destination {
     dest_edges_available.clear();
   }
 };
-
 // return true if any location had a valid time set
 // return false if it doesn't make sense computationally and add warnings accordingly
 inline bool check_matrix_time(Api& request, const Matrix::Algorithm algo) {

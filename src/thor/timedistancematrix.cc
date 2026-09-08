@@ -157,7 +157,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
     if (FORWARD) {
       edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
-                               path_distance, restriction_idx,
+                               path_distance, transition_cost, restriction_idx,
                                (pred.closure_pruning() || !(costing_->IsClosed(directededge, tile))),
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge), 0,
@@ -167,7 +167,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                destonly_restriction_mask);
     } else {
       edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
-                               path_distance, restriction_idx,
+                               path_distance, transition_cost, restriction_idx,
                                (pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2))),
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
@@ -249,7 +249,7 @@ bool TimeDistanceMatrix::ComputeMatrix(Api& request,
       }
 
       // Copy the EdgeLabel for use in costing
-      EdgeLabel pred = edgelabels_[predindex];
+      auto pred = edgelabels_[predindex];
 
       // Remove label from adjacency list, mark it as permanently labeled.
 
@@ -324,6 +324,8 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
                   has_other_edges = has_other_edges || (FORWARD ? !e.end_node() : !e.begin_node());
                 });
 
+  origin_edges_percent_along_.clear();
+
   // Iterate through edges and add to adjacency list
   for (const auto& edge : origin.correlation().edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1)
@@ -355,7 +357,7 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     float dist;
     GraphId opp_edge_id;
     const DirectedEdge* opp_dir_edge;
-    if (FORWARD) {
+    if constexpr (FORWARD) {
       const auto percent_along = 1.0f - edge.percent_along();
       cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
                                        edge.percent_along(), 1.0f);
@@ -376,7 +378,8 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    cost.cost += edge.distance();
+    Cost distance_penalty{static_cast<float>(edge.distance()), 0.f};
+    cost += distance_penalty;
 
     auto destonly_restriction_mask =
         costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
@@ -385,24 +388,29 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     // of the path. Set the origin flag
     if (FORWARD) {
       edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, mode_, dist,
-                               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
+                               distance_penalty, baldr::kInvalidRestriction,
+                               !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                InternalTurn::kNoTurn, 0,
                                directededge->destonly() ||
                                    (costing_->is_hgv() && directededge->destonly_hgv()),
                                directededge->forwardaccess() & kTruckAccess,
                                destonly_restriction_mask);
+      origin_edges_percent_along_.emplace(edgeid, static_cast<float>(edge.percent_along()));
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
-                               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
+                               distance_penalty, baldr::kInvalidRestriction,
+                               !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                InternalTurn::kNoTurn, 0,
                                directededge->destonly() ||
                                    (costing_->is_hgv() && directededge->destonly_hgv()),
                                directededge->forwardaccess() & kTruckAccess,
                                destonly_restriction_mask);
+      origin_edges_percent_along_.emplace(opp_edge_id, static_cast<float>(edge.percent_along()));
     }
     edgelabels_.back().set_origin();
+
     adjacencylist_.add(edgelabels_.size() - 1);
   }
 }
@@ -441,19 +449,21 @@ void TimeDistanceMatrix::InitDestinations(
       // Keep the id and the partial distance for the remainder of the edge.
       Destination& d = destinations_.back();
       edgeid = FORWARD ? edgeid : graphreader.GetOpposingEdgeId(edgeid);
-      auto percent_along = FORWARD ? (1.0f - edge.percent_along()) : edge.percent_along();
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      c += edge.distance();
+      Cost distance_penalty{static_cast<float>(edge.distance()), 0.f};
+      c += distance_penalty.cost;
       if (c > d.threshold) {
         d.threshold = c;
       }
 
       // Mark the edge as having a destination on it and add the
       // destination index
-      d.dest_edges_percent_along[edgeid] = percent_along;
+      d.edges_percent_along[edgeid] =
+          Destination::PartialEdge{.percent_along = static_cast<float>(edge.percent_along()),
+                                   .distance_penalty = distance_penalty};
       dest_edges_[edgeid].push_back(idx);
     }
     idx++;
@@ -470,7 +480,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     const DirectedEdge* edge,
     const graph_tile_ptr& tile,
     baldr::GraphReader& reader,
-    const EdgeLabel& pred,
+    const PathEdgeLabel& pred,
     const TimeInfo& time_info,
     const uint32_t matrix_locations) {
   // For each destination along this edge
@@ -512,7 +522,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
       continue;
     }
 
-    auto dest_edge = dest.dest_edges_percent_along.find(pred.edgeid());
+    auto dest_edge = dest.edges_percent_along.find(pred.edgeid());
 
     // Skip case where destination is along the origin edge, there is no
     // predecessor, and the destination cannot be reached via trivial path.
@@ -520,25 +530,49 @@ bool TimeDistanceMatrix::UpdateDestinations(
       continue;
     }
 
+    bool is_super_trivial = pred.predecessor() == kInvalidLabel;
+
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
     uint8_t flow_sources;
-    float remainder = dest_edge->second;
     auto opp_edge_id = reader.GetOpposingEdgeId(pred.edgeid());
     auto opp_tile = reader.GetGraphTile(opp_edge_id);
     auto begin_node = reader.GetBeginNodeId(edge, opp_tile);
     uint64_t timezone_index = opp_tile->node(begin_node)->timezone();
 
-    auto secs =
-        pred.predecessor() == kInvalidLabel ? 0.f : edgelabels_[pred.predecessor()].cost().secs;
-    auto offset_time =
-        FORWARD ? time_info.forward(secs, timezone_index) : time_info.reverse(secs, timezone_index);
-    Cost newcost =
-        pred.cost() -
-        (costing_->EdgeCost(edge, pred.edgeid(), tile, offset_time, flow_sources) * remainder);
+    Cost predecessor_cost =
+        pred.predecessor() == kInvalidLabel ? Cost{} : edgelabels_[pred.predecessor()].cost();
+    auto origin_percent_along = origin_edges_percent_along_[pred.edgeid()];
+
+    Cost newcost;
+    Cost previous_cost = predecessor_cost + pred.transition_cost();
+    uint32_t path_distance;
+
+    if constexpr (FORWARD) {
+      newcost =
+          previous_cost +
+          (costing_->PartialEdgeCost(edge, pred.edgeid(), tile,
+                                     time_info.forward(predecessor_cost.secs, timezone_index),
+                                     flow_sources, is_super_trivial ? origin_percent_along : 0.f,
+                                     dest_edge->second.percent_along)) +
+          dest_edge->second.distance_penalty;
+    } else {
+      // reverse expansion: edge is used for traversal, opp for costing
+      auto opp_edge = opp_tile->directededge(opp_edge_id);
+      // std::cerr << ""
+      newcost = previous_cost +
+                costing_->PartialEdgeCost(opp_edge, opp_edge_id, tile,
+                                          time_info.reverse(predecessor_cost.secs, timezone_index),
+                                          flow_sources, is_super_trivial ? origin_percent_along : 0.f,
+                                          dest_edge->second.percent_along) +
+                dest_edge->second.distance_penalty;
+    }
+
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
-      dest.distance = pred.path_distance() - (edge->length() * remainder);
+      dest.distance =
+          pred.path_distance() - (edge->length() * (FORWARD ? 1.f - dest_edge->second.percent_along
+                                                            : dest_edge->second.percent_along));
     }
 
     // Erase this edge from further consideration. Mark this destination as
