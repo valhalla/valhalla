@@ -49,7 +49,7 @@ bool circle_outside_bounds(const PointLL& center,
  * Tests whether a point lies inside a linear ring
  *
  * Uses a ray-casting algorithm supported by an r-tree on the ring segments
- * to only consider segments that intersect with the test point's x axis.
+ * to only consider segments whose latitude range intersects with the point's latitude.
  *
  * @param pt    the test point
  * @param ring  the linear ring to test against
@@ -70,11 +70,7 @@ bool point_in_ring(const PointLL& pt,
     const PointLL& a = ring[idx];
     const PointLL& b = ring[idx + 1];
 
-    // skip horizontal segments
-    if (a.lat() == b.y())
-      continue;
-
-    // check the ray at pt.y crosses the segment's y-span (half-open to avoid double counting at
+    // skip if the ray does not intersect with the segment (half open to avoid double counting at
     // vertices)
     if (!((a.lat() <= pt.lat() && b.lat() > pt.lat()) || (b.lat() <= pt.lat() && a.lat() > pt.lat())))
       continue;
