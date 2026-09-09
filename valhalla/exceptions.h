@@ -1,8 +1,11 @@
 #ifndef __VALHALLA_EXCEPTIONS_H__
 #define __VALHALLA_EXCEPTIONS_H__
 
+#include <cstddef>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace valhalla {
 class Api;
@@ -46,6 +49,15 @@ struct valhalla_exception_t : public std::runtime_error {
  * @param extra an optional string to append to the hard-coded warning message
  */
 void add_warning(valhalla::Api& api, unsigned code, const std::string& extra = "");
+
+/**
+ * Builds the message for a stored text offset that points past the end of a tile's text list.
+ *
+ * @param method  the accessor that hit the bad offset
+ * @param offset  the offset read from the tile
+ * @param length  the length of the text list the offset was checked against
+ */
+std::string text_offset_error_msg(std::string_view method, uint32_t offset, size_t length);
 } // namespace valhalla
 
 #endif //__VALHALLA_EXCEPTIONS_H__

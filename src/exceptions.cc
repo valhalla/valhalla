@@ -2,6 +2,7 @@
 
 #include <valhalla/proto/api.pb.h>
 
+#include <format>
 #include <unordered_map>
 
 namespace {
@@ -187,5 +188,10 @@ void add_warning(valhalla::Api& api, unsigned code, const std::string& extra) {
     warning_pbf->set_description(warning->second + extra);
     warning_pbf->set_code(warning->first);
   }
+}
+
+std::string text_offset_error_msg(std::string_view method, uint32_t offset, size_t length) {
+  return std::format("{}: offset exceeds size of text list (offset={}, length={})", method, offset,
+                     length);
 }
 } // namespace valhalla
