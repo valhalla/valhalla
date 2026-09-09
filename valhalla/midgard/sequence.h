@@ -339,7 +339,7 @@ public:
 
     // No more threads than chunks so every worker handles at least ~buffer_size elements
     const size_t chunk_count = 1 + (memmap.size() - 1) / buffer_size;
-    // No more than 8 as it doesn't give much beyond that number on fast SSDs while this hits hard on old disks
+    // No more than 8 as it doesn't give much beyond that number while hits hard on old disks
     concurrency = std::min(std::clamp(concurrency, size_t(1), size_t(8)), chunk_count);
 
     // Sort the subsections in parallel
