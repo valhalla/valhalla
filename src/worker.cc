@@ -343,6 +343,9 @@ void parse_location(valhalla::Location* location,
     // search_filter.exclude_ferry
     location->mutable_search_filter()->set_exclude_ferry(
         rapidjson::get<bool>(*search_filter, "/exclude_ferry", false));
+    // search_filter.exclude_avoided_edges
+    location->mutable_search_filter()->set_exclude_avoided_edges(
+        rapidjson::get<bool>(*search_filter, "/exclude_avoided_edges", false));
     location->mutable_search_filter()->set_level(
         rapidjson::get<float>(*search_filter, "/level", baldr::kMaxLevel));
     // search_filter.exclude_closures

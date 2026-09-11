@@ -67,6 +67,8 @@ message SearchFilter {
   oneof has_level {
     float level = 9; // level to filter edges by
   }
+
+  bool exclude_avoided_edges = 10; // whether to exclude edges the request excluded via exclude_locations/exclude_polygons [default = false]
 }
 
 message PathEdge {
