@@ -85,6 +85,8 @@
    * CHANGED: `CostMatrix` reverse trees use time-dependent speeds with `invariant` date_time [#6168](https://github.com/valhalla/valhalla/pull/6168)
    * ADDED: support for multiple --region args in valhalla_build_extract [#6172](https://github.com/valhalla/valhalla/pull/6172)
    * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
+   * ADDED: full windows support via latest prime_server dependency [#6105](https://github.com/valhalla/valhalla/pull/6105)
+
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**

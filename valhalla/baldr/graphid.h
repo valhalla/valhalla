@@ -5,6 +5,7 @@
 #include <valhalla/baldr/rapidjson_fwd.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -105,7 +106,7 @@ public:
    * @return Returns the tile's base GraphId.
    * @throws std::runtime_error if the path does not encode a (potentially) valid tile id.
    */
-  static GraphId FromTilePath(const std::string& fname);
+  static GraphId FromTilePath(const std::filesystem::path& path);
 
   /**
    * Gets the tile Id.

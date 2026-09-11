@@ -30,6 +30,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <numeric>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

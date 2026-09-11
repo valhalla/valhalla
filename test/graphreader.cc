@@ -3,11 +3,11 @@
 #include "baldr/tilehierarchy.h"
 
 #include <boost/property_tree/ptree.hpp>
-#include <fcntl.h>
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 
 using namespace valhalla::baldr;
 
@@ -69,9 +69,7 @@ void touch_tile(const uint32_t tile_id, const std::string& tile_dir, uint8_t lev
   std::filesystem::path fullpath{tile_dir};
   fullpath.append(suffix);
   std::filesystem::create_directories(fullpath.parent_path());
-  int fd = open(fullpath.c_str(), O_CREAT | O_WRONLY, 0644);
-  if (fd >= 0)
-    close(fd);
+  std::ofstream{fullpath, std::ios::binary | std::ios::app};
 }
 
 TEST(ConnectivityMap, Basic) {

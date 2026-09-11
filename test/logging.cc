@@ -72,19 +72,21 @@ TEST(Logging, FileLoggerTest) {
   LOG_TRACE("force log close/reopen");
   std::this_thread::sleep_for(std::chrono::milliseconds(1010));
 
-  // open up the file and make sure it looks right
-  std::ifstream file(base_path);
-
-  std::string line;
+  // open up the file and make sure it looks right; close it before logging more
+  // since on Windows an open handle blocks the logger from rotating the file.
   size_t error = 0, warn = 0, info = 0, debug = 0, trace = 0, custom = 0;
-  while (std::getline(file, line)) {
-    error += (line.find(" [ERROR] ") != std::string::npos);
-    warn += (line.find(" [WARN] ") != std::string::npos);
-    info += (line.find(" [INFO] ") != std::string::npos);
-    debug += (line.find(" [DEBUG] ") != std::string::npos);
-    trace += (line.find(" [TRACE] ") != std::string::npos);
-    custom += (line.find(" [CUSTOM] ") != std::string::npos);
-    line.clear();
+  {
+    std::ifstream file(base_path);
+    std::string line;
+    while (std::getline(file, line)) {
+      error += (line.find(" [ERROR] ") != std::string::npos);
+      warn += (line.find(" [WARN] ") != std::string::npos);
+      info += (line.find(" [INFO] ") != std::string::npos);
+      debug += (line.find(" [DEBUG] ") != std::string::npos);
+      trace += (line.find(" [TRACE] ") != std::string::npos);
+      custom += (line.find(" [CUSTOM] ") != std::string::npos);
+      line.clear();
+    }
   }
   size_t line_count = error + warn + info + debug + trace;
   EXPECT_EQ(line_count, 41); // todo: or should it be 40 as it was in the comment?

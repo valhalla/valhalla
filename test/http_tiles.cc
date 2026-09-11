@@ -18,7 +18,6 @@
 
 using namespace valhalla;
 
-zmq::context_t context;
 const std::string tile_remote_address{"127.0.0.1:48004"};
 const std::string tile_source_dir = VALHALLA_BUILD_DIR "test/data/utrecht_tiles";
 const auto tar_path = tile_source_dir + "/tiles.tar";
@@ -341,7 +340,7 @@ public:
     valhalla::test_tile_server_t server;
     server.set_url(tile_remote_address);
     server.set_user_pw(user_pw);
-    server.start(tile_source_dir, tar_path, context);
+    server.start(tile_source_dir, tar_path, valhalla::zmq_context());
   }
 
   void TearDown() override {
