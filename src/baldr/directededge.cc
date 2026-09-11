@@ -116,14 +116,15 @@ void DirectedEdge::set_sign(const bool exit) {
 
 // Sets the length of the edge in meters.
 void DirectedEdge::set_length(const double length) {
+  if (length > kMaxEdgeLength) {
+    // Consider this a catastrophic error.
+    LOG_ERROR("Exceeding max. edge length: " + std::to_string(length));
+    throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
+  }
+
   uint32_t rounded = std::round(length);
   if (rounded < kMinEdgeLength) {
     rounded = kMinEdgeLength;
-  }
-  if (rounded > kMaxEdgeLength) {
-    // Consider this a catastrophic error.
-    LOG_ERROR("Exceeding max. edge length: " + std::to_string(rounded));
-    throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
   }
   length_ = rounded;
 }

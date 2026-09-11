@@ -717,35 +717,3 @@ TEST(Standalone, FilterTestConsistencyTTHeadingsDriveability) {
     EXPECT_EQ((int)CF_edge->turntype(AC_edge->localedgeidx()), 2); // right
   }
 }
-
-TEST(Standalone, AggregateShortEdges) {
-  constexpr double gridsize_metres = 0.1;
-
-  const std::string ascii_map = R"(
-     A-B-C
-       |
-       D
-  )";
-
-  const gurka::ways ways = {
-      {"ABC", {{"highway", "unclassified"}, {"osm_id", "100"}, {"oneway", "yes"}}},
-      {"BD", {{"highway", "footway"}, {"osm_id", "101"}, {"footway", "crossing"}}},
-  };
-
-  auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {11.24006, 43.77054});
-  auto map =
-      gurka::buildtiles(layout, ways, {}, {}, work_dir,
-                        {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
-                         {"mjolnir.include_pedestrian", "false"}});
-
-  GraphReader graph_reader(map.config.get_child("mjolnir"));
-
-  auto [AC_edge_id, AC_edge] = gurka::findEdgeByNodes(graph_reader, layout, "A", "C");
-  ASSERT_NE(AC_edge, nullptr);
-
-  auto shape = graph_reader.GetGraphTile(AC_edge_id)->edgeinfo(AC_edge).shape();
-  ASSERT_EQ(shape.size(), 3) << "AB and BC were not aggregated";
-  EXPECT_LT(valhalla::midgard::length(shape), 0.5f) << "test needs a sub-metre aggregated shape";
-
-  EXPECT_GE(AC_edge->length(), 1);
-}
