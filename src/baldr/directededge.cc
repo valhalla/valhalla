@@ -115,18 +115,18 @@ void DirectedEdge::set_sign(const bool exit) {
 // ------------------------- Geographic attributes ------------------------- //
 
 // Sets the length of the edge in meters.
-void DirectedEdge::set_length(const uint32_t length, bool should_error) {
+void DirectedEdge::set_length(const double length) {
   if (length > kMaxEdgeLength) {
-    if (should_error) {
-      // Consider this a catastrophic error.
-      LOG_ERROR("Exceeding max. edge length: " + std::to_string(length));
-      throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
-    }
-    LOG_WARN("Exceeding max. edge length: " + std::to_string(length));
-    length_ = kMaxEdgeLength;
-  } else {
-    length_ = length;
+    // Consider this a catastrophic error.
+    LOG_ERROR("Exceeding max. edge length: " + std::to_string(length));
+    throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
   }
+
+  uint32_t rounded = std::round(length);
+  if (rounded < kMinEdgeLength) {
+    rounded = kMinEdgeLength;
+  }
+  length_ = rounded;
 }
 
 // Sets the weighted_grade factor (0-15) for the edge.

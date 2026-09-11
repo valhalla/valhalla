@@ -1037,10 +1037,10 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           // Add a directed edge and get a reference to it
-          DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
-                                 static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
-                                 truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
-                                 n, has_signal, has_stop, has_yield,
+          DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
+                                 speed, truck_speed, use,
+                                 static_cast<RoadClass>(edge.attributes.importance), n, has_signal,
+                                 has_stop, has_yield,
                                  ((has_stop || has_yield) ? node.minor() : false), restrictions,
                                  bike_network, edge.attributes.reclass_ferry,
                                  static_cast<RoadClass>(edge.attributes.importance_hierarchy));

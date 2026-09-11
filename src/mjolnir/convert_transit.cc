@@ -661,9 +661,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         }
 
         // add the egress connection
-        // Make sure length is non-zero
-        double length = std::max(1.0, egress_ll.Distance(station_ll));
-        directededge.set_length(length);
+        directededge.set_length(egress_ll.Distance(station_ll));
         directededge.set_use(Use::kEgressConnection);
         directededge.set_speed(5);
         directededge.set_classification(RoadClass::kServiceOther);
@@ -710,9 +708,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         directededge.set_endnode(egress_graphid);
 
         // add the platform connection
-        // Make sure length is non-zero
-        double length = std::max(1.0, station_ll.Distance(egress_ll));
-        directededge.set_length(length);
+        directededge.set_length(station_ll.Distance(egress_ll));
         directededge.set_use(Use::kEgressConnection);
         directededge.set_speed(5);
         directededge.set_classification(RoadClass::kServiceOther);
@@ -757,9 +753,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         PointLL platform_ll = {platform.lon(), platform.lat()};
 
         // add the platform connection
-        // Make sure length is non-zero
-        double length = std::max(1.0, station_ll.Distance(platform_ll));
-        directededge.set_length(length);
+        directededge.set_length(station_ll.Distance(platform_ll));
         directededge.set_use(Use::kPlatformConnection);
         directededge.set_speed(5);
         directededge.set_classification(RoadClass::kServiceOther);
@@ -837,9 +831,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     directededge.set_endnode(station_graphid);
 
     // add the platform connection
-    // Make sure length is non-zero
-    double length = std::max(1.0, platform_ll.Distance(station_ll));
-    directededge.set_length(length);
+    directededge.set_length(platform_ll.Distance(station_ll));
     directededge.set_use(Use::kPlatformConnection);
     directededge.set_speed(5);
     directededge.set_classification(RoadClass::kServiceOther);
