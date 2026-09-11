@@ -484,7 +484,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
 
       // Get the length from the shape. This prevents roundoff issues when forming
       // elevation.
-      uint32_t length = valhalla::midgard::length(shape);
+      const double length = valhalla::midgard::length(shape);
 
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
@@ -493,7 +493,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // overwrites the mean elevation if the dataset has elevation. No need for names etc,
       // shortcuts aren't used in guidance
       bool forward = true;
-      uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
+      uint32_t idx = ((static_cast<uint32_t>(length) & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, kNoElevationData,
                                   edgeinfo.bike_network(), edgeinfo.speed_limit(), shape, {}, {}, {},
