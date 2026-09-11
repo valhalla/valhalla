@@ -20,6 +20,7 @@
    * ADDED: documentation page for the pedestrian areas feature [#6266](https://github.com/valhalla/valhalla/pull/6266)
    * ADDED: Add use_distance to truck, bus, taxi, motorcycle and motor_scooter cost [#6214](https://github.com/valhalla/valhalla/pull/6214)
    * ADDED: limitations, future work and performance sections to the pedestrian areas documentation [#6279](https://github.com/valhalla/valhalla/pull/6279)
+   * ADDED: `thor.costmatrix.dijkstra_distance` config parameter [#6257](https://github.com/valhalla/valhalla/pull/6257)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
