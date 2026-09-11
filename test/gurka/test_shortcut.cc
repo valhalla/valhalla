@@ -216,12 +216,12 @@ TEST(Shortcuts, TruckSpeedPartiallySet) {
       {"AB",
        {{"highway", "motorway"},
         {"maxspeed", "100"},
-        {"maxspeed:hgv", "100"},
+        {"maxspeed:hgv", "90"},
         {"name", "High street"}}},
       {"BC",
        {{"highway", "motorway"},
         {"maxspeed", "100"},
-        {"maxspeed:hgv", "100"},
+        {"maxspeed:hgv", "90"},
         {"name", "High street"}}},
       {"CD", {{"highway", "motorway"}, {"maxspeed", "100"}, {"name", "High street"}}},
       {"DE", {{"highway", "motorway"}, {"maxspeed", "100"}, {"name", "High street"}}},
@@ -244,8 +244,10 @@ TEST(Shortcuts, TruckSpeedPartiallySet) {
       if (!edge->is_shortcut() || !(edge->forwardaccess() & baldr::kAutoAccess))
         continue;
 
-      EXPECT_GT(100, edge->truck_speed());
-      EXPECT_LT(90, edge->truck_speed());
+      // 4 equal-length edges, 2 have 100kmh and 2 have 90kmh for trucks which gives 95 as a result
+      EXPECT_EQ(95, edge->truck_speed());
+      // but as all 4 have the same 100kmh regular speed, shortcut also has 100kmh
+      EXPECT_EQ(100, edge->speed());
       found_shortcut = true;
     }
   }
