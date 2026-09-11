@@ -29,14 +29,16 @@ unzip ./timezones-with-oceans-1970.shapefile.zip 1>&2 || error_exit "unzip faile
 
 # on windows we need to patch tmp paths to contain the leading drive letter
 tz_file=$(mktemp)
-if command -v cygpath >/dev/null 2>&1; then
-    tz_file=$(cygpath -m "${tz_file}")
+if command -v cygpath >/dev/null 2>&1; then # git bash, cygwin, msys2
+    tz_file="$(cygpath -m "${tz_file}")"
+elif command -v wslpath >/dev/null 2>&1; then # wsl2
+    tz_file="$(wslpath -w "${tz_file}")"
 fi
 spatialite_tool -i -shp "./combined-shapefile-with-oceans-1970" -d "${tz_file}" -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
-spatialite ${tz_file} "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed"
-spatialite ${tz_file} "VACUUM;" 1>&2 || error_exit "VACUUM failed"
-spatialite ${tz_file} "ANALYZE;" 1>&2 || error_exit "ANALYZE failed"
+spatialite "${tz_file}" "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed"
+spatialite "${tz_file}" "VACUUM;" 1>&2 || error_exit "VACUUM failed"
+spatialite "${tz_file}" "ANALYZE;" 1>&2 || error_exit "ANALYZE failed"
 
 rm -rf ./combined-shapefile-with-oceans-1970*
 rm -f ./timezones-with-oceans-1970.shapefile.zip alias_tz.csv
-cat ${tz_file}
+cat "${tz_file}"
