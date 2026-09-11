@@ -38,6 +38,7 @@ valhalla_module(NAME loki
     PRIVATE
       ${unordered_dense_include_dir}
       ${vtzero_include_dirs}
+      ${flatbush_include_dir}
   DEPENDS
     valhalla::meili
     valhalla::skadi
