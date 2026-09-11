@@ -719,7 +719,7 @@ TEST(Standalone, FilterTestConsistencyTTHeadingsDriveability) {
 }
 
 TEST(Standalone, AggregateShortEdges) {
-  constexpr double gridsize_metres = 0.3;
+  constexpr double gridsize_metres = 0.1;
 
   const std::string ascii_map = R"(
      A-B-C
@@ -745,8 +745,7 @@ TEST(Standalone, AggregateShortEdges) {
 
   auto shape = graph_reader.GetGraphTile(AC_edge_id)->edgeinfo(AC_edge).shape();
   ASSERT_EQ(shape.size(), 3) << "AB and BC were not aggregated";
-  EXPECT_LT(valhalla::midgard::length(shape), 1.f) << "test needs a sub-metre aggregated shape";
+  EXPECT_LT(valhalla::midgard::length(shape), 0.5f) << "test needs a sub-metre aggregated shape";
 
-  EXPECT_GE(AC_edge->length(), 1)
-      << "zero length makes TripLeg::Edge::speed a 0/0 NaN in triplegbuilder";
+  EXPECT_GE(AC_edge->length(), 1);
 }
