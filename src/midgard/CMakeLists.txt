@@ -1,6 +1,7 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/midgard/*.h)
 
 set(sources
+  file_io.cc
   linesegment2.cc
   tiles.cc
   polyline2.cc
