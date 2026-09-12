@@ -340,7 +340,7 @@ public:
     }
 
     const size_t element_count = memmap.size();
-    // Sorting via offseted bulk reads/writes, so fstream and mmap handles have no use for us.
+    // Sorting via offsetted bulk reads/writes, so fstream and mmap handles have no use for us.
     file.reset();
     memmap.unmap();
 

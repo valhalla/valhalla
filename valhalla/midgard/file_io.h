@@ -14,7 +14,7 @@ inline constexpr bool is_byte_copyable_v =
     std::is_trivially_copy_constructible_v<T>&& std::is_trivially_destructible_v<T>;
 
 /**
- * Thin owning wrapper over the platform's file API. Abstracts platform-specific API for offseted
+ * Thin owning wrapper over the platform's file API. Abstracts platform-specific API for offsetted
  * read and write operations that mutate no inner state and thus could be done concurrently.
  */
 class file_handle {
