@@ -1,5 +1,7 @@
 #pragma once
 
+#include "midgard/file_io.h"
+
 #include <algorithm>
 #include <atomic>
 #include <cerrno>
@@ -337,23 +339,36 @@ public:
       return;
     }
 
+    const size_t element_count = memmap.size();
+    // Sorting via offseted bulk reads/writes, so fstream and mmap handles have no use for us.
+    file.reset();
+    memmap.unmap();
+
     // No more threads than chunks so every worker handles at least ~buffer_size elements
-    const size_t chunk_count = 1 + (memmap.size() - 1) / buffer_size;
+    const size_t chunk_count = 1 + (element_count - 1) / buffer_size;
     // No more than 8 as it doesn't give much beyond that number while hits hard on old disks
     concurrency = std::min(std::clamp(concurrency, size_t(1), size_t(8)), chunk_count);
 
-    // Sort the subsections in parallel
+    // Read `buffer_size` size of items, sort them and write them back in parallel
     {
+      // positioned transfers consult no cursor, so every worker shares the same handle
+      file_handle handle = file_handle::open(file_name);
       std::atomic<size_t> next_chunk(0); // self-scheduling counter to avoid a slow tail
       std::vector<std::thread> threads;
       threads.reserve(concurrency);
       for (size_t i = 0; i < concurrency; ++i) {
-        threads.emplace_back([this, &predicate, buffer_size, &next_chunk, chunk_count]() {
+        threads.emplace_back([&handle, &predicate, buffer_size, element_count, &next_chunk,
+                              chunk_count]() {
+          const auto buffer = std::make_unique_for_overwrite<std::byte[]>(buffer_size * sizeof(T));
           for (size_t chunk = next_chunk++; chunk < chunk_count; chunk = next_chunk++) {
             const size_t begin = chunk * buffer_size;
-            std::sort(static_cast<T*>(memmap) + begin,
-                      static_cast<T*>(memmap) + std::min(memmap.size(), begin + buffer_size),
-                      predicate);
+            const size_t end = std::min(element_count, begin + buffer_size);
+            const std::span<T> view(reinterpret_cast<T*>(buffer.get()), end - begin);
+            const uint64_t offset_bytes = static_cast<uint64_t>(begin) * sizeof(T);
+
+            handle.read_at(view, offset_bytes);
+            std::sort(view.begin(), view.end(), predicate);
+            handle.write_at(view, offset_bytes);
           }
         });
       }
@@ -365,8 +380,9 @@ public:
     auto tmp_path = std::filesystem::path(file_name).replace_filename(
         std::filesystem::path(file_name).filename().string() + ".tmp");
     {
-      // chunks are partitioned by value so each partition merges into its own output range
-      const T* data = static_cast<const T*>(memmap);
+      mem_map<T> input;
+      input.map(file_name, element_count);
+      const T* data = static_cast<const T*>(input);
       // one merge thread per partition
       const size_t partition_count = concurrency;
 
@@ -375,7 +391,7 @@ public:
       samples.reserve(chunk_count * (partition_count - 1));
       for (size_t chunk = 0; chunk < chunk_count; ++chunk) {
         const size_t begin = chunk * buffer_size;
-        const size_t len = std::min(memmap.size(), begin + buffer_size) - begin;
+        const size_t len = std::min(element_count, begin + buffer_size) - begin;
         for (size_t k = 1; k < partition_count; ++k) {
           samples.push_back(data[begin + k * len / partition_count]);
         }
@@ -385,7 +401,7 @@ public:
       // per-chunk partition boundaries, partition_count + 1 monotonic indexes each
       std::vector<std::vector<size_t>> boundaries(chunk_count);
       for (size_t chunk = 0; chunk < chunk_count; ++chunk) {
-        const size_t end = std::min(memmap.size(), chunk * buffer_size + buffer_size);
+        const size_t end = std::min(element_count, chunk * buffer_size + buffer_size);
         auto& bounds = boundaries[chunk];
         bounds.reserve(partition_count + 1);
         bounds.push_back(chunk * buffer_size);
@@ -407,10 +423,7 @@ public:
         }
       }
 
-      // The temporary file the merged output is written into, mapped at full size upfront
-      std::filesystem::remove(tmp_path); // drop stale bytes of a previously interrupted sort
-      mem_map<T> output;
-      output.create(tmp_path.string(), memmap.size());
+      file_handle output = file_handle::create(tmp_path.string());
 
       // partitions are disjoint by value so each merges and writes its range without locking
       auto merge_partition = [&](size_t k) {
@@ -427,17 +440,34 @@ public:
         }
         std::make_heap(heap.begin(), heap.end(), cmp);
 
-        T* out = static_cast<T*>(output) + output_offsets[k];
+        // Merge in small 32MiB buffer before writing into file
+        std::vector<T> buffer;
+        buffer.reserve(32 * 1024 * 1024 / sizeof(T));
+        uint64_t at = static_cast<uint64_t>(output_offsets[k]) * sizeof(T);
+        auto drain = [&]() {
+          if (buffer.empty()) {
+            return;
+          }
+          const std::span written(buffer);
+          output.write_at(written, at);
+          at += written.size_bytes();
+          buffer.clear();
+        };
+
         while (!heap.empty()) {
           std::pop_heap(heap.begin(), heap.end(), cmp);
           const size_t chunk = heap.back();
-          *out++ = data[cursors[chunk]];
+          buffer.push_back(data[cursors[chunk]]);
+          if (buffer.size() == buffer.capacity()) {
+            drain();
+          }
           if (++cursors[chunk] < boundaries[chunk][k + 1]) {
             std::push_heap(heap.begin(), heap.end(), cmp);
           } else {
             heap.pop_back();
           }
         }
+        drain();
       };
       std::vector<std::thread> threads;
       threads.reserve(partition_count);
@@ -449,11 +479,6 @@ public:
       }
     }
 
-    // Forget about this file for a second so we can swap in the temp file
-    file.reset();
-    memmap.unmap();
-
-    // Move the sorted result back into place
     std::filesystem::remove(file_name);
     std::filesystem::rename(tmp_path, file_name);
 
