@@ -69,7 +69,7 @@ size_t records_in(const std::string& path) {
 TEST(FileHandle, TransfersAtOffsets) {
   scoped_file f;
   const auto all = make_records(100, 7);
-  const auto h = file_handle::create(f.path);
+  auto h = file_handle::create(f.path);
   h.write_at(std::span(all), 0);
   EXPECT_EQ(records_in(f.path), all.size());
   EXPECT_EQ(read_records(h, all.size()), all);
@@ -91,7 +91,7 @@ TEST(FileHandle, ExtendsAFileThatAlreadyHasContent) {
   const auto head = make_records(20, 1);
   { file_handle::create(f.path).write_at(std::span(head), 0); }
   const auto tail = make_records(5, 2);
-  const auto h = file_handle::open(f.path); // opened, not replaced
+  auto h = file_handle::open(f.path); // opened, not replaced
   h.write_at(std::span(tail), 100 * sizeof(record));
 
   EXPECT_EQ(records_in(f.path), 105u);
@@ -123,7 +123,7 @@ TEST(FileHandle, ThrowsWhenTheFileIsMissing) {
 
 TEST(FileHandle, ThrowsWhenReadingPastTheEnd) {
   scoped_file f;
-  const auto h = file_handle::create(f.path);
+  auto h = file_handle::create(f.path);
   std::vector<record> buffer(20);
   h.write_at(std::span(buffer).first(10), 0); // only ten records exist
   EXPECT_THROW(h.read_at(std::span(buffer), 0), std::runtime_error);
@@ -131,7 +131,7 @@ TEST(FileHandle, ThrowsWhenReadingPastTheEnd) {
 
 TEST(FileHandle, EmptyTransfersDoNothing) {
   scoped_file f;
-  const auto h = file_handle::create(f.path);
+  auto h = file_handle::create(f.path);
   std::vector<record> none;
   EXPECT_NO_THROW(h.write_at(std::span(none), 0));
   EXPECT_NO_THROW(h.read_at(std::span(none), 1 << 20)); // no bytes move, so the offset is moot
@@ -144,7 +144,7 @@ TEST(FileHandle, ChunksTransfersLargerThanOneRequest) {
   std::vector<uint64_t> written((64ull << 20) / sizeof(uint64_t) + 1024); // just over 64 MiB
   std::iota(written.begin(), written.end(), 0);
 
-  const auto h = file_handle::create(f.path);
+  auto h = file_handle::create(f.path);
   h.write_at(std::span(written), 0);
   EXPECT_EQ(std::filesystem::file_size(f.path), written.size() * sizeof(uint64_t));
 
@@ -159,7 +159,7 @@ TEST(FileHandle, OneHandleServesConcurrentWriters) {
   scoped_file f;
   constexpr size_t kThreads = 8, kPer = 4096;
 
-  const auto h = file_handle::create(f.path);
+  auto h = file_handle::create(f.path);
   std::vector<std::thread> threads;
   for (size_t t = 0; t < kThreads; ++t) {
     // back to front, so the file is extended well before the gaps are filled
@@ -183,7 +183,7 @@ TEST(FileHandle, OneHandleServesConcurrentWriters) {
 TEST(FileHandle, OneHandleServesConcurrentReaders) {
   scoped_file f;
   const auto written = make_records(8192, 11);
-  const auto h = file_handle::create(f.path);
+  auto h = file_handle::create(f.path);
   h.write_at(std::span(written), 0);
 
   std::atomic<size_t> mismatches(0);
