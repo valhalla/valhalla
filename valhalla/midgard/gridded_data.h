@@ -443,7 +443,7 @@ public:
           box[1] = std::min(std::max(i - 1, 0), box[1]);
           // +1 extra because range is exclusive
           box[2] = std::max(std::min(j + 2, this->ncolumns_ - 1), box[2]);
-          box[3] = std::max(std::min(i + 2, this->ncolumns_ - 1), box[3]);
+          box[3] = std::max(std::min(i + 2, this->nrows_ - 1), box[3]);
         }
       }
     }
