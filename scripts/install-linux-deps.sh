@@ -3,6 +3,15 @@
 
 set -x -o errexit -o pipefail -o nounset
 
+# --no-prime-server: not necessary when no services needed
+build_prime_server=true
+for arg in "$@"; do
+    case "$arg" in
+        --no-prime-server) build_prime_server=false ;;
+        *) echo "unknown argument: $arg" >&2; exit 1 ;;
+    esac
+done
+
 # Now, go through and install the build dependencies
 sudo apt-get update --assume-yes
 env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
@@ -49,12 +58,14 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     unzip \
     zlib1g-dev
   
-# build prime_server from source
-# readonly primeserver_version=0.7.0
-readonly primeserver_dir=/tmp/prime_server
-git clone --recurse-submodules https://github.com/kevinkreiser/prime_server $primeserver_dir
-pushd $primeserver_dir
-./autogen.sh && ./configure
-make -j${CONCURRENCY:-$(nproc)}
-sudo make install
-popd && rm -rf $primeserver_dir
+if [ "$build_prime_server" = true ]; then
+    # build prime_server from source
+    # readonly primeserver_version=0.7.0
+    readonly primeserver_dir=/tmp/prime_server
+    git clone --recurse-submodules https://github.com/kevinkreiser/prime_server $primeserver_dir
+    pushd $primeserver_dir
+    ./autogen.sh && ./configure
+    make -j${CONCURRENCY:-$(nproc)}
+    sudo make install
+    popd && rm -rf $primeserver_dir
+fi
