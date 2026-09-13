@@ -11,6 +11,7 @@
    * FIXED: Do not require Python for building libvalhalla [#6303](https://github.com/valhalla/valhalla/pull/6303)
    * HOTFIX: Limit `sequence<T>::sort()` concurrency to 8 [#6316](https://github.com/valhalla/valhalla/pull/6316)
    * FIXED: read the predecessor edge levels from its own tile in reverse pedestrian transitions [#6291](https://github.com/valhalla/valhalla/pull/6291)
+   * FIXED: Sequental writes in `sequence<T>::sort()` to stay hdd-friendly [#6320](https://github.com/valhalla/valhalla/pull/6320)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
