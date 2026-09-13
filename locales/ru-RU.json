@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Через <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> километров",
+        "один километр",
+        "<METERS> метров",
+        "менее десяти метров"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "одну милю",
+        "полмили",
+        "четверть мили",
+        "<FEET> футов",
+        "менее десяти футов"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Прибытие: <TIME>.",
+        "1": "Прибытие: <TIME> в <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Прибытие к <TIME>.",
+        "1": "Прибытие к <TIME> в <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Поверните <RELATIVE_DIRECTION>.",
+        "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Затем двигайтесь по <STREET_NAMES>.",
+        "3": "Поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
+        "4": "Поверните <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "налево",
+        "направо"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Поверните <RELATIVE_DIRECTION>.",
+        "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
+        "3": "Поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
+        "4": "Поверните <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "налево",
+        "направо"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> переходит в <STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> переходит в <STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Продолжайте движение.",
+        "1": "Продолжайте движение по <STREET_NAMES>.",
+        "2": "Продолжайте движение через <JUNCTION_NAME>.",
+        "3": "Продолжайте движение на <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Продолжайте движение.",
+        "1": "Продолжайте движение еще <LENGTH>.",
+        "2": "Продолжайте движение по <STREET_NAMES>.",
+        "3": "Продолжайте движение по <STREET_NAMES> еще <LENGTH>.",
+        "4": "Продолжайте движение через <JUNCTION_NAME>.",
+        "5": "Продолжайте движение через <JUNCTION_NAME> еще <LENGTH>.",
+        "6": "Продолжайте движение <TOWARD_SIGN>.",
+        "7": "Продолжайте движение <TOWARD_SIGN> еще <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> километров",
+        "один километр",
+        "<METERS> метров",
+        "менее десяти метров"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "одну милю",
+        "полмили",
+        "четверть мили",
+        "<FEET> футов",
+        "менее десяти футов"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Продолжайте движение.",
+        "1": "Продолжайте движение по <STREET_NAMES>.",
+        "2": "Продолжайте движение через <JUNCTION_NAME>.",
+        "3": "Продолжайте движение <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходная дорожка",
+        "велосипедная дорожка",
+        "дорожка для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Отправление: <TIME>.",
+        "1": "Отправление: <TIME> из <TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Отправление в <TIME>.",
+        "1": "Отправление в <TIME> из <TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Вы прибыли в пункт назначения.",
+        "1": "Вы прибыли в <DESTINATION>.",
+        "2": "Пункт назначения <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "слева",
+        "справа"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Вы прибыли в пункт назначения.",
+        "1": "Вы прибыли в <DESTINATION>.",
+        "2": "Пункт назначения <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "слева",
+        "справа"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Вы прибудете в пункт назначения.",
+        "1": "Вы прибудете в <DESTINATION>.",
+        "2": "Пункт назначения будет <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> будет <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "слева",
+        "справа"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Воспользуйтесь лифтом.",
+        "1": "Воспользуйтесь лифтом до <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Войдите в здание.",
+        "1": "Войдите в здание, и продолжайте движение до <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедную дорожку",
+        "дорожка для горных велосипедов",
+        "пешеходный переход"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Садитесь на паром.",
+        "1": "Двигайтесь по <STREET_NAMES>.",
+        "2": "Двигайтесь по <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Садитесь на паром в направлении <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ferry_label": "Паром"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Садитесь на паром.",
+        "1": "Двигайтесь по <STREET_NAMES>.",
+        "2": "Двигайтесь по <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Садитесь на паром в направлении <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ferry_label": "Паром"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Выезжайте на кольцевую развязку.",
+        "1": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде.",
+        "2": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжите движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде в направлении <TOWARD_SIGN>.",
+        "5": "На кольцевой развязке сверните на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "На кольцевой развязке сверните на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжите движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "На кольцевой развязке сверните в направлении <TOWARD_SIGN>.",
+        "8": "Сверните на <STREET_NAMES>",
+        "9": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде.",
+        "10": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжайте движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде в сторону <TOWARD_SIGN>.",
+        "13": "Сверните на <STREET_NAMES> и сверните на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Сверните на <STREET_NAMES> и сверните на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжите движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Сверните на <STREET_NAMES> и сверните в направлении<TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ordinal_values": [
+        "первом",
+        "втором",
+        "третьем",
+        "четвёртом",
+        "пятом",
+        "шестом",
+        "седьмом",
+        "восьмом",
+        "девятом",
+        "десятом"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Выезжайте на кольцевую развязку.",
+        "1": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде.",
+        "2": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде <TOWARD_SIGN>.",
+        "5": "На кольцевой развязке сверните на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "На кольцевой развязке сверните на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "На кольцевой развязке сверните <TOWARD_SIGN>.",
+        "8": "Сверните на <STREET_NAMES>",
+        "9": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде.",
+        "10": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде <TOWARD_SIGN>.",
+        "13": "Сверните на <STREET_NAMES> и сверните на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Сверните на <STREET_NAMES> и сверните на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Сверните на <STREET_NAMES> и сверните <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ordinal_values": [
+        "первом",
+        "втором",
+        "третьем",
+        "четвёртом",
+        "пятом",
+        "шестом",
+        "седьмом",
+        "восьмом",
+        "девятом",
+        "десятом"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Воспользуйтесь эскалатором.",
+        "1": "Воспользуйтесь эскалатором до <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Сверните на съезде <RELATIVE_DIRECTION>.",
+        "1": "Сверните на съезде <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Сверните на съезде на <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Сверните на съезде <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
+        "4": "Сверните на съезде <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "5": "Сверните на съезде <NUMBER_SIGN> <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "6": "Сверните на съезде на <BRANCH_SIGN> <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "7": "Сверните на съезде <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "8": "Сверните на съезде на <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Сверните на съезде на <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
+        "12": "Сверните на съезде на <NAME_SIGN> <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "14": "Сверните на съезде на <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "15": "Сверните на съезде.",
+        "16": "Сверните на съезде <NUMBER_SIGN>.",
+        "17": "Сверните на съезде на <BRANCH_SIGN>.",
+        "18": "Сверните на съезде <NUMBER_SIGN> к <BRANCH_SIGN>.",
+        "19": "Сверните на съезде к <TOWARD_SIGN>.",
+        "20": "Сверните на съезде <NUMBER_SIGN> к <TOWARD_SIGN>.",
+        "21": "Сверните на съезде <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "22": "Сверните на съезде <NUMBER_SIGN> на <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "23": "Сверните на съезде <NAME_SIGN>.",
+        "25": "Сверните на съезде <NAME_SIGN> к <BRANCH_SIGN>.",
+        "27": "Сверните на съезде <NAME_SIGN> к <TOWARD_SIGN>.",
+        "29": "Сверните на съезде <NAME_SIGN> на <BRANCH_SIGN> к <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "слева",
+        "справа"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Выйдите из здания.",
+        "1": "Выйдите из здания и продолжайте по <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходному переходу"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Сверните с кольцевой развязки.",
+        "1": "Сверните с кольцевой развязки на <STREET_NAMES>.",
+        "2": "Сверните с кольцевой развязки на <BEGIN_STREET_NAMES>. Продолжите движение по <STREET_NAMES>.",
+        "3": "Сверните с кольцевой развязки к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Сверните с кольцевой развязки.",
+        "1": "Сверните с кольцевой развязки на <STREET_NAMES>.",
+        "2": "Сверните с кольцевой развязки на <BEGIN_STREET_NAMES>.",
+        "3": "Сверните с кольцевой развязки к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Сверните на съезд <RELATIVE_DIRECTION>.",
+        "1": "Сверните на съезд <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Сверните на съезд <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Сверните на съезд <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
+        "4": "Сверните на съезд <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "5": "Сверните на съезд <NUMBER_SIGN> <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "6": "Сверните на съезд на <BRANCH_SIGN> <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "7": "Сверните на съезд <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "8": "Сверните на съезд на <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Сверните на съезд на <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
+        "12": "Сверните на съезд на <NAME_SIGN> <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "14": "Сверните на съезд на <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "15": "Сверните на съезд.",
+        "16": "Сверните на съезд <NUMBER_SIGN>.",
+        "17": "Сверните на съезд на <BRANCH_SIGN>.",
+        "18": "Сверните на съезд <NUMBER_SIGN> к <BRANCH_SIGN>.",
+        "19": "Сверните на съезд к <TOWARD_SIGN>.",
+        "20": "Сверните на съезд <NUMBER_SIGN> к <TOWARD_SIGN>.",
+        "21": "Сверните на съезд <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "22": "Сверните на съезд <NUMBER_SIGN> на <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "23": "Сверните на съезд на <NAME_SIGN>.",
+        "25": "Сверните на съезд на <NAME_SIGN> к <BRANCH_SIGN>.",
+        "27": "Сверните на съезд на <NAME_SIGN> к <TOWARD_SIGN>.",
+        "29": "Сверните на съезд на <NAME_SIGN> на <BRANCH_SIGN> к <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "слева",
+        "справа"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Сверните на съезд <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Держитесь <RELATIVE_DIRECTION> на развилке.",
+        "1": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN>.",
+        "2": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на <STREET_NAMES>.",
+        "3": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN> на <STREET_NAMES>.",
+        "4": "Держитесь <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "5": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN> к <TOWARD_SIGN>.",
+        "6": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на <STREET_NAMES> к <TOWARD_SIGN>.",
+        "7": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN> на <STREET_NAMES> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "левее",
+        "прямо",
+        "правее"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Держитесь <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES>.",
+        "1": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN> и остаться на <STREET_NAMES>.",
+        "2": "Держитесь <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES> к <TOWARD_SIGN>.",
+        "3": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN> и остаться на <STREET_NAMES> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "левее",
+        "прямо",
+        "правее"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Держитесь <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES>.",
+        "1": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN> и остаться на <STREET_NAMES>.",
+        "2": "Держитесь <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES> к <TOWARD_SIGN>.",
+        "3": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN> и остаться на <STREET_NAMES> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "левее",
+        "прямо",
+        "правее"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Держитесь <RELATIVE_DIRECTION> на развилке.",
+        "1": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN>.",
+        "2": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на <STREET_NAMES>.",
+        "3": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN> на <STREET_NAMES>.",
+        "4": "Держитесь <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "5": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN> к <TOWARD_SIGN>.",
+        "6": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на <STREET_NAMES> к <TOWARD_SIGN>.",
+        "7": "Держитесь <RELATIVE_DIRECTION>, чтобы свернуть на съезд <NUMBER_SIGN> на <STREET_NAMES> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "левой стороны",
+        "прямо",
+        "правой стороны"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Continue to <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Выезжайте.",
+        "1": "Выезжайте <RELATIVE_DIRECTION>.",
+        "2": "Выезжайте на <STREET_NAMES>.",
+        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "4": "Выезжайте к <TOWARD_SIGN>.",
+        "5": "Выезжайте <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "налево",
+        "направо"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Выезжайте.",
+        "1": "Выезжайте <RELATIVE_DIRECTION>.",
+        "2": "Выезжайте на <STREET_NAMES>.",
+        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "4": "Выезжайте к <TOWARD_SIGN>.",
+        "5": "Выезжайте <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "налево",
+        "направо"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Pass <OBJECT_LABEL>.",
+        "1": "Pass traffic signals on <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "the gate",
+        "the bollards",
+        "ways intersection"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Проезжайте <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "остановку",
+        "other": "остановок"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Продолжайте движение еще <LENGTH>.",
+        "1": "Продолжайте движение по <STREET_NAMES> еще <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> километров",
+        "один километр",
+        "<METERS> метров",
+        "менее десяти метров"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "одну милю",
+        "полмили",
+        "четверть мили",
+        "<FEET> футов",
+        "менее десяти футов"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Сверните на въезд <RELATIVE_DIRECTION>.",
+        "1": "Сверните на въезд на <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Сверните на въезд <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "3": "Сверните на въезд на <BRANCH_SIGN> <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "4": "Сверните на въезд на <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Сверните <RELATIVE_DIRECTION> на въезд.",
+        "6": "Сверните <RELATIVE_DIRECTION> на въезд на <BRANCH_SIGN>.",
+        "7": "Сверните <RELATIVE_DIRECTION> на въезд к <TOWARD_SIGN>.",
+        "8": "Сверните <RELATIVE_DIRECTION> на въезд <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "9": "Сверните <RELATIVE_DIRECTION> на въезд на <NAME_SIGN>.",
+        "10": "Сверните на въезд.",
+        "11": "Сверните на въезд на <BRANCH_SIGN>.",
+        "12": "Сверните на въезд к <TOWARD_SIGN>.",
+        "13": "Сверните на въезд на <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "14": "Сверните на въезд на <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "слева",
+        "справа"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Держитесь прямо, чтобы заехать на въезд.",
+        "1": "Держитесь прямо, чтобы заехать на въезд на <BRANCH_SIGN>.",
+        "2": "Держитесь прямо, чтобы заехать на въезд к <TOWARD_SIGN>.",
+        "3": "Держитесь прямо, чтобы заехать на въезд на <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "4": "Держитесь прямо, чтобы заехать на въезд на <NAME_SIGN>."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Держитесь прямо, чтобы заехать на въезд.",
+        "1": "Держитесь прямо, чтобы заехать на въезд на <BRANCH_SIGN>.",
+        "2": "Держитесь прямо, чтобы заехать на въезд к <TOWARD_SIGN>.",
+        "3": "Держитесь прямо, чтобы заехать на въезд на <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "4": "Держитесь прямо, чтобы заехать на въезд на <NAME_SIGN>."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Сверните на въезд <RELATIVE_DIRECTION>.",
+        "1": "Сверните на въезд на <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Сверните на въезд <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "3": "Сверните на въезд на <BRANCH_SIGN> <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "4": "Сверните на въезд на <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Сверните <RELATIVE_DIRECTION> на въезд.",
+        "6": "Сверните <RELATIVE_DIRECTION> на въезд на <BRANCH_SIGN>.",
+        "7": "Сверните <RELATIVE_DIRECTION> на въезд к <TOWARD_SIGN>.",
+        "8": "Сверните <RELATIVE_DIRECTION> на въезд <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "9": "Сверните <RELATIVE_DIRECTION> на въезд на <NAME_SIGN>.",
+        "10": "Сверните на въезд.",
+        "11": "Сверните на въезд на <BRANCH_SIGN>.",
+        "12": "Сверните на въезд к <TOWARD_SIGN>.",
+        "13": "Сверните на въезд на <BRANCH_SIGN> к <TOWARD_SIGN>.",
+        "14": "Сверните на въезд на <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "слева",
+        "справа"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Круто поверните <RELATIVE_DIRECTION>.",
+        "1": "Круто поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Круто поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Следуйте далее по <STREET_NAMES>.",
+        "3": "Круто поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
+        "4": "Круто поверните <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
+        "5": "Круто поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "налево",
+        "направо"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Круто поверните <RELATIVE_DIRECTION>.",
+        "1": "Круто поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Круто поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
+        "3": "Круто поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
+        "4": "Круто поверните <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
+        "5": "Круто поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "налево",
+        "направо"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "1": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "2": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Следуйте далее по <STREET_NAMES>.",
+        "4": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "5": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "6": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Следуйте далее по <STREET_NAMES>.",
+        "8": "Идите <CARDINAL_DIRECTION>.",
+        "9": "Идите <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "10": "Идите <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Следуйте далее по <STREET_NAMES>.",
+        "16": "Двигайтесь по <CARDINAL_DIRECTION>.",
+        "17": "Двигайтесь по <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "18": "Двигайтесь по <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Следуйте далее по <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "север",
+        "северо-восток",
+        "восток",
+        "юго-восток",
+        "юг",
+        "юго-запад",
+        "запад",
+        "северо-запад"
+      ],
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "1": "Двигайтесь на <CARDINAL_DIRECTION> <LENGTH>.",
+        "2": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "3": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "4": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "5": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "6": "Двигайтесь на <CARDINAL_DIRECTION> <LENGTH>.",
+        "7": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "8": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "9": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "10": "Идите на <CARDINAL_DIRECTION>.",
+        "11": "Идите на <CARDINAL_DIRECTION> <LENGTH>.",
+        "12": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "13": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "14": "Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "15": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "16": "Двигайтесь на <CARDINAL_DIRECTION> <LENGTH>.",
+        "17": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "18": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "19": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "север",
+        "северо-запад",
+        "восток",
+        "юго-восток",
+        "юг",
+        "юго-запад",
+        "запад",
+        "северо-запад"
+      ],
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> километров",
+        "один километр",
+        "<METERS> метров",
+        "менее десяти метров"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "одну милю",
+        "полмили",
+        "четверть мили",
+        "<FEET> футов",
+        "менее десяти футов"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Воспользуйтесь лестницей.",
+        "1": "Воспользуйтесь лестницей до <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Садитесь на <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Садитесь на <TRANSIT_NAME> по направлению к <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "поезд",
+        "автобус",
+        "паром",
+        "канатную дорогу",
+        "гондолу",
+        "фуникулер"
+      ],
+      "transit_stop_count_labels": {
+        "one": "остановка",
+        "other": "остановки"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Сойдите со станции.",
+        "1": "Сойдите со станции <TRANSIT_STOP>.",
+        "2": "Сойдите со станции <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Станция"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Сойдите со станции.",
+        "1": "Сойдите со станции <TRANSIT_STOP>.",
+        "2": "Сойдите со станции <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Станция"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Войдите на станцию.",
+        "1": "Войдите на станцию <TRANSIT_STOP>.",
+        "2": "Войдите на станцию <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Станция"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Войдите на станцию.",
+        "1": "Войдите на станцию <TRANSIT_STOP>.",
+        "2": "Войдите на станцию <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Станция"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Сделайте пересадку на станции",
+        "1": "Сделайте пересадку на станции <TRANSIT_STOP>.",
+        "2": "Сделайте пересадку на станции <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Станция"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Сделайте пересадку на станции.",
+        "1": "Сделайте пересадку на станции <TRANSIT_STOP>.",
+        "2": "Сделайте пересадку на станции <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Станция"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Оставайтесь на <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Оставайтесь на <TRANSIT_NAME> по направлению к <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамвае",
+        "метро",
+        "поезде",
+        "автобусе",
+        "пароме",
+        "канатной дороге",
+        "гондоле",
+        "фуникулере"
+      ],
+      "transit_stop_count_labels": {
+        "one": "остановка",
+        "other": "остановок"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Оставайтесь на <TRANSIT_NAME>.",
+        "1": "Оставайтесь на <TRANSIT_NAME> по направлению к <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "трамвае",
+        "метро",
+        "поезде",
+        "автобусе",
+        "пароме",
+        "канатной дороге",
+        "гондоле",
+        "фуникулере"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Пересаживайтесь на <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Пересаживайтесь на <TRANSIT_NAME> по направлению к <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "поезд",
+        "автобус",
+        "паром",
+        "канатную дорогу",
+        "гондолу",
+        "фуникулер"
+      ],
+      "transit_stop_count_labels": {
+        "one": "остановка",
+        "other": "остановки"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Пересаживайтесь на <TRANSIT_NAME>.",
+        "1": "Пересаживайтесь на <TRANSIT_NAME> по направлению к <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "поезд",
+        "автобус",
+        "паром",
+        "канатную дорогу",
+        "гондолу",
+        "фуникулер"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Садитесь на <TRANSIT_NAME>.",
+        "1": "Садитесь на <TRANSIT_NAME> по направлению к <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "поезд",
+        "автобус",
+        "паром",
+        "канатную дорогу",
+        "гондолу",
+        "фуникулер"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "Поверните <RELATIVE_DIRECTION>.",
+        "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте движение по <STREET_NAMES>.",
+        "3": "Поверните <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES>.",
+        "4": "Поверните <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "налево",
+        "направо"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Поверните <RELATIVE_DIRECTION>.",
+        "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
+        "3": "Поверните <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES>.",
+        "4": "Поверните <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходную дорожку",
+        "велосипедную дорожку",
+        "дорожку для горных велосипедов",
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "налево",
+        "направо"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Развернитесь <RELATIVE_DIRECTION>.",
+        "1": "Развернитесь <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Развернитесь <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES>.",
+        "3": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.",
+        "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> на <STREET_NAMES>.",
+        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>, чтобы остаться на <STREET_NAMES>.",
+        "6": "Развернитесь <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "7": "Развернитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "пешеходном переходе",
+        "дорожке для горных велосипедов",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "налево",
+        "направо"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Развернитесь <RELATIVE_DIRECTION>.",
+        "1": "Развернитесь <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Развернитесь <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES>.",
+        "3": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.",
+        "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> на <STREET_NAMES>.",
+        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>, чтобы остаться на <STREET_NAMES>.",
+        "6": "Развернитесь <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "7": "Развернитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходном переходе",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "налево",
+        "направо"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE>, затем <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE>, затем через <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> километров",
+        "один километр",
+        "<METERS> метров",
+        "менее десяти метров"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "одну милю",
+        "полмили",
+        "четверть мили",
+        "<FEET> футов",
+        "менее десяти футов"
+      ]
+    }
+  },
+  "posix_locale": "ru_RU.UTF-8",
+  "aliases": [
+    "ru"
+  ]
+}

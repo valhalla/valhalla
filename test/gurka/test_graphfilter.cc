@@ -1,5 +1,6 @@
 #include "baldr/graphreader.h"
 #include "gurka.h"
+#include "midgard/util.h"
 
 #include <gtest/gtest.h>
 
@@ -22,7 +23,7 @@ TEST(Standalone, SimpleFilter) {
                   |    |         Q----S----T    |         |
                   N    O              |         V         X
                                       |
-                                      U 
+                                      U
   )";
 
   const gurka::ways ways = {
@@ -112,7 +113,7 @@ TEST(Standalone, SimpleFilter2) {
         A----B----C----D----E------------F----G
         |              |     \          /     |
         |              |      \        /      |
-        O              P       Q------R       S                  
+        O              P       Q------R       S
   )";
 
   const gurka::ways ways = {
@@ -199,7 +200,7 @@ TEST(Standalone, FilterTestComplexRestrictionsSignals) {
                           |
                           |
                           M--N
-                          |  | 
+                          |  |
                           |  |
        A------------------B--C----D-----------E
        |                  |  |
@@ -357,13 +358,13 @@ TEST(Standalone, FilterTestNodeTypeSignals) {
                 F
                 |
                 G--H
-                |  | 
+                |  |
                 |  |
      A----------B--C-------D
                 |
                 |
                 E
-  
+
   )";
 
   const gurka::ways ways = {
@@ -715,4 +716,37 @@ TEST(Standalone, FilterTestConsistencyTTHeadingsDriveability) {
     EXPECT_EQ((int)node->heading(CF_edge->localedgeidx()), 180);
     EXPECT_EQ((int)CF_edge->turntype(AC_edge->localedgeidx()), 2); // right
   }
+}
+
+TEST(Standalone, AggregateShortEdges) {
+  constexpr double gridsize_metres = 0.3;
+
+  const std::string ascii_map = R"(
+     A-B-C
+       |
+       D
+  )";
+
+  const gurka::ways ways = {
+      {"ABC", {{"highway", "unclassified"}, {"osm_id", "100"}, {"oneway", "yes"}}},
+      {"BD", {{"highway", "footway"}, {"osm_id", "101"}, {"footway", "crossing"}}},
+  };
+
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {11.24006, 43.77054});
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, work_dir,
+                        {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
+                         {"mjolnir.include_pedestrian", "false"}});
+
+  GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  auto [AC_edge_id, AC_edge] = gurka::findEdgeByNodes(graph_reader, layout, "A", "C");
+  ASSERT_NE(AC_edge, nullptr);
+
+  auto shape = graph_reader.GetGraphTile(AC_edge_id)->edgeinfo(AC_edge).shape();
+  ASSERT_EQ(shape.size(), 3) << "AB and BC were not aggregated";
+  EXPECT_LT(valhalla::midgard::length(shape), 1.f) << "test needs a sub-metre aggregated shape";
+
+  EXPECT_GE(AC_edge->length(), 1)
+      << "zero length makes TripLeg::Edge::speed a 0/0 NaN in triplegbuilder";
 }

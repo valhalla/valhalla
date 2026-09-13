@@ -848,7 +848,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     baldr::LimitedGraphReader reader = reader_getter();
     auto to_tile = reader.GetGraphTile(edge_id);
     auto levels = tile->edgeinfo(pred).levels();
-    auto prev_levels = to_tile->edgeinfo(edge).levels();
+    auto prev_levels = to_tile->edgeinfo(to_tile->directededge(edge_id)).levels();
     unsigned int traversed_levels = levels.first.size() == 1 && prev_levels.first.size() == 1 &&
                                             levels.first[0].first == levels.first[0].second &&
                                             prev_levels.first[0].first == prev_levels.first[0].second
