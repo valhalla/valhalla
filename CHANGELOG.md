@@ -11,6 +11,7 @@
    * FIXED: Do not require Python for building libvalhalla [#6303](https://github.com/valhalla/valhalla/pull/6303)
    * HOTFIX: Limit `sequence<T>::sort()` concurrency to 8 [#6316](https://github.com/valhalla/valhalla/pull/6316)
 * **Enhancement**
+   * UPDATED: timezone database to 2026d [#6321](https://github.com/valhalla/valhalla/pull/6321)
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
    * ADDED: `cost` in verbose matrix output [#6249](https://github.com/valhalla/valhalla/pull/6249)
