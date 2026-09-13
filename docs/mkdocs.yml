@@ -204,6 +204,7 @@ nav:
       - Live traffic incidents: concepts/incidents.md
       - Change identification: concepts/change-identification.md
       - Elevation: concepts/elevation.md
+      - Pedestrian areas: concepts/pedestrian-areas.md
       - Costing:
           - Dynamic costing: concepts/costing/dynamic-costing.md
           - Elevation influenced bicycle routing: concepts/costing/elevation-costing.md

@@ -5265,6 +5265,9 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
+
+  osmdata.max_way_id = parser.last_way_;
+
   parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the access tags so that we can easily find them.
@@ -5349,6 +5352,84 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
                                  concurrency);
   }
   LOG_INFO("Finished");
+}
+
+void PBFGraphParser::ParseAreaWays(const boost::property_tree::ptree& pt,
+                                   const std::vector<std::string>& input_files,
+                                   const std::string& ways_file,
+                                   const std::string& way_nodes_file,
+                                   OSMData& osmdata) {
+  SCOPED_TIMER();
+
+  // we need area_relations to know which ways to collect, read it from disk if needed
+  if (!osmdata.initialized)
+    osmdata.read_from_temp_files(pt.get<std::string>("tile_dir"));
+
+  // nothing to do if there are no area relations
+  if (osmdata.area_relations.empty())
+    return;
+
+  // collect the way ids we need (outer and inner members of the area relations)
+  ankerl::unordered_dense::set<uint64_t> needed_way_ids;
+  needed_way_ids.reserve(osmdata.area_relations.size());
+  for (const auto& entry : osmdata.area_relations) {
+    needed_way_ids.insert(entry.second.way_id);
+  }
+
+  LOG_INFO("Parsing area ways... looking for " + std::to_string(needed_way_ids.size()) + " ways");
+
+  // open the existing ways/way_nodes files
+  sequence<OSMWay> ways(ways_file, false);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
+
+  uint32_t found = 0;
+  for (const auto& file : input_files) {
+    osmium::io::Reader reader(file, osmium::osm_entity_bits::way);
+    while (osmium::memory::Buffer buffer = reader.read()) {
+      for (const auto& item : buffer) {
+        const auto& osm_way = static_cast<const osmium::Way&>(item);
+
+        // skip ways we don't care about
+        if (!needed_way_ids.count(static_cast<uint64_t>(osm_way.id())))
+          continue;
+
+        // gather the node ids of this way
+        std::vector<uint64_t> nodes;
+        nodes.reserve(osm_way.nodes().size());
+        for (const auto& node : osm_way.nodes()) {
+          nodes.push_back(node.ref());
+        }
+
+        // Do not add ways with < 2 nodes. Log error or add to a problem list
+        // TODO - find out if we do need these, why they exist...
+        if (nodes.size() < 2)
+          continue;
+
+        // the index this way will have in the ways file
+        uint32_t way_index = static_cast<uint32_t>(ways.size());
+
+        // store each node as a way node referencing this way by index
+        for (size_t i = 0; i < nodes.size(); ++i) {
+          OSMNode osm_node{nodes[i]};
+          osm_node.intersection_ = i == 0 || i == nodes.size() - 1;
+          way_nodes.push_back({osm_node, way_index, static_cast<uint32_t>(i)});
+        }
+
+        // emitted only partially filled. The area bit keeps ConstructEdges from turning
+        // these into edges, so the routing attributes (access, road class, speed) are
+        // left for BuildAreas to fill in if it decides to keep the perimeter
+        OSMWay w{static_cast<uint64_t>(osm_way.id())};
+        w.set_node_count(nodes.size());
+        w.set_area(true);
+        ways.push_back(w);
+        ++found;
+      }
+    }
+    reader.close();
+  }
+
+  LOG_INFO("Finished parsing area ways, found " + std::to_string(found) + " of " +
+           std::to_string(needed_way_ids.size()));
 }
 
 void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
@@ -5458,6 +5539,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // Some OSM extracts do not have changeset Ids. For these set the max changeset Id
   // to the max OSM Id
   // Note, we also allow dataset_id to be set by config, which happens at tile build
+  osmdata.max_node_id = max_osm_id;
   if (osmdata.max_changeset_id_ == 0) {
     osmdata.max_changeset_id_ = max_osm_id;
     LOG_INFO("Finished: max_osm_id " + std::to_string(osmdata.max_changeset_id_));

@@ -51,7 +51,8 @@ struct OSMNode {
   uint32_t tagged_access_ : 1; // Was access originally tagged?
   uint32_t private_access_ : 1;
   uint32_t cash_only_toll_ : 1;
-  uint32_t spare_ : 5;
+  uint32_t synthetic_ : 1;
+  uint32_t spare_ : 4;
 
   // Lat,lng of the node at fixed 7digit precision
   uint32_t lng7_;
@@ -451,6 +452,22 @@ struct OSMNode {
    */
   bool private_access() const {
     return private_access_;
+  }
+
+  /**
+   * Set the synthetic flag.
+   * @param  synthetic bool.
+   */
+  void set_synthetic(const bool synthetic) {
+    synthetic_ = synthetic;
+  }
+
+  /**
+   * Get the synthetic flag.
+   * @return  Returns synthetic flag.
+   */
+  bool synthetic() const {
+    return synthetic_;
   }
 
   /**
