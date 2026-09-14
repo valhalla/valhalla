@@ -767,8 +767,6 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   factor *= edge->lit() + (!edge->lit() * unlit_factor_);
   factor *= EdgeFactor(edgeid);
 
-  LOG_INFO("Use: {}, Factor: {}", baldr::to_string(edge->use()), factor);
-
   // Slightly favor walkways/paths and penalize alleys and driveways.
   return {sec * factor, sec};
 }
@@ -949,7 +947,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options){};
+  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options) {};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;
