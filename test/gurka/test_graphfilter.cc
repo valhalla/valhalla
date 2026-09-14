@@ -1,5 +1,6 @@
 #include "baldr/graphreader.h"
 #include "gurka.h"
+#include "midgard/util.h"
 
 #include <gtest/gtest.h>
 
@@ -22,7 +23,7 @@ TEST(Standalone, SimpleFilter) {
                   |    |         Q----S----T    |         |
                   N    O              |         V         X
                                       |
-                                      U 
+                                      U
   )";
 
   const gurka::ways ways = {
@@ -112,7 +113,7 @@ TEST(Standalone, SimpleFilter2) {
         A----B----C----D----E------------F----G
         |              |     \          /     |
         |              |      \        /      |
-        O              P       Q------R       S                  
+        O              P       Q------R       S
   )";
 
   const gurka::ways ways = {
@@ -199,7 +200,7 @@ TEST(Standalone, FilterTestComplexRestrictionsSignals) {
                           |
                           |
                           M--N
-                          |  | 
+                          |  |
                           |  |
        A------------------B--C----D-----------E
        |                  |  |
@@ -357,13 +358,13 @@ TEST(Standalone, FilterTestNodeTypeSignals) {
                 F
                 |
                 G--H
-                |  | 
+                |  |
                 |  |
      A----------B--C-------D
                 |
                 |
                 E
-  
+
   )";
 
   const gurka::ways ways = {

@@ -8,13 +8,11 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-constexpr uint32_t kMinimumEdgeLength = 1;
-
 // Constructor with parameters
 DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const GraphId& endnode,
                                          const bool forward,
-                                         const uint32_t length,
+                                         const double length,
                                          const uint32_t speed,
                                          const uint32_t truck_speed,
                                          const baldr::Use use,
@@ -34,8 +32,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_speed(speed);             // KPH
   set_truck_speed(truck_speed); // KPH
 
-  // Protect against 0 length edges
-  set_length(std::max(length, kMinimumEdgeLength), true);
+  set_length(length);
 
   // Override use for ferries/rail ferries. TODO - set this in lua
   if (way.ferry() && way.use() != Use::kConstruction) {
