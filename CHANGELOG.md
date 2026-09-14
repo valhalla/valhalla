@@ -10,6 +10,9 @@
    * FIXED: Shortcut/transit/etc. edges should use `kNoElevationData` (-500.0) instead of 0.0 [#6306](https://github.com/valhalla/valhalla/pull/6306)
    * FIXED: Do not require Python for building libvalhalla [#6303](https://github.com/valhalla/valhalla/pull/6303)
    * HOTFIX: Limit `sequence<T>::sort()` concurrency to 8 [#6316](https://github.com/valhalla/valhalla/pull/6316)
+   * FIXED: read the predecessor edge levels from its own tile in reverse pedestrian transitions [#6291](https://github.com/valhalla/valhalla/pull/6291)
+   * FIXED: A proper rounding and guarding against zero when calculating `DirectedEdge::length` for BSS/transit/shortcut edges [#6319](https://github.com/valhalla/valhalla/pull/6319)
+   * FIXED: apply `sidewalk_factor` on `Use::kSidewalk` [#6322](https://github.com/valhalla/valhalla/pull/6322)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
