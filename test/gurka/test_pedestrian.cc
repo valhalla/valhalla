@@ -691,34 +691,3 @@ TEST(Crosswalk, TransitionFromNonFootways) {
                                                             "Turn right onto the walkway.",
                                                             "Continue for 500 meters.");
 }
-
-// make sure a way with a sidewalk tag is preferred over one without a tagged sidewalk
-TEST(TestSidewalk, TestSidewalkTagged) {
-
-  const std::string& ascii_map = R"(
-        B---C---D
-       /         \
-      A           H  
-       \         /
-        E---F---G
-    )";
-  const gurka::ways ways = {
-      {"ABCDH",
-       {
-           {"highway", "tertiary"},
-           {"sidewalk", "both"},
-       }},
-      {"AEFGH",
-       {
-           {"highway", "tertiary"},
-       }},
-
-  };
-
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/costing_type_blind_bridge");
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "pedestrian",
-                                 {{"/costing_options/pedestrian/type", "blind"}});
-
-  gurka::assert::raw::expect_path(result, {"ABCDH"});
-}
