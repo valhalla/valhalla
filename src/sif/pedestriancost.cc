@@ -662,6 +662,8 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   use_factor_[static_cast<uint8_t>(Use::kTrack)] = track_factor_;
   use_factor_[static_cast<uint8_t>(Use::kLivingStreet)] = living_street_factor_;
   use_factor_[static_cast<uint8_t>(Use::kServiceRoad)] = service_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kPedestrianCrossing)] = walkway_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kPedestrian)] = walkway_factor_;
 }
 
 // Check if access is allowed on the specified edge. Disallow if no
@@ -947,7 +949,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options){};
+  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options) {};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;
