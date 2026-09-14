@@ -656,7 +656,7 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   // Populate the use_factor_ lookup table. 0.0f is the sentinel for "no match"
   use_factor_.fill(0.0f);
   use_factor_[static_cast<uint8_t>(Use::kFootway)] = walkway_factor_;
-  use_factor_[static_cast<uint8_t>(Use::kSidewalk)] = walkway_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kSidewalk)] = sidewalk_factor_;
   use_factor_[static_cast<uint8_t>(Use::kAlley)] = alley_factor_;
   use_factor_[static_cast<uint8_t>(Use::kDriveway)] = driveway_factor_;
   use_factor_[static_cast<uint8_t>(Use::kTrack)] = track_factor_;
@@ -766,6 +766,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   factor *= edge->lit() + (!edge->lit() * unlit_factor_);
   factor *= EdgeFactor(edgeid);
+
+  LOG_INFO("Use: {}, Factor: {}", baldr::to_string(edge->use()), factor);
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
   return {sec * factor, sec};
@@ -947,7 +949,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options){};
+  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options) {};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;
