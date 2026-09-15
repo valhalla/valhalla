@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "בעוד <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> קילומטרים",
+        "קילומטר אחד",
+        "<METERS> מטרים",
+        "פחות מ-10 מטרים"
+      ],
+      "us_customary_lengths": [
+        "<MILES> מייל",
+        "מייל אחד",
+        "חצי מייל",
+        "רבע מייל",
+        "<FEET> רגל",
+        "פחות מ-10 רגל"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "הגעה: <TIME>.",
+        "1": "הגעה: <TIME> אל <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "הגעה בשעה <TIME>.",
+        "1": "הגעה בשעה <TIME> אל <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "סטה <RELATIVE_DIRECTION>.",
+        "1": "סטה <RELATIVE_DIRECTION> אל <STREET_NAMES>.",
+        "2": "סטה <RELATIVE_DIRECTION> אל <BEGIN_STREET_NAMES>. המשך על <STREET_NAMES>.",
+        "3": "סטה <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES>.",
+        "4": "סטה <RELATIVE_DIRECTION> בצומת <JUNCTION_NAME>.",
+        "5": "סטה <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ימינה"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "סטה <RELATIVE_DIRECTION>.",
+        "1": "סטה <RELATIVE_DIRECTION> אל <STREET_NAMES>.",
+        "2": "סטה <RELATIVE_DIRECTION> אל <BEGIN_STREET_NAMES>.",
+        "3": "סטה <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES>.",
+        "4": "סטה <RELATIVE_DIRECTION> בצומת <JUNCTION_NAME>.",
+        "5": "סטה <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ימינה"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> הופך ל<STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> הופך ל<STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "המשך.",
+        "1": "המשך על <STREET_NAMES>.",
+        "2": "המשך בצומת <JUNCTION_NAME>.",
+        "3": "המשך לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "המשך.",
+        "1": "המשך <LENGTH>.",
+        "2": "המשך על <STREET_NAMES>.",
+        "3": "המשך <LENGTH> על <STREET_NAMES>.",
+        "4": "המשך בצומת <JUNCTION_NAME>.",
+        "5": "המשך <LENGTH> בצומת <JUNCTION_NAME>.",
+        "6": "המשך לכיוון <TOWARD_SIGN>.",
+        "7": "המשך <LENGTH> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> קילומטרים",
+        "קילומטר אחד",
+        "<METERS> מטרים",
+        "פחות מ-10 מטרים"
+      ],
+      "us_customary_lengths": [
+        "<MILES> מייל",
+        "מייל אחד",
+        "חצי מייל",
+        "רבע מייל",
+        "<FEET> רגל",
+        "פחות מ-10 רגל"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "המשך.",
+        "1": "המשך על <STREET_NAMES>.",
+        "2": "המשך בצומת <JUNCTION_NAME>.",
+        "3": "המשך לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "יציאה: <TIME>.",
+        "1": "יציאה: <TIME> מ<TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "יציאה בשעה <TIME>.",
+        "1": "יציאה בשעה <TIME> מ<TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "הגעת ליעד.",
+        "1": "הגעת ל<DESTINATION>.",
+        "2": "היעד נמצא בצד <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> נמצא בצד <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "שמאל",
+        "ימין"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "הגעת ליעד.",
+        "1": "הגעת ל<DESTINATION>.",
+        "2": "היעד נמצא בצד <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> נמצא בצד <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "שמאל",
+        "ימין"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "תגיע ליעד.",
+        "1": "תגיע ל<DESTINATION>.",
+        "2": "היעד יהיה בצד <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> יהיה בצד <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "שמאל",
+        "ימין"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "השתמש במעלית.",
+        "1": "השתמש במעלית כדי להגיע לקומה <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "היכנס לבניין.",
+        "1": "היכנס לבניין והמשך על <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "עלה למעבורת.",
+        "1": "עלה ל<STREET_NAMES>.",
+        "2": "עלה ל<FERRY_LABEL> <STREET_NAMES>.",
+        "3": "עלה למעבורת לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "ferry_label": "מעבורת"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "עלה למעבורת.",
+        "1": "עלה ל<STREET_NAMES>.",
+        "2": "עלה ל<FERRY_LABEL> <STREET_NAMES>.",
+        "3": "עלה למעבורת לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "ferry_label": "מעבורת"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "היכנס לכיכר.",
+        "1": "היכנס לכיכר וצא ביציאה ה<ORDINAL_VALUE>.",
+        "2": "היכנס לכיכר וצא ביציאה ה<ORDINAL_VALUE> אל <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "היכנס לכיכר וצא ביציאה ה<ORDINAL_VALUE> אל <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. המשך על <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "היכנס לכיכר וצא ביציאה ה<ORDINAL_VALUE> לכיוון <TOWARD_SIGN>.",
+        "5": "היכנס לכיכר וצא ביציאה אל <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "היכנס לכיכר וצא ביציאה אל <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. המשך על <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "היכנס לכיכר וצא ביציאה לכיוון <TOWARD_SIGN>.",
+        "8": "היכנס ל<STREET_NAMES>",
+        "9": "היכנס ל<STREET_NAMES> וצא ביציאה ה<ORDINAL_VALUE>.",
+        "10": "היכנס ל<STREET_NAMES> וצא ביציאה ה<ORDINAL_VALUE> אל <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "היכנס ל<STREET_NAMES> וצא ביציאה ה<ORDINAL_VALUE> אל <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. המשך על <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "היכנס ל<STREET_NAMES> וצא ביציאה ה<ORDINAL_VALUE> לכיוון <TOWARD_SIGN>.",
+        "13": "היכנס ל<STREET_NAMES> וצא ביציאה אל <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "היכנס ל<STREET_NAMES> וצא ביציאה אל <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. המשך על <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "היכנס ל<STREET_NAMES> וצא ביציאה לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "ordinal_values": [
+        "ראשונה",
+        "שנייה",
+        "שלישית",
+        "רביעית",
+        "חמישית",
+        "שישית",
+        "שביעית",
+        "שמינית",
+        "תשיעית",
+        "עשירית"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "היכנס לכיכר.",
+        "1": "היכנס לכיכר וצא ביציאה ה<ORDINAL_VALUE>.",
+        "2": "היכנס לכיכר וצא ביציאה ה<ORDINAL_VALUE> אל <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "היכנס לכיכר וצא ביציאה ה<ORDINAL_VALUE> אל <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "היכנס לכיכר וצא ביציאה ה<ORDINAL_VALUE> לכיוון <TOWARD_SIGN>.",
+        "5": "היכנס לכיכר וצא ביציאה אל <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "היכנס לכיכר וצא ביציאה אל <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "היכנס לכיכר וצא ביציאה לכיוון <TOWARD_SIGN>.",
+        "8": "היכנס ל<STREET_NAMES>",
+        "9": "היכנס ל<STREET_NAMES> וצא ביציאה ה<ORDINAL_VALUE>.",
+        "10": "היכנס ל<STREET_NAMES> וצא ביציאה ה<ORDINAL_VALUE> אל <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "היכנס ל<STREET_NAMES> וצא ביציאה ה<ORDINAL_VALUE> אל <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "היכנס ל<STREET_NAMES> וצא ביציאה ה<ORDINAL_VALUE> לכיוון <TOWARD_SIGN>.",
+        "13": "היכנס ל<STREET_NAMES> וצא ביציאה אל <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "היכנס ל<STREET_NAMES> וצא ביציאה אל <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "היכנס ל<STREET_NAMES> וצא ביציאה לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "ordinal_values": [
+        "ראשונה",
+        "שנייה",
+        "שלישית",
+        "רביעית",
+        "חמישית",
+        "שישית",
+        "שביעית",
+        "שמינית",
+        "תשיעית",
+        "עשירית"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "השתמש בדרגנוע.",
+        "1": "השתמש בדרגנוע כדי להגיע לקומה <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "צא ביציאה שבצד <RELATIVE_DIRECTION>.",
+        "1": "צא ביציאה <NUMBER_SIGN> שבצד <RELATIVE_DIRECTION>.",
+        "2": "צא ביציאת <BRANCH_SIGN> שבצד <RELATIVE_DIRECTION>.",
+        "3": "צא ביציאה <NUMBER_SIGN> שבצד <RELATIVE_DIRECTION> אל <BRANCH_SIGN>.",
+        "4": "צא ביציאה שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "5": "צא ביציאה <NUMBER_SIGN> שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "6": "צא ביציאת <BRANCH_SIGN> שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "7": "צא ביציאה <NUMBER_SIGN> שבצד <RELATIVE_DIRECTION> אל <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "8": "צא ביציאת <NAME_SIGN> שבצד <RELATIVE_DIRECTION>.",
+        "10": "צא ביציאת <NAME_SIGN> שבצד <RELATIVE_DIRECTION> אל <BRANCH_SIGN>.",
+        "12": "צא ביציאת <NAME_SIGN> שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "14": "צא ביציאת <NAME_SIGN> שבצד <RELATIVE_DIRECTION> אל <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "15": "צא ביציאה.",
+        "16": "צא ביציאה <NUMBER_SIGN>.",
+        "17": "צא ביציאת <BRANCH_SIGN>.",
+        "18": "צא ביציאה <NUMBER_SIGN> אל <BRANCH_SIGN>.",
+        "19": "צא ביציאה לכיוון <TOWARD_SIGN>.",
+        "20": "צא ביציאה <NUMBER_SIGN> לכיוון <TOWARD_SIGN>.",
+        "21": "צא ביציאת <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "22": "צא ביציאה <NUMBER_SIGN> אל <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "23": "צא ביציאת <NAME_SIGN>.",
+        "25": "צא ביציאת <NAME_SIGN> אל <BRANCH_SIGN>.",
+        "27": "צא ביציאת <NAME_SIGN> לכיוון <TOWARD_SIGN>.",
+        "29": "צא ביציאת <NAME_SIGN> אל <BRANCH_SIGN> לכיוון <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "שמאל",
+        "ימין"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "צא מהבניין.",
+        "1": "צא מהבניין והמשך על <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "צא מהכיכר.",
+        "1": "צא מהכיכר אל <STREET_NAMES>.",
+        "2": "צא מהכיכר אל <BEGIN_STREET_NAMES>. המשך על <STREET_NAMES>.",
+        "3": "צא מהכיכר לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "צא מהכיכר.",
+        "1": "צא מהכיכר אל <STREET_NAMES>.",
+        "2": "צא מהכיכר אל <BEGIN_STREET_NAMES>.",
+        "3": "צא מהכיכר לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "צא ביציאה שבצד <RELATIVE_DIRECTION>.",
+        "1": "צא ביציאה <NUMBER_SIGN> שבצד <RELATIVE_DIRECTION>.",
+        "2": "צא ביציאת <BRANCH_SIGN> שבצד <RELATIVE_DIRECTION>.",
+        "3": "צא ביציאה <NUMBER_SIGN> שבצד <RELATIVE_DIRECTION> אל <BRANCH_SIGN>.",
+        "4": "צא ביציאה שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "5": "צא ביציאה <NUMBER_SIGN> שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "6": "צא ביציאת <BRANCH_SIGN> שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "7": "צא ביציאה <NUMBER_SIGN> שבצד <RELATIVE_DIRECTION> אל <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "8": "צא ביציאת <NAME_SIGN> שבצד <RELATIVE_DIRECTION>.",
+        "10": "צא ביציאת <NAME_SIGN> שבצד <RELATIVE_DIRECTION> אל <BRANCH_SIGN>.",
+        "12": "צא ביציאת <NAME_SIGN> שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "14": "צא ביציאת <NAME_SIGN> שבצד <RELATIVE_DIRECTION> אל <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "15": "צא ביציאה.",
+        "16": "צא ביציאה <NUMBER_SIGN>.",
+        "17": "צא ביציאת <BRANCH_SIGN>.",
+        "18": "צא ביציאה <NUMBER_SIGN> אל <BRANCH_SIGN>.",
+        "19": "צא ביציאה לכיוון <TOWARD_SIGN>.",
+        "20": "צא ביציאה <NUMBER_SIGN> לכיוון <TOWARD_SIGN>.",
+        "21": "צא ביציאת <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "22": "צא ביציאה <NUMBER_SIGN> אל <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "23": "צא ביציאת <NAME_SIGN>.",
+        "25": "צא ביציאת <NAME_SIGN> אל <BRANCH_SIGN>.",
+        "27": "צא ביציאת <NAME_SIGN> לכיוון <TOWARD_SIGN>.",
+        "29": "צא ביציאת <NAME_SIGN> אל <BRANCH_SIGN> לכיוון <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "שמאל",
+        "ימין"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "יציאה <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "המשך <RELATIVE_DIRECTION> בהתפצלות.",
+        "1": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN>.",
+        "2": "המשך <RELATIVE_DIRECTION> כדי לעבור אל <STREET_NAMES>.",
+        "3": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN> אל <STREET_NAMES>.",
+        "4": "המשך <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "5": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN> לכיוון <TOWARD_SIGN>.",
+        "6": "המשך <RELATIVE_DIRECTION> כדי לעבור אל <STREET_NAMES> לכיוון <TOWARD_SIGN>.",
+        "7": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN> אל <STREET_NAMES> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ישר",
+        "ימינה"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "המשך <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES>.",
+        "1": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN> ולהישאר על <STREET_NAMES>.",
+        "2": "המשך <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES> לכיוון <TOWARD_SIGN>.",
+        "3": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN> ולהישאר על <STREET_NAMES> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ישר",
+        "ימינה"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "המשך <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES>.",
+        "1": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN> ולהישאר על <STREET_NAMES>.",
+        "2": "המשך <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES> לכיוון <TOWARD_SIGN>.",
+        "3": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN> ולהישאר על <STREET_NAMES> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ישר",
+        "ימינה"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "המשך <RELATIVE_DIRECTION> בהתפצלות.",
+        "1": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN>.",
+        "2": "המשך <RELATIVE_DIRECTION> כדי לעבור אל <STREET_NAMES>.",
+        "3": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN> אל <STREET_NAMES>.",
+        "4": "המשך <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "5": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN> לכיוון <TOWARD_SIGN>.",
+        "6": "המשך <RELATIVE_DIRECTION> כדי לעבור אל <STREET_NAMES> לכיוון <TOWARD_SIGN>.",
+        "7": "המשך <RELATIVE_DIRECTION> כדי לצאת ביציאה <NUMBER_SIGN> אל <STREET_NAMES> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ישר",
+        "ימינה"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "המשך לקומה <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "השתלב.",
+        "1": "השתלב <RELATIVE_DIRECTION>.",
+        "2": "השתלב אל <STREET_NAMES>.",
+        "3": "השתלב <RELATIVE_DIRECTION> אל <STREET_NAMES>.",
+        "4": "השתלב לכיוון <TOWARD_SIGN>.",
+        "5": "השתלב <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ימינה"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "השתלב.",
+        "1": "השתלב <RELATIVE_DIRECTION>.",
+        "2": "השתלב אל <STREET_NAMES>.",
+        "3": "השתלב <RELATIVE_DIRECTION> אל <STREET_NAMES>.",
+        "4": "השתלב לכיוון <TOWARD_SIGN>.",
+        "5": "השתלב <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ימינה"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "החנה את הרכב"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "עבור את <OBJECT_LABEL>.",
+        "1": "עבור את הרמזורים ב<OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "השער",
+        "העמודונים",
+        "צומת הדרכים"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "סע <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "תחנה",
+        "other": "תחנות"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "המשך <LENGTH>.",
+        "1": "המשך <LENGTH> על <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> קילומטרים",
+        "קילומטר אחד",
+        "<METERS> מטרים",
+        "פחות מ-10 מטרים"
+      ],
+      "us_customary_lengths": [
+        "<MILES> מייל",
+        "מייל אחד",
+        "חצי מייל",
+        "רבע מייל",
+        "<FEET> רגל",
+        "פחות מ-10 רגל"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "עלה לרמפה שבצד <RELATIVE_DIRECTION>.",
+        "1": "עלה לרמפת <BRANCH_SIGN> שבצד <RELATIVE_DIRECTION>.",
+        "2": "עלה לרמפה שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "3": "עלה לרמפת <BRANCH_SIGN> שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "4": "עלה לרמפת <NAME_SIGN> שבצד <RELATIVE_DIRECTION>.",
+        "5": "פנה ל<RELATIVE_DIRECTION> כדי לעלות לרמפה.",
+        "6": "פנה ל<RELATIVE_DIRECTION> כדי לעלות לרמפת <BRANCH_SIGN>.",
+        "7": "פנה ל<RELATIVE_DIRECTION> כדי לעלות לרמפה לכיוון <TOWARD_SIGN>.",
+        "8": "פנה ל<RELATIVE_DIRECTION> כדי לעלות לרמפת <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "9": "פנה ל<RELATIVE_DIRECTION> כדי לעלות לרמפת <NAME_SIGN>.",
+        "10": "עלה לרמפה.",
+        "11": "עלה לרמפת <BRANCH_SIGN>.",
+        "12": "עלה לרמפה לכיוון <TOWARD_SIGN>.",
+        "13": "עלה לרמפת <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "14": "עלה לרמפת <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "שמאל",
+        "ימין"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "המשך ישר כדי לעלות לרמפה.",
+        "1": "המשך ישר כדי לעלות לרמפת <BRANCH_SIGN>.",
+        "2": "המשך ישר כדי לעלות לרמפה לכיוון <TOWARD_SIGN>.",
+        "3": "המשך ישר כדי לעלות לרמפת <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "4": "המשך ישר כדי לעלות לרמפת <NAME_SIGN>."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "המשך ישר כדי לעלות לרמפה.",
+        "1": "המשך ישר כדי לעלות לרמפת <BRANCH_SIGN>.",
+        "2": "המשך ישר כדי לעלות לרמפה לכיוון <TOWARD_SIGN>.",
+        "3": "המשך ישר כדי לעלות לרמפת <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "4": "המשך ישר כדי לעלות לרמפת <NAME_SIGN>."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "עלה לרמפה שבצד <RELATIVE_DIRECTION>.",
+        "1": "עלה לרמפת <BRANCH_SIGN> שבצד <RELATIVE_DIRECTION>.",
+        "2": "עלה לרמפה שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "3": "עלה לרמפת <BRANCH_SIGN> שבצד <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>.",
+        "4": "עלה לרמפת <NAME_SIGN> שבצד <RELATIVE_DIRECTION>.",
+        "5": "פנה ל<RELATIVE_DIRECTION> כדי לעלות לרמפה.",
+        "6": "פנה ל<RELATIVE_DIRECTION> כדי לעלות לרמפת <BRANCH_SIGN>.",
+        "7": "פנה ל<RELATIVE_DIRECTION> כדי לעלות לרמפה לכיוון <TOWARD_SIGN>.",
+        "8": "פנה ל<RELATIVE_DIRECTION> כדי לעלות לרמפת <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "9": "פנה ל<RELATIVE_DIRECTION> כדי לעלות לרמפת <NAME_SIGN>.",
+        "10": "עלה לרמפה.",
+        "11": "עלה לרמפת <BRANCH_SIGN>.",
+        "12": "עלה לרמפה לכיוון <TOWARD_SIGN>.",
+        "13": "עלה לרמפת <BRANCH_SIGN> לכיוון <TOWARD_SIGN>.",
+        "14": "עלה לרמפת <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "שמאל",
+        "ימין"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "פנה בחדות <RELATIVE_DIRECTION>.",
+        "1": "פנה בחדות <RELATIVE_DIRECTION> אל <STREET_NAMES>.",
+        "2": "פנה בחדות <RELATIVE_DIRECTION> אל <BEGIN_STREET_NAMES>. המשך על <STREET_NAMES>.",
+        "3": "פנה בחדות <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES>.",
+        "4": "פנה בחדות <RELATIVE_DIRECTION> בצומת <JUNCTION_NAME>.",
+        "5": "פנה בחדות <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ימינה"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "פנה בחדות <RELATIVE_DIRECTION>.",
+        "1": "פנה בחדות <RELATIVE_DIRECTION> אל <STREET_NAMES>.",
+        "2": "פנה בחדות <RELATIVE_DIRECTION> אל <BEGIN_STREET_NAMES>.",
+        "3": "פנה בחדות <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES>.",
+        "4": "פנה בחדות <RELATIVE_DIRECTION> בצומת <JUNCTION_NAME>.",
+        "5": "פנה בחדות <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ימינה"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "צא <CARDINAL_DIRECTION>.",
+        "1": "צא <CARDINAL_DIRECTION> על <STREET_NAMES>.",
+        "2": "צא <CARDINAL_DIRECTION> על <BEGIN_STREET_NAMES>. המשך על <STREET_NAMES>.",
+        "4": "סע <CARDINAL_DIRECTION>.",
+        "5": "סע <CARDINAL_DIRECTION> על <STREET_NAMES>.",
+        "6": "סע <CARDINAL_DIRECTION> על <BEGIN_STREET_NAMES>. המשך על <STREET_NAMES>.",
+        "8": "לך <CARDINAL_DIRECTION>.",
+        "9": "לך <CARDINAL_DIRECTION> על <STREET_NAMES>.",
+        "10": "לך <CARDINAL_DIRECTION> על <BEGIN_STREET_NAMES>. המשך על <STREET_NAMES>.",
+        "16": "רכב <CARDINAL_DIRECTION>.",
+        "17": "רכב <CARDINAL_DIRECTION> על <STREET_NAMES>.",
+        "18": "רכב <CARDINAL_DIRECTION> על <BEGIN_STREET_NAMES>. המשך על <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "צפונה",
+        "צפון-מזרחה",
+        "מזרחה",
+        "דרום-מזרחה",
+        "דרומה",
+        "דרום-מערבה",
+        "מערבה",
+        "צפון-מערבה"
+      ],
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "צא <CARDINAL_DIRECTION>.",
+        "1": "צא <CARDINAL_DIRECTION> <LENGTH>.",
+        "2": "צא <CARDINAL_DIRECTION> על <STREET_NAMES>.",
+        "3": "צא <CARDINAL_DIRECTION> <LENGTH> על <STREET_NAMES>.",
+        "4": "צא <CARDINAL_DIRECTION> על <BEGIN_STREET_NAMES>.",
+        "5": "סע <CARDINAL_DIRECTION>.",
+        "6": "סע <CARDINAL_DIRECTION> <LENGTH>.",
+        "7": "סע <CARDINAL_DIRECTION> על <STREET_NAMES>.",
+        "8": "סע <CARDINAL_DIRECTION> <LENGTH> על <STREET_NAMES>.",
+        "9": "סע <CARDINAL_DIRECTION> על <BEGIN_STREET_NAMES>.",
+        "10": "לך <CARDINAL_DIRECTION>.",
+        "11": "לך <CARDINAL_DIRECTION> <LENGTH>.",
+        "12": "לך <CARDINAL_DIRECTION> על <STREET_NAMES>.",
+        "13": "לך <CARDINAL_DIRECTION> <LENGTH> על <STREET_NAMES>.",
+        "14": "לך <CARDINAL_DIRECTION> על <BEGIN_STREET_NAMES>.",
+        "15": "רכב <CARDINAL_DIRECTION>.",
+        "16": "רכב <CARDINAL_DIRECTION> <LENGTH>.",
+        "17": "רכב <CARDINAL_DIRECTION> על <STREET_NAMES>.",
+        "18": "רכב <CARDINAL_DIRECTION> <LENGTH> על <STREET_NAMES>.",
+        "19": "רכב <CARDINAL_DIRECTION> על <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "צפונה",
+        "צפון-מזרחה",
+        "מזרחה",
+        "דרום-מזרחה",
+        "דרומה",
+        "דרום-מערבה",
+        "מערבה",
+        "צפון-מערבה"
+      ],
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> קילומטרים",
+        "קילומטר אחד",
+        "<METERS> מטרים",
+        "פחות מ-10 מטרים"
+      ],
+      "us_customary_lengths": [
+        "<MILES> מייל",
+        "מייל אחד",
+        "חצי מייל",
+        "רבע מייל",
+        "<FEET> רגל",
+        "פחות מ-10 רגל"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "השתמש במדרגות.",
+        "1": "השתמש במדרגות כדי להגיע לקומה <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "עלה על <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "עלה על <TRANSIT_NAME> לכיוון <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "רכבת קלה",
+        "רכבת תחתית",
+        "רכבת",
+        "אוטובוס",
+        "מעבורת",
+        "רכבל",
+        "גונדולה",
+        "פוניקולר"
+      ],
+      "transit_stop_count_labels": {
+        "one": "תחנה",
+        "other": "תחנות"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "צא מהתחנה.",
+        "1": "צא מ<TRANSIT_STOP>.",
+        "2": "צא מ<STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "תחנת"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "צא מהתחנה.",
+        "1": "צא מ<TRANSIT_STOP>.",
+        "2": "צא מ<STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "תחנת"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "היכנס לתחנה.",
+        "1": "היכנס ל<TRANSIT_STOP>.",
+        "2": "היכנס ל<STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "תחנת"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "היכנס לתחנה.",
+        "1": "היכנס ל<TRANSIT_STOP>.",
+        "2": "היכנס ל<STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "תחנת"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "החלף בתחנה.",
+        "1": "החלף ב<TRANSIT_STOP>.",
+        "2": "החלף ב<STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "תחנת"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "החלף בתחנה.",
+        "1": "החלף ב<TRANSIT_STOP>.",
+        "2": "החלף ב<STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "תחנת"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "הישאר על <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "הישאר על <TRANSIT_NAME> לכיוון <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "רכבת קלה",
+        "רכבת תחתית",
+        "רכבת",
+        "אוטובוס",
+        "מעבורת",
+        "רכבל",
+        "גונדולה",
+        "פוניקולר"
+      ],
+      "transit_stop_count_labels": {
+        "one": "תחנה",
+        "other": "תחנות"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "הישאר על <TRANSIT_NAME>.",
+        "1": "הישאר על <TRANSIT_NAME> לכיוון <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "רכבת קלה",
+        "רכבת תחתית",
+        "רכבת",
+        "אוטובוס",
+        "מעבורת",
+        "רכבל",
+        "גונדולה",
+        "פוניקולר"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "החלף ועלה על <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "החלף ועלה על <TRANSIT_NAME> לכיוון <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "רכבת קלה",
+        "רכבת תחתית",
+        "רכבת",
+        "אוטובוס",
+        "מעבורת",
+        "רכבל",
+        "גונדולה",
+        "פוניקולר"
+      ],
+      "transit_stop_count_labels": {
+        "one": "תחנה",
+        "other": "תחנות"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "החלף ועלה על <TRANSIT_NAME>.",
+        "1": "החלף ועלה על <TRANSIT_NAME> לכיוון <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "רכבת קלה",
+        "רכבת תחתית",
+        "רכבת",
+        "אוטובוס",
+        "מעבורת",
+        "רכבל",
+        "גונדולה",
+        "פוניקולר"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "עלה על <TRANSIT_NAME>.",
+        "1": "עלה על <TRANSIT_NAME> לכיוון <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "רכבת קלה",
+        "רכבת תחתית",
+        "רכבת",
+        "אוטובוס",
+        "מעבורת",
+        "רכבל",
+        "גונדולה",
+        "פוניקולר"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "פנה <RELATIVE_DIRECTION>.",
+        "1": "פנה <RELATIVE_DIRECTION> אל <STREET_NAMES>.",
+        "2": "פנה <RELATIVE_DIRECTION> אל <BEGIN_STREET_NAMES>. המשך על <STREET_NAMES>.",
+        "3": "פנה <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES>.",
+        "4": "פנה <RELATIVE_DIRECTION> בצומת <JUNCTION_NAME>.",
+        "5": "פנה <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ימינה"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "פנה <RELATIVE_DIRECTION>.",
+        "1": "פנה <RELATIVE_DIRECTION> אל <STREET_NAMES>.",
+        "2": "פנה <RELATIVE_DIRECTION> אל <BEGIN_STREET_NAMES>.",
+        "3": "פנה <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES>.",
+        "4": "פנה <RELATIVE_DIRECTION> בצומת <JUNCTION_NAME>.",
+        "5": "פנה <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ימינה"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "בצע פניית פרסה <RELATIVE_DIRECTION>.",
+        "1": "בצע פניית פרסה <RELATIVE_DIRECTION> אל <STREET_NAMES>.",
+        "2": "בצע פניית פרסה <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES>.",
+        "3": "בצע פניית פרסה <RELATIVE_DIRECTION> בצומת <CROSS_STREET_NAMES>.",
+        "4": "בצע פניית פרסה <RELATIVE_DIRECTION> בצומת <CROSS_STREET_NAMES> אל <STREET_NAMES>.",
+        "5": "בצע פניית פרסה <RELATIVE_DIRECTION> בצומת <CROSS_STREET_NAMES> כדי להישאר על <STREET_NAMES>.",
+        "6": "בצע פניית פרסה <RELATIVE_DIRECTION> בצומת <JUNCTION_NAME>.",
+        "7": "בצע פניית פרסה <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ימינה"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "בצע פניית פרסה <RELATIVE_DIRECTION>.",
+        "1": "בצע פניית פרסה <RELATIVE_DIRECTION> אל <STREET_NAMES>.",
+        "2": "בצע פניית פרסה <RELATIVE_DIRECTION> כדי להישאר על <STREET_NAMES>.",
+        "3": "בצע פניית פרסה <RELATIVE_DIRECTION> בצומת <CROSS_STREET_NAMES>.",
+        "4": "בצע פניית פרסה <RELATIVE_DIRECTION> בצומת <CROSS_STREET_NAMES> אל <STREET_NAMES>.",
+        "5": "בצע פניית פרסה <RELATIVE_DIRECTION> בצומת <CROSS_STREET_NAMES> כדי להישאר על <STREET_NAMES>.",
+        "6": "בצע פניית פרסה <RELATIVE_DIRECTION> בצומת <JUNCTION_NAME>.",
+        "7": "בצע פניית פרסה <RELATIVE_DIRECTION> לכיוון <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "שביל ההליכה",
+        "שביל האופניים",
+        "שביל אופני ההרים",
+        "מעבר החצייה",
+        "המדרגות",
+        "הגשר",
+        "המנהרה"
+      ],
+      "relative_directions": [
+        "שמאלה",
+        "ימינה"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> לאחר מכן <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> לאחר מכן, בעוד <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> קילומטרים",
+        "קילומטר אחד",
+        "<METERS> מטרים",
+        "פחות מ-10 מטרים"
+      ],
+      "us_customary_lengths": [
+        "<MILES> מייל",
+        "מייל אחד",
+        "חצי מייל",
+        "רבע מייל",
+        "<FEET> רגל",
+        "פחות מ-10 רגל"
+      ]
+    }
+  },
+  "posix_locale": "he_IL.UTF-8",
+  "aliases": [
+    "he"
+  ]
+}
