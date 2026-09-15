@@ -148,8 +148,10 @@ std::vector<Token> tokenize(std::string_view str) {
         tokens.push_back({TokenKind::kNth, negative ? -value : value});
         i = j + 1;
       } else {
-        // an unreadable group, e.g. Su[1,-1]. Drop it whole, its pieces must not read as
-        // selectors of their own
+        // a group we don't parse, e.g. the [1,-1] of Su[1,-1]. Dropped whole so its contents
+        // don't read as selectors on their own
+        // TODO: Su[1,-1] is valid syntax for the first and the last Sunday. Turn the list into
+        // a mask of weeks 1-5, taking -1 as the 5th, and emit one restriction per week
         const size_t close = str.find(']', i + 1);
         i = (close != std::string_view::npos && close - i <= 8) ? close + 1 : i + 1;
         tokens.push_back({TokenKind::kUnknown, 0});
