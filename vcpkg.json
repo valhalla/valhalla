@@ -37,7 +37,8 @@
     "zlib",
     "unordered-dense",
     "libosmium",
-    "openssl"
+    "openssl",
+    "flatbush"
   ],
   "features": {
     "elevation-lz4": {
