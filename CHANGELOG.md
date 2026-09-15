@@ -20,10 +20,10 @@
    * ADDED: `expansion_index` expansion property [#6251](https://github.com/valhalla/valhalla/pull/6251)
    * CHANGED: Smaller `edge_shapes.bin` file for faster reads during tiles build [#6234](https://github.com/valhalla/valhalla/pull/6234)
    * ADDED: route through pedestrian areas via generated medial axis traversals, behind the `mjolnir.pedestrian_areas` config option [#6195](https://github.com/valhalla/valhalla/pull/6195)
-   * ADDED: Hebrew (`he-IL`) narrative language [#6267](https://github.com/valhalla/valhalla/pull/6267)
    * ADDED: documentation page for the pedestrian areas feature [#6266](https://github.com/valhalla/valhalla/pull/6266)
    * ADDED: Add use_distance to truck, bus, taxi, motorcycle and motor_scooter cost [#6214](https://github.com/valhalla/valhalla/pull/6214)
    * ADDED: limitations, future work and performance sections to the pedestrian areas documentation [#6279](https://github.com/valhalla/valhalla/pull/6279)
+   * ADDED: Hebrew (`he-IL`) narrative language [#6267](https://github.com/valhalla/valhalla/pull/6267)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
