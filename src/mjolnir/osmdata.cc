@@ -718,7 +718,8 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
       read_lane_connectivity(tile_directory + lane_connectivity_file, lane_connectivity_map) &&
       read_linguistic(tile_directory + pronunciation_file, pronunciations) &&
       read_linguistic(tile_directory + language_file, langs) &&
-      read_conditional_speed_limits(tile_directory + lane_connectivity_file, conditional_speeds);
+      read_conditional_speed_limits(tile_directory + conditional_speed_limit_file,
+                                    conditional_speeds);
   LOG_INFO("Done");
   initialized = status;
   return status;

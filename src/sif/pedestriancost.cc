@@ -656,7 +656,7 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   // Populate the use_factor_ lookup table. 0.0f is the sentinel for "no match"
   use_factor_.fill(0.0f);
   use_factor_[static_cast<uint8_t>(Use::kFootway)] = walkway_factor_;
-  use_factor_[static_cast<uint8_t>(Use::kSidewalk)] = walkway_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kSidewalk)] = sidewalk_factor_;
   use_factor_[static_cast<uint8_t>(Use::kAlley)] = alley_factor_;
   use_factor_[static_cast<uint8_t>(Use::kDriveway)] = driveway_factor_;
   use_factor_[static_cast<uint8_t>(Use::kTrack)] = track_factor_;
@@ -848,7 +848,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     baldr::LimitedGraphReader reader = reader_getter();
     auto to_tile = reader.GetGraphTile(edge_id);
     auto levels = tile->edgeinfo(pred).levels();
-    auto prev_levels = to_tile->edgeinfo(edge).levels();
+    auto prev_levels = to_tile->edgeinfo(to_tile->directededge(edge_id)).levels();
     unsigned int traversed_levels = levels.first.size() == 1 && prev_levels.first.size() == 1 &&
                                             levels.first[0].first == levels.first[0].second &&
                                             prev_levels.first[0].first == prev_levels.first[0].second

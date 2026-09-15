@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "<LENGTH> 이후, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS>km",
+        "1km",
+        "<METERS>m",
+        "10m 이하"
+      ],
+      "us_customary_lengths": [
+        "<MILES>마일",
+        "1 마일",
+        "0.5 마일",
+        "0.25 마일",
+        "<FEET>피트",
+        "10 피트 이하"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "도착지: <TIME>",
+        "1": "도착지: <TRANSIT_STOP>에 <TIME>"
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "<TIME>에 도착",
+        "1": " <TIME>에 <TRANSIT_STOP>에 도착"
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>편",
+        "1": "<RELATIVE_DIRECTION>편 <STREET_NAMES> 방향",
+        "2": "<RELATIVE_DIRECTION>편 <BEGIN_STREET_NAMES> 방향, 이후 <STREET_NAMES>방향",
+        "3": "<STREET_NAMES>에서 그대로 <RELATIVE_DIRECTION>편",
+        "4": "<JUNCTION_NAME>에서 <RELATIVE_DIRECTION>편",
+        "5": "<TOWARD_SIGN>방향 <RELATIVE_DIRECTION>편"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "왼",
+        "오른"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>편",
+        "1": "<RELATIVE_DIRECTION>편 <STREET_NAMES> 방향",
+        "2": "<RELATIVE_DIRECTION>편 <BEGIN_STREET_NAMES> 방향",
+        "3": "<STREET_NAMES>에서 그대로 <RELATIVE_DIRECTION>편",
+        "4": "<JUNCTION_NAME>에서 <RELATIVE_DIRECTION>편",
+        "5": "<TOWARD_SIGN> 방향 <RELATIVE_DIRECTION>편"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "왼쪽",
+        "오른쪽"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES>에서 <STREET_NAMES>로 진입"
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES>에서 <STREET_NAMES>로 진입"
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "계속",
+        "1": "<STREET_NAMES>을 따라 계속",
+        "2": "<JUNCTION_NAME>에서 계속",
+        "3": "<TOWARD_SIGN> 방향으로 계속"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "계속",
+        "1": "<LENGTH> 동안 계속",
+        "2": "<STREET_NAMES>을 따라 계속",
+        "3": "<LENGTH> 동안 <STREET_NAMES> 을 따라 계속",
+        "4": "<JUNCTION_NAME>에서 계속",
+        "5": "<LENGTH>동안 <JUNCTION_NAME> 따라 계속",
+        "6": "<TOWARD_SIGN> 방향으로 계속",
+        "7": "<LENGTH> 동안 <TOWARD_SIGN> 방향으로 계속"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS>km",
+        "1km",
+        "<METERS>m",
+        "10m 이하"
+      ],
+      "us_customary_lengths": [
+        "<MILES>마일",
+        "1 마일",
+        "0.5 마일",
+        "0.25 마일",
+        "<FEET>피트",
+        "10 피트 이하"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "계속",
+        "1": "<STREET_NAMES>을 따라 계속",
+        "2": "<JUNCTION_NAME>에서 계속",
+        "3": "<TOWARD_SIGN> 방향으로 계속"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "출발지: <TIME>",
+        "1": "출발지: <TRANSIT_STOP>에서 <TIME>"
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "<TIME>에 출발",
+        "1": "<TRANSIT_STOP>에서 <TIME>에 출발"
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "목적지 도착",
+        "1": "<DESTINATION> 도착",
+        "2": "<RELATIVE_DIRECTION>편 목적지 도착",
+        "3": "<DESTINATION>: <RELATIVE_DIRECTION>편"
+      },
+      "relative_directions": [
+        "왼",
+        "오른"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "목적지 도착 완료",
+        "1": "<DESTINATION> 도착 완료",
+        "2": "<RELATIVE_DIRECTION>편 목적지 도착",
+        "3": "<DESTINATION>: <RELATIVE_DIRECTION>편"
+      },
+      "relative_directions": [
+        "왼",
+        "오른"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "목적지 도착",
+        "1": "<DESTINATION> 도착",
+        "2": "<RELATIVE_DIRECTION>편 목적지 도착 예정",
+        "3": "<DESTINATION>: <RELATIVE_DIRECTION>편"
+      },
+      "relative_directions": [
+        "왼",
+        "오른"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "엘리베이터로 이동",
+        "1": "엘리베이터로 <LEVEL>까지 이동"
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "건물로 진입",
+        "1": "건물로 진입 후 <STREET_NAMES> 따라 진행"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "페리 탑승",
+        "1": "<STREET_NAMES> 탑승",
+        "2": "<STREET_NAMES><FERRY_LABEL> 탑승",
+        "3": "<TOWARD_SIGN> 방향 페리 탑승"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "ferry_label": "페리"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "페리 탑승",
+        "1": "<STREET_NAMES> 탑승",
+        "2": "<STREET_NAMES><FERRY_LABEL> 탑승",
+        "3": "<TOWARD_SIGN>방향 페리 탑승"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "ferry_label": "페리"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "회전교차로 진입",
+        "1": "회전교차로 진입 후 <ORDINAL_VALUE> 출구로 진출",
+        "2": "회전교차로 진입 후 <ORDINAL_VALUE> 출구에서 <ROUNDABOUT_EXIT_STREET_NAMES> 진입 ",
+        "3": "회전교차로 진입 후 <ORDINAL_VALUE> 출구에서 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> 진입 후 <ROUNDABOUT_EXIT_STREET_NAMES> 방향으로",
+        "4": "회전교차로 진입 후 <TOWARD_SIGN>방면 <ORDINAL_VALUE> 출구로 진출",
+        "5": "회전교차로 진입 후 출구에서 <ROUNDABOUT_EXIT_STREET_NAMES> 진입",
+        "6": "회전교차로 진입 후 출구에서 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> 진입 후 <ROUNDABOUT_EXIT_STREET_NAMES> 방향으로 계속",
+        "7": "회전교차로 진입 후 <TOWARD_SIGN> 방향 출구로 진출",
+        "8": "<STREET_NAMES> 진입",
+        "9": "<STREET_NAMES> 진입 후 <ORDINAL_VALUE> 출구로 진출",
+        "10": "<STREET_NAMES> 진입 후 <ORDINAL_VALUE> 출구에서 <ROUNDABOUT_EXIT_STREET_NAMES> 진입",
+        "11": "<STREET_NAMES> 진입 후 <ORDINAL_VALUE> 출구에서 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> 진입 후 <ROUNDABOUT_EXIT_STREET_NAMES> 방향으로 계속",
+        "12": "<STREET_NAMES> 진입 후 <TOWARD_SIGN>방면 <ORDINAL_VALUE> 출구로 진출",
+        "13": "<STREET_NAMES> 진입 후 출구 진출 후 <ROUNDABOUT_EXIT_STREET_NAMES> 진입",
+        "14": "<STREET_NAMES> 진입 후 출구 진출 후 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> 진입하여 <ROUNDABOUT_EXIT_STREET_NAMES> 방향으로 계속",
+        "15": " <STREET_NAMES> 진입 후 <TOWARD_SIGN> 방면 출구로 진출"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "ordinal_values": [
+        "1번째",
+        "2번째",
+        "3번째",
+        "4번째",
+        "5번째",
+        "6번째",
+        "7번째",
+        "8번째",
+        "9번째",
+        "10번째"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "회전교차로 진입",
+        "1": "회전교차로 진입 후 <ORDINAL_VALUE> 출구로 진출",
+        "2": "회전교차로 진입 후 <ORDINAL_VALUE> 방향 진출 후 <ROUNDABOUT_EXIT_STREET_NAMES> 진입 ",
+        "3": "회전교차로 진입 후 <ORDINAL_VALUE> 출구에서 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> 진입 ",
+        "4": "회전교차로 진입 후 <ORDINAL_VALUE> 출구에서 <TOWARD_SIGN> 방향으로",
+        "5": "회전교차로 진입 후 출구에서 <ROUNDABOUT_EXIT_STREET_NAMES> 진입",
+        "6": "회전교차로 진입 후 출구에서 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> 진입",
+        "7": "회전교차로 진입 후 <TOWARD_SIGN> 방면 출구로 진출",
+        "8": "<STREET_NAMES> 진입",
+        "9": "<STREET_NAMES> 진입 후 <ORDINAL_VALUE> 출구로 진출",
+        "10": "<STREET_NAMES> 진입 후  <ORDINAL_VALUE> 출구에서 <ROUNDABOUT_EXIT_STREET_NAMES> 진입",
+        "11": "<STREET_NAMES> 진입 후 <ORDINAL_VALUE> 출구에서 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> 진입",
+        "12": "<TOWARD_SIGN>방면 <STREET_NAMES> 진입 후 <ORDINAL_VALUE> 출구로 진출",
+        "13": "<STREET_NAMES> 진입 후 출구에서 <ROUNDABOUT_EXIT_STREET_NAMES> 진입",
+        "14": "<STREET_NAMES> 진입 후 출구에서 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> 진입",
+        "15": "<STREET_NAMES> 진입 후 출구 진출 후 <TOWARD_SIGN> 방향"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "ordinal_values": [
+        "1번째",
+        "2번째",
+        "3번째",
+        "4번째",
+        "5번째",
+        "6번째",
+        "7번째",
+        "8번째",
+        "9번째",
+        "10번째"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "에스컬레이터로 이동",
+        "1": "에스컬레이터로 <LEVEL>까지 이동"
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>쪽 출구로 진출",
+        "1": "<RELATIVE_DIRECTION>쪽 <NUMBER_SIGN> 출구로 진출",
+        "2": "<RELATIVE_DIRECTION>쪽 <BRANCH_SIGN> 출구로 진출",
+        "3": "<RELATIVE_DIRECTION>쪽 <NUMBER_SIGN> 출구에서 <BRANCH_SIGN> 진입",
+        "4": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION> 쪽 출구로 진출",
+        "5": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>쪽 <NUMBER_SIGN> 출구로 진출",
+        "6": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>쪽 <BRANCH_SIGN> 출구로 진출",
+        "7": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>쪽 <NUMBER_SIGN> 출구에서 <BRANCH_SIGN> 진입",
+        "8": "<RELATIVE_DIRECTION>쪽 <NAME_SIGN> 출구로 진출",
+        "10": "<RELATIVE_DIRECTION>쪽 <NAME_SIGN> 출구에서 <BRANCH_SIGN> 진입",
+        "12": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>쪽 <NAME_SIGN> 출구로 진출",
+        "14": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION> 쪽 <NAME_SIGN> 출구에서 <BRANCH_SIGN> 진입",
+        "15": "출구로 진출",
+        "16": "<NUMBER_SIGN> 출구로 진출",
+        "17": "<BRANCH_SIGN> 출구로 진출",
+        "18": "<BRANCH_SIGN> 쪽 <NUMBER_SIGN> 출구로 진출",
+        "19": "<TOWARD_SIGN> 방면 출구로 진출",
+        "20": "<TOWARD_SIGN> 방면 <NUMBER_SIGN> 출구로 진출",
+        "21": "<TOWARD_SIGN> 방면 <BRANCH_SIGN> 출구로 진출",
+        "22": "<TOWARD_SIGN> 방면 <BRANCH_SIGN>쪽 <NUMBER_SIGN>출구로 진출",
+        "23": "<NAME_SIGN> 출구로 진출",
+        "25": "<NAME_SIGN> 출구에서 <BRANCH_SIGN> 진입",
+        "27": "<TOWARD_SIGN>방면 <NAME_SIGN> 출구로 진출",
+        "29": "<TOWARD_SIGN> 방면 <BRANCH_SIGN>쪽 <NAME_SIGN> 출구로 진출"
+      },
+      "relative_directions": [
+        "왼",
+        "오른"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "건물에서 나가기",
+        "1": "건물에서 나가서 <STREET_NAMES> 따라 진행"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "회전교차로 진출",
+        "1": "<STREET_NAMES> 방향으로 회전교차로 진출",
+        "2": "<BEGIN_STREET_NAMES> 방향으로 회전교차로 진출 후 <STREET_NAMES> 진입",
+        "3": "<TOWARD_SIGN> 방향으로 회전교차로 진출"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "회전교차로 진출",
+        "1": "<STREET_NAMES> 방향으로 회전교차로 진출",
+        "2": "<BEGIN_STREET_NAMES> 방향으로 회전교차로 진출",
+        "3": "<TOWARD_SIGN> 방향으로 회전교차로 진출"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>쪽 출구 ",
+        "1": "<RELATIVE_DIRECTION>쪽 <NUMBER_SIGN> 출구",
+        "2": "<RELATIVE_DIRECTION>쪽 <BRANCH_SIGN> 출구",
+        "3": "<RELATIVE_DIRECTION>쪽 <NUMBER_SIGN> 출구에서 <BRANCH_SIGN> 진입",
+        "4": "<TOWARD_SIGN>방면 <RELATIVE_DIRECTION> 쪽 출구로 진출",
+        "5": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION> 쪽 <NUMBER_SIGN> 출구로 진출",
+        "6": "<TOWARD_SIGN>방면 <RELATIVE_DIRECTION>쪽 <BRANCH_SIGN> 출구로 진출",
+        "7": "<TOWARD_SIGN>방면 <RELATIVE_DIRECTION> 쪽 <NUMBER_SIGN> 출구에서 <BRANCH_SIGN> 진입",
+        "8": "<RELATIVE_DIRECTION>쪽 <NAME_SIGN>출구",
+        "10": "<RELATIVE_DIRECTION>쪽 <NAME_SIGN> 출구에서 <BRANCH_SIGN> 진입",
+        "12": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>쪽 <NAME_SIGN> 출구로 진출",
+        "14": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>쪽 <NAME_SIGN> 출구에서 <BRANCH_SIGN> 진입",
+        "15": "Take the exit.",
+        "16": "<NUMBER_SIGN> 출구로 진출",
+        "17": "<BRANCH_SIGN> 출구로 진출",
+        "18": "<BRANCH_SIGN> 쪽 <NUMBER_SIGN> 출구로 진출",
+        "19": "<TOWARD_SIGN> 방면 출구로 진출",
+        "20": "<TOWARD_SIGN> 방면 <NUMBER_SIGN> 출구로 진출",
+        "21": "<TOWARD_SIGN> 방면 <BRANCH_SIGN> 출구로 진출",
+        "22": "<TOWARD_SIGN> 방면 <BRANCH_SIGN>쪽 <NUMBER_SIGN>출구로 진출",
+        "23": "<NAME_SIGN> 출구로 진출",
+        "25": "<NAME_SIGN> 출구에서 <BRANCH_SIGN>로 진입",
+        "27": "<TOWARD_SIGN> 방면 <NAME_SIGN> 출구로 진출",
+        "29": "<TOWARD_SIGN>방면 <BRANCH_SIGN>쪽 <NAME_SIGN> 출구로 진출"
+      },
+      "relative_directions": [
+        "왼",
+        "오른"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "<EXIT_NUMBERS> 출구"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "분기점에서 <RELATIVE_DIRECTION>으로 계속",
+        "1": "<RELATIVE_DIRECTION>으로 계속 진행하여 <NUMBER_SIGN>출구로 진출",
+        "2": "<RELATIVE_DIRECTION>으로 계속 진행하여 <STREET_NAMES> 진입",
+        "3": "<RELATIVE_DIRECTION>으로 계속 진행하여 <NUMBER_SIGN> 출구에서 <STREET_NAMES> 진입",
+        "4": "<TOWARD_SIGN>방면으로 <RELATIVE_DIRECTION>으로 계속 진행",
+        "5": "<TOWARD_SIGN> 방면 <NUMBER_SIGN>출구로 <RELATIVE_DIRECTION>으로 계속 진행",
+        "6": "<RELATIVE_DIRECTION>으로 계속 진행하여 <TOWARD_SIGN>방면 <STREET_NAMES> 진입 ",
+        "7": "<RELATIVE_DIRECTION>으로 계속 진행하여 <TOWARD_SIGN> 방면 <NUMBER_SIGN> 출구에서 <STREET_NAMES> 진입"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "왼쪽",
+        "직진",
+        "오른쪽"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>으로 계속 진행하여 <STREET_NAMES> 따라 진행",
+        "1": "<RELATIVE_DIRECTION>으로 계속 진행하여 <NUMBER_SIGN> 출구에서 <STREET_NAMES> 따라 진행",
+        "2": "<RELATIVE_DIRECTION>으로 계속 진행하여 <TOWARD_SIGN>방면 <STREET_NAMES> 따라 진행",
+        "3": "<RELATIVE_DIRECTION>으로 계속 진행하여 <TOWARD_SIGN>방면 <NUMBER_SIGN>출구에서 <STREET_NAMES> 따라 진행"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "왼쪽",
+        "직진",
+        "오른쪽"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>으로 계속 진행하여 <STREET_NAMES> 따라 진행",
+        "1": "<RELATIVE_DIRECTION>으로 계속 진행하여 <NUMBER_SIGN> 출구에서 <STREET_NAMES> 따라 진행",
+        "2": "<RELATIVE_DIRECTION>으로 계속 진행하여 <TOWARD_SIGN>방면 <STREET_NAMES> 따라 진행",
+        "3": "<RELATIVE_DIRECTION>으로 계속 진행하여 <TOWARD_SIGN>방면 <NUMBER_SIGN>출구에서 <STREET_NAMES> 따라 진행"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "좌회전",
+        "직진",
+        "우회전"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "분기점에서 <RELATIVE_DIRECTION> 방향",
+        "1": "<RELATIVE_DIRECTION>으로 계속 진행하여 <NUMBER_SIGN>출구로 진출",
+        "2": "<RELATIVE_DIRECTION>으로 계속 진행하여 <STREET_NAMES> 진입",
+        "3": "<RELATIVE_DIRECTION>으로 계속 진행하여 <NUMBER_SIGN> 출구에서 <STREET_NAMES> 진입",
+        "4": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>으로 계속 진행 ",
+        "5": " <RELATIVE_DIRECTION>으로 계속 진행하여 <TOWARD_SIGN>방면 <NUMBER_SIGN>출구로 진출 ",
+        "6": "<RELATIVE_DIRECTION>으로 계속 진행하여 <TOWARD_SIGN>방면 <STREET_NAMES>진입",
+        "7": "<RELATIVE_DIRECTION>으로 계속 진행하여 <TOWARD_SIGN>방면 <NUMBER_SIGN> 출구에서 <STREET_NAMES> 진입"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "좌회전",
+        "직진",
+        "우회전"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Continue to <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "합류",
+        "1": "<RELATIVE_DIRECTION> 합류",
+        "2": "<STREET_NAMES>에 합류",
+        "3": "<STREET_NAMES>에 <RELATIVE_DIRECTION> 합류",
+        "4": "<TOWARD_SIGN> 방면 합류",
+        "5": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION> 합류"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "왼편",
+        "오른편"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "합류",
+        "1": "<RELATIVE_DIRECTION> 합류",
+        "2": "<STREET_NAMES>에 합류",
+        "3": "<STREET_NAMES>에 <RELATIVE_DIRECTION> 합류",
+        "4": "<TOWARD_SIGN> 방면 합류",
+        "5": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION> 합류"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "왼편",
+        "오른편"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "<OBJECT_LABEL> 통과",
+        "1": "<OBJECT_LABEL>에서 신호등 통과"
+      },
+      "object_labels": [
+        "게이트",
+        "볼라드",
+        "교차로"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> 탑승"
+      },
+      "transit_stop_count_labels": {
+        "one": "정거장",
+        "other": "정거장"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "<LENGTH> 동안 계속",
+        "1": "<LENGTH> 동안 <STREET_NAMES> 따라 계속"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS>km",
+        "1km",
+        "<METERS>m",
+        "10m 이하"
+      ],
+      "us_customary_lengths": [
+        "<MILES>마일",
+        "1 마일",
+        "0.5 마일",
+        "0.25 마일",
+        "<FEET>피트",
+        "10 피트 이하"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>측 램프 구간 진입 ",
+        "1": "<RELATIVE_DIRECTION>측 <BRANCH_SIGN> 램프 구간 진입",
+        "2": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>측 램프 구간 진입",
+        "3": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>측 <BRANCH_SIGN> 램프구간 진입",
+        "4": "<RELATIVE_DIRECTION>측 <NAME_SIGN> 램프구간 진입",
+        "5": "<RELATIVE_DIRECTION>회전하여 램프구간 진입",
+        "6": "<RELATIVE_DIRECTION>회전하여 <BRANCH_SIGN> 램프구간 진입",
+        "7": "<RELATIVE_DIRECTION>회전하여 <TOWARD_SIGN>방면 램프구간 진입",
+        "8": "<RELATIVE_DIRECTION>회전하여 <TOWARD_SIGN> 방면 <BRANCH_SIGN> 램프구간 진입",
+        "9": "<RELATIVE_DIRECTION>회전하여 <NAME_SIGN> 램프구간 진입",
+        "10": "램프구간 진입",
+        "11": "<BRANCH_SIGN> 램프구간 진입",
+        "12": "<TOWARD_SIGN> 방면 램프구간 진입",
+        "13": "<TOWARD_SIGN> 방면 <BRANCH_SIGN> 램프구간 진입",
+        "14": "<NAME_SIGN> 램프구간 진입"
+      },
+      "relative_directions": [
+        "좌",
+        "우"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "직진하여 램프구간 진입",
+        "1": "직진하여 <BRANCH_SIGN> 램프구간 진입",
+        "2": "직진하여 <TOWARD_SIGN> 방면 램프구간 진입",
+        "3": "직진하여 <TOWARD_SIGN> 방면 <BRANCH_SIGN> 램프구간 진입",
+        "4": "직진하여 <NAME_SIGN> 램프구간 진입"
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "직진하여 램프구간 진입",
+        "1": "직진하여 <BRANCH_SIGN> 램프구간 진입",
+        "2": "직진하여 <TOWARD_SIGN> 방면 램프구간 진입",
+        "3": "직진하여 <TOWARD_SIGN> 방면 <BRANCH_SIGN> 램프구간 진입",
+        "4": "직진하여 <NAME_SIGN> 램프구간 진입"
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> 램프 구간 진입 ",
+        "1": "<RELATIVE_DIRECTION>측 <BRANCH_SIGN> 램프 구간 진입",
+        "2": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>측 램프 구간 진입",
+        "3": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>측 <BRANCH_SIGN> 램프구간 진입",
+        "4": "<RELATIVE_DIRECTION>측 <NAME_SIGN> 램프구간 진입",
+        "5": "<RELATIVE_DIRECTION>회전하여 램프구간 진입",
+        "6": "<RELATIVE_DIRECTION>회전하여 <BRANCH_SIGN> 램프구간 진입",
+        "7": "<RELATIVE_DIRECTION>회전하여 <TOWARD_SIGN> 방면 램프구간 진입",
+        "8": "<RELATIVE_DIRECTION>회전하여 <TOWARD_SIGN> 방면 <BRANCH_SIGN> 램프구간 진입",
+        "9": "<RELATIVE_DIRECTION>회전하여 <NAME_SIGN> 램프구간 진입",
+        "10": "램프구간 진입",
+        "11": "<BRANCH_SIGN> 램프구간 진입",
+        "12": "<TOWARD_SIGN> 방면 램프구간 진입",
+        "13": "<TOWARD_SIGN> 방면 <BRANCH_SIGN> 램프구간 진입",
+        "14": "<NAME_SIGN> 램프구간 진입"
+      },
+      "relative_directions": [
+        "좌",
+        "우"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "급<RELATIVE_DIRECTION>회전",
+        "1": "급<RELATIVE_DIRECTION>회전 하여 <STREET_NAMES> 진입",
+        "2": "급<RELATIVE_DIRECTION>회전하여 <BEGIN_STREET_NAMES> 진입 후 <STREET_NAMES> 따라 진행",
+        "3": "급<RELATIVE_DIRECTION>회전하여 <STREET_NAMES> 따라 진행",
+        "4": "<JUNCTION_NAME>에서 급<RELATIVE_DIRECTION>회전",
+        "5": "<TOWARD_SIGN>방면 급<RELATIVE_DIRECTION>회전"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "좌회전",
+        "우회전"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "급<RELATIVE_DIRECTION>회전",
+        "1": "급<RELATIVE_DIRECTION>회전하여 <STREET_NAMES> 진입",
+        "2": "급<RELATIVE_DIRECTION>회전하여 <BEGIN_STREET_NAMES> 진입",
+        "3": "급<RELATIVE_DIRECTION>회전하여 <STREET_NAMES> 따라 진행",
+        "4": "<JUNCTION_NAME>에서 급<RELATIVE_DIRECTION>회전",
+        "5": "<TOWARD_SIGN>방면 급<RELATIVE_DIRECTION>회전"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "좌회전",
+        "우회전"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> 방향",
+        "1": "<STREET_NAMES>에서 <CARDINAL_DIRECTION> 방향",
+        "2": "<BEGIN_STREET_NAMES>에서 <CARDINAL_DIRECTION> 방향 <STREET_NAMES> 따라 진행",
+        "4": "<CARDINAL_DIRECTION>으로 주행",
+        "5": "<STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 주행",
+        "6": "<BEGIN_STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 주행하여 <STREET_NAMES> 따라 진행 ",
+        "8": "<CARDINAL_DIRECTION>으로 걷기",
+        "9": "<STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 걷기",
+        "10": "<BEGIN_STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 걸어서 <STREET_NAMES> 따라 진행",
+        "16": "<CARDINAL_DIRECTION>으로 자전거 타기 ",
+        "17": "<STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 자전거 타기",
+        "18": "<BEGIN_STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 자전거 타서 <STREET_NAMES> 따라 진행"
+      },
+      "cardinal_directions": [
+        "북쪽",
+        "북동쪽",
+        "동쪽",
+        "남동쪽",
+        "남쪽",
+        "남동쪽",
+        "서쪽",
+        "북서쪽"
+      ],
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> 방향",
+        "1": "<LENGTH> 동안 <CARDINAL_DIRECTION> 방향",
+        "2": "<STREET_NAMES> 따라 <CARDINAL_DIRECTION> 방향",
+        "3": "<LENGTH> 동안 <STREET_NAMES> 따라 <CARDINAL_DIRECTION> 방향",
+        "4": "<BEGIN_STREET_NAMES> 따라 <CARDINAL_DIRECTION> 방향",
+        "5": "<CARDINAL_DIRECTION>으로 주행",
+        "6": "<LENGTH> 동안 <CARDINAL_DIRECTION>으로 주행",
+        "7": "<STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 주행",
+        "8": "<LENGTH> 동안 <STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 주행",
+        "9": "<BEGIN_STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 주행",
+        "10": "<CARDINAL_DIRECTION>으로 걷기",
+        "11": "<LENGTH>동안 <CARDINAL_DIRECTION>으로 걷기",
+        "12": "<STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 걷기",
+        "13": "<LENGTH> 동안 <STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 걷기",
+        "14": "<BEGIN_STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 걷기",
+        "15": "<CARDINAL_DIRECTION>으로 자전거 타기 ",
+        "16": "<LENGTH> 동안 <CARDINAL_DIRECTION>으로 자전거 타기",
+        "17": "<STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 자전거 타기",
+        "18": "<LENGTH> 동안 <STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 자전거 타기",
+        "19": "<BEGIN_STREET_NAMES>에서 <CARDINAL_DIRECTION>으로 자전거 타기 "
+      },
+      "cardinal_directions": [
+        "북쪽",
+        "북동쪽",
+        "동쪽",
+        "남동쪽",
+        "남쪽",
+        "남서쪽",
+        "서쪽",
+        "북서쪽"
+      ],
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS>km",
+        "1km",
+        "<METERS>m",
+        "10m 이하"
+      ],
+      "us_customary_lengths": [
+        "<MILES>마일",
+        "1 마일",
+        "0.5 마일",
+        "0.25 마일",
+        "<FEET>피트",
+        "10 피트 이하"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "계단으로 이동",
+        "1": "계단으로 <LEVEL>까지 이동"
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "<TRANSIT_NAME>에 탑승 (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> 방면 <TRANSIT_NAME>에 탑승 (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "트램",
+        "지하철",
+        "기차",
+        "버스",
+        "페리",
+        "케이블카",
+        "곤돌라",
+        "케이블카"
+      ],
+      "transit_stop_count_labels": {
+        "one": "정거장",
+        "other": "정거장"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "역에서 나가기",
+        "1": "<TRANSIT_STOP>에서 나가기",
+        "2": "<STATION_LABEL> <TRANSIT_STOP>에서 나가기"
+      },
+      "station_label": "역"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "역에서 나가기",
+        "1": "<TRANSIT_STOP>에서 나가기",
+        "2": "<STATION_LABEL> <TRANSIT_STOP>에서 나가기"
+      },
+      "station_label": "역"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Enter the station.",
+        "1": "<TRANSIT_STOP> 진입",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> 진입"
+      },
+      "station_label": "역"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "역으로 진입",
+        "1": "<TRANSIT_STOP> 진입",
+        "2": " <TRANSIT_STOP> <STATION_LABEL> 진입"
+      },
+      "station_label": "역"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "역에서 환승",
+        "1": "<TRANSIT_STOP>에서 환승",
+        "2": "<TRANSIT_STOP><STATION_LABEL>에서 환승"
+      },
+      "station_label": "역"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "역에서 환승",
+        "1": "<TRANSIT_STOP>에서 환승",
+        "2": "<TRANSIT_STOP><STATION_LABEL>에서 환승"
+      },
+      "station_label": "역"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> 에서 계속 탑승 (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> 방면 <TRANSIT_NAME>에서 계속 탑승 (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "트램",
+        "지하철",
+        "기차",
+        "버스",
+        "페리",
+        "케이블카",
+        "곤돌라",
+        "케이블카"
+      ],
+      "transit_stop_count_labels": {
+        "one": "정거장",
+        "other": "정거장"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME>에서 계속 탑승 ",
+        "1": "<TRANSIT_HEADSIGN> 방면 <TRANSIT_NAME>에서 계속 탑승"
+      },
+      "empty_transit_name_labels": [
+        "트램",
+        "지하철",
+        "기차",
+        "버스",
+        "페리",
+        "케이블카",
+        "곤돌라",
+        "케이블카"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> 환승 (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN>방면 <TRANSIT_NAME> 환승 (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "트램",
+        "지하철",
+        "기차",
+        "버스",
+        "페리",
+        "케이블카",
+        "곤돌라",
+        "케이블카"
+      ],
+      "transit_stop_count_labels": {
+        "one": "멈춤",
+        "other": "정거장"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> 환승",
+        "1": "<TRANSIT_HEADSIGN> 방면 <TRANSIT_NAME> 환승"
+      },
+      "empty_transit_name_labels": [
+        "트램",
+        "지하철",
+        "기차",
+        "버스",
+        "페리",
+        "케이블카",
+        "곤돌라",
+        "케이블카"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> 탑승",
+        "1": "<TRANSIT_HEADSIGN>방면 <TRANSIT_NAME> 탑승"
+      },
+      "empty_transit_name_labels": [
+        "트램",
+        "지하철",
+        "기차",
+        "버스",
+        "페리",
+        "케이블카",
+        "곤돌라",
+        "케이블카"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>회전",
+        "1": "<STREET_NAMES>에서 <RELATIVE_DIRECTION>회전",
+        "2": "<BEGIN_STREET_NAMES>에서 <RELATIVE_DIRECTION>회전 후 <STREET_NAMES> 방향으로 계속 진행",
+        "3": "<STREET_NAMES> 따라 <RELATIVE_DIRECTION>회전",
+        "4": "<JUNCTION_NAME>에서 <RELATIVE_DIRECTION>회전",
+        "5": "<TOWARD_SIGN>방면 <RELATIVE_DIRECTION>회전"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "좌",
+        "우"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>회전",
+        "1": "<STREET_NAMES>에서 <RELATIVE_DIRECTION>회전",
+        "2": "<BEGIN_STREET_NAMES>에서 <RELATIVE_DIRECTION>회전",
+        "3": "<STREET_NAMES>를 따라 <RELATIVE_DIRECTION>회전",
+        "4": "<JUNCTION_NAME>에서 <RELATIVE_DIRECTION>회전",
+        "5": "<TOWARD_SIGN>방면 <RELATIVE_DIRECTION>회전"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "좌",
+        "우"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>측 유턴",
+        "1": "<STREET_NAMES> 방향 <RELATIVE_DIRECTION>측 유턴",
+        "2": "<STREET_NAMES> 따라 <RELATIVE_DIRECTION>측 유턴 ",
+        "3": "<CROSS_STREET_NAMES>에서 <RELATIVE_DIRECTION>측 유턴",
+        "4": "<CROSS_STREET_NAMES>에서 <STREET_NAMES> 방향 <RELATIVE_DIRECTION>측 유턴",
+        "5": "<CROSS_STREET_NAMES>에서 <STREET_NAMES>따라 <RELATIVE_DIRECTION>측 유턴",
+        "6": "<JUNCTION_NAME>에서 <RELATIVE_DIRECTION>측 유턴",
+        "7": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>측 유턴"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "좌",
+        "우"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>측 유턴",
+        "1": "<STREET_NAMES> 방향 <RELATIVE_DIRECTION>측 유턴",
+        "2": "<STREET_NAMES> 따라 <RELATIVE_DIRECTION>측 유턴 ",
+        "3": "<CROSS_STREET_NAMES>에서 <RELATIVE_DIRECTION>측 유턴",
+        "4": "<CROSS_STREET_NAMES>에서 <STREET_NAMES> 방향 <RELATIVE_DIRECTION>측 유턴",
+        "5": "<CROSS_STREET_NAMES>에서 <STREET_NAMES>따라 <RELATIVE_DIRECTION>측 유턴",
+        "6": "<JUNCTION_NAME>에서 <RELATIVE_DIRECTION>측 유턴",
+        "7": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>측 유턴"
+      },
+      "empty_street_name_labels": [
+        "보도",
+        "자전거 도로",
+        "산악 자전거 길",
+        "횡단보도",
+        "계단",
+        "다리",
+        "터널"
+      ],
+      "relative_directions": [
+        "좌",
+        "우"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> 그리고 <NEXT_VERBAL_CUE> ",
+        "1": "<CURRENT_VERBAL_CUE> 그리고 <LENGTH> 이후, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS>km",
+        "1km",
+        "<METERS>m",
+        "10m 이하"
+      ],
+      "us_customary_lengths": [
+        "<MILES>마일",
+        "1 마일",
+        "0.5 마일",
+        "0.25 마일",
+        "<FEET>피트",
+        "10 피트 이하"
+      ]
+    }
+  },
+  "posix_locale": "ko_KR.UTF-8",
+  "aliases": [
+    "ko"
+  ]
+}

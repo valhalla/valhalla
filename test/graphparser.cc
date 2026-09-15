@@ -37,6 +37,8 @@ std::string access_file = "test_access.bin";
 std::string from_restriction_file = "test_from_complex_restrictions.bin";
 std::string to_restriction_file = "test_to_complex_restrictions.bin";
 std::string bss_nodes_file = "test_bss_nodes.bin";
+std::string edge_shapes_file = "test_edge_shapes.bin";
+std::string edge_node_ids_file = "test_edge_node_ids.bin";
 std::string linguistic_node_file = "test_linguistic_node.bin";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
@@ -99,6 +101,12 @@ void CleanUp() {
 
   if (std::filesystem::exists(bss_nodes_file))
     std::filesystem::remove(bss_nodes_file);
+
+  if (std::filesystem::exists(edge_shapes_file))
+    std::filesystem::remove(edge_shapes_file);
+
+  if (std::filesystem::exists(edge_node_ids_file))
+    std::filesystem::remove(edge_node_ids_file);
 
   if (std::filesystem::exists(linguistic_node_file))
     std::filesystem::remove(linguistic_node_file);
@@ -690,7 +698,8 @@ TEST(GraphParser, TestImportBssNode) {
                                edges_file);
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
+                      edge_shapes_file, edge_node_ids_file, from_restriction_file,
+                      to_restriction_file, linguistic_node_file, tiles);
 
   BssBuilder::Build(conf, osmdata, bss_nodes_file);
 
