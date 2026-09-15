@@ -78,32 +78,32 @@ msgstr "在<TIME>到达<TRANSIT_STOP>。"
 #. e.g. Bear right.
 msgctxt "instructions.bear.phrases.0"
 msgid "Bear <RELATIVE_DIRECTION>."
-msgstr "向<RELATIVE_DIRECTION>偏行。"
+msgstr "向<RELATIVE_DIRECTION>稍偏。"
 
 #. e.g. Bear left onto Arlen Road.
 msgctxt "instructions.bear.phrases.1"
 msgid "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>偏行进入<STREET_NAMES>。"
+msgstr "向<RELATIVE_DIRECTION>稍偏进入<STREET_NAMES>。"
 
 #. e.g. Bear right onto Belair Road/US 1 Business. Continue on US 1 Business.
 msgctxt "instructions.bear.phrases.2"
 msgid "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>偏行进入<BEGIN_STREET_NAMES>。继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>稍偏进入<BEGIN_STREET_NAMES>。继续沿<STREET_NAMES>前行。"
 
 #. e.g. Bear left to stay on US 15 South.
 msgctxt "instructions.bear.phrases.3"
 msgid "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>偏行，继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>稍偏，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Bear right at Mannenbashi East.
 msgctxt "instructions.bear.phrases.4"
 msgid "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
-msgstr "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>偏行。"
+msgstr "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>稍偏。"
 
 #. e.g. Bear left toward Baltimore.
 msgctxt "instructions.bear.phrases.5"
 msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr "向<RELATIVE_DIRECTION>偏行，前往<TOWARD_SIGN>。"
+msgstr "向<RELATIVE_DIRECTION>稍偏，前往<TOWARD_SIGN>。"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -127,7 +127,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -144,32 +144,32 @@ msgstr "右"
 #. e.g. Bear right.
 msgctxt "instructions.bear_verbal.phrases.0"
 msgid "Bear <RELATIVE_DIRECTION>."
-msgstr "向<RELATIVE_DIRECTION>偏行。"
+msgstr "向<RELATIVE_DIRECTION>稍偏。"
 
 #. e.g. Bear left onto Arlen Road.
 msgctxt "instructions.bear_verbal.phrases.1"
 msgid "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>偏行进入<STREET_NAMES>。"
+msgstr "向<RELATIVE_DIRECTION>稍偏进入<STREET_NAMES>。"
 
 #. e.g. Bear right onto Belair Road, U.S. 1 Business.
 msgctxt "instructions.bear_verbal.phrases.2"
 msgid "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>偏行进入<BEGIN_STREET_NAMES>。"
+msgstr "向<RELATIVE_DIRECTION>稍偏进入<BEGIN_STREET_NAMES>。"
 
 #. e.g. Bear left to stay on U.S. 15 South.
 msgctxt "instructions.bear_verbal.phrases.3"
 msgid "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>偏行，继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>稍偏，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Bear right at Mannenbashi East.
 msgctxt "instructions.bear_verbal.phrases.4"
 msgid "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
-msgstr "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>偏行。"
+msgstr "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>稍偏。"
 
 #. e.g. Bear left toward Baltimore.
 msgctxt "instructions.bear_verbal.phrases.5"
 msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr "向<RELATIVE_DIRECTION>偏行，前往<TOWARD_SIGN>。"
+msgstr "向<RELATIVE_DIRECTION>稍偏，前往<TOWARD_SIGN>。"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -193,7 +193,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -220,22 +220,22 @@ msgstr "<PREVIOUS_STREET_NAMES>变为<STREET_NAMES>。"
 #. e.g. Continue.
 msgctxt "instructions.continue.phrases.0"
 msgid "Continue."
-msgstr "继续行驶。"
+msgstr "继续前行。"
 
 #. e.g. Continue on 10th Avenue.
 msgctxt "instructions.continue.phrases.1"
 msgid "Continue on <STREET_NAMES>."
-msgstr "继续沿<STREET_NAMES>行驶。"
+msgstr "继续沿<STREET_NAMES>前行。"
 
 #. e.g. Continue at Mannenbashi East.
 msgctxt "instructions.continue.phrases.2"
 msgid "Continue at <JUNCTION_NAME>."
-msgstr "在<JUNCTION_NAME>继续行驶。"
+msgstr "在<JUNCTION_NAME>继续前行。"
 
 #. e.g. Continue toward Baltimore.
 msgctxt "instructions.continue.phrases.3"
 msgid "Continue toward <TOWARD_SIGN>."
-msgstr "继续行驶，前往<TOWARD_SIGN>。"
+msgstr "继续前行，前往<TOWARD_SIGN>。"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -259,7 +259,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -268,42 +268,42 @@ msgstr "隧道"
 #. e.g. Continue.
 msgctxt "instructions.continue_verbal.phrases.0"
 msgid "Continue."
-msgstr "继续行驶。"
+msgstr "继续前行。"
 
 #. e.g. Continue for 300 feet.
 msgctxt "instructions.continue_verbal.phrases.1"
 msgid "Continue for <LENGTH>."
-msgstr "继续行驶<LENGTH>。"
+msgstr "继续前行<LENGTH>。"
 
 #. e.g. Continue on 10th Avenue.
 msgctxt "instructions.continue_verbal.phrases.2"
 msgid "Continue on <STREET_NAMES>."
-msgstr "继续沿<STREET_NAMES>行驶。"
+msgstr "继续沿<STREET_NAMES>前行。"
 
 #. e.g. Continue on 10th Avenue for 3 miles.
 msgctxt "instructions.continue_verbal.phrases.3"
 msgid "Continue on <STREET_NAMES> for <LENGTH>."
-msgstr "继续沿<STREET_NAMES>行驶<LENGTH>。"
+msgstr "继续沿<STREET_NAMES>前行<LENGTH>。"
 
 #. e.g. Continue at Mannenbashi East.
 msgctxt "instructions.continue_verbal.phrases.4"
 msgid "Continue at <JUNCTION_NAME>."
-msgstr "在<JUNCTION_NAME>继续行驶。"
+msgstr "在<JUNCTION_NAME>继续前行。"
 
 #. e.g. Continue at Mannenbashi East for 2 miles.
 msgctxt "instructions.continue_verbal.phrases.5"
 msgid "Continue at <JUNCTION_NAME> for <LENGTH>."
-msgstr "在<JUNCTION_NAME>继续行驶<LENGTH>。"
+msgstr "在<JUNCTION_NAME>继续前行<LENGTH>。"
 
 #. e.g. Continue toward Baltimore.
 msgctxt "instructions.continue_verbal.phrases.6"
 msgid "Continue toward <TOWARD_SIGN>."
-msgstr "继续行驶，前往<TOWARD_SIGN>。"
+msgstr "继续前行，前往<TOWARD_SIGN>。"
 
 #. e.g. Continue toward Baltimore for 5 miles.
 msgctxt "instructions.continue_verbal.phrases.7"
 msgid "Continue toward <TOWARD_SIGN> for <LENGTH>."
-msgstr "继续行驶<LENGTH>，前往<TOWARD_SIGN>。"
+msgstr "继续前行<LENGTH>，前往<TOWARD_SIGN>。"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -327,7 +327,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -376,22 +376,22 @@ msgstr "不到10英尺"
 #. e.g. Continue.
 msgctxt "instructions.continue_verbal_alert.phrases.0"
 msgid "Continue."
-msgstr "继续行驶。"
+msgstr "继续前行。"
 
 #. e.g. Continue on 10th Avenue.
 msgctxt "instructions.continue_verbal_alert.phrases.1"
 msgid "Continue on <STREET_NAMES>."
-msgstr "继续沿<STREET_NAMES>行驶。"
+msgstr "继续沿<STREET_NAMES>前行。"
 
 #. e.g. Continue at Mannenbashi East.
 msgctxt "instructions.continue_verbal_alert.phrases.2"
 msgid "Continue at <JUNCTION_NAME>."
-msgstr "在<JUNCTION_NAME>继续行驶。"
+msgstr "在<JUNCTION_NAME>继续前行。"
 
 #. e.g. Continue toward Baltimore.
 msgctxt "instructions.continue_verbal_alert.phrases.3"
 msgid "Continue toward <TOWARD_SIGN>."
-msgstr "继续行驶，前往<TOWARD_SIGN>。"
+msgstr "继续前行，前往<TOWARD_SIGN>。"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -415,7 +415,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -455,12 +455,12 @@ msgstr "您已到达<DESTINATION>。"
 #. e.g. Your destination is on the right.
 msgctxt "instructions.destination.phrases.2"
 msgid "Your destination is on the <RELATIVE_DIRECTION>."
-msgstr "目的地在<RELATIVE_DIRECTION>。"
+msgstr "您的目的地位于<RELATIVE_DIRECTION>。"
 
 #. e.g. Lancaster Brewing Company is on the left.
 msgctxt "instructions.destination.phrases.3"
 msgid "<DESTINATION> is on the <RELATIVE_DIRECTION>."
-msgstr "<DESTINATION>在<RELATIVE_DIRECTION>。"
+msgstr "<DESTINATION>位于<RELATIVE_DIRECTION>。"
 
 msgctxt "instructions.destination.replacement.relative_directions.0"
 msgid "left"
@@ -484,12 +484,12 @@ msgstr "您已到达<DESTINATION>。"
 #. e.g. Your destination is on the right.
 msgctxt "instructions.destination_verbal.phrases.2"
 msgid "Your destination is on the <RELATIVE_DIRECTION>."
-msgstr "目的地在<RELATIVE_DIRECTION>。"
+msgstr "您的目的地位于<RELATIVE_DIRECTION>。"
 
 #. e.g. Lancaster Brewing Company is on the left.
 msgctxt "instructions.destination_verbal.phrases.3"
 msgid "<DESTINATION> is on the <RELATIVE_DIRECTION>."
-msgstr "<DESTINATION>在<RELATIVE_DIRECTION>。"
+msgstr "<DESTINATION>位于<RELATIVE_DIRECTION>。"
 
 msgctxt "instructions.destination_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -513,12 +513,12 @@ msgstr "您即将到达<DESTINATION>。"
 #. e.g. Your destination will be on the right.
 msgctxt "instructions.destination_verbal_alert.phrases.2"
 msgid "Your destination will be on the <RELATIVE_DIRECTION>."
-msgstr "目的地将在<RELATIVE_DIRECTION>。"
+msgstr "您的目的地将位于<RELATIVE_DIRECTION>。"
 
 #. e.g. Lancaster Brewing Company will be on the left.
 msgctxt "instructions.destination_verbal_alert.phrases.3"
 msgid "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
-msgstr "<DESTINATION>将在<RELATIVE_DIRECTION>。"
+msgstr "<DESTINATION>将位于<RELATIVE_DIRECTION>。"
 
 msgctxt "instructions.destination_verbal_alert.replacement.relative_directions.0"
 msgid "left"
@@ -606,7 +606,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -658,7 +658,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -695,7 +695,7 @@ msgstr "进入环岛，从第<ORDINAL_VALUE>个出口驶出，进入<ROUNDABOUT_
 #. e.g. Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.3"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "进入环岛，从第<ORDINAL_VALUE>个出口驶出，进入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。继续沿<ROUNDABOUT_EXIT_STREET_NAMES>行驶。"
+msgstr "进入环岛，从第<ORDINAL_VALUE>个出口驶出，进入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。继续沿<ROUNDABOUT_EXIT_STREET_NAMES>前行。"
 
 #. e.g. Enter the roundabout and take the 3rd exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.4"
@@ -710,7 +710,7 @@ msgstr "进入环岛，从出口驶出，进入<ROUNDABOUT_EXIT_STREET_NAMES>。
 #. e.g. Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.6"
 msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "进入环岛，从出口驶出，进入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。继续沿<ROUNDABOUT_EXIT_STREET_NAMES>行驶。"
+msgstr "进入环岛，从出口驶出，进入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。继续沿<ROUNDABOUT_EXIT_STREET_NAMES>前行。"
 
 #. e.g. Enter the roundabout and take the exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.7"
@@ -735,7 +735,7 @@ msgstr "进入<STREET_NAMES>，从第<ORDINAL_VALUE>个出口驶出，进入<ROU
 #. e.g. Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.11"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "进入<STREET_NAMES>，从第<ORDINAL_VALUE>个出口驶出，进入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。继续沿<ROUNDABOUT_EXIT_STREET_NAMES>行驶。"
+msgstr "进入<STREET_NAMES>，从第<ORDINAL_VALUE>个出口驶出，进入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。继续沿<ROUNDABOUT_EXIT_STREET_NAMES>前行。"
 
 #. e.g. Enter Dupont Circle and take the 3rd exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.12"
@@ -750,7 +750,7 @@ msgstr "进入<STREET_NAMES>，从出口驶出，进入<ROUNDABOUT_EXIT_STREET_N
 #. e.g. Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.14"
 msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "进入<STREET_NAMES>，从出口驶出，进入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。继续沿<ROUNDABOUT_EXIT_STREET_NAMES>行驶。"
+msgstr "进入<STREET_NAMES>，从出口驶出，进入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。继续沿<ROUNDABOUT_EXIT_STREET_NAMES>前行。"
 
 #. e.g. Enter Dupont Circle and take the exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.15"
@@ -779,7 +779,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -936,7 +936,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -1160,7 +1160,7 @@ msgstr "驶出环岛，进入<STREET_NAMES>。"
 #. e.g. Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.
 msgctxt "instructions.exit_roundabout.phrases.2"
 msgid "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "驶出环岛，进入<BEGIN_STREET_NAMES>。继续沿<STREET_NAMES>行驶。"
+msgstr "驶出环岛，进入<BEGIN_STREET_NAMES>。继续沿<STREET_NAMES>前行。"
 
 #. e.g. Exit the roundabout toward Baltimore.
 msgctxt "instructions.exit_roundabout.phrases.3"
@@ -1189,7 +1189,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -1237,7 +1237,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -1441,7 +1441,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -1464,22 +1464,22 @@ msgstr "右侧"
 #. e.g. Keep right to stay on I 95 South.
 msgctxt "instructions.keep_to_stay_on.phrases.0"
 msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "保持<RELATIVE_DIRECTION>，继续沿<STREET_NAMES>行驶。"
+msgstr "保持<RELATIVE_DIRECTION>，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Keep left to take exit 62 to stay on I 95 South.
 msgctxt "instructions.keep_to_stay_on.phrases.1"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
-msgstr "保持<RELATIVE_DIRECTION>，从<NUMBER_SIGN>号出口驶出，继续沿<STREET_NAMES>行驶。"
+msgstr "保持<RELATIVE_DIRECTION>，从<NUMBER_SIGN>号出口驶出，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Keep left to stay on I 95 South toward Baltimore.
 msgctxt "instructions.keep_to_stay_on.phrases.2"
 msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "保持<RELATIVE_DIRECTION>，继续沿<STREET_NAMES>行驶，前往<TOWARD_SIGN>。"
+msgstr "保持<RELATIVE_DIRECTION>，继续沿<STREET_NAMES>前行，前往<TOWARD_SIGN>。"
 
 #. e.g. Keep left to take exit 62 to stay on I 95 South toward Baltimore.
 msgctxt "instructions.keep_to_stay_on.phrases.3"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "保持<RELATIVE_DIRECTION>，从<NUMBER_SIGN>号出口驶出，继续沿<STREET_NAMES>行驶，前往<TOWARD_SIGN>。"
+msgstr "保持<RELATIVE_DIRECTION>，从<NUMBER_SIGN>号出口驶出，继续沿<STREET_NAMES>前行，前往<TOWARD_SIGN>。"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1503,7 +1503,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -1526,22 +1526,22 @@ msgstr "右侧"
 #. e.g. Keep right to stay on Interstate 95 South.
 msgctxt "instructions.keep_to_stay_on_verbal.phrases.0"
 msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "保持<RELATIVE_DIRECTION>，继续沿<STREET_NAMES>行驶。"
+msgstr "保持<RELATIVE_DIRECTION>，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Keep left to take exit 62 to stay on Interstate 95 South.
 msgctxt "instructions.keep_to_stay_on_verbal.phrases.1"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
-msgstr "保持<RELATIVE_DIRECTION>，从<NUMBER_SIGN>号出口驶出，继续沿<STREET_NAMES>行驶。"
+msgstr "保持<RELATIVE_DIRECTION>，从<NUMBER_SIGN>号出口驶出，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Keep left to stay on I 95 South toward Baltimore.
 msgctxt "instructions.keep_to_stay_on_verbal.phrases.2"
 msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "保持<RELATIVE_DIRECTION>，继续沿<STREET_NAMES>行驶，前往<TOWARD_SIGN>。"
+msgstr "保持<RELATIVE_DIRECTION>，继续沿<STREET_NAMES>前行，前往<TOWARD_SIGN>。"
 
 #. e.g. Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore.
 msgctxt "instructions.keep_to_stay_on_verbal.phrases.3"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "保持<RELATIVE_DIRECTION>，从<NUMBER_SIGN>号出口驶出，继续沿<STREET_NAMES>行驶，前往<TOWARD_SIGN>。"
+msgstr "保持<RELATIVE_DIRECTION>，从<NUMBER_SIGN>号出口驶出，继续沿<STREET_NAMES>前行，前往<TOWARD_SIGN>。"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1565,7 +1565,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -1647,7 +1647,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -1673,32 +1673,32 @@ msgstr "继续前往<LEVEL>。"
 #. e.g. Merge.
 msgctxt "instructions.merge.phrases.0"
 msgid "Merge."
-msgstr "并线汇入。"
+msgstr "并道。"
 
 #. e.g. Merge left.
 msgctxt "instructions.merge.phrases.1"
 msgid "Merge <RELATIVE_DIRECTION>."
-msgstr "向<RELATIVE_DIRECTION>并线汇入。"
+msgstr "向<RELATIVE_DIRECTION>并道。"
 
 #. e.g. Merge onto I 76 West/Pennsylvania Turnpike.
 msgctxt "instructions.merge.phrases.2"
 msgid "Merge onto <STREET_NAMES>."
-msgstr "并线汇入<STREET_NAMES>。"
+msgstr "并入<STREET_NAMES>。"
 
 #. e.g. Merge right onto I 83 South.
 msgctxt "instructions.merge.phrases.3"
 msgid "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>并线汇入<STREET_NAMES>。"
+msgstr "向<RELATIVE_DIRECTION>并入<STREET_NAMES>。"
 
 #. e.g. Merge toward Baltimore.
 msgctxt "instructions.merge.phrases.4"
 msgid "Merge toward <TOWARD_SIGN>."
-msgstr "并线汇入，前往<TOWARD_SIGN>。"
+msgstr "并入，前往<TOWARD_SIGN>。"
 
 #. e.g. Merge right toward Baltimore.
 msgctxt "instructions.merge.phrases.5"
 msgid "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr "向<RELATIVE_DIRECTION>并线汇入，前往<TOWARD_SIGN>。"
+msgstr "向<RELATIVE_DIRECTION>并入，前往<TOWARD_SIGN>。"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1722,7 +1722,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -1739,32 +1739,32 @@ msgstr "右"
 #. e.g. Merge.
 msgctxt "instructions.merge_verbal.phrases.0"
 msgid "Merge."
-msgstr "并线汇入。"
+msgstr "并道。"
 
 #. e.g. Merge left.
 msgctxt "instructions.merge_verbal.phrases.1"
 msgid "Merge <RELATIVE_DIRECTION>."
-msgstr "向<RELATIVE_DIRECTION>并线汇入。"
+msgstr "向<RELATIVE_DIRECTION>并道。"
 
 #. e.g. Merge onto I 76 West/Pennsylvania Turnpike.
 msgctxt "instructions.merge_verbal.phrases.2"
 msgid "Merge onto <STREET_NAMES>."
-msgstr "并线汇入<STREET_NAMES>。"
+msgstr "并入<STREET_NAMES>。"
 
 #. e.g. Merge right onto I 83 South.
 msgctxt "instructions.merge_verbal.phrases.3"
 msgid "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>并线汇入<STREET_NAMES>。"
+msgstr "向<RELATIVE_DIRECTION>并入<STREET_NAMES>。"
 
 #. e.g. Merge toward Baltimore.
 msgctxt "instructions.merge_verbal.phrases.4"
 msgid "Merge toward <TOWARD_SIGN>."
-msgstr "并线汇入，前往<TOWARD_SIGN>。"
+msgstr "并入，前往<TOWARD_SIGN>。"
 
 #. e.g. Merge right toward Baltimore.
 msgctxt "instructions.merge_verbal.phrases.5"
 msgid "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr "向<RELATIVE_DIRECTION>并线汇入，前往<TOWARD_SIGN>。"
+msgstr "向<RELATIVE_DIRECTION>并入，前往<TOWARD_SIGN>。"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1788,7 +1788,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -1810,11 +1810,11 @@ msgstr "停放车辆"
 #. e.g. Pass the gate.
 msgctxt "instructions.pass.phrases.0"
 msgid "Pass <OBJECT_LABEL>."
-msgstr "通过<OBJECT_LABEL>。"
+msgstr "经过<OBJECT_LABEL>。"
 
 msgctxt "instructions.pass.phrases.1"
 msgid "Pass traffic signals on <OBJECT_LABEL>."
-msgstr "通过<OBJECT_LABEL>的交通信号灯。"
+msgstr "经过<OBJECT_LABEL>的交通信号灯。"
 
 msgctxt "instructions.pass.replacement.object_labels.0"
 msgid "the gate"
@@ -1822,7 +1822,7 @@ msgstr "大门"
 
 msgctxt "instructions.pass.replacement.object_labels.1"
 msgid "the bollards"
-msgstr "隔离桩"
+msgstr "护柱"
 
 msgctxt "instructions.pass.replacement.object_labels.2"
 msgid "ways intersection"
@@ -1846,13 +1846,13 @@ msgstr "站"
 #. e.g. Continue for 9 miles.
 msgctxt "instructions.post_transition_verbal.phrases.0"
 msgid "Continue for <LENGTH>."
-msgstr "继续行驶<LENGTH>。"
+msgstr "继续前行<LENGTH>。"
 
 #. e.g. Continue on Pennsylvania 7 43 for 6.2 miles.
 #. e.g. Continue on Main Street, Vermont 30 for 1 tenth of a mile.
 msgctxt "instructions.post_transition_verbal.phrases.1"
 msgid "Continue on <STREET_NAMES> for <LENGTH>."
-msgstr "继续沿<STREET_NAMES>行驶<LENGTH>。"
+msgstr "继续沿<STREET_NAMES>前行<LENGTH>。"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1876,7 +1876,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -2010,52 +2010,52 @@ msgstr "右"
 #. e.g. Stay straight to take the ramp.
 msgctxt "instructions.ramp_straight.phrases.0"
 msgid "Stay straight to take the ramp."
-msgstr "保持直行驶入匝道。"
+msgstr "保持直前行入匝道。"
 
 #. e.g. Stay straight to take the US 322 East ramp.
 msgctxt "instructions.ramp_straight.phrases.1"
 msgid "Stay straight to take the <BRANCH_SIGN> ramp."
-msgstr "保持直行驶入<BRANCH_SIGN>匝道。"
+msgstr "保持直前行入<BRANCH_SIGN>匝道。"
 
 #. e.g. Stay straight to take the ramp toward Hershey.
 msgctxt "instructions.ramp_straight.phrases.2"
 msgid "Stay straight to take the ramp toward <TOWARD_SIGN>."
-msgstr "保持直行驶入匝道，前往<TOWARD_SIGN>。"
+msgstr "保持直前行入匝道，前往<TOWARD_SIGN>。"
 
 #. e.g. Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown.
 msgctxt "instructions.ramp_straight.phrases.3"
 msgid "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
-msgstr "保持直行驶入<BRANCH_SIGN>匝道，前往<TOWARD_SIGN>。"
+msgstr "保持直前行入<BRANCH_SIGN>匝道，前往<TOWARD_SIGN>。"
 
 #. e.g. Stay straight to take the Gettysburg Pike ramp.
 msgctxt "instructions.ramp_straight.phrases.4"
 msgid "Stay straight to take the <NAME_SIGN> ramp."
-msgstr "保持直行驶入<NAME_SIGN>匝道。"
+msgstr "保持直前行入<NAME_SIGN>匝道。"
 
 #. e.g. Stay straight to take the ramp.
 msgctxt "instructions.ramp_straight_verbal.phrases.0"
 msgid "Stay straight to take the ramp."
-msgstr "保持直行驶入匝道。"
+msgstr "保持直前行入匝道。"
 
 #. e.g. Stay straight to take the U.S. 3 22 East ramp.
 msgctxt "instructions.ramp_straight_verbal.phrases.1"
 msgid "Stay straight to take the <BRANCH_SIGN> ramp."
-msgstr "保持直行驶入<BRANCH_SIGN>匝道。"
+msgstr "保持直前行入<BRANCH_SIGN>匝道。"
 
 #. e.g. Stay straight to take the ramp toward Hershey.
 msgctxt "instructions.ramp_straight_verbal.phrases.2"
 msgid "Stay straight to take the ramp toward <TOWARD_SIGN>."
-msgstr "保持直行驶入匝道，前往<TOWARD_SIGN>。"
+msgstr "保持直前行入匝道，前往<TOWARD_SIGN>。"
 
 #. e.g. Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale.
 msgctxt "instructions.ramp_straight_verbal.phrases.3"
 msgid "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
-msgstr "保持直行驶入<BRANCH_SIGN>匝道，前往<TOWARD_SIGN>。"
+msgstr "保持直前行入<BRANCH_SIGN>匝道，前往<TOWARD_SIGN>。"
 
 #. e.g. Stay straight to take the Gettysburg Pike ramp.
 msgctxt "instructions.ramp_straight_verbal.phrases.4"
 msgid "Stay straight to take the <NAME_SIGN> ramp."
-msgstr "保持直行驶入<NAME_SIGN>匝道。"
+msgstr "保持直前行入<NAME_SIGN>匝道。"
 
 #. e.g. Take the ramp on the left.
 #. e.g. Take the ramp on the right.
@@ -2155,12 +2155,12 @@ msgstr "向<RELATIVE_DIRECTION>急转弯进入<STREET_NAMES>。"
 #. e.g. Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.
 msgctxt "instructions.sharp.phrases.2"
 msgid "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>急转弯进入<BEGIN_STREET_NAMES>。继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>急转弯进入<BEGIN_STREET_NAMES>。继续沿<STREET_NAMES>前行。"
 
 #. e.g. Make a sharp right to stay on Sunstone Drive.
 msgctxt "instructions.sharp.phrases.3"
 msgid "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>急转弯，继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>急转弯，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Make a sharp right at Mannenbashi East.
 msgctxt "instructions.sharp.phrases.4"
@@ -2194,7 +2194,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -2226,7 +2226,7 @@ msgstr "向<RELATIVE_DIRECTION>急转弯进入<BEGIN_STREET_NAMES>。"
 #. e.g. Make a sharp right to stay on Sunstone Drive.
 msgctxt "instructions.sharp_verbal.phrases.3"
 msgid "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>急转弯，继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>急转弯，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Make a sharp right at Mannenbashi East.
 msgctxt "instructions.sharp_verbal.phrases.4"
@@ -2260,7 +2260,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -2291,7 +2291,7 @@ msgstr "沿<STREET_NAMES>向<CARDINAL_DIRECTION>出发。"
 #. e.g. Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.
 msgctxt "instructions.start.phrases.2"
 msgid "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "沿<BEGIN_STREET_NAMES>向<CARDINAL_DIRECTION>出发。继续沿<STREET_NAMES>行驶。"
+msgstr "沿<BEGIN_STREET_NAMES>向<CARDINAL_DIRECTION>出发。继续沿<STREET_NAMES>前行。"
 
 #. e.g. Drive east.
 #. e.g. Drive north.
@@ -2398,7 +2398,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -2566,7 +2566,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -2678,7 +2678,7 @@ msgstr "站"
 #. e.g. Exit the station.
 msgctxt "instructions.transit_connection_destination.phrases.0"
 msgid "Exit the station."
-msgstr "走出车站。"
+msgstr "出站。"
 
 #. e.g. Exit the Embarcadero Station.
 msgctxt "instructions.transit_connection_destination.phrases.1"
@@ -2697,7 +2697,7 @@ msgstr "站"
 #. e.g. Exit the station.
 msgctxt "instructions.transit_connection_destination_verbal.phrases.0"
 msgid "Exit the station."
-msgstr "走出车站。"
+msgstr "出站。"
 
 #. e.g. Exit the Embarcadero Station.
 msgctxt "instructions.transit_connection_destination_verbal.phrases.1"
@@ -2716,7 +2716,7 @@ msgstr "站"
 #. e.g. Enter the station.
 msgctxt "instructions.transit_connection_start.phrases.0"
 msgid "Enter the station."
-msgstr "进入车站。"
+msgstr "进站。"
 
 #. e.g. Enter the Embarcadero Station.
 msgctxt "instructions.transit_connection_start.phrases.1"
@@ -2735,7 +2735,7 @@ msgstr "站"
 #. e.g. Enter the station.
 msgctxt "instructions.transit_connection_start_verbal.phrases.0"
 msgid "Enter the station."
-msgstr "进入车站。"
+msgstr "进站。"
 
 #. e.g. Enter the Embarcadero Station.
 msgctxt "instructions.transit_connection_start_verbal.phrases.1"
@@ -3030,12 +3030,12 @@ msgstr "向<RELATIVE_DIRECTION>转弯进入<STREET_NAMES>。"
 #. e.g. Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.
 msgctxt "instructions.turn.phrases.2"
 msgid "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>转弯进入<BEGIN_STREET_NAMES>。继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>转弯进入<BEGIN_STREET_NAMES>。继续沿<STREET_NAMES>前行。"
 
 #. e.g. Turn right to stay on Sunstone Drive.
 msgctxt "instructions.turn.phrases.3"
 msgid "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>转弯，继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>转弯，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Turn right at Mannenbashi East.
 msgctxt "instructions.turn.phrases.4"
@@ -3069,7 +3069,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -3101,7 +3101,7 @@ msgstr "向<RELATIVE_DIRECTION>转弯进入<BEGIN_STREET_NAMES>。"
 #. e.g. Turn right to stay on Sunstone Drive.
 msgctxt "instructions.turn_verbal.phrases.3"
 msgid "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>转弯，继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>转弯，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Turn right at Mannenbashi East.
 msgctxt "instructions.turn_verbal.phrases.4"
@@ -3135,7 +3135,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -3162,7 +3162,7 @@ msgstr "向<RELATIVE_DIRECTION>掉头进入<STREET_NAMES>。"
 #. e.g. Make a left U-turn to stay on Bunker Hill Road.
 msgctxt "instructions.uturn.phrases.2"
 msgid "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>掉头，继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>掉头，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Make a left U-turn at Devonshire Road.
 msgctxt "instructions.uturn.phrases.3"
@@ -3177,7 +3177,7 @@ msgstr "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>掉头，进入<STREET_NAM
 #. e.g. Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22.
 msgctxt "instructions.uturn.phrases.5"
 msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
-msgstr "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>掉头，继续沿<STREET_NAMES>行驶。"
+msgstr "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>掉头，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Make a right U-turn at Mannenbashi East.
 msgctxt "instructions.uturn.phrases.6"
@@ -3211,7 +3211,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
@@ -3238,7 +3238,7 @@ msgstr "向<RELATIVE_DIRECTION>掉头进入<STREET_NAMES>。"
 #. e.g. Make a left U-turn to stay on Bunker Hill Road.
 msgctxt "instructions.uturn_verbal.phrases.2"
 msgid "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."
-msgstr "向<RELATIVE_DIRECTION>掉头，继续沿<STREET_NAMES>行驶。"
+msgstr "向<RELATIVE_DIRECTION>掉头，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Make a left U-turn at Devonshire Road.
 msgctxt "instructions.uturn_verbal.phrases.3"
@@ -3253,7 +3253,7 @@ msgstr "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>掉头，进入<STREET_NAM
 #. e.g. Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22.
 msgctxt "instructions.uturn_verbal.phrases.5"
 msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
-msgstr "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>掉头，继续沿<STREET_NAMES>行驶。"
+msgstr "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>掉头，继续沿<STREET_NAMES>前行。"
 
 #. e.g. Make a right U-turn at Mannenbashi East.
 msgctxt "instructions.uturn_verbal.phrases.6"
@@ -3287,7 +3287,7 @@ msgstr "楼梯"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr "桥"
+msgstr "桥梁"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
