@@ -343,9 +343,6 @@ void parse_location(valhalla::Location* location,
     // search_filter.exclude_ferry
     location->mutable_search_filter()->set_exclude_ferry(
         rapidjson::get<bool>(*search_filter, "/exclude_ferry", false));
-    // search_filter.exclude_avoided_edges
-    location->mutable_search_filter()->set_exclude_avoided_edges(
-        rapidjson::get<bool>(*search_filter, "/exclude_avoided_edges", false));
     location->mutable_search_filter()->set_level(
         rapidjson::get<float>(*search_filter, "/level", baldr::kMaxLevel));
     // search_filter.exclude_closures
@@ -1102,6 +1099,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (expansion_max_distance) {
     options.set_expansion_max_distance(*expansion_max_distance);
   }
+
+  options.set_excluded_edges_in_search(
+      rapidjson::get<bool>(doc, "/excluded_edges_in_search", options.excluded_edges_in_search()));
 
   // get the avoid polygons in there
   auto exclude_polygons =

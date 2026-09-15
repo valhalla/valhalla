@@ -48,7 +48,6 @@ CircleInBbox circle_intersects_bounds(const PointLL& center,
 }
 
 bool search_filter(const DirectedEdge* edge,
-                   const GraphId& edgeid,
                    const DynamicCost& costing,
                    const graph_tile_ptr& tile,
                    const valhalla::SearchFilter& filter) {
@@ -67,9 +66,7 @@ bool search_filter(const DirectedEdge* edge,
          (filter.exclude_ferry() && (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
          (filter.exclude_closures() && (costing.flow_mask() & kCurrentFlowMask) &&
           tile->IsClosed(edge)) ||
-         (filter.level() != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level())) ||
-         // reject edges excluded via exclude_locations/exclude_polygons if the location opted in
-         (filter.exclude_avoided_edges() && costing.IsUserAvoidEdge(edgeid));
+         (filter.level() != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level()));
 }
 
 bool side_filter(const valhalla::PathEdge& edge, const Location& location, GraphReader& reader) {
@@ -317,6 +314,11 @@ struct bin_handler_t {
   bin_handler_t(GraphReader& reader) : reader(reader), max_reach_limit(0) {
   }
 
+  // the costing only knows user excluded edges if the request set excluded_edges_in_search
+  bool edge_allowed(const DirectedEdge* edge, const GraphId& edge_id, const graph_tile_ptr& tile) {
+    return costing->Allowed(edge, tile, kDisallowShortcut) && !costing->IsUserAvoidEdge(edge_id);
+  }
+
   void clear() {
     pps.clear();
     max_reach_limit = 0;
@@ -361,8 +363,8 @@ struct bin_handler_t {
         auto layer = info.layer();
         // do we want this edge, note we have to re-evaluate the filter check because we may be
         // seeing these edges a second time (filtered out before)
-        if (costing->Allowed(edge, tile, kDisallowShortcut) &&
-            !search_filter(edge, id, *costing, tile, location.search_filter())) {
+        if (edge_allowed(edge, id, tile) &&
+            !search_filter(edge, *costing, tile, location.search_filter())) {
           auto reach = get_reach(id, edge);
           valhalla::PathEdge path_edge;
           path_edge.set_graph_id(id);
@@ -396,8 +398,8 @@ struct bin_handler_t {
         if (!other_edge)
           continue;
 
-        if (costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
-            !search_filter(other_edge, other_id, *costing, other_tile, location.search_filter())) {
+        if (edge_allowed(other_edge, other_id, other_tile) &&
+            !search_filter(other_edge, *costing, other_tile, location.search_filter())) {
           auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
 
@@ -498,8 +500,8 @@ struct bin_handler_t {
       bc->set_radius(candidate.bounding_circle.second);
 
       // correlate the edge we found if its not filtered out
-      bool hard_filtered = search_filter(candidate.edge, candidate.edge_id, *costing, candidate.tile,
-                                         location.search_filter());
+      bool hard_filtered =
+          search_filter(candidate.edge, *costing, candidate.tile, location.search_filter());
       if (!hard_filtered && (side_filter(path_edge, location, reader) ||
                              heading_filter(location, angle) || layer_filter(location, layer))) {
         location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
@@ -512,9 +514,8 @@ struct bin_handler_t {
       graph_tile_ptr other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
-      if (other_edge && costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
-          !search_filter(other_edge, opposing_edge_id, *costing, other_tile,
-                         location.search_filter())) {
+      if (other_edge && edge_allowed(other_edge, opposing_edge_id, other_tile) &&
+          !search_filter(other_edge, *costing, other_tile, location.search_filter())) {
         auto opp_angle = std::fmod(angle + 180.f, 360.f);
         reach = get_reach(opposing_edge_id, other_edge);
         valhalla::PathEdge other_path_edge;
@@ -683,10 +684,10 @@ struct bin_handler_t {
 
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
-      if (!costing->Allowed(edge, tile, kDisallowShortcut)) {
+      if (!edge_allowed(edge, edge_id, tile)) {
         // but if we couldnt get it or its filtered too then we move on
         if (!(opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) ||
-            !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
+            !edge_allowed(opp_edge, opp_edgeid, opp_tile))
           continue;
         // if we will continue with the opposing edge lets swap it in
         std::swap(edge, opp_edge);
@@ -705,10 +706,9 @@ struct bin_handler_t {
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
             c_itr->prefiltered ||
-            (search_filter(edge, edge_id, *costing, tile, p_itr->location->search_filter()) &&
+            (search_filter(edge, *costing, tile, p_itr->location->search_filter()) &&
              (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-             search_filter(opp_edge, opp_edgeid, *costing, opp_tile,
-                           p_itr->location->search_filter()));
+             search_filter(opp_edge, *costing, opp_tile, p_itr->location->search_filter()));
         // set to false if even one candidate was not filtered
         all_prefiltered = all_prefiltered && c_itr->prefiltered;
       }
@@ -773,9 +773,8 @@ struct bin_handler_t {
                          reach.inbound >= p_itr->location->minimum_inbound_reachability();
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-            costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
-            !search_filter(opp_edge, opp_edgeid, *costing, opp_tile,
-                           p_itr->location->search_filter())) {
+            edge_allowed(opp_edge, opp_edgeid, opp_tile) &&
+            !search_filter(opp_edge, *costing, opp_tile, p_itr->location->search_filter())) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
           if (opp_reach.outbound >= p_itr->location->minimum_outbound_reachability() &&
               opp_reach.inbound >= p_itr->location->minimum_inbound_reachability()) {

@@ -712,7 +712,7 @@ TEST(StandAlone, SuperTrivialExcludedConnection) {
 
 TEST(StandAlone, SnapAwayFromExcludedEdge) {
   // excluding x's location excludes Top; by default a location at x still snaps onto Top and
-  // fails to route, with search_filter.exclude_avoided_edges it snaps onto Bottom instead
+  // fails to route, with excluded_edges_in_search it snaps onto Bottom instead
   const std::string ascii_map = R"(
     A--x--B
     |     |
@@ -744,8 +744,7 @@ TEST(StandAlone, SnapAwayFromExcludedEdge) {
     FAIL() << "Expected valhalla_exception_t";
   }
 
-  // opting in via the search filter snaps the origin away from the excluded edge
-  rapidjson::Pointer("/locations/0/search_filter/exclude_avoided_edges").Set(doc, true);
+  rapidjson::Pointer("/excluded_edges_in_search").Set(doc, true);
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
   doc.Accept(writer);

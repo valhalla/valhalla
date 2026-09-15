@@ -87,6 +87,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
     // expand from the node
     if (!reader.GetGraphTile(node_id, tile))
       continue;
+    auto edge_id = GraphId(node_id.tileid(), node_id.level(), tile->node(node_id)->edge_index());
     for (const auto& edge : tile->GetDirectedEdges(node_id)) {
       // TODO: we'd rather say !edge.end_simple_restriction() and not !edge.restrictions()
       // TODO: but we'd need the predecessor information to do that so we punt 1 edge earlier
@@ -94,8 +95,9 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       // potential stopping point (maybe a path followed the restriction)
 
       // if this edge is traversable we enqueue its end node
-      if (costing->Allowed(&edge, tile, forward_disallow_mask))
+      if (costing->Allowed(&edge, tile, forward_disallow_mask) && !costing->IsUserAvoidEdge(edge_id))
         enqueue(edge.endnode(), reader, costing, tile);
+      ++edge_id;
     }
   }
   // settled nodes + will be settled nodes - duplicated transitions nodes
@@ -127,9 +129,10 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
     auto edge_id = GraphId(node_id.tileid(), node_id.level(), node_tile->node(node_id)->edge_index());
     for (const auto& edge : node_tile->GetDirectedEdges(node_id)) {
       // get the opposing edge
-      const auto* opp_edge = reader.GetOpposingEdge(edge_id, tile);
+      const DirectedEdge* opp_edge = nullptr;
+      const auto opp_edge_id = reader.GetOpposingEdgeId(edge_id, opp_edge, tile);
       ++edge_id;
-      if (!opp_edge)
+      if (!opp_edge_id)
         continue;
 
       // NOTE: we can go through the end of the restriction because only the start would mark a
@@ -137,7 +140,8 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       // at the start of a simple restriction because it could have been on our path
 
       // if this opposing edge is traversable we enqueue its begin node
-      if (costing->Allowed(opp_edge, tile, reverse_disallow_mask))
+      if (costing->Allowed(opp_edge, tile, reverse_disallow_mask) &&
+          !costing->IsUserAvoidEdge(opp_edge_id))
         enqueue(edge.endnode(), reader, costing, tile);
     }
   }
