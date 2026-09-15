@@ -21,6 +21,9 @@ namespace {
 // A* can take excessive time for longer paths - so exclude them to protect the service.
 constexpr float kPedestrianMultipassThreshold = 50000.0f; // 50km
 
+// first and last edges of a cost factor line covering less than this are dropped
+constexpr double kMinCostFactorEdgeLength = 1.0; // meters
+
 /**
  * Check if the paths meet at opposing edges (but not at a node). If so, add an intermediate location
  * so that the shape / distance along the path is adjusted at the location.
@@ -270,14 +273,22 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           for (const auto& edge :
                line.locations(static_cast<size_t>(is_last)).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
+              double start = is_first ? edge.percent_along() : 0.;
+              double end = is_last ? edge.percent_along() : 1.;
+              // an endpoint just off a node also correlates to the adjacent edges, skip those small
+              // parts
+              const auto* de = reader.directededge(path_info.edgeid);
+              if (de && de->length() * (end - start) < kMinCostFactorEdgeLength) {
+                break;
+              }
               edge_count++;
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(path_info.edgeid);
               // apply the minimum allowed value specified in the config
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
               e->set_ignore_access_restrictions(line.ignore_access_restrictions());
-              e->set_start(is_first ? edge.percent_along() : 0.);
-              e->set_end(is_last ? edge.percent_along() : 1.);
+              e->set_start(start);
+              e->set_end(end);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
               if (shortcut.is_valid()) {
                 add_shortcut(reader, shortcut, costing_options, e);

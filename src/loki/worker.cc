@@ -437,6 +437,14 @@ void loki_worker_t::check_hierarchy_distance(Api& request) {
     costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
   }
 }
+void loki_worker_t::apply_trace_location_defaults(valhalla::Location& loc) const {
+  loc.set_node_snap_tolerance(0.f);
+  loc.set_radius(10);
+  // Reachability test is not needed for edge walking because either
+  // - edge_walk relies on the shape that was produced by route
+  // - map_snap performs a Viterbi search that organically biases towards reachable edges
+  loc.set_minimum_reachability(0);
+}
 
 #ifdef ENABLE_SERVICES
 prime_server::worker_t::result_t
