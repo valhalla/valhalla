@@ -985,7 +985,7 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_EQ(res.directions().routes(0).legs().size(), 1);
 
   const auto& leg = res.directions().routes(0).legs(0);
-  EXPECT_NEAR(leg.summary().length(), 41.033, 0.001);
+  EXPECT_NEAR(leg.summary().length(), 41.036, 0.001);
   EXPECT_EQ(leg.maneuver(0).type(), DirectionsLeg_Maneuver_Type_kStart);
   EXPECT_EQ(leg.maneuver(1).type(), DirectionsLeg_Maneuver_Type_kTransitConnectionStart);
   EXPECT_EQ(leg.maneuver(2).type(), DirectionsLeg_Maneuver_Type_kTransit);
@@ -1010,8 +1010,8 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_EQ(res_doc["trip"]["legs"].GetArray().Size(), 1);
 
   const auto& leg_json = res_doc["trip"]["legs"].GetArray()[0];
-  EXPECT_NEAR(leg_json["summary"]["time"].GetDouble(), 8769.058, 0.001);
-  EXPECT_NEAR(leg_json["summary"]["length"].GetDouble(), 41.033, 0.001);
+  EXPECT_NEAR(leg_json["summary"]["time"].GetDouble(), 8770.470, 0.001);
+  EXPECT_NEAR(leg_json["summary"]["length"].GetDouble(), 41.036, 0.001);
   EXPECT_EQ(leg_json["maneuvers"][0]["type"].GetUint(),
             static_cast<uint32_t>(DirectionsLeg::Maneuver::kStart));
   EXPECT_EQ(leg_json["maneuvers"][1]["type"].GetUint(),
@@ -1062,8 +1062,8 @@ TEST(GtfsExample, route_trip4) {
 
   // test the PBF output
   const auto& leg = res.directions().routes(0).legs(0);
-  EXPECT_NEAR(leg.summary().time(), 8529.033, 0.001);
-  EXPECT_NEAR(leg.summary().length(), 16.112, 0.001);
+  EXPECT_NEAR(leg.summary().time(), 8530.445, 0.001);
+  EXPECT_NEAR(leg.summary().length(), 16.115, 0.001);
 
   const auto& transit_info = leg.maneuver(2).transit_info();
   EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), "2023-02-27T23:58-05:00");

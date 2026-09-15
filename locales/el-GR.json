@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Σε <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> χιλιόμετρα",
+        "1 χιλιόμετρο",
+        "<METERS> μέτρα",
+        "λιγότερο από 10 μέτρα"
+      ],
+      "us_customary_lengths": [
+        "<MILES> μίλια",
+        "1 μίλι",
+        "μισό μίλι",
+        "ένα τέταρτο μίλι",
+        "<FEET> πόδια",
+        "λιγότερο από 10 πόδια"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Άφιξη: <TIME>.",
+        "1": "Άφιξη: <TIME> στη <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Άφιξη στις <TIME>.",
+        "1": "Άφιξη στις <TIME> στη <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION>.",
+        "1": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION> στη <STREET_NAMES>.",
+        "2": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION> στη <BEGIN_STREET_NAMES>. Συνεχίστε στη <STREET_NAMES>.",
+        "3": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES>.",
+        "4": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION> στη <JUNCTION_NAME>.",
+        "5": "Στρίψτε <RELATIVE_DIRECTION> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION>.",
+        "1": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION> στη <STREET_NAMES>.",
+        "2": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION> στη <BEGIN_STREET_NAMES>.",
+        "3": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES>.",
+        "4": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION> στη <JUNCTION_NAME>.",
+        "5": "Στρίψτε <RELATIVE_DIRECTION> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> γίνεται <STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> γίνεται <STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Συνεχίστε.",
+        "1": "Συνεχίστε στη <STREET_NAMES>.",
+        "2": "Συνεχίστε στη <JUNCTION_NAME>.",
+        "3": "Συνεχίστε προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Συνεχίστε.",
+        "1": "Συνεχίστε για <LENGTH>.",
+        "2": "Συνεχίστε στη <STREET_NAMES>.",
+        "3": "Συνεχίστε στη <STREET_NAMES> για <LENGTH>.",
+        "4": "Συνεχίστε στη <JUNCTION_NAME>.",
+        "5": "Συνεχίστε στη <JUNCTION_NAME> για <LENGTH>.",
+        "6": "Συνεχίστε προς <TOWARD_SIGN>.",
+        "7": "Συνεχίστε προς <TOWARD_SIGN> για <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> χιλιόμετρα",
+        "1 χιλιόμετρο",
+        "<METERS> μέτρα",
+        "λιγότερο από 10 μέτρα"
+      ],
+      "us_customary_lengths": [
+        "<MILES> μίλια",
+        "1 μίλι",
+        "μισό μίλι",
+        "ένα τέταρτο μίλι",
+        "<FEET> πόδια",
+        "λιγότερο από 10 πόδια"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Συνεχίστε.",
+        "1": "Συνεχίστε στη <STREET_NAMES>.",
+        "2": "Συνεχίστε στη <JUNCTION_NAME>.",
+        "3": "Συνεχίστε προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Αναχώρηση: <TIME>.",
+        "1": "Αναχώρηση: <TIME> από <TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Αναχώρηση στις <TIME>.",
+        "1": "Αναχώρηση στις <TIME> από <TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Φτάσατε στον προορισμό σας.",
+        "1": "Φτάσατε στον <DESTINATION>.",
+        "2": "Ο προορισμός σας βρίσκεται <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> βρίσκετε <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Φτάσατε στον προορισμό σας.",
+        "1": "Φτάσατε στον <DESTINATION>.",
+        "2": "Ο προορισμός σας βρίσκεται <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> βρίσκετε <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Θα φτάσετε στον προορισμό σας.",
+        "1": "Θα φτάσατε στον <DESTINATION>.",
+        "2": "Ο προορισμός σας θα βρίσκεται στα <RELATIVE_DIRECTION> σας.",
+        "3": "<DESTINATION> θα βρίσκεται στα <RELATIVE_DIRECTION> σας."
+      },
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Take the elevator.",
+        "1": "Take the elevator to <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Enter the building.",
+        "1": "Enter the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Πάρτε το πλοίο.",
+        "1": "Πάρτε το <STREET_NAMES>.",
+        "2": "Πάρτε το <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Πάρτε το πλοίο προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ferry_label": "Πλοίο"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Πάρτε το πλοίο.",
+        "1": "Πάρτε το <STREET_NAMES>.",
+        "2": "Πάρτε το <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Πάρτε το φέρι προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ferry_label": "Πλοίο"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Μπείτε στον κυκλικό κόμβο.",
+        "1": "Μπείτε στον κυκλικό κόμβο και πάρτε την <ORDINAL_VALUE>η έξοδο.",
+        "2": "Μπείτε στον κυκλικό κόμβο και πάρτε την <ORDINAL_VALUE>η έξοδο στη <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Μπείτε στον κυκλικό κόμβο και πάρτε την <ORDINAL_VALUE>η έξοδο στη <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Συνεχίστε ευθεία στη <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Μπείτε στον κυκλικό κόμβο και πάρτε την <ORDINAL_VALUE>η έξοδο προς <TOWARD_SIGN>.",
+        "5": "Μπείτε στον κυκλικό κόμβο και πάρτε την έξοδο προς <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Μπείτε στον κυκλικό κόμβο και πάρτε την έξοδο προς <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Συνεχίστε στη <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Μπείτε στον κυκλικό κόμβο και πάρτε την έξοδο προς <TOWARD_SIGN>.",
+        "8": "Μπείτε στον <STREET_NAMES>",
+        "9": "Μπείτε στον <STREET_NAMES> και πάρτε την <ORDINAL_VALUE> έξοδο.",
+        "10": "Μπείτε στον <STREET_NAMES> και πάρτε την <ORDINAL_VALUE> έξοδο στη <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Μπείτε στον <STREET_NAMES> και πάρτε την <ORDINAL_VALUE> έξοδο στη <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> . Συνεχίστε ευθεία στη <ROUNDABOUT_EXIT_STREET_NAMES> .",
+        "12": "Μπείτε στον <STREET_NAMES> και πάρτε την <ORDINAL_VALUE> έξοδο προς <TOWARD_SIGN>.",
+        "13": "Μπείτε στον <STREET_NAMES> και πάρτε την έξοδο προς <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Μπείτε στον <STREET_NAMES> και πάρτε την έξοδο προς <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Συνεχίστε ευθεία στη <ROUNDABOUT_EXIT_STREET_NAMES>. ",
+        "15": "Μπείτε στον <STREET_NAMES> και πάρτε την έξοδο προς  <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ordinal_values": [
+        "1η",
+        "2η",
+        "3η",
+        "4η",
+        "5η",
+        "6η",
+        "7η",
+        "8η",
+        "9η",
+        "10η"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Μπείτε στον κυκλικό κόμβο.",
+        "1": "Μπείτε στον κυκλικό κόμβο και πάρτε την <ORDINAL_VALUE>η έξοδο.",
+        "2": "Μπείτε στον κυκλικό κόμβο και πάρτε την <ORDINAL_VALUE>η έξοδο στη <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Μπείτε στον κυκλικό κόμβο και πάρτε την <ORDINAL_VALUE> έξοδο προς <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Μπείτε στον κυκλικό κόμβο και πάρτε την <ORDINAL_VALUE>η έξοδο προς <TOWARD_SIGN>.",
+        "5": "Μπείτε στον κυκλικό κόμβο και πάρτε την έξοδο προς <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Μπείτε στον κυκλικό κόμβο και πάρτε την έξοδο προς <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Μπείτε στον κυκλικό κόμβο και πάρτε την έξοδο προς <TOWARD_SIGN>.",
+        "8": "Μπείτε στον <STREET_NAMES>",
+        "9": "Μπείτε στον <STREET_NAMES> και πάρτε την <ORDINAL_VALUE> έξοδο.",
+        "10": "Μπείτε στον <STREET_NAMES> και πάρτε την <ORDINAL_VALUE> έξοδο στη <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Μπείτε στον <STREET_NAMES> και πάρτε την <ORDINAL_VALUE> έξοδο στη <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Μπείτε στον <STREET_NAMES> και πάρτε την <ORDINAL_VALUE> έξοδο προς <TOWARD_SIGN>.",
+        "13": "Μπείτε στον <STREET_NAMES> και πάρτε την έξοδο στη <ROUNDABOUT_EXIT_STREET_NAMES> .",
+        "14": "Μπείτε στον <STREET_NAMES> και πάρτε την έξοδο προς <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Μπείτε στον <STREET_NAMES> και πάρτε την έξοδο προς  <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "ordinal_values": [
+        "1η",
+        "2η",
+        "3η",
+        "4η",
+        "5η",
+        "6η",
+        "7η",
+        "8η",
+        "9η",
+        "10η"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Take the escalator.",
+        "1": "Take the escalator to <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Πάρτε την έξοδο στα <RELATIVE_DIRECTION>.",
+        "1": "Βγείτε στην έξοδο <NUMBER_SIGN> στα <RELATIVE_DIRECTION>.",
+        "2": "Πάρτε την έξοδο <BRANCH_SIGN> στα <RELATIVE_DIRECTION>.",
+        "3": "Πάρτε την έξοδο <NUMBER_SIGN> στα <RELATIVE_DIRECTION> στη <BRANCH_SIGN>.",
+        "4": "Πάρτε την έξοδο στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "5": "Πάρτε την έξοδο <NUMBER_SIGN> στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "6": "Πάρτε την έξοδο <BRANCH_SIGN> στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "7": "Πάρτε την έξοδο <NUMBER_SIGN> στα <RELATIVE_DIRECTION> για <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "8": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION>.",
+        "10": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION> προς <BRANCH_SIGN>.",
+        "12": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "14": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION> για <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "15": "Πάρτε την έξοδο.",
+        "16": "Βγείτε στην έξοδο <NUMBER_SIGN>.",
+        "17": "Πάρτε την έξοδο <BRANCH_SIGN>.",
+        "18": "Πάρτε την έξοδο <NUMBER_SIGN> προς <BRANCH_SIGN>.",
+        "19": "Πάρτε την έξοδο προς <TOWARD_SIGN>.",
+        "20": "Πάρτε την έξοδο <NUMBER_SIGN> προς <TOWARD_SIGN>.",
+        "21": "Πάρτε την έξοδο <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "22": "Πάρτε την έξοδο <NUMBER_SIGN> για <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "23": "Πάρτε την έξοδο <NAME_SIGN>.",
+        "25": "Πάρτε την έξοδο <NAME_SIGN> προς <BRANCH_SIGN>.",
+        "27": "Πάρτε την έξοδο <NAME_SIGN> προς <TOWARD_SIGN>.",
+        "29": "Πάρτε την έξοδο <NAME_SIGN> για <BRANCH_SIGN> προς <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Exit the building.",
+        "1": "Exit the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Βγείτε από τον κυκλικό κόμβο.",
+        "1": "Βγείτε από τον κυκλικό κόμβο προς <STREET_NAMES>.",
+        "2": "Βγείτε από τον κυκλικό κόμβο προς <BEGIN_STREET_NAMES>. Συνεχίστε στη <STREET_NAMES>.",
+        "3": "Βγείτε από τον κυκλικό κόμβο προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Βγείτε από τον κυκλικό κόμβο.",
+        "1": "Βγείτε από τον κυκλικό κόμβο προς <STREET_NAMES>.",
+        "2": "Βγείτε από τον κυκλικό κόμβο προς <BEGIN_STREET_NAMES>.",
+        "3": "Βγείτε από τον κυκλικό κόμβο προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Πάρτε την έξοδο στα <RELATIVE_DIRECTION>.",
+        "1": "Βγείτε στην έξοδο <NUMBER_SIGN> στα <RELATIVE_DIRECTION>.",
+        "2": "Πάρτε την έξοδο <BRANCH_SIGN> στα <RELATIVE_DIRECTION>.",
+        "3": "Πάρτε την έξοδο <NUMBER_SIGN> στα <RELATIVE_DIRECTION> στη <BRANCH_SIGN>.",
+        "4": "Πάρτε την έξοδο στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "5": "Πάρτε την έξοδο <NUMBER_SIGN> στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "6": "Πάρτε την έξοδο <BRANCH_SIGN> στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "7": "Πάρτε την έξοδο <NUMBER_SIGN> στα <RELATIVE_DIRECTION> για <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "8": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION>.",
+        "10": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION> προς <BRANCH_SIGN>.",
+        "12": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "14": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION> για <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "15": "Πάρτε την έξοδο.",
+        "16": "Βγείτε στην έξοδο <NUMBER_SIGN>.",
+        "17": "Πάρτε την έξοδο <BRANCH_SIGN>.",
+        "18": "Πάρτε την έξοδο <NUMBER_SIGN> προς <BRANCH_SIGN>.",
+        "19": "Πάρτε την έξοδο προς <TOWARD_SIGN>.",
+        "20": "Πάρτε την έξοδο <NUMBER_SIGN> προς <TOWARD_SIGN>.",
+        "21": "Πάρτε την έξοδο <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "22": "Πάρτε την έξοδο <NUMBER_SIGN> για <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "23": "Πάρτε την έξοδο <NAME_SIGN>.",
+        "25": "Πάρτε την έξοδο <NAME_SIGN> προς <BRANCH_SIGN>.",
+        "27": "Πάρτε την έξοδο <NAME_SIGN> προς <TOWARD_SIGN>.",
+        "29": "Πάρτε την έξοδο <NAME_SIGN> για <BRANCH_SIGN> προς <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Έξοδος <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Μείνετε <RELATIVE_DIRECTION> στη διχάλα.",
+        "1": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN>.",
+        "2": "Μείνετε <RELATIVE_DIRECTION> για να πάρετε τη <STREET_NAMES>.",
+        "3": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> προς <STREET_NAMES>.",
+        "4": "Συνεχίστε <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "5": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> προς <TOWARD_SIGN>.",
+        "6": "Μείνετε <RELATIVE_DIRECTION> για να πάρετε τη <STREET_NAMES> προς <TOWARD_SIGN>.",
+        "7": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> για <STREET_NAMES> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "ευθεία",
+        "δεξιά"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Μείνετε <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES>.",
+        "1": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> για να παραμείνετε στην<STREET_NAMES>.",
+        "2": "Μείνετε <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES> προς <TOWARD_SIGN>.",
+        "3": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> για να παραμείνετε στη <STREET_NAMES> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "ευθεία",
+        "δεξιά"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Μείνετε <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES>.",
+        "1": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> για να παραμείνετε στην<STREET_NAMES>.",
+        "2": "Μείνετε <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES> προς <TOWARD_SIGN>.",
+        "3": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> για να παραμείνετε στη <STREET_NAMES> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "ευθεία",
+        "δεξιά"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Μείνετε <RELATIVE_DIRECTION> στη διχάλα.",
+        "1": "Μείνετε <RELATIVE_DIRECTION> για να πάρετε την έξοδο <NUMBER_SIGN>.",
+        "2": "Μείνετε <RELATIVE_DIRECTION> για να πάρετε τη <STREET_NAMES>.",
+        "3": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> προς <STREET_NAMES>.",
+        "4": "Συνεχίστε <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "5": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> προς <TOWARD_SIGN>.",
+        "6": "Μείνετε <RELATIVE_DIRECTION> για να πάρετε τη <STREET_NAMES> προς <TOWARD_SIGN>.",
+        "7": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> για <STREET_NAMES> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "ευθεία",
+        "δεξιά"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Continue to <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Μπείτε.",
+        "1": "Μπείτε <RELATIVE_DIRECTION>.",
+        "2": "Μπείτε στην <STREET_NAMES>.",
+        "3": "Μπείτε <RELATIVE_DIRECTION> στη <STREET_NAMES>.",
+        "4": "Μπείτε στη <TOWARD_SIGN>.",
+        "5": "Μπείτε <RELATIVE_DIRECTION> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Μπείτε.",
+        "1": "Μπείτε <RELATIVE_DIRECTION>.",
+        "2": "Μπείτε στην <STREET_NAMES>.",
+        "3": "Μπείτε <RELATIVE_DIRECTION> στη <STREET_NAMES>.",
+        "4": "Μπείτε στη <TOWARD_SIGN>.",
+        "5": "Μπείτε <RELATIVE_DIRECTION> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Pass <OBJECT_LABEL>.",
+        "1": "Pass traffic signals on <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "the gate",
+        "the bollards",
+        "ways intersection"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Ταξιδέψτε <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "στάση",
+        "other": "στάσεις"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Συνεχίστε για <LENGTH>.",
+        "1": "Συνεχίστε στη <STREET_NAMES> για <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> χιλιόμετρα",
+        "1 χιλιόμετρο",
+        "<METERS> μέτρα",
+        "λιγότερο από 10 μέτρα"
+      ],
+      "us_customary_lengths": [
+        "<MILES> μίλια",
+        "1 μίλι",
+        "μισό μίλι",
+        "ένα τέταρτο μίλι",
+        "<FEET> πόδια",
+        "λιγότερο από 10 πόδια"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Πάρτε τη ράμπα στα <RELATIVE_DIRECTION>.",
+        "1": "Πάρτε τη ράμπα <BRANCH_SIGN> στα <RELATIVE_DIRECTION>.",
+        "2": "Πάρτε τη ράμπα στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "3": "Πάρτε τη ράμπα <BRANCH_SIGN> στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "4": "Πάρτε τη ράμπα <NAME_SIGN> στα <RELATIVE_DIRECTION>.",
+        "5": "Στρίψτε <RELATIVE_DIRECTION> για να πάρετε τη ράμπα.",
+        "6": "Στρίψτε <RELATIVE_DIRECTION> για να πάρετε τη ράμπα <BRANCH_SIGN>.",
+        "7": "Στρίψτε <RELATIVE_DIRECTION> για να πάρετε τη ράμπα προς <TOWARD_SIGN>.",
+        "8": "Στρίψτε <RELATIVE_DIRECTION> για να πάρετε τη ράμπα <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "9": "Στρίψτε <RELATIVE_DIRECTION> για να πάρετε τη ράμπα <NAME_SIGN>.",
+        "10": "Πάρτε τη ράμπα.",
+        "11": "Πάρτε τη ράμπα <BRANCH_SIGN>.",
+        "12": "Πάρτε τη ράμπα προς <TOWARD_SIGN>.",
+        "13": "Πάρτε τη ράμπα <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "14": "Πάρτε τη ράμπα <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Μείνετε ευθεία για να πάρετε τη ράμπα.",
+        "1": "Μείνετε ευθεία για να πάρετε την <BRANCH_SIGN> ράμπα.",
+        "2": "Μείνετε ευθεία για να πάρετε τη ράμπα προς <TOWARD_SIGN>.",
+        "3": "Μείνετε ευθεία για να πάρετε τη ράμπα <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "4": "Μείνετε ευθεία για να πάρετε τη ράμπα <NAME_SIGN>."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Μείνετε ευθεία για να πάρετε τη ράμπα.",
+        "1": "Μείνετε ευθεία για να πάρετε τη <BRANCH_SIGN> ράμπα.",
+        "2": "Μείνετε ευθεία για να πάρετε τη ράμπα προς <TOWARD_SIGN>.",
+        "3": "Μείνετε ευθεία για να πάρετε τη ράμπα <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "4": "Μείνετε ευθεία για να πάρετε τη ράμπα <NAME_SIGN>."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Πάρτε τη ράμπα στα <RELATIVE_DIRECTION>.",
+        "1": "Πάρτε τη ράμπα <BRANCH_SIGN> στα <RELATIVE_DIRECTION>.",
+        "2": "Πάρτε τη ράμπα στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "3": "Πάρτε τη ράμπα <BRANCH_SIGN> στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "4": "Πάρτε τη ράμπα <NAME_SIGN> στα <RELATIVE_DIRECTION>.",
+        "5": "Στρίψτε <RELATIVE_DIRECTION> για να πάρετε τη ράμπα.",
+        "6": "Στρίψτε <RELATIVE_DIRECTION> για να πάρετε τη ράμπα <BRANCH_SIGN>.",
+        "7": "Στρίψτε <RELATIVE_DIRECTION> για να πάρετε τη ράμπα προς <TOWARD_SIGN>.",
+        "8": "Στρίψτε <RELATIVE_DIRECTION> για να πάρετε τη ράμπα <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "9": "Στρίψτε <RELATIVE_DIRECTION> για να πάρετε τη ράμπα <NAME_SIGN>.",
+        "10": "Πάρτε τη ράμπα.",
+        "11": "Πάρτε τη ράμπα <BRANCH_SIGN>.",
+        "12": "Πάρτε τη ράμπα προς <TOWARD_SIGN>.",
+        "13": "Πάρτε τη ράμπα <BRANCH_SIGN> προς <TOWARD_SIGN>.",
+        "14": "Πάρτε τη ράμπα <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION>.",
+        "1": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION> προς <STREET_NAMES>.",
+        "2": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION> στη <BEGIN_STREET_NAMES>. Συνεχίστε στη <STREET_NAMES>.",
+        "3": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES>.",
+        "4": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION> για να παραμείνετε στη <JUNCTION_NAME>.",
+        "5": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION> προς <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION>.",
+        "1": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION> προς <STREET_NAMES>.",
+        "2": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION> προς <BEGIN_STREET_NAMES>.",
+        "3": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES>.",
+        "4": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION> για να παραμείνετε στη <JUNCTION_NAME>.",
+        "5": "Πάρτε κλειστή στροφή <RELATIVE_DIRECTION> προς <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "Κατευθυνθείτε <CARDINAL_DIRECTION>.",
+        "1": "Κατευθυνθείτε <CARDINAL_DIRECTION> στη <STREET_NAMES>.",
+        "2": "Κατευθυνθείτε <CARDINAL_DIRECTION> στη <BEGIN_STREET_NAMES>. Συνεχίστε στη <STREET_NAMES>.",
+        "4": "Οδηγήστε <CARDINAL_DIRECTION>.",
+        "5": "Οδηγήστε <CARDINAL_DIRECTION> στη <STREET_NAMES>.",
+        "6": "Οδηγήστε <CARDINAL_DIRECTION> στη <BEGIN_STREET_NAMES>. Συνεχίστε στη <STREET_NAMES>.",
+        "8": "Περπατήστε <CARDINAL_DIRECTION>.",
+        "9": "Περπατήστε <CARDINAL_DIRECTION> στη <STREET_NAMES>.",
+        "10": "Περπατήστε <CARDINAL_DIRECTION> στη <BEGIN_STREET_NAMES>. Συνεχίστε στη <STREET_NAMES>.",
+        "16": "Προχωρήστε <CARDINAL_DIRECTION>.",
+        "17": "Προχωρήστε <CARDINAL_DIRECTION> στη <STREET_NAMES>. ",
+        "18": "Προχωρήστε <CARDINAL_DIRECTION> στη <BEGIN_STREET_NAMES>. Συνεχίστε στη <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "βόρεια",
+        "βορειοανατολικά",
+        "ανατολικά",
+        "νοτιοανατολικά",
+        "νότια",
+        "νοτιοδυτικά",
+        "δυτικά",
+        "βορειοδυτικά"
+      ],
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Κατευθυνθείτε <CARDINAL_DIRECTION>.",
+        "1": "Κατευθυνθείτε <CARDINAL_DIRECTION> για <LENGTH>.",
+        "2": "Κατευθυνθείτε <CARDINAL_DIRECTION> στη <STREET_NAMES>.",
+        "3": "Κατευθυνθείτε <CARDINAL_DIRECTION> στη <STREET_NAMES> για <LENGTH>.",
+        "4": "Κατευθυνθείτε <CARDINAL_DIRECTION> στη <BEGIN_STREET_NAMES>.",
+        "5": "Οδηγήστε <CARDINAL_DIRECTION>.",
+        "6": "Οδηγήστε <CARDINAL_DIRECTION> για <LENGTH>.",
+        "7": "Οδηγήστε <CARDINAL_DIRECTION> στη <STREET_NAMES>.",
+        "8": "Οδηγήστε <CARDINAL_DIRECTION> στη <STREET_NAMES>για <LENGTH>.",
+        "9": "Οδηγήστε <CARDINAL_DIRECTION> στη <BEGIN_STREET_NAMES>.",
+        "10": "Περπατήστε <CARDINAL_DIRECTION>.",
+        "11": "Περπατήστε <CARDINAL_DIRECTION> για <LENGTH>.",
+        "12": "Περπατήστε <CARDINAL_DIRECTION> στη <STREET_NAMES>.",
+        "13": "Περπατήστε <CARDINAL_DIRECTION> στη <STREET_NAMES>για <LENGTH>.",
+        "14": "Περπατήστε <CARDINAL_DIRECTION> στη <BEGIN_STREET_NAMES>.",
+        "15": "Προχωρήστε <CARDINAL_DIRECTION>.",
+        "16": "Προχωρήστε <CARDINAL_DIRECTION> για <LENGTH>. ",
+        "17": "Προχωρήστε <CARDINAL_DIRECTION> στη <STREET_NAMES>. ",
+        "18": "Προχωρήστε <CARDINAL_DIRECTION> στη <STREET_NAMES>για <LENGTH>.",
+        "19": "Προχωρήστε <CARDINAL_DIRECTION> στη <BEGIN_STREET_NAMES>. "
+      },
+      "cardinal_directions": [
+        "βοράς",
+        "βορειοανατολικά",
+        "ανατολή",
+        "βορειοδυτικά",
+        "νότος",
+        "νοτιοδυτικά",
+        "δύση",
+        "βορειοδυτικά"
+      ],
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> χιλιόμετρα",
+        "1 χιλιόμετρο",
+        "<METERS> μέτρα",
+        "λιγότερο από 10 μέτρα"
+      ],
+      "us_customary_lengths": [
+        "<MILES> μίλια",
+        "1 μίλι",
+        "μισό μίλι",
+        "ένα τέταρτο μίλι",
+        "<FEET> πόδια",
+        "λιγότερο από 10 πόδια"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Take the stairs.",
+        "1": "Take the stairs to <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Πάρτε το <TRANSIT_NAME>.(<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Πάρτε το <TRANSIT_NAME> προς <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "τραμ",
+        "μετρό",
+        "τρένο",
+        "λεωφορείο",
+        "πλοίο",
+        "τελεφερίκ",
+        "γόνδολα",
+        "τελεφερίκ"
+      ],
+      "transit_stop_count_labels": {
+        "one": "στάση",
+        "other": "στάσεις"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Βγείτε από το σταθμό.",
+        "1": "Βγείτε από τον <TRANSIT_STOP>.",
+        "2": "Βγείτε από τον <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Σταθμός"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Βγείτε από το σταθμό.",
+        "1": "Βγείτε από το <TRANSIT_STOP>.",
+        "2": "Βγείτε από <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Σταθμό"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Μπείτε στο σταθμό.",
+        "1": "Μπείτε στο <TRANSIT_STOP>.",
+        "2": "Μπείτε στο <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Σταθμός"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Μπείτε στο σταθμό.",
+        "1": "Μπείτε στο <TRANSIT_STOP>.",
+        "2": "Μπείτε στο <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Σταθμό"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Μεταφερθείτε στο σταθμό.",
+        "1": "Μεταφερθείτε στο <TRANSIT_STOP>.",
+        "2": "Μεταφερθείτε στο <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Σταθμό"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Μεταφερθείτε στο σταθμό.",
+        "1": "Μεταφερθείτε στο <TRANSIT_STOP>.",
+        "2": "Μεταφερθείτε στο <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Σταθμός"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Παραμείνετε στο <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Παραμείνετε στο <TRANSIT_NAME> προς <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "τραμ",
+        "μετρό",
+        "τρένο",
+        "λεωφορείο",
+        "πλοίο",
+        "τελεφερίκ",
+        "γόνδολα",
+        "τελεφερίκ"
+      ],
+      "transit_stop_count_labels": {
+        "one": "στάση",
+        "other": "στάσεις"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Παραμείνετε στο <TRANSIT_NAME>.",
+        "1": "Παραμείνετε στο <TRANSIT_NAME> προς <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "τραμ",
+        "μετρό",
+        "τρένο",
+        "λεωφορείο",
+        "πλοίο",
+        "τελεφερίκ",
+        "γόνδολα",
+        "τελεφερίκ"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Μεταφερθείτε για να πάρετε το <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Μεταφερθείτε για να πάρετε το <TRANSIT_NAME> προς <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "τραμ",
+        "μετρό",
+        "τρένο",
+        "λεωφορείο",
+        "πλοίο",
+        "τελεφερίκ",
+        "γόνδολα",
+        "τελεφερίκ"
+      ],
+      "transit_stop_count_labels": {
+        "one": "στάση",
+        "other": "στάσεις"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Μεταφερθείτε για να πάρετε το <TRANSIT_NAME>.",
+        "1": "Μεταφερθείτε για να πάρετε το <TRANSIT_NAME> προς <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "τραμ",
+        "μετρό",
+        "τρένο",
+        "λεωφορείο",
+        "πλοίο",
+        "τελεφερίκ",
+        "γόνδολα",
+        "τελεφερίκ"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Πάρτε το <TRANSIT_NAME>.",
+        "1": "Πάρτε το <TRANSIT_NAME> προς <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "τραμ",
+        "μετρό",
+        "τρένο",
+        "λεωφορείο",
+        "πλοίο",
+        "τελεφερίκ",
+        "γόνδολα",
+        "τελεφερίκ"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "Στρίψτε <RELATIVE_DIRECTION>.",
+        "1": "Στρίψτε <RELATIVE_DIRECTION> στη <STREET_NAMES>.",
+        "2": "Στρίψτε <RELATIVE_DIRECTION> στη <BEGIN_STREET_NAMES>. Συνεχίστε στη <STREET_NAMES>.",
+        "3": "Στρίψτε <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES>.",
+        "4": "Στρίψτε <RELATIVE_DIRECTION> στη <JUNCTION_NAME>.",
+        "5": "Στρίψτε <RELATIVE_DIRECTION> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Στρίψτε <RELATIVE_DIRECTION>.",
+        "1": "Στρίψτε <RELATIVE_DIRECTION> στη <STREET_NAMES>.",
+        "2": "Στρίψτε <RELATIVE_DIRECTION> στη <BEGIN_STREET_NAMES>.",
+        "3": "Στρίψτε <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES>.",
+        "4": "Στρίψτε <RELATIVE_DIRECTION> στη <JUNCTION_NAME>.",
+        "5": "Στρίψτε <RELATIVE_DIRECTION> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Κάντε αναστροφή <RELATIVE_DIRECTION>.",
+        "1": "Κάντε αναστροφή <RELATIVE_DIRECTION> στη <STREET_NAMES>.",
+        "2": "Κάντε αναστροφή <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES>.",
+        "3": "Κάντε αναστροφή <RELATIVE_DIRECTION> στη <CROSS_STREET_NAMES>.",
+        "4": "Κάντε αναστροφή <RELATIVE_DIRECTION> στη <CROSS_STREET_NAMES> για <STREET_NAMES>.",
+        "5": "Κάντε αναστροφή <RELATIVE_DIRECTION> στη <CROSS_STREET_NAMES> για να παραμείνετε στη <STREET_NAMES>.",
+        "6": "Στρίψτε ελαφρώς <RELATIVE_DIRECTION> στη <JUNCTION_NAME>.",
+        "7": "Κάντε αναστροφή <RELATIVE_DIRECTION> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Κάντε αναστροφή <RELATIVE_DIRECTION>.",
+        "1": "Κάντε αναστροφή <RELATIVE_DIRECTION> στη <STREET_NAMES>.",
+        "2": "Κάντε αναστροφή <RELATIVE_DIRECTION> για να παραμείνετε στη <STREET_NAMES>.",
+        "3": "Κάντε αναστροφή <RELATIVE_DIRECTION> στη <CROSS_STREET_NAMES>.",
+        "4": "Κάντε αναστροφή <RELATIVE_DIRECTION> στη <CROSS_STREET_NAMES> για <STREET_NAMES>.",
+        "5": "Κάντε αναστροφή <RELATIVE_DIRECTION> στη <CROSS_STREET_NAMES> για να παραμείνετε στη <STREET_NAMES>.",
+        "6": "Κάντε αναστροφή <RELATIVE_DIRECTION> στη <JUNCTION_NAME>.",
+        "7": "Κάντε αναστροφή <RELATIVE_DIRECTION> προς <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "διάβαση πεζών",
+        "ποδηλατοδρόμος ",
+        "μονοπάτι ποδηλασίας βουνού",
+        "the crosswalk",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
+      ],
+      "relative_directions": [
+        "αριστερά",
+        "δεξιά"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Στη συνέχεια <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Στη συνέχεια, σε <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> χιλιόμετρα",
+        "1 χιλιόμετρο",
+        "<METERS> μέτρα",
+        "λιγότερο από 10 μέτρα"
+      ],
+      "us_customary_lengths": [
+        "<MILES> μίλια",
+        "1 μίλι",
+        "μισό μίλι",
+        "ένα τέταρτο μίλι",
+        "<FEET> πόδια",
+        "λιγότερο από 10 πόδια"
+      ]
+    }
+  },
+  "posix_locale": "el_GR.UTF-8",
+  "aliases": [
+    "el"
+  ]
+}

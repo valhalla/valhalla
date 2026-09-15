@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Po <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometrov",
+        "1 kilometer",
+        "<METERS> metrov",
+        "menej ako 10 metrov"
+      ],
+      "us_customary_lengths": [
+        "<MILES> míľ",
+        "1 míľu",
+        "pol míle",
+        "štvrť míle",
+        "<FEET> stôp",
+        "menej ako 10 stôp"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Príjazd: <TIME>.",
+        "1": "Príjazd: <TIME> na <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Príchod o<TIME>.",
+        "1": "Príchod o <TIME> na <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Odbočte mierne <RELATIVE_DIRECTION>.",
+        "1": "Odbočte mierne <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Odbočte mierne <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
+        "3": "Odbočte mierne <RELATIVE_DIRECTION>, aby ste zostali na <STREET_NAMES>.",
+        "4": "Odbočte mierne <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
+        "5": "Odbočte mierne <RELATIVE_DIRECTION> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocesta",
+        "cesta pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Mierne <RELATIVE_DIRECTION>.",
+        "1": "Mierne <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Mierne <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
+        "3": "Mierne <RELATIVE_DIRECTION> a zostaňte na <STREET_NAMES>.",
+        "4": "Mierne <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
+        "5": "Mierne <RELATIVE_DIRECTION> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> prechádza na <STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> prechádza na <STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Pokračujte.",
+        "1": "Pokračujte po <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Pokračujte.",
+        "1": "Pokračujte <LENGTH>.",
+        "2": "Pokračujte po <STREET_NAMES>.",
+        "3": "Pokračujte <LENGTH> po <STREET_NAMES>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometrov",
+        "1 kilometer",
+        "<METERS> metrov",
+        "menej ako 10 metrov"
+      ],
+      "us_customary_lengths": [
+        "<MILES> míl",
+        "1 míla",
+        "pol míle",
+        "štvrť míle",
+        "<FEET> stôp",
+        "menej ako 10 stôp"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Pokračujte.",
+        "1": "Pokračujte po <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Odjazd: <TIME>.",
+        "1": "Odjazd: <TIME> z <TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Odchádzate o <TIME>.",
+        "1": "Odchádzate o <TIME> z <TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Dorazili ste do cieľa.",
+        "1": "Dorazili ste do <DESTINATION>.",
+        "2": "Váš cieľ je <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> je <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Dorazili ste do cieľa.",
+        "1": "Dorazili ste do <DESTINATION>.",
+        "2": "Váš cieľ je <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> je <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Blížite sa do cieľa.",
+        "1": "Blížite sa ku <DESTINATION>.",
+        "2": "Váš cieľ bude <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> bude <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Použite výťah.",
+        "1": "Použite výťah na <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Vojdite do budovy.",
+        "1": "Vojdite do budovy a pokračujte po <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechode pre chodcov"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Vojdite na trajekt.",
+        "1": "Vojdite na <STREET_NAMES>.",
+        "2": "Vojdite na <FERRY_LABEL> <STREET_NAMES>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "ferry_label": "trajekt"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Vojdite na trajekt.",
+        "1": "Vojdite na <STREET_NAMES>.",
+        "2": "Vojdite na <FERRY_LABEL> <STREET_NAMES>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "ferry_label": "trajekt"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Vojdite na kruhový objazd.",
+        "1": "Vojdite na kruhový objazd a vyjdite <ORDINAL_VALUE> výjazdom.",
+        "2": "Vojdite na kruhový objazd a vyjdite <ORDINAL_VALUE> výjazdom na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Vojdite na kruhový objazd a vyjdite <ORDINAL_VALUE> výjazdom na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Vojdite na kruhový objazd a vyjdite <ORDINAL_VALUE> výjazdom smer <TOWARD_SIGN>.",
+        "5": "Vojdite na kruhový objazd a vyjdite výjazdom na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Vojdite na kruhový objazd a vyjdite výjazdom na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Vojdite na kruhový objazd a vyjdite výjazdom smer <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Vojdite na<STREET_NAMES> a vyjdite <ORDINAL_VALUE> výjazdom na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Vojdite <STREET_NAMES> a vyjdite <ORDINAL_VALUE> výjazdom na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Vojdite <STREET_NAMES> a vyjdite výjazdom na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Vojdite <STREET_NAMES> a vyjdite výjazdom na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "ordinal_values": [
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Vojdite na kruhový objazd.",
+        "1": "Vojdite na kruhový objazd a vyjdite <ORDINAL_VALUE> výjazdom.",
+        "2": "Vojdite na kruhový objazd a vyjdite <ORDINAL_VALUE> výjazdom na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Vojdite na kruhový objazd a vyjdite <ORDINAL_VALUE> výjazdom na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Vojdite na kruhový objazd a vyjdite <ORDINAL_VALUE> výjazdom smer <TOWARD_SIGN>.",
+        "5": "Vojdite na kruhový objazd a vyjdite výjazdom na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Vojdite na kruhový objazd a vyjdite výjazdom na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Vojdite na kruhový objazd a vyjdite výjazdom smer <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Vojdite na<STREET_NAMES> a vyjdite <ORDINAL_VALUE> výjazdom na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Vojdite na<STREET_NAMES> a vyjdite <ORDINAL_VALUE> výjazdom na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Vojdite <STREET_NAMES> a vyjdite výjazdom na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Vojdite <STREET_NAMES> a vyjdite výjazdom na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "ordinal_values": [
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Choďte po pohyblivých schodoch.",
+        "1": "Choďte po pohyblivých schodoch na <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Zídite <RELATIVE_DIRECTION>.",
+        "1": "Použite výjazd <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Použite výjazd <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Použite výjazd <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
+        "4": "Použite výjazd <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "5": "Použite výjazd <NUMBER_SIGN> <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "6": "Použite výjazd <BRANCH_SIGN> <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "7": "Použite výjazd <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "8": "Použite výjazd <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Použite výjazd <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
+        "12": "Použite výjazd <NAME_SIGN> <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "14": "Použite výjazd <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "15": "Použite výjazd.",
+        "16": "Použite výjazd <NUMBER_SIGN>.",
+        "17": "Použite výjazd <BRANCH_SIGN>.",
+        "18": "Použite výjazd <NUMBER_SIGN> na <BRANCH_SIGN>.",
+        "19": "Použite výjazd smer <TOWARD_SIGN>.",
+        "20": "Použite výjazd <NUMBER_SIGN> smer <TOWARD_SIGN>.",
+        "21": "Použite výjazd <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "22": "Použite výjazd <NUMBER_SIGN> na <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "23": "Použite výjazd <NAME_SIGN>.",
+        "25": "Použite výjazd <NAME_SIGN> na <BRANCH_SIGN>.",
+        "27": "Použite výjazd <NAME_SIGN> smer <TOWARD_SIGN>.",
+        "29": "Použite výjazd <NAME_SIGN> na <BRANCH_SIGN> smer <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Vyjdite z budovy.",
+        "1": "Vyjdite z budovy a pokračujte po <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechode pre chodcov"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Vyjdite z kruhového objazdu.",
+        "1": "Vyjdite z kruhového objazdu na <STREET_NAMES>.",
+        "2": "Vyjdite z kruhového objazdu na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
+        "3": "Vyjdite z kruhového objazdu smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Vyjdite z kruhového objazdu.",
+        "1": "Vyjdite z kruhového objazdu na <STREET_NAMES>.",
+        "2": "Vyjdite z kruhového objazdu na <BEGIN_STREET_NAMES>.",
+        "3": "Vyjdite z kruhového objazdu smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Zídite <RELATIVE_DIRECTION>.",
+        "1": "Použite výjazd <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Použite výjazd <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Použite výjazd <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
+        "4": "Použite výjazd <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "5": "Použite výjazd <NUMBER_SIGN> <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "6": "Použite výjazd <BRANCH_SIGN> <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "7": "Použite výjazd <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "8": "Použite výjazd <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Použite výjazd <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
+        "12": "Použite výjazd <NAME_SIGN> <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "14": "Použite výjazd <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "15": "Použite výjazd.",
+        "16": "Použite výjazd <NUMBER_SIGN>.",
+        "17": "Použite výjazd <BRANCH_SIGN>.",
+        "18": "Použite výjazd <NUMBER_SIGN> na <BRANCH_SIGN>.",
+        "19": "Použite výjazd smer <TOWARD_SIGN>.",
+        "20": "Použite výjazd <NUMBER_SIGN> smer <TOWARD_SIGN>.",
+        "21": "Použite výjazd <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "22": "Použite výjazd <NUMBER_SIGN> na <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "23": "Použite výjazd <NAME_SIGN>.",
+        "25": "Použite výjazd <NAME_SIGN> na <BRANCH_SIGN>.",
+        "27": "Použite výjazd <NAME_SIGN> smer <TOWARD_SIGN>.",
+        "29": "Použite výjazd <NAME_SIGN> na <BRANCH_SIGN> smer <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Výjazd <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Na rozvetvení sa držte <RELATIVE_DIRECTION>.",
+        "1": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN>.",
+        "2": "Držte sa <RELATIVE_DIRECTION> k <STREET_NAMES>.",
+        "3": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN> na <STREET_NAMES>.",
+        "4": "Držte sa <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "5": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN> smer <TOWARD_SIGN>.",
+        "6": "Držte sa <RELATIVE_DIRECTION> k <STREET_NAMES> smer <TOWARD_SIGN>.",
+        "7": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN> na <STREET_NAMES> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "rovno",
+        "vpravo"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Držte sa <RELATIVE_DIRECTION>, aby ste zostali na <STREET_NAMES>.",
+        "1": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN>, aby ste zostali na <STREET_NAMES>.",
+        "2": "Držte sa <RELATIVE_DIRECTION>, aby ste zostali na <STREET_NAMES> smer <TOWARD_SIGN>.",
+        "3": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN>, aby ste zostali na <STREET_NAMES> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "rovno",
+        "vpravo"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Držte sa <RELATIVE_DIRECTION> a zostaňte na <STREET_NAMES>.",
+        "1": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN> a zostaňte na <STREET_NAMES>.",
+        "2": "Držte sa <RELATIVE_DIRECTION>, aby ste zostali na <STREET_NAMES> smer <TOWARD_SIGN>.",
+        "3": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN> a zostaňte na <STREET_NAMES> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "rovno",
+        "vpravo"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Na rozvetvení sa držte <RELATIVE_DIRECTION>.",
+        "1": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN>.",
+        "2": "Držte sa <RELATIVE_DIRECTION> k <STREET_NAMES>.",
+        "3": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN> na <STREET_NAMES>.",
+        "4": "Držte sa <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "5": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN> smer <TOWARD_SIGN>.",
+        "6": "Držte sa <RELATIVE_DIRECTION> k <STREET_NAMES> smer <TOWARD_SIGN>.",
+        "7": "Držte sa <RELATIVE_DIRECTION> k výjazdu <NUMBER_SIGN> na <STREET_NAMES> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "rovno",
+        "vpravo"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Continue to <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Pripojte sa.",
+        "1": "Pripojte sa <RELATIVE_DIRECTION>.",
+        "2": "Pripojte sa na <STREET_NAMES>.",
+        "3": "Pripojte sa <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Pripojte sa.",
+        "1": "Pripojte sa <RELATIVE_DIRECTION>.",
+        "2": "Pripojte sa na <STREET_NAMES>.",
+        "3": "Pripojte sa <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Prejdite<OBJECT_LABEL>.",
+        "1": "Prejdite semaformi na <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "bránu",
+        "stĺpiky",
+        "križovanie ciest"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Choďte <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "zastávku",
+        "other": "zastávok"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Pokračujte <LENGTH>.",
+        "1": "Pokračujte po <STREET_NAMES> <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometrov",
+        "1 kilometer",
+        "<METERS> metrov",
+        "menej ako 10 metrov"
+      ],
+      "us_customary_lengths": [
+        "<MILES> míl",
+        "1 mílu",
+        "pol míle",
+        "štvrť míle",
+        "<FEET> stôp",
+        "menej ako 10 stôp"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Použite nájazd <RELATIVE_DIRECTION>.",
+        "1": "Použite nájazd <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Použite nájazd <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "3": "Použite nájazd <BRANCH_SIGN> <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "4": "Použite nájazd <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Odbočte <RELATIVE_DIRECTION> na nájazd.",
+        "6": "Odbočte <RELATIVE_DIRECTION> na nájazd <BRANCH_SIGN>.",
+        "7": "Odbočte <RELATIVE_DIRECTION> na nájazd smer <TOWARD_SIGN>.",
+        "8": "Odbočte <RELATIVE_DIRECTION> na nájazd <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "9": "Odbočte <RELATIVE_DIRECTION> na nájazd <NAME_SIGN>.",
+        "10": "Použite nájazd.",
+        "11": "Použite nájazd <BRANCH_SIGN>.",
+        "12": "Použite nájazd smer <TOWARD_SIGN>.",
+        "13": "Použite nájazd <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "14": "Použite nájazd <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Pokračujte rovno na nájazd.",
+        "1": "Pokračujte rovno na nájazd <BRANCH_SIGN>.",
+        "2": "Pokračujte rovno na nájazd smer <TOWARD_SIGN>.",
+        "3": "Pokračujte rovno na nájazd <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "4": "Pokračujte rovno na nájazd <NAME_SIGN>."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Pokračujte rovno na nájazd.",
+        "1": "Pokračujte rovno na nájazd <BRANCH_SIGN>.",
+        "2": "Pokračujte rovno na nájazd smer <TOWARD_SIGN>.",
+        "3": "Pokračujte rovno na nájazd <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "4": "Pokračujte rovno na nájazd <NAME_SIGN>."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Použite nájazd <RELATIVE_DIRECTION>.",
+        "1": "Použite nájazd <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Použite nájazd <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "3": "Použite nájazd <BRANCH_SIGN> <RELATIVE_DIRECTION> smer <TOWARD_SIGN>.",
+        "4": "Použite nájazd <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Odbočte <RELATIVE_DIRECTION> na nájazd.",
+        "6": "Odbočte <RELATIVE_DIRECTION> na nájazd <BRANCH_SIGN>.",
+        "7": "Odbočte <RELATIVE_DIRECTION> na nájazd smer <TOWARD_SIGN>.",
+        "8": "Odbočte <RELATIVE_DIRECTION> na nájazd <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "9": "Odbočte <RELATIVE_DIRECTION> na nájazd <NAME_SIGN>.",
+        "10": "Použite nájazd.",
+        "11": "Použite nájazd <BRANCH_SIGN>.",
+        "12": "Použite nájazd smer <TOWARD_SIGN>.",
+        "13": "Použite nájazd <BRANCH_SIGN> smer <TOWARD_SIGN>.",
+        "14": "Použite nájazd <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Odbočte ostro <RELATIVE_DIRECTION>.",
+        "1": "Odbočte ostro <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Odbočte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
+        "3": "Odbočte ostro <RELATIVE_DIRECTION>, aby ste zostali na <STREET_NAMES>.",
+        "4": "Odbočte ostro <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
+        "5": "Odbočte ostro <RELATIVE_DIRECTION> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Odbočte ostro <RELATIVE_DIRECTION>.",
+        "1": "Odbočte ostro <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Odbočte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
+        "3": "Odbočte ostro <RELATIVE_DIRECTION> a zostaňte na <STREET_NAMES>.",
+        "4": "Odbočte ostro <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
+        "5": "Odbočte ostro <RELATIVE_DIRECTION> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "Pohybujte sa na <CARDINAL_DIRECTION>.",
+        "1": "Pohybujte sa na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "2": "Pohybujte sa na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>.",
+        "4": "Choďte na <CARDINAL_DIRECTION>.",
+        "5": "Choďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "6": "Choďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>.",
+        "8": "Choďte na <CARDINAL_DIRECTION>.",
+        "9": "Choďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "10": "Choďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>.",
+        "16": "Choďte na <CARDINAL_DIRECTION>.",
+        "17": "Choďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "18": "Choďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "sever",
+        "severovýchod",
+        "východ",
+        "juhovýchod",
+        "juh",
+        "juhozápad",
+        "západ",
+        "severozápad"
+      ],
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Pohybujte sa na <CARDINAL_DIRECTION>.",
+        "1": "<LENGTH> sa pohybujte na <CARDINAL_DIRECTION>.",
+        "2": "Pohybujte sa na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "3": "<LENGTH> sa pohybujte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "4": "Pohybujte sa na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
+        "5": "Choďte na <CARDINAL_DIRECTION>.",
+        "6": "<LENGTH> choďte na <CARDINAL_DIRECTION>.",
+        "7": "Choďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "8": "<LENGTH> choďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "9": "Choďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
+        "10": "Choďte na <CARDINAL_DIRECTION>.",
+        "11": "<LENGTH> choďte na <CARDINAL_DIRECTION>.",
+        "12": "Choďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "13": "<LENGTH> choďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "14": "Choďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
+        "15": "Choďte na <CARDINAL_DIRECTION>.",
+        "16": "<LENGTH> choďte na <CARDINAL_DIRECTION>.",
+        "17": "Choďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "18": "<LENGTH> choďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "19": "Choďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "sever",
+        "severovýchod",
+        "východ",
+        "juhovýchod",
+        "juh",
+        "juhozápad",
+        "západ",
+        "severozápad"
+      ],
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometrov",
+        "1 kilometer",
+        "<METERS> metrov",
+        "Menej ako 10 metrov"
+      ],
+      "us_customary_lengths": [
+        "<MILES> míl",
+        "1 mílu",
+        "pol míle",
+        "štvrť míle",
+        "<FEET> stôp",
+        "menej ako 10 stôp"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Choďte po schodoch.",
+        "1": "Choďte po schodoch na <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Nastúpte na <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Nastúpte na <TRANSIT_NAME> smer <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "električku",
+        "metro",
+        "vlak",
+        "autobus",
+        "prívoz",
+        "lanovku",
+        "lanovku",
+        "lanovku"
+      ],
+      "transit_stop_count_labels": {
+        "one": "zastávka",
+        "other": "zastávok"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Vyjdite zo stanice.",
+        "1": "Vyjdite z <TRANSIT_STOP>.",
+        "2": "Vyjdite zo <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "stanice"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Vyjdite zo stanice.",
+        "1": "Vyjdite z <TRANSIT_STOP>.",
+        "2": "Vyjdite zo <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "stanice"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Vojdite do stanice.",
+        "1": "Vojdite do <TRANSIT_STOP>.",
+        "2": "Vojdite do <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "stanice"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Vojdite do stanice.",
+        "1": "Vojdite do <TRANSIT_STOP>.",
+        "2": "Vojdite do <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "stanice"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Na stanici prestúpte.",
+        "1": "Prestúpte na <TRANSIT_STOP>.",
+        "2": "Prestúpte na <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "stanici"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Na stanici prestúpte.",
+        "1": "Prestúpte na <TRANSIT_STOP>.",
+        "2": "Prestúpte na <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "stanici"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Zostaňte v <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Zostaňte v <TRANSIT_NAME> smer <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "električke",
+        "metre",
+        "vlaku",
+        "autobuse",
+        "prívoze",
+        "lanovke",
+        "lanovke",
+        "lanovke"
+      ],
+      "transit_stop_count_labels": {
+        "one": "zastávka",
+        "other": "zastávok"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Zostaňte v <TRANSIT_NAME>.",
+        "1": "Zostaňte v <TRANSIT_NAME> smer <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "električke",
+        "metre",
+        "vlaku",
+        "autobuse",
+        "prívoze",
+        "lanovke",
+        "lanovke",
+        "lanovke"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Prestúpte na <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Prestúpte na <TRANSIT_NAME> smer <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "električku",
+        "metro",
+        "vlak",
+        "autobus",
+        "prívoz",
+        "lanovku",
+        "lanovku",
+        "lanovku"
+      ],
+      "transit_stop_count_labels": {
+        "one": "zastávka",
+        "other": "zastávok"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Prestúpte na <TRANSIT_NAME>.",
+        "1": "Prestúpte na <TRANSIT_NAME> smer <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "električku",
+        "metro",
+        "vlak",
+        "autobus",
+        "prívoz",
+        "lanovku",
+        "lanovku",
+        "lanovku"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Nastúpte na <TRANSIT_NAME>.",
+        "1": "Nastúpte na <TRANSIT_NAME> smer <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "električku",
+        "metro",
+        "vlak",
+        "autobus",
+        "prívoz",
+        "lanovku",
+        "lanovku",
+        "lanovku"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "Odbočte <RELATIVE_DIRECTION>.",
+        "1": "Odbočte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Odbočte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
+        "3": "Odbočte <RELATIVE_DIRECTION>, aby ste zostali na <STREET_NAMES>.",
+        "4": "Odbočte<RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
+        "5": "Odbočte <RELATIVE_DIRECTION> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Odbočte <RELATIVE_DIRECTION>.",
+        "1": "Odbočte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Odbočte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
+        "3": "Odbočte <RELATIVE_DIRECTION> a zostaňte na <STREET_NAMES>.",
+        "4": "Odbočte <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
+        "5": "Odbočte <RELATIVE_DIRECTION> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Otočte sa <RELATIVE_DIRECTION>.",
+        "1": "Otočte sa <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Otočte sa <RELATIVE_DIRECTION> a zostaňte na <STREET_NAMES>.",
+        "3": "Otočte sa <RELATIVE_DIRECTION> cez <CROSS_STREET_NAMES>.",
+        "4": "Otočte sa <RELATIVE_DIRECTION> cez <CROSS_STREET_NAMES> na <STREET_NAMES>.",
+        "5": "Otočte sa <RELATIVE_DIRECTION> cez <CROSS_STREET_NAMES> a zostaňte na <STREET_NAMES>.",
+        "6": "Otočte sa <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
+        "7": "Otočte sa <RELATIVE_DIRECTION> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklocestu",
+        "cestu pre horské bicykle",
+        "priechod pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Otočte sa <RELATIVE_DIRECTION>.",
+        "1": "Otočte sa <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Otočte sa <RELATIVE_DIRECTION> a zostaňte na <STREET_NAMES>.",
+        "3": "Otočte sa <RELATIVE_DIRECTION> cez <CROSS_STREET_NAMES>.",
+        "4": "Otočte sa <RELATIVE_DIRECTION> cez <CROSS_STREET_NAMES> na <STREET_NAMES>.",
+        "5": "Otočte sa <RELATIVE_DIRECTION> cez <CROSS_STREET_NAMES> a zostaňte na <STREET_NAMES>.",
+        "6": "Otočte sa <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
+        "7": "Otočte sa <RELATIVE_DIRECTION> smer <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "chodníku",
+        "cykloceste",
+        "ceste pre horské bicykle",
+        "priechode pre chodcov",
+        "schodoch",
+        "moste",
+        "tuneli"
+      ],
+      "relative_directions": [
+        "vľavo",
+        "vpravo"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Potom <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Potom za <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometrov",
+        "1 kilometer",
+        "<METERS> metrov",
+        "menej ako 10 metrov"
+      ],
+      "us_customary_lengths": [
+        "<MILES> míľ",
+        "1 míľa",
+        "pol míle",
+        "štvrť míle",
+        "<FEET> stôp",
+        "menej ako 10 stôp"
+      ]
+    }
+  },
+  "posix_locale": "sk_SK.UTF-8",
+  "aliases": [
+    "sk"
+  ]
+}
