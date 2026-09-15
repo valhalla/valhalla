@@ -191,7 +191,7 @@ jobs:
         run: scripts/clang-tidy-only-diff.sh $(nproc)
 
       - name: Run tests
-        run: make -C build -j$(nproc) check
+        run: find locales && VERBOSE=1 make -C build -j$(nproc) check
       
       - name: Install & Package Valhalla
         run: |
