@@ -341,6 +341,7 @@ For example a bus request with the result in Spanish using the OSRM (Open Source
 | `et-EE` | `et` | Estonian (Estonia) |
 | `fi-FI` | `fi` | Finnish (Finland) |
 | `fr-FR` | `fr` | French (France) |
+| `he-IL` | `he` | Hebrew (Israel) |
 | `hi-IN` | `hi` | Hindi (India) |
 | `hu-HU` | `hu` | Hungarian (Hungary) |
 | `it-IT` | `it` | Italian (Italy) |
