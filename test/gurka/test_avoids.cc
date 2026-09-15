@@ -709,3 +709,47 @@ TEST(StandAlone, SuperTrivialExcludedConnection) {
     EXPECT_EQ(res.matrix().distances(0), 100000000); // kMaxCost
   }
 }
+
+TEST(StandAlone, SnapAwayFromExcludedEdge) {
+  // excluding x's location excludes Top; by default a location at x still snaps onto Top and
+  // fails to route, with search_filter.exclude_avoided_edges it snaps onto Bottom instead
+  const std::string ascii_map = R"(
+    A--x--B
+    |     |
+    C-----D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"name", "Top"}}},
+      {"CD", {{"highway", "residential"}, {"name", "Bottom"}}},
+      {"AC", {{"highway", "residential"}, {"name", "Left"}}},
+      {"BD", {{"highway", "residential"}, {"name", "Right"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 30);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/gurka_snap_away_excluded");
+
+  std::vector<PointLL> avoid_locs{map.nodes["x"]};
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto value = get_avoid_locs(avoid_locs, allocator);
+  auto req = build_route_request(doc, allocator, {map.nodes["x"], map.nodes["D"]}, "auto", value,
+                                 "/exclude_locations");
+
+  // default behavior: the origin snaps onto the excluded edge and there's no path from it
+  try {
+    gurka::do_action(Options::route, map, req);
+    FAIL() << "Expected to fail";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t";
+  }
+
+  // opting in via the search filter snaps the origin away from the excluded edge
+  rapidjson::Pointer("/locations/0/search_filter/exclude_avoided_edges").Set(doc, true);
+  rapidjson::StringBuffer sb;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+  doc.Accept(writer);
+
+  auto route = gurka::do_action(Options::route, map, sb.GetString());
+  gurka::assert::raw::expect_path(route, {"Bottom"});
+}

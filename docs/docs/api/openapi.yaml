@@ -460,6 +460,10 @@ components:
           type: boolean
           default: true
           description: When false, closed roads are allowed for this location.
+        exclude_avoided_edges:
+          type: boolean
+          default: false
+          description: Whether to exclude edges excluded via `exclude_locations`/`exclude_polygons`, so the location snaps to the nearest non-excluded edge instead.
         level:
           type: number
           description: If specified, will only consider edges that are on or traverse the passed floor level. Useful for indoor routing. It will set `search_cutoff` to a default value of 300 meters if no cutoff value is passed. Additionally, if a `search_cutoff` is passed, it will be clamped to 1000 meters.
