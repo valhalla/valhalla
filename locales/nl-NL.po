@@ -21,7 +21,7 @@ msgstr "<KILOMETERS> kilometer"
 
 msgctxt "instructions.approach_verbal_alert.replacement.metric_lengths.1"
 msgid "1 kilometer"
-msgstr ""
+msgstr "1 kilometer"
 
 msgctxt "instructions.approach_verbal_alert.replacement.metric_lengths.2"
 msgid "<METERS> meters"
@@ -119,19 +119,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.bear.replacement.relative_directions.0"
 msgid "left"
@@ -185,19 +185,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.bear_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -251,19 +251,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 #. e.g. Continue.
 msgctxt "instructions.continue_verbal.phrases.0"
@@ -319,19 +319,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.continue_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -339,7 +339,7 @@ msgstr "<KILOMETERS> kilometer"
 
 msgctxt "instructions.continue_verbal.replacement.metric_lengths.1"
 msgid "1 kilometer"
-msgstr ""
+msgstr "1 kilometer"
 
 msgctxt "instructions.continue_verbal.replacement.metric_lengths.2"
 msgid "<METERS> meters"
@@ -407,19 +407,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 #. e.g. Depart: 8:02 AM.
 msgctxt "instructions.depart.phrases.0"
@@ -562,7 +562,7 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.enter_building.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 #. e.g. Take the Ferry.
 msgctxt "instructions.enter_ferry.phrases.0"
@@ -598,19 +598,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.enter_ferry.replacement.ferry_label"
 msgid "Ferry"
@@ -650,19 +650,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.ferry_label"
 msgid "Ferry"
@@ -771,19 +771,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.enter_roundabout.replacement.ordinal_values.0"
 msgid "1st"
@@ -928,19 +928,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.0"
 msgid "1st"
@@ -1145,7 +1145,7 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.exit_building.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 #. e.g. Exit the roundabout.
 msgctxt "instructions.exit_roundabout.phrases.0"
@@ -1181,19 +1181,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 #. e.g. Exit the roundabout.
 msgctxt "instructions.exit_roundabout_verbal.phrases.0"
@@ -1229,19 +1229,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 #. e.g. Take the exit on the left.
 #. e.g. Take the exit on the right.
@@ -1433,19 +1433,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.keep.replacement.relative_directions.0"
 msgid "left"
@@ -1495,19 +1495,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.0"
 msgid "left"
@@ -1557,19 +1557,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1639,19 +1639,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.keep_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1668,7 +1668,7 @@ msgstr "Rechts"
 #. e.g. Continue to Level 2.
 msgctxt "instructions.level_change.phrases.0"
 msgid "Continue to <LEVEL>."
-msgstr ""
+msgstr "Ga verder naar <LEVEL>."
 
 #. e.g. Merge.
 msgctxt "instructions.merge.phrases.0"
@@ -1714,19 +1714,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.merge.replacement.relative_directions.0"
 msgid "left"
@@ -1780,19 +1780,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.merge_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1805,28 +1805,28 @@ msgstr "Rechts"
 #. e.g. Park your vehicle.
 msgctxt "instructions.park_vehicle.phrases.0"
 msgid "Park your vehicle"
-msgstr ""
+msgstr "Parkeer uw voertuig"
 
 #. e.g. Pass the gate.
 msgctxt "instructions.pass.phrases.0"
 msgid "Pass <OBJECT_LABEL>."
-msgstr ""
+msgstr "Passeer <OBJECT_LABEL>."
 
 msgctxt "instructions.pass.phrases.1"
 msgid "Pass traffic signals on <OBJECT_LABEL>."
-msgstr ""
+msgstr "Passeer de verkeerslichten bij <OBJECT_LABEL>."
 
 msgctxt "instructions.pass.replacement.object_labels.0"
 msgid "the gate"
-msgstr ""
+msgstr "het hek"
 
 msgctxt "instructions.pass.replacement.object_labels.1"
 msgid "the bollards"
-msgstr ""
+msgstr "de paaltjes"
 
 msgctxt "instructions.pass.replacement.object_labels.2"
 msgid "ways intersection"
-msgstr ""
+msgstr "kruising van wegen"
 
 #. e.g. Travel 1 stop.
 #. e.g. Travel 3 stops.
@@ -1868,19 +1868,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.post_transition_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -1888,7 +1888,7 @@ msgstr "<KILOMETERS> kilometer"
 
 msgctxt "instructions.post_transition_verbal.replacement.metric_lengths.1"
 msgid "1 kilometer"
-msgstr ""
+msgstr "1 kilometer"
 
 msgctxt "instructions.post_transition_verbal.replacement.metric_lengths.2"
 msgid "<METERS> meters"
@@ -2186,19 +2186,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.sharp.replacement.relative_directions.0"
 msgid "left"
@@ -2252,19 +2252,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.sharp_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -2390,19 +2390,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 #. e.g. Head east.
 #. e.g. Head north.
@@ -2558,19 +2558,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.start_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -2578,7 +2578,7 @@ msgstr "<KILOMETERS> kilometer"
 
 msgctxt "instructions.start_verbal.replacement.metric_lengths.1"
 msgid "1 kilometer"
-msgstr ""
+msgstr "1 kilometer"
 
 msgctxt "instructions.start_verbal.replacement.metric_lengths.2"
 msgid "<METERS> meters"
@@ -2637,11 +2637,11 @@ msgstr "Neem de <TRANSIT_NAME> richting <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT
 
 msgctxt "instructions.transit.replacement.empty_transit_name_labels.0"
 msgid "tram"
-msgstr ""
+msgstr "tram"
 
 msgctxt "instructions.transit.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2649,7 +2649,7 @@ msgstr "trein"
 
 msgctxt "instructions.transit.replacement.empty_transit_name_labels.3"
 msgid "bus"
-msgstr ""
+msgstr "bus"
 
 msgctxt "instructions.transit.replacement.empty_transit_name_labels.4"
 msgid "ferry"
@@ -2692,7 +2692,7 @@ msgstr "Verlaat de <TRANSIT_STOP> <STATION_LABEL>."
 
 msgctxt "instructions.transit_connection_destination.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Exit the station.
 msgctxt "instructions.transit_connection_destination_verbal.phrases.0"
@@ -2711,7 +2711,7 @@ msgstr "De <TRANSIT_STOP> <STATION_LABEL> verlaten."
 
 msgctxt "instructions.transit_connection_destination_verbal.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Enter the station.
 msgctxt "instructions.transit_connection_start.phrases.0"
@@ -2730,7 +2730,7 @@ msgstr "Ga de <TRANSIT_STOP> <STATION_LABEL> in."
 
 msgctxt "instructions.transit_connection_start.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Enter the station.
 msgctxt "instructions.transit_connection_start_verbal.phrases.0"
@@ -2749,7 +2749,7 @@ msgstr "<TRANSIT_STOP> <STATION_LABEL> ingaan."
 
 msgctxt "instructions.transit_connection_start_verbal.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Transfer at the station.
 msgctxt "instructions.transit_connection_transfer.phrases.0"
@@ -2768,7 +2768,7 @@ msgstr "Stap over bij de <TRANSIT_STOP> <STATION_LABEL>."
 
 msgctxt "instructions.transit_connection_transfer.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Transfer at the station.
 msgctxt "instructions.transit_connection_transfer_verbal.phrases.0"
@@ -2787,7 +2787,7 @@ msgstr "SOverstappen bij de <TRANSIT_STOP> <STATION_LABEL>."
 
 msgctxt "instructions.transit_connection_transfer_verbal.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Remain on the New Haven. (1 stop)
 #. e.g. Remain on the train. (3 stops)
@@ -2802,11 +2802,11 @@ msgstr "Blijf in de <TRANSIT_NAME> richting <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_C
 
 msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.0"
 msgid "tram"
-msgstr ""
+msgstr "tram"
 
 msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2814,7 +2814,7 @@ msgstr "trein"
 
 msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.3"
 msgid "bus"
-msgstr ""
+msgstr "bus"
 
 msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.4"
 msgid "ferry"
@@ -2852,11 +2852,11 @@ msgstr "In de <TRANSIT_NAME> blijven richting <TRANSIT_HEADSIGN>."
 
 msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.0"
 msgid "tram"
-msgstr ""
+msgstr "tram"
 
 msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2864,7 +2864,7 @@ msgstr "trein"
 
 msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.3"
 msgid "bus"
-msgstr ""
+msgstr "bus"
 
 msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.4"
 msgid "ferry"
@@ -2895,11 +2895,11 @@ msgstr "Stap over om de <TRANSIT_NAME> te nemen richting <TRANSIT_HEADSIGN>. (<T
 
 msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.0"
 msgid "tram"
-msgstr ""
+msgstr "tram"
 
 msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2907,7 +2907,7 @@ msgstr "trein"
 
 msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.3"
 msgid "bus"
-msgstr ""
+msgstr "bus"
 
 msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.4"
 msgid "ferry"
@@ -2945,11 +2945,11 @@ msgstr "Overstappen om de <TRANSIT_NAME> te nemen richting <TRANSIT_HEADSIGN>."
 
 msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.0"
 msgid "tram"
-msgstr ""
+msgstr "tram"
 
 msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2957,7 +2957,7 @@ msgstr "trein"
 
 msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.3"
 msgid "bus"
-msgstr ""
+msgstr "bus"
 
 msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.4"
 msgid "ferry"
@@ -2987,11 +2987,11 @@ msgstr "<TRANSIT_NAME> nemen richting <TRANSIT_HEADSIGN>."
 
 msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.0"
 msgid "tram"
-msgstr ""
+msgstr "tram"
 
 msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2999,7 +2999,7 @@ msgstr "trein"
 
 msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.3"
 msgid "bus"
-msgstr ""
+msgstr "bus"
 
 msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.4"
 msgid "ferry"
@@ -3061,19 +3061,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.turn.replacement.relative_directions.0"
 msgid "left"
@@ -3127,19 +3127,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.turn_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -3203,19 +3203,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.uturn.replacement.relative_directions.0"
 msgid "left"
@@ -3279,19 +3279,19 @@ msgstr "het mountainbikepad"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "het zebrapad"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "de trap"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "de brug"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "de tunnel"
 
 msgctxt "instructions.uturn_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -3317,7 +3317,7 @@ msgstr "<KILOMETERS> kilometer"
 
 msgctxt "instructions.verbal_multi_cue.replacement.metric_lengths.1"
 msgid "1 kilometer"
-msgstr ""
+msgstr "1 kilometer"
 
 msgctxt "instructions.verbal_multi_cue.replacement.metric_lengths.2"
 msgid "<METERS> meters"

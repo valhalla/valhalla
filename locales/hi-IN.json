@@ -2,7 +2,7 @@
   "instructions": {
     "approach_verbal_alert": {
       "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "<LENGTH> में, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
@@ -14,7 +14,7 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "a quarter mile",
+        "एक चौथाई मील",
         "<FEET> फुट",
         "कम से कम 10 फुट"
       ]
@@ -37,17 +37,17 @@
         "1": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े.",
         "2": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े. <STREET_NAMES> पर बने रहें.",
         "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "<JUNCTION_NAME> पर <RELATIVE_DIRECTION> ओर बढ़े.",
+        "5": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> ओर बढ़े."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -60,17 +60,17 @@
         "1": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े.",
         "2": "<RELATIVE_DIRECTION> ओर <BEGIN_STREET_NAMES> पर बढ़े.",
         "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "<JUNCTION_NAME> पर <RELATIVE_DIRECTION> ओर बढ़े.",
+        "5": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> ओर बढ़े."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -91,17 +91,17 @@
       "phrases": {
         "0": "जारी रहें.",
         "1": "<STREET_NAMES> पर जारी रहें.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "<JUNCTION_NAME> पर जारी रहें.",
+        "3": "<TOWARD_SIGN> की ओर जारी रहें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ]
     },
     "continue_verbal": {
@@ -110,19 +110,19 @@
         "1": "<LENGTH> के लिए जारी रहें.",
         "2": "<STREET_NAMES> पर जारी रहें.",
         "3": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें.",
-        "4": "Continue at <JUNCTION_NAME>.",
-        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
-        "6": "Continue toward <TOWARD_SIGN>.",
-        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+        "4": "<JUNCTION_NAME> पर जारी रहें.",
+        "5": "<JUNCTION_NAME> पर <LENGTH> के लिए जारी रहें.",
+        "6": "<TOWARD_SIGN> की ओर जारी रहें.",
+        "7": "<TOWARD_SIGN> की ओर <LENGTH> के लिए जारी रहें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
@@ -134,7 +134,7 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "a quarter mile",
+        "एक चौथाई मील",
         "<FEET> फुट",
         "कम से कम 10 फुट"
       ]
@@ -143,17 +143,17 @@
       "phrases": {
         "0": "जारी रहें.",
         "1": "<STREET_NAMES> पर जारी रहें.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "<JUNCTION_NAME> पर जारी रहें.",
+        "3": "<TOWARD_SIGN> की ओर जारी रहें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ]
     },
     "depart": {
@@ -206,20 +206,20 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "लिफ्ट लें.",
+        "1": "लिफ्ट से <LEVEL> तक जाएं."
       }
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "इमारत में प्रवेश करें.",
+        "1": "इमारत में प्रवेश करें और <STREET_NAMES> पर जारी रहें."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk"
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "पैदल क्रॉसिंग"
       ]
     },
     "enter_ferry": {
@@ -227,64 +227,64 @@
         "0": "नौका लें.",
         "1": "<STREET_NAMES> लें.",
         "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "<TOWARD_SIGN> की ओर नौका लें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
-      "ferry_label": "Ferry"
+      "ferry_label": "नौका"
     },
     "enter_ferry_verbal": {
       "phrases": {
         "0": "नौका लें.",
         "1": "<STREET_NAMES> लें.",
         "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "<TOWARD_SIGN> की ओर नौका लें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
-      "ferry_label": "Ferry"
+      "ferry_label": "नौका"
     },
     "enter_roundabout": {
       "phrases": {
         "0": "सर्कल प्रवेश करें.",
         "1": "सर्कल प्रवेश करें और <ORDINAL_VALUE> निकास लें.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "2": "सर्कल प्रवेश करें और <ROUNDABOUT_EXIT_STREET_NAMES> पर <ORDINAL_VALUE> निकास लें.",
+        "3": "सर्कल प्रवेश करें और <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> पर <ORDINAL_VALUE> निकास लें. <ROUNDABOUT_EXIT_STREET_NAMES> पर जारी रहें.",
+        "4": "सर्कल प्रवेश करें और <TOWARD_SIGN> की ओर <ORDINAL_VALUE> निकास लें.",
+        "5": "सर्कल प्रवेश करें और <ROUNDABOUT_EXIT_STREET_NAMES> पर निकास लें.",
+        "6": "सर्कल प्रवेश करें और <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> पर निकास लें. <ROUNDABOUT_EXIT_STREET_NAMES> पर जारी रहें.",
+        "7": "सर्कल प्रवेश करें और <TOWARD_SIGN> की ओर निकास लें.",
+        "8": "<STREET_NAMES> में प्रवेश करें",
+        "9": "<STREET_NAMES> में प्रवेश करें और <ORDINAL_VALUE> निकास लें.",
+        "10": "<STREET_NAMES> में प्रवेश करें और <ROUNDABOUT_EXIT_STREET_NAMES> पर <ORDINAL_VALUE> निकास लें.",
+        "11": "<STREET_NAMES> में प्रवेश करें और <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> पर <ORDINAL_VALUE> निकास लें. <ROUNDABOUT_EXIT_STREET_NAMES> पर जारी रहें.",
+        "12": "<STREET_NAMES> में प्रवेश करें और <TOWARD_SIGN> की ओर <ORDINAL_VALUE> निकास लें.",
+        "13": "<STREET_NAMES> में प्रवेश करें और <ROUNDABOUT_EXIT_STREET_NAMES> पर निकास लें.",
+        "14": "<STREET_NAMES> में प्रवेश करें और <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> पर निकास लें. <ROUNDABOUT_EXIT_STREET_NAMES> पर जारी रहें.",
+        "15": "<STREET_NAMES> में प्रवेश करें और <TOWARD_SIGN> की ओर निकास लें."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "ordinal_values": [
         "पहला",
@@ -303,29 +303,29 @@
       "phrases": {
         "0": "सर्कल प्रवेश करें.",
         "1": "सर्कल प्रवेश करें और <ORDINAL_VALUE> निकास लें.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "2": "सर्कल प्रवेश करें और <ROUNDABOUT_EXIT_STREET_NAMES> पर <ORDINAL_VALUE> निकास लें.",
+        "3": "सर्कल प्रवेश करें और <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> पर <ORDINAL_VALUE> निकास लें.",
+        "4": "सर्कल प्रवेश करें और <TOWARD_SIGN> की ओर <ORDINAL_VALUE> निकास लें.",
+        "5": "सर्कल प्रवेश करें और <ROUNDABOUT_EXIT_STREET_NAMES> पर निकास लें.",
+        "6": "सर्कल प्रवेश करें और <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> पर निकास लें.",
+        "7": "सर्कल प्रवेश करें और <TOWARD_SIGN> की ओर निकास लें.",
+        "8": "<STREET_NAMES> में प्रवेश करें",
+        "9": "<STREET_NAMES> में प्रवेश करें और <ORDINAL_VALUE> निकास लें.",
+        "10": "<STREET_NAMES> में प्रवेश करें और <ROUNDABOUT_EXIT_STREET_NAMES> पर <ORDINAL_VALUE> निकास लें.",
+        "11": "<STREET_NAMES> में प्रवेश करें और <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> पर <ORDINAL_VALUE> निकास लें.",
+        "12": "<STREET_NAMES> में प्रवेश करें और <TOWARD_SIGN> की ओर <ORDINAL_VALUE> निकास लें.",
+        "13": "<STREET_NAMES> में प्रवेश करें और <ROUNDABOUT_EXIT_STREET_NAMES> पर निकास लें.",
+        "14": "<STREET_NAMES> में प्रवेश करें और <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> पर निकास लें.",
+        "15": "<STREET_NAMES> में प्रवेश करें और <TOWARD_SIGN> की ओर निकास लें."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "ordinal_values": [
         "पहला",
@@ -342,8 +342,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "एस्केलेटर लें.",
+        "1": "एस्केलेटर से <LEVEL> तक जाएं."
       }
     },
     "exit": {
@@ -380,14 +380,14 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "इमारत से बाहर निकलें.",
+        "1": "इमारत से बाहर निकलें और <STREET_NAMES> पर जारी रहें."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk"
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "पैदल क्रॉसिंग"
       ]
     },
     "exit_roundabout": {
@@ -395,16 +395,16 @@
         "0": "सर्कल से बाहर निकलें.",
         "1": "<STREET_NAMES> पर सर्कल से बाहर निकलें.",
         "2": "<BEGIN_STREET_NAMES> पर सर्कल से बाहर निकलें. <STREET_NAMES> पर जारी रहें.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "<TOWARD_SIGN> की ओर सर्कल से बाहर निकलें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ]
     },
     "exit_roundabout_verbal": {
@@ -412,16 +412,16 @@
         "0": "सर्कल से बाहर निकलें.",
         "1": "<STREET_NAMES> पर सर्कल से बाहर निकलें.",
         "2": "<BEGIN_STREET_NAMES> पर सर्कल से बाहर निकलें.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "<TOWARD_SIGN> की ओर सर्कल से बाहर निकलें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ]
     },
     "exit_verbal": {
@@ -476,10 +476,10 @@
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -498,10 +498,10 @@
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -520,10 +520,10 @@
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -546,10 +546,10 @@
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -559,7 +559,7 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "<LEVEL> तक जारी रहें."
       }
     },
     "merge": {
@@ -568,17 +568,17 @@
         "1": "<RELATIVE_DIRECTION> मिलें.",
         "2": "<STREET_NAMES> पर मिलें.",
         "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "<TOWARD_SIGN> की ओर मिलें.",
+        "5": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> मिलें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -591,17 +591,17 @@
         "1": "<RELATIVE_DIRECTION> मिलें.",
         "2": "<STREET_NAMES> पर मिलें.",
         "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "<TOWARD_SIGN> की ओर मिलें.",
+        "5": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> मिलें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -610,18 +610,18 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "अपना वाहन पार्क करें"
       }
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "<OBJECT_LABEL> से होकर गुजरें.",
+        "1": "<OBJECT_LABEL> पर ट्रैफिक सिग्नल से गुजरें."
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
-        "ways intersection"
+        "गेट",
+        "बोलार्ड",
+        "रास्तों का चौराहा"
       ]
     },
     "post_transition_transit_verbal": {
@@ -629,7 +629,7 @@
         "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> के लिए यात्रा."
       },
       "transit_stop_count_labels": {
-        "one": "stop",
+        "one": "स्टॉप",
         "other": "स्टॉप"
       }
     },
@@ -642,10 +642,10 @@
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
@@ -657,7 +657,7 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "a quarter mile",
+        "एक चौथाई मील",
         "<FEET> फुट",
         "कम से कम 10 फुट"
       ]
@@ -732,17 +732,17 @@
         "1": "<STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
         "2": "<BEGIN_STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें. <STREET_NAMES> पर बने रहें.",
         "3": "<STREET_NAMES> पर बने रहने के लिए तेज <RELATIVE_DIRECTION> मुड़ें.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "<JUNCTION_NAME> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "5": "<TOWARD_SIGN> की ओर तेज <RELATIVE_DIRECTION> मुड़ें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -755,17 +755,17 @@
         "1": "<STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
         "2": "<BEGIN_STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
         "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "<JUNCTION_NAME> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "5": "<TOWARD_SIGN> की ओर तेज <RELATIVE_DIRECTION> मुड़ें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -801,10 +801,10 @@
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ]
     },
     "start_verbal": {
@@ -844,10 +844,10 @@
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
@@ -859,15 +859,15 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "a quarter mile",
+        "एक चौथाई मील",
         "<FEET> फुट",
         "कम से कम 10 फुट"
       ]
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "सीढ़ियाँ लें.",
+        "1": "सीढ़ियों से <LEVEL> तक जाएं."
       }
     },
     "transit": {
@@ -886,7 +886,7 @@
         "रज्जु रेल"
       ],
       "transit_stop_count_labels": {
-        "one": "stop",
+        "one": "स्टॉप",
         "other": "स्टॉप"
       }
     },
@@ -896,7 +896,7 @@
         "1": "<TRANSIT_STOP> स्टेशन से बाहर निकलें..",
         "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन से बाहर निकलें.."
       },
-      "station_label": "Station"
+      "station_label": "स्टेशन"
     },
     "transit_connection_destination_verbal": {
       "phrases": {
@@ -904,7 +904,7 @@
         "1": "<TRANSIT_STOP> स्टेशन से बाहर निकलें..",
         "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन से बाहर निकलें.."
       },
-      "station_label": "Station"
+      "station_label": "स्टेशन"
     },
     "transit_connection_start": {
       "phrases": {
@@ -912,7 +912,7 @@
         "1": "<TRANSIT_STOP> स्टेशन में प्रवेश करे़.",
         "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन में प्रवेश करे़."
       },
-      "station_label": "Station"
+      "station_label": "स्टेशन"
     },
     "transit_connection_start_verbal": {
       "phrases": {
@@ -920,7 +920,7 @@
         "1": "<TRANSIT_STOP> स्टेशन में प्रवेश करे़.",
         "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन में प्रवेश करे़."
       },
-      "station_label": "Station"
+      "station_label": "स्टेशन"
     },
     "transit_connection_transfer": {
       "phrases": {
@@ -928,7 +928,7 @@
         "1": "<TRANSIT_STOP> स्टेशन पर हस्तांतरण करे़.",
         "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन पर हस्तांतरण करे़."
       },
-      "station_label": "Station"
+      "station_label": "स्टेशन"
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
@@ -936,7 +936,7 @@
         "1": "<TRANSIT_STOP> स्टेशन पर हस्तांतरण करे़.",
         "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन पर हस्तांतरण करे़."
       },
-      "station_label": "Station"
+      "station_label": "स्टेशन"
     },
     "transit_remain_on": {
       "phrases": {
@@ -954,7 +954,7 @@
         "रज्जु रेल"
       ],
       "transit_stop_count_labels": {
-        "one": "stop",
+        "one": "स्टॉप",
         "other": "स्टॉप"
       }
     },
@@ -990,7 +990,7 @@
         "रज्जु रेल"
       ],
       "transit_stop_count_labels": {
-        "one": "stop",
+        "one": "स्टॉप",
         "other": "स्टॉप"
       }
     },
@@ -1032,17 +1032,17 @@
         "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
         "2": "<BEGIN_STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें. <STREET_NAMES> पर बने रहें.",
         "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "<JUNCTION_NAME> पर <RELATIVE_DIRECTION> मुड़ें.",
+        "5": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> मुड़ें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -1055,17 +1055,17 @@
         "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
         "2": "<BEGIN_STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
         "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "<JUNCTION_NAME> पर <RELATIVE_DIRECTION> मुड़ें.",
+        "5": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> मुड़ें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -1080,17 +1080,17 @@
         "3": "<CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
         "4": "<CROSS_STREET_NAMES> पर <STREET_NAMES> की ओर <RELATIVE_DIRECTION> यू-टर्न लें.",
         "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "<JUNCTION_NAME> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "7": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> यू-टर्न लें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -1105,17 +1105,17 @@
         "3": "<CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
         "4": "<CROSS_STREET_NAMES> पर <STREET_NAMES> की ओर <RELATIVE_DIRECTION> यू-टर्न लें.",
         "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न ले.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "<JUNCTION_NAME> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "7": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> यू-टर्न लें."
       },
       "empty_street_name_labels": [
         "रास्ते",
         "साइकिल रास्ते",
         "माउंटेन साइकिल पगडंडी",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "पैदल क्रॉसिंग",
+        "सीढ़ियों",
+        "पुल",
+        "सुरंग"
       ],
       "relative_directions": [
         "बाएं",
@@ -1125,7 +1125,7 @@
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> और फिर <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "1": "<CURRENT_VERBAL_CUE> और फिर, <LENGTH> में, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
@@ -1137,7 +1137,7 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "a quarter mile",
+        "एक चौथाई मील",
         "<FEET> फुट",
         "कम से कम 10 फुट"
       ]

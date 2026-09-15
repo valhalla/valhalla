@@ -44,10 +44,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -67,10 +67,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -98,10 +98,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ]
     },
     "continue_verbal": {
@@ -119,10 +119,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "metric_lengths": [
         "<KILOMETERS>キロメートル",
@@ -150,10 +150,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ]
     },
     "depart": {
@@ -206,20 +206,20 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "エレベーターに乗ります。",
+        "1": "エレベーターで<LEVEL>に移動します。"
       }
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "建物に入ります。",
+        "1": "建物に入り、<STREET_NAMES>を進みます。"
       },
       "empty_street_name_labels": [
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk"
+        "横断歩道"
       ]
     },
     "enter_ferry": {
@@ -233,10 +233,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "ferry_label": "フェリー"
     },
@@ -251,10 +251,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "ferry_label": "フェリー"
     },
@@ -281,10 +281,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "ordinal_values": [
         "1つ目の",
@@ -322,10 +322,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "ordinal_values": [
         "1 つ目の",
@@ -342,8 +342,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "エスカレーターに乗ります。",
+        "1": "エスカレーターで<LEVEL>に移動します。"
       }
     },
     "exit": {
@@ -380,14 +380,14 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "建物から出ます。",
+        "1": "建物から出て、<STREET_NAMES>を進みます。"
       },
       "empty_street_name_labels": [
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk"
+        "横断歩道"
       ]
     },
     "exit_roundabout": {
@@ -401,10 +401,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ]
     },
     "exit_roundabout_verbal": {
@@ -418,10 +418,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ]
     },
     "exit_verbal": {
@@ -476,10 +476,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -498,10 +498,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -520,10 +520,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -546,10 +546,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -559,7 +559,7 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "<LEVEL>へ進みます。"
       }
     },
     "merge": {
@@ -575,10 +575,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -598,10 +598,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -610,18 +610,18 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "車を駐車します"
       }
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "<OBJECT_LABEL>を通過します。",
+        "1": "<OBJECT_LABEL>の信号を通過します。"
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
-        "ways intersection"
+        "ゲート",
+        "ボラード",
+        "道路の交差点"
       ]
     },
     "post_transition_transit_verbal": {
@@ -642,10 +642,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "metric_lengths": [
         "<KILOMETERS>キロメートル",
@@ -739,10 +739,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -762,10 +762,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -801,10 +801,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ]
     },
     "start_verbal": {
@@ -844,10 +844,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "metric_lengths": [
         "<KILOMETERS>キロメートル",
@@ -866,8 +866,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "階段を使います。",
+        "1": "階段で<LEVEL>に移動します。"
       }
     },
     "transit": {
@@ -1039,10 +1039,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -1062,10 +1062,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -1087,10 +1087,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",
@@ -1112,10 +1112,10 @@
         "歩道",
         "自転車道",
         "自転車道",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "横断歩道",
+        "階段",
+        "橋",
+        "トンネル"
       ],
       "relative_directions": [
         "左",

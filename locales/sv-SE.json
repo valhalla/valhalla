@@ -44,10 +44,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -67,10 +67,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -98,10 +98,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ]
     },
     "continue_verbal": {
@@ -119,10 +119,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -150,10 +150,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ]
     },
     "depart": {
@@ -206,20 +206,20 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Ta hissen.",
+        "1": "Ta hissen till <LEVEL>."
       }
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "Gå in i byggnaden.",
+        "1": "Gå in i byggnaden och fortsätt på <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk"
+        "övergångsstället"
       ]
     },
     "enter_ferry": {
@@ -233,10 +233,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "ferry_label": "Färja"
     },
@@ -251,10 +251,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "ferry_label": "Färja"
     },
@@ -281,10 +281,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "ordinal_values": [
         "1:a",
@@ -322,10 +322,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "ordinal_values": [
         "1:a",
@@ -342,8 +342,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Ta rulltrappan.",
+        "1": "Ta rulltrappan till <LEVEL>."
       }
     },
     "exit": {
@@ -380,14 +380,14 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Gå ut ur byggnaden.",
+        "1": "Gå ut ur byggnaden och fortsätt på <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk"
+        "övergångsstället"
       ]
     },
     "exit_roundabout": {
@@ -401,10 +401,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ]
     },
     "exit_roundabout_verbal": {
@@ -418,10 +418,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ]
     },
     "exit_verbal": {
@@ -476,10 +476,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -498,10 +498,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -520,10 +520,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -546,10 +546,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -559,7 +559,7 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "Fortsätt till <LEVEL>."
       }
     },
     "merge": {
@@ -575,10 +575,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -598,10 +598,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -610,18 +610,18 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "Parkera fordonet"
       }
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "Passera <OBJECT_LABEL>.",
+        "1": "Passera trafiksignalerna vid <OBJECT_LABEL>."
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
-        "ways intersection"
+        "grinden",
+        "pollarna",
+        "vägkorsningen"
       ]
     },
     "post_transition_transit_verbal": {
@@ -642,10 +642,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -739,10 +739,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -762,10 +762,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -801,10 +801,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ]
     },
     "start_verbal": {
@@ -844,10 +844,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -866,8 +866,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Ta trapporna.",
+        "1": "Ta trapporna till <LEVEL>."
       }
     },
     "transit": {
@@ -1039,10 +1039,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -1062,10 +1062,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -1087,10 +1087,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",
@@ -1112,10 +1112,10 @@
         "gångvägen",
         "cykelbanan",
         "terrängcykelbanan",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "övergångsstället",
+        "trappan",
+        "bron",
+        "tunneln"
       ],
       "relative_directions": [
         "vänster",

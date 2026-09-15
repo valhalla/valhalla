@@ -2,7 +2,7 @@
   "instructions": {
     "approach_verbal_alert": {
       "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "بعد <LENGTH>، <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "كيلومترات",
@@ -45,9 +45,9 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
@@ -68,9 +68,9 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
@@ -99,14 +99,14 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ]
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continue.",
+        "0": "استمر",
         "1": "اكمل لغاية <LENGTH>.",
         "2": "اكمل على <STREET_NAMES>.",
         "3": "اكمل على <STREET_NAMES> لغاية<LENGTH>.",
@@ -120,9 +120,9 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "metric_lengths": [
         "1 كيلومترات",
@@ -151,9 +151,9 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ]
     },
     "depart": {
@@ -206,14 +206,14 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "استقل المصعد.",
+        "1": "استقل المصعد إلى <LEVEL>."
       }
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "ادخل المبنى.",
+        "1": "ادخل المبنى واكمل على <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "الممشي",
@@ -234,9 +234,9 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "ferry_label": "عبارة"
     },
@@ -252,9 +252,9 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "ferry_label": "عبارة"
     },
@@ -282,9 +282,9 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "ordinal_values": [
         "الاول",
@@ -323,9 +323,9 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "ordinal_values": [
         "الاول",
@@ -342,36 +342,36 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "استقل السلم الكهربائي.",
+        "1": "استقل السلم الكهربائي إلى <LEVEL>."
       }
     },
     "exit": {
       "phrases": {
-        "0": "Take the exit on the <RELATIVE_DIRECTION>.",
-        "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
-        "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
-        "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
-        "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
-        "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
-        "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "0": "اسلك المخرج على <RELATIVE_DIRECTION>.",
+        "1": "اسلك المخرج <NUMBER_SIGN> على <RELATIVE_DIRECTION>.",
+        "2": "اسلك مخرج <BRANCH_SIGN> على <RELATIVE_DIRECTION>.",
+        "3": "اسلك المخرج <NUMBER_SIGN> على <RELATIVE_DIRECTION> إلى <BRANCH_SIGN>.",
+        "4": "اسلك المخرج على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "5": "اسلك المخرج <NUMBER_SIGN> على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "6": "اسلك مخرج <BRANCH_SIGN> على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "7": "اسلك المخرج <NUMBER_SIGN> على <RELATIVE_DIRECTION> إلى <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "8": "اسلك مخرج <NAME_SIGN> على <RELATIVE_DIRECTION>.",
+        "10": "اسلك مخرج <NAME_SIGN> على <RELATIVE_DIRECTION> إلى <BRANCH_SIGN>.",
+        "12": "اسلك مخرج <NAME_SIGN> على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "14": "اسلك مخرج <NAME_SIGN> على <RELATIVE_DIRECTION> إلى <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "15": "اسلك المخرج.",
+        "16": "اسلك المخرج <NUMBER_SIGN>.",
+        "17": "اسلك مخرج <BRANCH_SIGN>.",
+        "18": "اسلك المخرج <NUMBER_SIGN> إلى <BRANCH_SIGN>.",
+        "19": "اسلك المخرج باتجاه <TOWARD_SIGN>.",
+        "20": "اسلك المخرج <NUMBER_SIGN> باتجاه <TOWARD_SIGN>.",
+        "21": "اسلك مخرج <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "22": "اسلك المخرج <NUMBER_SIGN> إلى <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "23": "اسلك مخرج <NAME_SIGN>.",
+        "25": "اسلك مخرج <NAME_SIGN> إلى <BRANCH_SIGN>.",
+        "27": "اسلك مخرج <NAME_SIGN> باتجاه <TOWARD_SIGN>.",
+        "29": "اسلك مخرج <NAME_SIGN> إلى <BRANCH_SIGN> باتجاه <TOWARD_SIGN>."
       },
       "relative_directions": [
         "اليسار",
@@ -380,8 +380,8 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "اخرج من المبنى.",
+        "1": "اخرج من المبنى واكمل على <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "الممشي",
@@ -394,7 +394,7 @@
       "phrases": {
         "0": "اخرج من الدوار.",
         "1": "اخرج من الدوار على <STREET_NAMES>.",
-        "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "2": "اخرج من الدوار على <BEGIN_STREET_NAMES>. اكمل على <STREET_NAMES>.",
         "3": "اخرج الدوار باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
@@ -402,9 +402,9 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ]
     },
     "exit_roundabout_verbal": {
@@ -419,37 +419,37 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ]
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Take the exit on the <RELATIVE_DIRECTION>.",
-        "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
-        "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
-        "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
-        "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
-        "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
-        "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "0": "اسلك المخرج على <RELATIVE_DIRECTION>.",
+        "1": "اسلك المخرج <NUMBER_SIGN> على <RELATIVE_DIRECTION>.",
+        "2": "اسلك مخرج <BRANCH_SIGN> على <RELATIVE_DIRECTION>.",
+        "3": "اسلك المخرج <NUMBER_SIGN> على <RELATIVE_DIRECTION> إلى <BRANCH_SIGN>.",
+        "4": "اسلك المخرج على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "5": "اسلك المخرج <NUMBER_SIGN> على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "6": "اسلك مخرج <BRANCH_SIGN> على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "7": "اسلك المخرج <NUMBER_SIGN> على <RELATIVE_DIRECTION> إلى <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "8": "اسلك مخرج <NAME_SIGN> على <RELATIVE_DIRECTION>.",
+        "10": "اسلك مخرج <NAME_SIGN> على <RELATIVE_DIRECTION> إلى <BRANCH_SIGN>.",
+        "12": "اسلك مخرج <NAME_SIGN> على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "14": "اسلك مخرج <NAME_SIGN> على <RELATIVE_DIRECTION> إلى <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "15": "اسلك المخرج.",
+        "16": "اسلك المخرج <NUMBER_SIGN>.",
+        "17": "اسلك مخرج <BRANCH_SIGN>.",
+        "18": "اسلك المخرج <NUMBER_SIGN> إلى <BRANCH_SIGN>.",
+        "19": "اسلك المخرج باتجاه <TOWARD_SIGN>.",
+        "20": "اسلك المخرج <NUMBER_SIGN> باتجاه <TOWARD_SIGN>.",
+        "21": "اسلك مخرج <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "22": "اسلك المخرج <NUMBER_SIGN> إلى <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "23": "اسلك مخرج <NAME_SIGN>.",
+        "25": "اسلك مخرج <NAME_SIGN> إلى <BRANCH_SIGN>.",
+        "27": "اسلك مخرج <NAME_SIGN> باتجاه <TOWARD_SIGN>.",
+        "29": "اسلك مخرج <NAME_SIGN> إلى <BRANCH_SIGN> باتجاه <TOWARD_SIGN>."
       },
       "relative_directions": [
         "اليسار",
@@ -458,127 +458,127 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Exit <EXIT_NUMBERS>"
+        "0": "مخرج <EXIT_NUMBERS>"
       }
     },
     "keep": {
       "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> at the fork.",
-        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
-        "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
-        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
-        "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+        "0": "ابق على <RELATIVE_DIRECTION> عند المفترق.",
+        "1": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN>.",
+        "2": "ابق على <RELATIVE_DIRECTION> لسلوك <STREET_NAMES>.",
+        "3": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN> إلى <STREET_NAMES>.",
+        "4": "ابق على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "5": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN> باتجاه <TOWARD_SIGN>.",
+        "6": "ابق على <RELATIVE_DIRECTION> لسلوك <STREET_NAMES> باتجاه <TOWARD_SIGN>.",
+        "7": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN> إلى <STREET_NAMES> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
-        "مستقيم",
+        "المستقيم",
         "اليمين"
       ]
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
-        "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+        "0": "ابق على <RELATIVE_DIRECTION> للبقاء على <STREET_NAMES>.",
+        "1": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN> للبقاء على <STREET_NAMES>.",
+        "2": "ابق على <RELATIVE_DIRECTION> للبقاء على <STREET_NAMES> باتجاه <TOWARD_SIGN>.",
+        "3": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN> للبقاء على <STREET_NAMES> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
-        "مستقيم",
+        "المستقيم",
         "اليمين"
       ]
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
-        "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+        "0": "ابق على <RELATIVE_DIRECTION> للبقاء على <STREET_NAMES>.",
+        "1": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN> للبقاء على <STREET_NAMES>.",
+        "2": "ابق على <RELATIVE_DIRECTION> للبقاء على <STREET_NAMES> باتجاه <TOWARD_SIGN>.",
+        "3": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN> للبقاء على <STREET_NAMES> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
-        "مستقيم",
+        "المستقيم",
         "اليمين"
       ]
     },
     "keep_verbal": {
       "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> at the fork.",
-        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
-        "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
-        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
-        "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+        "0": "ابق على <RELATIVE_DIRECTION> عند المفترق.",
+        "1": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN>.",
+        "2": "ابق على <RELATIVE_DIRECTION> لسلوك <STREET_NAMES>.",
+        "3": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN> إلى <STREET_NAMES>.",
+        "4": "ابق على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "5": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN> باتجاه <TOWARD_SIGN>.",
+        "6": "ابق على <RELATIVE_DIRECTION> لسلوك <STREET_NAMES> باتجاه <TOWARD_SIGN>.",
+        "7": "ابق على <RELATIVE_DIRECTION> لسلوك المخرج <NUMBER_SIGN> إلى <STREET_NAMES> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
-        "مستقيم",
+        "المستقيم",
         "اليمين"
       ]
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "اكمل إلى <LEVEL>."
       }
     },
     "merge": {
       "phrases": {
-        "0": "Merge.",
-        "1": "Merge <RELATIVE_DIRECTION>.",
-        "2": "Merge onto <STREET_NAMES>.",
-        "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "اندمج.",
+        "1": "اندمج إلى <RELATIVE_DIRECTION>.",
+        "2": "اندمج على <STREET_NAMES>.",
+        "3": "اندمج إلى <RELATIVE_DIRECTION> على <STREET_NAMES>.",
+        "4": "اندمج باتجاه <TOWARD_SIGN>.",
+        "5": "اندمج إلى <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
@@ -587,21 +587,21 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Merge.",
-        "1": "Merge <RELATIVE_DIRECTION>.",
-        "2": "Merge onto <STREET_NAMES>.",
-        "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "اندمج.",
+        "1": "اندمج إلى <RELATIVE_DIRECTION>.",
+        "2": "اندمج على <STREET_NAMES>.",
+        "3": "اندمج إلى <RELATIVE_DIRECTION> على <STREET_NAMES>.",
+        "4": "اندمج باتجاه <TOWARD_SIGN>.",
+        "5": "اندمج إلى <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
@@ -610,23 +610,23 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "اركن مركبتك"
       }
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "تجاوز <OBJECT_LABEL>.",
+        "1": "تجاوز إشارات المرور عند <OBJECT_LABEL>."
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
-        "ways intersection"
+        "البوابة",
+        "الحواجز",
+        "تقاطع الطرق"
       ]
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+        "0": "تنقل <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
       "transit_stop_count_labels": {
         "one": "توقف",
@@ -643,9 +643,9 @@
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "metric_lengths": [
         "كيلومترات",
@@ -664,21 +664,21 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
-        "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
-        "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
-        "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
-        "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
-        "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
-        "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "0": "اسلك المنحدر على <RELATIVE_DIRECTION>.",
+        "1": "اسلك منحدر <BRANCH_SIGN> على <RELATIVE_DIRECTION>.",
+        "2": "اسلك المنحدر على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "3": "اسلك منحدر <BRANCH_SIGN> على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "4": "اسلك منحدر <NAME_SIGN> على <RELATIVE_DIRECTION>.",
+        "5": "انعطف إلى <RELATIVE_DIRECTION> لسلوك المنحدر.",
+        "6": "انعطف إلى <RELATIVE_DIRECTION> لسلوك منحدر <BRANCH_SIGN>.",
+        "7": "انعطف إلى <RELATIVE_DIRECTION> لسلوك المنحدر باتجاه <TOWARD_SIGN>.",
+        "8": "انعطف إلى <RELATIVE_DIRECTION> لسلوك منحدر <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "9": "انعطف إلى <RELATIVE_DIRECTION> لسلوك منحدر <NAME_SIGN>.",
+        "10": "اسلك المنحدر.",
+        "11": "اسلك منحدر <BRANCH_SIGN>.",
+        "12": "اسلك المنحدر باتجاه <TOWARD_SIGN>.",
+        "13": "اسلك منحدر <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "14": "اسلك منحدر <NAME_SIGN>."
       },
       "relative_directions": [
         "اليسار",
@@ -687,39 +687,39 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Stay straight to take the ramp.",
-        "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
-        "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-        "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "4": "Stay straight to take the <NAME_SIGN> ramp."
+        "0": "تابع مستقيمًا لسلوك المنحدر.",
+        "1": "تابع مستقيمًا لسلوك منحدر <BRANCH_SIGN>.",
+        "2": "تابع مستقيمًا لسلوك المنحدر باتجاه <TOWARD_SIGN>.",
+        "3": "تابع مستقيمًا لسلوك منحدر <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "4": "تابع مستقيمًا لسلوك منحدر <NAME_SIGN>."
       }
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Stay straight to take the ramp.",
-        "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
-        "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-        "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "4": "Stay straight to take the <NAME_SIGN> ramp."
+        "0": "تابع مستقيمًا لسلوك المنحدر.",
+        "1": "تابع مستقيمًا لسلوك منحدر <BRANCH_SIGN>.",
+        "2": "تابع مستقيمًا لسلوك المنحدر باتجاه <TOWARD_SIGN>.",
+        "3": "تابع مستقيمًا لسلوك منحدر <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "4": "تابع مستقيمًا لسلوك منحدر <NAME_SIGN>."
       }
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
-        "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
-        "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
-        "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
-        "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
-        "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
-        "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "0": "اسلك المنحدر على <RELATIVE_DIRECTION>.",
+        "1": "اسلك منحدر <BRANCH_SIGN> على <RELATIVE_DIRECTION>.",
+        "2": "اسلك المنحدر على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "3": "اسلك منحدر <BRANCH_SIGN> على <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>.",
+        "4": "اسلك منحدر <NAME_SIGN> على <RELATIVE_DIRECTION>.",
+        "5": "انعطف إلى <RELATIVE_DIRECTION> لسلوك المنحدر.",
+        "6": "انعطف إلى <RELATIVE_DIRECTION> لسلوك منحدر <BRANCH_SIGN>.",
+        "7": "انعطف إلى <RELATIVE_DIRECTION> لسلوك المنحدر باتجاه <TOWARD_SIGN>.",
+        "8": "انعطف إلى <RELATIVE_DIRECTION> لسلوك منحدر <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "9": "انعطف إلى <RELATIVE_DIRECTION> لسلوك منحدر <NAME_SIGN>.",
+        "10": "اسلك المنحدر.",
+        "11": "اسلك منحدر <BRANCH_SIGN>.",
+        "12": "اسلك المنحدر باتجاه <TOWARD_SIGN>.",
+        "13": "اسلك منحدر <BRANCH_SIGN> باتجاه <TOWARD_SIGN>.",
+        "14": "اسلك منحدر <NAME_SIGN>."
       },
       "relative_directions": [
         "اليسار",
@@ -728,21 +728,21 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Make a sharp <RELATIVE_DIRECTION>.",
-        "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-        "2": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "انعطف بحدة إلى <RELATIVE_DIRECTION>.",
+        "1": "انعطف بحدة إلى <RELATIVE_DIRECTION> على <STREET_NAMES>.",
+        "2": "انعطف بحدة إلى <RELATIVE_DIRECTION> على <BEGIN_STREET_NAMES>. اكمل على <STREET_NAMES>.",
+        "3": "انعطف بحدة إلى <RELATIVE_DIRECTION> للبقاء على <STREET_NAMES>.",
+        "4": "انعطف بحدة إلى <RELATIVE_DIRECTION> عند <JUNCTION_NAME>.",
+        "5": "انعطف بحدة إلى <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
@@ -751,21 +751,21 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Make a sharp <RELATIVE_DIRECTION>.",
-        "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-        "2": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-        "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "انعطف بحدة إلى <RELATIVE_DIRECTION>.",
+        "1": "انعطف بحدة إلى <RELATIVE_DIRECTION> على <STREET_NAMES>.",
+        "2": "انعطف بحدة إلى <RELATIVE_DIRECTION> على <BEGIN_STREET_NAMES>.",
+        "3": "انعطف بحدة إلى <RELATIVE_DIRECTION> للبقاء على <STREET_NAMES>.",
+        "4": "انعطف بحدة إلى <RELATIVE_DIRECTION> عند <JUNCTION_NAME>.",
+        "5": "انعطف بحدة إلى <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
@@ -774,80 +774,80 @@
     },
     "start": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+        "0": "اتجه نحو <CARDINAL_DIRECTION>.",
+        "1": "اتجه نحو <CARDINAL_DIRECTION> على <STREET_NAMES>.",
+        "2": "اتجه نحو <CARDINAL_DIRECTION> على <BEGIN_STREET_NAMES>. اكمل على <STREET_NAMES>.",
+        "4": "قد نحو <CARDINAL_DIRECTION>.",
+        "5": "قد نحو <CARDINAL_DIRECTION> على <STREET_NAMES>.",
+        "6": "قد نحو <CARDINAL_DIRECTION> على <BEGIN_STREET_NAMES>. اكمل على <STREET_NAMES>.",
+        "8": "امشِ نحو <CARDINAL_DIRECTION>.",
+        "9": "امشِ نحو <CARDINAL_DIRECTION> على <STREET_NAMES>.",
+        "10": "امشِ نحو <CARDINAL_DIRECTION> على <BEGIN_STREET_NAMES>. اكمل على <STREET_NAMES>.",
+        "16": "اركب الدراجة نحو <CARDINAL_DIRECTION>.",
+        "17": "اركب الدراجة نحو <CARDINAL_DIRECTION> على <STREET_NAMES>.",
+        "18": "اركب الدراجة نحو <CARDINAL_DIRECTION> على <BEGIN_STREET_NAMES>. اكمل على <STREET_NAMES>."
       },
       "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
+        "الشمال",
+        "الشمال الشرقي",
+        "الشرق",
+        "الجنوب الشرقي",
+        "الجنوب",
+        "الجنوب الغربي",
+        "الغرب",
+        "الشمال الغربي"
       ],
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ]
     },
     "start_verbal": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
-        "2": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "3": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "4": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "5": "Drive <CARDINAL_DIRECTION>.",
-        "6": "Drive <CARDINAL_DIRECTION> for <LENGTH>.",
-        "7": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "8": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "9": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "10": "Walk <CARDINAL_DIRECTION>.",
-        "11": "Walk <CARDINAL_DIRECTION> for <LENGTH>.",
-        "12": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "13": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "14": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "15": "Bike <CARDINAL_DIRECTION>.",
-        "16": "Bike <CARDINAL_DIRECTION> for <LENGTH>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "19": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+        "0": "اتجه نحو <CARDINAL_DIRECTION>.",
+        "1": "اتجه نحو <CARDINAL_DIRECTION> لغاية <LENGTH>.",
+        "2": "اتجه نحو <CARDINAL_DIRECTION> على <STREET_NAMES>.",
+        "3": "اتجه نحو <CARDINAL_DIRECTION> على <STREET_NAMES> لغاية <LENGTH>.",
+        "4": "اتجه نحو <CARDINAL_DIRECTION> على <BEGIN_STREET_NAMES>.",
+        "5": "قد نحو <CARDINAL_DIRECTION>.",
+        "6": "قد نحو <CARDINAL_DIRECTION> لغاية <LENGTH>.",
+        "7": "قد نحو <CARDINAL_DIRECTION> على <STREET_NAMES>.",
+        "8": "قد نحو <CARDINAL_DIRECTION> على <STREET_NAMES> لغاية <LENGTH>.",
+        "9": "قد نحو <CARDINAL_DIRECTION> على <BEGIN_STREET_NAMES>.",
+        "10": "امشِ نحو <CARDINAL_DIRECTION>.",
+        "11": "امشِ نحو <CARDINAL_DIRECTION> لغاية <LENGTH>.",
+        "12": "امشِ نحو <CARDINAL_DIRECTION> على <STREET_NAMES>.",
+        "13": "امشِ نحو <CARDINAL_DIRECTION> على <STREET_NAMES> لغاية <LENGTH>.",
+        "14": "امشِ نحو <CARDINAL_DIRECTION> على <BEGIN_STREET_NAMES>.",
+        "15": "اركب الدراجة نحو <CARDINAL_DIRECTION>.",
+        "16": "اركب الدراجة نحو <CARDINAL_DIRECTION> لغاية <LENGTH>.",
+        "17": "اركب الدراجة نحو <CARDINAL_DIRECTION> على <STREET_NAMES>.",
+        "18": "اركب الدراجة نحو <CARDINAL_DIRECTION> على <STREET_NAMES> لغاية <LENGTH>.",
+        "19": "اركب الدراجة نحو <CARDINAL_DIRECTION> على <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
+        "الشمال",
+        "الشمال الشرقي",
+        "الشرق",
+        "الجنوب الشرقي",
+        "الجنوب",
+        "الجنوب الغربي",
+        "الغرب",
+        "الشمال الغربي"
       ],
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "metric_lengths": [
         "كيلومترات",
@@ -866,24 +866,24 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "استخدم الدرج.",
+        "1": "استخدم الدرج إلى <LEVEL>."
       }
     },
     "transit": {
       "phrases": {
-        "0": "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "استقل <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "استقل <TRANSIT_NAME> باتجاه <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "train",
-        "bus",
-        "ferry",
-        "cable car",
-        "gondola",
-        "funicular"
+        "الترام",
+        "المترو",
+        "القطار",
+        "الحافلة",
+        "العبارة",
+        "التلفريك",
+        "الجندول",
+        "القطار المائل"
       ],
       "transit_stop_count_labels": {
         "one": "توقف",
@@ -892,66 +892,66 @@
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Exit the station.",
-        "1": "Exit the <TRANSIT_STOP>.",
-        "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "اخرج من المحطة.",
+        "1": "اخرج من <TRANSIT_STOP>.",
+        "2": "اخرج من <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Station"
+      "station_label": "محطة"
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Exit the station.",
-        "1": "Exit the <TRANSIT_STOP>.",
-        "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "اخرج من المحطة.",
+        "1": "اخرج من <TRANSIT_STOP>.",
+        "2": "اخرج من <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Station"
+      "station_label": "محطة"
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Enter the station.",
-        "1": "Enter the <TRANSIT_STOP>.",
-        "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "ادخل المحطة.",
+        "1": "ادخل <TRANSIT_STOP>.",
+        "2": "ادخل <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Station"
+      "station_label": "محطة"
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Enter the station.",
-        "1": "Enter the <TRANSIT_STOP>.",
-        "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "ادخل المحطة.",
+        "1": "ادخل <TRANSIT_STOP>.",
+        "2": "ادخل <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Station"
+      "station_label": "محطة"
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Transfer at the station.",
-        "1": "Transfer at the <TRANSIT_STOP>.",
-        "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "انتقل عند المحطة.",
+        "1": "انتقل عند <TRANSIT_STOP>.",
+        "2": "انتقل عند <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Station"
+      "station_label": "محطة"
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Transfer at the station.",
-        "1": "Transfer at the <TRANSIT_STOP>.",
-        "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "انتقل عند المحطة.",
+        "1": "انتقل عند <TRANSIT_STOP>.",
+        "2": "انتقل عند <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Station"
+      "station_label": "محطة"
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "ابق في <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "ابق في <TRANSIT_NAME> باتجاه <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "train",
-        "bus",
-        "ferry",
-        "cable car",
-        "gondola",
-        "funicular"
+        "الترام",
+        "المترو",
+        "القطار",
+        "الحافلة",
+        "العبارة",
+        "التلفريك",
+        "الجندول",
+        "القطار المائل"
       ],
       "transit_stop_count_labels": {
         "one": "توقف",
@@ -960,34 +960,34 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Remain on the <TRANSIT_NAME>.",
-        "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+        "0": "ابق في <TRANSIT_NAME>.",
+        "1": "ابق في <TRANSIT_NAME> باتجاه <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "train",
-        "bus",
-        "ferry",
-        "cable car",
-        "gondola",
-        "funicular"
+        "الترام",
+        "المترو",
+        "القطار",
+        "الحافلة",
+        "العبارة",
+        "التلفريك",
+        "الجندول",
+        "القطار المائل"
       ]
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "انتقل لاستقلال <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "انتقل لاستقلال <TRANSIT_NAME> باتجاه <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "train",
-        "bus",
-        "ferry",
-        "cable car",
-        "gondola",
-        "funicular"
+        "الترام",
+        "المترو",
+        "القطار",
+        "الحافلة",
+        "العبارة",
+        "التلفريك",
+        "الجندول",
+        "القطار المائل"
       ],
       "transit_stop_count_labels": {
         "one": "توقف",
@@ -996,53 +996,53 @@
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Transfer to take the <TRANSIT_NAME>.",
-        "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+        "0": "انتقل لاستقلال <TRANSIT_NAME>.",
+        "1": "انتقل لاستقلال <TRANSIT_NAME> باتجاه <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "train",
-        "bus",
-        "ferry",
-        "cable car",
-        "gondola",
-        "funicular"
+        "الترام",
+        "المترو",
+        "القطار",
+        "الحافلة",
+        "العبارة",
+        "التلفريك",
+        "الجندول",
+        "القطار المائل"
       ]
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Take the <TRANSIT_NAME>.",
-        "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+        "0": "استقل <TRANSIT_NAME>.",
+        "1": "استقل <TRANSIT_NAME> باتجاه <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "train",
-        "bus",
-        "ferry",
-        "cable car",
-        "gondola",
-        "funicular"
+        "الترام",
+        "المترو",
+        "القطار",
+        "الحافلة",
+        "العبارة",
+        "التلفريك",
+        "الجندول",
+        "القطار المائل"
       ]
     },
     "turn": {
       "phrases": {
-        "0": "Turn <RELATIVE_DIRECTION>.",
-        "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-        "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "انعطف إلى <RELATIVE_DIRECTION>.",
+        "1": "انعطف إلى <RELATIVE_DIRECTION> على <STREET_NAMES>.",
+        "2": "انعطف إلى <RELATIVE_DIRECTION> على <BEGIN_STREET_NAMES>. اكمل على <STREET_NAMES>.",
+        "3": "انعطف إلى <RELATIVE_DIRECTION> للبقاء على <STREET_NAMES>.",
+        "4": "انعطف إلى <RELATIVE_DIRECTION> عند <JUNCTION_NAME>.",
+        "5": "انعطف إلى <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
@@ -1051,21 +1051,21 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "Turn <RELATIVE_DIRECTION>.",
-        "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-        "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-        "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "انعطف إلى <RELATIVE_DIRECTION>.",
+        "1": "انعطف إلى <RELATIVE_DIRECTION> على <STREET_NAMES>.",
+        "2": "انعطف إلى <RELATIVE_DIRECTION> على <BEGIN_STREET_NAMES>.",
+        "3": "انعطف إلى <RELATIVE_DIRECTION> للبقاء على <STREET_NAMES>.",
+        "4": "انعطف إلى <RELATIVE_DIRECTION> عند <JUNCTION_NAME>.",
+        "5": "انعطف إلى <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
@@ -1074,23 +1074,23 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Make a <RELATIVE_DIRECTION> U-turn.",
-        "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
-        "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
-        "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
-        "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
-        "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "0": "استدر للخلف إلى <RELATIVE_DIRECTION>.",
+        "1": "استدر للخلف إلى <RELATIVE_DIRECTION> على <STREET_NAMES>.",
+        "2": "استدر للخلف إلى <RELATIVE_DIRECTION> للبقاء على <STREET_NAMES>.",
+        "3": "استدر للخلف إلى <RELATIVE_DIRECTION> عند <CROSS_STREET_NAMES>.",
+        "4": "استدر للخلف إلى <RELATIVE_DIRECTION> عند <CROSS_STREET_NAMES> على <STREET_NAMES>.",
+        "5": "استدر للخلف إلى <RELATIVE_DIRECTION> عند <CROSS_STREET_NAMES> للبقاء على <STREET_NAMES>.",
+        "6": "استدر للخلف إلى <RELATIVE_DIRECTION> عند <JUNCTION_NAME>.",
+        "7": "استدر للخلف إلى <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
@@ -1099,23 +1099,23 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Make a <RELATIVE_DIRECTION> U-turn.",
-        "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
-        "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
-        "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
-        "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
-        "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "0": "استدر للخلف إلى <RELATIVE_DIRECTION>.",
+        "1": "استدر للخلف إلى <RELATIVE_DIRECTION> على <STREET_NAMES>.",
+        "2": "استدر للخلف إلى <RELATIVE_DIRECTION> للبقاء على <STREET_NAMES>.",
+        "3": "استدر للخلف إلى <RELATIVE_DIRECTION> عند <CROSS_STREET_NAMES>.",
+        "4": "استدر للخلف إلى <RELATIVE_DIRECTION> عند <CROSS_STREET_NAMES> على <STREET_NAMES>.",
+        "5": "استدر للخلف إلى <RELATIVE_DIRECTION> عند <CROSS_STREET_NAMES> للبقاء على <STREET_NAMES>.",
+        "6": "استدر للخلف إلى <RELATIVE_DIRECTION> عند <JUNCTION_NAME>.",
+        "7": "استدر للخلف إلى <RELATIVE_DIRECTION> باتجاه <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "الممشي",
         "طريق الدراجات الهوائية",
         "مسار الدراجة الجبلية",
         "معبر مشاة",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "الدرج",
+        "الجسر",
+        "النفق"
       ],
       "relative_directions": [
         "اليسار",
@@ -1124,8 +1124,8 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> ثم <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> ثم، بعد <LENGTH>، <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "كيلومترات",

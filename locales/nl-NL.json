@@ -44,10 +44,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "links",
@@ -67,10 +67,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "Links",
@@ -98,10 +98,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ]
     },
     "continue_verbal": {
@@ -119,10 +119,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -150,10 +150,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ]
     },
     "depart": {
@@ -219,7 +219,7 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk"
+        "het zebrapad"
       ]
     },
     "enter_ferry": {
@@ -233,10 +233,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "ferry_label": "Veerboot"
     },
@@ -251,10 +251,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "ferry_label": "Veerboot"
     },
@@ -281,10 +281,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "ordinal_values": [
         "1e",
@@ -322,10 +322,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "ordinal_values": [
         "1e",
@@ -387,7 +387,7 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk"
+        "het zebrapad"
       ]
     },
     "exit_roundabout": {
@@ -401,10 +401,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ]
     },
     "exit_roundabout_verbal": {
@@ -418,10 +418,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ]
     },
     "exit_verbal": {
@@ -476,10 +476,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "links",
@@ -498,10 +498,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "links",
@@ -520,10 +520,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "Links",
@@ -546,10 +546,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "Links",
@@ -559,7 +559,7 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "Ga verder naar <LEVEL>."
       }
     },
     "merge": {
@@ -575,10 +575,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "links",
@@ -598,10 +598,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "Links",
@@ -610,18 +610,18 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "Parkeer uw voertuig"
       }
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "Passeer <OBJECT_LABEL>.",
+        "1": "Passeer de verkeerslichten bij <OBJECT_LABEL>."
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
-        "ways intersection"
+        "het hek",
+        "de paaltjes",
+        "kruising van wegen"
       ]
     },
     "post_transition_transit_verbal": {
@@ -642,10 +642,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -739,10 +739,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "links",
@@ -762,10 +762,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "links",
@@ -801,10 +801,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ]
     },
     "start_verbal": {
@@ -844,10 +844,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -1039,10 +1039,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "links",
@@ -1062,10 +1062,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "Links",
@@ -1087,10 +1087,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "links",
@@ -1112,10 +1112,10 @@
         "het voetpad",
         "het fietspad",
         "het mountainbikepad",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "het zebrapad",
+        "de trap",
+        "de brug",
+        "de tunnel"
       ],
       "relative_directions": [
         "Links",

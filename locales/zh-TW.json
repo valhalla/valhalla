@@ -1,0 +1,1148 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "<LENGTH>後，<CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS>公里",
+        "1公里",
+        "<METERS>公尺",
+        "不到10公尺"
+      ],
+      "us_customary_lengths": [
+        "<MILES>英里",
+        "1英里",
+        "半英里",
+        "四分之一英里",
+        "<FEET>英尺",
+        "不到10英尺"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "到達：<TIME>。",
+        "1": "到達：<TIME>，在<TRANSIT_STOP>。"
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "在<TIME>到達。",
+        "1": "在<TIME>到達<TRANSIT_STOP>。"
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "向<RELATIVE_DIRECTION>偏行。",
+        "1": "向<RELATIVE_DIRECTION>偏行進入<STREET_NAMES>。",
+        "2": "向<RELATIVE_DIRECTION>偏行進入<BEGIN_STREET_NAMES>。繼續沿<STREET_NAMES>行駛。",
+        "3": "向<RELATIVE_DIRECTION>偏行，繼續沿<STREET_NAMES>行駛。",
+        "4": "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>偏行。",
+        "5": "向<RELATIVE_DIRECTION>偏行，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "向<RELATIVE_DIRECTION>偏行。",
+        "1": "向<RELATIVE_DIRECTION>偏行進入<STREET_NAMES>。",
+        "2": "向<RELATIVE_DIRECTION>偏行進入<BEGIN_STREET_NAMES>。",
+        "3": "向<RELATIVE_DIRECTION>偏行，繼續沿<STREET_NAMES>行駛。",
+        "4": "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>偏行。",
+        "5": "向<RELATIVE_DIRECTION>偏行，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES>變為<STREET_NAMES>。"
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES>變為<STREET_NAMES>。"
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "繼續行駛。",
+        "1": "繼續沿<STREET_NAMES>行駛。",
+        "2": "在<JUNCTION_NAME>繼續行駛。",
+        "3": "繼續行駛，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "繼續行駛。",
+        "1": "繼續行駛<LENGTH>。",
+        "2": "繼續沿<STREET_NAMES>行駛。",
+        "3": "繼續沿<STREET_NAMES>行駛<LENGTH>。",
+        "4": "在<JUNCTION_NAME>繼續行駛。",
+        "5": "在<JUNCTION_NAME>繼續行駛<LENGTH>。",
+        "6": "繼續行駛，前往<TOWARD_SIGN>。",
+        "7": "繼續行駛<LENGTH>，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS>公里",
+        "1公里",
+        "<METERS>公尺",
+        "不到10公尺"
+      ],
+      "us_customary_lengths": [
+        "<MILES>英里",
+        "1英里",
+        "半英里",
+        "四分之一英里",
+        "<FEET>英尺",
+        "不到10英尺"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "繼續行駛。",
+        "1": "繼續沿<STREET_NAMES>行駛。",
+        "2": "在<JUNCTION_NAME>繼續行駛。",
+        "3": "繼續行駛，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "出發：<TIME>。",
+        "1": "出發：<TIME>，從<TRANSIT_STOP>。"
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "在<TIME>出發。",
+        "1": "在<TIME>從<TRANSIT_STOP>出發。"
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "您已到達目的地。",
+        "1": "您已到達<DESTINATION>。",
+        "2": "目的地在<RELATIVE_DIRECTION>。",
+        "3": "<DESTINATION>在<RELATIVE_DIRECTION>。"
+      },
+      "relative_directions": [
+        "左側",
+        "右側"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "您已到達目的地。",
+        "1": "您已到達<DESTINATION>。",
+        "2": "目的地在<RELATIVE_DIRECTION>。",
+        "3": "<DESTINATION>在<RELATIVE_DIRECTION>。"
+      },
+      "relative_directions": [
+        "左側",
+        "右側"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "您即將到達目的地。",
+        "1": "您即將到達<DESTINATION>。",
+        "2": "目的地將在<RELATIVE_DIRECTION>。",
+        "3": "<DESTINATION>將在<RELATIVE_DIRECTION>。"
+      },
+      "relative_directions": [
+        "左側",
+        "右側"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "搭乘電梯。",
+        "1": "搭乘電梯到<LEVEL>。"
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "進入建築物。",
+        "1": "進入建築物，然後繼續沿<STREET_NAMES>行進。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "搭乘渡輪。",
+        "1": "前往<STREET_NAMES>。",
+        "2": "搭乘<STREET_NAMES><FERRY_LABEL>。",
+        "3": "搭乘前往<TOWARD_SIGN>的渡輪。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "ferry_label": "渡輪"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "搭乘渡輪。",
+        "1": "前往<STREET_NAMES>。",
+        "2": "搭乘<STREET_NAMES><FERRY_LABEL>。",
+        "3": "搭乘前往<TOWARD_SIGN>的渡輪。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "ferry_label": "渡輪"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "進入圓環。",
+        "1": "進入圓環，從第<ORDINAL_VALUE>個出口駛出。",
+        "2": "進入圓環，從第<ORDINAL_VALUE>個出口駛出，進入<ROUNDABOUT_EXIT_STREET_NAMES>。",
+        "3": "進入圓環，從第<ORDINAL_VALUE>個出口駛出，進入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。繼續沿<ROUNDABOUT_EXIT_STREET_NAMES>行駛。",
+        "4": "進入圓環，從第<ORDINAL_VALUE>個出口駛出，前往<TOWARD_SIGN>。",
+        "5": "進入圓環，從出口駛出，進入<ROUNDABOUT_EXIT_STREET_NAMES>。",
+        "6": "進入圓環，從出口駛出，進入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。繼續沿<ROUNDABOUT_EXIT_STREET_NAMES>行駛。",
+        "7": "進入圓環，從出口駛出，前往<TOWARD_SIGN>。",
+        "8": "進入<STREET_NAMES>",
+        "9": "進入<STREET_NAMES>，從第<ORDINAL_VALUE>個出口駛出。",
+        "10": "進入<STREET_NAMES>，從第<ORDINAL_VALUE>個出口駛出，進入<ROUNDABOUT_EXIT_STREET_NAMES>。",
+        "11": "進入<STREET_NAMES>，從第<ORDINAL_VALUE>個出口駛出，進入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。繼續沿<ROUNDABOUT_EXIT_STREET_NAMES>行駛。",
+        "12": "進入<STREET_NAMES>，從第<ORDINAL_VALUE>個出口駛出，前往<TOWARD_SIGN>。",
+        "13": "進入<STREET_NAMES>，從出口駛出，進入<ROUNDABOUT_EXIT_STREET_NAMES>。",
+        "14": "進入<STREET_NAMES>，從出口駛出，進入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。繼續沿<ROUNDABOUT_EXIT_STREET_NAMES>行駛。",
+        "15": "進入<STREET_NAMES>，從出口駛出，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "ordinal_values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "進入圓環。",
+        "1": "進入圓環，從第<ORDINAL_VALUE>個出口駛出。",
+        "2": "進入圓環，從第<ORDINAL_VALUE>個出口駛出，進入<ROUNDABOUT_EXIT_STREET_NAMES>。",
+        "3": "進入圓環，從第<ORDINAL_VALUE>個出口駛出，進入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。",
+        "4": "進入圓環，從第<ORDINAL_VALUE>個出口駛出，前往<TOWARD_SIGN>。",
+        "5": "進入圓環，從出口駛出，進入<ROUNDABOUT_EXIT_STREET_NAMES>。",
+        "6": "進入圓環，從出口駛出，進入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。",
+        "7": "進入圓環，從出口駛出，前往<TOWARD_SIGN>。",
+        "8": "進入<STREET_NAMES>",
+        "9": "進入<STREET_NAMES>，從第<ORDINAL_VALUE>個出口駛出。",
+        "10": "進入<STREET_NAMES>，從第<ORDINAL_VALUE>個出口駛出，進入<ROUNDABOUT_EXIT_STREET_NAMES>。",
+        "11": "進入<STREET_NAMES>，從第<ORDINAL_VALUE>個出口駛出，進入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。",
+        "12": "進入<STREET_NAMES>，從第<ORDINAL_VALUE>個出口駛出，前往<TOWARD_SIGN>。",
+        "13": "進入<STREET_NAMES>，從出口駛出，進入<ROUNDABOUT_EXIT_STREET_NAMES>。",
+        "14": "進入<STREET_NAMES>，從出口駛出，進入<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>。",
+        "15": "進入<STREET_NAMES>，從出口駛出，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "ordinal_values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "搭乘手扶梯。",
+        "1": "搭乘手扶梯到<LEVEL>。"
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "從<RELATIVE_DIRECTION>側出口駛出。",
+        "1": "從<RELATIVE_DIRECTION>側<NUMBER_SIGN>號出口駛出。",
+        "2": "從<RELATIVE_DIRECTION>側<BRANCH_SIGN>出口駛出。",
+        "3": "從<RELATIVE_DIRECTION>側<NUMBER_SIGN>號出口駛出，進入<BRANCH_SIGN>。",
+        "4": "從<RELATIVE_DIRECTION>側出口駛出，前往<TOWARD_SIGN>。",
+        "5": "從<RELATIVE_DIRECTION>側<NUMBER_SIGN>號出口駛出，前往<TOWARD_SIGN>。",
+        "6": "從<RELATIVE_DIRECTION>側<BRANCH_SIGN>出口駛出，前往<TOWARD_SIGN>。",
+        "7": "從<RELATIVE_DIRECTION>側<NUMBER_SIGN>號出口駛出，進入<BRANCH_SIGN>，前往<TOWARD_SIGN>。",
+        "8": "從<RELATIVE_DIRECTION>側<NAME_SIGN>出口駛出。",
+        "10": "從<RELATIVE_DIRECTION>側<NAME_SIGN>出口駛出，進入<BRANCH_SIGN>。",
+        "12": "從<RELATIVE_DIRECTION>側<NAME_SIGN>出口駛出，前往<TOWARD_SIGN>。",
+        "14": "從<RELATIVE_DIRECTION>側<NAME_SIGN>出口駛出，進入<BRANCH_SIGN>，前往<TOWARD_SIGN>。",
+        "15": "從出口駛出。",
+        "16": "從<NUMBER_SIGN>號出口駛出。",
+        "17": "從<BRANCH_SIGN>出口駛出。",
+        "18": "從<NUMBER_SIGN>號出口駛出，進入<BRANCH_SIGN>。",
+        "19": "從出口駛出，前往<TOWARD_SIGN>。",
+        "20": "從<NUMBER_SIGN>號出口駛出，前往<TOWARD_SIGN>。",
+        "21": "從<BRANCH_SIGN>出口駛出，前往<TOWARD_SIGN>。",
+        "22": "從<NUMBER_SIGN>號出口駛出，進入<BRANCH_SIGN>，前往<TOWARD_SIGN>。",
+        "23": "從<NAME_SIGN>出口駛出。",
+        "25": "從<NAME_SIGN>出口駛出，進入<BRANCH_SIGN>。",
+        "27": "從<NAME_SIGN>出口駛出，前往<TOWARD_SIGN>。",
+        "29": "從<NAME_SIGN>出口駛出，進入<BRANCH_SIGN>，前往<TOWARD_SIGN>。"
+      },
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "走出建築物。",
+        "1": "走出建築物，然後繼續沿<STREET_NAMES>行進。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "駛出圓環。",
+        "1": "駛出圓環，進入<STREET_NAMES>。",
+        "2": "駛出圓環，進入<BEGIN_STREET_NAMES>。繼續沿<STREET_NAMES>行駛。",
+        "3": "駛出圓環，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "駛出圓環。",
+        "1": "駛出圓環，進入<STREET_NAMES>。",
+        "2": "駛出圓環，進入<BEGIN_STREET_NAMES>。",
+        "3": "駛出圓環，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "從<RELATIVE_DIRECTION>側出口駛出。",
+        "1": "從<RELATIVE_DIRECTION>側<NUMBER_SIGN>號出口駛出。",
+        "2": "從<RELATIVE_DIRECTION>側<BRANCH_SIGN>出口駛出。",
+        "3": "從<RELATIVE_DIRECTION>側<NUMBER_SIGN>號出口駛出，進入<BRANCH_SIGN>。",
+        "4": "從<RELATIVE_DIRECTION>側出口駛出，前往<TOWARD_SIGN>。",
+        "5": "從<RELATIVE_DIRECTION>側<NUMBER_SIGN>號出口駛出，前往<TOWARD_SIGN>。",
+        "6": "從<RELATIVE_DIRECTION>側<BRANCH_SIGN>出口駛出，前往<TOWARD_SIGN>。",
+        "7": "從<RELATIVE_DIRECTION>側<NUMBER_SIGN>號出口駛出，進入<BRANCH_SIGN>，前往<TOWARD_SIGN>。",
+        "8": "從<RELATIVE_DIRECTION>側<NAME_SIGN>出口駛出。",
+        "10": "從<RELATIVE_DIRECTION>側<NAME_SIGN>出口駛出，進入<BRANCH_SIGN>。",
+        "12": "從<RELATIVE_DIRECTION>側<NAME_SIGN>出口駛出，前往<TOWARD_SIGN>。",
+        "14": "從<RELATIVE_DIRECTION>側<NAME_SIGN>出口駛出，進入<BRANCH_SIGN>，前往<TOWARD_SIGN>。",
+        "15": "從出口駛出。",
+        "16": "從<NUMBER_SIGN>號出口駛出。",
+        "17": "從<BRANCH_SIGN>出口駛出。",
+        "18": "從<NUMBER_SIGN>號出口駛出，進入<BRANCH_SIGN>。",
+        "19": "從出口駛出，前往<TOWARD_SIGN>。",
+        "20": "從<NUMBER_SIGN>號出口駛出，前往<TOWARD_SIGN>。",
+        "21": "從<BRANCH_SIGN>出口駛出，前往<TOWARD_SIGN>。",
+        "22": "從<NUMBER_SIGN>號出口駛出，進入<BRANCH_SIGN>，前往<TOWARD_SIGN>。",
+        "23": "從<NAME_SIGN>出口駛出。",
+        "25": "從<NAME_SIGN>出口駛出，進入<BRANCH_SIGN>。",
+        "27": "從<NAME_SIGN>出口駛出，前往<TOWARD_SIGN>。",
+        "29": "從<NAME_SIGN>出口駛出，進入<BRANCH_SIGN>，前往<TOWARD_SIGN>。"
+      },
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "<EXIT_NUMBERS>號出口"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "在岔路口保持<RELATIVE_DIRECTION>。",
+        "1": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出。",
+        "2": "保持<RELATIVE_DIRECTION>，進入<STREET_NAMES>。",
+        "3": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出，進入<STREET_NAMES>。",
+        "4": "保持<RELATIVE_DIRECTION>，前往<TOWARD_SIGN>。",
+        "5": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出，前往<TOWARD_SIGN>。",
+        "6": "保持<RELATIVE_DIRECTION>，進入<STREET_NAMES>，前往<TOWARD_SIGN>。",
+        "7": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出，進入<STREET_NAMES>，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左側",
+        "直行",
+        "右側"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "保持<RELATIVE_DIRECTION>，繼續沿<STREET_NAMES>行駛。",
+        "1": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出，繼續沿<STREET_NAMES>行駛。",
+        "2": "保持<RELATIVE_DIRECTION>，繼續沿<STREET_NAMES>行駛，前往<TOWARD_SIGN>。",
+        "3": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出，繼續沿<STREET_NAMES>行駛，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左側",
+        "直行",
+        "右側"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "保持<RELATIVE_DIRECTION>，繼續沿<STREET_NAMES>行駛。",
+        "1": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出，繼續沿<STREET_NAMES>行駛。",
+        "2": "保持<RELATIVE_DIRECTION>，繼續沿<STREET_NAMES>行駛，前往<TOWARD_SIGN>。",
+        "3": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出，繼續沿<STREET_NAMES>行駛，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左側",
+        "直行",
+        "右側"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "在岔路口保持<RELATIVE_DIRECTION>。",
+        "1": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出。",
+        "2": "保持<RELATIVE_DIRECTION>，進入<STREET_NAMES>。",
+        "3": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出，進入<STREET_NAMES>。",
+        "4": "保持<RELATIVE_DIRECTION>，前往<TOWARD_SIGN>。",
+        "5": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出，前往<TOWARD_SIGN>。",
+        "6": "保持<RELATIVE_DIRECTION>，進入<STREET_NAMES>，前往<TOWARD_SIGN>。",
+        "7": "保持<RELATIVE_DIRECTION>，從<NUMBER_SIGN>號出口駛出，進入<STREET_NAMES>，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左側",
+        "直行",
+        "右側"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "繼續前往<LEVEL>。"
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "匯入車道。",
+        "1": "向<RELATIVE_DIRECTION>匯入車道。",
+        "2": "匯入<STREET_NAMES>。",
+        "3": "向<RELATIVE_DIRECTION>匯入<STREET_NAMES>。",
+        "4": "匯入車道，前往<TOWARD_SIGN>。",
+        "5": "向<RELATIVE_DIRECTION>匯入車道，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "匯入車道。",
+        "1": "向<RELATIVE_DIRECTION>匯入車道。",
+        "2": "匯入<STREET_NAMES>。",
+        "3": "向<RELATIVE_DIRECTION>匯入<STREET_NAMES>。",
+        "4": "匯入車道，前往<TOWARD_SIGN>。",
+        "5": "向<RELATIVE_DIRECTION>匯入車道，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "停放車輛"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "通過<OBJECT_LABEL>。",
+        "1": "通過<OBJECT_LABEL>的紅綠燈。"
+      },
+      "object_labels": [
+        "大門",
+        "阻車柱",
+        "道路交叉口"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "搭乘<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>。"
+      },
+      "transit_stop_count_labels": {
+        "one": "站",
+        "other": "站"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "繼續行駛<LENGTH>。",
+        "1": "繼續沿<STREET_NAMES>行駛<LENGTH>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS>公里",
+        "1公里",
+        "<METERS>公尺",
+        "不到10公尺"
+      ],
+      "us_customary_lengths": [
+        "<MILES>英里",
+        "1英里",
+        "半英里",
+        "四分之一英里",
+        "<FEET>英尺",
+        "不到10英尺"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "從<RELATIVE_DIRECTION>側匝道駛入。",
+        "1": "從<RELATIVE_DIRECTION>側<BRANCH_SIGN>匝道駛入。",
+        "2": "從<RELATIVE_DIRECTION>側匝道駛入，前往<TOWARD_SIGN>。",
+        "3": "從<RELATIVE_DIRECTION>側<BRANCH_SIGN>匝道駛入，前往<TOWARD_SIGN>。",
+        "4": "從<RELATIVE_DIRECTION>側<NAME_SIGN>匝道駛入。",
+        "5": "向<RELATIVE_DIRECTION>轉彎駛入匝道。",
+        "6": "向<RELATIVE_DIRECTION>轉彎駛入<BRANCH_SIGN>匝道。",
+        "7": "向<RELATIVE_DIRECTION>轉彎駛入匝道，前往<TOWARD_SIGN>。",
+        "8": "向<RELATIVE_DIRECTION>轉彎駛入<BRANCH_SIGN>匝道，前往<TOWARD_SIGN>。",
+        "9": "向<RELATIVE_DIRECTION>轉彎駛入<NAME_SIGN>匝道。",
+        "10": "駛入匝道。",
+        "11": "駛入<BRANCH_SIGN>匝道。",
+        "12": "駛入匝道，前往<TOWARD_SIGN>。",
+        "13": "駛入<BRANCH_SIGN>匝道，前往<TOWARD_SIGN>。",
+        "14": "駛入<NAME_SIGN>匝道。"
+      },
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "保持直行駛入匝道。",
+        "1": "保持直行駛入<BRANCH_SIGN>匝道。",
+        "2": "保持直行駛入匝道，前往<TOWARD_SIGN>。",
+        "3": "保持直行駛入<BRANCH_SIGN>匝道，前往<TOWARD_SIGN>。",
+        "4": "保持直行駛入<NAME_SIGN>匝道。"
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "保持直行駛入匝道。",
+        "1": "保持直行駛入<BRANCH_SIGN>匝道。",
+        "2": "保持直行駛入匝道，前往<TOWARD_SIGN>。",
+        "3": "保持直行駛入<BRANCH_SIGN>匝道，前往<TOWARD_SIGN>。",
+        "4": "保持直行駛入<NAME_SIGN>匝道。"
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "從<RELATIVE_DIRECTION>側匝道駛入。",
+        "1": "從<RELATIVE_DIRECTION>側<BRANCH_SIGN>匝道駛入。",
+        "2": "從<RELATIVE_DIRECTION>側匝道駛入，前往<TOWARD_SIGN>。",
+        "3": "從<RELATIVE_DIRECTION>側<BRANCH_SIGN>匝道駛入，前往<TOWARD_SIGN>。",
+        "4": "從<RELATIVE_DIRECTION>側<NAME_SIGN>匝道駛入。",
+        "5": "向<RELATIVE_DIRECTION>轉彎駛入匝道。",
+        "6": "向<RELATIVE_DIRECTION>轉彎駛入<BRANCH_SIGN>匝道。",
+        "7": "向<RELATIVE_DIRECTION>轉彎駛入匝道，前往<TOWARD_SIGN>。",
+        "8": "向<RELATIVE_DIRECTION>轉彎駛入<BRANCH_SIGN>匝道，前往<TOWARD_SIGN>。",
+        "9": "向<RELATIVE_DIRECTION>轉彎駛入<NAME_SIGN>匝道。",
+        "10": "駛入匝道。",
+        "11": "駛入<BRANCH_SIGN>匝道。",
+        "12": "駛入匝道，前往<TOWARD_SIGN>。",
+        "13": "駛入<BRANCH_SIGN>匝道，前往<TOWARD_SIGN>。",
+        "14": "駛入<NAME_SIGN>匝道。"
+      },
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "向<RELATIVE_DIRECTION>急轉彎。",
+        "1": "向<RELATIVE_DIRECTION>急轉彎進入<STREET_NAMES>。",
+        "2": "向<RELATIVE_DIRECTION>急轉彎進入<BEGIN_STREET_NAMES>。繼續沿<STREET_NAMES>行駛。",
+        "3": "向<RELATIVE_DIRECTION>急轉彎，繼續沿<STREET_NAMES>行駛。",
+        "4": "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>急轉彎。",
+        "5": "向<RELATIVE_DIRECTION>急轉彎，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "向<RELATIVE_DIRECTION>急轉彎。",
+        "1": "向<RELATIVE_DIRECTION>急轉彎進入<STREET_NAMES>。",
+        "2": "向<RELATIVE_DIRECTION>急轉彎進入<BEGIN_STREET_NAMES>。",
+        "3": "向<RELATIVE_DIRECTION>急轉彎，繼續沿<STREET_NAMES>行駛。",
+        "4": "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>急轉彎。",
+        "5": "向<RELATIVE_DIRECTION>急轉彎，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "向<CARDINAL_DIRECTION>出發。",
+        "1": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>出發。",
+        "2": "沿<BEGIN_STREET_NAMES>向<CARDINAL_DIRECTION>出發。繼續沿<STREET_NAMES>行駛。",
+        "4": "向<CARDINAL_DIRECTION>行駛。",
+        "5": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>行駛。",
+        "6": "沿<BEGIN_STREET_NAMES>向<CARDINAL_DIRECTION>行駛。繼續沿<STREET_NAMES>行駛。",
+        "8": "向<CARDINAL_DIRECTION>步行。",
+        "9": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>步行。",
+        "10": "沿<BEGIN_STREET_NAMES>向<CARDINAL_DIRECTION>步行。繼續沿<STREET_NAMES>行進。",
+        "16": "向<CARDINAL_DIRECTION>騎乘。",
+        "17": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>騎乘。",
+        "18": "沿<BEGIN_STREET_NAMES>向<CARDINAL_DIRECTION>騎乘。繼續沿<STREET_NAMES>騎乘。"
+      },
+      "cardinal_directions": [
+        "北",
+        "東北",
+        "東",
+        "東南",
+        "南",
+        "西南",
+        "西",
+        "西北"
+      ],
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "向<CARDINAL_DIRECTION>出發。",
+        "1": "向<CARDINAL_DIRECTION>行進<LENGTH>。",
+        "2": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>出發。",
+        "3": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>行進<LENGTH>。",
+        "4": "沿<BEGIN_STREET_NAMES>向<CARDINAL_DIRECTION>出發。",
+        "5": "向<CARDINAL_DIRECTION>行駛。",
+        "6": "向<CARDINAL_DIRECTION>行駛<LENGTH>。",
+        "7": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>行駛。",
+        "8": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>行駛<LENGTH>。",
+        "9": "沿<BEGIN_STREET_NAMES>向<CARDINAL_DIRECTION>行駛。",
+        "10": "向<CARDINAL_DIRECTION>步行。",
+        "11": "向<CARDINAL_DIRECTION>步行<LENGTH>。",
+        "12": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>步行。",
+        "13": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>步行<LENGTH>。",
+        "14": "沿<BEGIN_STREET_NAMES>向<CARDINAL_DIRECTION>步行。",
+        "15": "向<CARDINAL_DIRECTION>騎乘。",
+        "16": "向<CARDINAL_DIRECTION>騎乘<LENGTH>。",
+        "17": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>騎乘。",
+        "18": "沿<STREET_NAMES>向<CARDINAL_DIRECTION>騎乘<LENGTH>。",
+        "19": "沿<BEGIN_STREET_NAMES>向<CARDINAL_DIRECTION>騎乘。"
+      },
+      "cardinal_directions": [
+        "北",
+        "東北",
+        "東",
+        "東南",
+        "南",
+        "西南",
+        "西",
+        "西北"
+      ],
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS>公里",
+        "1公里",
+        "<METERS>公尺",
+        "不到10公尺"
+      ],
+      "us_customary_lengths": [
+        "<MILES>英里",
+        "1英里",
+        "半英里",
+        "四分之一英里",
+        "<FEET>英尺",
+        "不到10英尺"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "走樓梯。",
+        "1": "走樓梯到<LEVEL>。"
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "搭乘<TRANSIT_NAME>。（<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>）",
+        "1": "搭乘開往<TRANSIT_HEADSIGN>的<TRANSIT_NAME>。（<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>）"
+      },
+      "empty_transit_name_labels": [
+        "路面電車",
+        "捷運",
+        "火車",
+        "公車",
+        "渡輪",
+        "纜車",
+        "空中纜車",
+        "纜索鐵路"
+      ],
+      "transit_stop_count_labels": {
+        "one": "站",
+        "other": "站"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "走出車站。",
+        "1": "走出<TRANSIT_STOP>。",
+        "2": "走出<TRANSIT_STOP><STATION_LABEL>。"
+      },
+      "station_label": "站"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "走出車站。",
+        "1": "走出<TRANSIT_STOP>。",
+        "2": "走出<TRANSIT_STOP><STATION_LABEL>。"
+      },
+      "station_label": "站"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "進入車站。",
+        "1": "進入<TRANSIT_STOP>。",
+        "2": "進入<TRANSIT_STOP><STATION_LABEL>。"
+      },
+      "station_label": "站"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "進入車站。",
+        "1": "進入<TRANSIT_STOP>。",
+        "2": "進入<TRANSIT_STOP><STATION_LABEL>。"
+      },
+      "station_label": "站"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "在車站換乘。",
+        "1": "在<TRANSIT_STOP>換乘。",
+        "2": "在<TRANSIT_STOP><STATION_LABEL>換乘。"
+      },
+      "station_label": "站"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "在車站換乘。",
+        "1": "在<TRANSIT_STOP>換乘。",
+        "2": "在<TRANSIT_STOP><STATION_LABEL>換乘。"
+      },
+      "station_label": "站"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "繼續搭乘<TRANSIT_NAME>。（<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>）",
+        "1": "繼續搭乘開往<TRANSIT_HEADSIGN>的<TRANSIT_NAME>。（<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>）"
+      },
+      "empty_transit_name_labels": [
+        "路面電車",
+        "捷運",
+        "火車",
+        "公車",
+        "渡輪",
+        "纜車",
+        "空中纜車",
+        "纜索鐵路"
+      ],
+      "transit_stop_count_labels": {
+        "one": "站",
+        "other": "站"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "繼續搭乘<TRANSIT_NAME>。",
+        "1": "繼續搭乘開往<TRANSIT_HEADSIGN>的<TRANSIT_NAME>。"
+      },
+      "empty_transit_name_labels": [
+        "路面電車",
+        "捷運",
+        "火車",
+        "公車",
+        "渡輪",
+        "纜車",
+        "空中纜車",
+        "纜索鐵路"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "換乘<TRANSIT_NAME>。（<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>）",
+        "1": "換乘開往<TRANSIT_HEADSIGN>的<TRANSIT_NAME>。（<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>）"
+      },
+      "empty_transit_name_labels": [
+        "路面電車",
+        "捷運",
+        "火車",
+        "公車",
+        "渡輪",
+        "纜車",
+        "空中纜車",
+        "纜索鐵路"
+      ],
+      "transit_stop_count_labels": {
+        "one": "站",
+        "other": "站"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "換乘<TRANSIT_NAME>。",
+        "1": "換乘開往<TRANSIT_HEADSIGN>的<TRANSIT_NAME>。"
+      },
+      "empty_transit_name_labels": [
+        "路面電車",
+        "捷運",
+        "火車",
+        "公車",
+        "渡輪",
+        "纜車",
+        "空中纜車",
+        "纜索鐵路"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "搭乘<TRANSIT_NAME>。",
+        "1": "搭乘開往<TRANSIT_HEADSIGN>的<TRANSIT_NAME>。"
+      },
+      "empty_transit_name_labels": [
+        "路面電車",
+        "捷運",
+        "火車",
+        "公車",
+        "渡輪",
+        "纜車",
+        "空中纜車",
+        "纜索鐵路"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "向<RELATIVE_DIRECTION>轉彎。",
+        "1": "向<RELATIVE_DIRECTION>轉彎進入<STREET_NAMES>。",
+        "2": "向<RELATIVE_DIRECTION>轉彎進入<BEGIN_STREET_NAMES>。繼續沿<STREET_NAMES>行駛。",
+        "3": "向<RELATIVE_DIRECTION>轉彎，繼續沿<STREET_NAMES>行駛。",
+        "4": "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>轉彎。",
+        "5": "向<RELATIVE_DIRECTION>轉彎，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "向<RELATIVE_DIRECTION>轉彎。",
+        "1": "向<RELATIVE_DIRECTION>轉彎進入<STREET_NAMES>。",
+        "2": "向<RELATIVE_DIRECTION>轉彎進入<BEGIN_STREET_NAMES>。",
+        "3": "向<RELATIVE_DIRECTION>轉彎，繼續沿<STREET_NAMES>行駛。",
+        "4": "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>轉彎。",
+        "5": "向<RELATIVE_DIRECTION>轉彎，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "向<RELATIVE_DIRECTION>迴轉。",
+        "1": "向<RELATIVE_DIRECTION>迴轉進入<STREET_NAMES>。",
+        "2": "向<RELATIVE_DIRECTION>迴轉，繼續沿<STREET_NAMES>行駛。",
+        "3": "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>迴轉。",
+        "4": "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>迴轉，進入<STREET_NAMES>。",
+        "5": "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>迴轉，繼續沿<STREET_NAMES>行駛。",
+        "6": "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>迴轉。",
+        "7": "向<RELATIVE_DIRECTION>迴轉，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "向<RELATIVE_DIRECTION>迴轉。",
+        "1": "向<RELATIVE_DIRECTION>迴轉進入<STREET_NAMES>。",
+        "2": "向<RELATIVE_DIRECTION>迴轉，繼續沿<STREET_NAMES>行駛。",
+        "3": "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>迴轉。",
+        "4": "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>迴轉，進入<STREET_NAMES>。",
+        "5": "在<CROSS_STREET_NAMES>向<RELATIVE_DIRECTION>迴轉，繼續沿<STREET_NAMES>行駛。",
+        "6": "在<JUNCTION_NAME>向<RELATIVE_DIRECTION>迴轉。",
+        "7": "向<RELATIVE_DIRECTION>迴轉，前往<TOWARD_SIGN>。"
+      },
+      "empty_street_name_labels": [
+        "人行道",
+        "自行車道",
+        "山地自行車道",
+        "行人穿越道",
+        "樓梯",
+        "橋",
+        "隧道"
+      ],
+      "relative_directions": [
+        "左",
+        "右"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> 然後<NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> 然後，<LENGTH>後，<NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS>公里",
+        "1公里",
+        "<METERS>公尺",
+        "不到10公尺"
+      ],
+      "us_customary_lengths": [
+        "<MILES>英里",
+        "1英里",
+        "半英里",
+        "四分之一英里",
+        "<FEET>英尺",
+        "不到10英尺"
+      ]
+    }
+  },
+  "posix_locale": "zh_TW.UTF-8",
+  "aliases": []
+}

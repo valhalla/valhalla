@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "<LENGTH> தொலைவில், <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> கிலோமீட்டர்",
+        "1 கிலோமீட்டர்",
+        "<METERS> மீட்டர்",
+        "10 மீட்டருக்கும் குறைவு"
+      ],
+      "us_customary_lengths": [
+        "<MILES> மைல்",
+        "1 மைல்",
+        "அரை மைல்",
+        "கால் மைல்",
+        "<FEET> அடி",
+        "10 அடிக்கும் குறைவு"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "வந்து சேரும் நேரம்: <TIME>.",
+        "1": "வந்து சேரும் நேரம்: <TIME>, <TRANSIT_STOP> இல்."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "<TIME> மணிக்கு வந்து சேரவும்.",
+        "1": "<TIME> மணிக்கு <TRANSIT_STOP> இல் வந்து சேரவும்."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> பக்கம் சாய்ந்து செல்லவும்.",
+        "1": "<RELATIVE_DIRECTION> பக்கம் சாய்ந்து <STREET_NAMES> இல் செல்லவும்.",
+        "2": "<RELATIVE_DIRECTION> பக்கம் சாய்ந்து <BEGIN_STREET_NAMES> இல் செல்லவும். <STREET_NAMES> இல் தொடரவும்.",
+        "3": "<STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> பக்கம் சாய்ந்து செல்லவும்.",
+        "4": "<JUNCTION_NAME> இல் <RELATIVE_DIRECTION> பக்கம் சாய்ந்து செல்லவும்.",
+        "5": "<TOWARD_SIGN> நோக்கி <RELATIVE_DIRECTION> பக்கம் சாய்ந்து செல்லவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> பக்கம் சாய்ந்து செல்லவும்.",
+        "1": "<RELATIVE_DIRECTION> பக்கம் சாய்ந்து <STREET_NAMES> இல் செல்லவும்.",
+        "2": "<RELATIVE_DIRECTION> பக்கம் சாய்ந்து <BEGIN_STREET_NAMES> இல் செல்லவும்.",
+        "3": "<STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> பக்கம் சாய்ந்து செல்லவும்.",
+        "4": "<JUNCTION_NAME> இல் <RELATIVE_DIRECTION> பக்கம் சாய்ந்து செல்லவும்.",
+        "5": "<TOWARD_SIGN> நோக்கி <RELATIVE_DIRECTION> பக்கம் சாய்ந்து செல்லவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> ஆனது <STREET_NAMES> ஆக மாறுகிறது."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> ஆனது <STREET_NAMES> ஆக மாறுகிறது."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "தொடரவும்.",
+        "1": "<STREET_NAMES> இல் தொடரவும்.",
+        "2": "<JUNCTION_NAME> இல் தொடரவும்.",
+        "3": "<TOWARD_SIGN> நோக்கித் தொடரவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "தொடரவும்.",
+        "1": "<LENGTH> தொலைவு தொடரவும்.",
+        "2": "<STREET_NAMES> இல் தொடரவும்.",
+        "3": "<STREET_NAMES> இல் <LENGTH> தொலைவு தொடரவும்.",
+        "4": "<JUNCTION_NAME> இல் தொடரவும்.",
+        "5": "<JUNCTION_NAME> இல் <LENGTH> தொலைவு தொடரவும்.",
+        "6": "<TOWARD_SIGN> நோக்கித் தொடரவும்.",
+        "7": "<TOWARD_SIGN> நோக்கி <LENGTH> தொலைவு தொடரவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> கிலோமீட்டர்",
+        "1 கிலோமீட்டர்",
+        "<METERS> மீட்டர்",
+        "10 மீட்டருக்கும் குறைவு"
+      ],
+      "us_customary_lengths": [
+        "<MILES> மைல்",
+        "1 மைல்",
+        "அரை மைல்",
+        "கால் மைல்",
+        "<FEET> அடி",
+        "10 அடிக்கும் குறைவு"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "தொடரவும்.",
+        "1": "<STREET_NAMES> இல் தொடரவும்.",
+        "2": "<JUNCTION_NAME> இல் தொடரவும்.",
+        "3": "<TOWARD_SIGN> நோக்கித் தொடரவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "புறப்படும் நேரம்: <TIME>.",
+        "1": "புறப்படும் நேரம்: <TIME>, <TRANSIT_STOP> இலிருந்து."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "<TIME> மணிக்குப் புறப்படவும்.",
+        "1": "<TIME> மணிக்கு <TRANSIT_STOP> இலிருந்து புறப்படவும்."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "நீங்கள் உங்கள் இலக்கை அடைந்துவிட்டீர்கள்.",
+        "1": "நீங்கள் <DESTINATION> ஐ அடைந்துவிட்டீர்கள்.",
+        "2": "உங்கள் இலக்கு <RELATIVE_DIRECTION> புறத்தில் உள்ளது.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> புறத்தில் உள்ளது."
+      },
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "நீங்கள் உங்கள் இலக்கை அடைந்துவிட்டீர்கள்.",
+        "1": "நீங்கள் <DESTINATION> ஐ அடைந்துவிட்டீர்கள்.",
+        "2": "உங்கள் இலக்கு <RELATIVE_DIRECTION> புறத்தில் உள்ளது.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> புறத்தில் உள்ளது."
+      },
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "நீங்கள் உங்கள் இலக்கை அடையவிருக்கிறீர்கள்.",
+        "1": "நீங்கள் <DESTINATION> ஐ அடையவிருக்கிறீர்கள்.",
+        "2": "உங்கள் இலக்கு <RELATIVE_DIRECTION> புறத்தில் இருக்கும்.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> புறத்தில் இருக்கும்."
+      },
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "மின்தூக்கியைப் பயன்படுத்தவும்.",
+        "1": "மின்தூக்கியில் <LEVEL> க்குச் செல்லவும்."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "கட்டிடத்திற்குள் நுழையவும்.",
+        "1": "கட்டிடத்திற்குள் நுழைந்து <STREET_NAMES> இல் தொடரவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "படகில் ஏறவும்.",
+        "1": "<STREET_NAMES> இல் செல்லவும்.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> இல் செல்லவும்.",
+        "3": "<TOWARD_SIGN> நோக்கிச் செல்லும் படகில் ஏறவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "ferry_label": "படகு"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "படகில் ஏறவும்.",
+        "1": "<STREET_NAMES> இல் செல்லவும்.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> இல் செல்லவும்.",
+        "3": "<TOWARD_SIGN> நோக்கிச் செல்லும் படகில் ஏறவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "ferry_label": "படகு"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "சுற்றுவட்டத்தில் நுழையவும்.",
+        "1": "சுற்றுவட்டத்தில் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் செல்லவும்.",
+        "2": "சுற்றுவட்டத்தில் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <ROUNDABOUT_EXIT_STREET_NAMES> இல் செல்லவும்.",
+        "3": "சுற்றுவட்டத்தில் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> இல் செல்லவும். <ROUNDABOUT_EXIT_STREET_NAMES> இல் தொடரவும்.",
+        "4": "சுற்றுவட்டத்தில் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "5": "சுற்றுவட்டத்தில் நுழைந்து வெளியேறும் வழியில் <ROUNDABOUT_EXIT_STREET_NAMES> இல் செல்லவும்.",
+        "6": "சுற்றுவட்டத்தில் நுழைந்து வெளியேறும் வழியில் <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> இல் செல்லவும். <ROUNDABOUT_EXIT_STREET_NAMES> இல் தொடரவும்.",
+        "7": "சுற்றுவட்டத்தில் நுழைந்து வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "8": "<STREET_NAMES> இல் நுழையவும்",
+        "9": "<STREET_NAMES> இல் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் செல்லவும்.",
+        "10": "<STREET_NAMES> இல் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <ROUNDABOUT_EXIT_STREET_NAMES> இல் செல்லவும்.",
+        "11": "<STREET_NAMES> இல் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> இல் செல்லவும். <ROUNDABOUT_EXIT_STREET_NAMES> இல் தொடரவும்.",
+        "12": "<STREET_NAMES> இல் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "13": "<STREET_NAMES> இல் நுழைந்து வெளியேறும் வழியில் <ROUNDABOUT_EXIT_STREET_NAMES> இல் செல்லவும்.",
+        "14": "<STREET_NAMES> இல் நுழைந்து வெளியேறும் வழியில் <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> இல் செல்லவும். <ROUNDABOUT_EXIT_STREET_NAMES> இல் தொடரவும்.",
+        "15": "<STREET_NAMES> இல் நுழைந்து வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "ordinal_values": [
+        "1வது",
+        "2வது",
+        "3வது",
+        "4வது",
+        "5வது",
+        "6வது",
+        "7வது",
+        "8வது",
+        "9வது",
+        "10வது"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "சுற்றுவட்டத்தில் நுழையவும்.",
+        "1": "சுற்றுவட்டத்தில் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் செல்லவும்.",
+        "2": "சுற்றுவட்டத்தில் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <ROUNDABOUT_EXIT_STREET_NAMES> இல் செல்லவும்.",
+        "3": "சுற்றுவட்டத்தில் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> இல் செல்லவும்.",
+        "4": "சுற்றுவட்டத்தில் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "5": "சுற்றுவட்டத்தில் நுழைந்து வெளியேறும் வழியில் <ROUNDABOUT_EXIT_STREET_NAMES> இல் செல்லவும்.",
+        "6": "சுற்றுவட்டத்தில் நுழைந்து வெளியேறும் வழியில் <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> இல் செல்லவும்.",
+        "7": "சுற்றுவட்டத்தில் நுழைந்து வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "8": "<STREET_NAMES> இல் நுழையவும்",
+        "9": "<STREET_NAMES> இல் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் செல்லவும்.",
+        "10": "<STREET_NAMES> இல் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <ROUNDABOUT_EXIT_STREET_NAMES> இல் செல்லவும்.",
+        "11": "<STREET_NAMES> இல் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> இல் செல்லவும்.",
+        "12": "<STREET_NAMES> இல் நுழைந்து <ORDINAL_VALUE> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "13": "<STREET_NAMES> இல் நுழைந்து வெளியேறும் வழியில் <ROUNDABOUT_EXIT_STREET_NAMES> இல் செல்லவும்.",
+        "14": "<STREET_NAMES> இல் நுழைந்து வெளியேறும் வழியில் <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> இல் செல்லவும்.",
+        "15": "<STREET_NAMES> இல் நுழைந்து வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "ordinal_values": [
+        "1வது",
+        "2வது",
+        "3வது",
+        "4வது",
+        "5வது",
+        "6வது",
+        "7வது",
+        "8வது",
+        "9வது",
+        "10வது"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "நகரும் படிக்கட்டைப் பயன்படுத்தவும்.",
+        "1": "நகரும் படிக்கட்டில் <LEVEL> க்குச் செல்லவும்."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> புறத்தில் உள்ள வெளியேறும் வழியில் செல்லவும்.",
+        "1": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NUMBER_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "2": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <BRANCH_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "3": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NUMBER_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> இல் செல்லவும்.",
+        "4": "<RELATIVE_DIRECTION> புறத்தில் உள்ள வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "5": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NUMBER_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "6": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <BRANCH_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "7": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NUMBER_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> வழியாக <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "8": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NAME_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "10": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NAME_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> இல் செல்லவும்.",
+        "12": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NAME_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "14": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NAME_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> வழியாக <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "15": "வெளியேறும் வழியில் செல்லவும்.",
+        "16": "<NUMBER_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "17": "<BRANCH_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "18": "<NUMBER_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> இல் செல்லவும்.",
+        "19": "வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "20": "<NUMBER_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "21": "<BRANCH_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "22": "<NUMBER_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> வழியாக <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "23": "<NAME_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "25": "<NAME_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> இல் செல்லவும்.",
+        "27": "<NAME_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "29": "<NAME_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> வழியாக <TOWARD_SIGN> நோக்கிச் செல்லவும்."
+      },
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "கட்டிடத்திலிருந்து வெளியேறவும்.",
+        "1": "கட்டிடத்திலிருந்து வெளியேறி <STREET_NAMES> இல் தொடரவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "சுற்றுவட்டத்திலிருந்து வெளியேறவும்.",
+        "1": "சுற்றுவட்டத்திலிருந்து வெளியேறி <STREET_NAMES> இல் செல்லவும்.",
+        "2": "சுற்றுவட்டத்திலிருந்து வெளியேறி <BEGIN_STREET_NAMES> இல் செல்லவும். <STREET_NAMES> இல் தொடரவும்.",
+        "3": "சுற்றுவட்டத்திலிருந்து வெளியேறி <TOWARD_SIGN> நோக்கிச் செல்லவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "சுற்றுவட்டத்திலிருந்து வெளியேறவும்.",
+        "1": "சுற்றுவட்டத்திலிருந்து வெளியேறி <STREET_NAMES> இல் செல்லவும்.",
+        "2": "சுற்றுவட்டத்திலிருந்து வெளியேறி <BEGIN_STREET_NAMES> இல் செல்லவும்.",
+        "3": "சுற்றுவட்டத்திலிருந்து வெளியேறி <TOWARD_SIGN> நோக்கிச் செல்லவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> புறத்தில் உள்ள வெளியேறும் வழியில் செல்லவும்.",
+        "1": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NUMBER_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "2": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <BRANCH_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "3": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NUMBER_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> இல் செல்லவும்.",
+        "4": "<RELATIVE_DIRECTION> புறத்தில் உள்ள வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "5": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NUMBER_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "6": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <BRANCH_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "7": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NUMBER_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> வழியாக <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "8": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NAME_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "10": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NAME_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> இல் செல்லவும்.",
+        "12": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NAME_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "14": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NAME_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> வழியாக <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "15": "வெளியேறும் வழியில் செல்லவும்.",
+        "16": "<NUMBER_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "17": "<BRANCH_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "18": "<NUMBER_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> இல் செல்லவும்.",
+        "19": "வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "20": "<NUMBER_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "21": "<BRANCH_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "22": "<NUMBER_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> வழியாக <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "23": "<NAME_SIGN> வெளியேறும் வழியில் செல்லவும்.",
+        "25": "<NAME_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> இல் செல்லவும்.",
+        "27": "<NAME_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "29": "<NAME_SIGN> வெளியேறும் வழியில் <BRANCH_SIGN> வழியாக <TOWARD_SIGN> நோக்கிச் செல்லவும்."
+      },
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "வெளியேறும் வழி <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "பிரியும் இடத்தில் <RELATIVE_DIRECTION> செல்லவும்.",
+        "1": "<NUMBER_SIGN> வெளியேறும் வழியில் செல்ல <RELATIVE_DIRECTION> செல்லவும்.",
+        "2": "<STREET_NAMES> இல் செல்ல <RELATIVE_DIRECTION> செல்லவும்.",
+        "3": "<NUMBER_SIGN> வெளியேறும் வழியில் <STREET_NAMES> இல் செல்ல <RELATIVE_DIRECTION> செல்லவும்.",
+        "4": "<TOWARD_SIGN> நோக்கி <RELATIVE_DIRECTION> செல்லவும்.",
+        "5": "<NUMBER_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்ல <RELATIVE_DIRECTION> செல்லவும்.",
+        "6": "<STREET_NAMES> இல் <TOWARD_SIGN> நோக்கிச் செல்ல <RELATIVE_DIRECTION> செல்லவும்.",
+        "7": "<NUMBER_SIGN> வெளியேறும் வழியில் <STREET_NAMES> இல் <TOWARD_SIGN> நோக்கிச் செல்ல <RELATIVE_DIRECTION> செல்லவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது பக்கம்",
+        "நேராக",
+        "வலது பக்கம்"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "<STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> செல்லவும்.",
+        "1": "<NUMBER_SIGN> வெளியேறும் வழியில் சென்று <STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> செல்லவும்.",
+        "2": "<TOWARD_SIGN> நோக்கி <STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> செல்லவும்.",
+        "3": "<NUMBER_SIGN> வெளியேறும் வழியில் சென்று <TOWARD_SIGN> நோக்கி <STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> செல்லவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது பக்கம்",
+        "நேராக",
+        "வலது பக்கம்"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "<STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> செல்லவும்.",
+        "1": "<NUMBER_SIGN> வெளியேறும் வழியில் சென்று <STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> செல்லவும்.",
+        "2": "<TOWARD_SIGN> நோக்கி <STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> செல்லவும்.",
+        "3": "<NUMBER_SIGN> வெளியேறும் வழியில் சென்று <TOWARD_SIGN> நோக்கி <STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> செல்லவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது பக்கம்",
+        "நேராக",
+        "வலது பக்கம்"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "பிரியும் இடத்தில் <RELATIVE_DIRECTION> செல்லவும்.",
+        "1": "<NUMBER_SIGN> வெளியேறும் வழியில் செல்ல <RELATIVE_DIRECTION> செல்லவும்.",
+        "2": "<STREET_NAMES> இல் செல்ல <RELATIVE_DIRECTION> செல்லவும்.",
+        "3": "<NUMBER_SIGN> வெளியேறும் வழியில் <STREET_NAMES> இல் செல்ல <RELATIVE_DIRECTION> செல்லவும்.",
+        "4": "<TOWARD_SIGN> நோக்கி <RELATIVE_DIRECTION> செல்லவும்.",
+        "5": "<NUMBER_SIGN> வெளியேறும் வழியில் <TOWARD_SIGN> நோக்கிச் செல்ல <RELATIVE_DIRECTION> செல்லவும்.",
+        "6": "<STREET_NAMES> இல் <TOWARD_SIGN> நோக்கிச் செல்ல <RELATIVE_DIRECTION> செல்லவும்.",
+        "7": "<NUMBER_SIGN> வெளியேறும் வழியில் <STREET_NAMES> இல் <TOWARD_SIGN> நோக்கிச் செல்ல <RELATIVE_DIRECTION> செல்லவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது பக்கம்",
+        "நேராக",
+        "வலது பக்கம்"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "<LEVEL> வரை தொடரவும்."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "இணையவும்.",
+        "1": "<RELATIVE_DIRECTION> பக்கம் இணையவும்.",
+        "2": "<STREET_NAMES> இல் இணையவும்.",
+        "3": "<RELATIVE_DIRECTION> பக்கம் <STREET_NAMES> இல் இணையவும்.",
+        "4": "<TOWARD_SIGN> நோக்கி இணையவும்.",
+        "5": "<RELATIVE_DIRECTION> பக்கம் <TOWARD_SIGN> நோக்கி இணையவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "இணையவும்.",
+        "1": "<RELATIVE_DIRECTION> பக்கம் இணையவும்.",
+        "2": "<STREET_NAMES> இல் இணையவும்.",
+        "3": "<RELATIVE_DIRECTION> பக்கம் <STREET_NAMES> இல் இணையவும்.",
+        "4": "<TOWARD_SIGN> நோக்கி இணையவும்.",
+        "5": "<RELATIVE_DIRECTION> பக்கம் <TOWARD_SIGN> நோக்கி இணையவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "உங்கள் வாகனத்தை நிறுத்தவும்"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "<OBJECT_LABEL> ஐக் கடந்து செல்லவும்.",
+        "1": "<OBJECT_LABEL> இல் உள்ள போக்குவரத்து சமிக்ஞைகளைக் கடந்து செல்லவும்."
+      },
+      "object_labels": [
+        "வாயில்",
+        "தடுப்புத் தூண்கள்",
+        "சாலைச் சந்திப்பு"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> பயணிக்கவும்."
+      },
+      "transit_stop_count_labels": {
+        "one": "நிறுத்தம்",
+        "other": "நிறுத்தங்கள்"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "<LENGTH> தொலைவு தொடரவும்.",
+        "1": "<STREET_NAMES> இல் <LENGTH> தொலைவு தொடரவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> கிலோமீட்டர்",
+        "1 கிலோமீட்டர்",
+        "<METERS> மீட்டர்",
+        "10 மீட்டருக்கும் குறைவு"
+      ],
+      "us_customary_lengths": [
+        "<MILES> மைல்",
+        "1 மைல்",
+        "அரை மைல்",
+        "கால் மைல்",
+        "<FEET> அடி",
+        "10 அடிக்கும் குறைவு"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> புறத்தில் உள்ள இணைப்புச் சாலையில் செல்லவும்.",
+        "1": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <BRANCH_SIGN> இணைப்புச் சாலையில் செல்லவும்.",
+        "2": "<RELATIVE_DIRECTION> புறத்தில் உள்ள இணைப்புச் சாலையில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "3": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <BRANCH_SIGN> இணைப்புச் சாலையில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "4": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NAME_SIGN> இணைப்புச் சாலையில் செல்லவும்.",
+        "5": "இணைப்புச் சாலையில் செல்ல <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "6": "<BRANCH_SIGN> இணைப்புச் சாலையில் செல்ல <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "7": "<TOWARD_SIGN> நோக்கி இணைப்புச் சாலையில் செல்ல <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "8": "<TOWARD_SIGN> நோக்கி <BRANCH_SIGN> இணைப்புச் சாலையில் செல்ல <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "9": "<NAME_SIGN> இணைப்புச் சாலையில் செல்ல <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "10": "இணைப்புச் சாலையில் செல்லவும்.",
+        "11": "<BRANCH_SIGN> இணைப்புச் சாலையில் செல்லவும்.",
+        "12": "இணைப்புச் சாலையில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "13": "<BRANCH_SIGN> இணைப்புச் சாலையில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "14": "<NAME_SIGN> இணைப்புச் சாலையில் செல்லவும்."
+      },
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "இணைப்புச் சாலையில் செல்ல நேராகத் தொடரவும்.",
+        "1": "<BRANCH_SIGN> இணைப்புச் சாலையில் செல்ல நேராகத் தொடரவும்.",
+        "2": "<TOWARD_SIGN> நோக்கி இணைப்புச் சாலையில் செல்ல நேராகத் தொடரவும்.",
+        "3": "<TOWARD_SIGN> நோக்கி <BRANCH_SIGN> இணைப்புச் சாலையில் செல்ல நேராகத் தொடரவும்.",
+        "4": "<NAME_SIGN> இணைப்புச் சாலையில் செல்ல நேராகத் தொடரவும்."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "இணைப்புச் சாலையில் செல்ல நேராகத் தொடரவும்.",
+        "1": "<BRANCH_SIGN> இணைப்புச் சாலையில் செல்ல நேராகத் தொடரவும்.",
+        "2": "<TOWARD_SIGN> நோக்கி இணைப்புச் சாலையில் செல்ல நேராகத் தொடரவும்.",
+        "3": "<TOWARD_SIGN> நோக்கி <BRANCH_SIGN> இணைப்புச் சாலையில் செல்ல நேராகத் தொடரவும்.",
+        "4": "<NAME_SIGN> இணைப்புச் சாலையில் செல்ல நேராகத் தொடரவும்."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> புறத்தில் உள்ள இணைப்புச் சாலையில் செல்லவும்.",
+        "1": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <BRANCH_SIGN> இணைப்புச் சாலையில் செல்லவும்.",
+        "2": "<RELATIVE_DIRECTION> புறத்தில் உள்ள இணைப்புச் சாலையில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "3": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <BRANCH_SIGN> இணைப்புச் சாலையில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "4": "<RELATIVE_DIRECTION> புறத்தில் உள்ள <NAME_SIGN> இணைப்புச் சாலையில் செல்லவும்.",
+        "5": "இணைப்புச் சாலையில் செல்ல <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "6": "<BRANCH_SIGN> இணைப்புச் சாலையில் செல்ல <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "7": "<TOWARD_SIGN> நோக்கி இணைப்புச் சாலையில் செல்ல <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "8": "<TOWARD_SIGN> நோக்கி <BRANCH_SIGN> இணைப்புச் சாலையில் செல்ல <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "9": "<NAME_SIGN> இணைப்புச் சாலையில் செல்ல <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "10": "இணைப்புச் சாலையில் செல்லவும்.",
+        "11": "<BRANCH_SIGN> இணைப்புச் சாலையில் செல்லவும்.",
+        "12": "இணைப்புச் சாலையில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "13": "<BRANCH_SIGN> இணைப்புச் சாலையில் <TOWARD_SIGN> நோக்கிச் செல்லவும்.",
+        "14": "<NAME_SIGN> இணைப்புச் சாலையில் செல்லவும்."
+      },
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பவும்.",
+        "1": "<RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பி <STREET_NAMES> இல் செல்லவும்.",
+        "2": "<RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பி <BEGIN_STREET_NAMES> இல் செல்லவும். <STREET_NAMES> இல் தொடரவும்.",
+        "3": "<STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பவும்.",
+        "4": "<JUNCTION_NAME> இல் <RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பவும்.",
+        "5": "<TOWARD_SIGN> நோக்கி <RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பவும்.",
+        "1": "<RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பி <STREET_NAMES> இல் செல்லவும்.",
+        "2": "<RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பி <BEGIN_STREET_NAMES> இல் செல்லவும்.",
+        "3": "<STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பவும்.",
+        "4": "<JUNCTION_NAME> இல் <RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பவும்.",
+        "5": "<TOWARD_SIGN> நோக்கி <RELATIVE_DIRECTION> புறம் கூர்மையாகத் திரும்பவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> நோக்கிச் செல்லவும்.",
+        "1": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கிச் செல்லவும்.",
+        "2": "<BEGIN_STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கிச் செல்லவும். <STREET_NAMES> இல் தொடரவும்.",
+        "4": "<CARDINAL_DIRECTION> நோக்கி ஓட்டிச் செல்லவும்.",
+        "5": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி ஓட்டிச் செல்லவும்.",
+        "6": "<BEGIN_STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி ஓட்டிச் செல்லவும். <STREET_NAMES> இல் தொடரவும்.",
+        "8": "<CARDINAL_DIRECTION> நோக்கி நடந்து செல்லவும்.",
+        "9": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி நடந்து செல்லவும்.",
+        "10": "<BEGIN_STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி நடந்து செல்லவும். <STREET_NAMES> இல் தொடரவும்.",
+        "16": "<CARDINAL_DIRECTION> நோக்கி சைக்கிளில் செல்லவும்.",
+        "17": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி சைக்கிளில் செல்லவும்.",
+        "18": "<BEGIN_STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி சைக்கிளில் செல்லவும். <STREET_NAMES> இல் தொடரவும்."
+      },
+      "cardinal_directions": [
+        "வடக்கு",
+        "வடகிழக்கு",
+        "கிழக்கு",
+        "தென்கிழக்கு",
+        "தெற்கு",
+        "தென்மேற்கு",
+        "மேற்கு",
+        "வடமேற்கு"
+      ],
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> நோக்கிச் செல்லவும்.",
+        "1": "<CARDINAL_DIRECTION> நோக்கி <LENGTH> தொலைவு செல்லவும்.",
+        "2": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கிச் செல்லவும்.",
+        "3": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி <LENGTH> தொலைவு செல்லவும்.",
+        "4": "<BEGIN_STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கிச் செல்லவும்.",
+        "5": "<CARDINAL_DIRECTION> நோக்கி ஓட்டிச் செல்லவும்.",
+        "6": "<CARDINAL_DIRECTION> நோக்கி <LENGTH> தொலைவு ஓட்டிச் செல்லவும்.",
+        "7": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி ஓட்டிச் செல்லவும்.",
+        "8": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி <LENGTH> தொலைவு ஓட்டிச் செல்லவும்.",
+        "9": "<BEGIN_STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி ஓட்டிச் செல்லவும்.",
+        "10": "<CARDINAL_DIRECTION> நோக்கி நடந்து செல்லவும்.",
+        "11": "<CARDINAL_DIRECTION> நோக்கி <LENGTH> தொலைவு நடந்து செல்லவும்.",
+        "12": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி நடந்து செல்லவும்.",
+        "13": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி <LENGTH> தொலைவு நடந்து செல்லவும்.",
+        "14": "<BEGIN_STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி நடந்து செல்லவும்.",
+        "15": "<CARDINAL_DIRECTION> நோக்கி சைக்கிளில் செல்லவும்.",
+        "16": "<CARDINAL_DIRECTION> நோக்கி <LENGTH> தொலைவு சைக்கிளில் செல்லவும்.",
+        "17": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி சைக்கிளில் செல்லவும்.",
+        "18": "<STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி <LENGTH> தொலைவு சைக்கிளில் செல்லவும்.",
+        "19": "<BEGIN_STREET_NAMES> இல் <CARDINAL_DIRECTION> நோக்கி சைக்கிளில் செல்லவும்."
+      },
+      "cardinal_directions": [
+        "வடக்கு",
+        "வடகிழக்கு",
+        "கிழக்கு",
+        "தென்கிழக்கு",
+        "தெற்கு",
+        "தென்மேற்கு",
+        "மேற்கு",
+        "வடமேற்கு"
+      ],
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> கிலோமீட்டர்",
+        "1 கிலோமீட்டர்",
+        "<METERS> மீட்டர்",
+        "10 மீட்டருக்கும் குறைவு"
+      ],
+      "us_customary_lengths": [
+        "<MILES> மைல்",
+        "1 மைல்",
+        "அரை மைல்",
+        "கால் மைல்",
+        "<FEET> அடி",
+        "10 அடிக்கும் குறைவு"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "படிக்கட்டைப் பயன்படுத்தவும்.",
+        "1": "படிக்கட்டில் <LEVEL> க்குச் செல்லவும்."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> இல் ஏறவும். (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> நோக்கிச் செல்லும் <TRANSIT_NAME> இல் ஏறவும். (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "டிராம்",
+        "மெட்ரோ",
+        "ரயில்",
+        "பேருந்து",
+        "படகு",
+        "கேபிள் கார்",
+        "கோண்டோலா",
+        "சாய்வு ரயில்"
+      ],
+      "transit_stop_count_labels": {
+        "one": "நிறுத்தம்",
+        "other": "நிறுத்தங்கள்"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "நிலையத்திலிருந்து வெளியேறவும்.",
+        "1": "<TRANSIT_STOP> இலிருந்து வெளியேறவும்.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> இலிருந்து வெளியேறவும்."
+      },
+      "station_label": "நிலையம்"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "நிலையத்திலிருந்து வெளியேறவும்.",
+        "1": "<TRANSIT_STOP> இலிருந்து வெளியேறவும்.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> இலிருந்து வெளியேறவும்."
+      },
+      "station_label": "நிலையம்"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "நிலையத்திற்குள் நுழையவும்.",
+        "1": "<TRANSIT_STOP> இல் நுழையவும்.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> இல் நுழையவும்."
+      },
+      "station_label": "நிலையம்"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "நிலையத்திற்குள் நுழையவும்.",
+        "1": "<TRANSIT_STOP> இல் நுழையவும்.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> இல் நுழையவும்."
+      },
+      "station_label": "நிலையம்"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "நிலையத்தில் மாறவும்.",
+        "1": "<TRANSIT_STOP> இல் மாறவும்.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> இல் மாறவும்."
+      },
+      "station_label": "நிலையம்"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "நிலையத்தில் மாறவும்.",
+        "1": "<TRANSIT_STOP> இல் மாறவும்.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> இல் மாறவும்."
+      },
+      "station_label": "நிலையம்"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> இலேயே தொடரவும். (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> நோக்கிச் செல்லும் <TRANSIT_NAME> இலேயே தொடரவும். (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "டிராம்",
+        "மெட்ரோ",
+        "ரயில்",
+        "பேருந்து",
+        "படகு",
+        "கேபிள் கார்",
+        "கோண்டோலா",
+        "சாய்வு ரயில்"
+      ],
+      "transit_stop_count_labels": {
+        "one": "நிறுத்தம்",
+        "other": "நிறுத்தங்கள்"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> இலேயே தொடரவும்.",
+        "1": "<TRANSIT_HEADSIGN> நோக்கிச் செல்லும் <TRANSIT_NAME> இலேயே தொடரவும்."
+      },
+      "empty_transit_name_labels": [
+        "டிராம்",
+        "மெட்ரோ",
+        "ரயில்",
+        "பேருந்து",
+        "படகு",
+        "கேபிள் கார்",
+        "கோண்டோலா",
+        "சாய்வு ரயில்"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "மாறி <TRANSIT_NAME> இல் ஏறவும். (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "மாறி <TRANSIT_HEADSIGN> நோக்கிச் செல்லும் <TRANSIT_NAME> இல் ஏறவும். (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "டிராம்",
+        "மெட்ரோ",
+        "ரயில்",
+        "பேருந்து",
+        "படகு",
+        "கேபிள் கார்",
+        "கோண்டோலா",
+        "சாய்வு ரயில்"
+      ],
+      "transit_stop_count_labels": {
+        "one": "நிறுத்தம்",
+        "other": "நிறுத்தங்கள்"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "மாறி <TRANSIT_NAME> இல் ஏறவும்.",
+        "1": "மாறி <TRANSIT_HEADSIGN> நோக்கிச் செல்லும் <TRANSIT_NAME> இல் ஏறவும்."
+      },
+      "empty_transit_name_labels": [
+        "டிராம்",
+        "மெட்ரோ",
+        "ரயில்",
+        "பேருந்து",
+        "படகு",
+        "கேபிள் கார்",
+        "கோண்டோலா",
+        "சாய்வு ரயில்"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> இல் ஏறவும்.",
+        "1": "<TRANSIT_HEADSIGN> நோக்கிச் செல்லும் <TRANSIT_NAME> இல் ஏறவும்."
+      },
+      "empty_transit_name_labels": [
+        "டிராம்",
+        "மெட்ரோ",
+        "ரயில்",
+        "பேருந்து",
+        "படகு",
+        "கேபிள் கார்",
+        "கோண்டோலா",
+        "சாய்வு ரயில்"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "1": "<RELATIVE_DIRECTION> புறம் திரும்பி <STREET_NAMES> இல் செல்லவும்.",
+        "2": "<RELATIVE_DIRECTION> புறம் திரும்பி <BEGIN_STREET_NAMES> இல் செல்லவும். <STREET_NAMES> இல் தொடரவும்.",
+        "3": "<STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "4": "<JUNCTION_NAME> இல் <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "5": "<TOWARD_SIGN> நோக்கி <RELATIVE_DIRECTION> புறம் திரும்பவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "1": "<RELATIVE_DIRECTION> புறம் திரும்பி <STREET_NAMES> இல் செல்லவும்.",
+        "2": "<RELATIVE_DIRECTION> புறம் திரும்பி <BEGIN_STREET_NAMES> இல் செல்லவும்.",
+        "3": "<STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "4": "<JUNCTION_NAME> இல் <RELATIVE_DIRECTION> புறம் திரும்பவும்.",
+        "5": "<TOWARD_SIGN> நோக்கி <RELATIVE_DIRECTION> புறம் திரும்பவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்.",
+        "1": "<RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுத்து <STREET_NAMES> இல் செல்லவும்.",
+        "2": "<STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்.",
+        "3": "<CROSS_STREET_NAMES> இல் <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்.",
+        "4": "<CROSS_STREET_NAMES> இல் <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுத்து <STREET_NAMES> இல் செல்லவும்.",
+        "5": "<STREET_NAMES> இல் தொடர <CROSS_STREET_NAMES> இல் <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்.",
+        "6": "<JUNCTION_NAME> இல் <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்.",
+        "7": "<TOWARD_SIGN> நோக்கி <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்.",
+        "1": "<RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுத்து <STREET_NAMES> இல் செல்லவும்.",
+        "2": "<STREET_NAMES> இல் தொடர <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்.",
+        "3": "<CROSS_STREET_NAMES> இல் <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்.",
+        "4": "<CROSS_STREET_NAMES> இல் <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுத்து <STREET_NAMES> இல் செல்லவும்.",
+        "5": "<STREET_NAMES> இல் தொடர <CROSS_STREET_NAMES> இல் <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்.",
+        "6": "<JUNCTION_NAME> இல் <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்.",
+        "7": "<TOWARD_SIGN> நோக்கி <RELATIVE_DIRECTION> பக்கம் யூ-டர்ன் எடுக்கவும்."
+      },
+      "empty_street_name_labels": [
+        "நடைபாதை",
+        "சைக்கிள் பாதை",
+        "மலை சைக்கிள் பாதை",
+        "நடைபாதைக் கடவு",
+        "படிக்கட்டு",
+        "பாலம்",
+        "சுரங்கப்பாதை"
+      ],
+      "relative_directions": [
+        "இடது",
+        "வலது"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> அதன் பிறகு <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> அதன் பிறகு <LENGTH> தொலைவில், <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> கிலோமீட்டர்",
+        "1 கிலோமீட்டர்",
+        "<METERS> மீட்டர்",
+        "10 மீட்டருக்கும் குறைவு"
+      ],
+      "us_customary_lengths": [
+        "<MILES> மைல்",
+        "1 மைல்",
+        "அரை மைல்",
+        "கால் மைல்",
+        "<FEET> அடி",
+        "10 அடிக்கும் குறைவு"
+      ]
+    }
+  },
+  "posix_locale": "ta_IN.UTF-8",
+  "aliases": [
+    "ta"
+  ]
+}

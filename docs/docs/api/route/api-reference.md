@@ -328,12 +328,14 @@ For example a bus request with the result in Spanish using the OSRM (Open Source
 
 | Language tag | Language alias | Description |
 | :------------------ | :----------- | :----------- |
+| `ar-SA` | `ar` | Arabic (Saudi Arabia) |
 | `bg-BG` | `bg` | Bulgarian (Bulgaria) |
 | `ca-ES` | `ca` | Catalan (Spain) |
 | `cs-CZ` | `cs` | Czech (Czech Republic) |
 | `da-DK` | `da` | Danish (Denmark) |
 | `de-DE` | `de` | German (Germany) |
 | `el-GR` | `el` | Greek (Greece) |
+| `en-AU` | `au` | English (Australia) |
 | `en-GB` | | English (United Kingdom) |
 | `en-US-x-pirate` | `en-x-pirate` | English (United States) Pirate |
 | `en-US` | `en` | English (United States) |
@@ -343,8 +345,11 @@ For example a bus request with the result in Spanish using the OSRM (Open Source
 | `fr-FR` | `fr` | French (France) |
 | `hi-IN` | `hi` | Hindi (India) |
 | `hu-HU` | `hu` | Hungarian (Hungary) |
+| `id-ID` | `id` | Indonesian (Indonesia) |
 | `it-IT` | `it` | Italian (Italy) |
 | `ja-JP` | `ja` | Japanese (Japan) |
+| `ko-KR` | `ko` | Korean (South Korea) |
+| `mn-MN` | `mn` | Mongolian (Mongolia) |
 | `nb-NO` | `nb` | Bokmal (Norway) |
 | `nl-NL` | `nl` | Dutch (Netherlands) |
 | `pl-PL` | `pl` | Polish (Poland) |
@@ -355,8 +360,13 @@ For example a bus request with the result in Spanish using the OSRM (Open Source
 | `sk-SK` | `sk` | Slovak (Slovakia) |
 | `sl-SI` | `sl` | Slovenian (Slovenia) |
 | `sv-SE` | `sv` | Swedish (Sweden) |
+| `ta-IN` | `ta` | Tamil (India) |
+| `th-TH` | `th` | Thai (Thailand) |
 | `tr-TR` | `tr` | Turkish (Turkey) |
 | `uk-UA` | `uk` | Ukrainian (Ukraine) |
+| `vi-VN` | `vi` | Vietnamese (Vietnam) |
+| `zh-CN` | `zh` | Chinese (Simplified, China) |
+| `zh-TW` |  | Chinese (Traditional, Taiwan) |
 
 #### Other request options
 

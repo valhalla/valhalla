@@ -119,19 +119,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.bear.replacement.relative_directions.0"
 msgid "left"
@@ -185,19 +185,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.bear_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -251,19 +251,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 #. e.g. Continue.
 msgctxt "instructions.continue_verbal.phrases.0"
@@ -319,19 +319,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.continue_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -407,19 +407,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 #. e.g. Depart: 8:02 AM.
 msgctxt "instructions.depart.phrases.0"
@@ -531,22 +531,22 @@ msgstr "右"
 #. e.g. Take the elevator.
 msgctxt "instructions.elevator.phrases.0"
 msgid "Take the elevator."
-msgstr ""
+msgstr "エレベーターに乗ります。"
 
 #. e.g. Take the elevator to Level 1.
 msgctxt "instructions.elevator.phrases.1"
 msgid "Take the elevator to <LEVEL>."
-msgstr ""
+msgstr "エレベーターで<LEVEL>に移動します。"
 
 #. e.g. Enter the building.
 msgctxt "instructions.enter_building.phrases.0"
 msgid "Enter the building."
-msgstr ""
+msgstr "建物に入ります。"
 
 #. e.g. Enter the building, and continue on the walkway.
 msgctxt "instructions.enter_building.phrases.1"
 msgid "Enter the building, and continue on <STREET_NAMES>."
-msgstr ""
+msgstr "建物に入り、<STREET_NAMES>を進みます。"
 
 msgctxt "instructions.enter_building.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -562,7 +562,7 @@ msgstr "自転車道"
 
 msgctxt "instructions.enter_building.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 #. e.g. Take the Ferry.
 msgctxt "instructions.enter_ferry.phrases.0"
@@ -598,19 +598,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.enter_ferry.replacement.ferry_label"
 msgid "Ferry"
@@ -650,19 +650,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.ferry_label"
 msgid "Ferry"
@@ -771,19 +771,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.enter_roundabout.replacement.ordinal_values.0"
 msgid "1st"
@@ -928,19 +928,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.0"
 msgid "1st"
@@ -985,12 +985,12 @@ msgstr "10 番目の"
 #. e.g. Take the escalator.
 msgctxt "instructions.escalator.phrases.0"
 msgid "Take the escalator."
-msgstr ""
+msgstr "エスカレーターに乗ります。"
 
 #. e.g. Take the escalator to Level 3.
 msgctxt "instructions.escalator.phrases.1"
 msgid "Take the escalator to <LEVEL>."
-msgstr ""
+msgstr "エスカレーターで<LEVEL>に移動します。"
 
 #. e.g. Take the exit on the left.
 #. e.g. Take the exit on the right.
@@ -1124,12 +1124,12 @@ msgstr "右"
 #. e.g. Exit the building.
 msgctxt "instructions.exit_building.phrases.0"
 msgid "Exit the building."
-msgstr ""
+msgstr "建物から出ます。"
 
 #. e.g. Exit the building, and continue on the walkway.
 msgctxt "instructions.exit_building.phrases.1"
 msgid "Exit the building, and continue on <STREET_NAMES>."
-msgstr ""
+msgstr "建物から出て、<STREET_NAMES>を進みます。"
 
 msgctxt "instructions.exit_building.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1145,7 +1145,7 @@ msgstr "自転車道"
 
 msgctxt "instructions.exit_building.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 #. e.g. Exit the roundabout.
 msgctxt "instructions.exit_roundabout.phrases.0"
@@ -1181,19 +1181,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 #. e.g. Exit the roundabout.
 msgctxt "instructions.exit_roundabout_verbal.phrases.0"
@@ -1229,19 +1229,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 #. e.g. Take the exit on the left.
 #. e.g. Take the exit on the right.
@@ -1433,19 +1433,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.keep.replacement.relative_directions.0"
 msgid "left"
@@ -1495,19 +1495,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.0"
 msgid "left"
@@ -1557,19 +1557,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1639,19 +1639,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.keep_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1668,7 +1668,7 @@ msgstr "右"
 #. e.g. Continue to Level 2.
 msgctxt "instructions.level_change.phrases.0"
 msgid "Continue to <LEVEL>."
-msgstr ""
+msgstr "<LEVEL>へ進みます。"
 
 #. e.g. Merge.
 msgctxt "instructions.merge.phrases.0"
@@ -1714,19 +1714,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.merge.replacement.relative_directions.0"
 msgid "left"
@@ -1780,19 +1780,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.merge_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1805,28 +1805,28 @@ msgstr "右"
 #. e.g. Park your vehicle.
 msgctxt "instructions.park_vehicle.phrases.0"
 msgid "Park your vehicle"
-msgstr ""
+msgstr "車を駐車します"
 
 #. e.g. Pass the gate.
 msgctxt "instructions.pass.phrases.0"
 msgid "Pass <OBJECT_LABEL>."
-msgstr ""
+msgstr "<OBJECT_LABEL>を通過します。"
 
 msgctxt "instructions.pass.phrases.1"
 msgid "Pass traffic signals on <OBJECT_LABEL>."
-msgstr ""
+msgstr "<OBJECT_LABEL>の信号を通過します。"
 
 msgctxt "instructions.pass.replacement.object_labels.0"
 msgid "the gate"
-msgstr ""
+msgstr "ゲート"
 
 msgctxt "instructions.pass.replacement.object_labels.1"
 msgid "the bollards"
-msgstr ""
+msgstr "ボラード"
 
 msgctxt "instructions.pass.replacement.object_labels.2"
 msgid "ways intersection"
-msgstr ""
+msgstr "道路の交差点"
 
 #. e.g. Travel 1 stop.
 #. e.g. Travel 3 stops.
@@ -1868,19 +1868,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.post_transition_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -2186,19 +2186,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.sharp.replacement.relative_directions.0"
 msgid "left"
@@ -2252,19 +2252,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.sharp_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -2390,19 +2390,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 #. e.g. Head east.
 #. e.g. Head north.
@@ -2558,19 +2558,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.start_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -2615,12 +2615,12 @@ msgstr "10フィート以内"
 #. e.g. Take the stairs.
 msgctxt "instructions.steps.phrases.0"
 msgid "Take the stairs."
-msgstr ""
+msgstr "階段を使います。"
 
 #. e.g. Take the stairs to Level 2.
 msgctxt "instructions.steps.phrases.1"
 msgid "Take the stairs to <LEVEL>."
-msgstr ""
+msgstr "階段で<LEVEL>に移動します。"
 
 #. e.g. Take the New Haven. (1 stop)
 #. e.g. Take the metro. (2 stops)
@@ -3061,19 +3061,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.turn.replacement.relative_directions.0"
 msgid "left"
@@ -3127,19 +3127,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.turn_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -3203,19 +3203,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.uturn.replacement.relative_directions.0"
 msgid "left"
@@ -3279,19 +3279,19 @@ msgstr "自転車道"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "横断歩道"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "階段"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "橋"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "トンネル"
 
 msgctxt "instructions.uturn_verbal.replacement.relative_directions.0"
 msgid "left"

@@ -49,8 +49,8 @@ gurka::map RouteWithNarrativeLanguages::map = {};
 
 // The language tag and the expected "Turn right onto Main Street." text instruction
 const std::vector<std::pair<std::string, std::string>> RouteWithNarrativeLanguages::lang_phrase = {
-    {"ar", "Turn اليمين onto Main Street."},
-    {"ar-SA", "Turn اليمين onto Main Street."},
+    {"ar", "انعطف إلى اليمين على Main Street."},
+    {"ar-SA", "انعطف إلى اليمين على Main Street."},
     {"bg", "Завийте на дясно по Main Street."},
     {"bg-BG", "Завийте на дясно по Main Street."},
     {"ca", "Gira a la dreta cap a Main Street."},
@@ -82,6 +82,8 @@ const std::vector<std::pair<std::string, std::string>> RouteWithNarrativeLanguag
     {"hi-IN", "Main Street पर दाएँ मुड़ें."},
     {"hu", "Forduljon jobbra a(z) Main Street utcára."},
     {"hu-HU", "Forduljon jobbra a(z) Main Street utcára."},
+    {"id", "Belok kanan ke Main Street."},
+    {"id-ID", "Belok kanan ke Main Street."},
     {"it", "Svolta a destra su Main Street."},
     {"it-IT", "Svolta a destra su Main Street."},
     {"ja", "右方向です。その先Main Streetです。"},
@@ -109,12 +111,19 @@ const std::vector<std::pair<std::string, std::string>> RouteWithNarrativeLanguag
     {"sl-SI", "Zavijte desno na Main Street."},
     {"sv", "Sväng höger in på Main Street."},
     {"sv-SE", "Sväng höger in på Main Street."},
+    {"ta", "வலது புறம் திரும்பி Main Street இல் செல்லவும்."},
+    {"ta-IN", "வலது புறம் திரும்பி Main Street இல் செல்லவும்."},
+    {"th", "เลี้ยวขวาเข้าสู่ Main Street"},
+    {"th-TH", "เลี้ยวขวาเข้าสู่ Main Street"},
     {"tr", "Main Street caddesine doğru sağa dönün."},
     {"tr-TR", "Main Street caddesine doğru sağa dönün."},
     {"uk", "Поверніть праворуч на Main Street."},
     {"uk-UA", "Поверніть праворуч на Main Street."},
     {"vi", "Rẽ phải vào Main Street."},
     {"vi-VN", "Rẽ phải vào Main Street."},
+    {"zh", "向右转弯进入Main Street。"},
+    {"zh-CN", "向右转弯进入Main Street。"},
+    {"zh-TW", "向右轉彎進入Main Street。"},
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -44,7 +44,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -67,7 +67,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -98,7 +98,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -119,7 +119,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -150,7 +150,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -219,7 +219,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk"
+        "el paso de peatones"
       ]
     },
     "enter_ferry": {
@@ -233,7 +233,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -251,7 +251,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -281,7 +281,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -322,7 +322,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -387,7 +387,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk"
+        "el paso de peatones"
       ]
     },
     "exit_roundabout": {
@@ -401,7 +401,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -418,7 +418,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -476,7 +476,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -498,7 +498,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -520,7 +520,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -546,7 +546,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -559,7 +559,7 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "Continúe a <LEVEL>."
       }
     },
     "merge": {
@@ -575,7 +575,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -598,7 +598,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -610,18 +610,18 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "Aparque el vehículo"
       }
     },
     "pass": {
       "phrases": {
         "0": "Pase <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "1": "Pase los semáforos en <OBJECT_LABEL>."
       },
       "object_labels": [
         "la cancela",
         "los bolardos",
-        "ways intersection"
+        "intersección de vías"
       ]
     },
     "post_transition_transit_verbal": {
@@ -642,7 +642,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -739,7 +739,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -762,7 +762,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -801,7 +801,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -844,7 +844,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -1039,7 +1039,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -1062,7 +1062,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -1087,7 +1087,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"
@@ -1112,7 +1112,7 @@
         "la calzada",
         "el carril bici",
         "el sendero para bicicletas de montaña",
-        "the crosswalk",
+        "el paso de peatones",
         "las escaleras",
         "el puente",
         "el túnel"

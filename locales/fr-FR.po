@@ -33,11 +33,11 @@ msgstr "moins de 10 mètres"
 
 msgctxt "instructions.approach_verbal_alert.replacement.us_customary_lengths.0"
 msgid "<MILES> miles"
-msgstr ""
+msgstr "<MILES> miles"
 
 msgctxt "instructions.approach_verbal_alert.replacement.us_customary_lengths.1"
 msgid "1 mile"
-msgstr ""
+msgstr "un mile"
 
 msgctxt "instructions.approach_verbal_alert.replacement.us_customary_lengths.2"
 msgid "a half mile"
@@ -123,15 +123,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.bear.replacement.relative_directions.0"
 msgid "left"
@@ -189,15 +189,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.bear_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -255,15 +255,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 #. e.g. Continue.
 msgctxt "instructions.continue_verbal.phrases.0"
@@ -323,15 +323,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.continue_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -351,11 +351,11 @@ msgstr "moins de 10 mètres"
 
 msgctxt "instructions.continue_verbal.replacement.us_customary_lengths.0"
 msgid "<MILES> miles"
-msgstr ""
+msgstr "<MILES> miles"
 
 msgctxt "instructions.continue_verbal.replacement.us_customary_lengths.1"
 msgid "1 mile"
-msgstr ""
+msgstr "un mile"
 
 msgctxt "instructions.continue_verbal.replacement.us_customary_lengths.2"
 msgid "a half mile"
@@ -411,15 +411,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 #. e.g. Depart: 8:02 AM.
 msgctxt "instructions.depart.phrases.0"
@@ -602,19 +602,19 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.enter_ferry.replacement.ferry_label"
 msgid "Ferry"
-msgstr ""
+msgstr "Ferry"
 
 #. e.g. Take the Ferry.
 msgctxt "instructions.enter_ferry_verbal.phrases.0"
@@ -654,19 +654,19 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.ferry_label"
 msgid "Ferry"
-msgstr ""
+msgstr "Ferry"
 
 #. e.g. Enter the roundabout.
 msgctxt "instructions.enter_roundabout.phrases.0"
@@ -775,15 +775,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.enter_roundabout.replacement.ordinal_values.0"
 msgid "1st"
@@ -932,15 +932,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.0"
 msgid "1st"
@@ -1185,15 +1185,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 #. e.g. Exit the roundabout.
 msgctxt "instructions.exit_roundabout_verbal.phrases.0"
@@ -1233,15 +1233,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 #. e.g. Take the exit on the left.
 #. e.g. Take the exit on the right.
@@ -1437,15 +1437,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.keep.replacement.relative_directions.0"
 msgid "left"
@@ -1499,15 +1499,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.0"
 msgid "left"
@@ -1561,15 +1561,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1643,15 +1643,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.keep_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1718,15 +1718,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.merge.replacement.relative_directions.0"
 msgid "left"
@@ -1784,15 +1784,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.merge_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1805,28 +1805,28 @@ msgstr "droite"
 #. e.g. Park your vehicle.
 msgctxt "instructions.park_vehicle.phrases.0"
 msgid "Park your vehicle"
-msgstr ""
+msgstr "Garez votre véhicule"
 
 #. e.g. Pass the gate.
 msgctxt "instructions.pass.phrases.0"
 msgid "Pass <OBJECT_LABEL>."
-msgstr ""
+msgstr "Passez <OBJECT_LABEL>."
 
 msgctxt "instructions.pass.phrases.1"
 msgid "Pass traffic signals on <OBJECT_LABEL>."
-msgstr ""
+msgstr "Passez les feux de circulation sur <OBJECT_LABEL>."
 
 msgctxt "instructions.pass.replacement.object_labels.0"
 msgid "the gate"
-msgstr ""
+msgstr "le portail"
 
 msgctxt "instructions.pass.replacement.object_labels.1"
 msgid "the bollards"
-msgstr ""
+msgstr "les bornes"
 
 msgctxt "instructions.pass.replacement.object_labels.2"
 msgid "ways intersection"
-msgstr ""
+msgstr "intersection de voies"
 
 #. e.g. Travel 1 stop.
 #. e.g. Travel 3 stops.
@@ -1872,15 +1872,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.post_transition_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -1900,11 +1900,11 @@ msgstr "moins de 10 mètres"
 
 msgctxt "instructions.post_transition_verbal.replacement.us_customary_lengths.0"
 msgid "<MILES> miles"
-msgstr ""
+msgstr "<MILES> miles"
 
 msgctxt "instructions.post_transition_verbal.replacement.us_customary_lengths.1"
 msgid "1 mile"
-msgstr ""
+msgstr "un mile"
 
 msgctxt "instructions.post_transition_verbal.replacement.us_customary_lengths.2"
 msgid "a half mile"
@@ -2190,15 +2190,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.sharp.replacement.relative_directions.0"
 msgid "left"
@@ -2256,15 +2256,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.sharp_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -2394,15 +2394,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 #. e.g. Head east.
 #. e.g. Head north.
@@ -2562,15 +2562,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.start_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -2590,11 +2590,11 @@ msgstr "moins de 10 mètres"
 
 msgctxt "instructions.start_verbal.replacement.us_customary_lengths.0"
 msgid "<MILES> miles"
-msgstr ""
+msgstr "<MILES> miles"
 
 msgctxt "instructions.start_verbal.replacement.us_customary_lengths.1"
 msgid "1 mile"
-msgstr ""
+msgstr "un mile"
 
 msgctxt "instructions.start_verbal.replacement.us_customary_lengths.2"
 msgid "a half mile"
@@ -2692,7 +2692,7 @@ msgstr "Sortez de <TRANSIT_STOP> <STATION_LABEL>."
 
 msgctxt "instructions.transit_connection_destination.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Exit the station.
 msgctxt "instructions.transit_connection_destination_verbal.phrases.0"
@@ -2711,7 +2711,7 @@ msgstr "Sortez de <TRANSIT_STOP> <STATION_LABEL>."
 
 msgctxt "instructions.transit_connection_destination_verbal.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Enter the station.
 msgctxt "instructions.transit_connection_start.phrases.0"
@@ -2730,7 +2730,7 @@ msgstr "Entez dans <TRANSIT_STOP> <STATION_LABEL>."
 
 msgctxt "instructions.transit_connection_start.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Enter the station.
 msgctxt "instructions.transit_connection_start_verbal.phrases.0"
@@ -2749,7 +2749,7 @@ msgstr "Entez dans <TRANSIT_STOP> <STATION_LABEL>."
 
 msgctxt "instructions.transit_connection_start_verbal.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Transfer at the station.
 msgctxt "instructions.transit_connection_transfer.phrases.0"
@@ -2768,7 +2768,7 @@ msgstr "Changez à <TRANSIT_STOP> <STATION_LABEL>."
 
 msgctxt "instructions.transit_connection_transfer.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Transfer at the station.
 msgctxt "instructions.transit_connection_transfer_verbal.phrases.0"
@@ -2787,7 +2787,7 @@ msgstr "Changez à <TRANSIT_STOP> <STATION_LABEL>."
 
 msgctxt "instructions.transit_connection_transfer_verbal.replacement.station_label"
 msgid "Station"
-msgstr ""
+msgstr "Station"
 
 #. e.g. Remain on the New Haven. (1 stop)
 #. e.g. Remain on the train. (3 stops)
@@ -3065,15 +3065,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.turn.replacement.relative_directions.0"
 msgid "left"
@@ -3131,15 +3131,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.turn_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -3207,15 +3207,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.uturn.replacement.relative_directions.0"
 msgid "left"
@@ -3283,15 +3283,15 @@ msgstr "le passage protégé"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "l'escalier"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "le pont"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "le tunnel"
 
 msgctxt "instructions.uturn_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -3329,11 +3329,11 @@ msgstr "moins de 10 mètres"
 
 msgctxt "instructions.verbal_multi_cue.replacement.us_customary_lengths.0"
 msgid "<MILES> miles"
-msgstr ""
+msgstr "<MILES> miles"
 
 msgctxt "instructions.verbal_multi_cue.replacement.us_customary_lengths.1"
 msgid "1 mile"
-msgstr ""
+msgstr "un mile"
 
 msgctxt "instructions.verbal_multi_cue.replacement.us_customary_lengths.2"
 msgid "a half mile"

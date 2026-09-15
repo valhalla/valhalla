@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "ในอีก <LENGTH> <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> กิโลเมตร",
+        "1 กิโลเมตร",
+        "<METERS> เมตร",
+        "น้อยกว่า 10 เมตร"
+      ],
+      "us_customary_lengths": [
+        "<MILES> ไมล์",
+        "1 ไมล์",
+        "ครึ่งไมล์",
+        "หนึ่งในสี่ไมล์",
+        "<FEET> ฟุต",
+        "น้อยกว่า 10 ฟุต"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "ถึง: <TIME>",
+        "1": "ถึง: <TIME> ที่ <TRANSIT_STOP>"
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "ถึงเวลา <TIME>",
+        "1": "ถึง <TRANSIT_STOP> เวลา <TIME>"
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "เบี่ยง<RELATIVE_DIRECTION>",
+        "1": "เบี่ยง<RELATIVE_DIRECTION>เข้าสู่ <STREET_NAMES>",
+        "2": "เบี่ยง<RELATIVE_DIRECTION>เข้าสู่ <BEGIN_STREET_NAMES> แล้วไปต่อบน <STREET_NAMES>",
+        "3": "เบี่ยง<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "4": "เบี่ยง<RELATIVE_DIRECTION>ที่ <JUNCTION_NAME>",
+        "5": "เบี่ยง<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "เบี่ยง<RELATIVE_DIRECTION>",
+        "1": "เบี่ยง<RELATIVE_DIRECTION>เข้าสู่ <STREET_NAMES>",
+        "2": "เบี่ยง<RELATIVE_DIRECTION>เข้าสู่ <BEGIN_STREET_NAMES>",
+        "3": "เบี่ยง<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "4": "เบี่ยง<RELATIVE_DIRECTION>ที่ <JUNCTION_NAME>",
+        "5": "เบี่ยง<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> กลายเป็น <STREET_NAMES>"
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> กลายเป็น <STREET_NAMES>"
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "ไปต่อ",
+        "1": "ไปต่อบน <STREET_NAMES>",
+        "2": "ไปต่อที่ <JUNCTION_NAME>",
+        "3": "ไปต่อมุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "ไปต่อ",
+        "1": "ไปต่ออีก <LENGTH>",
+        "2": "ไปต่อบน <STREET_NAMES>",
+        "3": "ไปต่อบน <STREET_NAMES> อีก <LENGTH>",
+        "4": "ไปต่อที่ <JUNCTION_NAME>",
+        "5": "ไปต่อที่ <JUNCTION_NAME> อีก <LENGTH>",
+        "6": "ไปต่อมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "7": "ไปต่อมุ่งหน้าสู่ <TOWARD_SIGN> อีก <LENGTH>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> กิโลเมตร",
+        "1 กิโลเมตร",
+        "<METERS> เมตร",
+        "น้อยกว่า 10 เมตร"
+      ],
+      "us_customary_lengths": [
+        "<MILES> ไมล์",
+        "1 ไมล์",
+        "ครึ่งไมล์",
+        "หนึ่งในสี่ไมล์",
+        "<FEET> ฟุต",
+        "น้อยกว่า 10 ฟุต"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "ไปต่อ",
+        "1": "ไปต่อบน <STREET_NAMES>",
+        "2": "ไปต่อที่ <JUNCTION_NAME>",
+        "3": "ไปต่อมุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "ออกเดินทาง: <TIME>",
+        "1": "ออกเดินทาง: <TIME> จาก <TRANSIT_STOP>"
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "ออกเดินทางเวลา <TIME>",
+        "1": "ออกเดินทางจาก <TRANSIT_STOP> เวลา <TIME>"
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "คุณมาถึงจุดหมายแล้ว",
+        "1": "คุณมาถึง <DESTINATION> แล้ว",
+        "2": "จุดหมายอยู่ทาง<RELATIVE_DIRECTION>",
+        "3": "<DESTINATION> อยู่ทาง<RELATIVE_DIRECTION>"
+      },
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "คุณมาถึงจุดหมายแล้ว",
+        "1": "คุณมาถึง <DESTINATION> แล้ว",
+        "2": "จุดหมายอยู่ทาง<RELATIVE_DIRECTION>",
+        "3": "<DESTINATION> อยู่ทาง<RELATIVE_DIRECTION>"
+      },
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "คุณกำลังจะถึงจุดหมาย",
+        "1": "คุณกำลังจะถึง <DESTINATION>",
+        "2": "จุดหมายจะอยู่ทาง<RELATIVE_DIRECTION>",
+        "3": "<DESTINATION> จะอยู่ทาง<RELATIVE_DIRECTION>"
+      },
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "ใช้ลิฟต์",
+        "1": "ใช้ลิฟต์ไปยัง <LEVEL>"
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "เข้าสู่อาคาร",
+        "1": "เข้าสู่อาคาร แล้วไปต่อบน <STREET_NAMES>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "ขึ้นเรือข้ามฟาก",
+        "1": "ไปตาม <STREET_NAMES>",
+        "2": "ไปตาม <STREET_NAMES> <FERRY_LABEL>",
+        "3": "ขึ้นเรือข้ามฟากมุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "ferry_label": "เรือข้ามฟาก"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "ขึ้นเรือข้ามฟาก",
+        "1": "ไปตาม <STREET_NAMES>",
+        "2": "ไปตาม <STREET_NAMES> <FERRY_LABEL>",
+        "3": "ขึ้นเรือข้ามฟากมุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "ferry_label": "เรือข้ามฟาก"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "เข้าสู่วงเวียน",
+        "1": "เข้าสู่วงเวียนแล้วออกทางออกที่ <ORDINAL_VALUE>",
+        "2": "เข้าสู่วงเวียนแล้วออกทางออกที่ <ORDINAL_VALUE> เข้าสู่ <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "3": "เข้าสู่วงเวียนแล้วออกทางออกที่ <ORDINAL_VALUE> เข้าสู่ <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> แล้วไปต่อบน <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "4": "เข้าสู่วงเวียนแล้วออกทางออกที่ <ORDINAL_VALUE> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "5": "เข้าสู่วงเวียนแล้วออกทางออกเข้าสู่ <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "6": "เข้าสู่วงเวียนแล้วออกทางออกเข้าสู่ <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> แล้วไปต่อบน <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "7": "เข้าสู่วงเวียนแล้วออกทางออกมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "8": "เข้าสู่ <STREET_NAMES>",
+        "9": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกที่ <ORDINAL_VALUE>",
+        "10": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกที่ <ORDINAL_VALUE> เข้าสู่ <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "11": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกที่ <ORDINAL_VALUE> เข้าสู่ <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> แล้วไปต่อบน <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "12": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกที่ <ORDINAL_VALUE> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "13": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกเข้าสู่ <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "14": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกเข้าสู่ <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> แล้วไปต่อบน <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "15": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกมุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "ordinal_values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "เข้าสู่วงเวียน",
+        "1": "เข้าสู่วงเวียนแล้วออกทางออกที่ <ORDINAL_VALUE>",
+        "2": "เข้าสู่วงเวียนแล้วออกทางออกที่ <ORDINAL_VALUE> เข้าสู่ <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "3": "เข้าสู่วงเวียนแล้วออกทางออกที่ <ORDINAL_VALUE> เข้าสู่ <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>",
+        "4": "เข้าสู่วงเวียนแล้วออกทางออกที่ <ORDINAL_VALUE> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "5": "เข้าสู่วงเวียนแล้วออกทางออกเข้าสู่ <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "6": "เข้าสู่วงเวียนแล้วออกทางออกเข้าสู่ <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>",
+        "7": "เข้าสู่วงเวียนแล้วออกทางออกมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "8": "เข้าสู่ <STREET_NAMES>",
+        "9": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกที่ <ORDINAL_VALUE>",
+        "10": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกที่ <ORDINAL_VALUE> เข้าสู่ <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "11": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกที่ <ORDINAL_VALUE> เข้าสู่ <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>",
+        "12": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกที่ <ORDINAL_VALUE> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "13": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกเข้าสู่ <ROUNDABOUT_EXIT_STREET_NAMES>",
+        "14": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกเข้าสู่ <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>",
+        "15": "เข้าสู่ <STREET_NAMES> แล้วออกทางออกมุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "ordinal_values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "ใช้บันไดเลื่อน",
+        "1": "ใช้บันไดเลื่อนไปยัง <LEVEL>"
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "ออกทางออกด้าน<RELATIVE_DIRECTION>",
+        "1": "ออกทางออก <NUMBER_SIGN> ด้าน<RELATIVE_DIRECTION>",
+        "2": "ออกทางออก <BRANCH_SIGN> ด้าน<RELATIVE_DIRECTION>",
+        "3": "ออกทางออก <NUMBER_SIGN> ด้าน<RELATIVE_DIRECTION> เข้าสู่ <BRANCH_SIGN>",
+        "4": "ออกทางออกด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "5": "ออกทางออก <NUMBER_SIGN> ด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "6": "ออกทางออก <BRANCH_SIGN> ด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "7": "ออกทางออก <NUMBER_SIGN> ด้าน<RELATIVE_DIRECTION> เข้าสู่ <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "8": "ออกทางออก <NAME_SIGN> ด้าน<RELATIVE_DIRECTION>",
+        "10": "ออกทางออก <NAME_SIGN> ด้าน<RELATIVE_DIRECTION> เข้าสู่ <BRANCH_SIGN>",
+        "12": "ออกทางออก <NAME_SIGN> ด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "14": "ออกทางออก <NAME_SIGN> ด้าน<RELATIVE_DIRECTION> เข้าสู่ <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "15": "ออกทางออก",
+        "16": "ออกทางออก <NUMBER_SIGN>",
+        "17": "ออกทางออก <BRANCH_SIGN>",
+        "18": "ออกทางออก <NUMBER_SIGN> เข้าสู่ <BRANCH_SIGN>",
+        "19": "ออกทางออกมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "20": "ออกทางออก <NUMBER_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "21": "ออกทางออก <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "22": "ออกทางออก <NUMBER_SIGN> เข้าสู่ <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "23": "ออกทางออก <NAME_SIGN>",
+        "25": "ออกทางออก <NAME_SIGN> เข้าสู่ <BRANCH_SIGN>",
+        "27": "ออกทางออก <NAME_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "29": "ออกทางออก <NAME_SIGN> เข้าสู่ <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "ออกจากอาคาร",
+        "1": "ออกจากอาคาร แล้วไปต่อบน <STREET_NAMES>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "ออกจากวงเวียน",
+        "1": "ออกจากวงเวียนเข้าสู่ <STREET_NAMES>",
+        "2": "ออกจากวงเวียนเข้าสู่ <BEGIN_STREET_NAMES> แล้วไปต่อบน <STREET_NAMES>",
+        "3": "ออกจากวงเวียนมุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "ออกจากวงเวียน",
+        "1": "ออกจากวงเวียนเข้าสู่ <STREET_NAMES>",
+        "2": "ออกจากวงเวียนเข้าสู่ <BEGIN_STREET_NAMES>",
+        "3": "ออกจากวงเวียนมุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "ออกทางออกด้าน<RELATIVE_DIRECTION>",
+        "1": "ออกทางออก <NUMBER_SIGN> ด้าน<RELATIVE_DIRECTION>",
+        "2": "ออกทางออก <BRANCH_SIGN> ด้าน<RELATIVE_DIRECTION>",
+        "3": "ออกทางออก <NUMBER_SIGN> ด้าน<RELATIVE_DIRECTION> เข้าสู่ <BRANCH_SIGN>",
+        "4": "ออกทางออกด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "5": "ออกทางออก <NUMBER_SIGN> ด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "6": "ออกทางออก <BRANCH_SIGN> ด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "7": "ออกทางออก <NUMBER_SIGN> ด้าน<RELATIVE_DIRECTION> เข้าสู่ <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "8": "ออกทางออก <NAME_SIGN> ด้าน<RELATIVE_DIRECTION>",
+        "10": "ออกทางออก <NAME_SIGN> ด้าน<RELATIVE_DIRECTION> เข้าสู่ <BRANCH_SIGN>",
+        "12": "ออกทางออก <NAME_SIGN> ด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "14": "ออกทางออก <NAME_SIGN> ด้าน<RELATIVE_DIRECTION> เข้าสู่ <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "15": "ออกทางออก",
+        "16": "ออกทางออก <NUMBER_SIGN>",
+        "17": "ออกทางออก <BRANCH_SIGN>",
+        "18": "ออกทางออก <NUMBER_SIGN> เข้าสู่ <BRANCH_SIGN>",
+        "19": "ออกทางออกมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "20": "ออกทางออก <NUMBER_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "21": "ออกทางออก <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "22": "ออกทางออก <NUMBER_SIGN> เข้าสู่ <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "23": "ออกทางออก <NAME_SIGN>",
+        "25": "ออกทางออก <NAME_SIGN> เข้าสู่ <BRANCH_SIGN>",
+        "27": "ออกทางออก <NAME_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "29": "ออกทางออก <NAME_SIGN> เข้าสู่ <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "ทางออก <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "ชิด<RELATIVE_DIRECTION>ที่ทางแยก",
+        "1": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN>",
+        "2": "ชิด<RELATIVE_DIRECTION>เพื่อเข้าสู่ <STREET_NAMES>",
+        "3": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN> เข้าสู่ <STREET_NAMES>",
+        "4": "ชิด<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "5": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "6": "ชิด<RELATIVE_DIRECTION>เพื่อเข้าสู่ <STREET_NAMES> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "7": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN> เข้าสู่ <STREET_NAMES> มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ตรงกลาง",
+        "ขวา"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "ชิด<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "1": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN> และอยู่บน <STREET_NAMES> ต่อไป",
+        "2": "ชิด<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "3": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN> และอยู่บน <STREET_NAMES> ต่อไป มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ตรงกลาง",
+        "ขวา"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "ชิด<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "1": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN> และอยู่บน <STREET_NAMES> ต่อไป",
+        "2": "ชิด<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "3": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN> และอยู่บน <STREET_NAMES> ต่อไป มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ตรงกลาง",
+        "ขวา"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "ชิด<RELATIVE_DIRECTION>ที่ทางแยก",
+        "1": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN>",
+        "2": "ชิด<RELATIVE_DIRECTION>เพื่อเข้าสู่ <STREET_NAMES>",
+        "3": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN> เข้าสู่ <STREET_NAMES>",
+        "4": "ชิด<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "5": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "6": "ชิด<RELATIVE_DIRECTION>เพื่อเข้าสู่ <STREET_NAMES> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "7": "ชิด<RELATIVE_DIRECTION>เพื่อออกทางออก <NUMBER_SIGN> เข้าสู่ <STREET_NAMES> มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ตรงกลาง",
+        "ขวา"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "ไปต่อยัง <LEVEL>"
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "รวมช่องทาง",
+        "1": "รวมช่องทางไปทาง<RELATIVE_DIRECTION>",
+        "2": "รวมช่องทางเข้าสู่ <STREET_NAMES>",
+        "3": "รวมช่องทางไปทาง<RELATIVE_DIRECTION>เข้าสู่ <STREET_NAMES>",
+        "4": "รวมช่องทางมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "5": "รวมช่องทางไปทาง<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "รวมช่องทาง",
+        "1": "รวมช่องทางไปทาง<RELATIVE_DIRECTION>",
+        "2": "รวมช่องทางเข้าสู่ <STREET_NAMES>",
+        "3": "รวมช่องทางไปทาง<RELATIVE_DIRECTION>เข้าสู่ <STREET_NAMES>",
+        "4": "รวมช่องทางมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "5": "รวมช่องทางไปทาง<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "จอดยานพาหนะของคุณ"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "ผ่าน<OBJECT_LABEL>",
+        "1": "ผ่านสัญญาณไฟจราจรที่<OBJECT_LABEL>"
+      },
+      "object_labels": [
+        "ประตูกั้น",
+        "เสากั้น",
+        "ทางแยกของถนน"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "เดินทาง <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>"
+      },
+      "transit_stop_count_labels": {
+        "one": "ป้าย",
+        "other": "ป้าย"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "ไปต่ออีก <LENGTH>",
+        "1": "ไปต่อบน <STREET_NAMES> อีก <LENGTH>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> กิโลเมตร",
+        "1 กิโลเมตร",
+        "<METERS> เมตร",
+        "น้อยกว่า 10 เมตร"
+      ],
+      "us_customary_lengths": [
+        "<MILES> ไมล์",
+        "1 ไมล์",
+        "ครึ่งไมล์",
+        "หนึ่งในสี่ไมล์",
+        "<FEET> ฟุต",
+        "น้อยกว่า 10 ฟุต"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "ใช้ทางลาดด้าน<RELATIVE_DIRECTION>",
+        "1": "ใช้ทางลาด <BRANCH_SIGN> ด้าน<RELATIVE_DIRECTION>",
+        "2": "ใช้ทางลาดด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "3": "ใช้ทางลาด <BRANCH_SIGN> ด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "4": "ใช้ทางลาด <NAME_SIGN> ด้าน<RELATIVE_DIRECTION>",
+        "5": "เลี้ยว<RELATIVE_DIRECTION>เพื่อใช้ทางลาด",
+        "6": "เลี้ยว<RELATIVE_DIRECTION>เพื่อใช้ทางลาด <BRANCH_SIGN>",
+        "7": "เลี้ยว<RELATIVE_DIRECTION>เพื่อใช้ทางลาดมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "8": "เลี้ยว<RELATIVE_DIRECTION>เพื่อใช้ทางลาด <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "9": "เลี้ยว<RELATIVE_DIRECTION>เพื่อใช้ทางลาด <NAME_SIGN>",
+        "10": "ใช้ทางลาด",
+        "11": "ใช้ทางลาด <BRANCH_SIGN>",
+        "12": "ใช้ทางลาดมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "13": "ใช้ทางลาด <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "14": "ใช้ทางลาด <NAME_SIGN>"
+      },
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "ตรงไปเพื่อใช้ทางลาด",
+        "1": "ตรงไปเพื่อใช้ทางลาด <BRANCH_SIGN>",
+        "2": "ตรงไปเพื่อใช้ทางลาดมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "3": "ตรงไปเพื่อใช้ทางลาด <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "4": "ตรงไปเพื่อใช้ทางลาด <NAME_SIGN>"
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "ตรงไปเพื่อใช้ทางลาด",
+        "1": "ตรงไปเพื่อใช้ทางลาด <BRANCH_SIGN>",
+        "2": "ตรงไปเพื่อใช้ทางลาดมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "3": "ตรงไปเพื่อใช้ทางลาด <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "4": "ตรงไปเพื่อใช้ทางลาด <NAME_SIGN>"
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "ใช้ทางลาดด้าน<RELATIVE_DIRECTION>",
+        "1": "ใช้ทางลาด <BRANCH_SIGN> ด้าน<RELATIVE_DIRECTION>",
+        "2": "ใช้ทางลาดด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "3": "ใช้ทางลาด <BRANCH_SIGN> ด้าน<RELATIVE_DIRECTION> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "4": "ใช้ทางลาด <NAME_SIGN> ด้าน<RELATIVE_DIRECTION>",
+        "5": "เลี้ยว<RELATIVE_DIRECTION>เพื่อใช้ทางลาด",
+        "6": "เลี้ยว<RELATIVE_DIRECTION>เพื่อใช้ทางลาด <BRANCH_SIGN>",
+        "7": "เลี้ยว<RELATIVE_DIRECTION>เพื่อใช้ทางลาดมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "8": "เลี้ยว<RELATIVE_DIRECTION>เพื่อใช้ทางลาด <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "9": "เลี้ยว<RELATIVE_DIRECTION>เพื่อใช้ทางลาด <NAME_SIGN>",
+        "10": "ใช้ทางลาด",
+        "11": "ใช้ทางลาด <BRANCH_SIGN>",
+        "12": "ใช้ทางลาดมุ่งหน้าสู่ <TOWARD_SIGN>",
+        "13": "ใช้ทางลาด <BRANCH_SIGN> มุ่งหน้าสู่ <TOWARD_SIGN>",
+        "14": "ใช้ทางลาด <NAME_SIGN>"
+      },
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>",
+        "1": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>เข้าสู่ <STREET_NAMES>",
+        "2": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>เข้าสู่ <BEGIN_STREET_NAMES> แล้วไปต่อบน <STREET_NAMES>",
+        "3": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "4": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>ที่ <JUNCTION_NAME>",
+        "5": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>",
+        "1": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>เข้าสู่ <STREET_NAMES>",
+        "2": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>เข้าสู่ <BEGIN_STREET_NAMES>",
+        "3": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "4": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>ที่ <JUNCTION_NAME>",
+        "5": "เลี้ยวหักศอกไปทาง<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "มุ่งหน้าไปทาง<CARDINAL_DIRECTION>",
+        "1": "มุ่งหน้าไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES>",
+        "2": "มุ่งหน้าไปทาง<CARDINAL_DIRECTION>บน <BEGIN_STREET_NAMES> แล้วไปต่อบน <STREET_NAMES>",
+        "4": "ขับรถไปทาง<CARDINAL_DIRECTION>",
+        "5": "ขับรถไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES>",
+        "6": "ขับรถไปทาง<CARDINAL_DIRECTION>บน <BEGIN_STREET_NAMES> แล้วไปต่อบน <STREET_NAMES>",
+        "8": "เดินไปทาง<CARDINAL_DIRECTION>",
+        "9": "เดินไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES>",
+        "10": "เดินไปทาง<CARDINAL_DIRECTION>บน <BEGIN_STREET_NAMES> แล้วไปต่อบน <STREET_NAMES>",
+        "16": "ปั่นจักรยานไปทาง<CARDINAL_DIRECTION>",
+        "17": "ปั่นจักรยานไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES>",
+        "18": "ปั่นจักรยานไปทาง<CARDINAL_DIRECTION>บน <BEGIN_STREET_NAMES> แล้วไปต่อบน <STREET_NAMES>"
+      },
+      "cardinal_directions": [
+        "ทิศเหนือ",
+        "ทิศตะวันออกเฉียงเหนือ",
+        "ทิศตะวันออก",
+        "ทิศตะวันออกเฉียงใต้",
+        "ทิศใต้",
+        "ทิศตะวันตกเฉียงใต้",
+        "ทิศตะวันตก",
+        "ทิศตะวันตกเฉียงเหนือ"
+      ],
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "มุ่งหน้าไปทาง<CARDINAL_DIRECTION>",
+        "1": "มุ่งหน้าไปทาง<CARDINAL_DIRECTION>อีก <LENGTH>",
+        "2": "มุ่งหน้าไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES>",
+        "3": "มุ่งหน้าไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES> อีก <LENGTH>",
+        "4": "มุ่งหน้าไปทาง<CARDINAL_DIRECTION>บน <BEGIN_STREET_NAMES>",
+        "5": "ขับรถไปทาง<CARDINAL_DIRECTION>",
+        "6": "ขับรถไปทาง<CARDINAL_DIRECTION>อีก <LENGTH>",
+        "7": "ขับรถไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES>",
+        "8": "ขับรถไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES> อีก <LENGTH>",
+        "9": "ขับรถไปทาง<CARDINAL_DIRECTION>บน <BEGIN_STREET_NAMES>",
+        "10": "เดินไปทาง<CARDINAL_DIRECTION>",
+        "11": "เดินไปทาง<CARDINAL_DIRECTION>อีก <LENGTH>",
+        "12": "เดินไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES>",
+        "13": "เดินไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES> อีก <LENGTH>",
+        "14": "เดินไปทาง<CARDINAL_DIRECTION>บน <BEGIN_STREET_NAMES>",
+        "15": "ปั่นจักรยานไปทาง<CARDINAL_DIRECTION>",
+        "16": "ปั่นจักรยานไปทาง<CARDINAL_DIRECTION>อีก <LENGTH>",
+        "17": "ปั่นจักรยานไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES>",
+        "18": "ปั่นจักรยานไปทาง<CARDINAL_DIRECTION>บน <STREET_NAMES> อีก <LENGTH>",
+        "19": "ปั่นจักรยานไปทาง<CARDINAL_DIRECTION>บน <BEGIN_STREET_NAMES>"
+      },
+      "cardinal_directions": [
+        "ทิศเหนือ",
+        "ทิศตะวันออกเฉียงเหนือ",
+        "ทิศตะวันออก",
+        "ทิศตะวันออกเฉียงใต้",
+        "ทิศใต้",
+        "ทิศตะวันตกเฉียงใต้",
+        "ทิศตะวันตก",
+        "ทิศตะวันตกเฉียงเหนือ"
+      ],
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> กิโลเมตร",
+        "1 กิโลเมตร",
+        "<METERS> เมตร",
+        "น้อยกว่า 10 เมตร"
+      ],
+      "us_customary_lengths": [
+        "<MILES> ไมล์",
+        "1 ไมล์",
+        "ครึ่งไมล์",
+        "หนึ่งในสี่ไมล์",
+        "<FEET> ฟุต",
+        "น้อยกว่า 10 ฟุต"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "ใช้บันได",
+        "1": "ใช้บันไดไปยัง <LEVEL>"
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "ขึ้น <TRANSIT_NAME> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "ขึ้น <TRANSIT_NAME> มุ่งหน้าสู่ <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "รถราง",
+        "รถไฟใต้ดิน",
+        "รถไฟ",
+        "รถบัส",
+        "เรือข้ามฟาก",
+        "กระเช้าไฟฟ้า",
+        "กระเช้าลอยฟ้า",
+        "รถไฟรางชัน"
+      ],
+      "transit_stop_count_labels": {
+        "one": "ป้าย",
+        "other": "ป้าย"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "ออกจากสถานี",
+        "1": "ออกจาก <TRANSIT_STOP>",
+        "2": "ออกจาก <TRANSIT_STOP> <STATION_LABEL>"
+      },
+      "station_label": "สถานี"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "ออกจากสถานี",
+        "1": "ออกจาก <TRANSIT_STOP>",
+        "2": "ออกจาก <TRANSIT_STOP> <STATION_LABEL>"
+      },
+      "station_label": "สถานี"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "เข้าสู่สถานี",
+        "1": "เข้าสู่ <TRANSIT_STOP>",
+        "2": "เข้าสู่ <TRANSIT_STOP> <STATION_LABEL>"
+      },
+      "station_label": "สถานี"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "เข้าสู่สถานี",
+        "1": "เข้าสู่ <TRANSIT_STOP>",
+        "2": "เข้าสู่ <TRANSIT_STOP> <STATION_LABEL>"
+      },
+      "station_label": "สถานี"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "เปลี่ยนสายที่สถานี",
+        "1": "เปลี่ยนสายที่ <TRANSIT_STOP>",
+        "2": "เปลี่ยนสายที่ <TRANSIT_STOP> <STATION_LABEL>"
+      },
+      "station_label": "สถานี"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "เปลี่ยนสายที่สถานี",
+        "1": "เปลี่ยนสายที่ <TRANSIT_STOP>",
+        "2": "เปลี่ยนสายที่ <TRANSIT_STOP> <STATION_LABEL>"
+      },
+      "station_label": "สถานี"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "อยู่บน <TRANSIT_NAME> ต่อไป (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "อยู่บน <TRANSIT_NAME> มุ่งหน้าสู่ <TRANSIT_HEADSIGN> ต่อไป (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "รถราง",
+        "รถไฟใต้ดิน",
+        "รถไฟ",
+        "รถบัส",
+        "เรือข้ามฟาก",
+        "กระเช้าไฟฟ้า",
+        "กระเช้าลอยฟ้า",
+        "รถไฟรางชัน"
+      ],
+      "transit_stop_count_labels": {
+        "one": "ป้าย",
+        "other": "ป้าย"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "อยู่บน <TRANSIT_NAME> ต่อไป",
+        "1": "อยู่บน <TRANSIT_NAME> มุ่งหน้าสู่ <TRANSIT_HEADSIGN> ต่อไป"
+      },
+      "empty_transit_name_labels": [
+        "รถราง",
+        "รถไฟใต้ดิน",
+        "รถไฟ",
+        "รถบัส",
+        "เรือข้ามฟาก",
+        "กระเช้าไฟฟ้า",
+        "กระเช้าลอยฟ้า",
+        "รถไฟรางชัน"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "เปลี่ยนไปขึ้น <TRANSIT_NAME> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "เปลี่ยนไปขึ้น <TRANSIT_NAME> มุ่งหน้าสู่ <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "รถราง",
+        "รถไฟใต้ดิน",
+        "รถไฟ",
+        "รถบัส",
+        "เรือข้ามฟาก",
+        "กระเช้าไฟฟ้า",
+        "กระเช้าลอยฟ้า",
+        "รถไฟรางชัน"
+      ],
+      "transit_stop_count_labels": {
+        "one": "ป้าย",
+        "other": "ป้าย"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "เปลี่ยนไปขึ้น <TRANSIT_NAME>",
+        "1": "เปลี่ยนไปขึ้น <TRANSIT_NAME> มุ่งหน้าสู่ <TRANSIT_HEADSIGN>"
+      },
+      "empty_transit_name_labels": [
+        "รถราง",
+        "รถไฟใต้ดิน",
+        "รถไฟ",
+        "รถบัส",
+        "เรือข้ามฟาก",
+        "กระเช้าไฟฟ้า",
+        "กระเช้าลอยฟ้า",
+        "รถไฟรางชัน"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "ขึ้น <TRANSIT_NAME>",
+        "1": "ขึ้น <TRANSIT_NAME> มุ่งหน้าสู่ <TRANSIT_HEADSIGN>"
+      },
+      "empty_transit_name_labels": [
+        "รถราง",
+        "รถไฟใต้ดิน",
+        "รถไฟ",
+        "รถบัส",
+        "เรือข้ามฟาก",
+        "กระเช้าไฟฟ้า",
+        "กระเช้าลอยฟ้า",
+        "รถไฟรางชัน"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "เลี้ยว<RELATIVE_DIRECTION>",
+        "1": "เลี้ยว<RELATIVE_DIRECTION>เข้าสู่ <STREET_NAMES>",
+        "2": "เลี้ยว<RELATIVE_DIRECTION>เข้าสู่ <BEGIN_STREET_NAMES> แล้วไปต่อบน <STREET_NAMES>",
+        "3": "เลี้ยว<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "4": "เลี้ยว<RELATIVE_DIRECTION>ที่ <JUNCTION_NAME>",
+        "5": "เลี้ยว<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "เลี้ยว<RELATIVE_DIRECTION>",
+        "1": "เลี้ยว<RELATIVE_DIRECTION>เข้าสู่ <STREET_NAMES>",
+        "2": "เลี้ยว<RELATIVE_DIRECTION>เข้าสู่ <BEGIN_STREET_NAMES>",
+        "3": "เลี้ยว<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "4": "เลี้ยว<RELATIVE_DIRECTION>ที่ <JUNCTION_NAME>",
+        "5": "เลี้ยว<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "กลับรถทาง<RELATIVE_DIRECTION>",
+        "1": "กลับรถทาง<RELATIVE_DIRECTION>เข้าสู่ <STREET_NAMES>",
+        "2": "กลับรถทาง<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "3": "กลับรถทาง<RELATIVE_DIRECTION>ที่ <CROSS_STREET_NAMES>",
+        "4": "กลับรถทาง<RELATIVE_DIRECTION>ที่ <CROSS_STREET_NAMES> เข้าสู่ <STREET_NAMES>",
+        "5": "กลับรถทาง<RELATIVE_DIRECTION>ที่ <CROSS_STREET_NAMES> เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "6": "กลับรถทาง<RELATIVE_DIRECTION>ที่ <JUNCTION_NAME>",
+        "7": "กลับรถทาง<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "กลับรถทาง<RELATIVE_DIRECTION>",
+        "1": "กลับรถทาง<RELATIVE_DIRECTION>เข้าสู่ <STREET_NAMES>",
+        "2": "กลับรถทาง<RELATIVE_DIRECTION>เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "3": "กลับรถทาง<RELATIVE_DIRECTION>ที่ <CROSS_STREET_NAMES>",
+        "4": "กลับรถทาง<RELATIVE_DIRECTION>ที่ <CROSS_STREET_NAMES> เข้าสู่ <STREET_NAMES>",
+        "5": "กลับรถทาง<RELATIVE_DIRECTION>ที่ <CROSS_STREET_NAMES> เพื่ออยู่บน <STREET_NAMES> ต่อไป",
+        "6": "กลับรถทาง<RELATIVE_DIRECTION>ที่ <JUNCTION_NAME>",
+        "7": "กลับรถทาง<RELATIVE_DIRECTION>มุ่งหน้าสู่ <TOWARD_SIGN>"
+      },
+      "empty_street_name_labels": [
+        "ทางเดินเท้า",
+        "ทางจักรยาน",
+        "เส้นทางจักรยานเสือภูเขา",
+        "ทางม้าลาย",
+        "บันได",
+        "สะพาน",
+        "อุโมงค์"
+      ],
+      "relative_directions": [
+        "ซ้าย",
+        "ขวา"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> จากนั้น <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> จากนั้นในอีก <LENGTH> <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> กิโลเมตร",
+        "1 กิโลเมตร",
+        "<METERS> เมตร",
+        "น้อยกว่า 10 เมตร"
+      ],
+      "us_customary_lengths": [
+        "<MILES> ไมล์",
+        "1 ไมล์",
+        "ครึ่งไมล์",
+        "หนึ่งในสี่ไมล์",
+        "<FEET> ฟุต",
+        "น้อยกว่า 10 ฟุต"
+      ]
+    }
+  },
+  "posix_locale": "th_TH.UTF-8",
+  "aliases": [
+    "th"
+  ]
+}

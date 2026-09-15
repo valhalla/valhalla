@@ -119,19 +119,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.bear.replacement.relative_directions.0"
 msgid "left"
@@ -185,19 +185,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.bear_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -251,19 +251,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 #. e.g. Continue.
 msgctxt "instructions.continue_verbal.phrases.0"
@@ -319,19 +319,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.continue_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -407,19 +407,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 #. e.g. Depart: 8:02 AM.
 msgctxt "instructions.depart.phrases.0"
@@ -531,22 +531,22 @@ msgstr "sağ"
 #. e.g. Take the elevator.
 msgctxt "instructions.elevator.phrases.0"
 msgid "Take the elevator."
-msgstr ""
+msgstr "Asansörü kullanın."
 
 #. e.g. Take the elevator to Level 1.
 msgctxt "instructions.elevator.phrases.1"
 msgid "Take the elevator to <LEVEL>."
-msgstr ""
+msgstr "Asansörle <LEVEL> katına gidin."
 
 #. e.g. Enter the building.
 msgctxt "instructions.enter_building.phrases.0"
 msgid "Enter the building."
-msgstr ""
+msgstr "Binaya girin."
 
 #. e.g. Enter the building, and continue on the walkway.
 msgctxt "instructions.enter_building.phrases.1"
 msgid "Enter the building, and continue on <STREET_NAMES>."
-msgstr ""
+msgstr "Binaya girin ve <STREET_NAMES> üzerinde devam edin."
 
 msgctxt "instructions.enter_building.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -562,7 +562,7 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.enter_building.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 #. e.g. Take the Ferry.
 msgctxt "instructions.enter_ferry.phrases.0"
@@ -598,19 +598,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.enter_ferry.replacement.ferry_label"
 msgid "Ferry"
@@ -650,19 +650,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.enter_ferry_verbal.replacement.ferry_label"
 msgid "Ferry"
@@ -771,19 +771,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.enter_roundabout.replacement.ordinal_values.0"
 msgid "1st"
@@ -928,19 +928,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.ordinal_values.0"
 msgid "1st"
@@ -985,12 +985,12 @@ msgstr "Onuncu"
 #. e.g. Take the escalator.
 msgctxt "instructions.escalator.phrases.0"
 msgid "Take the escalator."
-msgstr ""
+msgstr "Yürüyen merdiveni kullanın."
 
 #. e.g. Take the escalator to Level 3.
 msgctxt "instructions.escalator.phrases.1"
 msgid "Take the escalator to <LEVEL>."
-msgstr ""
+msgstr "Yürüyen merdivenle <LEVEL> katına gidin."
 
 #. e.g. Take the exit on the left.
 #. e.g. Take the exit on the right.
@@ -1124,12 +1124,12 @@ msgstr "sağ"
 #. e.g. Exit the building.
 msgctxt "instructions.exit_building.phrases.0"
 msgid "Exit the building."
-msgstr ""
+msgstr "Binadan çıkın."
 
 #. e.g. Exit the building, and continue on the walkway.
 msgctxt "instructions.exit_building.phrases.1"
 msgid "Exit the building, and continue on <STREET_NAMES>."
-msgstr ""
+msgstr "Binadan çıkın ve <STREET_NAMES> üzerinde devam edin."
 
 msgctxt "instructions.exit_building.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1145,7 +1145,7 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.exit_building.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 #. e.g. Exit the roundabout.
 msgctxt "instructions.exit_roundabout.phrases.0"
@@ -1181,19 +1181,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 #. e.g. Exit the roundabout.
 msgctxt "instructions.exit_roundabout_verbal.phrases.0"
@@ -1229,19 +1229,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 #. e.g. Take the exit on the left.
 #. e.g. Take the exit on the right.
@@ -1297,7 +1297,7 @@ msgstr "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> işaretine doğru <NAME_SIGN> ç�
 #. e.g. Take the White Marsh Boulevard exit on the left toward White Marsh.
 msgctxt "instructions.exit_verbal.phrases.12"
 msgid "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın."
 
 #. e.g. Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh.
 msgctxt "instructions.exit_verbal.phrases.14"
@@ -1407,7 +1407,7 @@ msgstr "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
 #. e.g. Keep right to take exit 62 toward Annapolis.
 msgctxt "instructions.keep.phrases.5"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "<TOWARD_SIGN> işaretine doğru <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep right to take I 895 South toward Annapolis.
 msgctxt "instructions.keep.phrases.6"
@@ -1433,19 +1433,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.keep.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.keep.replacement.relative_directions.0"
 msgid "left"
@@ -1453,7 +1453,7 @@ msgstr "sol"
 
 msgctxt "instructions.keep.replacement.relative_directions.1"
 msgid "straight"
-msgstr ""
+msgstr "düz"
 
 msgctxt "instructions.keep.replacement.relative_directions.2"
 msgid "right"
@@ -1495,19 +1495,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.0"
 msgid "left"
@@ -1515,7 +1515,7 @@ msgstr "sol"
 
 msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.1"
 msgid "straight"
-msgstr ""
+msgstr "düz"
 
 msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.2"
 msgid "right"
@@ -1557,19 +1557,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1577,7 +1577,7 @@ msgstr "sol"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.1"
 msgid "straight"
-msgstr ""
+msgstr "düz"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.2"
 msgid "right"
@@ -1639,19 +1639,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.keep_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1659,7 +1659,7 @@ msgstr "sol"
 
 msgctxt "instructions.keep_verbal.replacement.relative_directions.1"
 msgid "straight"
-msgstr ""
+msgstr "düz"
 
 msgctxt "instructions.keep_verbal.replacement.relative_directions.2"
 msgid "right"
@@ -1668,7 +1668,7 @@ msgstr "sağ"
 #. e.g. Continue to Level 2.
 msgctxt "instructions.level_change.phrases.0"
 msgid "Continue to <LEVEL>."
-msgstr ""
+msgstr "<LEVEL> katına devam edin."
 
 #. e.g. Merge.
 msgctxt "instructions.merge.phrases.0"
@@ -1714,19 +1714,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.merge.replacement.relative_directions.0"
 msgid "left"
@@ -1780,19 +1780,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.merge_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -1805,28 +1805,28 @@ msgstr "sağ"
 #. e.g. Park your vehicle.
 msgctxt "instructions.park_vehicle.phrases.0"
 msgid "Park your vehicle"
-msgstr ""
+msgstr "Aracınızı park edin"
 
 #. e.g. Pass the gate.
 msgctxt "instructions.pass.phrases.0"
 msgid "Pass <OBJECT_LABEL>."
-msgstr ""
+msgstr "<OBJECT_LABEL> yanından geçin."
 
 msgctxt "instructions.pass.phrases.1"
 msgid "Pass traffic signals on <OBJECT_LABEL>."
-msgstr ""
+msgstr "<OBJECT_LABEL> üzerindeki trafik ışıklarını geçin."
 
 msgctxt "instructions.pass.replacement.object_labels.0"
 msgid "the gate"
-msgstr ""
+msgstr "kapı"
 
 msgctxt "instructions.pass.replacement.object_labels.1"
 msgid "the bollards"
-msgstr ""
+msgstr "dubalar"
 
 msgctxt "instructions.pass.replacement.object_labels.2"
 msgid "ways intersection"
-msgstr ""
+msgstr "yol kavşağı"
 
 #. e.g. Travel 1 stop.
 #. e.g. Travel 3 stops.
@@ -1868,19 +1868,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.post_transition_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -2186,19 +2186,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.sharp.replacement.relative_directions.0"
 msgid "left"
@@ -2252,19 +2252,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.sharp_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -2390,19 +2390,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.start.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 #. e.g. Head east.
 #. e.g. Head north.
@@ -2558,19 +2558,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.start_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.start_verbal.replacement.metric_lengths.0"
 msgid "<KILOMETERS> kilometers"
@@ -2615,12 +2615,12 @@ msgstr "10 fitten daha az"
 #. e.g. Take the stairs.
 msgctxt "instructions.steps.phrases.0"
 msgid "Take the stairs."
-msgstr ""
+msgstr "Merdivenleri kullanın."
 
 #. e.g. Take the stairs to Level 2.
 msgctxt "instructions.steps.phrases.1"
 msgid "Take the stairs to <LEVEL>."
-msgstr ""
+msgstr "Merdivenlerle <LEVEL> katına gidin."
 
 #. e.g. Take the New Haven. (1 stop)
 #. e.g. Take the metro. (2 stops)
@@ -2641,7 +2641,7 @@ msgstr "tramvay"
 
 msgctxt "instructions.transit.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2806,7 +2806,7 @@ msgstr "tramvay"
 
 msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit_remain_on.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2856,7 +2856,7 @@ msgstr "tramvay"
 
 msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit_remain_on_verbal.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2899,7 +2899,7 @@ msgstr "tramvay"
 
 msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit_transfer.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2949,7 +2949,7 @@ msgstr "tramvay"
 
 msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit_transfer_verbal.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -2991,7 +2991,7 @@ msgstr "tramvay"
 
 msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.1"
 msgid "metro"
-msgstr ""
+msgstr "metro"
 
 msgctxt "instructions.transit_verbal.replacement.empty_transit_name_labels.2"
 msgid "train"
@@ -3061,19 +3061,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.turn.replacement.relative_directions.0"
 msgid "left"
@@ -3127,19 +3127,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.turn_verbal.replacement.relative_directions.0"
 msgid "left"
@@ -3203,19 +3203,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.uturn.replacement.relative_directions.0"
 msgid "left"
@@ -3279,19 +3279,19 @@ msgstr "dağ bisikleti yolu"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.3"
 msgid "the crosswalk"
-msgstr ""
+msgstr "yaya geçidi"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.4"
 msgid "the stairs"
-msgstr ""
+msgstr "merdivenler"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.5"
 msgid "the bridge"
-msgstr ""
+msgstr "köprü"
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.6"
 msgid "the tunnel"
-msgstr ""
+msgstr "tünel"
 
 msgctxt "instructions.uturn_verbal.replacement.relative_directions.0"
 msgid "left"

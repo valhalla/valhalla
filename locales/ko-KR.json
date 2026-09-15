@@ -438,7 +438,7 @@
         "10": "<RELATIVE_DIRECTION>쪽 <NAME_SIGN> 출구에서 <BRANCH_SIGN> 진입",
         "12": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>쪽 <NAME_SIGN> 출구로 진출",
         "14": "<TOWARD_SIGN> 방면 <RELATIVE_DIRECTION>쪽 <NAME_SIGN> 출구에서 <BRANCH_SIGN> 진입",
-        "15": "Take the exit.",
+        "15": "출구로 진출",
         "16": "<NUMBER_SIGN> 출구로 진출",
         "17": "<BRANCH_SIGN> 출구로 진출",
         "18": "<BRANCH_SIGN> 쪽 <NUMBER_SIGN> 출구로 진출",
@@ -559,7 +559,7 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "<LEVEL>까지 계속 이동"
       }
     },
     "merge": {
@@ -610,7 +610,7 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "차량 주차"
       }
     },
     "pass": {
@@ -908,7 +908,7 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Enter the station.",
+        "0": "역으로 진입",
         "1": "<TRANSIT_STOP> 진입",
         "2": "<TRANSIT_STOP> <STATION_LABEL> 진입"
       },

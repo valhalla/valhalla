@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Dalam <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "kurang dari 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "setengah mil",
+        "seperempat mil",
+        "<FEET> kaki",
+        "kurang dari 10 kaki"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Tiba: <TIME>.",
+        "1": "Tiba: <TIME> di <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Tiba pukul <TIME>.",
+        "1": "Tiba pukul <TIME> di <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Ambil arah <RELATIVE_DIRECTION>.",
+        "1": "Ambil arah <RELATIVE_DIRECTION> ke <STREET_NAMES>.",
+        "2": "Ambil arah <RELATIVE_DIRECTION> ke <BEGIN_STREET_NAMES>. Lanjutkan di <STREET_NAMES>.",
+        "3": "Ambil arah <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES>.",
+        "4": "Ambil arah <RELATIVE_DIRECTION> di <JUNCTION_NAME>.",
+        "5": "Ambil arah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Ambil arah <RELATIVE_DIRECTION>.",
+        "1": "Ambil arah <RELATIVE_DIRECTION> ke <STREET_NAMES>.",
+        "2": "Ambil arah <RELATIVE_DIRECTION> ke <BEGIN_STREET_NAMES>.",
+        "3": "Ambil arah <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES>.",
+        "4": "Ambil arah <RELATIVE_DIRECTION> di <JUNCTION_NAME>.",
+        "5": "Ambil arah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> menjadi <STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> menjadi <STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Lanjutkan.",
+        "1": "Lanjutkan di <STREET_NAMES>.",
+        "2": "Lanjutkan di <JUNCTION_NAME>.",
+        "3": "Lanjutkan menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Lanjutkan.",
+        "1": "Lanjutkan sejauh <LENGTH>.",
+        "2": "Lanjutkan di <STREET_NAMES>.",
+        "3": "Lanjutkan di <STREET_NAMES> sejauh <LENGTH>.",
+        "4": "Lanjutkan di <JUNCTION_NAME>.",
+        "5": "Lanjutkan di <JUNCTION_NAME> sejauh <LENGTH>.",
+        "6": "Lanjutkan menuju <TOWARD_SIGN>.",
+        "7": "Lanjutkan menuju <TOWARD_SIGN> sejauh <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "kurang dari 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "setengah mil",
+        "seperempat mil",
+        "<FEET> kaki",
+        "kurang dari 10 kaki"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Lanjutkan.",
+        "1": "Lanjutkan di <STREET_NAMES>.",
+        "2": "Lanjutkan di <JUNCTION_NAME>.",
+        "3": "Lanjutkan menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Berangkat: <TIME>.",
+        "1": "Berangkat: <TIME> dari <TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Berangkat pukul <TIME>.",
+        "1": "Berangkat pukul <TIME> dari <TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Anda telah tiba di tujuan.",
+        "1": "Anda telah tiba di <DESTINATION>.",
+        "2": "Tujuan Anda ada di sebelah <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> ada di sebelah <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Anda telah tiba di tujuan.",
+        "1": "Anda telah tiba di <DESTINATION>.",
+        "2": "Tujuan Anda ada di sebelah <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> ada di sebelah <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Anda akan tiba di tujuan.",
+        "1": "Anda akan tiba di <DESTINATION>.",
+        "2": "Tujuan Anda akan ada di sebelah <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> akan ada di sebelah <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Gunakan lift.",
+        "1": "Gunakan lift ke <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Masuk ke gedung.",
+        "1": "Masuk ke gedung, lalu lanjutkan di <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Naik kapal feri.",
+        "1": "Ambil <STREET_NAMES>.",
+        "2": "Ambil <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Naik kapal feri menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "ferry_label": "Feri"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Naik kapal feri.",
+        "1": "Ambil <STREET_NAMES>.",
+        "2": "Ambil <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Naik kapal feri menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "ferry_label": "Feri"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Masuki bundaran.",
+        "1": "Masuki bundaran dan ambil pintu keluar <ORDINAL_VALUE>.",
+        "2": "Masuki bundaran dan ambil pintu keluar <ORDINAL_VALUE> ke <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Masuki bundaran dan ambil pintu keluar <ORDINAL_VALUE> ke <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Lanjutkan di <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Masuki bundaran dan ambil pintu keluar <ORDINAL_VALUE> menuju <TOWARD_SIGN>.",
+        "5": "Masuki bundaran dan ambil pintu keluar ke <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Masuki bundaran dan ambil pintu keluar ke <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Lanjutkan di <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Masuki bundaran dan ambil pintu keluar menuju <TOWARD_SIGN>.",
+        "8": "Masuki <STREET_NAMES>",
+        "9": "Masuki <STREET_NAMES> dan ambil pintu keluar <ORDINAL_VALUE>.",
+        "10": "Masuki <STREET_NAMES> dan ambil pintu keluar <ORDINAL_VALUE> ke <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Masuki <STREET_NAMES> dan ambil pintu keluar <ORDINAL_VALUE> ke <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Lanjutkan di <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Masuki <STREET_NAMES> dan ambil pintu keluar <ORDINAL_VALUE> menuju <TOWARD_SIGN>.",
+        "13": "Masuki <STREET_NAMES> dan ambil pintu keluar ke <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Masuki <STREET_NAMES> dan ambil pintu keluar ke <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Lanjutkan di <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Masuki <STREET_NAMES> dan ambil pintu keluar menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "ordinal_values": [
+        "ke-1",
+        "ke-2",
+        "ke-3",
+        "ke-4",
+        "ke-5",
+        "ke-6",
+        "ke-7",
+        "ke-8",
+        "ke-9",
+        "ke-10"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Masuki bundaran.",
+        "1": "Masuki bundaran dan ambil pintu keluar <ORDINAL_VALUE>.",
+        "2": "Masuki bundaran dan ambil pintu keluar <ORDINAL_VALUE> ke <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Masuki bundaran dan ambil pintu keluar <ORDINAL_VALUE> ke <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Masuki bundaran dan ambil pintu keluar <ORDINAL_VALUE> menuju <TOWARD_SIGN>.",
+        "5": "Masuki bundaran dan ambil pintu keluar ke <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Masuki bundaran dan ambil pintu keluar ke <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Masuki bundaran dan ambil pintu keluar menuju <TOWARD_SIGN>.",
+        "8": "Masuki <STREET_NAMES>",
+        "9": "Masuki <STREET_NAMES> dan ambil pintu keluar <ORDINAL_VALUE>.",
+        "10": "Masuki <STREET_NAMES> dan ambil pintu keluar <ORDINAL_VALUE> ke <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Masuki <STREET_NAMES> dan ambil pintu keluar <ORDINAL_VALUE> ke <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Masuki <STREET_NAMES> dan ambil pintu keluar <ORDINAL_VALUE> menuju <TOWARD_SIGN>.",
+        "13": "Masuki <STREET_NAMES> dan ambil pintu keluar ke <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Masuki <STREET_NAMES> dan ambil pintu keluar ke <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Masuki <STREET_NAMES> dan ambil pintu keluar menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "ordinal_values": [
+        "ke-1",
+        "ke-2",
+        "ke-3",
+        "ke-4",
+        "ke-5",
+        "ke-6",
+        "ke-7",
+        "ke-8",
+        "ke-9",
+        "ke-10"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Gunakan eskalator.",
+        "1": "Gunakan eskalator ke <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Ambil pintu keluar di sebelah <RELATIVE_DIRECTION>.",
+        "1": "Ambil pintu keluar <NUMBER_SIGN> di sebelah <RELATIVE_DIRECTION>.",
+        "2": "Ambil pintu keluar <BRANCH_SIGN> di sebelah <RELATIVE_DIRECTION>.",
+        "3": "Ambil pintu keluar <NUMBER_SIGN> di sebelah <RELATIVE_DIRECTION> ke <BRANCH_SIGN>.",
+        "4": "Ambil pintu keluar di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "5": "Ambil pintu keluar <NUMBER_SIGN> di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "6": "Ambil pintu keluar <BRANCH_SIGN> di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "7": "Ambil pintu keluar <NUMBER_SIGN> di sebelah <RELATIVE_DIRECTION> ke <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "8": "Ambil pintu keluar <NAME_SIGN> di sebelah <RELATIVE_DIRECTION>.",
+        "10": "Ambil pintu keluar <NAME_SIGN> di sebelah <RELATIVE_DIRECTION> ke <BRANCH_SIGN>.",
+        "12": "Ambil pintu keluar <NAME_SIGN> di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "14": "Ambil pintu keluar <NAME_SIGN> di sebelah <RELATIVE_DIRECTION> ke <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "15": "Ambil pintu keluar.",
+        "16": "Ambil pintu keluar <NUMBER_SIGN>.",
+        "17": "Ambil pintu keluar <BRANCH_SIGN>.",
+        "18": "Ambil pintu keluar <NUMBER_SIGN> ke <BRANCH_SIGN>.",
+        "19": "Ambil pintu keluar menuju <TOWARD_SIGN>.",
+        "20": "Ambil pintu keluar <NUMBER_SIGN> menuju <TOWARD_SIGN>.",
+        "21": "Ambil pintu keluar <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "22": "Ambil pintu keluar <NUMBER_SIGN> ke <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "23": "Ambil pintu keluar <NAME_SIGN>.",
+        "25": "Ambil pintu keluar <NAME_SIGN> ke <BRANCH_SIGN>.",
+        "27": "Ambil pintu keluar <NAME_SIGN> menuju <TOWARD_SIGN>.",
+        "29": "Ambil pintu keluar <NAME_SIGN> ke <BRANCH_SIGN> menuju <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Keluar dari gedung.",
+        "1": "Keluar dari gedung, lalu lanjutkan di <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Keluar dari bundaran.",
+        "1": "Keluar dari bundaran ke <STREET_NAMES>.",
+        "2": "Keluar dari bundaran ke <BEGIN_STREET_NAMES>. Lanjutkan di <STREET_NAMES>.",
+        "3": "Keluar dari bundaran menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Keluar dari bundaran.",
+        "1": "Keluar dari bundaran ke <STREET_NAMES>.",
+        "2": "Keluar dari bundaran ke <BEGIN_STREET_NAMES>.",
+        "3": "Keluar dari bundaran menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Ambil pintu keluar di sebelah <RELATIVE_DIRECTION>.",
+        "1": "Ambil pintu keluar <NUMBER_SIGN> di sebelah <RELATIVE_DIRECTION>.",
+        "2": "Ambil pintu keluar <BRANCH_SIGN> di sebelah <RELATIVE_DIRECTION>.",
+        "3": "Ambil pintu keluar <NUMBER_SIGN> di sebelah <RELATIVE_DIRECTION> ke <BRANCH_SIGN>.",
+        "4": "Ambil pintu keluar di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "5": "Ambil pintu keluar <NUMBER_SIGN> di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "6": "Ambil pintu keluar <BRANCH_SIGN> di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "7": "Ambil pintu keluar <NUMBER_SIGN> di sebelah <RELATIVE_DIRECTION> ke <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "8": "Ambil pintu keluar <NAME_SIGN> di sebelah <RELATIVE_DIRECTION>.",
+        "10": "Ambil pintu keluar <NAME_SIGN> di sebelah <RELATIVE_DIRECTION> ke <BRANCH_SIGN>.",
+        "12": "Ambil pintu keluar <NAME_SIGN> di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "14": "Ambil pintu keluar <NAME_SIGN> di sebelah <RELATIVE_DIRECTION> ke <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "15": "Ambil pintu keluar.",
+        "16": "Ambil pintu keluar <NUMBER_SIGN>.",
+        "17": "Ambil pintu keluar <BRANCH_SIGN>.",
+        "18": "Ambil pintu keluar <NUMBER_SIGN> ke <BRANCH_SIGN>.",
+        "19": "Ambil pintu keluar menuju <TOWARD_SIGN>.",
+        "20": "Ambil pintu keluar <NUMBER_SIGN> menuju <TOWARD_SIGN>.",
+        "21": "Ambil pintu keluar <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "22": "Ambil pintu keluar <NUMBER_SIGN> ke <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "23": "Ambil pintu keluar <NAME_SIGN>.",
+        "25": "Ambil pintu keluar <NAME_SIGN> ke <BRANCH_SIGN>.",
+        "27": "Ambil pintu keluar <NAME_SIGN> menuju <TOWARD_SIGN>.",
+        "29": "Ambil pintu keluar <NAME_SIGN> ke <BRANCH_SIGN> menuju <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Keluar <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Tetap di <RELATIVE_DIRECTION> pada percabangan.",
+        "1": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN>.",
+        "2": "Tetap di <RELATIVE_DIRECTION> untuk mengambil <STREET_NAMES>.",
+        "3": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN> ke <STREET_NAMES>.",
+        "4": "Tetap di <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "5": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN> menuju <TOWARD_SIGN>.",
+        "6": "Tetap di <RELATIVE_DIRECTION> untuk mengambil <STREET_NAMES> menuju <TOWARD_SIGN>.",
+        "7": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN> ke <STREET_NAMES> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "jalur lurus",
+        "kanan"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Tetap di <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES>.",
+        "1": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN> dan tetap di <STREET_NAMES>.",
+        "2": "Tetap di <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES> menuju <TOWARD_SIGN>.",
+        "3": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN> dan tetap di <STREET_NAMES> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "jalur lurus",
+        "kanan"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Tetap di <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES>.",
+        "1": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN> dan tetap di <STREET_NAMES>.",
+        "2": "Tetap di <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES> menuju <TOWARD_SIGN>.",
+        "3": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN> dan tetap di <STREET_NAMES> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "jalur lurus",
+        "kanan"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Tetap di <RELATIVE_DIRECTION> pada percabangan.",
+        "1": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN>.",
+        "2": "Tetap di <RELATIVE_DIRECTION> untuk mengambil <STREET_NAMES>.",
+        "3": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN> ke <STREET_NAMES>.",
+        "4": "Tetap di <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "5": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN> menuju <TOWARD_SIGN>.",
+        "6": "Tetap di <RELATIVE_DIRECTION> untuk mengambil <STREET_NAMES> menuju <TOWARD_SIGN>.",
+        "7": "Tetap di <RELATIVE_DIRECTION> untuk mengambil pintu keluar <NUMBER_SIGN> ke <STREET_NAMES> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "jalur lurus",
+        "kanan"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Lanjutkan ke <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Bergabung ke jalur.",
+        "1": "Bergabung ke jalur <RELATIVE_DIRECTION>.",
+        "2": "Bergabung ke <STREET_NAMES>.",
+        "3": "Bergabung ke <RELATIVE_DIRECTION> menuju <STREET_NAMES>.",
+        "4": "Bergabung ke jalur menuju <TOWARD_SIGN>.",
+        "5": "Bergabung ke jalur <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Bergabung ke jalur.",
+        "1": "Bergabung ke jalur <RELATIVE_DIRECTION>.",
+        "2": "Bergabung ke <STREET_NAMES>.",
+        "3": "Bergabung ke <RELATIVE_DIRECTION> menuju <STREET_NAMES>.",
+        "4": "Bergabung ke jalur menuju <TOWARD_SIGN>.",
+        "5": "Bergabung ke jalur <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Parkir kendaraan Anda"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Lewati <OBJECT_LABEL>.",
+        "1": "Lewati lampu lalu lintas di <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "gerbang",
+        "tiang penghalang",
+        "persimpangan jalan"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Tempuh <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "perhentian",
+        "other": "perhentian"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Lanjutkan sejauh <LENGTH>.",
+        "1": "Lanjutkan di <STREET_NAMES> sejauh <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "kurang dari 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "setengah mil",
+        "seperempat mil",
+        "<FEET> kaki",
+        "kurang dari 10 kaki"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Ambil ramp di sebelah <RELATIVE_DIRECTION>.",
+        "1": "Ambil ramp <BRANCH_SIGN> di sebelah <RELATIVE_DIRECTION>.",
+        "2": "Ambil ramp di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "3": "Ambil ramp <BRANCH_SIGN> di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "4": "Ambil ramp <NAME_SIGN> di sebelah <RELATIVE_DIRECTION>.",
+        "5": "Belok <RELATIVE_DIRECTION> untuk mengambil ramp.",
+        "6": "Belok <RELATIVE_DIRECTION> untuk mengambil ramp <BRANCH_SIGN>.",
+        "7": "Belok <RELATIVE_DIRECTION> untuk mengambil ramp menuju <TOWARD_SIGN>.",
+        "8": "Belok <RELATIVE_DIRECTION> untuk mengambil ramp <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "9": "Belok <RELATIVE_DIRECTION> untuk mengambil ramp <NAME_SIGN>.",
+        "10": "Ambil ramp.",
+        "11": "Ambil ramp <BRANCH_SIGN>.",
+        "12": "Ambil ramp menuju <TOWARD_SIGN>.",
+        "13": "Ambil ramp <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "14": "Ambil ramp <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Tetap lurus untuk mengambil ramp.",
+        "1": "Tetap lurus untuk mengambil ramp <BRANCH_SIGN>.",
+        "2": "Tetap lurus untuk mengambil ramp menuju <TOWARD_SIGN>.",
+        "3": "Tetap lurus untuk mengambil ramp <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "4": "Tetap lurus untuk mengambil ramp <NAME_SIGN>."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Tetap lurus untuk mengambil ramp.",
+        "1": "Tetap lurus untuk mengambil ramp <BRANCH_SIGN>.",
+        "2": "Tetap lurus untuk mengambil ramp menuju <TOWARD_SIGN>.",
+        "3": "Tetap lurus untuk mengambil ramp <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "4": "Tetap lurus untuk mengambil ramp <NAME_SIGN>."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Ambil ramp di sebelah <RELATIVE_DIRECTION>.",
+        "1": "Ambil ramp <BRANCH_SIGN> di sebelah <RELATIVE_DIRECTION>.",
+        "2": "Ambil ramp di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "3": "Ambil ramp <BRANCH_SIGN> di sebelah <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>.",
+        "4": "Ambil ramp <NAME_SIGN> di sebelah <RELATIVE_DIRECTION>.",
+        "5": "Belok <RELATIVE_DIRECTION> untuk mengambil ramp.",
+        "6": "Belok <RELATIVE_DIRECTION> untuk mengambil ramp <BRANCH_SIGN>.",
+        "7": "Belok <RELATIVE_DIRECTION> untuk mengambil ramp menuju <TOWARD_SIGN>.",
+        "8": "Belok <RELATIVE_DIRECTION> untuk mengambil ramp <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "9": "Belok <RELATIVE_DIRECTION> untuk mengambil ramp <NAME_SIGN>.",
+        "10": "Ambil ramp.",
+        "11": "Ambil ramp <BRANCH_SIGN>.",
+        "12": "Ambil ramp menuju <TOWARD_SIGN>.",
+        "13": "Ambil ramp <BRANCH_SIGN> menuju <TOWARD_SIGN>.",
+        "14": "Ambil ramp <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Belok tajam ke <RELATIVE_DIRECTION>.",
+        "1": "Belok tajam ke <RELATIVE_DIRECTION> menuju <STREET_NAMES>.",
+        "2": "Belok tajam ke <RELATIVE_DIRECTION> menuju <BEGIN_STREET_NAMES>. Lanjutkan di <STREET_NAMES>.",
+        "3": "Belok tajam ke <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES>.",
+        "4": "Belok tajam ke <RELATIVE_DIRECTION> di <JUNCTION_NAME>.",
+        "5": "Belok tajam ke <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Belok tajam ke <RELATIVE_DIRECTION>.",
+        "1": "Belok tajam ke <RELATIVE_DIRECTION> menuju <STREET_NAMES>.",
+        "2": "Belok tajam ke <RELATIVE_DIRECTION> menuju <BEGIN_STREET_NAMES>.",
+        "3": "Belok tajam ke <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES>.",
+        "4": "Belok tajam ke <RELATIVE_DIRECTION> di <JUNCTION_NAME>.",
+        "5": "Belok tajam ke <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "Menuju arah <CARDINAL_DIRECTION>.",
+        "1": "Menuju arah <CARDINAL_DIRECTION> di <STREET_NAMES>.",
+        "2": "Menuju arah <CARDINAL_DIRECTION> di <BEGIN_STREET_NAMES>. Lanjutkan di <STREET_NAMES>.",
+        "4": "Berkendara ke arah <CARDINAL_DIRECTION>.",
+        "5": "Berkendara ke arah <CARDINAL_DIRECTION> di <STREET_NAMES>.",
+        "6": "Berkendara ke arah <CARDINAL_DIRECTION> di <BEGIN_STREET_NAMES>. Lanjutkan di <STREET_NAMES>.",
+        "8": "Berjalan ke arah <CARDINAL_DIRECTION>.",
+        "9": "Berjalan ke arah <CARDINAL_DIRECTION> di <STREET_NAMES>.",
+        "10": "Berjalan ke arah <CARDINAL_DIRECTION> di <BEGIN_STREET_NAMES>. Lanjutkan di <STREET_NAMES>.",
+        "16": "Bersepeda ke arah <CARDINAL_DIRECTION>.",
+        "17": "Bersepeda ke arah <CARDINAL_DIRECTION> di <STREET_NAMES>.",
+        "18": "Bersepeda ke arah <CARDINAL_DIRECTION> di <BEGIN_STREET_NAMES>. Lanjutkan di <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "utara",
+        "timur laut",
+        "timur",
+        "tenggara",
+        "selatan",
+        "barat daya",
+        "barat",
+        "barat laut"
+      ],
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Menuju arah <CARDINAL_DIRECTION>.",
+        "1": "Menuju arah <CARDINAL_DIRECTION> sejauh <LENGTH>.",
+        "2": "Menuju arah <CARDINAL_DIRECTION> di <STREET_NAMES>.",
+        "3": "Menuju arah <CARDINAL_DIRECTION> di <STREET_NAMES> sejauh <LENGTH>.",
+        "4": "Menuju arah <CARDINAL_DIRECTION> di <BEGIN_STREET_NAMES>.",
+        "5": "Berkendara ke arah <CARDINAL_DIRECTION>.",
+        "6": "Berkendara ke arah <CARDINAL_DIRECTION> sejauh <LENGTH>.",
+        "7": "Berkendara ke arah <CARDINAL_DIRECTION> di <STREET_NAMES>.",
+        "8": "Berkendara ke arah <CARDINAL_DIRECTION> di <STREET_NAMES> sejauh <LENGTH>.",
+        "9": "Berkendara ke arah <CARDINAL_DIRECTION> di <BEGIN_STREET_NAMES>.",
+        "10": "Berjalan ke arah <CARDINAL_DIRECTION>.",
+        "11": "Berjalan ke arah <CARDINAL_DIRECTION> sejauh <LENGTH>.",
+        "12": "Berjalan ke arah <CARDINAL_DIRECTION> di <STREET_NAMES>.",
+        "13": "Berjalan ke arah <CARDINAL_DIRECTION> di <STREET_NAMES> sejauh <LENGTH>.",
+        "14": "Berjalan ke arah <CARDINAL_DIRECTION> di <BEGIN_STREET_NAMES>.",
+        "15": "Bersepeda ke arah <CARDINAL_DIRECTION>.",
+        "16": "Bersepeda ke arah <CARDINAL_DIRECTION> sejauh <LENGTH>.",
+        "17": "Bersepeda ke arah <CARDINAL_DIRECTION> di <STREET_NAMES>.",
+        "18": "Bersepeda ke arah <CARDINAL_DIRECTION> di <STREET_NAMES> sejauh <LENGTH>.",
+        "19": "Bersepeda ke arah <CARDINAL_DIRECTION> di <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "utara",
+        "timur laut",
+        "timur",
+        "tenggara",
+        "selatan",
+        "barat daya",
+        "barat",
+        "barat laut"
+      ],
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "kurang dari 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "setengah mil",
+        "seperempat mil",
+        "<FEET> kaki",
+        "kurang dari 10 kaki"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Gunakan tangga.",
+        "1": "Gunakan tangga ke <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Naik <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Naik <TRANSIT_NAME> menuju <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "trem",
+        "metro",
+        "kereta",
+        "bus",
+        "feri",
+        "kereta gantung",
+        "gondola",
+        "kereta funikular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "perhentian",
+        "other": "perhentian"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Keluar dari stasiun.",
+        "1": "Keluar dari <TRANSIT_STOP>.",
+        "2": "Keluar dari <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasiun"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Keluar dari stasiun.",
+        "1": "Keluar dari <TRANSIT_STOP>.",
+        "2": "Keluar dari <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasiun"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Masuk ke stasiun.",
+        "1": "Masuk ke <TRANSIT_STOP>.",
+        "2": "Masuk ke <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasiun"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Masuk ke stasiun.",
+        "1": "Masuk ke <TRANSIT_STOP>.",
+        "2": "Masuk ke <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasiun"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Berpindah di stasiun.",
+        "1": "Berpindah di <TRANSIT_STOP>.",
+        "2": "Berpindah di <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasiun"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Berpindah di stasiun.",
+        "1": "Berpindah di <TRANSIT_STOP>.",
+        "2": "Berpindah di <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Stasiun"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Tetap di <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Tetap di <TRANSIT_NAME> menuju <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "trem",
+        "metro",
+        "kereta",
+        "bus",
+        "feri",
+        "kereta gantung",
+        "gondola",
+        "kereta funikular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "perhentian",
+        "other": "perhentian"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Tetap di <TRANSIT_NAME>.",
+        "1": "Tetap di <TRANSIT_NAME> menuju <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "trem",
+        "metro",
+        "kereta",
+        "bus",
+        "feri",
+        "kereta gantung",
+        "gondola",
+        "kereta funikular"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Berpindah untuk naik <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Berpindah untuk naik <TRANSIT_NAME> menuju <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "trem",
+        "metro",
+        "kereta",
+        "bus",
+        "feri",
+        "kereta gantung",
+        "gondola",
+        "kereta funikular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "perhentian",
+        "other": "perhentian"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Berpindah untuk naik <TRANSIT_NAME>.",
+        "1": "Berpindah untuk naik <TRANSIT_NAME> menuju <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "trem",
+        "metro",
+        "kereta",
+        "bus",
+        "feri",
+        "kereta gantung",
+        "gondola",
+        "kereta funikular"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Naik <TRANSIT_NAME>.",
+        "1": "Naik <TRANSIT_NAME> menuju <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "trem",
+        "metro",
+        "kereta",
+        "bus",
+        "feri",
+        "kereta gantung",
+        "gondola",
+        "kereta funikular"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "Belok <RELATIVE_DIRECTION>.",
+        "1": "Belok <RELATIVE_DIRECTION> ke <STREET_NAMES>.",
+        "2": "Belok <RELATIVE_DIRECTION> ke <BEGIN_STREET_NAMES>. Lanjutkan di <STREET_NAMES>.",
+        "3": "Belok <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES>.",
+        "4": "Belok <RELATIVE_DIRECTION> di <JUNCTION_NAME>.",
+        "5": "Belok <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Belok <RELATIVE_DIRECTION>.",
+        "1": "Belok <RELATIVE_DIRECTION> ke <STREET_NAMES>.",
+        "2": "Belok <RELATIVE_DIRECTION> ke <BEGIN_STREET_NAMES>.",
+        "3": "Belok <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES>.",
+        "4": "Belok <RELATIVE_DIRECTION> di <JUNCTION_NAME>.",
+        "5": "Belok <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Putar balik ke <RELATIVE_DIRECTION>.",
+        "1": "Putar balik ke <RELATIVE_DIRECTION> menuju <STREET_NAMES>.",
+        "2": "Putar balik ke <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES>.",
+        "3": "Putar balik ke <RELATIVE_DIRECTION> di <CROSS_STREET_NAMES>.",
+        "4": "Putar balik ke <RELATIVE_DIRECTION> di <CROSS_STREET_NAMES> menuju <STREET_NAMES>.",
+        "5": "Putar balik ke <RELATIVE_DIRECTION> di <CROSS_STREET_NAMES> untuk tetap di <STREET_NAMES>.",
+        "6": "Putar balik ke <RELATIVE_DIRECTION> di <JUNCTION_NAME>.",
+        "7": "Putar balik ke <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Putar balik ke <RELATIVE_DIRECTION>.",
+        "1": "Putar balik ke <RELATIVE_DIRECTION> menuju <STREET_NAMES>.",
+        "2": "Putar balik ke <RELATIVE_DIRECTION> untuk tetap di <STREET_NAMES>.",
+        "3": "Putar balik ke <RELATIVE_DIRECTION> di <CROSS_STREET_NAMES>.",
+        "4": "Putar balik ke <RELATIVE_DIRECTION> di <CROSS_STREET_NAMES> menuju <STREET_NAMES>.",
+        "5": "Putar balik ke <RELATIVE_DIRECTION> di <CROSS_STREET_NAMES> untuk tetap di <STREET_NAMES>.",
+        "6": "Putar balik ke <RELATIVE_DIRECTION> di <JUNCTION_NAME>.",
+        "7": "Putar balik ke <RELATIVE_DIRECTION> menuju <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "jalur pejalan kaki",
+        "jalur sepeda",
+        "jalur sepeda gunung",
+        "penyeberangan pejalan kaki",
+        "tangga",
+        "jembatan",
+        "terowongan"
+      ],
+      "relative_directions": [
+        "kiri",
+        "kanan"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Lalu <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Lalu, dalam <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "kurang dari 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "setengah mil",
+        "seperempat mil",
+        "<FEET> kaki",
+        "kurang dari 10 kaki"
+      ]
+    }
+  },
+  "posix_locale": "id_ID.UTF-8",
+  "aliases": [
+    "id"
+  ]
+}

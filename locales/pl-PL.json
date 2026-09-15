@@ -559,7 +559,7 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "Przejdź na <LEVEL>."
       }
     },
     "merge": {
@@ -610,7 +610,7 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "Zaparkuj pojazd"
       }
     },
     "pass": {

@@ -98,7 +98,7 @@ To use this, add your executable(s) code, they will be picked up automatically b
 
 ## Translation contributions
 
-Valhalla currently supports almost 30 languages with > 95% translation coverage. If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. Translations are plain gettext `.po` files in [`locales/`](https://github.com/valhalla/valhalla/tree/master/locales) — edit your language's file with e.g. [Poedit](https://poedit.net/) and open a PR.
+Valhalla currently supports 39 languages; most are fully translated, and a handful sit between 70% and 95% (`po_tools.py stats` prints the current figures). If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. Translations are plain gettext `.po` files in [`locales/`](https://github.com/valhalla/valhalla/tree/master/locales) — edit your language's file with e.g. [Poedit](https://poedit.net/) and open a PR.
 
 You can find more information in the [dedicated doc](https://github.com/valhalla/valhalla/blob/master/docs/docs/contributing/locales.md).
 

@@ -44,10 +44,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -67,10 +67,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -98,10 +98,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ]
     },
     "continue_verbal": {
@@ -119,10 +119,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometre",
@@ -150,10 +150,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ]
     },
     "depart": {
@@ -206,20 +206,20 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Asansörü kullanın.",
+        "1": "Asansörle <LEVEL> katına gidin."
       }
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "Binaya girin.",
+        "1": "Binaya girin ve <STREET_NAMES> üzerinde devam edin."
       },
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk"
+        "yaya geçidi"
       ]
     },
     "enter_ferry": {
@@ -233,10 +233,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "ferry_label": "Feribot"
     },
@@ -251,10 +251,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "ferry_label": "Feribot"
     },
@@ -281,10 +281,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "ordinal_values": [
         "Birinci",
@@ -322,10 +322,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "ordinal_values": [
         "Birinci",
@@ -342,8 +342,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Yürüyen merdiveni kullanın.",
+        "1": "Yürüyen merdivenle <LEVEL> katına gidin."
       }
     },
     "exit": {
@@ -380,14 +380,14 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Binadan çıkın.",
+        "1": "Binadan çıkın ve <STREET_NAMES> üzerinde devam edin."
       },
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk"
+        "yaya geçidi"
       ]
     },
     "exit_roundabout": {
@@ -401,10 +401,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ]
     },
     "exit_roundabout_verbal": {
@@ -418,10 +418,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ]
     },
     "exit_verbal": {
@@ -436,7 +436,7 @@
         "7": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
         "8": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkıştan çıkın.",
         "10": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> işaretine doğru <NAME_SIGN> çıkışından çıkın.",
-        "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "12": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
         "14": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
         "15": "Çıkıştan çıkın",
         "16": "<NUMBER_SIGN> çıkıştan çıkın.",
@@ -468,7 +468,7 @@
         "2": "<STREET_NAMES> caddesine girmek için <RELATIVE_DIRECTION>da kalın.",
         "3": "<STREET_NAMES> caddesine giden <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
         "4": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
-        "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "5": "<TOWARD_SIGN> işaretine doğru <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
         "6": "<STREET_NAMES> caddesine girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
         "7": "<STREET_NAMES> üzerinde bulunan <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
       },
@@ -476,14 +476,14 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
-        "straight",
+        "düz",
         "sağ"
       ]
     },
@@ -498,14 +498,14 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
-        "straight",
+        "düz",
         "sağ"
       ]
     },
@@ -520,14 +520,14 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
-        "straight",
+        "düz",
         "sağ"
       ]
     },
@@ -546,20 +546,20 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
-        "straight",
+        "düz",
         "sağ"
       ]
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "<LEVEL> katına devam edin."
       }
     },
     "merge": {
@@ -575,10 +575,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -598,10 +598,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -610,18 +610,18 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "Aracınızı park edin"
       }
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "<OBJECT_LABEL> yanından geçin.",
+        "1": "<OBJECT_LABEL> üzerindeki trafik ışıklarını geçin."
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
-        "ways intersection"
+        "kapı",
+        "dubalar",
+        "yol kavşağı"
       ]
     },
     "post_transition_transit_verbal": {
@@ -642,10 +642,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "metric_lengths": [
         "<KILOMETERS>kilometre",
@@ -739,10 +739,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -762,10 +762,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -801,10 +801,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ]
     },
     "start_verbal": {
@@ -844,10 +844,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "metric_lengths": [
         "<KILOMETERS>kilometre",
@@ -866,8 +866,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Merdivenleri kullanın.",
+        "1": "Merdivenlerle <LEVEL> katına gidin."
       }
     },
     "transit": {
@@ -1039,10 +1039,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -1062,10 +1062,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -1087,10 +1087,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -1112,10 +1112,10 @@
         "yaya geçidi",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdivenler",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
