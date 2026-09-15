@@ -13,6 +13,7 @@
    * FIXED: read the predecessor edge levels from its own tile in reverse pedestrian transitions [#6291](https://github.com/valhalla/valhalla/pull/6291)
    * FIXED: A proper rounding and guarding against zero when calculating `DirectedEdge::length` for BSS/transit/shortcut edges [#6319](https://github.com/valhalla/valhalla/pull/6319)
    * FIXED: apply `sidewalk_factor` on `Use::kSidewalk` [#6322](https://github.com/valhalla/valhalla/pull/6322)
+   * FIXED: issues with shortcuts sharing the same start and end node [#6008](https://github.com/valhalla/valhalla/pull/6008)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
@@ -70,7 +71,6 @@
    * FIXED: JSON serialization of NaN values [#6147](https://github.com/valhalla/valhalla/pull/6147)
    * BREAKING: apply `low_class_penalty` only when transitioning from a higher class road in `TruckCost::TransitionCost`(impacts truck routes) [#6143](https://github.com/valhalla/valhalla/pull/6143)
    * FIXED: bounding circle precision issues [#6169](https://github.com/valhalla/valhalla/pull/6169)
-   * FIXED: issues with shortcuts sharing the same start and end node [#6008](https://github.com/valhalla/valhalla/pull/6008)
 * **Enhancement**
    * UPDATED: timezone database to 2026b [#6074](https://github.com/valhalla/valhalla/pull/6074)
    * ADDED: Ignore specific access restrictions via the linear features interface [#5942](https://github.com/valhalla/valhalla/pull/5942)
