@@ -118,6 +118,9 @@ void loki_worker_t::route(Api& request) {
     // lines as we'll need those for edge walking
     for (const auto& line : options.cost_factor_lines()) {
       google::protobuf::RepeatedPtrField<Location> first_and_last;
+      if (line.shape_size() == 0) {
+        throw valhalla_exception_t{173, "feature coordinates are empty"};
+      }
       first_and_last.Add()->CopyFrom(*line.shape().begin());
       first_and_last.Add()->CopyFrom(*line.shape().rbegin());
       Api dummy;
