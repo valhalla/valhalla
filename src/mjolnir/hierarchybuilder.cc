@@ -14,6 +14,7 @@
 
 #include <filesystem>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -71,24 +72,29 @@ bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
   }
 }
 
-void SortSequences(const std::string& new_to_old_file, const std::string& old_to_new_file) {
+void SortSequences(const std::string& new_to_old_file,
+                   const std::string& old_to_new_file,
+                   const uint32_t concurrency) {
   SCOPED_TIMER();
   // Sort the new nodes. Sort so highway level is first
   sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
-  new_to_old.sort([](const std::pair<GraphId, GraphId>& a, const std::pair<GraphId, GraphId>& b) {
-    if (a.first.level() == b.first.level()) {
-      if (a.first.tileid() == b.first.tileid()) {
-        return a.first.id() < b.first.id();
-      }
-      return a.first.tileid() < b.first.tileid();
-    }
-    return a.first.level() < b.first.level();
-  });
+  new_to_old.sort(
+      [](const std::pair<GraphId, GraphId>& a, const std::pair<GraphId, GraphId>& b) {
+        if (a.first.level() == b.first.level()) {
+          if (a.first.tileid() == b.first.tileid()) {
+            return a.first.id() < b.first.id();
+          }
+          return a.first.tileid() < b.first.tileid();
+        }
+        return a.first.level() < b.first.level();
+      },
+      concurrency);
 
   // Sort old to new by node Id
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
-  old_to_new.sort(
-      [](const OldToNewNodes& a, const OldToNewNodes& b) { return a.node_id < b.node_id; });
+  old_to_new.sort([](const OldToNewNodes& a,
+                     const OldToNewNodes& b) { return a.node_id < b.node_id; },
+                  concurrency);
 }
 
 // Convenience method to find the node association.
@@ -581,7 +587,9 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   CreateNodeAssociations(reader, new_to_old_file, old_to_new_file);
 
   // Sort the sequences
-  SortSequences(new_to_old_file, old_to_new_file);
+  const uint32_t concurrency =
+      std::max(1u, pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+  SortSequences(new_to_old_file, old_to_new_file, concurrency);
 
   // Iterate through the hierarchy (from highway down to local) and build
   // new tiles

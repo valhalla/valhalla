@@ -525,6 +525,7 @@ void test_hierarchy_warning(const Options_Action& action, const Costing_Type& ty
       worker.matrix(request);
     }
   } catch (...) {}
+  worker.cleanup();
 
   // Check warning: bicycle and pedastrian modes shouldn't have warning
   if (type == Costing_Type_bicycle || type == Costing_Type_pedestrian) {
@@ -570,6 +571,7 @@ TEST(LokiService, test_actions_whitelist) {
     auto msg = zmq::message_t{reinterpret_cast<void*>(&req_str.front()), req_str.size(),
                               [](void*, void*) {}};
     auto result = worker.work({msg}, reinterpret_cast<void*>(&info), []() {});
+    worker.cleanup();
 
     // failed to find that action in the whitelist
     auto front = result.messages.front();
@@ -580,6 +582,7 @@ TEST(LokiService, test_actions_whitelist) {
     msg = zmq::message_t{reinterpret_cast<void*>(&req_str.front()), req_str.size(),
                          [](void*, void*) {}};
     result = worker.work({msg}, reinterpret_cast<void*>(&info), []() {});
+    worker.cleanup();
 
     // found the action this time but failed for no locations
     EXPECT_TRUE(result.messages.front().find("Try any") == std::string::npos);

@@ -92,7 +92,7 @@ PrecisionT GeoPoint<PrecisionT>::Distance(const GeoPoint& other) const {
 
   // d = 2r * arcsin(sqrt(h))
   const double d = 2.0 * std::asin(std::sqrt(h));
-  const double meters = kRadEarthMeters * d;
+  const double meters = kRadEarthMetersD * d;
   return static_cast<PrecisionT>(meters);
 }
 

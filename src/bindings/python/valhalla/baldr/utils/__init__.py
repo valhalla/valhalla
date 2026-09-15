@@ -1,4 +1,4 @@
-"""Valhalla baldr utilities: graph reader, tile helpers, predicted speeds compression."""
+"""Valhalla baldr utilities: graph reader, tile helpers, tar index, predicted speeds compression."""
 
 from ..._valhalla import (
     BUCKETS_PER_WEEK,
@@ -15,6 +15,7 @@ from ..._valhalla import (
     get_tile_ids_from_ring,
 )
 from .graph_utils import GraphUtils
+from .tar_index import INDEX_FILE, TarIndexEntry, decode_tar_index, write_tar_index
 
 __all__ = [
     # graph_reader
@@ -24,6 +25,11 @@ __all__ = [
     "get_tile_id_from_lon_lat",
     "get_tile_ids_from_bbox",
     "get_tile_ids_from_ring",
+    # tar_index
+    "INDEX_FILE",
+    "TarIndexEntry",
+    "decode_tar_index",
+    "write_tar_index",
     # predicted_speeds
     "compress_speed_buckets",
     "decompress_speed_bucket",

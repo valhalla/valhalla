@@ -79,7 +79,7 @@ jobs:
       # TODO: can we move this to manylinux image?
       - name: Setup Python alias (Linux)
         if: matrix.os == 'linux'
-        run: ln -s $(which python3.12) /usr/local/bin/python
+        run: ln -sf $(which python3.12) /usr/local/bin/python
 
       - name: Build Valhalla with Node.js bindings
         run: |

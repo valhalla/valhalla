@@ -154,9 +154,10 @@ geom_type.add_argument(
     "-r",
     "--region",
     help="Geofabrik region name or ID (e.g. 'switzerland', 'europe/france'). "
+    "Pass multiple times to combine regions. "
     "Use '--region list' to show all available regions. Requires shapely.",
-    type=str,
-    default="",
+    action="append",
+    metavar="REGION",
 )
 parser.add_argument(
     "-v",
@@ -245,19 +246,21 @@ def list_geofabrik_regions(geofabrik_index: dict):
             print(f"  {fname:40s} {fid}")
 
 
-def get_tiles_with_region(tile_resolver_: TileResolver, region: str):
-    """Fetch Geofabrik region boundary and filter tiles by intersection."""
+def get_tiles_with_regions(tile_resolver_: TileResolver, regions: List[str]):
+    """Fetch Geofabrik region boundaries and filter tiles by intersection with any of them."""
     index = fetch_geofabrik_index()
-    feature = find_geofabrik_region(index, region)
 
-    geometry = feature["geometry"]
-    props = feature["properties"]
-    LOGGER.info(f"Using boundary for '{props.get('name')}' ({props.get('id')})")
+    polygons = []
+    for region in regions:
+        feature = find_geofabrik_region(index, region)
+        props = feature["properties"]
+        LOGGER.info(f"Using boundary for '{props.get('name')}' ({props.get('id')})")
 
-    polygons = _polygons_from_geojson_geometry(geometry)
-    if not polygons:
-        LOGGER.critical(f"Could not parse geometry for region '{region}'.")
-        sys.exit(1)
+        region_polygons = _polygons_from_geojson_geometry(feature["geometry"])
+        if not region_polygons:
+            LOGGER.critical(f"Could not parse geometry for region '{region}'.")
+            sys.exit(1)
+        polygons.extend(region_polygons)
 
     _intersect_tiles_with_polygons(tile_resolver_, polygons)
 
@@ -487,7 +490,7 @@ def main():
         LOGGER.setLevel(logging.DEBUG)
 
     # handle --region list early (no config needed)
-    if args.region and args.region.lower() == "list":
+    if args.region and any(r.lower() == "list" for r in args.region):
         LOGGER.setLevel(logging.INFO)
         index = fetch_geofabrik_index()
         list_geofabrik_regions(index)
@@ -540,7 +543,7 @@ def main():
     elif args.geojson_dir:
         get_tiles_with_geojson(tile_resolver, args.geojson_dir)
     elif args.region:
-        get_tiles_with_region(tile_resolver, args.region)
+        get_tiles_with_regions(tile_resolver, args.region)
     else:
         tile_resolver.matched_paths = tile_resolver.normalized_tile_paths
 

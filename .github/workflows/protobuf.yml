@@ -1,6 +1,7 @@
 name: release protobuf generated code
 
 on:
+  workflow_dispatch:
   push:
     tags: ["*"]
  
@@ -30,6 +31,9 @@ jobs:
  
   release-ts:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -40,6 +44,4 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
       - run: make release-ts-tag
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
  

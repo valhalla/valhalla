@@ -1,4 +1,5 @@
 #include "mjolnir/transitbuilder.h"
+#include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
@@ -162,8 +163,9 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
       uint32_t edge_info_offset =
-          tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, 0, 0, 0, conn.shape,
-                                        conn.names, conn.tagged_values, conn.linguistics, 0, added);
+          tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, kNoElevationData, 0, 0,
+                                        conn.shape, conn.names, conn.tagged_values, conn.linguistics,
+                                        0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -249,9 +251,9 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         auto r_shape = conn.shape;
         std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, conn.stop_node, conn.osm_node, conn.wayid, 0, 0, 0,
-                                            r_shape, conn.names, conn.tagged_values, conn.linguistics,
-                                            0, added);
+            tilebuilder_transit.AddEdgeInfo(0, conn.stop_node, conn.osm_node, conn.wayid,
+                                            kNoElevationData, 0, 0, r_shape, conn.names,
+                                            conn.tagged_values, conn.linguistics, 0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
@@ -541,7 +543,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
       if (std::filesystem::is_regular_file(dir_entry.path()) &&
           dir_entry.path().string().find(".gph") == (dir_entry.path().string().size() - 4)) {
         // turn the id from the level 3 transit tile into the level 2 tile under it
-        auto graph_id = GraphTile::GetTileId(dir_entry.path().string());
+        auto graph_id = GraphId::FromTilePath(dir_entry.path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
         // if the level 2 tile exists
         if (reader.DoesTileExist(local_graph_id)) {

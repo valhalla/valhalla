@@ -39,6 +39,7 @@ TEST(TimeTracking, make) {
     loc->mutable_ll()->set_lat(map.nodes.begin()->second.lat());
     loc->mutable_ll()->set_lng(map.nodes.begin()->second.lng());
     search.search(*options.mutable_locations(), costing);
+    search.clear();
 
     // no time
     auto ti = baldr::TimeInfo::make(*loc, reader, cache);
