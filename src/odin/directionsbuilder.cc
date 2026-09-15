@@ -10,7 +10,7 @@
 
 namespace {
 // Minimum edge length to verify heading (~3 feet)
-constexpr auto kMinEdgeLength = 0.001f;
+constexpr auto kMinLengthHeading = 0.001f;
 
 } // namespace
 
@@ -69,15 +69,15 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripLeg* etp) {
     auto next_edge = etp->GetNextEdge(x);
 
     // If very short edge and no headings
-    if (curr_edge && (curr_edge->length_km() <= kMinEdgeLength) &&
+    if (curr_edge && (curr_edge->length_km() <= kMinLengthHeading) &&
         (curr_edge->begin_heading() == 0) && (curr_edge->end_heading() == 0)) {
       // Use next edge to set the current begin/end heading
-      if (next_edge && (next_edge->length_km() > kMinEdgeLength)) {
+      if (next_edge && (next_edge->length_km() > kMinLengthHeading)) {
         curr_edge->set_begin_heading(next_edge->begin_heading());
         curr_edge->set_end_heading(next_edge->begin_heading());
       }
       // Use prev edge to set the current begin/end heading
-      else if (prev_edge && (prev_edge->length_km() > kMinEdgeLength)) {
+      else if (prev_edge && (prev_edge->length_km() > kMinLengthHeading)) {
         curr_edge->set_begin_heading(prev_edge->end_heading());
         curr_edge->set_end_heading(prev_edge->end_heading());
       }

@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "<LENGTH> kaugusel <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilomeetrit",
+        "1 kilomeeter",
+        "<METERS> meetrit",
+        "vähem kui 10 meetrit"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miili",
+        "1 miil",
+        "pool miili",
+        "veerand miili",
+        "<FEET> jalga",
+        "vähem kui 10 jalga"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Saabumisaeg: <TIME>.",
+        "1": "Saabud <TIME> vahepeatusesse <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Saabumisaeg <TIME>.",
+        "1": "Saabud <TIME> vahepeatusesse <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Võta suunaks <RELATIVE_DIRECTION>.",
+        "1": "Võta suunaks <RELATIVE_DIRECTION> <STREET_NAMES> teele.",
+        "2": "Võta suunaks <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> teed mööda. Jätka piki <STREET_NAMES>.",
+        "3": "Võta suunaks <RELATIVE_DIRECTION> ja jää <STREET_NAMES> teele.",
+        "4": "<JUNCTION_NAME> teeristis võta suunaks <RELATIVE_DIRECTION>.",
+        "5": "Võta suunaks <RELATIVE_DIRECTION> <TOWARD_SIGN> poole."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurada",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Võta suunaks <RELATIVE_DIRECTION>.",
+        "1": "Võta suunaks <RELATIVE_DIRECTION> <STREET_NAMES> teele.",
+        "2": "Võta suunaks <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> teele.",
+        "3": "Võta suunaks <RELATIVE_DIRECTION> ja jää <STREET_NAMES> teele.",
+        "4": "<JUNCTION_NAME> teeristis võta suunaks <RELATIVE_DIRECTION>.",
+        "5": "Võta suunaks <RELATIVE_DIRECTION> <TOWARD_SIGN> poole."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "Senise <PREVIOUS_STREET_NAMES> nimi on nüüd <STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "Senise <PREVIOUS_STREET_NAMES> nimi on nüüd <STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Jätka.",
+        "1": "Jätka mööda <STREET_NAMES> tänavat.",
+        "2": "Jätka <JUNCTION_NAME> teeristis.",
+        "3": "Jätka <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Jätka.",
+        "1": "Jätka veel <LENGTH>.",
+        "2": "Jätka mööda <STREET_NAMES> tänavat.",
+        "3": "Jätka <STREET_NAMES> tänavale veel <LENGTH>.",
+        "4": "Jätka <JUNCTION_NAME> teeristis.",
+        "5": "Jätka <JUNCTION_NAME> teeristist veel <LENGTH>.",
+        "6": "Jätka <TOWARD_SIGN> suunas.",
+        "7": "Jätka <TOWARD_SIGN> suunas veel <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilomeetrit",
+        "1 kilomeeter",
+        "<METERS> meetrit",
+        "vähem kui 10 meetrit"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miili",
+        "1 miil",
+        "pool miili",
+        "veerand miili",
+        "<FEET> jalga",
+        "vähem kui 10 jalga"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Jätka.",
+        "1": "Jätka mööda <STREET_NAMES> tänavat.",
+        "2": "Jätka <JUNCTION_NAME> teeristis.",
+        "3": "Jätka <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Väljumisaeg: <TIME>.",
+        "1": "Väljud <TIME> vahepeatusest <TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Väljumisaeg <TIME>.",
+        "1": "Väljud <TIME> vahepeatusest <TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Sa oled saabunud oma sihtkohta.",
+        "1": "Sa oled saabunud sihtkohta <DESTINATION>.",
+        "2": "Sinu sihtkoht asub <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> asub <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Sa oled saabunud oma sihtkohta.",
+        "1": "Sa oled saabunud sihtkohta <DESTINATION>.",
+        "2": "Sinu sihtkoht asub <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> asub <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Sa saabud oma sihtkohta.",
+        "1": "Sa saabud sihtkohta <DESTINATION>.",
+        "2": "Sinu sihtkoht asub <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> asub <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Astu lifti.",
+        "1": "Sõida liftiga kuni <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Sisene hoonesse.",
+        "1": "Sisene hoonesse ja jätka kulgemist mööda <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Mine praamile",
+        "1": "Pööra <STREET_NAMES> tänavale.",
+        "2": "Minnes <FERRY_LABEL> praamile pööra <STREET_NAMES> tänavale.",
+        "3": "Mine praamile <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "ferry_label": "Praam"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Mine praamile",
+        "1": "Pööra <STREET_NAMES> tänavale.",
+        "2": "Minnes <FERRY_LABEL> praamile pööra <STREET_NAMES> tänavale.",
+        "3": "Mine praamile <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "ferry_label": "Praam"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Sõida ringteele.",
+        "1": "Sõida ringteele ja välju sealt <ORDINAL_VALUE> ärapöördest.",
+        "2": "Sõida ringteele ja <ORDINAL_VALUE>ärapöördest liigu <ROUNDABOUT_EXIT_STREET_NAMES> teele.",
+        "3": "Sõida ringteele ja <ORDINAL_VALUE> ärapöördest liigu <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> teele. Jätka mööda <ROUNDABOUT_EXIT_STREET_NAMES> teed.",
+        "4": "Sõida ringteele ja <ORDINAL_VALUE> ärapöördest liigu <TOWARD_SIGN> suunas.",
+        "5": "Sõida ringteele ja pööra ära <ROUNDABOUT_EXIT_STREET_NAMES> teele.",
+        "6": "Sõida ringteele ja pööra ära <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> teele. Jätka mööda <ROUNDABOUT_EXIT_STREET_NAMES> teed.",
+        "7": "Sõida ringteele ja pööra ära <TOWARD_SIGN> suunas.",
+        "8": "Liigu <STREET_NAMES> tänavale",
+        "9": "Liigu <STREET_NAMES> tänavale ja lahku sealt <ORDINAL_VALUE> ärapöördest. ",
+        "10": "Sõida <STREET_NAMES> tänavale ja <ORDINAL_VALUE> ärapöördest suundu <ROUNDABOUT_EXIT_STREET_NAMES> tänavale.",
+        "11": "Sõida <STREET_NAMES> tänavale ja <ORDINAL_VALUE> ärapöördest suundu <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> tänavale. Jätka mööda <ROUNDABOUT_EXIT_STREET_NAMES> tänavat.",
+        "12": "Liigu <STREET_NAMES> tänavale ja lahku sealt <ORDINAL_VALUE> ärapöördest <TOWARD_SIGN> suunas.",
+        "13": "Sõida <STREET_NAMES> tänavale ja pööra siis <ROUNDABOUT_EXIT_STREET_NAMES> tänavale.",
+        "14": "Sõida <STREET_NAMES> tänavale ja pööra siis <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> tänavale. Jätka mööda <ROUNDABOUT_EXIT_STREET_NAMES> tänavat.",
+        "15": "Liigu <STREET_NAMES> tänavale ja lahku seakt <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "ordinal_values": [
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Sõida ringteele.",
+        "1": "Sõida ringteele ja välju sealt <ORDINAL_VALUE> ärapöördest.",
+        "2": "Sõida ringteele ja <ORDINAL_VALUE>ärapöördest liigu <ROUNDABOUT_EXIT_STREET_NAMES> teele.",
+        "3": "Sõida ringteele ja <ORDINAL_VALUE> ärapöördest liigu <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> teele.",
+        "4": "Sõida ringteele ja <ORDINAL_VALUE> ärapöördest liigu <TOWARD_SIGN> suunas.",
+        "5": "Sõida ringteele ja pööra ära <ROUNDABOUT_EXIT_STREET_NAMES> teele.",
+        "6": "Sõida ringteele ja pööra ära <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> teele.",
+        "7": "Sõida ringteele ja pööra ära <TOWARD_SIGN> suunas.",
+        "8": "Liigu <STREET_NAMES> tänavale",
+        "9": "Liigu <STREET_NAMES> tänavale ja lahku sealt <ORDINAL_VALUE> ärapöördest. ",
+        "10": "Sõida <STREET_NAMES> tänavale ja <ORDINAL_VALUE> ärapöördest suundu <ROUNDABOUT_EXIT_STREET_NAMES> tänavale.",
+        "11": "Sõida <STREET_NAMES> tänavale ja <ORDINAL_VALUE> ärapöördest suundu <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> tänavale.",
+        "12": "Liigu <STREET_NAMES> tänavale ja lahku sealt <ORDINAL_VALUE> ärapöördest <TOWARD_SIGN> suunas.",
+        "13": "Sõida <STREET_NAMES> tänavale ja pööra siis <ROUNDABOUT_EXIT_STREET_NAMES> tänavale.",
+        "14": "Sõida <STREET_NAMES> tänavale ja pööra siis <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> tänavale.",
+        "15": "Liigu <STREET_NAMES> tänavale ja lahku seakt <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "ordinal_values": [
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Astu eskalaatorile.",
+        "1": "Sõida eskalaatoriga kuni <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Kasuta ärapööret <RELATIVE_DIRECTION>.",
+        "1": "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION>.",
+        "2": "Kasuta <BRANCH_SIGN> ärapööret <RELATIVE_DIRECTION>.",
+        "3": "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> suunas.",
+        "4": "Kasuta ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas.",
+        "5": "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas.",
+        "6": "Kasuta <BRANCH_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas.",
+        "7": "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> ja <TOWARD_SIGN> suunas.",
+        "8": "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION>.",
+        "10": "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> suunas.",
+        "12": "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas.",
+        "14": "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> teele <TOWARD_SIGN> suunas.",
+        "15": "Pööra ära.",
+        "16": "Kasuta <NUMBER_SIGN> ärapööret.",
+        "17": "Kasuta <BRANCH_SIGN> ärapööret.",
+        "18": "Kasuta <NUMBER_SIGN> ärapööret <BRANCH_SIGN> suunas.",
+        "19": "Pööra ära <TOWARD_SIGN> suunas.",
+        "20": "Kasuta <NUMBER_SIGN> ärapööret <TOWARD_SIGN> suunas.",
+        "21": "Kasuta <BRANCH_SIGN> ärapööret <TOWARD_SIGN> suunas.",
+        "22": "Kasuta <NUMBER_SIGN> ärapööret <BRANCH_SIGN> ja <TOWARD_SIGN> suunas.",
+        "23": "Kasuta <NAME_SIGN> ärapööret.",
+        "25": "Kasuta <NAME_SIGN> ärapööret <BRANCH_SIGN> suunas.",
+        "27": "Kasuta <NAME_SIGN> ärapööret <TOWARD_SIGN> suunas.",
+        "29": "Kasuta <NAME_SIGN> ärapööret <BRANCH_SIGN> ja <TOWARD_SIGN> suunas."
+      },
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Välju hoonest.",
+        "1": "Välju hoonest ja jätka kulgemist mööda <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Sõida ringteelt ära.",
+        "1": "Sõida ringteelt ära <STREET_NAMES> teele.",
+        "2": "Sõida ringteelt ära <BEGIN_STREET_NAMES> teele. Jätka mööda <STREET_NAMES> teed.",
+        "3": "Sõida ringteelt ära <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Sõida ringteelt ära.",
+        "1": "Sõida ringteelt ära <STREET_NAMES> teele.",
+        "2": "Sõida ringteelt ära <BEGIN_STREET_NAMES> teele.",
+        "3": "Sõida ringteelt ära <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Kasuta ärapööret <RELATIVE_DIRECTION>.",
+        "1": "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION>.",
+        "2": "Kasuta <BRANCH_SIGN> ärapööret <RELATIVE_DIRECTION>.",
+        "3": "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> suunas.",
+        "4": "Kasuta ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas.",
+        "5": "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas.",
+        "6": "Kasuta <BRANCH_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas.",
+        "7": "Kasuta <NUMBER_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> ja <TOWARD_SIGN> suunas.",
+        "8": "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION>.",
+        "10": "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> suunas.",
+        "12": "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas.",
+        "14": "Kasuta <NAME_SIGN> ärapööret <RELATIVE_DIRECTION> <BRANCH_SIGN> teele <TOWARD_SIGN> suunas.",
+        "15": "Pööra ära.",
+        "16": "Kasuta <NUMBER_SIGN> ärapööret.",
+        "17": "Kasuta <BRANCH_SIGN> ärapööret.",
+        "18": "Kasuta <NUMBER_SIGN> ärapööret <BRANCH_SIGN> suunas.",
+        "19": "Pööra ära <TOWARD_SIGN> suunas.",
+        "20": "Kasuta <NUMBER_SIGN> ärapööret <TOWARD_SIGN> suunas.",
+        "21": "Kasuta <BRANCH_SIGN> ärapööret <TOWARD_SIGN> suunas.",
+        "22": "Kasuta <NUMBER_SIGN> ärapööret <BRANCH_SIGN> ja <TOWARD_SIGN> suunas.",
+        "23": "Kasuta <NAME_SIGN> ärapööret.",
+        "25": "Kasuta <NAME_SIGN> ärapööret <BRANCH_SIGN> suunas.",
+        "27": "Kasuta <NAME_SIGN> ärapööret <TOWARD_SIGN> suunas.",
+        "29": "Kasuta <NAME_SIGN> ärapööret <BRANCH_SIGN> ja <TOWARD_SIGN> suunas."
+      },
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Ärapööre <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Tee hargnemisel hoia <RELATIVE_DIRECTION> suunas.",
+        "1": "Hoia <RELATIVE_DIRECTION> ja kasuta ärapööret <NUMBER_SIGN>.",
+        "2": "Hoia <RELATIVE_DIRECTION> ja liigu <STREET_NAMES> tänavale.",
+        "3": "Hoia <RELATIVE_DIRECTION> kasutades ärapööret <NUMBER_SIGN> <STREET_NAMES> tänavale.",
+        "4": "Hoia <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas.",
+        "5": "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret <TOWARD_SIGN> suunas.",
+        "6": "Hoia <RELATIVE_DIRECTION> ja liigu <STREET_NAMES> tänavale <TOWARD_SIGN> poole.",
+        "7": "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret <STREET_NAMES> tänavale <TOWARD_SIGN> poole."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakule",
+        "otse",
+        "paremale"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Hoia <RELATIVE_DIRECTION> ja jätka mööda <STREET_NAMES> tänavat.",
+        "1": "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret ning püsi <STREET_NAMES> tänaval.",
+        "2": "Hoia <RELATIVE_DIRECTION> ja jätka <STREET_NAMES> tänaval <TOWARD_SIGN> suunas.",
+        "3": "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret et jätkata <STREET_NAMES> tänaval <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakule",
+        "otse",
+        "paremale"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Hoia <RELATIVE_DIRECTION> ja jätka mööda <STREET_NAMES> tänavat.",
+        "1": "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret ning püsi <STREET_NAMES> tänaval.",
+        "2": "Hoia <RELATIVE_DIRECTION> ja jätka <STREET_NAMES> tänaval <TOWARD_SIGN> suunas.",
+        "3": "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret et jätkata <STREET_NAMES> tänaval <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakule",
+        "otse",
+        "paremale"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Tee hargnemisel hoia <RELATIVE_DIRECTION> suunas.",
+        "1": "Hoia <RELATIVE_DIRECTION> ja kasuta ärapööret <NUMBER_SIGN>.",
+        "2": "Hoia <RELATIVE_DIRECTION> ja liigu <STREET_NAMES> tänavale.",
+        "3": "Hoia <RELATIVE_DIRECTION> kasutades ärapööret <NUMBER_SIGN> <STREET_NAMES> tänavale.",
+        "4": "Hoia <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas.",
+        "5": "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret <TOWARD_SIGN> suunas.",
+        "6": "Hoia <RELATIVE_DIRECTION> ja liigu <STREET_NAMES> tänavale <TOWARD_SIGN> poole.",
+        "7": "Hoia <RELATIVE_DIRECTION> ja kasuta <NUMBER_SIGN> ärapööret <STREET_NAMES> tänavale <TOWARD_SIGN> poole."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "otse",
+        "paremal"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Jätka: <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Liitu sõidurajaga.",
+        "1": "Liitu sõidurajaga <RELATIVE_DIRECTION>.",
+        "2": "Liitu sõidurajaga <STREET_NAMES> teel.",
+        "3": "Liitu sõidurajaga <RELATIVE_DIRECTION> <STREET_NAMES> teel.",
+        "4": "Liitu sõidurajaga <TOWARD_SIGN> suunas.",
+        "5": "Liitu sõidurajaga <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Liitu sõidurajaga.",
+        "1": "Liitu sõidurajaga <RELATIVE_DIRECTION>.",
+        "2": "Liitu sõidurajaga <STREET_NAMES> teel.",
+        "3": "Liitu sõidurajaga <RELATIVE_DIRECTION> <STREET_NAMES> teel.",
+        "4": "Liitu sõidurajaga <TOWARD_SIGN> suunas.",
+        "5": "Liitu sõidurajaga <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Möödu siit: <OBJECT_LABEL>.",
+        "1": "Möödu valgusfooridest <OBJECT_LABEL> teel."
+      },
+      "object_labels": [
+        "värav",
+        "piirdetulbad",
+        "teede ristmik"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Sõida <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "peatus",
+        "other": "peatused"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Jätka veel <LENGTH>.",
+        "1": "Jätka <STREET_NAMES> tänaval veel <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilomeetrit",
+        "1 kilomeeter",
+        "<METERS> meetrit",
+        "vähem kui 10 meetrit"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miili",
+        "1 miil",
+        "pool miili",
+        "veerand miili",
+        "<FEET> jalga",
+        "vähem kui 10 jalga"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Sõida <RELATIVE_DIRECTION> kaldteele.",
+        "1": "Sõida <RELATIVE_DIRECTION> kaldteele <BRANCH_SIGN> suunas.",
+        "2": "Sõida <RELATIVE_DIRECTION> asuvale kaldteele <TOWARD_SIGN> suunas.",
+        "3": "Sõida <RELATIVE_DIRECTION> asuvale <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas.",
+        "4": "Sõida <RELATIVE_DIRECTION> asuvale <NAME_SIGN> kaldteele.",
+        "5": "Pööra <RELATIVE_DIRECTION> ja sõida kaldteele.",
+        "6": "Pööra <RELATIVE_DIRECTION> ja sõida <BRANCH_SIGN> kaldteele.",
+        "7": "Pööra <RELATIVE_DIRECTION> ja sõida kaldteele <TOWARD_SIGN> suunas.",
+        "8": "Pööra <RELATIVE_DIRECTION> ja sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas.",
+        "9": "Pööra <RELATIVE_DIRECTION> ja sõida <NAME_SIGN> kaldteele.",
+        "10": "Sõida kaldteele.",
+        "11": "Sõida <BRANCH_SIGN> kaldteele",
+        "12": "Sõida kaldteele <TOWARD_SIGN> suunas.",
+        "13": "Sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas.",
+        "14": "Sõida <NAME_SIGN> kaldteele."
+      },
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Jätka otse ning sõida kaldteele.",
+        "1": "Jätka otse ning sõida <BRANCH_SIGN> kaldteele.",
+        "2": "Jätka otse ning sõida kaldteele <TOWARD_SIGN> suunas.",
+        "3": "Jätka otse ning sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas.",
+        "4": "Jätka otse ning sõida <NAME_SIGN> kaldteele."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Jätka otse ning sõida kaldteele.",
+        "1": "Jätka otse ning sõida <BRANCH_SIGN> kaldteele.",
+        "2": "Jätka otse ning sõida kaldteele <TOWARD_SIGN> suunas.",
+        "3": "Jätka otse ning sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas.",
+        "4": "Jätka otse ning sõida <NAME_SIGN> kaldteele."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Sõida <RELATIVE_DIRECTION> kaldteele.",
+        "1": "Sõida <RELATIVE_DIRECTION> kaldteele <BRANCH_SIGN> suunas.",
+        "2": "Sõida <RELATIVE_DIRECTION> asuvale kaldteele <TOWARD_SIGN> suunas.",
+        "3": "Sõida <RELATIVE_DIRECTION> asuvale <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas.",
+        "4": "Sõida <RELATIVE_DIRECTION> asuvale <NAME_SIGN> kaldteele.",
+        "5": "Pööra <RELATIVE_DIRECTION> ja sõida kaldteele.",
+        "6": "Pööra <RELATIVE_DIRECTION> ja sõida <BRANCH_SIGN> kaldteele.",
+        "7": "Pööra <RELATIVE_DIRECTION> ja sõida kaldteele <TOWARD_SIGN> suunas.",
+        "8": "Pööra <RELATIVE_DIRECTION> ja sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas.",
+        "9": "Pööra <RELATIVE_DIRECTION> ja sõida <NAME_SIGN> kaldteele.",
+        "10": "Sõida kaldteele.",
+        "11": "Sõida <BRANCH_SIGN> kaldteele",
+        "12": "Sõida kaldteele <TOWARD_SIGN> suunas.",
+        "13": "Sõida <BRANCH_SIGN> kaldteele <TOWARD_SIGN> suunas.",
+        "14": "Sõida <NAME_SIGN> kaldteele."
+      },
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Pööra järsult <RELATIVE_DIRECTION>.",
+        "1": "Pööra järsult <RELATIVE_DIRECTION> <STREET_NAMES> tänavale.",
+        "2": "Pööra järsult <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> tänavale. Jätka mööda <STREET_NAMES> teed.",
+        "3": "Pööra järsult <RELATIVE_DIRECTION> ja jätka <STREET_NAMES> teel.",
+        "4": "<JUNCTION_NAME> teeristis pööra järsult <RELATIVE_DIRECTION>.",
+        "5": "Pööra järsult <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Pööra järsult <RELATIVE_DIRECTION>.",
+        "1": "Pööra järsult <RELATIVE_DIRECTION> <STREET_NAMES> tänavale.",
+        "2": "Pööra järsult <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> teele.",
+        "3": "Pööra järsult <RELATIVE_DIRECTION> ja jätka <STREET_NAMES> teel.",
+        "4": "<JUNCTION_NAME> teeristis pööra järsult <RELATIVE_DIRECTION>.",
+        "5": "Pööra järsult <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "Suundu <CARDINAL_DIRECTION>.",
+        "1": "Suundu piki <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "2": "Suundu piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>. Jätka mööda <STREET_NAMES>.",
+        "4": "Sõida <CARDINAL_DIRECTION>.",
+        "5": "Sõida piki <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "6": "Sõida piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>. Jätka mööda <STREET_NAMES>.",
+        "8": "Kõnni <CARDINAL_DIRECTION>.",
+        "9": "Kõnni piki <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "10": "Kõnni piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>. Jätka mööda <STREET_NAMES>.",
+        "16": "Sõida rattaga <CARDINAL_DIRECTION>.",
+        "17": "Sõida rattaga mööda <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "18": "Sõida rattaga piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>. Jätka mööda <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "põhja suunas",
+        "kirde suunas",
+        "ida suunas",
+        "kagu suunas",
+        "lõuna suunas",
+        "edela suunas",
+        "lääne suunas",
+        "loode suunas"
+      ],
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Suundu <CARDINAL_DIRECTION>.",
+        "1": "Suundu <LENGTH> <CARDINAL_DIRECTION>.",
+        "2": "Suundu piki <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "3": "Suundu <LENGTH> piki <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "4": "Suundu piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "5": "Sõida <CARDINAL_DIRECTION>.",
+        "6": "Sõida <LENGTH> <CARDINAL_DIRECTION>.",
+        "7": "Sõida piki <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "8": "Sõida <LENGTH> piki <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "9": "Sõida piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "10": "Kõnni <CARDINAL_DIRECTION>.",
+        "11": "Kõnni <LENGTH> <CARDINAL_DIRECTION>.",
+        "12": "Kõnni piki <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "13": "Kõnni <LENGTH> piki <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "14": "Kõnni piki <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "15": "Sõida rattaga <CARDINAL_DIRECTION>.",
+        "16": "Sõida rattaga <LENGTH> <CARDINAL_DIRECTION>.",
+        "17": "Sõida rattaga mööda <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "18": "Sõida rattaga <LENGTH> mööda <STREET_NAMES> <CARDINAL_DIRECTION>.",
+        "19": "Sõida rattaga mööda <BEGIN_STREET_NAMES> <CARDINAL_DIRECTION>."
+      },
+      "cardinal_directions": [
+        "põhja suunas",
+        "kirde suunas",
+        "ida suunas",
+        "kagu suunas",
+        "lõuna suunas",
+        "edela suunas",
+        "lääne suunas",
+        "loode suunas"
+      ],
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilomeetrit",
+        "1 kilomeeter",
+        "<METERS> meetrit",
+        "vähem kui 10 meetrit"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miili",
+        "1 miil",
+        "pool miili",
+        "veerand miili",
+        "<FEET> jalga",
+        "vähem kui 10 jalga"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Mine trepist üles.",
+        "1": "Kõnni treppi mööda kuni <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Sõida <TRANSIT_NAME> liiniga (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>).",
+        "1": "Sõida <TRANSIT_NAME> liiniga <TRANSIT_HEADSIGN> suunas (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+      },
+      "empty_transit_name_labels": [
+        "tramm",
+        "metroo",
+        "rong",
+        "buss",
+        "praam",
+        "köisraudtee",
+        "gondel",
+        "köisraudtee"
+      ],
+      "transit_stop_count_labels": {
+        "one": "peatus",
+        "other": "peatused"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Välju jaamast.",
+        "1": "Välju <TRANSIT_STOP> jaamast.",
+        "2": "Välju <TRANSIT_STOP> <STATION_LABEL> jaamast."
+      },
+      "station_label": "Jaam"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Välju jaamast.",
+        "1": "Välju <TRANSIT_STOP> jaamast.",
+        "2": "Välju <TRANSIT_STOP> <STATION_LABEL> jaamast."
+      },
+      "station_label": "Jaam"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Sisene jaama.",
+        "1": "Sisene <TRANSIT_STOP> jaama.",
+        "2": "Sisene <TRANSIT_STOP> <STATION_LABEL> jaama."
+      },
+      "station_label": "Jaam"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Sisene jaama.",
+        "1": "Sisene <TRANSIT_STOP> jaama.",
+        "2": "Sisene <TRANSIT_STOP> <STATION_LABEL> jaama."
+      },
+      "station_label": "Jaam"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Istu jaamas ümber.",
+        "1": "Istu <TRANSIT_STOP> jaamas ümber.",
+        "2": "Istu <TRANSIT_STOP> <STATION_LABEL> jaamas ümber."
+      },
+      "station_label": "Jaam"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Istu jaamas ümber.",
+        "1": "Istu <TRANSIT_STOP> jaamas ümber.",
+        "2": "Istu <TRANSIT_STOP> <STATION_LABEL> jaamas ümber."
+      },
+      "station_label": "Jaam"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Jää <TRANSIT_NAME> liinile (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>).",
+        "1": "Liikudes <TRANSIT_HEADSIGN> suunas jää <TRANSIT_NAME> liinile (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+      },
+      "empty_transit_name_labels": [
+        "tramm",
+        "metroo",
+        "rong",
+        "buss",
+        "praam",
+        "köisraudtee",
+        "gondel",
+        "köisraudtee"
+      ],
+      "transit_stop_count_labels": {
+        "one": "peatus",
+        "other": "peatused"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Jää <TRANSIT_NAME> liinile.",
+        "1": "<TRANSIT_HEADSIGN> suunas jää <TRANSIT_NAME> liinile."
+      },
+      "empty_transit_name_labels": [
+        "tramm",
+        "metroo",
+        "rong",
+        "buss",
+        "praam",
+        "köisraudtee",
+        "gondel",
+        "köisraudtee"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Istu ümber <TRANSIT_NAME> liinile (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>). ",
+        "1": "<TRANSIT_HEADSIGN> suunas istu ümber <TRANSIT_NAME> liinile (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+      },
+      "empty_transit_name_labels": [
+        "tramm",
+        "metroo",
+        "rong",
+        "buss",
+        "praam",
+        "köisraudtee",
+        "gondel",
+        "köisraudtee"
+      ],
+      "transit_stop_count_labels": {
+        "one": "peatus",
+        "other": "peatused"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Istu ümber <TRANSIT_NAME> liinile.",
+        "1": "<TRANSIT_HEADSIGN> suunas istu ümber <TRANSIT_NAME> liinile."
+      },
+      "empty_transit_name_labels": [
+        "tramm",
+        "metroo",
+        "rong",
+        "buss",
+        "praam",
+        "köisraudtee",
+        "gondel",
+        "köisraudtee"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Kasuta <TRANSIT_NAME> liini.",
+        "1": "<TRANSIT_HEADSIGN> suunas kasuta <TRANSIT_NAME> liini."
+      },
+      "empty_transit_name_labels": [
+        "tramm",
+        "metroo",
+        "rong",
+        "buss",
+        "praam",
+        "köisraudtee",
+        "gondel",
+        "köisraudtee"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "Pööra <RELATIVE_DIRECTION>.",
+        "1": "Pööra <RELATIVE_DIRECTION> <STREET_NAMES> teele.",
+        "2": "Pööra <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> teele. Liigu edasi mööda <STREET_NAMES> teed.",
+        "3": "Pööra <RELATIVE_DIRECTION> ja jätka mööda <STREET_NAMES> teed.",
+        "4": "<JUNCTION_NAME> teeristis pööra <RELATIVE_DIRECTION>.",
+        "5": "Pööra <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Pööra <RELATIVE_DIRECTION>.",
+        "1": "Pööra <RELATIVE_DIRECTION> <STREET_NAMES> teele.",
+        "2": "Pööra <RELATIVE_DIRECTION> <BEGIN_STREET_NAMES> teele.",
+        "3": "Pööra <RELATIVE_DIRECTION> ja jätka mööda <STREET_NAMES> teed.",
+        "4": "<JUNCTION_NAME> teeristis pööra <RELATIVE_DIRECTION>.",
+        "5": "Pööra <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> pööra tagasi.",
+        "1": "<RELATIVE_DIRECTION> pööra tagasi <STREET_NAMES> teele.",
+        "2": "<RELATIVE_DIRECTION> pööra tagasi ja jätka mööda <STREET_NAMES> teed.",
+        "3": "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi.",
+        "4": "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi <STREET_NAMES> teele.",
+        "5": "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi ja jää <STREET_NAMES> teele.",
+        "6": "<JUNCTION_NAME> teeristist pööra <RELATIVE_DIRECTION> tagasi.",
+        "7": "<RELATIVE_DIRECTION> pööra tagasi <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tee tagasipööre.",
+        "1": "<RELATIVE_DIRECTION> pööra tagasi <STREET_NAMES> teele.",
+        "2": "<RELATIVE_DIRECTION> pööra tagasi ja jätka mööda <STREET_NAMES> teed.",
+        "3": "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi.",
+        "4": "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi <STREET_NAMES> teele.",
+        "5": "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi ja jää <STREET_NAMES> teele.",
+        "6": "<JUNCTION_NAME> teeristis pööra <RELATIVE_DIRECTION> tagasi.",
+        "7": "<RELATIVE_DIRECTION> pööra tagasi <TOWARD_SIGN> suunas."
+      },
+      "empty_street_name_labels": [
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal",
+        "trepp",
+        "sild",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "vasakul",
+        "paremal"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE>, seejärel <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE>, seejärel <LENGTH> kaugusel <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilomeetrit",
+        "1 kilomeeter",
+        "<METERS> meetrit",
+        "vähem kui 10 meetrit"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miili",
+        "1 miil",
+        "pool miili",
+        "veerand miili",
+        "<FEET> jalga",
+        "vähem kui 10 jalga"
+      ]
+    }
+  },
+  "posix_locale": "et_EE.UTF-8",
+  "aliases": [
+    "et"
+  ]
+}
