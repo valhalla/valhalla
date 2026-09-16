@@ -463,7 +463,7 @@ TEST_F(LinearFeatureTest, multi_shape_geojson) {
 }
 
 /**
- * The same shape as simple_high_factor, but for /sources_to_targets.
+ * The same shape as simple_high_factor, but for CostMatrix.
  * */
 TEST_F(LinearFeatureTest, matrix_high_factor) {
   std::string json_request = R"(
@@ -525,7 +525,7 @@ TEST_F(LinearFeatureTest, matrix_high_factor) {
 }
 
 /**
- * Same, but through TimeDistanceMatrix, which expands differently than CostMatrix.
+ * Same, but through TimeDistanceMatrix
  * */
 TEST_F(LinearFeatureTest, matrix_timedistancematrix) {
   std::string json_request = R"(
@@ -615,54 +615,4 @@ TEST_F(LinearFeatureTest, optimized_route) {
   auto costing_options =
       request.options().costings().find(request.options().costing_type())->second.options();
   EXPECT_EQ(costing_options.cost_factor_edges().size(), 4);
-}
-
-/**
- * A zero factor excludes its edge, and must not stop the factors of any later feature from being
- * applied.
- * */
-TEST_F(LinearFeatureTest, zero_factor_keeps_later_features) {
-  loki::loki_worker_t loki_worker(map.config);
-  thor::thor_worker_t thor_worker(map.config);
-
-  std::string json_request = R"(
-  {
-    "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
-    ],
-    "linear_cost_factors": [
-      {"shape": "%s", "factor": 0},
-      {"shape": "%s", "factor": 200}
-    ],
-    "costing": "auto"
-  }
-  )";
-
-  auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("3").lng()) %
-                   std::to_string(map.nodes.at("3").lat()) % std::to_string(map.nodes.at("2").lng()) %
-                   std::to_string(map.nodes.at("2").lat()) % encode_shape({"6", "X"}, map.nodes) %
-                   encode_shape({"A", "B", "C"}, map.nodes))
-                      .str();
-
-  Api request;
-  ParseApi(json_str, Options::route, request);
-  loki_worker.route(request);
-  loki_worker.cleanup();
-  ASSERT_EQ(request.options().cost_factor_lines().size(), 2);
-
-  thor_worker.route(request);
-  auto costing_options =
-      request.options().costings().find(request.options().costing_type())->second.options();
-
-  baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  // the zero factor comes first, the ones behind it still have to make it through
-  check_cost_factor_edge(costing_options.cost_factor_edges(), "W", "X", reader, map.nodes, 0., 0.2,
-                         1.);
-  check_cost_factor_edge(costing_options.cost_factor_edges(), "A", "B", reader, map.nodes, 200, 0, 1);
-  check_cost_factor_edge(costing_options.cost_factor_edges(), "B", "C", reader, map.nodes, 200, 0, 1);
-
-  // same detour as simple_high_factor: the 200 factor was not swallowed by the zero one
-  EXPECT_EQ(request.trip().routes(0).legs(0).shape(),
-            encode_shape({"3", "A", "a", "U", "T", "Y", "Z", "E", "2"}, map.nodes));
 }

@@ -66,9 +66,9 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
 
 /**
  * Appends the first and last point of every user provided cost factor line to the locations loki is
- * about to correlate. Thor needs those correlations to edge walk each line onto the graph.
+ * about to correlate. Thor needs those correlations to edge walk each line.
  *
- * @param options    the request options holding the cost factor lines
+ * @param options    the request options
  * @param locations  the locations to be correlated, appended to in place
  *
  * @return the index the appended locations start at
@@ -80,7 +80,7 @@ int add_cost_factor_locations(const Options& options,
  * Moves the correlations loki produced for the locations appended by add_cost_factor_locations back
  * onto their cost factor lines and drops them from `locations` again.
  *
- * @param options    the request options holding the cost factor lines
+ * @param options    the request options
  * @param locations  the correlated locations
  * @param offset     the index the appended locations start at
  */
@@ -89,16 +89,15 @@ void store_cost_factor_locations(Options& options,
                                  int offset);
 
 /**
- * Resolves each user provided cost factor line onto graph edges by edge walking its shape, stores the
- * result in the costing options and hands it to the costing. Costing must already be parsed, both to
- * drive the edge walk and to receive the factors.
+ * Resolves user provided cost factor lines to edges by edge walking them, stores the
+ * result in the costing options and hands it to costing.
  *
- * @param request             the request holding the cost factor lines and costing options
- * @param mode_costing        costing used to edge walk the lines and to apply the factors to
+ * @param request             the request object
+ * @param mode_costing        costing used to edge walk the lines and to add the resolved edges to
  * @param mode                travel mode used to edge walk the lines
  * @param reader              graph reader
  * @param min_allowed_factor  the smallest factor the config admits
- * @param max_allowed_edges   the most edges the config lets a request resolve
+ * @param max_allowed_edges   the max number of edges the config allows
  */
 void resolve_cost_factor_edges(Api& request,
                                const sif::mode_costing_t& mode_costing,

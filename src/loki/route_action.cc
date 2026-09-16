@@ -169,6 +169,7 @@ void loki_worker_t::route(Api& request) {
     }
 
     // store the correlations for the cost factor lines and drop their endpoints again
+    // from the locations
     // todo(chris): make sure this'll work with auto_pedestrian as well
     store_cost_factor_locations(options, locations, locations_size);
 

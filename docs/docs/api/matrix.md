@@ -65,7 +65,6 @@ The Time-Distance Matrix service uses the `auto`, `bicycle`, `pedestrian` and `b
 | `verbose`   | If `true` it will output a flat list of objects for `distances` & `durations` explicitly specifying the source & target indices. If `false` will return more compact, nested row-major `distances` & `durations` arrays and not echo `sources` and `targets`. Default `true`. |
 | `shape_format` | Specifies the optional format for the path shape of each connection. One of `polyline6`, `polyline5`, `geojson` or `no_shape` (default). |
 | `expansion_max_distance` | Maximum path distance in meters for an expansion. Currently this is implemented for the `timedistancematrix` algorithm. Source-target pairs whose cheapest path distance exceeds this limit will be returned as unreachable (with `null` time and distance). Default 0 (disabled). |
-| `linear_cost_factors` | Customized cost factors that influence path finding, specified as an array of JSON objects. See [the route API reference](route/api-reference.md#other-request-options) for the accepted formats and semantics. |
 
 ### Time-dependent matrices
 
