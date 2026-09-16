@@ -510,3 +510,46 @@ TEST_F(LinearFeatureTest, partial_edges_near_nodes) {
   check_cost_factor_edge(costing_options.cost_factor_edges(), "C", "D", reader, map.nodes, 10., 0.,
                          end);
 }
+
+TEST_F(LinearFeatureTest, empty_shape) {
+  loki::loki_worker_t loki_worker(map.config);
+  thor::thor_worker_t thor_worker(map.config);
+
+  std::string json_request = R"(
+  {
+    "locations": [
+      {"lon": %s, "lat": %s},
+      {"lon": %s, "lat": %s}
+    ], 
+    "linear_cost_factors": [
+      {"type": "Feature", "geometry": {"type": "LineString", "coordinates": %s}, "properties": {"factor": %s}},
+      {"type": "Feature", "geometry": {"type": "LineString", "coordinates": %s}, "properties": {"factor": %s}}
+    ], 
+    "costing": "auto"
+  }
+  )";
+
+  auto format_coordinates = [&](const std::vector<std::string>& waypoints) {
+    rapidjson::writer_wrapper_t writer;
+    writer.set_precision(6);
+    writer.start_array();
+    for (const auto& c : waypoints) {
+      writer.start_array();
+      writer(map.nodes.at(c).lng());
+      writer(map.nodes.at(c).lat());
+      writer.end_array();
+    }
+    writer.end_array();
+    return std::string(writer.get_buffer());
+  };
+
+  auto json_str =
+      (boost::format(json_request) % std::to_string(map.nodes.at("E").lng()) %
+       std::to_string(map.nodes.at("E").lat()) % std::to_string(map.nodes.at("Z").lng()) %
+       std::to_string(map.nodes.at("Z").lat()) % "" % "100" % format_coordinates({"F", "b"}) % "0.1")
+          .str();
+
+  std::cerr << "Valhalla request is: \n" << json_str << "\n";
+
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, json_str), valhalla_exception_t);
+}
