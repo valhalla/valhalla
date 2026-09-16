@@ -364,9 +364,9 @@ set_target_properties(nh_ar_tiles PROPERTIES FOLDER "Tests")
 
 # we have to skip this on windows, it automatically resolves whatever locales it has installed
 if(NOT WIN32)
-  file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.po" "${VALHALLA_SOURCE_DIR}/locales/valhalla.pot")
+  file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
   add_custom_command(OUTPUT .locales.timestamp
-    COMMAND /bin/bash -ec "for loc in \$(${Python_EXECUTABLE} ./po_tools.py print-posix-locales); do \
+    COMMAND /bin/bash -ec "for loc in $(jq --raw-output .posix_locale *.json); do \
          $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
          $<$<BOOL:${APPLE}>:         localedef -i /usr/share/locale/$\{loc\} ./$\{loc\} || true ; > \
        done \
