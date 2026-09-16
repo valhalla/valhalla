@@ -15,6 +15,7 @@
    * FIXED: apply `sidewalk_factor` on `Use::kSidewalk` [#6322](https://github.com/valhalla/valhalla/pull/6322)
    * FIXED: issues with shortcuts sharing the same start and end node [#6008](https://github.com/valhalla/valhalla/pull/6008)
    * FIXED: check for empty coords in `linear_feature_factors` [#6328](https://github.com/valhalla/valhalla/pull/6328)
+   * FIXED: edge walking issues with `linear_cost_features` [#6327](https://github.com/valhalla/valhalla/pull/6327)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
