@@ -65,6 +65,11 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             const bool use_hierarchy_limits);
 
 /**
+ * Apply defaults to start and end locations of a shape for edge walking.
+ */
+void apply_trace_location_defaults(valhalla::Location& loc);
+
+/**
  * Appends the first and last point of every user provided cost factor line to the locations loki is
  * about to correlate. Thor needs those correlations to edge walk each line.
  *

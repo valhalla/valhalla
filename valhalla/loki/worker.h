@@ -67,7 +67,6 @@ protected:
   void init_trace(Api& request);
   std::vector<midgard::PointLL> init_height(Api& request);
   void init_transit_available(Api& request);
-  void apply_trace_location_defaults(valhalla::Location& loc) const;
 
   boost::property_tree::ptree config;
   sif::CostFactory factory;

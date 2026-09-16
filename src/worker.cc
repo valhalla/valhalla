@@ -43,6 +43,9 @@ static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexc
 
 namespace {
 
+// first and last edges of a cost factor line covering less than this are dropped
+constexpr double kMinCostFactorEdgeLength = 1.0; // meters
+
 // Parses exclude_layers from JSON and adds them to the request's tile options
 void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
   static const std::unordered_set<std::string_view> kSupportedLayers =
@@ -1442,14 +1445,22 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           for (const auto& edge :
                line.locations(static_cast<size_t>(is_last)).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
+              double start = is_first ? edge.percent_along() : 0.;
+              double end = is_last ? edge.percent_along() : 1.;
+              // an endpoint just off a node also correlates to the adjacent edges, skip those small
+              // parts
+              const auto* de = reader.directededge(path_info.edgeid);
+              if (de && de->length() * (end - start) < kMinCostFactorEdgeLength) {
+                break;
+              }
               edge_count++;
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(path_info.edgeid);
               // apply the minimum allowed value specified in the config
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
               e->set_ignore_access_restrictions(line.ignore_access_restrictions());
-              e->set_start(is_first ? edge.percent_along() : 0.);
-              e->set_end(is_last ? edge.percent_along() : 1.);
+              e->set_start(start);
+              e->set_end(end);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
               if (shortcut.is_valid()) {
                 add_shortcut(reader, shortcut, costing_options, e);
@@ -1681,6 +1692,15 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
   return add_warning;
 }
 
+void apply_trace_location_defaults(valhalla::Location& loc) {
+  loc.set_node_snap_tolerance(0.f);
+  loc.set_radius(10);
+  // Reachability test is not needed for edge walking because either
+  // - edge_walk relies on the shape that was produced by route
+  // - map_snap performs a Viterbi search that organically biases towards reachable edges
+  loc.set_minimum_reachability(0);
+}
+
 int add_cost_factor_locations(const Options& options,
                               google::protobuf::RepeatedPtrField<valhalla::Location>* locations) {
   int offset = locations->size();
@@ -1689,7 +1709,9 @@ int add_cost_factor_locations(const Options& options,
       throw valhalla_exception_t{173, "feature coordinates are empty"};
     }
     locations->Add()->CopyFrom(*line.shape().begin());
+    apply_trace_location_defaults(*locations->rbegin());
     locations->Add()->CopyFrom(*line.shape().rbegin());
+    apply_trace_location_defaults(*locations->rbegin());
   }
   return offset;
 }
