@@ -20,6 +20,9 @@ namespace {
 // A* can take excessive time for longer paths - so exclude them to protect the service.
 constexpr float kPedestrianMultipassThreshold = 50000.0f; // 50km
 
+// first and last edges of a cost factor line covering less than this are dropped
+constexpr double kMinCostFactorEdgeLength = 1.0; // meters
+
 /**
  * Check if the paths meet at opposing edges (but not at a node). If so, add an intermediate location
  * so that the shape / distance along the path is adjusted at the location.

@@ -1190,6 +1190,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
           } else { // or an encoded polyline and a cost factor
             parse_line(linear_feat, l);
           }
+
+          if (l->shape_size() == 0) {
+            throw valhalla_exception_t{173, "feature coordinates are empty"};
+          }
         }
       } catch (const std::exception& e) { throw valhalla_exception_t{173, std::string(e.what())}; }
     }
@@ -1681,6 +1685,9 @@ int add_cost_factor_locations(const Options& options,
                               google::protobuf::RepeatedPtrField<valhalla::Location>* locations) {
   int offset = locations->size();
   for (const auto& line : options.cost_factor_lines()) {
+    if (line.shape_size() == 0) {
+      throw valhalla_exception_t{173, "feature coordinates are empty"};
+    }
     locations->Add()->CopyFrom(*line.shape().begin());
     locations->Add()->CopyFrom(*line.shape().rbegin());
   }
