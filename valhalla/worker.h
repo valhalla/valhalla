@@ -64,6 +64,52 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             const bool allow_modifications,
                             const bool use_hierarchy_limits);
 
+/**
+ * Appends the first and last point of every user provided cost factor line to the locations loki is
+ * about to correlate. Thor needs those correlations to edge walk each line onto the graph.
+ *
+ * @param options    the request options holding the cost factor lines
+ * @param locations  the locations to be correlated, appended to in place
+ *
+ * @return the index the appended locations start at
+ */
+int add_cost_factor_locations(const Options& options,
+                              google::protobuf::RepeatedPtrField<valhalla::Location>* locations);
+
+/**
+ * Moves the correlations loki produced for the locations appended by add_cost_factor_locations back
+ * onto their cost factor lines and drops them from `locations` again.
+ *
+ * @param options    the request options holding the cost factor lines
+ * @param locations  the correlated locations
+ * @param offset     the index the appended locations start at
+ */
+void store_cost_factor_locations(Options& options,
+                                 google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
+                                 int offset);
+
+/**
+ * Resolves each user provided cost factor line onto graph edges by edge walking its shape and stores
+ * the result in the costing options, where DynamicCost picks the factors up. Costing must already be
+ * parsed to drive the edge walk, and has to be parsed again afterwards for the resolved edges to
+ * take effect.
+ *
+ * @param request             the request holding the cost factor lines and costing options
+ * @param mode_costing        costing used to edge walk the lines
+ * @param mode                travel mode used to edge walk the lines
+ * @param reader              graph reader
+ * @param min_allowed_factor  the smallest factor the config admits
+ * @param max_allowed_edges   the most edges the config lets a request resolve
+ *
+ * @return true if any edges were resolved, i.e. costing needs to be parsed again
+ */
+bool resolve_cost_factor_edges(Api& request,
+                               const sif::mode_costing_t& mode_costing,
+                               const sif::TravelMode& mode,
+                               baldr::GraphReader& reader,
+                               double min_allowed_factor,
+                               uint64_t max_allowed_edges);
+
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request

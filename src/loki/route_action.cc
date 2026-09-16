@@ -116,13 +116,8 @@ void loki_worker_t::route(Api& request) {
 
     // maybe squeeze in the first and last locations of each user specified feature for cost factor
     // lines as we'll need those for edge walking
-    for (const auto& line : options.cost_factor_lines()) {
-      google::protobuf::RepeatedPtrField<Location> first_and_last;
-      first_and_last.Add()->CopyFrom(*line.shape().begin());
-      first_and_last.Add()->CopyFrom(*line.shape().rbegin());
-      Api dummy;
-      parse_locations(&first_and_last, dummy);
-      locations->MergeFrom(first_and_last);
+    for (int i = add_cost_factor_locations(options, locations); i < locations->size(); ++i) {
+      parse_location(locations->at(i));
     }
 
     // in case of auto_pedestrian costing, we 1) only allow two locations
@@ -173,18 +168,9 @@ void loki_worker_t::route(Api& request) {
       }
     }
 
-    // store the correlations for the cost factor lines
+    // store the correlations for the cost factor lines and drop their endpoints again
     // todo(chris): make sure this'll work with auto_pedestrian as well
-    size_t i = 0;
-    for (auto& line : *options.mutable_cost_factor_lines()) {
-      size_t correlated_start_index = locations_size + 2 * i;
-      line.mutable_locations()->Add(std::move(locations->at(correlated_start_index)));
-      size_t correlated_end_index = locations_size + 2 * i + 1;
-      line.mutable_locations()->Add(std::move(locations->at(correlated_end_index)));
-      ++i;
-    }
-    // and remove the first and last cost factor lines from the locations again
-    locations->DeleteSubrange(locations_size, locations->size() - locations_size);
+    store_cost_factor_locations(options, locations, locations_size);
 
   } catch (const valhalla_exception_t& e) { throw e; } catch (const std::exception&) {
     throw valhalla_exception_t{171};
