@@ -1,5 +1,10 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2026-09-16 Valhalla 3.8.4
+* **Removed**
    * REMOVED: Transifex and all locale JSONs [#6210](https://github.com/valhalla/valhalla/pull/6210)
 * **Bug Fix**
    * ADDED: .po file based translation workflow [#6210](https://github.com/valhalla/valhalla/pull/6210)
