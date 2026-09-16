@@ -18,6 +18,9 @@ using namespace valhalla::loki;
 
 namespace {
 
+// threshold below which candidate edges will be thrown on the filtered pile
+constexpr double kNameScoreThreshold = 10.;
+
 PointLL point_ll_from_latlng(const valhalla::LatLng& latlng) {
   return PointLL(latlng.lng(), latlng.lat());
 }
@@ -122,6 +125,15 @@ bool layer_filter(const Location& location, int8_t layer) {
   return location.preferred_layer() != layer;
 }
 
+double name_score(const Location&, const EdgeInfo& ei) {
+  const auto& names = ei.GetNames();
+
+  if (names.empty())
+    return 0.f;
+
+  return 1.;
+}
+
 valhalla::Location_SideOfStreet flip_side(const valhalla::Location_SideOfStreet side) {
   if (side != valhalla::Location_SideOfStreet_kNone) {
     return side == valhalla::Location_SideOfStreet_kLeft ? valhalla::Location_SideOfStreet_kRight
@@ -152,6 +164,8 @@ struct candidate_t {
   std::optional<EdgeInfo> edge_info;
 
   graph_tile_ptr tile;
+
+  double name_score{0.0};
 
   bool operator<(const candidate_t& c) const {
     return sq_distance < c.sq_distance;
@@ -210,7 +224,8 @@ struct candidate_t {
 struct projector_wrapper {
   projector_wrapper(Location* location, GraphReader& reader)
       : binner(make_binner(point_ll_from_latlng(location->ll()))), location(location),
-        bin_center_approximator(bin_center), sq_radius(midgard::sqr(double(location->radius()))),
+        has_name_hint(!location->name_hint().empty()), bin_center_approximator(bin_center),
+        sq_radius(midgard::sqr(double(location->radius()))),
         sq_cutoff(midgard::sqr(double(location->search_cutoff()))),
         project(point_ll_from_latlng(location->ll())) {
     // TODO: something more empirical based on radius
@@ -281,6 +296,7 @@ struct projector_wrapper {
   std::function<std::tuple<int32_t, unsigned short, double>()> binner;
   graph_tile_ptr cur_tile;
   Location* location;
+  bool has_name_hint;
   unsigned short bin_index = 0;
   PointLL bin_center;
   DistanceApproximator<PointLL> bin_center_approximator;
@@ -493,8 +509,10 @@ struct bin_handler_t {
       // correlate the edge we found if its not filtered out
       bool hard_filtered =
           search_filter(candidate.edge, *costing, candidate.tile, location.search_filter());
-      if (!hard_filtered && (side_filter(path_edge, location, reader) ||
-                             heading_filter(location, angle) || layer_filter(location, layer))) {
+
+      if (!hard_filtered &&
+          (side_filter(path_edge, location, reader) || heading_filter(location, angle) ||
+           layer_filter(location, layer) || candidate.name_score < kNameScoreThreshold)) {
         location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
       } else if (!hard_filtered && correlated_edges.insert(candidate.edge_id).second) {
         location.mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
@@ -527,7 +545,7 @@ struct bin_handler_t {
 
         // angle is 180 degrees opposite of the one above
         if (side_filter(other_path_edge, location, reader) || heading_filter(location, opp_angle) ||
-            layer_filter(location, layer)) {
+            layer_filter(location, layer) || candidate.name_score < kNameScoreThreshold) {
           location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(other_path_edge));
         } else if (correlated_edges.insert(opposing_edge_id).second) {
           location.mutable_correlation()->mutable_edges()->Add(std::move(other_path_edge));
@@ -624,6 +642,7 @@ struct bin_handler_t {
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           auto dsqr = p_itr->project.approx.DistanceSquared(circle.first);
 
+          // if we know the edge can't be inside the search cutoff, prefilter the candidate
           if (dsqr > midgard::sqr(static_cast<double>(p_itr->location->search_cutoff()) + radius)) {
             c_itr->prefiltered = true;
             continue;
@@ -759,6 +778,9 @@ struct bin_handler_t {
         if (c_itr->prefiltered) {
           continue;
         }
+
+        double score = name_score(*p_itr->location, edge_info);
+
         // is this edge reachable in the right way
         bool reachable = reach.outbound >= p_itr->location->minimum_outbound_reachability() &&
                          reach.inbound >= p_itr->location->minimum_inbound_reachability();
@@ -787,6 +809,7 @@ struct bin_handler_t {
           c_itr->edge_info = std::move(edge_info);
           c_itr->tile = tile;
           c_itr->bounding_circle = std::move(circle);
+          c_itr->name_score = score;
           batch->emplace_back(std::move(*c_itr));
           if (reachable && c_itr->sq_distance < p_itr->closest_external_reachable)
             p_itr->closest_external_reachable = c_itr->sq_distance;
@@ -795,7 +818,13 @@ struct bin_handler_t {
 
         // get some info about possibilities
         bool in_radius = c_itr->sq_distance < p_itr->sq_radius;
-        bool better = c_itr->sq_distance < batch->back().sq_distance;
+
+        // candidate is better if it's closer or if we're dealing with a name hint and the name hint
+        // is better than the current best name hint
+        bool better = c_itr->sq_distance < batch->back().sq_distance ||
+                      p_itr->has_name_hint && (c_itr->name_score > batch->back().name_score ||
+                                               (c_itr->name_score == batch->back().name_score &&
+                                                c_itr->sq_distance < batch->back().sq_distance));
         bool last_in_radius = batch->back().sq_distance < p_itr->sq_radius;
         // TODO: this is a bit blunt in that any reachable edges between the best or ones within
         // the radius will make unreachable edges that are even the tiniest bit further away unviable
@@ -812,6 +841,7 @@ struct bin_handler_t {
           c_itr->edge_info = std::move(edge_info);
           c_itr->tile = tile;
           c_itr->bounding_circle = std::move(circle);
+          c_itr->name_score = score;
           // the last one wasnt in the radius so replace it with this one because its better or is
           // in the radius
           if (!last_in_radius) {

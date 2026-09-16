@@ -251,6 +251,7 @@ void parse_location(valhalla::Location* location,
   if (preferred_layer) {
     location->set_preferred_layer(*preferred_layer);
   }
+  location->set_name_hint(rapidjson::get<std::string>(r_loc, "/name_hint", ""));
   auto node_snap_tolerance = rapidjson::get_optional<float>(r_loc, "/node_snap_tolerance");
   if (node_snap_tolerance) {
     location->set_node_snap_tolerance(*node_snap_tolerance);
