@@ -732,6 +732,24 @@ TEST(Standalone, EdgeWalkAcceptsTrafficSplitRouteShape) {
   EXPECT_GE(walked_edge_count(map, shape), 1u);
 }
 
+TEST(Standalone, EdgeWalkUsesPartialOriginProgressOnOverlappingShape) {
+  // X and Y are about 1 m apart. Loki correlates the origin exactly to Y, but the edge-walk
+  // coordinate tolerance also considers it equal to the earlier vertex X.
+  const gurka::nodelayout layout = {
+      {"A", {0.000, 0.000000}}, {"X", {0.003, 0.000000}},  {"B", {0.006, 0.003000}},
+      {"Y", {0.003, 0.000009}}, {"C", {0.003, -0.003000}},
+  };
+  const gurka::ways ways = {
+      {"AXBYC", {{"highway", "primary"}}},
+  };
+  const auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/edge_walk_partial_origin_overlapping_shape");
+
+  // Each trace starts at the later near-overlapping vertex in its directed-edge orientation.
+  EXPECT_GE(walked_edge_count(map, {layout.at("Y"), layout.at("C")}), 1u);
+  EXPECT_GE(walked_edge_count(map, {layout.at("X"), layout.at("A")}), 1u);
+}
+
 // Tolerating extra points must not tolerate points that leave the edge.
 TEST(Standalone, EdgeWalkRejectsPointOffEdge) {
   auto map = interior_vertex_map("test/data/edge_walk_point_off_edge");
@@ -756,6 +774,29 @@ TEST(Standalone, EdgeWalkRejectsBackwardExtraShapePoint) {
   };
 
   EXPECT_THROW(gurka::do_action(valhalla::Options::trace_attributes, map, edge_walk_request(shape)),
+               std::exception);
+}
+
+TEST(Standalone, EdgeWalkValidatesPartialDestinationEdge) {
+  const std::string ascii_map = R"(
+    A---B---C---D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BCD", {{"highway", "primary"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/edge_walk_partial_destination_edge");
+
+  const auto between_b_and_c = layout.at("B").PointAlongSegment(layout.at("C"), 0.5);
+  EXPECT_GE(walked_edge_count(map, {layout.at("A"), layout.at("B"), between_b_and_c, layout.at("C")}),
+            1u);
+
+  const auto off_edge = midgard::PointLL(between_b_and_c.lng(), between_b_and_c.lat() + 0.00009);
+  EXPECT_THROW(gurka::do_action(valhalla::Options::trace_attributes, map,
+                                edge_walk_request(
+                                    {layout.at("A"), layout.at("B"), off_edge, layout.at("C")})),
                std::exception);
 }
 
