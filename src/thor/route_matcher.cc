@@ -40,6 +40,9 @@ constexpr float kMinLengthTolerance = 10.0f;
 // edge shape after projecting trace points onto it.
 constexpr double kShapeProgressEpsilon = 0.25;
 
+// DirectedEdge length is rounded to the nearest meter
+constexpr double kEdgeLengthRoundingError = 0.5;
+
 // Get the length to compare to the edge length
 float length_comparison(const float length, const bool exact_match) {
   // Alter tolerance based on exact_match flag
@@ -146,7 +149,8 @@ bool check_shape(const graph_tile_ptr& tile,
   if (from == 0) {
     // Start at the correlated position so a loop or near-overlap earlier in the edge shape
     // cannot be mistaken for the partial origin.
-    const double start_distance = de->length() * start_percent_along;
+    const double start_distance =
+        std::max(0.0, de->length() * start_percent_along - kEdgeLengthRoundingError);
     if (!project_onto_shape(edge_shape, forward, vertex_distance, start, start_distance, segment,
                             last_distance)) {
       return false;
@@ -261,22 +265,25 @@ bool expand_from_node(const mode_costing_t& mode_costing,
     // A route can end partway along its final edge. Validate that remaining trace segment here;
     // complete edges are validated while walking from node to node below.
     const auto& end_edge = n->second.first;
+    bool end_shape_matches = true;
     if (!end_edge.end_node() && correlated_index + 1 < static_cast<size_t>(shape.size())) {
       const GraphId end_edge_id(end_edge.graph_id());
       const auto end_edge_tile = reader.GetGraphTile(end_edge_id);
-      if (!end_edge_tile ||
-          !check_shape(end_edge_tile, end_edge_tile->directededge(end_edge_id), shape,
-                       correlated_index, static_cast<uint32_t>(shape.size() - 1), false)) {
-        return false;
-      }
+      end_shape_matches =
+          end_edge_tile &&
+          check_shape(end_edge_tile, end_edge_tile->directededge(end_edge_id), shape,
+                      correlated_index, static_cast<uint32_t>(shape.size() - 1), false);
     }
 
-    if (!path_infos.back().is_shortcut) {
+    if (end_shape_matches) {
+      if (path_infos.back().is_shortcut) { // can't end on a shortcut
+        return false;
+      }
       end_node = node;
       return true;
-    } else { // can't end on a shortcut
-      return false;
     }
+    // A nearby destination candidate can satisfy the distance tolerance without matching the
+    // remaining shape. Continue walking so another candidate can be tried.
   }
 
   // Get the last edge followed from this index
