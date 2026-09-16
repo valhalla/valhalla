@@ -117,9 +117,16 @@ void loki_worker_t::route(Api& request) {
     // maybe squeeze in the first and last locations of each user specified feature for cost factor
     // lines as we'll need those for edge walking
     for (const auto& line : options.cost_factor_lines()) {
+      if (line.shape_size() == 0) {
+        throw valhalla_exception_t{173, "feature coordinates are empty"};
+      }
       google::protobuf::RepeatedPtrField<Location> first_and_last;
       first_and_last.Add()->CopyFrom(*line.shape().begin());
       first_and_last.Add()->CopyFrom(*line.shape().rbegin());
+
+      for (auto& loc : first_and_last) {
+        apply_trace_location_defaults(loc);
+      }
       Api dummy;
       parse_locations(&first_and_last, dummy);
       locations->MergeFrom(first_and_last);

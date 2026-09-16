@@ -235,6 +235,7 @@ config = {
             "max_reserved_locations": 25,
             "max_iterations": 2800,
             "min_iterations": 100,
+            "dijkstra_distance": 0,
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": 400,
@@ -416,6 +417,7 @@ config = {
         "max_timedep_distance_matrix": 0,
         "max_alternates": 2,
         "max_exclude_polygons_length": 10000,
+        "max_exclude_polygons_vertices": 100,
         "min_linear_cost_factor": 1,
         "max_linear_cost_edges": 50000,
         "max_distance_disable_hierarchy_culling": 0,
@@ -561,6 +563,7 @@ help_text = {
             "max_reserved_locations": "Maximum amount of locations allowed to to keep reserved between requests for CostMatrix",
             "max_iterations": "Upper bound on the number of iterations per expansion once a path has been found. Must be a positive integer",
             "min_iterations": "Lower bound on the number of iterations per expansion once a path has been found. Must be a positive integer",
+            "dijkstra_distance": "Distance in meters from a source/target within which its tree expands with a zero heuristic, i.e. like Dijkstra. Makes the found connections independent of where the other locations lie, at the cost of expanding more edges. 0 disables it. Default 0.",
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": "The default maximum up transitions for level 1 in CostMatrix",
@@ -765,6 +768,7 @@ help_text = {
         "max_timedep_distance_matrix": "Maximum b-line distance between 2 most distant locations in meters to allow a time-dependent matrix",
         "max_alternates": "Maximum number of alternate routes to allow in a request",
         "max_exclude_polygons_length": "Maximum total perimeter of all exclude_polygons in meters",
+        "max_exclude_polygons_vertices": "Maximum total number of vertices across all exclude_polygons",
         "min_linear_cost_factor": "Minimum allowed factor admissible for linear feature cost factors. Beware: low values approaching zero will render the A* heuristic unusable",
         "max_linear_cost_edges": "Maximum total number of linear cost edges",
         "max_distance_disable_hierarchy_culling": "Maximum search distance allowed with hierarchy culling disabled",

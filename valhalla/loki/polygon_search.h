@@ -18,7 +18,8 @@ namespace loki {
 std::unordered_set<valhalla::baldr::GraphId> edges_in_rings(const valhalla::Options& options,
                                                             baldr::GraphReader& reader,
                                                             const sif::cost_ptr_t& costing,
-                                                            float max_length);
+                                                            float max_length,
+                                                            size_t max_vertices);
 
 } // namespace loki
 } // namespace valhalla
