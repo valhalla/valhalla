@@ -21,7 +21,9 @@ using namespace valhalla::loki;
 
 namespace {
 constexpr std::string_view kDefaultMaxAge = "1800";
-}
+// a name hint disables the early exits of the candidate search, so the cutoff is all that bounds it
+constexpr uint32_t kMaxNameHintSearchCutoff = 500;
+} // namespace
 
 namespace valhalla {
 namespace loki {
@@ -74,6 +76,9 @@ std::pair<bool, bool> loki_worker_t::parse_location(valhalla::Location& location
     // level and no cutoff, set special default
     location.set_search_cutoff(kDefaultIndoorSearchCutoff);
     modified_search_cutoff.first = true;
+  }
+  if (!location.name_hint().empty() && location.search_cutoff() > kMaxNameHintSearchCutoff) {
+    location.set_search_cutoff(kMaxNameHintSearchCutoff);
   }
   // if there is a level search filter and
   if (!location.has_street_side_tolerance_case())

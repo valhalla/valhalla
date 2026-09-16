@@ -638,3 +638,150 @@ TEST(locate, locate_shoulder) {
     }
   }
 }
+
+class NameHint : public ::testing::Test {
+protected:
+  static gurka::map map;
+  static gurka::nodelayout layout;
+
+  static void SetUpTestSuite() {
+    const std::string ascii_map = R"(
+    A-----------B
+    |           |
+    |     1     |
+    |           |
+    |           |
+    |           |
+    C-----------D
+    )";
+
+    const gurka::ways ways = {
+        {"AB", {{"highway", "residential"}, {"name", "Main Street"}}},
+        {"CD", {{"highway", "residential"}, {"name", "Oak Avenue"}}},
+        {"AC", {{"highway", "residential"}, {"name", "Side Road"}}},
+        {"BD", {{"highway", "residential"}, {"name", "Side Road"}}},
+    };
+
+    layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+    map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_name_hint");
+  }
+
+  static Api do_locate(const std::string& node,
+                       const std::string& name_hint,
+                       const std::function<void(valhalla::Location&)>& mod = {}) {
+    Api request;
+    auto* options = request.mutable_options();
+    options->set_action(Options::locate);
+    auto* loc = options->add_locations();
+    loc->mutable_ll()->set_lat(layout.at(node).lat());
+    loc->mutable_ll()->set_lng(layout.at(node).lng());
+    loc->set_minimum_reachability(0);
+    loc->set_name_hint(name_hint);
+    if (mod)
+      mod(*loc);
+
+    tyr::actor_t actor(map.config);
+    actor.locate("", nullptr, &request);
+    return request;
+  }
+
+  static bool
+  has_edge(const Api& api, const std::string& from, const std::string& to, bool filtered = false) {
+    GraphReader reader(map.config.get_child("mjolnir"));
+    auto [id, edge] = gurka::findEdgeByNodes(reader, layout, from, to);
+    const auto& correlation = api.options().locations(0).correlation();
+    for (const auto& e : (filtered ? correlation.filtered_edges() : correlation.edges())) {
+      if (GraphId(e.graph_id()) == id)
+        return true;
+    }
+    return false;
+  }
+};
+
+gurka::map NameHint::map = {};
+gurka::nodelayout NameHint::layout = {};
+
+TEST_F(NameHint, NoHintTakesClosest) {
+  auto api = do_locate("1", "");
+  EXPECT_TRUE(has_edge(api, "A", "B"));
+  EXPECT_TRUE(has_edge(api, "B", "A"));
+  EXPECT_FALSE(has_edge(api, "C", "D"));
+  EXPECT_EQ(api.options().locations(0).correlation().filtered_edges_size(), 0);
+}
+
+TEST_F(NameHint, MatchCorrelatedClosestFiltered) {
+  auto api = do_locate("1", "Oak Avenue");
+  EXPECT_TRUE(has_edge(api, "C", "D"));
+  EXPECT_TRUE(has_edge(api, "D", "C"));
+  EXPECT_FALSE(has_edge(api, "A", "B"));
+  EXPECT_TRUE(has_edge(api, "A", "B", true));
+  EXPECT_TRUE(has_edge(api, "B", "A", true));
+  EXPECT_FALSE(has_edge(api, "C", "D", true));
+}
+
+TEST_F(NameHint, NoMatchOnlyClosestFiltered) {
+  for (const auto& hint : {"Elm Street", "Oak", "oak avenue"}) {
+    auto api = do_locate("1", hint);
+    EXPECT_EQ(api.options().locations(0).correlation().edges_size(), 0) << hint;
+    EXPECT_TRUE(has_edge(api, "A", "B", true)) << hint;
+    EXPECT_FALSE(has_edge(api, "C", "D", true)) << hint;
+  }
+}
+
+TEST_F(NameHint, RadiusSplitsByName) {
+  auto api = do_locate("1", "Oak Avenue", [](valhalla::Location& loc) { loc.set_radius(45); });
+  EXPECT_TRUE(has_edge(api, "C", "D"));
+  EXPECT_TRUE(has_edge(api, "D", "C"));
+  EXPECT_FALSE(has_edge(api, "A", "B"));
+  EXPECT_TRUE(has_edge(api, "A", "B", true));
+  // side roads are outside of the radius
+  EXPECT_FALSE(has_edge(api, "A", "C"));
+  EXPECT_FALSE(has_edge(api, "A", "C", true));
+}
+
+TEST_F(NameHint, RadiusKeepsAllMatches) {
+  auto api = do_locate("1", "Side Road", [](valhalla::Location& loc) { loc.set_radius(65); });
+  EXPECT_TRUE(has_edge(api, "A", "C"));
+  EXPECT_TRUE(has_edge(api, "C", "A"));
+  EXPECT_TRUE(has_edge(api, "B", "D"));
+  EXPECT_TRUE(has_edge(api, "D", "B"));
+  EXPECT_FALSE(has_edge(api, "A", "B"));
+  EXPECT_FALSE(has_edge(api, "C", "D"));
+  EXPECT_TRUE(has_edge(api, "A", "B", true));
+  EXPECT_TRUE(has_edge(api, "C", "D", true));
+}
+
+TEST_F(NameHint, RadiusWithoutMatchFiltersAllInRadius) {
+  auto api = do_locate("1", "Elm Street", [](valhalla::Location& loc) { loc.set_radius(45); });
+  EXPECT_EQ(api.options().locations(0).correlation().edges_size(), 0);
+  EXPECT_TRUE(has_edge(api, "A", "B", true));
+  EXPECT_TRUE(has_edge(api, "C", "D", true));
+  EXPECT_FALSE(has_edge(api, "A", "C", true));
+}
+
+TEST_F(NameHint, NothingInRadiusFallsBackToBest) {
+  auto api = do_locate("1", "Oak Avenue", [](valhalla::Location& loc) { loc.set_radius(10); });
+  EXPECT_TRUE(has_edge(api, "C", "D"));
+  EXPECT_FALSE(has_edge(api, "A", "B"));
+  EXPECT_TRUE(has_edge(api, "A", "B", true));
+}
+
+TEST_F(NameHint, NodeSnapSplitsByName) {
+  auto api = do_locate("A", "Side Road");
+  EXPECT_TRUE(has_edge(api, "A", "C"));
+  EXPECT_TRUE(has_edge(api, "C", "A"));
+  EXPECT_FALSE(has_edge(api, "A", "B"));
+  EXPECT_TRUE(has_edge(api, "A", "B", true));
+  EXPECT_TRUE(has_edge(api, "B", "A", true));
+}
+
+TEST_F(NameHint, LowersSearchCutoff) {
+  auto api = do_locate("1", "Oak Avenue");
+  EXPECT_EQ(api.options().locations(0).search_cutoff(), 500);
+
+  api = do_locate("1", "Oak Avenue", [](valhalla::Location& loc) { loc.set_search_cutoff(100); });
+  EXPECT_EQ(api.options().locations(0).search_cutoff(), 100);
+
+  api = do_locate("1", "");
+  EXPECT_GT(api.options().locations(0).search_cutoff(), 500);
+}

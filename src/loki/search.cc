@@ -19,7 +19,7 @@ using namespace valhalla::loki;
 namespace {
 
 // threshold below which candidate edges will be thrown on the filtered pile
-constexpr double kNameScoreThreshold = 10.;
+constexpr double kNameScoreThreshold = 1.;
 
 PointLL point_ll_from_latlng(const valhalla::LatLng& latlng) {
   return PointLL(latlng.lng(), latlng.lat());
@@ -125,13 +125,9 @@ bool layer_filter(const Location& location, int8_t layer) {
   return location.preferred_layer() != layer;
 }
 
-double name_score(const Location&, const EdgeInfo& ei) {
-  const auto& names = ei.GetNames();
-
-  if (names.empty())
-    return 0.f;
-
-  return 1.;
+double name_score(const Location& location, const EdgeInfo& ei) {
+  const auto names = ei.GetNames();
+  return !names.empty() && names.front() == location.name_hint() ? 1. : 0.;
 }
 
 valhalla::Location_SideOfStreet flip_side(const valhalla::Location_SideOfStreet side) {
@@ -269,8 +265,9 @@ struct projector_wrapper {
       int32_t tile_index;
       double distance;
       std::tie(tile_index, bin_index, distance) = binner();
+      // with a name hint the best candidate may be further away than any bin we have seen so far
       if (distance > location->search_cutoff() ||
-          (reachable.size() && distance > location->radius() &&
+          (!has_name_hint && reachable.size() && distance > location->radius() &&
            distance > std::sqrt(reachable.back().sq_distance))) {
         cur_tile = nullptr;
         break;
@@ -303,6 +300,8 @@ struct projector_wrapper {
   double sq_radius;
   std::vector<candidate_t> unreachable;
   std::vector<candidate_t> reachable;
+  std::optional<candidate_t> best_named;
+  bool best_named_reachable = false;
   double closest_external_reachable = std::numeric_limits<double>::max();
   double sq_cutoff;
 
@@ -334,7 +333,10 @@ struct bin_handler_t {
     directed_reaches.clear();
   }
 
-  void correlate_node(Location& location, const GraphId& found_node, const candidate_t& candidate) {
+  void correlate_node(Location& location,
+                      const GraphId& found_node,
+                      const candidate_t& candidate,
+                      bool force_filtered) {
     // the search cutoff is a hard filter so skip any outside of that
     PointLL pt = point_ll_from_latlng(location.ll());
     if (candidate.point.Distance(pt) > location.search_cutoff())
@@ -368,6 +370,9 @@ struct bin_handler_t {
             tangent_angle(index, candidate.point, info.shape(),
                           GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
         auto layer = info.layer();
+        // edges at a node can have different names than the candidate's edge
+        bool name_filtered = force_filtered || (!location.name_hint().empty() &&
+                                                name_score(location, info) < kNameScoreThreshold);
         // do we want this edge, note we have to re-evaluate the filter check because we may be
         // seeing these edges a second time (filtered out before)
         if (costing->Allowed(edge, tile, kDisallowShortcut) &&
@@ -390,7 +395,7 @@ struct bin_handler_t {
           bc->mutable_latlng()->set_lat(candidate.bounding_circle.first.lat());
           bc->set_radius(candidate.bounding_circle.second);
 
-          if ((heading_filter(location, angle) || layer_filter(location, layer)) &&
+          if ((heading_filter(location, angle) || layer_filter(location, layer) || name_filtered) &&
               correlated_edges.insert(id).second) {
             location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
           } else if (correlated_edges.insert(id).second) {
@@ -428,7 +433,8 @@ struct bin_handler_t {
           bc->set_radius(candidate.bounding_circle.second);
 
           // angle is 180 degrees opposite direction of the one above
-          if ((heading_filter(location, opp_angle) || layer_filter(location, layer)) &&
+          if ((heading_filter(location, opp_angle) || layer_filter(location, layer) ||
+               name_filtered) &&
               correlated_edges.insert(other_id).second) {
             location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
           } else if (correlated_edges.insert(other_id).second) {
@@ -450,7 +456,7 @@ struct bin_handler_t {
     crawl(found_node, true);
   }
 
-  void correlate_edge(Location& location, const candidate_t& candidate) {
+  void correlate_edge(Location& location, const candidate_t& candidate, bool force_filtered) {
     PointLL pt = point_ll_from_latlng(location.ll());
     // get the distance between the result
     auto distance = candidate.point.Distance(pt);
@@ -509,10 +515,12 @@ struct bin_handler_t {
       // correlate the edge we found if its not filtered out
       bool hard_filtered =
           search_filter(candidate.edge, *costing, candidate.tile, location.search_filter());
+      bool name_filtered = force_filtered || (!location.name_hint().empty() &&
+                                              candidate.name_score < kNameScoreThreshold);
 
       if (!hard_filtered &&
           (side_filter(path_edge, location, reader) || heading_filter(location, angle) ||
-           layer_filter(location, layer) || candidate.name_score < kNameScoreThreshold)) {
+           layer_filter(location, layer) || name_filtered)) {
         location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(path_edge));
       } else if (!hard_filtered && correlated_edges.insert(candidate.edge_id).second) {
         location.mutable_correlation()->mutable_edges()->Add(std::move(path_edge));
@@ -545,7 +553,7 @@ struct bin_handler_t {
 
         // angle is 180 degrees opposite of the one above
         if (side_filter(other_path_edge, location, reader) || heading_filter(location, opp_angle) ||
-            layer_filter(location, layer) || candidate.name_score < kNameScoreThreshold) {
+            layer_filter(location, layer) || name_filtered) {
           location.mutable_correlation()->mutable_filtered_edges()->Add(std::move(other_path_edge));
         } else if (correlated_edges.insert(opposing_edge_id).second) {
           location.mutable_correlation()->mutable_edges()->Add(std::move(other_path_edge));
@@ -587,7 +595,9 @@ struct bin_handler_t {
     auto c_itr = bin_candidates.begin();
     for (auto p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
       check = check || p_itr->reachable.empty() ||
-              c_itr->sq_distance < p_itr->reachable.back().sq_distance;
+              c_itr->sq_distance < p_itr->reachable.back().sq_distance ||
+              (!c_itr->prefiltered && c_itr->name_score >= kNameScoreThreshold &&
+               (!p_itr->best_named || c_itr->name_score >= p_itr->best_named->name_score));
     }
 
     // assume its reachable
@@ -647,9 +657,9 @@ struct bin_handler_t {
             c_itr->prefiltered = true;
             continue;
           }
-          // if we don't have any reachable candidates yet, we can't reject any edge within
-          // the cutoff distance
-          if (p_itr->reachable.empty()) {
+          // if we don't have any reachable candidates yet or are looking for a name, we can't
+          // reject any edge within the cutoff distance
+          if (p_itr->reachable.empty() || p_itr->has_name_hint) {
             all_prefiltered = false;
             break;
           }
@@ -712,6 +722,7 @@ struct bin_handler_t {
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
         c_itr->distance = std::numeric_limits<double>::max();
+        c_itr->name_score = 0.;
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
@@ -768,6 +779,14 @@ struct bin_handler_t {
         }
       }
 
+      // score the names first so the reachability check knows about better named candidates
+      c_itr = bin_candidates.begin();
+      for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
+        if (p_itr->has_name_hint && !c_itr->prefiltered) {
+          c_itr->name_score = name_score(*p_itr->location, edge_info);
+        }
+      }
+
       // if we already have a better reachable candidate we can just assume this one is reachable
       auto reach = check_reachability(begin, end, tile, edge, edge_id);
 
@@ -778,8 +797,6 @@ struct bin_handler_t {
         if (c_itr->prefiltered) {
           continue;
         }
-
-        double score = name_score(*p_itr->location, edge_info);
 
         // is this edge reachable in the right way
         bool reachable = reach.outbound >= p_itr->location->minimum_outbound_reachability() &&
@@ -799,6 +816,31 @@ struct bin_handler_t {
           }
         }
 
+        // keep the best name match separately, reachable ones win, then the score, then the distance
+        if (c_itr->name_score >= kNameScoreThreshold) {
+          auto& best = p_itr->best_named;
+          bool better_named = !best || (reachable != p_itr->best_named_reachable
+                                            ? reachable
+                                            : (c_itr->name_score != best->name_score
+                                                   ? c_itr->name_score > best->name_score
+                                                   : c_itr->sq_distance < best->sq_distance));
+          if (better_named) {
+            candidate_t named;
+            named.sq_distance = c_itr->sq_distance;
+            named.distance = c_itr->distance;
+            named.point = c_itr->point;
+            named.index = c_itr->index;
+            named.bounding_circle = circle;
+            named.edge_id = edge_id;
+            named.edge = edge;
+            named.edge_info.emplace(tile->edgeinfo(edge));
+            named.tile = tile;
+            named.name_score = c_itr->name_score;
+            p_itr->best_named = std::move(named);
+            p_itr->best_named_reachable = reachable;
+          }
+        }
+
         // which batch of findings will this go into
         auto* batch = reachable ? &p_itr->reachable : &p_itr->unreachable;
 
@@ -809,7 +851,6 @@ struct bin_handler_t {
           c_itr->edge_info = std::move(edge_info);
           c_itr->tile = tile;
           c_itr->bounding_circle = std::move(circle);
-          c_itr->name_score = score;
           batch->emplace_back(std::move(*c_itr));
           if (reachable && c_itr->sq_distance < p_itr->closest_external_reachable)
             p_itr->closest_external_reachable = c_itr->sq_distance;
@@ -818,13 +859,7 @@ struct bin_handler_t {
 
         // get some info about possibilities
         bool in_radius = c_itr->sq_distance < p_itr->sq_radius;
-
-        // candidate is better if it's closer or if we're dealing with a name hint and the name hint
-        // is better than the current best name hint
-        bool better = c_itr->sq_distance < batch->back().sq_distance ||
-                      p_itr->has_name_hint && (c_itr->name_score > batch->back().name_score ||
-                                               (c_itr->name_score == batch->back().name_score &&
-                                                c_itr->sq_distance < batch->back().sq_distance));
+        bool better = c_itr->sq_distance < batch->back().sq_distance;
         bool last_in_radius = batch->back().sq_distance < p_itr->sq_radius;
         // TODO: this is a bit blunt in that any reachable edges between the best or ones within
         // the radius will make unreachable edges that are even the tiniest bit further away unviable
@@ -841,7 +876,6 @@ struct bin_handler_t {
           c_itr->edge_info = std::move(edge_info);
           c_itr->tile = tile;
           c_itr->bounding_circle = std::move(circle);
-          c_itr->name_score = score;
           // the last one wasnt in the radius so replace it with this one because its better or is
           // in the radius
           if (!last_in_radius) {
@@ -937,9 +971,8 @@ private:
       // keep a look up around so we dont add duplicates with worse scores
       correlated_edges.reserve(pp.reachable.size());
       correlated_edges.clear();
-      // go through getting all the results for this one
-      for (const auto& candidate : pp.reachable) {
-        auto pp_pt = point_ll_from_latlng(pp.location->ll());
+      auto pp_pt = point_ll_from_latlng(pp.location->ll());
+      auto correlate = [&](const candidate_t& candidate, bool force_filtered) {
         // this may be at a node, either because it was the closest thing or from snap tolerance
         bool front =
             candidate.point == candidate.edge_info->shape().front() ||
@@ -952,15 +985,39 @@ private:
           graph_tile_ptr other_tile;
           auto opposing_edge = reader.GetOpposingEdge(candidate.edge_id, other_tile);
           if (!other_tile) {
-            continue; // TODO: do an edge snap instead, but you'll only get one direction
+            return; // TODO: do an edge snap instead, but you'll only get one direction
           }
-          correlate_node(*pp.location, opposing_edge->endnode(), candidate);
+          correlate_node(*pp.location, opposing_edge->endnode(), candidate, force_filtered);
         } // it was the end node
         else if ((back && candidate.edge->forward()) || (front && !candidate.edge->forward())) {
-          correlate_node(*pp.location, candidate.edge->endnode(), candidate);
+          correlate_node(*pp.location, candidate.edge->endnode(), candidate, force_filtered);
         } // it was along the edge
         else {
-          correlate_edge(*pp.location, candidate);
+          correlate_edge(*pp.location, candidate, force_filtered);
+        }
+      };
+
+      if (!pp.has_name_hint) {
+        for (const auto& candidate : pp.reachable) {
+          correlate(candidate, false);
+        }
+      } else if (std::any_of(pp.reachable.begin(), pp.reachable.end(),
+                             [&pp](const candidate_t& c) { return c.sq_distance < pp.sq_radius; })) {
+        // in radius the name decides per edge whether it's correlated or filtered
+        for (const auto& candidate : pp.reachable) {
+          if (candidate.sq_distance < pp.sq_radius) {
+            correlate(candidate, false);
+          }
+        }
+      } else {
+        // the best name match is correlated, what we'd have found without a name hint is filtered
+        if (pp.best_named) {
+          correlate(*pp.best_named, false);
+        }
+        for (const auto& candidate : pp.reachable) {
+          if (!correlated_edges.contains(candidate.edge_id.value)) {
+            correlate(candidate, true);
+          }
         }
       }
 
