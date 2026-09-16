@@ -138,6 +138,8 @@ set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
 set(libosmium_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
 set(vtzero_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/vtzero/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
 set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
+set(flatbush_include_dir ${VALHALLA_SOURCE_DIR}/third_party/flatbush)
+
 if (PREFER_EXTERNAL_DEPS)
   # date
   # check if tz_private.h exists, e.g. arch linux doesn't distribute that..
@@ -199,6 +201,13 @@ if (PREFER_EXTERNAL_DEPS)
     else()
       set(dirent_include_dir ${DIRENT_INCLUDE_DIRS})
     endif()
+  endif()
+  # flatbush
+  find_path(FLATBUSH_INCLUDE_DIRS "flatbush/flatbush.h")
+  if (NOT FLATBUSH_INCLUDE_DIRS)
+    message(WARNING "No flatbush found in system libraries, using vendored flatbush...")
+  else()
+    set(flatbush_include_dirs ${FLATBUSH_INCLUDE_DIRS})
   endif()
 endif()
 
