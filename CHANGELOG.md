@@ -2,6 +2,7 @@
 * **Removed**
    * REMOVED: Transifex and all locale JSONs [#6210](https://github.com/valhalla/valhalla/pull/6210)
 * **Bug Fix**
+   * FIXED: stack overflow in the route matcher's edge walking on long shapes, reached by `trace_route`/`trace_attributes` with `shape_match=edge_walk` or `walk_or_snap` and by `route` with `cost_factor_lines`: `expand_from_node` now runs on an explicit stack instead of recursing once per matched edge [#6294](https://github.com/valhalla/valhalla/issues/6294)
    * ADDED: .po file based translation workflow [#6210](https://github.com/valhalla/valhalla/pull/6210)
    * FIXED: bg-BG spoke the literal text `<STREET_NAME>` in some case(s) [#6210](https://github.com/valhalla/valhalla/pull/6210)
    * FIXED: don't advance bounding-circle iterator past the end [#6241](https://github.com/valhalla/valhalla/pull/6241)
