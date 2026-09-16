@@ -383,6 +383,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     return {uint32_t(0), uint32_t(0)};
   }
 
+  // we're at a non-contracting node
+
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
   auto last_edge = [&reader](const graph_tile_ptr& tile, const GraphId& endnode,
                              EdgePairs& edgepairs) {
@@ -450,12 +452,16 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       GraphId next_edge_id = edge_id;
       bool has_bridge = directededge->bridge();
       bool has_tunnel = directededge->tunnel();
+      GraphId first_contracted = end_node;
+      GraphId last_contracted = end_node;
       while (true) {
         EdgePairs edgepairs;
         graph_tile_ptr tile = reader.GetGraphTile(end_node);
+
         if (last_edge(tile, end_node, edgepairs)) {
           break;
         }
+        last_contracted = end_node;
 
         // Edge should match one of the 2 first (inbound) edges in the
         // pair. Choose the matching outgoing (second) edge.
@@ -482,18 +488,19 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         total_edge_count++;
       }
 
-      // Get the length from the shape. This prevents roundoff issues when forming
-      // elevation.
-      uint32_t length = valhalla::midgard::length(shape);
+      // if the shortcut formed would be a loop, skip it.
+      // this happens very rarely in practice, e.g. on roundabouts with only
+      // one non-contractable node: https://www.openstreetmap.org/#map=19/53.316187/6.011144
+      if (start_node == end_node) {
+        continue;
+      }
 
-      // Add the edge info. Use length and number of shape points to match an
-      // edge in case multiple shortcut edges exist between the 2 nodes.
-      // Test whether this shape is forward or reverse (in case an existing
-      // edge exists). Shortcuts use way Id = 0. ElevationBuilder runs after this stage and
-      // overwrites the mean elevation if the dataset has elevation. No need for names etc,
-      // shortcuts aren't used in guidance
       bool forward = true;
-      uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
+      // use the lower of the first and last contracted node ids to identify a shortcut
+      // in both directions
+      const uint64_t chain_id = std::min(first_contracted, last_contracted).value;
+      // ...and fold into 32 bits
+      uint32_t idx = static_cast<uint32_t>(chain_id ^ (chain_id >> 32));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, kNoElevationData,
                                   edgeinfo.bike_network(), edgeinfo.speed_limit(), shape, {}, {}, {},
@@ -525,6 +532,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // set new access mask
 
       // Update the length, curvature, and end node
+      double length = valhalla::midgard::length(shape);
       newedge.set_length(length);
       newedge.set_curvature(compute_curvature(shape));
       newedge.set_endnode(end_node);

@@ -67,6 +67,7 @@ protected:
   void init_trace(Api& request);
   std::vector<midgard::PointLL> init_height(Api& request);
   void init_transit_available(Api& request);
+  void apply_trace_location_defaults(valhalla::Location& loc) const;
 
   boost::property_tree::ptree config;
   sif::CostFactory factory;
@@ -85,6 +86,7 @@ protected:
   std::unordered_map<std::string, float> max_matrix_locations;
   size_t max_exclude_locations;
   float max_exclude_polygons_length;
+  float max_exclude_polygons_vertices;
   unsigned int max_reachability;
   unsigned int default_reachability;
   unsigned int max_radius;

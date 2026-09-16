@@ -2,6 +2,7 @@
 #include "baldr/graphreader.h"
 #include "gurka.h"
 #include "midgard/pointll.h"
+#include "test.h"
 
 #include <gtest/gtest.h>
 
@@ -216,12 +217,12 @@ TEST(Shortcuts, TruckSpeedPartiallySet) {
       {"AB",
        {{"highway", "motorway"},
         {"maxspeed", "100"},
-        {"maxspeed:hgv", "100"},
+        {"maxspeed:hgv", "90"},
         {"name", "High street"}}},
       {"BC",
        {{"highway", "motorway"},
         {"maxspeed", "100"},
-        {"maxspeed:hgv", "100"},
+        {"maxspeed:hgv", "90"},
         {"name", "High street"}}},
       {"CD", {{"highway", "motorway"}, {"maxspeed", "100"}, {"name", "High street"}}},
       {"DE", {{"highway", "motorway"}, {"maxspeed", "100"}, {"name", "High street"}}},
@@ -244,8 +245,10 @@ TEST(Shortcuts, TruckSpeedPartiallySet) {
       if (!edge->is_shortcut() || !(edge->forwardaccess() & baldr::kAutoAccess))
         continue;
 
-      EXPECT_GT(100, edge->truck_speed());
-      EXPECT_LT(90, edge->truck_speed());
+      // 4 equal-length edges, 2 have 100kmh and 2 have 90kmh for trucks which gives 95 as a result
+      EXPECT_EQ(95, edge->truck_speed());
+      // but as all 4 have the same 100kmh regular speed, shortcut also has 100kmh
+      EXPECT_EQ(100, edge->speed());
       found_shortcut = true;
     }
   }
@@ -439,4 +442,62 @@ TEST(Shortcuts, ShortcutRestrictions) {
     EXPECT_TRUE(std::get<1>(shortcut)->is_shortcut());
     EXPECT_NEAR(std::get<1>(shortcut)->length(), 7500, 1);
   }
+}
+
+TEST(Shortcuts, Duplicate) {
+  constexpr double gridsize = 50;
+
+  const std::string ascii_map = R"(
+                D
+                |
+      L         |                    M
+      |     ----C-------I----        |
+      |    /    |       |    \       |
+      A---B     |       |     G------H
+      |    \    |       |    /       |
+      |     ----J-------E----        |
+      K                 |            N
+                        |
+                        F
+  )";
+
+  const gurka::ways ways = {
+      {"ABCIGH", {{"highway", "tertiary"}, {"name", "Fabrieksgracht"}}},
+      {"BJEG", {{"highway", "tertiary"}, {"name", "Fabrieksgracht"}}},
+      {"DCJ", {{"highway", "residential"}, {"name", "Molenplantsoen"}}},
+      {"FEI", {{"highway", "residential"}, {"name", "Jan in 't Veltstraat "}}},
+      {"LAK", {{"highway", "primary"}, {"name", "Querstraße"}}},
+      {"MHN", {{"highway", "primary"}, {"name", "Querstraße"}}},
+
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/duplicate_shortcuts");
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  auto b = gurka::findNode(reader, layout, "B");
+  auto b_ni = reader.nodeinfo(b);
+
+  size_t found_shortcuts = 0;
+
+  auto edge_id = b;
+  edge_id.set_id(b_ni->edge_index());
+  auto* de = reader.directededge(edge_id);
+  std::vector<std::vector<midgard::PointLL>> shapes;
+  for (size_t i = 0; i < b_ni->edge_count(); ++i, ++de, edge_id++) {
+    found_shortcuts += de->is_shortcut();
+    if (de->is_shortcut()) {
+      shapes.push_back(reader.edgeinfo(edge_id).shape());
+    }
+  }
+  EXPECT_EQ(found_shortcuts, 2);
+
+  ASSERT_EQ(shapes.size(), 2);
+  EXPECT_EQ(shapes[0].size(), shapes[1].size());
+  ASSERT_EQ(shapes[0][0], shapes[1][0]);
+  EXPECT_FALSE(test::shape_equality(shapes[0], shapes[1]))
+      << "Expected shapes to differ: " << midgard::encode(shapes[0]) << " vs "
+      << midgard::encode(shapes[1]);
 }

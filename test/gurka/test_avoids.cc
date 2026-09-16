@@ -311,7 +311,7 @@ TEST_F(AvoidTest, ExcludeLevels) {
     };
 
     // should return the shortcut edge ID as well
-    auto avoid_edges = edges_in_rings(options.first, *reader, options.second, 10000);
+    auto avoid_edges = edges_in_rings(options.first, *reader, options.second, 10000, 1000);
     ASSERT_EQ(avoid_edges.size(), param.second) << edge_names(avoid_edges);
   }
 }
@@ -503,7 +503,7 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
 
   // should return the shortcut edge ID as well
   size_t found_shortcuts = 0;
-  auto avoid_edges = edges_in_rings(options, *reader, costing, 10000);
+  auto avoid_edges = edges_in_rings(options, *reader, costing, 10000, 1000);
   for (const auto& edge_id : avoid_edges) {
     if (reader->GetGraphTile(edge_id)->directededge(edge_id)->is_shortcut()) {
       found_shortcuts++;

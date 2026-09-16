@@ -11,6 +11,11 @@
    * FIXED: Do not require Python for building libvalhalla [#6303](https://github.com/valhalla/valhalla/pull/6303)
    * HOTFIX: Limit `sequence<T>::sort()` concurrency to 8 [#6316](https://github.com/valhalla/valhalla/pull/6316)
    * FIXED: read the predecessor edge levels from its own tile in reverse pedestrian transitions [#6291](https://github.com/valhalla/valhalla/pull/6291)
+   * FIXED: A proper rounding and guarding against zero when calculating `DirectedEdge::length` for BSS/transit/shortcut edges [#6319](https://github.com/valhalla/valhalla/pull/6319)
+   * FIXED: apply `sidewalk_factor` on `Use::kSidewalk` [#6322](https://github.com/valhalla/valhalla/pull/6322)
+   * FIXED: issues with shortcuts sharing the same start and end node [#6008](https://github.com/valhalla/valhalla/pull/6008)
+   * FIXED: check for empty coords in `linear_feature_factors` [#6328](https://github.com/valhalla/valhalla/pull/6328)
+   * FIXED: edge walking issues with `linear_cost_features` [#6327](https://github.com/valhalla/valhalla/pull/6327)
    * FIXED: Sequental writes in `sequence<T>::sort()` to stay hdd-friendly [#6320](https://github.com/valhalla/valhalla/pull/6320)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
@@ -22,6 +27,10 @@
    * ADDED: documentation page for the pedestrian areas feature [#6266](https://github.com/valhalla/valhalla/pull/6266)
    * ADDED: Add use_distance to truck, bus, taxi, motorcycle and motor_scooter cost [#6214](https://github.com/valhalla/valhalla/pull/6214)
    * ADDED: limitations, future work and performance sections to the pedestrian areas documentation [#6279](https://github.com/valhalla/valhalla/pull/6279)
+   * ADDED: Hebrew (`he-IL`) narrative language [#6267](https://github.com/valhalla/valhalla/pull/6267)
+   * UPDATED: Faster `exclude_polygons` [#6156](https://github.com/valhalla/valhalla/pull/6156)
+   * CHANGED: Rewrite conditional time range parsing without regex [#6230](https://github.com/valhalla/valhalla/pull/6230)
+   * ADDED: `thor.costmatrix.dijkstra_distance` config parameter [#6257](https://github.com/valhalla/valhalla/pull/6257)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
