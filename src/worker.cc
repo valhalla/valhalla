@@ -1699,18 +1699,19 @@ void store_cost_factor_locations(Options& options,
   locations->DeleteSubrange(offset, locations->size() - offset);
 }
 
-bool resolve_cost_factor_edges(Api& request,
+void resolve_cost_factor_edges(Api& request,
                                const sif::mode_costing_t& mode_costing,
                                const sif::TravelMode& mode,
                                baldr::GraphReader& reader,
                                double min_allowed_factor,
                                uint64_t max_allowed_edges) {
-  if (request.options().cost_factor_lines().empty()) {
-    return false;
+  auto& options = *request.mutable_options();
+  if (options.cost_factor_lines().empty()) {
+    return;
   }
-  add_cost_factor_edges(mode_costing, mode, reader, *request.mutable_options(), min_allowed_factor,
-                        max_allowed_edges);
-  return true;
+  add_cost_factor_edges(mode_costing, mode, reader, options, min_allowed_factor, max_allowed_edges);
+  mode_costing[static_cast<size_t>(mode)]->SetCostFactorEdges(
+      options.costings().find(options.costing_type())->second.options());
 }
 
 #ifdef ENABLE_SERVICES

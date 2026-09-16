@@ -89,21 +89,18 @@ void store_cost_factor_locations(Options& options,
                                  int offset);
 
 /**
- * Resolves each user provided cost factor line onto graph edges by edge walking its shape and stores
- * the result in the costing options, where DynamicCost picks the factors up. Costing must already be
- * parsed to drive the edge walk, and has to be parsed again afterwards for the resolved edges to
- * take effect.
+ * Resolves each user provided cost factor line onto graph edges by edge walking its shape, stores the
+ * result in the costing options and hands it to the costing. Costing must already be parsed, both to
+ * drive the edge walk and to receive the factors.
  *
  * @param request             the request holding the cost factor lines and costing options
- * @param mode_costing        costing used to edge walk the lines
+ * @param mode_costing        costing used to edge walk the lines and to apply the factors to
  * @param mode                travel mode used to edge walk the lines
  * @param reader              graph reader
  * @param min_allowed_factor  the smallest factor the config admits
  * @param max_allowed_edges   the most edges the config lets a request resolve
- *
- * @return true if any edges were resolved, i.e. costing needs to be parsed again
  */
-bool resolve_cost_factor_edges(Api& request,
+void resolve_cost_factor_edges(Api& request,
                                const sif::mode_costing_t& mode_costing,
                                const sif::TravelMode& mode,
                                baldr::GraphReader& reader,

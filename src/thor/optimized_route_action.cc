@@ -18,10 +18,8 @@ void thor_worker_t::optimized_route(Api& request) {
   auto& options = *request.mutable_options();
   adjust_locations(request);
   auto costing = parse_costing(request);
-  if (resolve_cost_factor_edges(request, mode_costing, mode, *reader, min_linear_cost_factor,
-                                max_linear_cost_edges)) {
-    costing = parse_costing(request);
-  }
+  resolve_cost_factor_edges(request, mode_costing, mode, *reader, min_linear_cost_factor,
+                            max_linear_cost_edges);
   controller = AttributesController(options);
 
   costmatrix_.set_interrupt(interrupt);

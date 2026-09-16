@@ -92,10 +92,8 @@ std::string thor_worker_t::matrix(Api& request) {
   auto& options = *request.mutable_options();
   adjust_locations(request);
   auto costing = parse_costing(request);
-  if (resolve_cost_factor_edges(request, mode_costing, mode, *reader, min_linear_cost_factor,
-                                max_linear_cost_edges)) {
-    costing = parse_costing(request);
-  }
+  resolve_cost_factor_edges(request, mode_costing, mode, *reader, min_linear_cost_factor,
+                            max_linear_cost_edges);
 
   bool has_time =
       check_matrix_time(request, options.prioritize_bidirectional() ? Matrix::CostMatrix
