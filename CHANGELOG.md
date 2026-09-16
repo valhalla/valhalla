@@ -13,7 +13,8 @@
    * FIXED: read the predecessor edge levels from its own tile in reverse pedestrian transitions [#6291](https://github.com/valhalla/valhalla/pull/6291)
    * FIXED: A proper rounding and guarding against zero when calculating `DirectedEdge::length` for BSS/transit/shortcut edges [#6319](https://github.com/valhalla/valhalla/pull/6319)
    * FIXED: apply `sidewalk_factor` on `Use::kSidewalk` [#6322](https://github.com/valhalla/valhalla/pull/6322)
-   * FIXED: a zero `linear_cost_factors` factor no longer discards the factors of every feature behind it [#6330](https://github.com/valhalla/valhalla/pull/6330)
+   * FIXED: issues with shortcuts sharing the same start and end node [#6008](https://github.com/valhalla/valhalla/pull/6008)
+   * FIXED: a zero `linear_cost_factors` factor no longer discards the factors of every feature behind it [#6329](https://github.com/valhalla/valhalla/pull/6329)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
@@ -27,7 +28,8 @@
    * ADDED: Hebrew (`he-IL`) narrative language [#6267](https://github.com/valhalla/valhalla/pull/6267)
    * UPDATED: Faster `exclude_polygons` [#6156](https://github.com/valhalla/valhalla/pull/6156)
    * CHANGED: Rewrite conditional time range parsing without regex [#6230](https://github.com/valhalla/valhalla/pull/6230)
-   * ADDED: support `linear_cost_factors` in `/sources_to_targets` and `/optimized_route` [#6330](https://github.com/valhalla/valhalla/pull/6330)
+   * ADDED: `thor.costmatrix.dijkstra_distance` config parameter [#6257](https://github.com/valhalla/valhalla/pull/6257)
+   * ADDED: support `linear_cost_factors` in `/sources_to_targets` and `/optimized_route` [#6329](https://github.com/valhalla/valhalla/pull/6329)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
