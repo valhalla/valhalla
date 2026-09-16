@@ -1189,6 +1189,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
           } else { // or an encoded polyline and a cost factor
             parse_line(linear_feat, l);
           }
+
+          if (l->shape_size() == 0) {
+            throw valhalla_exception_t{173, "feature coordinates are empty"};
+          }
         }
       } catch (const std::exception& e) { throw valhalla_exception_t{173, std::string(e.what())}; }
     }
