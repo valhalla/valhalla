@@ -299,9 +299,6 @@ if(ENABLE_SERVICES)
       message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
     endif()
   endif()
-  # must be defined globally, not per target: service_worker_t in worker.h grows a
-  # virtual work() under this define, so any tu compiled without it sees a different
-  # vtable layout and virtual calls dispatch to the wrong slot
   if(libprime_server_targets)
     get_target_property(_prime_server_inc ${libprime_server_targets} INTERFACE_INCLUDE_DIRECTORIES)
     if(_prime_server_inc)
