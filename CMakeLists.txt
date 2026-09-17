@@ -302,6 +302,12 @@ if(ENABLE_SERVICES)
   # must be defined globally, not per target: service_worker_t in worker.h grows a
   # virtual work() under this define, so any tu compiled without it sees a different
   # vtable layout and virtual calls dispatch to the wrong slot
+  if(libprime_server_targets)
+    get_target_property(_prime_server_inc ${libprime_server_targets} INTERFACE_INCLUDE_DIRECTORIES)
+    if(_prime_server_inc)
+      include_directories(SYSTEM ${_prime_server_inc})
+    endif()
+  endif()
   add_compile_definitions(ENABLE_SERVICES)
 endif()
 
