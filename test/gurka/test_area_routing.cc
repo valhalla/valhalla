@@ -372,3 +372,58 @@ TEST(area_routing, mapped_paths_inside_skip_generation) {
   }
   EXPECT_TRUE(used_shortcut);
 }
+
+TEST(area_routing, synthetic_node_ids_are_not_stored) {
+  const std::string ascii_map = R"(
+    F--------G
+    |        |
+    A----B   |
+    |    |   |
+    D----C   |
+         |   |
+         E---H
+  )";
+
+  const gurka::ways ways = {
+      {"ABCDA", {{"highway", "pedestrian"}, {"area", "yes"}, {"name", "square"}}},
+      {"FG", {{"highway", "footway"}, {"name", "top"}}},
+      {"GH", {{"highway", "footway"}, {"name", "right"}}},
+      {"EH", {{"highway", "footway"}, {"name", "bottom"}}},
+      {"FA", {{"highway", "footway"}, {"name", "entry"}}},
+      {"CE", {{"highway", "footway"}, {"name", "exit"}}},
+  };
+
+  // pinned so that the highest real id is known, the traversal's own nodes are numbered above it
+  constexpr uint64_t kMaxRealNodeId = 1008;
+  const gurka::nodes nodes = {
+      {"A", {{"osm_id", "1001"}}}, {"B", {{"osm_id", "1002"}}},
+      {"C", {{"osm_id", "1003"}}}, {"D", {{"osm_id", "1004"}}},
+      {"E", {{"osm_id", "1005"}}}, {"F", {{"osm_id", "1006"}}},
+      {"G", {{"osm_id", "1007"}}}, {"H", {{"osm_id", std::to_string(kMaxRealNodeId)}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_area_synthetic_node_ids",
+                               {{"mjolnir.concurrency", "1"},
+                                {"mjolnir.pedestrian_areas", "true"},
+                                {"mjolnir.keep_all_osm_node_ids", "true"}});
+
+  const auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  // the generated traversal has more shape points than it has real OSM nodes
+  bool found_traversal = false;
+  for (const auto& tile_id : reader->GetTileSet()) {
+    auto tile = reader->GetGraphTile(tile_id);
+    for (auto edge_id = tile_id; edge_id.id() < tile->header()->directededgecount(); ++edge_id) {
+      const auto* edge = tile->directededge(edge_id);
+      auto info = tile->edgeinfo(edge);
+      auto ids = info.osm_node_ids();
+      for (const auto id : ids) {
+        EXPECT_LE(id, kMaxRealNodeId) << "synthetic node id " << id << " leaked into EdgeInfo";
+        EXPECT_NE(id, 0) << "the marker for a synthetic node leaked into EdgeInfo";
+      }
+      found_traversal = found_traversal || ids.size() < info.shape().size();
+    }
+  }
+  EXPECT_TRUE(found_traversal);
+}

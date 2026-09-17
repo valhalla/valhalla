@@ -606,3 +606,36 @@ TEST(Standalone, BackwardTraceOnOnewayEdge) {
                                 "auto", {{"/elevation_interval", "30"}}),
                std::exception);
 }
+
+TEST(Standalone, DuplicateTracePointsEdgeIndex) {
+  const std::string ascii_map = R"(
+    A--1--B--2--C
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+  };
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/duplicate_trace_points");
+
+  std::string trace_json;
+  gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "1", "1", "2"}, "auto", {}, {},
+                   &trace_json, "");
+
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+  ASSERT_FALSE(result.HasParseError());
+
+  ASSERT_EQ(result["edges"].GetArray().Size(), 2);
+
+  // the duplicates are interpolated onto AB, only the last point is matched onto BC
+  std::vector<uint64_t> edge_indexes;
+  for (const auto& point : result["matched_points"].GetArray()) {
+    ASSERT_TRUE(point.HasMember("edge_index"));
+    edge_indexes.push_back(point["edge_index"].GetUint64());
+  }
+  EXPECT_EQ(edge_indexes, (std::vector<uint64_t>{0, 0, 0, 1}));
+}

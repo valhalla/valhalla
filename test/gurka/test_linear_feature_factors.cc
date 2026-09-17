@@ -191,7 +191,7 @@ TEST_F(LinearFeatureTest, simple_high_factor) {
       EXPECT_NEAR(e.start(), 0., 0.01);
       EXPECT_NEAR(e.end(), 1., 0.01);
     } else if (e.id() == std::get<0>(shortcut)) {
-      if (e.start() == 0.) {
+      if (e.start() < 0.01) {
         EXPECT_NEAR(e.end(), 0.275, 0.01);
       } else {
         EXPECT_NEAR(e.start(), 0.275, 0.01);
@@ -460,4 +460,251 @@ TEST_F(LinearFeatureTest, multi_shape_geojson) {
 
   // finally check the route
   gurka::assert::raw::expect_path(request, {"A2", "Fb", "Zb"});
+}
+
+/**
+ * The same shape as simple_high_factor, but for CostMatrix.
+ * */
+TEST_F(LinearFeatureTest, matrix_high_factor) {
+  std::string json_request = R"(
+  {
+    "sources": [{"lon": %s, "lat": %s}],
+    "targets": [{"lon": %s, "lat": %s}],
+    %s
+    "costing": "auto"
+  }
+  )";
+
+  auto build_request = [&](const std::string& factors) {
+    return (boost::format(json_request) % std::to_string(map.nodes.at("3").lng()) %
+            std::to_string(map.nodes.at("3").lat()) % std::to_string(map.nodes.at("2").lng()) %
+            std::to_string(map.nodes.at("2").lat()) % factors)
+        .str();
+  };
+
+  const auto factors = (boost::format(R"("linear_cost_factors": [{"shape": "%s", "factor": 200}],)") %
+                        encode_shape({"A", "B", "C"}, map.nodes))
+                           .str();
+
+  loki::loki_worker_t loki_worker(map.config);
+  thor::thor_worker_t thor_worker(map.config);
+
+  // baseline: straight down the motorway
+  Api baseline;
+  ParseApi(build_request(""), Options::sources_to_targets, baseline);
+  loki_worker.matrix(baseline);
+  loki_worker.cleanup();
+  thor_worker.matrix(baseline);
+  thor_worker.cleanup();
+  ASSERT_EQ(baseline.matrix().distances().size(), 1);
+
+  Api request;
+  ParseApi(build_request(factors), Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  loki_worker.cleanup();
+
+  // the endpoints got correlated onto the lines without disturbing sources/targets
+  ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
+  ASSERT_EQ(request.options().cost_factor_lines().at(0).locations().size(), 2);
+  EXPECT_EQ(request.options().sources_size(), 1);
+  EXPECT_EQ(request.options().targets_size(), 1);
+
+  thor_worker.matrix(request);
+  auto costing_options =
+      request.options().costings().find(request.options().costing_type())->second.options();
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  // AB, BC and the shortcut they make up, twice (once for each range)
+  ASSERT_EQ(costing_options.cost_factor_edges().size(), 4);
+  check_cost_factor_edge(costing_options.cost_factor_edges(), "A", "B", reader, map.nodes, 200, 0, 1);
+  check_cost_factor_edge(costing_options.cost_factor_edges(), "B", "C", reader, map.nodes, 200, 0, 1);
+
+  // avoiding the motorway makes for a longer path
+  ASSERT_EQ(request.matrix().distances().size(), 1);
+  EXPECT_GT(request.matrix().distances(0), baseline.matrix().distances(0));
+}
+
+/**
+ * Same, but through TimeDistanceMatrix
+ * */
+TEST_F(LinearFeatureTest, matrix_timedistancematrix) {
+  std::string json_request = R"(
+  {
+    "sources": [{"lon": %s, "lat": %s}],
+    "targets": [{"lon": %s, "lat": %s}],
+    %s
+    "costing": "auto"
+  }
+  )";
+
+  auto build_request = [&](const std::string& factors) {
+    return (boost::format(json_request) % std::to_string(map.nodes.at("3").lng()) %
+            std::to_string(map.nodes.at("3").lat()) % std::to_string(map.nodes.at("2").lng()) %
+            std::to_string(map.nodes.at("2").lat()) % factors)
+        .str();
+  };
+
+  const auto factors = (boost::format(R"("linear_cost_factors": [{"shape": "%s", "factor": 200}],)") %
+                        encode_shape({"A", "B", "C"}, map.nodes))
+                           .str();
+
+  auto config = map.config;
+  config.put("thor.source_to_target_algorithm", "timedistancematrix");
+  loki::loki_worker_t loki_worker(config);
+  thor::thor_worker_t thor_worker(config);
+
+  Api baseline;
+  ParseApi(build_request(""), Options::sources_to_targets, baseline);
+  loki_worker.matrix(baseline);
+  loki_worker.cleanup();
+  thor_worker.matrix(baseline);
+  thor_worker.cleanup();
+  ASSERT_EQ(baseline.matrix().algorithm(), Matrix::TimeDistanceMatrix);
+
+  Api request;
+  ParseApi(build_request(factors), Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  loki_worker.cleanup();
+  thor_worker.matrix(request);
+
+  ASSERT_EQ(request.matrix().algorithm(), Matrix::TimeDistanceMatrix);
+  auto costing_options =
+      request.options().costings().find(request.options().costing_type())->second.options();
+  EXPECT_EQ(costing_options.cost_factor_edges().size(), 4);
+
+  ASSERT_EQ(request.matrix().distances().size(), 1);
+  EXPECT_GT(request.matrix().distances(0), baseline.matrix().distances(0));
+}
+
+/**
+ * /optimized_route runs a matrix too, so it resolves the lines through the same path.
+ * */
+TEST_F(LinearFeatureTest, optimized_route) {
+  std::string json_request = R"(
+  {
+    "locations": [
+      {"lon": %s, "lat": %s},
+      {"lon": %s, "lat": %s},
+      {"lon": %s, "lat": %s}
+    ],
+    "linear_cost_factors": [{"shape": "%s", "factor": 200}],
+    "costing": "auto"
+  }
+  )";
+
+  auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("3").lng()) %
+                   std::to_string(map.nodes.at("3").lat()) % std::to_string(map.nodes.at("2").lng()) %
+                   std::to_string(map.nodes.at("2").lat()) % std::to_string(map.nodes.at("1").lng()) %
+                   std::to_string(map.nodes.at("1").lat()) % encode_shape({"A", "B", "C"}, map.nodes))
+                      .str();
+
+  loki::loki_worker_t loki_worker(map.config);
+  thor::thor_worker_t thor_worker(map.config);
+
+  Api request;
+  ParseApi(json_str, Options::optimized_route, request);
+  loki_worker.matrix(request);
+  loki_worker.cleanup();
+
+  ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
+  ASSERT_EQ(request.options().cost_factor_lines().at(0).locations().size(), 2);
+  EXPECT_EQ(request.options().sources_size(), 3);
+  EXPECT_EQ(request.options().targets_size(), 3);
+
+  thor_worker.optimized_route(request);
+  auto costing_options =
+      request.options().costings().find(request.options().costing_type())->second.options();
+  EXPECT_EQ(costing_options.cost_factor_edges().size(), 4);
+}
+
+// shape starts and ends within the default node snap tolerance of a node
+TEST_F(LinearFeatureTest, partial_edges_near_nodes) {
+  loki::loki_worker_t loki_worker(map.config);
+  thor::thor_worker_t thor_worker(map.config);
+
+  std::string json_request = R"(
+  {
+    "locations": [
+      {"lon": %s, "lat": %s},
+      {"lon": %s, "lat": %s}
+    ],
+    "linear_cost_factors": [
+      {"shape": "%s", "factor": %s}
+    ],
+    "costing": "auto"
+  }
+  )";
+
+  const auto& B = map.nodes.at("B");
+  const auto& C = map.nodes.at("C");
+  const auto& D = map.nodes.at("D");
+  double start = 3. / B.Distance(C);
+  double end = 1. - 3. / C.Distance(D);
+  std::vector<midgard::PointLL> shape{B.PointAlongSegment(C, start), C, C.PointAlongSegment(D, end)};
+
+  auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("3").lng()) %
+                   std::to_string(map.nodes.at("3").lat()) % std::to_string(map.nodes.at("2").lng()) %
+                   std::to_string(map.nodes.at("2").lat()) % midgard::encode(shape, 1e6) % "10")
+                      .str();
+
+  Api request;
+  ParseApi(json_str, Options::route, request);
+  loki_worker.route(request);
+  loki_worker.cleanup();
+  ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
+
+  thor_worker.route(request);
+  auto costing_options =
+      request.options().costings().find(request.options().costing_type())->second.options();
+  // BC, CD and the shortcut entry for each
+  EXPECT_EQ(costing_options.cost_factor_edges().size(), 4);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  check_cost_factor_edge(costing_options.cost_factor_edges(), "B", "C", reader, map.nodes, 10., start,
+                         1.);
+  check_cost_factor_edge(costing_options.cost_factor_edges(), "C", "D", reader, map.nodes, 10., 0.,
+                         end);
+}
+
+TEST_F(LinearFeatureTest, empty_shape) {
+  loki::loki_worker_t loki_worker(map.config);
+  thor::thor_worker_t thor_worker(map.config);
+
+  std::string json_request = R"(
+  {
+    "locations": [
+      {"lon": %s, "lat": %s},
+      {"lon": %s, "lat": %s}
+    ], 
+    "linear_cost_factors": [
+      {"type": "Feature", "geometry": {"type": "LineString", "coordinates": %s}, "properties": {"factor": %s}},
+      {"type": "Feature", "geometry": {"type": "LineString", "coordinates": %s}, "properties": {"factor": %s}}
+    ], 
+    "costing": "auto"
+  }
+  )";
+
+  auto format_coordinates = [&](const std::vector<std::string>& waypoints) {
+    rapidjson::writer_wrapper_t writer;
+    writer.set_precision(6);
+    writer.start_array();
+    for (const auto& c : waypoints) {
+      writer.start_array();
+      writer(map.nodes.at(c).lng());
+      writer(map.nodes.at(c).lat());
+      writer.end_array();
+    }
+    writer.end_array();
+    return std::string(writer.get_buffer());
+  };
+
+  auto json_str =
+      (boost::format(json_request) % std::to_string(map.nodes.at("E").lng()) %
+       std::to_string(map.nodes.at("E").lat()) % std::to_string(map.nodes.at("Z").lng()) %
+       std::to_string(map.nodes.at("Z").lat()) % "" % "100" % format_coordinates({"F", "b"}) % "0.1")
+          .str();
+
+  std::cerr << "Valhalla request is: \n" << json_str << "\n";
+
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, json_str), valhalla_exception_t);
 }
