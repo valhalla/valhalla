@@ -20,6 +20,8 @@
    * FIXED: apply `sidewalk_factor` on `Use::kSidewalk` [#6322](https://github.com/valhalla/valhalla/pull/6322)
    * FIXED: issues with shortcuts sharing the same start and end node [#6008](https://github.com/valhalla/valhalla/pull/6008)
    * FIXED: check for empty coords in `linear_feature_factors` [#6328](https://github.com/valhalla/valhalla/pull/6328)
+   * FIXED: edge walking issues with `linear_cost_features` [#6327](https://github.com/valhalla/valhalla/pull/6327)
+   * FIXED: a zero `linear_cost_factors` factor no longer discards the factors of every feature behind it [#6329](https://github.com/valhalla/valhalla/pull/6329)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
@@ -34,6 +36,7 @@
    * UPDATED: Faster `exclude_polygons` [#6156](https://github.com/valhalla/valhalla/pull/6156)
    * CHANGED: Rewrite conditional time range parsing without regex [#6230](https://github.com/valhalla/valhalla/pull/6230)
    * ADDED: `thor.costmatrix.dijkstra_distance` config parameter [#6257](https://github.com/valhalla/valhalla/pull/6257)
+   * ADDED: support `linear_cost_factors` in `/sources_to_targets` and `/optimized_route` [#6329](https://github.com/valhalla/valhalla/pull/6329)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**
@@ -99,6 +102,8 @@
    * CHANGED: `CostMatrix` reverse trees use time-dependent speeds with `invariant` date_time [#6168](https://github.com/valhalla/valhalla/pull/6168)
    * ADDED: support for multiple --region args in valhalla_build_extract [#6172](https://github.com/valhalla/valhalla/pull/6172)
    * ADDED: `incidents` layer to `/tile` [#5974](https://github.com/valhalla/valhalla/pull/5974)
+   * ADDED: full windows support via latest prime_server dependency [#6105](https://github.com/valhalla/valhalla/pull/6105)
+
 
 ## Release Date: 2026-04-28 Valhalla 3.7.0
 * **Removed**

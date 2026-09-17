@@ -1,4 +1,7 @@
-name: Build Node.js bindings
+# TODO: make this like the python workflow. build and unit test the node bindings in the regular
+# linux, windows and osx builds (ENABLE_NODE_BINDINGS on) so every pr exercises them, and shrink
+# this workflow to just packaging and publishing the npm tarball on merge to master or on tags.
+name: node.js
 
 on:
   push:
@@ -33,21 +36,24 @@ concurrency:
 
 jobs:
   build_nodejs_bindings:
-    name: Build Node.js bindings (${{ matrix.os }}-${{ matrix.arch }})
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container }}
     strategy:
       matrix:
         include:
-          - os: linux
+          - name: linux
+            os: linux
             arch: x64
             runner: ubuntu-latest
             container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
-          - os: linux
+          - name: linux arm
+            os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
             container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
-          - os: macos
+          - name: osx
+            os: macos
             arch: arm64
             runner: macos-14
             container: null
@@ -118,7 +124,7 @@ jobs:
           path: nodejs_dist.tar
   
   package_nodejs_bindings:
-    name: Package Node.js bindings for NPM
+    name: package
     runs-on: ubuntu-latest
     needs: [build_nodejs_bindings]
     steps:
@@ -155,22 +161,25 @@ jobs:
           path: valhalla-npm-package/*.tgz
 
   verify_nodejs_package:
-    name: Verify NPM package (${{ matrix.os }}-${{ matrix.arch }})
+    name: verify ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     needs: [package_nodejs_bindings]
     container: ${{ matrix.container }}
     strategy:
       matrix:
         include:
-          - os: linux
+          - name: linux
+            os: linux
             arch: x64
             runner: ubuntu-latest
             container: node:18
-          - os: linux
+          - name: linux arm
+            os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
             container: node:18
-          - os: macos
+          - name: osx
+            os: macos
             arch: arm64
             runner: macos-14
             container: null
@@ -222,7 +231,7 @@ jobs:
           node --test src/bindings/nodejs/test/test-integration.js
 
   publish_npm:
-    name: Publish to NPM
+    name: publish
     runs-on: ubuntu-latest
     needs: [verify_nodejs_package]
     if: ${{ (startsWith(github.ref, 'refs/tags/') || (github.event_name == 'schedule')) && (github.repository_owner == 'valhalla') }}

@@ -112,12 +112,20 @@ void loki_worker_t::matrix(Api& request) {
   google::protobuf::RepeatedPtrField<Location> sources_targets;
   sources_targets.MergeFrom(options.sources());
   sources_targets.MergeFrom(options.targets());
+  const auto sources_targets_size = sources_targets.size();
+
+  // maybe squeeze in the first and last locations of each user specified feature for cost factor
+  // lines as we'll need those for edge walking
+  for (int i = add_cost_factor_locations(options, &sources_targets); i < sources_targets.size();
+       ++i) {
+    parse_location(sources_targets.at(i));
+  }
 
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
     search_.search(sources_targets, mode_costing[static_cast<size_t>(mode)]);
-    for (int i = 0; i < sources_targets.size(); ++i) {
+    for (int i = 0; i < sources_targets_size; ++i) {
       const auto& l = sources_targets[i];
       if (i < options.sources_size()) {
         options.mutable_sources(i)->CopyFrom(l);
@@ -139,6 +147,9 @@ void loki_worker_t::matrix(Api& request) {
         }
       }
     }
+
+    // store the correlations for the cost factor lines and drop their endpoints again
+    store_cost_factor_locations(options, &sources_targets, sources_targets_size);
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 
   // are all the locations in the same color regions
@@ -147,7 +158,7 @@ void loki_worker_t::matrix(Api& request) {
   }
   bool connected = false;
   for (const auto& c : color_counts) {
-    if (static_cast<int>(c.second) == sources_targets.size()) {
+    if (static_cast<int>(c.second) == sources_targets_size) {
       connected = true;
       break;
     }

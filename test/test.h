@@ -21,12 +21,6 @@
 #include <unordered_map>
 #include <vector>
 
-#ifndef _MSC_VER
-#include <sys/mman.h>
-#endif
-
-#include <sys/stat.h>
-
 namespace test {
 
 // Return a random number inside [0, 1)

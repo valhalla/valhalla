@@ -49,6 +49,28 @@ endif()
 set_target_properties(_valhalla PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla)
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+# On windows from python 3.8+ there is no more searching for dlls on path for your modules. the only thing
+# that seemed to work was copying them next to each .pyd file so that stubgen finds them using windows
+# default of looking at siblings in the directory. lLinux/mac use RPATH for this. because some deps have
+# private shared libs we copy with a glob because otherwise we dont know the names of those deps
+if(WIN32)
+  set(_pybind_dll_dirs "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin")
+  foreach(_prefix IN LISTS CMAKE_PREFIX_PATH)
+    if(IS_DIRECTORY "${_prefix}/bin")
+      list(APPEND _pybind_dll_dirs "${_prefix}/bin")
+    endif()
+  endforeach()
+  set(_pybind_dlls)
+  foreach(_dir IN LISTS _pybind_dll_dirs)
+    file(GLOB _these "${_dir}/*.dll")
+    list(APPEND _pybind_dlls ${_these})
+  endforeach()
+  add_custom_command(TARGET _valhalla POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_RUNTIME_DLLS:_valhalla> ${_pybind_dlls} $<TARGET_FILE_DIR:_valhalla>
+    COMMAND_EXPAND_LISTS)
+endif()
+
 # Generate Python type stubs (.pyi) from the compiled extension modules.
 # Stubs are committed to the source tree and refreshed on every build;
 # INCLUDE_PRIVATE keeps "_"-prefixed members in the output; the POST_BUILD
