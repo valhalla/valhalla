@@ -1422,10 +1422,12 @@ function filter_tags_generic(kv)
     local access_backward = any_in(motor_vehicle, mv_backward)
     kv["auto_backward"] = access_backward
     kv["truck_backward"] = access_backward
-    kv["bus_backward"] = access_backward
-    kv["taxi_backward"] = access_backward
-    kv["moped_backward"] = access_backward
-    kv["motorcycle_backward"] = access_backward
+    kv["bus_backward"] = any_in(bus, kv["bus:backward"]) or access_backward
+    kv["taxi_backward"] = any_in(taxi, kv["taxi:backward"]) or access_backward
+    kv["moped_backward"] = any_in(moped, kv["moped:backward"]) or
+                           any_in(moped, kv["mofa:backward"]) or
+                           access_backward
+    kv["motorcycle_backward"] = any_in(motor_vehicle, kv["motorcycle:backward"]) or access_backward
   end
   if kv["foot:backward"] ~= nil then
     kv["pedestrian_backward"] = any_in(foot, kv["foot:backward"])
