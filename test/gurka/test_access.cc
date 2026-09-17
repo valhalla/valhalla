@@ -653,6 +653,35 @@ TEST(Standalone, AccessForwardBackward) {
   }
 }
 
+TEST(Standalone, ModeBackwardOverrides) {
+  const std::string ascii_map = R"(
+    A----B----C
+  )";
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"highway", "primary"},
+        {"vehicle:backward", "no"},
+        {"bus:backward", "designated"},
+        {"taxi:backward", "yes"}}},
+      {"BC", {{"highway", "primary"}, {"vehicle:backward", "yes"}, {"bus:backward", "no"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_access_mode_backward", build_config);
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  const auto* BA = std::get<3>(gurka::findEdge(reader, layout, "AB", "B"));
+  EXPECT_FALSE(BA->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_TRUE(BA->forwardaccess() & baldr::kBusAccess);
+  EXPECT_TRUE(BA->forwardaccess() & baldr::kTaxiAccess);
+
+  const auto* CB = std::get<3>(gurka::findEdge(reader, layout, "BC", "C"));
+  EXPECT_TRUE(CB->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_FALSE(CB->forwardaccess() & baldr::kBusAccess);
+}
+
 TEST(Standalone, ViaFerrata) {
   const std::string ascii_map = R"(A----B----C)";
   const gurka::ways ways = {{"AB", {{"highway", "via_ferrata"}, {"sac_scale", "hiking"}}},
