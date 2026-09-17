@@ -146,6 +146,7 @@ set(valhalla_hdrs
 
 set(valhalla_src
     config.cc
+    filesystem_utils.cc
     worker.cc
     proto_conversions.cc
     exceptions.cc
