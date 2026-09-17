@@ -1332,6 +1332,32 @@ TEST_P(TestConnectionCheck, MultipleTrivialRoutes) {
 
 INSTANTIATE_TEST_SUITE_P(connection_check, TestConnectionCheck, ::testing::Values("1", "0"));
 
+TEST(StandAlone, TrivialRouteBeginEndNode) {
+  const std::string ascii_map = R"(
+    A--B--1------------C
+       |               |
+       E---------------F
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
+      {"BE", {{"highway", "residential"}}}, {"EF", {{"highway", "residential"}}},
+      {"FC", {{"highway", "residential"}}},
+  };
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_trivial_end_node", {});
+
+  auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"B"}, "auto",
+                                 {{"/shape_format", "polyline6"}});
+  EXPECT_EQ(matrix.matrix().distances(0), 300);
+  EXPECT_EQ(matrix.matrix().shapes(0), encode_shape({"1", "B"}, layout));
+
+  matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"B"}, {"1"}, "auto",
+                            {{"/shape_format", "polyline6"}});
+  EXPECT_EQ(matrix.matrix().distances(0), 300);
+  EXPECT_EQ(matrix.matrix().shapes(0), encode_shape({"B", "1"}, layout));
+}
+
 TEST(StandAlone, TrivialKeepExpanding) {
   // target candidates includes AB but should be penalized
   // so that path 1B, BC, Cx has less cost than the trivial one
