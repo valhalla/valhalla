@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 import re
-from tempfile import NamedTemporaryFile
+from tempfile import TemporaryDirectory
 import unittest
 from valhalla import Actor, ValhallaError, get_config, VALHALLA_PRINT_VERSION
 from valhalla.valhalla_build_config import config as default_config
@@ -182,14 +182,14 @@ class TestBindings(unittest.TestCase):
         self.assertEqual(str(e), e.message)
 
     def test_change_config(self):
-        with NamedTemporaryFile('w+') as tmp:
+        with TemporaryDirectory() as tmp_dir:
+            config_path = os.path.join(tmp_dir, "config.json")
             config = get_config(self.extract_path, self.tiles_path)
             config['service_limits']['bicycle']['max_distance'] = 1
-            json.dump(config, tmp, indent=2)
+            with open(config_path, 'w') as f:
+                json.dump(config, f, indent=2)
 
-            tmp.seek(0)
-
-            actor = Actor(str(tmp.name))
+            actor = Actor(config_path)
 
             with self.assertRaises(ValhallaError) as e:
                 actor.route(json.dumps({"locations":[{"lat":52.08813,"lon":5.03231},{"lat":52.09987,"lon":5.14913}],"costing":"bicycle","directions_options":{"language":"ru-RU"}}))
