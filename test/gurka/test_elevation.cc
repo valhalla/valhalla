@@ -60,7 +60,8 @@ TEST(Standalone, ElevationCompareToSkadi) {
              Q---R-----S
 
     T--3--U        separate components, far from the cluster and not to scale
-    V-4-W-5-X-6-Y
+    V-4-W-5-X-6-Y                     motorway, contracts to one shortcut
+    Z--0=b=8~~9--7                    plain, bridge, tunnel, ferry
   )";
 
   const gurka::ways ways = {
@@ -78,6 +79,10 @@ TEST(Standalone, ElevationCompareToSkadi) {
       {"V4W", {{"highway", "motorway"}, {"name", "Ridge Freeway"}}},
       {"W5X", {{"highway", "motorway"}, {"name", "Ridge Freeway"}}},
       {"X6Y", {{"highway", "motorway"}, {"name", "Ridge Freeway"}}},
+      {"Z0", {{"highway", "secondary"}, {"name", "Harbour Road"}}},
+      {"0b8", {{"highway", "secondary"}, {"name", "Harbour Road"}, {"bridge", "yes"}}},
+      {"89", {{"highway", "secondary"}, {"name", "Harbour Road"}, {"tunnel", "yes"}}},
+      {"97", {{"route", "ferry"}, {"motor_vehicle", "yes"}, {"name", "The Crossing"}}},
   };
 
   // Create our layout based on real world data.
@@ -117,6 +122,12 @@ TEST(Standalone, ElevationCompareToSkadi) {
   layout.insert({"X", {-76.6000, 40.40}});
   layout.insert({"6", {-76.5875, 40.40}});
   layout.insert({"Y", {-76.5750, 40.40}});
+  layout.insert({"Z", {-76.70, 40.30}});
+  layout.insert({"0", {-76.68, 40.30}});
+  layout.insert({"b", {-76.67, 40.30}});
+  layout.insert({"8", {-76.66, 40.30}});
+  layout.insert({"9", {-76.64, 40.30}});
+  layout.insert({"7", {-76.62, 40.30}});
 
   // create a fake elevation tile over the gurka map area
   midgard::PointLL bottom_left(-77, 40), upper_right(-76, 41);
@@ -322,8 +333,21 @@ TEST(Standalone, ElevationCompareToSkadi) {
     }
     ASSERT_GT(shortcuts, 0u) << "no shortcuts were built, so the check above proves nothing";
 
-    ASSERT_GT(postings(gurka::findEdgeByNodes(reader, layout, "V", "W")), 0u)
-        << "base edges must still carry their postings";
+    // an ordinary edge keeps its postings; anything the runtime can interpolate stores none
+    ASSERT_GT(postings(gurka::findEdgeByNodes(reader, layout, "V", "W")), 0u) << "plain motorway";
+    ASSERT_GT(postings(gurka::findEdgeByNodes(reader, layout, "Z", "0")), 0u) << "plain secondary";
+
+    const auto bridge = gurka::findEdgeByNodes(reader, layout, "0", "8");
+    ASSERT_TRUE(std::get<1>(bridge)->bridge()) << "way is not tagged as a bridge";
+    EXPECT_EQ(postings(bridge), 0u) << "bridge";
+
+    const auto tunnel = gurka::findEdgeByNodes(reader, layout, "8", "9");
+    ASSERT_TRUE(std::get<1>(tunnel)->tunnel()) << "way is not tagged as a tunnel";
+    EXPECT_EQ(postings(tunnel), 0u) << "tunnel";
+
+    const auto ferry = gurka::findEdgeByNodes(reader, layout, "9", "7");
+    ASSERT_EQ(std::get<1>(ferry)->use(), baldr::Use::kFerry) << "way is not a ferry";
+    EXPECT_EQ(postings(ferry), 0u) << "ferry";
   }
 
   // routing over the contracted chain still returns a profile, because FormPath recovers the
@@ -358,6 +382,51 @@ TEST(Standalone, ElevationCompareToSkadi) {
     ASSERT_EQ(elevation->Size(), heights->Size());
     for (rapidjson::SizeType i = 0; i < elevation->Size(); ++i) {
       EXPECT_NEAR((*elevation)[i].GetFloat(), (*heights)[i].GetFloat(), 0.5f) << "posting " << i;
+    }
+  }
+
+  // a route across the bridge, tunnel and ferry still gets a complete profile
+  {
+    std::string route_json;
+    gurka::do_action(valhalla::Options::route, map, {"Z", "7"}, "auto",
+                     {{"/elevation_interval", "30"},
+                      {"/locations/0/minimum_reachability", "0"},
+                      {"/locations/1/minimum_reachability", "0"}},
+                     {}, &route_json);
+
+    rapidjson::Document result;
+    result.Parse(route_json.c_str());
+    ASSERT_FALSE(result.HasParseError());
+    auto elevation = rapidjson::get_child_optional(result, "/trip/legs/0/elevation");
+    ASSERT_TRUE(elevation && elevation->IsArray());
+    ASSERT_GT(elevation->Size(), 150u) << "the whole ~6km chain should be covered at 30m";
+    for (const auto& e : elevation->GetArray()) {
+      EXPECT_NE(e.GetFloat(), baldr::kNoElevationData);
+    }
+  }
+
+  // starting mid-bridge takes SetElevation's trimmed branch, which interpolates the stored
+  // array rather than copying it
+  {
+    std::string route_json;
+    gurka::do_action(valhalla::Options::route, map, {"b", "7"}, "auto",
+                     {{"/elevation_interval", "30"},
+                      {"/locations/0/minimum_reachability", "0"},
+                      {"/locations/1/minimum_reachability", "0"}},
+                     {}, &route_json);
+
+    rapidjson::Document result;
+    result.Parse(route_json.c_str());
+    ASSERT_FALSE(result.HasParseError());
+    auto elevation = rapidjson::get_child_optional(result, "/trip/legs/0/elevation");
+    ASSERT_TRUE(elevation && elevation->IsArray());
+    // proves the origin really snapped mid-bridge: node 8 would give 3.4km, node 0 would give 5.1km
+    auto length = rapidjson::get_child_optional(result, "/trip/legs/0/summary/length");
+    ASSERT_TRUE(length && length->IsNumber());
+    EXPECT_NEAR(length->GetDouble(), 4.24, 0.15) << "origin did not snap mid-edge";
+    ASSERT_GT(elevation->Size(), 100u) << "~4km from mid-bridge to the far side of the ferry";
+    for (const auto& e : elevation->GetArray()) {
+      EXPECT_NE(e.GetFloat(), baldr::kNoElevationData);
     }
   }
 
