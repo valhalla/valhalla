@@ -87,6 +87,12 @@
         "0": "<PREVIOUS_STREET_NAMES> diventa <STREET_NAMES>."
       }
     },
+    "bike_share_verbal": {
+      "phrases": {
+        "0": "Noleggia una bici dalla stazione del bike sharing.",
+        "1": "Riconsegna la bici alla stazione di bike sharing."
+      }
+    },
     "continue": {
       "phrases": {
         "0": "Continua.",
