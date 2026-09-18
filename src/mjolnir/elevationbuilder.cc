@@ -221,7 +221,10 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
       // Bridges, tunnels, ferries are special cases. Increment the new edge info offset.
       std::vector<int8_t> encoded;
       auto wayid = tilebuilder.edgeinfo(&directededge).wayid();
-      if (directededge.bridge() || directededge.tunnel() || directededge.use() == Use::kFerry) {
+      if (directededge.is_shortcut()) {
+        // duplicates the base edges, and FormPath recovers shortcuts so it is never read
+      } else if (directededge.bridge() || directededge.tunnel() ||
+                 directededge.use() == Use::kFerry) {
         encoded = encode_btf_elevation(sample, shape, length, wayid);
       } else {
         encoded = encode_edge_elevation(sample, shape, length, wayid);

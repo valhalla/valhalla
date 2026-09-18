@@ -1,3 +1,5 @@
+#include "baldr/graphconstants.h"
+#include "baldr/graphreader.h"
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
@@ -56,6 +58,9 @@ TEST(Standalone, ElevationCompareToSkadi) {
              |   |     |
              |   |     |
              Q---R-----S
+
+    T--3--U        separate components, far from the cluster and not to scale
+    V-4-W-5-X-6-Y
   )";
 
   const gurka::ways ways = {
@@ -70,6 +75,9 @@ TEST(Standalone, ElevationCompareToSkadi) {
       {"HIJ", {{"highway", "secondary"}, {"name", "East Main Street"}}},
       {"EABC", {{"highway", "service"}, {"service", "driveway"}}},
       {"T3U", {{"highway", "service"}}},
+      {"V4W", {{"highway", "motorway"}, {"name", "Ridge Freeway"}}},
+      {"W5X", {{"highway", "motorway"}, {"name", "Ridge Freeway"}}},
+      {"X6Y", {{"highway", "motorway"}, {"name", "Ridge Freeway"}}},
   };
 
   // Create our layout based on real world data.
@@ -101,6 +109,14 @@ TEST(Standalone, ElevationCompareToSkadi) {
   layout.insert({"T", {-76.8, 40.2}});
   layout.insert({"3", {-76.79, 40.21}});
   layout.insert({"U", {-76.78, 40.22}});
+  // a separate component, clear of the bicycle routes asserted above
+  layout.insert({"V", {-76.6500, 40.40}});
+  layout.insert({"4", {-76.6375, 40.40}});
+  layout.insert({"W", {-76.6250, 40.40}});
+  layout.insert({"5", {-76.6125, 40.40}});
+  layout.insert({"X", {-76.6000, 40.40}});
+  layout.insert({"6", {-76.5875, 40.40}});
+  layout.insert({"Y", {-76.5750, 40.40}});
 
   // create a fake elevation tile over the gurka map area
   midgard::PointLL bottom_left(-77, 40), upper_right(-76, 41);
@@ -275,6 +291,94 @@ TEST(Standalone, ElevationCompareToSkadi) {
                                         ("/trip/legs/" + std::to_string(leg_index) + "/elevation")
                                             .c_str());
       EXPECT_FALSE(elevation && elevation->IsArray());
+    }
+  }
+
+  // shortcuts keep mean elevation and grade, but not the postings
+  {
+    baldr::GraphReader reader(map.config.get_child("mjolnir"));
+    auto postings = [&reader](const auto& found) {
+      const auto* edge = std::get<1>(found);
+      auto info = reader.GetGraphTile(std::get<0>(found))->edgeinfo(edge);
+      double interval = 0.0;
+      auto encoded = info.encoded_elevation(edge->length(), interval);
+      EXPECT_EQ(info.has_elevation(), !encoded.empty());
+      EXPECT_NE(info.mean_elevation(), baldr::kNoElevationData);
+      return encoded.size();
+    };
+
+    size_t shortcuts = 0;
+    for (auto tile_id : reader.GetTileSet()) {
+      auto tile = reader.GetGraphTile(tile_id);
+      for (const auto& edge : tile->GetDirectedEdges()) {
+        if (!edge.is_shortcut())
+          continue;
+        ++shortcuts;
+        EXPECT_FALSE(tile->edgeinfo(&edge).has_elevation())
+            << "shortcut postings duplicate its base edges and are never read";
+        EXPECT_NE(tile->edgeinfo(&edge).mean_elevation(), baldr::kNoElevationData);
+        EXPECT_NE(edge.weighted_grade(), 0u) << "costing reads grade on shortcuts";
+      }
+    }
+    ASSERT_GT(shortcuts, 0u) << "no shortcuts were built, so the check above proves nothing";
+
+    ASSERT_GT(postings(gurka::findEdgeByNodes(reader, layout, "V", "W")), 0u)
+        << "base edges must still carry their postings";
+  }
+
+  // routing over the contracted chain still returns a profile, because FormPath recovers the
+  // shortcut into base edges that do carry postings
+  {
+    std::string route_json;
+    gurka::do_action(valhalla::Options::route, map, {"V", "Y"}, "auto",
+                     {{"/elevation_interval", "30"},
+                      {"/locations/0/minimum_reachability", "0"},
+                      {"/locations/1/minimum_reachability", "0"}},
+                     {}, &route_json);
+
+    rapidjson::Document result;
+    result.Parse(route_json.c_str());
+    ASSERT_FALSE(result.HasParseError());
+    auto elevation = rapidjson::get_child_optional(result, "/trip/legs/0/elevation");
+    auto shape = rapidjson::get_child_optional(result, "/trip/legs/0/shape");
+    ASSERT_TRUE(elevation && elevation->IsArray());
+    ASSERT_TRUE(shape && shape->IsString());
+    ASSERT_GT(elevation->Size(), 150u) << "the whole ~6km chain should be covered at 30m";
+
+    // same skadi comparison the bicycle legs above make, over a path built from a shortcut
+    std::string height_json;
+    std::string request = R"({"height_precision":1,"resample_distance":30,"encoded_polyline":")" +
+                          json_escape(shape->GetString()) + R"("})";
+    gurka::do_action(valhalla::Options::height, map, request, {}, &height_json);
+
+    rapidjson::Document height_result;
+    height_result.Parse(height_json.c_str());
+    auto heights = rapidjson::get_child_optional(height_result, "/height");
+    ASSERT_TRUE(heights && heights->IsArray());
+    ASSERT_EQ(elevation->Size(), heights->Size());
+    for (rapidjson::SizeType i = 0; i < elevation->Size(); ++i) {
+      EXPECT_NEAR((*elevation)[i].GetFloat(), (*heights)[i].GetFloat(), 0.5f) << "posting " << i;
+    }
+  }
+
+  // trace_attributes serves the same profile and still reports mean elevation per edge
+  {
+    std::string trace_json;
+    gurka::do_action(valhalla::Options::trace_attributes, map, {"V", "4", "W", "5", "X", "6", "Y"},
+                     "auto", {{"/elevation_interval", "30"}}, {}, &trace_json);
+
+    rapidjson::Document result;
+    result.Parse(trace_json.c_str());
+    ASSERT_FALSE(result.HasParseError());
+    auto elevation = rapidjson::get_child_optional(result, "/elevation");
+    ASSERT_TRUE(elevation && elevation->IsArray());
+    ASSERT_GT(elevation->Size(), 150u);
+
+    auto edges = rapidjson::get_child_optional(result, "/edges");
+    ASSERT_TRUE(edges && edges->IsArray());
+    ASSERT_GT(edges->GetArray().Size(), 0u);
+    for (const auto& edge : edges->GetArray()) {
+      EXPECT_TRUE(edge.HasMember("mean_elevation")) << "omitted only when it is kNoElevationData";
     }
   }
 }
