@@ -945,8 +945,8 @@ void CostMatrix::CheckConnections(const uint32_t loc_idx,
         source_edge = find_correlated_edge(options.sources(opp_loc_idx), opp_label.edgeid());
         target_edge = find_correlated_edge(options.targets(loc_idx), opp_label.edgeid());
 
-        traversed_portion = source_edge->percent_along();
-        opp_traversed_portion = 1.0f - target_edge->percent_along();
+        traversed_portion = target_edge->percent_along();
+        opp_traversed_portion = 1.0f - source_edge->percent_along();
       }
 
       // if source percent along edge is larger than target percent along,
