@@ -1515,7 +1515,13 @@ void BuildLocalTiles(const unsigned int thread_count,
 namespace valhalla::mjolnir {
 
 // Key used to sort nodes spatially within a tile.
-uint32_t GetSortKey(const OSMNode& node, const midgard::Tiles<midgard::PointLL>& tiling) {
+uint32_t GetSortKey(const OSMNode& node,
+                    const midgard::Tiles<midgard::PointLL>& tiling,
+                    const bool spatial_sort) {
+  if (!spatial_sort) {
+    return 0;
+  }
+
   const auto ll = node.latlng();
   const auto tile_id = tiling.TileId(ll);
   if (tile_id < 0) {
@@ -1534,11 +1540,15 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
   uint8_t level = TileHierarchy::levels().back().level;
   auto tiling = TileHierarchy::get_tiling(level);
 
+  const bool spatial_sort = pt.get<bool>("mjolnir.data_processing.sort_nodes_spatially", true);
+  LOG_INFO(spatial_sort ? "Sorting nodes within each tile along a Hilbert curve"
+                        : "Spatial sorting of nodes within each tile is disabled");
+
   // Make the edges and nodes in the graph
   ConstructEdges(
       ways_file, way_nodes_file, nodes_file, edges_file,
       [&level](const OSMNode& node) { return TileHierarchy::GetGraphId(node.latlng(), level); },
-      [&tiling](const OSMNode& node) { return GetSortKey(node, tiling); },
+      [&tiling, spatial_sort](const OSMNode& node) { return GetSortKey(node, tiling, spatial_sort); },
       pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   const uint32_t concurrency =
