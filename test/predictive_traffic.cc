@@ -63,7 +63,7 @@ TEST(PredictiveTraffic, test_get_speed) {
   GraphReader reader(config.get_child("mjolnir"));
 
   // fixture traffic tile 0/003/196.gph
-  GraphId id("0/3196/0");
+  GraphId id("0/3196/1155");
   auto tile = reader.GetGraphTile(id);
   auto de = tile->directededge(id);
 
