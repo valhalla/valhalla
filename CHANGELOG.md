@@ -1,12 +1,12 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: Unused elevation for shortucs and ferry/tunnel/bridge edges [#6340](https://github.com/valhalla/valhalla/pull/6340)
 * **Bug Fix**
 * **Enhancement**
 
 ## Release Date: 2026-09-19 Valhalla 3.9.0
 * **Removed**
    * REMOVED: Transifex and all locale JSONs [#6210](https://github.com/valhalla/valhalla/pull/6210)
-   * REMOVED: Unused elevation for shortucs and ferry/tunnel/bridge edges [#6340](https://github.com/valhalla/valhalla/pull/6340)
 * **Bug Fix**
    * ADDED: .po file based translation workflow [#6210](https://github.com/valhalla/valhalla/pull/6210)
    * FIXED: bg-BG spoke the literal text `<STREET_NAME>` in some case(s) [#6210](https://github.com/valhalla/valhalla/pull/6210)
