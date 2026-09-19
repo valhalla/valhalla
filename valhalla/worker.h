@@ -64,6 +64,53 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             const bool allow_modifications,
                             const bool use_hierarchy_limits);
 
+/**
+ * Apply defaults to start and end locations of a shape for edge walking.
+ */
+void apply_trace_location_defaults(valhalla::Location& loc);
+
+/**
+ * Appends the first and last point of every user provided cost factor line to the locations loki is
+ * about to correlate. Thor needs those correlations to edge walk each line.
+ *
+ * @param options    the request options
+ * @param locations  the locations to be correlated, appended to in place
+ *
+ * @return the index the appended locations start at
+ */
+int add_cost_factor_locations(const Options& options,
+                              google::protobuf::RepeatedPtrField<valhalla::Location>* locations);
+
+/**
+ * Moves the correlations loki produced for the locations appended by add_cost_factor_locations back
+ * onto their cost factor lines and drops them from `locations` again.
+ *
+ * @param options    the request options
+ * @param locations  the correlated locations
+ * @param offset     the index the appended locations start at
+ */
+void store_cost_factor_locations(Options& options,
+                                 google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
+                                 int offset);
+
+/**
+ * Resolves user provided cost factor lines to edges by edge walking them, stores the
+ * result in the costing options and hands it to costing.
+ *
+ * @param request             the request object
+ * @param mode_costing        costing used to edge walk the lines and to add the resolved edges to
+ * @param mode                travel mode used to edge walk the lines
+ * @param reader              graph reader
+ * @param min_allowed_factor  the smallest factor the config admits
+ * @param max_allowed_edges   the max number of edges the config allows
+ */
+void resolve_cost_factor_edges(Api& request,
+                               const sif::mode_costing_t& mode_costing,
+                               const sif::TravelMode& mode,
+                               baldr::GraphReader& reader,
+                               double min_allowed_factor,
+                               uint64_t max_allowed_edges);
+
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
@@ -99,6 +146,9 @@ to_response(const std::string& data,
             prime_server::http_request_info_t& request_info,
             const Api& options,
             const std::vector<std::pair<std::string, std::string>>& additional_headers = {});
+
+// a shared zqm context so inproc:// endpoints work across threads within a single process
+zmq::context_t& zmq_context();
 #endif
 
 struct statsd_client_t;

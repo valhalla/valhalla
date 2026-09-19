@@ -253,7 +253,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (!Options_Action_Enum_Parse(path, &action)) {
       throw std::runtime_error("Action not supported " + path);
     }
-    actions.insert(action);
+    actions[action] = true;
     action_str.append("'/" + path + "' ");
   }
   // Make sure we have at least something to support!
@@ -440,15 +440,6 @@ void loki_worker_t::check_hierarchy_distance(Api& request) {
     costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
   }
 }
-void loki_worker_t::apply_trace_location_defaults(valhalla::Location& loc) const {
-  loc.set_node_snap_tolerance(0.f);
-  loc.set_radius(10);
-  // Reachability test is not needed for edge walking because either
-  // - edge_walk relies on the shape that was produced by route
-  // - map_snap performs a Viterbi search that organically biases towards reachable edges
-  loc.set_minimum_reachability(0);
-}
-
 #ifdef ENABLE_SERVICES
 prime_server::worker_t::result_t
 loki_worker_t::work(const std::list<zmq::message_t>& job,
@@ -469,7 +460,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     const auto& options = request.options();
 
     // check there is a valid action
-    if (actions.find(options.action()) == actions.cend()) {
+    if (!actions[options.action()]) {
       throw valhalla_exception_t{106, action_str};
     }
 
@@ -554,11 +545,9 @@ void run_service(const boost::property_tree::ptree& config) {
   auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
   auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
-  // listen for requests
-  zmq::context_t context;
   loki_worker_t loki_worker(config);
-  prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-                                interrupt_endpoint,
+  prime_server::worker_t worker(zmq_context(), upstream_endpoint, downstream_endpoint,
+                                loopback_endpoint, interrupt_endpoint,
                                 std::bind(&loki_worker_t::work, std::ref(loki_worker),
                                           std::placeholders::_1, std::placeholders::_2,
                                           std::placeholders::_3),

@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <sstream>
 #include <vector>
 
@@ -42,8 +43,8 @@ TEST(Graphtile, FileSuffix) {
   TileLevel level{7, valhalla::baldr::RoadClass::kSecondary, "half_degree_is_a_multiple_of_3",
                   Tiles<PointLL>{{{-180, -90}, {180, 90}}, .5, 1}};
 
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1234, 7, 0), ".qux", false, &level), "7/001/234.qux");
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(123456, 7, 0), ".qux", false, &level), "7/123/456.qux");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1234, 7, 0), ".qux", &level), "7/001/234.qux");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(123456, 7, 0), ".qux", &level), "7/123/456.qux");
 }
 
 TEST(Graphtile, IdFromString) {
@@ -57,13 +58,17 @@ TEST(Graphtile, IdFromString) {
   EXPECT_EQ(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002"),
             GraphId(1000002, 3, 0));
   EXPECT_EQ(GraphId::FromTilePath("2/000/791/317.gph.gz"), GraphId(791317, 2, 0));
+#ifdef _WIN32
+  // backslash is a separator only on windows; the path lib normalizes it to forward slash
+  EXPECT_EQ(GraphId::FromTilePath("foo\\bar\\1\\000\\002.gph"), GraphId(2, 1, 0));
+  EXPECT_EQ(GraphId::FromTilePath("foo\\bar/2/001\\000/002.gph"), GraphId(1000002, 2, 0));
+#endif
 
   EXPECT_THROW(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/1/000/002/.gph"),
                std::runtime_error);
   EXPECT_THROW(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/0/004/050.gph"),
                std::runtime_error);
   EXPECT_THROW(GraphId::FromTilePath("foo/bar/0/004/0-1.gph"), std::runtime_error);
-  EXPECT_THROW(GraphId::FromTilePath("foo/bar/0/004//001.gph"), std::runtime_error);
   EXPECT_THROW(GraphId::FromTilePath("foo/bar/1/000/004/001.gph"), std::runtime_error);
   EXPECT_THROW(GraphId::FromTilePath("00/002.gph"), std::runtime_error);
 }

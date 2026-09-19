@@ -1,6 +1,7 @@
 #include "loki/search.h"
 #include "loki/worker.h"
 #include "midgard/pointll.h"
+#include "worker.h"
 
 #include <cmath>
 

@@ -14,6 +14,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <array>
 #include <vector>
 
 namespace valhalla {
@@ -67,7 +68,6 @@ protected:
   void init_trace(Api& request);
   std::vector<midgard::PointLL> init_height(Api& request);
   void init_transit_available(Api& request);
-  void apply_trace_location_defaults(valhalla::Location& loc) const;
 
   boost::property_tree::ptree config;
   sif::CostFactory factory;
@@ -76,7 +76,7 @@ protected:
   std::shared_ptr<baldr::GraphReader> reader;
   Search search_;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;
-  std::unordered_set<Options::Action> actions;
+  std::array<bool, Options::Action_ARRAYSIZE> actions{};
   std::string action_str;
   std::unordered_map<std::string, size_t> max_locations;
   std::unordered_map<std::string, float> max_distance;
