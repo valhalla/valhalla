@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: Sequental writes in `sequence<T>::sort()` to stay hdd-friendly [#6320](https://github.com/valhalla/valhalla/pull/6320)
 * **Enhancement**
 
 ## Release Date: 2026-09-19 Valhalla 3.9.0
