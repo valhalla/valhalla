@@ -1,0 +1,8 @@
+{
+  "sources_to_targets": {
+    "durations": [[0, 105], [108, 0]],
+    "distances": [[0.0, 0.147], [0.147, 0.0]]
+  },
+  "units": "kilometers",
+  "algorithm": "timedistancematrix"
+}
