@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * UPDATED: timezone database to 2026d [#6343](https://github.com/valhalla/valhalla/pull/6343)
    * UPDATED: Sort nodes spatially using Hilbert curve [#6342](https://github.com/valhalla/valhalla/pull/6342)
 
 ## Release Date: 2026-09-19 Valhalla 3.9.0
