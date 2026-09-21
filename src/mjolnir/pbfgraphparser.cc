@@ -1495,11 +1495,16 @@ struct graph_parser {
                  value.find("pavingstone") != std::string::npos ||
                  value.find("paving_stones") != std::string::npos ||
                  value.find("sett") != std::string::npos ||
-                 value.find("grass_paver") != std::string::npos) {
+                 value.find("grass_paver") != std::string::npos ||
+                 value.find("rubber") != std::string::npos ||
+                 value.find("acrylic") != std::string::npos ||
+                 value.find("plastic") != std::string::npos) {
         way_.set_surface(Surface::kPaved);
 
       } else if (value.find("cobblestone") != std::string::npos ||
-                 value.find("brick") != std::string::npos) {
+                 value.find("brick") != std::string::npos ||
+                 // exact match, otherwise pebblestone and stepping_stones would land here
+                 value == "stone") {
         way_.set_surface(Surface::kPavedRough);
 
       } else if (value.find("compacted") != std::string::npos ||
@@ -1512,7 +1517,8 @@ struct graph_parser {
                  value.find("earth") != std::string::npos ||
                  value.find("ground") != std::string::npos ||
                  value.find("mud") != std::string::npos || value.find("clay") != std::string::npos ||
-                 value.find("laterite") != std::string::npos) {
+                 value.find("laterite") != std::string::npos ||
+                 value.find("soil") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
       } else if (value.find("gravel") != std::string::npos || // gravel, fine_gravel
@@ -1520,6 +1526,8 @@ struct graph_parser {
                  value.find("sand") != std::string::npos) {
         way_.set_surface(Surface::kGravel);
       } else if (value.find("grass") != std::string::npos ||
+                 value.find("artificial_turf") != std::string::npos ||
+                 value.find("rock") != std::string::npos ||
                  value.find("stepping_stones") != std::string::npos) {
         way_.set_surface(Surface::kPath);
         // We have to set a flag as surface may come before Road classes and Uses
