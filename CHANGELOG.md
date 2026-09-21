@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: Sequental writes in `sequence<T>::sort()` to stay hdd-friendly [#6320](https://github.com/valhalla/valhalla/pull/6320)
 * **Enhancement**
    * UPDATED: timezone database to 2026d [#6343](https://github.com/valhalla/valhalla/pull/6343)
 
