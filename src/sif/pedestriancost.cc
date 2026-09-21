@@ -56,8 +56,8 @@ constexpr uint32_t kDefaultMaxGradeWheelchair = 12; // Conservative for now...
 // Other defaults (not dependent on type)
 constexpr uint8_t kDefaultMaxHikingDifficulty = 1; // T1 (kHiking)
 constexpr float kModeFactor = 1.5f;                // Favor this mode?
-constexpr float kDefaultWalkwayFactor = 1.0f;      // Neutral value for walkways
-constexpr float kDefaultSideWalkFactor = 1.0f;     // Neutral value for sidewalks
+constexpr float kDefaultWalkwayFactor = 0.85f;     // slightly favor walkways
+constexpr float kDefaultSideWalkFactor = 0.85f;    // slightly favor sidewalks
 constexpr float kDefaultAlleyFactor = 2.0f;        // Avoid alleys
 constexpr float kDefaultDrivewayFactor = 5.0f;     // Avoid driveways
 constexpr float kDefaultUseFerry = 1.0f;
