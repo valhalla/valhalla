@@ -708,3 +708,55 @@ TEST_F(LinearFeatureTest, empty_shape) {
 
   EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, json_str), valhalla_exception_t);
 }
+
+// lines are correlated with a none costing, so they resolve onto edges the requested costing
+// can't travel on
+TEST(LinearFeature, none_costing) {
+  const std::string ascii_map = R"(
+    A----B----C
+         |
+         D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"BD", {{"highway", "footway"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/linear_feature_none_costing");
+
+  std::string json_request = R"(
+  {
+    "locations": [
+      {"lon": %s, "lat": %s},
+      {"lon": %s, "lat": %s}
+    ],
+    "linear_cost_factors": [
+      {"shape": "%s", "factor": 200}
+    ],
+    "costing": "auto"
+  }
+  )";
+
+  auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
+                   std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("C").lng()) %
+                   std::to_string(map.nodes.at("C").lat()) % encode_shape({"B", "D"}, map.nodes))
+                      .str();
+
+  loki::loki_worker_t loki_worker(map.config);
+
+  Api request;
+  ParseApi(json_str, Options::route, request);
+  loki_worker.route(request);
+
+  // loki resolved the line without disturbing the locations it has to correlate for the route
+  EXPECT_EQ(request.options().locations_size(), 2);
+  const auto& costing_options =
+      request.options().costings().find(request.options().costing_type())->second.options();
+  ASSERT_EQ(costing_options.cost_factor_edges().size(), 1);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  check_cost_factor_edge(costing_options.cost_factor_edges(), "B", "D", reader, map.nodes, 200, 0, 1);
+}
