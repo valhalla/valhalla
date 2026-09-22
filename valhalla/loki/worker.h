@@ -58,6 +58,7 @@ protected:
 
   void parse_trace(Api& request);
   void parse_costing(Api& request, bool allow_none = false);
+  void resolve_linear_cost_factors(Api& request);
   void locations_from_shape(Api& request);
   void check_hierarchy_distance(Api& request);
 
@@ -115,6 +116,8 @@ protected:
   bool allow_verbose;
   bool allow_hard_exclusions;
   float max_distance_disable_hierarchy_culling;
+  double min_linear_cost_factor;
+  uint64_t max_linear_cost_edges;
   std::unordered_set<baldr::GraphId> bbox_intersection_;
 
   // for /tile requests

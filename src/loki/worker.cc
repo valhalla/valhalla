@@ -1,5 +1,6 @@
 #include "loki/worker.h"
 #include "exceptions.h"
+#include "loki/linear_cost_factors.h"
 #include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
@@ -216,11 +217,75 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   }
 
+  resolve_linear_cost_factors(api);
+
   // If more alternates are requested than we support we cap it
   if (options.action() != Options::trace_attributes && options.alternates() > max_alternates)
     options.set_alternates(max_alternates);
   if (options.action() == Options::trace_attributes && options.alternates() > max_trace_alternates)
     options.set_alternates(max_trace_alternates);
+}
+
+/**
+ * resolves user supplied  features into
+ * the edges they cover. A none costing is used on purpose: the features describe geometry, not
+ * something the requested mode has to be able to travel on.
+ */
+void loki_worker_t::resolve_linear_cost_factors(Api& api) {
+
+  auto& options = *api.mutable_options();
+
+  // nothing to do
+  if (options.cost_factor_lines().empty()) {
+    return;
+  }
+
+  // first correlate the end points
+  google::protobuf::RepeatedPtrField<Location> endpoints;
+  endpoints.Reserve(2 * options.cost_factor_lines_size());
+
+  for (const auto& line : options.cost_factor_lines()) {
+    if (line.shape().empty()) {
+      throw valhalla_exception_t{173, "feature coordinates are empty"};
+    }
+    endpoints.Add()->CopyFrom(*line.shape().begin());
+    endpoints.Add()->CopyFrom(*line.shape().rbegin());
+  }
+
+  for (auto& endpoint : endpoints) {
+    apply_trace_location_defaults(endpoint);
+    parse_location(endpoint);
+  }
+
+  // the provided lines represent subsequent edge shapes
+  // so we don't care about costing
+  auto none_costing = factory.Create(Costing::none_);
+  sif::mode_costing_t none_mode_costing;
+  const auto none_mode = none_costing->travel_mode();
+  none_mode_costing[static_cast<size_t>(none_mode)] = none_costing;
+
+  try {
+    search_.search(endpoints, none_costing);
+    search_.clear();
+  } catch (const std::exception&) {
+    throw valhalla_exception_t{173, "No edges near start/end of linear cost feature."};
+  }
+
+  int i = 0;
+  for (auto& line : *options.mutable_cost_factor_lines()) {
+    if (endpoints.at(2 * i).correlation().edges().empty() ||
+        endpoints.at(2 * i + 1).correlation().edges().empty()) {
+      throw valhalla_exception_t{173, "No edges near start/end of linear cost feature."};
+    }
+
+    // move the correlated start and end back into place
+    line.mutable_locations()->Add(std::move(endpoints.at(2 * i)));
+    line.mutable_locations()->Add(std::move(endpoints.at(2 * i + 1)));
+    ++i;
+  }
+
+  add_cost_factor_edges(none_mode_costing, none_mode, *reader, options, min_linear_cost_factor,
+                        max_linear_cost_edges);
 }
 
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
@@ -370,6 +435,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
+  min_linear_cost_factor = config.get<double>("service_limits.min_linear_cost_factor", 1.0);
+  max_linear_cost_edges = config.get<uint64_t>("service_limits.max_linear_cost_edges", 50000);
   mvt_cache_dir_ = config.get<std::string>("loki.service_defaults.mvt_cache_dir", "");
   if (!mvt_cache_dir_.empty() && !std::filesystem::exists(mvt_cache_dir_))
     std::filesystem::create_directory(mvt_cache_dir_);
