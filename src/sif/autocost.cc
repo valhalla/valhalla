@@ -411,7 +411,6 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
     return true;
   }
 
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
