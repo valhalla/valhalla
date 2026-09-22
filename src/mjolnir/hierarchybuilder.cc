@@ -18,7 +18,6 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -447,8 +446,7 @@ void FormTilesInNewLevel(GraphReader& reader,
  */
 void CreateNodeAssociations(GraphReader& reader,
                             const std::string& new_to_old_file,
-                            const std::string& old_to_new_file,
-                            const bool spatial_sort) {
+                            const std::string& old_to_new_file) {
   SCOPED_TIMER();
   // Create a sequence to associate new nodes to old nodes. Ids are assigned later, in
   // `SortSequences()`, once every base tile feeding a new tile has been seen.
@@ -462,13 +460,6 @@ void CreateNodeAssociations(GraphReader& reader,
   uint32_t al = static_cast<uint32_t>(arterial_level.level);
   const auto& highway_level = TileHierarchy::levels()[0];
   uint32_t hl = static_cast<uint32_t>(highway_level.level);
-
-  // Without spatial sorting the nodes of a new tile keep the order they were promoted in.
-  std::unordered_map<GraphId, uint32_t> promoted;
-  const auto sort_key = [&](const GraphId& new_tile, const PointLL& ll, const TileLevel& level,
-                            const int32_t tileid) {
-    return spatial_sort ? TileHilbertIndex(ll, level.tiles, tileid) : promoted[new_tile]++;
-  };
 
   // Iterate through all tiles in the local level, in tile order so the sequences below are
   // reproducible from run to run.
@@ -517,14 +508,14 @@ void CreateNodeAssociations(GraphReader& reader,
       if (levels[0]) {
         // New node is on the highway level. Associate back to base/local node
         const auto tileid = highway_level.tiles.TileId(ll);
-        const GraphId new_tile(tileid, hl, 0);
-        new_to_old.push_back({new_tile, basenode, sort_key(new_tile, ll, highway_level, tileid)});
+        new_to_old.push_back(
+            {GraphId(tileid, hl, 0), basenode, TileHilbertIndex(ll, highway_level.tiles, tileid)});
       }
       if (levels[1]) {
         // New node is on the arterial level. Associate back to base/local node
         const auto tileid = arterial_level.tiles.TileId(ll);
-        const GraphId new_tile(tileid, al, 0);
-        new_to_old.push_back({new_tile, basenode, sort_key(new_tile, ll, arterial_level, tileid)});
+        new_to_old.push_back(
+            {GraphId(tileid, al, 0), basenode, TileHilbertIndex(ll, arterial_level.tiles, tileid)});
       }
       if (levels[2]) {
         // New node is on the local level. The base tile is already sorted spatially, so a
@@ -655,8 +646,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   GraphReader reader(pt.get_child("mjolnir"));
 
   // Association of old nodes to new nodes
-  CreateNodeAssociations(reader, new_to_old_file, old_to_new_file,
-                         pt.get<bool>("mjolnir.data_processing.sort_nodes_spatially", true));
+  CreateNodeAssociations(reader, new_to_old_file, old_to_new_file);
 
   // Sort the sequences
   const uint32_t concurrency =
