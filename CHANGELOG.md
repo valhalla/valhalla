@@ -10,6 +10,7 @@
    * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6347](https://github.com/valhalla/valhalla/pull/6347)
    * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6348](https://github.com/valhalla/valhalla/pull/6348)
    * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6349](https://github.com/valhalla/valhalla/pull/6349)
+   * ADDED: `allow` property for `linear_cost_factors` []()
    * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6349](https://github.com/valhalla/valhalla/pull/6349)
    * ADDED: `allow` property for `linear_cost_factors` []()
 
