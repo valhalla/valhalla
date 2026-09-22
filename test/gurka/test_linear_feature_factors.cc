@@ -761,12 +761,6 @@ TEST(LinearFeature, none_costing) {
   check_cost_factor_edge(costing_options.cost_factor_edges(), "B", "D", reader, map.nodes, 200, 0, 1);
 }
 
-/**
- * "allow" has to cover more than the access restrictions it started out as: GH has no auto
- * access at all and is the only link between the two halves of the map, so the route either
- * exists or it doesn't and no cost comparison is involved. GH sits near the destination on
- * purpose, so the reverse search runs out of edges long before the forward one arrives.
- */
 TEST(LinearFeature, allow_inaccessible_edge) {
   const std::string ascii_map = R"(
     A----B----C----D----E----F----G----H--I
