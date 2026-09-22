@@ -232,7 +232,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     // Check the access mode and skip this edge if access is not allowed in the reverse
     // direction. This avoids the (somewhat expensive) retrieval of the opposing directed
     // edge when no access is allowed in the reverse direction.
-    if (!(meta.edge->reverseaccess() & access_mode_)) {
+    if (!(meta.edge->reverseaccess() & access_mode_) && !costing_->has_allowed_linear_edges()) {
       return false;
     }
 

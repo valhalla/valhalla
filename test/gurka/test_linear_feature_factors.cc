@@ -323,7 +323,7 @@ TEST_F(LinearFeatureTest, partial_edges_shape) {
   gurka::assert::raw::expect_path(request, {"TS", "SR", "RB", "A2", "A2", "A2", "EZ"});
 }
 
-TEST_F(LinearFeatureTest, ignore_access_restrictions) {
+TEST_F(LinearFeatureTest, allow_access_restriction) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
 
@@ -334,7 +334,7 @@ TEST_F(LinearFeatureTest, ignore_access_restrictions) {
       {"lon": %s, "lat": %s}
     ], 
     "linear_cost_factors": [
-      {"shape": "%s", "ignore_access_restrictions": %s}
+      {"shape": "%s", "allow": %s}
     ], 
     "costing": "auto",
     "costing_options": {
@@ -359,7 +359,7 @@ TEST_F(LinearFeatureTest, ignore_access_restrictions) {
   loki_worker.cleanup();
   ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
   EXPECT_NEAR(request.options().cost_factor_lines().at(0).cost_factor(), 1.f, 0.01);
-  EXPECT_TRUE(request.options().cost_factor_lines().at(0).ignore_access_restrictions());
+  EXPECT_TRUE(request.options().cost_factor_lines().at(0).allow());
   EXPECT_EQ(request.options().cost_factor_lines().at(0).shape().size(), 2);
 
   thor_worker.route(request);
@@ -373,7 +373,7 @@ TEST_F(LinearFeatureTest, ignore_access_restrictions) {
   for (auto& cfe : costing_options.cost_factor_edges()) {
     auto e = gurka::findEdgeByNodes(reader, map.nodes, "V", "W");
     if (std::get<0>(e) == cfe.id()) {
-      EXPECT_TRUE(cfe.ignore_access_restrictions());
+      EXPECT_TRUE(cfe.allow());
       EXPECT_NEAR(cfe.factor(), 1.f, 0.01f);
       found = true;
       break;
@@ -759,4 +759,172 @@ TEST(LinearFeature, none_costing) {
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
   check_cost_factor_edge(costing_options.cost_factor_edges(), "B", "D", reader, map.nodes, 200, 0, 1);
+}
+
+/**
+ * "allow" has to cover more than the access restrictions it started out as: GH has no auto
+ * access at all and is the only link between the two halves of the map, so the route either
+ * exists or it doesn't and no cost comparison is involved. GH sits near the destination on
+ * purpose, so the reverse search runs out of edges long before the forward one arrives.
+ */
+TEST(LinearFeature, allow_inaccessible_edge) {
+  const std::string ascii_map = R"(
+    A----B----C----D----E----F----G----H--I
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FG", {{"highway", "residential"}}},
+      {"GH", {{"highway", "residential"}, {"motor_vehicle", "no"}}},
+      {"HI", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/linear_feature_allow");
+
+  std::string json_request = R"(
+  {
+    "locations": [
+      {"lon": %s, "lat": %s},
+      {"lon": %s, "lat": %s}
+    ],
+    %s
+    "costing": "auto"
+  }
+  )";
+
+  auto route = [&](const std::string& linear_cost_factors, Api& request) {
+    auto json_str =
+        (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
+         std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("I").lng()) %
+         std::to_string(map.nodes.at("I").lat()) % linear_cost_factors)
+            .str();
+
+    loki::loki_worker_t loki_worker(map.config);
+    thor::thor_worker_t thor_worker(map.config);
+    ParseApi(json_str, Options::route, request);
+    loki_worker.route(request);
+    loki_worker.cleanup();
+    thor_worker.route(request);
+  };
+
+  Api without;
+  EXPECT_THROW(route("", without), valhalla_exception_t);
+
+  Api with;
+  route((boost::format(R"("linear_cost_factors": [{"shape": "%s", "allow": true}],)") %
+         encode_shape({"G", "H"}, map.nodes))
+            .str(),
+        with);
+
+  const auto& costing_options =
+      with.options().costings().find(with.options().costing_type())->second.options();
+  ASSERT_EQ(costing_options.cost_factor_edges().size(), 1);
+  EXPECT_TRUE(costing_options.cost_factor_edges().at(0).allow());
+
+  gurka::assert::raw::expect_path(with, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+}
+
+/**
+ * Dijkstras gates on the raw access bits before it ever asks costing, so the isochrone
+ * expansion stops at B unless "allow" is honored there too
+ */
+TEST(LinearFeature, allow_in_dijkstras) {
+  const std::string ascii_map = R"(
+    A----B----C----D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}, {"motor_vehicle", "no"}}},
+      {"CD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/linear_feature_allow_dijkstras");
+
+  std::string json_request = R"(
+  {
+    "locations": [{"lon": %s, "lat": %s}],
+    "contours": [{"time": 60}],
+    "action": "isochrone",
+    "skip_opposites": true,
+    %s
+    "costing": "auto"
+  }
+  )";
+
+  auto expand = [&](const std::string& linear_cost_factors) {
+    auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
+                     std::to_string(map.nodes.at("A").lat()) % linear_cost_factors)
+                        .str();
+    return gurka::do_action(Options::expansion, map, json_str);
+  };
+
+  EXPECT_EQ(expand("").expansion().geometries_size(), 1);
+
+  auto with = expand((boost::format(R"("linear_cost_factors": [{"shape": "%s", "allow": true}],)") %
+                      encode_shape({"B", "C"}, map.nodes))
+                         .str());
+  EXPECT_EQ(with.expansion().geometries_size(), 3);
+}
+
+/**
+ * CostMatrix checks the raw access bits before it asks costing, same as the route
+ * algorithms. BC has no auto access and is the only link between source and target.
+ */
+TEST(LinearFeature, allow_in_costmatrix) {
+  const std::string ascii_map = R"(
+    A----B----C----D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}, {"motor_vehicle", "no"}}},
+      {"CD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/linear_feature_allow_costmatrix");
+
+  std::string json_request = R"(
+  {
+    "sources": [{"lon": %s, "lat": %s}],
+    "targets": [{"lon": %s, "lat": %s}],
+    %s
+    "costing": "auto"
+  }
+  )";
+
+  auto matrix = [&](const std::string& linear_cost_factors, Api& request) {
+    auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
+                     std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("D").lng()) %
+                     std::to_string(map.nodes.at("D").lat()) % linear_cost_factors)
+                        .str();
+
+    loki::loki_worker_t loki_worker(map.config);
+    thor::thor_worker_t thor_worker(map.config);
+    ParseApi(json_str, Options::sources_to_targets, request);
+    loki_worker.matrix(request);
+    loki_worker.cleanup();
+    thor_worker.matrix(request);
+  };
+
+  Api without;
+  matrix("", without);
+  ASSERT_EQ(without.matrix().distances().size(), 1);
+  // no auto path across BC, so the pair comes back unreachable
+  EXPECT_GT(without.matrix().distances(0), 1e6);
+
+  Api with;
+  matrix((boost::format(R"("linear_cost_factors": [{"shape": "%s", "allow": true}],)") %
+          encode_shape({"B", "C"}, map.nodes))
+             .str(),
+         with);
+  ASSERT_EQ(with.matrix().distances().size(), 1);
+  EXPECT_NEAR(with.matrix().distances(0), 1500, 1);
 }

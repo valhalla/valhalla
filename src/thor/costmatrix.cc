@@ -142,9 +142,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
                    static_cast<uint32_t>(1))),
       dijkstra_distance_(
           config.get<uint32_t>("costmatrix.dijkstra_distance", kDefaultDijkstraDistance)),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -566,7 +566,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     // Check the access mode and skip this edge if access is not allowed in the reverse
     // direction. This avoids the (somewhat expensive) retrieval of the opposing directed
     // edge when no access is allowed in the reverse direction.
-    if (!(meta.edge->reverseaccess() & access_mode_)) {
+    if (!(meta.edge->reverseaccess() & access_mode_) && !costing_->has_allowed_linear_edges()) {
       return false;
     }
 

@@ -390,6 +390,7 @@ void DynamicCost::SetCostFactorEdges(const Costing_Options& options) {
   // callable after construction, so start from scratch rather than folding into what's there
   linear_cost_edges_.clear();
   min_linear_cost_factor_ = 1.;
+  has_allowed_linear_edges_ = false;
 
   // Add avoid edges to internal set
   for (auto& edge : options.exclude_edges()) {
@@ -405,7 +406,9 @@ void DynamicCost::SetCostFactorEdges(const Costing_Options& options) {
     }
     auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
     cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
-    cost_edge.ignore_restrictions_ = e.ignore_access_restrictions();
+    // one allowing range is enough, it exempts the whole edge
+    cost_edge.allow |= e.allow();
+    has_allowed_linear_edges_ |= e.allow();
   }
 
   // once all cost factors are filled, sort by range, precompute overall average

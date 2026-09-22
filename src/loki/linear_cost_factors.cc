@@ -20,13 +20,14 @@ void add_shortcut(GraphReader& reader,
                   valhalla::Costing_Options* options,
                   valhalla::CostFactorEdge* cost_factor) {
 
-  // for ignoring access restrictions, we don't care if it's
-  // a partial, it applies to the whole edge
-  if (cost_factor->ignore_access_restrictions()) {
-    auto* exclude_edge = options->add_exclude_edges();
-    exclude_edge->set_id(shortcut.value);
+  // allow applies to the whole edge
+  if (cost_factor->allow() && cost_factor->factor() != 1.0) {
+    auto* e = options->add_cost_factor_edges();
+    e->set_id(shortcut.value);
+    e->set_allow(true);
     return;
   }
+
   GraphId edge = static_cast<GraphId>(cost_factor->id());
   graph_tile_ptr tile = reader.GetGraphTile(shortcut);
   // it's part of a shortcut
@@ -95,7 +96,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(line.cost_factor());
-          e->set_ignore_access_restrictions(line.ignore_access_restrictions());
+          e->set_allow(line.allow());
           for (const auto& edge : line.locations(0).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
               e->set_start(edge.percent_along());
@@ -129,7 +130,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
               e->set_id(path_info.edgeid);
               // apply the minimum allowed value specified in the config
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-              e->set_ignore_access_restrictions(line.ignore_access_restrictions());
+              e->set_allow(line.allow());
               e->set_start(start);
               e->set_end(end);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
@@ -144,7 +145,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-          e->set_ignore_access_restrictions(line.ignore_access_restrictions());
+          e->set_allow(line.allow());
           e->set_start(0.);
           e->set_end(1.);
 
@@ -156,7 +157,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(constituent);
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-              e->set_ignore_access_restrictions(line.ignore_access_restrictions());
+              e->set_allow(line.allow());
               e->set_start(0);
               e->set_end(1);
             }
