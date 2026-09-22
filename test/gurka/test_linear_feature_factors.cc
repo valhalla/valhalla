@@ -783,8 +783,8 @@ TEST(LinearFeature, allow_inaccessible_edge) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {},
-                               VALHALLA_BUILD_DIR "test/data/linear_feature_allow");
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/linear_feature_allow");
 
   std::string json_request = R"(
   {
@@ -901,10 +901,11 @@ TEST(LinearFeature, allow_in_costmatrix) {
   )";
 
   auto matrix = [&](const std::string& linear_cost_factors, Api& request) {
-    auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
-                     std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("D").lng()) %
-                     std::to_string(map.nodes.at("D").lat()) % linear_cost_factors)
-                        .str();
+    auto json_str =
+        (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
+         std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("D").lng()) %
+         std::to_string(map.nodes.at("D").lat()) % linear_cost_factors)
+            .str();
 
     loki::loki_worker_t loki_worker(map.config);
     thor::thor_worker_t thor_worker(map.config);
