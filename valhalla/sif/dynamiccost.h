@@ -138,7 +138,7 @@ struct cost_edge_t {
 struct custom_cost_t {
   std::vector<cost_edge_t> ranges;
   double avg_factor{1.};
-  bool ignore_restrictions_;
+  bool allow{false};
 
   // once ranges are filled up, sort and compute average
   // returns the minimum factor
@@ -470,6 +470,26 @@ public:
   }
 
   /**
+   * Whether the user marked this edge as traversable via an
+   * "allow" linear cost feature.
+   */
+  inline bool AllowedLinearFeature(const baldr::GraphId& edgeid) const {
+    if (!has_allowed_linear_edges_)
+      return false;
+
+    auto it = linear_cost_edges_.find(edgeid);
+    return it != linear_cost_edges_.end() && it->second.allow;
+  }
+
+  /**
+   * Whether this request has any "allow" linear cost features at all. Lets callers that
+   * don't have the relevant edge id at hand skip their own access short-circuits.
+   */
+  inline bool has_allowed_linear_edges() const {
+    return has_allowed_linear_edges_;
+  }
+
+  /**
    * Get the cost to traverse the specified directed edge using a transit
    * departure (schedule based edge traversal). Cost includes
    * the time (seconds) to traverse the edge.
@@ -784,13 +804,6 @@ public:
                                    uint8_t& destonly_access_restr_mask) const {
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
-
-    decltype(linear_cost_edges_)::const_iterator it;
-    if (!linear_cost_edges_.empty() &&
-        (it = linear_cost_edges_.find(edgeid)) != linear_cost_edges_.end() &&
-        it->second.ignore_restrictions_) {
-      return true;
-    }
 
     auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
@@ -1422,6 +1435,7 @@ protected:
   // User specified edges to cost based on user provided factors
   std::unordered_map<baldr::GraphId, custom_cost_t> linear_cost_edges_;
   double min_linear_cost_factor_;
+  bool has_allowed_linear_edges_{false};
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.

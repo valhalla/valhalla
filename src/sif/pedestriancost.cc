@@ -678,6 +678,11 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint32_t tz_index,
                              uint8_t& restriction_idx,
                              uint8_t& destonly_access_restr_mask) const {
+  // the user asked for this edge to be usable no matter what
+  if (AllowedLinearFeature(edgeid)) {
+    return true;
+  }
+
   if (!IsAccessible(edge) || (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
       IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
@@ -711,6 +716,11 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const uint32_t tz_index,
                                     uint8_t& restriction_idx,
                                     uint8_t& destonly_access_restr_mask) const {
+  // the user asked for this edge to be usable no matter what
+  if (AllowedLinearFeature(opp_edgeid)) {
+    return true;
+  }
+
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
   // multimodal routes).
