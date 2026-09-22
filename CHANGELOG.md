@@ -4,8 +4,6 @@
 * **Enhancement**
    * UPDATED: timezone database to 2026d [#6343](https://github.com/valhalla/valhalla/pull/6343)
    * ADDED: `allow` property for `linear_cost_factors` []()
-   * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6347](https://github.com/valhalla/valhalla/pull/6347)
-   * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6348](https://github.com/valhalla/valhalla/pull/6348)
    * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6349](https://github.com/valhalla/valhalla/pull/6349)
 
 ## Release Date: 2026-09-19 Valhalla 3.9.0
