@@ -8,11 +8,14 @@
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/hilbert.h"
 #include "scoped_timer.h"
 
 #include <boost/property_tree/ptree.hpp>
 
 #include <filesystem>
+#include <set>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
@@ -42,6 +45,14 @@ struct OldToNewNodes {
                 const uint32_t d)
       : node_id(node), highway_node(highway), arterial_node(arterial), local_node(local), density(d) {
   }
+};
+
+// Associates a node on a new hierarchy level with the base node it was promoted from. The id in
+// `new_node` is assigned by `SortSequences()`, in `sort_key` order within its tile.
+struct NewToOldNode {
+  GraphId new_node;
+  GraphId base_node;
+  uint32_t sort_key;
 };
 
 // Gets the hierarchy level respecting ramp & ferry-related edges which can be marked
@@ -76,25 +87,90 @@ void SortSequences(const std::string& new_to_old_file,
                    const std::string& old_to_new_file,
                    const uint32_t concurrency) {
   SCOPED_TIMER();
-  // Sort the new nodes. Sort so highway level is first
-  sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
+  // Sort so highway level is first, then by tile, then spatially within the tile. Nodes are
+  // numbered in this order below, which lays out the NodeInfo array of every new tile.
+  sequence<NewToOldNode> new_to_old(new_to_old_file, false);
   new_to_old.sort(
-      [](const std::pair<GraphId, GraphId>& a, const std::pair<GraphId, GraphId>& b) {
-        if (a.first.level() == b.first.level()) {
-          if (a.first.tileid() == b.first.tileid()) {
-            return a.first.id() < b.first.id();
-          }
-          return a.first.tileid() < b.first.tileid();
+      [](const NewToOldNode& a, const NewToOldNode& b) {
+        if (a.new_node.level() != b.new_node.level()) {
+          return a.new_node.level() < b.new_node.level();
         }
-        return a.first.level() < b.first.level();
+        if (a.new_node.tileid() != b.new_node.tileid()) {
+          return a.new_node.tileid() < b.new_node.tileid();
+        }
+        if (a.sort_key != b.sort_key) {
+          return a.sort_key < b.sort_key;
+        }
+        // Two nodes can quantize alike; keep the order reproducible.
+        return a.base_node < b.base_node;
       },
       concurrency);
+
+  // Number the nodes of each tile in that order. No id is assigned yet, so a node's GraphId is
+  // still its tile's.
+  GraphId current_tile;
+  uint32_t index = 0;
+  new_to_old.transform([&current_tile, &index](NewToOldNode& element) {
+    if (element.new_node != current_tile) {
+      current_tile = element.new_node;
+      index = 0;
+    }
+    element.new_node.set_id(index++);
+  });
 
   // Sort old to new by node Id
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
   old_to_new.sort([](const OldToNewNodes& a,
                      const OldToNewNodes& b) { return a.node_id < b.node_id; },
                   concurrency);
+
+  // Fill the new ids into the reverse mapping. Sorting by base node makes this a merge rather
+  // than a lookup per node.
+  new_to_old.sort(
+      [](const NewToOldNode& a, const NewToOldNode& b) {
+        return a.base_node == b.base_node ? a.new_node.level() < b.new_node.level()
+                                          : a.base_node < b.base_node;
+      },
+      concurrency);
+
+  auto assoc = old_to_new.begin();
+  uint32_t associated = 0;
+  new_to_old.enumerate([&assoc, &old_to_new, &associated](const NewToOldNode& element) {
+    while (assoc != old_to_new.end() && (*assoc).node_id < element.base_node) {
+      ++assoc;
+    }
+    if (assoc == old_to_new.end() || !((*assoc).node_id == element.base_node)) {
+      throw std::runtime_error("Promoted node has no base node association!");
+    }
+    OldToNewNodes nodes = *assoc;
+    switch (element.new_node.level()) {
+      case 0:
+        nodes.highway_node = element.new_node;
+        break;
+      case 1:
+        nodes.arterial_node = element.new_node;
+        break;
+      default:
+        nodes.local_node = element.new_node;
+        break;
+    }
+    assoc = nodes;
+    ++associated;
+  });
+  LOG_INFO("Associated " + std::to_string(associated) + " new nodes to base nodes");
+
+  // Restore the numbering order that `FormTilesInNewLevel()` iterates in.
+  new_to_old.sort(
+      [](const NewToOldNode& a, const NewToOldNode& b) {
+        if (a.new_node.level() != b.new_node.level()) {
+          return a.new_node.level() < b.new_node.level();
+        }
+        if (a.new_node.tileid() != b.new_node.tileid()) {
+          return a.new_node.tileid() < b.new_node.tileid();
+        }
+        return a.new_node.id() < b.new_node.id();
+      },
+      concurrency);
 }
 
 // Convenience method to find the node association.
@@ -117,7 +193,7 @@ void FormTilesInNewLevel(GraphReader& reader,
                          const std::string& old_to_new_file) {
   SCOPED_TIMER();
   // Use the sequence that associate new nodes to old nodes
-  sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
+  sequence<NewToOldNode> new_to_old(new_to_old_file, false);
 
   // Use the sorted sequence that associates old nodes to new nodes
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
@@ -160,7 +236,7 @@ void FormTilesInNewLevel(GraphReader& reader,
   GraphTileBuilder* tilebuilder = nullptr;
   for (auto new_node = new_to_old.begin(); new_node != new_to_old.end(); new_node++) {
     // Get the node - check if a new tile
-    GraphId nodea = (*new_node).first;
+    GraphId nodea = (*new_node).new_node;
     if (nodea.tile_base() != tile_id) {
       // Store the prior tile
       if (tilebuilder != nullptr) {
@@ -184,7 +260,7 @@ void FormTilesInNewLevel(GraphReader& reader,
     }
 
     // Get the node in the base level
-    GraphId base_node = (*new_node).second;
+    GraphId base_node = (*new_node).base_node;
     graph_tile_ptr tile = reader.GetGraphTile(base_node);
     if (tile == nullptr) {
       LOG_ERROR("Base tile is null? ");
@@ -372,25 +448,9 @@ void CreateNodeAssociations(GraphReader& reader,
                             const std::string& new_to_old_file,
                             const std::string& old_to_new_file) {
   SCOPED_TIMER();
-  // Map of tiles vs. count of nodes. Used to construct new node Ids.
-  std::unordered_map<GraphId, uint32_t> new_nodes;
-
-  // lambda to get the next "new" node Id in a given tile
-  auto get_new_node = [&new_nodes](const GraphId& tile) -> GraphId {
-    auto itr = new_nodes.find(tile);
-    if (itr == new_nodes.end()) {
-      GraphId new_node(tile.tileid(), tile.level(), 0);
-      new_nodes[tile] = 1;
-      return new_node;
-    } else {
-      GraphId new_node(tile.tileid(), tile.level(), itr->second);
-      itr->second++;
-      return new_node;
-    }
-  };
-
-  // Create a sequence to associate new nodes to old nodes
-  sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, true);
+  // Create a sequence to associate new nodes to old nodes. Ids are assigned later, in
+  // `SortSequences()`, once every base tile feeding a new tile has been seen.
+  sequence<NewToOldNode> new_to_old(new_to_old_file, true);
 
   // Create a sequence to associate new nodes to old nodes
   sequence<OldToNewNodes> old_to_new(old_to_new_file, true);
@@ -401,8 +461,10 @@ void CreateNodeAssociations(GraphReader& reader,
   const auto& highway_level = TileHierarchy::levels()[0];
   uint32_t hl = static_cast<uint32_t>(highway_level.level);
 
-  // Iterate through all tiles in the local level
-  auto local_tiles = reader.GetTileSet();
+  // Iterate through all tiles in the local level, in tile order so the sequences below are
+  // reproducible from run to run.
+  const auto tile_set = reader.GetTileSet();
+  const std::set<GraphId> local_tiles(tile_set.begin(), tile_set.end());
   for (const auto& base_tile_id : local_tiles) {
     // We keep all transit data inside the transit hierarchy
     if (base_tile_id.level() == TileHierarchy::GetTransitLevel().level) {
@@ -421,6 +483,7 @@ void CreateNodeAssociations(GraphReader& reader,
     uint32_t nodecount = tile->header()->nodecount();
     GraphId basenode = base_tile_id;
     GraphId edgeid = base_tile_id;
+    uint32_t local_index = 0;
     PointLL base_ll = tile->header()->base_ll();
     const NodeInfo* nodeinfo = tile->node(basenode);
     for (uint32_t i = 0; i < nodecount; i++, nodeinfo++, ++basenode) {
@@ -440,34 +503,33 @@ void CreateNodeAssociations(GraphReader& reader,
         }
       }
 
-      // Associate new nodes to base nodes and base node to new nodes
-      GraphId highway_node, arterial_node, local_node;
+      // Associate new nodes to base nodes, keyed by where the node sits in its new tile.
+      const auto ll = nodeinfo->latlng(base_ll);
       if (levels[0]) {
         // New node is on the highway level. Associate back to base/local node
-        GraphId new_tile(highway_level.tiles.TileId(nodeinfo->latlng(base_ll)), hl, 0);
-        highway_node = get_new_node(new_tile);
-        new_to_old.push_back(std::make_pair(highway_node, basenode));
+        const auto tileid = highway_level.tiles.TileId(ll);
+        new_to_old.push_back(
+            {GraphId(tileid, hl, 0), basenode, TileHilbertIndex(ll, highway_level.tiles, tileid)});
       }
       if (levels[1]) {
         // New node is on the arterial level. Associate back to base/local node
-        GraphId new_tile(arterial_level.tiles.TileId(nodeinfo->latlng(base_ll)), al, 0);
-        arterial_node = get_new_node(new_tile);
-        new_to_old.push_back(std::make_pair(arterial_node, basenode));
+        const auto tileid = arterial_level.tiles.TileId(ll);
+        new_to_old.push_back(
+            {GraphId(tileid, al, 0), basenode, TileHilbertIndex(ll, arterial_level.tiles, tileid)});
       }
       if (levels[2]) {
-        // New node is on the local level. Associate back to base/local node
-        local_node = get_new_node(base_tile_id);
-        new_to_old.push_back(std::make_pair(local_node, basenode));
+        // New node is on the local level. The base tile is already sorted spatially, so a
+        // running index keeps that order.
+        new_to_old.push_back({base_tile_id, basenode, local_index++});
       }
 
       if (!levels[0] && !levels[1] && !levels[2]) {
         LOG_ERROR("No valid level for this node!");
       }
 
-      // Associate the old node to the new node(s). Entries in the tuple
-      // that are invalid nodes indicate no node exists in the new level.
-      OldToNewNodes assoc(basenode, highway_node, arterial_node, local_node, nodeinfo->density());
-      old_to_new.push_back(assoc);
+      // Associate the old node to the new node(s); `SortSequences()` fills in the ids. Ones
+      // still invalid after that have no node on the level.
+      old_to_new.push_back(OldToNewNodes(basenode, {}, {}, {}, nodeinfo->density()));
     }
 
     // Check if we need to clear the tile cache
