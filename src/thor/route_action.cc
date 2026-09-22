@@ -215,8 +215,6 @@ void thor_worker_t::route(Api& request) {
   controller = AttributesController(options);
 
   auto costing = parse_costing(request);
-  resolve_cost_factor_edges(request, mode_costing, mode, *reader, min_linear_cost_factor,
-                            max_linear_cost_edges);
 
   // get all the legs
   if (options.date_time_type() == Options::arrive_by) {
