@@ -7,6 +7,7 @@
    * UPDATED: timezone database to 2026d [#6343](https://github.com/valhalla/valhalla/pull/6343)
    * UPDATED: Sort nodes spatially using Hilbert curve [#6342](https://github.com/valhalla/valhalla/pull/6342)
    * UPDATED: complete Slovenian (sl-SI) locale [#6339](https://github.com/valhalla/valhalla/pull/6339)
+   * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6347](https://github.com/valhalla/valhalla/pull/6347)
 
 ## Release Date: 2026-09-19 Valhalla 3.9.0
 * **Removed**
