@@ -19,7 +19,10 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <osmium/handler/node_locations_for_ways.hpp>
+#include <osmium/index/map/flex_mem.hpp>
 #include <osmium/io/pbf_input.hpp>
+#include <osmium/visitor.hpp>
 #ifdef HAVE_EXPAT
 #include <osmium/io/xml_input.hpp>
 #endif
@@ -186,6 +189,7 @@ struct graph_parser {
     use_admin_db_ = pt.get<bool>("data_processing.use_admin_db", true);
 
     empty_node_tags_ = lua_.Transform(OSMType::kNode, 0, {});
+    empty_way_tags_ = lua_.Transform(OSMType::kWay, 0, {});
     empty_relation_tags_ = lua_.Transform(OSMType::kRelation, 0, {});
 
     tag_handlers_["driving_side"] = [this]() {
@@ -1990,32 +1994,10 @@ struct graph_parser {
     }
     return std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len);
   }
-
-  // Handle bike share stations separately
-  void bss_node(const osmium::Node& node) {
-    const uint64_t osmid = node.id();
-    // unsorted extracts are just plain nasty, so they can bugger off!
-    if (osmid < last_node_) {
-      throw std::runtime_error("Detected unsorted input data");
-    }
-    last_node_ = osmid;
-
-    // Get tags - do't bother with Lua callout if the taglist is empty
-    const Tags tags = node.tags().empty() ? empty_node_tags_
-                                          : lua_.Transform(OSMType::kNode, node.id(), node.tags());
-
-    // bail if there is nothing bike related
-    Tags::const_iterator found = tags.find("amenity");
-    if (found == tags.end() || found->second != "bicycle_rental") {
-      return;
-    }
-
-    // Create a new node and set its attributes
-    OSMNode n{osmid};
-    n.set_latlng(node.location().lon(), node.location().lat());
-    n.set_type(NodeType::kBikeShare);
+  // returns its index in node_names. Shared between node and way
+  uint32_t make_bss_info_index(const Tags& tags, const std::string& uri) {
     valhalla::BikeShareStationInfo bss_info;
-
+    bss_info.set_bss_uri(uri);
     for (auto& key_value : tags) {
       if (key_value.first == "name") {
         bss_info.set_name(key_value.second);
@@ -2039,8 +2021,86 @@ struct graph_parser {
     }
     const uint32_t bss_info_index = osmdata_.node_names.index(buffer);
     ++osmdata_.node_name_count;
+    return bss_info_index;
+  }
+  bool is_bicycle_rental(const Tags& tags) {
+    Tags::const_iterator found = tags.find("amenity");
+    return (found != tags.end() && found->second == "bicycle_rental");
+  }
+  // Handle bike share stations separately
+  void bss_node(const osmium::Node& node) {
+    const uint64_t osmid = node.id();
+    // unsorted extracts are just plain nasty, so they can bugger off!
+    if (osmid < last_node_) {
+      throw std::runtime_error("Detected unsorted input data");
+    }
+    last_node_ = osmid;
 
-    bss_nodes_->push_back({n, bss_info_index});
+    // Get tags - do't bother with Lua callout if the taglist is empty
+    const Tags tags = node.tags().empty() ? empty_node_tags_
+                                          : lua_.Transform(OSMType::kNode, node.id(), node.tags());
+
+    // bail if there is nothing bike related
+    if (!is_bicycle_rental(tags)) {
+      return;
+    }
+
+    // Create a new node and set its attributes
+    OSMNode n{osmid};
+    n.set_latlng(node.location().lon(), node.location().lat());
+    n.set_type(NodeType::kBikeShare);
+    std::string uri = "node:" + std::to_string(osmid);
+    bss_nodes_->push_back({n, make_bss_info_index(tags, uri)});
+  }
+
+  // Handle bike share stations of type way (closed way)
+  void bss_way(const osmium::Way& way) {
+    const uint64_t osmid = way.id();
+    // unsorted extracts are just plain nasty, so they can bugger off!
+    if (osmid < last_way_) {
+      throw std::runtime_error("Detected unsorted input data");
+    }
+    last_way_ = osmid;
+    // Get tags via the way lua transform
+    const Tags tags =
+        way.tags().empty() ? empty_way_tags_ : lua_.Transform(OSMType::kWay, way.id(), way.tags());
+
+    // bail if there is nothing bike related
+    if (!is_bicycle_rental(tags)) {
+      return;
+    }
+    // Compute the centroid (average of the valid vertices).
+    // For a closed way (area) the last node duplicates the first, skip it.
+    const auto& nodes = way.nodes();
+    size_t count = nodes.size();
+    if (count == 0) {
+      return;
+    }
+    if (count > 1 && nodes.front().ref() == nodes.back().ref()) {
+      --count;
+    }
+
+    double sum_lon = 0.0, sum_lat = 0.0;
+    size_t valid = 0;
+    for (size_t i = 0; i < count; ++i) {
+      const auto& loc = nodes[i].location();
+      if (!loc.valid()) {
+        continue;
+      }
+      sum_lon += loc.lon();
+      sum_lat += loc.lat();
+      ++valid;
+    }
+    if (valid == 0) {
+      LOG_WARN("BSS way " + std::to_string(osmid) + " has no valid node location");
+      return;
+    }
+
+    OSMNode n{osmid};
+    n.set_latlng(sum_lon / valid, sum_lat / valid);
+    n.set_type(NodeType::kBikeShare);
+    std::string uri = "way:" + std::to_string(osmid);
+    bss_nodes_->push_back({n, make_bss_info_index(tags, uri)});
   }
 
   void node(const osmium::Node& node) {
@@ -5116,6 +5176,7 @@ struct graph_parser {
 
   // empty objects initialized with defaults to use when no tags are present on objects
   Tags empty_node_tags_;
+  Tags empty_way_tags_;
   Tags empty_relation_tags_;
 
   uint32_t get_pronunciation_index(const uint8_t type, const uint8_t alpha) {
@@ -5441,7 +5502,25 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   LOG_INFO("Parsing files for nodes: " + boost::algorithm::join(input_files, ", "));
 
   if (pt.get<bool>("import_bike_share_stations", false)) {
-    LOG_INFO("Parsing bss nodes...");
+    LOG_INFO("Parsing bss nodes and ways...");
+
+    // Index type used to store node locations (required to
+    // reconstruct the ways' geometry and compute their centroid).
+    using index_type = osmium::index::map::FlexMem<osmium::unsigned_object_id_type, osmium::Location>;
+    using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
+
+    // Small handler that forwards node()/way() to the parser.
+    struct bss_handler : public osmium::handler::Handler {
+      graph_parser& parser;
+      explicit bss_handler(graph_parser& p) : parser(p) {
+      }
+      void node(const osmium::Node& n) {
+        parser.bss_node(n);
+      }
+      void way(const osmium::Way& w) {
+        parser.bss_way(w);
+      }
+    };
 
     bool create = true;
     for (auto& file : input_files) {
@@ -5452,12 +5531,15 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                    new sequence<OSMBSSNode>(bss_nodes_file, create), nullptr);
       create = false;
 
-      osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
-      while (const osmium::memory::Buffer buffer = reader.read()) {
-        for (const osmium::memory::Item& item : buffer) {
-          parser.bss_node(static_cast<const osmium::Node&>(item));
-        }
-      }
+      index_type index;
+      location_handler_type location_handler{index};
+      location_handler.ignore_errors();
+      bss_handler handler{parser};
+
+      // Read both nodes AND ways; osmium populates the way-nodes' coordinates
+      // via location_handler before calling handler.way().
+      osmium::io::Reader reader(file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way);
+      osmium::apply(reader, location_handler, handler);
       reader.close(); // Explicit close to get an exception in case of an error.
     }
     // Since the sequence must be flushed before reading it...
