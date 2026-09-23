@@ -59,7 +59,8 @@ void test_request(const std::string& request,
                   // We mark only the maneuvers that are RentBike and ReturnBike
                   const std::map<size_t, BssManeuverType>& expected_bss_maneuver,
                   const std::map<size_t, std::string>& expected_bss_ref = {},
-                  const std::optional<std::string>& expected_shape = {}) {
+                  const std::optional<std::string>& expected_shape = {},
+                  const std::map<size_t, std::string>& expected_bss_uri_ref = {}) {
 
   route_tester tester;
   auto response = tester.test(request);
@@ -105,6 +106,13 @@ void test_request(const std::string& request,
         EXPECT_EQ(m.bss_info().ref(), search->second)
             << "bss_info.osm_node_id at " + std::to_string(idx) + " is incorrect";
       }
+
+      auto search_uri = expected_bss_uri_ref.find(idx);
+      if (search_uri != expected_bss_uri_ref.end()) {
+        EXPECT_EQ(m.bss_info().bss_uri(), search_uri->second)
+            << "bss_info.bss_uri at " + std::to_string(idx) + " is incorrect";
+      }
+
       travel_modes.push_back(m.travel_mode());
       std::string name;
       for (const auto& n : m.street_name()) {
@@ -389,4 +397,29 @@ TEST(Standalone, UtrechtMultiModalAStar) {
   EXPECT_EQ(leg.maneuver(0).travel_mode(), TravelMode::kDrive);
   EXPECT_EQ(leg.maneuver(leg.maneuver_size() - 1).travel_mode(), TravelMode::kPedestrian);
   actor.cleanup();
+}
+
+TEST(AstarBss, test_With_Way_ref_11046) {
+  std::string request =
+      R"({"locations":[{"lat":48.86671,"lon":2.36512},{"lat":48.86974,"lon":2.37189}],"costing":"bikeshare",
+	       "costing_options":{"pedestrian":{"bss_rent_cost":0,"bss_rent_penalty":0},
+	                          "bicycle"   :{"bss_return_cost":0,"bss_return_penalty":0}}})";
+  std::vector<TravelMode> expected_travel_modes{TravelMode::kPedestrian, TravelMode::kBicycle,
+                                                TravelMode::kPedestrian};
+
+  std::vector<std::string> expected_route{"Boulevard Voltaire",   "Boulevard Voltaire",
+                                          "Rue Amelot",           "Avenue de la République",
+                                          "Rue des Trois Bornes", "Avenue Parmentier",
+                                          "Avenue Parmentier",    "Avenue Parmentier",
+                                          "Rue Abel-Rabaud"};
+
+  const std::map<size_t, BssManeuverType>&
+      expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
+                            {8, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+  const std::map<size_t, std::string>& expected_bss_ref{{2, "11046"}, {8, "11035"}};
+  const std::map<size_t, std::string>& expected_bss_uri_ref{{2, "way:3127156"},
+                                                            {8, "node:6380249071"}};
+
+  test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver,
+               expected_bss_ref, std::nullopt, expected_bss_uri_ref);
 }
