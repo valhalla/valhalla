@@ -380,6 +380,11 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                                const uint32_t tz_index,
                                uint8_t& restriction_idx,
                                uint8_t& destonly_access_restr_mask) const {
+  // the user asked for this edge to be usable no matter what
+  if (AllowedLinearFeature(edgeid)) {
+    return true;
+  }
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -405,6 +410,11 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                       const uint32_t tz_index,
                                       uint8_t& restriction_idx,
                                       uint8_t& destonly_access_restr_mask) const {
+  // the user asked for this edge to be usable no matter what
+  if (AllowedLinearFeature(opp_edgeid)) {
+    return true;
+  }
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
