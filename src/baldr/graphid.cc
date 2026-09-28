@@ -7,7 +7,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
-#include <iterator>
 #include <unordered_set>
 
 namespace valhalla {
@@ -133,12 +132,13 @@ std::ostream& operator<<(std::ostream& os, const GraphId& id) {
 namespace std {
 
 std::string to_string(const valhalla::baldr::GraphId& id) {
-  char buf[20]; // "7/4194303/2097151" is the longest a GraphId can print
-  char* pos = std::to_chars(buf, std::end(buf), id.level()).ptr;
+  constexpr size_t kTextMaxSize = 20; // "7/4194303/2097151" is the longest a GraphId can print
+  char buf[kTextMaxSize];
+  char* pos = std::to_chars(buf, buf + kTextMaxSize, id.level()).ptr;
   *pos++ = '/';
-  pos = std::to_chars(pos, std::end(buf), id.tileid()).ptr;
+  pos = std::to_chars(pos, buf + kTextMaxSize, id.tileid()).ptr;
   *pos++ = '/';
-  pos = std::to_chars(pos, std::end(buf), id.id()).ptr;
+  pos = std::to_chars(pos, buf + kTextMaxSize, id.id()).ptr;
   return {buf, pos};
 }
 
