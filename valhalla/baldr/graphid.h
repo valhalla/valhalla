@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <format>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -272,10 +273,13 @@ template <> struct hash<valhalla::baldr::GraphId> {
     return static_cast<size_t>(v);
   }
 };
-inline std::string to_string(const valhalla::baldr::GraphId& id) {
-  return std::to_string(id.level()) + "/" + std::to_string(id.tileid()) + "/" +
-         std::to_string(id.id());
-}
+std::string to_string(const valhalla::baldr::GraphId& id);
+
+template <> struct formatter<valhalla::baldr::GraphId> : formatter<std::string> {
+  auto format(const valhalla::baldr::GraphId& id, format_context& ctx) const {
+    return formatter<std::string>::format(::std::to_string(id), ctx);
+  }
+};
 } // namespace std
 
 #endif // VALHALLA_BALDR_GRAPHID_H_
