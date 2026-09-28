@@ -346,7 +346,6 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
     const bool using_bd = path_algorithm == &bidir_astar;
     cost->RelaxHierarchyLimits(using_bd);
     cost->set_allow_destination_only(true);
-    cost->set_allow_conditional_destination(true);
     path_algorithm->set_not_thru_pruning(false);
     // Get the best path. Return if not empty (else return the original path)
     auto relaxed_paths =

@@ -187,10 +187,10 @@ DynamicCost::DynamicCost(const Costing& costing,
                          const TravelMode mode,
                          uint32_t access_mask,
                          bool penalize_uturns)
-    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true),
-      allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
-      closure_factor_(kDefaultClosureFactor), speed_penalty_factor_(kDefaultSpeedPenaltyFactor),
-      flow_mask_(kDefaultFlowMask), shortest_(costing.options().shortest()),
+    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
+      access_mask_(access_mask), closure_factor_(kDefaultClosureFactor),
+      speed_penalty_factor_(kDefaultSpeedPenaltyFactor), flow_mask_(kDefaultFlowMask),
+      shortest_(costing.options().shortest()),
       distance_factor_(costing.options().use_distance() * kInvMedianSpeed),
       inv_distance_factor_(1.f - costing.options().use_distance()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
@@ -299,11 +299,6 @@ void DynamicCost::SetAllowTransitConnections(const bool allow) {
 // Sets the flag indicating whether destination only edges are allowed.
 void DynamicCost::set_allow_destination_only(const bool allow) {
   allow_destination_only_ = allow;
-}
-
-// Sets the flag indicating whether edges with valid restriction conditional=destination are allowed.
-void DynamicCost::set_allow_conditional_destination(const bool allow) {
-  allow_conditional_destination_ = allow;
 }
 
 // Returns the maximum transfer distance between stops that you are willing

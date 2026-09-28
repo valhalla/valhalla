@@ -110,7 +110,8 @@ public:
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx,
-                       uint8_t& /*destonly_access_restr_mask*/) const override;
+                       uint8_t& /*destonly_access_restr_mask*/,
+                       bool* /*edge_destonly*/) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -137,7 +138,9 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               uint8_t& restriction_idx,
-                              uint8_t& /*destonly_access_restr_mask*/) const override;
+                              uint8_t& /*destonly_access_restr_mask*/,
+                              const bool is_dest,
+                              bool* /*edge_destonly*/) const override;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -525,7 +528,8 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const uint64_t,
                           const uint32_t,
                           uint8_t&,
-                          uint8_t&) const {
+                          uint8_t&,
+                          bool*) const {
   // TODO - obtain and check the access restrictions.
 
   if (exclude_stops_.size()) {
@@ -557,7 +561,9 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge*,
                                  const uint64_t,
                                  const uint32_t,
                                  uint8_t&,
-                                 uint8_t&) const {
+                                 uint8_t&,
+                                 const bool,
+                                 bool*) const {
   // This method should not be called since time based routes do not use
   // bidirectional A*
   return false;

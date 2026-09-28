@@ -53,7 +53,8 @@ public:
                        const uint64_t,
                        const uint32_t,
                        uint8_t&,
-                       uint8_t&) const override {
+                       uint8_t&,
+                       bool*) const override {
     return !edge->is_shortcut();
   }
 
@@ -83,7 +84,9 @@ public:
                               const uint64_t,
                               const uint32_t,
                               uint8_t&,
-                              uint8_t&) const override {
+                              uint8_t&,
+                              const bool,
+                              bool*) const override {
     return !opp_edge->is_shortcut();
   }
 

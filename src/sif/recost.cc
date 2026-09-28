@@ -95,6 +95,7 @@ void recost_forward(baldr::GraphReader& reader,
     // queued edges as normal
     uint8_t time_restrictions_TODO = baldr::kInvalidRestriction;
     uint8_t destonly_restriction_mask = 0;
+    bool edge_destonly = false;
     // if its not time dependent set to 0 for Allowed method below
     const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
     // we should call 'Allowed' method even if 'ignore_access' flag is true in order to
@@ -103,7 +104,7 @@ void recost_forward(baldr::GraphReader& reader,
     if (predecessor != baldr::kInvalidLabel &&
         (!costing.Allowed(edge, !next_id.is_valid(), label, tile, edge_id, localtime,
                           offset_time.timezone_index, time_restrictions_TODO,
-                          destonly_restriction_mask) &&
+                          destonly_restriction_mask, &edge_destonly) &&
          !ignore_access)) {
       throw std::runtime_error("This path requires different edge access than this costing allows");
     }
@@ -141,7 +142,8 @@ void recost_forward(baldr::GraphReader& reader,
         node ? costing.TurnType(label.opp_local_idx(), node, edge) : InternalTurn::kNoTurn;
     label = PathEdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, costing.travel_mode(),
                           std::round(length), transition_cost, time_restrictions_TODO, !ignore_access,
-                          static_cast<bool>(flow_sources & baldr::kDefaultFlowMask), turn);
+                          static_cast<bool>(flow_sources & baldr::kDefaultFlowMask), turn, 0,
+                          edge_destonly);
     // hand back the label
     label_cb(label);
     // next edge

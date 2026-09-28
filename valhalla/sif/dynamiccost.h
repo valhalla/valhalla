@@ -351,7 +351,8 @@ public:
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx,
-                       uint8_t& destonly_access_restr_mask) const = 0;
+                       uint8_t& destonly_access_restr_mask,
+                       bool* edge_destonly = nullptr) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -379,7 +380,9 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               uint8_t& restriction_idx,
-                              uint8_t& destonly_access_restr_mask) const = 0;
+                              uint8_t& destonly_access_restr_mask,
+                              const bool is_dest = false,
+                              bool* edge_destonly = nullptr) const = 0;
 
   /**
    * Checks if any edge exclusion is present.
@@ -743,17 +746,25 @@ public:
    */
   inline uint8_t GetExemptedAccessRestrictions(const baldr::DirectedEdge* edge,
                                                const baldr::graph_tile_ptr& tile,
-                                               const baldr::GraphId& edgeid) {
+                                               const baldr::GraphId& edgeid,
+                                               const uint64_t current_time = 0,
+                                               const uint32_t tz_index = 0,
+                                               bool* edge_destonly = nullptr) {
 
     uint8_t destonly_access_restr_mask = 0;
-    if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_) ||
-        allow_destination_only_)
+    if (edge_destonly)
+      *edge_destonly = is_hgv() ? edge->destonly_hgv() : edge->destonly();
+    if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_))
       return 0;
 
     auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mask_);
 
     for (const auto& restr : restrictions) {
-      if (restr.except_destination()) {
+      if (edge_destonly && restr.type() == baldr::AccessType::kDestinationAllowed &&
+          current_time != 0 && IsConditionalActive(restr.value(), current_time, tz_index)) {
+        *edge_destonly = true;
+      }
+      if (restr.except_destination() && !allow_destination_only_) {
         destonly_access_restr_mask |=
             baldr::kAccessRestrictionMasks[static_cast<size_t>(restr.type())];
       }
@@ -767,7 +778,6 @@ public:
    *
    * @param access_mode        The access mode to get restrictions for
    * @param edge               The edge to check for restrictions
-   * @param is_dest            Is there a destination on the edge?
    * @param tile               The edge's tile
    * @param current_time       Needed for time dependent restrictions
    * @param tz_index           The current timezone index
@@ -775,13 +785,15 @@ public:
    */
   inline bool EvaluateRestrictions(uint32_t access_mode,
                                    const baldr::DirectedEdge* edge,
-                                   const bool is_dest,
                                    const baldr::graph_tile_ptr& tile,
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
                                    uint8_t& restriction_idx,
-                                   uint8_t& destonly_access_restr_mask) const {
+                                   uint8_t& destonly_access_restr_mask,
+                                   const bool pred_destonly = false,
+                                   const bool is_dest = false,
+                                   bool* edge_destonly = nullptr) const {
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
 
@@ -824,9 +836,14 @@ public:
             if (access_type == baldr::AccessType::kTimedAllowed) {
               destonly_access_restr_mask = tmp_mask;
               return true;
-            } else if (access_type == baldr::AccessType::kDestinationAllowed)
-              return allow_conditional_destination_ || is_dest;
-            else
+            } else if (access_type == baldr::AccessType::kTimedDenied) {
+              return false;
+            }
+            // an open window makes this edge destination-only: local traffic keeps checking
+            // the rest of its restrictions, everyone else is turned away here
+            if (edge_destonly)
+              *edge_destonly = true;
+            if (pass_ == 0 && !pred_destonly && !is_dest)
               return false;
           }
         }
@@ -980,12 +997,6 @@ public:
    * @param  allow  Flag indicating whether transit connections are allowed.
    */
   virtual void SetAllowTransitConnections(const bool allow);
-
-  /**
-   * Sets the flag indicating whether edges with valid restriction conditional=destination are
-   * allowed.
-   */
-  void set_allow_conditional_destination(const bool allow);
 
   /**
    * Set the current travel mode.
@@ -1319,8 +1330,6 @@ protected:
   // and bicycle generally allow access (with small penalties).
   bool allow_destination_only_;
 
-  bool allow_conditional_destination_;
-
   // Used in edgefilter, it tells if the location should be projected on a edge which is
   // a bike share station connection
   bool project_on_bss_connection_{false};
@@ -1547,6 +1556,7 @@ protected:
    * @return Returns the transition cost (cost, elapsed time).
    */
   template <typename predecessor_t>
+  // edge_destonly, when the caller knows it, already accounts for an open window
   sif::Cost base_transition_cost(const baldr::NodeInfo* node,
                                  const baldr::DirectedEdge* edge,
                                  const predecessor_t* pred,

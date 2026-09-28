@@ -342,3 +342,211 @@ TEST_F(ConditionalRestrictions, AccessConditional) {
         << costing;
   }
 }
+class DestinationOnlyZones : public ::testing::Test {
+protected:
+  // A contiguous run of dest-only edges is a zone, static and conditional parts alike: traffic
+  // with an endpoint inside may cross all of it, through traffic may not.
+  static constexpr const char* kZoneCondition = "destination @ (Mo-Su 09:00-17:00)";
+  static constexpr const char* kRestricted = "2020-04-02T12:00";
+  static constexpr const char* kUnrestricted = "2020-04-02T20:00";
+
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    const std::string ascii_map = R"(
+       A----B----C----D----E----F----G----H----I
+            |                   |    |         |
+            J-------------------K    +----L----+
+                                     |         |
+                                     +----M----+
+    )";
+    const std::pair<std::string, std::string> stat = {"motor_vehicle", "destination"};
+    const std::pair<std::string, std::string> cond = {"motor_vehicle:conditional", kZoneCondition};
+    const gurka::ways ways = {
+        {"AB", {{"highway", "residential"}}},       {"BC", {{"highway", "residential"}, stat}},
+        {"CD", {{"highway", "residential"}, stat}}, {"DE", {{"highway", "residential"}, cond}},
+        {"EF", {{"highway", "residential"}, cond}}, {"FG", {{"highway", "residential"}}},
+        {"GH", {{"highway", "residential"}, cond}}, {"HI", {{"highway", "residential"}}},
+        {"GL", {{"highway", "residential"}, stat}}, {"LI", {{"highway", "residential"}}},
+        {"GM", {{"highway", "residential"}}},       {"MI", {{"highway", "residential"}}},
+        {"BJ", {{"highway", "residential"}}},       {"JK", {{"highway", "residential"}}},
+        {"KF", {{"highway", "residential"}}},
+    };
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+    map =
+        gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/destination_only_zones",
+                          {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
+  }
+
+  // warning 401 means pass 0 failed and dest-only was dropped globally for the request
+  static bool used_relaxed_pass(const valhalla::Api& result) {
+    for (const auto& w : result.info().warnings())
+      if (w.code() == 401)
+        return true;
+    return false;
+  }
+};
+gurka::map DestinationOnlyZones::map = {};
+
+// Origin F rather than G: an origin edge is seeded without an access check, so a restricted
+// edge has to be one hop in to be evaluated at all.
+TEST_F(DestinationOnlyZones, ThroughTrafficExcluded) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
+                                   {{"/date_time/type", dt}, {"/date_time/value", kRestricted}});
+    gurka::assert::raw::expect_path(result, {"FG", "GM", "MI"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+// The window is an access rule, not a cost: zeroing the penalty must not open the conditional
+// branch. The static branch does open for the time-dependent algorithms, as it always has.
+TEST_F(DestinationOnlyZones, ThroughTrafficExcludedWithZeroPenalty) {
+  for (const auto& dt : {std::string("1"), std::string("2")}) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"FG", "GL", "LI"}, "date_time type " + dt);
+  }
+
+  auto bidirectional = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
+                                        {{"/date_time/type", "3"},
+                                         {"/date_time/value", kRestricted},
+                                         {"/costing_options/auto/destination_only_penalty", "0"}});
+  gurka::assert::raw::expect_path(bidirectional, {"FG", "GM", "MI"});
+}
+
+TEST_F(DestinationOnlyZones, ThroughTrafficAllowedOutsideWindow) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
+                                   {{"/date_time/type", dt}, {"/date_time/value", kUnrestricted}});
+    gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"}, "date_time type " + dt);
+  }
+}
+
+TEST_F(DestinationOnlyZones, EnterOneEdge) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "E"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"FG", "EF"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, LeaveOneEdge) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "G"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"EF", "FG"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+// Only the tree seeded at the far end sees an endpoint this deep, so depart_at is excluded.
+TEST_F(DestinationOnlyZones, EnterTwoEdges) {
+  for (const auto& dt : {std::string("2"), std::string("3")}) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "D"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"FG", "EF", "DE"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, LeaveTwoEdges) {
+  for (const auto& dt : {std::string("1"), std::string("3")}) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"D", "G"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"DE", "EF", "FG"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+// `pred.destonly()` is false on a conditional edge, so the seam trips the static check too.
+TEST_F(DestinationOnlyZones, StaticOriginThroughConditional) {
+  for (const auto& dt : {std::string("1"), std::string("3")}) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"C", "G"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"CD", "DE", "EF", "FG"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, StaticDestinationThroughConditional) {
+  for (const auto& dt : {std::string("2"), std::string("3")}) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "C"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"FG", "EF", "DE", "CD"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, ConditionalOriginThroughStatic) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "A"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"DE", "CD", "BC", "AB"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, ConditionalDestinationThroughStatic) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+// Leaving a zone must not switch dest-only off for the rest of the route; either downstream
+// shortcut being taken means the exemption leaked past the zone boundary.
+TEST_F(DestinationOnlyZones, StillAppliesAfterLeavingZone) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "I"}, "auto",
+                                   {{"/date_time/type", dt}, {"/date_time/value", kRestricted}});
+    gurka::assert::raw::expect_path(result, {"EF", "FG", "GM", "MI"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, DestinationInDownstreamZone) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "H"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"EF", "FG", "GH"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+// Known limit: a unidirectional search only seeds one end, so it cannot tell that an endpoint
+// more than one edge inside a zone makes the path local traffic, and detours instead.
+TEST_F(DestinationOnlyZones, UnidirectionalDetoursAroundDeepEndpoints) {
+  auto depart_at = gurka::do_action(valhalla::Options::route, map, {"G", "D"}, "auto",
+                                    {{"/date_time/type", "1"}, {"/date_time/value", kRestricted}});
+  gurka::assert::raw::expect_path(depart_at, {"FG", "KF", "JK", "BJ", "BC", "CD"},
+                                  "depart_at cannot see a destination two edges into the zone");
+
+  auto arrive_by = gurka::do_action(valhalla::Options::route, map, {"D", "G"}, "auto",
+                                    {{"/date_time/type", "2"}, {"/date_time/value", kRestricted}});
+  gurka::assert::raw::expect_path(arrive_by, {"CD", "BC", "BJ", "JK", "KF", "FG"},
+                                  "arrive_by cannot see an origin two edges into the zone");
+}
