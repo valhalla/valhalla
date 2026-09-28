@@ -276,7 +276,8 @@ template <> struct hash<valhalla::baldr::GraphId> {
 std::string to_string(const valhalla::baldr::GraphId& id);
 
 template <> struct formatter<valhalla::baldr::GraphId> : formatter<std::string> {
-  auto format(const valhalla::baldr::GraphId& id, format_context& ctx) const {
+  template <class FormatContext>
+  auto format(const valhalla::baldr::GraphId& id, FormatContext& ctx) const {
     return formatter<std::string>::format(::std::to_string(id), ctx);
   }
 };
