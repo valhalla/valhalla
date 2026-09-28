@@ -1915,11 +1915,12 @@ public:
     return {sec / 10.0f, sec};
   }
 
-  vs::Cost TransitionCost(const DirectedEdge* /*edge*/,
-                          const NodeInfo* /*node*/,
-                          const vs::EdgeLabel& /*pred*/,
-                          const graph_tile_ptr& /*tile*/,
-                          const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/) const override {
+  vs::Cost
+  TransitionCost(const DirectedEdge* /*edge*/,
+                 const NodeInfo* /*node*/,
+                 const vs::EdgeLabel& /*pred*/,
+                 const graph_tile_ptr& /*tile*/,
+                 const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/) const override {
     return {5.0f, 5.0f};
   }
 

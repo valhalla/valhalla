@@ -92,11 +92,12 @@ public:
     return {sec / 10.0f, sec};
   }
 
-  Cost TransitionCost(const DirectedEdge* /*edge*/,
-                      const NodeInfo* /*node*/,
-                      const EdgeLabel& /*pred*/,
-                      const graph_tile_ptr& /*tile*/,
-                      const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/) const override {
+  Cost
+  TransitionCost(const DirectedEdge* /*edge*/,
+                 const NodeInfo* /*node*/,
+                 const EdgeLabel& /*pred*/,
+                 const graph_tile_ptr& /*tile*/,
+                 const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/) const override {
     return {5.0f, 5.0f};
   }
 
