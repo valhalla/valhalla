@@ -133,7 +133,7 @@ std::ostream& operator<<(std::ostream& os, const GraphId& id) {
 namespace std {
 
 std::string to_string(const valhalla::baldr::GraphId& id) {
-  char buf[17]; // "7/4194303/2097151" is the longest a GraphId can print
+  char buf[20]; // "7/4194303/2097151" is the longest a GraphId can print
   char* pos = std::to_chars(buf, std::end(buf), id.level()).ptr;
   *pos++ = '/';
   pos = std::to_chars(pos, std::end(buf), id.tileid()).ptr;
