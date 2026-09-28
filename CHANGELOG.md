@@ -6,6 +6,7 @@
 * **Enhancement**
    * UPDATED: timezone database to 2026d [#6343](https://github.com/valhalla/valhalla/pull/6343)
    * UPDATED: Sort nodes spatially using Hilbert curve [#6342](https://github.com/valhalla/valhalla/pull/6342)
+   * UPDATED: complete Slovenian (sl-SI) locale [#6339](https://github.com/valhalla/valhalla/pull/6339)
    * UPDATED: Replace `boost::format` with C++20 `std::format` [#6363](https://github.com/valhalla/valhalla/pull/6363)
 
 ## Release Date: 2026-09-19 Valhalla 3.9.0
