@@ -15,6 +15,7 @@
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/ferry_connections.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/hilbert.h"
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
 #include "mjolnir/util.h"
@@ -51,10 +52,10 @@ SortGraph(const std::string& nodes_file, const std::string& edges_file, const ui
   nodes.sort(
       [](const Node& a, const Node& b) {
         if (a.graph_id == b.graph_id) {
-          if (a.grid_id == b.grid_id) {
+          if (a.sort_key == b.sort_key) {
             return a.node.osmid_ < b.node.osmid_;
           } else {
-            return a.grid_id < b.grid_id;
+            return a.sort_key < b.sort_key;
           }
         }
         return a.graph_id < b.graph_id;
@@ -205,7 +206,7 @@ void ConstructEdges(const std::string& ways_file,
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
-                    const std::function<uint32_t(const OSMNode&)>& grid_id_predicate,
+                    const std::function<uint32_t(const OSMNode&)>& sort_key_predicate,
                     const bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
 
@@ -264,7 +265,7 @@ void ConstructEdges(const std::string& ways_file,
     way_node.node.link_edge_ = way.link();
     way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
     nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1),
-                     graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
+                     graph_id_predicate(way_node.node), sort_key_predicate(way_node.node)});
 
     // Iterate through the nodes of the way until we find an intersection
     while (current_way_node_index < way_nodes.size()) {
@@ -285,7 +286,7 @@ void ConstructEdges(const std::string& ways_file,
         // edge until the next iteration of the loop, ie once the edge becomes prev_edge
         uint32_t end_of = static_cast<uint32_t>(edges.size() + prev_edge.is_valid());
         nodes.push_back({way_node.node, static_cast<uint32_t>(-1), end_of,
-                         graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
+                         graph_id_predicate(way_node.node), sort_key_predicate(way_node.node)});
 
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
@@ -1513,32 +1514,15 @@ void BuildLocalTiles(const unsigned int thread_count,
 
 namespace valhalla::mjolnir {
 
-// Returns the grid Id within the tile. A tile is subdivided into a nxn grid.
-// The grid Id within the tile is used to sort nodes spatially.
-uint32_t GetGridId(const OSMNode& node,
-                   const midgard::Tiles<midgard::PointLL>& tiling,
-                   const uint32_t grid_divisions) {
-  // By default grid_divisions is set to 0 to indicate no spatial sorting within a tile
-  if (grid_divisions == 0) {
+// Key used to sort nodes spatially within a tile.
+uint32_t GetSortKey(const OSMNode& node, const midgard::Tiles<midgard::PointLL>& tiling) {
+  const auto ll = node.latlng();
+  const auto tile_id = tiling.TileId(ll);
+  if (tile_id < 0) {
+    LOG_ERROR("GetSortKey: Invalid tile id, node osm id = " + std::to_string(node.osmid_));
     return 0;
   }
-
-  auto tile_id = tiling.TileId(node.latlng());
-  if (tile_id >= 0) {
-    auto base_ll = tiling.Base(tile_id);
-    float grid_size = tiling.TileSize() / static_cast<float>(grid_divisions);
-    uint32_t row = static_cast<uint32_t>((node.latlng().lat() - base_ll.lat()) / grid_size);
-    uint32_t col = static_cast<uint32_t>((node.latlng().lng() - base_ll.lng()) / grid_size);
-    if (row > grid_divisions || col > grid_divisions) {
-      LOG_ERROR("grid row = " + std::to_string(row) + " col = " + std::to_string(col) +
-                " node osm id = " + std::to_string(node.osmid_));
-      return 0;
-    }
-    return (row * grid_divisions + col);
-  } else {
-    LOG_ERROR("GetGridId: Invalid tile id, node osm id = " + std::to_string(node.osmid_));
-    return 0;
-  }
+  return TileHilbertIndex(ll, tiling, tile_id);
 }
 
 std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::ptree& pt,
@@ -1549,22 +1533,12 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
   SCOPED_TIMER();
   uint8_t level = TileHierarchy::levels().back().level;
   auto tiling = TileHierarchy::get_tiling(level);
-  uint32_t grid_divisions =
-      pt.get<unsigned int>("mjolnir.data_processing.grid_divisions_within_tile", 0);
-  if (grid_divisions > 0) {
-    LOG_INFO("Sort nodes spatially within each tile using nxn grids where n = " +
-             std::to_string(grid_divisions));
-  } else {
-    LOG_INFO("Spatial sorting of nodes within each tile is disabled");
-  }
 
   // Make the edges and nodes in the graph
   ConstructEdges(
       ways_file, way_nodes_file, nodes_file, edges_file,
       [&level](const OSMNode& node) { return TileHierarchy::GetGraphId(node.latlng(), level); },
-      [&tiling, &grid_divisions](const OSMNode& node) {
-        return GetGridId(node, tiling, grid_divisions);
-      },
+      [&tiling](const OSMNode& node) { return GetSortKey(node, tiling); },
       pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   const uint32_t concurrency =
