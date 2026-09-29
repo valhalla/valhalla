@@ -561,6 +561,11 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const uint32_t tz_index,
                           uint8_t& restriction_idx,
                           uint8_t& destonly_access_restr_mask) const {
+  // the user asked for this edge to be usable no matter what
+  if (AllowedLinearFeature(edgeid)) {
+    return true;
+  }
+
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Allow Uturns at dead ends only.
   // Skip impassable edges and shortcut edges.
@@ -598,6 +603,11 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const uint32_t tz_index,
                                  uint8_t& restriction_idx,
                                  uint8_t& destonly_access_restr_mask) const {
+  // the user asked for this edge to be usable no matter what
+  if (AllowedLinearFeature(opp_edgeid)) {
+    return true;
+  }
+
   // Check access, U-turn (allow at dead-ends), and simple turn restriction.
   // Do not allow transit connection edges.
   if (!IsAccessible(opp_edge) || opp_edge->is_shortcut() ||

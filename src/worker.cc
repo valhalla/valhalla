@@ -591,6 +591,29 @@ void parse_xyz(const rapidjson::Document& doc, valhalla::Options& options) {
   }
 }
 
+uint32_t AllowTypes_Parse(const rapidjson::Value::ConstObject& obj) {
+  static const std::unordered_map<std::string, uint32_t> types{
+      {"all", baldr::kAllowAll},
+  };
+
+  // handle {"allow": true} shorthand
+  if (obj.HasMember("allow") && obj["allow"].IsBool() && obj["allow"].GetBool())
+    return baldr::kAllowAll;
+
+  uint32_t mask = baldr::kAllowNone;
+  if (obj.HasMember("allow_types") && obj["allow_types"].IsArray()) {
+    for (const auto& allow_type : obj["allow_types"].GetArray()) {
+      if (allow_type.IsString()) {
+        auto i = types.find(allow_type.GetString());
+        if (i != types.cend()) {
+          mask |= i->second;
+        }
+      }
+    }
+  }
+  return mask;
+}
+
 void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
   auto json_obj = json_feat.GetObject();
   for (const auto& coords_j : json_obj["geometry"].GetObject()["coordinates"].GetArray()) {
@@ -598,13 +621,9 @@ void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatu
     shape_pt->mutable_ll()->set_lng(coords_j.GetArray()[0].GetFloat());
     shape_pt->mutable_ll()->set_lat(coords_j.GetArray()[1].GetFloat());
   }
-  if (json_obj["properties"].GetObject().HasMember("factor")) {
-    line_feat->set_cost_factor(json_obj["properties"].GetObject()["factor"].GetFloat());
-  } else if (json_obj["properties"].GetObject().HasMember("ignore_access_restrictions")) {
-    line_feat->set_ignore_access_restrictions(
-        json_obj["properties"].GetObject()["ignore_access_restrictions"].GetBool());
-    line_feat->set_cost_factor(1);
-  }
+  auto props = json_obj["properties"].GetObject();
+  line_feat->set_cost_factor(props.HasMember("factor") ? props["factor"].GetFloat() : 1.);
+  line_feat->set_allow_types(AllowTypes_Parse(props));
 }
 
 void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
@@ -619,12 +638,8 @@ void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* 
     shape_pt->mutable_ll()->set_lat(ll.lat());
   }
 
-  if (json_obj.HasMember("factor")) {
-    line_feat->set_cost_factor(json_obj["factor"].GetFloat());
-  } else if (json_obj.HasMember("ignore_access_restrictions")) {
-    line_feat->set_cost_factor(1);
-    line_feat->set_ignore_access_restrictions(json_obj["ignore_access_restrictions"].GetBool());
-  }
+  line_feat->set_cost_factor(json_obj.HasMember("factor") ? json_obj["factor"].GetFloat() : 1.);
+  line_feat->set_allow_types(AllowTypes_Parse(json_obj));
 }
 
 /**
