@@ -709,23 +709,22 @@ TEST(LinearFeature, none_costing) {
   auto map = gurka::buildtiles(layout, ways, {}, {},
                                VALHALLA_BUILD_DIR "test/data/linear_feature_none_costing");
 
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
-    ],
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
+    ], 
     "linear_cost_factors": [
-      {"shape": "%s", "factor": 200}
-    ],
+      {{"shape": "{}", "factor": 200}}
+    ], 
     "costing": "auto"
-  }
+  }}
   )";
 
-  auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
-                   std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("C").lng()) %
-                   std::to_string(map.nodes.at("C").lat()) % encode_shape({"B", "D"}, map.nodes))
-                      .str();
+  auto json_str = std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
+                              map.nodes.at("C").lng(), map.nodes.at("C").lat(),
+                              encode_shape({"B", "D"}, map.nodes));
 
   loki::loki_worker_t loki_worker(map.config);
 
