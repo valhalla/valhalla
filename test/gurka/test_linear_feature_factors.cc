@@ -4,8 +4,10 @@
 #include "loki/worker.h"
 #include "thor/worker.h"
 
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
+
+#include <format>
+#include <string_view>
 
 using namespace valhalla;
 
@@ -143,24 +145,22 @@ TEST_F(LinearFeatureTest, simple_high_factor) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
 
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
     ], 
     "linear_cost_factors": [
-      {"shape": "%s", "factor": %s}
+      {{"shape": "{}", "factor": {}}}
     ], 
     "costing": "auto"
-  }
+  }}
   )";
 
-  auto json_str =
-      (boost::format(json_request) % std::to_string(map.nodes.at("3").lng()) %
-       std::to_string(map.nodes.at("3").lat()) % std::to_string(map.nodes.at("2").lng()) %
-       std::to_string(map.nodes.at("2").lat()) % encode_shape({"A", "B", "C"}, map.nodes) % "200")
-          .str();
+  auto json_str = std::format(json_request, map.nodes.at("3").lng(), map.nodes.at("3").lat(),
+                              map.nodes.at("2").lng(), map.nodes.at("2").lat(),
+                              encode_shape({"A", "B", "C"}, map.nodes), "200");
 
   Api request;
   ParseApi(json_str, Options::route, request);
@@ -214,24 +214,22 @@ TEST_F(LinearFeatureTest, simple_low_factor) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
 
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
     ], 
     "linear_cost_factors": [
-      {"shape": "%s", "factor": %s}
+      {{"shape": "{}", "factor": {}}}
     ], 
     "costing": "auto"
-  }
+  }}
   )";
 
-  auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("4").lng()) %
-                   std::to_string(map.nodes.at("4").lat()) % std::to_string(map.nodes.at("1").lng()) %
-                   std::to_string(map.nodes.at("1").lat()) %
-                   encode_shape({"U", "V", "W", "X", "Y"}, map.nodes) % "0.01")
-                      .str();
+  auto json_str = std::format(json_request, map.nodes.at("4").lng(), map.nodes.at("4").lat(),
+                              map.nodes.at("1").lng(), map.nodes.at("1").lat(),
+                              encode_shape({"U", "V", "W", "X", "Y"}, map.nodes), "0.01");
 
   std::cerr << "Valhalla request is: \n" << json_str << "\n";
 
@@ -274,24 +272,22 @@ TEST_F(LinearFeatureTest, partial_edges_shape) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
 
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
     ], 
     "linear_cost_factors": [
-      {"shape": "%s", "factor": %s}
+      {{"shape": "{}", "factor": {}}}
     ], 
     "costing": "auto"
-  }
+  }}
   )";
 
-  auto json_str =
-      (boost::format(json_request) % std::to_string(map.nodes.at("T").lng()) %
-       std::to_string(map.nodes.at("T").lat()) % std::to_string(map.nodes.at("Z").lng()) %
-       std::to_string(map.nodes.at("Z").lat()) % encode_shape({"1", "Y", "5"}, map.nodes) % "100")
-          .str();
+  auto json_str = std::format(json_request, map.nodes.at("T").lng(), map.nodes.at("T").lat(),
+                              map.nodes.at("Z").lng(), map.nodes.at("Z").lat(),
+                              encode_shape({"1", "Y", "5"}, map.nodes), "100");
 
   std::cerr << "Valhalla request is: \n" << json_str << "\n";
 
@@ -327,29 +323,27 @@ TEST_F(LinearFeatureTest, ignore_access_restrictions) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
 
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
     ], 
     "linear_cost_factors": [
-      {"shape": "%s", "ignore_access_restrictions": %s}
+      {{"shape": "{}", "ignore_access_restrictions": {}}}
     ], 
     "costing": "auto",
-    "costing_options": {
-      "auto": {
+    "costing_options": {{
+      "auto": {{
         "weight": 20
-      }
-    }
-  }
+      }}
+    }}
+  }}
   )";
 
-  auto json_str =
-      (boost::format(json_request) % std::to_string(map.nodes.at("4").lng()) %
-       std::to_string(map.nodes.at("4").lat()) % std::to_string(map.nodes.at("6").lng()) %
-       std::to_string(map.nodes.at("6").lat()) % encode_shape({"V", "W"}, map.nodes) % "true")
-          .str();
+  auto json_str = std::format(json_request, map.nodes.at("4").lng(), map.nodes.at("4").lat(),
+                              map.nodes.at("6").lng(), map.nodes.at("6").lat(),
+                              encode_shape({"V", "W"}, map.nodes), "true");
 
   std::cerr << "Valhalla request is: \n" << json_str << "\n";
 
@@ -395,18 +389,18 @@ TEST_F(LinearFeatureTest, multi_shape_geojson) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
 
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
     ], 
     "linear_cost_factors": [
-      {"type": "Feature", "geometry": {"type": "LineString", "coordinates": %s}, "properties": {"factor": %s}},
-      {"type": "Feature", "geometry": {"type": "LineString", "coordinates": %s}, "properties": {"factor": %s}}
+      {{"type": "Feature", "geometry": {{"type": "LineString", "coordinates": {}}}, "properties": {{"factor": {}}}}},
+      {{"type": "Feature", "geometry": {{"type": "LineString", "coordinates": {}}}, "properties": {{"factor": {}}}}}
     ], 
     "costing": "auto"
-  }
+  }}
   )";
 
   auto format_coordinates = [&](const std::vector<std::string>& waypoints) {
@@ -423,12 +417,10 @@ TEST_F(LinearFeatureTest, multi_shape_geojson) {
     return std::string(writer.get_buffer());
   };
 
-  auto json_str =
-      (boost::format(json_request) % std::to_string(map.nodes.at("E").lng()) %
-       std::to_string(map.nodes.at("E").lat()) % std::to_string(map.nodes.at("Z").lng()) %
-       std::to_string(map.nodes.at("Z").lat()) % format_coordinates({"2", "E", "Z", "5"}) % "100" %
-       format_coordinates({"F", "b"}) % "0.1")
-          .str();
+  auto json_str = std::format(json_request, map.nodes.at("E").lng(), map.nodes.at("E").lat(),
+                              map.nodes.at("Z").lng(), map.nodes.at("Z").lat(),
+                              format_coordinates({"2", "E", "Z", "5"}), "100",
+                              format_coordinates({"F", "b"}), "0.1");
 
   std::cerr << "Valhalla request is: \n" << json_str << "\n";
 
@@ -466,25 +458,22 @@ TEST_F(LinearFeatureTest, multi_shape_geojson) {
  * The same shape as simple_high_factor, but for CostMatrix.
  * */
 TEST_F(LinearFeatureTest, matrix_high_factor) {
-  std::string json_request = R"(
-  {
-    "sources": [{"lon": %s, "lat": %s}],
-    "targets": [{"lon": %s, "lat": %s}],
-    %s
+  constexpr std::string_view json_request = R"(
+  {{
+    "sources": [{{"lon": {:.6f}, "lat": {:.6f}}}],
+    "targets": [{{"lon": {:.6f}, "lat": {:.6f}}}],
+    {}
     "costing": "auto"
-  }
+  }}
   )";
 
   auto build_request = [&](const std::string& factors) {
-    return (boost::format(json_request) % std::to_string(map.nodes.at("3").lng()) %
-            std::to_string(map.nodes.at("3").lat()) % std::to_string(map.nodes.at("2").lng()) %
-            std::to_string(map.nodes.at("2").lat()) % factors)
-        .str();
+    return std::format(json_request, map.nodes.at("3").lng(), map.nodes.at("3").lat(),
+                       map.nodes.at("2").lng(), map.nodes.at("2").lat(), factors);
   };
 
-  const auto factors = (boost::format(R"("linear_cost_factors": [{"shape": "%s", "factor": 200}],)") %
-                        encode_shape({"A", "B", "C"}, map.nodes))
-                           .str();
+  const auto factors = std::format(R"("linear_cost_factors": [{{"shape": "{}", "factor": 200}}],)",
+                                   encode_shape({"A", "B", "C"}, map.nodes));
 
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
@@ -528,25 +517,22 @@ TEST_F(LinearFeatureTest, matrix_high_factor) {
  * Same, but through TimeDistanceMatrix
  * */
 TEST_F(LinearFeatureTest, matrix_timedistancematrix) {
-  std::string json_request = R"(
-  {
-    "sources": [{"lon": %s, "lat": %s}],
-    "targets": [{"lon": %s, "lat": %s}],
-    %s
+  constexpr std::string_view json_request = R"(
+  {{
+    "sources": [{{"lon": {:.6f}, "lat": {:.6f}}}],
+    "targets": [{{"lon": {:.6f}, "lat": {:.6f}}}],
+    {}
     "costing": "auto"
-  }
+  }}
   )";
 
   auto build_request = [&](const std::string& factors) {
-    return (boost::format(json_request) % std::to_string(map.nodes.at("3").lng()) %
-            std::to_string(map.nodes.at("3").lat()) % std::to_string(map.nodes.at("2").lng()) %
-            std::to_string(map.nodes.at("2").lat()) % factors)
-        .str();
+    return std::format(json_request, map.nodes.at("3").lng(), map.nodes.at("3").lat(),
+                       map.nodes.at("2").lng(), map.nodes.at("2").lat(), factors);
   };
 
-  const auto factors = (boost::format(R"("linear_cost_factors": [{"shape": "%s", "factor": 200}],)") %
-                        encode_shape({"A", "B", "C"}, map.nodes))
-                           .str();
+  const auto factors = std::format(R"("linear_cost_factors": [{{"shape": "{}", "factor": 200}}],)",
+                                   encode_shape({"A", "B", "C"}, map.nodes));
 
   auto config = map.config;
   config.put("thor.source_to_target_algorithm", "timedistancematrix");
@@ -580,23 +566,22 @@ TEST_F(LinearFeatureTest, matrix_timedistancematrix) {
  * /optimized_route runs a matrix too, so it resolves the lines through the same path.
  * */
 TEST_F(LinearFeatureTest, optimized_route) {
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
     ],
-    "linear_cost_factors": [{"shape": "%s", "factor": 200}],
+    "linear_cost_factors": [{{"shape": "{}", "factor": 200}}],
     "costing": "auto"
-  }
+  }}
   )";
 
-  auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("3").lng()) %
-                   std::to_string(map.nodes.at("3").lat()) % std::to_string(map.nodes.at("2").lng()) %
-                   std::to_string(map.nodes.at("2").lat()) % std::to_string(map.nodes.at("1").lng()) %
-                   std::to_string(map.nodes.at("1").lat()) % encode_shape({"A", "B", "C"}, map.nodes))
-                      .str();
+  auto json_str =
+      std::format(json_request, map.nodes.at("3").lng(), map.nodes.at("3").lat(),
+                  map.nodes.at("2").lng(), map.nodes.at("2").lat(), map.nodes.at("1").lng(),
+                  map.nodes.at("1").lat(), encode_shape({"A", "B", "C"}, map.nodes));
 
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
@@ -622,17 +607,17 @@ TEST_F(LinearFeatureTest, partial_edges_near_nodes) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
 
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
     ],
     "linear_cost_factors": [
-      {"shape": "%s", "factor": %s}
+      {{"shape": "{}", "factor": {}}}
     ],
     "costing": "auto"
-  }
+  }}
   )";
 
   const auto& B = map.nodes.at("B");
@@ -642,10 +627,9 @@ TEST_F(LinearFeatureTest, partial_edges_near_nodes) {
   double end = 1. - 3. / C.Distance(D);
   std::vector<midgard::PointLL> shape{B.PointAlongSegment(C, start), C, C.PointAlongSegment(D, end)};
 
-  auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("3").lng()) %
-                   std::to_string(map.nodes.at("3").lat()) % std::to_string(map.nodes.at("2").lng()) %
-                   std::to_string(map.nodes.at("2").lat()) % midgard::encode(shape, 1e6) % "10")
-                      .str();
+  auto json_str = std::format(json_request, map.nodes.at("3").lng(), map.nodes.at("3").lat(),
+                              map.nodes.at("2").lng(), map.nodes.at("2").lat(),
+                              midgard::encode(shape, 1e6), "10");
 
   Api request;
   ParseApi(json_str, Options::route, request);
@@ -670,18 +654,18 @@ TEST_F(LinearFeatureTest, empty_shape) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
 
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
     ], 
     "linear_cost_factors": [
-      {"type": "Feature", "geometry": {"type": "LineString", "coordinates": %s}, "properties": {"factor": %s}},
-      {"type": "Feature", "geometry": {"type": "LineString", "coordinates": %s}, "properties": {"factor": %s}}
+      {{"type": "Feature", "geometry": {{"type": "LineString", "coordinates": {}}}, "properties": {{"factor": {}}}}},
+      {{"type": "Feature", "geometry": {{"type": "LineString", "coordinates": {}}}, "properties": {{"factor": {}}}}}
     ], 
     "costing": "auto"
-  }
+  }}
   )";
 
   auto format_coordinates = [&](const std::vector<std::string>& waypoints) {
@@ -698,11 +682,9 @@ TEST_F(LinearFeatureTest, empty_shape) {
     return std::string(writer.get_buffer());
   };
 
-  auto json_str =
-      (boost::format(json_request) % std::to_string(map.nodes.at("E").lng()) %
-       std::to_string(map.nodes.at("E").lat()) % std::to_string(map.nodes.at("Z").lng()) %
-       std::to_string(map.nodes.at("Z").lat()) % "" % "100" % format_coordinates({"F", "b"}) % "0.1")
-          .str();
+  auto json_str = std::format(json_request, map.nodes.at("E").lng(), map.nodes.at("E").lat(),
+                              map.nodes.at("Z").lng(), map.nodes.at("Z").lat(), "", "100",
+                              format_coordinates({"F", "b"}), "0.1");
 
   std::cerr << "Valhalla request is: \n" << json_str << "\n";
 
