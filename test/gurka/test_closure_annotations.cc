@@ -2,8 +2,10 @@
 #include "gurka.h"
 #include "test.h"
 
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
+
+#include <format>
+#include <string_view>
 
 using namespace valhalla;
 using LiveTrafficCustomize = test::LiveTrafficCustomize;
@@ -188,28 +190,28 @@ const std::string req_without_closure_annotations = R"({
 }
 )";
 
-const std::string req_with_closure_annotations = R"({
+constexpr std::string_view req_with_closure_annotations = R"({{
   "locations": [
-    {"lat": %s, "lon": %s},
-    {"lat": %s, "lon": %s}
+    {{"lat": {:.6f}, "lon": {:.6f}}},
+    {{"lat": {:.6f}, "lon": {:.6f}}}
   ],
   "costing": "auto",
-  "costing_options": {
-    "auto": {
+  "costing_options": {{
+    "auto": {{
       "speed_types": [ "freeflow", "constrained", "predicted", "current"],
       "ignore_closures": true
-    }
-  },
-  "date_time": { "type": 3, "value": "current" },
+    }}
+  }},
+  "date_time": {{ "type": 3, "value": "current" }},
   "format": "osrm",
   "shape_format": "geojson",
-  "filters": {
+  "filters": {{
     "attributes": [
       "shape_attributes.closure"
     ],
     "action": "include"
-  }
-}
+  }}
+}}
 )";
 
 void expect_closures(const rapidjson::Document& response,
@@ -234,11 +236,9 @@ void expect_closures(const rapidjson::Document& response,
 
 TEST_F(ClosureAnnotations, EndOnClosure) {
   const std::string& req =
-      (boost::format(req_with_closure_annotations) % std::to_string(closure_map.nodes.at("1").lat()) %
-       std::to_string(closure_map.nodes.at("1").lng()) %
-       std::to_string(closure_map.nodes.at("2").lat()) %
-       std::to_string(closure_map.nodes.at("2").lng()))
-          .str();
+      std::format(req_with_closure_annotations, closure_map.nodes.at("1").lat(),
+                  closure_map.nodes.at("1").lng(), closure_map.nodes.at("2").lat(),
+                  closure_map.nodes.at("2").lng());
   auto result = gurka::do_action(Options::route, closure_map, req, reader);
   gurka::assert::raw::expect_path(result, {"AB"});
 
@@ -248,11 +248,9 @@ TEST_F(ClosureAnnotations, EndOnClosure) {
 
 TEST_F(ClosureAnnotations, EndWithConsecutiveClosures) {
   const std::string& req =
-      (boost::format(req_with_closure_annotations) % std::to_string(closure_map.nodes.at("1").lat()) %
-       std::to_string(closure_map.nodes.at("1").lng()) %
-       std::to_string(closure_map.nodes.at("3").lat()) %
-       std::to_string(closure_map.nodes.at("3").lng()))
-          .str();
+      std::format(req_with_closure_annotations, closure_map.nodes.at("1").lat(),
+                  closure_map.nodes.at("1").lng(), closure_map.nodes.at("3").lat(),
+                  closure_map.nodes.at("3").lng());
   auto result = gurka::do_action(Options::route, closure_map, req, reader);
   gurka::assert::raw::expect_path(result, {"AB", "BC"});
 
@@ -262,11 +260,9 @@ TEST_F(ClosureAnnotations, EndWithConsecutiveClosures) {
 
 TEST_F(ClosureAnnotations, IntermediateClosure) {
   const std::string& req =
-      (boost::format(req_with_closure_annotations) % std::to_string(closure_map.nodes.at("1").lat()) %
-       std::to_string(closure_map.nodes.at("1").lng()) %
-       std::to_string(closure_map.nodes.at("4").lat()) %
-       std::to_string(closure_map.nodes.at("4").lng()))
-          .str();
+      std::format(req_with_closure_annotations, closure_map.nodes.at("1").lat(),
+                  closure_map.nodes.at("1").lng(), closure_map.nodes.at("4").lat(),
+                  closure_map.nodes.at("4").lng());
   auto result = gurka::do_action(Options::route, closure_map, req, reader);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
 
@@ -276,11 +272,9 @@ TEST_F(ClosureAnnotations, IntermediateClosure) {
 
 TEST_F(ClosureAnnotations, BeginAtClosure) {
   const std::string& req =
-      (boost::format(req_with_closure_annotations) % std::to_string(closure_map.nodes.at("2").lat()) %
-       std::to_string(closure_map.nodes.at("2").lng()) %
-       std::to_string(closure_map.nodes.at("4").lat()) %
-       std::to_string(closure_map.nodes.at("4").lng()))
-          .str();
+      std::format(req_with_closure_annotations, closure_map.nodes.at("2").lat(),
+                  closure_map.nodes.at("2").lng(), closure_map.nodes.at("4").lat(),
+                  closure_map.nodes.at("4").lng());
   auto result = gurka::do_action(Options::route, closure_map, req, reader);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
 
@@ -290,11 +284,9 @@ TEST_F(ClosureAnnotations, BeginAtClosure) {
 
 TEST_F(ClosureAnnotations, AllWithinClosure) {
   const std::string& req =
-      (boost::format(req_with_closure_annotations) % std::to_string(closure_map.nodes.at("2").lat()) %
-       std::to_string(closure_map.nodes.at("2").lng()) %
-       std::to_string(closure_map.nodes.at("3").lat()) %
-       std::to_string(closure_map.nodes.at("3").lng()))
-          .str();
+      std::format(req_with_closure_annotations, closure_map.nodes.at("2").lat(),
+                  closure_map.nodes.at("2").lng(), closure_map.nodes.at("3").lat(),
+                  closure_map.nodes.at("3").lng());
   auto result = gurka::do_action(Options::route, closure_map, req, reader);
   gurka::assert::raw::expect_path(result, {"AB", "BC"});
 
@@ -304,11 +296,9 @@ TEST_F(ClosureAnnotations, AllWithinClosure) {
 
 TEST_F(ClosureAnnotations, DiscontinuousClosures) {
   const std::string& req =
-      (boost::format(req_with_closure_annotations) % std::to_string(closure_map.nodes.at("A").lat()) %
-       std::to_string(closure_map.nodes.at("A").lng()) %
-       std::to_string(closure_map.nodes.at("E").lat()) %
-       std::to_string(closure_map.nodes.at("E").lng()))
-          .str();
+      std::format(req_with_closure_annotations, closure_map.nodes.at("A").lat(),
+                  closure_map.nodes.at("A").lng(), closure_map.nodes.at("E").lat(),
+                  closure_map.nodes.at("E").lng());
   auto result = gurka::do_action(Options::route, closure_map, req, reader);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
 
