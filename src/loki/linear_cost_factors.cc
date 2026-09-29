@@ -21,10 +21,10 @@ void add_shortcut(GraphReader& reader,
                   valhalla::CostFactorEdge* cost_factor) {
 
   // allow applies to the whole edge
-  if (cost_factor->allow() && cost_factor->factor() != 1.0) {
+  if (cost_factor->allow_types() && cost_factor->factor() != 1.0) {
     auto* e = options->add_cost_factor_edges();
     e->set_id(shortcut.value);
-    e->set_allow(true);
+    e->set_allow_types(cost_factor->allow_types());
     return;
   }
 
@@ -96,7 +96,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(line.cost_factor());
-          e->set_allow(line.allow());
+          e->set_allow_types(line.allow_types());
           for (const auto& edge : line.locations(0).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
               e->set_start(edge.percent_along());
@@ -130,7 +130,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
               e->set_id(path_info.edgeid);
               // apply the minimum allowed value specified in the config
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-              e->set_allow(line.allow());
+              e->set_allow_types(line.allow_types());
               e->set_start(start);
               e->set_end(end);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
@@ -145,7 +145,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-          e->set_allow(line.allow());
+          e->set_allow_types(line.allow_types());
           e->set_start(0.);
           e->set_end(1.);
 
@@ -157,7 +157,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(constituent);
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-              e->set_allow(line.allow());
+              e->set_allow_types(line.allow_types());
               e->set_start(0);
               e->set_end(1);
             }

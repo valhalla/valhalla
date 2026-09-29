@@ -407,8 +407,8 @@ void DynamicCost::SetCostFactorEdges(const Costing_Options& options) {
     auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
     cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
     // one allowing range is enough, it exempts the whole edge
-    cost_edge.allow |= e.allow();
-    has_allowed_linear_edges_ |= e.allow();
+    cost_edge.allow_types |= e.allow_types();
+    has_allowed_linear_edges_ |= e.allow_types() == kAllowAll;
   }
 
   // once all cost factors are filled, sort by range, precompute overall average

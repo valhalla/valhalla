@@ -138,7 +138,7 @@ struct cost_edge_t {
 struct custom_cost_t {
   std::vector<cost_edge_t> ranges;
   double avg_factor{1.};
-  bool allow{false};
+  uint32_t allow_types{baldr::kAllowNone};
 
   // once ranges are filled up, sort and compute average
   // returns the minimum factor
@@ -470,15 +470,15 @@ public:
   }
 
   /**
-   * Whether the user marked this edge as traversable via an
-   * "allow" linear cost feature.
+   * Whether the user marked this edge as traversable via a linear cost
+   * feature with "allow" or "allow_types" covering everything.
    */
   inline bool AllowedLinearFeature(const baldr::GraphId& edgeid) const {
     if (!has_allowed_linear_edges_)
       return false;
 
     auto it = linear_cost_edges_.find(edgeid);
-    return it != linear_cost_edges_.end() && it->second.allow;
+    return it != linear_cost_edges_.end() && it->second.allow_types == baldr::kAllowAll;
   }
 
   /**

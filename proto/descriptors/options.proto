@@ -79,7 +79,7 @@ message CostFactorEdge {
   double factor = 2; // the factor applied to the (partial) edge cost
   double start = 3;  // the start fraction along the edge
   double end = 4;    // the end fraction along the edge
-  bool allow = 6;   // whether the edge may be always allowed
+  uint32 allow_types = 6;   // does the user want to allow this edge
 }
 
 /**
@@ -386,7 +386,7 @@ message LinearFeatureCost {
   repeated Location locations = 1;                               // In here we just store the first and last location correlation
   repeated Location shape = 2;                                   // This is where the actual line geometry goes
   double cost_factor = 3;
-  bool allow = 5;                                                // whether edges along this shape may be used unconditionally
+  uint32 allow_types = 5;                                                // whether edges along this shape may be used unconditionally
 }
 
 message Options {

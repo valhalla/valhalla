@@ -359,7 +359,7 @@ TEST_F(LinearFeatureTest, allow_access_restriction) {
   loki_worker.cleanup();
   ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
   EXPECT_NEAR(request.options().cost_factor_lines().at(0).cost_factor(), 1.f, 0.01);
-  EXPECT_TRUE(request.options().cost_factor_lines().at(0).allow());
+  EXPECT_EQ(request.options().cost_factor_lines().at(0).allow_types(), baldr::kAllowAll);
   EXPECT_EQ(request.options().cost_factor_lines().at(0).shape().size(), 2);
 
   thor_worker.route(request);
@@ -373,7 +373,7 @@ TEST_F(LinearFeatureTest, allow_access_restriction) {
   for (auto& cfe : costing_options.cost_factor_edges()) {
     auto e = gurka::findEdgeByNodes(reader, map.nodes, "V", "W");
     if (std::get<0>(e) == cfe.id()) {
-      EXPECT_TRUE(cfe.allow());
+      EXPECT_EQ(cfe.allow_types(), baldr::kAllowAll);
       EXPECT_NEAR(cfe.factor(), 1.f, 0.01f);
       found = true;
       break;
@@ -818,9 +818,22 @@ TEST(LinearFeature, allow_inaccessible_edge) {
   const auto& costing_options =
       with.options().costings().find(with.options().costing_type())->second.options();
   ASSERT_EQ(costing_options.cost_factor_edges().size(), 1);
-  EXPECT_TRUE(costing_options.cost_factor_edges().at(0).allow());
+  EXPECT_EQ(costing_options.cost_factor_edges().at(0).allow_types(), baldr::kAllowAll);
 
   gurka::assert::raw::expect_path(with, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+
+  Api with_types;
+  route((boost::format(R"("linear_cost_factors": [{"shape": "%s", "allow_types": ["all"]}],)") %
+         encode_shape({"G", "H"}, map.nodes))
+            .str(),
+        with_types);
+
+  const auto& types_costing_options =
+      with_types.options().costings().find(with_types.options().costing_type())->second.options();
+  ASSERT_EQ(types_costing_options.cost_factor_edges().size(), 1);
+  EXPECT_EQ(types_costing_options.cost_factor_edges().at(0).allow_types(), baldr::kAllowAll);
+
+  gurka::assert::raw::expect_path(with_types, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
 }
 
 /**
