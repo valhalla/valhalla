@@ -738,7 +738,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
                                  const baldr::NodeInfo* node,
                                  const EdgeLabel& pred,
-                                 const graph_tile_ptr& tile,
+                                 const graph_tile_ptr& /*tile*/,
                                  const std::function<LimitedGraphReader()>& /*reader_getter*/) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
