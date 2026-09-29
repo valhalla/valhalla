@@ -19,7 +19,7 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 Important guarantees within a major version:
 
 - **stable graph schema**: new releaess will be able to read old graphs and old releases will be able to read new graphs
-- **stable request/response schema**: new releaess will only _add_ new request & response elements, never remove any
+- **stable request/response schema**: new releases will only _add_ new request & response elements in the JSON/PBF interfaces, never remove any
 - **instable C++ API**: the interface to the C++ library is considered instable
 
 ## Build Status
