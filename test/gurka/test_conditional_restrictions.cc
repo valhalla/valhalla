@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include "test.h"
 
 #include <gtest/gtest.h>
 
@@ -375,7 +376,9 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
     map =
         gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/destination_only_zones",
-                          {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
+                          {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
+                           // loki drops date_time from a matrix request beyond this
+                           {"service_limits.max_timedep_distance_matrix", "50000"}});
   }
 
   // warning 401 means pass 0 failed and dest-only was dropped globally for the request
@@ -549,4 +552,54 @@ TEST_F(DestinationOnlyZones, UnidirectionalDetoursAroundDeepEndpoints) {
                                     {{"/date_time/type", "2"}, {"/date_time/value", kRestricted}});
   gurka::assert::raw::expect_path(arrive_by, {"CD", "BC", "BJ", "JK", "KF", "FG"},
                                   "arrive_by cannot see an origin two edges into the zone");
+}
+
+// TimeDistanceMatrix seeds only its sources, so D's label has to carry the zone from DE into
+// EF; the way around through BJ, JK and KF is 3900m.
+TEST_F(DestinationOnlyZones, TimeDistanceMatrixCrossesZoneToEndpoint) {
+  auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"D"}, {"G"}, "auto",
+                                 {{"/date_time/type", "1"}, {"/date_time/value", kRestricted}});
+  EXPECT_EQ(result.matrix().algorithm(), Matrix::TimeDistanceMatrix);
+  EXPECT_NEAR(result.matrix().distances(0), 1500, 10);
+}
+
+// CostMatrix grows a tree from each end, and only conditional edges meet at E, so both trees
+// have to cross EF to pair E with G at all.
+TEST_F(DestinationOnlyZones, CostMatrixCrossesZoneToEndpoint) {
+  auto result =
+      gurka::do_action(valhalla::Options::sources_to_targets, map, {"E", "G"}, {"G", "E"}, "auto",
+                       {{"/prioritize_bidirectional", "1"},
+                        {"/date_time/type", "1"},
+                        {"/date_time/value", kRestricted}});
+  EXPECT_EQ(result.matrix().algorithm(), Matrix::CostMatrix);
+  EXPECT_NEAR(result.matrix().distances(0), 1000, 10) << "forward tree from E";
+  EXPECT_NEAR(result.matrix().distances(3), 1000, 10) << "reverse tree from E";
+}
+
+// Expanding from D, node E hangs off the seeded DE label alone, so EF is only settled if the zone
+// carried over; HG is only approached from the free edge IH, so it stays shut.
+TEST_F(DestinationOnlyZones, IsochroneCrossesZoneButNotThrough) {
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto ef = static_cast<uint64_t>(std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, "E", "F")));
+  auto hg = static_cast<uint64_t>(std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, "H", "G")));
+
+  auto settled_edges = [](const char* date_time) {
+    auto result = gurka::do_action(valhalla::Options::expansion, map, {"D"}, "auto",
+                                   {{"/action", "isochrone"},
+                                    {"/expansion_properties/0", "edge_id"},
+                                    {"/contours/0/time", "60"},
+                                    {"/date_time/type", "1"},
+                                    {"/date_time/value", date_time},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    const auto& ids = result.expansion().edge_id();
+    return std::unordered_set<uint64_t>(ids.begin(), ids.end());
+  };
+
+  auto restricted = settled_edges(kRestricted);
+  EXPECT_EQ(restricted.count(ef), 1);
+  EXPECT_EQ(restricted.count(hg), 0);
+
+  auto unrestricted = settled_edges(kUnrestricted);
+  EXPECT_EQ(unrestricted.count(ef), 1);
+  EXPECT_EQ(unrestricted.count(hg), 1);
 }

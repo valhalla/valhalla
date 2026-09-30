@@ -152,18 +152,20 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     EdgeStatus* todo = nullptr;
     uint8_t restriction_idx = kInvalidRestriction;
     uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
+    bool edge_destonly = false;
     // is_dest is false, because it is a traversal algorithm in this context, not a path search
     // algorithm. In other words, destination edges are not defined for this Dijkstra's algorithm.
     const bool is_dest = false;
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
       const bool allowed =
-          FORWARD
-              ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.local_time,
-                                  nodeinfo->timezone(), restriction_idx, destonly_restriction_mask)
-              : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid,
-                                         offset_time.local_time, nodeinfo->timezone(),
-                                         restriction_idx, destonly_restriction_mask);
+          FORWARD ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid,
+                                      offset_time.local_time, nodeinfo->timezone(), restriction_idx,
+                                      destonly_restriction_mask, &edge_destonly)
+                  : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid,
+                                             offset_time.local_time, nodeinfo->timezone(),
+                                             restriction_idx, destonly_restriction_mask, is_dest,
+                                             &edge_destonly);
       if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true,
                                            todo, offset_time.local_time, nodeinfo->timezone())) {
         continue;
@@ -171,9 +173,10 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     } else {
       const bool allowed =
           FORWARD ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0,
-                                      restriction_idx, destonly_restriction_mask)
+                                      restriction_idx, destonly_restriction_mask, &edge_destonly)
                   : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid, 0, 0,
-                                             restriction_idx, destonly_restriction_mask);
+                                             restriction_idx, destonly_restriction_mask, is_dest,
+                                             &edge_destonly);
 
       if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
         continue;
@@ -222,9 +225,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                                  (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
-                                 restriction_idx, pred.path_id(),
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 restriction_idx, pred.path_id(), edge_destonly,
                                  directededge->forwardaccess() & kTruckAccess,
                                  destonly_restriction_mask);
 
@@ -235,9 +236,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                     opp_pred_edge),
-                                 restriction_idx, pred.path_id(),
-                                 opp_edge->destonly() ||
-                                     (costing_->is_hgv() && opp_edge->destonly_hgv()),
+                                 restriction_idx, pred.path_id(), edge_destonly,
                                  opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
     }
     adjacencylist_.add(idx);
@@ -813,16 +812,17 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
+      bool edge_destonly = false;
       auto destonly_restriction_mask =
-          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
+                                                  time_info.valid ? time_info.local_time : 0,
+                                                  time_info.timezone_index, &edge_destonly);
 
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, kInvalidRestriction, multipath_ ? loc_idx : 0,
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()),
-                                 directededge->forwardaccess() & kTruckAccess,
+                                 edge_destonly, directededge->forwardaccess() & kTruckAccess,
                                  destonly_restriction_mask);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
@@ -915,16 +915,17 @@ void Dijkstras::SetDestinationLocations(
 
       // we call this to find out if we're starting on access restrictions with a local traffic
       // exemption and push this info into the label
+      bool edge_destonly = false;
       auto destonly_restriction_mask =
-          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
+                                                  time_info.valid ? time_info.local_time : 0,
+                                                  time_info.timezone_index, &edge_destonly);
 
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? loc_idx : 0,
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()),
-                                 directededge->forwardaccess() & kTruckAccess,
+                                 edge_destonly, directededge->forwardaccess() & kTruckAccess,
                                  destonly_restriction_mask);
       adjacencylist_.add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? loc_idx : 0);
