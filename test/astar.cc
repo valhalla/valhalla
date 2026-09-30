@@ -1884,7 +1884,6 @@ public:
                       const uint32_t /*tz_index*/,
                       uint8_t& /*restriction_idx*/,
                       uint8_t& /*destonly_access_restr_mask*/,
-                      const bool /*is_dest*/,
                       bool* /*edge_destonly*/) const override {
     if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -1915,12 +1914,12 @@ public:
     return {sec / 10.0f, sec};
   }
 
-  vs::Cost
-  TransitionCost(const DirectedEdge* /*edge*/,
-                 const NodeInfo* /*node*/,
-                 const vs::EdgeLabel& /*pred*/,
-                 const graph_tile_ptr& /*tile*/,
-                 const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/) const override {
+  vs::Cost TransitionCost(const DirectedEdge* /*edge*/,
+                          const NodeInfo* /*node*/,
+                          const vs::EdgeLabel& /*pred*/,
+                          const graph_tile_ptr& /*tile*/,
+                          const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
+                          const bool /*edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -1932,7 +1931,9 @@ public:
                                  const baldr::GraphId& /*edge_id*/,
                                  const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
                                  const bool /*has_measured_speed*/,
-                                 const vs::InternalTurn /*internal_turn*/) const override {
+                                 const vs::InternalTurn /*internal_turn*/,
+                                 const bool /*opp_edge_destonly*/,
+                                 const bool /*opp_pred_edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 

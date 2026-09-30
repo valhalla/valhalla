@@ -139,7 +139,6 @@ public:
                               const uint32_t tz_index,
                               uint8_t& restriction_idx,
                               uint8_t& /*destonly_access_restr_mask*/,
-                              const bool is_dest,
                               bool* /*edge_destonly*/) const override;
 
   /**
@@ -193,12 +192,12 @@ public:
    * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return Returns the cost and time (seconds)
    */
-  virtual Cost
-  TransitionCost(const baldr::DirectedEdge* edge,
-                 const baldr::NodeInfo* node,
-                 const EdgeLabel& pred,
-                 const graph_tile_ptr& tile,
-                 const std::function<baldr::LimitedGraphReader()>& reader_getter) const override;
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile,
+                              const std::function<baldr::LimitedGraphReader()>& reader_getter,
+                              const bool edge_destonly) const override;
 
   /**
    * Returns the transfer cost between 2 transit stops.
@@ -562,7 +561,6 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge*,
                                  const uint32_t,
                                  uint8_t&,
                                  uint8_t&,
-                                 const bool,
                                  bool*) const {
   // This method should not be called since time based routes do not use
   // bidirectional A*
@@ -595,12 +593,12 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
-Cost TransitCost::TransitionCost(
-    const baldr::DirectedEdge* edge,
-    const baldr::NodeInfo* /*node*/,
-    const EdgeLabel& pred,
-    const graph_tile_ptr& /*tile*/,
-    const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/) const {
+Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
+                                 const baldr::NodeInfo* /*node*/,
+                                 const EdgeLabel& pred,
+                                 const graph_tile_ptr& /*tile*/,
+                                 const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
+                                 const bool edge_destonly) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?

@@ -120,7 +120,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     } else {
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
                                     offset_time.local_time, nodeinfo->timezone(), restriction_idx,
-                                    destonly_restriction_mask, is_dest, &edge_destonly) ||
+                                    destonly_restriction_mask, &edge_destonly) ||
           (costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, false, nullptr,
                                 offset_time.local_time, nodeinfo->timezone()))) {
         continue;
@@ -133,11 +133,13 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                            : costing_->EdgeCost(opp_edge, opp_edge_id, t2, offset_time, flow_sources);
     auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost =
-        FORWARD ? costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter)
-                : costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                  opp_pred_edge, t2, pred.edgeid(), reader_getter,
-                                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                                  pred.internal_turn());
+        FORWARD
+            ? costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter,
+                                       edge_destonly)
+            : costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                              opp_pred_edge, t2, pred.edgeid(), reader_getter,
+                                              static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                              pred.internal_turn(), edge_destonly, pred.destonly());
     newcost += pred.cost() + transition_cost;
     uint32_t path_distance = pred.path_distance() + directededge->length();
     if (max_expansion_distance_ > 0 && path_distance > max_expansion_distance_) {

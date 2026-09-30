@@ -402,15 +402,15 @@ TEST_F(DestinationOnlyZones, ThroughTrafficExcluded) {
   }
 }
 
-// The window is an access rule, not a cost: zeroing the penalty must not open the conditional
-// branch. The static branch does open for the time-dependent algorithms, as it always has.
-TEST_F(DestinationOnlyZones, ThroughTrafficExcludedWithZeroPenalty) {
+// With the penalty at zero nothing separates an open conditional zone from a static one, so
+// the shortest branch wins for the time-dependent trees and bidirectional still refuses both.
+TEST_F(DestinationOnlyZones, ZeroPenaltyTreatsConditionalLikeStatic) {
   for (const auto& dt : {std::string("1"), std::string("2")}) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
                                    {{"/date_time/type", dt},
                                     {"/date_time/value", kRestricted},
                                     {"/costing_options/auto/destination_only_penalty", "0"}});
-    gurka::assert::raw::expect_path(result, {"FG", "GL", "LI"}, "date_time type " + dt);
+    gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"}, "date_time type " + dt);
   }
 
   auto bidirectional = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
@@ -450,9 +450,8 @@ TEST_F(DestinationOnlyZones, LeaveOneEdge) {
   }
 }
 
-// Only the tree seeded at the far end sees an endpoint this deep, so depart_at is excluded.
 TEST_F(DestinationOnlyZones, EnterTwoEdges) {
-  for (const auto& dt : {std::string("2"), std::string("3")}) {
+  for (const auto& dt : kDateTimeTypes) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"G", "D"}, "auto",
                                    {{"/date_time/type", dt},
                                     {"/date_time/value", kRestricted},
@@ -463,7 +462,7 @@ TEST_F(DestinationOnlyZones, EnterTwoEdges) {
 }
 
 TEST_F(DestinationOnlyZones, LeaveTwoEdges) {
-  for (const auto& dt : {std::string("1"), std::string("3")}) {
+  for (const auto& dt : kDateTimeTypes) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"D", "G"}, "auto",
                                    {{"/date_time/type", dt},
                                     {"/date_time/value", kRestricted},
@@ -540,20 +539,6 @@ TEST_F(DestinationOnlyZones, DestinationInDownstreamZone) {
   }
 }
 
-// Known limit: a unidirectional search only seeds one end, so it cannot tell that an endpoint
-// more than one edge inside a zone makes the path local traffic, and detours instead.
-TEST_F(DestinationOnlyZones, UnidirectionalDetoursAroundDeepEndpoints) {
-  auto depart_at = gurka::do_action(valhalla::Options::route, map, {"G", "D"}, "auto",
-                                    {{"/date_time/type", "1"}, {"/date_time/value", kRestricted}});
-  gurka::assert::raw::expect_path(depart_at, {"FG", "KF", "JK", "BJ", "BC", "CD"},
-                                  "depart_at cannot see a destination two edges into the zone");
-
-  auto arrive_by = gurka::do_action(valhalla::Options::route, map, {"D", "G"}, "auto",
-                                    {{"/date_time/type", "2"}, {"/date_time/value", kRestricted}});
-  gurka::assert::raw::expect_path(arrive_by, {"CD", "BC", "BJ", "JK", "KF", "FG"},
-                                  "arrive_by cannot see an origin two edges into the zone");
-}
-
 // TimeDistanceMatrix seeds only its sources, so D's label has to carry the zone from DE into
 // EF; the way around through BJ, JK and KF is 3900m.
 TEST_F(DestinationOnlyZones, TimeDistanceMatrixCrossesZoneToEndpoint) {
@@ -576,30 +561,33 @@ TEST_F(DestinationOnlyZones, CostMatrixCrossesZoneToEndpoint) {
   EXPECT_NEAR(result.matrix().distances(3), 1000, 10) << "reverse tree from E";
 }
 
-// Expanding from D, node E hangs off the seeded DE label alone, so EF is only settled if the zone
-// carried over; HG is only approached from the free edge IH, so it stays shut.
-TEST_F(DestinationOnlyZones, IsochroneCrossesZoneButNotThrough) {
+// Dijkstras prices dest-only rather than refusing it, and a time contour bounds seconds while
+// the penalty only moves cost -- so the charge is what /expansion reports, not a smaller polygon.
+TEST_F(DestinationOnlyZones, IsochroneChargesConditionalLikeStatic) {
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-  auto ef = static_cast<uint64_t>(std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, "E", "F")));
-  auto hg = static_cast<uint64_t>(std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, "H", "G")));
+  auto gh = static_cast<uint64_t>(std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, "G", "H")));
+  auto gl = static_cast<uint64_t>(std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, "G", "L")));
 
-  auto settled_edges = [](const char* date_time) {
-    auto result = gurka::do_action(valhalla::Options::expansion, map, {"D"}, "auto",
+  auto edge_costs = [](const char* date_time) {
+    auto result = gurka::do_action(valhalla::Options::expansion, map, {"F"}, "auto",
                                    {{"/action", "isochrone"},
                                     {"/expansion_properties/0", "edge_id"},
+                                    {"/expansion_properties/1", "cost"},
                                     {"/contours/0/time", "60"},
                                     {"/date_time/type", "1"},
-                                    {"/date_time/value", date_time},
-                                    {"/costing_options/auto/destination_only_penalty", "0"}});
-    const auto& ids = result.expansion().edge_id();
-    return std::unordered_set<uint64_t>(ids.begin(), ids.end());
+                                    {"/date_time/value", date_time}});
+    const auto& e = result.expansion();
+    std::unordered_map<uint64_t, uint32_t> costs;
+    for (int i = 0; i < e.edge_id_size(); ++i)
+      costs.emplace(e.edge_id(i), e.costs(i));
+    return costs;
   };
 
-  auto restricted = settled_edges(kRestricted);
-  EXPECT_EQ(restricted.count(ef), 1);
-  EXPECT_EQ(restricted.count(hg), 0);
+  auto restricted = edge_costs(kRestricted);
+  auto unrestricted = edge_costs(kUnrestricted);
+  constexpr uint32_t kDefaultDestOnlyPenalty = 600;
 
-  auto unrestricted = settled_edges(kUnrestricted);
-  EXPECT_EQ(unrestricted.count(ef), 1);
-  EXPECT_EQ(unrestricted.count(hg), 1);
+  EXPECT_NEAR(restricted.at(gh) - unrestricted.at(gh), kDefaultDestOnlyPenalty, 2)
+      << "an open window costs the same as the static tag";
+  EXPECT_EQ(restricted.at(gl), unrestricted.at(gl)) << "the static tag is priced either way";
 }

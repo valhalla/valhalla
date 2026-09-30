@@ -213,12 +213,16 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                        : costing_->EdgeCost(opp_edge, opp_edge_id, endtile, time_info, flow_sources);
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
 
-  sif::Cost transition_cost =
-      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter)
-              : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, endtile, pred.edgeid(), reader_getter,
-                                                0 != (flow_sources & kDefaultFlowMask),
-                                                pred.internal_turn());
+  auto transition_cost_of = [&](const bool edge_destonly) {
+    return FORWARD
+               ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter,
+                                          edge_destonly)
+               : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                 opp_pred_edge, endtile, pred.edgeid(), reader_getter,
+                                                 0 != (flow_sources & kDefaultFlowMask),
+                                                 pred.internal_turn(), edge_destonly,
+                                                 pred.destonly());
+  };
 
   auto endpoint = endtile->get_node_ll(meta.edge->endnode());
 
@@ -245,12 +249,13 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     } else {
       if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
                                     time_info.local_time, nodeinfo->timezone(), restriction_idx,
-                                    destonly_restriction_mask, dest_path_edge, &edge_destonly) ||
+                                    destonly_restriction_mask, &edge_destonly) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false, &edgestatus_,
                                time_info.local_time, nodeinfo->timezone())) {
         return false;
       }
     }
+    const sif::Cost transition_cost = transition_cost_of(edge_destonly);
     auto percent_traversed = !dest_path_edge ? 1.0f
                                              : (FORWARD ? dest_path_edge->percent_along()
                                                         : 1.0f - dest_path_edge->percent_along());
@@ -350,7 +355,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       } else {
         if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
                                       time_info.local_time, nodeinfo->timezone(), restriction_idx,
-                                      destonly_restriction_mask, false, &edge_destonly) ||
+                                      destonly_restriction_mask, &edge_destonly) ||
             costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false,
                                  &edgestatus_, time_info.local_time, nodeinfo->timezone())) {
           return false;
@@ -359,6 +364,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
       // TODO(danpat): can we slices down to EdgeLabel here safely?
       auto& lab = edgelabels_[meta.edge_status->index()];
+      const sif::Cost transition_cost = transition_cost_of(edge_destonly);
       auto newcost = pred.cost() + transition_cost + edge_cost;
 
       if (newcost.cost < lab.cost().cost) {

@@ -269,7 +269,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   } else {
     if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
                                   time_info.timezone_index, restriction_idx,
-                                  destonly_restriction_mask, false, &edge_destonly) ||
+                                  destonly_restriction_mask, &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
                              &edgestatus_reverse_, localtime, time_info.timezone_index)) {
       return false;
@@ -286,11 +286,12 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
   // Separate out transition cost.
   sif::Cost transition_cost =
-      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter)
-              : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, t2, pred.edgeid(), reader_getter,
-                                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                                pred.internal_turn());
+      FORWARD
+          ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter, edge_destonly)
+          : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                            opp_pred_edge, t2, pred.edgeid(), reader_getter,
+                                            static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                            pred.internal_turn(), edge_destonly, pred.destonly());
   newcost += transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If

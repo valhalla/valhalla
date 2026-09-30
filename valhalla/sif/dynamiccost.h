@@ -381,7 +381,6 @@ public:
                               const uint32_t tz_index,
                               uint8_t& restriction_idx,
                               uint8_t& destonly_access_restr_mask,
-                              const bool is_dest = false,
                               bool* edge_destonly = nullptr) const = 0;
 
   /**
@@ -527,7 +526,8 @@ public:
                               const baldr::NodeInfo* node,
                               const EdgeLabel& pred,
                               const baldr::graph_tile_ptr& tile,
-                              const std::function<baldr::LimitedGraphReader()>& reader_getter) const;
+                              const std::function<baldr::LimitedGraphReader()>& reader_getter,
+                              const bool edge_destonly = false) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -555,7 +555,9 @@ public:
                                      const baldr::GraphId& pred_id,
                                      const std::function<baldr::LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed = false,
-                                     const InternalTurn internal_turn = InternalTurn::kNoTurn) const;
+                                     const InternalTurn internal_turn = InternalTurn::kNoTurn,
+                                     const bool opp_edge_destonly = false,
+                                     const bool opp_pred_edge_destonly = false) const;
 
   /**
    * Test if an edge should be restricted due to a complex restriction.
@@ -792,7 +794,6 @@ public:
                                    uint8_t& restriction_idx,
                                    uint8_t& destonly_access_restr_mask,
                                    const bool pred_destonly = false,
-                                   const bool is_dest = false,
                                    bool* edge_destonly = nullptr) const {
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
@@ -813,7 +814,7 @@ public:
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
       if (!ignore_non_vehicular_restrictions_ &&
-          (access_type == baldr::AccessType::kTimedAllowed ||
+            (access_type == baldr::AccessType::kTimedAllowed ||
            access_type == baldr::AccessType::kTimedDenied ||
            access_type == baldr::AccessType::kDestinationAllowed)) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
@@ -839,11 +840,11 @@ public:
             } else if (access_type == baldr::AccessType::kTimedDenied) {
               return false;
             }
-            // an open window makes this edge destination-only: local traffic keeps checking
-            // the rest of its restrictions, everyone else is turned away here
+            // an open window makes this edge destination-only, gated and priced exactly as
+            // the static tag is
             if (edge_destonly)
               *edge_destonly = true;
-            if (pass_ == 0 && !pred_destonly && !is_dest)
+            if (!allow_destination_only_ && !pred_destonly)
               return false;
           }
         }
@@ -1559,7 +1560,9 @@ protected:
   sif::Cost base_transition_cost(const baldr::NodeInfo* node,
                                  const baldr::DirectedEdge* edge,
                                  const predecessor_t* pred,
-                                 const uint32_t idx) const {
+                                 const uint32_t idx,
+                                 const bool edge_destonly = false,
+                                 const bool pred_destonly = false) const {
     // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
@@ -1576,8 +1579,10 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    const bool is_destonly = (is_hgv() && edge->destonly_hgv()) || (!is_hgv() && edge->destonly());
-    c.cost += destination_only_penalty_ * (is_destonly && !pred->destonly());
+    // todo: That hack with `edge_destonly` and `pred_destonly` is needed to have this function
+    // callable with `predecessor_t == DirectedEdge` and to pass conditional destonly if it's active
+    const bool is_destonly = edge_destonly || (is_hgv() ? edge->destonly_hgv() : edge->destonly());
+    c.cost += destination_only_penalty_ * (is_destonly && !(pred_destonly || pred->destonly()));
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));

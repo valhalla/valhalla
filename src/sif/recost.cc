@@ -129,7 +129,7 @@ void recost_forward(baldr::GraphReader& reader,
     // the cost for traversing this intersection
     auto reader_getter = [&reader]() { return baldr::LimitedGraphReader(reader); };
     Cost transition_cost =
-        node ? costing.TransitionCost(edge, node, label, tile, reader_getter) : Cost{};
+        node ? costing.TransitionCost(edge, node, label, tile, reader_getter, edge_destonly) : Cost{};
     // update the cost to the end of this edge
     uint8_t flow_sources;
     cost += transition_cost + costing.PartialEdgeCost(edge, baldr::GraphId(baldr::kInvalidGraphId),

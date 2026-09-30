@@ -159,24 +159,24 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
       const bool allowed =
-          FORWARD ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid,
-                                      offset_time.local_time, nodeinfo->timezone(), restriction_idx,
-                                      destonly_restriction_mask, &edge_destonly)
-                  : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid,
-                                             offset_time.local_time, nodeinfo->timezone(),
-                                             restriction_idx, destonly_restriction_mask, is_dest,
-                                             &edge_destonly);
+          FORWARD
+              ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.local_time,
+                                  nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
+                                  &edge_destonly)
+              : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid,
+                                         offset_time.local_time, nodeinfo->timezone(),
+                                         restriction_idx, destonly_restriction_mask, &edge_destonly);
       if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true,
                                            todo, offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
       const bool allowed =
-          FORWARD ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0,
-                                      restriction_idx, destonly_restriction_mask, &edge_destonly)
-                  : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid, 0, 0,
-                                             restriction_idx, destonly_restriction_mask, is_dest,
-                                             &edge_destonly);
+          FORWARD
+              ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx,
+                                  destonly_restriction_mask, &edge_destonly)
+              : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid, 0, 0,
+                                         restriction_idx, destonly_restriction_mask, &edge_destonly);
 
       if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
         continue;
@@ -188,7 +188,8 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     uint8_t flow_sources;
     auto reader_getter = [&]() { return baldr::LimitedGraphReader(graphreader); };
     if (FORWARD) {
-      transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
+      transition_cost =
+          costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter, edge_destonly);
       newcost = pred.cost() +
                 costing_->EdgeCost(directededge, edgeid, tile, offset_time, flow_sources) +
                 transition_cost;
@@ -196,7 +197,8 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                           opp_pred_edge, t2, pred.edgeid(), reader_getter,
-                                          pred.has_measured_speed(), pred.internal_turn());
+                                          pred.has_measured_speed(), pred.internal_turn(),
+                                          edge_destonly, pred.destonly());
       newcost = pred.cost() + costing_->EdgeCost(opp_edge, oppedgeid, t2, offset_time, flow_sources) +
                 transition_cost;
     }
