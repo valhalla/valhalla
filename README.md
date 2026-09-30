@@ -20,7 +20,7 @@ Important guarantees within a major version:
 
 - **stable graph schema**: new releases will be able to read old graphs and old releases will be able to read new graphs
 - **stable request/response schema**: new releases will only _add_ new request & response elements in the JSON/PBF interfaces, never remove any
-- **instable C++ API**: the interface to the C++ library is considered instable
+- **unstable C++ API**: the interface to the C++ library is considered unstable
 
 ## Build Status
 
