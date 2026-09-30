@@ -46,6 +46,8 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
 
 **IMPORTANT:** Avoid `make check` — it's extremely slow for the development loop. Run only the relevant tests.
 
+**IMPORTANT:** `LOG_DEBUG`/`LOG_TRACE` expand to nothing at the default `LOGGING_LEVEL=INFO`, so their arguments are never type-checked. After touching one, re-compile the TU with `-DLOGGING_LEVEL_ALL` (e.g. take its command from `build/compile_commands.json`, add the define and `-o /dev/null`) — otherwise a broken `std::format` call ships unnoticed.
+
 ### Key CMake Options
 
 | Option | Default | Purpose |

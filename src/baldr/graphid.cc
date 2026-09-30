@@ -3,6 +3,7 @@
 #include "baldr/tilehierarchy.h"
 
 #include <algorithm>
+#include <charconv>
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
@@ -127,3 +128,18 @@ std::ostream& operator<<(std::ostream& os, const GraphId& id) {
 
 } // namespace baldr
 } // namespace valhalla
+
+namespace std {
+
+std::string to_string(const valhalla::baldr::GraphId& id) {
+  constexpr size_t kTextMaxSize = 20; // "7/4194303/2097151" is the longest a GraphId can print
+  char buf[kTextMaxSize];
+  char* pos = std::to_chars(buf, buf + kTextMaxSize, id.level()).ptr;
+  *pos++ = '/';
+  pos = std::to_chars(pos, buf + kTextMaxSize, id.tileid()).ptr;
+  *pos++ = '/';
+  pos = std::to_chars(pos, buf + kTextMaxSize, id.id()).ptr;
+  return {buf, pos};
+}
+
+} // namespace std
