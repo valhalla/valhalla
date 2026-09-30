@@ -196,9 +196,9 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     } else {
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                          opp_pred_edge, t2, pred.edgeid(), reader_getter,
+                                          opp_pred_edge, pred, t2, pred.edgeid(), reader_getter,
                                           pred.has_measured_speed(), pred.internal_turn(),
-                                          edge_destonly, pred.destonly());
+                                          edge_destonly);
       newcost = pred.cost() + costing_->EdgeCost(opp_edge, oppedgeid, t2, offset_time, flow_sources) +
                 transition_cost;
     }

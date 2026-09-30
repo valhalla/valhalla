@@ -281,13 +281,13 @@ public:
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
+                                     const EdgeLabel& pred_label,
                                      const graph_tile_ptr& tile,
                                      const GraphId& pred_id,
                                      const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed,
                                      const InternalTurn internal_turn,
-                                     const bool opp_edge_destonly,
-                                     const bool opp_pred_edge_destonly) const override;
+                                     const bool opp_edge_destonly) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -661,19 +661,19 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                                       const baldr::NodeInfo* node,
                                       const baldr::DirectedEdge* pred,
                                       const baldr::DirectedEdge* edge,
+                                      const EdgeLabel& pred_label,
                                       const graph_tile_ptr& /*tile*/,
                                       const GraphId& /*pred_id*/,
                                       const std::function<LimitedGraphReader()>& /*reader_getter*/,
                                       const bool has_measured_speed,
                                       const InternalTurn internal_turn,
-                                      const bool opp_edge_destonly,
-                                      const bool opp_pred_edge_destonly) const {
+                                      const bool opp_edge_destonly) const {
 
   // TODO: do we want to update the cost if we have flow or speed from traffic.
 
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
-  Cost c = base_transition_cost(node, edge, pred, idx, opp_pred_edge_destonly, opp_edge_destonly);
+  Cost c = base_transition_cost(node, edge, pred, idx, pred_label.destonly(), opp_edge_destonly);
   c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Penalty to transition onto low class roads.

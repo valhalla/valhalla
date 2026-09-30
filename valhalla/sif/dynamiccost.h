@@ -551,13 +551,13 @@ public:
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
                                      const baldr::DirectedEdge* opp_pred_edge,
+                                     const EdgeLabel& pred_label,
                                      const baldr::graph_tile_ptr& tile,
                                      const baldr::GraphId& pred_id,
                                      const std::function<baldr::LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed = false,
                                      const InternalTurn internal_turn = InternalTurn::kNoTurn,
-                                     const bool opp_edge_destonly = false,
-                                     const bool opp_pred_edge_destonly = false) const;
+                                     const bool opp_edge_destonly = false) const;
 
   /**
    * Test if an edge should be restricted due to a complex restriction.

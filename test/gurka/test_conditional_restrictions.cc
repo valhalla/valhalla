@@ -591,3 +591,42 @@ TEST_F(DestinationOnlyZones, IsochroneChargesConditionalLikeStatic) {
       << "an open window costs the same as the static tag";
   EXPECT_EQ(restricted.at(gl), unrestricted.at(gl)) << "the static tag is priced either way";
 }
+
+// destination_only_penalty is charged once, where a zone is entered, and the reverse tree has to
+// agree. Only a conditional zone can show this: a static tag sits on both directed edges, so the
+// tag fallback in base_transition_cost prices it either way.
+TEST_F(DestinationOnlyZones, ReverseTreeChargesZoneEntryOnce) {
+  // arrive_by grows only the reverse tree, and G->D enters the open zone at EF and stays in it
+  auto result = gurka::do_action(valhalla::Options::expansion, map, {"G", "D"}, "auto",
+                                 {{"/action", "route"},
+                                  {"/expansion_properties/0", "edge_id"},
+                                  {"/expansion_properties/1", "cost"},
+                                  {"/date_time/type", "2"},
+                                  {"/date_time/value", kRestricted}});
+
+  const auto& expansion = result.expansion();
+  std::unordered_map<uint64_t, uint32_t> costs;
+  for (int i = 0; i < expansion.edge_id_size(); ++i) {
+    auto [it, added] = costs.emplace(expansion.edge_id(i), expansion.costs(i));
+    if (!added)
+      it->second = std::min(it->second, expansion.costs(i));
+  }
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  // the reverse tree labels the opposing edges, so accept either orientation
+  auto cost_of = [&](const std::string& a, const std::string& b) {
+    for (const auto& ends : {std::pair{a, b}, std::pair{b, a}}) {
+      auto id = static_cast<uint64_t>(
+          std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, ends.first, ends.second)));
+      auto found = costs.find(id);
+      if (found != costs.end())
+        return static_cast<int>(found->second);
+    }
+    ADD_FAILURE() << a << b << " was never expanded";
+    return 0;
+  };
+
+  const int entering_zone = cost_of("G", "F") - cost_of("F", "E");
+  const int already_inside = cost_of("F", "E") - cost_of("E", "D");
+  EXPECT_NEAR(entering_zone - already_inside, 600, 20);
+}

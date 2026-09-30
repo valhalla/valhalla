@@ -104,13 +104,13 @@ public:
                              const NodeInfo* /*node*/,
                              const DirectedEdge* /*opp_edge*/,
                              const DirectedEdge* /*opp_pred_edge*/,
+                             const EdgeLabel& /*pred_label*/,
                              const graph_tile_ptr& /*tile*/,
                              const baldr::GraphId& /*edge_id*/,
                              const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
                              const bool /*has_measured_speed*/,
                              const InternalTurn /*internal_turn*/,
-                             const bool /*opp_edge_destonly*/,
-                             const bool /*opp_pred_edge_destonly*/) const override {
+                             const bool /*opp_edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 

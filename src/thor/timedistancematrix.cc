@@ -137,9 +137,9 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
             ? costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter,
                                        edge_destonly)
             : costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                              opp_pred_edge, t2, pred.edgeid(), reader_getter,
+                                              opp_pred_edge, pred, t2, pred.edgeid(), reader_getter,
                                               static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                              pred.internal_turn(), edge_destonly, pred.destonly());
+                                              pred.internal_turn(), edge_destonly);
     newcost += pred.cost() + transition_cost;
     uint32_t path_distance = pred.path_distance() + directededge->length();
     if (max_expansion_distance_ > 0 && path_distance > max_expansion_distance_) {

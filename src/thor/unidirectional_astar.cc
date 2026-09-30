@@ -214,14 +214,13 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
 
   auto transition_cost_of = [&](const bool edge_destonly) {
-    return FORWARD
-               ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter,
-                                          edge_destonly)
-               : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                 opp_pred_edge, endtile, pred.edgeid(), reader_getter,
-                                                 0 != (flow_sources & kDefaultFlowMask),
-                                                 pred.internal_turn(), edge_destonly,
-                                                 pred.destonly());
+    return FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter,
+                                              edge_destonly)
+                   : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                     opp_pred_edge, pred, endtile, pred.edgeid(),
+                                                     reader_getter,
+                                                     0 != (flow_sources & kDefaultFlowMask),
+                                                     pred.internal_turn(), edge_destonly);
   };
 
   auto endpoint = endtile->get_node_ll(meta.edge->endnode());
