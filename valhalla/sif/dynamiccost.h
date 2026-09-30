@@ -1556,7 +1556,6 @@ protected:
    * @return Returns the transition cost (cost, elapsed time).
    */
   template <typename predecessor_t>
-  // edge_destonly, when the caller knows it, already accounts for an open window
   sif::Cost base_transition_cost(const baldr::NodeInfo* node,
                                  const baldr::DirectedEdge* edge,
                                  const predecessor_t* pred,
