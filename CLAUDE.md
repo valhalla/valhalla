@@ -38,7 +38,7 @@ cd build && cmake --build . -j$(nproc) --target run-gurka
 cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_route
 
-# Format — or use clang-format-11 directly `clang-format-11 -i src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc`
+# Format — or use clang-format-11 directly `clang-format-11 -i valhalla/**/*.h src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc`
 ./scripts/format.sh
 ```
 
