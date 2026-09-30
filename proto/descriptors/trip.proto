@@ -309,6 +309,9 @@ message TripLeg {
     repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for recostings
     BikeShareStationInfo bss_info = 14;
      bool traffic_signal = 21;
+    oneof has_stop_impact {
+      uint32 stop_impact = 22;      // stop impact of the transition from the previous edge onto this node's edge
+    }
  }
 
   message Admin {

@@ -400,6 +400,9 @@ void serialize_edges(const AttributesController& controller,
           writer.set_precision(tyr::kDefaultPrecision);
           writer("transition_time", node.cost().transition_cost().seconds());
         }
+        if (controller(kNodeStopImpact) && node.has_stop_impact_case()) {
+          writer("stop_impact", node.stop_impact());
+        }
 
         // TODO transit info at node
         // kNodeTransitStopInfoType = "node.transit_stop_info.type";
