@@ -814,7 +814,7 @@ public:
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
       if (!ignore_non_vehicular_restrictions_ &&
-            (access_type == baldr::AccessType::kTimedAllowed ||
+          (access_type == baldr::AccessType::kTimedAllowed ||
            access_type == baldr::AccessType::kTimedDenied ||
            access_type == baldr::AccessType::kDestinationAllowed)) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
