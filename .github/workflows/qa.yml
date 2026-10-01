@@ -1,0 +1,68 @@
+name: qa
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    # runs on github's runner so unauthorized requests never occupy the hetzner box
+    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/qa')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # for the reaction on the comment
+      pull-requests: write
+    outputs:
+      base_sha: ${{ steps.resolve.outputs.base_sha }}
+      head_sha: ${{ steps.resolve.outputs.head_sha }}
+    steps:
+      - id: resolve
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const { data: perm } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner, repo, username: context.actor })
+            if (!['admin', 'maintain', 'write'].includes(perm.permission)) {
+              core.setFailed(`${context.actor} is not allowed to trigger qa`)
+              return
+            }
+
+            // pin both shas now so pushes after the comment can't sneak into this run
+            const { data: pr } = await github.rest.pulls.get({
+              owner, repo, pull_number: context.issue.number })
+            const { data: master } = await github.rest.repos.getBranch({
+              owner, repo, branch: 'master' })
+            core.setOutput('base_sha', master.commit.sha)
+            core.setOutput('head_sha', pr.head.sha)
+
+            await github.rest.reactions.createForIssueComment({
+              owner, repo, comment_id: context.payload.comment.id, content: 'rocket' })
+
+  qa:
+    needs: gate
+    runs-on: [self-hosted, hetzner-qa]
+    steps:
+      - name: checkout fork master
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.base_sha }}
+          path: base
+          submodules: recursive # valhalla vendors third_party deps as submodules
+          persist-credentials: false
+
+      - name: checkout pr
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.head_sha }}
+          path: pr
+          submodules: recursive
+          persist-credentials: false
+
+      - name: show what we got
+        run: |
+          echo "base: $(git -C base log -1 --oneline)"
+          echo "pr:   $(git -C pr log -1 --oneline)"
