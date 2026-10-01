@@ -595,7 +595,11 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (stopimpact > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = kTCCrossing * (static_cast<float>(stopimpact) / static_cast<float>(kMaxStopImpact));
+    } else if (turntype == Turn::Type::kStraight) {
+      turn_cost = ((node->drive_on_right()) ? kRightSideTurnCosts[static_cast<uint32_t>(turntype)]
+                                            : kLeftSideTurnCosts[static_cast<uint32_t>(turntype)]) *
+                  (static_cast<float>(stopimpact) / static_cast<float>(kMaxStopImpact));
     } else {
       turn_cost = (node->drive_on_right()) ? kRightSideTurnCosts[static_cast<uint32_t>(turntype)]
                                            : kLeftSideTurnCosts[static_cast<uint32_t>(turntype)];
@@ -785,7 +789,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options){};
+  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options) {};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;
