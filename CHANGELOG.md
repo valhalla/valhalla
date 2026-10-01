@@ -1,5 +1,10 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2026-10-01 Valhalla 3.10.0
+* **Removed**
    * REMOVED: Unused elevation for shortucs and ferry/tunnel/bridge edges [#6340](https://github.com/valhalla/valhalla/pull/6340)
 * **Bug Fix**
    * FIXED: Update flatbush to 1.6.0 to fix 32-bit targets [#6360](https://github.com/valhalla/valhalla/pull/6360)
