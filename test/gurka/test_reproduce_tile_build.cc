@@ -229,6 +229,34 @@ TEST(TileChecksum, BuildIdAndPerTileHash) {
   EXPECT_GT(per_tile_hashes.size(), 1u);
 }
 
+// GraphFilter skips hashing tile data in its intermediate passes, but its output must be hashed
+TEST(TileChecksum, GraphFilterHashesEveryTile) {
+  const std::string ascii_map = R"(
+    A----B----C
+    |    |    |
+    D----E----F)";
+  const gurka::ways ways = {{"ABC", {{"highway", "primary"}}},
+                            {"DEF", {{"highway", "primary"}}},
+                            {"AD", {{"highway", "secondary"}}},
+                            {"BE", {{"highway", "footway"}}},
+                            {"CF", {{"highway", "secondary"}}}};
+  const gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, 100000);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_filtered_tile_checksum",
+                               {{"mjolnir.include_pedestrian", "false"},
+                                {"mjolnir.include_bicycle", "false"}},
+                               mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kFilter);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  ASSERT_FALSE(std::get<0>(gurka::findEdge(reader, layout, "BE", "E")).is_valid())
+      << "footway should have been filtered";
+  const std::unordered_set<GraphId> tiles = reader.GetTileSet();
+  ASSERT_GT(tiles.size(), 1);
+  for (const GraphId& tile_id : tiles) {
+    const GraphTileHeader* header = reader.GetGraphTile(tile_id)->header();
+    EXPECT_GT(header->tile_checksum(), 0) << "tile " << tile_id << " was left unhashed";
+  }
+}
+
 // Adding predicted traffic rewrites a subset of tiles. The touched tiles' data hash must be refreshed
 // and the tileset build id recomputed, so a tile_url client can tell the tileset changed.
 TEST(TileChecksum, AddPredictedTrafficRefreshesChecksums) {
