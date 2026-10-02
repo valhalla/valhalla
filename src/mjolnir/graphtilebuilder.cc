@@ -129,8 +129,9 @@ private:
 class tile_ostream : public std::ostream {
 public:
   tile_ostream(const std::filesystem::path& file_path, GraphTileHeader& header)
-      : std::ostream(nullptr), header_(header),
-        file_(std::fopen(file_path.string().c_str(), "wb"), &std::fclose),
+      : std::ostream(nullptr), header_(header), file_path_(file_path),
+        tmp_file_path_(tmp_path(file_path)),
+        file_(std::fopen(tmp_file_path_.string().c_str(), "wb"), &std::fclose),
         md5_ctx_(EVP_MD_CTX_new(), &EVP_MD_CTX_free), buf_(file_.get(), md5_ctx_.get()) {
     if (!file_)
       throw std::runtime_error("Failed to open file " + file_path.string());
@@ -159,15 +160,26 @@ public:
     write_header();
     if (std::fclose(file_.release()) != 0)
       throw std::runtime_error("Failed to close tile file");
+    std::filesystem::rename(tmp_file_path_, file_path_);
   }
 
 private:
+  // Tiles are rewritten multiple times during building and threads may read tiles while they're
+  // being written, so tiles are written to a temp file and atomically renamed to avoid partial reads.
+  static std::filesystem::path tmp_path(const std::filesystem::path& file_path) {
+    std::ostringstream suffix;
+    suffix << "_" << std::this_thread::get_id() << ".tmp";
+    return file_path.string() + suffix.str();
+  }
+
   void write_header() {
     if (std::fwrite(&header_, sizeof(GraphTileHeader), 1, file_.get()) != 1)
       throw std::runtime_error("Failed to write tile header");
   }
 
   GraphTileHeader& header_;
+  std::filesystem::path file_path_;
+  std::filesystem::path tmp_file_path_;
   std::unique_ptr<std::FILE, decltype(&std::fclose)> file_;
   std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md5_ctx_;
   hashing_streambuf buf_;
@@ -396,17 +408,8 @@ void GraphTileBuilder::StoreTileData() {
     std::filesystem::create_directories(filename.parent_path());
   }
 
-  // Tiles are rewritten multiple times during building. Since threads may read tiles while they're
-  // being written, we use atomic "write to temp file + rename" to avoid partial reads.
-  std::filesystem::path tmp_filename = filename;
-  {
-    std::ostringstream suffix;
-    suffix << "_" << std::this_thread::get_id() << ".tmp";
-    tmp_filename += suffix.str();
-  }
-
-  // Stream the tile body straight to the temp file, hashing as we go.
-  tile_ostream in_mem(tmp_filename, header_builder_);
+  // Stream the tile body straight to disk, hashing as we go.
+  tile_ostream in_mem(filename, header_builder_);
   // Write the nodes
   header_builder_.set_nodecount(nodes_builder_.size());
   in_mem.write(reinterpret_cast<const char*>(nodes_builder_.data()),
@@ -560,7 +563,6 @@ void GraphTileBuilder::StoreTileData() {
 
   // Stamp the data hash into the header and rewrite it in place, then publish atomically.
   in_mem.finalize();
-  std::filesystem::rename(tmp_filename, filename);
 }
 
 // Update a graph tile with new nodes and directed edges. The rest of the
