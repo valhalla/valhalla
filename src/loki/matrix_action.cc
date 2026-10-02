@@ -114,13 +114,6 @@ void loki_worker_t::matrix(Api& request) {
   sources_targets.MergeFrom(options.targets());
   const auto sources_targets_size = sources_targets.size();
 
-  // maybe squeeze in the first and last locations of each user specified feature for cost factor
-  // lines as we'll need those for edge walking
-  for (int i = add_cost_factor_locations(options, &sources_targets); i < sources_targets.size();
-       ++i) {
-    parse_location(sources_targets.at(i));
-  }
-
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
@@ -147,9 +140,6 @@ void loki_worker_t::matrix(Api& request) {
         }
       }
     }
-
-    // store the correlations for the cost factor lines and drop their endpoints again
-    store_cost_factor_locations(options, &sources_targets, sources_targets_size);
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 
   // are all the locations in the same color regions
