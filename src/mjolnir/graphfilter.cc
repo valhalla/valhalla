@@ -79,6 +79,24 @@ uint8_t get_new_mask(uint8_t old_mask, const std::array<uint8_t, 8>& new_local_i
   return new_mask;
 }
 
+// Find the new node of an old node, end nodes are always on the same (local) level so the tile id
+// is enough to identify their tile
+const new_node_t* FindNewNode(const old_to_new_t& old_to_new, const GraphId& node, uint64_t wayid) {
+  auto iter = old_to_new.find(node.tileid());
+  if (iter == old_to_new.end() || node.id() >= iter->second.size() ||
+      !iter->second[node.id()].id.is_valid()) {
+    LOG_ERROR("GraphFilter - failed to find associated node");
+    std::cout << std::to_string(node.value) << " " << std::to_string(wayid) << std::endl;
+    return nullptr;
+  }
+  return &iter->second[node.id()];
+}
+
+GraphId GetNewNode(const old_to_new_t& old_to_new, const GraphId& node, uint64_t wayid) {
+  const new_node_t* new_node = FindNewNode(old_to_new, node, wayid);
+  return new_node ? new_node->id : GraphId();
+}
+
 bool CanAggregate(const DirectedEdge* de) {
   if (de->start_restriction() || de->part_of_complex_restriction() || de->end_restriction() ||
       de->restrictions() || de->traffic_signal() || de->access_restriction()) {
@@ -93,27 +111,14 @@ RoadClass get_hierarchy_rc(const DirectedEdge* de) {
   return de->is_shortcut() ? static_cast<RoadClass>(de->shortcut()) : de->classification();
 }
 
-// ExpandFromNode and ExpandFromNodeInner is reused code from restriction builder with some slight
-// modifications. We are using recursion for graph traversal. We have to make sure we don't loop back
-// to ourselves, walk in the correct direction, have not already visited a node, etc. Once we meet our
-// criteria or not we stop.
-bool ExpandFromNode(GraphReader& reader,
-                    std::vector<PointLL>& shape,
-                    GraphId& en,
-                    const GraphId& from_node,
-                    std::unordered_set<std::string>& isos,
-                    bool forward,
-                    std::unordered_set<GraphId>& visited_nodes,
-                    uint64_t& way_id,
-                    const graph_tile_ptr& prev_tile,
-                    GraphId prev_node,
-                    GraphId current_node,
-                    const RoadClass& rc,
-                    bool validate);
-
+// ExpandFromNode is reused code from restriction builder with some slight modifications. We are
+// using recursion for graph traversal. We have to make sure we don't loop back to ourselves, walk
+// in the correct direction, have not already visited a node, etc. Once we meet our criteria or not
+// we stop.
 /*
  * Expand from the current node
- * @param  reader  Graph reader.
+ * @param  tile  tile of the walk, marked nodes only have edges within their own tile
+ * @param  marked  whether each node of the tile is marked for aggregation
  * @param  shape  shape that we need to update
  * @param  en  current end node that we started at
  * @param  from_node  node that we started from
@@ -121,43 +126,35 @@ bool ExpandFromNode(GraphReader& reader,
  * @param  forward  traverse in the forward or backward direction
  * @param  visited_nodes  nodes that we already visited.  don't visit again
  * @param  way_id  only interested in edges with this way_id
- * @param  prev_tile  previous tile
  * @param  prev_node  previous node
  * @param  current_node  current node
- * @param  node_info  current node's info
  * @param  validate  Are we validating data?
  *
  */
-bool ExpandFromNodeInner(GraphReader& reader,
-                         std::vector<PointLL>& shape,
-                         GraphId& en,
-                         const GraphId& from_node,
-                         std::unordered_set<std::string>& isos,
-                         bool forward,
-                         std::unordered_set<GraphId>& visited_nodes,
-                         uint64_t& way_id,
-                         const graph_tile_ptr& prev_tile,
-                         GraphId prev_node,
-                         GraphId current_node,
-                         const NodeInfo* node_info,
-                         const RoadClass& rc,
-                         bool validate) {
-
+bool ExpandFromNode(const graph_tile_ptr& tile,
+                    const std::vector<bool>& marked,
+                    std::vector<PointLL>& shape,
+                    GraphId& en,
+                    const GraphId& from_node,
+                    std::unordered_set<std::string>& isos,
+                    bool forward,
+                    std::unordered_set<GraphId>& visited_nodes,
+                    uint64_t& way_id,
+                    GraphId prev_node,
+                    GraphId current_node,
+                    const RoadClass& rc,
+                    bool validate) {
+  const NodeInfo* node_info = tile->node(current_node);
+  const bool node_marked = marked[current_node.id()];
   for (size_t j = 0; j < node_info->edge_count(); ++j) {
-    GraphId edge_id(prev_tile->id().tileid(), prev_tile->id().level(), node_info->edge_index() + j);
-    const DirectedEdge* de = prev_tile->directededge(edge_id);
-    const auto& edge_info = prev_tile->edgeinfo(de);
-
-    auto tile = prev_tile;
-    if (tile->id() != de->endnode().tile_base()) {
-      tile = reader.GetGraphTile(de->endnode());
-    }
+    const DirectedEdge* de = tile->directededge(node_info->edge_index() + j);
+    const auto& edge_info = tile->edgeinfo(de);
 
     const NodeInfo* en_info = tile->node(de->endnode().id());
+    const bool en_marked = de->endnode().tile_base() == tile->id() && marked[de->endnode().id()];
     // check the direction, if we looped back, or are we done
     if ((de->endnode() != prev_node) && (de->forward() == forward) && (de->endnode() != from_node)) {
-      if (edge_info.wayid() == way_id &&
-          (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
+      if (edge_info.wayid() == way_id && (en_marked || (node_marked && !en_marked))) {
 
         // If this edge has special attributes, then we can't aggregate
         if (!CanAggregate(de) || get_hierarchy_rc(de) != rc) {
@@ -183,7 +180,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
 
         // found a node that does not have aggregation marked (using mode_change flag)
         // we are done.
-        if (node_info->mode_change() && !en_info->mode_change()) {
+        if (node_marked && !en_marked) {
           en = de->endnode();
           aggregated++;
           return true;
@@ -195,8 +192,8 @@ bool ExpandFromNodeInner(GraphReader& reader,
           visited_nodes.insert(de->endnode());
 
           // expand with the same way_id
-          found = ExpandFromNode(reader, shape, en, from_node, isos, forward, visited_nodes, way_id,
-                                 tile, current_node, de->endnode(), rc, validate);
+          found = ExpandFromNode(tile, marked, shape, en, from_node, isos, forward, visited_nodes,
+                                 way_id, current_node, de->endnode(), rc, validate);
           if (found) {
             return true;
           }
@@ -209,49 +206,9 @@ bool ExpandFromNodeInner(GraphReader& reader,
   return false;
 }
 
-/*
- * Expand from the next node which is now our new current node
- * @param  reader  Graph reader.
- * @param  shape  shape that we need to update
- * @param  en  current end node that we started at
- * @param  from_node  node that we started from
- * @param  isos  country ISOs. Used to see if we cross into a new country
- * @param  forward  traverse in the forward or backward direction
- * @param  visited_nodes  nodes that we already visited.  don't visit again
- * @param  way_id  only interested in edges with this way_id
- * @param  prev_tile  previous tile
- * @param  prev_node  previous node
- * @param  current_node  current node
- * @param  validate  Are we validating data?
- *
- */
-bool ExpandFromNode(GraphReader& reader,
-                    std::vector<PointLL>& shape,
-                    GraphId& en,
-                    const GraphId& from_node,
-                    std::unordered_set<std::string>& isos,
-                    bool forward,
-                    std::unordered_set<GraphId>& visited_nodes,
-                    uint64_t& way_id,
-                    const graph_tile_ptr& prev_tile,
-                    GraphId prev_node,
-                    GraphId current_node,
-                    const RoadClass& rc,
-                    bool validate) {
-
-  auto tile = prev_tile;
-  if (tile->id() != current_node.tile_base()) {
-    tile = reader.GetGraphTile(current_node);
-  }
-
-  auto* node_info = tile->node(current_node);
-  // expand from the current node
-  return ExpandFromNodeInner(reader, shape, en, from_node, isos, forward, visited_nodes, way_id, tile,
-                             prev_node, current_node, node_info, rc, validate);
-}
-
 bool Aggregate(GraphId& start_node,
-               GraphReader& reader,
+               const graph_tile_ptr& tile,
+               const std::vector<bool>& marked,
                std::vector<PointLL>& shape,
                GraphId& en,
                const GraphId& from_node,
@@ -260,10 +217,8 @@ bool Aggregate(GraphId& start_node,
                const RoadClass& rc,
                bool forward,
                bool validate) {
-
-  graph_tile_ptr tile = reader.GetGraphTile(start_node);
   std::unordered_set<GraphId> visited_nodes{start_node};
-  return ExpandFromNode(reader, shape, en, from_node, isos, forward, visited_nodes, way_id, tile,
+  return ExpandFromNode(tile, marked, shape, en, from_node, isos, forward, visited_nodes, way_id,
                         GraphId(), start_node, rc, validate);
 }
 
@@ -601,7 +556,7 @@ void FilterTiles(const boost::property_tree::ptree& pt,
   LOG_INFO("Nodes to aggregate: " + std::to_string(can_aggregate));
 }
 
-void GetAggregatedData(GraphReader& reader,
+void GetAggregatedData(const std::vector<bool>& marked,
                        std::vector<PointLL>& shape,
                        GraphId& en,
                        const GraphId& from_node,
@@ -616,7 +571,7 @@ void GetAggregatedData(GraphReader& reader,
 
   // walk in the correct direction.
   uint64_t wayid = tile->edgeinfo(directededge).wayid();
-  if (Aggregate(id, reader, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
+  if (Aggregate(id, tile, marked, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
                 isForward, false)) {
     aggregated++; // count the current edge
     // flip the shape back for storing in edgeinfo
@@ -636,7 +591,7 @@ void GetAggregatedData(GraphReader& reader,
 // https://www.openstreetmap.org/way/975845893
 // As of 01/15/2024 there are only ~180 of these.
 
-void ValidateData(GraphReader& reader,
+void ValidateData(const std::vector<bool>& marked,
                   std::vector<PointLL>& shape,
                   GraphId& en,
                   std::unordered_set<GraphId>& processed_nodes,
@@ -654,7 +609,7 @@ void ValidateData(GraphReader& reader,
     const NodeInfo* en_info = tile->node(directededge->endnode().id());
     const NodeInfo* sn_info = tile->node(from_node);
 
-    if (en_info->mode_change()) {
+    if (marked[directededge->endnode().id()]) {
 
       // If this edge has special attributes, then we can't aggregate
       if (!CanAggregate(directededge)) {
@@ -677,8 +632,8 @@ void ValidateData(GraphReader& reader,
 
       // walk in the correct direction.
       uint64_t wayid = edgeinfo.wayid();
-      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
-                     isForward, true)) {
+      if (!Aggregate(id, tile, marked, shape, en, from_node, wayid, isos,
+                     get_hierarchy_rc(directededge), isForward, true)) {
         // LOG_WARN("ValidateData - failed to validate node.  Will not aggregate.");
         // for debugging only
         // std::cout << "End node: " << directededge->endnode().value << " WayId: " <<
@@ -698,17 +653,20 @@ void ValidateData(GraphReader& reader,
 }
 
 /**
- * Validate which nodes can aggregate their edges and turn off the aggregation bit where they
- * can not. A worker processing tiles from the shared queue, run on multiple threads. Nodes
- * marked for aggregation only have edges that stay within their own tile, so each tile is
- * validated and updated independently.
+ * Validate which nodes can aggregate their edges and associate the nodes that remain after
+ * aggregation to their new Ids. A worker processing tiles from the shared queue, run on multiple
+ * threads. Nodes marked for aggregation only have edges that stay within their own tile, so each
+ * tile is validated independently.
  * @param  pt  Property tree with the mjolnir configuration.
  * @param  tilequeue  Queue of local tiles to process, shared between the workers.
  * @param  lock  Mutex that guards the tile queue.
+ * @param  old_to_new  Associations of old nodes to new nodes Ids (after aggregation) for the
+ *                     tiles this worker has processed. Nodes that get aggregated have no new Id.
  */
 void ValidateAggregationWorker(const boost::property_tree::ptree& pt,
                                std::deque<GraphId>& tilequeue,
-                               std::mutex& lock) {
+                               std::mutex& lock,
+                               old_to_new_t& old_to_new) {
   GraphReader reader(pt.get_child("mjolnir"));
   while (true) {
     lock.lock();
@@ -723,6 +681,12 @@ void ValidateAggregationWorker(const boost::property_tree::ptree& pt,
     // Get the graph tile. Read from this tile to create the new tile.
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
     assert(tile);
+
+    // Nodes got marked for aggregation (using mode_change flag) while filtering
+    std::vector<bool> marked(tile->header()->nodecount());
+    for (uint32_t i = 0; i < tile->header()->nodecount(); ++i) {
+      marked[i] = tile->node(i)->mode_change();
+    }
 
     std::unordered_set<GraphId> processed_nodes;
     std::unordered_set<uint64_t> no_agg_ways;
@@ -739,7 +703,7 @@ void ValidateAggregationWorker(const boost::property_tree::ptree& pt,
           GraphId en = directededge->endnode();
           std::vector<PointLL> shape;
           // check if we can aggregate the edges at this node.
-          ValidateData(reader, shape, en, processed_nodes, no_agg_ways, nodeid, tile, directededge);
+          ValidateData(marked, shape, en, processed_nodes, no_agg_ways, nodeid, tile, directededge);
         }
       }
     }
@@ -757,30 +721,17 @@ void ValidateAggregationWorker(const boost::property_tree::ptree& pt,
       }
     }
 
-    // Create a new tile builder
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
-    std::vector<NodeInfo> nodes;
-
-    // Copy edges (they do not change)
-    std::vector<DirectedEdge> directededges;
-    size_t n = tile->header()->directededgecount();
-    directededges.reserve(n);
-    const DirectedEdge* orig_edges = tile->directededge(0);
-    std::copy(orig_edges, orig_edges + n, std::back_inserter(directededges));
-
+    // We can not aggregate at the processed nodes, all other marked nodes get removed and the
+    // remaining nodes keep their order
+    std::vector<new_node_t>& new_nodes = old_to_new[tile_id.tileid()];
+    new_nodes.resize(tile->header()->nodecount());
+    uint32_t new_count = 0;
     nodeid = GraphId(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
-      NodeInfo nodeinfo = tilebuilder.node(i);
-      bool found = (processed_nodes.find(nodeid) != processed_nodes.end());
-
-      // We can not aggregate at this node.  Turn off the mode change(aggregation) bit
-      if (found) {
-        nodeinfo.set_mode_change(false);
+      if (!marked[i] || processed_nodes.find(nodeid) != processed_nodes.end()) {
+        new_nodes[i].id = GraphId(tile_id.tileid(), tile_id.level(), new_count++);
       }
-      // Add the node to the local list
-      nodes.emplace_back(std::move(nodeinfo));
     }
-    tilebuilder.Update(nodes, directededges);
 
     if (reader.OverCommitted()) {
       reader.Trim();
@@ -789,19 +740,18 @@ void ValidateAggregationWorker(const boost::property_tree::ptree& pt,
 }
 
 /**
- * Aggregate edges at the marked nodes. A worker processing tiles from the shared queue, run
- * on multiple threads. Aggregated chains never leave the tile of the node that started them,
- * so each tile is aggregated and written independently.
+ * Aggregate edges at the marked nodes and update end nodes of all directed edges. A worker
+ * processing tiles from the shared queue, run on multiple threads. Aggregated chains never leave
+ * the tile of the node that started them, so each tile is aggregated and written independently.
  * @param  pt  Property tree with the mjolnir configuration.
  * @param  tilequeue  Queue of local tiles to process, shared between the workers.
  * @param  lock  Mutex that guards the tile queue.
- * @param  old_to_new  Associations of old nodes to new nodes Ids (after aggregation) for the
- *                     tiles this worker has processed.
+ * @param  old_to_new  Associations of old nodes to new nodes Ids (after aggregation).
  */
 void AggregateTilesWorker(const boost::property_tree::ptree& pt,
                           std::deque<GraphId>& tilequeue,
                           std::mutex& lock,
-                          old_to_new_t& old_to_new) {
+                          const old_to_new_t& old_to_new) {
   GraphReader reader(pt.get_child("mjolnir"));
   while (true) {
     lock.lock();
@@ -820,8 +770,12 @@ void AggregateTilesWorker(const boost::property_tree::ptree& pt,
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
     assert(tile);
 
-    std::vector<new_node_t>& new_nodes = old_to_new[tile_id.tileid()];
-    new_nodes.resize(tile->header()->nodecount());
+    // Nodes without a new Id are marked for aggregation
+    const std::vector<new_node_t>& new_nodes = old_to_new.at(tile_id.tileid());
+    std::vector<bool> marked(new_nodes.size());
+    for (size_t i = 0; i < new_nodes.size(); ++i) {
+      marked[i] = !new_nodes[i].id.is_valid();
+    }
 
     std::hash<std::string> hasher;
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
@@ -839,8 +793,8 @@ void AggregateTilesWorker(const boost::property_tree::ptree& pt,
       std::vector<GraphId> endnode;
       const NodeInfo* nodeinfo = tile->node(nodeid);
 
-      // Nodes marked with mode_change = true are tossed.
-      if (nodeinfo->mode_change()) {
+      // Nodes marked for aggregation are tossed.
+      if (marked[i]) {
         continue;
       }
 
@@ -903,12 +857,12 @@ void AggregateTilesWorker(const boost::property_tree::ptree& pt,
         GraphId en = directededge->endnode();
 
         if (en.tile_value() == tile_id) {
-          if (tile->node(en.id())->mode_change()) {
-            GetAggregatedData(reader, shape, en, nodeid, tile, directededge);
-            newedge.set_endnode(en);
+          if (marked[en.id()]) {
+            GetAggregatedData(marked, shape, en, nodeid, tile, directededge);
             aggregated = true;
           }
         }
+        newedge.set_endnode(GetNewNode(old_to_new, en, edgeinfo.wayid()));
 
         // Hammerhead specific.  bike network not saved to edgeinfo
         bool added;
@@ -939,6 +893,7 @@ void AggregateTilesWorker(const boost::property_tree::ptree& pt,
         GraphId new_node(nodeid.tileid(), nodeid.level(), tilebuilder.nodes().size());
         tilebuilder.nodes().push_back(*nodeinfo);
         NodeInfo& node = tilebuilder.nodes().back();
+        node.set_mode_change(false);
         node.set_edge_count(edge_count);
         node.set_local_edge_count(edge_count);
         node.set_edge_index(edge_index);
@@ -955,8 +910,9 @@ void AggregateTilesWorker(const boost::property_tree::ptree& pt,
           node.set_named_intersection(true);
           tilebuilder.AddSigns(tilebuilder.nodes().size() - 1, signs);
         }
-        // Associate the old node to the new node.
-        new_nodes[i].id = new_node;
+        if (new_node != new_nodes[i].id) {
+          LOG_ERROR("AggregateTiles - node Id does not match the one assigned in validation");
+        }
       }
     }
 
@@ -979,30 +935,15 @@ void AggregateTilesWorker(const boost::property_tree::ptree& pt,
 }
 
 /**
- * Aggregate edges at nodes that got marked for aggregation while filtering, processing tiles
- * on multiple threads.
+ * Aggregate edges at nodes that got marked for aggregation while filtering and update end nodes
+ * of all directed edges, processing tiles on multiple threads.
  * @param  pt  Property tree with the mjolnir configuration.
- * @param  old_to_new  Associations of old nodes to new nodes Ids (after aggregation).
  */
-void AggregateTiles(const boost::property_tree::ptree& pt, old_to_new_t& old_to_new) {
+void AggregateTiles(const boost::property_tree::ptree& pt) {
   SCOPED_TIMER();
 
   LOG_INFO("Validating edges for aggregation");
-  {
-    std::deque<GraphId> tilequeue = GetLocalTileQueue(pt);
-    std::mutex lock;
-    std::vector<std::thread> threads;
-    threads.reserve(GetConcurrency(pt));
-    for (size_t i = 0; i < threads.capacity(); ++i) {
-      threads.emplace_back(ValidateAggregationWorker, std::cref(pt), std::ref(tilequeue),
-                           std::ref(lock));
-    }
-    for (auto& thread : threads) {
-      thread.join();
-    }
-  }
-
-  LOG_INFO("Aggregating edges");
+  old_to_new_t old_to_new;
   {
     std::deque<GraphId> tilequeue = GetLocalTileQueue(pt);
     std::mutex lock;
@@ -1013,8 +954,8 @@ void AggregateTiles(const boost::property_tree::ptree& pt, old_to_new_t& old_to_
     std::vector<std::thread> threads;
     threads.reserve(results.size());
     for (auto& result : results) {
-      threads.emplace_back(AggregateTilesWorker, std::cref(pt), std::ref(tilequeue), std::ref(lock),
-                           std::ref(result));
+      threads.emplace_back(ValidateAggregationWorker, std::cref(pt), std::ref(tilequeue),
+                           std::ref(lock), std::ref(result));
     }
     for (auto& thread : threads) {
       thread.join();
@@ -1023,6 +964,21 @@ void AggregateTiles(const boost::property_tree::ptree& pt, old_to_new_t& old_to_
       for (auto& tile_nodes : result) {
         old_to_new[tile_nodes.first] = std::move(tile_nodes.second);
       }
+    }
+  }
+
+  LOG_INFO("Aggregating edges");
+  {
+    std::deque<GraphId> tilequeue = GetLocalTileQueue(pt);
+    std::mutex lock;
+    std::vector<std::thread> threads;
+    threads.reserve(GetConcurrency(pt));
+    for (size_t i = 0; i < threads.capacity(); ++i) {
+      threads.emplace_back(AggregateTilesWorker, std::cref(pt), std::ref(tilequeue), std::ref(lock),
+                           std::cref(old_to_new));
+    }
+    for (auto& thread : threads) {
+      thread.join();
     }
   }
 
@@ -1073,28 +1029,20 @@ void UpdateEndNodesWorker(const boost::property_tree::ptree& pt,
     for (uint32_t j = 0; j < tile->header()->directededgecount(); ++j, ++edgeid) {
       const DirectedEdge* edge = tile->directededge(j);
 
-      // Find the end node in the old_to_new associations. End nodes are always on the same
-      // (local) level, so the tile id is enough to identify their tile
       GraphId end_node;
       uint8_t new_restrictions = edge->restrictions();
       uint8_t new_name_consistency = edge->name_consistency();
-      auto iter = old_to_new.find(edge->endnode().tileid());
-      if (iter == old_to_new.end() || edge->endnode().id() >= iter->second.size() ||
-          !iter->second[edge->endnode().id()].id.is_valid()) {
-        LOG_ERROR("UpdateEndNodes - failed to find associated node");
-        std::cout << std::to_string(edge->endnode().value) << " "
-                  << std::to_string(tile->edgeinfo(edge).wayid()) << std::endl;
-      } else {
-        const new_node_t& new_node = iter->second[edge->endnode().id()];
-        end_node = new_node.id;
+      if (const new_node_t* new_node =
+              FindNewNode(old_to_new, edge->endnode(), tile->edgeinfo(edge).wayid())) {
+        end_node = new_node->id;
 
         // Update masks with the new local edge indexes at the end node (identity unless
         // some edges at that node have been filtered)
         if (new_restrictions != 0) {
-          new_restrictions = get_new_mask(new_restrictions, new_node.local_indexes);
+          new_restrictions = get_new_mask(new_restrictions, new_node->local_indexes);
         }
         if (new_name_consistency != 0) {
-          new_name_consistency = get_new_mask(new_name_consistency, new_node.local_indexes);
+          new_name_consistency = get_new_mask(new_name_consistency, new_node->local_indexes);
         }
       }
 
@@ -1278,12 +1226,9 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
 
   // Update end nodes
   UpdateEndNodes(pt, old_to_new);
-
   old_to_new.clear();
-  AggregateTiles(pt, old_to_new);
 
-  // Update end nodes
-  UpdateEndNodes(pt, old_to_new);
+  AggregateTiles(pt);
 
   // Update Opposing Edge Index
   UpdateOpposingIndexAndTransitions(pt);
