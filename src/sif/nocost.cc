@@ -53,7 +53,8 @@ public:
                        const uint64_t,
                        const uint32_t,
                        uint8_t&,
-                       uint8_t&) const override {
+                       uint8_t&,
+                       bool*) const override {
     return !edge->is_shortcut();
   }
 
@@ -83,7 +84,8 @@ public:
                               const uint64_t,
                               const uint32_t,
                               uint8_t&,
-                              uint8_t&) const override {
+                              uint8_t&,
+                              bool*) const override {
     return !opp_edge->is_shortcut();
   }
 
@@ -155,7 +157,8 @@ public:
                               const baldr::NodeInfo*,
                               const EdgeLabel&,
                               const baldr::graph_tile_ptr&,
-                              const std::function<baldr::LimitedGraphReader()>&) const override {
+                              const std::function<baldr::LimitedGraphReader()>&,
+                              const bool) const override {
     return {};
   }
 
@@ -178,11 +181,13 @@ public:
                                      const baldr::NodeInfo*,
                                      const baldr::DirectedEdge*,
                                      const baldr::DirectedEdge*,
+                                     const EdgeLabel&,
                                      const graph_tile_ptr&,
                                      const GraphId&,
                                      const std::function<baldr::LimitedGraphReader()>&,
                                      const bool,
-                                     const InternalTurn) const override {
+                                     const InternalTurn,
+                                     const bool) const override {
     return {};
   }
 

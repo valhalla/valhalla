@@ -38,7 +38,7 @@ cd build && cmake --build . -j$(nproc) --target run-gurka
 cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_route
 
-# Format — or use clang-format-11 directly `clang-format-11 -i src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc`
+# Format — or use clang-format-11 directly `clang-format-11 -i valhalla/**/*.h src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc`
 ./scripts/format.sh
 ```
 
@@ -151,6 +151,8 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | How edges/nodes get their properties during tile build | `src/mjolnir/graphbuilder.cc`, `src/mjolnir/graphenhancer.cc` |
 | Adding new per-edge data to tiles | `TaggedValue` enum in `valhalla/baldr/graphconstants.h`, stored in `EdgeInfo` name/tag list (`valhalla/baldr/edgeinfo.h`) |
 | Whether a vehicle type can use an edge, costing weights | `src/sif/` — each model has its own file (e.g., `autocost.cc`, `bicyclecost.cc`). See `docs/docs/concepts/costing/dynamic-costing.md` |
+| Conditional access (`*:conditional=... @ (...)`) | Parsed to `AccessType` in `src/mjolnir/pbfgraphparser.cc`, evaluated in `DynamicCost::EvaluateRestrictions` (`valhalla/sif/dynamiccost.h`). `destination` becomes `kDestinationAllowed`; while its window is open the edge **is** a destination-only edge — same `allow_destination_only_` gate, same `destination_only_penalty`, same `EdgeLabel::dest_only_` chain as the static tag. There is no separate rule for it |
+| Time-dependent transition penalties | `TransitionCost`/`TransitionCostReverse` carry no timestamp and no `GraphId`, so never resolve time inside them — resolve it in `Allowed()` (which has both) and pass the result down as a defaulted `bool`. Default it so untouched call sites keep the tag-only behaviour. `TransitionCostReverse` maps `opp_edge` to `base_transition_cost`'s `pred` and `opp_pred_edge` to its `edge` — name reverse parameters `opp_*` or the two get transposed silently |
 | Routing algorithm behavior | `src/thor/bidirectional_astar.cc`, `unidirectional_astar.cc`, `timedep_forward.cc`, `timedep_reverse.cc`. See `docs/docs/contributing/architecture/thor/path-algorithm.md` |
 | Algorithm selection and time-dependent fallback | `src/thor/route_action.cc` — BidirectionalAStar by default; UnidirectionalAStar for `depart_at`/`arrive_by` under `max_timedep_distance` (default 500 km) |
 | Adding new top-level request parameters | Add field to `Options` in `proto/options.proto`, parse from JSON in `src/worker.cc` (around the `matrix_locations` / `avoid_polygons` section). Costing-specific params go in `Costing.Options` and are parsed in `src/sif/dynamiccost.cc` (`ParseBaseCostOptions`) or individual costing files |

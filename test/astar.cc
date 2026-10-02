@@ -1864,7 +1864,8 @@ public:
                const uint64_t /*current_time*/,
                const uint32_t /*tz_index*/,
                uint8_t& /*restriction_idx*/,
-               uint8_t& /*destonly_access_restr_mask*/) const override {
+               uint8_t& /*destonly_access_restr_mask*/,
+               bool* /*edge_destonly*/) const override {
     if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
@@ -1882,7 +1883,8 @@ public:
                       const uint64_t /*current_time*/,
                       const uint32_t /*tz_index*/,
                       uint8_t& /*restriction_idx*/,
-                      uint8_t& /*destonly_access_restr_mask*/) const override {
+                      uint8_t& /*destonly_access_restr_mask*/,
+                      bool* /*edge_destonly*/) const override {
     if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
@@ -1916,8 +1918,8 @@ public:
                           const NodeInfo* /*node*/,
                           const vs::EdgeLabel& /*pred*/,
                           const graph_tile_ptr& /*tile*/,
-                          const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/
-  ) const override {
+                          const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
+                          const bool /*edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -1925,11 +1927,13 @@ public:
                                  const NodeInfo* /*node*/,
                                  const DirectedEdge* /*opp_edge*/,
                                  const DirectedEdge* /*opp_pred_edge*/,
+                                 const vs::EdgeLabel& /*pred_label*/,
                                  const graph_tile_ptr& /*tile*/,
                                  const baldr::GraphId& /*edge_id*/,
                                  const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
                                  const bool /*has_measured_speed*/,
-                                 const vs::InternalTurn /*internal_turn*/) const override {
+                                 const vs::InternalTurn /*internal_turn*/,
+                                 const bool /*opp_edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
