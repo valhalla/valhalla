@@ -60,8 +60,10 @@ public:
    * Output the tile to file. Stores as binary data.
    * @param  graphid  GraphID to store.
    * @param  hierarchy  Gives info about number of tiles per level
+   * @param  hash  Whether to store the hash of the tile data, 0 is stored otherwise. Only skip it
+   *               when the tile gets rewritten later anyway.
    */
-  void StoreTileData();
+  void StoreTileData(bool hash = true);
 
   /**
    * Update a graph tile with new nodes and directed edges. Assumes no new
@@ -70,9 +72,11 @@ public:
    * information.
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
+   * @param hash Whether to store the hash of the tile data, see StoreTileData.
    */
   void Update(const std::vector<baldr::NodeInfo>& nodes,
-              const std::vector<baldr::DirectedEdge>& directededges);
+              const std::vector<baldr::DirectedEdge>& directededges,
+              bool hash = true);
 
   /**
    * Get the current list of node builders.

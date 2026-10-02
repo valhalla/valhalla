@@ -62,6 +62,10 @@ uint32_t GetConcurrency(const boost::property_tree::ptree& pt) {
                   pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
 }
 
+// Each GraphFilter pass but the last one gets its tiles rewritten by the next pass, so hashing
+// tile data is only needed in the last one
+constexpr bool kHashTileData = false;
+
 // Group wheelchair and pedestrian access together
 constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess);
 
@@ -498,7 +502,7 @@ void FilterTilesWorker(const boost::property_tree::ptree& pt,
 
     // Store the updated tile data (or remove tile if all edges are filtered)
     if (tilebuilder.nodes().size() > 0) {
-      tilebuilder.StoreTileData();
+      tilebuilder.StoreTileData(kHashTileData);
     } else {
       // Remove the tile - all nodes and edges were filtered
       std::filesystem::path file_location{reader.tile_dir()};
@@ -918,7 +922,7 @@ void AggregateTilesWorker(const boost::property_tree::ptree& pt,
 
     // Store the updated tile data (or remove tile if all edges are filtered)
     if (tilebuilder.nodes().size() > 0) {
-      tilebuilder.StoreTileData();
+      tilebuilder.StoreTileData(kHashTileData);
     } else {
       // Remove the tile - all nodes and edges were filtered
       std::filesystem::path file_location{reader.tile_dir()};
@@ -1057,7 +1061,7 @@ void UpdateEndNodesWorker(const boost::property_tree::ptree& pt,
     }
 
     // Update the tile with new directededges.
-    tilebuilder.Update(nodes, directededges);
+    tilebuilder.Update(nodes, directededges, kHashTileData);
 
     if (reader.OverCommitted()) {
       reader.Trim();
