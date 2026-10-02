@@ -10,6 +10,8 @@
 #include <openssl/evp.h>
 
 #include <algorithm>
+#include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -60,37 +62,64 @@ uint64_t fold_md5(const std::array<unsigned char, 16>& digest) {
   return lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
 }
 
-// streambuf that writes each chunk straight to the open file while folding it into a running
-// MD5, so the tile body is never held in a single buffer.
+// streambuf that folds the tile body into a running MD5 while writing it out through a bounded
+// buffer, since tile builders serialize field by field.
 class hashing_streambuf : public std::streambuf {
 public:
-  hashing_streambuf(std::ofstream& file, EVP_MD_CTX* ctx) : file_(file), md5_ctx_(ctx) {
+  hashing_streambuf(std::FILE* file, EVP_MD_CTX* ctx)
+      : file_(file), md5_ctx_(ctx), buffer_(kBufferSize) {
+    setp(buffer_.data(), buffer_.data() + buffer_.size());
   }
 
 protected:
   std::streamsize xsputn(const char* s, std::streamsize n) override {
-    if (EVP_DigestUpdate(md5_ctx_, s, n) != 1)
-      throw std::runtime_error("EVP_DigestUpdate failed");
-    file_.write(s, n);
-    pos_ += n;
+    if (n > epptr() - pptr()) {
+      flush_buffer();
+      if (n >= static_cast<std::streamsize>(buffer_.size())) {
+        write_through(s, n);
+        return n;
+      }
+    }
+    std::memcpy(pptr(), s, n);
+    pbump(static_cast<int>(n));
     return n;
   }
   int_type overflow(int_type ch) override {
+    flush_buffer();
     if (!traits_type::eq_int_type(ch, traits_type::eof())) {
-      const char c = traits_type::to_char_type(ch);
-      xsputn(&c, 1);
+      *pptr() = traits_type::to_char_type(ch);
+      pbump(1);
     }
     return traits_type::not_eof(ch);
   }
+  int sync() override {
+    flush_buffer();
+    return 0;
+  }
   pos_type seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode) override {
     if (off == 0 && way == std::ios_base::cur)
-      return pos_type(pos_);
+      return pos_type(pos_ + (pptr() - pbase()));
     return pos_type(off_type(-1));
   }
 
 private:
-  std::ofstream& file_;
+  static constexpr size_t kBufferSize = 1 << 20;
+
+  void write_through(const char* s, std::streamsize n) {
+    if (EVP_DigestUpdate(md5_ctx_, s, n) != 1)
+      throw std::runtime_error("EVP_DigestUpdate failed");
+    if (std::fwrite(s, 1, n, file_) != static_cast<size_t>(n))
+      throw std::runtime_error("Failed to write tile data");
+    pos_ += n;
+  }
+  void flush_buffer() {
+    write_through(pbase(), pptr() - pbase());
+    setp(buffer_.data(), buffer_.data() + buffer_.size());
+  }
+
+  std::FILE* file_;
   EVP_MD_CTX* md5_ctx_;
+  std::vector<char> buffer_;
   std::streamsize pos_ = 0;
 };
 
@@ -101,16 +130,16 @@ class tile_ostream : public std::ostream {
 public:
   tile_ostream(const std::filesystem::path& file_path, GraphTileHeader& header)
       : std::ostream(nullptr), header_(header),
-        file_(file_path, std::ios::out | std::ios::binary | std::ios::trunc),
-        md5_ctx_(EVP_MD_CTX_new(), &EVP_MD_CTX_free), buf_(file_, md5_ctx_.get()) {
-    if (!file_.is_open())
+        file_(std::fopen(file_path.string().c_str(), "wb"), &std::fclose),
+        md5_ctx_(EVP_MD_CTX_new(), &EVP_MD_CTX_free), buf_(file_.get(), md5_ctx_.get()) {
+    if (!file_)
       throw std::runtime_error("Failed to open file " + file_path.string());
     if (!md5_ctx_ || EVP_DigestInit_ex(md5_ctx_.get(), EVP_md5(), nullptr) != 1)
       throw std::runtime_error("EVP_DigestInit failed");
     rdbuf(&buf_);
 
     // reserve the header slot up front; rewritten by finalize() once offsets/hash are known
-    file_.write(reinterpret_cast<const char*>(&header_), sizeof(GraphTileHeader));
+    write_header();
   }
 
   void finalize() {
@@ -125,14 +154,21 @@ public:
     header_.set_raw_checksum((static_cast<uint64_t>(header_.build_id()) << baldr::kTileHashBits) |
                              tile_hash);
 
-    file_.seekp(0);
-    file_.write(reinterpret_cast<const char*>(&header_), sizeof(GraphTileHeader));
-    file_.close();
+    if (std::fseek(file_.get(), 0, SEEK_SET) != 0)
+      throw std::runtime_error("Failed to seek tile file");
+    write_header();
+    if (std::fclose(file_.release()) != 0)
+      throw std::runtime_error("Failed to close tile file");
   }
 
 private:
+  void write_header() {
+    if (std::fwrite(&header_, sizeof(GraphTileHeader), 1, file_.get()) != 1)
+      throw std::runtime_error("Failed to write tile header");
+  }
+
   GraphTileHeader& header_;
-  std::ofstream file_;
+  std::unique_ptr<std::FILE, decltype(&std::fclose)> file_;
   std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md5_ctx_;
   hashing_streambuf buf_;
 };
