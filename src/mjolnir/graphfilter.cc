@@ -13,8 +13,13 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <array>
+#include <deque>
 #include <filesystem>
 #include <iostream>
+#include <mutex>
+#include <random>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -24,22 +29,63 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-uint32_t n_original_edges = 0;
-uint32_t n_original_nodes = 0;
-uint32_t n_filtered_edges = 0;
-uint32_t n_filtered_nodes = 0;
-uint32_t can_aggregate = 0;
-uint32_t aggregated = 0;
+// New graph id of an old node (invalid if the node was removed) and the new local index of
+// each of the node's first 8 edges (255 for removed edges, identity if nothing was filtered).
+// Restriction and name consistency masks only cover 8 edges so higher indexes are not tracked.
+struct new_node_t {
+  GraphId id;
+  std::array<uint8_t, 8> local_indexes = {0, 1, 2, 3, 4, 5, 6, 7};
+};
+
+// Associations from old to new nodes for every tile, indexed by the old node id within the tile
+using old_to_new_t = std::unordered_map<uint32_t, std::vector<new_node_t>>;
+
+// Counts for logging. Each worker counts its own, summed up once the workers are done
+struct filter_stats_t {
+  uint32_t original_edges = 0;
+  uint32_t original_nodes = 0;
+  uint32_t filtered_edges = 0;
+  uint32_t filtered_nodes = 0;
+  uint32_t can_aggregate = 0;
+  uint32_t aggregated = 0;
+
+  filter_stats_t& operator+=(const filter_stats_t& other) {
+    original_edges += other.original_edges;
+    original_nodes += other.original_nodes;
+    filtered_edges += other.filtered_edges;
+    filtered_nodes += other.filtered_nodes;
+    can_aggregate += other.can_aggregate;
+    aggregated += other.aggregated;
+    return *this;
+  }
+};
+
+// Local level tiles, shuffled to spread dense regions between the threads more evenly
+std::deque<GraphId> GetLocalTileQueue(const boost::property_tree::ptree& pt) {
+  GraphReader reader(pt.get_child("mjolnir"));
+  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
+  std::deque<GraphId> tilequeue(local_tiles.begin(), local_tiles.end());
+  std::shuffle(tilequeue.begin(), tilequeue.end(), std::default_random_engine(3));
+  return tilequeue;
+}
+
+uint32_t GetConcurrency(const boost::property_tree::ptree& pt) {
+  return std::max(static_cast<uint32_t>(1),
+                  pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+}
+
+// Each GraphFilter pass but the last one gets its tiles rewritten by the next pass, so hashing
+// tile data is only needed in the last one
+constexpr bool kHashTileData = false;
 
 // Group wheelchair and pedestrian access together
 constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess);
 
-uint8_t get_new_mask(uint8_t old_mask, const std::vector<uint8_t>& new_local_indexes) {
+uint8_t get_new_mask(uint8_t old_mask, const std::array<uint8_t, 8>& new_local_indexes) {
 
-  size_t n = std::min(static_cast<size_t>(8), new_local_indexes.size());
   // For each bit set in old_mask, update a bit in the new mask using new_local_indexes
   uint8_t new_mask = 0;
-  for (uint8_t i = 0; i < n; ++i) {
+  for (uint8_t i = 0; i < new_local_indexes.size(); ++i) {
     if ((old_mask & 1 << i) != 0 && (new_local_indexes[i] != 255)) {
       // Replace bit set in the old mask with one from new_local_indexes
       uint8_t index = new_local_indexes[i];
@@ -47,6 +93,24 @@ uint8_t get_new_mask(uint8_t old_mask, const std::vector<uint8_t>& new_local_ind
     }
   }
   return new_mask;
+}
+
+// Find the new node of an old node, end nodes are always on the same (local) level so the tile id
+// is enough to identify their tile
+const new_node_t* FindNewNode(const old_to_new_t& old_to_new, const GraphId& node, uint64_t wayid) {
+  auto iter = old_to_new.find(node.tileid());
+  if (iter == old_to_new.end() || node.id() >= iter->second.size() ||
+      !iter->second[node.id()].id.is_valid()) {
+    LOG_ERROR("GraphFilter - failed to find associated node");
+    std::cout << std::to_string(node.value) << " " << std::to_string(wayid) << std::endl;
+    return nullptr;
+  }
+  return &iter->second[node.id()];
+}
+
+GraphId GetNewNode(const old_to_new_t& old_to_new, const GraphId& node, uint64_t wayid) {
+  const new_node_t* new_node = FindNewNode(old_to_new, node, wayid);
+  return new_node ? new_node->id : GraphId();
 }
 
 bool CanAggregate(const DirectedEdge* de) {
@@ -63,27 +127,14 @@ RoadClass get_hierarchy_rc(const DirectedEdge* de) {
   return de->is_shortcut() ? static_cast<RoadClass>(de->shortcut()) : de->classification();
 }
 
-// ExpandFromNode and ExpandFromNodeInner is reused code from restriction builder with some slight
-// modifications. We are using recursion for graph traversal. We have to make sure we don't loop back
-// to ourselves, walk in the correct direction, have not already visited a node, etc. Once we meet our
-// criteria or not we stop.
-bool ExpandFromNode(GraphReader& reader,
-                    std::vector<PointLL>& shape,
-                    GraphId& en,
-                    const GraphId& from_node,
-                    std::unordered_set<std::string>& isos,
-                    bool forward,
-                    std::unordered_set<GraphId>& visited_nodes,
-                    uint64_t& way_id,
-                    const graph_tile_ptr& prev_tile,
-                    GraphId prev_node,
-                    GraphId current_node,
-                    const RoadClass& rc,
-                    bool validate);
-
+// ExpandFromNode is reused code from restriction builder with some slight modifications. We are
+// using recursion for graph traversal. We have to make sure we don't loop back to ourselves, walk
+// in the correct direction, have not already visited a node, etc. Once we meet our criteria or not
+// we stop.
 /*
  * Expand from the current node
- * @param  reader  Graph reader.
+ * @param  tile  tile of the walk, marked nodes only have edges within their own tile
+ * @param  marked  whether each node of the tile is marked for aggregation
  * @param  shape  shape that we need to update
  * @param  en  current end node that we started at
  * @param  from_node  node that we started from
@@ -91,43 +142,37 @@ bool ExpandFromNode(GraphReader& reader,
  * @param  forward  traverse in the forward or backward direction
  * @param  visited_nodes  nodes that we already visited.  don't visit again
  * @param  way_id  only interested in edges with this way_id
- * @param  prev_tile  previous tile
  * @param  prev_node  previous node
  * @param  current_node  current node
- * @param  node_info  current node's info
  * @param  validate  Are we validating data?
+ * @param  aggregated  count of aggregated edges
  *
  */
-bool ExpandFromNodeInner(GraphReader& reader,
-                         std::vector<PointLL>& shape,
-                         GraphId& en,
-                         const GraphId& from_node,
-                         std::unordered_set<std::string>& isos,
-                         bool forward,
-                         std::unordered_set<GraphId>& visited_nodes,
-                         uint64_t& way_id,
-                         const graph_tile_ptr& prev_tile,
-                         GraphId prev_node,
-                         GraphId current_node,
-                         const NodeInfo* node_info,
-                         const RoadClass& rc,
-                         bool validate) {
-
+bool ExpandFromNode(const graph_tile_ptr& tile,
+                    const std::vector<bool>& marked,
+                    std::vector<PointLL>& shape,
+                    GraphId& en,
+                    const GraphId& from_node,
+                    std::unordered_set<std::string>& isos,
+                    bool forward,
+                    std::unordered_set<GraphId>& visited_nodes,
+                    uint64_t& way_id,
+                    GraphId prev_node,
+                    GraphId current_node,
+                    const RoadClass& rc,
+                    bool validate,
+                    uint32_t& aggregated) {
+  const NodeInfo* node_info = tile->node(current_node);
+  const bool node_marked = marked[current_node.id()];
   for (size_t j = 0; j < node_info->edge_count(); ++j) {
-    GraphId edge_id(prev_tile->id().tileid(), prev_tile->id().level(), node_info->edge_index() + j);
-    const DirectedEdge* de = prev_tile->directededge(edge_id);
-    const auto& edge_info = prev_tile->edgeinfo(de);
-
-    auto tile = prev_tile;
-    if (tile->id() != de->endnode().tile_base()) {
-      tile = reader.GetGraphTile(de->endnode());
-    }
+    const DirectedEdge* de = tile->directededge(node_info->edge_index() + j);
+    const auto& edge_info = tile->edgeinfo(de);
 
     const NodeInfo* en_info = tile->node(de->endnode().id());
+    const bool en_marked = de->endnode().tile_base() == tile->id() && marked[de->endnode().id()];
     // check the direction, if we looped back, or are we done
     if ((de->endnode() != prev_node) && (de->forward() == forward) && (de->endnode() != from_node)) {
-      if (edge_info.wayid() == way_id &&
-          (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
+      if (edge_info.wayid() == way_id && (en_marked || (node_marked && !en_marked))) {
 
         // If this edge has special attributes, then we can't aggregate
         if (!CanAggregate(de) || get_hierarchy_rc(de) != rc) {
@@ -153,7 +198,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
 
         // found a node that does not have aggregation marked (using mode_change flag)
         // we are done.
-        if (node_info->mode_change() && !en_info->mode_change()) {
+        if (node_marked && !en_marked) {
           en = de->endnode();
           aggregated++;
           return true;
@@ -165,8 +210,8 @@ bool ExpandFromNodeInner(GraphReader& reader,
           visited_nodes.insert(de->endnode());
 
           // expand with the same way_id
-          found = ExpandFromNode(reader, shape, en, from_node, isos, forward, visited_nodes, way_id,
-                                 tile, current_node, de->endnode(), rc, validate);
+          found = ExpandFromNode(tile, marked, shape, en, from_node, isos, forward, visited_nodes,
+                                 way_id, current_node, de->endnode(), rc, validate, aggregated);
           if (found) {
             return true;
           }
@@ -179,49 +224,9 @@ bool ExpandFromNodeInner(GraphReader& reader,
   return false;
 }
 
-/*
- * Expand from the next node which is now our new current node
- * @param  reader  Graph reader.
- * @param  shape  shape that we need to update
- * @param  en  current end node that we started at
- * @param  from_node  node that we started from
- * @param  isos  country ISOs. Used to see if we cross into a new country
- * @param  forward  traverse in the forward or backward direction
- * @param  visited_nodes  nodes that we already visited.  don't visit again
- * @param  way_id  only interested in edges with this way_id
- * @param  prev_tile  previous tile
- * @param  prev_node  previous node
- * @param  current_node  current node
- * @param  validate  Are we validating data?
- *
- */
-bool ExpandFromNode(GraphReader& reader,
-                    std::vector<PointLL>& shape,
-                    GraphId& en,
-                    const GraphId& from_node,
-                    std::unordered_set<std::string>& isos,
-                    bool forward,
-                    std::unordered_set<GraphId>& visited_nodes,
-                    uint64_t& way_id,
-                    const graph_tile_ptr& prev_tile,
-                    GraphId prev_node,
-                    GraphId current_node,
-                    const RoadClass& rc,
-                    bool validate) {
-
-  auto tile = prev_tile;
-  if (tile->id() != current_node.tile_base()) {
-    tile = reader.GetGraphTile(current_node);
-  }
-
-  auto* node_info = tile->node(current_node);
-  // expand from the current node
-  return ExpandFromNodeInner(reader, shape, en, from_node, isos, forward, visited_nodes, way_id, tile,
-                             prev_node, current_node, node_info, rc, validate);
-}
-
 bool Aggregate(GraphId& start_node,
-               GraphReader& reader,
+               const graph_tile_ptr& tile,
+               const std::vector<bool>& marked,
                std::vector<PointLL>& shape,
                GraphId& en,
                const GraphId& from_node,
@@ -229,30 +234,34 @@ bool Aggregate(GraphId& start_node,
                std::unordered_set<std::string>& isos,
                const RoadClass& rc,
                bool forward,
-               bool validate) {
-
-  graph_tile_ptr tile = reader.GetGraphTile(start_node);
+               bool validate,
+               uint32_t& aggregated) {
   std::unordered_set<GraphId> visited_nodes{start_node};
-  return ExpandFromNode(reader, shape, en, from_node, isos, forward, visited_nodes, way_id, tile,
-                        GraphId(), start_node, rc, validate);
+  return ExpandFromNode(tile, marked, shape, en, from_node, isos, forward, visited_nodes, way_id,
+                        GraphId(), start_node, rc, validate, aggregated);
 }
 
 /**
- * Filter edges to optionally remove edges by access.
- * @param  reader  Graph reader.
- * @param  old_to_new  Map of original node Ids to new nodes Ids (after filtering).
- * @param  updated_local_indexes Map of nodes with updated local edge indexes (after filtering).
+ * Filter edges to optionally remove edges by access. A worker processing tiles from the
+ * shared queue, run on multiple threads.
+ * @param  pt  Property tree with the mjolnir configuration.
+ * @param  tilequeue  Queue of local tiles to process, shared between the workers.
+ * @param  lock  Mutex that guards the tile queue.
  * @param  include_driving  Include edge if driving (any vehicular) access in either direction.
  * @param  include_bicycle  Include edge if bicycle access in either direction.
  * @param  include_pedestrian  Include edge if pedestrian or wheelchair access in either direction.
+ * @param  old_to_new  Associations of old nodes to new nodes Ids (after filtering) for the
+ *                     tiles this worker has processed.
+ * @param  stats  Counts of the tiles this worker has processed.
  */
-void FilterTiles(GraphReader& reader,
-                 std::unordered_map<GraphId, GraphId>& old_to_new,
-                 std::unordered_map<GraphId, std::vector<uint8_t>>& updated_local_indexes,
-                 const bool include_driving,
-                 const bool include_bicycle,
-                 const bool include_pedestrian) {
-  SCOPED_TIMER();
+void FilterTilesWorker(const boost::property_tree::ptree& pt,
+                       std::deque<GraphId>& tilequeue,
+                       std::mutex& lock,
+                       const bool include_driving,
+                       const bool include_bicycle,
+                       const bool include_pedestrian,
+                       old_to_new_t& old_to_new,
+                       filter_stats_t& stats) {
   // lambda to check if an edge should be included
   auto include_edge = [&include_driving, &include_bicycle,
                        &include_pedestrian](const DirectedEdge* edge) {
@@ -267,17 +276,28 @@ void FilterTiles(GraphReader& reader,
            (pedestrian_access && include_pedestrian);
   };
 
-  // Iterate through all tiles in the local level
-  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
-  for (const auto& tile_id : local_tiles) {
+  GraphReader reader(pt.get_child("mjolnir"));
+  while (true) {
+    lock.lock();
+    if (tilequeue.empty()) {
+      lock.unlock();
+      break;
+    }
+    GraphId tile_id = tilequeue.front();
+    tilequeue.pop_front();
+    lock.unlock();
+
     // Create a new tilebuilder - should copy header information
     GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
-    n_original_nodes += tilebuilder.header()->nodecount();
-    n_original_edges += tilebuilder.header()->directededgecount();
+    stats.original_nodes += tilebuilder.header()->nodecount();
+    stats.original_edges += tilebuilder.header()->directededgecount();
 
     // Get the graph tile. Read from this tile to create the new tile.
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
     assert(tile);
+
+    std::vector<new_node_t>& new_nodes = old_to_new[tile_id.tileid()];
+    new_nodes.resize(tile->header()->nodecount());
 
     std::hash<std::string> hasher;
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
@@ -292,8 +312,7 @@ void FilterTiles(GraphReader& reader,
       uint32_t edge_index = tilebuilder.directededges().size();
 
       uint8_t new_edge_count = 0;
-      uint8_t removed_index = 255;
-      std::vector<uint8_t> new_local_indexes;
+      std::array<uint8_t, 8>& new_local_indexes = new_nodes[i].local_indexes;
 
       // Iterate through directed edges outbound from this node
       std::vector<uint64_t> wayid;
@@ -308,13 +327,17 @@ void FilterTiles(GraphReader& reader,
         // Check if the directed edge should be included
         const DirectedEdge* directededge = tile->directededge(edgeid);
         if (!include_edge(directededge)) {
-          ++n_filtered_edges;
+          ++stats.filtered_edges;
           edge_filtered = true;
-          new_local_indexes.push_back(removed_index);
+          if (j < new_local_indexes.size()) {
+            new_local_indexes[j] = 255; // marks a removed edge
+          }
           continue;
         }
 
-        new_local_indexes.push_back(new_edge_count);
+        if (j < new_local_indexes.size()) {
+          new_local_indexes[j] = new_edge_count;
+        }
         new_edge_count++;
 
         // Copy the directed edge information
@@ -418,6 +441,14 @@ void FilterTiles(GraphReader& reader,
         ++edge_count;
       }
 
+      // When some edge at the node has been filtered, mask bits beyond the node's original
+      // edge count are dropped rather than kept as is
+      if (edge_filtered) {
+        for (uint32_t j = nodeinfo->edge_count(); j < new_local_indexes.size(); ++j) {
+          new_local_indexes[j] = 255;
+        }
+      }
+
       // Add the node to the tilebuilder unless no edges remain
       if (edge_count > 0) {
         // Add a node builder to the tile. Update the edge count and edgeindex
@@ -452,13 +483,7 @@ void FilterTiles(GraphReader& reader,
         }
 
         // Associate the old node to the new node.
-        old_to_new[nodeid] = new_node;
-
-        // If any edges from this node have been filtered, add new_local_indexes to the
-        // updated_local_indexes map
-        if (edge_filtered > 0) {
-          updated_local_indexes[nodeid] = new_local_indexes;
-        }
+        new_nodes[i].id = new_node;
 
         // Check if edges at this node can be aggregated. Only 2 edges, same way Id (so that
         // edge attributes should match), don't end at same node (no loops), no traffic signal,
@@ -484,17 +509,17 @@ void FilterTiles(GraphReader& reader,
           if (aggregate) {
             // temporarily used to check aggregating edges from this node
             node.set_mode_change(true);
-            ++can_aggregate;
+            ++stats.can_aggregate;
           }
         }
       } else {
-        ++n_filtered_nodes;
+        ++stats.filtered_nodes;
       }
     }
 
     // Store the updated tile data (or remove tile if all edges are filtered)
     if (tilebuilder.nodes().size() > 0) {
-      tilebuilder.StoreTileData();
+      tilebuilder.StoreTileData(kHashTileData);
     } else {
       // Remove the tile - all nodes and edges were filtered
       std::filesystem::path file_location{reader.tile_dir()};
@@ -508,19 +533,64 @@ void FilterTiles(GraphReader& reader,
       reader.Trim();
     }
   }
-  LOG_INFO("Filtered " + std::to_string(n_filtered_nodes) + " nodes out of " +
-           std::to_string(n_original_nodes));
-  LOG_INFO("Filtered " + std::to_string(n_filtered_edges) + " directededges out of " +
-           std::to_string(n_original_edges));
-  LOG_INFO("Nodes to aggregate: " + std::to_string(can_aggregate));
 }
 
-void GetAggregatedData(GraphReader& reader,
+/**
+ * Filter edges to optionally remove edges by access, processing tiles on multiple threads.
+ * @param  pt  Property tree with the mjolnir configuration.
+ * @param  old_to_new  Associations of old nodes to new nodes Ids (after filtering).
+ * @param  include_driving  Include edge if driving (any vehicular) access in either direction.
+ * @param  include_bicycle  Include edge if bicycle access in either direction.
+ * @param  include_pedestrian  Include edge if pedestrian or wheelchair access in either direction.
+ * @param  stats  Counts of the filtered tiles.
+ */
+void FilterTiles(const boost::property_tree::ptree& pt,
+                 old_to_new_t& old_to_new,
+                 const bool include_driving,
+                 const bool include_bicycle,
+                 const bool include_pedestrian,
+                 filter_stats_t& stats) {
+  SCOPED_TIMER();
+  std::deque<GraphId> tilequeue = GetLocalTileQueue(pt);
+  std::mutex lock;
+
+  // Each worker only associates nodes of the tiles it has processed, so workers fill
+  // their own associations that are merged together once they are done
+  std::vector<old_to_new_t> results(GetConcurrency(pt));
+  std::vector<filter_stats_t> worker_stats(results.size());
+  std::vector<std::thread> threads;
+  threads.reserve(results.size());
+  for (size_t i = 0; i < results.size(); ++i) {
+    threads.emplace_back(FilterTilesWorker, std::cref(pt), std::ref(tilequeue), std::ref(lock),
+                         include_driving, include_bicycle, include_pedestrian, std::ref(results[i]),
+                         std::ref(worker_stats[i]));
+  }
+  for (auto& thread : threads) {
+    thread.join();
+  }
+  for (auto& result : results) {
+    for (auto& tile_nodes : result) {
+      old_to_new[tile_nodes.first] = std::move(tile_nodes.second);
+    }
+  }
+  for (const auto& worker : worker_stats) {
+    stats += worker;
+  }
+
+  LOG_INFO("Filtered " + std::to_string(stats.filtered_nodes) + " nodes out of " +
+           std::to_string(stats.original_nodes));
+  LOG_INFO("Filtered " + std::to_string(stats.filtered_edges) + " directededges out of " +
+           std::to_string(stats.original_edges));
+  LOG_INFO("Nodes to aggregate: " + std::to_string(stats.can_aggregate));
+}
+
+void GetAggregatedData(const std::vector<bool>& marked,
                        std::vector<PointLL>& shape,
                        GraphId& en,
                        const GraphId& from_node,
                        const graph_tile_ptr& tile,
-                       const DirectedEdge* directededge) {
+                       const DirectedEdge* directededge,
+                       uint32_t& aggregated) {
   std::unordered_set<std::string> isos;
   bool isForward = directededge->forward();
   auto id = directededge->endnode();
@@ -530,8 +600,8 @@ void GetAggregatedData(GraphReader& reader,
 
   // walk in the correct direction.
   uint64_t wayid = tile->edgeinfo(directededge).wayid();
-  if (Aggregate(id, reader, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
-                isForward, false)) {
+  if (Aggregate(id, tile, marked, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
+                isForward, false, aggregated)) {
     aggregated++; // count the current edge
     // flip the shape back for storing in edgeinfo
     if (!isForward) {
@@ -550,14 +620,15 @@ void GetAggregatedData(GraphReader& reader,
 // https://www.openstreetmap.org/way/975845893
 // As of 01/15/2024 there are only ~180 of these.
 
-void ValidateData(GraphReader& reader,
+void ValidateData(const std::vector<bool>& marked,
                   std::vector<PointLL>& shape,
                   GraphId& en,
                   std::unordered_set<GraphId>& processed_nodes,
                   std::unordered_set<uint64_t>& no_agg_ways,
                   const GraphId& from_node,
                   const graph_tile_ptr& tile,
-                  const DirectedEdge* directededge) {
+                  const DirectedEdge* directededge,
+                  uint32_t& aggregated) {
 
   // Get the tile at the end node.  Skip if node is in another tile.
   // mode_change is not set for end nodes that are in diff tiles
@@ -568,7 +639,7 @@ void ValidateData(GraphReader& reader,
     const NodeInfo* en_info = tile->node(directededge->endnode().id());
     const NodeInfo* sn_info = tile->node(from_node);
 
-    if (en_info->mode_change()) {
+    if (marked[directededge->endnode().id()]) {
 
       // If this edge has special attributes, then we can't aggregate
       if (!CanAggregate(directededge)) {
@@ -591,8 +662,8 @@ void ValidateData(GraphReader& reader,
 
       // walk in the correct direction.
       uint64_t wayid = edgeinfo.wayid();
-      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, get_hierarchy_rc(directededge),
-                     isForward, true)) {
+      if (!Aggregate(id, tile, marked, shape, en, from_node, wayid, isos,
+                     get_hierarchy_rc(directededge), isForward, true, aggregated)) {
         // LOG_WARN("ValidateData - failed to validate node.  Will not aggregate.");
         // for debugging only
         // std::cout << "End node: " << directededge->endnode().value << " WayId: " <<
@@ -611,16 +682,43 @@ void ValidateData(GraphReader& reader,
   }
 }
 
-void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
+/**
+ * Validate which nodes can aggregate their edges and associate the nodes that remain after
+ * aggregation to their new Ids. A worker processing tiles from the shared queue, run on multiple
+ * threads. Nodes marked for aggregation only have edges that stay within their own tile, so each
+ * tile is validated independently.
+ * @param  pt  Property tree with the mjolnir configuration.
+ * @param  tilequeue  Queue of local tiles to process, shared between the workers.
+ * @param  lock  Mutex that guards the tile queue.
+ * @param  old_to_new  Associations of old nodes to new nodes Ids (after aggregation) for the
+ *                     tiles this worker has processed. Nodes that get aggregated have no new Id.
+ * @param  stats  Counts of the tiles this worker has processed.
+ */
+void ValidateAggregationWorker(const boost::property_tree::ptree& pt,
+                               std::deque<GraphId>& tilequeue,
+                               std::mutex& lock,
+                               old_to_new_t& old_to_new,
+                               filter_stats_t& stats) {
+  GraphReader reader(pt.get_child("mjolnir"));
+  while (true) {
+    lock.lock();
+    if (tilequeue.empty()) {
+      lock.unlock();
+      break;
+    }
+    GraphId tile_id = tilequeue.front();
+    tilequeue.pop_front();
+    lock.unlock();
 
-  SCOPED_TIMER();
-  LOG_INFO("Validating edges for aggregation");
-  // Iterate through all tiles in the local level
-  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
-  for (const auto& tile_id : local_tiles) {
     // Get the graph tile. Read from this tile to create the new tile.
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
     assert(tile);
+
+    // Nodes got marked for aggregation (using mode_change flag) while filtering
+    std::vector<bool> marked(tile->header()->nodecount());
+    for (uint32_t i = 0; i < tile->header()->nodecount(); ++i) {
+      marked[i] = tile->node(i)->mode_change();
+    }
 
     std::unordered_set<GraphId> processed_nodes;
     std::unordered_set<uint64_t> no_agg_ways;
@@ -637,7 +735,8 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
           GraphId en = directededge->endnode();
           std::vector<PointLL> shape;
           // check if we can aggregate the edges at this node.
-          ValidateData(reader, shape, en, processed_nodes, no_agg_ways, nodeid, tile, directededge);
+          ValidateData(marked, shape, en, processed_nodes, no_agg_ways, nodeid, tile, directededge,
+                       stats.aggregated);
         }
       }
     }
@@ -655,48 +754,63 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       }
     }
 
-    // Create a new tile builder
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
-    std::vector<NodeInfo> nodes;
-
-    // Copy edges (they do not change)
-    std::vector<DirectedEdge> directededges;
-    size_t n = tile->header()->directededgecount();
-    directededges.reserve(n);
-    const DirectedEdge* orig_edges = tile->directededge(0);
-    std::copy(orig_edges, orig_edges + n, std::back_inserter(directededges));
-
+    // We can not aggregate at the processed nodes, all other marked nodes get removed and the
+    // remaining nodes keep their order
+    std::vector<new_node_t>& new_nodes = old_to_new[tile_id.tileid()];
+    new_nodes.resize(tile->header()->nodecount());
+    uint32_t new_count = 0;
     nodeid = GraphId(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
-      NodeInfo nodeinfo = tilebuilder.node(i);
-      bool found = (processed_nodes.find(nodeid) != processed_nodes.end());
-
-      // We can not aggregate at this node.  Turn off the mode change(aggregation) bit
-      if (found) {
-        nodeinfo.set_mode_change(false);
+      if (!marked[i] || processed_nodes.find(nodeid) != processed_nodes.end()) {
+        new_nodes[i].id = GraphId(tile_id.tileid(), tile_id.level(), new_count++);
       }
-      // Add the node to the local list
-      nodes.emplace_back(std::move(nodeinfo));
     }
-    tilebuilder.Update(nodes, directededges);
 
     if (reader.OverCommitted()) {
       reader.Trim();
     }
   }
+}
 
-  LOG_INFO("Aggregating edges");
-  reader.Clear();
-  // Iterate through all tiles in the local level
-  local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
-  // Iterate through all tiles in the local level
-  for (const auto& tile_id : local_tiles) {
+/**
+ * Aggregate edges at the marked nodes and update end nodes of all directed edges. A worker
+ * processing tiles from the shared queue, run on multiple threads. Aggregated chains never leave
+ * the tile of the node that started them, so each tile is aggregated and written independently.
+ * @param  pt  Property tree with the mjolnir configuration.
+ * @param  tilequeue  Queue of local tiles to process, shared between the workers.
+ * @param  lock  Mutex that guards the tile queue.
+ * @param  old_to_new  Associations of old nodes to new nodes Ids (after aggregation).
+ * @param  stats  Counts of the tiles this worker has processed.
+ */
+void AggregateTilesWorker(const boost::property_tree::ptree& pt,
+                          std::deque<GraphId>& tilequeue,
+                          std::mutex& lock,
+                          const old_to_new_t& old_to_new,
+                          filter_stats_t& stats) {
+  GraphReader reader(pt.get_child("mjolnir"));
+  while (true) {
+    lock.lock();
+    if (tilequeue.empty()) {
+      lock.unlock();
+      break;
+    }
+    GraphId tile_id = tilequeue.front();
+    tilequeue.pop_front();
+    lock.unlock();
+
     // Create a new tilebuilder - should copy header information
     GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
 
     // Get the graph tile. Read from this tile to create the new tile.
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
     assert(tile);
+
+    // Nodes without a new Id are marked for aggregation
+    const std::vector<new_node_t>& new_nodes = old_to_new.at(tile_id.tileid());
+    std::vector<bool> marked(new_nodes.size());
+    for (size_t i = 0; i < new_nodes.size(); ++i) {
+      marked[i] = !new_nodes[i].id.is_valid();
+    }
 
     std::hash<std::string> hasher;
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
@@ -714,8 +828,8 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       std::vector<GraphId> endnode;
       const NodeInfo* nodeinfo = tile->node(nodeid);
 
-      // Nodes marked with mode_change = true are tossed.
-      if (nodeinfo->mode_change()) {
+      // Nodes marked for aggregation are tossed.
+      if (marked[i]) {
         continue;
       }
 
@@ -778,12 +892,12 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         GraphId en = directededge->endnode();
 
         if (en.tile_value() == tile_id) {
-          if (tile->node(en.id())->mode_change()) {
-            GetAggregatedData(reader, shape, en, nodeid, tile, directededge);
-            newedge.set_endnode(en);
+          if (marked[en.id()]) {
+            GetAggregatedData(marked, shape, en, nodeid, tile, directededge, stats.aggregated);
             aggregated = true;
           }
         }
+        newedge.set_endnode(GetNewNode(old_to_new, en, edgeinfo.wayid()));
 
         // Hammerhead specific.  bike network not saved to edgeinfo
         bool added;
@@ -814,6 +928,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         GraphId new_node(nodeid.tileid(), nodeid.level(), tilebuilder.nodes().size());
         tilebuilder.nodes().push_back(*nodeinfo);
         NodeInfo& node = tilebuilder.nodes().back();
+        node.set_mode_change(false);
         node.set_edge_count(edge_count);
         node.set_local_edge_count(edge_count);
         node.set_edge_index(edge_index);
@@ -830,14 +945,15 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
           node.set_named_intersection(true);
           tilebuilder.AddSigns(tilebuilder.nodes().size() - 1, signs);
         }
-        // Associate the old node to the new node.
-        old_to_new[nodeid] = new_node;
+        if (new_node != new_nodes[i].id) {
+          LOG_ERROR("AggregateTiles - node Id does not match the one assigned in validation");
+        }
       }
     }
 
     // Store the updated tile data (or remove tile if all edges are filtered)
     if (tilebuilder.nodes().size() > 0) {
-      tilebuilder.StoreTileData();
+      tilebuilder.StoreTileData(kHashTileData);
     } else {
       // Remove the tile - all nodes and edges were filtered
       std::filesystem::path file_location{reader.tile_dir()};
@@ -851,24 +967,92 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       reader.Trim();
     }
   }
-
-  LOG_INFO("Aggregated " + std::to_string(aggregated) + " directededges out of " +
-           std::to_string(n_original_edges));
 }
 
 /**
- * Update end nodes of all directed edges.
- * @param  reader  Graph reader.
- * @param  old_to_new  Map of original node Ids to new nodes Ids (after filtering).
+ * Aggregate edges at nodes that got marked for aggregation while filtering and update end nodes
+ * of all directed edges, processing tiles on multiple threads.
+ * @param  pt  Property tree with the mjolnir configuration.
+ * @param  stats  Counts of the filtered tiles, aggregated edges get added to it.
  */
-void UpdateEndNodes(GraphReader& reader,
-                    std::unordered_map<GraphId, GraphId>& old_to_new,
-                    std::unordered_map<GraphId, std::vector<uint8_t>>& updated_local_indexes) {
+void AggregateTiles(const boost::property_tree::ptree& pt, filter_stats_t& stats) {
   SCOPED_TIMER();
-  LOG_INFO("Update end nodes of directed edges");
-  // Iterate through all tiles in the local level
-  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
-  for (const auto& tile_id : local_tiles) {
+
+  LOG_INFO("Validating edges for aggregation");
+  old_to_new_t old_to_new;
+  {
+    std::deque<GraphId> tilequeue = GetLocalTileQueue(pt);
+    std::mutex lock;
+
+    // Each worker only associates nodes of the tiles it has processed, so workers fill
+    // their own associations that are merged together once they are done
+    std::vector<old_to_new_t> results(GetConcurrency(pt));
+    std::vector<filter_stats_t> worker_stats(results.size());
+    std::vector<std::thread> threads;
+    threads.reserve(results.size());
+    for (size_t i = 0; i < results.size(); ++i) {
+      threads.emplace_back(ValidateAggregationWorker, std::cref(pt), std::ref(tilequeue),
+                           std::ref(lock), std::ref(results[i]), std::ref(worker_stats[i]));
+    }
+    for (auto& thread : threads) {
+      thread.join();
+    }
+    for (auto& result : results) {
+      for (auto& tile_nodes : result) {
+        old_to_new[tile_nodes.first] = std::move(tile_nodes.second);
+      }
+    }
+    for (const auto& worker : worker_stats) {
+      stats += worker;
+    }
+  }
+
+  LOG_INFO("Aggregating edges");
+  {
+    std::deque<GraphId> tilequeue = GetLocalTileQueue(pt);
+    std::mutex lock;
+    std::vector<filter_stats_t> worker_stats(GetConcurrency(pt));
+    std::vector<std::thread> threads;
+    threads.reserve(worker_stats.size());
+    for (auto& worker : worker_stats) {
+      threads.emplace_back(AggregateTilesWorker, std::cref(pt), std::ref(tilequeue), std::ref(lock),
+                           std::cref(old_to_new), std::ref(worker));
+    }
+    for (auto& thread : threads) {
+      thread.join();
+    }
+    for (const auto& worker : worker_stats) {
+      stats += worker;
+    }
+  }
+
+  LOG_INFO("Aggregated " + std::to_string(stats.aggregated) + " directededges out of " +
+           std::to_string(stats.original_edges));
+}
+
+/**
+ * Update end nodes of all directed edges. A worker processing tiles from the shared queue,
+ * run on multiple threads.
+ * @param  pt  Property tree with the mjolnir configuration.
+ * @param  tilequeue  Queue of local tiles to process, shared between the workers.
+ * @param  lock  Mutex that guards the tile queue.
+ * @param  old_to_new  Associations of old nodes to new nodes Ids (after filtering).
+ */
+void UpdateEndNodesWorker(const boost::property_tree::ptree& pt,
+                          std::deque<GraphId>& tilequeue,
+                          std::mutex& lock,
+                          const old_to_new_t& old_to_new) {
+  GraphReader reader(pt.get_child("mjolnir"));
+  while (true) {
+    lock.lock();
+    if (tilequeue.empty()) {
+      lock.unlock();
+      break;
+    }
+    GraphId tile_id = tilequeue.front();
+    tilequeue.pop_front();
+    lock.unlock();
+
     // Get the graph tile. Skip if no tile exists (should not happen!?)
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
     assert(tile);
@@ -889,30 +1073,21 @@ void UpdateEndNodes(GraphReader& reader,
     for (uint32_t j = 0; j < tile->header()->directededgecount(); ++j, ++edgeid) {
       const DirectedEdge* edge = tile->directededge(j);
 
-      // Check if end node has updated local indexes (any edges filtered)
+      GraphId end_node;
       uint8_t new_restrictions = edge->restrictions();
       uint8_t new_name_consistency = edge->name_consistency();
-      auto indexes = updated_local_indexes.find(edge->endnode());
-      if (indexes != updated_local_indexes.end()) {
-        uint8_t old_mask = edge->restrictions();
-        if (old_mask != 0) {
-          new_restrictions = get_new_mask(old_mask, indexes->second);
-        }
-        old_mask = edge->name_consistency();
-        if (old_mask != 0) {
-          new_name_consistency = get_new_mask(old_mask, indexes->second);
-        }
-      }
+      if (const new_node_t* new_node =
+              FindNewNode(old_to_new, edge->endnode(), tile->edgeinfo(edge).wayid())) {
+        end_node = new_node->id;
 
-      // Find the end node in the old_to_new mapping
-      GraphId end_node;
-      auto iter = old_to_new.find(edge->endnode());
-      if (iter == old_to_new.end()) {
-        LOG_ERROR("UpdateEndNodes - failed to find associated node");
-        std::cout << std::to_string(edge->endnode().value) << " "
-                  << std::to_string(tile->edgeinfo(edge).wayid()) << std::endl;
-      } else {
-        end_node = iter->second;
+        // Update masks with the new local edge indexes at the end node (identity unless
+        // some edges at that node have been filtered)
+        if (new_restrictions != 0) {
+          new_restrictions = get_new_mask(new_restrictions, new_node->local_indexes);
+        }
+        if (new_name_consistency != 0) {
+          new_name_consistency = get_new_mask(new_name_consistency, new_node->local_indexes);
+        }
       }
 
       // Copy the edge to the directededges vector and update the end node
@@ -926,7 +1101,7 @@ void UpdateEndNodes(GraphReader& reader,
     }
 
     // Update the tile with new directededges.
-    tilebuilder.Update(nodes, directededges);
+    tilebuilder.Update(nodes, directededges, kHashTileData);
 
     if (reader.OverCommitted()) {
       reader.Trim();
@@ -935,18 +1110,53 @@ void UpdateEndNodes(GraphReader& reader,
 }
 
 /**
- * Update Opposing Edge Index and Transitions of all directed edges.
- * @param  reader  Graph reader.
+ * Update end nodes of all directed edges, processing tiles on multiple threads.
+ * @param  pt  Property tree with the mjolnir configuration.
+ * @param  old_to_new  Associations of old nodes to new nodes Ids (after filtering).
  */
-void UpdateOpposingIndexAndTransitions(GraphReader& reader) {
+void UpdateEndNodes(const boost::property_tree::ptree& pt, const old_to_new_t& old_to_new) {
   SCOPED_TIMER();
-  LOG_INFO("Update Opposing Edge Index of directed edges");
+  LOG_INFO("Update end nodes of directed edges");
+  std::deque<GraphId> tilequeue = GetLocalTileQueue(pt);
+  std::mutex lock;
 
+  std::vector<std::thread> threads;
+  threads.reserve(GetConcurrency(pt));
+  for (size_t i = 0; i < threads.capacity(); ++i) {
+    threads.emplace_back(UpdateEndNodesWorker, std::cref(pt), std::ref(tilequeue), std::ref(lock),
+                         std::cref(old_to_new));
+  }
+  for (auto& thread : threads) {
+    thread.join();
+  }
+}
+
+/**
+ * Update Opposing Edge Index and Transitions of all directed edges. A worker processing
+ * tiles from the shared queue, run on multiple threads. Workers also read the tiles of
+ * neighboring end nodes, which tile writes replace atomically. The fields this pass updates do
+ * not affect the opposing edge search, so a neighbor read that got the tile before or after its
+ * own update sees the same result.
+ * @param  pt  Property tree with the mjolnir configuration.
+ * @param  tilequeue  Queue of local tiles to process, shared between the workers.
+ * @param  lock  Mutex that guards the tile queue.
+ */
+void UpdateOpposingWorker(const boost::property_tree::ptree& pt,
+                          std::deque<GraphId>& tilequeue,
+                          std::mutex& lock) {
   enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {0}};
-  // Iterate through all tiles in the local level
-  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
-  for (const auto& tile_id : local_tiles) {
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true);
+  GraphReader reader(pt.get_child("mjolnir"));
+  while (true) {
+    lock.lock();
+    if (tilequeue.empty()) {
+      lock.unlock();
+      break;
+    }
+    GraphId tile_id = tilequeue.front();
+    tilequeue.pop_front();
+    lock.unlock();
+
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
 
     // Get the graph tile. Read from this tile to create the new tile.
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
@@ -966,7 +1176,7 @@ void UpdateOpposingIndexAndTransitions(GraphReader& reader) {
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
       const NodeInfo* nodeinfo = tile->node(nodeid);
       GraphId edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
-      const DirectedEdge* edges = tilebuilder.directededges(nodeinfo->edge_index());
+      const DirectedEdge* edges = tile->directededge(nodeinfo->edge_index());
 
       for (uint32_t j = 0; j < nodeinfo->edge_count(); ++j, ++edgeid) {
         // Check if the directed edge should be included
@@ -1004,6 +1214,27 @@ void UpdateOpposingIndexAndTransitions(GraphReader& reader) {
   }
 }
 
+/**
+ * Update Opposing Edge Index and Transitions of all directed edges, processing tiles on
+ * multiple threads.
+ * @param  pt  Property tree with the mjolnir configuration.
+ */
+void UpdateOpposingIndexAndTransitions(const boost::property_tree::ptree& pt) {
+  SCOPED_TIMER();
+  LOG_INFO("Update Opposing Edge Index of directed edges");
+  std::deque<GraphId> tilequeue = GetLocalTileQueue(pt);
+  std::mutex lock;
+
+  std::vector<std::thread> threads;
+  threads.reserve(GetConcurrency(pt));
+  for (size_t i = 0; i < threads.capacity(); ++i) {
+    threads.emplace_back(UpdateOpposingWorker, std::cref(pt), std::ref(tilequeue), std::ref(lock));
+  }
+  for (auto& thread : threads) {
+    thread.join();
+  }
+}
+
 } // namespace
 
 namespace valhalla {
@@ -1011,9 +1242,6 @@ namespace mjolnir {
 
 // Optionally filter edges and nodes based on access.
 void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
-
-  // TODO: thread this. Could be difficult due to sequence creates to associate nodes
-
   SCOPED_TIMER();
   // Edge filtering (optionally exclude edges)
   bool include_driving = pt.get_child("mjolnir").get<bool>("include_driving", true);
@@ -1034,36 +1262,21 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
     return;
   }
 
-  // Map of old node Ids to new node Ids (after filtering).
-  std::unordered_map<baldr::GraphId, baldr::GraphId> old_to_new;
-
-  // Map of updated local indexes at nodes where edges have been filtered
-  std::unordered_map<GraphId, std::vector<uint8_t>> updated_local_indexes;
-
-  // Construct GraphReader
-  GraphReader reader(pt.get_child("mjolnir"));
+  // Associations of old node Ids to new node Ids (after filtering).
+  old_to_new_t old_to_new;
 
   // Filter edges (and nodes) by access
-  FilterTiles(reader, old_to_new, updated_local_indexes, include_driving, include_bicycle,
-              include_pedestrian);
+  filter_stats_t stats;
+  FilterTiles(pt, old_to_new, include_driving, include_bicycle, include_pedestrian, stats);
 
-  // Update end nodes. Clear the GraphReader cache first.
-  reader.Clear();
-  UpdateEndNodes(reader, old_to_new, updated_local_indexes);
-
-  reader.Clear();
+  // Update end nodes
+  UpdateEndNodes(pt, old_to_new);
   old_to_new.clear();
-  AggregateTiles(reader, old_to_new);
 
-  // Update end nodes. Clear the GraphReader cache first.
-  reader.Clear();
-  // Only update the indexes once.
-  updated_local_indexes.clear();
-  UpdateEndNodes(reader, old_to_new, updated_local_indexes);
+  AggregateTiles(pt, stats);
 
-  // Update Opposing Edge Index. Clear the GraphReader cache first.
-  reader.Clear();
-  UpdateOpposingIndexAndTransitions(reader);
+  // Update Opposing Edge Index
+  UpdateOpposingIndexAndTransitions(pt);
 
   LOG_INFO("Done GraphFilter");
 }
