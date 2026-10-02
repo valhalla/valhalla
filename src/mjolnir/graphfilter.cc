@@ -1141,14 +1141,13 @@ void UpdateEndNodes(const boost::property_tree::ptree& pt, const old_to_new_t& o
 
 /**
  * Update Opposing Edge Index and Transitions of all directed edges. A worker processing
- * tiles from the shared queue, run on multiple threads. Only the worker that owns a tile
- * writes it, but workers also read the tiles of neighboring end nodes, so all tile reads
- * and writes are serialized with the same mutex that guards the queue. The fields this
- * pass updates do not affect the opposing edge search, so a neighbor read that got the
- * tile before or after its own update sees the same result.
+ * tiles from the shared queue, run on multiple threads. Workers also read the tiles of
+ * neighboring end nodes, which tile writes replace atomically. The fields this pass updates do
+ * not affect the opposing edge search, so a neighbor read that got the tile before or after its
+ * own update sees the same result.
  * @param  pt  Property tree with the mjolnir configuration.
  * @param  tilequeue  Queue of local tiles to process, shared between the workers.
- * @param  lock  Mutex that guards the tile queue and the tile reads/writes.
+ * @param  lock  Mutex that guards the tile queue.
  */
 void UpdateOpposingWorker(const boost::property_tree::ptree& pt,
                           std::deque<GraphId>& tilequeue,
@@ -1165,13 +1164,10 @@ void UpdateOpposingWorker(const boost::property_tree::ptree& pt,
     tilequeue.pop_front();
     lock.unlock();
 
-    // Only this worker writes the tile, so it is safe to read it without the lock
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true);
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
 
     // Get the graph tile. Read from this tile to create the new tile.
-    lock.lock();
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
-    lock.unlock();
     assert(tile);
 
     // Copy nodes (they do not change)
@@ -1188,7 +1184,7 @@ void UpdateOpposingWorker(const boost::property_tree::ptree& pt,
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
       const NodeInfo* nodeinfo = tile->node(nodeid);
       GraphId edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
-      const DirectedEdge* edges = tilebuilder.directededges(nodeinfo->edge_index());
+      const DirectedEdge* edges = tile->directededge(nodeinfo->edge_index());
 
       for (uint32_t j = 0; j < nodeinfo->edge_count(); ++j, ++edgeid) {
         // Check if the directed edge should be included
@@ -1203,9 +1199,7 @@ void UpdateOpposingWorker(const boost::property_tree::ptree& pt,
         if (tile->id() == edge->endnode().tile_base()) {
           endnodetile = tile;
         } else {
-          lock.lock();
           endnodetile = reader.GetGraphTile(edge->endnode());
-          lock.unlock();
         }
 
         // Set the opposing index on the local level
@@ -1220,13 +1214,11 @@ void UpdateOpposingWorker(const boost::property_tree::ptree& pt,
     }
 
     // Update the tile with new directededges.
-    lock.lock();
     tilebuilder.Update(nodes, directededges);
 
     if (reader.OverCommitted()) {
       reader.Trim();
     }
-    lock.unlock();
   }
 }
 
