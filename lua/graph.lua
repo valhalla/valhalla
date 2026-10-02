@@ -2042,6 +2042,10 @@ function filter_tags_generic(kv)
   return 0
 end
 
+function is_bicycle_rental(kv)
+  return kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes")
+end
+
 function nodes_proc (kv, nokeys)
 
   --normalize a few tags that we care about
@@ -2277,7 +2281,7 @@ function nodes_proc (kv, nokeys)
     kv["elevator"] = "true"
   end
 
-  if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes") then
+  if is_bicycle_rental(kv) then
     kv["bicycle_rental"] = "true"
   end
 
@@ -2370,6 +2374,12 @@ function ways_proc (kv, nokeys)
   --if there were no tags passed in, ie keyvalues is empty
   if nokeys == 0 then
     return 1, kv, 0, 0
+  end
+
+  -- Keep bike share stations modeled as ways
+  if is_bicycle_rental(kv) then
+    kv["bicycle_rental"] = "true"
+    return 0, kv, 0, 0
   end
 
   --does it at least have some interesting tags
