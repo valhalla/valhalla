@@ -1,4 +1,4 @@
-name: Build OSX, Win & Python bindings
+name: python
 
 # this workflow:
 # - runs master & PR pushes for OSX & Win
@@ -20,19 +20,6 @@ on:
       - master
     tags:
       - '*'
-  pull_request:
-    paths-ignore:
-      - "*.md"
-      - .circleci/
-      - docs/
-      - run_route_scripts/
-      - test_requests/
-      - test/check_compilers/
-      - .github/workflows/check_compilers.yml
-      - ".tx"
-      - ".git*"
-    branches:
-      - master
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -55,14 +42,14 @@ concurrency:
 env:
   # only run tmate if manually invoked and debug_enabled == true or a previous step failed
   SETUP_TMATE: ${{ ((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) && (github.repository_owner == 'valhalla') }}
-  PUBLISH_PYPI: ${{ (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
+  PUBLISH_PYPI: ${{ (startsWith(github.ref, 'refs/tags') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
 
 jobs:
   # only publish to PyPI on tags, schedule or workflow_dispatch (only on master!)
   # very annoying: env vars can't be referenced in job's "if" statements, so we have to do this
   # https://stackoverflow.com/questions/73797254/environment-variables-in-github-actions
   publish_pypi:
-    name: Whether to publish PyPI
+    name: should-publish
     runs-on: ubuntu-latest
     steps:
       - run: echo "Are we publishing to PyPI? ${{ env.PUBLISH_PYPI }}"
@@ -72,7 +59,7 @@ jobs:
   # we build the sdist (source distribution) first, so cibuildwheel below can build the wheel
   # from that; ensures the sdist is really self-contained (minus system dependencies)
   build_sdist:
-    name: Build sdist
+    name: sdist
     runs-on: ubuntu-latest
     needs: [publish_pypi]
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' || (github.event_name == 'push' && github.ref == 'refs/heads/master') }}
@@ -99,7 +86,7 @@ jobs:
           path: dist/*.tar.gz
 
   build_python_wheels_linux:
-    name: Build Linux Python wheels
+    name: linux
     runs-on: ${{ matrix.runner }}
     needs: [build_sdist]
     strategy:
@@ -203,8 +190,10 @@ jobs:
     # this is the arm64 image for macos-13
     # we want the lowest available version to build the Python bindings
     runs-on: macos-14
-    name: Build OSX & Python wheels
+    name: osx
     needs: [publish_pypi]
+    # osx build+test lives in osx.yml now; this job only builds+publishes the wheel on release
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -250,35 +239,6 @@ jobs:
       - name: Build & install Valhalla (for python bindings)
         run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
 
-      - name: Build Tests
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        run: make -C build -j$(sysctl -n hw.logicalcpu) tests
-
-      - name: Delete cache to save the latest
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        run: |
-          KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
-          gh cache delete ${KEY} || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Save ccache
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        uses: tespkg/actions-cache/save@v1
-        with:
-          endpoint: fsn1.your-objectstorage.com
-          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache-2
-          key: ccache-osx-${{ env.VALHALLA_BRANCH }}
-          path: ~/Library/Caches/ccache
-
-      - name: Run Tests
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        run: make -C build -j$(sysctl -n hw.logicalcpu) check
-      
-      # only package python bindings if it's not a PR
-      
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
         env:
@@ -306,13 +266,15 @@ jobs:
           detached: true
   
   build_win:
-    name: Build Win & Python wheels
-    runs-on: windows-2022
+    name: windows
+    # same runner+msvc as windows.yml so the shared vcpkg cache below is ABI-compatible
+    runs-on: windows-2025
     needs: [publish_pypi]
+    # windows build+test lives in windows.yml now; this job only builds+publishes the wheel on release
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     env:
-      BUILD_TYPE: Release
-      MSVC_VERSION: "2022"
-      VCPKG_VERSION: "0e39c10"
+      MSVC_VERSION: "2025"
+      VCPKG_VERSION: "66c0373d"
       VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
       VCPKG_DISABLE_COMPILER_TRACKING: ON
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
@@ -351,14 +313,14 @@ jobs:
 
       - name: Restore vcpkg packages
         uses: tespkg/actions-cache/restore@v1
-        id: vcpkg_restore
         with:
           endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache-2
           # actions/cache compatible properties: https://github.com/actions/cache
-          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+          # must match windows.yml's key exactly to share its (superset) vcpkg cache on release
+          key: vcpkg-windows=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlay-ports-vcpkg/**') }}
           path: |
             vcpkg/*
             !vcpkg/downloads
@@ -374,71 +336,29 @@ jobs:
         if: ${{  github.ref == 'refs/heads/master'  }}
         run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - name: Configure CMake
+      # populate build/vcpkg_installed/x64-windows/bin (prime_server.dll etc.) so delvewheel can
+      # vendor the services runtime dlls; vcpkg installs from the restored cache so this is quick
+      - name: Populate vcpkg_installed for delvewheel
         shell: bash
         run: |
-
-          cmake --version
           cmake -B build \
-            -G "Visual Studio 17 2022" \
-            -A x64 \
-            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
             -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
             -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
-            -DENABLE_DATA_TOOLS=ON \
-            -DENABLE_TOOLS=ON \
+            -DVCPKG_MANIFEST_FEATURES="services" \
+            -DENABLE_SERVICES=ON \
             -DENABLE_PYTHON_BINDINGS=OFF \
-            -DENABLE_HTTP=ON \
-            -DENABLE_TESTS=OFF \
-            -DENABLE_CCACHE=OFF \
-            -DENABLE_SERVICES=OFF \
-            -DPREFER_EXTERNAL_DEPS=ON \
-            -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
+            -DENABLE_TESTS=OFF
 
-      - name: Save vcpkg packages
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' && steps.vcpkg_restore.outputs.cache-hit != 'true' }}
-        uses: tespkg/actions-cache/save@v1
-        with:
-          endpoint: fsn1.your-objectstorage.com
-          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache-2
-          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
-          path: |
-            vcpkg/*
-            !vcpkg/downloads
-            !vcpkg/docs
-            !vcpkg/buildtrees
-            vcpkg/downloads/tools
-
-      - name: Build Valhalla
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        run: |
-          cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
-          cmake --build build --config Release --target install
-
-      - name: Test Executable
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
-        shell: bash
-        run: |
-          set PATH=$PATH:${{ github.workspace }}/build/vcpkg_installed/$BUILD_TYPE/bin
-          ./build/$BUILD_TYPE/valhalla_build_tiles.exe -c ./test/win/valhalla.json ./test/data/utrecht_netherlands.osm.pbf
-          ./build/$BUILD_TYPE/valhalla_service.exe ./test/win/valhalla.json isochrone "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
-        
-      - name: Print libs
-        shell: bash
-        run: |
-          ls -l build/vcpkg_installed/x64-windows/lib
-          ls -l build/vcpkg_installed/x64-windows/bin
-      
-      # only package python bindings if it's not a PR
-      
+      # the vcpkg restore above just warms cibuildwheel's dep cache (produced by windows.yml).
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
         env:
+          # services on (prime_server via the vcpkg services feature) to match linux/osx wheels
           CIBW_ENVIRONMENT_WINDOWS: >-
-            CMAKE_ARGS="-DENABLE_SERVICES=OFF -DENABLE_TESTS=OFF -DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
+            CMAKE_ARGS="-DENABLE_SERVICES=ON -DENABLE_TESTS=OFF -DVCPKG_MANIFEST_FEATURES=services -DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
           # represents the minimum python version we release for
           CIBW_BUILD: cp312-*
           # enable when debugging
@@ -460,6 +380,7 @@ jobs:
           detached: true
 
   verify_wheels_linux:
+    name: verify-linux
     needs: [build_python_wheels_linux]
     runs-on: ${{  matrix.runner  }}
     container: python:3.13-slim-bookworm
@@ -486,6 +407,7 @@ jobs:
           ./src/bindings/python/test/test_pyvalhalla_package.sh
 
   verify_wheels_osx:
+    name: verify-osx
     needs: [build_osx]
     runs-on: macos-14
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
@@ -509,6 +431,7 @@ jobs:
           python -m valhalla valhalla_build_tiles -h
   
   verify_wheels_win:
+    name: verify-windows
     needs: [build_win]
     runs-on: windows-2022
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
@@ -532,7 +455,7 @@ jobs:
           python -m valhalla valhalla_build_tiles -h
 
   upload_all:
-    name: Upload if release
+    name: publish
     needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
     runs-on: ubuntu-latest
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' && github.event.inputs.python_test_publish != 'true' }}

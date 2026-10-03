@@ -57,15 +57,15 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     spatialite-bin \
     unzip \
     zlib1g-dev
-  
+
 if [ "$build_prime_server" = true ]; then
-    # build prime_server from source
-    # readonly primeserver_version=0.7.0
-    readonly primeserver_dir=/tmp/prime_server
-    git clone --recurse-submodules https://github.com/kevinkreiser/prime_server $primeserver_dir
-    pushd $primeserver_dir
-    ./autogen.sh && ./configure
-    make -j${CONCURRENCY:-$(nproc)}
-    sudo make install
-    popd && rm -rf $primeserver_dir
+  # build prime_server from source (pointed at tagged release)
+  readonly primeserver_version=0.12.0
+  readonly primeserver_dir=/tmp/prime_server
+  git clone --branch="$primeserver_version" --recurse-submodules https://github.com/kevinkreiser/prime_server "$primeserver_dir"
+  pushd "$primeserver_dir"
+  cmake -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_WERROR=OFF
+  cmake --build build -j${CONCURRENCY:-$(nproc)}
+  sudo cmake --install build
+  popd && rm -rf "$primeserver_dir"
 fi

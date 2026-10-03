@@ -1068,6 +1068,15 @@ public:
   void AddUserAvoidEdges(const std::vector<AvoidEdge>& exclude_edges);
 
   /**
+   * Ingests the user specified per-edge cost factors and avoid list. The constructor calls this with
+   * the options it was built from; call it again when cost factor edges were resolved after
+   * construction, to avoid building the costing all over again. Must run before the first
+   * AStarCostFactor() call, which path algorithms snapshot when they start.
+   * @param  options  the costing options holding cost_factor_edges and exclude_edges
+   */
+  void SetCostFactorEdges(const Costing_Options& options);
+
+  /**
    * Check if the edge is in the user-specified avoid list.
    * @param  edgeid  Directed edge Id.
    * @return Returns true if the edge Id is in the user avoid edges set,
