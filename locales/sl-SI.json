@@ -37,8 +37,8 @@
         "1": "Držite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.",
         "2": "Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.",
         "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Pri <JUNCTION_NAME> se držite <RELATIVE_DIRECTION>.",
+        "5": "Držite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -60,8 +60,8 @@
         "1": "Držite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.",
         "2": "Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>.",
         "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Pri <JUNCTION_NAME> se držite <RELATIVE_DIRECTION>.",
+        "5": "Držite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -91,8 +91,8 @@
       "phrases": {
         "0": "Nadaljujte.",
         "1": "Nadaljujte po <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "Pri <JUNCTION_NAME> nadaljujte.",
+        "3": "Nadaljujte proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpoti",
@@ -110,10 +110,10 @@
         "1": "Nadaljujte <LENGTH>.",
         "2": "Nadaljujte po <STREET_NAMES>.",
         "3": "Po <STREET_NAMES> nadaljujte <LENGTH>.",
-        "4": "Continue at <JUNCTION_NAME>.",
-        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
-        "6": "Continue toward <TOWARD_SIGN>.",
-        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+        "4": "Pri <JUNCTION_NAME> nadaljujte.",
+        "5": "Pri <JUNCTION_NAME> nadaljujte <LENGTH>.",
+        "6": "Nadaljujte proti <TOWARD_SIGN>.",
+        "7": "Nadaljujte <LENGTH> proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpoti",
@@ -143,8 +143,8 @@
       "phrases": {
         "0": "Nadaljujte.",
         "1": "Nadaljujte po <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "Pri <JUNCTION_NAME> nadaljujte.",
+        "3": "Nadaljujte proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpoti",
@@ -206,14 +206,14 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Uporabite dvigalo.",
+        "1": "Z dvigalom pojdite do <LEVEL>."
       }
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "Vstopite v stavbo.",
+        "1": "Vstopite v stavbo in nadaljujte po <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -227,7 +227,7 @@
         "0": "Pojdite na trajekt.",
         "1": "Pojdite na <STREET_NAMES>.",
         "2": "Pojdite na <FERRY_LABEL> <STREET_NAMES>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Pojdite na trajekt proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -245,7 +245,7 @@
         "0": "Pojdite na trajekt.",
         "1": "Pojdite na <STREET_NAMES>.",
         "2": "Pojdite na <FERRY_LABEL> <STREET_NAMES>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Pojdite na trajekt proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -262,20 +262,20 @@
       "phrases": {
         "0": "Pojdite v krožišče.",
         "1": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "2": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Nadaljujte po <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod proti <TOWARD_SIGN>.",
+        "5": "Pojdite v krožišče in uporabite izhod na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Pojdite v krožišče in uporabite izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Nadaljujte po <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Pojdite v krožišče in uporabite izhod proti <TOWARD_SIGN>.",
+        "8": "Pojdite na <STREET_NAMES>",
+        "9": "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod.",
+        "10": "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Nadaljujte po <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod proti <TOWARD_SIGN>.",
+        "13": "Pojdite na <STREET_NAMES> in uporabite izhod na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Pojdite na <STREET_NAMES> in uporabite izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Nadaljujte po <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Pojdite na <STREET_NAMES> in uporabite izhod proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -303,20 +303,20 @@
       "phrases": {
         "0": "Pojdite v krožišče.",
         "1": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "2": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod proti <TOWARD_SIGN>.",
+        "5": "Pojdite v krožišče in uporabite izhod na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Pojdite v krožišče in uporabite izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Pojdite v krožišče in uporabite izhod proti <TOWARD_SIGN>.",
+        "8": "Pojdite na <STREET_NAMES>",
+        "9": "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod.",
+        "10": "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod proti <TOWARD_SIGN>.",
+        "13": "Pojdite na <STREET_NAMES> in uporabite izhod na <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Pojdite na <STREET_NAMES> in uporabite izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Pojdite na <STREET_NAMES> in uporabite izhod proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -342,8 +342,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Uporabite tekoče stopnice.",
+        "1": "S tekočimi stopnicami pojdite do <LEVEL>."
       }
     },
     "exit": {
@@ -380,8 +380,8 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Zapustite stavbo.",
+        "1": "Zapustite stavbo in nadaljujte po <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -395,7 +395,7 @@
         "0": "Zapustite krožišče.",
         "1": "Iz krožišča pojdite na <STREET_NAMES>.",
         "2": "Iz krožišča pojdite na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "Iz krožišča pojdite proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -412,7 +412,7 @@
         "0": "Zapustite krožišče.",
         "1": "Iz krožišča pojdite na <STREET_NAMES>.",
         "2": "Iz krožišča pojdite na <BEGIN_STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "Iz krožišča pojdite proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -559,7 +559,7 @@
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "Nadaljujte do <LEVEL>."
       }
     },
     "merge": {
@@ -568,8 +568,8 @@
         "1": "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot.",
         "2": "Zapeljite na <STREET_NAMES>.",
         "3": "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Zapeljite na sosednjo pot proti <TOWARD_SIGN>.",
+        "5": "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -591,8 +591,8 @@
         "1": "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot.",
         "2": "Zapeljite na <STREET_NAMES>.",
         "3": "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Zapeljite na sosednjo pot proti <TOWARD_SIGN>.",
+        "5": "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -610,13 +610,13 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "Parkirajte vozilo"
       }
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "Peljite mimo <OBJECT_LABEL>.",
+        "1": "Peljite mimo semaforjev na <OBJECT_LABEL>."
       },
       "object_labels": [
         "the gate",
@@ -732,8 +732,8 @@
         "1": "Zavijte ostro <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Zavijte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.",
         "3": "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Pri <JUNCTION_NAME> zavijte ostro <RELATIVE_DIRECTION>.",
+        "5": "Zavijte ostro <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -755,8 +755,8 @@
         "1": "Zavijte ostro <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Zavijte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
         "3": "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Pri <JUNCTION_NAME> zavijte ostro <RELATIVE_DIRECTION>.",
+        "5": "Zavijte ostro <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -866,8 +866,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Uporabite stopnice.",
+        "1": "Po stopnicah pojdite do <LEVEL>."
       }
     },
     "transit": {
@@ -1032,8 +1032,8 @@
         "1": "Zavijte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Zavijte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.",
         "3": "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Pri <JUNCTION_NAME> zavijte <RELATIVE_DIRECTION>.",
+        "5": "Zavijte <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -1055,8 +1055,8 @@
         "1": "Zavijte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Zavijte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
         "3": "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Pri <JUNCTION_NAME> zavijte <RELATIVE_DIRECTION>.",
+        "5": "Zavijte <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -1080,8 +1080,8 @@
         "3": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>.",
         "4": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "Pri <JUNCTION_NAME> polkrožno obrnite <RELATIVE_DIRECTION>.",
+        "7": "Polkrožno obrnite <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -1105,8 +1105,8 @@
         "3": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>.",
         "4": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "Pri <JUNCTION_NAME> polkrožno obrnite <RELATIVE_DIRECTION>.",
+        "7": "Polkrožno obrnite <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
