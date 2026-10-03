@@ -692,15 +692,16 @@ TEST(Crosswalk, TransitionFromNonFootways) {
                                                             "Continue for 500 meters.");
 }
 
-// make sure a way with a sidewalk tag is preferred over one without a tagged sidewalk
-TEST(TestSidewalk, TestSidewalkTagged) {
+// Make sure a way with a sidewalk tag is taken by default
+// over one without a sidewalk tag
+TEST(Sidewalk, TaggedSidewalk) {
 
   const std::string& ascii_map = R"(
-        B---C---D
-       /         \
-      A           H  
-       \         /
-        E---F---G
+      B---C---D
+     /         \
+    A           H
+     \         /
+      E---F---G 
     )";
   const gurka::ways ways = {
       {"ABCDH",
@@ -712,13 +713,48 @@ TEST(TestSidewalk, TestSidewalkTagged) {
        {
            {"highway", "tertiary"},
        }},
-
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/costing_type_blind_bridge");
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "pedestrian",
-                                 {{"/costing_options/pedestrian/type", "blind"}});
-
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/sidewalk_tagged");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "pedestrian", {});
   gurka::assert::raw::expect_path(result, {"ABCDH"});
+}
+
+// Make sure a separately mapped sidewalk is taken by default
+// over its main carriage way
+// needs to treat crossings as favorable ways as well
+TEST(Sidewalk, DISABLED_SeparatelyMappedSidewalk) {
+
+  const std::string& ascii_map = R"(
+    A------B------C
+    |             |
+    D------E------F
+    )";
+  const gurka::ways ways = {
+      {"ABC",
+       {
+           {"highway", "tertiary"},
+       }},
+      {"DEF",
+       {
+           {"highway", "footway"},
+           {"footway", "sidewalk"},
+       }},
+      {"AD",
+       {
+           {"highway", "footway"},
+           {"footway", "crossing"},
+       }},
+      {"CF",
+       {
+           {"highway", "footway"},
+           {"footway", "crossing"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/sidewalk_mapped");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian", {});
+  gurka::assert::raw::expect_path(result, {"AD", "DEF", "CF"});
 }
