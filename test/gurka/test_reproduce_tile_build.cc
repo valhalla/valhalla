@@ -229,8 +229,8 @@ TEST(TileChecksum, BuildIdAndPerTileHash) {
   EXPECT_GT(per_tile_hashes.size(), 1u);
 }
 
-// GraphFilter skips hashing tile data in its intermediate passes, but its output must be hashed
-TEST(TileChecksum, GraphFilterHashesEveryTile) {
+// Nodes of a filtered edge get aggregated within a tile, the aggregated tile must be hashed too
+TEST(TileChecksum, GraphFilterHashesAggregatedTile) {
   const std::string ascii_map = R"(
     A----B----C
     |    |    |
@@ -240,21 +240,21 @@ TEST(TileChecksum, GraphFilterHashesEveryTile) {
                             {"AD", {{"highway", "secondary"}}},
                             {"BE", {{"highway", "footway"}}},
                             {"CF", {{"highway", "secondary"}}}};
-  const gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, 100000);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_filtered_tile_checksum",
+  const gurka::nodelayout layout =
+      gurka::detail::map_to_coordinates(ascii_map, 100, {-76.59223, 39.26825});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_aggregated_tile_checksum",
                                {{"mjolnir.include_pedestrian", "false"},
                                 {"mjolnir.include_bicycle", "false"}},
                                mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kFilter);
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  ASSERT_FALSE(std::get<0>(gurka::findEdge(reader, layout, "BE", "E")).is_valid())
-      << "footway should have been filtered";
   const std::unordered_set<GraphId> tiles = reader.GetTileSet();
-  ASSERT_GT(tiles.size(), 1);
-  for (const GraphId& tile_id : tiles) {
-    const GraphTileHeader* header = reader.GetGraphTile(tile_id)->header();
-    EXPECT_GT(header->tile_checksum(), 0) << "tile " << tile_id << " was left unhashed";
-  }
+  ASSERT_EQ(tiles.size(), 1u);
+  const auto tile = reader.GetGraphTile(*tiles.begin());
+  // B and E are aggregated away, leaving A-C, D-F, A-D and C-F in both directions
+  EXPECT_EQ(tile->header()->nodecount(), 4u);
+  EXPECT_EQ(tile->header()->directededgecount(), 8u);
+  EXPECT_GT(tile->header()->tile_checksum(), 0u);
 }
 
 // Adding predicted traffic rewrites a subset of tiles. The touched tiles' data hash must be refreshed
