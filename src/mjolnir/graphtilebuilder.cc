@@ -16,6 +16,7 @@
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -67,15 +68,15 @@ uint64_t fold_md5(const std::array<unsigned char, 16>& digest) {
 class hashing_streambuf : public std::streambuf {
 public:
   hashing_streambuf(std::FILE* file, EVP_MD_CTX* ctx)
-      : file_(file), md5_ctx_(ctx), buffer_(kBufferSize) {
-    setp(buffer_.data(), buffer_.data() + buffer_.size());
+      : file_(file), md5_ctx_(ctx), buffer_(std::make_unique_for_overwrite<char[]>(kBufferSize)) {
+    setp(buffer_.get(), buffer_.get() + kBufferSize);
   }
 
 protected:
   std::streamsize xsputn(const char* s, std::streamsize n) override {
     if (n > epptr() - pptr()) {
       flush_buffer();
-      if (n >= static_cast<std::streamsize>(buffer_.size())) {
+      if (n >= static_cast<std::streamsize>(kBufferSize)) {
         write_through(s, n);
         return n;
       }
@@ -114,12 +115,12 @@ private:
   }
   void flush_buffer() {
     write_through(pbase(), pptr() - pbase());
-    setp(buffer_.data(), buffer_.data() + buffer_.size());
+    setp(buffer_.get(), buffer_.get() + kBufferSize);
   }
 
   std::FILE* file_;
   EVP_MD_CTX* md5_ctx_;
-  std::vector<char> buffer_;
+  std::unique_ptr<char[]> buffer_;
   std::streamsize pos_ = 0;
 };
 
@@ -146,7 +147,7 @@ public:
 
   void finalize() {
     flush();
-    // Unhashed tiles get 0 rather than a stale hash of their previous data
+    // Tiles written without hashing get a zero data hash
     uint64_t tile_hash = 0;
     if (hash_) {
       std::array<unsigned char, 16> digest{};
@@ -568,7 +569,7 @@ void GraphTileBuilder::StoreTileData(bool hash) {
   LOG_DEBUG("   admins = {}  departures = {} stops = {} routes = {}", admins_builder_.size(),
             departure_builder_.size(), stop_builder_.size(), route_builder_.size());
 
-  // Stamp the data hash into the header and rewrite it in place, then publish atomically.
+  // Stamp the data hash into the header, rewrite it in place and move the tile into place.
   in_mem.finalize();
 }
 
