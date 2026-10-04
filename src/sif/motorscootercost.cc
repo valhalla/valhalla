@@ -492,8 +492,15 @@ Cost MotorScooterCost::TransitionCost(
   const auto turntype = edge->turntype(idx);
   // Transition time = turncost * stopimpact * densityfactor
   if (stopimpact > 0 && !shortest_) {
+    bool has_left =
+        (turntype == baldr::Turn::Type::kLeft || turntype == baldr::Turn::Type::kSharpLeft);
+    bool has_right =
+        (turntype == baldr::Turn::Type::kRight || turntype == baldr::Turn::Type::kSharpRight);
+    bool has_reverse = turntype == baldr::Turn::Type::kReverse;
+    bool is_turn = has_left || has_right || has_reverse;
+
     float turn_cost;
-    if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+    if (edge->edge_to_right(idx) && edge->edge_to_left(idx) && (is_turn || stopimpact >= 3)) {
       turn_cost = kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right()) ? kRightSideTurnCosts[static_cast<uint32_t>(turntype)]
@@ -509,28 +516,22 @@ Cost MotorScooterCost::TransitionCost(
 
     float seconds = turn_cost;
 
-    bool has_left =
-        (turntype == baldr::Turn::Type::kLeft || turntype == baldr::Turn::Type::kSharpLeft);
-    bool has_right =
-        (turntype == baldr::Turn::Type::kRight || turntype == baldr::Turn::Type::kSharpRight);
-    bool has_reverse = turntype == baldr::Turn::Type::kReverse;
-
-    bool is_turn = has_left || has_right || has_reverse;
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
     if (is_turn) {
       seconds *= stopimpact;
+    } else {
+      // Straight-on transition: Driveway crossings (stopimpact <= 1) incur 0 penalty.
+      // Higher stop impact intersections scale progressively with (stopimpact - 1).
+      seconds = (stopimpact > 1) ? (seconds * (stopimpact - 1)) : 0.0f;
     }
 
     AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, false, InternalTurn::kNoTurn,
                     seconds);
 
-    // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
-    // using traffic
+    // Apply density factor if there isn't traffic on this edge or you're not using traffic
     if (!pred.has_measured_speed()) {
-      if (!is_turn)
-        seconds *= stopimpact;
       seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
@@ -570,8 +571,15 @@ Cost MotorScooterCost::TransitionCostReverse(
   const auto turntype = edge->turntype(idx);
   // Transition time = turncost * stopimpact * densityfactor
   if (stopimpact > 0 && !shortest_) {
+    bool has_left =
+        (turntype == baldr::Turn::Type::kLeft || turntype == baldr::Turn::Type::kSharpLeft);
+    bool has_right =
+        (turntype == baldr::Turn::Type::kRight || turntype == baldr::Turn::Type::kSharpRight);
+    bool has_reverse = turntype == baldr::Turn::Type::kReverse;
+    bool is_turn = has_left || has_right || has_reverse;
+
     float turn_cost;
-    if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+    if (edge->edge_to_right(idx) && edge->edge_to_left(idx) && (is_turn || stopimpact >= 3)) {
       turn_cost = kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right()) ? kRightSideTurnCosts[static_cast<uint32_t>(turntype)]
@@ -586,27 +594,23 @@ Cost MotorScooterCost::TransitionCostReverse(
     }
 
     float seconds = turn_cost;
-    bool has_left =
-        (turntype == baldr::Turn::Type::kLeft || turntype == baldr::Turn::Type::kSharpLeft);
-    bool has_right =
-        (turntype == baldr::Turn::Type::kRight || turntype == baldr::Turn::Type::kSharpRight);
-    bool has_reverse = turntype == baldr::Turn::Type::kReverse;
-    bool is_turn = has_left || has_right || has_reverse;
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
     if (is_turn) {
       seconds *= stopimpact;
+    } else {
+      // Straight-on transition: Driveway crossings (stopimpact <= 1) incur 0 penalty.
+      // Higher stop impact intersections scale progressively with (stopimpact - 1).
+      seconds = (stopimpact > 1) ? (seconds * (stopimpact - 1)) : 0.0f;
     }
 
     AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, false, InternalTurn::kNoTurn,
                     seconds);
 
-    // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
-    // using traffic
+    // Apply density factor if there isn't traffic on this edge or you're not using traffic
     if (!has_measured_speed) {
-      if (!is_turn)
-        seconds *= stopimpact;
       seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
