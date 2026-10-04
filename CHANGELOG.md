@@ -5,6 +5,7 @@
    * FIXED: Update flatbush to 1.6.0 to fix 32-bit targets [#6360](https://github.com/valhalla/valhalla/pull/6360)
    * FIXED: `valhalla_add_elevation` tile argument validation [#6361](https://github.com/valhalla/valhalla/pull/6361)
 * **Enhancement**
+   * CHANGED: default `walkway_factor` and `sidewalk_factor` to 0.85 to favor sidewalks and walkways [#6323](https://github.com/valhalla/valhalla/issues/6323)
    * UPDATED: timezone database to 2026d [#6343](https://github.com/valhalla/valhalla/pull/6343)
    * UPDATED: Sort nodes spatially using Hilbert curve [#6342](https://github.com/valhalla/valhalla/pull/6342)
    * UPDATED: complete Slovenian (sl-SI) locale [#6339](https://github.com/valhalla/valhalla/pull/6339)
