@@ -362,16 +362,27 @@ protected:
                                      |         |
                                      +----M----+
     )";
-    const std::pair<std::string, std::string> stat = {"motor_vehicle", "destination"};
-    const std::pair<std::string, std::string> cond = {"motor_vehicle:conditional", kZoneCondition};
+    const std::pair<std::string, std::string> auto_stat = {"motor_vehicle", "destination"};
+    const std::pair<std::string, std::string> auto_cond = {"motor_vehicle:conditional",
+                                                           kZoneCondition};
+    const std::pair<std::string, std::string> hgv_cond = {"hgv:conditional", kZoneCondition};
+    const std::pair<std::string, std::string> hgv_stat = {"hgv", "destination"};
+    const std::pair<std::string, std::string> bicycle_cond = {"bicycle:conditional", kZoneCondition};
     const gurka::ways ways = {
-        {"AB", {{"highway", "residential"}}},       {"BC", {{"highway", "residential"}, stat}},
-        {"CD", {{"highway", "residential"}, stat}}, {"DE", {{"highway", "residential"}, cond}},
-        {"EF", {{"highway", "residential"}, cond}}, {"FG", {{"highway", "residential"}}},
-        {"GH", {{"highway", "residential"}, cond}}, {"HI", {{"highway", "residential"}}},
-        {"GL", {{"highway", "residential"}, stat}}, {"LI", {{"highway", "residential"}}},
-        {"GM", {{"highway", "residential"}}},       {"MI", {{"highway", "residential"}}},
-        {"BJ", {{"highway", "residential"}}},       {"JK", {{"highway", "residential"}}},
+        {"AB", {{"highway", "residential"}}},
+        {"BC", {{"highway", "residential"}, auto_stat}},
+        {"CD", {{"highway", "residential"}, auto_stat}},
+        {"DE", {{"highway", "residential"}, auto_cond}},
+        {"EF", {{"highway", "residential"}, auto_cond}},
+        {"FG", {{"highway", "residential"}}},
+        {"GH", {{"highway", "residential"}, auto_cond}},
+        {"HI", {{"highway", "residential"}, bicycle_cond}},
+        {"GL", {{"highway", "residential"}, auto_stat}},
+        {"LI", {{"highway", "residential"}}},
+        {"GM", {{"highway", "residential"}}},
+        {"MI", {{"highway", "residential"}}},
+        {"BJ", {{"highway", "residential"}, hgv_stat}},
+        {"JK", {{"highway", "residential"}, hgv_cond}},
         {"KF", {{"highway", "residential"}}},
     };
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
@@ -622,4 +633,23 @@ TEST_F(DestinationOnlyZones, ReverseSearchAddsPenaltyOnceOnZoneEntry) {
   const int entering_zone = cost_of("G", "F") - cost_of("F", "E");
   const int already_inside = cost_of("F", "E") - cost_of("E", "D");
   EXPECT_NEAR(entering_zone - already_inside, kDestOnlyPenalty, 20);
+}
+
+// Costings other than auto are restricted by their own tags, which auto ignores.
+TEST_F(DestinationOnlyZones, OtherCostingsReadTheirOwnTags) {
+  for (const auto& dt : kDateTimeTypes) {
+    SCOPED_TRACE("date_time type " + dt);
+    const std::unordered_map<std::string, std::string> restricted = {{"/date_time/type", dt},
+                                                                     {"/date_time/value",
+                                                                      kRestricted}};
+    // HI is restricted for bicycle only, auto is already kept off GH
+    auto bicycle = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "bicycle", restricted);
+    gurka::assert::raw::expect_path(bicycle, {"FG", "GM", "MI"}, "bicycle");
+
+    // the bypass is a zone for truck only, so truck stays on the main road and auto leaves it
+    auto truck = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "truck", restricted);
+    gurka::assert::raw::expect_path(truck, {"AB", "BC", "CD", "DE", "EF"}, "truck");
+    auto car = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", restricted);
+    gurka::assert::raw::expect_path(car, {"AB", "BJ", "JK", "KF"}, "auto");
+  }
 }
