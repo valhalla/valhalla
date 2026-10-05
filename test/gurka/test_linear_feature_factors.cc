@@ -330,7 +330,7 @@ TEST_F(LinearFeatureTest, allow_access_restriction) {
       {{"lon": {:.6f}, "lat": {:.6f}}}
     ], 
     "linear_cost_factors": [
-      {"shape": "%s", "allow": %s}
+      {{"shape": "{}", "allow": {}}}
     ], 
     "costing": "auto",
     "costing_options": {{
@@ -709,23 +709,22 @@ TEST(LinearFeature, none_costing) {
   auto map = gurka::buildtiles(layout, ways, {}, {},
                                VALHALLA_BUILD_DIR "test/data/linear_feature_none_costing");
 
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
     ],
     "linear_cost_factors": [
-      {"shape": "%s", "factor": 200}
+      {{"shape": "{}", "factor": 200}}
     ],
     "costing": "auto"
-  }
+  }}
   )";
 
-  auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
-                   std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("C").lng()) %
-                   std::to_string(map.nodes.at("C").lat()) % encode_shape({"B", "D"}, map.nodes))
-                      .str();
+  auto json_str = std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
+                              map.nodes.at("C").lng(), map.nodes.at("C").lat(),
+                              encode_shape({"B", "D"}, map.nodes));
 
   loki::loki_worker_t loki_worker(map.config);
 
@@ -762,23 +761,21 @@ TEST(LinearFeature, allow_inaccessible_edge) {
   auto map =
       gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/linear_feature_allow");
 
-  std::string json_request = R"(
-  {
+  constexpr std::string_view json_request = R"(
+  {{
     "locations": [
-      {"lon": %s, "lat": %s},
-      {"lon": %s, "lat": %s}
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
     ],
-    %s
+    {}
     "costing": "auto"
-  }
+  }}
   )";
 
   auto route = [&](const std::string& linear_cost_factors, Api& request) {
     auto json_str =
-        (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
-         std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("I").lng()) %
-         std::to_string(map.nodes.at("I").lat()) % linear_cost_factors)
-            .str();
+        std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
+                    map.nodes.at("I").lng(), map.nodes.at("I").lat(), linear_cost_factors);
 
     loki::loki_worker_t loki_worker(map.config);
     thor::thor_worker_t thor_worker(map.config);
@@ -792,9 +789,8 @@ TEST(LinearFeature, allow_inaccessible_edge) {
   EXPECT_THROW(route("", without), valhalla_exception_t);
 
   Api with;
-  route((boost::format(R"("linear_cost_factors": [{"shape": "%s", "allow": true}],)") %
-         encode_shape({"G", "H"}, map.nodes))
-            .str(),
+  route(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow": true}}],)",
+                    encode_shape({"G", "H"}, map.nodes)),
         with);
 
   const auto& costing_options =
@@ -805,9 +801,8 @@ TEST(LinearFeature, allow_inaccessible_edge) {
   gurka::assert::raw::expect_path(with, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
 
   Api with_types;
-  route((boost::format(R"("linear_cost_factors": [{"shape": "%s", "allow_types": ["all"]}],)") %
-         encode_shape({"G", "H"}, map.nodes))
-            .str(),
+  route(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow_types": ["all"]}}],)",
+                    encode_shape({"G", "H"}, map.nodes)),
         with_types);
 
   const auto& types_costing_options =
@@ -836,29 +831,27 @@ TEST(LinearFeature, allow_in_dijkstras) {
   auto map = gurka::buildtiles(layout, ways, {}, {},
                                VALHALLA_BUILD_DIR "test/data/linear_feature_allow_dijkstras");
 
-  std::string json_request = R"(
-  {
-    "locations": [{"lon": %s, "lat": %s}],
-    "contours": [{"time": 60}],
+  constexpr std::string_view json_request = R"(
+  {{
+    "locations": [{{"lon": {:.6f}, "lat": {:.6f}}}],
+    "contours": [{{"time": 60}}],
     "action": "isochrone",
     "skip_opposites": true,
-    %s
+    {}
     "costing": "auto"
-  }
+  }}
   )";
 
   auto expand = [&](const std::string& linear_cost_factors) {
-    auto json_str = (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
-                     std::to_string(map.nodes.at("A").lat()) % linear_cost_factors)
-                        .str();
+    auto json_str = std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
+                                linear_cost_factors);
     return gurka::do_action(Options::expansion, map, json_str);
   };
 
   EXPECT_EQ(expand("").expansion().geometries_size(), 1);
 
-  auto with = expand((boost::format(R"("linear_cost_factors": [{"shape": "%s", "allow": true}],)") %
-                      encode_shape({"B", "C"}, map.nodes))
-                         .str());
+  auto with = expand(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow": true}}],)",
+                                 encode_shape({"B", "C"}, map.nodes)));
   EXPECT_EQ(with.expansion().geometries_size(), 3);
 }
 
@@ -880,21 +873,19 @@ TEST(LinearFeature, allow_in_costmatrix) {
   auto map = gurka::buildtiles(layout, ways, {}, {},
                                VALHALLA_BUILD_DIR "test/data/linear_feature_allow_costmatrix");
 
-  std::string json_request = R"(
-  {
-    "sources": [{"lon": %s, "lat": %s}],
-    "targets": [{"lon": %s, "lat": %s}],
-    %s
+  constexpr std::string_view json_request = R"(
+  {{
+    "sources": [{{"lon": {:.6f}, "lat": {:.6f}}}],
+    "targets": [{{"lon": {:.6f}, "lat": {:.6f}}}],
+    {}
     "costing": "auto"
-  }
+  }}
   )";
 
   auto matrix = [&](const std::string& linear_cost_factors, Api& request) {
     auto json_str =
-        (boost::format(json_request) % std::to_string(map.nodes.at("A").lng()) %
-         std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("D").lng()) %
-         std::to_string(map.nodes.at("D").lat()) % linear_cost_factors)
-            .str();
+        std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
+                    map.nodes.at("D").lng(), map.nodes.at("D").lat(), linear_cost_factors);
 
     loki::loki_worker_t loki_worker(map.config);
     thor::thor_worker_t thor_worker(map.config);
@@ -911,9 +902,8 @@ TEST(LinearFeature, allow_in_costmatrix) {
   EXPECT_GT(without.matrix().distances(0), 1e6);
 
   Api with;
-  matrix((boost::format(R"("linear_cost_factors": [{"shape": "%s", "allow": true}],)") %
-          encode_shape({"B", "C"}, map.nodes))
-             .str(),
+  matrix(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow": true}}],)",
+                     encode_shape({"B", "C"}, map.nodes)),
          with);
   ASSERT_EQ(with.matrix().distances().size(), 1);
   EXPECT_NEAR(with.matrix().distances(0), 1500, 1);
