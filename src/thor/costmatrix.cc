@@ -613,7 +613,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
       FORWARD
           ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter, edge_destonly)
           : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                            opp_pred_edge, pred, t2, pred.edgeid(), reader_getter,
+                                            opp_pred_edge, pred, t2, reader_getter,
                                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                                             pred.internal_turn(), edge_destonly);
   newcost += tc;

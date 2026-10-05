@@ -217,8 +217,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     return FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter,
                                               edge_destonly)
                    : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                     opp_pred_edge, pred, endtile, pred.edgeid(),
-                                                     reader_getter,
+                                                     opp_pred_edge, pred, endtile, reader_getter,
                                                      0 != (flow_sources & kDefaultFlowMask),
                                                      pred.internal_turn(), edge_destonly);
   };

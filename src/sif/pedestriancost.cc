@@ -421,7 +421,6 @@ public:
                                      const baldr::DirectedEdge* edge,
                                      const EdgeLabel& pred_label,
                                      const graph_tile_ptr& tile,
-                                     const GraphId& edge_id,
                                      const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool /*has_measured_speed*/,
                                      const InternalTurn /*internal_turn*/,
@@ -840,7 +839,6 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::DirectedEdge* edge,
                                            const EdgeLabel& pred_label,
                                            const graph_tile_ptr& tile,
-                                           const GraphId& edge_id,
                                            const std::function<LimitedGraphReader()>& reader_getter,
                                            const bool /*has_measured_speed*/,
                                            const InternalTurn /*internal_turn*/,
@@ -863,9 +861,9 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   if (node->type() == NodeType::kElevator) {
     // call functor to get limited access to reader
     baldr::LimitedGraphReader reader = reader_getter();
-    auto to_tile = reader.GetGraphTile(edge_id);
+    auto to_tile = reader.GetGraphTile(pred_label.edgeid());
     auto levels = tile->edgeinfo(pred).levels();
-    auto prev_levels = to_tile->edgeinfo(to_tile->directededge(edge_id)).levels();
+    auto prev_levels = to_tile->edgeinfo(to_tile->directededge(pred_label.edgeid())).levels();
     unsigned int traversed_levels = levels.first.size() == 1 && prev_levels.first.size() == 1 &&
                                             levels.first[0].first == levels.first[0].second &&
                                             prev_levels.first[0].first == prev_levels.first[0].second

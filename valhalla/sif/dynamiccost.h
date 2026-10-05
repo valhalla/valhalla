@@ -540,8 +540,8 @@ public:
    *                            "from" or predecessor edge in the transition.
    * @param  opp_pred_edge      Pointer to the opposing directed edge to the
    *                            predecessor. This is the "to" edge.
+   * @param  pred_label         Label of the predecessor, whose edge id is the opp_pred_edge id
    * @param  tile               Graphtile that contains the node and the opp_edge
-   * @param  pred_id            Graph ID of opp_pred_edge to get its tile if needed
    * @param  reader             Graphreader to optionally get the tile containing the "to" edge.
    * @param  has_measured_speed Do we have any of the measured speed types set?
    * @param  internal_turn      Did we make a uturn on a short internal edge?
@@ -553,7 +553,6 @@ public:
                                      const baldr::DirectedEdge* opp_pred_edge,
                                      const EdgeLabel& pred_label,
                                      const baldr::graph_tile_ptr& tile,
-                                     const baldr::GraphId& pred_id,
                                      const std::function<baldr::LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed = false,
                                      const InternalTurn internal_turn = InternalTurn::kNoTurn,
@@ -1579,8 +1578,7 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    // todo: That hack with `edge_destonly` and `pred_destonly` is needed to have this function
-    // callable with `predecessor_t == DirectedEdge` and to pass conditional destonly if it's active
+    // the flags carry destonly state that is not on the edge itself, i.e. an open conditional window
     const bool is_destonly = edge_destonly || (is_hgv() ? edge->destonly_hgv() : edge->destonly());
     c.cost += destination_only_penalty_ * (is_destonly && !(pred_destonly || pred->destonly()));
     c.cost +=

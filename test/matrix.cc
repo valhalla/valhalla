@@ -106,7 +106,6 @@ public:
                              const DirectedEdge* /*opp_pred_edge*/,
                              const EdgeLabel& /*pred_label*/,
                              const graph_tile_ptr& /*tile*/,
-                             const baldr::GraphId& /*edge_id*/,
                              const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
                              const bool /*has_measured_speed*/,
                              const InternalTurn /*internal_turn*/,

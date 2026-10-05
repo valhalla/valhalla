@@ -183,7 +183,6 @@ public:
                                      const baldr::DirectedEdge*,
                                      const EdgeLabel&,
                                      const graph_tile_ptr&,
-                                     const GraphId&,
                                      const std::function<baldr::LimitedGraphReader()>&,
                                      const bool,
                                      const InternalTurn,
