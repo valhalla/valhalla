@@ -139,9 +139,11 @@ private:
 
 // Temp file next to the tile that only the calling thread writes to
 std::filesystem::path tmp_tile_path(const std::filesystem::path& filename) {
+  std::filesystem::path tmp_filename = filename;
   std::ostringstream suffix;
   suffix << "_" << std::this_thread::get_id() << ".tmp";
-  return filename.string() + suffix.str();
+  tmp_filename += suffix.str();
+  return tmp_filename;
 }
 
 } // namespace
