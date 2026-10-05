@@ -400,6 +400,11 @@ endif()
 
 ## Python bindings
 # needs to be after defining the tool targets above
+# valhalla.mjolnir binds symbols libvalhalla only has with the data tools
+if(ENABLE_PYTHON_BINDINGS AND NOT ENABLE_DATA_TOOLS)
+  set(ENABLE_PYTHON_BINDINGS OFF)
+  message(WARNING "Python bindings require ENABLE_DATA_TOOLS, skipping Python bindings...")
+endif()
 if(ENABLE_PYTHON_BINDINGS)
   set(Python_FIND_STRATEGY LOCATION)
   set(Python_FIND_REGISTRY NEVER)
