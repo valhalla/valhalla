@@ -595,7 +595,7 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
                                  const EdgeLabel& pred,
                                  const graph_tile_ptr& /*tile*/,
                                  const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
-                                 const bool edge_destonly) const {
+                                 const bool /*edge_destonly*/) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?
