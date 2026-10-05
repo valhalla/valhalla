@@ -108,9 +108,8 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     uint8_t restriction_idx = kInvalidRestriction;
     uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
     bool edge_destonly = false;
-    const bool is_dest = dest_edges_.find(edgeid) != dest_edges_.cend();
     if (FORWARD) {
-      if (!costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.local_time,
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, offset_time.local_time,
                              nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
                              &edge_destonly) ||
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, nullptr,

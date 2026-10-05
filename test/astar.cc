@@ -1857,7 +1857,6 @@ public:
   }
 
   bool Allowed(const DirectedEdge* edge,
-               const bool /*is_dest*/,
                const vs::EdgeLabel& pred,
                const graph_tile_ptr& /*tile*/,
                const GraphId& edgeid,

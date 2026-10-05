@@ -102,9 +102,8 @@ void recost_forward(baldr::GraphReader& reader,
     // evaluate time restrictions
     const auto next_id = edge_cb();
     if (predecessor != baldr::kInvalidLabel &&
-        (!costing.Allowed(edge, !next_id.is_valid(), label, tile, edge_id, localtime,
-                          offset_time.timezone_index, time_restrictions_TODO,
-                          destonly_restriction_mask, &edge_destonly) &&
+        (!costing.Allowed(edge, label, tile, edge_id, localtime, offset_time.timezone_index,
+                          time_restrictions_TODO, destonly_restriction_mask, &edge_destonly) &&
          !ignore_access)) {
       throw std::runtime_error("This path requires different edge access than this costing allows");
     }

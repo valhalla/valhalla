@@ -237,9 +237,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
     bool edge_destonly = false;
     if (FORWARD) {
-      if (!costing_->Allowed(meta.edge, dest_path_edge, pred, tile, meta.edge_id,
-                             time_info.local_time, nodeinfo->timezone(), restriction_idx,
-                             destonly_restriction_mask, &edge_destonly) ||
+      if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
+                             nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
+                             &edge_destonly) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
                                time_info.local_time, nodeinfo->timezone())) {
         return false;
@@ -343,7 +343,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
       bool edge_destonly = false;
       if (FORWARD) {
-        if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
+        if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
                                nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
                                &edge_destonly) ||
             costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,

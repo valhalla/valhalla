@@ -584,7 +584,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   bool edge_destonly = false;
   if (FORWARD) {
-    if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
+    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
                            time_info.timezone_index, restriction_idx, destonly_restriction_mask,
                            &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, true,

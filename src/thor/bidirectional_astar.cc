@@ -251,17 +251,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   bool edge_destonly = false;
   if (FORWARD) {
-    // Why is is_dest false?
-    // We have to consider next cases:
-    //  1) At least one step of reverse search was done -> forward search will never reach the
-    //  destination edge. 2) There were no steps of the reverse search -> the destination edge is a
-    //  connection edge.
-    // We can set is_dest incorrectly in the second case, but it is the rare case.
-    // The result path will be correct, because there are cosing.Allowed calls inside recost_forward
-    // function in second time.
-    if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, localtime,
-                           time_info.timezone_index, restriction_idx, destonly_restriction_mask,
-                           &edge_destonly) ||
+    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, time_info.timezone_index,
+                           restriction_idx, destonly_restriction_mask, &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
                              &edgestatus_forward_, localtime, time_info.timezone_index)) {
       return false;
