@@ -837,8 +837,8 @@ public:
             } else if (access_type == baldr::AccessType::kTimedDenied) {
               return false;
             }
-            // an open window makes this edge destination-only, gated and priced exactly as
-            // the static tag is
+            // an active conditional restriction makes the edge destination-only, with the same cost
+            // as a regular one
             if (edge_destonly)
               *edge_destonly = true;
             if (!allow_destination_only_ && !pred_destonly)
@@ -1576,7 +1576,8 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    // the flags carry destonly state that is not on the edge itself, i.e. an open conditional window
+    // todo: That hack with `edge_destonly` and `pred_destonly` is needed to have this function
+    // callable with `predecessor_t == DirectedEdge` and to pass conditional destonly if it's active
     const bool is_destonly = edge_destonly || (is_hgv() ? edge->destonly_hgv() : edge->destonly());
     c.cost += destination_only_penalty_ * (is_destonly && !(pred_destonly || pred->destonly()));
     c.cost +=

@@ -343,13 +343,14 @@ TEST_F(ConditionalRestrictions, AccessConditional) {
         << costing;
   }
 }
+
 class DestinationOnlyZones : public ::testing::Test {
 protected:
-  // A contiguous run of dest-only edges is a zone, static and conditional parts alike: traffic
-  // with an endpoint inside may cross all of it, through traffic may not.
+  // Consecutive destination-only edges, static or conditional, form a zone.
   static constexpr const char* kZoneCondition = "destination @ (Mo-Su 09:00-17:00)";
   static constexpr const char* kRestricted = "2020-04-02T12:00";
   static constexpr const char* kUnrestricted = "2020-04-02T20:00";
+  static constexpr uint32_t kDestOnlyPenalty = 600;
 
   static gurka::map map;
 
@@ -381,7 +382,7 @@ protected:
                            {"service_limits.max_timedep_distance_matrix", "50000"}});
   }
 
-  // warning 401 means pass 0 failed and dest-only was dropped globally for the request
+  // warning 401 means the first pass found no route and destination-only was relaxed
   static bool used_relaxed_pass(const valhalla::Api& result) {
     for (const auto& w : result.info().warnings())
       if (w.code() == 401)
@@ -391,8 +392,7 @@ protected:
 };
 gurka::map DestinationOnlyZones::map = {};
 
-// Origin F rather than G: an origin edge is seeded without an access check, so a restricted
-// edge has to be one hop in to be evaluated at all.
+// Starts at F because access isn't checked on the origin edge.
 TEST_F(DestinationOnlyZones, ThroughTrafficExcluded) {
   for (const auto& dt : kDateTimeTypes) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
@@ -402,8 +402,7 @@ TEST_F(DestinationOnlyZones, ThroughTrafficExcluded) {
   }
 }
 
-// With the penalty at zero nothing separates an open conditional zone from a static one, so
-// the shortest branch wins for the time-dependent trees and bidirectional still refuses both.
+// Zero penalty: time-dependent takes the shortest branch, bidirectional's first pass rejects it.
 TEST_F(DestinationOnlyZones, ZeroPenaltyTreatsConditionalLikeStatic) {
   for (const auto& dt : {std::string("1"), std::string("2")}) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
@@ -420,7 +419,7 @@ TEST_F(DestinationOnlyZones, ZeroPenaltyTreatsConditionalLikeStatic) {
   gurka::assert::raw::expect_path(bidirectional, {"FG", "GM", "MI"});
 }
 
-TEST_F(DestinationOnlyZones, ThroughTrafficAllowedOutsideWindow) {
+TEST_F(DestinationOnlyZones, ThroughTrafficAllowedWhenRestrictionInactive) {
   for (const auto& dt : kDateTimeTypes) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
                                    {{"/date_time/type", dt}, {"/date_time/value", kUnrestricted}});
@@ -472,7 +471,7 @@ TEST_F(DestinationOnlyZones, LeaveTwoEdges) {
   }
 }
 
-// `pred.destonly()` is false on a conditional edge, so the seam trips the static check too.
+// Start on a static destination-only edge and continue into a conditional one.
 TEST_F(DestinationOnlyZones, StaticOriginThroughConditional) {
   for (const auto& dt : {std::string("1"), std::string("3")}) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"C", "G"}, "auto",
@@ -517,8 +516,7 @@ TEST_F(DestinationOnlyZones, ConditionalDestinationThroughStatic) {
   }
 }
 
-// Leaving a zone must not switch dest-only off for the rest of the route; either downstream
-// shortcut being taken means the exemption leaked past the zone boundary.
+// Destination-only edges must still be avoided after leaving the zone.
 TEST_F(DestinationOnlyZones, StillAppliesAfterLeavingZone) {
   for (const auto& dt : kDateTimeTypes) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"E", "I"}, "auto",
@@ -539,8 +537,7 @@ TEST_F(DestinationOnlyZones, DestinationInDownstreamZone) {
   }
 }
 
-// TimeDistanceMatrix seeds only its sources, so D's label has to carry the zone from DE into
-// EF; the way around through BJ, JK and KF is 3900m.
+// The matrix starts only from D, so the state must carry over from DE into EF (detour: 3900m).
 TEST_F(DestinationOnlyZones, TimeDistanceMatrixCrossesZoneToEndpoint) {
   auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"D"}, {"G"}, "auto",
                                  {{"/date_time/type", "1"}, {"/date_time/value", kRestricted}});
@@ -548,8 +545,7 @@ TEST_F(DestinationOnlyZones, TimeDistanceMatrixCrossesZoneToEndpoint) {
   EXPECT_NEAR(result.matrix().distances(0), 1500, 10);
 }
 
-// CostMatrix grows a tree from each end, and only conditional edges meet at E, so both trees
-// have to cross EF to pair E with G at all.
+// CostMatrix expands from both ends, so each tree has to cross EF to connect E and G.
 TEST_F(DestinationOnlyZones, CostMatrixCrossesZoneToEndpoint) {
   auto result =
       gurka::do_action(valhalla::Options::sources_to_targets, map, {"E", "G"}, {"G", "E"}, "auto",
@@ -561,9 +557,8 @@ TEST_F(DestinationOnlyZones, CostMatrixCrossesZoneToEndpoint) {
   EXPECT_NEAR(result.matrix().distances(3), 1000, 10) << "reverse tree from E";
 }
 
-// Dijkstras prices dest-only rather than refusing it, and a time contour bounds seconds while
-// the penalty only moves cost -- so the charge is what /expansion reports, not a smaller polygon.
-TEST_F(DestinationOnlyZones, IsochroneChargesConditionalLikeStatic) {
+// The penalty changes cost but not time, so compare /expansion costs rather than the polygon.
+TEST_F(DestinationOnlyZones, IsochroneActiveConditionalAddsDestOnlyPenalty) {
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   auto gh = static_cast<uint64_t>(std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, "G", "H")));
   auto gl = static_cast<uint64_t>(std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, "G", "L")));
@@ -585,18 +580,16 @@ TEST_F(DestinationOnlyZones, IsochroneChargesConditionalLikeStatic) {
 
   auto restricted = edge_costs(kRestricted);
   auto unrestricted = edge_costs(kUnrestricted);
-  constexpr uint32_t kDefaultDestOnlyPenalty = 600;
 
-  EXPECT_NEAR(restricted.at(gh) - unrestricted.at(gh), kDefaultDestOnlyPenalty, 2)
-      << "an open window costs the same as the static tag";
-  EXPECT_EQ(restricted.at(gl), unrestricted.at(gl)) << "the static tag is priced either way";
+  EXPECT_NEAR(restricted.at(gh) - unrestricted.at(gh), kDestOnlyPenalty, 2)
+      << "an active restriction costs the same as a regular destination-only edge";
+  EXPECT_EQ(restricted.at(gl), unrestricted.at(gl))
+      << "a regular destination-only edge costs the same either way";
 }
 
-// destination_only_penalty is charged once, where a zone is entered, and the reverse tree has to
-// agree. Only a conditional zone can show this: a static tag sits on both directed edges, so the
-// tag fallback in base_transition_cost prices it either way.
-TEST_F(DestinationOnlyZones, ReverseTreeChargesZoneEntryOnce) {
-  // arrive_by grows only the reverse tree, and G->D enters the open zone at EF and stays in it
+// The reverse search adds the penalty once on zone entry (only conditional edges show this).
+TEST_F(DestinationOnlyZones, ReverseSearchAddsPenaltyOnceOnZoneEntry) {
+  // arrive_by runs only the reverse search, and G->D enters the zone at EF and stays inside
   auto result = gurka::do_action(valhalla::Options::expansion, map, {"G", "D"}, "auto",
                                  {{"/action", "route"},
                                   {"/expansion_properties/0", "edge_id"},
@@ -613,7 +606,7 @@ TEST_F(DestinationOnlyZones, ReverseTreeChargesZoneEntryOnce) {
   }
 
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-  // the reverse tree labels the opposing edges, so accept either orientation
+  // the reverse search labels the opposing edges, so check both directions
   auto cost_of = [&](const std::string& a, const std::string& b) {
     for (const auto& ends : {std::pair{a, b}, std::pair{b, a}}) {
       auto id = static_cast<uint64_t>(
@@ -628,5 +621,5 @@ TEST_F(DestinationOnlyZones, ReverseTreeChargesZoneEntryOnce) {
 
   const int entering_zone = cost_of("G", "F") - cost_of("F", "E");
   const int already_inside = cost_of("F", "E") - cost_of("E", "D");
-  EXPECT_NEAR(entering_zone - already_inside, 600, 20);
+  EXPECT_NEAR(entering_zone - already_inside, kDestOnlyPenalty, 20);
 }
