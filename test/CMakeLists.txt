@@ -182,7 +182,8 @@ endfunction()
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   DEPENDS ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/
-  COMMAND bash -c "${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones > ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp 2> ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.log || (cat ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.log >&2 && exit 1)"
+  COMMAND ${CMAKE_COMMAND} -E env SPATIALITE=${SPATIALITE_EXECUTABLE} SPATIALITE_TOOL=${SPATIALITE_TOOL_EXECUTABLE}
+    bash -c "${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones >${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp 2> ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.log || (cat ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.log >&2 && exit 1)"
   COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   COMMENT "Building tz.sqlite..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
