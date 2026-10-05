@@ -2,11 +2,17 @@
 
 error_exit() {
   echo "error: $1" 1>&2
+  exit 1
+}
+
+spatialite_failed() {
   # geos 3.9* has a double free bug which, although it crashes the programs
   # that use it when they go to exit, works fine otherwise in terms of the
   # output. so here if we detect that we ignore the failure and keep going
-  if [ $(pkg-config geos --modversion | grep -cvF "3.9") -eq 0 ]; then
-    exit 1
+  if pkg-config geos --modversion 2>/dev/null | grep -qE '^3\.9(\.|$)'; then
+    echo "warning: $1, ignored because of the geos 3.9 crash on exit" 1>&2
+  else
+    error_exit "$1"
   fi
 }
 
@@ -38,10 +44,10 @@ if command -v cygpath >/dev/null 2>&1; then # git bash, cygwin, msys2
 elif command -v wslpath >/dev/null 2>&1; then # wsl2
     tz_file="$(wslpath -w "${tz_file}")"
 fi
-"${spatialite_tool}" -i -shp "./combined-shapefile-with-oceans-1970" -d "${tz_file}" -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
-"${spatialite}" "${tz_file}" "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed"
-"${spatialite}" "${tz_file}" "VACUUM;" 1>&2 || error_exit "VACUUM failed"
-"${spatialite}" "${tz_file}" "ANALYZE;" 1>&2 || error_exit "ANALYZE failed"
+"${spatialite_tool}" -i -shp "./combined-shapefile-with-oceans-1970" -d "${tz_file}" -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || spatialite_failed "spatialite_tool import failed"
+"${spatialite}" "${tz_file}" "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || spatialite_failed "SpatialIndex failed"
+"${spatialite}" "${tz_file}" "VACUUM;" 1>&2 || spatialite_failed "VACUUM failed"
+"${spatialite}" "${tz_file}" "ANALYZE;" 1>&2 || spatialite_failed "ANALYZE failed"
 
 rm -rf ./combined-shapefile-with-oceans-1970*
 rm -f ./timezones-with-oceans-1970.shapefile.zip alias_tz.csv
