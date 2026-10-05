@@ -8,9 +8,11 @@
 #include "proto/options.pb.h"
 #include "sif/costfactory.h"
 
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
 #include <test.h>
+
+#include <format>
+#include <string_view>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -421,19 +423,16 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
 
 TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
   // https://github.com/valhalla/valhalla/issues/3905
-  std::string req =
-      R"({
+  constexpr std::string_view req = R"({{
           "locations": [
-            {"lat": %s, "lon": %s},
-            {"lat": %s, "lon": %s}
+            {{"lat": {:.6f}, "lon": {:.6f}}},
+            {{"lat": {:.6f}, "lon": {:.6f}}}
           ],
           "costing":"auto",
         )";
   std::string req_base =
-      (boost::format(req) % std::to_string(avoid_map.nodes.at("A").lat()) %
-       std::to_string(avoid_map.nodes.at("A").lng()) % std::to_string(avoid_map.nodes.at("D").lat()) %
-       std::to_string(avoid_map.nodes.at("D").lng()))
-          .str();
+      std::format(req, avoid_map.nodes.at("A").lat(), avoid_map.nodes.at("A").lng(),
+                  avoid_map.nodes.at("D").lat(), avoid_map.nodes.at("D").lng());
   Api request;
 
   // empty polygon
