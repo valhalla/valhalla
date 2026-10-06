@@ -98,9 +98,8 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     // method), or if a complex restriction prevents this path.
     uint8_t restriction_idx = kInvalidRestriction;
     uint8_t destonly_restriction_mask = 0;
-    const bool is_dest = dest_edges_.find(edgeid.value) != dest_edges_.cend();
     if (FORWARD) {
-      if (!current_costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx,
+      if (!current_costing->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx,
                                     destonly_restriction_mask) ||
           current_costing->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
         continue;
@@ -121,7 +120,7 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
         FORWARD
             ? current_costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter)
             : current_costing->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                     opp_pred_edge, t2, pred.edgeid(), reader_getter);
+                                                     opp_pred_edge, pred, t2, reader_getter);
 
     Cost normalized_edge_cost = {edge_cost.cost * current_costing->GetModeFactor(), edge_cost.secs};
     // Compute the cost to the end of this edge
@@ -542,6 +541,7 @@ void TimeDistanceBSSMatrix::FormTimeDistanceMatrix(Api& request,
     matrix.mutable_to_indices()->Set(pbf_idx, forward ? i : origin_index);
     matrix.mutable_distances()->Set(pbf_idx, dest.distance);
     matrix.mutable_times()->Set(pbf_idx, time);
+    matrix.mutable_costs()->Set(pbf_idx, dest.best_cost.cost);
 
     // TODO - support date_time and time zones as in timedistancematrix.
     // For now, add empty strings (serializer requires this) to prevent crashing

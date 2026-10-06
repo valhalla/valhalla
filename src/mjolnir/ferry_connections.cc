@@ -48,18 +48,17 @@ public:
 std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
                                        const uint32_t node_idx,
                                        sequence<OSMWay>& ways,
-                                       sequence<OSMWayNode>& way_nodes,
+                                       sequence<OSMWayNodeShape>& edge_shapes,
                                        sequence<Edge>& edges,
                                        sequence<Node>& nodes,
                                        const bool inbound,
                                        const bool first_edge_destonly) {
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
-  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
+  const auto EdgeShape = [&edge_shapes](size_t idx, const size_t count) {
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
-      auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.latlng());
+      shape.emplace_back((*edge_shapes[idx++]).latlng());
     }
     return shape;
   };
@@ -264,14 +263,13 @@ bool ShortFerry(const uint32_t node_index,
                 node_bundle& bundle,
                 sequence<Edge>& edges,
                 sequence<Node>& nodes,
-                sequence<OSMWayNode>& way_nodes) {
+                sequence<OSMWayNodeShape>& edge_shapes) {
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
-  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
+  const auto EdgeShape = [&edge_shapes](size_t idx, const size_t count) {
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
-      auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.latlng());
+      shape.emplace_back((*edge_shapes[idx++]).latlng());
     }
     return shape;
   };
@@ -314,14 +312,14 @@ bool ShortFerry(const uint32_t node_index,
 // Reclassify edges from a ferry along the shortest path to the
 // specified road classification.
 void ReclassifyFerryConnections(const std::string& ways_file,
-                                const std::string& way_nodes_file,
+                                const std::string& edge_shapes_file,
                                 const std::string& nodes_file,
                                 const std::string& edges_file) {
   SCOPED_TIMER();
   LOG_INFO("Reclassifying ferry connection graph edges...");
 
   sequence<OSMWay> ways(ways_file, false);
-  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
+  sequence<OSMWayNodeShape> edge_shapes(edge_shapes_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
 
@@ -338,7 +336,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.ferry_edge_ && bundle.node.non_ferry_edge_ &&
         GetBestNonFerryClass(bundle.node_edges) > kFerryUpClass &&
-        !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes)) {
+        !ShortFerry(node_itr.position(), bundle, edges, nodes, edge_shapes)) {
       bool inbound_path_found = false;
       bool outbound_path_found = false;
       [[maybe_unused]] const PointLL ll = (*nodes[node_itr.position()]).node.latlng();
@@ -371,13 +369,13 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         if (edge_fwd_access == edge_rev_access) {
           // drivable in both directions - get an inbound path and an
           // outbound path.
-          auto ret1 = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges, nodes,
+          auto ret1 = ShortestPath(node_itr.position(), end_node_idx, ways, edge_shapes, edges, nodes,
                                    true, remove_destonly);
           total_count += ret1.first;
           if (ret1.second) {
             inbound_path_found = true;
           }
-          auto ret2 = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges, nodes,
+          auto ret2 = ShortestPath(node_itr.position(), end_node_idx, ways, edge_shapes, edges, nodes,
                                    false, remove_destonly);
           total_count += ret2.first;
           if (ret2.second) {
@@ -399,7 +397,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           // Check if oneway inbound to the ferry
           bool inbound =
               (edge.first.sourcenode_ == node_itr.position()) ? edge_rev_access : edge_fwd_access;
-          auto ret = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges, nodes,
+          auto ret = ShortestPath(node_itr.position(), end_node_idx, ways, edge_shapes, edges, nodes,
                                   inbound, remove_destonly);
           total_count += ret.first;
           if (ret.second) {

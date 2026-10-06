@@ -66,12 +66,8 @@ class TestPredictedSpeeds(unittest.TestCase):
         mean_error = np.mean(errors)
         max_error = np.max(errors)
 
-        self.assertLessEqual(
-            mean_error, 1.0, f"Mean error {mean_error:.2f} KPH exceeds threshold"
-        )
-        self.assertLessEqual(
-            max_error, 2.0, f"Max error {max_error:.2f} KPH exceeds threshold"
-        )
+        self.assertLessEqual(mean_error, 1.0, f"Mean error {mean_error:.2f} KPH exceeds threshold")
+        self.assertLessEqual(max_error, 2.0, f"Max error {max_error:.2f} KPH exceeds threshold")
 
     def test_encode_decode_round_trip(self):
         """Test encode/decode round-trip preserves coefficients."""

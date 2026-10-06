@@ -16,8 +16,9 @@ A single `NB_MODULE(_valhalla)` lives in [src/_valhalla.cc](src/_valhalla.cc) �
 | graph tile | `pyvalhalla::baldr::utils::init_graphtile` ([src/baldr/utils/graph_tile.cc](src/baldr/utils/graph_tile.cc)) | [src/baldr/utils/module.h](src/baldr/utils/module.h) | `get_tile_*` helpers (`TileHierarchy`) |
 | predicted speeds | `pyvalhalla::baldr::utils::init_predicted_speeds` ([src/baldr/utils/predicted_speeds.cc](src/baldr/utils/predicted_speeds.cc)) | [src/baldr/utils/module.h](src/baldr/utils/module.h) | `baldr::compress_speed_buckets`, DCT-II helpers |
 | polyline | `pyvalhalla::midgard::utils::init_polyline` ([src/midgard/utils/polyline.cc](src/midgard/utils/polyline.cc)) | [src/midgard/utils/module.h](src/midgard/utils/module.h) | `midgard::decode` → `decode_polyline` |
+| tileset build id | `pyvalhalla::mjolnir::init_util` ([src/mjolnir/util.cc](src/mjolnir/util.cc)) | [src/mjolnir/module.h](src/mjolnir/module.h) | `mjolnir::compute_tileset_build_id`, `mjolnir::set_tileset_build_id` (GIL released — they walk whole tile dirs) |
 
-All symbols land flat in `_valhalla`; the `valhalla/...` Python packages **mirror the C++ module tree** and provide the user-facing namespacing by re-exporting from `_valhalla` (e.g. `pyvalhalla::baldr::GraphId` → `valhalla.baldr.GraphId`; `pyvalhalla::midgard::utils::*` → `valhalla.midgard.utils.*`). Empty `src/{mjolnir,loki}/utils/` dirs are placeholders for future bindings.
+All symbols land flat in `_valhalla`; the `valhalla/...` Python packages **mirror the C++ module tree** and provide the user-facing namespacing by re-exporting from `_valhalla` (e.g. `pyvalhalla::baldr::GraphId` → `valhalla.baldr.GraphId`; `pyvalhalla::midgard::utils::*` → `valhalla.midgard.utils.*`). The empty `src/loki/utils/` dir is a placeholder for future bindings.
 
 Shared headers under [../shared/](../shared/) (e.g., `tile_id_utils.h`) are reused by the Node.js bindings.
 
@@ -27,9 +28,11 @@ Shared headers under [../shared/](../shared/) (e.g., `tile_id_utils.h`) are reus
 | [valhalla/actor.py](valhalla/actor.py) | `Actor(_Actor)` — adds dict/str input handling via `@dict_or_str`, config validation. **Holds the user-facing docstrings** (see "Docstring placement" below) |
 | [valhalla/config.py](valhalla/config.py) | `get_config`, `get_help`, `parse_and_validate_config` |
 | [valhalla/baldr/__init__.py](valhalla/baldr/__init__.py) | Re-exports `GraphId` from `.._valhalla` |
-| [valhalla/baldr/utils/__init__.py](valhalla/baldr/utils/__init__.py) | Public surface: re-exports tile helpers and DCT helpers straight from `..._valhalla`, plus `GraphUtils` from `.graph_utils` |
+| [valhalla/baldr/utils/__init__.py](valhalla/baldr/utils/__init__.py) | Public surface: re-exports tile helpers and DCT helpers straight from `..._valhalla`, plus `GraphUtils` from `.graph_utils` and the tar index helpers from `.tar_index` |
 | [valhalla/baldr/utils/graph_utils.py](valhalla/baldr/utils/graph_utils.py) | `GraphUtils(_GraphUtils)` wrapper only (dict/Path/str config). No raw re-exports — those live in `__init__.py` |
+| [valhalla/baldr/utils/tar_index.py](valhalla/baldr/utils/tar_index.py) | Pure Python: read/decode/write the `index.bin` tile index embedded as a tar extract's first member (`TarIndexEntry`, `decode_tar_index` — path or raw bytes, `write_tar_index`) — the format `valhalla_build_extract` writes and `GraphReader` consumes over HTTP ranges |
 | [valhalla/midgard/utils/__init__.py](valhalla/midgard/utils/__init__.py) | Re-exports `decode_polyline` from `..._valhalla` |
+| [valhalla/mjolnir/__init__.py](valhalla/mjolnir/__init__.py) | Re-exports `compute_tileset_build_id`, `set_tileset_build_id` from `.._valhalla` (no `utils` layer — mjolnir's C++ `util.h` grab-bag isn't a namespace worth mirroring) |
 | [valhalla/utils/__init__.py](valhalla/utils/__init__.py) | **Deprecation shim** — re-exports the relocated symbols from `valhalla.baldr[.utils]` and `valhalla.midgard.utils` and emits a `DeprecationWarning` on import. Remove in a future release |
 | [valhalla/__main__.py](valhalla/__main__.py), [valhalla/_scripts.py](valhalla/_scripts.py) | CLI entry points (installed only in scikit-build-core wheel builds — see [CMakeLists.txt](CMakeLists.txt) `SKBUILD` branch) |
 
@@ -114,6 +117,9 @@ Located under [../../../test/bindings/python/](../../../test/bindings/python/):
 | `test_graph_utils.py` | Mostly tile-independent; `test_get_edge_shape` + the `graphutils_*` tests need utrecht_tiles. |
 | `test_predicted_speeds.py` | Self-contained, no tiles needed. |
 | `test_config.py` | Self-contained. |
+| `test_graph_id.py` | Self-contained (`GraphId.from_tile_path`). |
+| `test_mjolnir_utils.py` | Self-contained — synthesizes header-only tiles via `GraphTileHeader.to_bytes()`, no fixture tileset. |
+| `test_tar_index.py` | Self-contained — builds its own tar extracts in a tempdir. |
 
 Run with `PYTHONPATH=build/.../src/bindings/python python -m pytest ...`. Watch out for an already-installed `valhalla` in your venv shadowing the PYTHONPATH — the venv's `valhalla/__init__.py` wins because it's a proper package, not just on sys.path.
 

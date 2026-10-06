@@ -172,7 +172,7 @@ std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::st
   if (tile_dir.empty() || tile.empty())
     return {};
 
-  valhalla::mjolnir::GraphTileBuilder tilebuilder(tile_dir, GraphTile::GetTileId(tile_dir + tile),
+  valhalla::mjolnir::GraphTileBuilder tilebuilder(tile_dir, GraphId::FromTilePath(tile_dir + tile),
                                                   true);
   tilebuilder.header_builder().set_has_elevation(true);
 

@@ -3,13 +3,14 @@
 # See src/bindings/python/README.md ("Type stubs") for the regeneration workflow.
 
 from collections.abc import Sequence
+import os
 from typing import Annotated, overload
 
 import numpy
 from numpy.typing import NDArray
 
 
-VALHALLA_PRINT_VERSION: str = '3.7.0'
+VALHALLA_PRINT_VERSION: str = '3.9.0'
 
 class ValhallaError(RuntimeError):
     """
@@ -77,6 +78,19 @@ class GraphId:
     def __init__(self, arg: str, /) -> None:
         """Constructs a GraphId from its string representation, e.g. "2/71944/0"."""
 
+    @staticmethod
+    def from_tile_path(path: str) -> GraphId:
+        """
+        Parses a graph tile's file path into its base GraphId, e.g.
+        "2/000/820/135.gph" (relative or absolute, any file extension) -> 2/820135/0.
+        The inverse of os.fspath(graph_id); the path must contain at least one
+        path separator (forward slashes work on every platform).
+
+        :param path: The tile's file path.
+        :returns: The tile's base GraphId (the within-tile id portion is 0).
+        :raises RuntimeError: The path doesn't encode a (potentially) valid tile id.
+        """
+
     @property
     def value(self) -> int:
         """The integer representation of the bit-fielded GraphId."""
@@ -131,8 +145,10 @@ class GraphId:
 
 class GraphTileHeader:
     """
-    Read-only information about a graph tile. Obtain one via GraphUtils.get_graph_tile_header().
+    Header of a graph tile. Read one via GraphUtils.get_graph_tile_header(), from_file() or from_bytes(), or default-construct one. The tileset identity fields (dataset_id, date_created, raw_checksum) are writable; everything else is read-only — it identifies the tile or is derived from its data. save() patches the header span of an existing tile file in place.
     """
+
+    def __init__(self) -> None: ...
 
     @property
     def graphid(self) -> GraphId:
@@ -149,6 +165,25 @@ class GraphTileHeader:
     @property
     def dataset_id(self) -> int:
         """Data set id (e.g. latest OSM changeset id)."""
+
+    @dataset_id.setter
+    def dataset_id(self, arg: int, /) -> None: ...
+
+    @property
+    def date_created(self) -> int:
+        """Tile creation date (days since the pivot date)."""
+
+    @date_created.setter
+    def date_created(self, arg: int, /) -> None: ...
+
+    @property
+    def raw_checksum(self) -> int:
+        """
+        Raw 64-bit checksum field: tileset build id in the high 16 bits, the tile's 48-bit data hash in the low bits. See also the derived tile_checksum and build_id.
+        """
+
+    @raw_checksum.setter
+    def raw_checksum(self, arg: int, /) -> None: ...
 
     @property
     def density(self) -> int:
@@ -219,20 +254,50 @@ class GraphTileHeader:
         """Number of transit transfers."""
 
     @property
-    def date_created(self) -> int:
-        """Tile creation date (days since the pivot date)."""
-
-    @property
     def end_offset(self) -> int:
         """Tile size in bytes."""
 
     @property
     def tile_checksum(self) -> int:
-        """Integer checksum (48 bit) of the tile's data."""
+        """
+        Integer checksum (48 bit) of the tile's data. Setting it keeps the build_id.
+        """
+
+    @tile_checksum.setter
+    def tile_checksum(self, arg: int, /) -> None: ...
 
     @property
     def build_id(self) -> int:
-        """Integer additive checksum (16 bit) of the tileset."""
+        """
+        Integer additive checksum (16 bit) of the tileset. Setting it keeps the tile_checksum.
+        """
+
+    @build_id.setter
+    def build_id(self, arg: int, /) -> None: ...
+
+    @staticmethod
+    def byte_size() -> int:
+        """
+        Size of the on-disk header in bytes (the header span at the start of a tile).
+        """
+
+    @staticmethod
+    def from_bytes(data: bytes) -> GraphTileHeader:
+        """
+        Read a header from a buffer (a whole tile or just its first byte_size() bytes).
+        """
+
+    @staticmethod
+    def from_file(path: str | os.PathLike) -> GraphTileHeader:
+        """Read the header of a graph tile file."""
+
+    def to_bytes(self) -> bytes:
+        """Serialize the header to its byte_size() on-disk bytes."""
+
+    def save(self, path: str | os.PathLike) -> None:
+        """
+        Patch this header over the header span of an existing graph tile file, in place. The file must already exist and hold at least byte_size() bytes.
+        """
 
     def __repr__(self) -> str: ...
 
@@ -265,9 +330,11 @@ class _GraphUtils:
         """
         Get the GraphTileHeader for the tile that contains this GraphId.
 
+        Reads only the header span from the tile_dir file or the mmapped extract; the tile only gzipped or remote tilesets might load the GraphTile into memory.
+
         :param tile_id: GraphId of (or within) the tile
         :returns: GraphTileHeader with the tile's summary metadata
-        :raises RuntimeError: When the tile is or edge not found
+        :raises RuntimeError: When the tile is not found
         """
 
 def get_tile_base_lon_lat(graph_id: GraphId) -> tuple:
@@ -363,4 +430,23 @@ def decode_polyline(polyline: str, precision: int = 6, order: str = 'lnglat') ->
     """
     Decodes an encoded polyline string with precision to a list of coordinate tuples.
     The coordinate order of the output can be lnglat or latlng.
+    """
+
+def compute_tileset_build_id(tile_dir: str) -> int:
+    """
+    Compute the tileset-wide 16-bit build id from the per-tile content hashes
+    already stored in each tile header (their sum, folded to 16 bits; no
+    re-hashing). Read-only companion of set_tileset_build_id.
+
+    :param tile_dir: Directory holding the .gph tiles.
+    :returns: The 16-bit tileset build id.
+    """
+
+def set_tileset_build_id(tile_dir: str) -> None:
+    """
+    Recompute the tileset-wide build id and stamp it into the high bits of every
+    tile's checksum, in place. Call this after a tool has rewritten a subset of
+    tiles (e.g. adding predicted traffic) so URL clients see a changed tileset.
+
+    :param tile_dir: Directory holding the .gph tiles; headers are patched in place.
     """

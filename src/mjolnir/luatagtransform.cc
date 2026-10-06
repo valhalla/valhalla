@@ -2,9 +2,9 @@
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
 
-#include <boost/format.hpp>
 #include <osmium/osm/tag.hpp>
 
+#include <format>
 #include <stdexcept>
 
 extern "C" {
@@ -26,8 +26,7 @@ void CheckLuaFuncExists(lua_State* state, const std::string& func_name) {
   lua_getglobal(state, func_name.c_str());
 
   if (!lua_isfunction(state, -1)) {
-    throw std::runtime_error(
-        (boost::format("Lua script does not contain a function %1%.") % func_name).str());
+    throw std::runtime_error(std::format("Lua script does not contain a function {}.", func_name));
   }
   lua_pop(state, 1);
 }
@@ -93,10 +92,9 @@ Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const osmium::TagL
       // running out of memory, then this indicates a programming logic error
       // and the program should stop with as informative an error message as
       // it's possible to give.
-      throw std::runtime_error((boost::format("Failed to execute lua function "
-                                              "for basic tag processing in %1% %2%: %3%") %
-                                ::to_string(type) % osmid % lua_error_message)
-                                   .str());
+      throw std::runtime_error(
+          std::format("Failed to execute lua function for basic tag processing in {} {}: {}",
+                      ::to_string(type), osmid, lua_error_message));
     }
 
     // TODO:  if we dont care about it we stop looking.  Look for filter = 1
@@ -114,12 +112,12 @@ Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const osmium::TagL
     while (lua_next(state_, -2) != 0) {
       const char* key = lua_tostring(state_, -2);
       if (key == nullptr) {
-        LOG_ERROR((boost::format("Invalid key in Lua function: %1%.") % lua_func).str());
+        LOG_ERROR("Invalid key in Lua function: {}.", lua_func);
         break;
       }
       const char* value = lua_tostring(state_, -1);
       if (value == nullptr) {
-        LOG_ERROR((boost::format("Invalid value in Lua function: %1%.") % lua_func).str());
+        LOG_ERROR("Invalid value in Lua function: {}.", lua_func);
         break;
       }
       result[key] = value;
@@ -134,10 +132,8 @@ Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const osmium::TagL
       result.clear();
     }
   } catch (std::exception& e) {
-    LOG_ERROR((boost::format("Exception in Lua function: %1%: %2%") % lua_func % e.what()).str());
-  } catch (...) {
-    LOG_ERROR((boost::format("Unknown exception in Lua function: %1%.") % lua_func).str());
-  }
+    LOG_ERROR("Exception in Lua function: {}: {}", lua_func, e.what());
+  } catch (...) { LOG_ERROR("Unknown exception in Lua function: {}.", lua_func); }
 
   return result;
 }

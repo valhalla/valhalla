@@ -372,6 +372,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
         // call loki::Search to get nearby edges to each landmark
         search.search(landmark_locs, sif::CreateNoCost({}));
+        search.clear();
 
         // we only have one landmark as input so the return size should be no more than one
 
@@ -527,7 +528,7 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   seq_file.close();
 
   midgard::sequence<std::pair<GraphId, uint64_t>> merged_sequence_file(merged_seq_file, false);
-  merged_sequence_file.sort(sort_seq_file);
+  merged_sequence_file.sort(sort_seq_file, num_threads);
 
   LOG_INFO("Updating tiles...");
 

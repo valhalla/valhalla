@@ -8,6 +8,7 @@ set(sources
   status_action.cc
   transit_available_action.cc
   polygon_search.cc
+  linear_cost_factors.cc
   isochrone_action.cc
   height_action.cc
   locate_action.cc
@@ -38,6 +39,7 @@ valhalla_module(NAME loki
     PRIVATE
       ${unordered_dense_include_dir}
       ${vtzero_include_dirs}
+      ${flatbush_include_dir}
   DEPENDS
     valhalla::meili
     valhalla::skadi

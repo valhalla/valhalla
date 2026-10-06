@@ -346,8 +346,7 @@ TEST_F(Search, ReachabilityZeroEverything) {
 }
 
 TEST_F(Search, ReachabilityHighRadius) {
-  auto longest = static_cast<unsigned int>(pt("B").Distance(pt("D")));
-  auto api = do_locate(pt("8"), [longest](valhalla::Location& loc) {
+  auto api = do_locate(pt("8"), [](valhalla::Location& loc) {
     loc.set_minimum_reachability(0);
     loc.set_radius(20000);
   });

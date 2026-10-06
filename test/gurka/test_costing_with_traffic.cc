@@ -1,8 +1,9 @@
 #include "gurka.h"
 #include "test.h"
 
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
+
+#include <format>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -214,12 +215,10 @@ TEST(Standalone, CostingWithTraffic) {
     test::customize_live_traffic_data(map.config, edges_with_traffic);
 
     for (auto& c : costing) {
-      const std::string& req_no_traffic =
-          (boost::format(
-               R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"%s"})") %
-           std::to_string(map.nodes.at("2").lat()) % std::to_string(map.nodes.at("2").lng()) %
-           std::to_string(map.nodes.at("1").lat()) % std::to_string(map.nodes.at("1").lng()) % c)
-              .str();
+      const std::string& req_no_traffic = std::
+          format(R"({{"locations":[{{"lat":{},"lon":{}}},{{"lat":{},"lon":{}}}],"costing":"{}"}})",
+                 std::to_string(map.nodes.at("2").lat()), std::to_string(map.nodes.at("2").lng()),
+                 std::to_string(map.nodes.at("1").lat()), std::to_string(map.nodes.at("1").lng()), c);
       auto result = gurka::do_action(valhalla::Options::route, map, req_no_traffic, reader);
 
       if (c == "truck" ||
@@ -234,12 +233,10 @@ TEST(Standalone, CostingWithTraffic) {
 
     std::string date_type = "3"; // invariant time
     for (auto& c : costing) {
-      const std::string& req_with_traffic =
-          (boost::format(
-               R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":3, "value": "current"}})") %
-           std::to_string(map.nodes.at("2").lat()) % std::to_string(map.nodes.at("2").lng()) %
-           std::to_string(map.nodes.at("1").lat()) % std::to_string(map.nodes.at("1").lng()) % c % c)
-              .str();
+      const std::string& req_with_traffic = std::format(
+          R"({{"locations":[{{"lat":{:.6f},"lon":{:.6f}}},{{"lat":{:.6f},"lon":{:.6f}}}],"costing":"{}", "costing_options": {{"{}": {{"speed_types":["freeflow","constrained","predicted","current"]}}}}, "date_time":{{"type":3, "value": "current"}}}})",
+          map.nodes.at("2").lat(), map.nodes.at("2").lng(), map.nodes.at("1").lat(),
+          map.nodes.at("1").lng(), c, c);
       auto result = gurka::do_action(valhalla::Options::route, map, req_with_traffic, reader);
 
       // favor tertiary road - traffic in use

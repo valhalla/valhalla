@@ -1771,6 +1771,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the area flag.
+   * @param  area   Is this an area?
+   */
+  void set_area(const bool area) {
+    area_ = area;
+  }
+
+  /**
+   * Get the area flag.
+   * @return  Returns area flag.
+   */
+  bool area() const {
+    return area_;
+  }
+
+  /**
    * Sets the ferry flag.
    * @param  ferry   Is a ferry?
    */
@@ -2708,7 +2724,8 @@ struct OSMWay {
   uint16_t bike_backward_ : 1;
   uint16_t lit_ : 1;
   uint16_t destination_only_hgv_ : 1;
-  uint16_t spare2_ : 2;
+  uint16_t area_ : 1;
+  uint16_t spare2_ : 1;
 
   uint16_t nodecount_;
 

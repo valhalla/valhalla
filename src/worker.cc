@@ -46,7 +46,7 @@ namespace {
 void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
   static const std::unordered_set<std::string_view> kSupportedLayers =
       {valhalla::kEdgeLayerName, valhalla::kNodeLayerName, valhalla::kShortcutLayerName,
-       valhalla::kAccessRestrictionLayerName};
+       valhalla::kAccessRestrictionLayerName, valhalla::kIncidentLayerName};
 
   if (exclude_layers.has_value() && exclude_layers->IsArray()) {
     for (const auto& lyr : exclude_layers->GetArray()) {
@@ -1189,6 +1189,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
           } else { // or an encoded polyline and a cost factor
             parse_line(linear_feat, l);
           }
+
+          if (l->shape_size() == 0) {
+            throw valhalla_exception_t{173, "feature coordinates are empty"};
+          }
         }
       } catch (const std::exception& e) { throw valhalla_exception_t{173, std::string(e.what())}; }
     }
@@ -1517,6 +1521,15 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
   return add_warning;
 }
 
+void apply_trace_location_defaults(valhalla::Location& loc) {
+  loc.set_node_snap_tolerance(0.f);
+  loc.set_radius(10);
+  // Reachability test is not needed for edge walking because either
+  // - edge_walk relies on the shape that was produced by route
+  // - map_snap performs a Viterbi search that organically biases towards reachable edges
+  loc.set_minimum_reachability(0);
+}
+
 #ifdef ENABLE_SERVICES
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
   // block all but get and post
@@ -1623,6 +1636,12 @@ to_response(const std::string& data,
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
+}
+
+// if we shared zmq context across threads we can use inproc:// (shared mem) endpoints
+zmq::context_t& zmq_context() {
+  static zmq::context_t ctx;
+  return ctx;
 }
 
 #endif

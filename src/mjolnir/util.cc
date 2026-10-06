@@ -5,6 +5,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "mjolnir/areabuilder.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphbuilder.h"
@@ -25,7 +26,6 @@
 
 #include <filesystem>
 #include <format>
-#include <regex>
 
 using boost::property_tree::ptree;
 using namespace valhalla::baldr;
@@ -37,6 +37,8 @@ namespace {
 // Temporary files used during tile building
 const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
+const std::string edge_shapes_file = "edge_shapes.bin";
+const std::string edge_node_ids_file = "edge_node_ids.bin";
 const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
 const std::string tile_manifest_file = "tile_manifest.json";
@@ -400,7 +402,7 @@ uint32_t GetStopImpact(uint32_t from,
 namespace valhalla {
 namespace mjolnir {
 
-void set_tileset_build_id(const std::string& tile_dir) {
+uint16_t compute_tileset_build_id(const std::string& tile_dir) {
   // sum the per-tile data hashes already stored in each header's low bits, no re-hashing needed.
   // addition is order independent, so the build id doesn't depend on the walk
   uint64_t build_id_acc = 0;
@@ -411,10 +413,14 @@ void set_tileset_build_id(const std::string& tile_dir) {
     build_id_acc += header.tile_checksum();
   });
 
-  // fold to 16 bits (enough for URL based deployments) and stamp into every tile's high bits
-  uint16_t build_id =
-      build_id_acc ^ (build_id_acc >> 16) ^ (build_id_acc >> 32) ^ (build_id_acc >> 48);
-  const uint64_t build_id_bits = static_cast<uint64_t>(build_id) << kTileHashBits;
+  // fold to 16 bits (enough for URL based deployments)
+  return build_id_acc ^ (build_id_acc >> 16) ^ (build_id_acc >> 32) ^ (build_id_acc >> 48);
+}
+
+void set_tileset_build_id(const std::string& tile_dir) {
+  // stamp the computed build id into every tile's high bits
+  const uint64_t build_id_bits = static_cast<uint64_t>(compute_tileset_build_id(tile_dir))
+                                 << kTileHashBits;
   for_each_tile(tile_dir, [&](const std::filesystem::path& p) {
     update_tile_header(p, [&](GraphTileHeader& h) {
       h.set_raw_checksum(h.tile_checksum() | build_id_bits);
@@ -436,10 +442,20 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) 
 }
 
 std::vector<std::string> GetTagTokens(const std::string& tag_value, const std::string& delim_str) {
-  std::regex regex_str(delim_str);
-  std::vector<std::string> tokens(std::sregex_token_iterator(tag_value.begin(), tag_value.end(),
-                                                             regex_str, -1),
-                                  std::sregex_token_iterator());
+  std::vector<std::string> tokens;
+  if (delim_str.empty()) {
+    tokens.emplace_back(tag_value);
+    return tokens;
+  }
+  size_t start = 0, pos;
+  while ((pos = tag_value.find(delim_str, start)) != std::string::npos) {
+    tokens.emplace_back(tag_value, start, pos - start);
+    start = pos + delim_str.size();
+  }
+  // an empty token after the last delimiter is not emitted
+  if (start < tag_value.size()) {
+    tokens.emplace_back(tag_value, start);
+  }
   return tokens;
 }
 
@@ -682,6 +698,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Set up the temporary (*.bin) files used during processing
   std::string ways_bin = tile_dir + ways_file;
   std::string way_nodes_bin = tile_dir + way_nodes_file;
+  std::string edge_shapes_bin = tile_dir + edge_shapes_file;
+  std::string edge_node_ids_bin = tile_dir + edge_node_ids_file;
   std::string nodes_bin = tile_dir + nodes_file;
   std::string edges_bin = tile_dir + edges_file;
   std::string tile_manifest = tile_dir + tile_manifest_file;
@@ -724,6 +742,22 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     log_stage(BuildStage::kParseRelations);
   }
 
+  // Second pass over the ways to collect the geometry of ways that
+  // are members of pedestrian area relations
+  if (start_stage <= BuildStage::kParseAreaWays && BuildStage::kParseAreaWays <= end_stage) {
+    if (config.get<bool>("mjolnir.pedestrian_areas", false) &&
+        config.get<bool>("mjolnir.include_pedestrian", true)) {
+      PBFGraphParser::ParseAreaWays(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
+                                    osm_data);
+
+      // Write the OSMData to files if the end stage is less than enhancing
+      if (end_stage <= BuildStage::kEnhance) {
+        osm_data.write_to_temp_files(tile_dir);
+      }
+    }
+    log_stage(BuildStage::kParseAreaWays);
+  }
+
   // Parse OSM data
   if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for nodes
@@ -736,6 +770,20 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
       osm_data.write_to_temp_files(tile_dir);
     }
     log_stage(BuildStage::kParseNodes);
+  }
+
+  // Builds pedestrian areas
+  if (start_stage <= BuildStage::kBuildAreas && BuildStage::kBuildAreas <= end_stage) {
+    if (config.get<bool>("mjolnir.pedestrian_areas", false) &&
+        config.get<bool>("mjolnir.include_pedestrian", true)) {
+      AreaBuilder::BuildAreas(config.get_child("mjolnir"), ways_bin, way_nodes_bin, osm_data);
+
+      // Write the OSMData to files if the end stage is less than enhancing
+      if (end_stage <= BuildStage::kEnhance) {
+        osm_data.write_to_temp_files(tile_dir);
+      }
+    }
+    log_stage(BuildStage::kBuildAreas);
   }
 
   // Construct edges
@@ -769,8 +817,9 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     }
 
     // Build the graph using the OSMNodes and OSMWays from the parser
-    GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin, linguistic_node_bin, tiles);
+    GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin,
+                        edge_shapes_bin, edge_node_ids_bin, cr_from_bin, cr_to_bin,
+                        linguistic_node_bin, tiles);
     log_stage(BuildStage::kBuild);
   }
 
@@ -858,6 +907,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     LOG_INFO("Cleaning up temporary *.bin files within " + tile_dir);
     remove_temp_file(ways_bin);
     remove_temp_file(way_nodes_bin);
+    remove_temp_file(edge_shapes_bin);
+    remove_temp_file(edge_node_ids_bin);
     remove_temp_file(nodes_bin);
     remove_temp_file(edges_bin);
     remove_temp_file(access_bin);

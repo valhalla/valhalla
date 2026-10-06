@@ -249,6 +249,13 @@ public:
     directededgecount_ = count;
   }
 
+  /**
+   * Checks for the presence of bounding circles.
+   *
+   * @return false if the bounding circle offset is
+   * either 0 or equal to the overall tile size (during early Valhalla 3.x versions, unused offset
+   * slots were set to tile_size), else true.
+   */
   bool has_bounding_circles() const {
     return boundingcircles_offset_ != 0 && boundingcircles_offset_ != tile_size_;
   }
@@ -733,7 +740,9 @@ protected:
   // GraphTile data size in bytes
   uint32_t tile_size_ = 0;
 
+  // Offset to the start of the bounding circles; 0 means no bounding circles are present
   uint32_t boundingcircles_offset_ = 0;
+
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,
   // simply add a uint32_t some_offset_; just above empty_slots_ and decrease

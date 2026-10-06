@@ -54,7 +54,7 @@ def get_config(
         if isinstance(tile_extract, str) and not str(tile_extract)
         else str(Path(tile_extract).resolve(strict=True))
     )
-    config["mjolnir"]["logging"]["type"] = "std_out" if verbose else ""
+    config["logging"]["type"] = "std_out" if verbose else ""
 
     return config
 

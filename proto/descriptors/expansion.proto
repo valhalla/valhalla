@@ -31,5 +31,6 @@ message Expansion {
   repeated Geometry geometries = 7;
   repeated uint32 flow_sources = 9 [packed=true];
   repeated TravelMode travel_modes = 10 [packed=true];
+  repeated uint32 expansion_index = 11 [packed=true];
 }
 

@@ -25,8 +25,9 @@ if(ENABLE_DATA_TOOLS)
     add_dependencies(${TESTNAME} build_timezones)
 
     ## Test run targets
+    # Explicit `bash` (MSBuild ignores shebangs) + $<TARGET_FILE:> for multi-config.
     add_custom_command(OUTPUT ${TESTNAME}.log
-      COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}
+      COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales bash ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh $<TARGET_FILE:${TESTNAME}>
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       DEPENDS ${TESTNAME}
       VERBATIM)

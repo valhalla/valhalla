@@ -103,6 +103,8 @@ constexpr float kDefaultServiceFactor = 1.0f;
 // Default penalty factor for avoiding closures (increases the cost of an edge as if its being
 // traversed at kMinSpeedKph)
 constexpr float kDefaultClosureFactor = 9.0f;
+constexpr float kDefaultUseDistance = 0.f; // Default preference of using distance vs time 0-1
+
 // Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not
 // penalize closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the
 // non-closure end
@@ -177,17 +179,20 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       exclude_tolls_(false), exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
       include_hov3_{false}, height_{0.f, kDefaultHeight, 10.0f}, width_{0.f, kDefaultWidth, 10.0f},
-      length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f} {
+      length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f},
+      use_distance_{0.f, kDefaultUseDistance, 1.f} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
                          const TravelMode mode,
                          uint32_t access_mask,
                          bool penalize_uturns)
-    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true),
-      allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
-      closure_factor_(kDefaultClosureFactor), speed_penalty_factor_(kDefaultSpeedPenaltyFactor),
-      flow_mask_(kDefaultFlowMask), shortest_(costing.options().shortest()),
+    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
+      access_mask_(access_mask), closure_factor_(kDefaultClosureFactor),
+      speed_penalty_factor_(kDefaultSpeedPenaltyFactor), flow_mask_(kDefaultFlowMask),
+      shortest_(costing.options().shortest()),
+      distance_factor_(costing.options().use_distance() * kInvMedianSpeed),
+      inv_distance_factor_(1.f - costing.options().use_distance()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
       ignore_non_vehicular_restrictions_(costing.options().ignore_non_vehicular_restrictions()),
       ignore_turn_restrictions_(costing.options().ignore_restrictions() ||
@@ -219,29 +224,7 @@ DynamicCost::DynamicCost(const Costing& costing,
     }
   }
 
-  // Add avoid edges to internal set
-  for (auto& edge : costing.options().exclude_edges()) {
-    user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
-  }
-
-  // add linear feature factors
-  for (auto& e : costing.options().cost_factor_edges()) {
-    // short-circuit the ones with factor 0 by putting them on the exclude pile
-    if (e.factor() == 0.) {
-      user_exclude_edges_.insert({static_cast<GraphId>(e.id()), e.start()});
-      break;
-    }
-    auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
-    cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
-    cost_edge.ignore_restrictions_ = e.ignore_access_restrictions();
-  }
-
-  // once all cost factors are filled, sort by range, precompute overall average
-  // and store the overall minimum factor so it won't mess with the A* heuristic
-  for (auto& [edge, cost_factors] : linear_cost_edges_) {
-    min_linear_cost_factor_ =
-        std::min(min_linear_cost_factor_, cost_factors.sort_and_find_smallest());
-  }
+  SetCostFactorEdges(costing.options());
 }
 
 DynamicCost::~DynamicCost() {
@@ -272,7 +255,8 @@ Cost DynamicCost::TransitionCost(const DirectedEdge*,
                                  const NodeInfo*,
                                  const EdgeLabel&,
                                  const graph_tile_ptr&,
-                                 const std::function<baldr::LimitedGraphReader()>&) const {
+                                 const std::function<baldr::LimitedGraphReader()>&,
+                                 const bool) const {
   return {0.0f, 0.0f};
 }
 
@@ -284,11 +268,12 @@ Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::NodeInfo*,
                                         const baldr::DirectedEdge*,
                                         const baldr::DirectedEdge*,
+                                        const EdgeLabel&,
                                         const graph_tile_ptr&,
-                                        const baldr::GraphId&,
                                         const std::function<baldr::LimitedGraphReader()>&,
                                         const bool,
-                                        const InternalTurn) const {
+                                        const InternalTurn,
+                                        const bool) const {
   return {0.0f, 0.0f};
 }
 
@@ -316,11 +301,6 @@ void DynamicCost::SetAllowTransitConnections(const bool allow) {
 // Sets the flag indicating whether destination only edges are allowed.
 void DynamicCost::set_allow_destination_only(const bool allow) {
   allow_destination_only_ = allow;
-}
-
-// Sets the flag indicating whether edges with valid restriction conditional=destination are allowed.
-void DynamicCost::set_allow_conditional_destination(const bool allow) {
-  allow_conditional_destination_ = allow;
 }
 
 // Returns the maximum transfer distance between stops that you are willing
@@ -400,6 +380,36 @@ bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::NodeInfo*) {
 void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& exclude_edges) {
   for (auto edge : exclude_edges) {
     user_exclude_edges_.insert({edge.id, edge.percent_along});
+  }
+}
+
+void DynamicCost::SetCostFactorEdges(const Costing_Options& options) {
+  // callable after construction, so start from scratch rather than folding into what's there
+  linear_cost_edges_.clear();
+  min_linear_cost_factor_ = 1.;
+
+  // Add avoid edges to internal set
+  for (auto& edge : options.exclude_edges()) {
+    user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
+  }
+
+  // add linear feature factors
+  for (auto& e : options.cost_factor_edges()) {
+    // short-circuit the ones with factor 0 by putting them on the exclude pile
+    if (e.factor() == 0.) {
+      user_exclude_edges_.insert({static_cast<GraphId>(e.id()), e.start()});
+      continue;
+    }
+    auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
+    cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
+    cost_edge.ignore_restrictions_ = e.ignore_access_restrictions();
+  }
+
+  // once all cost factors are filled, sort by range, precompute overall average
+  // and store the overall minimum factor so it won't mess with the A* heuristic
+  for (auto& [edge, cost_factors] : linear_cost_edges_) {
+    min_linear_cost_factor_ =
+        std::min(min_linear_cost_factor_, cost_factors.sort_and_find_smallest());
   }
 }
 
@@ -578,6 +588,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty,
                           warnings);
 
+  JSON_PBF_RANGED_DEFAULT(co, cfg.use_distance_, json, "/use_distance", use_distance, warnings);
   // service_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_factor_, json, "/service_factor", service_factor, warnings);
 

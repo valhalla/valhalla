@@ -11,7 +11,6 @@
 #include "mjolnir/util.h"
 #include "scoped_timer.h"
 
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <algorithm>
@@ -91,6 +90,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
   uint32_t opp_index = absurd_index;
   const DirectedEdge* directededge = end_tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+
     // Reject edge if access does not match or the edge does not point
     // back to the startnode
     if (directededge->endnode() != startnode ||
@@ -145,7 +145,11 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
       if (edge.is_shortcut()) {
         // Shortcut edges - use must match (or both are links)
         if ((directededge->link() && edge.link()) || (directededge->use() == edge.use())) {
-          match = true;
+          auto shape1 = tile->edgeinfo(&edge).shape();
+          auto shape2 = end_tile->edgeinfo(directededge).shape();
+          if (shapes_match(shape1, shape2)) {
+            match = true;
+          }
         }
       } else {
         // Regular edges - match wayids and edge info offset (if in same tile)
@@ -212,17 +216,13 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
 #ifdef LOGGING_LEVEL_ERROR
       PointLL ll = end_tile->get_node_ll(endnode);
       if (edge.is_shortcut()) {
-        LOG_ERROR(
-            (boost::format(
-                 "No opposing shortcut edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5%") %
-             ll.lat() % ll.lng() % edge.length() % startnode % edge.endnode())
-                .str());
+        LOG_ERROR("No opposing shortcut edge at LL={},{} Length = {} Startnode {} EndNode {}",
+                  ll.lat(), ll.lng(), edge.length(), startnode, edge.endnode());
       } else {
-        LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% "
-                                 "EndNode %5% WayID %6% EdgeInfoOffset %7%") %
-                   ll.lat() % ll.lng() % edge.length() % startnode % edge.endnode() % wayid %
-                   edge.edgeinfo_offset())
-                      .str());
+        LOG_ERROR("No opposing edge at LL={},{} Length = {} Startnode {} EndNode {} WayID {} "
+                  "EdgeInfoOffset {}",
+                  ll.lat(), ll.lng(), edge.length(), startnode, edge.endnode(), wayid,
+                  edge.edgeinfo_offset());
       }
 #endif
 
@@ -230,10 +230,9 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
       directededge = end_tile->directededge(nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
         if (edge.is_shortcut() == directededge->is_shortcut()) {
-          LOG_WARN((boost::format("    Length = %1% Endnode: %2% WayId = %3% EdgeInfoOffset = %4%") %
-                    directededge->length() % directededge->endnode() %
-                    end_tile->edgeinfo(directededge).wayid() % directededge->edgeinfo_offset())
-                       .str());
+          LOG_WARN("    Length = {} Endnode: {} WayId = {} EdgeInfoOffset = {}",
+                   directededge->length(), directededge->endnode(),
+                   end_tile->edgeinfo(directededge).wayid(), directededge->edgeinfo_offset());
           n++;
         }
       }
@@ -270,8 +269,7 @@ void validate(
   // default to false if the config does not contain any value
   // TODO(chris): enable this line once bounding circle computation is
   // finalized
-  bool build_bounding_circles =
-      false; // pt.get<bool>("mjolnir.data_processing.build_bounding_circles", true);
+  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles", true);
 
   // vector to hold densities for each level
   std::vector<std::vector<float>> densities(numLevels);
@@ -581,8 +579,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   std::string tile_dir = hierarchy_properties.get<std::string>("tile_dir");
   // TODO(chris): enable this line once bounding circle computation is
   // finalized
-  bool build_bounding_circles =
-      false; // pt.get<bool>("mjolnir.data_processing.build_bounding_circles", true);
+  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles", true);
 
   // Create a randomized queue of tiles (at all levels) to work from
   std::deque<GraphId> tilequeue;
@@ -661,9 +658,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   // print dupcount and find densities
   for (uint8_t level = 0; level < TileHierarchy::levels().size(); level++) {
     // Print duplicates info for level
-    LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%") % std::to_string(level) %
-              duplicates[level])
-                 .str());
+    LOG_WARN("Possible duplicates at level: {} = {}", std::to_string(level), duplicates[level]);
     if (densities[level].empty()) {
       continue;
     }

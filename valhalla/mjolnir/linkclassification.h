@@ -14,7 +14,7 @@ namespace mjolnir {
 void ReclassifyLinks(const std::string& ways_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
-                     const std::string& way_nodes_file,
+                     const std::string& edge_shapes_file,
                      const OSMData& osmdata,
                      bool reclassify_links,
                      bool infer_turn_channels);

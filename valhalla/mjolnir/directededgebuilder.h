@@ -38,7 +38,7 @@ public:
   DirectedEdgeBuilder(const OSMWay& way,
                       const baldr::GraphId& endnode,
                       const bool forward,
-                      const uint32_t length,
+                      const double length,
                       const uint32_t speed,
                       const uint32_t truck_speed,
                       const baldr::Use use,

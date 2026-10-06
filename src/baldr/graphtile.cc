@@ -195,7 +195,7 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data,
     file.close();
     if (file.fail())
       success = false;
-    std::filesystem::rename(tmp_location, disk_location, ec);
+    filesystem_utils::rename_replace(tmp_location, disk_location, ec);
     if (ec)
       success = false;
   } else {
@@ -267,9 +267,8 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
   tile_getter_t::GET_response_t result;
   if (range_size == 0) {
     // requesting plain tiles
-    auto fname =
-        valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
-                                               valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
+    auto fname = valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
+                                                        valhalla::baldr::SUFFIX_NON_COMPRESSED);
     result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
   } else {
     // or HTTP range on a tar
@@ -487,7 +486,6 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
 
 std::string GraphTile::FileSuffix(const GraphId& graphid,
                                   const std::string& fname_suffix,
-                                  bool is_file_path,
                                   const TileLevel* tiles) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
@@ -529,7 +527,8 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
   const size_t tile_id_strlen = max_length + max_length / 3;
   assert(tile_id_strlen % 4 == 0);
 
-  const char separator = is_file_path ? std::filesystem::path::preferred_separator : '/';
+  // always forward slash: valid for windows file apis too, and required for urls and tar entries
+  const char separator = '/';
 
   std::string tile_id_str(tile_id_strlen, '0');
   size_t ind = tile_id_strlen - 1;
@@ -545,110 +544,6 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
   }
 
   return std::to_string(graphid.level()) + tile_id_str + fname_suffix;
-}
-
-// Get the tile Id given the full path to the file.
-GraphId GraphTile::GetTileId(const std::string& fname) {
-  std::unordered_set<std::string::value_type> allowed{std::filesystem::path::preferred_separator,
-                                                      '0',
-                                                      '1',
-                                                      '2',
-                                                      '3',
-                                                      '4',
-                                                      '5',
-                                                      '6',
-                                                      '7',
-                                                      '8',
-                                                      '9'};
-  // we require slashes
-  auto pos = fname.find_last_of(std::filesystem::path::preferred_separator);
-  if (pos == fname.npos) {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // swallow numbers until you reach the end or a dot
-  for (; pos < fname.size(); ++pos) {
-    if (allowed.find(fname[pos]) == allowed.cend()) {
-      break;
-    }
-  }
-  allowed.erase(static_cast<std::string::value_type>(std::filesystem::path::preferred_separator));
-
-  // if you didnt reach the end and it wasnt a dot then this isnt valid
-  if (pos != fname.size() && fname[pos] != '.') {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // run backwards while you find an allowed char but stop if not 3 digits between slashes
-  std::vector<uint32_t> digits;
-  auto last = pos;
-  while (--pos < last) {
-    auto c = fname[pos];
-    // invalid char showed up
-    if (allowed.find(c) == allowed.cend()) {
-      throw std::runtime_error("Invalid tile path: " + fname);
-    }
-
-    // if its the last thing or the next one is a separator thats another digit
-    if (pos == 0 || fname[pos - 1] == std::filesystem::path::preferred_separator) {
-      // this is not 3 or 1 digits so its wrong
-      auto dist = last - pos;
-      if (dist != 3 && dist != 1) {
-        throw std::runtime_error("Invalid tile path: " + fname);
-      }
-      // we'll keep this
-      auto i = atoi(fname.substr(pos, dist).c_str());
-      digits.push_back(i);
-      // and we'll stop if it was the level (always a single digit see GraphId)
-      if (dist == 1) {
-        break;
-      }
-      // next
-      last = --pos;
-    }
-  }
-
-  // if the first thing isnt a valid level bail
-  if (digits.back() >= TileHierarchy::levels().size() &&
-      digits.back() != TileHierarchy::GetTransitLevel().level) {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // get the level info
-  uint32_t level = digits.back();
-  digits.pop_back();
-  const auto& tile_level = level == TileHierarchy::GetTransitLevel().level
-                               ? TileHierarchy::GetTransitLevel()
-                               : TileHierarchy::levels()[level];
-
-  // get the number of sub directories that we should have
-  uint32_t max_id = static_cast<uint32_t>(tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1);
-  size_t parts = static_cast<size_t>(std::log10(std::max(1u, max_id))) + 1;
-  if (parts % 3 != 0) {
-    parts += 3 - (parts % 3);
-  }
-  parts /= 3;
-
-  // bail if its the wrong number of sub dirs
-  if (digits.size() != parts) {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // parse the id of the tile
-  int multiplier = 1;
-  uint32_t id = 0;
-  for (auto digit : digits) {
-    id += digit * multiplier;
-    multiplier *= 1000;
-  }
-
-  // if after parsing them the number is out of bounds bail
-  if (id > max_id) {
-    throw std::runtime_error("Invalid tile path: " + fname);
-  }
-
-  // you've passed the test enjoy your id
-  return {id, level, 0};
 }
 
 // Get the bounding box of this graph tile.

@@ -214,22 +214,13 @@ public:
    * Gets the directory like filename suffix given the graphId
    * @param  graphid      Graph Id to construct filename.
    * @param  gzipped      Modifies the suffix if you expect gzipped file names
-   * @param  is_file_path Determines the 1000 separator to be used for file or URL access
    * @param  tiles        Allows passing a custom tile definition rather than pulling from static
    *                      hierarchy, which is useful for testing
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
   static std::string FileSuffix(const GraphId& graphid,
                                 const std::string& suffix = valhalla::baldr::SUFFIX_NON_COMPRESSED,
-                                bool is_file_path = true,
                                 const TileLevel* tiles = nullptr);
-
-  /**
-   * Get the tile Id given the full path to the file.
-   * @param  fname    Filename with complete path.
-   * @return  Returns the tile Id.
-   */
-  static GraphId GetTileId(const std::string& fname);
 
   /**
    * Get the bounding box of this graph tile.

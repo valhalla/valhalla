@@ -59,7 +59,7 @@ struct NodeStatusInfo {
  * specified road classification.
  */
 void ReclassifyFerryConnections(const std::string& ways_file,
-                                const std::string& way_nodes_file,
+                                const std::string& edge_shapes_file,
                                 const std::string& nodes_file,
                                 const std::string& edges_file);
 

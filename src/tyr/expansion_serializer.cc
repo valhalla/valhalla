@@ -79,6 +79,8 @@ std::string serializeExpansion(Api& request, const std::string& algo) {
     }
     if (exp_props.count(Options_ExpansionProperties_travel_mode))
       writer("travel_mode", TravelMode_Enum_Name(expansion.travel_modes(i)));
+    if (exp_props.count(Options_ExpansionProperties_expansion_index))
+      writer("expansion_index", static_cast<uint64_t>(expansion.expansion_index(i)));
 
     writer.end_object(); // properties
     writer.end_object(); // feature

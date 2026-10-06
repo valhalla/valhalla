@@ -1,36 +1,13 @@
 #pragma once
 
-#include <valhalla/baldr/graphconstants.h>
-
 #include <cstdint>
-#include <string>
+#include <string_view>
 #include <vector>
 
 namespace valhalla {
 namespace mjolnir {
 
-/**
- * get the dow mask from the provided string.  try to handle most inputs
- * @param   dow entered by a user
- * @return dow mask
- */
-uint8_t get_dow_mask(const std::string& dow);
-
-/**
- * get the dow from the provided string.  try to handle most inputs
- * @param   dow entered by a user
- * @return DOW
- */
-baldr::DOW get_dow(const std::string& dow);
-
-/**
- * Get the month from the input string.Try to handle most inputs.
- * @param   month entered by a user
- * @return MONTH
- */
-baldr::MONTH get_month(const std::string& month);
-
-std::vector<uint64_t> get_time_range(const std::string& condition);
+std::vector<uint64_t> get_time_range(std::string_view condition);
 
 } // namespace mjolnir
 } // namespace valhalla
