@@ -93,11 +93,17 @@ int main(int argc, char** argv) {
     if (!result.count("tiles")) {
       std::cerr << "Tile file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
-    } else {
-      for (const auto& tile : result["concurrency"].as<std::vector<std::string>>()) {
-        if (std::filesystem::exists(tile) && std::filesystem::is_regular_file(tile))
-          return EXIT_FAILURE;
-      }
+    }
+
+    bool any_valid = false;
+    for (const auto& tile : result["tiles"].as<std::vector<std::string>>()) {
+      if (std::filesystem::exists(tile) && std::filesystem::is_regular_file(tile))
+        any_valid = true;
+      else
+        std::cerr << "Invalid tile file: " << tile << "\n";
+    }
+
+    if (!any_valid) {
       std::cerr << "All tile files are invalid\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }

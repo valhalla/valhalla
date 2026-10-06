@@ -38,13 +38,15 @@ cd build && cmake --build . -j$(nproc) --target run-gurka
 cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_route
 
-# Format — or use clang-format-11 directly `clang-format-11 -i src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc`
+# Format — or use clang-format-11 directly `clang-format-11 -i valhalla/**/*.h src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc`
 ./scripts/format.sh
 ```
 
 **Build parallelism:** `-j$(nproc)` works on Linux; on macOS use `-j$(sysctl -n hw.logicalcpu)` or install `coreutils` for `nproc`. Alternatively, configure CMake with Ninja (`cmake -G Ninja ..` or `CMAKE_GENERATOR=Ninja`), which parallelizes automatically without needing `-j`.
 
 **IMPORTANT:** Avoid `make check` — it's extremely slow for the development loop. Run only the relevant tests.
+
+**IMPORTANT:** `LOG_DEBUG`/`LOG_TRACE` expand to nothing at the default `LOGGING_LEVEL=INFO`, so their arguments are never type-checked. After touching one, re-compile the TU with `-DLOGGING_LEVEL_ALL` (e.g. take its command from `build/compile_commands.json`, add the define and `-o /dev/null`) — otherwise a broken `std::format` call ships unnoticed.
 
 ### Key CMake Options
 
@@ -149,6 +151,8 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | How edges/nodes get their properties during tile build | `src/mjolnir/graphbuilder.cc`, `src/mjolnir/graphenhancer.cc` |
 | Adding new per-edge data to tiles | `TaggedValue` enum in `valhalla/baldr/graphconstants.h`, stored in `EdgeInfo` name/tag list (`valhalla/baldr/edgeinfo.h`) |
 | Whether a vehicle type can use an edge, costing weights | `src/sif/` — each model has its own file (e.g., `autocost.cc`, `bicyclecost.cc`). See `docs/docs/concepts/costing/dynamic-costing.md` |
+| Conditional access (`*:conditional=... @ (...)`) | Parsed to `AccessType` in `src/mjolnir/pbfgraphparser.cc`, evaluated in `DynamicCost::EvaluateRestrictions` (`valhalla/sif/dynamiccost.h`). `destination` becomes `kDestinationAllowed`; while it is active the edge **is** a destination-only edge — same `allow_destination_only_` check, same `destination_only_penalty`, same `EdgeLabel::dest_only_` chain as a regular destination-only edge. There is no separate rule for it |
+| Time-dependent transition penalties | `TransitionCost`/`TransitionCostReverse` carry no timestamp and no `GraphId`, so never resolve time inside them — resolve it in `Allowed()` (which has both) and pass the result down as a defaulted `bool`. Default it so untouched call sites keep using the edge's own destonly flag. `TransitionCostReverse` maps `opp_edge` to `base_transition_cost`'s `pred` and `opp_pred_edge` to its `edge` — name reverse parameters `opp_*` or the two get transposed silently |
 | Routing algorithm behavior | `src/thor/bidirectional_astar.cc`, `unidirectional_astar.cc`, `timedep_forward.cc`, `timedep_reverse.cc`. See `docs/docs/contributing/architecture/thor/path-algorithm.md` |
 | Algorithm selection and time-dependent fallback | `src/thor/route_action.cc` — BidirectionalAStar by default; UnidirectionalAStar for `depart_at`/`arrive_by` under `max_timedep_distance` (default 500 km) |
 | Adding new top-level request parameters | Add field to `Options` in `proto/options.proto`, parse from JSON in `src/worker.cc` (around the `matrix_locations` / `avoid_polygons` section). Costing-specific params go in `Costing.Options` and are parsed in `src/sif/dynamiccost.cc` (`ParseBaseCostOptions`) or individual costing files |
