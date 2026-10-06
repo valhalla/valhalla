@@ -653,33 +653,72 @@ TEST(Standalone, AccessForwardBackward) {
   }
 }
 
-TEST(Standalone, ModeBackwardOverrides) {
+TEST(Standalone, ModeOverridesBackward) {
   const std::string ascii_map = R"(
     A----B----C
   )";
 
   const gurka::ways ways = {
       {"AB",
-       {{"highway", "primary"},
-        {"vehicle:backward", "no"},
-        {"bus:backward", "designated"},
-        {"taxi:backward", "yes"}}},
+       {
+           {"highway", "primary"},
+           {"vehicle:backward", "no"},
+           {"bus:backward", "designated"},
+           {"taxi:backward", "yes"},
+           {"hgv:backward", "designated"},
+       }},
       {"BC", {{"highway", "primary"}, {"vehicle:backward", "yes"}, {"bus:backward", "no"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_access_mode_backward", build_config);
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/gurka_access_mode_backward", build_config);
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
   const auto* BA = std::get<3>(gurka::findEdge(reader, layout, "AB", "B"));
   EXPECT_FALSE(BA->forwardaccess() & baldr::kAutoAccess);
   EXPECT_TRUE(BA->forwardaccess() & baldr::kBusAccess);
   EXPECT_TRUE(BA->forwardaccess() & baldr::kTaxiAccess);
+  EXPECT_TRUE(BA->forwardaccess() & baldr::kTruckAccess);
 
   const auto* CB = std::get<3>(gurka::findEdge(reader, layout, "BC", "C"));
   EXPECT_TRUE(CB->forwardaccess() & baldr::kAutoAccess);
   EXPECT_FALSE(CB->forwardaccess() & baldr::kBusAccess);
+}
+
+TEST(Standalone, ModeOverridesForward) {
+  const std::string ascii_map = R"(
+    A----B----C
+  )";
+
+  const gurka::ways ways = {
+      {"AB",
+       {
+           {"highway", "primary"},
+           {"vehicle:forward", "no"},
+           {"bus:forward", "designated"},
+           {"taxi:forward", "yes"},
+           {"hgv:forward", "designated"},
+       }},
+      {"BC", {{"highway", "primary"}, {"vehicle:forward", "yes"}, {"bus:forward", "no"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/gurka_access_mode_backward", build_config);
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  const auto* AB = std::get<3>(gurka::findEdge(reader, layout, "AB", "A"));
+  EXPECT_FALSE(AB->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_TRUE(AB->forwardaccess() & baldr::kBusAccess);
+  EXPECT_TRUE(AB->forwardaccess() & baldr::kTaxiAccess);
+  EXPECT_TRUE(AB->forwardaccess() & baldr::kTruckAccess);
+
+  const auto* BC = std::get<3>(gurka::findEdge(reader, layout, "BC", "B"));
+  EXPECT_TRUE(BC->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_FALSE(BC->forwardaccess() & baldr::kBusAccess);
 }
 
 TEST(Standalone, ViaFerrata) {
