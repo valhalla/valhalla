@@ -45,6 +45,8 @@ public:
                     const std::string& way_nodes_file,
                     const std::string& nodes_file,
                     const std::string& edges_file,
+                    const std::string& edge_shapes_file,
+                    const std::string& edge_node_ids_file,
                     const std::string& complex_from_restriction_file,
                     const std::string& complex_to_restriction_file,
                     const std::string& linguistic_node_file,

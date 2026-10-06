@@ -17,7 +17,7 @@ Since this service wraps other services, the request format mostly follows the o
 | `action` (required)               | The service whose expansion should be tracked. Currently one of `route`, `isochrone` or `sources_to_targets`. |
 | `skip_opposites` (optional)       | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. Default false. |
 | `dedupe` (optional)               | If set to `true`, the output will contain each edge only once, significantly reducing the response size. The expansion will keep track of already visited edges and override their properties, ensuring that only the one with higher edge state is returned. Default `false`.                                     |
-| `expansion_properties` (optional) | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "duration", "distance", "cost", "edge_id", "pred_edge_id", "edge_status" or "expansion_type". **Note**, that each additional property will increase the output size by minimum ~ 10%. By default an empty `properties` object is returned. |
+| `expansion_properties` (optional) | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "duration", "distance", "cost", "edge_id", "pred_edge_id", "edge_status", "expansion_type" or "expansion_index". **Note**, that each additional property will increase the output size by minimum ~ 10%. By default an empty `properties` object is returned. |
 
 The `expansion_properties` choices are as follows:
 
@@ -32,6 +32,7 @@ The `expansion_properties` choices are as follows:
 | `expansion_type`   | Returns the expansion direction from which the edge was encountered. 0 for forward, 1 for reverse. |
 | `flow_sources`   | Returns which speed sources were used on the edge. Only populated when an edge is first reached. Adds the following boolean properties in JSON: `["flow_sources_current", "flow_sources_predicted", "flow_sources_free_flow", "flow_sources_constrained"]`. |
 | `travel_modes`   | Returns the travel mode with which the edge was traversed. One of `{"drive", "pedestrian", "bicycle", "transit"}`. |
+| `expansion_index`   | Returns the index of the source or target the edge was expanded from, i.e. which of the trees the edge belongs to (use `expansion_type` to tell sources from targets). Only meaningful for `"action": "sources_to_targets"` with the CostMatrix algorithm, 0 otherwise. |
 
 An example request is:
 

@@ -170,8 +170,8 @@ void cut_segments(const std::vector<MatchResult>& match_results,
       // and we still need to mark the segments in such a way that we which match points lie on them
       if (search_segment->first_match_idx < 0)
         search_segment->first_match_idx = curr_idx;
-      if (search_segment->last_match_idx < 0)
-        search_segment->last_match_idx = curr_idx;
+      // always update this index so the range covers every interpolated point, not just the first
+      search_segment->last_match_idx = curr_idx;
       // we are done marking it no need to split this one
       continue;
     }

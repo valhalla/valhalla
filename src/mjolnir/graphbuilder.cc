@@ -15,13 +15,13 @@
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/ferry_connections.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/hilbert.h"
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
 #include "mjolnir/util.h"
 #include "scoped_timer.h"
 
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <filesystem>
@@ -51,10 +51,10 @@ SortGraph(const std::string& nodes_file, const std::string& edges_file, const ui
   nodes.sort(
       [](const Node& a, const Node& b) {
         if (a.graph_id == b.graph_id) {
-          if (a.grid_id == b.grid_id) {
+          if (a.sort_key == b.sort_key) {
             return a.node.osmid_ < b.node.osmid_;
           } else {
-            return a.grid_id < b.grid_id;
+            return a.sort_key < b.sort_key;
           }
         }
         return a.graph_id < b.graph_id;
@@ -152,13 +152,60 @@ SortGraph(const std::string& nodes_file, const std::string& edges_file, const ui
   return tiles;
 }
 
+// Extracts what the edge shape readers need from way_nodes, entry for entry, so that
+// Edge::llindex_ addresses files small enough to stay in the page cache under random reads.
+void BuildEdgeShapes(const std::string& way_nodes_file,
+                     const std::string& edge_shapes_file,
+                     const std::string& edge_node_ids_file,
+                     const bool keep_node_ids,
+                     const uint32_t concurrency) {
+  SCOPED_TIMER();
+  const size_t count = std::filesystem::file_size(way_nodes_file) / sizeof(OSMWayNode);
+  if (count == 0) {
+    return;
+  }
+  LOG_INFO("Building edge shapes from " + std::to_string(count) + " way nodes...");
+
+  mem_map<OSMWayNode> way_nodes;
+  way_nodes.map_readonly(way_nodes_file, count);
+  mem_map<OSMWayNodeShape> shapes;
+  shapes.create(edge_shapes_file, count);
+  mem_map<uint64_t> node_ids;
+  if (keep_node_ids) {
+    node_ids.create(edge_node_ids_file, count);
+  }
+
+  // entries are independent, so chunks of them are converted in parallel
+  const size_t thread_count = std::max(1u, concurrency);
+  const size_t chunk_size = (count + thread_count - 1) / thread_count;
+  std::vector<std::thread> threads;
+  threads.reserve(thread_count);
+  for (size_t t = 0; t < thread_count; ++t) {
+    threads.emplace_back([&, t]() {
+      const size_t begin = t * chunk_size;
+      const size_t end = std::min(count, (t + 1) * chunk_size);
+      for (size_t i = begin; i < end; ++i) {
+        const OSMNode& node = way_nodes.get()[i].node;
+        shapes.get()[i] = {.lng7 = node.lng7_, .lat7 = node.lat7_};
+        if (keep_node_ids) {
+          // no OSM object has id 0, so it marks the synthetic nodes to be skipped later on
+          node_ids.get()[i] = node.synthetic() ? 0 : node.osmid_;
+        }
+      }
+    });
+  }
+  for (auto& thread : threads) {
+    thread.join();
+  }
+}
+
 // Construct edges in the graph and assign nodes to tiles.
 void ConstructEdges(const std::string& ways_file,
                     const std::string& way_nodes_file,
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
-                    const std::function<uint32_t(const OSMNode&)>& grid_id_predicate,
+                    const std::function<uint32_t(const OSMNode&)>& sort_key_predicate,
                     const bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
 
@@ -217,7 +264,7 @@ void ConstructEdges(const std::string& ways_file,
     way_node.node.link_edge_ = way.link();
     way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
     nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1),
-                     graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
+                     graph_id_predicate(way_node.node), sort_key_predicate(way_node.node)});
 
     // Iterate through the nodes of the way until we find an intersection
     while (current_way_node_index < way_nodes.size()) {
@@ -238,7 +285,7 @@ void ConstructEdges(const std::string& ways_file,
         // edge until the next iteration of the loop, ie once the edge becomes prev_edge
         uint32_t end_of = static_cast<uint32_t>(edges.size() + prev_edge.is_valid());
         nodes.push_back({way_node.node, static_cast<uint32_t>(-1), end_of,
-                         graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
+                         graph_id_predicate(way_node.node), sort_key_predicate(way_node.node)});
 
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
@@ -466,7 +513,8 @@ std::unordered_map<uint64_t, uint32_t> ComputeFerrySpeeds(const std::string& way
 }
 
 void BuildTileSet(const std::string& ways_file,
-                  const std::string& way_nodes_file,
+                  const std::string& edge_shapes_file,
+                  const std::string& edge_node_ids_file,
                   const std::string& nodes_file,
                   const std::string& edges_file,
                   const std::string& complex_restriction_from_file,
@@ -482,7 +530,7 @@ void BuildTileSet(const std::string& ways_file,
                   std::promise<DataQuality>& result) {
 
   sequence<OSMWay> ways(ways_file, false);
-  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
+  sequence<OSMWayNodeShape> edge_shapes(edge_shapes_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
   sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
@@ -516,20 +564,28 @@ void BuildTileSet(const std::string& ways_file,
   // floats we need to change into PointLL to get length of an edge
   auto keep_all_nodes = pt.get<bool>("keep_all_osm_node_ids", false);
   auto graph_nodes_only = pt.get<bool>("keep_osm_node_ids", false);
+  // osm node ids of the shape points are only extracted from way_nodes when they are kept
+  std::optional<sequence<uint64_t>> edge_node_ids;
+  if (keep_all_nodes || graph_nodes_only) {
+    edge_node_ids.emplace(edge_node_ids_file, false);
+  }
   std::vector<PointLL> shape;
   std::vector<uint64_t> osm_node_ids;
   std::string encoded_node_ids(1, static_cast<std::string::value_type>(TaggedValue::kOSMNodeIds));
-  const auto edge_shape = [&way_nodes, &shape, &osm_node_ids, &encoded_node_ids, keep_all_nodes,
-                           graph_nodes_only](size_t idx, const size_t count) {
+  const auto edge_shape = [&edge_shapes, &edge_node_ids, &shape, &osm_node_ids, &encoded_node_ids,
+                           keep_all_nodes, graph_nodes_only](size_t idx, const size_t count) {
     shape.reserve(count);
     shape.clear();
     osm_node_ids.reserve(graph_nodes_only ? 2 : count);
     osm_node_ids.clear();
-    for (size_t i = 0; i < count; ++i) {
-      auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.latlng());
+    for (size_t i = 0; i < count; ++i, ++idx) {
+      shape.emplace_back((*edge_shapes[idx]).latlng());
       if (keep_all_nodes || (graph_nodes_only && (i == 0 || i == count - 1))) {
-        osm_node_ids.push_back(node.osmid_);
+        // zeroes mark synthetic nodes, whose ids aren't real OSM ids
+        const uint64_t node_id = *(*edge_node_ids)[idx];
+        if (node_id != 0) {
+          osm_node_ids.push_back(node_id);
+        }
       }
     }
     if (!osm_node_ids.empty()) {
@@ -945,9 +1001,10 @@ void BuildTileSet(const std::string& ways_file,
               bike_network = w.bike_network();
             }
 
+            const uint64_t wayid = w.way_id() > osmdata.max_way_id ? 0 : w.way_id();
             edge_info_offset =
                 graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                      (*nodes[target]).graph_id, w.way_id(), kNoElevationData,
+                                      (*nodes[target]).graph_id, wayid, kNoElevationData,
                                       bike_network, speed_limit, shape, names, tagged_values,
                                       linguistics, types, added, (diff_names || dual_refs));
 
@@ -980,10 +1037,10 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           // Add a directed edge and get a reference to it
-          DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
-                                 static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
-                                 truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
-                                 n, has_signal, has_stop, has_yield,
+          DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
+                                 speed, truck_speed, use,
+                                 static_cast<RoadClass>(edge.attributes.importance), n, has_signal,
+                                 has_stop, has_yield,
                                  ((has_stop || has_yield) ? node.minor() : false), restrictions,
                                  bike_network, edge.attributes.reclass_ferry,
                                  static_cast<RoadClass>(edge.attributes.importance_hierarchy));
@@ -1361,14 +1418,12 @@ void BuildTileSet(const std::string& ways_file,
       graphtile.StoreTileData();
 
       // Made a tile
-      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile.first %
-                 graphtile.header_builder().end_offset())
-                    .str());
+      LOG_DEBUG("Wrote tile {}: {} bytes", tile.first, graphtile.header_builder().end_offset());
     } // Whatever happens in Vegas..
     catch (std::exception& e) {
       // ..gets sent back to the main thread
       result.set_exception(std::current_exception());
-      LOG_ERROR((boost::format("Failed tile %1%: %2%") % tile.first % e.what()).str());
+      LOG_ERROR("Failed tile {}: {}", tile.first, e.what());
       return;
     }
   }
@@ -1382,6 +1437,8 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const OSMData& osmdata,
                      const std::string& ways_file,
                      const std::string& way_nodes_file,
+                     const std::string& edge_shapes_file,
+                     const std::string& edge_node_ids_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
                      const std::string& complex_from_restriction_file,
@@ -1418,9 +1475,9 @@ void BuildLocalTiles(const unsigned int thread_count,
   for (size_t i = 0; i < threads.size(); ++i) {
     // Make the thread
     threads[i] =
-        std::make_shared<std::thread>(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
-                                      std::cref(nodes_file), std::cref(edges_file),
-                                      std::cref(complex_from_restriction_file),
+        std::make_shared<std::thread>(BuildTileSet, std::cref(ways_file), std::cref(edge_shapes_file),
+                                      std::cref(edge_node_ids_file), std::cref(nodes_file),
+                                      std::cref(edges_file), std::cref(complex_from_restriction_file),
                                       std::cref(complex_to_restriction_file),
                                       std::cref(linguistic_node_file), std::cref(tile_dir),
                                       std::cref(osmdata), std::ref(tile_queue), std::ref(tile_lock),
@@ -1454,32 +1511,15 @@ void BuildLocalTiles(const unsigned int thread_count,
 
 namespace valhalla::mjolnir {
 
-// Returns the grid Id within the tile. A tile is subdivided into a nxn grid.
-// The grid Id within the tile is used to sort nodes spatially.
-uint32_t GetGridId(const OSMNode& node,
-                   const midgard::Tiles<midgard::PointLL>& tiling,
-                   const uint32_t grid_divisions) {
-  // By default grid_divisions is set to 0 to indicate no spatial sorting within a tile
-  if (grid_divisions == 0) {
+// Key used to sort nodes spatially within a tile.
+uint32_t GetSortKey(const OSMNode& node, const midgard::Tiles<midgard::PointLL>& tiling) {
+  const auto ll = node.latlng();
+  const auto tile_id = tiling.TileId(ll);
+  if (tile_id < 0) {
+    LOG_ERROR("GetSortKey: Invalid tile id, node osm id = " + std::to_string(node.osmid_));
     return 0;
   }
-
-  auto tile_id = tiling.TileId(node.latlng());
-  if (tile_id >= 0) {
-    auto base_ll = tiling.Base(tile_id);
-    float grid_size = tiling.TileSize() / static_cast<float>(grid_divisions);
-    uint32_t row = static_cast<uint32_t>((node.latlng().lat() - base_ll.lat()) / grid_size);
-    uint32_t col = static_cast<uint32_t>((node.latlng().lng() - base_ll.lng()) / grid_size);
-    if (row > grid_divisions || col > grid_divisions) {
-      LOG_ERROR("grid row = " + std::to_string(row) + " col = " + std::to_string(col) +
-                " node osm id = " + std::to_string(node.osmid_));
-      return 0;
-    }
-    return (row * grid_divisions + col);
-  } else {
-    LOG_ERROR("GetGridId: Invalid tile id, node osm id = " + std::to_string(node.osmid_));
-    return 0;
-  }
+  return TileHilbertIndex(ll, tiling, tile_id);
 }
 
 std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::ptree& pt,
@@ -1490,22 +1530,12 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
   SCOPED_TIMER();
   uint8_t level = TileHierarchy::levels().back().level;
   auto tiling = TileHierarchy::get_tiling(level);
-  uint32_t grid_divisions =
-      pt.get<unsigned int>("mjolnir.data_processing.grid_divisions_within_tile", 0);
-  if (grid_divisions > 0) {
-    LOG_INFO("Sort nodes spatially within each tile using nxn grids where n = " +
-             std::to_string(grid_divisions));
-  } else {
-    LOG_INFO("Spatial sorting of nodes within each tile is disabled");
-  }
 
   // Make the edges and nodes in the graph
   ConstructEdges(
       ways_file, way_nodes_file, nodes_file, edges_file,
       [&level](const OSMNode& node) { return TileHierarchy::GetGraphId(node.latlng(), level); },
-      [&tiling, &grid_divisions](const OSMNode& node) {
-        return GetGridId(node, tiling, grid_divisions);
-      },
+      [&tiling](const OSMNode& node) { return GetSortKey(node, tiling); },
       pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   const uint32_t concurrency =
@@ -1520,19 +1550,28 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& way_nodes_file,
                          const std::string& nodes_file,
                          const std::string& edges_file,
+                         const std::string& edge_shapes_file,
+                         const std::string& edge_node_ids_file,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
                          const std::string& linguistic_node_file,
                          const std::map<GraphId, size_t>& tiles) {
+  SCOPED_TIMER();
+
+  const uint32_t concurrency =
+      std::max(1u, pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+  const bool keep_node_ids = pt.get<bool>("mjolnir.keep_all_osm_node_ids", false) ||
+                             pt.get<bool>("mjolnir.keep_osm_node_ids", false);
+  BuildEdgeShapes(way_nodes_file, edge_shapes_file, edge_node_ids_file, keep_node_ids, concurrency);
+
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified. ReclassifyLinks also infers turn channels
   // so we always want to do this unless reclassify_links and infer_turn_channels
   // are both false.
-  SCOPED_TIMER();
   bool reclassify_links = pt.get<bool>("mjolnir.reclassify_links", true);
   bool infer_turn_channels = pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true);
   if (reclassify_links || infer_turn_channels) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata, reclassify_links,
+    ReclassifyLinks(ways_file, nodes_file, edges_file, edge_shapes_file, osmdata, reclassify_links,
                     infer_turn_channels);
   } else {
     LOG_WARN("Not reclassifying link graph edges or inferring turn channels");
@@ -1541,7 +1580,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // Do not reclassify ferry connection edges if no hierarchies are built. If reclassifying,
   // we use RoadClass::kPrimary (highway classification) as cutoff.
   if (pt.get<bool>("mjolnir.hierarchy", true)) {
-    ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
+    ReclassifyFerryConnections(ways_file, edge_shapes_file, nodes_file, edges_file);
   } else {
     LOG_WARN("Not reclassifying ferry connections since no hierarches are being created");
   }
@@ -1554,9 +1593,9 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
 
   auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
 
-  BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                  complex_from_restriction_file, complex_to_restriction_file, linguistic_node_file,
-                  tiles, tile_dir, stats, pt);
+  BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, edge_shapes_file, edge_node_ids_file,
+                  nodes_file, edges_file, complex_from_restriction_file, complex_to_restriction_file,
+                  linguistic_node_file, tiles, tile_dir, stats, pt);
   stats.LogStatistics();
 }
 

@@ -38,13 +38,15 @@ cd build && cmake --build . -j$(nproc) --target run-gurka
 cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
   ./test/gurka/gurka_access && ./test/gurka/gurka_route
 
-# Format — or use clang-format-11 directly `clang-format-11 -i src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc`
+# Format — or use clang-format-11 directly `clang-format-11 -i valhalla/**/*.h src/**/*.h src/**/*.cc test/**/*.h test/**/*.cc`
 ./scripts/format.sh
 ```
 
 **Build parallelism:** `-j$(nproc)` works on Linux; on macOS use `-j$(sysctl -n hw.logicalcpu)` or install `coreutils` for `nproc`. Alternatively, configure CMake with Ninja (`cmake -G Ninja ..` or `CMAKE_GENERATOR=Ninja`), which parallelizes automatically without needing `-j`.
 
 **IMPORTANT:** Avoid `make check` — it's extremely slow for the development loop. Run only the relevant tests.
+
+**IMPORTANT:** `LOG_DEBUG`/`LOG_TRACE` expand to nothing at the default `LOGGING_LEVEL=INFO`, so their arguments are never type-checked. After touching one, re-compile the TU with `-DLOGGING_LEVEL_ALL` (e.g. take its command from `build/compile_commands.json`, add the define and `-o /dev/null`) — otherwise a broken `std::format` call ships unnoticed.
 
 ### Key CMake Options
 
@@ -149,11 +151,14 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | How edges/nodes get their properties during tile build | `src/mjolnir/graphbuilder.cc`, `src/mjolnir/graphenhancer.cc` |
 | Adding new per-edge data to tiles | `TaggedValue` enum in `valhalla/baldr/graphconstants.h`, stored in `EdgeInfo` name/tag list (`valhalla/baldr/edgeinfo.h`) |
 | Whether a vehicle type can use an edge, costing weights | `src/sif/` — each model has its own file (e.g., `autocost.cc`, `bicyclecost.cc`). See `docs/docs/concepts/costing/dynamic-costing.md` |
+| Conditional access (`*:conditional=... @ (...)`) | Parsed to `AccessType` in `src/mjolnir/pbfgraphparser.cc`, evaluated in `DynamicCost::EvaluateRestrictions` (`valhalla/sif/dynamiccost.h`). `destination` becomes `kDestinationAllowed`; while it is active the edge **is** a destination-only edge — same `allow_destination_only_` check, same `destination_only_penalty`, same `EdgeLabel::dest_only_` chain as a regular destination-only edge. There is no separate rule for it |
+| Time-dependent transition penalties | `TransitionCost`/`TransitionCostReverse` carry no timestamp and no `GraphId`, so never resolve time inside them — resolve it in `Allowed()` (which has both) and pass the result down as a defaulted `bool`. Default it so untouched call sites keep using the edge's own destonly flag. `TransitionCostReverse` maps `opp_edge` to `base_transition_cost`'s `pred` and `opp_pred_edge` to its `edge` — name reverse parameters `opp_*` or the two get transposed silently |
 | Routing algorithm behavior | `src/thor/bidirectional_astar.cc`, `unidirectional_astar.cc`, `timedep_forward.cc`, `timedep_reverse.cc`. See `docs/docs/contributing/architecture/thor/path-algorithm.md` |
 | Algorithm selection and time-dependent fallback | `src/thor/route_action.cc` — BidirectionalAStar by default; UnidirectionalAStar for `depart_at`/`arrive_by` under `max_timedep_distance` (default 500 km) |
 | Adding new top-level request parameters | Add field to `Options` in `proto/options.proto`, parse from JSON in `src/worker.cc` (around the `matrix_locations` / `avoid_polygons` section). Costing-specific params go in `Costing.Options` and are parsed in `src/sif/dynamiccost.cc` (`ParseBaseCostOptions`) or individual costing files |
 | How lat/lon maps to graph edges | `src/loki/search.cc` (bin search → projection → filtering → reachability) |
 | Turn-by-turn maneuver generation | `src/odin/maneuversbuilder.cc`, `src/odin/narrativebuilder.cc` |
+| Translations / narrative languages | `locales/` holds the gettext ground truth plus the JSONs generated from it: `valhalla.pot` is the hand-maintained English source (msgctxt = JSON path, en-US metadata in its header), one `.po` per language. `po_tools.py` reads them with its own stdlib parser; only `init` and `lint --fix`, which write `.po` files, need `polib` (`pip install polib`). The per-language JSONs are generated from them and committed as `locales/*.json`; the build only compiles those into `locales.h` with the pure-CMake `cmake/ValhallaBin2Header.cmake` (`src/odin/CMakeLists.txt`), so building needs no interpreter. **Regenerate with `python3 locales/po_tools.py po2json` and commit the JSONs with every `.pot`/`.po` change** — CI fails if they drift. To change English phrases: edit `valhalla.pot`, then `python3 locales/po_tools.py update`. Non-`phrases` sub-keys carry a `replacement` marker segment in their msgctxt (`instructions.bear.replacement.relative_directions.0`) so alphabetical sort keeps them right after their phrases block; `po2json` strips it, leaving odin's JSON structure/lookup keys unchanged. The marker isn't hand-written — `po_tools.py lint --fix` inserts it (and sorts). CI (`lint.yml` `locales` job) enforces `.pot`/`.po` syntax + placeholder lint + marker + sort order + that the committed JSONs match the gettext files. Full workflow: `docs/docs/contributing/locales.md` |
 | API response serialization (pbf → JSON/GPX/pbf output) | `src/tyr/` — `route_serializer_valhalla.cc`, `route_serializer_osrm.cc`, `matrix_serializer.cc`, and other `*_serializer.cc`. New output fields must be added to the `.proto` definition first, then to the serializer |
 | Error handling | `valhalla_exception_t` in `valhalla/exceptions.h`, codes in `src/exceptions.cc` (100s=Loki, 200s=Odin, 300s=Skadi, 400s=Thor, 500s=Tyr) |
 | Tile build warnings, data quality counters | `build_stats` singleton in `valhalla/mjolnir/util.h` — enum+array counters with `static_assert` safety. `log_stage()` in `src/mjolnir/util.cc` emits per-stage deltas to LOG_WARN + statsd gauges. Increment via `build_stats::get().increment(build_stats::kCounterName)` from any file |
@@ -348,7 +353,7 @@ test/              # Unit tests + test helpers (test.h/test.cc)
   gurka/           # Integration test framework (~136 tests)
   data/            # Test fixtures: OSM PBFs, admin DBs, traffic CSVs
 lua/               # OSM tag parsing scripts (graph.lua, admin.lua)
-locales/           # Translation JSON files (~30 languages)
+locales/           # Translations: valhalla.pot (English source) + gettext .po files (~30 languages) + the generated *.json the build embeds
 third_party/       # Vendored deps: rapidjson, date, googletest, etc.
 scripts/           # Dev scripts: format.sh, valhalla_build_config, CI
 ```

@@ -155,7 +155,6 @@ public:
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
    * @param  edge                        Pointer to a directed edge.
-   * @param  is_dest                     Is a directed edge the destination?
    * @param  pred                        Predecessor edge information.
    * @param  tile                        Current tile.
    * @param  edgeid                      GraphId of the directed edge.
@@ -169,14 +168,14 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const bool is_dest,
                        const EdgeLabel& pred,
                        const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx,
-                       uint8_t& destonly_access_restr_mask) const override;
+                       uint8_t& destonly_access_restr_mask,
+                       bool* edge_destonly) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -208,7 +207,8 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               uint8_t& restriction_idx,
-                              uint8_t& destonly_access_restr_mask) const override;
+                              uint8_t& destonly_access_restr_mask,
+                              bool* edge_destonly) const override;
 
   /**
    * Callback for Allowed doing mode  specific restriction checks
@@ -253,12 +253,12 @@ public:
    * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return Returns the cost and time (seconds)
    */
-  virtual Cost
-  TransitionCost(const baldr::DirectedEdge* edge,
-                 const baldr::NodeInfo* node,
-                 const EdgeLabel& pred,
-                 const graph_tile_ptr& tile,
-                 const std::function<LimitedGraphReader()>& reader_getter) const override;
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile,
+                              const std::function<LimitedGraphReader()>& reader_getter,
+                              const bool edge_destonly) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -279,11 +279,12 @@ public:
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
+                                     const EdgeLabel& pred_label,
                                      const graph_tile_ptr& tile,
-                                     const GraphId& pred_id,
                                      const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed,
-                                     const InternalTurn internal_turn) const override;
+                                     const InternalTurn internal_turn,
+                                     const bool opp_edge_destonly) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -349,7 +350,7 @@ TruckCost::TruckCost(const Costing& costing)
   get_base_costs(costing);
 
   low_class_penalty_ = costing_options.low_class_penalty();
-  low_class_factor_ = costing_options.low_class_factor();
+  low_class_factor_ = costing_options.low_class_factor() - 1.f; // gets added to the base factor
   non_truck_route_factor_ =
       costing_options.use_truck_route() < 0.5f
           ? kMinNonTruckRouteFactor + 2.f * costing_options.use_truck_route()
@@ -454,14 +455,14 @@ bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction)
 
 // Check if access is allowed on the specified edge.
 inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
-                               const bool is_dest,
                                const EdgeLabel& pred,
                                const graph_tile_ptr& tile,
                                const baldr::GraphId& edgeid,
                                const uint64_t current_time,
                                const uint32_t tz_index,
                                uint8_t& restriction_idx,
-                               uint8_t& destonly_access_restr_mask) const {
+                               uint8_t& destonly_access_restr_mask,
+                               bool* edge_destonly) const {
   // Check access, U-turn, and simple turn restriction.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && (!ignore_turn_restrictions_)) ||
@@ -472,8 +473,11 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
-                                           tz_index, restriction_idx, destonly_access_restr_mask);
+  if (edge_destonly)
+    *edge_destonly = edge->destonly_hgv();
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
+                                           restriction_idx, destonly_access_restr_mask,
+                                           pred.destonly(), edge_destonly);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -486,7 +490,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const uint64_t current_time,
                                const uint32_t tz_index,
                                uint8_t& restriction_idx,
-                               uint8_t& destonly_access_restr_mask) const {
+                               uint8_t& destonly_access_restr_mask,
+                               bool* edge_destonly) const {
   // Check access, U-turn, and simple turn restriction.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
@@ -498,9 +503,11 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx,
-                                           destonly_access_restr_mask);
+  if (edge_destonly)
+    *edge_destonly = opp_edge->destonly_hgv();
+  return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx, destonly_access_restr_mask,
+                                           pred.destonly(), edge_destonly);
 }
 
 // Get the cost to traverse the edge in seconds
@@ -533,22 +540,20 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
       factor = rail_ferry_factor_;
       break;
     default:
-      factor = kDensityFactor[edge->density()] +
-               highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-               kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
-               SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
-               (low_class_factor_ * (edge->classification() >= baldr::RoadClass::kResidential));
+      factor = kDensityFactor[edge->density()];
       break;
   }
+
+  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+            kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+            SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
+            edge->toll() * toll_factor_ +
+            (low_class_factor_ * (edge->classification() >= baldr::RoadClass::kResidential));
 
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
   } else {
     factor *= non_truck_route_factor_;
-  }
-
-  if (edge->toll()) {
-    factor += toll_factor_;
   }
 
   if (edge->use() == Use::kTrack) {
@@ -559,13 +564,14 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= service_factor_;
   }
 
+  factor *= EdgeFactor(edgeid);
+
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
-  factor *= EdgeFactor(edgeid);
 
-  return {sec * factor, sec};
+  return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -573,11 +579,12 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
                                const EdgeLabel& pred,
                                const graph_tile_ptr& /*tile*/,
-                               const std::function<LimitedGraphReader()>& /*reader_getter*/) const {
+                               const std::function<LimitedGraphReader()>& /*reader_getter*/,
+                               const bool edge_destonly) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  Cost c = base_transition_cost(node, edge, &pred, idx);
+  Cost c = base_transition_cost(node, edge, &pred, idx, edge_destonly);
   c.secs += OSRMCarTurnDuration(edge, node, idx);
 
   // Penalty to transition onto low class roads.
@@ -636,6 +643,9 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
     }
     c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  c.cost *= inv_distance_factor_;
   return c;
 }
 
@@ -647,17 +657,18 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                                       const baldr::NodeInfo* node,
                                       const baldr::DirectedEdge* pred,
                                       const baldr::DirectedEdge* edge,
+                                      const EdgeLabel& pred_label,
                                       const graph_tile_ptr& /*tile*/,
-                                      const GraphId& /*pred_id*/,
                                       const std::function<LimitedGraphReader()>& /*reader_getter*/,
                                       const bool has_measured_speed,
-                                      const InternalTurn internal_turn) const {
+                                      const InternalTurn internal_turn,
+                                      const bool opp_edge_destonly) const {
 
   // TODO: do we want to update the cost if we have flow or speed from traffic.
 
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
-  Cost c = base_transition_cost(node, edge, pred, idx);
+  Cost c = base_transition_cost(node, edge, pred, idx, pred_label.destonly(), opp_edge_destonly);
   c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Penalty to transition onto low class roads.
@@ -715,6 +726,10 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
     }
     c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  c.cost *= inv_distance_factor_;
+
   return c;
 }
 
