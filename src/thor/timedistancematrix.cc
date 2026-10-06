@@ -107,10 +107,11 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     // method), or if a complex restriction prevents this path.
     uint8_t restriction_idx = kInvalidRestriction;
     uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
-    const bool is_dest = dest_edges_.find(edgeid) != dest_edges_.cend();
+    bool edge_destonly = false;
     if (FORWARD) {
-      if (!costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.local_time,
-                             nodeinfo->timezone(), restriction_idx, destonly_restriction_mask) ||
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, offset_time.local_time,
+                             nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
+                             &edge_destonly) ||
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, nullptr,
                                offset_time.local_time, nodeinfo->timezone())) {
         continue;
@@ -118,7 +119,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     } else {
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
                                     offset_time.local_time, nodeinfo->timezone(), restriction_idx,
-                                    destonly_restriction_mask) ||
+                                    destonly_restriction_mask, &edge_destonly) ||
           (costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, false, nullptr,
                                 offset_time.local_time, nodeinfo->timezone()))) {
         continue;
@@ -131,11 +132,12 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                            : costing_->EdgeCost(opp_edge, opp_edge_id, t2, offset_time, flow_sources);
     auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost =
-        FORWARD ? costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter)
+        FORWARD ? costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter,
+                                           edge_destonly)
                 : costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                  opp_pred_edge, t2, pred.edgeid(), reader_getter,
+                                                  opp_pred_edge, pred, t2, reader_getter,
                                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                                  pred.internal_turn());
+                                                  pred.internal_turn(), edge_destonly);
     newcost += pred.cost() + transition_cost;
     uint32_t path_distance = pred.path_distance() + directededge->length();
     if (max_expansion_distance_ > 0 && path_distance > max_expansion_distance_) {
@@ -161,9 +163,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                (pred.closure_pruning() || !(costing_->IsClosed(directededge, tile))),
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge), 0,
-                               directededge->destonly() ||
-                                   (costing_->is_hgv() && directededge->destonly_hgv()),
-                               directededge->forwardaccess() & kTruckAccess,
+                               edge_destonly, directededge->forwardaccess() & kTruckAccess,
                                destonly_restriction_mask);
     } else {
       edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
@@ -172,10 +172,8 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                   opp_pred_edge),
-                               0,
-                               opp_edge->destonly() ||
-                                   (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                               opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
+                               0, edge_destonly, opp_edge->forwardaccess() & kTruckAccess,
+                               destonly_restriction_mask);
     }
 
     *es = {EdgeSet::kTemporary, idx};
@@ -378,8 +376,11 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
 
+    bool edge_destonly = false;
     auto destonly_restriction_mask =
-        costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+        costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
+                                                time_info.valid ? time_info.local_time : 0,
+                                                time_info.timezone_index, &edge_destonly);
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
@@ -387,18 +388,14 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
       edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, mode_, dist,
                                baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               InternalTurn::kNoTurn, 0,
-                               directededge->destonly() ||
-                                   (costing_->is_hgv() && directededge->destonly_hgv()),
+                               InternalTurn::kNoTurn, 0, edge_destonly,
                                directededge->forwardaccess() & kTruckAccess,
                                destonly_restriction_mask);
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
                                baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               InternalTurn::kNoTurn, 0,
-                               directededge->destonly() ||
-                                   (costing_->is_hgv() && directededge->destonly_hgv()),
+                               InternalTurn::kNoTurn, 0, edge_destonly,
                                directededge->forwardaccess() & kTruckAccess,
                                destonly_restriction_mask);
     }
