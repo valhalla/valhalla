@@ -92,8 +92,6 @@ std::string thor_worker_t::matrix(Api& request) {
   auto& options = *request.mutable_options();
   adjust_locations(request);
   auto costing = parse_costing(request);
-  resolve_cost_factor_edges(request, mode_costing, mode, *reader, min_linear_cost_factor,
-                            max_linear_cost_edges);
 
   bool has_time =
       check_matrix_time(request, options.prioritize_bidirectional() ? Matrix::CostMatrix
@@ -155,7 +153,6 @@ std::string thor_worker_t::matrix(Api& request) {
     cost->set_pass(1);
     cost->RelaxHierarchyLimits(true);
     cost->set_allow_destination_only(true);
-    cost->set_allow_conditional_destination(true);
     algo->set_not_thru_pruning(false);
     algo->SourceToTarget(request, *reader, mode_costing, mode,
                          max_matrix_distance.find(costing)->second);

@@ -69,9 +69,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
       matcher_factory(config, reader), controller{},
       allow_hierarchy_limits_modifications(
-          config.get<bool>("service_limits.hierarchy_limits.allow_modification", false)),
-      min_linear_cost_factor(config.get<double>("service_limits.min_linear_cost_factor", 1.0)),
-      max_linear_cost_edges(config.get<uint64_t>("service_limits.max_linear_cost_edges", 50000)) {
+          config.get<bool>("service_limits.hierarchy_limits.allow_modification", false)) {
 
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)
@@ -213,11 +211,9 @@ void run_service(const boost::property_tree::ptree& config) {
   auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
   auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
-  // listen for requests
-  zmq::context_t context;
   thor_worker_t thor_worker(config);
-  prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-                                interrupt_endpoint,
+  prime_server::worker_t worker(zmq_context(), upstream_endpoint, downstream_endpoint,
+                                loopback_endpoint, interrupt_endpoint,
                                 std::bind(&thor_worker_t::work, std::ref(thor_worker),
                                           std::placeholders::_1, std::placeholders::_2,
                                           std::placeholders::_3),

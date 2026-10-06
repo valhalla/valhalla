@@ -13,9 +13,6 @@
 #include "sif/osrm_car_duration.h"
 
 #include <boost/property_tree/ptree.hpp>
-#ifdef LOGGING_LEVEL_DEBUG
-#include <boost/format.hpp>
-#endif
 
 #include <string>
 #include <tuple>
@@ -755,9 +752,8 @@ std::tuple<uint32_t, uint32_t, uint32_t> FormShortcuts(GraphReader& reader, cons
 
     // Store the new tile
     tilebuilder.StoreTileData();
-    LOG_DEBUG((boost::format("ShortcutBuilder created tile %1%: %2% bytes") % tile %
-               tilebuilder.header_builder().end_offset())
-                  .str());
+    LOG_DEBUG("ShortcutBuilder created tile {}: {} bytes", new_tile,
+              tilebuilder.header_builder().end_offset());
 
     // Check if we need to clear the tile cache.
     if (reader.OverCommitted()) {

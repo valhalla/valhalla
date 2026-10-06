@@ -979,7 +979,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
           if (i->is_regular_file() || i->is_symlink()) {
             // add it if it can be parsed as a valid tile file name
             try {
-              tiles.emplace(GraphId::FromTilePath(i->path().string()));
+              tiles.emplace(GraphId::FromTilePath(i->path()));
             } catch (...) {}
           }
         }
@@ -1011,7 +1011,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
         if (i->is_regular_file() || i->is_symlink()) {
           // add it if it can be parsed as a valid tile file name
           try {
-            tiles.emplace(GraphId::FromTilePath(i->path().string()));
+            tiles.emplace(GraphId::FromTilePath(i->path()));
           } catch (...) {}
         }
       }
