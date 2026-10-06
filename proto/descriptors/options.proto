@@ -386,7 +386,7 @@ message LinearFeatureCost {
   repeated Location locations = 1;                               // In here we just store the first and last location correlation
   repeated Location shape = 2;                                   // This is where the actual line geometry goes
   double cost_factor = 3;
-  uint32 allow_types = 5;                                                // whether edges along this shape may be used unconditionally
+  uint32 allow_types = 5;                                        // whether edges along this shape may be used unconditionally
 }
 
 message Options {

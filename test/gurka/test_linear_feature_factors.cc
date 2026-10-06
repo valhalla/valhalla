@@ -814,9 +814,9 @@ TEST(LinearFeature, allow_inaccessible_edge) {
 }
 
 /**
- * Dijkstras gates on the raw access bits before it ever asks costing, so the isochrone
- * expansion stops at B unless "allow" is honored there too
- */
+ * Dijkstras has a raw access mask check to quickly bail disallowed candidates
+ * only if there are no allowed linear edges
+ * */
 TEST(LinearFeature, allow_in_dijkstras) {
   const std::string ascii_map = R"(
     A----B----C----D
@@ -856,9 +856,9 @@ TEST(LinearFeature, allow_in_dijkstras) {
 }
 
 /**
- * CostMatrix checks the raw access bits before it asks costing, same as the route
- * algorithms. BC has no auto access and is the only link between source and target.
- */
+ * CostMatrix has a raw access mask check to quickly bail disallowed candidates
+ * only if there are no allowed linear edges
+ * */
 TEST(LinearFeature, allow_in_costmatrix) {
   const std::string ascii_map = R"(
     A----B----C----D
