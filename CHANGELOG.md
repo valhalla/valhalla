@@ -3,7 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
 
-## Release Date: 2026-10-01 Valhalla 3.10.0
+## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
    * REMOVED: Unused elevation for shortucs and ferry/tunnel/bridge edges [#6340](https://github.com/valhalla/valhalla/pull/6340)
 * **Bug Fix**
