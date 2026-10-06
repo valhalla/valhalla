@@ -224,29 +224,7 @@ DynamicCost::DynamicCost(const Costing& costing,
     }
   }
 
-  // Add avoid edges to internal set
-  for (auto& edge : costing.options().exclude_edges()) {
-    user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
-  }
-
-  // add linear feature factors
-  for (auto& e : costing.options().cost_factor_edges()) {
-    // short-circuit the ones with factor 0 by putting them on the exclude pile
-    if (e.factor() == 0.) {
-      user_exclude_edges_.insert({static_cast<GraphId>(e.id()), e.start()});
-      break;
-    }
-    auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
-    cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
-    cost_edge.ignore_restrictions_ = e.ignore_access_restrictions();
-  }
-
-  // once all cost factors are filled, sort by range, precompute overall average
-  // and store the overall minimum factor so it won't mess with the A* heuristic
-  for (auto& [edge, cost_factors] : linear_cost_edges_) {
-    min_linear_cost_factor_ =
-        std::min(min_linear_cost_factor_, cost_factors.sort_and_find_smallest());
-  }
+  SetCostFactorEdges(costing.options());
 }
 
 DynamicCost::~DynamicCost() {
@@ -405,6 +383,36 @@ bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::NodeInfo*) {
 void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& exclude_edges) {
   for (auto edge : exclude_edges) {
     user_exclude_edges_.insert({edge.id, edge.percent_along});
+  }
+}
+
+void DynamicCost::SetCostFactorEdges(const Costing_Options& options) {
+  // callable after construction, so start from scratch rather than folding into what's there
+  linear_cost_edges_.clear();
+  min_linear_cost_factor_ = 1.;
+
+  // Add avoid edges to internal set
+  for (auto& edge : options.exclude_edges()) {
+    user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
+  }
+
+  // add linear feature factors
+  for (auto& e : options.cost_factor_edges()) {
+    // short-circuit the ones with factor 0 by putting them on the exclude pile
+    if (e.factor() == 0.) {
+      user_exclude_edges_.insert({static_cast<GraphId>(e.id()), e.start()});
+      continue;
+    }
+    auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
+    cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
+    cost_edge.ignore_restrictions_ = e.ignore_access_restrictions();
+  }
+
+  // once all cost factors are filled, sort by range, precompute overall average
+  // and store the overall minimum factor so it won't mess with the A* heuristic
+  for (auto& [edge, cost_factors] : linear_cost_edges_) {
+    min_linear_cost_factor_ =
+        std::min(min_linear_cost_factor_, cost_factors.sort_and_find_smallest());
   }
 }
 
