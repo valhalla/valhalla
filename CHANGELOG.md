@@ -1,9 +1,16 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+   * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
+
+## Release Date: 2026-10-01 Valhalla 3.9.1
+* **Removed**
    * REMOVED: Unused elevation for shortucs and ferry/tunnel/bridge edges [#6340](https://github.com/valhalla/valhalla/pull/6340)
 * **Bug Fix**
    * FIXED: Update flatbush to 1.6.0 to fix 32-bit targets [#6360](https://github.com/valhalla/valhalla/pull/6360)
    * FIXED: `valhalla_add_elevation` tile argument validation [#6361](https://github.com/valhalla/valhalla/pull/6361)
+   * FIXED: Handle destonly zones with `<access>:conditional=destination @ ...` [#6364](https://github.com/valhalla/valhalla/pull/6364)
 * **Enhancement**
    * UPDATED: timezone database to 2026d [#6343](https://github.com/valhalla/valhalla/pull/6343)
    * UPDATED: Sort nodes spatially using Hilbert curve [#6342](https://github.com/valhalla/valhalla/pull/6342)
@@ -31,6 +38,7 @@
    * FIXED: check for empty coords in `linear_feature_factors` [#6328](https://github.com/valhalla/valhalla/pull/6328)
    * FIXED: edge walking issues with `linear_cost_features` [#6327](https://github.com/valhalla/valhalla/pull/6327)
    * FIXED: a zero `linear_cost_factors` factor no longer discards the factors of every feature behind it [#6329](https://github.com/valhalla/valhalla/pull/6329)
+   * FIXED: `<mode>:backward` should override `vehicle:backward` [#6332](https://github.com/valhalla/valhalla/pull/6332)
    * FIXED: trivial CostMatrix path where either source/target is node snapped [#6334](https://github.com/valhalla/valhalla/pull/6334)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)

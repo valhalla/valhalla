@@ -653,6 +653,122 @@ TEST(Standalone, AccessForwardBackward) {
   }
 }
 
+TEST(Standalone, ModeOverridesBackward) {
+  const std::string ascii_map = R"(
+    A----B----C----D----E----F
+  )";
+
+  const gurka::ways ways = {
+      {"AB",
+       {
+           {"highway", "primary"},
+           {"vehicle:backward", "no"},
+           {"bus:backward", "designated"},
+           {"taxi:backward", "yes"},
+           {"hgv:backward", "designated"},
+       }},
+      {"BC", {{"highway", "primary"}, {"vehicle:backward", "yes"}, {"bus:backward", "no"}}},
+      {"CD", {{"highway", "primary"}, {"vehicle:backward", "no"}, {"psv:backward", "yes"}}},
+      {"DE", {{"highway", "primary"}, {"oneway", "yes"}, {"hgv:backward", "yes"}}},
+      {"EF",
+       {
+           {"highway", "primary"},
+           {"motorcar:backward", "no"},
+           {"motorcycle:backward", "no"},
+           {"moped:backward", "no"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/gurka_access_mode_backward", build_config);
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  const auto* BA = std::get<3>(gurka::findEdge(reader, layout, "AB", "B"));
+  EXPECT_FALSE(BA->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_TRUE(BA->forwardaccess() & baldr::kBusAccess);
+  EXPECT_TRUE(BA->forwardaccess() & baldr::kTaxiAccess);
+  EXPECT_TRUE(BA->forwardaccess() & baldr::kTruckAccess);
+
+  const auto* CB = std::get<3>(gurka::findEdge(reader, layout, "BC", "C"));
+  EXPECT_TRUE(CB->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_FALSE(CB->forwardaccess() & baldr::kBusAccess);
+
+  const auto* DC = std::get<3>(gurka::findEdge(reader, layout, "CD", "D"));
+  EXPECT_FALSE(DC->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_TRUE(DC->forwardaccess() & baldr::kBusAccess);
+  EXPECT_TRUE(DC->forwardaccess() & baldr::kTaxiAccess);
+
+  const auto* ED = std::get<3>(gurka::findEdge(reader, layout, "DE", "E"));
+  EXPECT_FALSE(ED->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_TRUE(ED->forwardaccess() & baldr::kTruckAccess);
+
+  const auto* FE = std::get<3>(gurka::findEdge(reader, layout, "EF", "F"));
+  EXPECT_FALSE(FE->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_FALSE(FE->forwardaccess() & baldr::kMotorcycleAccess);
+  EXPECT_FALSE(FE->forwardaccess() & baldr::kMopedAccess);
+  EXPECT_TRUE(FE->forwardaccess() & baldr::kTruckAccess);
+}
+
+TEST(Standalone, ModeOverridesForward) {
+  const std::string ascii_map = R"(
+    A----B----C----D----E----F
+  )";
+
+  const gurka::ways ways = {
+      {"AB",
+       {
+           {"highway", "primary"},
+           {"vehicle:forward", "no"},
+           {"bus:forward", "designated"},
+           {"taxi:forward", "yes"},
+           {"hgv:forward", "designated"},
+       }},
+      {"BC", {{"highway", "primary"}, {"vehicle:forward", "yes"}, {"bus:forward", "no"}}},
+      {"CD", {{"highway", "primary"}, {"vehicle:forward", "no"}, {"psv:forward", "yes"}}},
+      {"DE", {{"highway", "primary"}, {"hgv:forward", "no"}}},
+      {"EF",
+       {
+           {"highway", "primary"},
+           {"motorcar:forward", "no"},
+           {"motorcycle:forward", "no"},
+           {"mofa:forward", "no"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/gurka_access_mode_forward", build_config);
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  const auto* AB = std::get<3>(gurka::findEdge(reader, layout, "AB", "A"));
+  EXPECT_FALSE(AB->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_TRUE(AB->forwardaccess() & baldr::kBusAccess);
+  EXPECT_TRUE(AB->forwardaccess() & baldr::kTaxiAccess);
+  EXPECT_TRUE(AB->forwardaccess() & baldr::kTruckAccess);
+
+  const auto* BC = std::get<3>(gurka::findEdge(reader, layout, "BC", "B"));
+  EXPECT_TRUE(BC->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_FALSE(BC->forwardaccess() & baldr::kBusAccess);
+
+  const auto* CD = std::get<3>(gurka::findEdge(reader, layout, "CD", "C"));
+  EXPECT_FALSE(CD->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_TRUE(CD->forwardaccess() & baldr::kBusAccess);
+  EXPECT_TRUE(CD->forwardaccess() & baldr::kTaxiAccess);
+
+  const auto* DE = std::get<3>(gurka::findEdge(reader, layout, "DE", "D"));
+  EXPECT_TRUE(DE->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_FALSE(DE->forwardaccess() & baldr::kTruckAccess);
+
+  const auto* EF = std::get<3>(gurka::findEdge(reader, layout, "EF", "E"));
+  EXPECT_FALSE(EF->forwardaccess() & baldr::kAutoAccess);
+  EXPECT_FALSE(EF->forwardaccess() & baldr::kMotorcycleAccess);
+  EXPECT_FALSE(EF->forwardaccess() & baldr::kMopedAccess);
+  EXPECT_TRUE(EF->forwardaccess() & baldr::kTruckAccess);
+}
+
 TEST(Standalone, ViaFerrata) {
   const std::string ascii_map = R"(A----B----C)";
   const gurka::ways ways = {{"AB", {{"highway", "via_ferrata"}, {"sac_scale", "hiking"}}},
