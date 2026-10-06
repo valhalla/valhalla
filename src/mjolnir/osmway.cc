@@ -1178,16 +1178,16 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
     // sentinel value that marks discontinuity
     std::string sep = encode_level(kLevelRangeSeparator);
 
-    auto last_it = --values.end();
+    auto first_it = values.begin();
     auto prec_power = pow(10, precision);
     for (auto it = values.begin(); it != values.end(); ++it) {
+      if (it != first_it)
+        levels_encoded.append(sep);
+
       auto& range = *it;
       levels_encoded.append(encode_level(range.first * prec_power));
       if (range.first != range.second)
         levels_encoded.append(encode_level(range.second * prec_power));
-
-      if (it != last_it)
-        levels_encoded.append(sep);
     }
 
     std::string precision_enc = encode_level(static_cast<float>(precision));
