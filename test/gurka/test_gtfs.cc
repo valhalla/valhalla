@@ -75,7 +75,6 @@ date::local_seconds parse_date_time_string(const std::string& date_time) {
   std::istringstream in{date_time};
   date::local_seconds tp;
   in >> date::parse("%Y%m%d", tp);
-
   return tp;
 }
 
@@ -214,8 +213,8 @@ TEST(GtfsExample, WriteGtfs) {
   ttc2.agency_timezone = "America/Toronto";
   f2.add_agency(ttc2);
 
-  f1.write_agencies(f1_path);
-  f2.write_agencies(f2_path);
+  f1.write_agencies(f1_path.string());
+  f2.write_agencies(f2_path.string());
 
   // write stops.txt:
   // 1st has all stop objects, egress/station/platform
@@ -304,8 +303,8 @@ TEST(GtfsExample, WriteGtfs) {
   p4.wheelchair_boarding = "1";
   f2.add_stop(p4);
 
-  f1.write_stops(f1_path);
-  f2.write_stops(f2_path);
+  f1.write_stops(f1_path.string());
+  f2.write_stops(f2_path.string());
 
   // write routes.txt
   struct Route r1;
@@ -330,8 +329,8 @@ TEST(GtfsExample, WriteGtfs) {
   r2.route_text_color = "001100";
   f2.add_route(r2);
 
-  f1.write_routes(f1_path);
-  f2.write_routes(f2_path);
+  f1.write_routes(f1_path.string());
+  f2.write_routes(f2_path.string());
 
   // write trips.txt
   struct gtfs::Trip t1;
@@ -373,8 +372,8 @@ TEST(GtfsExample, WriteGtfs) {
   t4.bikes_allowed = gtfs::TripAccess::No;
   f2.add_trip(t4);
 
-  f1.write_trips(f1_path);
-  f2.write_trips(f2_path);
+  f1.write_trips(f1_path.string());
+  f2.write_trips(f2_path.string());
 
   // write stop_times.txt
   struct StopTime t1p1;
@@ -483,8 +482,8 @@ TEST(GtfsExample, WriteGtfs) {
   t3p4.timepoint = gtfs::StopTimePoint::Exact;
   f2.add_stop_time(t3p4);
 
-  f1.write_stop_times(f1_path);
-  f2.write_stop_times(f2_path);
+  f1.write_stop_times(f1_path.string());
+  f2.write_stop_times(f2_path.string());
 
   // write calendar.txt
   struct CalendarItem c1;
@@ -528,8 +527,8 @@ TEST(GtfsExample, WriteGtfs) {
   c3.end_date = Date(sv_end);
   f2.add_calendar_item(c3);
 
-  f1.write_calendar(f1_path);
-  f2.write_calendar(f2_path);
+  f1.write_calendar(f1_path.string());
+  f2.write_calendar(f2_path.string());
 
   // write calendar_dates.txt
   struct CalendarDate servAdded;
@@ -544,7 +543,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   f1.add_calendar_date(servAdded);
   f1.add_calendar_date(servRemoved);
-  f1.write_calendar_dates(f1_path);
+  f1.write_calendar_dates(f1_path.string());
 
   // write shapes.txt
   // TODO: write shapes before stop_times so that we can determine the correct travelled distance
@@ -557,7 +556,7 @@ TEST(GtfsExample, WriteGtfs) {
     sp.shape_pt_sequence = f1.get_shapes().size();
     f1.add_shape(sp);
   }
-  f1.write_shapes(f1_path);
+  f1.write_shapes(f1_path.string());
 
   // write frequencies.txt
   struct Frequency freqBased;
@@ -576,10 +575,10 @@ TEST(GtfsExample, WriteGtfs) {
 
   f1.add_frequency(freqBased);
   f1.add_frequency(schedBased);
-  f1.write_frequencies(f1_path);
+  f1.write_frequencies(f1_path.string());
 
-  Feed f1_reader(f1_path);
-  Feed f2_reader(f2_path);
+  Feed f1_reader(f1_path.string());
+  Feed f2_reader(f2_path.string());
   f1_reader.read_feed();
   f2_reader.read_feed();
 

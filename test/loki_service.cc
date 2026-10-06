@@ -98,10 +98,10 @@ const std::
         valhalla_responses{
             {200,
              R"({"version":")" VALHALLA_PRINT_VERSION
-             R"(","tileset_last_modified":0,"available_actions":["tile", "status","centroid","expansion","transit_available","trace_attributes","trace_route","isochrone","optimized_route","sources_to_targets","height","route","locate"]})"},
+             R"(","tileset_last_modified":0,"available_actions":["route", "locate","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","height","transit_available","expansion","centroid","status","tile"]})"},
             {200,
              R"({"version":")" VALHALLA_PRINT_VERSION
-             R"(","tileset_last_modified":0,"available_actions":["tile", "status","centroid","expansion","transit_available","trace_attributes","trace_route","isochrone","optimized_route","sources_to_targets","height","route","locate"],"has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"has_transit_tiles":false,"bbox":{"features":[],"type":"FeatureCollection"}})"},
+             R"(","tileset_last_modified":0,"available_actions":["route", "locate","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","height","transit_available","expansion","centroid","status","tile"],"has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"has_transit_tiles":false,"bbox":{"features":[],"type":"FeatureCollection"}})"},
             {405,
              R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
             {405,
@@ -279,7 +279,7 @@ const std::vector<http_request_t> osrm_requests{
 const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
     {200,
      R"({"version":")" VALHALLA_PRINT_VERSION
-     R"(","tileset_last_modified":0,"available_actions":["tile","status","centroid","expansion","transit_available","trace_attributes","trace_route","isochrone","optimized_route","sources_to_targets","height","route","locate"]})"},
+     R"(","tileset_last_modified":0,"available_actions":["route","locate","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","height","transit_available","expansion","centroid","status","tile"]})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
@@ -388,9 +388,10 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
   if (!std::filesystem::is_directory(run_dir) && !std::filesystem::create_directories(run_dir))
     throw std::runtime_error("Couldnt make directory to run from");
 
-  auto config = test::make_config(run_dir.string(),
+  auto config = test::make_config(run_dir.generic_string(),
                                   {{"service_limits.skadi.max_shape", "100"},
-                                   {"service_limits.max_exclude_locations", "0"}},
+                                   {"service_limits.max_exclude_locations", "0"},
+                                   {"httpd.service.listen", "tcp://127.0.0.1:8003"}},
                                   {"loki.actions", "mjolnir.tile_extract", "mjolnir.tile_dir"});
 
   boost::property_tree::ptree actions;
@@ -407,15 +408,12 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
 // config for permanently running server
 auto const config = make_config();
 
-// for zmq thead communications
-zmq::context_t context;
-
 // this macro is convenient for making all the stages of the service pipeline
 #define STAGE(stage)                                                                                 \
   {                                                                                                  \
     std::thread proxy(                                                                               \
         std::bind(&proxy_t::forward,                                                                 \
-                  proxy_t(context,                                                                   \
+                  proxy_t(valhalla::zmq_context(),                                                   \
                           config.get<std::string>(std::string(#stage) + ".service.proxy") + "_in",   \
                           config.get<std::string>(std::string(#stage) + ".service.proxy") +          \
                               "_out")));                                                             \
@@ -427,7 +425,8 @@ zmq::context_t context;
 void start_service() {
   // server
   std::thread server(std::bind(&http_server_t::serve,
-                               http_server_t(context, config.get<std::string>("httpd.service.listen"),
+                               http_server_t(valhalla::zmq_context(),
+                                             config.get<std::string>("httpd.service.listen"),
                                              config.get<std::string>("loki.service.proxy") + "_in",
                                              config.get<std::string>("httpd.service.loopback"),
                                              config.get<std::string>("httpd.service.interrupt"))));
@@ -447,7 +446,7 @@ void run_requests(const std::vector<http_request_t>& requests,
   std::string request_str;
   int success_count = 0;
   http_client_t client(
-      context, config.get<std::string>("httpd.service.listen"),
+      valhalla::zmq_context(), config.get<std::string>("httpd.service.listen"),
       [&requests, &request, &request_str]() {
         // we dont have any more requests so bail
         if (request == requests.cend()) {

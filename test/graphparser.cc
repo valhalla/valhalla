@@ -75,43 +75,6 @@ void DoConfig() {
   file.close();
 }
 
-// must do clean up here vs TearDown() as we are building data
-// in the same directory multiple times
-void CleanUp() {
-  if (std::filesystem::exists(ways_file))
-    std::filesystem::remove(ways_file);
-
-  if (std::filesystem::exists(way_nodes_file))
-    std::filesystem::remove(way_nodes_file);
-
-  if (std::filesystem::exists(nodes_file))
-    std::filesystem::remove(nodes_file);
-
-  if (std::filesystem::exists(edges_file))
-    std::filesystem::remove(edges_file);
-
-  if (std::filesystem::exists(access_file))
-    std::filesystem::remove(access_file);
-
-  if (std::filesystem::exists(from_restriction_file))
-    std::filesystem::remove(from_restriction_file);
-
-  if (std::filesystem::exists(to_restriction_file))
-    std::filesystem::remove(to_restriction_file);
-
-  if (std::filesystem::exists(bss_nodes_file))
-    std::filesystem::remove(bss_nodes_file);
-
-  if (std::filesystem::exists(edge_shapes_file))
-    std::filesystem::remove(edge_shapes_file);
-
-  if (std::filesystem::exists(edge_node_ids_file))
-    std::filesystem::remove(edge_node_ids_file);
-
-  if (std::filesystem::exists(linguistic_node_file))
-    std::filesystem::remove(linguistic_node_file);
-}
-
 void BollardsGatesAndAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(config_file, conf);
@@ -261,8 +224,6 @@ void BollardsGatesAndAccess(const std::string& config_file) {
 
   EXPECT_TRUE((bike_network & kMcn) && (bike_network & kRcn) && way_75786176.bike_network() == 0)
       << "rcn and mtb not marked on way 75786176.";
-
-  CleanUp();
 }
 
 void RemovableBollards(const std::string& config_file) {
@@ -291,8 +252,6 @@ void RemovableBollards(const std::string& config_file) {
   EXPECT_EQ(node.access(), kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
                                kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
                                kBicycleAccess | kMopedAccess | kMotorcycleAccess);
-
-  CleanUp();
 }
 
 void Exits(const std::string& config_file) {
@@ -329,8 +288,6 @@ void Exits(const std::string& config_file) {
   EXPECT_TRUE(node.intersection());
   EXPECT_EQ(osmdata.node_names.name(node.exit_to_index()), "PA441")
       << "node exit_to not set correctly .";
-
-  CleanUp();
 }
 
 void Baltimore(const std::string& config_file) {
@@ -443,8 +400,6 @@ void Baltimore(const std::string& config_file) {
     } else
       FAIL() << "98040438 restriction test failed.";
   }
-
-  CleanUp();
 }
 
 void Bike(const std::string& config_file) {
@@ -527,8 +482,6 @@ void Bike(const std::string& config_file) {
   EXPECT_TRUE(way_156539491.bus_backward());
   EXPECT_TRUE(way_156539491.moped_forward());
   EXPECT_TRUE(way_156539491.bike_backward());
-
-  CleanUp();
 }
 
 void Bus(const std::string& config_file) {
@@ -596,8 +549,6 @@ void Bus(const std::string& config_file) {
   EXPECT_FALSE(way_225895737.moped_backward());
   EXPECT_FALSE(way_225895737.bus_backward());
   EXPECT_FALSE(way_225895737.bike_backward());
-
-  CleanUp();
 }
 
 void BicycleTrafficSignals(const std::string& config_file) {
@@ -633,8 +584,6 @@ void BicycleTrafficSignals(const std::string& config_file) {
     EXPECT_FALSE(node.intersection())
       << "Bike rental at a shop not marked as intersection."
   */
-
-  CleanUp();
 }
 
 TEST(GraphParser, TestBollardsGatesAndAccess) {
@@ -769,7 +718,6 @@ TEST(GraphParser, TestImportBssNode) {
                        kPedestrianAccess);
   check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 2), kPedestrianAccess,
                        kBicycleAccess);
-  CleanUp();
 }
 
 } // namespace
@@ -781,6 +729,13 @@ public:
   }
 
   void TearDown() override {
+    // runs after every test body has returned, so the sequences are closed and
+    // these unlink cleanly on all platforms
+    for (const auto& f : {ways_file, way_nodes_file, nodes_file, edges_file, access_file,
+                          from_restriction_file, to_restriction_file, bss_nodes_file,
+                          linguistic_node_file, edge_shapes_file, edge_node_ids_file}) {
+      std::filesystem::remove(f);
+    }
   }
 };
 
