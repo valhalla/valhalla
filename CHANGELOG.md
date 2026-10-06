@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
