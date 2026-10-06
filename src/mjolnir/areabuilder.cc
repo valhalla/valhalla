@@ -410,6 +410,21 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
     current_way_node_index = last_way_node_index + 1;
   }
 
+  // count how many distinct areas share each perimeter node
+  std::unordered_map<uint64_t, uint32_t> node_area_count;
+  for (const auto& [area_key, nodes] : area_shared_nodes) {
+    std::vector<uint64_t> unique_nodes;
+    unique_nodes.reserve(nodes.size());
+    for (const auto& [node_id, ll] : nodes) {
+      unique_nodes.push_back(node_id);
+    }
+    std::sort(unique_nodes.begin(), unique_nodes.end());
+    unique_nodes.erase(std::unique(unique_nodes.begin(), unique_nodes.end()), unique_nodes.end());
+    for (uint64_t node_id : unique_nodes) {
+      node_area_count[node_id]++;
+    }
+  }
+
   // with the areas and the pedestrian ways touching them collected, assemble each
   // area's polygons, generate a traversal skeleton along their medial axis, connect
   // the entrances to it, and materialise the result as routable ways
@@ -431,7 +446,10 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
       continue;
     }
     for (const auto& [node_id, ll] : shared_it->second) {
-      if (pedestrian_node_ways.count(node_id) && seen_entrances.insert(node_id).second) {
+      bool is_linear_entrance = pedestrian_node_ways.count(node_id);
+      // nodes shared by multiple distinct areas act as entrances between them
+      bool is_adjacent_area = node_area_count[node_id] > 1;
+      if ((is_linear_entrance || is_adjacent_area) && seen_entrances.insert(node_id).second) {
         entrances.push_back({node_id, ll});
       }
     }

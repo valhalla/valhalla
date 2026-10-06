@@ -427,3 +427,55 @@ TEST(area_routing, synthetic_node_ids_are_not_stored) {
   }
   EXPECT_TRUE(found_traversal);
 }
+
+
+TEST(area_routing, adjacent_areas_route_through) {
+  const std::string ascii_map = R"(
+    I-------------------J
+    |                   |
+    |                   |
+    |                   |
+    |                   |
+    X----A----B----C----Y
+         |    |    |
+         D----E----F
+  )";
+
+  const gurka::ways ways = {
+      {"ABEDA", {{"highway", "pedestrian"}, {"area", "yes"}, {"name", "area_left"}}},
+      {"BCFEB", {{"highway", "pedestrian"}, {"area", "yes"}, {"name", "area_right"}}},
+      {"XA", {{"highway", "footway"}, {"name", "entry"}}},
+      {"CY", {{"highway", "footway"}, {"name", "exit"}}},
+      {"XI", {{"highway", "footway"}, {"name", "bypass_left"}}},
+      {"IJ", {{"highway", "footway"}, {"name", "bypass_top"}}},
+      {"JY", {{"highway", "footway"}, {"name", "bypass_right"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_adjacent_areas",
+                               {{"mjolnir.concurrency", "1"}, {"mjolnir.pedestrian_areas", "true"}});
+
+  const auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  // We don't want to route the perimeters of the areas
+  EXPECT_THROW(gurka::findEdgeByNodes(*reader, map.nodes, "A", "B"), std::runtime_error);
+  EXPECT_THROW(gurka::findEdgeByNodes(*reader, map.nodes, "B", "C"), std::runtime_error);
+
+  // The route should cross through the adjacent areas via their generated traversals
+  auto result = gurka::do_action(valhalla::Options::route, map, {"X", "Y"}, "pedestrian");
+  auto paths = gurka::detail::get_paths(result);
+  ASSERT_FALSE(paths.empty());
+
+  auto names = paths.front();
+  ASSERT_FALSE(names.empty());
+
+  // The route should go through the entry and exit, NOT the bypass
+  EXPECT_EQ(names.front(), "entry");
+  EXPECT_EQ(names.back(), "exit");
+  for (const auto& n : names) {
+    EXPECT_NE(n, "bypass_left");
+    EXPECT_NE(n, "bypass_top");
+    EXPECT_NE(n, "bypass_right");
+  }
+}
