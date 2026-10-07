@@ -117,6 +117,7 @@ constexpr float kDefaultBicycle_UseFerry = 0.5f;               // Factor between
 constexpr float kDefaultBicycle_UseHills = 0.25f;
 constexpr float kDefaultBicycle_AvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultBicycle_UseLivingStreets = 0.5f;  // Factor between 0 and 1
+constexpr float kDefaultBicycle_StepsFactor = 8.0f;
 constexpr float kDefaultBicycle_ServicePenalty = 15.0f;   // Seconds
 const std::string kDefaultBicycle_BicycleType = "hybrid"; // Bicycle type
 constexpr float kDefaultBicycle_CyclingSpeed[] = {
@@ -615,6 +616,8 @@ void test_default_bicycle_cost_options(const Costing::Type costing_type,
   validate("use_hills", kDefaultBicycle_UseHills, options.use_hills());
   validate("avoid_bad_surfaces", kDefaultBicycle_AvoidBadSurfaces, options.avoid_bad_surfaces());
   validate("use_living_streets", kDefaultBicycle_UseLivingStreets, options.use_living_streets());
+  validate("steps_factor", kDefaultBicycle_StepsFactor, options.steps_factor());
+  validate("snap_to_steps", false, options.snap_to_steps());
   validate("service_penalty", kDefaultBicycle_ServicePenalty, options.service_penalty());
   validate("cycling_speed",
            kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kHybrid)],
@@ -1247,6 +1250,38 @@ void test_avoid_bad_surfaces_parsing(const Costing::Type costing_type,
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
   const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.avoid_bad_surfaces());
+}
+
+void test_steps_factor_parsing(const Costing::Type costing_type,
+                               const float specified_value,
+                               const float expected_value,
+                               const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing_type);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "steps_factor";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  const auto& options = request.options().costings().find(costing_type)->second.options();
+  validate(key, expected_value, options.steps_factor());
+}
+
+void test_snap_to_steps_parsing(const Costing::Type costing_type,
+                                const bool specified_value,
+                                const bool expected_value,
+                                const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing_type);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "snap_to_steps";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  const auto& options = request.options().costings().find(costing_type)->second.options();
+  validate(key, expected_value, options.snap_to_steps());
 }
 
 void test_transit_start_end_max_distance_parsing(const Costing::Type costing_type,
@@ -2640,6 +2675,22 @@ TEST(ParseRequest, test_avoid_bad_surfaces) {
   test_avoid_bad_surfaces_parsing(costing, 0.5f, 0.5f);
   test_avoid_bad_surfaces_parsing(costing, -2.f, default_value);
   test_avoid_bad_surfaces_parsing(costing, 2.f, default_value);
+}
+
+TEST(ParseRequest, test_steps_factor) {
+  Costing::Type costing = Costing::bicycle;
+  float default_value = kDefaultBicycle_StepsFactor;
+  test_steps_factor_parsing(costing, default_value, default_value);
+  test_steps_factor_parsing(costing, 1.f, 1.f);
+  test_steps_factor_parsing(costing, 2.5f, 2.5f);
+  test_steps_factor_parsing(costing, 0.5f, default_value);
+  test_steps_factor_parsing(costing, 200.f, default_value);
+}
+
+TEST(ParseRequest, test_snap_to_steps) {
+  Costing::Type costing = Costing::bicycle;
+  test_snap_to_steps_parsing(costing, false, false);
+  test_snap_to_steps_parsing(costing, true, true);
 }
 
 TEST(ParseRequest, test_cycling_speed) {

@@ -1108,6 +1108,20 @@ components:
                 between 0 and 1. When the value is 0, there is no penalization of roads with different surface types; only bicycle speed on each surface is taken into account. 
                 As the value approaches 1, roads with poor surfaces for the bike are penalized heavier so that they are only taken if they significantly improve travel time. 
                 When the value is equal to 1, all bad surfaces are completely disallowed from routing, including start and end points.
+            steps_factor:
+              type: number
+              minimum: 1
+              maximum: 100
+              default: 8
+              description: >
+                A factor that multiplies the cost of steps or stairs, which are traversed at a pace of 1 km/h while carrying the bike.
+                1 only accounts for the slow pace and higher values avoid steps more strongly.
+            snap_to_steps:
+              type: boolean
+              default: false
+              description: >
+                Whether locations may be correlated to steps or stairs. When `false`, a location on steps snaps to the nearest
+                other edge the bicycle can use.
             bss_return_cost:
               type: number
               minimum: 0
