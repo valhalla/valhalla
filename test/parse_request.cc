@@ -2666,7 +2666,8 @@ TEST(ParseRequest, test_steps_factor) {
   test_steps_factor_parsing(costing, default_value, default_value);
   test_steps_factor_parsing(costing, 1.f, 1.f);
   test_steps_factor_parsing(costing, 2.5f, 2.5f);
-  test_steps_factor_parsing(costing, 0.5f, default_value);
+  test_steps_factor_parsing(costing, 0.5f, 0.5f);
+  test_steps_factor_parsing(costing, 0.05f, default_value);
   test_steps_factor_parsing(costing, 200.f, 200.f);
   test_steps_factor_parsing(costing, 200000.f, default_value);
 }

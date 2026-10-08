@@ -1113,12 +1113,12 @@ components:
                 When the value is equal to 1, all bad surfaces are completely disallowed from routing, including start and end points.
             steps_factor:
               type: number
-              minimum: 1
+              minimum: 0.1
               maximum: 100000
               default: 8
               description: >
                 A factor that multiplies the cost of steps or stairs, which are traversed at a pace of 1 km/h while carrying the bike.
-                1 only accounts for the slow pace and higher values avoid steps more strongly.
+                1 only accounts for the slow pace, higher values avoid steps more strongly and lower values favor them.
             bss_return_cost:
               type: number
               minimum: 0
