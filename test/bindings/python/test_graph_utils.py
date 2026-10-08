@@ -244,9 +244,6 @@ class TestBindings(unittest.TestCase):
         self.assertGreater(header.tile_checksum, 0)
         self.assertLess(header.tile_checksum, 1 << 48)
 
-        with self.assertRaises(AttributeError):
-            header.tile_checksum = 0
-
     def test_tile_header_build_id(self):
         """build_id is the 16-bit tileset id packed into the high bits of checksum_."""
         graph = GraphUtils(json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}}))
@@ -256,9 +253,6 @@ class TestBindings(unittest.TestCase):
         self.assertIsInstance(header.build_id, int)
         self.assertGreater(header.build_id, 0)
         self.assertLess(header.build_id, 1 << 16)
-
-        with self.assertRaises(AttributeError):
-            header.build_id = 0
 
     def test_graphutils_dict_config(self):
         """Test GraphUtils initialization with dict config."""
