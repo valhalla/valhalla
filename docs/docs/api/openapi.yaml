@@ -458,7 +458,8 @@ components:
           description: Whether to exclude ferry routes.
         exclude_steps:
           type: boolean
-          description: Whether to exclude steps. Defaults to `true` for `bicycle` costing and `false` otherwise.
+          description: > 
+            **BETA** Whether to exclude steps. Defaults to `true` for `bicycle` costing and `false` otherwise.
         exclude_closures:
           type: boolean
           default: true
@@ -1117,7 +1118,7 @@ components:
               maximum: 100000
               default: 8
               description: >
-                A factor that multiplies the cost of steps or stairs, which are traversed at a pace of 1 km/h while carrying the bike.
+                **BETA**: A factor that multiplies the cost of steps or stairs, which are traversed at a pace of 1 km/h while carrying the bike.
                 1 only accounts for the slow pace, higher values avoid steps more strongly and lower values favor them.
             bss_return_cost:
               type: number
