@@ -79,7 +79,7 @@ constexpr float kLeftSideTurnPenalties[] = {kTPStraight,    kTPUnfavorableSlight
 const float kTruckStress = 0.5f;
 
 // Cost of traversing an edge with steps. Make this high but not impassible.
-const float kBicycleStepsFactor = 8.0f;
+constexpr float kDefaultStepsFactor = 8.0f;
 
 // Default cycling speed on smooth, flat roads - based on bicycle type (KPH)
 constexpr float kDefaultCyclingSpeed[] = {
@@ -203,6 +203,7 @@ constexpr float kBicycleNetworkFactor = 0.95f;
 constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadSurfaces, 1.0f};
+constexpr ranged_default_t<float> kStepsFactorRange{kMinFactor, kDefaultStepsFactor, kMaxFactor};
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
@@ -408,6 +409,7 @@ public:
   float livingstreet_factor_; // Factor to use for living streets
   float track_factor_;        // Factor to use tracks
   float avoid_bad_surfaces_;  // Preference of avoiding bad surfaces for the bike type
+  float steps_factor_;        // Cost factor for steps, applied on top of a 1 kph pace
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -446,7 +448,6 @@ protected:
                const graph_tile_ptr& tile,
                uint16_t disallow_mask = kDisallowNone) const override {
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
-           edge->use() != Use::kSteps &&
            (avoid_bad_surfaces_ != 1.0f || edge->surface() <= worst_allowed_surface_);
   }
 };
@@ -484,6 +485,7 @@ BicycleCost::BicycleCost(const Costing& costing)
   avoid_bad_surfaces_ = costing_options.avoid_bad_surfaces();
   minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t>(type_)];
   worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ? minimal_surface_penalized_ : Surface::kPath;
+  steps_factor_ = costing_options.steps_factor();
 
   // Set the surface speed factors for the bicycle type.
   if (type_ == BicycleType::kRoad) {
@@ -636,7 +638,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
     float sec = (edge->length() * kSpeedFactor[1]);
-    return {shortest_ ? edge->length() : sec * kBicycleStepsFactor, sec};
+    return {shortest_ ? edge->length() : sec * steps_factor_, sec};
   }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
@@ -897,6 +899,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kAvoidBadSurfacesRange, json, "/avoid_bad_surfaces", avoid_bad_surfaces,
                           warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kStepsFactorRange, json, "/steps_factor", steps_factor, warnings);
   JSON_PBF_DEFAULT(co, kDefaultBicycleType, json, "/bicycle_type", transport_type);
 
   // convert string to enum, set ranges and defaults based on enum
