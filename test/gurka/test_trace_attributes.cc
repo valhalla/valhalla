@@ -1,4 +1,5 @@
 #include "baldr/rapidjson_utils.h"
+#include "exceptions.h"
 #include "gurka.h"
 #include "midgard/encoded.h"
 #include "test.h"
@@ -6,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <format>
+#include <set>
 
 using namespace valhalla;
 
@@ -672,4 +674,45 @@ TEST(Standalone, UseTimestamps) {
   // 1.2 km of primary road takes nowhere near the 2000 seconds the timestamps say
   EXPECT_LT(trace_elapsed(false), 500);
   EXPECT_NEAR(trace_elapsed(true), 2000, 1);
+}
+
+TEST(Standalone, ShapeMatchAndFilterActionParsing) {
+  const std::string ascii_map = R"(
+    A--1--B--2--C)";
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_trace_option_parsing");
+
+  auto trace = [&](const std::string& shape_match, const std::string& filter_action) {
+    std::string json;
+    gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2"}, "auto",
+                     {{"/shape_match", shape_match},
+                      {"/filters/action", filter_action},
+                      {"/filters/attributes/0", "edge.names"}},
+                     {}, &json);
+    rapidjson::Document doc;
+    doc.Parse(json);
+    return doc;
+  };
+
+  for (const auto* shape_match : {"map_snap", "walk_or_snap"}) {
+    EXPECT_EQ(trace(shape_match, "include")["edges"].Size(), 2) << shape_match;
+  }
+  try {
+    trace("snap_or_walk", "include");
+    FAIL() << "Expected an unknown shape_match to be rejected";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 445); }
+
+  // include keeps only the names, exclude drops them, an unknown action filters nothing
+  auto edge_keys = [&](const std::string& filter_action) {
+    std::set<std::string> keys;
+    for (const auto& member : trace("map_snap", filter_action)["edges"][0].GetObject())
+      keys.emplace(member.name.GetString());
+    return keys;
+  };
+  EXPECT_EQ(edge_keys("include"), std::set<std::string>{"names"});
+  EXPECT_FALSE(edge_keys("exclude").contains("names"));
+  EXPECT_TRUE(edge_keys("exclude").contains("length"));
+  EXPECT_TRUE(edge_keys("ignore").contains("names"));
+  EXPECT_TRUE(edge_keys("ignore").contains("length"));
 }

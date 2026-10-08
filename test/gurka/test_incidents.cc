@@ -926,6 +926,60 @@ TEST_F(IncidentsTest, serialized_properties) {
   EXPECT_EQ(edges_with_incidents, 1) << json;
 }
 
+TEST_F(IncidentsTest, serialized_types_and_impacts) {
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"CB"}, edge_ids);
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
+  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 1234);
+  auto& meta = *reader->incidents[edge_ids[0].tile_base()].mutable_metadata(0);
+
+  auto locate_incident = [&]() {
+    std::string json;
+    gurka::do_action(valhalla::Options::locate, map, {"1"}, "auto", {{"/verbose", "1"}}, graphreader,
+                     &json);
+    rapidjson::Document locate;
+    locate.Parse(json);
+    for (const auto& edge : locate[0]["edges"].GetArray()) {
+      if (edge.HasMember("incidents"))
+        return std::make_pair(std::string(edge["incidents"][0]["type"].GetString()),
+                              std::string(edge["incidents"][0]["impact"].GetString()));
+    }
+    return std::make_pair(std::string(), std::string());
+  };
+
+  const std::vector<std::pair<valhalla::IncidentsTile::Metadata::Type, std::string>> types = {
+      {valhalla::IncidentsTile::Metadata::ACCIDENT, "accident"},
+      {valhalla::IncidentsTile::Metadata::CONGESTION, "congestion"},
+      {valhalla::IncidentsTile::Metadata::CONSTRUCTION, "construction"},
+      {valhalla::IncidentsTile::Metadata::DISABLED_VEHICLE, "disabled_vehicle"},
+      {valhalla::IncidentsTile::Metadata::LANE_RESTRICTION, "lane_restriction"},
+      {valhalla::IncidentsTile::Metadata::MASS_TRANSIT, "mass_transit"},
+      {valhalla::IncidentsTile::Metadata::MISCELLANEOUS, "miscellaneous"},
+      {valhalla::IncidentsTile::Metadata::OTHER_NEWS, "other_news"},
+      {valhalla::IncidentsTile::Metadata::PLANNED_EVENT, "planned_event"},
+      {valhalla::IncidentsTile::Metadata::ROAD_CLOSURE, "road_closure"},
+      {valhalla::IncidentsTile::Metadata::ROAD_HAZARD, "road_hazard"},
+      {valhalla::IncidentsTile::Metadata::WEATHER, "weather"},
+  };
+  for (const auto& [type, name] : types) {
+    meta.set_type(type);
+    EXPECT_EQ(locate_incident().first, name);
+  }
+
+  const std::vector<std::pair<valhalla::IncidentsTile::Metadata::Impact, std::string>> impacts = {
+      {valhalla::IncidentsTile::Metadata::UNKNOWN, "unknown"},
+      {valhalla::IncidentsTile::Metadata::CRITICAL, "critical"},
+      {valhalla::IncidentsTile::Metadata::MAJOR, "major"},
+      {valhalla::IncidentsTile::Metadata::MINOR, "minor"},
+      {valhalla::IncidentsTile::Metadata::LOW, "low"},
+      {static_cast<valhalla::IncidentsTile::Metadata::Impact>(1000), "UNHANDLED_CASE"},
+  };
+  for (const auto& [impact, name] : impacts) {
+    meta.set_impact(impact);
+    EXPECT_EQ(locate_incident().second, name);
+  }
+}
+
 TEST(Standalone, vector_tiles) {
 
   const std::string ascii_map = R"(
