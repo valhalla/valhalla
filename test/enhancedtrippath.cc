@@ -645,6 +645,166 @@ TEST(EnhancedTripPath, TestActivateTurnLanesShortNextLeft) {
   ClearActiveTurnLanes(edge_3.mutable_turn_lanes());
 }
 
+TEST(EnhancedTripPath, EdgeToString) {
+  TripLeg_Edge edge;
+  edge.add_name()->set_value("Main Street");
+  auto* name = edge.add_name();
+  name->set_value("US 1");
+  name->mutable_pronunciation()->set_value("you es one");
+  edge.set_length_km(1.5f);
+  edge.set_use(TripLeg_Use_kRoadUse);
+  edge.mutable_sign()->add_exit_numbers()->set_text("67B");
+  edge.mutable_sign()->add_exit_toward_locations()->set_text("Harrisburg");
+  edge.mutable_transit_route_info()->set_onestop_id("r-route");
+  edge.mutable_transit_route_info()->set_operator_name("Metro");
+
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneEmpty);
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneNone);
+  auto* lane = edge.add_turn_lanes();
+  lane->set_directions_mask(kTurnLaneReverse | kTurnLaneSharpLeft | kTurnLaneLeft |
+                            kTurnLaneSlightLeft | kTurnLaneMergeToLeft | kTurnLaneThrough |
+                            kTurnLaneMergeToRight | kTurnLaneSlightRight | kTurnLaneRight |
+                            kTurnLaneSharpRight);
+  lane->set_state(TurnLane::kActive);
+  lane->set_active_direction(kTurnLaneThrough);
+  lane = edge.add_turn_lanes();
+  lane->set_directions_mask(kTurnLaneRight);
+  lane->set_state(TurnLane::kValid);
+
+  EnhancedTripLeg_Edge enhanced(&edge);
+  auto str = enhanced.ToString();
+  EXPECT_NE(str.find("name=Main Street/US 1(you es one)"), std::string::npos) << str;
+  EXPECT_NE(str.find("exit_numbers=67B"), std::string::npos) << str;
+  EXPECT_NE(str.find("exit_toward_locations=Harrisburg"), std::string::npos) << str;
+  EXPECT_NE(str.find("transit_route_info.onestop_id=r-route"), std::string::npos) << str;
+  EXPECT_NE(str.find("transit_route_info.operator_name=Metro"), std::string::npos) << str;
+  EXPECT_EQ(enhanced.TurnLanesToString(),
+            "[ empty | none | reverse;sharp_left;left;slight_left;merge_to_left;*through*;"
+            "merge_to_right;slight_right;right;sharp_right ACTIVE | right VALID ]");
+  EXPECT_NE(str.find(enhanced.TurnLanesToString()), std::string::npos) << str;
+
+  // left-hand traffic puts the u-turn lane on the right
+  edge.set_drive_on_left(true);
+  edge.clear_turn_lanes();
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneSharpRight | kTurnLaneReverse);
+  EXPECT_EQ(enhanced.TurnLanesToString(), "[ sharp_right;reverse ]");
+
+  TripLeg_Edge unnamed;
+  EXPECT_NE(EnhancedTripLeg_Edge(&unnamed).ToString().find("name=unnamed"), std::string::npos);
+}
+
+TEST(EnhancedTripPath, EdgeAccessors) {
+  TripLeg_Edge edge;
+  edge.add_name()->set_value("Main Street");
+  auto* route = edge.add_name();
+  route->set_value("US 1");
+  route->set_is_route_number(true);
+  edge.set_length_km(2.0f);
+
+  EnhancedTripLeg_Edge enhanced(&edge);
+  std::vector<std::pair<std::string, bool>> expected{{"Main Street", false}, {"US 1", true}};
+  EXPECT_EQ(enhanced.GetNameList(), expected);
+  EXPECT_FLOAT_EQ(enhanced.GetLength(Options::kilometers), 2.0f);
+  EXPECT_NEAR(enhanced.GetLength(Options::miles), 1.24274f, 0.0001f);
+}
+
+TEST(EnhancedTripPath, EdgeUsePredicates) {
+  TripLeg_Edge edge;
+  EnhancedTripLeg_Edge enhanced(&edge);
+  const std::vector<std::pair<TripLeg_Use, bool (EnhancedTripLeg_Edge::*)() const>> uses = {
+      {TripLeg_Use_kTrackUse, &EnhancedTripLeg_Edge::IsTrackUse},
+      {TripLeg_Use_kSidewalkUse, &EnhancedTripLeg_Edge::IsSidewalkUse},
+      {TripLeg_Use_kPathUse, &EnhancedTripLeg_Edge::IsPathUse},
+      {TripLeg_Use_kPedestrianUse, &EnhancedTripLeg_Edge::IsPedestrianUse},
+      {TripLeg_Use_kBridlewayUse, &EnhancedTripLeg_Edge::IsBridlewayUse},
+      {TripLeg_Use_kRestAreaUse, &EnhancedTripLeg_Edge::IsRestAreaUse},
+      {TripLeg_Use_kServiceAreaUse, &EnhancedTripLeg_Edge::IsServiceAreaUse},
+      {TripLeg_Use_kOtherUse, &EnhancedTripLeg_Edge::IsOtherUse},
+      {TripLeg_Use_kConstructionUse, &EnhancedTripLeg_Edge::IsConstructionUse},
+  };
+  for (const auto& [use, is_use] : uses) {
+    edge.set_use(use);
+    EXPECT_TRUE((enhanced.*is_use)()) << TripLeg_Use_Name(use);
+    edge.set_use(TripLeg_Use_kRoadUse);
+    EXPECT_FALSE((enhanced.*is_use)()) << TripLeg_Use_Name(use);
+  }
+}
+
+TEST(EnhancedTripPath, NodeTypePredicates) {
+  TripLeg_Node node;
+  EnhancedTripLeg_Node enhanced(&node);
+  const std::vector<std::pair<TripLeg_Node_Type, bool (EnhancedTripLeg_Node::*)() const>> types = {
+      {TripLeg_Node_Type_kStreetIntersection, &EnhancedTripLeg_Node::IsStreetIntersection},
+      {TripLeg_Node_Type_kGate, &EnhancedTripLeg_Node::IsGate},
+      {TripLeg_Node_Type_kBollard, &EnhancedTripLeg_Node::IsBollard},
+      {TripLeg_Node_Type_kTollBooth, &EnhancedTripLeg_Node::IsTollBooth},
+      {TripLeg_Node_Type_kTransitEgress, &EnhancedTripLeg_Node::IsTransitEgress},
+      {TripLeg_Node_Type_kTransitStation, &EnhancedTripLeg_Node::IsTransitStation},
+      {TripLeg_Node_Type_kTransitPlatform, &EnhancedTripLeg_Node::IsTransitPlatform},
+      {TripLeg_Node_Type_kBikeShare, &EnhancedTripLeg_Node::IsBikeShare},
+      {TripLeg_Node_Type_kParking, &EnhancedTripLeg_Node::IsParking},
+      {TripLeg_Node_Type_kMotorwayJunction, &EnhancedTripLeg_Node::IsMotorwayJunction},
+      {TripLeg_Node_Type_kBorderControl, &EnhancedTripLeg_Node::IsBorderControl},
+      {TripLeg_Node_Type_kTollGantry, &EnhancedTripLeg_Node::IsTollGantry},
+      {TripLeg_Node_Type_kSumpBuster, &EnhancedTripLeg_Node::IsSumpBuster},
+      {TripLeg_Node_Type_kBuildingEntrance, &EnhancedTripLeg_Node::IsBuildingEntrance},
+      {TripLeg_Node_Type_kElevator, &EnhancedTripLeg_Node::IsElevator},
+  };
+  for (const auto& [type, is_type] : types) {
+    for (const auto& [other, unused] : types) {
+      node.set_type(other);
+      EXPECT_EQ((enhanced.*is_type)(), other == type)
+          << TripLeg_Node_Type_Name(type) << " vs " << TripLeg_Node_Type_Name(other);
+    }
+  }
+}
+
+TEST(EnhancedTripPath, HasForwardIntersectingEdge) {
+  TripLeg_Node node;
+  node.add_intersecting_edge()->set_begin_heading(90);
+  EnhancedTripLeg_Node enhanced(&node);
+  EXPECT_FALSE(enhanced.HasForwardIntersectingEdge(0));
+  node.add_intersecting_edge()->set_begin_heading(10);
+  EXPECT_TRUE(enhanced.HasForwardIntersectingEdge(0));
+}
+
+TEST(EnhancedTripPath, NodeToString) {
+  TripLeg_Node node;
+  node.set_type(TripLeg_Node_Type_kTransitPlatform);
+  node.set_time_zone("Europe/Berlin");
+  auto* platform = node.mutable_transit_platform_info();
+  platform->set_onestop_id("s-platform");
+  platform->set_name("Hauptbahnhof");
+  platform->set_station_name("Hbf");
+  auto* xedge = node.add_intersecting_edge();
+  xedge->set_begin_heading(123);
+  xedge->set_lane_count(3);
+
+  EnhancedTripLeg_Node enhanced(&node);
+  auto str = enhanced.ToString();
+  EXPECT_NE(str.find("transit_platform_info.onestop_id=s-platform"), std::string::npos) << str;
+  EXPECT_NE(str.find("transit_platform_info.name=Hauptbahnhof"), std::string::npos) << str;
+  EXPECT_NE(str.find("transit_platform_info.station_name=Hbf"), std::string::npos) << str;
+  EXPECT_NE(str.find("time_zone=Europe/Berlin"), std::string::npos) << str;
+
+  auto xedge_str = enhanced.GetIntersectingEdge(0)->ToString();
+  EXPECT_NE(xedge_str.find("begin_heading=123"), std::string::npos) << xedge_str;
+  EXPECT_NE(xedge_str.find("lane_count=3"), std::string::npos) << xedge_str;
+
+  TripLeg_Node plain;
+  EXPECT_EQ(EnhancedTripLeg_Node(&plain).ToString().find("transit_platform_info"), std::string::npos);
+}
+
+TEST(EnhancedTripPath, AdminToString) {
+  TripLeg_Admin admin;
+  admin.set_country_code("DE");
+  admin.set_country_text("Germany");
+  admin.set_state_code("BE");
+  admin.set_state_text("Berlin");
+  EXPECT_EQ(EnhancedTripLeg_Admin(&admin).ToString(),
+            "country_code=DE | country_text=Germany | state_code=BE | state_text=Berlin");
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

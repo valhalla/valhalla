@@ -5,6 +5,8 @@
 
 #include <gtest/gtest.h>
 
+#include <format>
+
 using namespace valhalla;
 
 /*************************************************************/
@@ -638,4 +640,36 @@ TEST(Standalone, DuplicateTracePointsEdgeIndex) {
     edge_indexes.push_back(point["edge_index"].GetUint64());
   }
   EXPECT_EQ(edge_indexes, (std::vector<uint64_t>{0, 0, 0, 1}));
+}
+
+TEST(Standalone, UseTimestamps) {
+  const std::string ascii_map = R"(
+    A--1--B--2--C--3--D)";
+
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                            {"BC", {{"highway", "primary"}}},
+                            {"CD", {{"highway", "primary"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_trace_use_timestamps");
+
+  auto trace_elapsed = [&](bool use_timestamps) {
+    std::string shape;
+    for (const auto* node : {"1", "2", "3"}) {
+      const auto& ll = layout.at(node);
+      shape +=
+          (shape.empty() ? "" : ",") + std::format(R"({{"lat":{},"lon":{}}})", ll.lat(), ll.lng());
+    }
+    auto request = std::format(
+        R"({{"shape":[{}],"costing":"auto","shape_match":"map_snap","durations":[1000,1000],"use_timestamps":{}}})",
+        shape, use_timestamps);
+    auto api = gurka::do_action(valhalla::Options::trace_attributes, map, request);
+    const auto& leg = api.trip().routes(0).legs(0);
+    EXPECT_EQ(leg.node_size(), 4);
+    return leg.node(leg.node_size() - 1).cost().elapsed_cost().seconds();
+  };
+
+  // 1.2 km of primary road takes nowhere near the 2000 seconds the timestamps say
+  EXPECT_LT(trace_elapsed(false), 500);
+  EXPECT_NEAR(trace_elapsed(true), 2000, 1);
 }
