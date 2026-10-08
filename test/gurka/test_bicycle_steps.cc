@@ -55,8 +55,21 @@ TEST_F(BicycleSteps, DefaultDoesNotSnapToSteps) {
   EXPECT_EQ(std::count(paths[0].begin(), paths[0].end(), "BXD"), 0);
 }
 
-TEST_F(BicycleSteps, SnapToSteps) {
+TEST_F(BicycleSteps, ExcludeStepsFalseSnapsToSteps) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"X", "F"}, "bicycle",
-                                 {{"/costing_options/bicycle/snap_to_steps", "1"}});
+                                 {{"/locations/0/search_filter/exclude_steps", "0"}});
   gurka::assert::raw::expect_path(result, {"BXD", "DF"});
+}
+
+TEST_F(BicycleSteps, PedestrianSnapsToStepsByDefault) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"X", "F"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"BXD", "DF"});
+}
+
+TEST_F(BicycleSteps, PedestrianExcludeSteps) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"X", "F"}, "pedestrian",
+                                 {{"/locations/0/search_filter/exclude_steps", "1"}});
+  const auto paths = gurka::detail::get_paths(result);
+  ASSERT_FALSE(paths.empty());
+  EXPECT_EQ(std::count(paths[0].begin(), paths[0].end(), "BXD"), 0);
 }

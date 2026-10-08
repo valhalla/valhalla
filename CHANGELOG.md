@@ -6,7 +6,7 @@
    * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
-   * ADDED: `steps_factor` and `snap_to_steps` bicycle costing options
+   * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**

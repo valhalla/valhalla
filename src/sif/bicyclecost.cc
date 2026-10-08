@@ -203,7 +203,7 @@ constexpr float kBicycleNetworkFactor = 0.95f;
 constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadSurfaces, 1.0f};
-constexpr ranged_default_t<float> kStepsFactorRange{1.0f, kDefaultStepsFactor, 100.0f};
+constexpr ranged_default_t<float> kStepsFactorRange{1.0f, kDefaultStepsFactor, kMaxFactor};
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
@@ -410,7 +410,6 @@ public:
   float track_factor_;        // Factor to use tracks
   float avoid_bad_surfaces_;  // Preference of avoiding bad surfaces for the bike type
   float steps_factor_;        // Cost factor for steps, applied on top of a 1 kph pace
-  bool snap_to_steps_;        // Whether locations may correlate to steps
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -449,7 +448,6 @@ protected:
                const graph_tile_ptr& tile,
                uint16_t disallow_mask = kDisallowNone) const override {
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
-           (snap_to_steps_ || edge->use() != Use::kSteps) &&
            (avoid_bad_surfaces_ != 1.0f || edge->surface() <= worst_allowed_surface_);
   }
 };
@@ -488,7 +486,6 @@ BicycleCost::BicycleCost(const Costing& costing)
   minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t>(type_)];
   worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ? minimal_surface_penalized_ : Surface::kPath;
   steps_factor_ = costing_options.steps_factor();
-  snap_to_steps_ = costing_options.snap_to_steps();
 
   // Set the surface speed factors for the bicycle type.
   if (type_ == BicycleType::kRoad) {
@@ -903,7 +900,6 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kAvoidBadSurfacesRange, json, "/avoid_bad_surfaces", avoid_bad_surfaces,
                           warnings);
   JSON_PBF_RANGED_DEFAULT(co, kStepsFactorRange, json, "/steps_factor", steps_factor, warnings);
-  JSON_PBF_DEFAULT_V2(co, false, json, "/snap_to_steps", snap_to_steps);
   JSON_PBF_DEFAULT(co, kDefaultBicycleType, json, "/bicycle_type", transport_type);
 
   // convert string to enum, set ranges and defaults based on enum

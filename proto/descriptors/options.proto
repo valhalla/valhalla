@@ -365,7 +365,6 @@ message Costing {
     oneof has_steps_factor {
       float steps_factor = 99;
     }
-    bool snap_to_steps = 100;
   }
 
   oneof has_options {
