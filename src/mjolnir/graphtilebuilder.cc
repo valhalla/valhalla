@@ -137,6 +137,15 @@ private:
   hashing_streambuf buf_;
 };
 
+// Temp file next to the tile that only the calling thread writes to
+std::filesystem::path tmp_tile_path(const std::filesystem::path& filename) {
+  std::filesystem::path tmp_filename = filename;
+  std::ostringstream suffix;
+  suffix << "_" << std::this_thread::get_id() << ".tmp";
+  tmp_filename += suffix.str();
+  return tmp_filename;
+}
+
 } // namespace
 
 // Constructor given an existing tile. This is used to read in the tile
@@ -362,12 +371,7 @@ void GraphTileBuilder::StoreTileData() {
 
   // Tiles are rewritten multiple times during building. Since threads may read tiles while they're
   // being written, we use atomic "write to temp file + rename" to avoid partial reads.
-  std::filesystem::path tmp_filename = filename;
-  {
-    std::ostringstream suffix;
-    suffix << "_" << std::this_thread::get_id() << ".tmp";
-    tmp_filename += suffix.str();
-  }
+  const std::filesystem::path tmp_filename = tmp_tile_path(filename);
 
   // Stream the tile body straight to the temp file, hashing as we go.
   tile_ostream in_mem(tmp_filename, header_builder_);
@@ -551,7 +555,9 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
   // Stream the data portion straight to disk, hashing as we go: updated nodes, unchanged
   // transitions, updated directed edges, then the rest of the tile unchanged.
   // If there are extended directed edge attributes they would need to be written out here.
-  tile_ostream in_mem(filename, header_builder_);
+  // Threads may read the tile while it's rewritten, so it's replaced atomically like in StoreTileData
+  const std::filesystem::path tmp_filename = tmp_tile_path(filename);
+  tile_ostream in_mem(tmp_filename, header_builder_);
   in_mem.write(reinterpret_cast<const char*>(nodes.data()), nodes.size() * sizeof(NodeInfo));
   in_mem.write(reinterpret_cast<const char*>(transitions_),
                header_->transitioncount() * sizeof(NodeTransition));
@@ -562,6 +568,7 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
   in_mem.write(begin, end - begin);
 
   in_mem.finalize();
+  std::filesystem::rename(tmp_filename, filename);
 }
 
 // Gets a reference to the header builder.
