@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
+   * FIXED: emergency only access on `service=emergency_access` [#6396](https://github.com/valhalla/valhalla/pull/6396)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
 
