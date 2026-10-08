@@ -964,7 +964,7 @@ function filter_tags_generic(kv)
     end
 
     -- expects access=private not to be combined with other values
-    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
+    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and kv["emergency"] == "yes") or (kv["service"] == "emergency_access") then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
