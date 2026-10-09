@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include "test.h"
 
 #include <gtest/gtest.h>
 
@@ -340,5 +341,315 @@ TEST_F(ConditionalRestrictions, AccessConditional) {
         },
         std::exception)
         << costing;
+  }
+}
+
+class DestinationOnlyZones : public ::testing::Test {
+protected:
+  // Consecutive destination-only edges, static or conditional, form a zone.
+  static constexpr const char* kZoneCondition = "destination @ (Mo-Su 09:00-17:00)";
+  static constexpr const char* kRestricted = "2020-04-02T12:00";
+  static constexpr const char* kUnrestricted = "2020-04-02T20:00";
+  static constexpr uint32_t kDestOnlyPenalty = 600;
+
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    const std::string ascii_map = R"(
+       A----B----C----D----E----F----G----H----I
+            |                   |    |         |
+            J-------------------K    +----L----+
+                                     |         |
+                                     +----M----+
+    )";
+    const std::pair<std::string, std::string> auto_stat = {"motor_vehicle", "destination"};
+    const std::pair<std::string, std::string> auto_cond = {"motor_vehicle:conditional",
+                                                           kZoneCondition};
+    const std::pair<std::string, std::string> hgv_cond = {"hgv:conditional", kZoneCondition};
+    const std::pair<std::string, std::string> hgv_stat = {"hgv", "destination"};
+    const std::pair<std::string, std::string> bicycle_cond = {"bicycle:conditional", kZoneCondition};
+    const gurka::ways ways = {
+        {"AB", {{"highway", "residential"}}},
+        {"BC", {{"highway", "residential"}, auto_stat}},
+        {"CD", {{"highway", "residential"}, auto_stat}},
+        {"DE", {{"highway", "residential"}, auto_cond}},
+        {"EF", {{"highway", "residential"}, auto_cond}},
+        {"FG", {{"highway", "residential"}}},
+        {"GH", {{"highway", "residential"}, auto_cond}},
+        {"HI", {{"highway", "residential"}, bicycle_cond}},
+        {"GL", {{"highway", "residential"}, auto_stat}},
+        {"LI", {{"highway", "residential"}}},
+        {"GM", {{"highway", "residential"}}},
+        {"MI", {{"highway", "residential"}}},
+        {"BJ", {{"highway", "residential"}, hgv_stat}},
+        {"JK", {{"highway", "residential"}, hgv_cond}},
+        {"KF", {{"highway", "residential"}}},
+    };
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+    map =
+        gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/destination_only_zones",
+                          {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
+                           // loki drops date_time from a matrix request beyond this
+                           {"service_limits.max_timedep_distance_matrix", "50000"}});
+  }
+
+  // warning 401 means the first pass found no route and destination-only was relaxed
+  static bool used_relaxed_pass(const valhalla::Api& result) {
+    for (const auto& w : result.info().warnings())
+      if (w.code() == 401)
+        return true;
+    return false;
+  }
+};
+gurka::map DestinationOnlyZones::map = {};
+
+// Starts at F because access isn't checked on the origin edge.
+TEST_F(DestinationOnlyZones, ThroughTrafficExcluded) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
+                                   {{"/date_time/type", dt}, {"/date_time/value", kRestricted}});
+    gurka::assert::raw::expect_path(result, {"FG", "GM", "MI"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+// Zero penalty: time-dependent takes the shortest branch, bidirectional's first pass rejects it.
+TEST_F(DestinationOnlyZones, ZeroPenaltyTreatsConditionalLikeStatic) {
+  for (const auto& dt : {std::string("1"), std::string("2")}) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"}, "date_time type " + dt);
+  }
+
+  auto bidirectional = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
+                                        {{"/date_time/type", "3"},
+                                         {"/date_time/value", kRestricted},
+                                         {"/costing_options/auto/destination_only_penalty", "0"}});
+  gurka::assert::raw::expect_path(bidirectional, {"FG", "GM", "MI"});
+}
+
+TEST_F(DestinationOnlyZones, ThroughTrafficAllowedWhenRestrictionInactive) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
+                                   {{"/date_time/type", dt}, {"/date_time/value", kUnrestricted}});
+    gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"}, "date_time type " + dt);
+  }
+}
+
+TEST_F(DestinationOnlyZones, EnterOneEdge) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "E"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"FG", "EF"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, LeaveOneEdge) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "G"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"EF", "FG"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, EnterTwoEdges) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "D"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"FG", "EF", "DE"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, LeaveTwoEdges) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"D", "G"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"DE", "EF", "FG"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+// Start on a static destination-only edge and continue into a conditional one.
+TEST_F(DestinationOnlyZones, StaticOriginThroughConditional) {
+  for (const auto& dt : {std::string("1"), std::string("3")}) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"C", "G"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"CD", "DE", "EF", "FG"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, StaticDestinationThroughConditional) {
+  for (const auto& dt : {std::string("2"), std::string("3")}) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "C"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"FG", "EF", "DE", "CD"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, ConditionalOriginThroughStatic) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "A"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"DE", "CD", "BC", "AB"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, ConditionalDestinationThroughStatic) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+// Destination-only edges must still be avoided after leaving the zone.
+TEST_F(DestinationOnlyZones, StillAppliesAfterLeavingZone) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "I"}, "auto",
+                                   {{"/date_time/type", dt}, {"/date_time/value", kRestricted}});
+    gurka::assert::raw::expect_path(result, {"EF", "FG", "GM", "MI"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+TEST_F(DestinationOnlyZones, DestinationInDownstreamZone) {
+  for (const auto& dt : kDateTimeTypes) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "H"}, "auto",
+                                   {{"/date_time/type", dt},
+                                    {"/date_time/value", kRestricted},
+                                    {"/costing_options/auto/destination_only_penalty", "0"}});
+    gurka::assert::raw::expect_path(result, {"EF", "FG", "GH"}, "date_time type " + dt);
+    EXPECT_FALSE(used_relaxed_pass(result)) << "date_time type " << dt;
+  }
+}
+
+// The matrix starts only from D, so the state must carry over from DE into EF (detour: 3900m).
+TEST_F(DestinationOnlyZones, TimeDistanceMatrixCrossesZoneToEndpoint) {
+  auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"D"}, {"G"}, "auto",
+                                 {{"/date_time/type", "1"}, {"/date_time/value", kRestricted}});
+  EXPECT_EQ(result.matrix().algorithm(), Matrix::TimeDistanceMatrix);
+  EXPECT_NEAR(result.matrix().distances(0), 1500, 10);
+}
+
+// CostMatrix expands from both ends, so each tree has to cross EF to connect E and G.
+TEST_F(DestinationOnlyZones, CostMatrixCrossesZoneToEndpoint) {
+  auto result =
+      gurka::do_action(valhalla::Options::sources_to_targets, map, {"E", "G"}, {"G", "E"}, "auto",
+                       {{"/prioritize_bidirectional", "1"},
+                        {"/date_time/type", "1"},
+                        {"/date_time/value", kRestricted}});
+  EXPECT_EQ(result.matrix().algorithm(), Matrix::CostMatrix);
+  EXPECT_NEAR(result.matrix().distances(0), 1000, 10) << "forward tree from E";
+  EXPECT_NEAR(result.matrix().distances(3), 1000, 10) << "reverse tree from E";
+}
+
+// The penalty changes cost but not time, so compare /expansion costs rather than the polygon.
+TEST_F(DestinationOnlyZones, IsochroneActiveConditionalAddsDestOnlyPenalty) {
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto gh = static_cast<uint64_t>(std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, "G", "H")));
+  auto gl = static_cast<uint64_t>(std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, "G", "L")));
+
+  auto edge_costs = [](const char* date_time) {
+    auto result = gurka::do_action(valhalla::Options::expansion, map, {"F"}, "auto",
+                                   {{"/action", "isochrone"},
+                                    {"/expansion_properties/0", "edge_id"},
+                                    {"/expansion_properties/1", "cost"},
+                                    {"/contours/0/time", "60"},
+                                    {"/date_time/type", "1"},
+                                    {"/date_time/value", date_time}});
+    const auto& e = result.expansion();
+    std::unordered_map<uint64_t, uint32_t> costs;
+    for (int i = 0; i < e.edge_id_size(); ++i)
+      costs.emplace(e.edge_id(i), e.costs(i));
+    return costs;
+  };
+
+  auto restricted = edge_costs(kRestricted);
+  auto unrestricted = edge_costs(kUnrestricted);
+
+  EXPECT_NEAR(restricted.at(gh) - unrestricted.at(gh), kDestOnlyPenalty, 2)
+      << "an active restriction costs the same as a regular destination-only edge";
+  EXPECT_EQ(restricted.at(gl), unrestricted.at(gl))
+      << "a regular destination-only edge costs the same either way";
+}
+
+// The reverse search adds the penalty once on zone entry (only conditional edges show this).
+TEST_F(DestinationOnlyZones, ReverseSearchAddsPenaltyOnceOnZoneEntry) {
+  // arrive_by runs only the reverse search, and G->D enters the zone at EF and stays inside
+  auto result = gurka::do_action(valhalla::Options::expansion, map, {"G", "D"}, "auto",
+                                 {{"/action", "route"},
+                                  {"/expansion_properties/0", "edge_id"},
+                                  {"/expansion_properties/1", "cost"},
+                                  {"/date_time/type", "2"},
+                                  {"/date_time/value", kRestricted}});
+
+  const auto& expansion = result.expansion();
+  std::unordered_map<uint64_t, uint32_t> costs;
+  for (int i = 0; i < expansion.edge_id_size(); ++i) {
+    auto [it, added] = costs.emplace(expansion.edge_id(i), expansion.costs(i));
+    if (!added)
+      it->second = std::min(it->second, expansion.costs(i));
+  }
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  // the reverse search labels the opposing edges, so check both directions
+  auto cost_of = [&](const std::string& a, const std::string& b) {
+    for (const auto& ends : {std::pair{a, b}, std::pair{b, a}}) {
+      auto id = static_cast<uint64_t>(
+          std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, ends.first, ends.second)));
+      auto found = costs.find(id);
+      if (found != costs.end())
+        return static_cast<int>(found->second);
+    }
+    ADD_FAILURE() << a << b << " was never expanded";
+    return 0;
+  };
+
+  const int entering_zone = cost_of("G", "F") - cost_of("F", "E");
+  const int already_inside = cost_of("F", "E") - cost_of("E", "D");
+  EXPECT_NEAR(entering_zone - already_inside, kDestOnlyPenalty, 20);
+}
+
+// Costings other than auto are restricted by their own tags, which auto ignores.
+TEST_F(DestinationOnlyZones, OtherCostingsReadTheirOwnTags) {
+  for (const auto& dt : kDateTimeTypes) {
+    SCOPED_TRACE("date_time type " + dt);
+    const std::unordered_map<std::string, std::string> restricted = {{"/date_time/type", dt},
+                                                                     {"/date_time/value",
+                                                                      kRestricted}};
+    // HI is restricted for bicycle only, auto is already kept off GH
+    auto bicycle = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "bicycle", restricted);
+    gurka::assert::raw::expect_path(bicycle, {"FG", "GM", "MI"}, "bicycle");
+
+    // the bypass is a zone for truck only, so truck stays on the main road and auto leaves it
+    auto truck = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "truck", restricted);
+    gurka::assert::raw::expect_path(truck, {"AB", "BC", "CD", "DE", "EF"}, "truck");
+    auto car = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", restricted);
+    gurka::assert::raw::expect_path(car, {"AB", "BJ", "JK", "KF"}, "auto");
   }
 }

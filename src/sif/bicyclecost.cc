@@ -79,7 +79,7 @@ constexpr float kLeftSideTurnPenalties[] = {kTPStraight,    kTPUnfavorableSlight
 const float kTruckStress = 0.5f;
 
 // Cost of traversing an edge with steps. Make this high but not impassible.
-const float kBicycleStepsFactor = 8.0f;
+constexpr float kDefaultStepsFactor = 8.0f;
 
 // Default cycling speed on smooth, flat roads - based on bicycle type (KPH)
 constexpr float kDefaultCyclingSpeed[] = {
@@ -203,6 +203,7 @@ constexpr float kBicycleNetworkFactor = 0.95f;
 constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadSurfaces, 1.0f};
+constexpr ranged_default_t<float> kStepsFactorRange{kMinFactor, kDefaultStepsFactor, kMaxFactor};
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
@@ -244,7 +245,6 @@ public:
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
    * @param  edge                        Pointer to a directed edge.
-   * @param  is_dest                     Is a directed edge the destination?
    * @param  pred                        Predecessor edge information.
    * @param  tile                        Current tile.
    * @param  edgeid                      GraphId of the directed edge.
@@ -258,14 +258,14 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const bool is_dest,
                        const EdgeLabel& pred,
                        const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx,
-                       uint8_t& destonly_access_restr_mask) const override;
+                       uint8_t& destonly_access_restr_mask,
+                       bool* edge_destonly) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -296,7 +296,8 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               uint8_t& restriction_idx,
-                              uint8_t& destonly_access_restr_mask) const override;
+                              uint8_t& destonly_access_restr_mask,
+                              bool* edge_destonly) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -340,12 +341,12 @@ public:
    * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return Returns the cost and time (seconds)
    */
-  virtual Cost
-  TransitionCost(const baldr::DirectedEdge* edge,
-                 const baldr::NodeInfo* node,
-                 const EdgeLabel& pred,
-                 const graph_tile_ptr& tile,
-                 const std::function<LimitedGraphReader()>& reader_getter) const override;
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile,
+                              const std::function<LimitedGraphReader()>& reader_getter,
+                              const bool edge_destonly) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -366,11 +367,12 @@ public:
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
+                                     const EdgeLabel& pred_label,
                                      const graph_tile_ptr& tile,
-                                     const GraphId& pred_id,
                                      const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool /*has_measured_speed*/,
-                                     const InternalTurn /*internal_turn*/) const override;
+                                     const InternalTurn /*internal_turn*/,
+                                     const bool opp_edge_destonly) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -407,6 +409,7 @@ public:
   float livingstreet_factor_; // Factor to use for living streets
   float track_factor_;        // Factor to use tracks
   float avoid_bad_surfaces_;  // Preference of avoiding bad surfaces for the bike type
+  float steps_factor_;        // Cost factor for steps, applied on top of a 1 kph pace
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -445,7 +448,6 @@ protected:
                const graph_tile_ptr& tile,
                uint16_t disallow_mask = kDisallowNone) const override {
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
-           edge->use() != Use::kSteps &&
            (avoid_bad_surfaces_ != 1.0f || edge->surface() <= worst_allowed_surface_);
   }
 };
@@ -483,6 +485,7 @@ BicycleCost::BicycleCost(const Costing& costing)
   avoid_bad_surfaces_ = costing_options.avoid_bad_surfaces();
   minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t>(type_)];
   worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ? minimal_surface_penalized_ : Surface::kPath;
+  steps_factor_ = costing_options.steps_factor();
 
   // Set the surface speed factors for the bicycle type.
   if (type_ == BicycleType::kRoad) {
@@ -553,14 +556,14 @@ BicycleCost::BicycleCost(const Costing& costing)
 
 // Check if access is allowed on the specified edge.
 bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
-                          const bool is_dest,
                           const EdgeLabel& pred,
                           const graph_tile_ptr& tile,
                           const baldr::GraphId& edgeid,
                           const uint64_t current_time,
                           const uint32_t tz_index,
                           uint8_t& restriction_idx,
-                          uint8_t& destonly_access_restr_mask) const {
+                          uint8_t& destonly_access_restr_mask,
+                          bool* edge_destonly) const {
   // the user asked for this edge to be usable no matter what
   if (AllowedLinearFeature(edgeid)) {
     return true;
@@ -588,8 +591,11 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   if (edge->surface() > worst_allowed_surface_) {
     return false;
   }
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
-                                           tz_index, restriction_idx, destonly_access_restr_mask);
+  if (edge_destonly)
+    *edge_destonly = edge->destonly();
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
+                                           restriction_idx, destonly_access_restr_mask,
+                                           pred.destonly(), edge_destonly);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -602,7 +608,8 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const uint64_t current_time,
                                  const uint32_t tz_index,
                                  uint8_t& restriction_idx,
-                                 uint8_t& destonly_access_restr_mask) const {
+                                 uint8_t& destonly_access_restr_mask,
+                                 bool* edge_destonly) const {
   // the user asked for this edge to be usable no matter what
   if (AllowedLinearFeature(opp_edgeid)) {
     return true;
@@ -624,9 +631,11 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (edge->surface() > worst_allowed_surface_) {
     return false;
   }
-  return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx,
-                                           destonly_access_restr_mask);
+  if (edge_destonly)
+    *edge_destonly = opp_edge->destonly();
+  return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx, destonly_access_restr_mask,
+                                           pred.destonly(), edge_destonly);
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time
@@ -639,7 +648,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
     float sec = (edge->length() * kSpeedFactor[1]);
-    return {shortest_ ? edge->length() : sec * kBicycleStepsFactor, sec};
+    return {shortest_ ? edge->length() : sec * steps_factor_, sec};
   }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
@@ -738,11 +747,12 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
                                  const baldr::NodeInfo* node,
                                  const EdgeLabel& pred,
                                  const graph_tile_ptr& /*tile*/,
-                                 const std::function<LimitedGraphReader()>& /*reader_getter*/) const {
+                                 const std::function<LimitedGraphReader()>& /*reader_getter*/,
+                                 const bool edge_destonly) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  Cost c = base_transition_cost(node, edge, &pred, idx);
+  Cost c = base_transition_cost(node, edge, &pred, idx, edge_destonly);
 
   // Reduce penalty to make this turn if the road we are turning on has some kind of bicycle
   // accommodation
@@ -810,11 +820,12 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
                                         const baldr::NodeInfo* node,
                                         const baldr::DirectedEdge* pred,
                                         const baldr::DirectedEdge* edge,
+                                        const EdgeLabel& pred_label,
                                         const graph_tile_ptr& /*tile*/,
-                                        const GraphId& /*pred_id*/,
                                         const std::function<LimitedGraphReader()>& /*reader_getter*/,
                                         const bool /*has_measured_speed*/,
-                                        const InternalTurn /*internal_turn*/) const {
+                                        const InternalTurn /*internal_turn*/,
+                                        const bool opp_edge_destonly) const {
 
   // Bicycles should be able to make uturns on short internal edges; therefore, InternalTurn
   // is ignored for now.
@@ -822,7 +833,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
-  Cost c = base_transition_cost(node, edge, pred, idx);
+  Cost c = base_transition_cost(node, edge, pred, idx, pred_label.destonly(), opp_edge_destonly);
 
   // Reduce penalty to make this turn if the road we are turning on has some kind of bicycle
   // accommodation
@@ -898,6 +909,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kAvoidBadSurfacesRange, json, "/avoid_bad_surfaces", avoid_bad_surfaces,
                           warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kStepsFactorRange, json, "/steps_factor", steps_factor, warnings);
   JSON_PBF_DEFAULT(co, kDefaultBicycleType, json, "/bicycle_type", transport_type);
 
   // convert string to enum, set ranges and defaults based on enum

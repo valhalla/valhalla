@@ -345,6 +345,10 @@ void parse_location(valhalla::Location* location,
         rapidjson::get<bool>(*search_filter, "/exclude_ferry", false));
     location->mutable_search_filter()->set_level(
         rapidjson::get<float>(*search_filter, "/level", baldr::kMaxLevel));
+    // search_filter.exclude_steps
+    auto exclude_steps = rapidjson::get_optional<bool>(*search_filter, "/exclude_steps");
+    if (exclude_steps)
+      location->mutable_search_filter()->set_exclude_steps(*exclude_steps);
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
   } // or is it pbf
@@ -375,6 +379,9 @@ void parse_location(valhalla::Location* location,
   }
   if (!location->search_filter().has_level_case())
     location->mutable_search_filter()->set_level(baldr::kMaxLevel);
+  if (!location->search_filter().has_exclude_steps_case())
+    location->mutable_search_filter()->set_exclude_steps(request.options().costing_type() ==
+                                                         Costing::bicycle);
 
   float waiting_secs = rapidjson::get<float>(r_loc, "/waiting", 0.f);
   switch (location->type()) {

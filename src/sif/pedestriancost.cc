@@ -292,7 +292,6 @@ public:
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
    * @param  edge                        Pointer to a directed edge.
-   * @param  is_dest                     Is a directed edge the destination?
    * @param  pred                        Predecessor edge information.
    * @param  tile                        Current tile.
    * @param  edgeid                      GraphId of the directed edge.
@@ -306,14 +305,14 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const bool is_dest,
                        const EdgeLabel& pred,
                        const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx,
-                       uint8_t& destonly_access_restr_mask) const override;
+                       uint8_t& destonly_access_restr_mask,
+                       bool* edge_destonly) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -345,7 +344,8 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               uint8_t& restriction_idx,
-                              uint8_t& destonly_access_restr_mask) const override;
+                              uint8_t& destonly_access_restr_mask,
+                              bool* edge_destonly) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -389,12 +389,12 @@ public:
    * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost
-  TransitionCost(const baldr::DirectedEdge* edge,
-                 const baldr::NodeInfo* node,
-                 const EdgeLabel& pred,
-                 const graph_tile_ptr& tile,
-                 const std::function<LimitedGraphReader()>& reader_getter) const override;
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile,
+                              const std::function<LimitedGraphReader()>& reader_getter,
+                              const bool edge_destonly) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -417,11 +417,12 @@ public:
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
+                                     const EdgeLabel& pred_label,
                                      const graph_tile_ptr& tile,
-                                     const GraphId& edge_id,
                                      const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool /*has_measured_speed*/,
-                                     const InternalTurn /*internal_turn*/) const override;
+                                     const InternalTurn /*internal_turn*/,
+                                     const bool opp_edge_destonly) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -560,7 +561,9 @@ public:
   sif::Cost base_transition_cost(const baldr::NodeInfo* node,
                                  const baldr::DirectedEdge* edge,
                                  const predecessor_t* pred,
-                                 const uint32_t idx) const {
+                                 const uint32_t idx,
+                                 const bool edge_destonly = false,
+                                 const bool pred_destonly = false) const {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
@@ -573,7 +576,8 @@ public:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
+    c.cost += destination_only_penalty_ *
+              ((edge_destonly || edge->destonly()) && !(pred_destonly || pred->destonly()));
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost +=
@@ -670,14 +674,14 @@ PedestrianCost::PedestrianCost(const Costing& costing)
 // (currently disabled bcs of noisy data).
 // Disallow edges where max. distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
-                             const bool is_dest,
                              const EdgeLabel& pred,
                              const graph_tile_ptr& tile,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              uint8_t& restriction_idx,
-                             uint8_t& destonly_access_restr_mask) const {
+                             uint8_t& destonly_access_restr_mask,
+                             bool* edge_destonly) const {
   // the user asked for this edge to be usable no matter what
   if (AllowedLinearFeature(edgeid)) {
     return true;
@@ -701,8 +705,11 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
-                                           tz_index, restriction_idx, destonly_access_restr_mask);
+  if (edge_destonly)
+    *edge_destonly = edge->destonly();
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
+                                           restriction_idx, destonly_access_restr_mask,
+                                           pred.destonly(), edge_destonly);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -715,7 +722,8 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
                                     uint8_t& restriction_idx,
-                                    uint8_t& destonly_access_restr_mask) const {
+                                    uint8_t& destonly_access_restr_mask,
+                                    bool* edge_destonly) const {
   // the user asked for this edge to be usable no matter what
   if (AllowedLinearFeature(opp_edgeid)) {
     return true;
@@ -735,9 +743,11 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx,
-                                           destonly_access_restr_mask);
+  if (edge_destonly)
+    *edge_destonly = opp_edge->destonly();
+  return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx, destonly_access_restr_mask,
+                                           pred.destonly(), edge_destonly);
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time
@@ -786,7 +796,8 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
                                     const baldr::NodeInfo* node,
                                     const EdgeLabel& pred,
                                     const graph_tile_ptr& tile,
-                                    const std::function<LimitedGraphReader()>& reader_getter) const {
+                                    const std::function<LimitedGraphReader()>& reader_getter,
+                                    const bool edge_destonly) const {
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return {step_penalty_, 0.0f};
@@ -814,7 +825,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  Cost c = base_transition_cost(node, edge, &pred, idx);
+  Cost c = base_transition_cost(node, edge, &pred, idx, edge_destonly);
 
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
@@ -833,11 +844,12 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
                                            const baldr::DirectedEdge* edge,
+                                           const EdgeLabel& pred_label,
                                            const graph_tile_ptr& tile,
-                                           const GraphId& edge_id,
                                            const std::function<LimitedGraphReader()>& reader_getter,
                                            const bool /*has_measured_speed*/,
-                                           const InternalTurn /*internal_turn*/) const {
+                                           const InternalTurn /*internal_turn*/,
+                                           const bool opp_edge_destonly) const {
 
   // Pedestrians should be able to make uturns on short internal edges; therefore, InternalTurn
   // is ignored for now.
@@ -856,9 +868,9 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   if (node->type() == NodeType::kElevator) {
     // call functor to get limited access to reader
     baldr::LimitedGraphReader reader = reader_getter();
-    auto to_tile = reader.GetGraphTile(edge_id);
+    auto to_tile = reader.GetGraphTile(pred_label.edgeid());
     auto levels = tile->edgeinfo(pred).levels();
-    auto prev_levels = to_tile->edgeinfo(to_tile->directededge(edge_id)).levels();
+    auto prev_levels = to_tile->edgeinfo(to_tile->directededge(pred_label.edgeid())).levels();
     unsigned int traversed_levels = levels.first.size() == 1 && prev_levels.first.size() == 1 &&
                                             levels.first[0].first == levels.first[0].second &&
                                             prev_levels.first[0].first == prev_levels.first[0].second
@@ -869,7 +881,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
 
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
-  Cost c = base_transition_cost(node, edge, pred, idx);
+  Cost c = base_transition_cost(node, edge, pred, idx, pred_label.destonly(), opp_edge_destonly);
 
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
