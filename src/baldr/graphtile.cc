@@ -978,6 +978,9 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
         departure_time += frequency;
       }
 
+      if (departure_time >= end_time)
+        continue;
+
       // make a new departure with a guess for departure time          ;
       return new TransitDeparture(d.lineid(), d.tripid(), d.routeindex(), d.blockid(),
                                   d.headsign_offset(), departure_time, d.end_time(), d.frequency(),
