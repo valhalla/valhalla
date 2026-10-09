@@ -16,6 +16,7 @@
    * FIXED: `valhalla_add_elevation` tile argument validation [#6361](https://github.com/valhalla/valhalla/pull/6361)
    * FIXED: Handle destonly zones with `<access>:conditional=destination @ ...` [#6364](https://github.com/valhalla/valhalla/pull/6364)
 * **Enhancement**
+   * UPDATED: timezone database to 2026e [#6375](https://github.com/valhalla/valhalla/pull/6375)
    * UPDATED: timezone database to 2026d [#6343](https://github.com/valhalla/valhalla/pull/6343)
    * UPDATED: Sort nodes spatially using Hilbert curve [#6342](https://github.com/valhalla/valhalla/pull/6342)
    * UPDATED: complete Slovenian (sl-SI) locale [#6339](https://github.com/valhalla/valhalla/pull/6339)
