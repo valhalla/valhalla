@@ -60,6 +60,7 @@ bool search_filter(const DirectedEdge* edge,
          (filter.exclude_toll() && edge->toll()) ||
          (filter.exclude_ramp() && (edge->use() == Use::kRamp)) ||
          (filter.exclude_ferry() && (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
+         (filter.exclude_steps() && edge->use() == Use::kSteps) ||
          (filter.exclude_closures() && (costing.flow_mask() & kCurrentFlowMask) &&
           tile->IsClosed(edge)) ||
          (filter.level() != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level()));

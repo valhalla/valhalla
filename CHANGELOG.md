@@ -1,7 +1,12 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
+   * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
+   * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
 * **Enhancement**
+   * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
+   * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
@@ -37,6 +42,7 @@
    * FIXED: check for empty coords in `linear_feature_factors` [#6328](https://github.com/valhalla/valhalla/pull/6328)
    * FIXED: edge walking issues with `linear_cost_features` [#6327](https://github.com/valhalla/valhalla/pull/6327)
    * FIXED: a zero `linear_cost_factors` factor no longer discards the factors of every feature behind it [#6329](https://github.com/valhalla/valhalla/pull/6329)
+   * FIXED: `<mode>:backward` should override `vehicle:backward` [#6332](https://github.com/valhalla/valhalla/pull/6332)
    * FIXED: trivial CostMatrix path where either source/target is node snapped [#6334](https://github.com/valhalla/valhalla/pull/6334)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
