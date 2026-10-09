@@ -695,3 +695,28 @@ TEST_F(DestinationOnlyZones, OtherCostingsReadTheirOwnTags) {
     gurka::assert::raw::expect_path(car, {"AB", "BJ", "JK", "KF"}, "auto");
   }
 }
+
+TEST(StandAlone, MultipleTimedRestrictions) {
+  const gurka::ways ways = {
+      {"AB", {{"highway", "secondary"}}},
+      {"BC",
+       {{"highway", "secondary"},
+        {"hgv:conditional", "yes @ (09:00-12:00)"},
+        {"access:conditional", "no @ (13:00-14:00)"}}},
+  };
+  const std::string ascii_map = R"(
+        A----B----C
+      )";
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/multi_timed",
+                               {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
+
+  // 16:00 is outside both windows, so BC (open 09:00-12:00 only) must not be routable
+  try {
+    gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "truck",
+                     {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-10T16:00"}});
+    FAIL() << "Expected route to fail.";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected different error code.";
+  }
+}
