@@ -951,6 +951,42 @@ TEST(GtfsExample, MakeTile) {
   EXPECT_EQ(uses[Use::kRail], 3);
 }
 
+TEST(GtfsExample, FrequencyDepartureBeforeEndTime) {
+  boost::property_tree::ptree pt = get_config();
+  GraphReader reader(pt.get_child("mjolnir"));
+
+  // Tuesday, so both frequency trips run
+  auto dt = "2023-03-28";
+  auto dt_date_days = DateTime::days_from_pivot_date(DateTime::get_formatted_date(dt));
+  auto dt_dow = DateTime::day_of_week_mask(dt);
+
+  // t1 runs every 30 minutes until 22:00
+  const uint32_t current_time = 78300; // 21:45, no next departure on this day
+  size_t frequency_deps = 0;
+  for (auto tileid : reader.GetTileSet()) {
+    graph_tile_ptr tile = reader.GetGraphTile(tileid);
+    uint32_t date_created = tile->header()->date_created();
+    bool date_before_tile = dt_date_days < date_created;
+    uint32_t dt_day = date_before_tile ? 0 : dt_date_days - date_created;
+
+    for (const auto& edge : tile->GetDirectedEdges()) {
+      if (!edge.IsTransitLine()) {
+        continue;
+      }
+      const auto* dep = tile->GetNextDeparture(edge.lineid(), current_time, dt_day, dt_dow,
+                                               date_before_tile, false, false);
+      if (!dep || dep->type() != kFrequencySchedule) {
+        continue;
+      }
+      ++frequency_deps;
+      EXPECT_GE(dep->departure_time(), current_time);
+      EXPECT_LT(dep->departure_time(), dep->end_time());
+      EXPECT_EQ(dep->frequency(), t2_headsecs);
+    }
+  }
+  EXPECT_EQ(frequency_deps, 2);
+}
+
 TEST(GtfsExample, bicycle_locate) {
   std::string response;
   gurka::do_action(valhalla::Options::locate, map, {"1"}, "bicycle", {}, {}, &response);
