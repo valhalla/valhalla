@@ -4,6 +4,7 @@
    * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
    * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
+   * FIXED: emergency only access on `service=emergency_access` [#6396](https://github.com/valhalla/valhalla/pull/6396)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
