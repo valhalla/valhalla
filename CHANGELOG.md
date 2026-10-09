@@ -21,6 +21,7 @@
    * UPDATED: complete Slovenian (sl-SI) locale [#6339](https://github.com/valhalla/valhalla/pull/6339)
    * UPDATED: Replace `boost::format` with C++20 `std::format` [#6363](https://github.com/valhalla/valhalla/pull/6363)
    * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6371](https://github.com/valhalla/valhalla/pull/6371)
+   * ADDED: `allow` property for `linear_cost_factors` [#6350](https://github.com/valhalla/valhalla/pull/6350)
 
 ## Release Date: 2026-09-19 Valhalla 3.9.0
 * **Removed**

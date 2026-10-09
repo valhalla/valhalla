@@ -319,7 +319,7 @@ TEST_F(LinearFeatureTest, partial_edges_shape) {
   gurka::assert::raw::expect_path(request, {"TS", "SR", "RB", "A2", "A2", "A2", "EZ"});
 }
 
-TEST_F(LinearFeatureTest, ignore_access_restrictions) {
+TEST_F(LinearFeatureTest, allow_access_restriction) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
 
@@ -330,7 +330,7 @@ TEST_F(LinearFeatureTest, ignore_access_restrictions) {
       {{"lon": {:.6f}, "lat": {:.6f}}}
     ], 
     "linear_cost_factors": [
-      {{"shape": "{}", "ignore_access_restrictions": {}}}
+      {{"shape": "{}", "allow": {}}}
     ], 
     "costing": "auto",
     "costing_options": {{
@@ -353,7 +353,7 @@ TEST_F(LinearFeatureTest, ignore_access_restrictions) {
   loki_worker.cleanup();
   ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
   EXPECT_NEAR(request.options().cost_factor_lines().at(0).cost_factor(), 1.f, 0.01);
-  EXPECT_TRUE(request.options().cost_factor_lines().at(0).ignore_access_restrictions());
+  EXPECT_EQ(request.options().cost_factor_lines().at(0).allow_types(), baldr::kAllowAll);
   EXPECT_EQ(request.options().cost_factor_lines().at(0).shape().size(), 2);
 
   thor_worker.route(request);
@@ -367,7 +367,7 @@ TEST_F(LinearFeatureTest, ignore_access_restrictions) {
   for (auto& cfe : costing_options.cost_factor_edges()) {
     auto e = gurka::findEdgeByNodes(reader, map.nodes, "V", "W");
     if (std::get<0>(e) == cfe.id()) {
-      EXPECT_TRUE(cfe.ignore_access_restrictions());
+      EXPECT_EQ(cfe.allow_types(), baldr::kAllowAll);
       EXPECT_NEAR(cfe.factor(), 1.f, 0.01f);
       found = true;
       break;
@@ -714,10 +714,10 @@ TEST(LinearFeature, none_costing) {
     "locations": [
       {{"lon": {:.6f}, "lat": {:.6f}}},
       {{"lon": {:.6f}, "lat": {:.6f}}}
-    ], 
+    ],
     "linear_cost_factors": [
       {{"shape": "{}", "factor": 200}}
-    ], 
+    ],
     "costing": "auto"
   }}
   )";
@@ -740,4 +740,171 @@ TEST(LinearFeature, none_costing) {
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
   check_cost_factor_edge(costing_options.cost_factor_edges(), "B", "D", reader, map.nodes, 200, 0, 1);
+}
+
+TEST(LinearFeature, allow_inaccessible_edge) {
+  const std::string ascii_map = R"(
+    A----B----C----D----E----F----G----H--I
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FG", {{"highway", "residential"}}},
+      {"GH", {{"highway", "residential"}, {"motor_vehicle", "no"}}},
+      {"HI", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/linear_feature_allow");
+
+  constexpr std::string_view json_request = R"(
+  {{
+    "locations": [
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
+    ],
+    {}
+    "costing": "auto"
+  }}
+  )";
+
+  auto route = [&](const std::string& linear_cost_factors, Api& request) {
+    auto json_str =
+        std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
+                    map.nodes.at("I").lng(), map.nodes.at("I").lat(), linear_cost_factors);
+
+    loki::loki_worker_t loki_worker(map.config);
+    thor::thor_worker_t thor_worker(map.config);
+    ParseApi(json_str, Options::route, request);
+    loki_worker.route(request);
+    loki_worker.cleanup();
+    thor_worker.route(request);
+  };
+
+  Api without;
+  EXPECT_THROW(route("", without), valhalla_exception_t);
+
+  Api with;
+  route(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow": true}}],)",
+                    encode_shape({"G", "H"}, map.nodes)),
+        with);
+
+  const auto& costing_options =
+      with.options().costings().find(with.options().costing_type())->second.options();
+  ASSERT_EQ(costing_options.cost_factor_edges().size(), 1);
+  EXPECT_EQ(costing_options.cost_factor_edges().at(0).allow_types(), baldr::kAllowAll);
+
+  gurka::assert::raw::expect_path(with, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+
+  Api with_types;
+  route(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow_types": ["all"]}}],)",
+                    encode_shape({"G", "H"}, map.nodes)),
+        with_types);
+
+  const auto& types_costing_options =
+      with_types.options().costings().find(with_types.options().costing_type())->second.options();
+  ASSERT_EQ(types_costing_options.cost_factor_edges().size(), 1);
+  EXPECT_EQ(types_costing_options.cost_factor_edges().at(0).allow_types(), baldr::kAllowAll);
+
+  gurka::assert::raw::expect_path(with_types, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+}
+
+/**
+ * Dijkstras has a raw access mask check to quickly bail disallowed candidates
+ * only if there are no allowed linear edges
+ * */
+TEST(LinearFeature, allow_in_dijkstras) {
+  const std::string ascii_map = R"(
+    A----B----C----D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}, {"motor_vehicle", "no"}}},
+      {"CD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/linear_feature_allow_dijkstras");
+
+  constexpr std::string_view json_request = R"(
+  {{
+    "locations": [{{"lon": {:.6f}, "lat": {:.6f}}}],
+    "contours": [{{"time": 60}}],
+    "action": "isochrone",
+    "skip_opposites": true,
+    {}
+    "costing": "auto"
+  }}
+  )";
+
+  auto expand = [&](const std::string& linear_cost_factors) {
+    auto json_str = std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
+                                linear_cost_factors);
+    return gurka::do_action(Options::expansion, map, json_str);
+  };
+
+  EXPECT_EQ(expand("").expansion().geometries_size(), 1);
+
+  auto with = expand(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow": true}}],)",
+                                 encode_shape({"B", "C"}, map.nodes)));
+  EXPECT_EQ(with.expansion().geometries_size(), 3);
+}
+
+/**
+ * CostMatrix has a raw access mask check to quickly bail disallowed candidates
+ * only if there are no allowed linear edges
+ * */
+TEST(LinearFeature, allow_in_costmatrix) {
+  const std::string ascii_map = R"(
+    A----B----C----D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}, {"motor_vehicle", "no"}}},
+      {"CD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/linear_feature_allow_costmatrix");
+
+  constexpr std::string_view json_request = R"(
+  {{
+    "sources": [{{"lon": {:.6f}, "lat": {:.6f}}}],
+    "targets": [{{"lon": {:.6f}, "lat": {:.6f}}}],
+    {}
+    "costing": "auto"
+  }}
+  )";
+
+  auto matrix = [&](const std::string& linear_cost_factors, Api& request) {
+    auto json_str =
+        std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
+                    map.nodes.at("D").lng(), map.nodes.at("D").lat(), linear_cost_factors);
+
+    loki::loki_worker_t loki_worker(map.config);
+    thor::thor_worker_t thor_worker(map.config);
+    ParseApi(json_str, Options::sources_to_targets, request);
+    loki_worker.matrix(request);
+    loki_worker.cleanup();
+    thor_worker.matrix(request);
+  };
+
+  Api without;
+  matrix("", without);
+  ASSERT_EQ(without.matrix().distances().size(), 1);
+  // no auto path across BC, so the pair comes back unreachable
+  EXPECT_GT(without.matrix().distances(0), 1e6);
+
+  Api with;
+  matrix(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow": true}}],)",
+                     encode_shape({"B", "C"}, map.nodes)),
+         with);
+  ASSERT_EQ(with.matrix().distances().size(), 1);
+  EXPECT_NEAR(with.matrix().distances(0), 1500, 1);
 }
