@@ -66,6 +66,30 @@ rapidjson::Document d;
 
 /*************************************************************/
 
+TEST_F(TaggedValues, EdgeInfoJson) {
+  baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
+  auto edge_id = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, "B", "C"));
+  auto ei = graphreader.edgeinfo(edge_id);
+
+  rapidjson::writer_wrapper_t writer;
+  writer.start_object();
+  ei.json(writer);
+  writer.end_object();
+
+  rapidjson::Document json;
+  json.Parse(writer.get_buffer());
+  ASSERT_FALSE(json.HasParseError()) << writer.get_buffer();
+  EXPECT_EQ(json["way_id"].GetUint64(), ei.wayid());
+  EXPECT_TRUE(json["names"].IsArray());
+  // layer and tunnel are stored as tagged values but aren't part of the edge info json
+  EXPECT_EQ(ei.layer(), -3);
+  EXPECT_FALSE(json.HasMember("layer"));
+  EXPECT_FALSE(json.HasMember("tunnel"));
+  EXPECT_FALSE(json.HasMember("osm_node_ids"));
+}
+
+/*************************************************************/
+
 TEST_F(TaggedValues, Layer) {
   baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
 
@@ -253,4 +277,20 @@ TEST(TaggedValuesStandalone, test_osm_node_ids) {
       ++id;
     }
   }
+
+  auto edge_id = std::get<0>(gurka::findEdgeByNodes(graph_reader, layout, "W", "Z"));
+  rapidjson::writer_wrapper_t writer;
+  writer.start_object();
+  graph_reader.edgeinfo(edge_id).json(writer);
+  writer.end_object();
+
+  rapidjson::Document json;
+  json.Parse(writer.get_buffer());
+  ASSERT_TRUE(json.HasMember("osm_node_ids")) << writer.get_buffer();
+  const auto& json_ids = json["osm_node_ids"].GetArray();
+  ASSERT_EQ(json_ids.Size(), 4);
+  EXPECT_EQ(json_ids[0].GetUint64(), 800000);
+  EXPECT_EQ(json_ids[1].GetUint64(), UINT64_MAX - 1);
+  EXPECT_EQ(json_ids[2].GetUint64(), UINT64_MAX);
+  EXPECT_EQ(json_ids[3].GetUint64(), 1);
 }

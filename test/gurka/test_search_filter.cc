@@ -151,6 +151,17 @@ TEST_F(SearchFilter, MinRoadClass) {
   gurka::assert::osrm::expect_steps(result, {"AB"});
   gurka::assert::raw::expect_path(result, {"AB"});
 }
+TEST_F(SearchFilter, UnknownRoadClassIsIgnored) {
+  auto route = [](const std::string& max_road_class) {
+    const std::string& request = std::format(
+        R"({{"locations":[{{"lat":{:.6f},"lon":{:.6f},"search_filter":{{"max_road_class":"{}"}}}},{{"lat":{:.6f},"lon":{:.6f}}}],"costing":"auto"}})",
+        map.nodes.at("1").lat(), map.nodes.at("1").lng(), max_road_class, map.nodes.at("2").lat(),
+        map.nodes.at("2").lng());
+    return gurka::do_action(valhalla::Options::route, map, request);
+  };
+  gurka::assert::raw::expect_path(route("primary"), {"AD", "AB", "BC"});
+  gurka::assert::raw::expect_path(route("highway"), {"AB", "BC"});
+}
 TEST_F(SearchFilter, ExcludeTunnel) {
   auto from = "2";
   auto to = "1";

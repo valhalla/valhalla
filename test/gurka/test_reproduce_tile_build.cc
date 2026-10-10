@@ -257,7 +257,7 @@ TEST(TileChecksum, AddPredictedTrafficRefreshesChecksums) {
   std::ofstream(csv) << tile_id.level() << "/" << tile_id.tileid() << "/" << edge_id.id()
                      << ",45,35,\n";
 
-  mjolnir::ProcessTrafficTiles(tile_dir, traffic_dir, false, map.config);
+  mjolnir::ProcessTrafficTiles(tile_dir, traffic_dir, true, map.config);
 
   // fresh reader so we read the rewritten tile rather than the cached one
   baldr::GraphReader updated(map.config.get_child("mjolnir"));

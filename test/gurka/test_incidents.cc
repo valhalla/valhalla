@@ -1,3 +1,4 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "test.h"
 
@@ -847,6 +848,136 @@ TEST_F(IncidentsTest, armageddon) {
                                        {2, 2, 0, .7, 1, .2},
                                        {3, 2, 0, .8, 1, 1.},
                                    });
+}
+
+TEST_F(IncidentsTest, serialized_properties) {
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"CB"}, edge_ids);
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
+  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 1234, "fender bender");
+
+  auto& meta = *reader->incidents[edge_ids[0].tile_base()].mutable_metadata(0);
+  meta.set_type(valhalla::IncidentsTile::Metadata::ACCIDENT);
+  meta.set_impact(valhalla::IncidentsTile::Metadata::MAJOR);
+  meta.set_long_description("two cars, right lane");
+  meta.set_sub_type("collision");
+  meta.set_sub_type_description("rear end");
+  meta.set_creation_time(1600000000);
+  meta.set_start_time(1600000000);
+  meta.set_end_time(1600003600);
+  meta.set_num_lanes_blocked(1);
+  meta.set_length(120);
+  meta.set_clear_lanes("left lane open");
+  meta.set_road_closed(true);
+  meta.add_alertc_codes(201);
+  meta.add_lanes_blocked("right");
+  meta.mutable_congestion()->set_value(42);
+
+  auto check_incident = [](const rapidjson::Value& incident, bool locate) {
+    EXPECT_EQ(incident["type"].GetString(), std::string("accident"));
+    EXPECT_EQ(incident["impact"].GetString(), std::string("major"));
+    EXPECT_EQ(incident["description"].GetString(), std::string("fender bender"));
+    EXPECT_EQ(incident["long_description"].GetString(), std::string("two cars, right lane"));
+    EXPECT_EQ(incident["sub_type"].GetString(), std::string("collision"));
+    EXPECT_EQ(incident["sub_type_description"].GetString(), std::string("rear end"));
+    EXPECT_EQ(incident["num_lanes_blocked"].GetUint(), 1);
+    EXPECT_EQ(incident["clear_lanes"].GetString(), std::string("left lane open"));
+    EXPECT_EQ(incident["congestion"]["value"].GetUint(), 42);
+    EXPECT_EQ(incident["alertc_codes"][0].GetUint(), 201);
+    EXPECT_EQ(incident["lanes_blocked"][0].GetString(), std::string("right"));
+    EXPECT_EQ(incident[locate ? "road_closed" : "closed"].GetBool(), true);
+    EXPECT_EQ(incident["iso_3166_1_alpha2"].GetString(), std::string(locate ? "" : "CA"));
+    if (locate) {
+      EXPECT_EQ(incident["id"].GetUint64(), 1234);
+      EXPECT_EQ(incident["start_time"].GetUint64(), 1600000000);
+    } else {
+      EXPECT_EQ(incident["id"].GetString(), std::string("1234"));
+      EXPECT_EQ(incident["start_time"].GetString(), std::string("2020-09-13T12:26:40Z"));
+      EXPECT_TRUE(incident.HasMember("geometry_index_start"));
+    }
+  };
+
+  std::string json;
+  gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                   {{"/format", "osrm"},
+                    {"/filters/action", "include"},
+                    {"/filters/attributes/0", "incidents"}},
+                   graphreader, &json);
+  rapidjson::Document route;
+  route.Parse(json);
+  ASSERT_FALSE(route.HasParseError()) << json;
+  const auto& route_incidents = route["routes"][0]["legs"][0]["incidents"];
+  ASSERT_EQ(route_incidents.Size(), 1) << json;
+  check_incident(route_incidents[0], false);
+
+  gurka::do_action(valhalla::Options::locate, map, {"1"}, "auto", {{"/verbose", "1"}}, graphreader,
+                   &json);
+  rapidjson::Document locate;
+  locate.Parse(json);
+  ASSERT_FALSE(locate.HasParseError()) << json;
+  size_t edges_with_incidents = 0;
+  for (const auto& edge : locate[0]["edges"].GetArray()) {
+    if (!edge.HasMember("incidents"))
+      continue;
+    ++edges_with_incidents;
+    ASSERT_EQ(edge["incidents"].Size(), 1) << json;
+    check_incident(edge["incidents"][0], true);
+  }
+  EXPECT_EQ(edges_with_incidents, 1) << json;
+}
+
+TEST_F(IncidentsTest, serialized_types_and_impacts) {
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"CB"}, edge_ids);
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
+  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 1234);
+  auto& meta = *reader->incidents[edge_ids[0].tile_base()].mutable_metadata(0);
+
+  auto locate_incident = [&]() {
+    std::string json;
+    gurka::do_action(valhalla::Options::locate, map, {"1"}, "auto", {{"/verbose", "1"}}, graphreader,
+                     &json);
+    rapidjson::Document locate;
+    locate.Parse(json);
+    for (const auto& edge : locate[0]["edges"].GetArray()) {
+      if (edge.HasMember("incidents"))
+        return std::make_pair(std::string(edge["incidents"][0]["type"].GetString()),
+                              std::string(edge["incidents"][0]["impact"].GetString()));
+    }
+    return std::make_pair(std::string(), std::string());
+  };
+
+  const std::vector<std::pair<valhalla::IncidentsTile::Metadata::Type, std::string>> types = {
+      {valhalla::IncidentsTile::Metadata::ACCIDENT, "accident"},
+      {valhalla::IncidentsTile::Metadata::CONGESTION, "congestion"},
+      {valhalla::IncidentsTile::Metadata::CONSTRUCTION, "construction"},
+      {valhalla::IncidentsTile::Metadata::DISABLED_VEHICLE, "disabled_vehicle"},
+      {valhalla::IncidentsTile::Metadata::LANE_RESTRICTION, "lane_restriction"},
+      {valhalla::IncidentsTile::Metadata::MASS_TRANSIT, "mass_transit"},
+      {valhalla::IncidentsTile::Metadata::MISCELLANEOUS, "miscellaneous"},
+      {valhalla::IncidentsTile::Metadata::OTHER_NEWS, "other_news"},
+      {valhalla::IncidentsTile::Metadata::PLANNED_EVENT, "planned_event"},
+      {valhalla::IncidentsTile::Metadata::ROAD_CLOSURE, "road_closure"},
+      {valhalla::IncidentsTile::Metadata::ROAD_HAZARD, "road_hazard"},
+      {valhalla::IncidentsTile::Metadata::WEATHER, "weather"},
+  };
+  for (const auto& [type, name] : types) {
+    meta.set_type(type);
+    EXPECT_EQ(locate_incident().first, name);
+  }
+
+  const std::vector<std::pair<valhalla::IncidentsTile::Metadata::Impact, std::string>> impacts = {
+      {valhalla::IncidentsTile::Metadata::UNKNOWN, "unknown"},
+      {valhalla::IncidentsTile::Metadata::CRITICAL, "critical"},
+      {valhalla::IncidentsTile::Metadata::MAJOR, "major"},
+      {valhalla::IncidentsTile::Metadata::MINOR, "minor"},
+      {valhalla::IncidentsTile::Metadata::LOW, "low"},
+      {static_cast<valhalla::IncidentsTile::Metadata::Impact>(1000), "UNHANDLED_CASE"},
+  };
+  for (const auto& [impact, name] : impacts) {
+    meta.set_impact(impact);
+    EXPECT_EQ(locate_incident().second, name);
+  }
 }
 
 TEST(Standalone, vector_tiles) {

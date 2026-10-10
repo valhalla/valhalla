@@ -1,9 +1,13 @@
 #include "baldr/rapidjson_utils.h"
+#include "exceptions.h"
 #include "gurka.h"
 #include "midgard/encoded.h"
 #include "test.h"
 
 #include <gtest/gtest.h>
+
+#include <format>
+#include <set>
 
 using namespace valhalla;
 
@@ -638,4 +642,77 @@ TEST(Standalone, DuplicateTracePointsEdgeIndex) {
     edge_indexes.push_back(point["edge_index"].GetUint64());
   }
   EXPECT_EQ(edge_indexes, (std::vector<uint64_t>{0, 0, 0, 1}));
+}
+
+TEST(Standalone, UseTimestamps) {
+  const std::string ascii_map = R"(
+    A--1--B--2--C--3--D)";
+
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                            {"BC", {{"highway", "primary"}}},
+                            {"CD", {{"highway", "primary"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_trace_use_timestamps");
+
+  auto trace_elapsed = [&](bool use_timestamps) {
+    std::string shape;
+    for (const auto* node : {"1", "2", "3"}) {
+      const auto& ll = layout.at(node);
+      shape +=
+          (shape.empty() ? "" : ",") + std::format(R"({{"lat":{},"lon":{}}})", ll.lat(), ll.lng());
+    }
+    auto request = std::format(
+        R"({{"shape":[{}],"costing":"auto","shape_match":"map_snap","durations":[1000,1000],"use_timestamps":{}}})",
+        shape, use_timestamps);
+    auto api = gurka::do_action(valhalla::Options::trace_attributes, map, request);
+    const auto& leg = api.trip().routes(0).legs(0);
+    EXPECT_EQ(leg.node_size(), 4);
+    return leg.node(leg.node_size() - 1).cost().elapsed_cost().seconds();
+  };
+
+  // 1.2 km of primary road takes nowhere near the 2000 seconds the timestamps say
+  EXPECT_LT(trace_elapsed(false), 500);
+  EXPECT_NEAR(trace_elapsed(true), 2000, 1);
+}
+
+TEST(Standalone, ShapeMatchAndFilterActionParsing) {
+  const std::string ascii_map = R"(
+    A--1--B--2--C)";
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_trace_option_parsing");
+
+  auto trace = [&](const std::string& shape_match, const std::string& filter_action) {
+    std::string json;
+    gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2"}, "auto",
+                     {{"/shape_match", shape_match},
+                      {"/filters/action", filter_action},
+                      {"/filters/attributes/0", "edge.names"}},
+                     {}, &json);
+    rapidjson::Document doc;
+    doc.Parse(json);
+    return doc;
+  };
+
+  for (const auto* shape_match : {"map_snap", "walk_or_snap"}) {
+    EXPECT_EQ(trace(shape_match, "include")["edges"].Size(), 2) << shape_match;
+  }
+  try {
+    trace("snap_or_walk", "include");
+    FAIL() << "Expected an unknown shape_match to be rejected";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 445); }
+
+  // include keeps only the names, exclude drops them, an unknown action filters nothing
+  auto edge_keys = [&](const std::string& filter_action) {
+    std::set<std::string> keys;
+    for (const auto& member : trace("map_snap", filter_action)["edges"][0].GetObject())
+      keys.emplace(member.name.GetString());
+    return keys;
+  };
+  EXPECT_EQ(edge_keys("include"), std::set<std::string>{"names"});
+  EXPECT_FALSE(edge_keys("exclude").contains("names"));
+  EXPECT_TRUE(edge_keys("exclude").contains("length"));
+  EXPECT_TRUE(edge_keys("ignore").contains("names"));
+  EXPECT_TRUE(edge_keys("ignore").contains("length"));
 }

@@ -148,3 +148,131 @@ test('actor', async(t) => {
     }
   });
 });
+test('actor endpoints', async (t) => {
+  const actor = new valhalla.Actor(config);
+  const a = { lat: 52.08813, lon: 5.03231 };
+  const b = { lat: 52.09987, lon: 5.14913 };
+  const c = { lat: 52.0938, lon: 5.1194 };
+  const route = JSON.parse(await actor.route(JSON.stringify({ locations: [a, b], costing: 'auto' })));
+  const shape = route.trip.legs[0].shape;
+
+  // method -> [request, key expected in the response]
+  const cases = {
+    locate: [{ locations: [a], costing: 'auto' }, null],
+    matrix: [{ sources: [a], targets: [b, c], costing: 'auto' }, 'sources_to_targets'],
+    optimizedRoute: [{ locations: [a, c, b], costing: 'auto' }, 'trip'],
+    traceRoute: [{ encoded_polyline: shape, costing: 'auto', shape_match: 'edge_walk' }, 'trip'],
+    traceAttributes: [{ encoded_polyline: shape, costing: 'auto', shape_match: 'edge_walk' }, 'edges'],
+    height: [{ shape: [a, b] }, 'height'],
+    transitAvailable: [{ locations: [{ ...a, radius: 1000 }] }, null],
+    expansion: [{ locations: [a, b], costing: 'auto', action: 'route' }, 'features'],
+    centroid: [{ locations: [a, b], costing: 'auto' }, 'trip'],
+    status: [{}, 'version'],
+  };
+  for (const [method, [query, key]] of Object.entries(cases)) {
+    await t.test(method, async () => {
+      const res = JSON.parse(await actor[method](JSON.stringify(query)));
+      if (key === null) {
+        assert.ok(Array.isArray(res));
+        assert.equal(res.length, query.locations.length);
+      } else {
+        assert.ok(key in res, `${key} missing from ${method} response`);
+      }
+    });
+  }
+
+  await t.test('binary result', async () => {
+    const query = JSON.stringify({ locations: [a, b], costing: 'auto', format: 'pbf' });
+    const json = await actor.route(query);
+    assert.equal(typeof json, 'string');
+    const buf = await actor.route(query, true);
+    assert.ok(Buffer.isBuffer(buf));
+    assert.ok(buf.length > 0);
+  });
+
+  await t.test('argument validation', () => {
+    assert.throws(() => new valhalla.Actor(), TypeError);
+    assert.throws(() => new valhalla.Actor('{not json'), /Failed to parse config/);
+    assert.throws(() => actor.route(), TypeError);
+    assert.throws(() => actor.route({}), TypeError);
+    assert.throws(() => actor.tile(), TypeError);
+  });
+});
+
+test('GraphId', () => {
+  const { GraphId } = valhalla;
+
+  const gid = new GraphId(421920, 2, 20);
+  assert.equal(gid.tileid(), 421920);
+  assert.equal(gid.level(), 2);
+  assert.equal(gid.id(), 20);
+  assert.equal(gid.value, 674464002);
+  assert.ok(gid.is_valid());
+  assert.equal(new GraphId().is_valid(), false);
+
+  // every constructor yields the same id
+  assert.ok(new GraphId('2/421920/20').equals(gid));
+  assert.ok(new GraphId(674464002).equals(gid));
+  assert.ok(new GraphId(674464002n).equals(gid));
+
+  assert.ok(gid.tile_base().equals(new GraphId(421920, 2, 0)));
+  assert.equal(gid.tile_value(), new GraphId(421920, 2, 0).value);
+  assert.ok(gid.add(2).equals(new GraphId(421920, 2, 22)));
+  assert.equal(gid.id(), 20);
+
+  assert.equal(gid.equals(new GraphId(421920, 2, 21)), false);
+  assert.equal(gid.equals({}), false);
+  assert.equal(gid.equals(), false);
+
+  assert.equal(gid.toString(), '2/421920/20');
+  assert.deepEqual(JSON.parse(JSON.stringify(gid)),
+    { level: 2, tileid: 421920, id: 20, value: 674464002 });
+
+  assert.throws(() => new GraphId(true), TypeError);
+  assert.throws(() => new GraphId(2n ** 64n), /Value too large/);
+  assert.throws(() => new GraphId('1', 2, 3), TypeError);
+  assert.throws(() => new GraphId(1, 2), TypeError);
+  assert.throws(() => new GraphId('invalid'), Error);
+  assert.throws(() => gid.add('1'), TypeError);
+});
+
+test('tile helpers', () => {
+  const { GraphId } = valhalla;
+
+  const gid = valhalla.getTileIdFromLonLat(2, [5.03231, 52.08813]);
+  assert.equal(gid.level(), 2);
+  assert.equal(gid.id(), 0);
+  const [lon, lat] = valhalla.getTileBaseLonLat(gid);
+  assert.ok(lon <= 5.03231 && lon > 5.03231 - 0.25);
+  assert.ok(lat <= 52.08813 && lat > 52.08813 - 0.25);
+  assert.ok(valhalla.getTileIdFromLonLat(2, [lon, lat]).equals(gid));
+
+  assert.throws(() => valhalla.getTileBaseLonLat('2/0/0'), TypeError);
+  assert.throws(() => valhalla.getTileBaseLonLat(new GraphId(0, 5, 0)), Error);
+  assert.throws(() => valhalla.getTileIdFromLonLat(2, '5,52'), TypeError);
+  assert.throws(() => valhalla.getTileIdFromLonLat(2, [5]), TypeError);
+  assert.throws(() => valhalla.getTileIdFromLonLat(5, [5, 52]), /hierarchy levels/);
+  assert.throws(() => valhalla.getTileIdFromLonLat(2, [200, 0]), /Invalid coordinate/);
+
+  const bbox = [4.9, 52.0, 5.2, 52.2];
+  const all = valhalla.getTileIdsFromBbox(...bbox);
+  const local = valhalla.getTileIdsFromBbox(...bbox, [2]);
+  assert.ok(local.length > 0);
+  assert.ok(local.every((t) => t.level() === 2));
+  assert.ok(all.length > local.length);
+  assert.ok(local.some((t) => t.equals(gid)));
+  assert.throws(() => valhalla.getTileIdsFromBbox(1, 2), TypeError);
+  assert.throws(() => valhalla.getTileIdsFromBbox(200, 0, 201, 1), /Invalid coordinate/);
+  assert.throws(() => valhalla.getTileIdsFromBbox(...bbox, [5]), /hierarchy levels/);
+
+  // a ring around the same bbox covers the same level 2 tiles
+  const ring = [[4.9, 52.0], [5.2, 52.0], [5.2, 52.2], [4.9, 52.2]];
+  const fromRing = valhalla.getTileIdsFromRing(ring, [2]);
+  assert.deepEqual(fromRing.map(String).sort(), local.map(String).sort());
+  assert.equal(valhalla.getTileIdsFromRing(ring).length, all.length);
+  assert.throws(() => valhalla.getTileIdsFromRing('ring'), TypeError);
+  assert.throws(() => valhalla.getTileIdsFromRing([[0, 0], 1, [1, 1]]), TypeError);
+  assert.throws(() => valhalla.getTileIdsFromRing([[0, 0], [1], [1, 1]]), TypeError);
+  assert.throws(() => valhalla.getTileIdsFromRing([[0, 0], [1, 1]]), /at least 3/);
+  assert.throws(() => valhalla.getTileIdsFromRing([[200, 0], [0, 0], [0, 1]]), /Invalid coordinate/);
+});

@@ -543,6 +543,7 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
   # Call Python with exports in a single bash command (simpler than wrapper script)
   add_custom_command(OUTPUT python_valhalla.log
     COMMAND bash -cx "\
+      set -o pipefail; \
       ${PYTHON_TEST_EXPORTS} \
       ${TEST_PYTHON_EXECUTABLE} -m unittest discover \
         -s ${VALHALLA_SOURCE_DIR}/test/bindings/python \

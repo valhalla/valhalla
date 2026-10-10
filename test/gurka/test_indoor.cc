@@ -164,6 +164,18 @@ TEST_F(Indoor, DirectedEdge) {
   EXPECT_TRUE(directededge->reverseaccess() & baldr::kPedestrianAccess);
 }
 
+TEST_F(Indoor, EdgeInfoLevelRef) {
+  baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
+
+  auto level_ref = [&](const std::string& from, const std::string& to) {
+    auto edge_id = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, from, to));
+    return graphreader.edgeinfo(edge_id).level_ref();
+  };
+  EXPECT_EQ(level_ref("A", "B"), std::vector<std::string>{"Parking"});
+  EXPECT_EQ(level_ref("C", "F"), std::vector<std::string>{"Lobby"});
+  EXPECT_TRUE(level_ref("B", "C").empty());
+}
+
 TEST_F(Indoor, ElevatorPenalty) {
   // first route should take the elevator node
   auto result = gurka::do_action(valhalla::Options::route, map, {"E", "J"}, "pedestrian");
