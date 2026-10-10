@@ -36,6 +36,13 @@ constexpr float kTotalDistanceEpsilon = 5.0f;
 // Minimum tolerance for edge length
 constexpr float kMinLengthTolerance = 10.0f;
 
+// Small distance tolerance, in meters, used when comparing progress along an
+// edge shape after projecting trace points onto it.
+constexpr double kShapeProgressEpsilon = 0.25;
+
+// DirectedEdge length is rounded to the nearest meter
+constexpr double kEdgeLengthRoundingError = 0.5;
+
 // Get the length to compare to the edge length
 float length_comparison(const float length, const bool exact_match) {
   // Alter tolerance based on exact_match flag
@@ -51,29 +58,136 @@ float length_comparison(const float length, const bool exact_match) {
   return length + tolerance;
 }
 
-// check if the intermediate shape points are also on the edge
+const valhalla::midgard::PointLL& vertex_at(const std::vector<valhalla::midgard::PointLL>& edge_shape,
+                                            const bool forward,
+                                            const size_t index) {
+  return forward ? edge_shape[index] : edge_shape[edge_shape.size() - 1 - index];
+}
+
+// Project a trace point onto the directed edge shape, starting at the current segment cursor.
+bool project_onto_shape(const std::vector<valhalla::midgard::PointLL>& edge_shape,
+                        const bool forward,
+                        const std::vector<double>& vertex_distance,
+                        const valhalla::midgard::PointLL& point,
+                        double min_distance,
+                        size_t& segment,
+                        double& distance_along) {
+  while (segment + 1 < vertex_distance.size()) {
+    // Skip segments that end before the previous matched point on this edge.
+    if (vertex_distance[segment + 1] + kShapeProgressEpsilon < min_distance) {
+      ++segment;
+      continue;
+    }
+
+    // The trace point is valid for this segment only if it projects back to itself.
+    const auto& segment_start = vertex_at(edge_shape, forward, segment);
+    const auto projected = point.Project(segment_start, vertex_at(edge_shape, forward, segment + 1));
+    if (!point.ApproximatelyEqual(projected)) {
+      ++segment;
+      continue;
+    }
+
+    // Measure where the projected point lands along the whole edge shape, not
+    // just within this one segment.
+    const auto distance_along_shape = vertex_distance[segment] + segment_start.Distance(projected);
+    if (distance_along_shape + kShapeProgressEpsilon < min_distance) {
+      // A looped or near-overlapping edge can contain the same or a nearly identical point more
+      // than once. If this projection is behind the previous trace point, search later segments.
+      ++segment;
+      continue;
+    }
+
+    distance_along = distance_along_shape;
+    return true;
+  }
+  return false;
+}
+
+// Verify that the trace points for one directed edge walk monotonically along that edge's
+// shape. Extra points are allowed, e.g. route shapes split by live traffic breakpoints,
+// but real edge vertices must still appear in order.
 bool check_shape(const graph_tile_ptr& tile,
                  const DirectedEdge* de,
                  const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                  uint32_t from,
-                 uint32_t to) {
+                 uint32_t to,
+                 bool require_edge_end = true,
+                 float start_percent_along = 0.0f) {
+  if (from >= to || static_cast<size_t>(to) >= static_cast<size_t>(shape.size())) {
+    return false;
+  }
   if (to - from == 1 && de->length() == 0) {
     return true;
   }
+
   const auto edgeinfo = tile->edgeinfo(de);
   const auto& edge_shape = edgeinfo.shape();
-  int32_t i = edge_shape.size() - (to - from);
-  if (i < 1 || (from > 0 && i != 1)) {
+  if (edge_shape.size() < 2) {
     return false;
   }
-  bool forward = de->forward();
-  for (uint32_t j = from + 1; j < to; i++, j++) {
-    const uint32_t shape_idx = forward ? i : edge_shape.size() - 1 - i;
-    if (!to_ll(shape.Get(j).ll()).ApproximatelyEqual(edge_shape[shape_idx])) {
+
+  const size_t n = edge_shape.size();
+  const bool forward = de->forward();
+
+  // Accumulated distance from the edge's first vertex to each subsequent vertex.
+  std::vector<double> vertex_distance;
+  vertex_distance.reserve(n);
+  vertex_distance.push_back(0.0);
+  for (size_t i = 1; i < n; ++i) {
+    vertex_distance.push_back(
+        vertex_distance.back() +
+        vertex_at(edge_shape, forward, i - 1).Distance(vertex_at(edge_shape, forward, i)));
+  }
+
+  // Track both trace progress and the next real edge vertex that must appear.
+  double last_distance = 0.0;
+  size_t segment = 0;
+  size_t next_vertex = 1;
+  const auto start = to_ll(shape.Get(from).ll());
+  // The origin can be correlated to the middle of an edge, so only the first
+  // checked edge is allowed to start after one or more stored vertices.
+  if (from == 0) {
+    // Start at the correlated position so a loop or near-overlap earlier in the edge shape
+    // cannot be mistaken for the partial origin.
+    const double start_distance =
+        std::max(0.0, de->length() * start_percent_along - kEdgeLengthRoundingError);
+    if (!project_onto_shape(edge_shape, forward, vertex_distance, start, start_distance, segment,
+                            last_distance)) {
       return false;
     }
+
+    // Do not require vertices that precede a partial-edge origin.
+    while (next_vertex < n && vertex_distance[next_vertex] + kShapeProgressEpsilon < last_distance) {
+      ++next_vertex;
+    }
+    // If the origin is itself a stored vertex, that vertex has already been consumed.
+    while (next_vertex < n && start.ApproximatelyEqual(vertex_at(edge_shape, forward, next_vertex))) {
+      ++next_vertex;
+    }
   }
-  return true;
+
+  for (uint32_t j = from + 1; j <= to; ++j) {
+    const auto point = to_ll(shape.Get(j).ll());
+    double distance_along = 0.0;
+    if (!project_onto_shape(edge_shape, forward, vertex_distance, point, last_distance, segment,
+                            distance_along)) {
+      return false;
+    }
+
+    // Extra points are allowed, but they must not replace any stored vertices
+    // from the edge geometry.
+    if (next_vertex < n && vertex_distance[next_vertex] < distance_along - kShapeProgressEpsilon) {
+      return false;
+    }
+    while (next_vertex < n && point.ApproximatelyEqual(vertex_at(edge_shape, forward, next_vertex))) {
+      ++next_vertex;
+    }
+
+    last_distance = distance_along;
+  }
+  // Full-edge matches must consume the final stored vertex. A partial destination edge may end
+  // before it, but all trace points and stored vertices up to the destination are still checked.
+  return !require_edge_end || next_vertex == n;
 }
 
 // TODO: we need to stop relying on loki::Search to pre populate edge candidates for the first and
@@ -148,12 +262,28 @@ bool expand_from_node(const mode_costing_t& mode_costing,
       valhalla::midgard::equal<float>((distances[correlated_index].second + n->second.second),
                                       distances.back().second, kTotalDistanceEpsilon)) {
 
-    if (!path_infos.back().is_shortcut) {
+    // A route can end partway along its final edge. Validate that remaining trace segment here;
+    // complete edges are validated while walking from node to node below.
+    const auto& end_edge = n->second.first;
+    bool end_shape_matches = true;
+    if (!end_edge.end_node() && correlated_index + 1 < static_cast<size_t>(shape.size())) {
+      const GraphId end_edge_id(end_edge.graph_id());
+      const auto end_edge_tile = reader.GetGraphTile(end_edge_id);
+      end_shape_matches =
+          end_edge_tile &&
+          check_shape(end_edge_tile, end_edge_tile->directededge(end_edge_id), shape,
+                      correlated_index, static_cast<uint32_t>(shape.size() - 1), false);
+    }
+
+    if (end_shape_matches) {
+      if (path_infos.back().is_shortcut) { // can't end on a shortcut
+        return false;
+      }
       end_node = node;
       return true;
-    } else { // can't end on a shortcut
-      return false;
     }
+    // A nearby destination candidate can satisfy the distance tolerance without matching the
+    // remaining shape. Continue walking so another candidate can be tried.
   }
 
   // Get the last edge followed from this index
@@ -417,7 +547,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
       // Check if shape is within tolerance at the end node
       if (to_ll(options.shape(index).ll()).ApproximatelyEqual(de_end_ll) &&
           de_remaining_length < length_comparison(length, true) &&
-          check_shape(begin_edge_tile, de, options.shape(), 0, index)) {
+          check_shape(begin_edge_tile, de, options.shape(), 0, index, true, edge.percent_along())) {
 
         // Figure out what time it is right now, the first iteration is a no-op
         auto offset_time_info = nodeinfo
@@ -539,7 +669,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
     if (length <= de_length) {
       // Did not find the end of the origin edge. Check for trivial route on a single edge
       for (const auto& end : end_nodes) {
-        if (end.second.first.graph_id() == edge.graph_id()) {
+        if (end.second.first.graph_id() == edge.graph_id() &&
+            check_shape(begin_edge_tile, de, options.shape(), 0, options.shape_size() - 1, false,
+                        edge.percent_along())) {
           // Update the elapsed time based on edge cost
           uint8_t flow_sources;
           elapsed +=
