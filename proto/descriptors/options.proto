@@ -362,6 +362,9 @@ message Costing {
     oneof has_low_class_factor {
       float low_class_factor = 97;
     }
+    oneof has_steps_factor {
+      float steps_factor = 99;
+    }
   }
 
   oneof has_options {
