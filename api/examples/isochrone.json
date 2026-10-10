@@ -1,0 +1,43 @@
+{
+	"features": [
+		{
+			"properties": {
+				"fill-opacity": 0.33,
+				"fillColor": "#bf4040",
+				"opacity": 0.33,
+				"fill": "#bf4040",
+				"fillOpacity": 0.33,
+				"color": "#bf4040",
+				"contour": 0.1,
+				"metric": "distance"
+			},
+			"geometry": {
+				"coordinates": [
+					[
+						13.433188,
+						52.520031
+					],
+					[
+						13.431776,
+						52.519011
+					],
+					[
+						13.433188,
+						52.517663
+					],
+					[
+						13.43394,
+						52.519763
+					],
+					[
+						13.433188,
+						52.520031
+					]
+				],
+				"type": "LineString"
+			},
+			"type": "Feature"
+		}
+	],
+	"type": "FeatureCollection"
+}
