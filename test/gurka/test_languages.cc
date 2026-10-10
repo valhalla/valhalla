@@ -6879,3 +6879,79 @@ TEST_F(RouteWithStreetnameAndSign_en_USMultiWithNameSlash, CheckBackwardNames) {
             static_cast<int>(PronunciationAlphabet::kNone));
   EXPECT_EQ(std::get<kLinguisticMapTuplePronunciationIndex>(lang_iter->second), "");
 }
+
+TEST(Standalone, NodeLanguagesFromThreeInputFiles) {
+  const std::string ascii_map = R"(
+    A----B----C
+
+    D----E----F
+
+    G----H----I
+  )";
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {-75.6625, 45.3940});
+
+  // one road per pbf, gurka numbers osm ids per pbf so they are pinned here
+  const std::vector<std::pair<gurka::ways, gurka::nodes>> extracts = {
+      {{{"ABC", {{"highway", "primary"}, {"osm_id", "10"}}}},
+       {{"A", {{"osm_id", "11"}}},
+        {"B",
+         {{"osm_id", "12"},
+          {"barrier", "toll_booth"},
+          {"name", "Champlain Bridge"},
+          {"name:en", "Champlain Bridge"},
+          {"name:fr", "Pont Champlain"}}},
+        {"C", {{"osm_id", "13"}}}}},
+      {{{"DEF", {{"highway", "primary"}, {"osm_id", "20"}}}},
+       {{"D", {{"osm_id", "21"}}},
+        {"E",
+         {{"osm_id", "22"},
+          {"barrier", "toll_booth"},
+          {"name", "Pont Alexandra"},
+          {"name:fr", "Pont Alexandra"}}},
+        {"F", {{"osm_id", "23"}}}}},
+      {{{"GHI", {{"highway", "primary"}, {"osm_id", "30"}}}},
+       {{"G", {{"osm_id", "31"}}},
+        {"H",
+         {{"osm_id", "32"},
+          {"barrier", "toll_booth"},
+          {"name", "Chaudiere Bridge"},
+          {"name:en", "Chaudiere Bridge"}}},
+        {"I", {{"osm_id", "33"}}}}},
+  };
+
+  const std::string workdir = "test/data/gurka_node_languages_three_input_files";
+  std::filesystem::remove_all(workdir);
+  std::filesystem::create_directories(workdir);
+  std::vector<std::string> input_files;
+  for (const auto& [ways, nodes] : extracts) {
+    input_files.push_back(workdir + "/" + std::to_string(input_files.size()) + ".pbf");
+    gurka::detail::build_pbf(layout, ways, nodes, {}, input_files.back());
+  }
+
+  const auto config =
+      test::make_config(workdir,
+                        {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}}});
+  ASSERT_NO_THROW(build_tile_set(config, input_files, mjolnir::BuildStage::kInitialize,
+                                 mjolnir::BuildStage::kValidate));
+
+  GraphReader reader(config.get_child("mjolnir"));
+  const std::map<std::string, std::vector<std::pair<std::string, std::string>>> expected = {
+      {"B", {{"Champlain Bridge", "en"}, {"Pont Champlain", "fr"}}},
+      {"E", {{"Pont Alexandra", "fr"}}},
+      {"H", {{"Chaudiere Bridge", "en"}}},
+  };
+  for (const auto& [booth, names] : expected) {
+    const auto node_id = gurka::findNode(reader, layout, booth);
+    std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
+    const auto signs = reader.GetGraphTile(node_id)->GetSigns(node_id.id(), linguistics, true);
+    std::vector<std::pair<std::string, std::string>> actual;
+    for (size_t i = 0; i < signs.size(); ++i) {
+      const auto lang = linguistics.find(i);
+      ASSERT_NE(lang, linguistics.end()) << booth << " " << signs[i].text();
+      actual.emplace_back(signs[i].text(),
+                          to_string(static_cast<Language>(
+                              std::get<kLinguisticMapTupleLanguageIndex>(lang->second))));
+    }
+    EXPECT_EQ(actual, names) << "toll booth " << booth;
+  }
+}

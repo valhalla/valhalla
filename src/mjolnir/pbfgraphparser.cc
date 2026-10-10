@@ -5493,11 +5493,13 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // being used in a way.
   // TODO: we know how many knows we expect, stop early once we have that many
   LOG_INFO("Parsing nodes...");
+  bool create = true;
   for (auto& file : input_files) {
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     parser.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr, nullptr,
-                 nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, true));
+                 nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, create));
+    create = false;
     parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
 
     osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
