@@ -191,6 +191,7 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kNodeTransitEgressInfoLatLon, true},
     {kNodeTimeZone, true},
     {kNodeTransitionTime, true},
+    {kNodeStopImpact, false},
     {kNodeDriveOnRight, false},
     {kNodeElevation, false},
     {kNodeTaggedAccess, false},
