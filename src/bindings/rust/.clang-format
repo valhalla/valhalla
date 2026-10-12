@@ -1,0 +1,18 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+AccessModifierOffset: -2
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: false
+ColumnLimit: 120
+Cpp11BracedListStyle: false
+DerivePointerAlignment: false
+IncludeBlocks: Preserve
+IndentCaseLabels: false
+IndentPPDirectives: BeforeHash
+UseTab: Never
+...

@@ -1,0 +1,5 @@
+# Separate workspace: keeps the examples' heavy deps (tokio, axum, ...) out of valhalla's Cargo.lock.
+[workspace]
+members = ["*"]
+exclude = ["target"]
+resolver = "3"

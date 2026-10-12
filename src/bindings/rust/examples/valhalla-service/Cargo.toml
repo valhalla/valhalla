@@ -1,0 +1,20 @@
+[package]
+name = "valhalla-service"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+axum = { version = "0.8", default-features = false, features = ["tokio", "http1"] }
+clap = { version = "4", features = ["derive"] }
+flume = "0.11"
+form_urlencoded = "1"
+prost = "0.14"
+tokio = { version = "1", features = ["rt-multi-thread", "signal", "net"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "ansi"] }
+valhalla = { path = "../..", features = ["proto"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros"] }
+tower = { version = "0.5", features = ["util"] }

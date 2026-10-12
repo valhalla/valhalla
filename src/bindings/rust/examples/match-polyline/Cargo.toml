@@ -1,0 +1,11 @@
+[package]
+name = "match-polyline"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+polyline-iter = "0.4"
+valhalla = { path = "../..", features = ["proto"] }

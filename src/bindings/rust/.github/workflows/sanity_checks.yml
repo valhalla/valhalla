@@ -1,0 +1,22 @@
+name: Sanity checks
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+
+jobs:
+  sanity_checks:
+    name: Run Sanity Checks
+    runs-on: ubuntu-latest
+    steps:
+      # No checkout step here because build-push-action uses git context by default:
+      # https://github.com/marketplace/actions/build-and-push-docker-images#git-context
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and test
+        uses: docker/build-push-action@v6
+        with:
+          file: Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

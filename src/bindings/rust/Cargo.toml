@@ -1,0 +1,107 @@
+[package]
+name = "valhalla"
+
+version = "0.7.1"
+edition = "2024"
+rust-version = "1.98"
+description = "Rust bindings for Valhalla routing engine"
+readme = "README.md"
+repository = "https://github.com/kinkard/valhalla-rs"
+license = "MIT"
+keywords = ["geo", "routing", "navigation", "ffi", "valhalla"]
+# Valhalla uses git submodules that bring a lot of files that we don't need in the published crate.
+exclude = [
+    "**/.*",
+    "**/.github/*",
+    "**/test/*",
+    "**/tests/*",
+    "**/doctest/*",
+    "**/gtest/*",
+    "**/googletest/*",
+    "**/googlemock/*",
+    "**/doc/*",
+    "**/docs/*",
+    "**/bench/*",
+    "**/benches/*",
+    "**/benchmarks/*",
+    "**/example/*",
+    "**/examples/*",
+    "**/package-lock.json",
+
+    "valhalla/docker",
+    "valhalla/run_route_scripts",
+    "valhalla/scripts/*.py", # Python scripts for CI and other dev things
+    "valhalla/scripts/*.sh", # Python scripts for CI and other dev things
+    "valhalla/locales/*.po*",
+    "valhalla/src/bindings",
+    "valhalla/src/mjolnir", # Mjolnir is anyway disabled by `ENABLE_DATA_TOOLS=OFF` in build.rs
+    "valhalla/valhalla/mjolnir", # And same for Mjolnir headers
+    "valhalla/src/valhalla_*", # Valhalla executables not needed for Rust bindings
+    "valhalla/taginfo.json",
+    "valhalla/test_requests",
+    # Somehow, valhalla/LICENSE.md is required for cmake, so all unused docs are excluded in a more specific way.
+    "valhalla/third_party/**/*.md",
+    "valhalla/CHANGELOG.md",
+    "valhalla/CLAUDE.md",
+    "valhalla/AGENTS.md",
+    "valhalla/CODEX.md",
+    "valhalla/COPILOT.md",
+    "valhalla/CURSOR.md",
+    "valhalla/GEMINI.md",
+    "valhalla/CONTRIBUTING.md",
+    "valhalla/**/README.md",
+    # Valhalla submodules that are not needed for Rust bindings
+    "valhalla/third_party/cxxopts", # Used only by valhalla executables
+    "valhalla/third_party/dirent",  # Windows only, anyway not supported by Rust bindings
+    "valhalla/third_party/fastcov",
+    "valhalla/third_party/just_gtfs", # Used only by Mjolnir to build transits
+    "valhalla/third_party/libosmium", # Used only by Mjolnir to read OSM PBFs
+    "valhalla/third_party/nanobind",  # Used only by Python bindings
+    "valhalla/third_party/rapidjson/bin",
+    "valhalla/third_party/tz/*.html",
+    "valhalla/third_party/tz/NEWS",
+    "valhalla/third_party/unordered_dense/data",
+    "valhalla/third_party/unordered_dense/scripts",
+]
+
+# Makes possible to run profilers with `cargo bench`, e.g. `samply record cargo bench`
+[profile.bench]
+debug = "line-tables-only"
+lto = "thin"
+
+[features]
+default = ["proto"]
+# Enables Valhalla's Actor API and `proto` module with Valhalla's protobuf types.
+proto = ["dep:prost", "dep:prost-build"]
+
+[dependencies]
+bitflags = "2"
+# Lock to specific version to avoid accidentally upgrading to a version that somehow breaks compatibility.
+cxx = { version = "=1.0.203", features = ["c++20"] }
+prost = { version = "0.14", optional = true }
+
+[build-dependencies]
+cmake = "0.1"
+cxx-build = "=1.0.203"
+miniserde = "0.1"    # For compile_commands.json parsing
+pkg-config = "0.3"
+prost-build = { version = "0.14", optional = true }
+
+[dev-dependencies]
+miniserde = "0.1"
+pretty_assertions = "1"
+tempfile = { version = "3", default-features = false }
+criterion = { version = "0.7", default-features = false }
+
+[[bench]]
+name = "actor_bench"
+harness = false
+required-features = ["proto"]
+
+[[bench]]
+name = "tiles_bench"
+harness = false
+
+[[bench]]
+name = "config_bench"
+harness = false

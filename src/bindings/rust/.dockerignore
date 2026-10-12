@@ -1,0 +1,16 @@
+# Rust build artifacts
+/target
+/examples/target
+
+# Native build trees
+build/
+.cache/
+**/.cache/
+valhalla/build/
+
+# Not needed by the build (no git metadata in build.rs or valhalla CMake)
+.git
+.github
+
+# Submodule gitlink
+**/.git
