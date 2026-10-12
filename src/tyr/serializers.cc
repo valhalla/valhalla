@@ -279,6 +279,107 @@ void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer
   writer.set_precision(kDefaultPrecision);
   writer.end_array();
 }
+
+void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
+                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
+                                 const int begin_shape_index,
+                                 const int end_shape_index,
+                                 const std::string& road_class,
+                                 const std::string& key_prefix) {
+  writer(key_prefix + "id", std::to_string(incident_metadata.id()));
+  // Type is mandatory
+  writer(key_prefix + "type", valhalla::incidentTypeToString(incident_metadata.type()));
+  if (!incident_metadata.iso_3166_1_alpha2().empty()) {
+    writer(key_prefix + "iso_3166_1_alpha2", incident_metadata.iso_3166_1_alpha2());
+  }
+  if (!incident_metadata.iso_3166_1_alpha3().empty()) {
+    writer(key_prefix + "iso_3166_1_alpha3", incident_metadata.iso_3166_1_alpha3());
+  }
+  if (!incident_metadata.description().empty()) {
+    writer(key_prefix + "description", incident_metadata.description());
+  }
+  if (!incident_metadata.long_description().empty()) {
+    writer(key_prefix + "long_description", incident_metadata.long_description());
+  }
+  if (incident_metadata.creation_time()) {
+    writer(key_prefix + "creation_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
+  }
+  if (incident_metadata.start_time() > 0) {
+    writer(key_prefix + "start_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
+  }
+  if (incident_metadata.end_time()) {
+    writer(key_prefix + "end_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
+  }
+  if (incident_metadata.impact()) {
+    writer(key_prefix + "impact", valhalla::incidentImpactToString(incident_metadata.impact()));
+  }
+  if (!incident_metadata.sub_type().empty()) {
+    writer(key_prefix + "sub_type", incident_metadata.sub_type());
+  }
+  if (!incident_metadata.sub_type_description().empty()) {
+    writer(key_prefix + "sub_type_description", incident_metadata.sub_type_description());
+  }
+  if (incident_metadata.alertc_codes_size() > 0) {
+    writer(key_prefix + "alertc_codes");
+    writer.start_array();
+    for (const auto& alertc_code : incident_metadata.alertc_codes()) {
+      writer(static_cast<uint64_t>(alertc_code));
+    }
+    writer.end_array();
+  }
+  {
+    writer(key_prefix + "lanes_blocked");
+    writer.start_array();
+    for (const auto& blocked_lane : incident_metadata.lanes_blocked()) {
+      writer(blocked_lane);
+    }
+    writer.end_array();
+  }
+  if (incident_metadata.num_lanes_blocked()) {
+    writer(key_prefix + "num_lanes_blocked", incident_metadata.num_lanes_blocked());
+  }
+  if (!incident_metadata.clear_lanes().empty()) {
+    writer(key_prefix + "clear_lanes", incident_metadata.clear_lanes());
+  }
+
+  if (incident_metadata.length() > 0) {
+    writer(key_prefix + "length", incident_metadata.length());
+  }
+
+  if (incident_metadata.road_closed()) {
+    writer(key_prefix + "closed", incident_metadata.road_closed());
+  }
+  if (!road_class.empty()) {
+    writer(key_prefix + "class", road_class);
+  }
+
+  if (incident_metadata.has_congestion()) {
+    writer(key_prefix + "congestion");
+    writer.start_object();
+    writer("value", incident_metadata.congestion().value());
+    writer.end_object();
+  }
+
+  if (begin_shape_index >= 0) {
+    writer(key_prefix + "geometry_index_start", begin_shape_index);
+  }
+  if (end_shape_index >= 0) {
+    writer(key_prefix + "geometry_index_end", end_shape_index);
+  }
+
+  if (incident_metadata.has_display_ll() && incident_metadata.display_ll().has_lat() &&
+      incident_metadata.display_ll().has_lng()) {
+    writer.start_object("display_ll");
+    writer("lat", incident_metadata.display_ll().lat());
+    writer("lon", incident_metadata.display_ll().lng());
+    writer.end_object();
+  }
+  // TODO Add test of lanes blocked and add missing properties
+}
+
 } // namespace tyr
 } // namespace valhalla
 
@@ -457,106 +558,6 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
     }
   }
   return via_waypoints;
-}
-
-void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
-                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
-                                 const int begin_shape_index,
-                                 const int end_shape_index,
-                                 const std::string& road_class,
-                                 const std::string& key_prefix) {
-  writer(key_prefix + "id", std::to_string(incident_metadata.id()));
-  // Type is mandatory
-  writer(key_prefix + "type", valhalla::incidentTypeToString(incident_metadata.type()));
-  if (!incident_metadata.iso_3166_1_alpha2().empty()) {
-    writer(key_prefix + "iso_3166_1_alpha2", incident_metadata.iso_3166_1_alpha2());
-  }
-  if (!incident_metadata.iso_3166_1_alpha3().empty()) {
-    writer(key_prefix + "iso_3166_1_alpha3", incident_metadata.iso_3166_1_alpha3());
-  }
-  if (!incident_metadata.description().empty()) {
-    writer(key_prefix + "description", incident_metadata.description());
-  }
-  if (!incident_metadata.long_description().empty()) {
-    writer(key_prefix + "long_description", incident_metadata.long_description());
-  }
-  if (incident_metadata.creation_time()) {
-    writer(key_prefix + "creation_time",
-           baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
-  }
-  if (incident_metadata.start_time() > 0) {
-    writer(key_prefix + "start_time",
-           baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
-  }
-  if (incident_metadata.end_time()) {
-    writer(key_prefix + "end_time",
-           baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
-  }
-  if (incident_metadata.impact()) {
-    writer(key_prefix + "impact", valhalla::incidentImpactToString(incident_metadata.impact()));
-  }
-  if (!incident_metadata.sub_type().empty()) {
-    writer(key_prefix + "sub_type", incident_metadata.sub_type());
-  }
-  if (!incident_metadata.sub_type_description().empty()) {
-    writer(key_prefix + "sub_type_description", incident_metadata.sub_type_description());
-  }
-  if (incident_metadata.alertc_codes_size() > 0) {
-    writer(key_prefix + "alertc_codes");
-    writer.start_array();
-    for (const auto& alertc_code : incident_metadata.alertc_codes()) {
-      writer(static_cast<uint64_t>(alertc_code));
-    }
-    writer.end_array();
-  }
-  {
-    writer(key_prefix + "lanes_blocked");
-    writer.start_array();
-    for (const auto& blocked_lane : incident_metadata.lanes_blocked()) {
-      writer(blocked_lane);
-    }
-    writer.end_array();
-  }
-  if (incident_metadata.num_lanes_blocked()) {
-    writer(key_prefix + "num_lanes_blocked", incident_metadata.num_lanes_blocked());
-  }
-  if (!incident_metadata.clear_lanes().empty()) {
-    writer(key_prefix + "clear_lanes", incident_metadata.clear_lanes());
-  }
-
-  if (incident_metadata.length() > 0) {
-    writer(key_prefix + "length", incident_metadata.length());
-  }
-
-  if (incident_metadata.road_closed()) {
-    writer(key_prefix + "closed", incident_metadata.road_closed());
-  }
-  if (!road_class.empty()) {
-    writer(key_prefix + "class", road_class);
-  }
-
-  if (incident_metadata.has_congestion()) {
-    writer(key_prefix + "congestion");
-    writer.start_object();
-    writer("value", incident_metadata.congestion().value());
-    writer.end_object();
-  }
-
-  if (begin_shape_index >= 0) {
-    writer(key_prefix + "geometry_index_start", begin_shape_index);
-  }
-  if (end_shape_index >= 0) {
-    writer(key_prefix + "geometry_index_end", end_shape_index);
-  }
-
-  if (incident_metadata.has_display_ll() && incident_metadata.display_ll().has_lat() &&
-      incident_metadata.display_ll().has_lng()) {
-    writer.start_object("display_ll");
-    writer("lat", incident_metadata.display_ll().lat());
-    writer("lon", incident_metadata.display_ll().lng());
-    writer.end_object();
-  }
-  // TODO Add test of lanes blocked and add missing properties
 }
 
 } // namespace osrm
