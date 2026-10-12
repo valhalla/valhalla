@@ -21,7 +21,7 @@ from similarity import (
 TAU = 0.6  # a light score below this tries the retries; stage 5 ignores the hint below it
 BETA = 0.9  # aggressive pass discount
 FUZZY_DISCOUNT = 0.85  # edit-distance retry discount
-GAMMA = 0.15  # how much candidate weight the hint does not cover may cost
+GAMMA = 0.3  # how much candidate weight the hint does not cover may cost
 EVIDENCE_K = 1.5  # minimum hint weight, in units of the rarest possible gram
 GENERIC_MISMATCH = 0.6  # both sides carry a generic and they differ
 MIN_FUZZY_CORE = 3

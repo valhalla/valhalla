@@ -12,8 +12,10 @@ import argparse
 import os
 import sys
 
-from locate import LocateError, load_pool
+from candidate import Candidate, CandidatePool
+from locate import LocateError, index_names, load_pool
 from normalize import normalize_aggressive, normalize_light, split_hint
+from rank import ALPHA, HINT_RADIUS, rank
 from score import TAU, Hint, score_loose, score_pool
 from similarity import plain_containment, score_names, trigrams
 
@@ -52,7 +54,17 @@ SCORE_FIXTURES = (
 )
 SCORE_TOLERANCE = 0.01
 
-# (hint, names, the one name that must win and clear TAU - or None when nothing may clear it)
+
+def load_names(filename):
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", filename)
+    with open(path, "r", encoding="utf-8") as handle:
+        return tuple(line.strip() for line in handle if line.strip())
+
+
+# every distinct name within 1 km of 52.473833,13.427794 - a real pool, so IDF behaves as it does live
+NEUKOELLN = load_names("neukoelln.txt")
+
+# (hint, names, the only name that may clear TAU - or None when nothing may)
 WINNER_FIXTURES = (
     ("Hauptweg", ("Hauptweg", "Hauptstraße", "Bahnhofstraße", "Schulweg"), "Hauptweg"),
     ("Hauptstr", ("Hauptweg", "Hauptstraße", "Bahnhofstraße", "Schulweg"), "Hauptstraße"),
@@ -63,9 +75,29 @@ WINNER_FIXTURES = (
     ),
     ("Muehlstr", ("Mühlstraße", "Gerstenmühlstraße", "Mohlstraße", "Bergstraße"), "Mühlstraße"),
     ("Main Rd", ("Main Road", "Main Street", "High Road", "Station Road"), "Main Road"),
+    # a dropped letter leaves the hint inside a longer name: only the surplus term separates them
+    ("leinstr", NEUKOELLN, "Leinestraße"),
     ("B28", ("B 28", "B 27", "Hegelstraße"), "B 28"),
     ("Str", ("Bergstraße", "Burgstraße", "Bahnhofstraße"), None),
     ("Mozartstr", ("Bergstraße", "Sigwartstraße", "Gartenstraße", "Lazarettgasse"), None),
+)
+
+
+# the input sits on a side street, the hinted street is 10x farther: (edge_id, name, distance)
+RANK_POOL = (
+    (1, "Seitenweg", 3.0),
+    (2, "Seitenweg", 3.0),
+    (3, "Doblerstraße", 30.0),
+    (4, "Doblerstraße", 30.0),
+    (5, "Keplerstraße", 50.0),
+    (6, "Hegelstraße", 80.0),
+    (7, "Doblerstraße", 150.0),
+)
+# (hint, expected edges, expected filtered_edges) - a match wins outright, the side street is the
+# fallback, the out-of-radius stretch of the same street plays no part; no match changes nothing
+RANK_FIXTURES = (
+    ("Doblerstr", [3, 4], [1, 2]),
+    ("Mozartstr", [1, 2], []),
 )
 
 
@@ -85,10 +117,16 @@ def parse_args(argv):
     parser.add_argument(
         "--show",
         default="pool",
-        choices=["pool", "normalize", "grams", "scores"],
+        choices=["pool", "normalize", "grams", "scores", "rank"],
         help="which stage to report",
     )
     parser.add_argument("--limit", type=int, default=20, help="rows to print in candidate tables")
+    parser.add_argument(
+        "--location-radius", type=int, default=0, help="the waypoint's own radius, as loki sees it"
+    )
+    parser.add_argument(
+        "--hint-radius", type=int, default=HINT_RADIUS, help="how far the hint may reach, metres"
+    )
     return parser.parse_args(argv)
 
 
@@ -183,8 +221,30 @@ def check_fixtures():
         reason = check_winner(hint, names, winner)
         if reason:
             failures.append("  winner {!r}: {}".format(hint, reason))
+    for hint, want_edges, want_filtered in RANK_FIXTURES:
+        ranking = rank(synthetic_pool(RANK_POOL), Hint(hint))
+        got_edges = sorted(entry.candidate.edge_id for entry in ranking.edges)
+        got_filtered = sorted(entry.candidate.edge_id for entry in ranking.filtered)
+        if got_edges != want_edges or got_filtered != want_filtered:
+            failures.append(
+                "  rank {!r}: edges {} filtered {}, want {} / {}".format(
+                    hint, got_edges, got_filtered, want_edges, want_filtered
+                )
+            )
     if failures:
         raise RuntimeError("fixtures failed:\n" + "\n".join(failures))
+
+
+def synthetic_pool(rows):
+    pool = CandidatePool()
+    for edge_id, name, distance in rows:
+        candidate = Candidate()
+        candidate.edge_id = edge_id
+        candidate.names = [name]
+        candidate.distance = distance
+        pool.candidates.append(candidate)
+    index_names(pool)
+    return pool
 
 
 def check_winner(hint, names, winner):
@@ -198,10 +258,9 @@ def check_winner(hint, names, winner):
     summary = ", ".join("{} {:.3f}".format(name, score) for score, name in above) or "nothing"
     if winner is None:
         return "expected nothing above TAU, got {}".format(summary) if above else None
-    if not above or above[0][1] != winner:
-        return "expected {!r} on top, got {}".format(winner, summary)
-    if len(above) > 1 and above[1][0] == above[0][0]:
-        return "{!r} ties: {}".format(winner, summary)
+    # the soft filter keeps every edge at or above TAU, so a runner-up there is a wrong correlation
+    if len(above) != 1 or above[0][1] != winner:
+        return "expected only {!r} above TAU, got {}".format(winner, summary)
     return None
 
 
@@ -337,6 +396,58 @@ def print_scores_report(hint_text, pool, limit):
     print("  {} of {} edges carry a name at or above TAU={}".format(above, len(per_candidate), TAU))
 
 
+def print_ranked_rows(label, entries, limit):
+    print("  {} ({})".format(label, len(entries)))
+    for entry in entries[:limit]:
+        candidate = entry.candidate
+        score = entry.name_score.score if entry.name_score else None
+        names = ", ".join(candidate.names) if candidate.names else "-"
+        print(
+            "    {:>7.1f}  {:>7.1f}  {}  {:>7.0f}  {:<18}  {}".format(
+                candidate.distance,
+                entry.effective,
+                format_score(score),
+                entry.thor_score,
+                candidate.graph_id_str(),
+                names,
+            )
+        )
+    if len(entries) > limit:
+        print("    ... {} more (raise --limit)".format(len(entries) - limit))
+
+
+def print_rank_report(args, pool):
+    print()
+    print_hint_split(args.name)
+    hint = Hint(args.name)
+    ranking = rank(pool, hint, args.location_radius, args.hint_radius, args.costing)
+
+    best = ranking.best
+    best_text = "none" if best is None else "{:.3f} {}".format(best.score, best.name)
+    print(
+        "  within {} m: {} edges, {} distinct names, best name score {}".format(
+            args.hint_radius, len(ranking.near.candidates), len(ranking.near.distinct_names), best_text
+        )
+    )
+    verdict = "USED - soft filter" if ranking.hint_used else "not used - below TAU={}".format(TAU)
+    print("  hint {}   (alpha={}, location radius={} m)".format(verdict, ALPHA, args.location_radius))
+
+    if ranking.hint_used and ranking.baseline:
+        moved = ranking.edges[0].candidate.distance - ranking.baseline[0].candidate.distance
+        print("  correlation moved {:.1f} m away from the closest edge".format(moved))
+
+    print()
+    print(
+        "    {:>7}  {:>7}  {:>5}  {:>7}  {:<18}  {}".format(
+            "dist", "eff", "name", "thor", "graph id", "names"
+        )
+    )
+    print_ranked_rows("edges", ranking.edges, args.limit)
+    print_ranked_rows("filtered_edges", ranking.filtered, args.limit)
+    if ranking.hint_used:
+        print_ranked_rows("without the hint", ranking.baseline, args.limit)
+
+
 def main(argv):
     args = parse_args(argv)
     check_fixtures()
@@ -365,6 +476,8 @@ def main(argv):
         print_grams_report(args.name, pool, args.limit)
     elif args.show == "scores":
         print_scores_report(args.name, pool, args.limit)
+    elif args.show == "rank":
+        print_rank_report(args, pool)
 
     return 0
 

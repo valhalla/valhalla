@@ -1,7 +1,9 @@
 # street name hint — design notes
 
-Companion to [geocoding_problem_description.md](geocoding_problem_description.md). Conceptual only; no
-implementation, no Valhalla code referenced.
+Companion to [geocoding_problem_description.md](geocoding_problem_description.md). The design and the
+decisions taken on it; [scripts/geocoding_demo/](scripts/geocoding_demo/README.md) is the stdlib Python
+prototype that measures them, one module per eventual C++ translation unit. Values below marked
+*measured* come from that prototype on real `/locate` pools (Tübingen, Berlin-Neukölln).
 
 ## Framing
 
@@ -28,6 +30,12 @@ second aggressive pass, scored with a penalty, tried only if the light pass miss
 oe/ae.
 
 Applied to both sides, this alone resolves the hyphen half of the problem statement.
+
+Decided: no ICU, no NFKD at runtime. Valhalla has neither, and NFKD wouldn't be enough anyway, since
+`ß ø ł æ œ þ` don't decompose. The fold is a literal per-codepoint table, generated offline from NFKD
+plus Unicode character names plus a short exception list. It covers 387 of the 401 letters in
+U+00A0–U+024F, and the C++ side gets the same table as a `constexpr` array. Anything outside it
+(Greek, Cyrillic, CJK) passes through unfolded.
 
 ### Runtime, not baked into tiles
 
@@ -63,10 +71,10 @@ matching over normalized Damerau-Levenshtein; score the generic separately at lo
 Accurate and explainable, and the only thing that *truly* resolves `Str` → `Straße`. But it is a permanent
 maintenance surface, it is language-detection-adjacent, and it has a tail that never ends.
 
-### Design B — IDF-weighted character n-grams (recommended)
+### Design B — IDF-weighted character n-grams (chosen)
 
-Strip all whitespace from both normalized strings, take character trigram bags, score with the asymmetric
-overlap coefficient (`shared / smaller`), weighted by rarity.
+Strip all whitespace from both normalized strings, take character trigram bags, score by **containment
+of the hint**: shared hint weight ÷ total hint weight, each gram weighted by rarity.
 
 ## 3. Design B in plain language
 
@@ -80,9 +88,10 @@ A bag has no order and no word boundaries, so two things fall out for free:
 - **Word order stops mattering.** `Via Roma` and `Roma Via` give nearly the same bag, so prefix-vs-suffix
   generics never come up.
 
-**Comparing two bags:** count shared fragments, divide by the count in the *smaller* bag. Dividing by the
-smaller one is what makes abbreviations work — every fragment of `primustruberstr` also appears in
-`primustruberstrasse`, so it scores 1.0 instead of being punished for the missing letters.
+**Comparing two bags:** count shared fragments, divide by the count in the *hint's* bag. That is what
+makes abbreviations work — every fragment of `primustruberstr` also appears in `primustruberstrasse`, so
+it scores 1.0 instead of being punished for the missing letters. Dividing by the *smaller* bag instead
+would be wrong: `Truber Str` would then score 1.0 against the hint `Primus Truber Straße`.
 
 ### The problem with doing only that
 
@@ -118,6 +127,16 @@ everything. Weight each fragment by its rarity **among the candidates currently 
 The gap between right and wrong widens from 0.40 to 0.62. Nothing told the algorithm that *Straße* is a
 street-type word — it inferred it from everything nearby having it.
 
+Concretely, with N = distinct normalized names in the corpus:
+
+```
+weight(g) = ln(N / max(df(g), 1))
+```
+
+A hint gram no nearby name contains gets the maximum weight. Dropping it instead would let `Mozartstr`
+score 1.0 against every `-straße` in the pool. The table above is this formula at N=4, and the prototype
+asserts the 1.00 / 0.38 / 0.07 on every run.
+
 ```mermaid
 flowchart TD
     H["hint: 'Bergstr'"] --> N1["normalize<br/>strip spaces + punctuation"]
@@ -136,58 +155,107 @@ flowchart TD
 
 - **No language tables.** Common fragments come from `caddesi` in Turkey and `calle` in Spain. Reweights
   itself per location, nothing to maintain, no country detection.
-- **Typos degrade gently.** One wrong letter kills ~3 fragments out of ~15 — a dip, not a cliff.
 - **Small.** Normalize, slide a window, count, intersect. No alignment, no dynamic programming.
 
 ### Caveats
 
-- **Short names are noisy.** `Am See` yields ~4 fragments; one typo is fatal. Fall back to edit distance
-  below some length.
-- **Rarity needs enough candidates.** With 3 nearby streets the estimate is rubbish. See open questions.
-- **Cannot separate `Hauptweg` from `Hauptstraße` on principle** — both generics get down-weighted to
-  nothing, yet they are different streets that frequently coexist in one village. This specific case needs
-  a small explicit generics list to penalize a mismatch, and is the one place worth spending a table.
+Each one turned into a rule in §4.
 
-**Recommendation:** Design B plus a ~30-entry alias table for abbreviations that are ambiguous rather than
-truncating (`st`, `ul.`, `cad.`, `pl.`, `bd`), and the small generics list for the mismatch penalty above.
-Reach for Design A only if measurement shows B is insufficient.
+- **Typos are a cliff on short cores, not a dip.** *Measured:* the rare grams sit in the core, which is
+  short, so `Dobelrstr` (one transposition) keeps 3 of 7 grams and scores 0.23, tied with a wrong
+  street. `Doblr Strasse` (one dropped letter) scores 0.57. Both are below τ. → edit-distance retry on
+  the core.
+- **A ratio cannot measure how much evidence there is.** *Measured:* `Str` alone scores 1.0 against every
+  `-straße`, because its only gram is common, but common everywhere. → evidence floor.
+- **A hint can sit inside a longer name.** *Measured:* `leinstr` shares all but `lei` with
+  `silbersteinstr`, so Silbersteinstraße scores 0.68 and Leinestraße, which lost `ins`/`nst` to the
+  dropped `e`, only 0.61. Containment ignores the candidate's surplus by design. → weak surplus term.
+  Anchoring grams at the start of the name or token (pg_trgm-style padding) was tried and changed
+  nothing.
+- **Cannot separate `Hauptweg` from `Hauptstraße` on principle** — both generics get down-weighted to
+  nothing, yet they are different streets that frequently coexist in one village. → generics list and
+  mismatch penalty. The edit-distance retry makes this sharper: with the generic removed, both cores
+  are `haupt`.
+- **Rarity needs enough candidates.** Fewer than two distinct names → every weight is 0 → no score.
+
+**Chosen:** Design B, plus a generics list (prefix / suffix / glued forms, ~80 across de, nl,
+Scandinavian, en, fr, it, es, pt, pl, tr, hu, cz) for the mismatch penalty and for cutting the core out,
+plus ~40 position-aware abbreviations (`st` closing a name is street, `pl` is place/platz/plac/plaza).
+Abbreviations that truncate (`str`, `ave`) need no entry, since containment covers them. Design A stays
+unbuilt.
 
 ## 4. Aggregation details
 
-These matter more than the choice of similarity function.
+These matter more than the choice of similarity function. Per name, in this order:
 
-- **Asymmetric miss penalty.** Hint tokens absent from the candidate are strong negative evidence
-  (`Primus Truber` vs `Truber Straße` → probably the wrong street). Candidate tokens absent from the hint
-  are weak evidence — humans drop words. Do not make this symmetric.
-- **Generic disagreement is not free.** See the `Hauptweg` caveat above.
+1. **Ref regime.** A hint that looks like a ref (one to three letters, digits, at most one trailing
+   letter: `B28`, `L 1208`, `US101`) is matched near-exactly on the light form, giving 1.0 or 0.0, and
+   nothing else runs. A street hint never scores a ref name. Fuzzy matching on 3-char alphanumerics is
+   meaningless.
+2. **Evidence floor.** The hint's total gram weight must reach `1.5 · ln(N)`, roughly 1.5 grams of maximal
+   rarity, or the hint scores nothing anywhere. *Measured:* `Str` carries 0.45 against a floor of 7.6 in
+   Tübingen.
+3. **Asymmetric miss penalty.** Hint grams absent from the candidate are strong negative evidence: they
+   are the containment denominator. Candidate grams absent from the hint are weak evidence (humans drop
+   words), so they cost only `× (1 − γ · uncovered share of the candidate's weight)`. Generic grams are
+   cheap, so abbreviations barely pay, while `silberst` or `gersten` does. *Measured:* γ = 0.3. At 0.15,
+   Silbersteinstraße still cleared τ for `leinstr`. At 0.5, prefix-word names like `Obere Schillerstraße`
+   start to suffer (0.93 → 0.77).
+4. **Retries, only below τ**, best one wins:
+   - the aggressive pass × β (0.9);
+   - OSA edit distance (a transposition counts as one edit) between the **cores**, meaning the name with
+     its generic removed, × 0.85. *Measured:* `Dobelrstr` and `Doblr Strasse` both reach 0.71.
+5. **Generic disagreement is not free.** If both sides carry a generic and they share none, × 0.6.
+   *Measured:* `Hauptweg` vs Hauptstraße 0.51, while Hauptweg itself scores 1.0.
+
+Around that:
+
 - **Score against every name an edge carries** and take the max: `name`, the `name:xx` variants, and `ref`.
-  A hint that looks like a ref (`B27`, `A9`) needs a separate near-exact regime — fuzzy matching on 3-char
-  alphanumerics is meaningless.
+- **Expand leading and closing abbreviations** into extra hint variants (`Main Rd` → `Main Road`) and score
+  the best variant.
 - **Strip trailing house numbers** into a discarded slot. On a comma, use the first component; the rest is
   usually a city, optionally checkable against admin data.
 
 ## 5. Integration
 
-Treat it as a log-likelihood addition, not a filter. The candidate score today comes from projection
-distance; the hint adds a term:
+Decided: a **soft filter**, bounded by a hint radius. The problem statement asks for "matching roads are
+the ones we correlate to".
 
 ```
-effective_distance = distance × (1 − α · name_score)      α ≈ 0.7–0.9
+effective_distance = distance × (1 − α · name_score)      α = 0.8
 ```
 
-This gives the soft-filter behaviour for free and preserves the property that actually matters: a perfect
-name match 5 km away must still lose to a decent match 20 m away. A hard filter, or an unbounded bonus,
-turns a *wrong* high-scoring match into a start point hundreds of metres off — which arrives later as a
-"routing bug" report with no obvious cause.
+Scaling distances alone was the first idea and is not enough. It bounds a hint to `1/(1−α)` = 5× the
+closest edge's distance. *Measured:* `Pfleghofstr` in Tübingen is 27.3 m away against 4.5 m for the
+closest edge. Its effective distance is 5.7 m, so the hint loses exactly in the case it exists for:
+an address point sitting nearer a side street.
 
-Guards:
+How it works:
 
-- Global threshold τ (~0.6) below which the hint is ignored entirely — the stated soft-filter fallback.
-- A cap on how far the bonus may move the winner.
+- **Hint radius** (default 100 m, overridable per location, bounded by service limits). Loki keeps only
+  the closest edge at `radius=0`, discarding the rest during the bin search. So when a hint is present,
+  it has to collect everything within the hint radius instead. The names inside that radius are the IDF
+  corpus, and the radius is the cap on how far a hint can move the correlation.
+- **Hint used** iff some edge within the hint radius scores ≥ τ (0.6). If none does, the output is exactly
+  today's: the stated soft-filter fallback.
+- **When it is used:**
+  - Matching edges (score ≥ τ) become `edges`, with their distance replaced by the effective distance.
+    Loki's usual rule then runs on them: everything inside the location radius, otherwise the closest
+    edge and its ties.
+  - What loki would have picked without the hint becomes `filtered_edges`. That is thor's existing
+    fallback, retried with a `+3600 + worst kept` penalty only when `edges` find no route.
+  - α therefore only orders matching edges among themselves. A perfect match 90 m away still loses to a
+    decent one 20 m away.
+- **Thor is unchanged.** It already turns `PathEdge.distance` into `10·d²` (minus the minimum, capped at
+  43200 for auto, which saturates at ~66 m) and already handles `filtered_edges`. The whole change is one
+  hook in `src/loki/search.cc`: collect within the hint radius during the bin search, then score and
+  split in `finalize()`.
 - **Surface whether the hint was used** in the response. Silent fallback is much harder to debug than a
   flag.
-- Consider widening the search radius when a hint is present, since the usual reason for supplying one is
-  an imprecise coordinate.
+
+*Measured:* `Pfleghofstr 5, Tübingen` moves the correlation 22.8 m, and `Leinestr` in Neukölln moves it
+39.6 m. Hints with no match nearby (`Mozartstr`, or `Hegelstr` with Hegelstraße outside 100 m) change
+nothing.
 
 Nothing here touches tiles or the graph — query-time only, in the correlation step.
 
@@ -197,14 +265,27 @@ Generate the corpus from the tileset itself: take real OSM names and apply synth
 abbreviate the generic, strip diacritics, split the compound, transpose two letters, drop a token. Measure
 recall@1 against the true edge plus the false-positive rate against names from the *same* region.
 
-That tunes τ and α on something real, and is the difference between "80% solution" and "80% solution we
-can prove".
+That tunes τ, α, β, γ, the retry discounts and the evidence floor on something real, and is the
+difference between "80% solution" and "80% solution we can prove". Every value above is a hand-picked
+guess until then. The prototype's fixtures only pin individual cases.
+
+## Decided
+
+- **Rarity corpus is local**: the distinct names within the hint radius. A fixed default radius keeps
+  scores reproducible. No shipped static table.
+- **Short-name fallback** has become the core edit-distance retry, for every length, triggered by
+  missing τ rather than by a length cutoff.
 
 ## Open questions
 
-- **Rarity corpus: local candidate set vs. shipped static table.** Local is elegant and self-tuning but
-  makes scores non-deterministic with respect to search radius. Static is stable and reproducible but is a
-  versioned artifact to maintain. Leaning local.
-- **Short-name fallback threshold** — at what length does trigram scoring stop being trustworthy.
+- **Location radius on effective or raw distance.** Applying it to the effective distance (what "the
+  hook replaces the distance" implies) widens the caller's `radius` by up to `1/(1−αs)` for matching
+  edges.
+- **Compounds of the hinted name.** `Muehlstr` still clears τ on Gerstenmühlstraße (0.74 vs 0.88). If
+  both are within the hint radius, the closer one wins.
+- **Typo grams count as maximum evidence.** A gram no nearby name contains gets the top weight, so a
+  typo *raises* the evidence total. That's harmless so far, but the floor measures novelty as well as
+  rarity.
+- **German article prefixes** (`Am`, `An der`, `Im`, `Zum`) are not generics, so they stay in the core.
 - **Non-Latin scripts.** Normalized-exact and trigram scoring still function; only the alias/generics
   tables don't apply. Probably acceptable for the stated 80% target.

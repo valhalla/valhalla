@@ -136,7 +136,11 @@ def build_pool(raw_response, lat, lon, radius, from_cache):
     for raw in edges:
         pool.candidates.append(_to_candidate(raw))
     pool.candidates.sort(key=lambda c: (c.distance, c.edge_id))
+    index_names(pool)
+    return pool
 
+
+def index_names(pool):
     # record (sorted) unique names for the whole pool (lots of dups most likely)
     for position, candidate in enumerate(pool.candidates):
         if not candidate.is_named():
@@ -146,7 +150,20 @@ def build_pool(raw_response, lat, lon, radius, from_cache):
             pool.name_to_candidates.setdefault(name, []).append(position)
 
     pool.distinct_names = sorted(pool.name_to_candidates)
-    return pool
+
+
+def restrict_pool(pool, radius):
+    """The pool loki would have collected with a smaller radius - names re-indexed, so IDF sees only it."""
+    restricted = CandidatePool()
+    restricted.lat = pool.lat
+    restricted.lon = pool.lon
+    restricted.radius = radius
+    restricted.from_cache = pool.from_cache
+    for candidate in pool.candidates:
+        if candidate.distance <= radius:
+            restricted.candidates.append(candidate)
+    index_names(restricted)
+    return restricted
 
 
 def load_pool(lat, lon, radius, url, costing, cache_dir, offline):

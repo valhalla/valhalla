@@ -1,8 +1,9 @@
 # `street_name` hint prototype
 
 Prototype for the waypoint `street_name` hint described in `geocoding_problem_description.md` and
-designed in `geocoding_design_notes.md`. It exists to put numbers on τ, α and β before any C++ gets
-written in `src/loki/search.cc`.
+designed in `geocoding_design_notes.md`. It exists to put numbers on τ, α, β and γ before any C++
+gets written in `src/loki/search.cc`. The design notes record the decisions and measured values; this
+file describes how the prototype implements them.
 
 Stdlib only — no venv, no `pip install`. Run from the repo root:
 
@@ -30,6 +31,7 @@ rather than idiomatic — plain structs, plain loops, no comprehension tricks in
 | `generics.py` | `constexpr` generic/abbreviation tables |
 | `score.py` | the scoring added to loki |
 | `rank.py` | the hook in `search.cc` |
+| `fixtures/` | nothing — real name pools the fixtures run against |
 
 ## Stages
 
@@ -41,7 +43,7 @@ Built one at a time; `--show` selects which one reports.
 | `normalize` | transliteration and normalization passes | done |
 | `grams` | trigram bags, IDF, the scoring formula | done |
 | `scores` | per-candidate name score and aggregation | done |
-| — | `effective_distance` ranking, τ/α guards | todo |
+| `rank` | soft filter into `edges` / `filtered_edges`, thor's origin score | done |
 
 ## Normalization
 
@@ -137,8 +139,8 @@ aggressive scores per name. `main.py` checks the worked example from the design 
 2. **Evidence floor** - the hint's total gram weight must reach `EVIDENCE_K · ln(N)`, i.e. ~1.5 grams
    of maximal rarity. `Str` alone carries 0.45 against a floor of 7.6 in Tübingen and scores nothing.
 3. **Light containment**, times `1 − GAMMA · uncovered` - the share of the candidate's weight the hint
-   doesn't cover. Weak by design: generics are cheap, so abbreviations barely pay; `Gerstenmühlstraße`
-   pays for `gersten`.
+   doesn't cover. Generics are cheap, so abbreviations barely pay; `Silbersteinstraße` pays for
+   `silberst` when the hint is `leinstr`, which is what keeps it below TAU.
 4. **Below TAU only**, two retries, best one wins: the aggressive pass × `BETA`, and edit distance
    (OSA, transposition = 1 edit) between the **cores** - the name with its generic removed - ×
    `FUZZY_DISCOUNT`.
@@ -150,17 +152,45 @@ closing abbreviation is also expanded into extra hint variants (`Main Rd` → `M
 the best variant.
 
 `--show scores` prints the hint's core, generics and evidence, then light / aggressive / fuzzy /
-final per name and how many edges clear TAU. `WINNER_FIXTURES` in `main.py` pin eight cases
-(abbreviation, transposition, umlaut, generic mismatch, ref, no-evidence, absent street) and raise on
-every run if one flips.
+final per name and how many edges clear TAU. `WINNER_FIXTURES` in `main.py` pin nine cases
+(abbreviation, transposition, umlaut, generic mismatch, ref, no-evidence, absent street, hint inside a
+longer name) and raise on every run if one flips. Each requires its winner to be the *only* name at or
+above TAU, since the soft filter keeps every edge that clears it. The `leinstr` case runs against
+`fixtures/neukoelln.txt`, a snapshot of the 78 real names within 1 km. Small synthetic pools don't
+reproduce its gram weights, and it is the case that fails at `GAMMA=0.15`.
 
 | constant | value | |
 |---|---|---|
 | `TAU` | 0.6 | retry trigger here, hint threshold in stage 5 |
 | `BETA` | 0.9 | aggressive pass discount |
 | `FUZZY_DISCOUNT` | 0.85 | core edit-distance discount |
-| `GAMMA` | 0.15 | candidate surplus weight |
+| `GAMMA` | 0.3 | candidate surplus weight |
 | `EVIDENCE_K` | 1.5 | evidence floor, in units of `ln(N)` |
 | `GENERIC_MISMATCH` | 0.6 | |
 
 All guesses until the validation corpus exists.
+
+## Ranking
+
+`rank.py` stands in for the hook in `src/loki/search.cc` and ends where thor's
+`thor_worker_t` scoring of `PathEdge.distance` ends.
+
+- **Hint radius** (`HINT_RADIUS`, 100 m; per location in C++). Loki keeps only the closest edge at
+  `radius=0`, so a hint has to collect candidates over this radius first. The names inside it are also
+  the IDF corpus, and it caps how far a hint can move the correlation.
+- **Hint used** when any edge inside the hint radius scores ≥ `TAU`. If none does, the output is
+  exactly today's.
+- **Soft filter.** Matching edges become `edges`, with distance replaced by `d · (1 − ALPHA · score)`,
+  then loki's own rule runs on them: everything inside the location radius, otherwise the closest
+  edge and its ties. What loki would have picked without the hint becomes `filtered_edges` -
+  thor's existing fallback, retried only when `edges` find no route.
+- **Thor score** is reproduced as `10 · d²`, minus the minimum, capped per costing (43200 for auto,
+  which saturates at ~66 m), and filtered edges get `+3600 + worst kept`.
+
+Only scaling distances (the design notes' formula alone) bounds a hint to 5× the closest edge's
+distance at `ALPHA=0.8`. `Pfleghofstr` in the Tübingen pool is 27.3 m away against 4.5 m: the
+effective distance is 5.7 m, which loses, so the filter is what lets the hint win.
+
+`--show rank` prints `edges`, `filtered_edges` and the no-hint selection with raw distance, effective
+distance, name score and thor score. `--location-radius` and `--hint-radius` set the two radii.
+`RANK_FIXTURES` in `main.py` pin the side-street case and the no-match case.
