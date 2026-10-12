@@ -681,6 +681,18 @@ bitflags! {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LatLon(pub f64, pub f64);
 
+impl From<LatLon> for (f64, f64) {
+    fn from(loc: LatLon) -> Self {
+        (loc.0, loc.1)
+    }
+}
+
+impl From<(f64, f64)> for LatLon {
+    fn from((lat, lon): (f64, f64)) -> Self {
+        LatLon(lat, lon)
+    }
+}
+
 #[cfg(feature = "proto")]
 impl From<LatLon> for proto::LatLng {
     fn from(loc: LatLon) -> Self {
