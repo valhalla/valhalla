@@ -13,7 +13,8 @@ import os
 import sys
 
 from locate import LocateError, load_pool
-from normalize import normalize_aggressive, normalize_light, split_on_comma, strip_house_number
+from normalize import normalize_aggressive, normalize_light, split_hint
+from similarity import plain_containment, score_names, trigrams
 
 DEFAULT_URL = "https://valhalla1.openstreetmap.de/locate"
 DEFAULT_CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".cache")
@@ -41,6 +42,15 @@ FIXTURE_GROUPS = (
     ),
 )
 
+# the worked example in geocoding_design_notes.md section 3: (hint, {name: expected light score})
+SCORE_FIXTURES = (
+    (
+        "Bergstr",
+        {"Bergstraße": 1.00, "Burgstraße": 0.38, "Bahnhofstraße": 0.07, "Schulweg": 0.0},
+    ),
+)
+SCORE_TOLERANCE = 0.01
+
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(
@@ -56,7 +66,10 @@ def parse_args(argv):
     parser.add_argument("--cache", default=DEFAULT_CACHE, help="response cache dir, empty to disable")
     parser.add_argument("--offline", action="store_true", help="fail rather than issue a request")
     parser.add_argument(
-        "--show", default="pool", choices=["pool", "normalize"], help="which stage to report"
+        "--show",
+        default="pool",
+        choices=["pool", "normalize", "grams"],
+        help="which stage to report",
     )
     parser.add_argument("--limit", type=int, default=20, help="rows to print in candidate tables")
     return parser.parse_args(argv)
@@ -141,6 +154,14 @@ def check_fixtures():
         reason = check_fixture(expectation, variants)
         if reason:
             failures.append("  {} [{}]: {}".format(label, expectation, reason))
+    for hint, expected in SCORE_FIXTURES:
+        _, _, scores = score_names(hint, list(expected), normalize_light)
+        for name, want in expected.items():
+            got = scores[name]
+            if got is None or abs(got - want) > SCORE_TOLERANCE:
+                failures.append(
+                    "  score {!r} vs {!r}: got {}, want {:.2f}".format(hint, name, got, want)
+                )
     if failures:
         raise RuntimeError("normalization fixtures failed:\n" + "\n".join(failures))
 
@@ -153,16 +174,74 @@ def print_normalize_report(hint, pool, limit):
         )
     )
 
-    street, rest = split_on_comma(hint)
-    street, house = strip_house_number(street)
-    if rest or house:
-        print("  hint split: street={!r} house={!r} discarded={!r}".format(street, house, rest))
+    street = print_hint_split(hint)
     print_normalize_row("HINT " + hint, street)
 
     print()
     print("candidate names ({} distinct, showing {})".format(len(pool.distinct_names), limit))
     for name in pool.distinct_names[:limit]:
         print_normalize_row(name, name)
+
+
+def print_hint_split(hint):
+    street, house, rest = split_hint(hint)
+    if rest or house:
+        print("  hint split: street={!r} house={!r} discarded={!r}".format(street, house, rest))
+    return street
+
+
+def format_score(score):
+    return "    -" if score is None else "{:.3f}".format(score)
+
+
+def print_grams_report(hint, pool, limit):
+    print()
+    street = print_hint_split(hint)
+    names = pool.distinct_names
+    index, hint_bag, light = score_names(street, names, normalize_light)
+    aggressive_index, _, aggressive = score_names(street, names, normalize_aggressive)
+    print(
+        "  corpus: {} light / {} aggressive documents from {} distinct names".format(
+            index.document_count, aggressive_index.document_count, len(names)
+        )
+    )
+    if index.document_count < 2:
+        print("  warning: fewer than two documents - every gram weighs 0, scores are undefined")
+
+    print()
+    print("  {:<6}  {:>3}  {:>6}   (light pass, hint {!r})".format("gram", "df", "weight", street))
+    total = 0.0
+    for gram in sorted(hint_bag):
+        weight = index.weight(gram)
+        total += weight * hint_bag[gram]
+        count = "" if hint_bag[gram] == 1 else " x{}".format(hint_bag[gram])
+        print(
+            "  {:<6}  {:>3}  {:>6.2f}{}".format(
+                gram, index.document_frequency.get(gram, 0), weight, count
+            )
+        )
+    print("  {:<6}  {:>3}  {:>6.2f}".format("total", "", total))
+    if not hint_bag:
+        print("  hint is shorter than one gram - nothing to score")
+
+    plain_hint = trigrams(normalize_light(street).stripped)
+    rows = []
+    for name in names:
+        plain = plain_containment(plain_hint, trigrams(normalize_light(name).stripped))
+        rows.append((name, plain, light[name], aggressive[name]))
+    # best light score first, unscored names last
+    rows.sort(key=lambda row: (row[2] is None, -(row[2] or 0.0), row[0]))
+
+    print()
+    print("  {:>5}  {:>5}  {:>5}  {}".format("plain", "light", "aggr", "name"))
+    for name, plain, light_score, aggressive_score in rows[:limit]:
+        print(
+            "  {}  {}  {}  {}".format(
+                format_score(plain), format_score(light_score), format_score(aggressive_score), name
+            )
+        )
+    if len(rows) > limit:
+        print("  ... {} more (raise --limit)".format(len(rows) - limit))
 
 
 def main(argv):
@@ -189,6 +268,8 @@ def main(argv):
         print_candidate_table(pool, args.limit)
     elif args.show == "normalize":
         print_normalize_report(args.name, pool, args.limit)
+    elif args.show == "grams":
+        print_grams_report(args.name, pool, args.limit)
 
     return 0
 

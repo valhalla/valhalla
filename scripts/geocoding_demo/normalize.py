@@ -143,6 +143,13 @@ def split_on_comma(text):
     return text[:position].strip(), text[position + 1 :].strip()
 
 
+def split_hint(text):
+    """Return (street, house number, discarded rest) - the part of a hint worth scoring."""
+    street, rest = split_on_comma(text)
+    street, house = strip_house_number(street)
+    return street, house, rest
+
+
 def _starts_with_digit(token):
     return len(token) > 0 and "0" <= token[0] <= "9"
 

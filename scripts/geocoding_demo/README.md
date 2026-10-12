@@ -39,7 +39,7 @@ Built one at a time; `--show` selects which one reports.
 |---|---|---|
 | `pool` | candidate pool from `/locate` | done |
 | `normalize` | transliteration and normalization passes | done |
-| `grams` | trigram bags, IDF, the scoring formula | todo |
+| `grams` | trigram bags, IDF, the scoring formula | done |
 | `scores` | per-candidate name score and aggregation | todo |
 | — | `effective_distance` ranking, τ/α guards | todo |
 
@@ -105,3 +105,25 @@ Two properties of the real data drive the design:
 
 The endpoint clamps `radius` to `service_limits.max_radius`, silently. The pool summary warns when
 the farthest candidate sits well inside the requested radius, which is what that clamp looks like.
+
+## Scoring
+
+`similarity.py` scores a hint against every distinct name in the pool, once per normalization pass:
+
+```
+weight(g) = ln(N / max(df(g), 1))           N = distinct normalized names in the pool
+score     = Σ weight(g) · shared(g)  /  Σ weight(g) · hint(g)
+```
+
+- **Divided by the hint, not the smaller bag.** Hint grams missing from a candidate count against it;
+  candidate grams missing from the hint don't, which is what lets `Doblerstr` score 1.0 against
+  `Doblerstraße`.
+- **A hint gram no nearby name contains gets the maximum weight.** Dropping it instead would let
+  `Mozartstr` score 1.0 against every `-straße` in the pool.
+- **Documents are distinct normalized names**, so a street split into 40 edges, or spelt two ways, is
+  one document.
+- Fewer than two documents means every weight is 0 and the score is undefined (`-`).
+
+`--show grams` prints the hint's grams with df and weight, then plain (unweighted), light and
+aggressive scores per name. `main.py` checks the worked example from the design notes
+(`Bergstr` → 1.00 / 0.38 / 0.07 / 0.00) on every run and raises if it drifts.
