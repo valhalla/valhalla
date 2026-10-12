@@ -28,7 +28,7 @@ mod locate;
 mod priority_queue;
 
 /// How far the search may wander on each hierarchy level, in metres from the origin.
-/// Indexed by [`valhalla::GraphId::level`]: 0 highway, 1 arterial, 2 local. Buys speed with coverage.
+/// Indexed by [`valhalla::GraphId::level`], see [`valhalla::level`]. Buys speed with coverage.
 const HIERARCHY_LIMITS: [u32; 3] = [u32::MAX, 100_000, 10_000];
 
 /// An over-budget node can be followed by an under-budget one, so give up only after this many

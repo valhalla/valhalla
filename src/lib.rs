@@ -32,6 +32,13 @@ pub use ffi::decode_weekly_speeds;
 pub use ffi::encode_weekly_speeds;
 pub use traffic::{LiveTraffic, TrafficSegment};
 
+/// Named hierarchy levels of the default Valhalla graph, as returned by [`GraphId::level`].
+pub mod level {
+    pub const HIGHWAY: u8 = 0;
+    pub const ARTERIAL: u8 = 1;
+    pub const LOCAL: u8 = 2;
+}
+
 #[cxx::bridge]
 mod ffi {
     /// Edge use type. Indicates specialized uses.

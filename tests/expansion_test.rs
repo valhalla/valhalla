@@ -52,7 +52,7 @@ fn furthest_reachable_node() {
 
             for transition in tile.node_transitions(node) {
                 let next_node_id = transition.endnode();
-                if next_node_id.level() == 2 {
+                if next_node_id.level() == valhalla::level::LOCAL {
                     continue; // exploring all edges in the 2nd level takes too long
                 }
 
@@ -95,8 +95,8 @@ fn furthest_reachable_node() {
     let second_node = second_edge.endnode();
 
     // both nodes are at level 0 (Highway)
-    assert_eq!(first_node.level(), 0);
-    assert_eq!(second_node.level(), 0);
+    assert_eq!(first_node.level(), valhalla::level::HIGHWAY);
+    assert_eq!(second_node.level(), valhalla::level::HIGHWAY);
 
     // What Valhalla's `auto` costing accepts.
     let auto = Access::AUTO | Access::HOV;

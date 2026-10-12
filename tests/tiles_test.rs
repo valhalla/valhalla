@@ -3,6 +3,7 @@ use pretty_assertions::assert_eq;
 
 use valhalla::{
     Access, Config, GraphId, GraphReader, LatLon, LiveTraffic, NodeType, TileId, TimeZoneInfo,
+    level,
 };
 
 #[derive(Serialize)]
@@ -155,7 +156,7 @@ fn tiles_in_bbox() {
     all_tiles.sort(); // order is not guaranteed, sort for comparison
     assert!(!all_tiles.is_empty(), "Should have tiles in the dataset");
 
-    let mut world_tiles: Vec<TileId> = (0..=2)
+    let mut world_tiles: Vec<TileId> = (level::HIGHWAY..=level::LOCAL)
         .flat_map(|level| reader.tiles_in_bbox(LatLon(-90.0, -180.0), LatLon(90.0, 180.0), level))
         .collect();
     world_tiles.sort();
@@ -164,7 +165,7 @@ fn tiles_in_bbox() {
         "All tiles should equal world bbox tiles"
     );
 
-    let mut andorra_tiles: Vec<TileId> = (0..=2)
+    let mut andorra_tiles: Vec<TileId> = (level::HIGHWAY..=level::LOCAL)
         .flat_map(|level| reader.tiles_in_bbox(ANDORRA_BBOX.0, ANDORRA_BBOX.1, level))
         .collect();
     andorra_tiles.sort();
@@ -179,7 +180,7 @@ fn tiles_in_bbox() {
         assert!(tiles.is_empty());
     }
 
-    for level in 0..=2 {
+    for level in level::HIGHWAY..=level::LOCAL {
         let tiles = reader.tiles_in_bbox(ANDORRA_BBOX.0, ANDORRA_BBOX.1, level);
         assert!(!tiles.is_empty(), "No tiles found for level {level}");
         for tile_id in tiles {
