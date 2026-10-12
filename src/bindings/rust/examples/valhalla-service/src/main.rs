@@ -292,13 +292,16 @@ mod tests {
     use super::*;
     use tower::ServiceExt; // for `Router::oneshot`
 
-    const TILES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/andorra/tiles.tar");
-    // Sant Julia de Loria -> Andorra la Vella.
-    const ROUTE_JSON: &str = r#"{"locations":[{"lat":42.50107,"lon":1.51034},{"lat":42.50627,"lon":1.52173}],"costing":"auto"}"#;
+    const TILES: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../../../build/test/data/utrecht_tiles/tiles.tar"
+    );
+    // Utrecht Centraal -> Dom Tower.
+    const ROUTE_JSON: &str = r#"{"locations":[{"lat":52.08946,"lon":5.11006},{"lat":52.09068,"lon":5.12136}],"costing":"auto"}"#;
 
-    /// Service backed by the Andorra test tiles; [`valhalla::ConfigBuilder`] fills defaults, so no
+    /// Service backed by the Utrecht test tiles; [`valhalla::ConfigBuilder`] fills defaults, so no
     /// JSON config file is needed.
-    fn andorra_app() -> Router {
+    fn utrecht_app() -> Router {
         let config = valhalla::ConfigBuilder {
             mjolnir: valhalla::config::Mjolnir {
                 tile_extract: TILES.into(),
@@ -350,7 +353,7 @@ mod tests {
 
     #[tokio::test]
     async fn http_api() {
-        let app = andorra_app();
+        let app = utrecht_app();
 
         // JSON body in, JSON out.
         let (status, body) = send(&app, post("/route", "application/json", ROUTE_JSON)).await;
@@ -372,11 +375,11 @@ mod tests {
                 costing_type: proto::costing::Type::Auto as i32,
                 locations: vec![
                     proto::Location {
-                        ll: valhalla::LatLon(42.50107, 1.51034).into(),
+                        ll: valhalla::LatLon(52.08946, 5.11006).into(),
                         ..Default::default()
                     },
                     proto::Location {
-                        ll: valhalla::LatLon(42.50627, 1.52173).into(),
+                        ll: valhalla::LatLon(52.09068, 5.12136).into(),
                         ..Default::default()
                     },
                 ],
@@ -400,7 +403,7 @@ mod tests {
         assert_eq!(status, StatusCode::BAD_REQUEST);
 
         // Valhalla treats every request error (like a single location here) as a 400.
-        let one_location = r#"{"locations":[{"lat":42.50107,"lon":1.51034}],"costing":"auto"}"#;
+        let one_location = r#"{"locations":[{"lat":52.08946,"lon":5.11006}],"costing":"auto"}"#;
         let (status, _) = send(&app, post("/route", "application/json", one_location)).await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
 

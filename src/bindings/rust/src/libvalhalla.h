@@ -20,8 +20,6 @@ struct TileId;
 /// Exposed internal [`valhalla::baldr::GraphReader::tile_extract_t`], used to
 /// access exact graph and traffic tiles. Create it using [`new_tileset()`].
 struct TileSet {
-  /// Explicitly define destructor as otherwise compiler will fail with
-  /// std::unique_ptr due to forward declarations for `midgard::tar`
   ~TileSet();
 
   std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles_;

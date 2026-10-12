@@ -5,7 +5,7 @@ use crate::Error;
 #[cxx::bridge]
 pub(crate) mod ffi {
     unsafe extern "C++" {
-        include!("valhalla/src/config.hpp");
+        include!("valhalla/src/bindings/rust/src/config.h");
 
         #[namespace = "boost::property_tree"]
         type ptree;
@@ -33,8 +33,8 @@ pub(crate) mod ffi {
 /// ```
 /// let config = valhalla::ConfigBuilder {
 ///     mjolnir: valhalla::config::Mjolnir {
-///         tile_extract: "./tests/andorra/tiles.tar".into(),
-///         traffic_extract: "./tests/andorra/traffic.tar".into(),
+///         tile_extract: "path/to/tiles.tar".into(),
+///         traffic_extract: "path/to/traffic.tar".into(),
 ///         ..Default::default()
 ///     },
 ///     ..Default::default()

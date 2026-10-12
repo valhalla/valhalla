@@ -224,7 +224,7 @@ mod ffi {
     }
 
     unsafe extern "C++" {
-        include!("valhalla/src/libvalhalla.hpp");
+        include!("valhalla/src/bindings/rust/src/libvalhalla.h");
 
         #[namespace = "valhalla::baldr"]
         type GraphId = crate::GraphId;

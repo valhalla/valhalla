@@ -12,7 +12,7 @@ h3o = "0.8"
 rustc-hash = "2.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-valhalla = { path = "../..", features = ["proto"] }
+valhalla = { path = "../../../../..", features = ["proto"] }
 
 [dev-dependencies]
 pretty_assertions = "1"

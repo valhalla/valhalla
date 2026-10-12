@@ -2,8 +2,8 @@
 //!
 //! Run from the `examples/` workspace:
 //!   cargo run -p match-polyline -- \
-//!     --tiles ../tests/andorra/tiles.tar \
-//!     --polyline6 'qwnapA__c|A_CeOu@qEyAkMs@cISuFEePS_Ze@yG_A}EwNyc@iG_P_BoE'
+//!     --tiles ../../../../build/test/data/utrecht_tiles/tiles.tar \
+//!     --polyline6 'quijbBqpnwHfJxc@bBdJrDfSdAzFX|AHd@bG~[|AnIdArGbAo@z@m@`EuClO}MjE}E~NkPaAuC'
 
 use std::path::PathBuf;
 

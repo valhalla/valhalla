@@ -14,7 +14,7 @@ mod ffi {
     }
 
     unsafe extern "C++" {
-        include!("valhalla/src/actor.hpp");
+        include!("valhalla/src/bindings/rust/src/actor.h");
 
         #[namespace = "boost::property_tree"]
         type ptree = crate::config::ffi::ptree;

@@ -5,11 +5,9 @@
 //!   - `Exhausted` is an answer: the reachable subgraph ran out
 //!   - labels nodes, not edges, so turn restrictions are not honoured
 //!
-//! Run from the `examples/` workspace, against the repo's Andorra tileset:
-//!   cargo run -p reachability -- --tiles ../tests/andorra/tiles.tar 42.46372,1.49129
-//!       # Sant Julià de Lòria: nearest highway 362m away
-//!   cargo run -p reachability -- --tiles ../tests/andorra/tiles.tar 42.5443,1.7285
-//!       # Pas de la Casa, on Túnel d'Envalira: toll_zone
+//! Run from the `examples/` workspace, against the repo's Utrecht tileset (`utrecht_tiles` CMake target):
+//!   cargo run -p reachability -- --tiles ../../../../build/test/data/utrecht_tiles/tiles.tar 52.09068,5.12136
+//!       # Domplein: nearest highway about 2km away
 
 use std::path::PathBuf;
 

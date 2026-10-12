@@ -1,5 +1,5 @@
-#include "libvalhalla.hpp"
-#include "valhalla/src/lib.rs.h"
+#include "libvalhalla.h"
+#include "valhalla/src/bindings/rust/src/lib.rs.h"
 
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphreader.h>

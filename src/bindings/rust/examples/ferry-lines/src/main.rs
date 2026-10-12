@@ -6,7 +6,7 @@
 //!   - following a route across tile boundaries and several edges of one OSM way
 //!   - country, state and timezone straight from the tiles, no geocoder
 //!
-//! Needs a coastal tileset; the repo's Andorra fixture is landlocked. From `examples/`:
+//! Needs a tileset with ferries; the repo's Utrecht fixture has none. From `examples/`:
 //!   cargo run -p ferry-lines -- --tiles path/to/denmark.tar
 
 use std::path::PathBuf;

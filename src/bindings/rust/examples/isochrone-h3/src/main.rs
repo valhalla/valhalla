@@ -8,8 +8,8 @@
 //! Labels nodes rather than edges, so turn restrictions are not honoured.
 //!
 //! Run from the `examples/` workspace, then paste the output into <https://geojson.io>:
-//!   cargo run -p isochrone-h3 -- --tiles ../tests/andorra/tiles.tar 42.5063,1.5218 --budget 60min
-//!   cargo run -p isochrone-h3 -- --tiles ../tests/andorra/tiles.tar 42.5063,1.5218 --budget 15km --resolution 9
+//!   cargo run -p isochrone-h3 -- --tiles ../../../../build/test/data/utrecht_tiles/tiles.tar 52.09068,5.12136 --budget 10min
+//!   cargo run -p isochrone-h3 -- --tiles ../../../../build/test/data/utrecht_tiles/tiles.tar 52.09068,5.12136 --budget 5km --resolution 9
 
 use std::collections::hash_map::Entry;
 use std::path::PathBuf;

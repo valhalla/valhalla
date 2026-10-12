@@ -2,8 +2,17 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 use valhalla::{Config, ConfigBuilder, GraphReader, LiveTraffic, TileId};
 
+const UTRECHT_TILES: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/build/test/data/utrecht_tiles/tiles.tar"
+);
+const UTRECHT_TRAFFIC: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/build/test/data/utrecht_tiles/traffic.tar"
+);
+
 fn edgeinfo(c: &mut Criterion) {
-    let config = Config::from_tile_extract("./tests/andorra/tiles.tar").unwrap();
+    let config = Config::from_tile_extract(UTRECHT_TILES).unwrap();
     let reader = GraphReader::new(&config).unwrap();
     let tiles: Vec<_> = reader
         .tiles()
@@ -37,10 +46,13 @@ fn edgeinfo(c: &mut Criterion) {
 }
 
 fn write_traffic(c: &mut Criterion) {
+    // the C++ tests use the same traffic.tar, so write to a copy
+    let traffic_copy = tempfile::NamedTempFile::new().unwrap();
+    std::fs::copy(UTRECHT_TRAFFIC, traffic_copy.path()).unwrap();
     let config = ConfigBuilder {
         mjolnir: valhalla::config::Mjolnir {
-            tile_extract: "./tests/andorra/tiles.tar".to_string(),
-            traffic_extract: "./tests/andorra/traffic.tar".to_string(),
+            tile_extract: UTRECHT_TILES.to_string(),
+            traffic_extract: traffic_copy.path().to_str().unwrap().to_string(),
             ..Default::default()
         },
         ..Default::default()

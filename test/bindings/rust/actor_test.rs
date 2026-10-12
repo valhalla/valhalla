@@ -5,18 +5,20 @@ use valhalla::{
     proto::{self, options::Format},
 };
 
-const ANDORRA_TILES: &str = "tests/andorra/tiles.tar";
-const ANDORRA_TRAFFIC: &str = "tests/andorra/traffic.tar";
+mod common;
+use common::utrecht_tiles;
 
-const ANDORRA_TEST_LOC_1: LatLon = LatLon(42.50107335756198, 1.510341967860551); // Sant Julia de Loria
-const ANDORRA_TEST_LOC_2: LatLon = LatLon(42.50627089323736, 1.521734167223563); // Andorra la Vella
+const UTRECHT_TEST_LOC_1: LatLon = LatLon(52.08946, 5.11006); // Utrecht Centraal
+const UTRECHT_TEST_LOC_2: LatLon = LatLon(52.09068, 5.12136); // Dom Tower
+// Shape of a route, so `walk_or_snap` edge-walks it: its `map_snap` fallback drops the warnings
+const TRACE_SHAPE: &str = "aepkbBiptuHgIu]~HoIbPkN_Pot@zE_BlC}EtCgGA}Gy@mG_GaLiCsB{C}@{BGuE~HiBfEg@rFuHa@mVqPaSiMwJgIyf@m]uWuQmQcNsBsB_C}A}C^kD|AoClEe@fA";
 
 #[test]
 fn smoke() {
     let config = ConfigBuilder {
         mjolnir: valhalla::config::Mjolnir {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
             ..Default::default()
         },
         ..Default::default()
@@ -63,11 +65,11 @@ fn request_response_format() {
         costing_type: proto::costing::Type::Auto as i32,
         locations: vec![
             proto::Location {
-                ll: ANDORRA_TEST_LOC_1.into(),
+                ll: UTRECHT_TEST_LOC_1.into(),
                 ..Default::default()
             },
             proto::Location {
-                ll: ANDORRA_TEST_LOC_2.into(),
+                ll: UTRECHT_TEST_LOC_2.into(),
                 ..Default::default()
             },
         ],
@@ -92,7 +94,7 @@ fn request_response_format() {
             endpoint: Actor::locate,
             options: proto::Options {
                 locations: vec![proto::Location {
-                    ll: ANDORRA_TEST_LOC_1.into(),
+                    ll: UTRECHT_TEST_LOC_1.into(),
                     ..Default::default()
                 }],
                 has_verbose: Some(proto::options::HasVerbose::Verbose(true)), // for more detailed output
@@ -142,7 +144,7 @@ fn request_response_format() {
             options: proto::Options {
                 costing_type: proto::costing::Type::Auto as i32,
                 locations: vec![proto::Location {
-                    ll: ANDORRA_TEST_LOC_2.into(),
+                    ll: UTRECHT_TEST_LOC_2.into(),
                     ..Default::default()
                 }],
                 contours: vec![proto::Contour {
@@ -166,7 +168,7 @@ fn request_response_format() {
             options: proto::Options {
                 costing_type: proto::costing::Type::Auto as i32,
                 has_encoded_polyline: Some(proto::options::HasEncodedPolyline::EncodedPolyline(
-                    "qwnapA__c|A_CeOu@qEyAkMs@cISuFEePS_Ze@yG_A}EwNyc@iG_P_BoE".into(),
+                    TRACE_SHAPE.into(),
                 )),
                 ..Default::default()
             },
@@ -184,7 +186,7 @@ fn request_response_format() {
             options: proto::Options {
                 costing_type: proto::costing::Type::Auto as i32,
                 has_encoded_polyline: Some(proto::options::HasEncodedPolyline::EncodedPolyline(
-                    "qwnapA__c|A_CeOu@qEyAkMs@cISuFEePS_Ze@yG_A}EwNyc@iG_P_BoE".into(),
+                    TRACE_SHAPE.into(),
                 )),
                 ..Default::default()
             },
@@ -260,8 +262,8 @@ fn request_response_format() {
 
     let config = ConfigBuilder {
         mjolnir: valhalla::config::Mjolnir {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
             ..Default::default()
         },
         ..Default::default()
@@ -287,15 +289,15 @@ fn parse_api() {
     assert!(Actor::parse_json_request("{", proto::options::Action::Route).is_err());
     assert!(Actor::parse_json_request("}", proto::options::Action::Route).is_err());
 
-    let json = r#"{"units":"kilometers","date_time":{"type":"current"},"costing":"auto","costing_options":{"auto":{"use_ferry":0.5,"use_rail_ferry":0.5,"use_highways":0.5,"use_tolls":0.5,"country_crossing_cost":0}},"alternates":2,"locations":[{"lat":42.50107335756198,"lon":1.510341967860551},{"lat":42.50627089323736,"lon":1.521734167223563}]}"#;
+    let json = r#"{"units":"kilometers","date_time":{"type":"current"},"costing":"auto","costing_options":{"auto":{"use_ferry":0.5,"use_rail_ferry":0.5,"use_highways":0.5,"use_tolls":0.5,"country_crossing_cost":0}},"alternates":2,"locations":[{"lat":52.08946,"lon":5.11006},{"lat":52.09068,"lon":5.12136}]}"#;
     let request = Actor::parse_json_request(json, proto::options::Action::Route)
         .expect("Failed to parse API");
     assert_eq!(request.units, proto::options::Units::Kilometers as i32);
     // assert_eq!(options.date_time.as_ref().unwrap().type_, proto::options::DateTimeType::Current as i32);
     assert_eq!(request.costing_type, proto::costing::Type::Auto as i32);
     assert_eq!(request.locations.len(), 2);
-    assert_eq!(request.locations[0].ll, Some(ANDORRA_TEST_LOC_1.into()));
-    assert_eq!(request.locations[1].ll, Some(ANDORRA_TEST_LOC_2.into()));
+    assert_eq!(request.locations[0].ll, Some(UTRECHT_TEST_LOC_1.into()));
+    assert_eq!(request.locations[1].ll, Some(UTRECHT_TEST_LOC_2.into()));
     assert_eq!(
         request.has_alternates,
         Some(proto::options::HasAlternates::Alternates(2))
@@ -333,8 +335,8 @@ fn parse_api() {
     // Parsed request should be routable
     let config = ConfigBuilder {
         mjolnir: valhalla::config::Mjolnir {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
             ..Default::default()
         },
         ..Default::default()

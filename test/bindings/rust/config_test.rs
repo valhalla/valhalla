@@ -7,6 +7,9 @@ use tempfile::NamedTempFile;
 use valhalla::Actor;
 use valhalla::{Config, ConfigBuilder, GraphReader};
 
+mod common;
+use common::utrecht_tiles;
+
 /// Small subset of `valhalla::ConfigBuilder` to test building a config from JSON.
 #[derive(Serialize)]
 struct ValhallaConfig {
@@ -18,9 +21,6 @@ struct MjolnirConfig {
     tile_extract: String,
     traffic_extract: String,
 }
-
-const ANDORRA_TILES: &str = "tests/andorra/tiles.tar";
-const ANDORRA_TRAFFIC: &str = "tests/andorra/traffic.tar";
 
 #[test]
 fn from_file() {
@@ -49,7 +49,7 @@ fn from_file() {
     // tiles only
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
             traffic_extract: "bad_path_to_traffic_extract".into(), // Bad traffic extract
         },
     };
@@ -64,7 +64,7 @@ fn from_file() {
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
             tile_extract: "bad_path_to_tile_extract".into(), // No tile extract
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            traffic_extract: utrecht_tiles("traffic.tar"),
         },
     };
     let mut file = NamedTempFile::new().expect("Failed to create temp file for config");
@@ -77,8 +77,8 @@ fn from_file() {
     // tiles and traffic
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
         },
     };
     let mut file = NamedTempFile::new().expect("Failed to create temp file for config");
@@ -109,8 +109,8 @@ fn from_json() {
     // tiles and traffic ok
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
         },
     };
     let config = Config::from_json(&json::to_string(&config)).unwrap();
@@ -123,9 +123,11 @@ fn from_tile_extract() {
     assert!(
         GraphReader::new(&Config::from_tile_extract("bad_path_to_tile_extract").unwrap()).is_err()
     );
-    assert!(GraphReader::new(&Config::from_tile_extract(ANDORRA_TILES).unwrap()).is_ok());
+    assert!(
+        GraphReader::new(&Config::from_tile_extract(utrecht_tiles("tiles.tar")).unwrap()).is_ok()
+    );
     #[cfg(feature = "proto")]
-    assert!(Actor::new(&Config::from_tile_extract(ANDORRA_TILES).unwrap()).is_ok());
+    assert!(Actor::new(&Config::from_tile_extract(utrecht_tiles("tiles.tar")).unwrap()).is_ok());
 }
 
 #[test]
@@ -156,7 +158,7 @@ fn config_builder() {
 
     // tiles only
     let mut builder = ConfigBuilder::default();
-    builder.mjolnir.tile_extract = ANDORRA_TILES.into();
+    builder.mjolnir.tile_extract = utrecht_tiles("tiles.tar");
     builder.mjolnir.traffic_extract = "bad_path_to_traffic_extract".into();
     let config = builder.build();
     assert!(GraphReader::new(&config).is_ok());
@@ -164,14 +166,14 @@ fn config_builder() {
     // traffic only
     let mut builder = ConfigBuilder::default();
     builder.mjolnir.tile_extract = "bad_path_to_tile_extract".into();
-    builder.mjolnir.traffic_extract = ANDORRA_TRAFFIC.into();
+    builder.mjolnir.traffic_extract = utrecht_tiles("traffic.tar");
     let config = builder.build();
     assert!(GraphReader::new(&config).is_err());
 
     // tiles and traffic
     let mut builder = ConfigBuilder::default();
-    builder.mjolnir.tile_extract = ANDORRA_TILES.into();
-    builder.mjolnir.traffic_extract = ANDORRA_TRAFFIC.into();
+    builder.mjolnir.tile_extract = utrecht_tiles("tiles.tar");
+    builder.mjolnir.traffic_extract = utrecht_tiles("traffic.tar");
     let config = builder.build();
     assert!(GraphReader::new(&config).is_ok());
     #[cfg(feature = "proto")]

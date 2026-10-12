@@ -1,0 +1,134 @@
+[package]
+name = "valhalla"
+version = "0.7.1"
+edition = "2024"
+rust-version = "1.98"
+description = "Rust bindings for Valhalla routing engine"
+readme = "src/bindings/rust/README.md"
+repository = "https://github.com/valhalla/valhalla"
+license = "MIT"
+keywords = ["geo", "routing", "navigation", "ffi", "valhalla"]
+build = "src/bindings/rust/build.rs"
+exclude = [
+    "**/.*",
+    "**/test/*",
+    "**/tests/*",
+    "**/doctest/*",
+    "**/gtest/*",
+    "**/googletest/*",
+    "**/googlemock/*",
+    "**/doc/*",
+    "**/docs/*",
+    "**/bench/*",
+    "**/benches/*",
+    "**/benchmarks/*",
+    "**/example/*",
+    "**/examples/*",
+    "**/package-lock.json",
+
+    "/docker",
+    "/overlay-ports-vcpkg",
+    "/run_route_scripts",
+    "/scripts/*.py",
+    "/scripts/*.sh",
+    "/locales/*.po*",
+    "/proto/python",
+    "/proto/typescript",
+    "/src/bindings/nodejs",
+    "/src/bindings/python",
+    "/src/bindings/shared",
+    "/src/mjolnir",         # Mjolnir is anyway disabled by `ENABLE_DATA_TOOLS=OFF` in build.rs
+    "/valhalla/mjolnir",    # And same for Mjolnir headers
+    "/src/valhalla_*",      # Valhalla executables not needed for Rust bindings
+    "/taginfo.json",
+    "/test_requests",
+    "/vcpkg*.json",
+    # LICENSE.md is required by cmake, so unused docs are excluded in a more specific way.
+    "/third_party/**/*.md",
+    "/AGENTS.md",
+    "/CHANGELOG.md",
+    "/CLAUDE.md",
+    "/CODEX.md",
+    "/CONTRIBUTING.md",
+    "/COPILOT.md",
+    "/CURSOR.md",
+    "/GEMINI.md",
+    "**/README.md",
+    "/SECURITY.md",
+    # Submodules that are not needed for Rust bindings
+    "/third_party/cxxopts",   # Used only by valhalla executables
+    "/third_party/dirent",    # Windows only, anyway not supported by Rust bindings
+    "/third_party/fastcov",
+    "/third_party/just_gtfs", # Used only by Mjolnir to build transits
+    "/third_party/libosmium", # Used only by Mjolnir to read OSM PBFs
+    "/third_party/nanobind",  # Used only by Python bindings
+    "/third_party/rapidjson/bin",
+    "/third_party/tz/*.html",
+    "/third_party/tz/NEWS",
+    "/third_party/unordered_dense/data",
+    "/third_party/unordered_dense/scripts",
+]
+
+[lib]
+path = "src/bindings/rust/src/lib.rs"
+
+# Makes possible to run profilers with `cargo bench`, e.g. `samply record cargo bench`
+[profile.bench]
+debug = "line-tables-only"
+lto = "thin"
+
+[features]
+default = ["proto"]
+# Enables Valhalla's Actor API and `proto` module with Valhalla's protobuf types.
+proto = ["dep:prost", "dep:prost-build"]
+
+[dependencies]
+bitflags = "2"
+# Lock to specific version to avoid accidentally upgrading to a version that somehow breaks compatibility.
+cxx = { version = "=1.0.203", features = ["c++20"] }
+prost = { version = "0.14", optional = true }
+
+[build-dependencies]
+cmake = "0.1"
+cxx-build = "=1.0.203"
+miniserde = "0.1"    # For compile_commands.json parsing
+pkg-config = "0.3"
+prost-build = { version = "0.14", optional = true }
+
+[dev-dependencies]
+miniserde = "0.1"
+pretty_assertions = "1"
+tempfile = { version = "3", default-features = false }
+criterion = { version = "0.7", default-features = false }
+
+[[test]]
+name = "actor_test"
+path = "test/bindings/rust/actor_test.rs"
+
+[[test]]
+name = "config_test"
+path = "test/bindings/rust/config_test.rs"
+
+[[test]]
+name = "expansion_test"
+path = "test/bindings/rust/expansion_test.rs"
+
+[[test]]
+name = "tiles_test"
+path = "test/bindings/rust/tiles_test.rs"
+
+[[bench]]
+name = "actor_bench"
+path = "src/bindings/rust/benches/actor_bench.rs"
+harness = false
+required-features = ["proto"]
+
+[[bench]]
+name = "tiles_bench"
+path = "src/bindings/rust/benches/tiles_bench.rs"
+harness = false
+
+[[bench]]
+name = "config_bench"
+path = "src/bindings/rust/benches/config_bench.rs"
+harness = false

@@ -1,0 +1,194 @@
+name: rust
+
+# this workflow:
+# - builds and tests the Rust bindings on master & PR pushes
+# - checks that the packaged crate builds
+# - publishes the `valhalla` crate from master when its version isn't on crates.io yet
+
+on:
+  push:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - "**vcpkg**"
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - "**vcpkg**"
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+
+# Cancel CI runs on a branch when new commits were pushed
+# See https://stackoverflow.com/a/72408109/2582935
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-24.04
+    env:
+      # lets the examples workspace reuse the libvalhalla build
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target
+      CCACHE_BASEDIR: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      # includes the data tools deps for the Utrecht tiles
+      - name: Install deps
+        run: ./scripts/install-linux-deps.sh --no-prime-server
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy,rustfmt --no-self-update
+          rustup default stable
+
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-rust-${{ github.sha }}
+          restore-keys: |
+            ccache-rust-
+
+      - name: Format
+        run: |
+          cargo fmt --all --check
+          cargo fmt --all --check --manifest-path src/bindings/rust/examples/Cargo.toml
+
+      - name: Clippy
+        run: |
+          cargo clippy --all-targets -- -Dwarnings
+          cargo clippy --manifest-path src/bindings/rust/examples/Cargo.toml --all-targets -- -Dwarnings
+
+      - name: Build Utrecht tiles
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_SERVICES=OFF -DENABLE_HTTP=OFF \
+            -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_GEOTIFF=OFF -DENABLE_SINGLE_FILES_WERROR=OFF
+          cmake --build build --target utrecht_tiles -j$(nproc)
+
+      - name: Test
+        run: |
+          cargo test
+          cargo test --manifest-path src/bindings/rust/examples/Cargo.toml
+
+  package:
+    name: package
+    runs-on: ubuntu-24.04
+    env:
+      CCACHE_BASEDIR: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install deps
+        run: |
+          sudo apt-get update --assume-yes
+          sudo apt-get install --yes --no-install-recommends \
+            ccache cmake libboost-dev libprotobuf-dev pkg-config protobuf-compiler zlib1g-dev
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-rust-package-${{ github.sha }}
+          restore-keys: |
+            ccache-rust-package-
+
+      - name: Package
+        run: cargo package
+
+  check_version:
+    name: check version
+    runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'push' && github.repository_owner == 'valhalla' }}
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should_publish: ${{ steps.version.outputs.should_publish }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check version on crates.io
+        id: version
+        run: |
+          version=$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
+          if [ -z "$version" ]; then
+            echo "Could not extract version from Cargo.toml"
+            exit 1
+          fi
+
+          # crates.io rejects requests without a descriptive User-Agent (403)
+          http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "User-Agent: valhalla publish CI (https://github.com/valhalla/valhalla)" \
+            "https://crates.io/api/v1/crates/valhalla/$version")
+
+          # only publish on a definite 404 so that a transient error can't trigger a publish
+          case "$http_code" in
+            200) should_publish=false ;;
+            404) should_publish=true ;;
+            *) echo "Unexpected HTTP $http_code from crates.io"; exit 1 ;;
+          esac
+
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "should_publish=$should_publish" >> $GITHUB_OUTPUT
+
+  publish:
+    name: publish ${{ needs.check_version.outputs.version }}
+    runs-on: ubuntu-24.04
+    needs: [build, package, check_version]
+    if: ${{ needs.check_version.outputs.should_publish == 'true' }}
+    permissions:
+      contents: read
+      id-token: write # crates.io trusted publishing
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install deps
+        run: |
+          sudo apt-get update --assume-yes
+          sudo apt-get install --yes --no-install-recommends \
+            cmake libboost-dev libprotobuf-dev pkg-config protobuf-compiler zlib1g-dev
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+
+      - uses: rust-lang/crates-io-auth-action@v1
+        id: auth
+
+      - name: Publish to crates.io
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}

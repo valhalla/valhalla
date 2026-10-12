@@ -4,17 +4,23 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 use valhalla::{Actor, ConfigBuilder, LatLon, proto};
 
-const ANDORRA_TILES: &str = "tests/andorra/tiles.tar";
-const ANDORRA_TRAFFIC: &str = "tests/andorra/traffic.tar";
+const UTRECHT_TILES: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/build/test/data/utrecht_tiles/tiles.tar"
+);
+const UTRECHT_TRAFFIC: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/build/test/data/utrecht_tiles/traffic.tar"
+);
 
-const ANDORRA_TEST_LOC_1: LatLon = LatLon(42.50107335756198, 1.510341967860551); // Sant Julia de Loria
-const ANDORRA_TEST_LOC_2: LatLon = LatLon(42.50627089323736, 1.521734167223563); // Andorra la Vella
+const UTRECHT_TEST_LOC_1: LatLon = LatLon(52.08946, 5.11006); // Utrecht Centraal
+const UTRECHT_TEST_LOC_2: LatLon = LatLon(52.09068, 5.12136); // Dom Tower
 
 fn route(c: &mut Criterion) {
     let config = ConfigBuilder {
         mjolnir: valhalla::config::Mjolnir {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: UTRECHT_TILES.into(),
+            traffic_extract: UTRECHT_TRAFFIC.into(),
             ..Default::default()
         },
         ..Default::default()
@@ -28,11 +34,11 @@ fn route(c: &mut Criterion) {
             costing_type: proto::costing::Type::Auto as i32,
             locations: vec![
                 proto::Location {
-                    ll: ANDORRA_TEST_LOC_1.into(),
+                    ll: UTRECHT_TEST_LOC_1.into(),
                     ..Default::default()
                 },
                 proto::Location {
-                    ll: ANDORRA_TEST_LOC_2.into(),
+                    ll: UTRECHT_TEST_LOC_2.into(),
                     ..Default::default()
                 },
             ],
@@ -51,11 +57,11 @@ fn route(c: &mut Criterion) {
             costing_type: proto::costing::Type::Auto as i32,
             locations: vec![
                 proto::Location {
-                    ll: ANDORRA_TEST_LOC_1.into(),
+                    ll: UTRECHT_TEST_LOC_1.into(),
                     ..Default::default()
                 },
                 proto::Location {
-                    ll: ANDORRA_TEST_LOC_2.into(),
+                    ll: UTRECHT_TEST_LOC_2.into(),
                     ..Default::default()
                 },
             ],
@@ -74,11 +80,11 @@ fn route(c: &mut Criterion) {
             costing_type: proto::costing::Type::Auto as i32,
             locations: vec![
                 proto::Location {
-                    ll: LatLon(42.54381401912126, 1.4756460643803673).into(),
+                    ll: LatLon(52.08813, 5.03231).into(),
                     ..Default::default()
                 },
                 proto::Location {
-                    ll: LatLon(42.54262715333714, 1.7332292461658099).into(),
+                    ll: LatLon(52.09987, 5.14913).into(),
                     ..Default::default()
                 },
             ],
@@ -97,11 +103,11 @@ fn route(c: &mut Criterion) {
             costing_type: proto::costing::Type::Auto as i32,
             locations: vec![
                 proto::Location {
-                    ll: LatLon(42.54381401912126, 1.4756460643803673).into(),
+                    ll: LatLon(52.08813, 5.03231).into(),
                     ..Default::default()
                 },
                 proto::Location {
-                    ll: LatLon(42.54262715333714, 1.7332292461658099).into(),
+                    ll: LatLon(52.09987, 5.14913).into(),
                     ..Default::default()
                 },
             ],
@@ -118,8 +124,8 @@ fn route(c: &mut Criterion) {
 fn trace_attributes(c: &mut Criterion) {
     let config = ConfigBuilder {
         mjolnir: valhalla::config::Mjolnir {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: UTRECHT_TILES.into(),
+            traffic_extract: UTRECHT_TRAFFIC.into(),
             ..Default::default()
         },
         ..Default::default()
@@ -127,7 +133,8 @@ fn trace_attributes(c: &mut Criterion) {
     .build();
     let mut actor = Actor::new(&config).unwrap();
 
-    let shape = "ifadpAyon{A`ClBtAg@~FwKbOwIeAtL[lJt@hDnCtEdB~D|BnDbAj@v@Sr@s@?sAy@gIkA_ICyDh@{Cz@}At@k@fACbAb@j@~@xAvHvHn`@p@pE\\~@t@`@lAoA\\wCo@aRu@uSOoG`@mBr@oAbBw@dBNxA|Bj@|HbDj\\f@lBt@f@fAIr@uCtBaPbCaSj@eD~A{AjCk@nBrBb@jDyJr`AG~DnBzCbChAb@YbAo@bA}FzGmo@pAuHt@iC~AwBhAq@dBIbH~ApCXrBA`Ba@bBz@MvCeB`CeB`A}@f@yDjD}DlEsAlDE|AXrAr@j@|@OnAqAtBmFzAcC|C_@zEg@l@^P~@S|Bo@hA_B|@wBlAmAd@]fBTjCOlJqAbKx@rGFtCN~FcBjIqDxIwBlD?zBGzCg@Rc@^Yl@Ot@Cd@?f@Df@Jb@P^TZVTZLZD\\?ZGXOTSRYN]J_@Fc@|GwAbCG|DCnA@tDf@xCGvI_CfBu@~@i@ZQ|DyBtIeF|BuAdCoERkACoBUoBcBsDyBoCiB_C}@kBuAcEu@aDQw@]uCKsB@qAPkB^cC~@}EdBgGrUih@vAaDjEaJlMqYrMmY|@uA`AiAnDwDtDiDvBiCX[`BoBtDgFjB_ENg@Bk@x@uIb@wG`@eIJyAzAar@^qQ_AsUkCuRy@aGuE}PyDqLyFaJiDiFyMgRsImN_AuAeBsB}ByAkDy@mFe@oEYqF}AsHcDeB{@aA[g@M{Cy@gA[{Bm@{IyBkGaB{EgBmB{@aB}@mCoBgCoB}HaJmSmV}QmUqD{EeDgG}BsFoB{I}@sF_DaYu@yEs@mEs@qCw@eC_DuHeDaIaAaCwEgKkFgL}JkUwHoOqBuDqBuCcB}B_CyBuFeEmDoBwBqA_G_CsFyA_@IoEy@sEk@_DMuAKmBWy@a@w@y@Qq@E}FFW`@eB|@wAbA{@tAc@rBB`DvB~TpNhKtGlSvM|GhEjPlH`NpF";
+    // shape of the "long route" bench
+    let shape = "}sejbBqvcrHtFkuA|HgkBnFexA~Ay`@nB_[tAwZxBey@TwPGuOw@qMcBqLeCsKsDuJ}G}LqHmJmIyIyCqDb@{BHiCMgCg@yB}@aBkA{@sASsATkA~@{@bBeByB}CeEgEcHgHaQmEgOsJi^mA{EbAyAn@wBTiCEmC_@eCg@sAq@cA{@m@_AUg@wE]uF]aONeLd@gKtCqZfEu_@zE}[zDsUrEkVzDeQzCmHzAiClCiCpEaBbFm@hY`D~Fl@fE^bk@lFhZlCfFKnCa@fEs@nA~A~Ah@`BW|A_Bz@uCLqDdCwElD_M`D_Yt@sKf@_TXmSH}RDgM?aF`BAjAGzHm@lOaAdIw@xFYxK@tI`@xMvApb@pFnUzDfc@vIze@fM|[bJvR|GpYtLdVbK~J|DvEnBtEtB~g@`VtdA|b@dCjAbNhHnFhC~h@pS|GpDNnCb@dCt@rBbAxApA|@zA\\zAGvAk@nAoA~@kB~GbCxCdAnQjH|GdCxO|E`FfBfk@fU|kBpu@z}@h^nFrBbCbAvDjDRjDt@nCfA|AlAr@{_A|gLcUnwBiPj~AkQn{AcApKsArNhGlDvYlQ`NfK~_@d\\vDlAjBTvAGnA}@fBqCx@oEjAqKp@sKlIq|B|Ke_CtAwYx[uaFnAgm@t`CmhY|C_^rO_aBxbAwkHdf@_~ClM{z@nnB_bMbtAqrInIue@zLqg@pO}k@dUwq@xf@kwAjLs`@zIeb@tFc^vDu]zCqb@tAy}AQkm@Twk@|Aap@tDqcAtCmw@jd@_aLj[{vHbY_vFvG}xAzFu|@vL}sAn\\koCrLw`Avg@qzDha@unBhW}qA`TwfA`SueA|JcYnOc]xI}JzKuYrEq[tAwWEmRsAoNkBqPwIkW{GcOsLoK{JkDgHiA}E{@wEScLtBaKhFaKtJ}JxHwK~IuMvEoSp@}Fw@oNaCugA}_@_w@uYcmAme@c}A_m@w|@c_@_zAul@w\\sRy^}Vk`@a]eYeYs_@ud@u]og@wTsY_Xs[kh@{s@iSu[oMsTiQg]w[mt@uMa]mXcv@aQsg@}g@_|A_My^mOg^eQ_\\gOqUcN}OuUmTcMiJeLwH}I{FkIoFkWmOmlAcu@aLwHauBkuA{d@sZqbBmeAmo@oa@uc@w\\c[c[inBe{B}JuJsQoQgQ_NmDkBgCuAuH_EuQwFmJgAaH_AuUh@gPzA_P~FmV|Kw^bWuK`K_a@j`@mQdNkQ`NcPtK_XrOyIxEcRvFaEhAoHdAifD|hAyGfCoW|Ims@fVgNnEcFfAiDG_HoBwA_AwE{CqCyBoDgAuD@mDjA_DnCeBrCuArD}@hEiFzIuDxE_H`FuUhHcUfGaj@hKmc@~Hq\\rAyd@e@eMWmVuCg\\yBu]}BuEg@mFqBeEmBuDyBiDyNyBsDmBuMuAcLWoMdBklA[}h@mBqe@fCiA|Dk@pFMlTa@zAF`@yHnFqg@fEw`@zCgZvBn@|Cz@rA^~K~C|WpH";
 
     c.bench_function("trace attributes edge walk json", |b| {
         let request = proto::Options {
@@ -195,8 +202,8 @@ fn trace_attributes(c: &mut Criterion) {
 fn locate(c: &mut Criterion) {
     let config = ConfigBuilder {
         mjolnir: valhalla::config::Mjolnir {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: UTRECHT_TILES.into(),
+            traffic_extract: UTRECHT_TRAFFIC.into(),
             ..Default::default()
         },
         ..Default::default()
@@ -207,7 +214,7 @@ fn locate(c: &mut Criterion) {
     c.bench_function("locate", |b| {
         let request = proto::Options {
             locations: vec![proto::Location {
-                ll: ANDORRA_TEST_LOC_1.into(),
+                ll: UTRECHT_TEST_LOC_1.into(),
                 ..Default::default()
             }],
             ..Default::default()
@@ -222,8 +229,8 @@ fn locate(c: &mut Criterion) {
     c.bench_function("locate json", |b| {
         let request = r#"{
             "locations":[{
-                "lat":42.50107335756198,
-                "lon":1.510341967860551
+                "lat":52.08946,
+                "lon":5.11006
             }],
             "verbose": true
         }"#;
@@ -240,8 +247,8 @@ fn locate(c: &mut Criterion) {
 fn status(c: &mut Criterion) {
     let config = ConfigBuilder {
         mjolnir: valhalla::config::Mjolnir {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: UTRECHT_TILES.into(),
+            traffic_extract: UTRECHT_TRAFFIC.into(),
             ..Default::default()
         },
         ..Default::default()

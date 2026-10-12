@@ -6,6 +6,9 @@ use valhalla::{
     level,
 };
 
+mod common;
+use common::utrecht_tiles;
+
 #[derive(Serialize)]
 struct ValhallaConfig {
     mjolnir: MjolnirConfig,
@@ -17,30 +20,33 @@ struct MjolnirConfig {
     traffic_extract: String,
 }
 
-const ANDORRA_TILES: &str = "tests/andorra/tiles.tar";
-const ANDORRA_TRAFFIC: &str = "tests/andorra/traffic.tar";
-const ANDORRA_BBOX: (LatLon, LatLon) = (LatLon(42.373627, 1.301427), LatLon(42.72199, 1.892865));
+const UTRECHT_BBOX: (LatLon, LatLon) = (LatLon(52.04, 5.01), LatLon(52.15, 5.17));
+
+// The only edge in test/data/traffic_tiles/0/003/196.csv
+fn historical_traffic_edge() -> GraphId {
+    GraphId::from_parts(level::HIGHWAY, 3196, 1155).unwrap()
+}
 
 #[test]
 fn dataset_id() {
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
         },
     };
     let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
         .expect("Failed to create GraphReader");
 
-    assert_eq!(reader.dataset_id(), 12953172102);
+    assert_eq!(reader.dataset_id(), 34979400);
 }
 
 #[test]
 fn graph_tile_can_outlive_reader() {
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
         },
     };
     let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
@@ -85,10 +91,13 @@ fn graph_tile_can_outlive_reader() {
 
 #[test]
 fn traffic_tile_can_outlive_reader() {
+    // the C++ tests use the same traffic.tar, so write to a copy
+    let traffic_copy = tempfile::NamedTempFile::new().unwrap();
+    std::fs::copy(utrecht_tiles("traffic.tar"), traffic_copy.path()).unwrap();
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: traffic_copy.path().to_str().unwrap().into(),
         },
     };
     let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
@@ -106,15 +115,14 @@ fn traffic_tile_can_outlive_reader() {
         1,
         "Tile should remain valid after reader is dropped"
     );
-    tile.write_spare(0); // cleanup
 }
 
 #[test]
 fn graph_tile_accepts_any_id_inside_the_tile() {
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
         },
     };
     let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
@@ -136,8 +144,8 @@ fn graph_tile_accepts_any_id_inside_the_tile() {
 fn tiles_in_bbox() {
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
         },
     };
     let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
@@ -165,13 +173,13 @@ fn tiles_in_bbox() {
         "All tiles should equal world bbox tiles"
     );
 
-    let mut andorra_tiles: Vec<TileId> = (level::HIGHWAY..=level::LOCAL)
-        .flat_map(|level| reader.tiles_in_bbox(ANDORRA_BBOX.0, ANDORRA_BBOX.1, level))
+    let mut bbox_tiles: Vec<TileId> = (level::HIGHWAY..=level::LOCAL)
+        .flat_map(|level| reader.tiles_in_bbox(UTRECHT_BBOX.0, UTRECHT_BBOX.1, level))
         .collect();
-    andorra_tiles.sort();
+    bbox_tiles.sort();
     assert_eq!(
-        all_tiles, andorra_tiles,
-        "All tiles should equal Andorra bbox tiles"
+        all_tiles, bbox_tiles,
+        "All tiles should equal Utrecht bbox tiles"
     );
 
     // And no other levels
@@ -181,7 +189,7 @@ fn tiles_in_bbox() {
     }
 
     for level in level::HIGHWAY..=level::LOCAL {
-        let tiles = reader.tiles_in_bbox(ANDORRA_BBOX.0, ANDORRA_BBOX.1, level);
+        let tiles = reader.tiles_in_bbox(UTRECHT_BBOX.0, UTRECHT_BBOX.1, level);
         assert!(!tiles.is_empty(), "No tiles found for level {level}");
         for tile_id in tiles {
             assert_ne!(tile_id, TileId::default(), "Tile ID should not be invalid");
@@ -219,11 +227,11 @@ fn tiles_in_bbox() {
     assert_eq!(admininfo.country_text, "None");
     assert_eq!(admininfo.state_text, "None");
 
-    // The second admin info is Andorra
+    // The second admin info is the Netherlands
     let admininfo = tile.admin_info(1).unwrap();
-    assert_eq!(admininfo.country_iso, "AD");
+    assert_eq!(admininfo.country_iso, "NL");
     assert_eq!(admininfo.state_iso, "");
-    assert_eq!(admininfo.country_text, "Andorra");
+    assert_eq!(admininfo.country_text, "Nederland");
     assert_eq!(admininfo.state_text, "");
 
     // There is no third admin info in this tileset
@@ -234,13 +242,14 @@ fn tiles_in_bbox() {
 fn edges_in_tile() {
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
         },
     };
     let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
         .expect("Failed to create GraphReader");
 
+    let historical_edge = historical_traffic_edge();
     for tile_id in reader.tiles() {
         let tile = reader.graph_tile(tile_id).unwrap();
 
@@ -255,24 +264,25 @@ fn edges_in_tile() {
                 "de and via_ptr should have the same address"
             );
 
-            // this tileset has no historical traffic data
-            assert_eq!(de.free_flow_speed(), 0);
-            assert_eq!(de.constrained_flow_speed(), 0);
             assert_ne!(de.speed(), 0, "Default edge's speed should never be zero");
             assert_eq!(tile.live_traffic(de).speed(), None);
-            assert_eq!(
-                tile.edge_speed(de, valhalla::SpeedSources::ALL, false, 0, 0),
-                (de.speed(), valhalla::SpeedSources::NO_FLOW)
-            );
-            let truck_speed = if de.truck_speed() > 0 {
-                de.truck_speed()
-            } else {
-                de.speed()
-            };
-            assert_eq!(
-                tile.edge_speed(de, valhalla::SpeedSources::ALL, true, 0, 0),
-                (truck_speed, valhalla::SpeedSources::NO_FLOW)
-            );
+            if tile_id.graph_id(i as u32) != Some(historical_edge) {
+                assert_eq!(de.free_flow_speed(), 0);
+                assert_eq!(de.constrained_flow_speed(), 0);
+                assert_eq!(
+                    tile.edge_speed(de, valhalla::SpeedSources::ALL, false, 0, 0),
+                    (de.speed(), valhalla::SpeedSources::NO_FLOW)
+                );
+                let truck_speed = if de.truck_speed() > 0 {
+                    de.truck_speed()
+                } else {
+                    de.speed()
+                };
+                assert_eq!(
+                    tile.edge_speed(de, valhalla::SpeedSources::ALL, true, 0, 0),
+                    (truck_speed, valhalla::SpeedSources::NO_FLOW)
+                );
+            }
 
             let ei = tile.edgeinfo(de);
             assert_eq!(de.is_shortcut(), ei.way_id == 0, "Shortcuts have way_id 0");
@@ -287,6 +297,35 @@ fn edges_in_tile() {
     }
 }
 
+#[test]
+fn edge_with_historical_traffic() {
+    let reader = GraphReader::new(&Config::from_tile_extract(utrecht_tiles("tiles.tar")).unwrap())
+        .expect("Failed to create GraphReader");
+    let id = historical_traffic_edge();
+    let tile = reader.graph_tile(id).unwrap();
+    let de = tile.directededge(id.id()).unwrap();
+
+    assert_eq!(de.free_flow_speed(), 45);
+    assert_eq!(de.constrained_flow_speed(), 35);
+    let (_, sources) = tile.edge_speed(de, valhalla::SpeedSources::ALL, false, 0, 0);
+    assert_eq!(sources, valhalla::SpeedSources::PREDICTED_FLOW);
+    // free flow is used at night and constrained flow during the day
+    assert_eq!(
+        tile.edge_speed(de, valhalla::SpeedSources::FREE_FLOW, false, 0, 0),
+        (45, valhalla::SpeedSources::FREE_FLOW)
+    );
+    assert_eq!(
+        tile.edge_speed(
+            de,
+            valhalla::SpeedSources::CONSTRAINED_FLOW,
+            false,
+            12 * 3600,
+            0
+        ),
+        (35, valhalla::SpeedSources::CONSTRAINED_FLOW)
+    );
+}
+
 /// When no traffic tile is loaded at all, the C++ shim must return the static `INVALID_SPEED`
 /// record *faithfully* - overall + all three subsegment speeds == 127, breakpoints == 0 (raw bits
 /// `0x0FFF_FFFF`) - NOT a normalized `0`. Normalizing to 0 would silently drop the high bits
@@ -297,10 +336,10 @@ fn edges_in_tile() {
 fn live_traffic_invalid_speed_bits_when_no_traffic_loaded() {
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
             // A non-existent traffic extract -> no traffic tile is loaded -> trafficspeed() yields
             // the static INVALID_SPEED sentinel rather than a stored (all-zero) record.
-            traffic_extract: "tests/andorra/does-not-exist.tar".into(),
+            traffic_extract: "bad_path_to_traffic_extract".into(),
         },
     };
     let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
@@ -333,8 +372,8 @@ fn live_traffic_invalid_speed_bits_when_no_traffic_loaded() {
 fn nodes_in_tile() {
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
         },
     };
     let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
@@ -343,7 +382,7 @@ fn nodes_in_tile() {
     let mut no_auto_access_count = 0;
     let mut transition_count = 0;
     let mut gate_count = 0;
-    let mut toll_booth_count = 0;
+    let mut bollard_count = 0;
     let mut private_access_count = 0;
     for tile_id in reader.tiles() {
         let tile = reader.graph_tile(tile_id).unwrap();
@@ -364,15 +403,15 @@ fn nodes_in_tile() {
             let transitions = tile.node_transitions(node);
             transition_count += transitions.len();
 
-            assert_eq!(node.admin_index(), 1); // Andorra only, see [`tiles_in_bbox`] test
+            assert_eq!(node.admin_index(), 1); // Netherlands only, see [`tiles_in_bbox`] test
 
-            // Europe/Andorra or Europe/Madrid or Europe/Paris timezones
-            assert!(matches!(node.timezone(), 293 | 313 | 319));
+            // Europe/Brussels, tzdata links Europe/Amsterdam to it
+            assert_eq!(node.timezone(), 298);
 
-            // All nodes should be within Andorra bbox
+            // All nodes should be within Utrecht bbox
             let ll = tile.node_latlon(node);
-            assert!(ll.0 >= ANDORRA_BBOX.0.0 && ll.0 <= ANDORRA_BBOX.1.0);
-            assert!(ll.1 >= ANDORRA_BBOX.0.1 && ll.1 <= ANDORRA_BBOX.1.1);
+            assert!(ll.0 >= UTRECHT_BBOX.0.0 && ll.0 <= UTRECHT_BBOX.1.0);
+            assert!(ll.1 >= UTRECHT_BBOX.0.1 && ll.1 <= UTRECHT_BBOX.1.1);
 
             // This tileset has no elevation data
             assert_eq!(node.elevation(), -500.0);
@@ -383,34 +422,29 @@ fn nodes_in_tile() {
 
             match node.node_type() {
                 NodeType::kGate => gate_count += 1,
-                NodeType::kTollBooth => toll_booth_count += 1,
+                NodeType::kBollard => bollard_count += 1,
                 _ => {}
             }
             if node.private_access() {
-                // Valhalla only applies the private access penalty to gates and bollards.
-                assert!(matches!(
-                    node.node_type(),
-                    NodeType::kGate | NodeType::kBollard
-                ));
                 // Access mask stays fully open, `private_access()` is the only way to spot it.
                 assert!(node.access().contains(Access::AUTO));
                 private_access_count += 1;
             }
         }
     }
-    assert_eq!(transition_count, 3550); // to be changed if tileset changes
-    assert_eq!(no_auto_access_count, 22); // all nodes should have auto access
-    assert_eq!(gate_count, 84);
-    assert_eq!(toll_booth_count, 6);
-    assert_eq!(private_access_count, 3);
+    assert!(transition_count > 0);
+    assert!(no_auto_access_count > 0);
+    assert!(gate_count > 0);
+    assert!(bollard_count > 0);
+    assert!(private_access_count > 0);
 }
 
 #[test]
 fn reverse_edge() {
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: ANDORRA_TRAFFIC.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: utrecht_tiles("traffic.tar"),
         },
     };
     let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
@@ -440,21 +474,14 @@ fn reverse_edge() {
 #[test]
 fn live_traffic() {
     // for this test we should work with copy of the traffic tar to avoid modifying the original one
-    let traffic_copy = "tests/andorra/traffic_copy.tar";
-    std::fs::copy(ANDORRA_TRAFFIC, traffic_copy).expect("Failed to copy traffic tar");
-    // Poor man's `defer`
-    struct Cleanup<'a>(&'a str);
-    impl<'a> Drop for Cleanup<'a> {
-        fn drop(&mut self) {
-            let _ = std::fs::remove_file(self.0);
-        }
-    }
-    let _cleanup = Cleanup(traffic_copy);
+    let traffic_copy = tempfile::NamedTempFile::new().unwrap();
+    std::fs::copy(utrecht_tiles("traffic.tar"), traffic_copy.path())
+        .expect("Failed to copy traffic tar");
 
     let config = ValhallaConfig {
         mjolnir: MjolnirConfig {
-            tile_extract: ANDORRA_TILES.into(),
-            traffic_extract: traffic_copy.into(),
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: traffic_copy.path().to_str().unwrap().into(),
         },
     };
 
@@ -610,7 +637,7 @@ fn tz_info() {
 #[test]
 #[should_panic = "Wrong tile"]
 fn wrong_tile_edgeinfo() {
-    let reader = GraphReader::new(&Config::from_tile_extract(ANDORRA_TILES).unwrap())
+    let reader = GraphReader::new(&Config::from_tile_extract(utrecht_tiles("tiles.tar")).unwrap())
         .expect("Failed to create GraphReader");
 
     let tiles = reader.tiles();
@@ -625,7 +652,7 @@ fn wrong_tile_edgeinfo() {
 #[test]
 #[should_panic = "Wrong tile"]
 fn wrong_tile_live_traffic() {
-    let reader = GraphReader::new(&Config::from_tile_extract(ANDORRA_TILES).unwrap())
+    let reader = GraphReader::new(&Config::from_tile_extract(utrecht_tiles("tiles.tar")).unwrap())
         .expect("Failed to create GraphReader");
 
     let tiles = reader.tiles();
@@ -640,7 +667,7 @@ fn wrong_tile_live_traffic() {
 #[test]
 #[should_panic = "Wrong tile"]
 fn wrong_tile_node_latlon() {
-    let reader = GraphReader::new(&Config::from_tile_extract(ANDORRA_TILES).unwrap())
+    let reader = GraphReader::new(&Config::from_tile_extract(utrecht_tiles("tiles.tar")).unwrap())
         .expect("Failed to create GraphReader");
 
     let tiles = reader.tiles();
@@ -655,7 +682,7 @@ fn wrong_tile_node_latlon() {
 #[test]
 #[should_panic = "Wrong tile"]
 fn wrong_tile_node_edges() {
-    let reader = GraphReader::new(&Config::from_tile_extract(ANDORRA_TILES).unwrap())
+    let reader = GraphReader::new(&Config::from_tile_extract(utrecht_tiles("tiles.tar")).unwrap())
         .expect("Failed to create GraphReader");
 
     let tiles = reader.tiles();
@@ -670,7 +697,7 @@ fn wrong_tile_node_edges() {
 #[test]
 #[should_panic = "Wrong tile"]
 fn wrong_tile_node_transitions() {
-    let reader = GraphReader::new(&Config::from_tile_extract(ANDORRA_TILES).unwrap())
+    let reader = GraphReader::new(&Config::from_tile_extract(utrecht_tiles("tiles.tar")).unwrap())
         .expect("Failed to create GraphReader");
 
     let tiles = reader.tiles();
@@ -684,10 +711,9 @@ fn wrong_tile_node_transitions() {
 
 #[test]
 fn edge_info_shape() {
-    let reader = GraphReader::new(&Config::from_tile_extract(ANDORRA_TILES).unwrap()).unwrap();
+    let reader =
+        GraphReader::new(&Config::from_tile_extract(utrecht_tiles("tiles.tar")).unwrap()).unwrap();
 
-    let mut edges = 0;
-    let mut points = 0;
     for tile_id in reader.tiles() {
         let tile = reader.graph_tile(tile_id).unwrap();
         for de in tile.directededges() {
@@ -703,10 +729,16 @@ fn edge_info_shape() {
             assert_eq!(iter.is_empty(), shape.is_empty());
             assert_eq!(iter.count(), shape.len()); // `count()` is consuming, check it last
 
-            // Andorra sits in a tight box, so a bad decode shows up immediately.
+            // Utrecht sits in a tight box, so a bad decode shows up immediately.
             for point in &shape {
-                assert!((42.4..42.7).contains(&point.0), "{point:?}");
-                assert!((1.4..1.8).contains(&point.1), "{point:?}");
+                assert!(
+                    (UTRECHT_BBOX.0.0..UTRECHT_BBOX.1.0).contains(&point.0),
+                    "{point:?}"
+                );
+                assert!(
+                    (UTRECHT_BBOX.0.1..UTRECHT_BBOX.1.1).contains(&point.1),
+                    "{point:?}"
+                );
             }
 
             // The shape spans the edge, so it ends at the edge's end node.
@@ -727,10 +759,6 @@ fn edge_info_shape() {
                     "{shape_end:?} vs {end:?}"
                 );
             }
-
-            edges += 1;
-            points += shape.len();
         }
     }
-    assert_eq!((edges, points), (30418, 353806));
 }

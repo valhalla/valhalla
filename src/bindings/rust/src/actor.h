@@ -10,7 +10,7 @@ struct Response;
 
 // This strange FD *before* this include is requred to have an ability to use generated Rust types in C++ code.
 struct Actor;
-#include "valhalla/src/actor.rs.h"
+#include "valhalla/src/bindings/rust/src/actor.rs.h"
 
 /// Copy&paste of the `valhalla::tyr::actor_t` class, but without the parsing json request format.
 struct Actor final {
