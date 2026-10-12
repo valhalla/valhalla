@@ -14,6 +14,7 @@ import sys
 
 from locate import LocateError, load_pool
 from normalize import normalize_aggressive, normalize_light, split_hint
+from score import TAU, Hint, score_loose, score_pool
 from similarity import plain_containment, score_names, trigrams
 
 DEFAULT_URL = "https://valhalla1.openstreetmap.de/locate"
@@ -51,6 +52,22 @@ SCORE_FIXTURES = (
 )
 SCORE_TOLERANCE = 0.01
 
+# (hint, names, the one name that must win and clear TAU - or None when nothing may clear it)
+WINNER_FIXTURES = (
+    ("Hauptweg", ("Hauptweg", "Hauptstraße", "Bahnhofstraße", "Schulweg"), "Hauptweg"),
+    ("Hauptstr", ("Hauptweg", "Hauptstraße", "Bahnhofstraße", "Schulweg"), "Hauptstraße"),
+    (
+        "Dobelrstr",
+        ("Doblerstraße", "Obere Schillerstraße", "Keplerstraße", "Hegelstraße"),
+        "Doblerstraße",
+    ),
+    ("Muehlstr", ("Mühlstraße", "Gerstenmühlstraße", "Mohlstraße", "Bergstraße"), "Mühlstraße"),
+    ("Main Rd", ("Main Road", "Main Street", "High Road", "Station Road"), "Main Road"),
+    ("B28", ("B 28", "B 27", "Hegelstraße"), "B 28"),
+    ("Str", ("Bergstraße", "Burgstraße", "Bahnhofstraße"), None),
+    ("Mozartstr", ("Bergstraße", "Sigwartstraße", "Gartenstraße", "Lazarettgasse"), None),
+)
+
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(
@@ -68,7 +85,7 @@ def parse_args(argv):
     parser.add_argument(
         "--show",
         default="pool",
-        choices=["pool", "normalize", "grams"],
+        choices=["pool", "normalize", "grams", "scores"],
         help="which stage to report",
     )
     parser.add_argument("--limit", type=int, default=20, help="rows to print in candidate tables")
@@ -162,8 +179,30 @@ def check_fixtures():
                 failures.append(
                     "  score {!r} vs {!r}: got {}, want {:.2f}".format(hint, name, got, want)
                 )
+    for hint, names, winner in WINNER_FIXTURES:
+        reason = check_winner(hint, names, winner)
+        if reason:
+            failures.append("  winner {!r}: {}".format(hint, reason))
     if failures:
-        raise RuntimeError("normalization fixtures failed:\n" + "\n".join(failures))
+        raise RuntimeError("fixtures failed:\n" + "\n".join(failures))
+
+
+def check_winner(hint, names, winner):
+    scores = score_loose(hint, list(names))
+    above = []
+    for name in names:
+        score = scores[name].score
+        if score is not None and score >= TAU:
+            above.append((score, name))
+    above.sort(reverse=True)
+    summary = ", ".join("{} {:.3f}".format(name, score) for score, name in above) or "nothing"
+    if winner is None:
+        return "expected nothing above TAU, got {}".format(summary) if above else None
+    if not above or above[0][1] != winner:
+        return "expected {!r} on top, got {}".format(winner, summary)
+    if len(above) > 1 and above[1][0] == above[0][0]:
+        return "{!r} ties: {}".format(winner, summary)
+    return None
 
 
 def print_normalize_report(hint, pool, limit):
@@ -244,6 +283,60 @@ def print_grams_report(hint, pool, limit):
         print("  ... {} more (raise --limit)".format(len(rows) - limit))
 
 
+def print_scores_report(hint_text, pool, limit):
+    print()
+    print_hint_split(hint_text)
+    hint = Hint(hint_text)
+    scorer, by_name, per_candidate = score_pool(pool, hint)
+
+    if hint.ref is not None:
+        print("  ref hint {!r} - near-exact match only".format(hint.ref))
+    else:
+        generics = ",".join(sorted(hint.generics.forms)) or "-"
+        print(
+            "  core {!r}  generics {}  variants {}".format(
+                hint.generics.core, generics, len(hint.variants)
+            )
+        )
+        for label, state in (("light", scorer.light), ("aggressive", scorer.aggressive)):
+            verdict = "ok" if state.has_evidence() else "NO EVIDENCE"
+            print(
+                "  {:<10} evidence {:.2f}, floor {:.2f} over {} documents - {}".format(
+                    label, state.evidence, state.floor, state.index.document_count, verdict
+                )
+            )
+
+    rows = list(by_name.values())
+    rows.sort(key=lambda row: (row.score is None, -(row.score or 0.0), row.name))
+    print()
+    print(
+        "  {:>5}  {:>5}  {:>5}  {:>5}  {:<10}  {}".format(
+            "light", "aggr", "fuzzy", "final", "via", "name"
+        )
+    )
+    for row in rows[:limit]:
+        via = row.via + (" x gen" if row.generic_mismatch else "")
+        print(
+            "  {}  {}  {}  {}  {:<10}  {}".format(
+                format_score(row.light),
+                format_score(row.aggressive),
+                format_score(row.fuzzy),
+                format_score(row.score),
+                via,
+                row.name,
+            )
+        )
+    if len(rows) > limit:
+        print("  ... {} more (raise --limit)".format(len(rows) - limit))
+
+    above = 0
+    for best in per_candidate:
+        if best is not None and best.score >= TAU:
+            above += 1
+    print()
+    print("  {} of {} edges carry a name at or above TAU={}".format(above, len(per_candidate), TAU))
+
+
 def main(argv):
     args = parse_args(argv)
     check_fixtures()
@@ -270,6 +363,8 @@ def main(argv):
         print_normalize_report(args.name, pool, args.limit)
     elif args.show == "grams":
         print_grams_report(args.name, pool, args.limit)
+    elif args.show == "scores":
+        print_scores_report(args.name, pool, args.limit)
 
     return 0
 

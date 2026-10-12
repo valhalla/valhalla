@@ -40,7 +40,7 @@ Built one at a time; `--show` selects which one reports.
 | `pool` | candidate pool from `/locate` | done |
 | `normalize` | transliteration and normalization passes | done |
 | `grams` | trigram bags, IDF, the scoring formula | done |
-| `scores` | per-candidate name score and aggregation | todo |
+| `scores` | per-candidate name score and aggregation | done |
 | — | `effective_distance` ranking, τ/α guards | todo |
 
 ## Normalization
@@ -127,3 +127,40 @@ score     = Σ weight(g) · shared(g)  /  Σ weight(g) · hint(g)
 `--show grams` prints the hint's grams with df and weight, then plain (unweighted), light and
 aggressive scores per name. `main.py` checks the worked example from the design notes
 (`Bergstr` → 1.00 / 0.38 / 0.07 / 0.00) on every run and raises if it drifts.
+
+## Per-name and per-edge score
+
+`score.py` turns a hint into one score per name, then per edge (max over the names it carries):
+
+1. **Ref hint** (`B28`, `L 1208`: up to three letters, digits, one optional letter) - near-exact match
+   on the light form, 1.0 or 0.0, nothing else runs. A street hint never scores a ref name.
+2. **Evidence floor** - the hint's total gram weight must reach `EVIDENCE_K · ln(N)`, i.e. ~1.5 grams
+   of maximal rarity. `Str` alone carries 0.45 against a floor of 7.6 in Tübingen and scores nothing.
+3. **Light containment**, times `1 − GAMMA · uncovered` - the share of the candidate's weight the hint
+   doesn't cover. Weak by design: generics are cheap, so abbreviations barely pay; `Gerstenmühlstraße`
+   pays for `gersten`.
+4. **Below TAU only**, two retries, best one wins: the aggressive pass × `BETA`, and edit distance
+   (OSA, transposition = 1 edit) between the **cores** - the name with its generic removed - ×
+   `FUZZY_DISCOUNT`.
+5. **Generic mismatch** - both sides carry a generic and they share none: × `GENERIC_MISMATCH`. This
+   is what keeps `Hauptweg` from scoring `Hauptstraße` via the core retry.
+
+`generics.py` holds the generic forms (prefix, suffix, glued) and the abbreviation table; a leading or
+closing abbreviation is also expanded into extra hint variants (`Main Rd` → `Main Road`), scored as
+the best variant.
+
+`--show scores` prints the hint's core, generics and evidence, then light / aggressive / fuzzy /
+final per name and how many edges clear TAU. `WINNER_FIXTURES` in `main.py` pin eight cases
+(abbreviation, transposition, umlaut, generic mismatch, ref, no-evidence, absent street) and raise on
+every run if one flips.
+
+| constant | value | |
+|---|---|---|
+| `TAU` | 0.6 | retry trigger here, hint threshold in stage 5 |
+| `BETA` | 0.9 | aggressive pass discount |
+| `FUZZY_DISCOUNT` | 0.85 | core edit-distance discount |
+| `GAMMA` | 0.15 | candidate surplus weight |
+| `EVIDENCE_K` | 1.5 | evidence floor, in units of `ln(N)` |
+| `GENERIC_MISMATCH` | 0.6 | |
+
+All guesses until the validation corpus exists.
