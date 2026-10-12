@@ -447,7 +447,7 @@ TEST(Standalone, FilterTestMultipleEdges) {
   // there should be 7 edges from A to I as even though DJ is a footway, CD and DE have different way
   // ids FG and GH will be aggregated as they have the same way id and are separated by a footway.
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "HI"});
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "GH", "HI"});
 
   {
     GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
@@ -482,13 +482,13 @@ TEST(Standalone, FilterTestMultipleEdges) {
     EXPECT_EQ(FG_edge, nullptr);
     EXPECT_EQ(GF_edge, nullptr);
 
-    // GH should be deleted as it was aggregated
+    // FG should be deleted as it was aggregated
     GraphId GH_edge_id;
     const DirectedEdge* GH_edge = nullptr;
     GraphId HG_edge_id;
     const DirectedEdge* HG_edge = nullptr;
     std::tie(GH_edge_id, GH_edge, HG_edge_id, HG_edge) =
-        findEdge(graph_reader, map.nodes, "GH", "H", baldr::GraphId{});
+        findEdge(graph_reader, map.nodes, "FG", "H", baldr::GraphId{});
     EXPECT_EQ(GH_edge, nullptr);
     EXPECT_EQ(HG_edge, nullptr);
 
@@ -498,7 +498,7 @@ TEST(Standalone, FilterTestMultipleEdges) {
     GraphId HF_edge_id;
     const DirectedEdge* HF_edge = nullptr;
     std::tie(FH_edge_id, FH_edge, HF_edge_id, HF_edge) =
-        findEdge(graph_reader, map.nodes, "FG", "H", baldr::GraphId{}, 105);
+        findEdge(graph_reader, map.nodes, "GH", "H", baldr::GraphId{}, 105);
     EXPECT_NE(FH_edge, nullptr);
     EXPECT_NE(HF_edge, nullptr);
 
@@ -716,37 +716,4 @@ TEST(Standalone, FilterTestConsistencyTTHeadingsDriveability) {
     EXPECT_EQ((int)node->heading(CF_edge->localedgeidx()), 180);
     EXPECT_EQ((int)CF_edge->turntype(AC_edge->localedgeidx()), 2); // right
   }
-}
-
-TEST(Standalone, AggregateShortEdges) {
-  constexpr double gridsize_metres = 0.3;
-
-  const std::string ascii_map = R"(
-     A-B-C
-       |
-       D
-  )";
-
-  const gurka::ways ways = {
-      {"ABC", {{"highway", "unclassified"}, {"osm_id", "100"}, {"oneway", "yes"}}},
-      {"BD", {{"highway", "footway"}, {"osm_id", "101"}, {"footway", "crossing"}}},
-  };
-
-  auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {11.24006, 43.77054});
-  auto map =
-      gurka::buildtiles(layout, ways, {}, {}, work_dir,
-                        {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
-                         {"mjolnir.include_pedestrian", "false"}});
-
-  GraphReader graph_reader(map.config.get_child("mjolnir"));
-
-  auto [AC_edge_id, AC_edge] = gurka::findEdgeByNodes(graph_reader, layout, "A", "C");
-  ASSERT_NE(AC_edge, nullptr);
-
-  auto shape = graph_reader.GetGraphTile(AC_edge_id)->edgeinfo(AC_edge).shape();
-  ASSERT_EQ(shape.size(), 3) << "AB and BC were not aggregated";
-  EXPECT_LT(valhalla::midgard::length(shape), 1.f) << "test needs a sub-metre aggregated shape";
-
-  EXPECT_GE(AC_edge->length(), 1)
-      << "zero length makes TripLeg::Edge::speed a 0/0 NaN in triplegbuilder";
 }

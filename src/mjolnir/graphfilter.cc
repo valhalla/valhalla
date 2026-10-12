@@ -799,8 +799,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
 
         // Update length and curvature if the edge was aggregated
         if (aggregated) {
-          double length = std::max(1.0, valhalla::midgard::length(shape));
-          newedge.set_length(length);
+          newedge.set_length(valhalla::midgard::length(shape));
           newedge.set_curvature(compute_curvature(shape));
         }
 

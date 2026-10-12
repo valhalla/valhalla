@@ -98,12 +98,12 @@ msgstr "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
 #. e.g. Bear right at Mannenbashi East.
 msgctxt "instructions.bear.phrases.4"
 msgid "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> se držite <RELATIVE_DIRECTION>."
 
 #. e.g. Bear left toward Baltimore.
 msgctxt "instructions.bear.phrases.5"
 msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Držite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -164,12 +164,12 @@ msgstr "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
 #. e.g. Bear right at Mannenbashi East.
 msgctxt "instructions.bear_verbal.phrases.4"
 msgid "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> se držite <RELATIVE_DIRECTION>."
 
 #. e.g. Bear left toward Baltimore.
 msgctxt "instructions.bear_verbal.phrases.5"
 msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Držite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -230,12 +230,12 @@ msgstr "Nadaljujte po <STREET_NAMES>."
 #. e.g. Continue at Mannenbashi East.
 msgctxt "instructions.continue.phrases.2"
 msgid "Continue at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> nadaljujte."
 
 #. e.g. Continue toward Baltimore.
 msgctxt "instructions.continue.phrases.3"
 msgid "Continue toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Nadaljujte proti <TOWARD_SIGN>."
 
 msgctxt "instructions.continue.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -288,22 +288,22 @@ msgstr "Po <STREET_NAMES> nadaljujte <LENGTH>."
 #. e.g. Continue at Mannenbashi East.
 msgctxt "instructions.continue_verbal.phrases.4"
 msgid "Continue at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> nadaljujte."
 
 #. e.g. Continue at Mannenbashi East for 2 miles.
 msgctxt "instructions.continue_verbal.phrases.5"
 msgid "Continue at <JUNCTION_NAME> for <LENGTH>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> nadaljujte <LENGTH>."
 
 #. e.g. Continue toward Baltimore.
 msgctxt "instructions.continue_verbal.phrases.6"
 msgid "Continue toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Nadaljujte proti <TOWARD_SIGN>."
 
 #. e.g. Continue toward Baltimore for 5 miles.
 msgctxt "instructions.continue_verbal.phrases.7"
 msgid "Continue toward <TOWARD_SIGN> for <LENGTH>."
-msgstr ""
+msgstr "Nadaljujte <LENGTH> proti <TOWARD_SIGN>."
 
 msgctxt "instructions.continue_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -386,12 +386,12 @@ msgstr "Nadaljujte po <STREET_NAMES>."
 #. e.g. Continue at Mannenbashi East.
 msgctxt "instructions.continue_verbal_alert.phrases.2"
 msgid "Continue at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> nadaljujte."
 
 #. e.g. Continue toward Baltimore.
 msgctxt "instructions.continue_verbal_alert.phrases.3"
 msgid "Continue toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Nadaljujte proti <TOWARD_SIGN>."
 
 msgctxt "instructions.continue_verbal_alert.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -531,22 +531,22 @@ msgstr "desni"
 #. e.g. Take the elevator.
 msgctxt "instructions.elevator.phrases.0"
 msgid "Take the elevator."
-msgstr ""
+msgstr "Uporabite dvigalo."
 
 #. e.g. Take the elevator to Level 1.
 msgctxt "instructions.elevator.phrases.1"
 msgid "Take the elevator to <LEVEL>."
-msgstr ""
+msgstr "Z dvigalom pojdite do <LEVEL>."
 
 #. e.g. Enter the building.
 msgctxt "instructions.enter_building.phrases.0"
 msgid "Enter the building."
-msgstr ""
+msgstr "Vstopite v stavbo."
 
 #. e.g. Enter the building, and continue on the walkway.
 msgctxt "instructions.enter_building.phrases.1"
 msgid "Enter the building, and continue on <STREET_NAMES>."
-msgstr ""
+msgstr "Vstopite v stavbo in nadaljujte po <STREET_NAMES>."
 
 msgctxt "instructions.enter_building.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -582,7 +582,7 @@ msgstr "Pojdite na <FERRY_LABEL> <STREET_NAMES>."
 #. e.g. Take the ferry toward Cape May.
 msgctxt "instructions.enter_ferry.phrases.3"
 msgid "Take the ferry toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Pojdite na trajekt proti <TOWARD_SIGN>."
 
 msgctxt "instructions.enter_ferry.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -634,7 +634,7 @@ msgstr "Pojdite na <FERRY_LABEL> <STREET_NAMES>."
 #. e.g. Take the ferry toward Cape May.
 msgctxt "instructions.enter_ferry_verbal.phrases.3"
 msgid "Take the ferry toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Pojdite na trajekt proti <TOWARD_SIGN>."
 
 msgctxt "instructions.enter_ferry_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -690,72 +690,72 @@ msgstr "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod."
 #. e.g. Enter the roundabout and take the 3rd exit onto Main Street.
 msgctxt "instructions.enter_roundabout.phrases.2"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.3"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Nadaljujte po <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter the roundabout and take the 3rd exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.4"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod proti <TOWARD_SIGN>."
 
 #. e.g. Enter the roundabout and take the exit onto Main Street.
 msgctxt "instructions.enter_roundabout.phrases.5"
 msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite izhod na <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.6"
 msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Nadaljujte po <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter the roundabout and take the exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.7"
 msgid "Enter the roundabout and take the exit toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite izhod proti <TOWARD_SIGN>."
 
 #. e.g. Enter Dupont Circle.
 msgctxt "instructions.enter_roundabout.phrases.8"
 msgid "Enter <STREET_NAMES>"
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES>"
 
 #. e.g. Enter Dupont Circle and take the 1st exit.
 msgctxt "instructions.enter_roundabout.phrases.9"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit onto Main Street.
 msgctxt "instructions.enter_roundabout.phrases.10"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.11"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Nadaljujte po <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.12"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod proti <TOWARD_SIGN>."
 
 #. e.g. Enter Dupont Circle and take the exit onto Main Street.
 msgctxt "instructions.enter_roundabout.phrases.13"
 msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite izhod na <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.14"
 msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Nadaljujte po <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter Dupont Circle and take the exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.15"
 msgid "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite izhod proti <TOWARD_SIGN>."
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -847,72 +847,72 @@ msgstr "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod."
 #. e.g. Enter the roundabout and take the 3rd exit onto Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.2"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.3"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
 
 #. e.g. Enter the roundabout and take the 3rd exit toward Baltimore.
 msgctxt "instructions.enter_roundabout_verbal.phrases.4"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod proti <TOWARD_SIGN>."
 
 #. e.g. Enter the roundabout and take the exit onto Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.5"
 msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite izhod na <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter the roundabout and take the exit onto U.S. 3 22/Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.6"
 msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
 
 #. e.g. Enter the roundabout and take the exit toward Baltimore.
 msgctxt "instructions.enter_roundabout_verbal.phrases.7"
 msgid "Enter the roundabout and take the exit toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Pojdite v krožišče in uporabite izhod proti <TOWARD_SIGN>."
 
 #. e.g. Enter Dupont Circle.
 msgctxt "instructions.enter_roundabout_verbal.phrases.8"
 msgid "Enter <STREET_NAMES>"
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES>"
 
 #. e.g. Enter Dupont Circle and take the 1st exit.
 msgctxt "instructions.enter_roundabout_verbal.phrases.9"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit onto Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.10"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.11"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit toward Baltimore.
 msgctxt "instructions.enter_roundabout_verbal.phrases.12"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite <ORDINAL_VALUE>. izhod proti <TOWARD_SIGN>."
 
 #. e.g. Enter Dupont Circle and take the exit onto Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.13"
 msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite izhod na <ROUNDABOUT_EXIT_STREET_NAMES>."
 
 #. e.g. Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.14"
 msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite izhod na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
 
 #. e.g. Enter Dupont Circle and take the exit toward Baltimore.
 msgctxt "instructions.enter_roundabout_verbal.phrases.15"
 msgid "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Pojdite na <STREET_NAMES> in uporabite izhod proti <TOWARD_SIGN>."
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -985,12 +985,12 @@ msgstr "10"
 #. e.g. Take the escalator.
 msgctxt "instructions.escalator.phrases.0"
 msgid "Take the escalator."
-msgstr ""
+msgstr "Uporabite tekoče stopnice."
 
 #. e.g. Take the escalator to Level 3.
 msgctxt "instructions.escalator.phrases.1"
 msgid "Take the escalator to <LEVEL>."
-msgstr ""
+msgstr "S tekočimi stopnicami pojdite do <LEVEL>."
 
 #. e.g. Take the exit on the left.
 #. e.g. Take the exit on the right.
@@ -1124,12 +1124,12 @@ msgstr "desni"
 #. e.g. Exit the building.
 msgctxt "instructions.exit_building.phrases.0"
 msgid "Exit the building."
-msgstr ""
+msgstr "Zapustite stavbo."
 
 #. e.g. Exit the building, and continue on the walkway.
 msgctxt "instructions.exit_building.phrases.1"
 msgid "Exit the building, and continue on <STREET_NAMES>."
-msgstr ""
+msgstr "Zapustite stavbo in nadaljujte po <STREET_NAMES>."
 
 msgctxt "instructions.exit_building.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1165,7 +1165,7 @@ msgstr "Iz krožišča pojdite na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NA
 #. e.g. Exit the roundabout toward Baltimore.
 msgctxt "instructions.exit_roundabout.phrases.3"
 msgid "Exit the roundabout toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Iz krožišča pojdite proti <TOWARD_SIGN>."
 
 msgctxt "instructions.exit_roundabout.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1213,7 +1213,7 @@ msgstr "Iz krožišča pojdite na <BEGIN_STREET_NAMES>."
 #. e.g. Exit the roundabout toward Baltimore.
 msgctxt "instructions.exit_roundabout_verbal.phrases.3"
 msgid "Exit the roundabout toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Iz krožišča pojdite proti <TOWARD_SIGN>."
 
 msgctxt "instructions.exit_roundabout_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1668,7 +1668,7 @@ msgstr "desno"
 #. e.g. Continue to Level 2.
 msgctxt "instructions.level_change.phrases.0"
 msgid "Continue to <LEVEL>."
-msgstr ""
+msgstr "Nadaljujte do <LEVEL>."
 
 #. e.g. Merge.
 msgctxt "instructions.merge.phrases.0"
@@ -1693,12 +1693,12 @@ msgstr "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>."
 #. e.g. Merge toward Baltimore.
 msgctxt "instructions.merge.phrases.4"
 msgid "Merge toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Zapeljite na sosednjo pot proti <TOWARD_SIGN>."
 
 #. e.g. Merge right toward Baltimore.
 msgctxt "instructions.merge.phrases.5"
 msgid "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot proti <TOWARD_SIGN>."
 
 msgctxt "instructions.merge.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1759,12 +1759,12 @@ msgstr "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>."
 #. e.g. Merge toward Baltimore.
 msgctxt "instructions.merge_verbal.phrases.4"
 msgid "Merge toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Zapeljite na sosednjo pot proti <TOWARD_SIGN>."
 
 #. e.g. Merge right toward Baltimore.
 msgctxt "instructions.merge_verbal.phrases.5"
 msgid "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot proti <TOWARD_SIGN>."
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1805,16 +1805,16 @@ msgstr "desno"
 #. e.g. Park your vehicle.
 msgctxt "instructions.park_vehicle.phrases.0"
 msgid "Park your vehicle"
-msgstr ""
+msgstr "Parkirajte vozilo"
 
 #. e.g. Pass the gate.
 msgctxt "instructions.pass.phrases.0"
 msgid "Pass <OBJECT_LABEL>."
-msgstr ""
+msgstr "Peljite mimo <OBJECT_LABEL>."
 
 msgctxt "instructions.pass.phrases.1"
 msgid "Pass traffic signals on <OBJECT_LABEL>."
-msgstr ""
+msgstr "Peljite mimo semaforjev na <OBJECT_LABEL>."
 
 msgctxt "instructions.pass.replacement.object_labels.0"
 msgid "the gate"
@@ -2165,12 +2165,12 @@ msgstr "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
 #. e.g. Make a sharp right at Mannenbashi East.
 msgctxt "instructions.sharp.phrases.4"
 msgid "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> zavijte ostro <RELATIVE_DIRECTION>."
 
 #. e.g. Make a sharp left toward Baltimore.
 msgctxt "instructions.sharp.phrases.5"
 msgid "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Zavijte ostro <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
 
 msgctxt "instructions.sharp.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -2231,12 +2231,12 @@ msgstr "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
 #. e.g. Make a sharp right at Mannenbashi East.
 msgctxt "instructions.sharp_verbal.phrases.4"
 msgid "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> zavijte ostro <RELATIVE_DIRECTION>."
 
 #. e.g. Make a sharp left toward Baltimore.
 msgctxt "instructions.sharp_verbal.phrases.5"
 msgid "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Zavijte ostro <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
 
 msgctxt "instructions.sharp_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -2615,12 +2615,12 @@ msgstr "Manj kot 10 čevljev"
 #. e.g. Take the stairs.
 msgctxt "instructions.steps.phrases.0"
 msgid "Take the stairs."
-msgstr ""
+msgstr "Uporabite stopnice."
 
 #. e.g. Take the stairs to Level 2.
 msgctxt "instructions.steps.phrases.1"
 msgid "Take the stairs to <LEVEL>."
-msgstr ""
+msgstr "Po stopnicah pojdite do <LEVEL>."
 
 #. e.g. Take the New Haven. (1 stop)
 #. e.g. Take the metro. (2 stops)
@@ -3040,12 +3040,12 @@ msgstr "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
 #. e.g. Turn right at Mannenbashi East.
 msgctxt "instructions.turn.phrases.4"
 msgid "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> zavijte <RELATIVE_DIRECTION>."
 
 #. e.g. Turn left toward Baltimore.
 msgctxt "instructions.turn.phrases.5"
 msgid "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Zavijte <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
 
 msgctxt "instructions.turn.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -3106,12 +3106,12 @@ msgstr "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
 #. e.g. Turn right at Mannenbashi East.
 msgctxt "instructions.turn_verbal.phrases.4"
 msgid "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> zavijte <RELATIVE_DIRECTION>."
 
 #. e.g. Turn left toward Baltimore.
 msgctxt "instructions.turn_verbal.phrases.5"
 msgid "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Zavijte <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
 
 msgctxt "instructions.turn_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -3182,12 +3182,12 @@ msgstr "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ost
 #. e.g. Make a right U-turn at Mannenbashi East.
 msgctxt "instructions.uturn.phrases.6"
 msgid "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> polkrožno obrnite <RELATIVE_DIRECTION>."
 
 #. e.g. Make a left U-turn toward Baltimore.
 msgctxt "instructions.uturn.phrases.7"
 msgid "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Polkrožno obrnite <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
 
 msgctxt "instructions.uturn.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -3258,12 +3258,12 @@ msgstr "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ost
 #. e.g. Make a right U-turn at Mannenbashi East.
 msgctxt "instructions.uturn_verbal.phrases.6"
 msgid "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>."
-msgstr ""
+msgstr "Pri <JUNCTION_NAME> polkrožno obrnite <RELATIVE_DIRECTION>."
 
 #. e.g. Make a left U-turn toward Baltimore.
 msgctxt "instructions.uturn_verbal.phrases.7"
 msgid "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
-msgstr ""
+msgstr "Polkrožno obrnite <RELATIVE_DIRECTION> proti <TOWARD_SIGN>."
 
 msgctxt "instructions.uturn_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"

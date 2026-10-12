@@ -213,12 +213,14 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                        : costing_->EdgeCost(opp_edge, opp_edge_id, endtile, time_info, flow_sources);
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
 
-  sif::Cost transition_cost =
-      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter)
-              : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, endtile, pred.edgeid(), reader_getter,
-                                                0 != (flow_sources & kDefaultFlowMask),
-                                                pred.internal_turn());
+  auto transition_cost_of = [&](const bool edge_destonly) {
+    return FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter,
+                                              edge_destonly)
+                   : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                     opp_pred_edge, pred, endtile, reader_getter,
+                                                     0 != (flow_sources & kDefaultFlowMask),
+                                                     pred.internal_turn(), edge_destonly);
+  };
 
   auto endpoint = endtile->get_node_ll(meta.edge->endnode());
 
@@ -233,10 +235,11 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     // (based on costing method)
     uint8_t restriction_idx = kInvalidRestriction;
     uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
+    bool edge_destonly = false;
     if (FORWARD) {
-      if (!costing_->Allowed(meta.edge, dest_path_edge, pred, tile, meta.edge_id,
-                             time_info.local_time, nodeinfo->timezone(), restriction_idx,
-                             destonly_restriction_mask) ||
+      if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
+                             nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
+                             &edge_destonly) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
                                time_info.local_time, nodeinfo->timezone())) {
         return false;
@@ -244,12 +247,13 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     } else {
       if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
                                     time_info.local_time, nodeinfo->timezone(), restriction_idx,
-                                    destonly_restriction_mask) ||
+                                    destonly_restriction_mask, &edge_destonly) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false, &edgestatus_,
                                time_info.local_time, nodeinfo->timezone())) {
         return false;
       }
     }
+    const sif::Cost transition_cost = transition_cost_of(edge_destonly);
     auto percent_traversed = !dest_path_edge ? 1.0f
                                              : (FORWARD ? dest_path_edge->percent_along()
                                                         : 1.0f - dest_path_edge->percent_along());
@@ -282,9 +286,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                               restriction_idx, 0,
-                               meta.edge->destonly() ||
-                                   (costing_->is_hgv() && meta.edge->destonly_hgv()),
+                               restriction_idx, 0, edge_destonly,
                                meta.edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
     } else {
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
@@ -294,9 +296,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                   opp_pred_edge),
-                               restriction_idx, 0,
-                               opp_edge->destonly() ||
-                                   (costing_->is_hgv() && opp_edge->destonly_hgv()),
+                               restriction_idx, 0, edge_destonly,
                                opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
     }
 
@@ -341,9 +341,11 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     auto update_label = [&]() {
       uint8_t restriction_idx = kInvalidRestriction;
       uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
+      bool edge_destonly = false;
       if (FORWARD) {
-        if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
-                               nodeinfo->timezone(), restriction_idx, destonly_restriction_mask) ||
+        if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
+                               nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
+                               &edge_destonly) ||
             costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
                                  time_info.local_time, nodeinfo->timezone())) {
           return false;
@@ -351,7 +353,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       } else {
         if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
                                       time_info.local_time, nodeinfo->timezone(), restriction_idx,
-                                      destonly_restriction_mask) ||
+                                      destonly_restriction_mask, &edge_destonly) ||
             costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false,
                                  &edgestatus_, time_info.local_time, nodeinfo->timezone())) {
           return false;
@@ -360,6 +362,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
       // TODO(danpat): can we slices down to EdgeLabel here safely?
       auto& lab = edgelabels_[meta.edge_status->index()];
+      const sif::Cost transition_cost = transition_cost_of(edge_destonly);
       auto newcost = pred.cost() + transition_cost + edge_cost;
 
       if (newcost.cost < lab.cost().cost) {
@@ -816,16 +819,17 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
 
       // Add EdgeLabel to the adjacency list
       uint32_t idx = edgelabels_.size();
+      bool edge_destonly = false;
       auto destonly_restriction_mask =
-          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
+                                                  time_info.valid ? time_info.local_time : 0,
+                                                  time_info.timezone_index, &edge_destonly);
 
       if (FORWARD) {
         edgelabels_.emplace_back(kInvalidLabel, edgeid, GraphId(), directededge, cost, sortcost, dist,
                                  mode_, Cost{}, false, !(costing_->IsClosed(directededge, tile)),
                                  0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
-                                 kInvalidRestriction, 0,
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 kInvalidRestriction, 0, edge_destonly,
                                  directededge->forwardaccess() & kTruckAccess,
                                  destonly_restriction_mask);
       } else {
@@ -833,9 +837,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
                                  dist, mode_, Cost{}, false,
                                  !(costing_->IsClosed(directededge, tile)),
                                  0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
-                                 kInvalidRestriction, 0,
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 kInvalidRestriction, 0, edge_destonly,
                                  directededge->forwardaccess() & kTruckAccess,
                                  destonly_restriction_mask);
       }

@@ -2,7 +2,8 @@
 #include "gurka.h"
 #include "test.h"
 
-#include <boost/format.hpp>
+#include <format>
+#include <string_view>
 
 using namespace valhalla;
 namespace dt = valhalla::baldr::DateTime;
@@ -217,18 +218,16 @@ std::string make_route_request(const gurka::map& map,
                                bool prioritize_bidirectional,
                                int date_time_type,
                                std::string date_time_value) {
-  const std::string query_pattern_with_speeds = R"({
-      "locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],
+  constexpr std::string_view query_pattern_with_speeds = R"({{
+      "locations":[{{"lat":{:.6f},"lon":{:.6f}}},{{"lat":{:.6f},"lon":{:.6f}}}],
       "costing": "auto",
-      "costing_options":{"auto":{"speed_types":[%s]}},
-      "prioritize_bidirectional":%s,
-      "date_time": { "type": "%d", "value": "%s" }
-    })";
-  return (boost::format(query_pattern_with_speeds) % std::to_string(map.nodes.at(from).lat()) %
-          std::to_string(map.nodes.at(from).lng()) % std::to_string(map.nodes.at(to).lat()) %
-          std::to_string(map.nodes.at(to).lng()) % speed_types %
-          std::to_string(prioritize_bidirectional) % date_time_type % date_time_value)
-      .str();
+      "costing_options":{{"auto":{{"speed_types":[{}]}}}},
+      "prioritize_bidirectional":{},
+      "date_time": {{ "type": "{}", "value": "{}" }}
+    }})";
+  return std::format(query_pattern_with_speeds, map.nodes.at(from).lat(), map.nodes.at(from).lng(),
+                     map.nodes.at(to).lat(), map.nodes.at(to).lng(), speed_types,
+                     prioritize_bidirectional, date_time_type, date_time_value);
 }
 
 class RouteWithTraffic : public ::testing::Test {
@@ -526,16 +525,14 @@ std::string make_mapmatch_request(const gurka::map& map,
                                   const std::string& to,
                                   std::string speed_types,
                                   std::string date_time_value) {
-  const std::string query_pattern_with_speeds = R"({
-      "shape":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],
+  constexpr std::string_view query_pattern_with_speeds = R"({{
+      "shape":[{{"lat":{:.6f},"lon":{:.6f}}},{{"lat":{:.6f},"lon":{:.6f}}}],
       "costing": "auto",
-      "costing_options":{"auto":{"speed_types":[%s]}},
-      "date_time":{"value":"%s","type":"1"}
-    })";
-  return (boost::format(query_pattern_with_speeds) % std::to_string(map.nodes.at(from).lat()) %
-          std::to_string(map.nodes.at(from).lng()) % std::to_string(map.nodes.at(to).lat()) %
-          std::to_string(map.nodes.at(to).lng()) % speed_types % date_time_value)
-      .str();
+      "costing_options":{{"auto":{{"speed_types":[{}]}}}},
+      "date_time":{{"value":"{}","type":"1"}}
+    }})";
+  return std::format(query_pattern_with_speeds, map.nodes.at(from).lat(), map.nodes.at(from).lng(),
+                     map.nodes.at(to).lat(), map.nodes.at(to).lng(), speed_types, date_time_value);
 }
 
 class MapMatchWithTraffic : public ::testing::Test {
