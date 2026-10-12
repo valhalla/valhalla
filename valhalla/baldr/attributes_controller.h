@@ -172,6 +172,7 @@ constexpr std::string_view kNodeTransitEgressInfoName = "node.transit_egress_inf
 constexpr std::string_view kNodeTransitEgressInfoLatLon = "node.transit_egress_info.lat_lon";
 constexpr std::string_view kNodeTimeZone = "node.time_zone";
 constexpr std::string_view kNodeTransitionTime = "node.transition_time";
+constexpr std::string_view kNodeStopImpact = "node.stop_impact";
 constexpr std::string_view kNodeDriveOnRight = "node.drive_on_right";
 constexpr std::string_view kNodeElevation = "node.elevation";
 constexpr std::string_view kNodeTaggedAccess = "node.tagged_access";
