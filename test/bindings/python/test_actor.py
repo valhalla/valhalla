@@ -131,6 +131,45 @@ class TestBindings(unittest.TestCase):
         iso = self.actor.isochrone(query)
         self.assertEqual(len(iso['features']), 6)  # 4 isochrones and the 2 point layers
 
+    def test_remaining_endpoints(self):
+        a = {"lat": 52.08813, "lon": 5.03231}
+        b = {"lat": 52.09987, "lon": 5.14913}
+        c = {"lat": 52.0938, "lon": 5.1194}
+        route = self.actor.route({"locations": [a, b], "costing": "auto"})
+        shape = route["trip"]["legs"][0]["shape"]
+
+        # endpoint -> (request, key expected in the response)
+        cases = {
+            "locate": ({"locations": [a], "costing": "auto"}, None),
+            "matrix": ({"sources": [a], "targets": [b, c], "costing": "auto"}, "sources_to_targets"),
+            "optimized_route": ({"locations": [a, c, b], "costing": "auto"}, "trip"),
+            "trace_route": (
+                {"encoded_polyline": shape, "costing": "auto", "shape_match": "edge_walk"},
+                "trip",
+            ),
+            "trace_attributes": (
+                {"encoded_polyline": shape, "costing": "auto", "shape_match": "edge_walk"},
+                "edges",
+            ),
+            "height": ({"shape": [a, b]}, "height"),
+            "transit_available": ({"locations": [dict(a, radius=1000)]}, None),
+            "expansion": ({"locations": [a, b], "costing": "auto", "action": "route"}, "features"),
+            "centroid": ({"locations": [a, b], "costing": "auto"}, "trip"),
+        }
+        for name, (query, key) in cases.items():
+            with self.subTest(endpoint=name):
+                res = getattr(self.actor, name)(query)
+                if key is None:
+                    self.assertIsInstance(res, list)
+                    self.assertEqual(len(res), len(query["locations"]))
+                else:
+                    self.assertIn(key, res)
+
+                # the str API returns the same response as a JSON string
+                res_str = getattr(self.actor, name)(json.dumps(query))
+                self.assertIsInstance(res_str, str)
+                self.assertEqual(json.loads(res_str), res)
+
     def test_tile(self):
         # Utrecht center tile coordinates (52.08778°N, 5.13142°E at zoom 14)
         query = {

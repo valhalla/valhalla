@@ -1248,3 +1248,28 @@ TEST(StandAlone, HGVNoAccessPenalty) {
     }
   }
 }
+
+TEST(Standalone, DirectionsTypeParsing) {
+  const std::string ascii_map = R"(
+    A----B----C)";
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_directions_type_parsing");
+
+  auto route = [&](const std::string& directions_type) {
+    return gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto",
+                            {{"/directions_type", directions_type}});
+  };
+  EXPECT_EQ(route("none").directions().routes(0).legs(0).maneuver_size(), 0);
+
+  auto maneuvers = route("maneuvers").directions().routes(0).legs(0);
+  ASSERT_GT(maneuvers.maneuver_size(), 0);
+  EXPECT_TRUE(maneuvers.maneuver(0).text_instruction().empty());
+
+  // an unknown value keeps the default, which is instructions
+  for (const auto* directions_type : {"instructions", "narrative"}) {
+    auto leg = route(directions_type).directions().routes(0).legs(0);
+    ASSERT_GT(leg.maneuver_size(), 0) << directions_type;
+    EXPECT_FALSE(leg.maneuver(0).text_instruction().empty()) << directions_type;
+  }
+}

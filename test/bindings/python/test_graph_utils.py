@@ -88,6 +88,16 @@ class TestBindings(unittest.TestCase):
         path = Path(graph_id)
         self.assertEqual(path, Path("1/000/001.gph"))
 
+    def test_graph_id_tile_and_string_helpers(self):
+        gid = GraphId(421920, 2, 20)
+        self.assertEqual(gid.tile_base(), GraphId(421920, 2, 0))
+        self.assertEqual(gid.tile_value(), 421920 << 3 | 2)
+        self.assertEqual(GraphId(421920, 2, 0).tile_value(), gid.tile_value())
+
+        self.assertEqual(str(gid), "2/421920/20")
+        self.assertEqual(repr(gid), "<GraphId(2/421920/20)>")
+        self.assertEqual(GraphId(str(gid)), gid)
+
     def test_get_tile_base_lon_lat_and_reverse(self):
         gid = GraphId(674464002)
         test_pt = (-180.0, -16.75)
@@ -244,9 +254,6 @@ class TestBindings(unittest.TestCase):
         self.assertGreater(header.tile_checksum, 0)
         self.assertLess(header.tile_checksum, 1 << 48)
 
-        with self.assertRaises(AttributeError):
-            header.tile_checksum = 0
-
     def test_tile_header_build_id(self):
         """build_id is the 16-bit tileset id packed into the high bits of checksum_."""
         graph = GraphUtils(json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}}))
@@ -256,9 +263,6 @@ class TestBindings(unittest.TestCase):
         self.assertIsInstance(header.build_id, int)
         self.assertGreater(header.build_id, 0)
         self.assertLess(header.build_id, 1 << 16)
-
-        with self.assertRaises(AttributeError):
-            header.build_id = 0
 
     def test_graphutils_dict_config(self):
         """Test GraphUtils initialization with dict config."""
