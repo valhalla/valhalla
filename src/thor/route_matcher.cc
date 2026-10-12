@@ -108,12 +108,12 @@ bool project_onto_shape(const std::vector<valhalla::midgard::PointLL>& edge_shap
 // but real edge vertices must still appear in order.
 bool check_shape(const graph_tile_ptr& tile,
                  const DirectedEdge* de,
-                 const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
+                 const google::protobuf::RepeatedPtrField<valhalla::Location>& route_shape,
                  uint32_t from,
                  uint32_t to,
                  bool require_edge_end = true,
                  float start_percent_along = 0.0f) {
-  if (from >= to || static_cast<size_t>(to) >= static_cast<size_t>(shape.size())) {
+  if (from >= to || static_cast<size_t>(to) >= static_cast<size_t>(route_shape.size())) {
     return false;
   }
   if (to - from == 1 && de->length() == 0) {
@@ -143,7 +143,7 @@ bool check_shape(const graph_tile_ptr& tile,
   double last_distance = 0.0;
   size_t segment = 0;
   size_t next_vertex = 1;
-  const auto start = to_ll(shape.Get(from).ll());
+  const auto start = to_ll(route_shape.Get(from).ll());
   // The origin can be correlated to the middle of an edge, so only the first
   // checked edge is allowed to start after one or more stored vertices.
   if (from == 0) {
@@ -167,7 +167,7 @@ bool check_shape(const graph_tile_ptr& tile,
   }
 
   for (uint32_t j = from + 1; j <= to; ++j) {
-    const auto point = to_ll(shape.Get(j).ll());
+    const auto point = to_ll(route_shape.Get(j).ll());
     double distance_along = 0.0;
     if (!project_onto_shape(edge_shape, forward, vertex_distance, point, last_distance, segment,
                             distance_along)) {
