@@ -9,6 +9,8 @@
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
+   * ADDED: `stop_impact` in `trace_attributes` [#6368](https://github.com/valhalla/valhalla/pull/6368)
+   * ADDED: `allow` property for `linear_cost_factors` [#6350](https://github.com/valhalla/valhalla/pull/6350)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
@@ -24,8 +26,6 @@
    * UPDATED: complete Slovenian (sl-SI) locale [#6339](https://github.com/valhalla/valhalla/pull/6339)
    * UPDATED: Replace `boost::format` with C++20 `std::format` [#6363](https://github.com/valhalla/valhalla/pull/6363)
    * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6371](https://github.com/valhalla/valhalla/pull/6371)
-   * ADDED: `stop_impact` in `trace_attributes` [#6368](https://github.com/valhalla/valhalla/pull/6368)
-   * ADDED: `allow` property for `linear_cost_factors` [#6350](https://github.com/valhalla/valhalla/pull/6350)
 
 ## Release Date: 2026-09-19 Valhalla 3.9.0
 * **Removed**
