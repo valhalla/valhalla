@@ -603,10 +603,6 @@ uint32_t AllowTypes_Parse(const rapidjson::Value::ConstObject& obj) {
       {"all", baldr::kAllowAll},
   };
 
-  // handle {"allow": true} shorthand
-  if (obj.HasMember("allow") && obj["allow"].IsBool() && obj["allow"].GetBool())
-    return baldr::kAllowAll;
-
   uint32_t mask = baldr::kAllowNone;
   if (obj.HasMember("allow_types") && obj["allow_types"].IsArray()) {
     for (const auto& allow_type : obj["allow_types"].GetArray()) {

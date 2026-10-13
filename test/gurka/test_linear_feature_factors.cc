@@ -330,7 +330,7 @@ TEST_F(LinearFeatureTest, allow_access_restriction) {
       {{"lon": {:.6f}, "lat": {:.6f}}}
     ], 
     "linear_cost_factors": [
-      {{"shape": "{}", "allow": {}}}
+      {{"shape": "{}", "allow_types": [{}]}}
     ], 
     "costing": "auto",
     "costing_options": {{
@@ -343,7 +343,7 @@ TEST_F(LinearFeatureTest, allow_access_restriction) {
 
   auto json_str = std::format(json_request, map.nodes.at("4").lng(), map.nodes.at("4").lat(),
                               map.nodes.at("6").lng(), map.nodes.at("6").lat(),
-                              encode_shape({"V", "W"}, map.nodes), "true");
+                              encode_shape({"V", "W"}, map.nodes), "\"all\"");
 
   std::cerr << "Valhalla request is: \n" << json_str << "\n";
 
@@ -789,7 +789,7 @@ TEST(LinearFeature, allow_inaccessible_edge) {
   EXPECT_THROW(route("", without), valhalla_exception_t);
 
   Api with;
-  route(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow": true}}],)",
+  route(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow_types": ["all"]}}],)",
                     encode_shape({"G", "H"}, map.nodes)),
         with);
 
@@ -850,8 +850,9 @@ TEST(LinearFeature, allow_in_dijkstras) {
 
   EXPECT_EQ(expand("").expansion().geometries_size(), 1);
 
-  auto with = expand(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow": true}}],)",
-                                 encode_shape({"B", "C"}, map.nodes)));
+  auto with =
+      expand(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow_types": ["all"]}}],)",
+                         encode_shape({"B", "C"}, map.nodes)));
   EXPECT_EQ(with.expansion().geometries_size(), 3);
 }
 
@@ -863,48 +864,63 @@ TEST(LinearFeature, allow_in_costmatrix) {
   const std::string ascii_map = R"(
     A----B----C----D
   )";
-  const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}}},
-      {"BC", {{"highway", "residential"}, {"motor_vehicle", "no"}}},
-      {"CD", {{"highway", "residential"}}},
-  };
-
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {},
-                               VALHALLA_BUILD_DIR "test/data/linear_feature_allow_costmatrix");
 
   constexpr std::string_view json_request = R"(
   {{
     "sources": [{{"lon": {:.6f}, "lat": {:.6f}}}],
     "targets": [{{"lon": {:.6f}, "lat": {:.6f}}}],
     {}
-    "costing": "auto"
+    "costing": "{}"
   }}
   )";
 
-  auto matrix = [&](const std::string& linear_cost_factors, Api& request) {
-    auto json_str =
-        std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
-                    map.nodes.at("D").lng(), map.nodes.at("D").lat(), linear_cost_factors);
+  // the tag that closes BC for the given costings
+  const std::vector<std::pair<std::string, std::vector<std::string>>> access_tags = {
+      {"motor_vehicle", {"auto", "bus", "taxi", "truck", "motor_scooter", "motorcycle"}},
+      {"bicycle", {"bicycle"}},
+      {"foot", {"pedestrian"}},
+  };
+
+  for (const auto& [access_tag, costings] : access_tags) {
+    const gurka::ways ways = {
+        {"AB", {{"highway", "unclassified"}}},
+        {"BC", {{"highway", "unclassified"}, {access_tag, "no"}}},
+        {"CD", {{"highway", "unclassified"}}},
+    };
+    auto map = gurka::buildtiles(layout, ways, {}, {},
+                                 VALHALLA_BUILD_DIR "test/data/linear_feature_allow_costmatrix_" +
+                                     access_tag,
+                                 {{"thor.source_to_target_algorithm", "costmatrix"}});
 
     loki::loki_worker_t loki_worker(map.config);
     thor::thor_worker_t thor_worker(map.config);
-    ParseApi(json_str, Options::sources_to_targets, request);
-    loki_worker.matrix(request);
-    loki_worker.cleanup();
-    thor_worker.matrix(request);
-  };
+    for (const auto& costing : costings) {
+      SCOPED_TRACE(costing);
+      auto matrix = [&](const std::string& linear_cost_factors, Api& request) {
+        auto json_str = std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
+                                    map.nodes.at("D").lng(), map.nodes.at("D").lat(),
+                                    linear_cost_factors, costing);
 
-  Api without;
-  matrix("", without);
-  ASSERT_EQ(without.matrix().distances().size(), 1);
-  // no auto path across BC, so the pair comes back unreachable
-  EXPECT_GT(without.matrix().distances(0), 1e6);
+        ParseApi(json_str, Options::sources_to_targets, request);
+        loki_worker.matrix(request);
+        loki_worker.cleanup();
+        thor_worker.matrix(request);
+        thor_worker.cleanup();
+      };
 
-  Api with;
-  matrix(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow": true}}],)",
-                     encode_shape({"B", "C"}, map.nodes)),
-         with);
-  ASSERT_EQ(with.matrix().distances().size(), 1);
-  EXPECT_NEAR(with.matrix().distances(0), 1500, 1);
+      Api without;
+      matrix("", without);
+      ASSERT_EQ(without.matrix().distances().size(), 1);
+      // no path across BC, so the pair comes back unreachable
+      EXPECT_GT(without.matrix().distances(0), 1e6);
+
+      Api with;
+      matrix(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow_types": ["all"]}}],)",
+                         encode_shape({"B", "C"}, map.nodes)),
+             with);
+      ASSERT_EQ(with.matrix().distances().size(), 1);
+      EXPECT_NEAR(with.matrix().distances(0), 1500, 1);
+    }
+  }
 }

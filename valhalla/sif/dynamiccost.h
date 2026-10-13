@@ -482,8 +482,7 @@ public:
   }
 
   /**
-   * Whether this request has any "allow" linear cost features at all. Lets callers that
-   * don't have the relevant edge id at hand skip their own access short-circuits.
+   * Whether this request has any "allow" linear cost features at all.
    */
   inline bool has_allowed_linear_edges() const {
     return has_allowed_linear_edges_;
