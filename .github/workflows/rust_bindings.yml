@@ -51,7 +51,6 @@ jobs:
     env:
       # lets the examples workspace reuse the libvalhalla build
       CARGO_TARGET_DIR: ${{ github.workspace }}/target
-      CCACHE_BASEDIR: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -98,8 +97,6 @@ jobs:
   package:
     name: package
     runs-on: ubuntu-24.04
-    env:
-      CCACHE_BASEDIR: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v6
         with:
