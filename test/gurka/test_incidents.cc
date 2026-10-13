@@ -1,7 +1,10 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "test.h"
 
 #include <vtzero/vector_tile.hpp>
+
+#include <set>
 
 using namespace valhalla;
 
@@ -847,6 +850,87 @@ TEST_F(IncidentsTest, armageddon) {
                                        {2, 2, 0, .7, 1, .2},
                                        {3, 2, 0, .8, 1, 1.},
                                    });
+}
+
+TEST_F(IncidentsTest, locate_matches_route_serialization) {
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"CB"}, edge_ids);
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
+  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 1234);
+  auto& meta = *reader->incidents[edge_ids[0].tile_base()].mutable_metadata(0);
+
+  // copies the only incident of the route or of the located edges into incident
+  auto route_incident = [&](rapidjson::Document& incident) {
+    std::string json;
+    gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                     {{"/format", "osrm"},
+                      {"/filters/action", "include"},
+                      {"/filters/attributes/0", "incidents"}},
+                     graphreader, &json);
+    rapidjson::Document doc;
+    doc.Parse(json);
+    const auto& incidents = doc["routes"][0]["legs"][0]["incidents"];
+    ASSERT_EQ(incidents.Size(), 1) << json;
+    incident.CopyFrom(incidents[0], incident.GetAllocator());
+  };
+  auto locate_incident = [&](rapidjson::Document& incident) {
+    std::string json;
+    gurka::do_action(valhalla::Options::locate, map, {"1"}, "auto", {{"/verbose", "1"}}, graphreader,
+                     &json);
+    rapidjson::Document doc;
+    doc.Parse(json);
+    size_t found = 0;
+    for (const auto& edge : doc[0]["edges"].GetArray()) {
+      if (edge.HasMember("incidents")) {
+        ASSERT_EQ(edge["incidents"].Size(), 1) << json;
+        incident.CopyFrom(edge["incidents"][0], incident.GetAllocator());
+        ++found;
+      }
+    }
+    ASSERT_EQ(found, 1) << json;
+  };
+
+  // only the id is set: unset fields are left out
+  rapidjson::Document locate;
+  locate_incident(locate);
+  std::set<std::string> keys;
+  for (const auto& member : locate.GetObject())
+    keys.insert(member.name.GetString());
+  EXPECT_EQ(keys, (std::set<std::string>{"id", "type", "lanes_blocked"}));
+
+  meta.set_type(valhalla::IncidentsTile::Metadata::ACCIDENT);
+  meta.set_impact(valhalla::IncidentsTile::Metadata::MAJOR);
+  meta.set_description("fender bender");
+  meta.set_long_description("two cars, right lane");
+  meta.set_sub_type("collision");
+  meta.set_sub_type_description("rear end");
+  meta.set_creation_time(1600000000);
+  meta.set_start_time(1600000000);
+  meta.set_end_time(1600003600);
+  meta.set_num_lanes_blocked(1);
+  meta.set_length(120);
+  meta.set_clear_lanes("left lane open");
+  meta.set_road_closed(true);
+  meta.add_alertc_codes(201);
+  meta.add_lanes_blocked("right");
+  meta.mutable_congestion()->set_value(42);
+  meta.mutable_display_ll()->set_lat(49.0);
+  meta.mutable_display_ll()->set_lng(-111.9);
+
+  rapidjson::Document route;
+  route_incident(route);
+  locate_incident(locate);
+  EXPECT_EQ(locate["id"].GetString(), std::string("1234"));
+  EXPECT_EQ(locate["start_time"].GetString(), std::string("2020-09-13T12:26:40Z"));
+
+  // only the route knows where along its shape the incident is and which country it is in
+  for (const auto* key :
+       {"geometry_index_start", "geometry_index_end", "iso_3166_1_alpha2", "iso_3166_1_alpha3"}) {
+    EXPECT_TRUE(route.HasMember(key)) << key;
+    route.RemoveMember(key);
+  }
+  EXPECT_EQ(locate, route) << "locate: " << rapidjson::to_string(locate)
+                           << "\nroute:  " << rapidjson::to_string(route);
 }
 
 TEST(Standalone, vector_tiles) {
