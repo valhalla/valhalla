@@ -124,13 +124,13 @@ jobs:
           restore-keys: |
             ccache-rust-package-
 
-      - name: Package
-        run: cargo package
+      - name: Publish dry run
+        run: cargo publish --dry-run
 
   check_version:
     name: check version
     runs-on: ubuntu-24.04
-    if: ${{ github.event_name == 'push' && github.repository_owner == 'valhalla' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && github.repository_owner == 'valhalla' }}
     outputs:
       version: ${{ steps.version.outputs.version }}
       should_publish: ${{ steps.version.outputs.should_publish }}
@@ -161,7 +161,8 @@ jobs:
     name: publish ${{ needs.check_version.outputs.version }}
     runs-on: ubuntu-24.04
     needs: [build, package, check_version]
-    if: ${{ needs.check_version.outputs.should_publish == 'true' }}
+    if: ${{ needs.check_version.outputs.should_publish == 'true' && github.ref == 'refs/heads/master' }}
+    environment: crates-io
     permissions:
       contents: read
       id-token: write # crates.io trusted publishing

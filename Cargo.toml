@@ -1,6 +1,6 @@
 [package]
 name = "valhalla"
-version = "0.7.1"
+version = "0.7.2"
 edition = "2024"
 rust-version = "1.98"
 description = "Rust bindings for Valhalla routing engine"
