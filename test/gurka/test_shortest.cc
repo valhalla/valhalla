@@ -37,7 +37,7 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    shortest_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shortest");
+    shortest_map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/shortest");
   }
 
   inline float getLength(const valhalla::Api& route) {
@@ -113,6 +113,41 @@ TEST(AutoShorter, deprecation) {
 
 TEST_F(ShortestTest, AutoUseDistance) {
   std::string costing = "auto";
+  doTests(costing, {"ABDE", "BFGD", "ABDE"},
+          {{"/costing_options/" + costing + "/use_distance", "1"}});
+}
+
+TEST_F(ShortestTest, TruckUseDistance) {
+  std::string costing = "truck";
+  doTests(costing, {"ABDE", "BFGD", "ABDE"},
+          {{"/costing_options/" + costing + "/use_distance", "1"},
+           {"/costing_options/" + costing + "/low_class_factor", "1"},
+           {"/costing_options/" + costing + "/low_class_penalty", "0"}});
+}
+
+TEST_F(ShortestTest, BusUseDistance) {
+  std::string costing = "bus";
+  doTests(costing, {"ABDE", "BFGD", "ABDE"},
+          {{"/costing_options/" + costing + "/use_distance", "1"}});
+}
+
+TEST_F(ShortestTest, TaxiUseDistance) {
+  std::string costing = "taxi";
+  doTests(costing, {"ABDE", "BFGD", "ABDE"},
+          {{"/costing_options/" + costing + "/use_distance", "1"}});
+}
+
+TEST_F(ShortestTest, MotorcycleUseDistance) {
+  std::string costing = "motorcycle";
+  doTests(costing, {"ABDE", "BFGD", "ABDE"},
+          {
+              {"/costing_options/" + costing + "/use_distance", "1"},
+              {"/costing_options/" + costing + "/use_trails", "0.5"},
+          });
+}
+
+TEST_F(ShortestTest, MotorScooterUseDistance) {
+  std::string costing = "motor_scooter";
   doTests(costing, {"ABDE", "BFGD", "ABDE"},
           {{"/costing_options/" + costing + "/use_distance", "1"}});
 }
