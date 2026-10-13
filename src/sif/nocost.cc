@@ -36,7 +36,6 @@ public:
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
    * @param  edge           Pointer to a directed edge.
-   * @param  is_dest        Is a directed edge the destination?
    * @param  pred           Predecessor edge information.
    * @param  tile           Current tile.
    * @param  edgeid         GraphId of the directed edge.
@@ -46,14 +45,14 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const bool,
                        const EdgeLabel&,
                        const graph_tile_ptr&,
                        const baldr::GraphId&,
                        const uint64_t,
                        const uint32_t,
                        uint8_t&,
-                       uint8_t&) const override {
+                       uint8_t&,
+                       bool*) const override {
     return !edge->is_shortcut();
   }
 
@@ -83,7 +82,8 @@ public:
                               const uint64_t,
                               const uint32_t,
                               uint8_t&,
-                              uint8_t&) const override {
+                              uint8_t&,
+                              bool*) const override {
     return !opp_edge->is_shortcut();
   }
 
@@ -155,7 +155,8 @@ public:
                               const baldr::NodeInfo*,
                               const EdgeLabel&,
                               const baldr::graph_tile_ptr&,
-                              const std::function<baldr::LimitedGraphReader()>&) const override {
+                              const std::function<baldr::LimitedGraphReader()>&,
+                              const bool) const override {
     return {};
   }
 
@@ -178,11 +179,12 @@ public:
                                      const baldr::NodeInfo*,
                                      const baldr::DirectedEdge*,
                                      const baldr::DirectedEdge*,
+                                     const EdgeLabel&,
                                      const graph_tile_ptr&,
-                                     const GraphId&,
                                      const std::function<baldr::LimitedGraphReader()>&,
                                      const bool,
-                                     const InternalTurn) const override {
+                                     const InternalTurn,
+                                     const bool) const override {
     return {};
   }
 

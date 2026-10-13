@@ -1,9 +1,27 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+   * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
+   * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
+   * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
+   * FIXED: emergency only access on `service=emergency_access` [#6396](https://github.com/valhalla/valhalla/pull/6396)
+   * FIXED: crash and wrong node languages when building tiles from three or more input files [#6402](https://github.com/valhalla/valhalla/pull/6402)
+   * FIXED: missing bounding circle on the opposing edge of a /locate response [#6410](https://github.com/valhalla/valhalla/pull/6410)
+   * BREAKING: consistent incident serialization in route and locate [#6405](https://github.com/valhalla/valhalla/pull/6405)
+* **Enhancement**
+   * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
+   * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
+   * ADDED: `stop_impact` in `trace_attributes` [#6368](https://github.com/valhalla/valhalla/pull/6368)
+   * ADDED: `allow` property for `linear_cost_factors` [#6350](https://github.com/valhalla/valhalla/pull/6350)
+
+## Release Date: 2026-10-01 Valhalla 3.9.1
+* **Removed**
    * REMOVED: Unused elevation for shortucs and ferry/tunnel/bridge edges [#6340](https://github.com/valhalla/valhalla/pull/6340)
 * **Bug Fix**
    * FIXED: Update flatbush to 1.6.0 to fix 32-bit targets [#6360](https://github.com/valhalla/valhalla/pull/6360)
    * FIXED: `valhalla_add_elevation` tile argument validation [#6361](https://github.com/valhalla/valhalla/pull/6361)
+   * FIXED: Handle destonly zones with `<access>:conditional=destination @ ...` [#6364](https://github.com/valhalla/valhalla/pull/6364)
+   * FIXED: don't return early from `DynamicCost::EvaluateRestrictions` [#6157](github.com/valhalla/valhalla/pull/6157)
 * **Enhancement**
    * UPDATED: timezone database to 2026d [#6343](https://github.com/valhalla/valhalla/pull/6343)
    * UPDATED: Sort nodes spatially using Hilbert curve [#6342](https://github.com/valhalla/valhalla/pull/6342)
@@ -30,6 +48,7 @@
    * FIXED: check for empty coords in `linear_feature_factors` [#6328](https://github.com/valhalla/valhalla/pull/6328)
    * FIXED: edge walking issues with `linear_cost_features` [#6327](https://github.com/valhalla/valhalla/pull/6327)
    * FIXED: a zero `linear_cost_factors` factor no longer discards the factors of every feature behind it [#6329](https://github.com/valhalla/valhalla/pull/6329)
+   * FIXED: `<mode>:backward` should override `vehicle:backward` [#6332](https://github.com/valhalla/valhalla/pull/6332)
    * FIXED: trivial CostMatrix path where either source/target is node snapped [#6334](https://github.com/valhalla/valhalla/pull/6334)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
