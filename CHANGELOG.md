@@ -9,7 +9,7 @@
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
-   * ADDED: Rust bindings, moved from [valhalla-rs](https://github.com/kinkard/valhalla-rs) and published to crates.io as [`valhalla`](https://crates.io/crates/valhalla) [#XXXX](https://github.com/valhalla/valhalla/pull/XXXX)
+   * ADDED: Rust bindings, moved from [valhalla-rs](https://github.com/kinkard/valhalla-rs) [#6409](https://github.com/valhalla/valhalla/pull/6409)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
