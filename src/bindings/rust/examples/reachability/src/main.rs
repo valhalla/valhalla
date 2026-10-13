@@ -1,9 +1,6 @@
-//! Is this address stuck behind a toll, and how far is the nearest highway?
-//!
-//! Demonstrates:
-//!   - `Actor::locate` snaps a coordinate the way the routing engine does
-//!   - `Exhausted` is an answer: the reachable subgraph ran out
-//!   - labels nodes, not edges, so turn restrictions are not honoured
+//! Checks whether a coordinate is stuck behind a toll and how far the nearest highway is. The
+//! coordinate is snapped with `Actor::locate` like the router does, then the searches run over the
+//! raw graph. They label nodes, not edges, so turn restrictions are not honored.
 //!
 //! Run from the `examples/` workspace, against the repo's Utrecht tileset (`utrecht_tiles` CMake target):
 //!   cargo run -p reachability -- --tiles ../../../../build/test/data/utrecht_tiles/tiles.tar 52.09068,5.12136
@@ -31,13 +28,13 @@ const HIGHWAY_SEARCH_RADIUS: u32 = 10_000;
 #[derive(Parser)]
 #[command(about = "Toll-island and nearest-highway analysis over the Valhalla road graph")]
 struct Cli {
-    /// Coordinate to analyse, as `lat,lon`.
+    /// Coordinate to analyze, as `lat,lon`.
     #[arg(value_parser = parse_lat_lon)]
     coordinate: LatLon,
     /// Path to the Valhalla tiles.tar.
     #[arg(long)]
     tiles: PathBuf,
-    /// How far `/locate` may look for a road to snap onto, in metres.
+    /// How far `/locate` may look for a road to snap onto, in meters.
     #[arg(long, default_value_t = 100)]
     locate_radius: u32,
 }
@@ -55,9 +52,9 @@ fn parse_lat_lon(s: &str) -> Result<LatLon> {
 /// What the analysis concluded about a coordinate.
 #[derive(Debug, Serialize, PartialEq)]
 struct Verdict {
-    /// You cannot get `TOLL_ZONE_REACHABILITY` metres away without paying.
+    /// You cannot get `TOLL_ZONE_REACHABILITY` meters away without paying.
     toll_zone: bool,
-    /// Distance to the nearest highway in metres, if one is within `HIGHWAY_SEARCH_RADIUS`.
+    /// Distance to the nearest highway in meters, if one is within `HIGHWAY_SEARCH_RADIUS`.
     nearest_highway_distance: Option<u32>,
 }
 
@@ -68,7 +65,7 @@ fn main() -> Result<()> {
             tile_extract: cli.tiles.display().to_string(),
             ..Default::default()
         },
-        // Valhalla logs to stdout by default, which would corrupt this example's own output.
+        // Valhalla logs to stdout by default, which would mix with the output
         logging: valhalla::config::Logging {
             r#type: "std_err".to_string(),
             ..Default::default()
@@ -81,12 +78,12 @@ fn main() -> Result<()> {
     let reader =
         GraphReader::new(&config).map_err(|e| anyhow!("failed to open GraphReader: {e}"))?;
 
-    let verdict = analyse(&mut actor, reader, cli.coordinate, cli.locate_radius)?;
+    let verdict = analyze(&mut actor, reader, cli.coordinate, cli.locate_radius)?;
     println!("{}", serde_json::to_string_pretty(&verdict)?);
     Ok(())
 }
 
-fn analyse(
+fn analyze(
     actor: &mut Actor,
     reader: GraphReader,
     coordinate: LatLon,
@@ -95,11 +92,11 @@ fn analyse(
     // Snap like the router does; the search starts at the far end of the snapped edge.
     let edges = locate::locate(actor, coordinate, locate_radius)?;
 
-    // For this analytics we are not interested in private areas
+    // Private areas don't count
     let node_filter =
         |node: &NodeInfo| node.access().intersects(Access::AUTO) && !node.private_access();
     let edge_filter = |edge: &DirectedEdge| edge.forwardaccess().intersects(Access::AUTO);
-    // Hand-rolled, as Valhalla's `exclude_tolls` only penalises tolls.
+    // Hand-rolled, as Valhalla's `exclude_tolls` only penalizes tolls.
     let toll_free = |edge: &DirectedEdge| edge_filter(edge) && !edge.toll();
     // `RoadClass` is ordered by importance: below primary is motorway and trunk.
     let is_highway = |edge: &DirectedEdge| edge.road_class() < RoadClass::kPrimary;

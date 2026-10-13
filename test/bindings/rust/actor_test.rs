@@ -97,7 +97,7 @@ fn request_response_format() {
                     ll: UTRECHT_TEST_LOC_1.into(),
                     ..Default::default()
                 }],
-                has_verbose: Some(proto::options::HasVerbose::Verbose(true)), // for more detailed output
+                has_verbose: Some(proto::options::HasVerbose::Verbose(true)),
                 ..Default::default()
             },
             format_checks: vec![
@@ -225,7 +225,7 @@ fn request_response_format() {
                 (Format::Json, expect_json),
                 (Format::Osrm, expect_json),
                 (Format::Pbf, expect_pbf),
-                // no warnings for GPX and Geotiff, while they are not supported
+                // unsupported, yet no warnings
                 (Format::Gpx, expect_json),
                 (Format::Geotiff, expect_json),
             ],
@@ -253,7 +253,7 @@ fn request_response_format() {
                 (Format::Json, expect_json),
                 (Format::Osrm, expect_json),
                 (Format::Pbf, expect_pbf),
-                // no warnings for GPX and Geotiff, while they are not supported
+                // unsupported, yet no warnings
                 (Format::Gpx, expect_json),
                 (Format::Geotiff, expect_json),
             ],
@@ -293,7 +293,6 @@ fn parse_api() {
     let request = Actor::parse_json_request(json, proto::options::Action::Route)
         .expect("Failed to parse API");
     assert_eq!(request.units, proto::options::Units::Kilometers as i32);
-    // assert_eq!(options.date_time.as_ref().unwrap().type_, proto::options::DateTimeType::Current as i32);
     assert_eq!(request.costing_type, proto::costing::Type::Auto as i32);
     assert_eq!(request.locations.len(), 2);
     assert_eq!(request.locations[0].ll, Some(UTRECHT_TEST_LOC_1.into()));

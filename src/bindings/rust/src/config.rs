@@ -42,28 +42,15 @@ pub(crate) mod ffi {
 /// .build();
 /// ```
 ///
-/// Alternatively, [`Config::from_file`] or [`Config::from_json`] can be used to parse an existing
-/// config JSON, created by [`valhalla_build_config`] script:
+/// Alternatively, [`Config::from_file`] and [`Config::from_json`] parse a config created by the
+/// [`valhalla_build_config`] script. Its format may change between Valhalla versions, so a config
+/// made for another version may not work.
 ///
-/// ```
-/// let Ok(config) = valhalla::Config::from_file("path/to/config.json") else {
-///     return; // Handle error appropriately
-/// };
-/// ```
-///
-/// N.B.: [`Config::from_file`] and [`Config::from_json`] are provided for convenience but their
-/// use is **fragile**: the expected JSON schema may change between Valhalla versions, causing
-/// hard-to-diagnose runtime failures.
-/// Prefer [`ConfigBuilder`] for forward-compatible configuration.
-///
-/// `valhalla_build_config`: https://github.com/valhalla/valhalla/blob/master/scripts/valhalla_build_config
+/// [`valhalla_build_config`]: https://github.com/valhalla/valhalla/blob/master/scripts/valhalla_build_config
 pub struct Config(cxx::UniquePtr<ffi::ptree>);
 
 impl Config {
     /// Reads configuration from the given Valhalla configuration file.
-    ///
-    /// **Warning**: The JSON configuration format may change between Valhalla versions.
-    /// Prefer [`ConfigBuilder`] which automatically tracks Valhalla's defaults.
     ///
     /// # Examples
     ///
@@ -78,9 +65,6 @@ impl Config {
 
     /// Reads configuration from Valhalla configuration JSON string.
     ///
-    /// **Warning**: The JSON configuration format may change between Valhalla versions.
-    /// Prefer [`ConfigBuilder`] which automatically tracks Valhalla's defaults.
-    ///
     /// # Examples
     ///
     /// ```
@@ -91,10 +75,8 @@ impl Config {
         Ok(Config::new(ffi::from_json(config)?))
     }
 
-    /// Creates a new Valhalla configuration from path to the tiles tar extract.
-    ///
-    /// This is a convenience shortcut for the common case of only needing tile data.
-    /// For more control, use [`ConfigBuilder`].
+    /// Creates a new Valhalla configuration from path to the tiles tar extract, a shortcut for
+    /// [`ConfigBuilder`] with only `mjolnir.tile_extract` set.
     ///
     /// # Examples
     ///
@@ -119,7 +101,6 @@ impl Config {
         Config(pt)
     }
 
-    /// Reference to the inner Valhalla configuration object.
     pub(crate) fn inner(&self) -> &ffi::ptree {
         self.0.as_ref().unwrap()
     }

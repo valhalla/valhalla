@@ -1,5 +1,5 @@
 use pretty_assertions::assert_eq;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 
 use valhalla::{Access, Config, GraphId, GraphReader, RoadClass};
 
@@ -27,7 +27,6 @@ fn furthest_reachable_node() {
         })
         .unwrap();
 
-    // Test function that finds the furthest reachable node from the given node
     let furthest_node_distance = |reader: &GraphReader, access: Access, node_id: GraphId| {
         let mut tile_id = node_id.tile();
         let mut tile = reader.graph_tile(tile_id).unwrap();
@@ -35,10 +34,9 @@ fn furthest_reachable_node() {
         // labels keep the shortest distance to each node we've found so far
         let mut node_labels = HashMap::new();
         node_labels.insert(node_id, 0u32);
-        let mut to_visit = VecDeque::new();
-        to_visit.push_back(node_id);
-
-        while let Some(node_id) = to_visit.pop_back() {
+        // Poor man's priority queue for expansion. A simple stack in this case as order doesn't matter here
+        let mut to_visit = vec![node_id];
+        while let Some(node_id) = to_visit.pop() {
             if node_id.tile() != tile_id {
                 tile_id = node_id.tile();
                 tile = reader.graph_tile(tile_id).unwrap();
@@ -60,7 +58,7 @@ fn furthest_reachable_node() {
                     .is_none_or(|&length| curr_length < length)
                 {
                     node_labels.insert(next_node_id, curr_length);
-                    to_visit.push_back(next_node_id);
+                    to_visit.push(next_node_id);
                 }
             }
 
@@ -76,7 +74,7 @@ fn furthest_reachable_node() {
                     .is_none_or(|&length| next_length < length)
                 {
                     node_labels.insert(next_node_id, next_length);
-                    to_visit.push_back(next_node_id);
+                    to_visit.push(next_node_id);
                 }
             }
         }
@@ -93,7 +91,6 @@ fn furthest_reachable_node() {
     assert_eq!(second_edge.road_class(), RoadClass::kMotorway);
     let second_node = second_edge.endnode();
 
-    // both nodes are at level 0 (Highway)
     assert_eq!(first_node.level(), valhalla::level::HIGHWAY);
     assert_eq!(second_node.level(), valhalla::level::HIGHWAY);
 

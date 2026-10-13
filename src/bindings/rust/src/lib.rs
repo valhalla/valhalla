@@ -1,8 +1,4 @@
-use std::{
-    fmt,
-    hash::{Hash, Hasher},
-    ptr::NonNull,
-};
+use std::{fmt, ptr::NonNull};
 
 use bitflags::bitflags;
 use cxx::ExternType;
@@ -158,7 +154,7 @@ mod ffi {
     }
 
     /// Dynamic (cold) information about the edge, such as OSM Way ID, speed limit, shape, elevation, etc.
-    /// N.B.: Check [`DirectedEdge::forward()`] before reading edge's shape.
+    /// N.B.: Check [`DirectedEdge::forward()`] before reading the shape.
     #[derive(Clone, Copy)]
     struct EdgeInfo<'a> {
         /// OSM Way ID of the edge.
@@ -336,7 +332,7 @@ mod ffi {
         /// let end_tile = if edge.leaves_tile() {
         ///     reader.graph_tile(end_node_id)?
         /// } else {
-        ///     tile.clone()  // `clone()`
+        ///     tile.clone()
         /// };
         /// let end_node = end_tile.node(end_node_id.id())?;
         /// let opp_edge = &end_tile.node_edges(end_node)[edge.opp_index() as usize];
@@ -453,14 +449,8 @@ mod ffi {
         /// [historical traffic]: https://valhalla.github.io/valhalla/mjolnir/historical_traffic/#historical-traffic
         fn encode_weekly_speeds(speeds: &[f32]) -> Result<String>;
 
-        /// Decodes a DCT-II compressed base64 string back to 2016 weekly speed values.
-        ///
-        /// Reconstructs the original weekly speed profile from its compressed representation using
-        /// DCT-III inverse transform. Returns 2016 speed values (one per 5-minute interval covering
-        /// a full week starting from Sunday 00:00). Useful for validating encoding quality since
-        /// the compression is lossy (2016 -> 200 -> 2016 coefficients).
-        ///
-        /// [historical traffic]: https://valhalla.github.io/valhalla/mjolnir/historical_traffic/#historical-traffic
+        /// Decodes a string from [`encode_weekly_speeds`] back to 2016 speed values, one per 5-minute
+        /// interval of a week starting from Sunday 00:00.
         fn decode_weekly_speeds(encoded: &str) -> Result<Vec<f32>>;
     }
 }
@@ -472,7 +462,7 @@ unsafe impl Sync for ffi::TileSet {}
 
 /// Identifier of a node or an edge within the tiled, hierarchical graph.
 /// Includes the tile Id, hierarchy level, and a unique identifier within the tile/level.
-#[derive(Clone, Copy, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct GraphId {
     pub value: u64,
@@ -509,19 +499,6 @@ impl fmt::Display for GraphId {
     }
 }
 
-impl PartialEq for GraphId {
-    #[inline(always)]
-    fn eq(&self, other: &Self) -> bool {
-        self.value == other.value
-    }
-}
-
-impl Hash for GraphId {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.value.hash(state);
-    }
-}
-
 impl GraphId {
     #[inline(always)]
     pub fn new(value: u64) -> Self {
@@ -529,7 +506,7 @@ impl GraphId {
     }
 
     /// Constructs a new `GraphId` from the given hierarchy level, tile index, and unique ID within the tile.
-    /// Returns `None` if the level is invalid (greater than 7) or if the tile index is invalid (greater than 2^22).
+    /// Returns `None` if any of the parts is out of range.
     #[inline(always)]
     pub fn from_parts(level: u8, tile_index: u32, id: u32) -> Option<Self> {
         ffi::from_parts(level, tile_index, id).ok()
@@ -716,8 +693,8 @@ impl From<LatLon> for Option<proto::LatLng> {
 /// As `GraphReader` already uses shared ownership internally, cloning is cheap and it can be
 /// reused across threads without wrapping it in an [`Arc`].
 ///
-/// N.B.: It is better to clone `GraphReader` instances rather than creating new ones from the same
-/// configuration to avoid duplicate memory mappings (up to 80GB+ per instance for planetary tilesets).
+/// Prefer cloning over creating another `GraphReader` from the same config, as each one memory-maps
+/// the whole tileset.
 #[derive(Clone)]
 pub struct GraphReader(cxx::SharedPtr<ffi::TileSet>);
 
@@ -781,10 +758,8 @@ impl GraphReader {
 /// `GraphTile` uses manual reference counting via `boost::intrusive_ptr<T>` on the C++ side.
 /// Cloning is cheap as it only increments the reference count.
 ///
-/// **Thread Safety**: NOT Send/Sync due to non-atomic reference counting.
-/// For multi-threaded use, call [`GraphReader::graph_tile()`] to have an access to the tile data
-/// from each thread rather than sharing instances across threads. Consider caching instances for
-/// faster graph traversal.
+/// It's not `Send`/`Sync` as the reference count isn't atomic, so call [`GraphReader::graph_tile()`]
+/// from each thread instead of sharing instances.
 ///
 /// `GraphTile` can outlive the [`GraphReader`] that created it.
 pub struct GraphTile(NonNull<ffi::GraphTile>);
@@ -807,8 +782,8 @@ impl GraphTile {
         NonNull::new(tile.cast_mut()).map(Self)
     }
 
-    /// Explicit implementation of [`std::ops::Deref`] to keep inner methods private.
-    fn deref(&self) -> &ffi::GraphTile {
+    /// Like `Deref`, but keeps the ffi methods private.
+    fn inner(&self) -> &ffi::GraphTile {
         // Safety: the pointer comes from [`GraphTile::new()`] and the tile outlives `self`.
         unsafe { self.0.as_ref() }
     }
@@ -816,37 +791,33 @@ impl GraphTile {
     /// Id of this tile.
     #[inline(always)]
     pub fn id(&self) -> TileId {
-        self.deref().id().tile()
+        self.inner().id().tile()
     }
 
     /// Slice of all directed edges in the current tile.
     #[inline(always)]
     pub fn directededges(&self) -> &[ffi::DirectedEdge] {
-        ffi::directededges(self.deref())
+        ffi::directededges(self.inner())
     }
 
     /// Gets a directed edge by index within the current tile.
     pub fn directededge(&self, index: u32) -> Option<&ffi::DirectedEdge> {
-        match self.deref().directededge(index as usize) {
+        match self.inner().directededge(index as usize) {
             Ok(ptr) if !ptr.is_null() => Some(unsafe { &*ptr }),
-            // Valhalla always return non-null ptr if ok and throws an exception if the index is out of bounds.
-            // But it also sounds nice to handle nullptr in the same way.
             _ => None,
         }
     }
 
-    /// Slice of all node in the current tile.
+    /// Slice of all nodes in the current tile.
     #[inline(always)]
     pub fn nodes(&self) -> &[ffi::NodeInfo] {
-        ffi::nodes(self.deref())
+        ffi::nodes(self.inner())
     }
 
     /// Gets a node by index within the current tile.
     pub fn node(&self, index: u32) -> Option<&ffi::NodeInfo> {
-        match self.deref().node(index as usize) {
+        match self.inner().node(index as usize) {
             Ok(ptr) if !ptr.is_null() => Some(unsafe { &*ptr }),
-            // Valhalla always return non-null ptr if ok and throws an exception if the index is out of bounds.
-            // But it also sounds nice to handle nullptr in the same way.
             _ => None,
         }
     }
@@ -856,7 +827,7 @@ impl GraphTile {
     #[inline(always)]
     pub fn node_latlon(&self, node: &ffi::NodeInfo) -> LatLon {
         debug_assert!(ref_within_slice(self.nodes(), node), "Wrong tile");
-        let latlon = ffi::node_latlon(self.deref(), node);
+        let latlon = ffi::node_latlon(self.inner(), node);
         LatLon(latlon.lat, latlon.lon)
     }
 
@@ -864,27 +835,27 @@ impl GraphTile {
     #[inline(always)]
     pub fn node_edges<'a>(&'a self, node: &ffi::NodeInfo) -> &'a [ffi::DirectedEdge] {
         debug_assert!(ref_within_slice(self.nodes(), node), "Wrong tile");
-        ffi::node_edges(self.deref(), node)
+        ffi::node_edges(self.inner(), node)
     }
 
     /// Slice of all transitions to other hierarchy levels for the given node.
     #[inline(always)]
     pub fn node_transitions<'a>(&'a self, node: &ffi::NodeInfo) -> &'a [ffi::NodeTransition] {
         debug_assert!(ref_within_slice(self.nodes(), node), "Wrong tile");
-        ffi::node_transitions(self.deref(), node)
+        ffi::node_transitions(self.inner(), node)
     }
 
     /// Information about the administrative area, such as country or state, by its index.
     /// Indices are stored in [`NodeInfo::admin_index()`] fields.
     pub fn admin_info(&self, index: u32) -> Option<ffi::AdminInfo> {
-        ffi::admininfo(self.deref(), index).ok()
+        ffi::admininfo(self.inner(), index).ok()
     }
 
     /// Dynamic (cold) information about the edge, such as OSM Way ID, speed limit, shape, elevation, etc.
     #[inline(always)]
     pub fn edgeinfo<'a>(&'a self, de: &ffi::DirectedEdge) -> EdgeInfo<'a> {
         debug_assert!(ref_within_slice(self.directededges(), de), "Wrong tile");
-        ffi::edgeinfo(self.deref(), de)
+        ffi::edgeinfo(self.inner(), de)
     }
 
     /// Live traffic record for this edge. When no traffic is loaded the record carries no reading
@@ -892,11 +863,11 @@ impl GraphTile {
     #[inline(always)]
     pub fn live_traffic(&self, de: &ffi::DirectedEdge) -> LiveTraffic {
         debug_assert!(ref_within_slice(self.directededges(), de), "Wrong tile");
-        LiveTraffic::from_bits(ffi::live_traffic(self.deref(), de))
+        LiveTraffic::from_bits(ffi::live_traffic(self.inner(), de))
     }
 
-    /// Overall edge speed, mixed from different [`SpeedSources`] in km/h. As not all requested speed sources may be
-    /// available for the edge, this function returns `(speed_kmh: u32, sources: SpeedSources)` tuple.
+    /// Overall edge speed in km/h, mixed from the requested [`SpeedSources`], along with the sources
+    /// that were actually available for the edge.
     ///
     /// This function never returns zero speed, even if the edge is closed due to traffic. Read the edge's live
     /// traffic via [`GraphTile::live_traffic()`] and check [`LiveTraffic::speed()`] for
@@ -912,7 +883,7 @@ impl GraphTile {
         debug_assert!(ref_within_slice(self.directededges(), de), "Wrong tile");
         let mut flow_sources: u8 = 0;
         let speed = unsafe {
-            self.deref().GetSpeed(
+            self.inner().GetSpeed(
                 de as *const ffi::DirectedEdge,
                 speed_sources.bits(),
                 second_of_week,
@@ -928,11 +899,7 @@ impl GraphTile {
 /// Directed edge within the graph.
 #[repr(C)]
 pub struct DirectedEdge {
-    // With this definition and cxx's magic it becomes possible to do pointer arithmetic properly,
-    // allowing to operate with slices of `DirectedEdge` in Rust.
-    // Otherwise, Rust compiler has no way to know the size of the `DirectedEdge` struct and assumes that
-    // `DirectedEdge` is a zero-sized type (ZST), which leads to incorrect pointer arithmetic.
-    // The whole Valhalla's ability to work with binary files (tilesets) relies this contract.
+    // Same size as the C++ type, so that slices of it index correctly.
     data: [u64; 6],
 }
 
@@ -960,11 +927,7 @@ impl DirectedEdge {
 /// end node of the edge.
 #[repr(C)]
 pub struct NodeInfo {
-    // With this definition and cxx's magic it becomes possible to do pointer arithmetic properly,
-    // allowing to operate with slices of `NodeInfo` in Rust.
-    // Otherwise, Rust compiler has no way to know the size of the `NodeInfo` struct and assumes that
-    // `NodeInfo` is a zero-sized type (ZST), which leads to incorrect pointer arithmetic.
-    // The whole Valhalla's ability to work with binary files (tilesets) relies this contract.
+    // Same size as the C++ type, so that slices of it index correctly.
     data: [u64; 4],
 }
 
@@ -1013,10 +976,7 @@ impl<'a> EdgeInfo<'a> {
 
 /// Checks if the given reference points to an item within the given slice.
 fn ref_within_slice<T>(slice: &[T], item: &T) -> bool {
-    let start = slice.as_ptr() as usize;
-    let item_pos = item as *const T as usize;
-    let byte_offset = item_pos.wrapping_sub(start);
-    byte_offset < std::mem::size_of_val(slice)
+    slice.as_ptr_range().contains(&(item as *const T))
 }
 
 #[cfg(test)]

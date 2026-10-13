@@ -1,10 +1,5 @@
-//! Extracts every ferry route from a Valhalla tileset and prints it as GeoJSON.
-//!
-//! Demonstrates:
-//!   - scanning a whole tileset in parallel with one shared `GraphReader`
-//!   - recovering an edge's *begin* node via `opp_index`
-//!   - following a route across tile boundaries and several edges of one OSM way
-//!   - country, state and timezone straight from the tiles, no geocoder
+//! Extracts every ferry route from a Valhalla tileset and prints it as GeoJSON, along with the
+//! country, state and timezone of its landings read straight from the tiles.
 //!
 //! Needs a tileset with ferries; the repo's Utrecht fixture has none. From `examples/`:
 //!   cargo run -p ferry-lines -- --tiles path/to/denmark.tar
@@ -38,7 +33,7 @@ fn main() -> Result<()> {
             tile_extract: cli.tiles.display().to_string(),
             ..Default::default()
         },
-        // Valhalla logs to stdout by default; stdout here is GeoJSON.
+        // Valhalla logs to stdout by default, which would mix with the output
         logging: valhalla::config::Logging {
             r#type: "std_err".to_string(),
             ..Default::default()
@@ -70,7 +65,7 @@ struct FerryRoute {
     way_id: u64,
     /// Full geometry in (lat, lon) order.
     geometry: Box<[LatLon]>,
-    /// Total length in metres.
+    /// Total length in meters.
     length_m: u32,
     /// Graph nodes where the route starts and ends. Both are on land.
     from_node: GraphId,
@@ -202,7 +197,7 @@ fn resolve_ferry_route(
     None
 }
 
-/// Where a ferry landing is, from the node's admin index and timezone id — no geocoder.
+/// Where a ferry landing is, from the node's admin index and timezone id.
 #[derive(Default)]
 struct Place {
     country_iso: Option<String>,

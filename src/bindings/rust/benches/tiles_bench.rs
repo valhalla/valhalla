@@ -60,7 +60,7 @@ fn write_traffic(c: &mut Criterion) {
     .build();
     let graph_reader = GraphReader::new(&config).unwrap();
 
-    // find a tile the the most edges
+    // find a tile with the most edges
     let mut max_edges = 0;
     let mut max_tile_id = TileId::default();
     for tile_id in graph_reader.tiles() {

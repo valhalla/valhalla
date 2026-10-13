@@ -10,6 +10,11 @@
 namespace baldr = valhalla::baldr;
 namespace midgard = valhalla::midgard;
 
+// lib.rs mirrors these sizes to index slices of them
+static_assert(sizeof(baldr::DirectedEdge) == 6 * sizeof(uint64_t));
+static_assert(sizeof(baldr::NodeInfo) == 4 * sizeof(uint64_t));
+static_assert(sizeof(baldr::NodeTransition) == sizeof(uint64_t));
+
 namespace {
 
 struct GraphMemory : public baldr::GraphMemory {
@@ -22,8 +27,6 @@ struct GraphMemory : public baldr::GraphMemory {
 };
 
 }  // namespace
-
-TileSet::~TileSet() {}
 
 std::shared_ptr<TileSet> new_tileset(const boost::property_tree::ptree& pt) {
   // Hack to expose protected `baldr::GraphReader::tile_extract_t`
@@ -76,7 +79,7 @@ rust::Vec<TileId> TileSet::tiles_in_bbox(float min_lat, float min_lon, float max
   return result;
 }
 
-/// Part of the [`baldr::GraphReader::GetGraphTile()`] that gets tile from mmap file
+// The tar extract part of `baldr::GraphReader::GetGraphTile()`
 const baldr::GraphTile* TileSet::get_graph_tile(TileId id) const {
   const baldr::GraphId base(id.value);
 
@@ -85,12 +88,10 @@ const baldr::GraphTile* TileSet::get_graph_tile(TileId id) const {
     return nullptr;
   }
 
-  // Optionally get the traffic tile if it exists
   auto traffic_it = traffic_tiles_.find(base);
   auto traffic =
       traffic_it != traffic_tiles_.end() ? std::make_unique<GraphMemory>(traffic_tar_, traffic_it->second) : nullptr;
 
-  // cxx doesn't support `boost::intrusive_ptr<T>`, so instead all refcounting should be done manually
   auto ptr = baldr::GraphTile::Create(base, std::make_unique<GraphMemory>(tar_, tile_it->second), std::move(traffic));
   return ptr.detach();
 }
@@ -134,8 +135,7 @@ LatLon node_latlon(const baldr::GraphTile& tile, const baldr::NodeInfo& node) {
 }
 
 EdgeInfo edgeinfo(const baldr::GraphTile& tile, const baldr::DirectedEdge& de) {
-  // `baldr::EdgeInfo` keeps these pointers protected, and a local class cannot hold static data
-  // members - hence the `using`s and the pointers-to-member as locals.
+  // `encoded_shape_` is protected and has no public accessor
   struct EdgeInfoPeek : baldr::EdgeInfo {
     using baldr::EdgeInfo::encoded_shape_;
   };
@@ -148,7 +148,6 @@ EdgeInfo edgeinfo(const baldr::GraphTile& tile, const baldr::DirectedEdge& de) {
 
   return EdgeInfo{
     .way_id = edge_info.wayid(),
-    // todo: properly handle `0` and `baldr::kUnlimitedSpeedLimit`
     .speed_limit = static_cast<uint8_t>(edge_info.speed_limit()),
     .encoded_shape = rust::Slice<const uint8_t>(shape, shape_size),
   };
@@ -156,8 +155,7 @@ EdgeInfo edgeinfo(const baldr::GraphTile& tile, const baldr::DirectedEdge& de) {
 
 uint64_t live_traffic(const baldr::GraphTile& tile, const baldr::DirectedEdge& de) {
   static_assert(sizeof(baldr::TrafficSpeed) == sizeof(uint64_t), "TrafficSpeed must be a single u64");
-  // trafficspeed() throws if `de` is out of tile bounds - guarded by the Rust-side `debug_assert!`
-  // ("Wrong tile") and load-time tile validation.
+  // trafficspeed() throws for an edge of another tile, the Rust side checks that before calling
   const volatile baldr::TrafficSpeed& ts = tile.trafficspeed(&de);
   return *reinterpret_cast<const volatile uint64_t*>(&ts);
 }

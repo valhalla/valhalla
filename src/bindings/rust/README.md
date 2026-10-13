@@ -9,11 +9,11 @@ The [`valhalla`](https://crates.io/crates/valhalla) crate provides drop-in infra
 Features:
 
 - [x] **Tile access**: Read Valhalla tiles and access road graph edges (`DirectedEdge`, `EdgeInfo`) and nodes (`NodeInfo`) - see [tiles_tests](https://github.com/valhalla/valhalla/blob/master/test/bindings/rust/tiles_test.rs) for examples
-- [x] **Live traffic**: Read and write live traffic directly on a memory-mapped traffic.tar via a fully round-trippable typed API. Read a record's overall speed (`speed() -> Option<u8>`, with `Some(0)` = closed) plus per-segment speeds and congestion via `segments()` (an iterator of `TrafficSegment`s), and the incidents/spare bits; write any of them back. See the runnable [traffic_debug](https://github.com/valhalla/valhalla/blob/master/src/bindings/rust/examples/traffic_debug/src/main.rs) CLI for a worked example covering scan / inspect / set-speed / close / reset / clear
+- [x] **Live traffic**: Read and write live traffic directly on a memory-mapped traffic.tar via a fully typed API. See [traffic_debug](https://github.com/valhalla/valhalla/blob/master/src/bindings/rust/examples/traffic_debug/src/main.rs) example for more details.
 - [x] **Actor API**: Route building and routing operations similar to [Valhalla's Python bindings](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/examples/actor_examples.ipynb) - see [actor_tests](https://github.com/valhalla/valhalla/blob/master/test/bindings/rust/actor_test.rs) for examples
 - [x] **Typed configuration**: `valhalla::ConfigBuilder` provides a typed Rust API with all of Valhalla's defaults - no Python, no JSON files needed - see [config_tests](https://github.com/valhalla/valhalla/blob/master/test/bindings/rust/config_test.rs) for examples
 
-TODOs:
+Not supported yet:
 
 - [ ] **Logging**: Redirect Valhalla logging to Rust's `tracing` crate or provide an interface for redirecting it to a custom logger.
 - [ ] **Reading individual tile files**: Support reading info from Valhalla tiles from `tile_dir` (individual file per tile). Currently only `tile_extract` (single tiles.tar file) is supported.

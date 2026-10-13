@@ -141,10 +141,6 @@ jobs:
         id: version
         run: |
           version=$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
-          if [ -z "$version" ]; then
-            echo "Could not extract version from Cargo.toml"
-            exit 1
-          fi
 
           # crates.io rejects requests without a descriptive User-Agent (403)
           http_code=$(curl -s -o /dev/null -w "%{http_code}" \

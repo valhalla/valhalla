@@ -1,24 +1,12 @@
-use miniserde::{Serialize, json};
 use pretty_assertions::assert_eq;
 
 use valhalla::{
-    Access, Config, GraphId, GraphReader, LatLon, LiveTraffic, NodeType, TileId, TimeZoneInfo,
-    level,
+    Access, Config, ConfigBuilder, GraphId, GraphReader, LatLon, LiveTraffic, NodeType, TileId,
+    TimeZoneInfo, level,
 };
 
 mod common;
 use common::utrecht_tiles;
-
-#[derive(Serialize)]
-struct ValhallaConfig {
-    mjolnir: MjolnirConfig,
-}
-
-#[derive(Serialize)]
-struct MjolnirConfig {
-    tile_extract: String,
-    traffic_extract: String,
-}
 
 const UTRECHT_BBOX: (LatLon, LatLon) = (LatLon(52.04, 5.01), LatLon(52.15, 5.17));
 
@@ -27,30 +15,29 @@ fn historical_traffic_edge() -> GraphId {
     GraphId::from_parts(level::HIGHWAY, 3196, 1155).unwrap()
 }
 
+fn utrecht_reader(traffic_extract: &str) -> GraphReader {
+    let config = ConfigBuilder {
+        mjolnir: valhalla::config::Mjolnir {
+            tile_extract: utrecht_tiles("tiles.tar"),
+            traffic_extract: traffic_extract.into(),
+            ..Default::default()
+        },
+        ..Default::default()
+    }
+    .build();
+    GraphReader::new(&config).expect("Failed to create GraphReader")
+}
+
 #[test]
 fn dataset_id() {
-    let config = ValhallaConfig {
-        mjolnir: MjolnirConfig {
-            tile_extract: utrecht_tiles("tiles.tar"),
-            traffic_extract: utrecht_tiles("traffic.tar"),
-        },
-    };
-    let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
-        .expect("Failed to create GraphReader");
+    let reader = utrecht_reader(&utrecht_tiles("traffic.tar"));
 
     assert_eq!(reader.dataset_id(), 34979400);
 }
 
 #[test]
 fn graph_tile_can_outlive_reader() {
-    let config = ValhallaConfig {
-        mjolnir: MjolnirConfig {
-            tile_extract: utrecht_tiles("tiles.tar"),
-            traffic_extract: utrecht_tiles("traffic.tar"),
-        },
-    };
-    let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
-        .expect("Failed to create GraphReader");
+    let reader = utrecht_reader(&utrecht_tiles("traffic.tar"));
 
     let tile = reader.graph_tile(reader.tiles()[0]).unwrap();
     // just do something complicated with the tile
@@ -85,7 +72,7 @@ fn graph_tile_can_outlive_reader() {
         .count();
     assert_eq!(
         count, cloned_count,
-        "Tile should remain valid after reader is dropped"
+        "Clone should remain valid after the tile is dropped"
     );
 }
 
@@ -94,14 +81,7 @@ fn traffic_tile_can_outlive_reader() {
     // the C++ tests use the same traffic.tar, so write to a copy
     let traffic_copy = tempfile::NamedTempFile::new().unwrap();
     std::fs::copy(utrecht_tiles("traffic.tar"), traffic_copy.path()).unwrap();
-    let config = ValhallaConfig {
-        mjolnir: MjolnirConfig {
-            tile_extract: utrecht_tiles("tiles.tar"),
-            traffic_extract: traffic_copy.path().to_str().unwrap().into(),
-        },
-    };
-    let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
-        .expect("Failed to create GraphReader");
+    let reader = utrecht_reader(traffic_copy.path().to_str().unwrap());
 
     let tile = reader.traffic_tile(reader.tiles()[0]).unwrap();
     tile.write_spare(1);
@@ -119,14 +99,7 @@ fn traffic_tile_can_outlive_reader() {
 
 #[test]
 fn graph_tile_accepts_any_id_inside_the_tile() {
-    let config = ValhallaConfig {
-        mjolnir: MjolnirConfig {
-            tile_extract: utrecht_tiles("tiles.tar"),
-            traffic_extract: utrecht_tiles("traffic.tar"),
-        },
-    };
-    let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
-        .expect("Failed to create GraphReader");
+    let reader = utrecht_reader(&utrecht_tiles("traffic.tar"));
 
     for tile_id in reader.tiles() {
         let tile = reader.graph_tile(tile_id).unwrap();
@@ -142,45 +115,26 @@ fn graph_tile_accepts_any_id_inside_the_tile() {
 
 #[test]
 fn tiles_in_bbox() {
-    let config = ValhallaConfig {
-        mjolnir: MjolnirConfig {
-            tile_extract: utrecht_tiles("tiles.tar"),
-            traffic_extract: utrecht_tiles("traffic.tar"),
-        },
-    };
-    let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
-        .expect("Failed to create GraphReader");
+    let reader = utrecht_reader(&utrecht_tiles("traffic.tar"));
 
-    assert!(
-        reader.graph_tile(GraphId::default()).is_none(),
-        "Default tile should not exist"
-    );
-    assert!(
-        reader.traffic_tile(GraphId::default()).is_none(),
-        "Default traffic tile should not exist"
-    );
+    assert!(reader.graph_tile(GraphId::default()).is_none());
+    assert!(reader.traffic_tile(GraphId::default()).is_none());
 
     let mut all_tiles = reader.tiles();
     all_tiles.sort(); // order is not guaranteed, sort for comparison
-    assert!(!all_tiles.is_empty(), "Should have tiles in the dataset");
+    assert!(!all_tiles.is_empty());
 
     let mut world_tiles: Vec<TileId> = (level::HIGHWAY..=level::LOCAL)
         .flat_map(|level| reader.tiles_in_bbox(LatLon(-90.0, -180.0), LatLon(90.0, 180.0), level))
         .collect();
     world_tiles.sort();
-    assert_eq!(
-        all_tiles, world_tiles,
-        "All tiles should equal world bbox tiles"
-    );
+    assert_eq!(all_tiles, world_tiles);
 
     let mut bbox_tiles: Vec<TileId> = (level::HIGHWAY..=level::LOCAL)
         .flat_map(|level| reader.tiles_in_bbox(UTRECHT_BBOX.0, UTRECHT_BBOX.1, level))
         .collect();
     bbox_tiles.sort();
-    assert_eq!(
-        all_tiles, bbox_tiles,
-        "All tiles should equal Utrecht bbox tiles"
-    );
+    assert_eq!(all_tiles, bbox_tiles);
 
     // And no other levels
     for level in [3, 7, u8::MAX] {
@@ -190,31 +144,19 @@ fn tiles_in_bbox() {
 
     for level in level::HIGHWAY..=level::LOCAL {
         let tiles = reader.tiles_in_bbox(UTRECHT_BBOX.0, UTRECHT_BBOX.1, level);
-        assert!(!tiles.is_empty(), "No tiles found for level {level}");
+        assert!(!tiles.is_empty(), "level {level}");
         for tile_id in tiles {
-            assert_ne!(tile_id, TileId::default(), "Tile ID should not be invalid");
+            assert_ne!(tile_id, TileId::default());
             assert_eq!(tile_id.level(), level);
 
-            let tile = reader.graph_tile(tile_id);
-            assert!(tile.is_some(), "Tile should exist for ID: {tile_id:?}");
-            let tile = tile.unwrap();
-            assert_eq!(tile.id(), tile_id, "Tile ID mismatch for {tile_id:?}");
+            let tile = reader.graph_tile(tile_id).unwrap();
+            assert_eq!(tile.id(), tile_id);
 
-            let traffic_tile = reader.traffic_tile(tile_id);
-            assert!(
-                traffic_tile.is_some(),
-                "Traffic tile should exist for ID: {tile_id:?}"
-            );
-            let traffic_tile = traffic_tile.unwrap();
-            assert_eq!(
-                traffic_tile.id(),
-                tile_id,
-                "Traffic tile ID mismatch for {tile_id:?}"
-            );
+            let traffic_tile = reader.traffic_tile(tile_id).unwrap();
+            assert_eq!(traffic_tile.id(), tile_id);
             assert_eq!(
                 traffic_tile.edge_count() as usize,
-                tile.directededges().len(),
-                "Mismatch in edge count for {tile_id:?}"
+                tile.directededges().len()
             );
         }
     }
@@ -240,29 +182,19 @@ fn tiles_in_bbox() {
 
 #[test]
 fn edges_in_tile() {
-    let config = ValhallaConfig {
-        mjolnir: MjolnirConfig {
-            tile_extract: utrecht_tiles("tiles.tar"),
-            traffic_extract: utrecht_tiles("traffic.tar"),
-        },
-    };
-    let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
-        .expect("Failed to create GraphReader");
+    let reader = utrecht_reader(&utrecht_tiles("traffic.tar"));
 
     let historical_edge = historical_traffic_edge();
     for tile_id in reader.tiles() {
         let tile = reader.graph_tile(tile_id).unwrap();
 
         let slice = tile.directededges();
-        assert!(!slice.is_empty(), "Tile should always have directed edges");
+        assert!(!slice.is_empty());
         for (i, de) in slice.iter().enumerate() {
             // Ensure that the directed edge index matches the slice index.
             // This assertion ensures that the pointer arithmetic in the Rust FFI is correct.
             let via_ptr = tile.directededge(i as u32).unwrap();
-            assert_eq!(
-                de as *const _, via_ptr as *const _,
-                "de and via_ptr should have the same address"
-            );
+            assert_eq!(de as *const _, via_ptr as *const _);
 
             assert_ne!(de.speed(), 0, "Default edge's speed should never be zero");
             assert_eq!(tile.live_traffic(de).speed(), None);
@@ -326,31 +258,12 @@ fn edge_with_historical_traffic() {
     );
 }
 
-/// When no traffic tile is loaded at all, the C++ shim must return the static `INVALID_SPEED`
-/// record *faithfully* - overall + all three subsegment speeds == 127, breakpoints == 0 (raw bits
-/// `0x0FFF_FFFF`) - NOT a normalized `0`. Normalizing to 0 would silently drop the high bits
-/// (`has_incidents`/`spare`) that the format permits on an invalid-speed edge. Both patterns decode
-/// to `speed() == None`, so a `return 0` regression would be invisible to a `speed()`-only
-/// assertion; this pins the raw bits. See `INVALID_SPEED` in `valhalla/baldr/traffictile.h`.
 #[test]
-fn live_traffic_invalid_speed_bits_when_no_traffic_loaded() {
-    let config = ValhallaConfig {
-        mjolnir: MjolnirConfig {
-            tile_extract: utrecht_tiles("tiles.tar"),
-            // A non-existent traffic extract -> no traffic tile is loaded -> trafficspeed() yields
-            // the static INVALID_SPEED sentinel rather than a stored (all-zero) record.
-            traffic_extract: "bad_path_to_traffic_extract".into(),
-        },
-    };
-    let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
-        .expect("Failed to create GraphReader");
+fn live_traffic_without_traffic_extract() {
+    let reader = utrecht_reader("bad_path_to_traffic_extract");
 
-    // Sanity: with no traffic loaded, there is no traffic tile to read.
     for tile_id in reader.tiles() {
-        assert!(
-            reader.traffic_tile(tile_id).is_none(),
-            "no traffic tile should be loaded without a valid traffic extract"
-        );
+        assert!(reader.traffic_tile(tile_id).is_none());
     }
 
     let tile_id = reader.tiles()[0];
@@ -360,24 +273,14 @@ fn live_traffic_invalid_speed_bits_when_no_traffic_loaded() {
     for de in edges {
         let live = tile.live_traffic(de);
         assert_eq!(live.speed(), None);
-        assert_eq!(
-            live.to_bits(),
-            0x0FFF_FFFF,
-            "no-traffic edge must carry the C++ INVALID_SPEED raw bits, not 0"
-        );
+        // INVALID_SPEED from traffictile.h, not a zeroed record
+        assert_eq!(live.to_bits(), 0x0FFF_FFFF);
     }
 }
 
 #[test]
 fn nodes_in_tile() {
-    let config = ValhallaConfig {
-        mjolnir: MjolnirConfig {
-            tile_extract: utrecht_tiles("tiles.tar"),
-            traffic_extract: utrecht_tiles("traffic.tar"),
-        },
-    };
-    let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
-        .expect("Failed to create GraphReader");
+    let reader = utrecht_reader(&utrecht_tiles("traffic.tar"));
 
     let mut no_auto_access_count = 0;
     let mut transition_count = 0;
@@ -393,10 +296,7 @@ fn nodes_in_tile() {
             // Ensure that the node index matches the slice index.
             // This assertion ensures that the pointer arithmetic in the Rust FFI is correct.
             let via_ptr = tile.node(i as u32).unwrap();
-            assert_eq!(
-                node as *const _, via_ptr as *const _,
-                "node and via_ptr should have the same address"
-            );
+            assert_eq!(node as *const _, via_ptr as *const _);
 
             // Check no panic
             let _ = tile.node_edges(node);
@@ -441,14 +341,7 @@ fn nodes_in_tile() {
 
 #[test]
 fn reverse_edge() {
-    let config = ValhallaConfig {
-        mjolnir: MjolnirConfig {
-            tile_extract: utrecht_tiles("tiles.tar"),
-            traffic_extract: utrecht_tiles("traffic.tar"),
-        },
-    };
-    let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
-        .expect("Failed to create GraphReader");
+    let reader = utrecht_reader(&utrecht_tiles("traffic.tar"));
 
     let tile_id = reader.tiles()[0];
     let tile = reader.graph_tile(tile_id).unwrap();
@@ -478,17 +371,9 @@ fn live_traffic() {
     std::fs::copy(utrecht_tiles("traffic.tar"), traffic_copy.path())
         .expect("Failed to copy traffic tar");
 
-    let config = ValhallaConfig {
-        mjolnir: MjolnirConfig {
-            tile_extract: utrecht_tiles("tiles.tar"),
-            traffic_extract: traffic_copy.path().to_str().unwrap().into(),
-        },
-    };
+    let reader = utrecht_reader(traffic_copy.path().to_str().unwrap());
 
-    let reader = GraphReader::new(&Config::from_json(&json::to_string(&config)).unwrap())
-        .expect("Failed to create GraphReader");
-
-    // find a tile the the most edges to have a good number of edges to test
+    // find a tile with the most edges to have a good number of edges to test
     let tile_id = {
         let mut max_edges = 0;
         let mut max_tile_id = TileId::default();
@@ -516,10 +401,9 @@ fn live_traffic() {
     assert_eq!(traffic_tile.last_update(), 101);
     traffic_tile.write_spare(999);
     assert_eq!(traffic_tile.spare(), 999);
-    traffic_tile.clear_traffic(); // it's important to reset it back for other tests
+    traffic_tile.clear_traffic();
     assert_eq!(traffic_tile.last_update(), 0);
     assert_eq!(traffic_tile.spare(), 999); // spare is not cleared
-    traffic_tile.write_spare(0); // reset spare too
 
     for edge_id in 0..traffic_tile.edge_count() {
         let edge = tile.directededge(edge_id).unwrap();
@@ -568,7 +452,7 @@ fn live_traffic() {
         assert_eq!(segments[1].range, (127.0 / 255.0, 128.0 / 255.0));
         assert_eq!(segments[2].range, (128.0 / 255.0, 1.0));
 
-        // congestion / has_incidents / spare round-trip through the real GraphTile accessor
+        // congestion / has_incidents / spare round-trip through the GraphTile accessor
         let record = LiveTraffic::from_segmented_speeds(72, [60, 80, 100], [100, 200])
             .with_congestion([Some(0.0), Some(0.5), None])
             .with_incidents(true)

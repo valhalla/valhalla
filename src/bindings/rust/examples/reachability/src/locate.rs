@@ -17,7 +17,7 @@ pub fn locate(actor: &mut Actor, coord: LatLon, search_radius: u32) -> Result<Ve
             has_search_cutoff: Some(SearchCutoff(search_radius)),
             ..Default::default()
         }],
-        // Load-bearing: `edge_id` is only written in the serializer's verbose branch.
+        // `edge_id` is only in the verbose output
         has_verbose: Some(Verbose(true)),
         ..Default::default()
     };

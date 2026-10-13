@@ -1,6 +1,5 @@
 //! Dijkstra over the raw road graph, with the caller supplying the rules.
-//! Cost is path length in metres: it orders the queue, `Found` reports it, `max_distance` caps it.
-//! No hierarchy limits — `max_distance` is the only cutoff.
+//! Cost is path length in meters, and there are no hierarchy limits.
 
 use std::collections::hash_map::Entry;
 
@@ -11,7 +10,7 @@ use crate::{bitset::BitSet, priority_queue::PriorityQueue};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SearchResult {
-    /// An edge satisfying `stop_condition` was reached, at this distance in metres.
+    /// An edge satisfying `stop_condition` was reached, at this distance in meters.
     Found(u32),
     /// The reachable graph ran out before `max_distance` was spent.
     Exhausted,
