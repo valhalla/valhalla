@@ -521,7 +521,7 @@ struct bin_handler_t {
         other_path_edge.set_heading(opp_angle);
         other_path_edge.set_side_of_street(flip_side(side));
 
-        auto* bc = path_edge.mutable_bounding_circle();
+        auto* bc = other_path_edge.mutable_bounding_circle();
         bc->mutable_latlng()->set_lng(candidate.bounding_circle.first.lng());
         bc->mutable_latlng()->set_lat(candidate.bounding_circle.first.lat());
         bc->set_radius(candidate.bounding_circle.second);
