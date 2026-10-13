@@ -13,6 +13,7 @@
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
    * ADDED: `stop_impact` in `trace_attributes` [#6368](https://github.com/valhalla/valhalla/pull/6368)
    * ADDED: `allow` property for `linear_cost_factors` [#6350](https://github.com/valhalla/valhalla/pull/6350)
+   * UPDATED: timezone database to 2026e [#6415](https://github.com/valhalla/valhalla/pull/6415)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
