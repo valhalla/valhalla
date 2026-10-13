@@ -6,6 +6,7 @@
    * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
    * FIXED: emergency only access on `service=emergency_access` [#6396](https://github.com/valhalla/valhalla/pull/6396)
    * FIXED: crash and wrong node languages when building tiles from three or more input files [#6402](https://github.com/valhalla/valhalla/pull/6402)
+   * FIXED: missing bounding circle on the opposing edge of a /locate response [#6410](https://github.com/valhalla/valhalla/pull/6410)
    * FIXED: `edge_walk` matching for route shapes with extra live traffic breakpoint points [#6261](https://github.com/valhalla/valhalla/issues/6261)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)

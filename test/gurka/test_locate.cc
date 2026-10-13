@@ -101,6 +101,20 @@ protected:
     return false;
   }
 
+  static const valhalla::PathEdge* find_path_edge(const Api& api,
+                                                  const std::string& from,
+                                                  const std::string& to,
+                                                  bool filtered = false) {
+    GraphReader reader(map.config.get_child("mjolnir"));
+    auto [id, edge] = gurka::findEdgeByNodes(reader, layout, from, to);
+    for (const auto& e : (filtered ? correlated_filtered_edges(api) : correlated_edges(api))) {
+      if (GraphId(e.graph_id()) == id)
+        return &e;
+    }
+    ADD_FAILURE() << "edge " << from << "->" << to << " not in result";
+    return nullptr;
+  }
+
   static valhalla::Location::SideOfStreet
   sos_for(const Api& api, const std::string& from, const std::string& to) {
     GraphReader reader(map.config.get_child("mjolnir"));
@@ -225,6 +239,29 @@ TEST_F(Search, HeadingNorthYieldsFilteredEdges) {
   auto api = do_locate(pt("4"), [](valhalla::Location& loc) { loc.set_heading(0); });
   EXPECT_TRUE(has_edge(api, "A", "D", true));
   EXPECT_TRUE(has_edge(api, "D", "A", true));
+}
+
+// both directions of a mid-edge snap share one edge, so they must report the same bounding circle
+TEST_F(Search, MidEdgeSnapBoundingCircleOnBothDirections) {
+  for (bool filtered : {false, true}) {
+    // heading north is perpendicular to A->D, which moves both directions into filtered_edges
+    auto api = do_locate(pt("3"), [filtered](valhalla::Location& loc) {
+      if (filtered)
+        loc.set_heading(0);
+    });
+    const auto* forward = find_path_edge(api, "A", "D", filtered);
+    const auto* reverse = find_path_edge(api, "D", "A", filtered);
+    ASSERT_NE(forward, nullptr);
+    ASSERT_NE(reverse, nullptr);
+
+    EXPECT_GT(forward->bounding_circle().radius(), 0) << "filtered=" << filtered;
+    EXPECT_EQ(forward->bounding_circle().radius(), reverse->bounding_circle().radius())
+        << "filtered=" << filtered;
+    EXPECT_EQ(forward->bounding_circle().latlng().lat(), reverse->bounding_circle().latlng().lat())
+        << "filtered=" << filtered;
+    EXPECT_EQ(forward->bounding_circle().latlng().lng(), reverse->bounding_circle().latlng().lng())
+        << "filtered=" << filtered;
+  }
 }
 
 // side of street — point 5 is left of CD, point 6 is right of CD
