@@ -20,9 +20,7 @@ struct Actor final {
 
   Actor(const boost::property_tree::ptree& config)
       : reader(std::make_shared<valhalla::baldr::GraphReader>(config.get_child("mjolnir"))),
-        loki_worker(config, reader),
-        thor_worker(config, reader),
-        odin_worker(config) {
+        loki_worker(config, reader), thor_worker(config, reader), odin_worker(config) {
     if (reader->GetTileSet().empty()) {
       throw std::runtime_error("Failed to load tileset");
     }
@@ -37,7 +35,8 @@ struct Actor final {
   }
 
   Response locate(rust::Slice<const uint8_t> request) {
-    return act(request, valhalla::Options::locate, [this](valhalla::Api& api) { return loki_worker.locate(api); });
+    return act(request, valhalla::Options::locate,
+               [this](valhalla::Api& api) { return loki_worker.locate(api); });
   }
 
   Response matrix(rust::Slice<const uint8_t> request) {
@@ -85,9 +84,15 @@ struct Actor final {
   Response expansion(rust::Slice<const uint8_t> request) {
     return act(request, valhalla::Options::expansion, [this](valhalla::Api& api) {
       switch (api.options().expansion_action()) {
-      case valhalla::Options::route: loki_worker.route(api); break;
-      case valhalla::Options::isochrone: loki_worker.isochrones(api); break;
-      default: loki_worker.matrix(api); break;
+        case valhalla::Options::route:
+          loki_worker.route(api);
+          break;
+        case valhalla::Options::isochrone:
+          loki_worker.isochrones(api);
+          break;
+        default:
+          loki_worker.matrix(api);
+          break;
       }
       return thor_worker.expansion(api);
     });
@@ -127,7 +132,8 @@ private:
     // Workers keep per-request state, reset it even if the action throws
     struct CleanupGuard {
       Actor& actor_;
-      explicit CleanupGuard(Actor& actor) : actor_(actor) {}
+      explicit CleanupGuard(Actor& actor) : actor_(actor) {
+      }
       ~CleanupGuard() {
         actor_.loki_worker.cleanup();
         actor_.thor_worker.cleanup();
@@ -138,8 +144,8 @@ private:
     std::string output = action_fn(*api);
 
     return Response{
-      .data = std::make_unique<std::string>(std::move(output)),
-      .format = format,
+        .data = std::make_unique<std::string>(std::move(output)),
+        .format = format,
     };
   }
 };
@@ -150,6 +156,7 @@ std::unique_ptr<Actor> new_actor(const boost::property_tree::ptree& config) {
 
 std::unique_ptr<std::string> parse_json_request(rust::Str json, int action) {
   valhalla::Api api;
-  valhalla::ParseApi(static_cast<std::string>(json), static_cast<valhalla::Options::Action>(action), api);
+  valhalla::ParseApi(static_cast<std::string>(json), static_cast<valhalla::Options::Action>(action),
+                     api);
   return std::make_unique<std::string>(api.options().SerializeAsString());
 }

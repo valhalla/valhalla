@@ -2,9 +2,9 @@
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/logging.h>
-#include <boost/property_tree/ptree.hpp>
 
-#include "rust/cxx.h"
+#include <boost/property_tree/ptree.hpp>
+#include <rust/cxx.h>
 
 inline std::unique_ptr<boost::property_tree::ptree> from_file(rust::slice<const uint8_t> path) {
   auto pt = std::make_unique<boost::property_tree::ptree>();
@@ -21,7 +21,8 @@ inline std::unique_ptr<boost::property_tree::ptree> from_json(rust::str config) 
   rapidjson::Document d;
   d.Parse(config.data(), config.size());
   if (d.HasParseError()) {
-    throw std::runtime_error("Could not parse json, error at offset: " + std::to_string(d.GetErrorOffset()));
+    throw std::runtime_error("Could not parse json, error at offset: " +
+                             std::to_string(d.GetErrorOffset()));
   }
 
   auto pt = std::make_unique<boost::property_tree::ptree>();
@@ -56,7 +57,9 @@ inline std::unique_ptr<boost::property_tree::ptree> ptree_new() {
   return std::make_unique<boost::property_tree::ptree>();
 }
 
-inline void ptree_put_str_array(boost::property_tree::ptree& pt, rust::Str path, rust::Slice<const rust::String> values) {
+inline void ptree_put_str_array(boost::property_tree::ptree& pt,
+                                rust::Str path,
+                                rust::Slice<const rust::String> values) {
   boost::property_tree::ptree children;
   for (const auto& v : values) {
     boost::property_tree::ptree child;
@@ -66,7 +69,9 @@ inline void ptree_put_str_array(boost::property_tree::ptree& pt, rust::Str path,
   pt.put_child(std::string(path.data(), path.size()), children);
 }
 
-inline void ptree_put_int_array(boost::property_tree::ptree& pt, rust::Str path, rust::Slice<const int64_t> values) {
+inline void ptree_put_int_array(boost::property_tree::ptree& pt,
+                                rust::Str path,
+                                rust::Slice<const int64_t> values) {
   boost::property_tree::ptree children;
   for (auto v : values) {
     boost::property_tree::ptree child;

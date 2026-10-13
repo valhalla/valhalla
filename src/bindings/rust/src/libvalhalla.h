@@ -1,9 +1,9 @@
 #pragma once
 
 #include <valhalla/baldr/graphtile.h>
-#include <boost/property_tree/ptree_fwd.hpp>
 
-#include "rust/cxx.h"
+#include <boost/property_tree/ptree_fwd.hpp>
+#include <rust/cxx.h>
 
 namespace valhalla::midgard {
 struct tar;
@@ -17,7 +17,8 @@ struct TrafficTile;
 struct LatLon;
 struct TileId;
 
-// Protected `valhalla::baldr::GraphReader::tile_extract_t`, to access graph and traffic tiles directly.
+// Protected `valhalla::baldr::GraphReader::tile_extract_t`, to access graph and traffic tiles
+// directly.
 struct TileSet {
   std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles_;
   std::unordered_map<uint64_t, std::pair<char*, size_t>> traffic_tiles_;
@@ -25,7 +26,8 @@ struct TileSet {
   std::shared_ptr<valhalla::midgard::tar> traffic_tar_;
 
   rust::Vec<TileId> tiles() const;
-  rust::Vec<TileId> tiles_in_bbox(float min_lat, float min_lon, float max_lat, float max_lon, uint8_t level) const;
+  rust::Vec<TileId>
+  tiles_in_bbox(float min_lat, float min_lon, float max_lat, float max_lon, uint8_t level) const;
   // The caller owns a reference to the returned tile, see `add_ref()` and `release()`.
   const valhalla::baldr::GraphTile* get_graph_tile(TileId id) const;
   TrafficTile get_traffic_tile(TileId id) const;
@@ -47,7 +49,8 @@ inline valhalla::baldr::GraphId from_parts(uint8_t level, uint32_t tile_index, u
   return valhalla::baldr::GraphId(tile_index, level, id);
 }
 
-inline rust::Slice<const valhalla::baldr::DirectedEdge> directededges(const valhalla::baldr::GraphTile& tile) {
+inline rust::Slice<const valhalla::baldr::DirectedEdge>
+directededges(const valhalla::baldr::GraphTile& tile) {
   auto slice = tile.GetDirectedEdges();
   return rust::Slice(slice.data(), slice.size());
 }
@@ -57,14 +60,14 @@ inline rust::Slice<const valhalla::baldr::NodeInfo> nodes(const valhalla::baldr:
   return rust::Slice(slice.data(), slice.size());
 }
 
-inline rust::Slice<const valhalla::baldr::DirectedEdge> node_edges(const valhalla::baldr::GraphTile& tile,
-                                                                   const valhalla::baldr::NodeInfo& node) {
+inline rust::Slice<const valhalla::baldr::DirectedEdge>
+node_edges(const valhalla::baldr::GraphTile& tile, const valhalla::baldr::NodeInfo& node) {
   auto slice = tile.GetDirectedEdges(&node);
   return rust::Slice(slice.data(), slice.size());
 }
 
-inline rust::Slice<const valhalla::baldr::NodeTransition> node_transitions(const valhalla::baldr::GraphTile& tile,
-                                                                           const valhalla::baldr::NodeInfo& node) {
+inline rust::Slice<const valhalla::baldr::NodeTransition>
+node_transitions(const valhalla::baldr::GraphTile& tile, const valhalla::baldr::NodeInfo& node) {
   auto slice = tile.GetNodeTransitions(&node);
   return rust::Slice(slice.data(), slice.size());
 }
@@ -74,7 +77,8 @@ LatLon node_latlon(const valhalla::baldr::GraphTile& tile, const valhalla::baldr
 // Borrowed view of the tile's edge info, Rust decodes the shape.
 EdgeInfo edgeinfo(const valhalla::baldr::GraphTile& tile, const valhalla::baldr::DirectedEdge& de);
 
-uint64_t live_traffic(const valhalla::baldr::GraphTile& tile, const valhalla::baldr::DirectedEdge& de);
+uint64_t live_traffic(const valhalla::baldr::GraphTile& tile,
+                      const valhalla::baldr::DirectedEdge& de);
 
 AdminInfo admininfo(const valhalla::baldr::GraphTile& tile, uint32_t index);
 

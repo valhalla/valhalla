@@ -20,13 +20,14 @@ namespace {
 struct GraphMemory : public baldr::GraphMemory {
   const std::shared_ptr<midgard::tar> tar_;
 
-  GraphMemory(std::shared_ptr<midgard::tar> tar, std::pair<char*, size_t> position) : tar_(std::move(tar)) {
+  GraphMemory(std::shared_ptr<midgard::tar> tar, std::pair<char*, size_t> position)
+      : tar_(std::move(tar)) {
     data = position.first;
     size = position.second;
   }
 };
 
-}  // namespace
+} // namespace
 
 std::shared_ptr<TileSet> new_tileset(const boost::property_tree::ptree& pt) {
   // Hack to expose protected `baldr::GraphReader::tile_extract_t`
@@ -34,10 +35,10 @@ std::shared_ptr<TileSet> new_tileset(const boost::property_tree::ptree& pt) {
     static TileSet create(const boost::property_tree::ptree& pt) {
       auto extract = baldr::GraphReader::tile_extract_t(pt, false);
       return TileSet{
-        .tiles_ = std::move(extract.tiles),
-        .traffic_tiles_ = std::move(extract.traffic_tiles),
-        .tar_ = std::move(extract.archive),
-        .traffic_tar_ = std::move(extract.traffic_archive),
+          .tiles_ = std::move(extract.tiles),
+          .traffic_tiles_ = std::move(extract.traffic_tiles),
+          .tar_ = std::move(extract.archive),
+          .traffic_tar_ = std::move(extract.traffic_archive),
       };
     }
   };
@@ -58,7 +59,10 @@ rust::Vec<TileId> TileSet::tiles() const {
   return result;
 }
 
-rust::Vec<TileId> TileSet::tiles_in_bbox(float min_lat, float min_lon, float max_lat, float max_lon,
+rust::Vec<TileId> TileSet::tiles_in_bbox(float min_lat,
+                                         float min_lon,
+                                         float max_lat,
+                                         float max_lon,
                                          uint8_t level) const {
   rust::Vec<TileId> result;
   if (level >= baldr::TileHierarchy::levels().size()) {
@@ -66,7 +70,8 @@ rust::Vec<TileId> TileSet::tiles_in_bbox(float min_lat, float min_lon, float max
   }
 
   const midgard::AABB2<midgard::PointLL> bbox(min_lon, min_lat, max_lon, max_lat);
-  const auto tile_ids = baldr::TileHierarchy::levels()[static_cast<size_t>(level)].tiles.TileList(bbox);
+  const auto tile_ids =
+      baldr::TileHierarchy::levels()[static_cast<size_t>(level)].tiles.TileList(bbox);
 
   result.reserve(tile_ids.size());
   for (auto tile_id : tile_ids) {
@@ -89,10 +94,12 @@ const baldr::GraphTile* TileSet::get_graph_tile(TileId id) const {
   }
 
   auto traffic_it = traffic_tiles_.find(base);
-  auto traffic =
-      traffic_it != traffic_tiles_.end() ? std::make_unique<GraphMemory>(traffic_tar_, traffic_it->second) : nullptr;
+  auto traffic = traffic_it != traffic_tiles_.end()
+                     ? std::make_unique<GraphMemory>(traffic_tar_, traffic_it->second)
+                     : nullptr;
 
-  auto ptr = baldr::GraphTile::Create(base, std::make_unique<GraphMemory>(tar_, tile_it->second), std::move(traffic));
+  auto ptr = baldr::GraphTile::Create(base, std::make_unique<GraphMemory>(tar_, tile_it->second),
+                                      std::move(traffic));
   return ptr.detach();
 }
 
@@ -113,16 +120,18 @@ TrafficTile TileSet::get_traffic_tile(TileId id) const {
   }
 
   return TrafficTile{
-    .header = reinterpret_cast<uint64_t*>(traffic_it->second.first),
-    .speeds = reinterpret_cast<uint64_t*>(traffic_it->second.first + sizeof(baldr::TrafficTileHeader)),
-    .edge_count = header->directed_edge_count,
-    .traffic_tar = traffic_tar_,
+      .header = reinterpret_cast<uint64_t*>(traffic_it->second.first),
+      .speeds =
+          reinterpret_cast<uint64_t*>(traffic_it->second.first + sizeof(baldr::TrafficTileHeader)),
+      .edge_count = header->directed_edge_count,
+      .traffic_tar = traffic_tar_,
   };
 }
 
 uint64_t TileSet::dataset_id() const {
   // Every tile starts with its header, so read it in place rather than building a tile around it.
-  if (auto it = tiles_.begin(); it != tiles_.end() && it->second.second >= sizeof(baldr::GraphTileHeader)) {
+  if (auto it = tiles_.begin();
+      it != tiles_.end() && it->second.second >= sizeof(baldr::GraphTileHeader)) {
     return reinterpret_cast<const baldr::GraphTileHeader*>(it->second.first)->dataset_id();
   }
   return 0;
@@ -131,7 +140,7 @@ uint64_t TileSet::dataset_id() const {
 LatLon node_latlon(const baldr::GraphTile& tile, const baldr::NodeInfo& node) {
   const auto base_ll = tile.header()->base_ll();
   const auto ll = node.latlng(base_ll);
-  return LatLon{ .lat = ll.lat(), .lon = ll.lng() };
+  return LatLon{.lat = ll.lat(), .lon = ll.lng()};
 }
 
 EdgeInfo edgeinfo(const baldr::GraphTile& tile, const baldr::DirectedEdge& de) {
@@ -147,9 +156,9 @@ EdgeInfo edgeinfo(const baldr::GraphTile& tile, const baldr::DirectedEdge& de) {
   const uint32_t shape_size = edge_info.encoded_shape_size();
 
   return EdgeInfo{
-    .way_id = edge_info.wayid(),
-    .speed_limit = static_cast<uint8_t>(edge_info.speed_limit()),
-    .encoded_shape = rust::Slice<const uint8_t>(shape, shape_size),
+      .way_id = edge_info.wayid(),
+      .speed_limit = static_cast<uint8_t>(edge_info.speed_limit()),
+      .encoded_shape = rust::Slice<const uint8_t>(shape, shape_size),
   };
 }
 
@@ -163,10 +172,10 @@ uint64_t live_traffic(const baldr::GraphTile& tile, const baldr::DirectedEdge& d
 AdminInfo admininfo(const baldr::GraphTile& tile, uint32_t index) {
   auto info = tile.admininfo(index);
   return AdminInfo{
-    .country_text = info.country_text(),
-    .state_text = info.state_text(),
-    .country_iso = info.country_iso(),
-    .state_iso = info.state_iso(),
+      .country_text = info.country_text(),
+      .state_text = info.state_text(),
+      .country_iso = info.country_iso(),
+      .state_iso = info.state_iso(),
   };
 }
 
@@ -183,8 +192,8 @@ TimeZoneInfo from_id(uint32_t id, uint64_t unix_timestamp) {
   const auto tz_info = zoned_tp.get_info();
 
   return TimeZoneInfo{
-    .name = tz->name(),
-    .offset_seconds = static_cast<int32_t>(tz_info.offset.count()),
+      .name = tz->name(),
+      .offset_seconds = static_cast<int32_t>(tz_info.offset.count()),
   };
 }
 
