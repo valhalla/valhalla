@@ -9,11 +9,11 @@
    * FIXED: missing bounding circle on the opposing edge of a /locate response [#6410](https://github.com/valhalla/valhalla/pull/6410)
    * BREAKING: consistent incident serialization in route and locate [#6405](https://github.com/valhalla/valhalla/pull/6405)
 * **Enhancement**
-   * UPDATED: timezone database to 2026e [#6415](https://github.com/valhalla/valhalla/pull/6415)
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
    * ADDED: `stop_impact` in `trace_attributes` [#6368](https://github.com/valhalla/valhalla/pull/6368)
    * ADDED: `allow` property for `linear_cost_factors` [#6350](https://github.com/valhalla/valhalla/pull/6350)
+   * UPDATED: timezone database to 2026e [#6415](https://github.com/valhalla/valhalla/pull/6415)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
