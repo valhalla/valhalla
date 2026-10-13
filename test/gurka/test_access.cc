@@ -942,6 +942,44 @@ TEST(Standalone, HighwayPedestrian) {
   }
 }
 
+TEST(Standalone, ServiceEmergencyAccess) {
+  const std::string ascii_map = R"(
+    A----B----C
+         |
+    F----E----D
+  )";
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto build_map = [&](const std::string& service, const std::string& dir) {
+    gurka::ways ways = {
+        {"ABC", {{"highway", "motorway"}, {"oneway", "yes"}}},
+        {"DEF", {{"highway", "motorway"}, {"oneway", "yes"}}},
+        {"BE", {{"highway", "service"}}},
+    };
+    if (!service.empty())
+      ways["BE"]["service"] = service;
+    return gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/" + dir,
+                             build_config);
+  };
+
+  // a plain service road lets auto turn around between the carriageways
+  auto plain_map = build_map("", "gurka_access_service_plain");
+  auto result = gurka::do_action(valhalla::Options::route, plain_map, {"A", "F"}, "auto");
+  gurka::assert::raw::expect_path(result, {"ABC", "BE", "DEF"});
+
+  auto map = build_map("emergency_access", "gurka_access_service_emergency");
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto"),
+               std::runtime_error);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  for (const auto& end_node : {"B", "E"}) {
+    const auto* edge = std::get<1>(gurka::findEdge(reader, layout, "BE", end_node));
+    EXPECT_TRUE(edge->forwardaccess() & baldr::kEmergencyAccess) << end_node;
+    EXPECT_FALSE(edge->forwardaccess() & baldr::kAutoAccess) << end_node;
+  }
+}
+
 class CombinedRestrictionTagValues : public ::testing::Test {
 protected:
   static gurka::nodelayout layout;
