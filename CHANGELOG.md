@@ -1,13 +1,13 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
-   * FIXED: Fix assertion when decrementing end iterator of empty vector [#6388](https://github.com/valhalla/valhalla/pull/6388)
    * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
    * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
    * FIXED: emergency only access on `service=emergency_access` [#6396](https://github.com/valhalla/valhalla/pull/6396)
    * FIXED: crash and wrong node languages when building tiles from three or more input files [#6402](https://github.com/valhalla/valhalla/pull/6402)
    * FIXED: missing bounding circle on the opposing edge of a /locate response [#6410](https://github.com/valhalla/valhalla/pull/6410)
+   * FIXED: Fix assertion when decrementing end iterator of empty vector [#6388](https://github.com/valhalla/valhalla/pull/6388)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
