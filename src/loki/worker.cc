@@ -1,5 +1,6 @@
 #include "loki/worker.h"
 #include "exceptions.h"
+#include "loki/linear_cost_factors.h"
 #include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
@@ -158,8 +159,9 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
   if (options.exclude_polygons_size()) {
     const auto edges = edges_in_rings(options, *reader, mode_costing[static_cast<size_t>(mode)],
-                                      max_exclude_polygons_length);
+                                      max_exclude_polygons_length, max_exclude_polygons_vertices);
     auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
+    co.mutable_exclude_edges()->Reserve(edges.size());
     for (const auto& edge_id : edges) {
       auto* avoid = co.add_exclude_edges();
       avoid->set_id(edge_id);
@@ -215,11 +217,75 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   }
 
+  resolve_linear_cost_factors(api);
+
   // If more alternates are requested than we support we cap it
   if (options.action() != Options::trace_attributes && options.alternates() > max_alternates)
     options.set_alternates(max_alternates);
   if (options.action() == Options::trace_attributes && options.alternates() > max_trace_alternates)
     options.set_alternates(max_trace_alternates);
+}
+
+/**
+ * resolves user supplied  features into
+ * the edges they cover. A none costing is used on purpose: the features describe geometry, not
+ * something the requested mode has to be able to travel on.
+ */
+void loki_worker_t::resolve_linear_cost_factors(Api& api) {
+
+  auto& options = *api.mutable_options();
+
+  // nothing to do
+  if (options.cost_factor_lines().empty()) {
+    return;
+  }
+
+  // first correlate the end points
+  google::protobuf::RepeatedPtrField<Location> endpoints;
+  endpoints.Reserve(2 * options.cost_factor_lines_size());
+
+  for (const auto& line : options.cost_factor_lines()) {
+    if (line.shape().empty()) {
+      throw valhalla_exception_t{173, "feature coordinates are empty"};
+    }
+    endpoints.Add()->CopyFrom(*line.shape().begin());
+    endpoints.Add()->CopyFrom(*line.shape().rbegin());
+  }
+
+  for (auto& endpoint : endpoints) {
+    apply_trace_location_defaults(endpoint);
+    parse_location(endpoint);
+  }
+
+  // the provided lines represent subsequent edge shapes
+  // so we don't care about costing
+  auto none_costing = factory.Create(Costing::none_);
+  sif::mode_costing_t none_mode_costing;
+  const auto none_mode = none_costing->travel_mode();
+  none_mode_costing[static_cast<size_t>(none_mode)] = none_costing;
+
+  try {
+    search_.search(endpoints, none_costing);
+    search_.clear();
+  } catch (const std::exception&) {
+    throw valhalla_exception_t{173, "No edges near start/end of linear cost feature."};
+  }
+
+  int i = 0;
+  for (auto& line : *options.mutable_cost_factor_lines()) {
+    if (endpoints.at(2 * i).correlation().edges().empty() ||
+        endpoints.at(2 * i + 1).correlation().edges().empty()) {
+      throw valhalla_exception_t{173, "No edges near start/end of linear cost feature."};
+    }
+
+    // move the correlated start and end back into place
+    line.mutable_locations()->Add(std::move(endpoints.at(2 * i)));
+    line.mutable_locations()->Add(std::move(endpoints.at(2 * i + 1)));
+    ++i;
+  }
+
+  add_cost_factor_edges(none_mode_costing, none_mode, *reader, options, min_linear_cost_factor,
+                        max_linear_cost_edges);
 }
 
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
@@ -252,7 +318,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (!Options_Action_Enum_Parse(path, &action)) {
       throw std::runtime_error("Action not supported " + path);
     }
-    actions.insert(action);
+    actions[action] = true;
     action_str.append("'/" + path + "' ");
   }
   // Make sure we have at least something to support!
@@ -289,7 +355,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
-        kv.first == "max_exclude_polygons_length" ||
+        kv.first == "max_exclude_polygons_length" || kv.first == "max_exclude_polygons_vertices" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
         kv.first == "status" || kv.first == "allow_hard_exclusions" ||
         kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
@@ -344,6 +410,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 
   max_exclude_locations = config.get<size_t>("service_limits.max_exclude_locations");
   max_exclude_polygons_length = config.get<float>("service_limits.max_exclude_polygons_length");
+  max_exclude_polygons_vertices =
+      config.get<size_t>("service_limits.max_exclude_polygons_vertices", 100);
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");
@@ -367,6 +435,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
+  min_linear_cost_factor = config.get<double>("service_limits.min_linear_cost_factor", 1.0);
+  max_linear_cost_edges = config.get<uint64_t>("service_limits.max_linear_cost_edges", 50000);
   mvt_cache_dir_ = config.get<std::string>("loki.service_defaults.mvt_cache_dir", "");
   if (!mvt_cache_dir_.empty() && !std::filesystem::exists(mvt_cache_dir_))
     std::filesystem::create_directory(mvt_cache_dir_);
@@ -437,7 +507,6 @@ void loki_worker_t::check_hierarchy_distance(Api& request) {
     costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
   }
 }
-
 #ifdef ENABLE_SERVICES
 prime_server::worker_t::result_t
 loki_worker_t::work(const std::list<zmq::message_t>& job,
@@ -458,7 +527,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     const auto& options = request.options();
 
     // check there is a valid action
-    if (actions.find(options.action()) == actions.cend()) {
+    if (!actions[options.action()]) {
       throw valhalla_exception_t{106, action_str};
     }
 
@@ -543,11 +612,9 @@ void run_service(const boost::property_tree::ptree& config) {
   auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
   auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
-  // listen for requests
-  zmq::context_t context;
   loki_worker_t loki_worker(config);
-  prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-                                interrupt_endpoint,
+  prime_server::worker_t worker(zmq_context(), upstream_endpoint, downstream_endpoint,
+                                loopback_endpoint, interrupt_endpoint,
                                 std::bind(&loki_worker_t::work, std::ref(loki_worker),
                                           std::placeholders::_1, std::placeholders::_2,
                                           std::placeholders::_3),

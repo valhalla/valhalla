@@ -131,7 +131,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
   // for each tile.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     if (std::filesystem::is_regular_file(transit_file_itr->path())) {
-      std::string fname = transit_file_itr->path().string();
+      std::string fname = transit_file_itr->path().generic_string();
       std::string ext = transit_file_itr->path().extension().string();
       std::string file_name = fname.substr(0, fname.size() - ext.size());
 
@@ -145,7 +145,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           if (ext == ".pbf") {
             curr_tile_pbf = tile_pbf;
           } else {
-            curr_tile_pbf = read_pbf(transit_file_itr->path().string(), lock);
+            curr_tile_pbf = read_pbf(transit_file_itr->path().generic_string(), lock);
           }
         }
 
@@ -661,9 +661,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         }
 
         // add the egress connection
-        // Make sure length is non-zero
-        double length = std::max(1.0, egress_ll.Distance(station_ll));
-        directededge.set_length(length);
+        directededge.set_length(egress_ll.Distance(station_ll));
         directededge.set_use(Use::kEgressConnection);
         directededge.set_speed(5);
         directededge.set_classification(RoadClass::kServiceOther);
@@ -710,9 +708,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         directededge.set_endnode(egress_graphid);
 
         // add the platform connection
-        // Make sure length is non-zero
-        double length = std::max(1.0, station_ll.Distance(egress_ll));
-        directededge.set_length(length);
+        directededge.set_length(station_ll.Distance(egress_ll));
         directededge.set_use(Use::kEgressConnection);
         directededge.set_speed(5);
         directededge.set_classification(RoadClass::kServiceOther);
@@ -757,9 +753,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         PointLL platform_ll = {platform.lon(), platform.lat()};
 
         // add the platform connection
-        // Make sure length is non-zero
-        double length = std::max(1.0, station_ll.Distance(platform_ll));
-        directededge.set_length(length);
+        directededge.set_length(station_ll.Distance(platform_ll));
         directededge.set_use(Use::kPlatformConnection);
         directededge.set_speed(5);
         directededge.set_classification(RoadClass::kServiceOther);
@@ -837,9 +831,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     directededge.set_endnode(station_graphid);
 
     // add the platform connection
-    // Make sure length is non-zero
-    double length = std::max(1.0, platform_ll.Distance(station_ll));
-    directededge.set_length(length);
+    directededge.set_length(platform_ll.Distance(station_ll));
     directededge.set_use(Use::kPlatformConnection);
     directededge.set_speed(5);
     directededge.set_classification(RoadClass::kServiceOther);
@@ -1203,7 +1195,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     auto tile_path = transit_file_itr->path();
     if (std::filesystem::is_regular_file(transit_file_itr->path()) &&
         (tile_path.extension() == ".pbf" || std::isdigit(tile_path.string().back()))) {
-      all_tiles.emplace(GraphId::FromTilePath(tile_path.string()));
+      all_tiles.emplace(GraphId::FromTilePath(tile_path));
     }
   }
 

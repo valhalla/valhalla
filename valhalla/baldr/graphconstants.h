@@ -188,6 +188,9 @@ constexpr uint8_t kMaxBicycleNetwork = 15;
 // Maximum offset to edge information
 constexpr uint32_t kMaxEdgeInfoOffset = 33554431; // 2^25 bytes
 
+// Minimum length of an edge
+constexpr uint32_t kMinEdgeLength = 1;
+
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215; // 2^24 meters
 
@@ -856,6 +859,11 @@ constexpr uint8_t kPredictedFlowMask = 4;
 constexpr uint8_t kCurrentFlowMask = 8;
 constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
+
+// Which restrictions a linear cost feature clears
+constexpr uint32_t kAllowNone = 0;
+constexpr uint32_t kAllowAll = std::numeric_limits<uint32_t>::max();
+
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
 constexpr uint64_t kInvalidSecondsOfWeek =
