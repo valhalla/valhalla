@@ -30,18 +30,18 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// New graph id of an old node (invalid if the node was removed) and the new local index of
-// each of the node's first 8 edges (255 for removed edges, identity if nothing was filtered).
-// Restriction and name consistency masks only cover 8 edges so higher indexes are not tracked.
+constexpr uint8_t kRemovedEdge = 255;
+
+// New id of an old node (invalid if removed) and the new local indexes of its first 8 edges,
+// the only ones restriction and name consistency masks cover
 struct new_node_t {
   GraphId id;
   std::array<uint8_t, 8> local_indexes = {0, 1, 2, 3, 4, 5, 6, 7};
 };
 
-// Associations from old to new nodes for every tile, indexed by the old node id within the tile
+// New nodes of every tile, indexed by the old node id
 using old_to_new_t = std::unordered_map<uint32_t, std::vector<new_node_t>>;
 
-// Counts for logging. Each worker counts its own, summed up once the workers are done
 struct filter_stats_t {
   uint32_t original_edges = 0;
   uint32_t original_nodes = 0;
@@ -61,8 +61,7 @@ struct filter_stats_t {
   }
 };
 
-// Local level tiles shared by the workers of a pass. Shuffled to spread dense regions between the
-// threads more evenly
+// Shuffled to spread dense regions over the workers
 class TileQueue {
 public:
   explicit TileQueue(const boost::property_tree::ptree& pt) {
@@ -87,11 +86,10 @@ private:
   std::mutex lock_;
 };
 
-// Workers fill their own associations, merged together once they are done
 void MergeAssociations(std::vector<old_to_new_t>& results, old_to_new_t& old_to_new) {
   for (auto& result : results) {
-    for (auto& tile_nodes : result) {
-      old_to_new[tile_nodes.first] = std::move(tile_nodes.second);
+    for (auto& [tile_id, new_nodes] : result) {
+      old_to_new[tile_id] = std::move(new_nodes);
     }
   }
 }
@@ -104,7 +102,7 @@ uint8_t get_new_mask(uint8_t old_mask, const std::array<uint8_t, 8>& new_local_i
   // For each bit set in old_mask, update a bit in the new mask using new_local_indexes
   uint8_t new_mask = 0;
   for (uint8_t i = 0; i < new_local_indexes.size(); ++i) {
-    if ((old_mask & 1 << i) != 0 && (new_local_indexes[i] != 255)) {
+    if ((old_mask & 1 << i) != 0 && (new_local_indexes[i] != kRemovedEdge)) {
       // Replace bit set in the old mask with one from new_local_indexes
       uint8_t index = new_local_indexes[i];
       new_mask |= 1 << index;
@@ -113,8 +111,7 @@ uint8_t get_new_mask(uint8_t old_mask, const std::array<uint8_t, 8>& new_local_i
   return new_mask;
 }
 
-// Find the new node of an old node, end nodes are always on the same (local) level so the tile id
-// is enough to identify their tile
+// End nodes are on the local level, so the tile id alone identifies their tile
 const new_node_t* FindNewNode(const old_to_new_t& old_to_new, const GraphId& node, uint64_t wayid) {
   auto iter = old_to_new.find(node.tileid());
   if (iter == old_to_new.end() || node.id() >= iter->second.size() ||
@@ -166,8 +163,8 @@ bool ExpandFromNode(const graph_tile_ptr& tile,
 
 /*
  * Expand from the current node
- * @param  tile  tile of the walk, marked nodes only have edges within their own tile
- * @param  marked  whether each node of the tile is marked for aggregation
+ * @param  tile  tile of the walk
+ * @param  marked  nodes of the tile marked for aggregation
  * @param  shape  shape that we need to update
  * @param  en  current end node that we started at
  * @param  from_node  node that we started from
@@ -261,8 +258,8 @@ bool ExpandFromNodeInner(const graph_tile_ptr& tile,
 
 /*
  * Expand from the next node which is now our new current node
- * @param  tile  tile of the walk, marked nodes only have edges within their own tile
- * @param  marked  whether each node of the tile is marked for aggregation
+ * @param  tile  tile of the walk
+ * @param  marked  nodes of the tile marked for aggregation
  * @param  shape  shape that we need to update
  * @param  en  current end node that we started at
  * @param  from_node  node that we started from
@@ -314,18 +311,6 @@ bool Aggregate(GraphId& start_node,
                         GraphId(), start_node, rc, validate, aggregated);
 }
 
-/**
- * Filter edges to optionally remove edges by access. A worker processing tiles from the
- * shared queue, run on multiple threads.
- * @param  pt  Property tree with the mjolnir configuration.
- * @param  tilequeue  Queue of local tiles to process, shared between the workers.
- * @param  include_driving  Include edge if driving (any vehicular) access in either direction.
- * @param  include_bicycle  Include edge if bicycle access in either direction.
- * @param  include_pedestrian  Include edge if pedestrian or wheelchair access in either direction.
- * @param  old_to_new  Associations of old nodes to new nodes Ids (after filtering) for the
- *                     tiles this worker has processed.
- * @param  stats  Counts of the tiles this worker has processed.
- */
 void FilterTilesWorker(const boost::property_tree::ptree& pt,
                        TileQueue& tilequeue,
                        const bool include_driving,
@@ -373,7 +358,7 @@ void FilterTilesWorker(const boost::property_tree::ptree& pt,
       uint32_t edge_count = 0;
 
       // Current edge index for first edge from this node
-      uint32_t edge_index = tilebuilder.directededges().size();
+      const uint32_t edge_index = tilebuilder.directededges().size();
 
       uint8_t new_edge_count = 0;
       std::array<uint8_t, 8>& new_local_indexes = new_nodes[i].local_indexes;
@@ -383,7 +368,6 @@ void FilterTilesWorker(const boost::property_tree::ptree& pt,
       std::vector<RoadClass> classification;
       std::vector<GraphId> endnode;
       const NodeInfo* nodeinfo = tile->node(nodeid);
-      std::string begin_node_iso = tile->admin(nodeinfo->admin_index())->country_iso();
       std::vector<uint32_t> headings;
       std::vector<Traversability> traversabilities;
       GraphId edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
@@ -394,7 +378,7 @@ void FilterTilesWorker(const boost::property_tree::ptree& pt,
           ++stats.filtered_edges;
           edge_filtered = true;
           if (j < new_local_indexes.size()) {
-            new_local_indexes[j] = 255; // marks a removed edge
+            new_local_indexes[j] = kRemovedEdge;
           }
           continue;
         }
@@ -505,11 +489,10 @@ void FilterTilesWorker(const boost::property_tree::ptree& pt,
         ++edge_count;
       }
 
-      // When some edge at the node has been filtered, mask bits beyond the node's original
-      // edge count are dropped rather than kept as is
+      // Mask bits past the edge count survive only at nodes without filtered edges
       if (edge_filtered) {
         for (uint32_t j = nodeinfo->edge_count(); j < new_local_indexes.size(); ++j) {
-          new_local_indexes[j] = 255;
+          new_local_indexes[j] = kRemovedEdge;
         }
       }
 
@@ -599,16 +582,7 @@ void FilterTilesWorker(const boost::property_tree::ptree& pt,
   }
 }
 
-/**
- * Filter edges to optionally remove edges by access, processing tiles on multiple threads.
- * @param  pt  Property tree with the mjolnir configuration.
- * @param  concurrency  Number of threads to process the tiles on.
- * @param  old_to_new  Associations of old nodes to new nodes Ids (after filtering).
- * @param  include_driving  Include edge if driving (any vehicular) access in either direction.
- * @param  include_bicycle  Include edge if bicycle access in either direction.
- * @param  include_pedestrian  Include edge if pedestrian or wheelchair access in either direction.
- * @param  stats  Counts of the filtered tiles.
- */
+// Keeps an edge if any included mode has access in either direction
 void FilterTiles(const boost::property_tree::ptree& pt,
                  const uint32_t concurrency,
                  old_to_new_t& old_to_new,
@@ -741,17 +715,7 @@ void ValidateData(const std::vector<bool>& marked,
   }
 }
 
-/**
- * Validate which nodes can aggregate their edges and associate the nodes that remain after
- * aggregation to their new Ids. A worker processing tiles from the shared queue, run on multiple
- * threads. Nodes marked for aggregation only have edges that stay within their own tile, so each
- * tile is validated independently.
- * @param  pt  Property tree with the mjolnir configuration.
- * @param  tilequeue  Queue of local tiles to process, shared between the workers.
- * @param  old_to_new  Associations of old nodes to new nodes Ids (after aggregation) for the
- *                     tiles this worker has processed. Nodes that get aggregated have no new Id.
- * @param  stats  Counts of the tiles this worker has processed.
- */
+// Marked nodes only have edges within their own tile, so every tile is validated on its own
 void ValidateAggregationWorker(const boost::property_tree::ptree& pt,
                                TileQueue& tilequeue,
                                old_to_new_t& old_to_new,
@@ -804,8 +768,7 @@ void ValidateAggregationWorker(const boost::property_tree::ptree& pt,
       }
     }
 
-    // We can not aggregate at the processed nodes, all other marked nodes get removed and the
-    // remaining nodes keep their order
+    // Aggregation was ruled out at the processed nodes, other marked nodes get removed
     std::vector<new_node_t>& new_nodes = old_to_new[tile_id.tileid()];
     new_nodes.resize(tile->header()->nodecount());
     uint32_t new_count = 0;
@@ -822,15 +785,6 @@ void ValidateAggregationWorker(const boost::property_tree::ptree& pt,
   }
 }
 
-/**
- * Aggregate edges at the marked nodes and update end nodes of all directed edges. A worker
- * processing tiles from the shared queue, run on multiple threads. Aggregated chains never leave
- * the tile of the node that started them, so each tile is aggregated and written independently.
- * @param  pt  Property tree with the mjolnir configuration.
- * @param  tilequeue  Queue of local tiles to process, shared between the workers.
- * @param  old_to_new  Associations of old nodes to new nodes Ids (after aggregation).
- * @param  stats  Counts of the tiles this worker has processed.
- */
 void AggregateTilesWorker(const boost::property_tree::ptree& pt,
                           TileQueue& tilequeue,
                           const old_to_new_t& old_to_new,
@@ -862,7 +816,7 @@ void AggregateTilesWorker(const boost::property_tree::ptree& pt,
       uint32_t edge_count = 0;
 
       // Current edge index for first edge from this node
-      uint32_t edge_index = tilebuilder.directededges().size();
+      const uint32_t edge_index = tilebuilder.directededges().size();
 
       // Iterate through directed edges outbound from this node
       std::vector<uint64_t> wayid;
@@ -1010,13 +964,7 @@ void AggregateTilesWorker(const boost::property_tree::ptree& pt,
   }
 }
 
-/**
- * Aggregate edges at nodes that got marked for aggregation while filtering and update end nodes
- * of all directed edges, processing tiles on multiple threads.
- * @param  pt  Property tree with the mjolnir configuration.
- * @param  concurrency  Number of threads to process the tiles on.
- * @param  stats  Counts of the filtered tiles, aggregated edges get added to it.
- */
+// New ids of all nodes are known before any tile is written, so end nodes are final right away
 void AggregateTiles(const boost::property_tree::ptree& pt,
                     const uint32_t concurrency,
                     filter_stats_t& stats) {
@@ -1065,13 +1013,6 @@ void AggregateTiles(const boost::property_tree::ptree& pt,
            std::to_string(stats.original_edges));
 }
 
-/**
- * Update end nodes of all directed edges. A worker processing tiles from the shared queue,
- * run on multiple threads.
- * @param  pt  Property tree with the mjolnir configuration.
- * @param  tilequeue  Queue of local tiles to process, shared between the workers.
- * @param  old_to_new  Associations of old nodes to new nodes Ids (after filtering).
- */
 void UpdateEndNodesWorker(const boost::property_tree::ptree& pt,
                           TileQueue& tilequeue,
                           const old_to_new_t& old_to_new) {
@@ -1106,8 +1047,7 @@ void UpdateEndNodesWorker(const boost::property_tree::ptree& pt,
               FindNewNode(old_to_new, edge->endnode(), tile->edgeinfo(edge).wayid())) {
         end_node = new_node->id;
 
-        // Update masks with the new local edge indexes at the end node (identity unless
-        // some edges at that node have been filtered)
+        // Local indexes are identity unless edges were filtered at the end node
         if (new_restrictions != 0) {
           new_restrictions = get_new_mask(new_restrictions, new_node->local_indexes);
         }
@@ -1135,12 +1075,6 @@ void UpdateEndNodesWorker(const boost::property_tree::ptree& pt,
   }
 }
 
-/**
- * Update end nodes of all directed edges, processing tiles on multiple threads.
- * @param  pt  Property tree with the mjolnir configuration.
- * @param  concurrency  Number of threads to process the tiles on.
- * @param  old_to_new  Associations of old nodes to new nodes Ids (after filtering).
- */
 void UpdateEndNodes(const boost::property_tree::ptree& pt,
                     const uint32_t concurrency,
                     const old_to_new_t& old_to_new) {
@@ -1159,15 +1093,8 @@ void UpdateEndNodes(const boost::property_tree::ptree& pt,
   }
 }
 
-/**
- * Update Opposing Edge Index and Transitions of all directed edges. A worker processing
- * tiles from the shared queue, run on multiple threads. Workers also read the tiles of
- * neighboring end nodes, which tile writes replace atomically. The fields this pass updates do
- * not affect the opposing edge search, so a neighbor read that got the tile before or after its
- * own update sees the same result.
- * @param  pt  Property tree with the mjolnir configuration.
- * @param  tilequeue  Queue of local tiles to process, shared between the workers.
- */
+// Neighbor tiles may be read before or after their own update, which only changes fields the
+// opposing edge search doesn't use
 void UpdateOpposingWorker(const boost::property_tree::ptree& pt, TileQueue& tilequeue) {
   enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {0}};
   GraphReader reader(pt.get_child("mjolnir"));
@@ -1232,12 +1159,6 @@ void UpdateOpposingWorker(const boost::property_tree::ptree& pt, TileQueue& tile
   }
 }
 
-/**
- * Update Opposing Edge Index and Transitions of all directed edges, processing tiles on
- * multiple threads.
- * @param  pt  Property tree with the mjolnir configuration.
- * @param  concurrency  Number of threads to process the tiles on.
- */
 void UpdateOpposingIndexAndTransitions(const boost::property_tree::ptree& pt,
                                        const uint32_t concurrency) {
   SCOPED_TIMER();
@@ -1284,21 +1205,14 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
   const uint32_t concurrency =
       std::max(1u, pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
 
-  // Associations of old node Ids to new node Ids (after filtering).
   old_to_new_t old_to_new;
-
-  // Filter edges (and nodes) by access
   filter_stats_t stats;
   FilterTiles(pt, concurrency, old_to_new, include_driving, include_bicycle, include_pedestrian,
               stats);
-
-  // Update end nodes
   UpdateEndNodes(pt, concurrency, old_to_new);
   old_to_new.clear();
 
   AggregateTiles(pt, concurrency, stats);
-
-  // Update Opposing Edge Index
   UpdateOpposingIndexAndTransitions(pt, concurrency);
 
   LOG_INFO("Done GraphFilter");

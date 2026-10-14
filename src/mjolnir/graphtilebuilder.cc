@@ -4,6 +4,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/predictedspeeds.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem_utils.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
 
@@ -528,7 +529,7 @@ void GraphTileBuilder::StoreTileData() {
 
   // Stamp the data hash into the header and rewrite it in place, then publish atomically.
   in_mem.finalize();
-  std::filesystem::rename(tmp_filename, filename);
+  filesystem_utils::rename_replace(tmp_filename, filename);
 }
 
 // Update a graph tile with new nodes and directed edges. The rest of the
@@ -568,7 +569,7 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
   in_mem.write(begin, end - begin);
 
   in_mem.finalize();
-  std::filesystem::rename(tmp_filename, filename);
+  filesystem_utils::rename_replace(tmp_filename, filename);
 }
 
 // Gets a reference to the header builder.
