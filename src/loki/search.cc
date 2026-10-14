@@ -60,6 +60,7 @@ bool search_filter(const DirectedEdge* edge,
          (filter.exclude_toll() && edge->toll()) ||
          (filter.exclude_ramp() && (edge->use() == Use::kRamp)) ||
          (filter.exclude_ferry() && (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
+         (filter.exclude_steps() && edge->use() == Use::kSteps) ||
          (filter.exclude_closures() && (costing.flow_mask() & kCurrentFlowMask) &&
           tile->IsClosed(edge)) ||
          (filter.level() != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level()));
@@ -520,7 +521,7 @@ struct bin_handler_t {
         other_path_edge.set_heading(opp_angle);
         other_path_edge.set_side_of_street(flip_side(side));
 
-        auto* bc = path_edge.mutable_bounding_circle();
+        auto* bc = other_path_edge.mutable_bounding_circle();
         bc->mutable_latlng()->set_lng(candidate.bounding_circle.first.lng());
         bc->mutable_latlng()->set_lat(candidate.bounding_circle.first.lat());
         bc->set_radius(candidate.bounding_circle.second);

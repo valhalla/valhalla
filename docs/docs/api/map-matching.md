@@ -140,6 +140,7 @@ node.type
 node.traffic_signal
 node.fork
 node.time_zone
+node.stop_impact
 
 // Other filter keys
 osm_changeset
@@ -272,6 +273,7 @@ Each `end_node` may include:
 | `traffic_signal` | A boolean value indicating whether the node is a traffic signal (`true` or `false`) |
 | `fork` | True if this node is a fork. |
 | `time_zone` | Time zone string for this node. |
+| `stop_impact` | Relative impact (0-7) of the intersection on the transition from this edge onto the next edge of the path. Not present on the last edge. Only returned if `node.stop_impact` is explicitly included via `filters`. |
 | `node_id` | OpenStreetMap node identifier at the end of the edge. Present only if available in the underlying graph data and edge.end_osm_node_id is requested. |
 
 #### Intersecting edge items
