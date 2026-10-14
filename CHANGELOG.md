@@ -14,6 +14,7 @@
    * ADDED: `stop_impact` in `trace_attributes` [#6368](https://github.com/valhalla/valhalla/pull/6368)
    * ADDED: `allow` property for `linear_cost_factors` [#6350](https://github.com/valhalla/valhalla/pull/6350)
    * UPDATED: timezone database to 2026e [#6415](https://github.com/valhalla/valhalla/pull/6415)
+   * ADDED: `mjolnir.tile_url_connect_timeout`, 10 s by default, so a tile server that doesn't answer fails fast [#6422](https://github.com/valhalla/valhalla/issues/6422)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**

@@ -18,12 +18,14 @@ public:
    * @param user_agent  user agent to use by curlers for HTTP requests
    * @param gzipped  whether to request for gzip compressed data
    * @param user_pw  the "user:pwd" for HTTP basic auth
+   * @param connect_timeout  seconds to wait for a connection, 0 for curl's default of 300
    */
   curl_tile_getter_t(const size_t pool_size,
                      const std::string& user_agent,
                      bool gzipped,
-                     const std::string& user_pw)
-      : curlers_(pool_size, user_agent, user_pw), gzipped_(gzipped) {
+                     const std::string& user_pw,
+                     uint32_t connect_timeout = 0)
+      : curlers_(pool_size, user_agent, user_pw, connect_timeout), gzipped_(gzipped) {
   }
 
   GET_response_t get(const std::string& url,
