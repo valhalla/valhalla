@@ -859,6 +859,11 @@ constexpr uint8_t kPredictedFlowMask = 4;
 constexpr uint8_t kCurrentFlowMask = 8;
 constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
+
+// Which restrictions a linear cost feature clears
+constexpr uint32_t kAllowNone = 0;
+constexpr uint32_t kAllowAll = std::numeric_limits<uint32_t>::max();
+
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
 constexpr uint64_t kInvalidSecondsOfWeek =
