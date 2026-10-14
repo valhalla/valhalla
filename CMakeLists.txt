@@ -222,7 +222,7 @@ if (PREFER_EXTERNAL_DEPS)
     endif()
   endif()
   # flatbush
-  find_path(FLATBUSH_INCLUDE_DIRS "flatbush/flatbush.h")
+  find_path(FLATBUSH_INCLUDE_DIRS "flatbush.h")
   if (NOT FLATBUSH_INCLUDE_DIRS)
     message(WARNING "No flatbush found in system libraries, using vendored flatbush...")
   else()
