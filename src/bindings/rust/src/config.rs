@@ -1,0 +1,110 @@
+use std::{os::unix::ffi::OsStrExt, path::Path};
+
+use crate::Error;
+
+#[cxx::bridge]
+pub(crate) mod ffi {
+    unsafe extern "C++" {
+        include!("valhalla/src/bindings/rust/src/config.h");
+
+        #[namespace = "boost::property_tree"]
+        type ptree;
+        fn from_file(path: &[u8]) -> Result<UniquePtr<ptree>>;
+        fn from_json(config: &str) -> Result<UniquePtr<ptree>>;
+
+        fn ptree_new() -> UniquePtr<ptree>;
+        fn ptree_put_str(pt: Pin<&mut ptree>, path: &str, value: &str);
+        fn ptree_put_bool(pt: Pin<&mut ptree>, path: &str, value: bool);
+        fn ptree_put_int(pt: Pin<&mut ptree>, path: &str, value: i64);
+        fn ptree_put_float(pt: Pin<&mut ptree>, path: &str, value: f64);
+        fn ptree_put_str_array(pt: Pin<&mut ptree>, path: &str, values: &[String]);
+        fn ptree_put_int_array(pt: Pin<&mut ptree>, path: &str, values: &[i64]);
+
+        /// Applies the config's `logging` section to Valhalla's logger.
+        fn configure_logging(pt: &ptree);
+    }
+}
+
+/// Wrapper around Valhalla configuration.
+///
+/// The recommended way to create a `Config` is via [`ConfigBuilder`], which
+/// auto-generates all Valhalla defaults at build time:
+///
+/// ```
+/// let config = valhalla::ConfigBuilder {
+///     mjolnir: valhalla::config::Mjolnir {
+///         tile_extract: "path/to/tiles.tar".into(),
+///         traffic_extract: "path/to/traffic.tar".into(),
+///         ..Default::default()
+///     },
+///     ..Default::default()
+/// }
+/// .build();
+/// ```
+///
+/// Alternatively, [`Config::from_file`] and [`Config::from_json`] parse a config created by the
+/// [`valhalla_build_config`] script. Its format may change between Valhalla versions, so a config
+/// made for another version may not work.
+///
+/// [`valhalla_build_config`]: https://github.com/valhalla/valhalla/blob/master/scripts/valhalla_build_config
+pub struct Config(cxx::UniquePtr<ffi::ptree>);
+
+impl Config {
+    /// Reads configuration from the given Valhalla configuration file.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let config = valhalla::Config::from_file("path/to/config.json");
+    /// ```
+    pub fn from_file(path: impl AsRef<Path>) -> Result<Self, Error> {
+        Ok(Config::new(ffi::from_file(
+            path.as_ref().as_os_str().as_bytes(),
+        )?))
+    }
+
+    /// Reads configuration from Valhalla configuration JSON string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let json = r#"{"mjolnir":{"tile_extract":"path/to/tiles.tar","traffic_extract":"path/to/traffic.tar"}}"#;
+    /// let config = valhalla::Config::from_json(&json);
+    /// ```
+    pub fn from_json(config: &str) -> Result<Self, Error> {
+        Ok(Config::new(ffi::from_json(config)?))
+    }
+
+    /// Creates a new Valhalla configuration from path to the tiles tar extract, a shortcut for
+    /// [`ConfigBuilder`] with only `mjolnir.tile_extract` set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let config = valhalla::Config::from_tile_extract("path/to/tiles.tar");
+    /// ```
+    pub fn from_tile_extract(tile_extract: impl AsRef<Path>) -> Result<Self, Error> {
+        let config = ConfigBuilder {
+            mjolnir: Mjolnir {
+                tile_extract: tile_extract.as_ref().display().to_string(),
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+        .build();
+        Ok(config)
+    }
+
+    pub(crate) fn new(pt: cxx::UniquePtr<ffi::ptree>) -> Self {
+        // Valhalla has static global state for logging so this is the earliest we can call it. No-op for subsequent calls.
+        ffi::configure_logging(pt.as_ref().unwrap());
+        Config(pt)
+    }
+
+    pub(crate) fn inner(&self) -> &ffi::ptree {
+        self.0.as_ref().unwrap()
+    }
+}
+
+// ConfigBuilder and all supporting types.
+include!(concat!(env!("OUT_DIR"), "/config_builder.rs"));
