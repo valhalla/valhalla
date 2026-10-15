@@ -230,7 +230,8 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        uint64_t range_offset,
                                        uint64_t range_size,
                                        const std::filesystem::path& id_txt_path,
-                                       std::optional<uint64_t> id_checksum) {
+                                       std::optional<uint64_t> id_checksum,
+                                       long* http_code) {
   // Don't bother with invalid ids
   if (!graphid.is_valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
@@ -275,6 +276,9 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     result = tile_getter->get(tile_url, range_offset, range_size);
   }
 
+  if (http_code) {
+    *http_code = result.http_code_;
+  }
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
     return nullptr;
   }
