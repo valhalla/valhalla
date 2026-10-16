@@ -9,6 +9,7 @@
    * FIXED: missing bounding circle on the opposing edge of a /locate response [#6410](https://github.com/valhalla/valhalla/pull/6410)
    * BREAKING: consistent incident serialization in route and locate [#6405](https://github.com/valhalla/valhalla/pull/6405)
    * FIXED: a `tile_url` download that got no response or a 408, 429, 500, 502, 503 or 504 is retried on the next request instead of never [#6417](https://github.com/valhalla/valhalla/pull/6417)
+   * FIXED: `edge_walk` matching for route shapes with extra live traffic breakpoint points [#6261](https://github.com/valhalla/valhalla/issues/6261)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
