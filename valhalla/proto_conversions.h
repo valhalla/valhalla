@@ -484,6 +484,8 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kLivingStreetUse;
     case baldr::Use::kServiceRoad:
       return TripLeg_Use_kServiceRoadUse;
+    case baldr::Use::kCycleStreet:
+      return TripLeg_Use_kCycleStreetUse;
     case baldr::Use::kCycleway:
       return TripLeg_Use_kCyclewayUse;
     case baldr::Use::kMountainBike:

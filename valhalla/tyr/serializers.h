@@ -247,6 +247,16 @@ get_elevation(const TripLeg& path_leg, const float interval, const float start_d
   return elevation;
 }
 
+/**
+ * Serialize an incident.
+ */
+void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
+                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
+                                 const int begin_shape_index,
+                                 const int end_shape_index,
+                                 const std::string& road_class,
+                                 const std::string& key_prefix);
+
 } // namespace tyr
 } // namespace valhalla
 
@@ -274,13 +284,6 @@ void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
                bool tracepoints = false);
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
-
-void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
-                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
-                                 const int begin_shape_index,
-                                 const int end_shape_index,
-                                 const std::string& road_class,
-                                 const std::string& key_prefix);
 
 } // namespace osrm
 
