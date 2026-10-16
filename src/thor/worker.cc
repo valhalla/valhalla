@@ -364,6 +364,7 @@ void thor_worker_t::cleanup() {
   if (reader->OverCommitted()) {
     reader->Trim();
   }
+  reader->ClearRetryableFailures();
 }
 
 void thor_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
