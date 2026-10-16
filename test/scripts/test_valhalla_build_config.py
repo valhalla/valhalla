@@ -1,4 +1,6 @@
 import unittest
+import json
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import valhalla_build_config
@@ -9,6 +11,63 @@ mock_parser.add_argument = MagicMock()
 
 
 class TestBuildConfig(unittest.TestCase):
+    def test_config_schema_matches_defaults(self):
+        schema = valhalla_build_config.config_schema()
+        schema_path = (
+            Path(__file__).parents[2] / "schema" / "config_schema.json"
+        )
+
+        with schema_path.open(encoding="utf-8") as schema_file:
+            checked_in_schema = json.load(schema_file)
+
+        self.assertEqual(checked_in_schema, schema)
+        self.assertEqual(schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
+        self.assertEqual(
+            schema["properties"]["mjolnir"]["properties"]["tile_dir"]["description"],
+            "Location to read/write tiles to/from",
+        )
+
+    def test_config_schema_validates_default_configuration(self):
+        schema = valhalla_build_config.config_schema()
+
+        def without_optional(value):
+            if isinstance(value, dict):
+                return {
+                    key: without_optional(child)
+                    for key, child in value.items()
+                    if not isinstance(child, valhalla_build_config.Optional)
+                }
+            return value
+
+        def validate(value, definition, path=""):
+            expected_type = definition.get("type")
+            if expected_type == "object":
+                self.assertIsInstance(value, dict, path)
+                for key in definition.get("required", []):
+                    self.assertIn(key, value, path)
+                for key, child in value.items():
+                    self.assertIn(key, definition["properties"], path)
+                    validate(value[key], definition["properties"][key], f"{path}.{key}")
+            elif expected_type == "array":
+                self.assertIsInstance(value, list, path)
+                for item in value:
+                    validate(item, definition.get("items", {}), path)
+            elif expected_type == "boolean":
+                self.assertIsInstance(value, bool, path)
+            elif expected_type == "integer":
+                self.assertIsInstance(value, int, path)
+                self.assertNotIsInstance(value, bool, path)
+            elif expected_type == "number":
+                self.assertIsInstance(value, (int, float), path)
+                self.assertNotIsInstance(value, bool, path)
+            elif expected_type == "string":
+                self.assertIsInstance(value, str, path)
+
+        validate(
+            without_optional(valhalla_build_config.config),
+            schema,
+        )
+
     def test_add_leaf_types(self):
         # test all data types, except for bool & list
         # they have custom lambdas we can't test this way
