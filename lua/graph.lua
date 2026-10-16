@@ -1629,6 +1629,11 @@ function filter_tags_generic(kv)
     use = 0 --general road, no special use
   end
 
+  -- special use for cycle streets
+  if bicycle[kv["cyclestreet"]] == "true" or bicycle[kv["bicycle_road"]] == "true" then
+    use = 12
+  end
+
   -- do not override 'construction' use
   if use ~= 43 and (kv["access"] == "emergency" or kv["emergency"] == "yes") and
       kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
