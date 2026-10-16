@@ -438,6 +438,9 @@ struct graph_parser {
         case Use::kServiceRoad:
           way_.set_use(Use::kServiceRoad);
           break;
+        case Use::kCycleStreet:
+          way_.set_use(Use::kCycleStreet);
+          break;
         case Use::kTrack:
           way_.set_use(Use::kTrack);
           break;
@@ -3049,6 +3052,7 @@ struct graph_parser {
               case Use::kDriveThru:
               case Use::kLivingStreet:
               case Use::kServiceRoad:
+              case Use::kCycleStreet:
                 way_.set_surface(Surface::kPavedSmooth);
                 break;
               case Use::kCycleway:
