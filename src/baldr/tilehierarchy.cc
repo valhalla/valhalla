@@ -1,6 +1,7 @@
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphtileheader.h"
 #include "midgard/vector2.h"
+#include <stdexcept>
 
 #include <cassert>
 
@@ -103,6 +104,27 @@ std::vector<GraphId> TileHierarchy::GetGraphIds(const midgard::AABB2<midgard::Po
     ids.reserve(ids.size() + level_ids.size());
     ids.insert(ids.end(), level_ids.begin(), level_ids.end());
   }
+  return ids;
+}
+
+std::vector<GraphId> TileHierarchy::GetGraphIds(
+    const midgard::AABB2<midgard::PointLL>& bbox,
+    const std::vector<uint32_t>& requested_levels) {
+  if (requested_levels.empty()) {
+    return GetGraphIds(bbox);
+  }
+
+  std::vector<GraphId> ids;
+
+  for (const auto level : requested_levels) {
+    if (level >= levels().size()) {
+      throw std::invalid_argument("Invalid hierarchy level");
+    }
+
+    auto level_ids = GetGraphIds(bbox, static_cast<uint8_t>(level));
+    ids.insert(ids.end(), level_ids.begin(), level_ids.end());
+  }
+
   return ids;
 }
 

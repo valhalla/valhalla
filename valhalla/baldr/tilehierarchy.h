@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace valhalla {
 namespace baldr {
@@ -74,6 +75,16 @@ public:
    * @param bbox  Bounding box of tiles to find.
    */
   static std::vector<GraphId> GetGraphIds(const midgard::AABB2<midgard::PointLL>& bbox);
+
+  /**
+   * Returns GraphIds of tiles intersecting the bounding box at the specified levels.
+   * If levels is empty, all road hierarchy levels are used.
+   * @param bbox Bounding box of tiles to find.
+   * @param levels Hierarchy levels to query.
+   */
+  static std::vector<GraphId> GetGraphIds(
+      const midgard::AABB2<midgard::PointLL>& bbox,
+      const std::vector<uint32_t>& levels);
 
   /**
    * Gets the hierarchy level given the road class.
