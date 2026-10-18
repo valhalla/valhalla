@@ -451,6 +451,7 @@ void loki_worker_t::cleanup() {
   if (reader->OverCommitted()) {
     reader->Trim();
   }
+  reader->ClearRetryableFailures();
   bbox_intersection_.clear();
   search_.clear();
 }
