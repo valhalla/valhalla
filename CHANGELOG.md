@@ -10,6 +10,7 @@
    * BREAKING: consistent incident serialization in route and locate [#6405](https://github.com/valhalla/valhalla/pull/6405)
    * FIXED: a `tile_url` download that got no response or a 408, 429, 500, 502, 503 or 504 is retried on the next request instead of never [#6417](https://github.com/valhalla/valhalla/pull/6417)
    * FIXED: a `tile_url` download that isn't a whole tile is no longer cached and no longer crashes [#6421](https://github.com/valhalla/valhalla/pull/6421)
+   * FIXED: Fix assertion when decrementing end iterator of empty vector [#6388](https://github.com/valhalla/valhalla/pull/6388)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
@@ -80,7 +81,7 @@
    * UPDATED: timezone database to 2026c [#6199](https://github.com/valhalla/valhalla/pull/6199)
    * ADDED: `GraphReader::GetGraphTileHeader` to read just a tile's header without loading the tile [#6200](https://github.com/valhalla/valhalla/pull/6200)
    * FIXED: use the new `GraphReader::GetGraphTileHeader` in `baldr/utils/graph_reader.cc:get_graph_tile_header` to prevent loading entire tiles into RAM [#6200](https://github.com/valhalla/valhalla/pull/6200)
-   * CHANGED: Optionally construct fresh `ReachedMap`s in `CostMatrix::Clear()` [#5978](https://github.com/valhalla/valhalla/pull/5978) 
+   * CHANGED: Optionally construct fresh `ReachedMap`s in `CostMatrix::Clear()` [#5978](https://github.com/valhalla/valhalla/pull/5978)
    * ADDED: classify `surface=laterite` and `surface=clay` as `Surface::kDirt` [#6171](https://github.com/valhalla/valhalla/issues/6171)
    * CHANGED: update doc structure [#6196](https://github.com/valhalla/valhalla/issues/6196)
    * CHANGED: Speedup sequence sort by using PSRS algorithm [#6226](https://github.com/valhalla/valhalla/pull/6226)
