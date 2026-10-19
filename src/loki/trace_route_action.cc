@@ -240,7 +240,9 @@ void loki_worker_t::locations_from_shape(Api& request) {
                                                       : valhalla::Location::kRight);
       }
     }
-  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
+  } catch (const valhalla_exception_t& e) { throw e; } catch (const std::exception&) {
+    throw valhalla_exception_t{171};
+  }
 }
 
 } // namespace loki
