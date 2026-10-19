@@ -775,14 +775,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     log_stage(BuildStage::kBuild);
   }
 
-  // Enrich unnamed pedestrian edges
-  if (start_stage <= BuildStage::kEnrichNames && BuildStage::kEnrichNames <= end_stage) {
-    if (config.get<bool>("mjolnir.enrich_pedestrian_names", false)) {
-      EnrichPedestrianEdgeNames(config);
-      log_stage(BuildStage::kEnrichNames);
-    }
-  }
-
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
@@ -853,6 +845,14 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
     RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
     log_stage(BuildStage::kRestrictions);
+  }
+
+  // Enrich unnamed pedestrian edges
+  if (start_stage <= BuildStage::kEnrichNames && BuildStage::kEnrichNames <= end_stage) {
+    if (config.get<bool>("mjolnir.enrich_pedestrian_names", false)) {
+      EnrichPedestrianEdgeNames(config);
+      log_stage(BuildStage::kEnrichNames);
+    }
   }
 
   // Validate the graph and add information that cannot be added until full graph is formed.
