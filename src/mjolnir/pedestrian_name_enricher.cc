@@ -222,6 +222,22 @@ NamedEdgesTree BuildNamedEdgesTree(GraphReader& reader,
   return tree;
 }
 
+float DirectionDifferencePenalizationFactor(const std::vector<PointLL>& from,
+                                            const std::vector<PointLL>& to) {
+  double heading_from = from.front().Heading(from.back());
+  double heading_to = to.front().Heading(to.back());
+
+  // compute smallest angle between two undirected directions, in [0°, 90°].
+  const double diff = std::abs(heading_from - heading_to);
+  const double diff_0_90 = std::min(std::fmod(diff, 180.), 180. - std::fmod(diff, 180.));
+
+  // a big angle is not relevant
+  if (std::abs(diff_0_90) > 75.)
+    return 100.;
+
+  return 1. + std::tan(diff_0_90 * kRadPerDegD);
+}
+
 // Computes a length-weighted average distance (in meters) from polyline 'from' to a set
 // of polylines 'tos'. Each vertex of 'from' is projected onto the NEAREST of all 'tos',
 // and every segment contributes the mean of its two endpoint distances, weighted by its
@@ -267,7 +283,8 @@ float AverageDistanceToPolylines(const std::vector<PointLL>& from,
       if (to->empty())
         continue;
       vertex_dist[i] =
-          std::min(vertex_dist[i], static_cast<float>(std::get<1>(from[i].ClosestPoint(*to))));
+          std::min(vertex_dist[i], DirectionDifferencePenalizationFactor(from, *to) *
+                                       static_cast<float>(std::get<1>(from[i].ClosestPoint(*to))));
     }
   }
 
