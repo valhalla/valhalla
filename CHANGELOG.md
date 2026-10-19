@@ -8,9 +8,9 @@
    * FIXED: crash and wrong node languages when building tiles from three or more input files [#6402](https://github.com/valhalla/valhalla/pull/6402)
    * FIXED: missing bounding circle on the opposing edge of a /locate response [#6410](https://github.com/valhalla/valhalla/pull/6410)
    * BREAKING: consistent incident serialization in route and locate [#6405](https://github.com/valhalla/valhalla/pull/6405)
-   * FIXED: matrix, isochrone and trace requests report errors like 446 instead of "No suitable edges near location" (171), as route already does [#6416](https://github.com/valhalla/valhalla/pull/6416)
    * FIXED: a `tile_url` download that got no response or a 408, 429, 500, 502, 503 or 504 is retried on the next request instead of never [#6417](https://github.com/valhalla/valhalla/pull/6417)
    * FIXED: a `tile_url` download that isn't a whole tile is no longer cached and no longer crashes [#6421](https://github.com/valhalla/valhalla/pull/6421)
+   * FIXED: matrix, isochrone and trace requests report errors like 446 instead of "No suitable edges near location" (171), as route already does [#6416](https://github.com/valhalla/valhalla/pull/6416)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
