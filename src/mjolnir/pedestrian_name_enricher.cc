@@ -41,6 +41,17 @@ constexpr unsigned int kMaxSamplePointsToTest = 100;
 // Maximum search distance in meters between a named road and a sidewalk
 constexpr unsigned long kMaxEnrichDistance = 50;
 
+// Minimum pedestrian edge length (in meters) to enrich. Very short fragments (e.g. the
+// 1-6 m connectors flanking a pedestrian crossing) sit right next to the perpendicular
+// street they meet, so a single static name is ambiguous and misleading. Leaving them
+// unnamed lets Odin adopt the continuing street's name when it builds the maneuver.
+constexpr uint32_t kMinEnrichLengthMeters = 6;
+
+// Maximum ratio by which the best street must beat the runner-up for the
+// match to be considered unambiguous. If two different streets score almost the same,
+// picking one is a coin-flip and misleading, so we leave the edge unnamed.
+constexpr float kMaxScoreRatio = 0.75f;
+
 // R-tree types for spatial indexing of named edges
 // We use cartesian coordinates instead geographical because it is clearly faster.
 // To approximate coordinates, we just multiply the longitudes by a tile-constant cos(lat).
@@ -310,18 +321,31 @@ std::string FindNearestName(const NamedEdgesTree& tree,
     shapes_by_name[candidate.name].push_back(&candidate.shape);
   }
 
-  // the street name with the best aggregated score wins
-  float best_score = kMaxEnrichDistance;
+  // the street name with the best aggregated score wins; we also track the runner-up
+  // to reject ambiguous matches
+  float best_score = std::numeric_limits<float>::max();
+  float second_score = std::numeric_limits<float>::max();
   std::string best_name;
   for (const auto& [name, shapes] : shapes_by_name) {
     float score = AverageDistanceToPolylines(sampled_pedestrian, shapes);
     if (score < best_score) {
+      second_score = best_score;
       best_score = score;
       best_name = name;
+    } else if (score < second_score) {
+      second_score = score;
     }
   }
 
-  return best_name; // can be empty if all tested streets are > kMaxEnrichDistance
+  // too far: no usable name
+  if (best_score > kMaxEnrichDistance)
+    return {};
+
+  // ambiguous: the runner-up street is almost as close, so naming is misleading
+  if (best_score > kMaxScoreRatio * second_score)
+    return {};
+
+  return best_name; // can be empty if all tested streets are > kMaxEnrichDistance or ambiguous
 }
 
 // Unit pedestrian enrichment of an edge
@@ -356,6 +380,11 @@ PedestrianTargets CollectPedestrianTargets(const graph_tile_ptr& tile) {
 
     // skip shortcuts and edge uses that are not eligible for enrichment
     if (edge->is_shortcut() || !IsPedestrianUseToEnrich(edge->use()))
+      continue;
+
+    // skip very short fragments: their nearest named road is ambiguous, so we leave them unnamed and
+    // let Odin infer the correct name from the continuing edge
+    if (edge->length() <= kMinEnrichLengthMeters)
       continue;
 
     auto edge_info = tile->edgeinfo(edge);
