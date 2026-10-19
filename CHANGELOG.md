@@ -15,6 +15,7 @@
    * ADDED: `stop_impact` in `trace_attributes` [#6368](https://github.com/valhalla/valhalla/pull/6368)
    * ADDED: `allow` property for `linear_cost_factors` [#6350](https://github.com/valhalla/valhalla/pull/6350)
    * UPDATED: timezone database to 2026e [#6415](https://github.com/valhalla/valhalla/pull/6415)
+   * CHANGED: report the offset and the text list length when a stored text offset is out of range [#6289](https://github.com/valhalla/valhalla/pull/6289)
    * ADDED: `kCycleStreet` use [#6407](https://github.com/valhalla/valhalla/pull/6407)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
