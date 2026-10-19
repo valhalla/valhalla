@@ -17,11 +17,8 @@ struct curler_t {
    *
    * @param user_agent User-Agent header
    * @param user_pw  the "user:pwd" for HTTP basic auth
-   * @param connect_timeout  seconds to wait for a connection, 0 for curl's default of 300
    */
-  explicit curler_t(const std::string& user_agent,
-                    const std::string& user_pw,
-                    uint32_t connect_timeout = 0);
+  explicit curler_t(const std::string& user_agent, const std::string& user_pw);
 
   using interrupt_t = tile_getter_t::interrupt_t;
   using HEAD_response_t = tile_getter_t::HEAD_response_t;
@@ -76,12 +73,8 @@ public:
    *
    * @param pool_size   the number of curler instances in the pool
    * @param user_agent  user agent to use by curlers for HTTP requests
-   * @param connect_timeout  seconds to wait for a connection, 0 for curl's default of 300
    */
-  curler_pool_t(const size_t pool_size,
-                const std::string& user_agent,
-                const std::string& user_pw,
-                uint32_t connect_timeout = 0);
+  curler_pool_t(const size_t pool_size, const std::string& user_agent, const std::string& user_pw);
 
   /**
    * @return The size of the pool (never changes from creation)

@@ -515,8 +515,7 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
           std::make_unique<curl_tile_getter_t>(max_concurrent_users_,
                                                pt.get<std::string>("user_agent", ""),
                                                pt.get<bool>("tile_url_gz", false),
-                                               pt.get<std::string>("tile_url_user_pw", ""),
-                                               pt.get<uint32_t>("tile_url_connect_timeout", 10));
+                                               pt.get<std::string>("tile_url_user_pw", ""));
     }
     if (is_tar_url_) {
       load_remote_tar_offsets();

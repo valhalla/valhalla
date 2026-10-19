@@ -61,7 +61,7 @@ namespace valhalla {
 namespace baldr {
 
 struct curler_t::pimpl_t {
-  pimpl_t(const std::string& user_agent, const std::string& user_pw, uint32_t connect_timeout)
+  pimpl_t(const std::string& user_agent, const std::string& user_pw)
       : connection(init_curl()), user_agent(user_agent), user_pw(user_pw) {
     if (connection.get() == nullptr) {
       LOG_ERROR("Failed to created CURL connection");
@@ -78,8 +78,8 @@ struct curler_t::pimpl_t {
                 "Failed to disable peer verification ");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_SSL_VERIFYHOST, 0L),
                 "Failed to disable host verification ");
-    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_CONNECTTIMEOUT,
-                                 static_cast<long>(connect_timeout)),
+    // curl waits 300 s by default, which stalls a request when the tile server is down
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_CONNECTTIMEOUT, 5L),
                 "Failed to set connect timeout ");
   }
 
@@ -181,10 +181,8 @@ struct curler_t::pimpl_t {
   std::string user_pw;
 };
 
-curler_t::curler_t(const std::string& user_agent,
-                   const std::string& user_pw,
-                   uint32_t connect_timeout)
-    : pimpl(new pimpl_t(user_agent, user_pw, connect_timeout)) {
+curler_t::curler_t(const std::string& user_agent, const std::string& user_pw)
+    : pimpl(new pimpl_t(user_agent, user_pw)) {
 }
 
 curler_t::GET_response_t curler_t::get(const std::string& url,
@@ -203,11 +201,10 @@ curler_t::HEAD_response_t curler_t::head(const std::string& url, header_mask_t h
 
 curler_pool_t::curler_pool_t(const size_t pool_size,
                              const std::string& user_agent,
-                             const std::string& user_pw,
-                             uint32_t connect_timeout)
+                             const std::string& user_pw)
     : size_(pool_size) {
   for (size_t i = 0; i < pool_size; ++i) {
-    curlers_.emplace_back(user_agent, user_pw, connect_timeout);
+    curlers_.emplace_back(user_agent, user_pw);
   }
 }
 
@@ -239,7 +236,7 @@ void curler_pool_t::release(curler_t&& curler) {
 // if you dont build with CURL support we always error when you try to use it
 namespace valhalla {
 namespace baldr {
-curler_t::curler_t(const std::string& user_agent, const std::string& user_pw, uint32_t) {
+curler_t::curler_t(const std::string& user_agent, const std::string& user_pw) {
 }
 
 curler_t::GET_response_t curler_t::get(const std::string& url,
@@ -257,10 +254,7 @@ curler_t::HEAD_response_t curler_t::head(const std::string& url,
   throw std::runtime_error("This version of libvalhalla was not built with CURL support");
 }
 
-curler_pool_t::curler_pool_t(const size_t pool_size,
-                             const std::string&,
-                             const std::string& user_pw,
-                             uint32_t)
+curler_pool_t::curler_pool_t(const size_t pool_size, const std::string&, const std::string& user_pw)
     : size_(pool_size) {
 }
 
