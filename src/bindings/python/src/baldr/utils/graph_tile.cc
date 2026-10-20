@@ -8,6 +8,7 @@
 #include "tile_id_utils.h"
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
 namespace nb = nanobind;
@@ -20,6 +21,78 @@ using valhalla::bindings::check_level;
 namespace pyvalhalla::baldr::utils {
 
 void init_graphtile(nb::module_& m) {
+  nb::class_<vm::PointLL>(
+      m, "PointLL",
+      "Longitude, latitude point in degrees (lon first, lat second).")
+      .def(
+          "__init__",
+          [](vm::PointLL* self, double lon, double lat) { new (self) vm::PointLL{lon, lat}; },
+          nb::arg("lon"), nb::arg("lat"),
+          "Constructs a PointLL from longitude and latitude in degrees.")
+      .def("lng", &vm::PointLL::lng, "Gets the longitude in degrees.")
+      .def("lat", &vm::PointLL::lat, "Gets the latitude in degrees.")
+      .def("is_valid", &vm::PointLL::IsValid,
+           "Returns false if the coordinates hold the invalid sentinel.")
+      .def("__repr__", [](const vm::PointLL& p) {
+        return nb::str(("<PointLL(" + std::to_string(p.lng()) + ", " + std::to_string(p.lat()) + ")>").c_str());
+      });
+
+  nb::class_<vm::AABB2<vm::PointLL>>(
+      m, "AABB2",
+      "Axis-aligned bounding box of PointLL coordinates (lon/lat degrees).")
+      .def(
+          "__init__",
+          [](vm::AABB2<vm::PointLL>* self, double minx, double miny, double maxx, double maxy) {
+            new (self) vm::AABB2<vm::PointLL>{minx, miny, maxx, maxy};
+          },
+          nb::arg("minx"), nb::arg("miny"), nb::arg("maxx"), nb::arg("maxy"),
+          "Constructs a bounding box from min/max lon/lat values.")
+      .def(
+          "__init__",
+          [](vm::AABB2<vm::PointLL>* self, const vm::PointLL& minpt,
+             const vm::PointLL& maxpt) { new (self) vm::AABB2<vm::PointLL>{minpt, maxpt}; },
+          nb::arg("minpt"), nb::arg("maxpt"),
+          "Constructs a bounding box from minimum and maximum points.")
+      .def("minx", &vm::AABB2<vm::PointLL>::minx, "Gets the minimum x (lon).")
+      .def("maxx", &vm::AABB2<vm::PointLL>::maxx, "Gets the maximum x (lon).")
+      .def("miny", &vm::AABB2<vm::PointLL>::miny, "Gets the minimum y (lat).")
+      .def("maxy", &vm::AABB2<vm::PointLL>::maxy, "Gets the maximum y (lat).")
+      .def("minpt", &vm::AABB2<vm::PointLL>::minpt, "Gets the minimum point.")
+      .def("maxpt", &vm::AABB2<vm::PointLL>::maxpt, "Gets the maximum point.")
+      .def("__repr__", [](const vm::AABB2<vm::PointLL>& b) {
+        return nb::str(("<AABB2(" + std::to_string(b.minx()) + ", " + std::to_string(b.miny()) +
+                         ", " + std::to_string(b.maxx()) + ", " + std::to_string(b.maxy()) + ")>").c_str());
+      });
+
+  nb::class_<vb::TileHierarchy>(
+      m, "TileHierarchy",
+      "Static hierarchy of routing tiles. Query one level at a time with "
+      "GetGraphIds(bbox, level).")
+      .def_static(
+          "GetGraphId",
+          [](const vm::PointLL& point, const uint32_t level) {
+            check_level(level);
+            return vb::TileHierarchy::GetGraphId(point, static_cast<uint8_t>(level));
+          },
+          nb::arg("point"), nb::arg("level"),
+          "Get the tile GraphId containing the point at a single hierarchy level.\n\n"
+          ":param point: The PointLL location within the tile.\n"
+          ":param level: The hierarchy level.\n"
+          ":returns: GraphId of the tile.\n"
+          ":raises ValueError: When the level is invalid.")
+      .def_static(
+          "GetGraphIds",
+          [](const vm::AABB2<vm::PointLL>& bbox, const uint32_t level) {
+            check_level(level);
+            return vb::TileHierarchy::GetGraphIds(bbox, static_cast<uint8_t>(level));
+          },
+          nb::arg("bbox"), nb::arg("level"), nb::call_guard<nb::gil_scoped_release>(),
+          "Get all tile GraphIds intersecting the bbox at a single hierarchy level.\n\n"
+          ":param bbox: The AABB2 bounding box of tiles to find.\n"
+          ":param level: The hierarchy level.\n"
+          ":returns: The list of tile GraphIds which intersect the bounding box.\n"
+          ":raises ValueError: When the level is invalid.");
+
   m.def(
       "get_tile_base_lon_lat",
       [](const vb::GraphId& graph_id) {
@@ -39,6 +112,7 @@ void init_graphtile(nb::module_& m) {
         if (nb::len(coord) != 2) {
           throw nb::value_error("Invalid coordinate size, must be 2");
         }
+
         check_level(level);
 
         auto x = nb::cast<double>(coord[0]);
@@ -55,53 +129,18 @@ void init_graphtile(nb::module_& m) {
       ":raises ValueError: When the level or coord are invalid.");
 
   m.def(
-      "get_tile_ids_from_bbox",
-      [](const double minx, const double miny, const double maxx, const double maxy,
-         std::vector<uint32_t> levels) {
-        if (!levels.size()) {
-          levels.push_back(0);
-          levels.push_back(1);
-          levels.push_back(2);
-        }
-
-        check_coord(minx, miny, maxx, maxy);
-
-        const vm::AABB2<vm::PointLL> bbox{minx, miny, maxx, maxy};
-        std::vector<vb::GraphId> tile_ids;
-        for (const auto level : levels) {
-          check_level(level);
-          const auto level_tile_ids = vb::TileHierarchy::levels().at(level).tiles.TileList(bbox);
-          tile_ids.reserve(tile_ids.size() + level_tile_ids.size());
-          for (const auto tid : level_tile_ids) {
-            tile_ids.emplace_back(vb::GraphId{static_cast<uint32_t>(tid), level, 0});
-          }
-        }
-
-        return tile_ids;
-      },
-      nb::arg("minx"), nb::arg("miny"), nb::arg("maxx"), nb::arg("maxy"),
-      nb::arg("levels") = std::vector<uint32_t>{}, nb::call_guard<nb::gil_scoped_release>(),
-      "Returns all tiles GraphIds for the specified levels (default: all),\n"
-      "which intersect the bbox.\n\n"
-      ":param minx: The bbox's minimum longitude.\n"
-      ":param miny: The bbox's minimum latitude.\n"
-      ":param maxx: The bbox's maximum longitude.\n"
-      ":param maxy: The bbox's maximum latitude.\n"
-      ":param levels: The hierarchy levels for which to find tiles.\n"
-      ":returns: The list of tile GraphIds which intersect the bounding box\n"
-      ":raises ValueError: When the level(s) or coord are invalid.");
-
-  m.def(
       "get_tile_ids_from_ring",
       [](const std::vector<nb::tuple>& ring_coords,
          std::vector<uint32_t> levels) -> std::vector<vb::GraphId> {
-        // parse binding-specific coordinate tuples into PointLL
+        // Parse binding-specific coordinate tuples into PointLL.
         std::vector<vm::PointLL> ring;
         ring.reserve(ring_coords.size());
+
         for (const auto& coord : ring_coords) {
           if (nb::len(coord) != 2) {
             throw nb::value_error("Each coordinate must have 2 elements (lon, lat)");
           }
+
           auto x = nb::cast<double>(coord[0]);
           auto y = nb::cast<double>(coord[1]);
           check_coord(x, y, x, y);
@@ -122,4 +161,5 @@ void init_graphtile(nb::module_& m) {
       ":returns: The list of tile GraphIds which intersect or are inside the ring.\n"
       ":raises ValueError: When the level(s), coords, or ring size are invalid.");
 }
+
 } // namespace pyvalhalla::baldr::utils

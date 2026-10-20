@@ -1,5 +1,5 @@
 """Valhalla baldr bindings: graph data structures."""
 
-from .._valhalla import GraphId, GraphTileHeader
+from .._valhalla import GraphId, GraphTileHeader, TileHierarchy
 
-__all__ = ["GraphId", "GraphTileHeader"]
+__all__ = ["GraphId", "GraphTileHeader", "TileHierarchy"]

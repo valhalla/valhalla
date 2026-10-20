@@ -102,6 +102,7 @@ set(py_srcs
   valhalla/actor.py
   valhalla/baldr/__init__.py
   valhalla/baldr/utils/__init__.py
+  valhalla/baldr/utils/graph_tile.py
   valhalla/baldr/utils/graph_utils.py
   valhalla/baldr/utils/tar_index.py
   valhalla/midgard/__init__.py

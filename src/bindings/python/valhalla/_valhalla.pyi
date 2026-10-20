@@ -337,6 +337,81 @@ class _GraphUtils:
         :raises RuntimeError: When the tile is not found
         """
 
+class PointLL:
+    """Longitude, latitude point in degrees (lon first, lat second)."""
+
+    def __init__(self, lon: float, lat: float) -> None:
+        """Constructs a PointLL from longitude and latitude in degrees."""
+
+    def lng(self) -> float:
+        """Gets the longitude in degrees."""
+
+    def lat(self) -> float:
+        """Gets the latitude in degrees."""
+
+    def is_valid(self) -> bool:
+        """Returns false if the coordinates hold the invalid sentinel."""
+
+    def __repr__(self) -> str: ...
+
+class AABB2:
+    """Axis-aligned bounding box of PointLL coordinates (lon/lat degrees)."""
+
+    @overload
+    def __init__(self, minx: float, miny: float, maxx: float, maxy: float) -> None:
+        """Constructs a bounding box from min/max lon/lat values."""
+
+    @overload
+    def __init__(self, minpt: PointLL, maxpt: PointLL) -> None:
+        """Constructs a bounding box from minimum and maximum points."""
+
+    def minx(self) -> float:
+        """Gets the minimum x (lon)."""
+
+    def maxx(self) -> float:
+        """Gets the maximum x (lon)."""
+
+    def miny(self) -> float:
+        """Gets the minimum y (lat)."""
+
+    def maxy(self) -> float:
+        """Gets the maximum y (lat)."""
+
+    def minpt(self) -> PointLL:
+        """Gets the minimum point."""
+
+    def maxpt(self) -> PointLL:
+        """Gets the maximum point."""
+
+    def __repr__(self) -> str: ...
+
+class TileHierarchy:
+    """
+    Static hierarchy of routing tiles. Query one level at a time with GetGraphIds(bbox, level).
+    """
+
+    @staticmethod
+    def GetGraphId(point: PointLL, level: int) -> GraphId:
+        """
+        Get the tile GraphId containing the point at a single hierarchy level.
+
+        :param point: The PointLL location within the tile.
+        :param level: The hierarchy level.
+        :returns: GraphId of the tile.
+        :raises ValueError: When the level is invalid.
+        """
+
+    @staticmethod
+    def GetGraphIds(bbox: AABB2, level: int) -> list[GraphId]:
+        """
+        Get all tile GraphIds intersecting the bbox at a single hierarchy level.
+
+        :param bbox: The AABB2 bounding box of tiles to find.
+        :param level: The hierarchy level.
+        :returns: The list of tile GraphIds which intersect the bounding box.
+        :raises ValueError: When the level is invalid.
+        """
+
 def get_tile_base_lon_lat(graph_id: GraphId) -> tuple:
     """
     Get the geographic coordinate of the south-western corner of this graph_id's tile.
@@ -353,20 +428,6 @@ def get_tile_id_from_lon_lat(level: int, coord: tuple) -> GraphId:
     :param coord: The geographic coordinate to intersect with tiles.
     :returns: GraphId of found tile.
     :raises ValueError: When the level or coord are invalid.
-    """
-
-def get_tile_ids_from_bbox(minx: float, miny: float, maxx: float, maxy: float, levels: Sequence[int] = []) -> list[GraphId]:
-    """
-    Returns all tiles GraphIds for the specified levels (default: all),
-    which intersect the bbox.
-
-    :param minx: The bbox's minimum longitude.
-    :param miny: The bbox's minimum latitude.
-    :param maxx: The bbox's maximum longitude.
-    :param maxy: The bbox's maximum latitude.
-    :param levels: The hierarchy levels for which to find tiles.
-    :returns: The list of tile GraphIds which intersect the bounding box
-    :raises ValueError: When the level(s) or coord are invalid.
     """
 
 def get_tile_ids_from_ring(ring_coords: Sequence[tuple], levels: Sequence[int] = []) -> list[GraphId]:
