@@ -22,6 +22,7 @@
 
 #include <ankerl/unordered_dense.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <future>
@@ -49,17 +50,22 @@ namespace {
 constexpr uint32_t kMaxNoThruTries = 256;
 
 // Radius (km) to use for density
-constexpr float kDensityRadius = 2.0f;
+constexpr float kDensityRadius = .4f;
 constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDegreeLat;
+// Radius (km) in which the density of non-rural nodes decides between suburban and urban
+constexpr float kUrbanRadius = 2.f;
+constexpr float kUrbanLatDeg = (kUrbanRadius * kMetersPerKm) / kMetersPerDegreeLat;
+// Street nodes per km^2 within kDensityRadius at which an area stops being rural
+constexpr float kSuburbanNodeDensity = 53.0f;
+// Non-rural street nodes per km^2 within kUrbanRadius at which an area is urban
+constexpr float kUrbanNodeDensity = 120.0f;
 
-struct DensityCellId {
-  // `cell_id` is computed by shifting coordinate values by this amount, meaning that a bigger
-  // level produces bigger cells (as fewer bits remain from coordinate).
-  // - 15: 362m x 181m cell at 60 latitude, approx 7.5k cells to cover single tile
-  // - 14: 181m x 90m cell at 60 latitude, approx 30k cells to cover single tile
-  // - 13: 90m x 45m cell at 60 latitude, approx 120k cells to cover single tile
-  static constexpr uint32_t kGridLevel = 14; // good compromise between performance and accuracy
-
+// `cell_id` is computed by shifting coordinate values by `kGridLevel`, meaning that a bigger
+// level produces bigger cells (as fewer bits remain from coordinate).
+// - 15: 362m x 181m cell at 60 latitude, approx 7.5k cells to cover single tile
+// - 14: 181m x 90m cell at 60 latitude, approx 30k cells to cover single tile
+// - 13: 90m x 45m cell at 60 latitude, approx 120k cells to cover single tile
+template <uint32_t kGridLevel> struct GridCellId {
   // Cell size in degrees
   static constexpr float kSizeDeg = static_cast<float>(1 << kGridLevel) / 1e7;
 
@@ -80,10 +86,10 @@ struct DensityCellId {
   static constexpr uint32_t kComponentBits = sizeof(id_) * 8 / 2;
   static constexpr uint32_t kComponentMask = (1 << kComponentBits) - 1;
 
-  DensityCellId(uint32_t id) : id_(id) {
+  GridCellId(uint32_t id) : id_(id) {
   }
 
-  DensityCellId(const PointLL& ll) {
+  GridCellId(const PointLL& ll) {
     uint32_t x = static_cast<uint32_t>((ll.lng() + 180.0) * 1e7);
     uint32_t y = static_cast<uint32_t>((ll.lat() + 90.0) * 1e7);
 
@@ -94,15 +100,15 @@ struct DensityCellId {
   }
 
   // Neighboring cells ids within the given radius in degrees
-  std::vector<DensityCellId> neighbors(float radius_lng_deg, float radius_lat_deg) const {
-    const int x_neighbors = std::ceil(radius_lng_deg / DensityCellId::kSizeDeg);
-    const int y_neighbors = std::ceil(radius_lat_deg / DensityCellId::kSizeDeg);
+  std::vector<GridCellId> neighbors(float radius_lng_deg, float radius_lat_deg) const {
+    const int x_neighbors = std::ceil(radius_lng_deg / kSizeDeg);
+    const int y_neighbors = std::ceil(radius_lat_deg / kSizeDeg);
 
     // Convert cell_id back to x, y coordinates
     const int x = id_ & kComponentMask;
     const int y = (id_ >> kComponentBits) & kComponentMask;
 
-    std::vector<DensityCellId> neighbors;
+    std::vector<GridCellId> neighbors;
     neighbors.reserve(4 * x_neighbors * y_neighbors);
     for (int nx = -x_neighbors; nx <= x_neighbors; nx++) {
       for (int ny = -y_neighbors; ny <= y_neighbors; ny++) {
@@ -117,21 +123,25 @@ struct DensityCellId {
     return neighbors;
   }
 
-  bool operator==(const DensityCellId& other) const {
+  bool operator==(const GridCellId& other) const {
     return id_ == other.id_;
   }
 
-  bool operator!=(const DensityCellId& other) const {
+  bool operator!=(const GridCellId& other) const {
     return !(*this == other);
   }
 };
+
+using DensityCellId = GridCellId<12>;
+// The urban pass averages over a much larger radius, so coarser cells lose little accuracy
+using UrbanCellId = GridCellId<14>;
 
 using DensityIndex = ankerl::unordered_dense::map<DensityCellId, uint32_t>;
 } // namespace
 
 namespace std {
-template <> struct hash<DensityCellId> {
-  size_t operator()(const DensityCellId& cell) const {
+template <uint32_t kGridLevel> struct hash<GridCellId<kGridLevel>> {
+  size_t operator()(const GridCellId<kGridLevel>& cell) const {
     return cell.id_;
   }
 };
@@ -831,22 +841,20 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   return true;
 }
 
-float NodeRoadlengths(const graph_tile_ptr& tile, const NodeInfo* node) {
-  float roadlengths = 0.0f;
+bool IsStreetNode(const graph_tile_ptr& tile, const NodeInfo* node) {
   const DirectedEdge* directededge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
-    // Exclude non-roads (parking, walkways, ferries, construction, etc.)
-    if (directededge->is_road() || directededge->use() == Use::kRamp ||
-        directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
-        directededge->use() == Use::kEmergencyAccess) {
-      roadlengths += directededge->length();
+    // Exclude non-streets (service roads, parking, walkways, ferries, construction, etc.)
+    if (directededge->use() == Use::kRoad || directededge->use() == Use::kLivingStreet ||
+        directededge->use() == Use::kRamp || directededge->use() == Use::kTurnChannel) {
+      return true;
     }
   }
-  return roadlengths;
+  return false;
 }
 
 /**
- * Build a density index by accumulating edge lengths in each grid cell and convert
+ * Build a density index by counting street nodes in each grid cell and convert
  * to the relative density values (0-15) used by the enhancer.
  * This dramatically speeds up density calculations by pre-computing densities.
  * @param reader        Graph reader
@@ -859,18 +867,28 @@ DensityIndex BuildDensityIndex(GraphReader& reader,
                                const graph_tile_ptr& tile,
                                const TileLevel& tile_level,
                                enhancer_stats& stats) {
-  // To properly count density on the tile edges, the bbox should be extended by the density radius,
+  // To properly count density on the tile edges, the bbox should be extended by both radii,
   // rounded up to the grid cell size to get fully filled edge cells
   const AABB2<PointLL> tile_bbox = tile->BoundingBox();
   const float lat_cos = cosf(kRadPerDeg * tile_bbox.Center().lat());
   const float density_lng_deg = kDensityLatDeg / lat_cos;
-  const AABB2<PointLL> bbox(tile_bbox.minpt().lng() - (density_lng_deg + DensityCellId::kSizeDeg),
-                            tile_bbox.minpt().lat() - (kDensityLatDeg + DensityCellId::kSizeDeg),
-                            tile_bbox.maxpt().lng() + (density_lng_deg + DensityCellId::kSizeDeg),
-                            tile_bbox.maxpt().lat() + (kDensityLatDeg + DensityCellId::kSizeDeg));
+  const float urban_lng_deg = kUrbanLatDeg / lat_cos;
+  // The urban window is centered on a coarse cell and rounded up to whole coarse cells
+  const float urban_margin_deg = DensityCellId::kSizeDeg + 2 * UrbanCellId::kSizeDeg;
+  const float margin_lng_deg = density_lng_deg + urban_lng_deg + urban_margin_deg;
+  const float margin_lat_deg = kDensityLatDeg + kUrbanLatDeg + urban_margin_deg;
+  const AABB2<PointLL> bbox(tile_bbox.minpt().lng() - margin_lng_deg,
+                            tile_bbox.minpt().lat() - margin_lat_deg,
+                            tile_bbox.maxpt().lng() + margin_lng_deg,
+                            tile_bbox.maxpt().lat() + margin_lat_deg);
 
-  // Grid where each cell contains a sum of lengths of all edges of all nodes within the cell
-  ankerl::unordered_dense::map<DensityCellId, float> density_grid;
+  // Grid where each cell contains the number of street nodes within the cell and the coarse cell
+  // it lies in
+  struct DensityCell {
+    uint32_t nodes = 0;
+    UrbanCellId urban_cell = 0u;
+  };
+  ankerl::unordered_dense::map<DensityCellId, DensityCell> density_grid;
   density_grid.reserve(DensityCellId::cover_count(bbox));
 
   // Process current tile separately from neighbors to always have a cell for each node in the tile
@@ -879,7 +897,10 @@ DensityIndex BuildDensityIndex(GraphReader& reader,
     const auto start_node = tile->node(0);
     const auto end_node = start_node + tile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
-      density_grid[node->latlng(base_ll)] += NodeRoadlengths(tile, node);
+      const PointLL node_ll = node->latlng(base_ll);
+      auto& cell = density_grid[node_ll];
+      cell.nodes += IsStreetNode(tile, node);
+      cell.urban_cell = node_ll;
     }
   }
 
@@ -901,7 +922,9 @@ DensityIndex BuildDensityIndex(GraphReader& reader,
     for (auto node = start_node; node < end_node; ++node) {
       const PointLL node_ll = node->latlng(base_ll);
       if (bbox.Contains(node_ll)) {
-        density_grid[node_ll] += NodeRoadlengths(newtile, node);
+        auto& cell = density_grid[node_ll];
+        cell.nodes += IsStreetNode(newtile, node);
+        cell.urban_cell = node_ll;
       }
     }
   }
@@ -911,32 +934,73 @@ DensityIndex BuildDensityIndex(GraphReader& reader,
   const float cell_size_km = DensityCellId::kSizeDeg * kMetersPerDegreeLat / kMetersPerKm;
   const float cell_area = cell_size_km * cell_size_km * lat_cos;
 
-  // Now build the density index where each cell contains density value for nodes in that cell
+  // Now build the density index where each cell contains density value for nodes in that cell,
+  // and sum up the street nodes of non-rural cells per coarse cell
   DensityIndex density_index;
   density_index.reserve(density_grid.size());
-  for (const auto& [cell_id, _] : density_grid) {
-    float roadlengths = 0.0f;
+  ankerl::unordered_dense::map<UrbanCellId, uint32_t> urban_grid;
+  for (const auto& [cell_id, cell] : density_grid) {
+    uint32_t nodes = 0;
 
     const auto neighbors = cell_id.neighbors(density_lng_deg, kDensityLatDeg);
     for (const auto& neighbor : neighbors) {
       if (auto it = density_grid.find(neighbor); it != density_grid.end()) {
-        roadlengths += it->second;
+        nodes += it->second.nodes;
       }
     }
 
-    // Form density measure as km/km^2. Convert roadlengths to km and divide by 2
-    // (since 2 directed edges per edge)
-    float density = (roadlengths * 0.0005f) / (cell_area * neighbors.size());
+    // Form density measure as nodes/km^2
+    float density = nodes / (cell_area * neighbors.size());
     if (density > stats.max_density) {
       stats.max_density = density;
     }
 
-    // Convert to relative density (0-15)
-    const uint32_t relative_value = std::round(density * 0.7f);
+    // Convert to relative density (0-15), linear so that suburban starts at kSuburbanNodeDensity
+    const uint32_t relative_value =
+        std::round(density * (kMinSuburbanDensity + 0.5f) / kSuburbanNodeDensity);
     density_index[cell_id] = std::min(relative_value, 15u);
+    if (relative_value > kMinSuburbanDensity) {
+      urban_grid[cell.urban_cell] += cell.nodes;
+    }
   }
 
-  return density_index;
+  const float urban_cell_size_km = UrbanCellId::kSizeDeg * kMetersPerDegreeLat / kMetersPerKm;
+  const float urban_cell_area = urban_cell_size_km * urban_cell_size_km * lat_cos;
+
+  // Non-rural cells are urban if enough non-rural nodes surround them within kUrbanRadius, so small
+  // towns stay suburban. Either way a cell keeps its local level within its band
+  DensityIndex urban_index;
+  // Urban decision per coarse cell, shared by all cells within it
+  ankerl::unordered_dense::map<UrbanCellId, bool> is_urban;
+  const PointLL base_ll = tile->header()->base_ll();
+  const auto start_node = tile->node(0);
+  const auto end_node = start_node + tile->header()->nodecount();
+  for (auto node = start_node; node < end_node; ++node) {
+    const PointLL node_ll = node->latlng(base_ll);
+    const DensityCellId cell_id(node_ll);
+    const uint32_t local = density_index[cell_id];
+    auto [it, inserted] = urban_index.try_emplace(cell_id, local);
+    if (!inserted || local <= kMinSuburbanDensity) {
+      continue;
+    }
+
+    const UrbanCellId urban_cell(node_ll);
+    auto [urban, new_urban_cell] = is_urban.try_emplace(urban_cell, false);
+    if (new_urban_cell) {
+      uint32_t nodes = 0;
+      const auto neighbors = urban_cell.neighbors(urban_lng_deg, kUrbanLatDeg);
+      for (const auto& neighbor : neighbors) {
+        if (auto n = urban_grid.find(neighbor); n != urban_grid.end()) {
+          nodes += n->second;
+        }
+      }
+      urban->second = nodes / (urban_cell_area * neighbors.size()) >= kUrbanNodeDensity;
+    }
+    it->second = urban->second ? std::max(local, kMaxSuburbanDensity + 1)
+                               : std::min(local, kMaxSuburbanDensity);
+  }
+
+  return urban_index;
 }
 
 bool ConsistentNames(const std::string& country_code,
