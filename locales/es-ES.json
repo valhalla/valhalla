@@ -87,6 +87,12 @@
         "0": "<PREVIOUS_STREET_NAMES> se convierte en <STREET_NAMES>."
       }
     },
+    "bike_share_verbal": {
+      "phrases": {
+        "0": "Alquile una bicicleta en la estación de bicicletas compartidas.",
+        "1": "Devuelva la bicicleta a la estación de bicicletas compartidas."
+      }
+    },
     "continue": {
       "phrases": {
         "0": "Continúe.",
