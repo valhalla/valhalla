@@ -9,6 +9,8 @@ There are many ways to make meaningful contributions to the project:
 - contribute feature implementations, for larger features/changes its best to **open an issue asking for feedback before starting implementation**
 - improve translations by editing the [gettext `.po` files](https://github.com/valhalla/valhalla/tree/master/locales), e.g. with [Poedit](https://poedit.net/)
 
+We don't assign issues to people. If you want to work on one, just open a PR, no need to ask first.
+
 ## Generative AI usage
 
 While we absolutely accept AI usage for Valhalla (and its related projects), we require the following guidelines to be followed:
