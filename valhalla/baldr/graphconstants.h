@@ -317,6 +317,7 @@ enum class Use : uint8_t {
                         // connected at one node to another edge.
   kLivingStreet = 10,   // Streets with preference towards bicyclists and pedestrians
   kServiceRoad = 11,    // Generic service road (not driveway, alley, parking aisle, etc.)
+  kCycleStreet = 12,    // Road with priority for cyclists
 
   // Bicycle specific uses
   kCycleway = 20,     // Dedicated bicycle path
@@ -372,6 +373,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kCuldesac), "culdesac"},
       {static_cast<uint8_t>(Use::kLivingStreet), "living_street"},
       {static_cast<uint8_t>(Use::kServiceRoad), "service_road"},
+      {static_cast<uint8_t>(Use::kCycleStreet), "cycle_street"},
       {static_cast<uint8_t>(Use::kCycleway), "cycleway"},
       {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
       {static_cast<uint8_t>(Use::kSidewalk), "sidewalk"},
