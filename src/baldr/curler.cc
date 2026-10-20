@@ -78,6 +78,9 @@ struct curler_t::pimpl_t {
                 "Failed to disable peer verification ");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_SSL_VERIFYHOST, 0L),
                 "Failed to disable host verification ");
+    // curl waits 300 s by default, which stalls a request when the tile server is down
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_CONNECTTIMEOUT, 5L),
+                "Failed to set connect timeout ");
   }
 
   HEAD_response_t head(const std::string& url, header_mask_t header_mask) {
