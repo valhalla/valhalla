@@ -81,14 +81,16 @@ TEST_F(incident_loading, update_tile) {
   ASSERT_TRUE(testable_singleton::update_tile(state, baldr::GraphId(0), {}))
       << " unable to update nonexistent tile";
   ASSERT_TRUE(state->cache.count(baldr::GraphId(0))) << " cannot find new tile in cache";
-  ASSERT_TRUE(state->cache.find(baldr::GraphId(0))->second == nullptr) << " tile should be null";
+  ASSERT_TRUE(state->cache.find(baldr::GraphId(0))->second.load(std::memory_order_acquire) == nullptr)
+      << " tile should be null";
 
   // slot exists already
   std::shared_ptr<const IncidentsTile> tile{new IncidentsTile()};
   ASSERT_TRUE(testable_singleton::update_tile(state, baldr::GraphId(0), std::move(tile)))
       << " unable to update existing tile";
   ASSERT_TRUE(state->cache.count(baldr::GraphId(0))) << " cannot find updated tile in cache";
-  ASSERT_TRUE(state->cache.find(baldr::GraphId(0))->second != nullptr) << " tile should be non null";
+  ASSERT_TRUE(state->cache.find(baldr::GraphId(0))->second.load(std::memory_order_acquire) != nullptr)
+      << " tile should be non null";
 
   // unexpected tile
   state->lock_free.store(true);
@@ -101,7 +103,8 @@ TEST_F(incident_loading, update_tile) {
   ASSERT_TRUE(testable_singleton::update_tile(state, baldr::GraphId(0), {}, &hint))
       << " unable to update existing tile";
   ASSERT_TRUE(state->cache.count(baldr::GraphId(0))) << " cannot find new tile in cache";
-  ASSERT_TRUE(state->cache.find(baldr::GraphId(0))->second == nullptr) << " tile should be null";
+  ASSERT_TRUE(state->cache.find(baldr::GraphId(0))->second.load(std::memory_order_acquire) == nullptr)
+      << " tile should be null";
 }
 
 TEST_F(incident_loading, disabled) {
@@ -187,8 +190,10 @@ TEST_F(incident_loading, watch) {
           // one is loaded
           EXPECT_EQ(state->cache.size(), tileset.empty() ? 1 : 2) << " wrong number of cache entries";
           EXPECT_EQ(state->cache.count(snake_eyes), 1) << " there should be one tile in here now";
-          EXPECT_TRUE(state->cache[snake_eyes]) << " the tile pointer should be non null";
-          EXPECT_TRUE(test::pbf_equals(snake_eyes_tile, *state->cache[snake_eyes]))
+          EXPECT_TRUE(state->cache[snake_eyes].load(std::memory_order_acquire))
+              << " the tile pointer should be non null";
+          EXPECT_TRUE(test::pbf_equals(snake_eyes_tile,
+                                       *state->cache[snake_eyes].load(std::memory_order_acquire)))
               << " the tile should be equal to the one written";
           // update it
           auto* loc = snake_eyes_tile.mutable_locations()->Add();
@@ -216,8 +221,10 @@ TEST_F(incident_loading, watch) {
           // one is updated
           EXPECT_EQ(state->cache.size(), tileset.empty() ? 1 : 2) << " wrong number of cache entries";
           EXPECT_EQ(state->cache.count(snake_eyes), 1) << " should still be in there";
-          EXPECT_TRUE(state->cache[snake_eyes]) << " should still be not null";
-          EXPECT_TRUE(test::pbf_equals(snake_eyes_tile, *state->cache[snake_eyes]))
+          EXPECT_TRUE(state->cache[snake_eyes].load(std::memory_order_acquire))
+              << " should still be not null";
+          EXPECT_TRUE(test::pbf_equals(snake_eyes_tile,
+                                       *state->cache[snake_eyes].load(std::memory_order_acquire)))
               << " should have all the changes that were made";
           // remove one
           EXPECT_TRUE(std::filesystem::remove(snake_eyes_name)) << " couldnt remove file";
@@ -229,7 +236,8 @@ TEST_F(incident_loading, watch) {
           // one is null
           EXPECT_EQ(state->cache.size(), tileset.empty() ? 1 : 2) << " wrong number of cache entries";
           EXPECT_EQ(state->cache.count(snake_eyes), 1) << " should still be in there";
-          EXPECT_FALSE(state->cache[snake_eyes]) << " should be null now";
+          EXPECT_FALSE(state->cache[snake_eyes].load(std::memory_order_acquire))
+              << " should be null now";
           // add two back
           {
             std::ofstream f(snake_eyes_name, std::ofstream::out | std::ofstream::binary);
@@ -263,12 +271,16 @@ TEST_F(incident_loading, watch) {
           // two are updated
           EXPECT_EQ(state->cache.size(), 2) << " wrong number of cache entries";
           EXPECT_EQ(state->cache.count(snake_eyes), 1) << " both should be there";
-          EXPECT_TRUE(state->cache[snake_eyes]) << " should be not null";
-          EXPECT_TRUE(test::pbf_equals(snake_eyes_tile, *state->cache[snake_eyes]))
+          EXPECT_TRUE(state->cache[snake_eyes].load(std::memory_order_acquire))
+              << " should be not null";
+          EXPECT_TRUE(test::pbf_equals(snake_eyes_tile,
+                                       *state->cache[snake_eyes].load(std::memory_order_acquire)))
               << " should be equivalent";
           EXPECT_EQ(state->cache.count(box_cars), 1) << " both should be there";
-          EXPECT_TRUE(state->cache[box_cars]) << " should be not null";
-          EXPECT_TRUE(test::pbf_equals(box_cars_tile, *state->cache[box_cars]))
+          EXPECT_TRUE(state->cache[box_cars].load(std::memory_order_acquire))
+              << " should be not null";
+          EXPECT_TRUE(test::pbf_equals(box_cars_tile,
+                                       *state->cache[box_cars].load(std::memory_order_acquire)))
               << " should be equivalent";
           // remove one
           EXPECT_TRUE(std::filesystem::remove(snake_eyes_name)) << " couldnt remove file";
@@ -280,10 +292,13 @@ TEST_F(incident_loading, watch) {
           // one is null
           EXPECT_EQ(state->cache.size(), 2) << " wrong number of cache entries";
           EXPECT_EQ(state->cache.count(snake_eyes), 1) << " should still be in there";
-          EXPECT_FALSE(state->cache[snake_eyes]) << " should be null now";
+          EXPECT_FALSE(state->cache[snake_eyes].load(std::memory_order_acquire))
+              << " should be null now";
           EXPECT_EQ(state->cache.count(box_cars), 1) << " should also be this one";
-          EXPECT_TRUE(state->cache[box_cars]) << " should be not null";
-          EXPECT_TRUE(test::pbf_equals(box_cars_tile, *state->cache[box_cars]))
+          EXPECT_TRUE(state->cache[box_cars].load(std::memory_order_acquire))
+              << " should be not null";
+          EXPECT_TRUE(test::pbf_equals(box_cars_tile,
+                                       *state->cache[box_cars].load(std::memory_order_acquire)))
               << " should be equivalent";
           // quit before next update; the dir is reset below, after the log mapping closes
           return true;
@@ -296,10 +311,12 @@ TEST_F(incident_loading, watch) {
     // by the end of the dance above we should have 1 loaded and 1 null
     EXPECT_EQ(state->cache.size(), 2) << " wrong number of cache entries";
     EXPECT_EQ(state->cache.count(snake_eyes), 1) << " should still be in there";
-    EXPECT_FALSE(state->cache[snake_eyes]) << " should be null now";
+    EXPECT_FALSE(state->cache[snake_eyes].load(std::memory_order_acquire)) << " should be null now";
     EXPECT_EQ(state->cache.count(box_cars), 1) << " should also be this one";
-    EXPECT_TRUE(state->cache[box_cars]) << " should be not null";
-    EXPECT_TRUE(test::pbf_equals(box_cars_tile, *state->cache[box_cars])) << " should be equivalent";
+    EXPECT_TRUE(state->cache[box_cars].load(std::memory_order_acquire)) << " should be not null";
+    EXPECT_TRUE(
+        test::pbf_equals(box_cars_tile, *state->cache[box_cars].load(std::memory_order_acquire)))
+        << " should be equivalent";
   }
 }
 
