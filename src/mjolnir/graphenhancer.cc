@@ -1010,9 +1010,10 @@ DensityIndex BuildDensityIndex(GraphReader& reader,
       urban->second = nodes / (urban_cell_area * neighbors.size()) >= kUrbanNodeDensity;
     }
     const uint32_t band_start = urban->second ? kMaxSuburbanDensity + 1 : kMinSuburbanDensity + 1;
-    const uint32_t band_width = urban->second ? kMaxDensity - band_start : kMaxSuburbanDensity - band_start;
-    it->second = band_start + std::round(LogPosition(density, kSuburbanNodeDensity, kMaxNodeDensity) *
-                                         band_width);
+    const uint32_t band_width =
+        urban->second ? kMaxDensity - band_start : kMaxSuburbanDensity - band_start;
+    it->second = band_start +
+                 std::round(LogPosition(density, kSuburbanNodeDensity, kMaxNodeDensity) * band_width);
   }
 
   return urban_index;
