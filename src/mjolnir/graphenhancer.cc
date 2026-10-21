@@ -25,9 +25,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <filesystem>
-#include <format>
-#include <fstream>
 #include <functional>
 #include <future>
 #include <limits>
@@ -61,14 +58,13 @@ constexpr float kUrbanRadius = 2.f;
 constexpr float kUrbanLatDeg = (kUrbanRadius * kMetersPerKm) / kMetersPerDegreeLat;
 // Street nodes per km^2 within kDensityRadius at which an area stops being rural
 constexpr float kSuburbanNodeDensity = 53.0f;
-// Street nodes per km^2 within kDensityRadius at the top of the suburban and urban bands
+// Street nodes per km^2 within kDensityRadius at the bottom of the rural and the top of the
+// suburban and urban bands; levels step geometrically in between
+constexpr float kMinNodeDensity = 1.0f;
 constexpr float kMaxNodeDensity = 1300.0f;
-// Rural levels rise exponentially towards kSuburbanNodeDensity; higher is flatter at low density
-constexpr float kRuralSteepness = 3.0f;
-// Suburban levels follow a sigmoid on log density, centered on the typical suburban density
-// (nodes/km^2) with this spread in natural-log units
-constexpr float kSuburbanCenter = 120.0f;
-constexpr float kSuburbanSpread = 0.5f;
+// First relative density level of suburban and of urban areas
+constexpr uint32_t kSuburbanLevel = 4;
+constexpr uint32_t kUrbanLevel = 9;
 // Non-rural street nodes per km^2 within kUrbanRadius at which an area is urban
 constexpr float kUrbanNodeDensity = 120.0f;
 
@@ -858,18 +854,6 @@ float LogPosition(float density, float lo, float hi) {
   return density > lo ? std::min(std::log(density / lo) / std::log(hi / lo), 1.0f) : 0.0f;
 }
 
-// Exponential position of density in [0, hi]; steepness > 0 puts more levels near hi
-float ExpPosition(float density, float hi, float steepness) {
-  const float x = std::min(density / hi, 1.0f);
-  return (std::exp(steepness * x) - 1.0f) / (std::exp(steepness) - 1.0f);
-}
-
-// Logistic on log density, rescaled so lo maps to 0 and hi to 1
-float SigmoidPosition(float density, float lo, float hi, float center, float spread) {
-  const auto s = [&](float d) { return 1.0f / (1.0f + std::exp(-std::log(d / center) / spread)); };
-  return std::clamp((s(std::max(density, lo)) - s(lo)) / (s(hi) - s(lo)), 0.0f, 1.0f);
-}
-
 bool IsStreetNode(const graph_tile_ptr& tile, const NodeInfo* node) {
   const DirectedEdge* directededge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
@@ -881,11 +865,6 @@ bool IsStreetNode(const graph_tile_ptr& tile, const NodeInfo* node) {
   }
   return false;
 }
-
-// TODO: remove, debug output of the raw node density of every node
-std::mutex debug_density_lock;
-std::ofstream debug_density_file;
-bool debug_density_first = true;
 
 /**
  * Build a density index by counting street nodes in each grid cell and convert
@@ -1030,36 +1009,16 @@ DensityIndex BuildDensityIndex(GraphReader& reader,
 
     const float density = local_density[cell_id];
     if (density < kSuburbanNodeDensity) {
-      it->second = std::round(ExpPosition(density, kSuburbanNodeDensity, kRuralSteepness) *
-                              kMinSuburbanDensity);
+      it->second = std::round(LogPosition(density, kMinNodeDensity, kSuburbanNodeDensity) *
+                              (kSuburbanLevel - 1));
       continue;
     }
 
     const bool urban = urban_density(UrbanCellId(node_ll)) >= kUrbanNodeDensity;
-    const uint32_t band_start = urban ? kMaxSuburbanDensity + 1 : kMinSuburbanDensity + 1;
-    const uint32_t band_width = urban ? kMaxDensity - band_start : kMaxSuburbanDensity - band_start;
-    const float position =
-        urban ? LogPosition(density, kSuburbanNodeDensity, kMaxNodeDensity)
-              : SigmoidPosition(density, kSuburbanNodeDensity, kMaxNodeDensity, kSuburbanCenter,
-                                kSuburbanSpread);
-    it->second = band_start + std::round(position * band_width);
-  }
-
-  // TODO: remove, debug output of the raw node density of every node
-  std::string features;
-  for (auto node = start_node; node < end_node; ++node) {
-    const PointLL node_ll = node->latlng(base_ll);
-    const DensityCellId cell_id(node_ll);
-    features += std::format(",\n{{\"type\":\"Feature\",\"geometry\":{{\"type\":\"Point\","
-                            "\"coordinates\":[{:.7f},{:.7f}]}},\"properties\":{{\"density\":{:.2f},"
-                            "\"urban_density\":{:.2f},\"level\":{}}}}}",
-                            node_ll.lng(), node_ll.lat(), local_density[cell_id],
-                            urban_density(UrbanCellId(node_ll)), urban_index[cell_id]);
-  }
-  if (!features.empty()) {
-    std::lock_guard<std::mutex> guard(debug_density_lock);
-    debug_density_file << (debug_density_first ? features.substr(2) : features);
-    debug_density_first = false;
+    const uint32_t band_start = urban ? kUrbanLevel : kSuburbanLevel;
+    const uint32_t band_width = urban ? kMaxDensity - kUrbanLevel : kUrbanLevel - 1 - kSuburbanLevel;
+    it->second = band_start +
+                 std::round(LogPosition(density, kSuburbanNodeDensity, kMaxNodeDensity) * band_width);
   }
 
   return urban_index;
@@ -1557,10 +1516,6 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // An atomic object we can use to do the synchronization
   std::mutex lock;
 
-  // TODO: remove, debug output of the raw node density of every node
-  debug_density_file.open(std::filesystem::path(reader.tile_dir()) / "node_density.geojson");
-  debug_density_file << "{\"type\":\"FeatureCollection\",\"features\":[\n";
-
   // Start the threads
   for (auto& thread : threads) {
     results.emplace_back();
@@ -1573,8 +1528,6 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   for (auto& thread : threads) {
     thread->join();
   }
-  debug_density_file << "\n]}\n";
-  debug_density_file.close();
 
   // Check all of the outcomes, to see about maximum density (km/km2)
   enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {0}};
