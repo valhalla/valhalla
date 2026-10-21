@@ -60,8 +60,8 @@ constexpr float kUrbanLatDeg = (kUrbanRadius * kMetersPerKm) / kMetersPerDegreeL
 constexpr float kSuburbanNodeDensity = 53.0f;
 // Street nodes per km^2 within kDensityRadius at the bottom of the rural and the top of the
 // suburban and urban bands; levels step geometrically in between
-constexpr float kMinNodeDensity = 4.0f;
-constexpr float kMaxNodeDensity = 400.0f;
+constexpr float kMinNodeDensity = 1.0f;
+constexpr float kMaxNodeDensity = 3200.0f;
 // Non-rural street nodes per km^2 within kUrbanRadius at which an area is urban
 constexpr float kUrbanNodeDensity = 120.0f;
 
