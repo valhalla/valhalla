@@ -198,6 +198,12 @@ mod ffi {
         name: String,
         /// Offset in seconds from UTC for the timezone.
         offset_seconds: i32,
+        /// Start of the range where this info holds, unix seconds UTC, inclusive.
+        /// 0 if the range starts before the Unix epoch.
+        valid_from: u64,
+        /// End of the range where this info holds, unix seconds UTC, exclusive.
+        /// Year 32767 if no later transition is known.
+        valid_until: u64,
     }
 
     /// An interface for reading and writing live traffic information for the corresponding graph tile.

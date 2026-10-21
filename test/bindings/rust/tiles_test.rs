@@ -516,6 +516,34 @@ fn tz_info() {
     let tz = TimeZoneInfo::from_id(94, unix_timestamp).unwrap();
     assert_eq!(tz.name, "America/Los_Angeles");
     assert_eq!(tz.offset_seconds, -28800); // UTC-8
+
+    // Validity range ends at the next DST transition
+    let unix_timestamp = 1792454400; // 2026-10-20T00:00:00Z
+    let tz = TimeZoneInfo::from_id(297, unix_timestamp).unwrap();
+    assert_eq!(tz.name, "Europe/Berlin");
+    assert_eq!(tz.offset_seconds, 7200); // CEST
+    assert_eq!(tz.valid_from, 1774746000); // 2026-03-29T01:00:00Z
+    assert_eq!(tz.valid_until, 1792890000); // 2026-10-25T01:00:00Z
+
+    let before = TimeZoneInfo::from_id(297, tz.valid_until - 1).unwrap();
+    let after = TimeZoneInfo::from_id(297, tz.valid_until).unwrap();
+    assert_eq!(before.offset_seconds, 7200);
+    assert_eq!(after.offset_seconds, 3600); // CET
+    assert_eq!(after.valid_from, tz.valid_until);
+
+    // No transitions at all
+    let tz = TimeZoneInfo::from_id(291, unix_timestamp).unwrap();
+    assert_eq!(tz.name, "Etc/UTC");
+    assert_eq!(tz.offset_seconds, 0);
+    assert_eq!(tz.valid_from, 0); // clamped from -32767-01-01T00:00:00Z
+    assert_eq!(tz.valid_until, 971890876800); // 32767-12-31T00:00:00Z
+
+    // Last transition in 1945, none after
+    let tz = TimeZoneInfo::from_id(198, unix_timestamp).unwrap();
+    assert_eq!(tz.name, "Asia/Kolkata");
+    assert_eq!(tz.offset_seconds, 19800); // UTC+5:30
+    assert_eq!(tz.valid_from, 0); // clamped from 1945-10-14T17:30:00Z
+    assert_eq!(tz.valid_until, 971890876800); // 32767-12-31T00:00:00Z
 }
 
 #[test]

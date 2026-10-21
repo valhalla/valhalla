@@ -194,6 +194,9 @@ TimeZoneInfo from_id(uint32_t id, uint64_t unix_timestamp) {
   return TimeZoneInfo{
       .name = tz->name(),
       .offset_seconds = static_cast<int32_t>(tz_info.offset.count()),
+      .valid_from =
+          static_cast<uint64_t>(std::max<int64_t>(tz_info.begin.time_since_epoch().count(), 0)),
+      .valid_until = static_cast<uint64_t>(tz_info.end.time_since_epoch().count()),
   };
 }
 
