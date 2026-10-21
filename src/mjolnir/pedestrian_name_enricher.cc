@@ -60,8 +60,8 @@ using rtree_point_t = boost::geometry::model::point<float, 2, boost::geometry::c
 using rtree_value_t = std::pair<rtree_point_t, uint32_t>; // point + candidate_idx
 using rtree_t = boost::geometry::index::rtree<rtree_value_t, boost::geometry::index::rstar<16>>;
 
-// Returns true if the edge `use` is a road-specific type
-bool IsRoadUse(Use use) {
+// Returns true if the edge `use` is a candidate to give its name
+bool IsCandidateUseForName(Use use) {
   switch (use) {
     case Use::kRoad:
     case Use::kRamp:
@@ -75,6 +75,9 @@ bool IsRoadUse(Use use) {
     case Use::kCuldesac:
     case Use::kLivingStreet:
     case Use::kServiceRoad:
+    case Use::kFootway:
+    case Use::kPedestrian:
+    case Use::kPath:
       return true;
     default:
       return false;
@@ -155,8 +158,8 @@ NamedEdgesTree BuildNamedEdgesTree(GraphReader& reader,
       if (candidate_directed_edge->is_shortcut())
         continue;
 
-      // only process road edges
-      if (!IsRoadUse(candidate_directed_edge->use()))
+      // only process candidate uses
+      if (!IsCandidateUseForName(candidate_directed_edge->use()))
         continue;
 
       EdgeInfo candidate_edgeinfo = candidate_tile->edgeinfo(candidate_directed_edge);
