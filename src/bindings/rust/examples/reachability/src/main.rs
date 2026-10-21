@@ -1,0 +1,161 @@
+//! Checks whether a coordinate is stuck behind a toll and how far the nearest highway is. The
+//! coordinate is snapped with `Actor::locate` like the router does, then the searches run over the
+//! raw graph. They label nodes, not edges, so turn restrictions are not honored.
+//!
+//! Run from the `examples/` workspace, against the repo's Utrecht tileset (`utrecht_tiles` CMake target):
+//!   cargo run -p reachability -- --tiles ../../../../build/test/data/utrecht_tiles/tiles.tar 52.09068,5.12136
+//!       # Domplein: nearest highway about 2km away
+
+use std::path::PathBuf;
+
+use anyhow::{Context, Result, anyhow};
+use clap::Parser;
+use serde::Serialize;
+use valhalla::{Access, Actor, DirectedEdge, GraphReader, LatLon, NodeInfo, RoadClass};
+
+use crate::dijkstra::{CachedGraphReader, SearchResult};
+
+mod bitset;
+mod dijkstra;
+mod locate;
+mod priority_queue;
+
+/// Toll-free distance *along the network* required to not count as a toll island.
+const TOLL_ZONE_REACHABILITY: u32 = 1500;
+/// How far to look for a highway before giving up.
+const HIGHWAY_SEARCH_RADIUS: u32 = 10_000;
+
+#[derive(Parser)]
+#[command(about = "Toll-island and nearest-highway analysis over the Valhalla road graph")]
+struct Cli {
+    /// Coordinate to analyze, as `lat,lon`.
+    #[arg(value_parser = parse_lat_lon)]
+    coordinate: LatLon,
+    /// Path to the Valhalla tiles.tar.
+    #[arg(long)]
+    tiles: PathBuf,
+    /// How far `/locate` may look for a road to snap onto, in meters.
+    #[arg(long, default_value_t = 100)]
+    locate_radius: u32,
+}
+
+fn parse_lat_lon(s: &str) -> Result<LatLon> {
+    let (lat, lon) = s
+        .split_once(',')
+        .ok_or_else(|| anyhow!("expected `lat,lon`, got `{s}`"))?;
+    Ok(LatLon(
+        lat.trim().parse().context("bad latitude")?,
+        lon.trim().parse().context("bad longitude")?,
+    ))
+}
+
+/// What the analysis concluded about a coordinate.
+#[derive(Debug, Serialize, PartialEq)]
+struct Verdict {
+    /// You cannot get `TOLL_ZONE_REACHABILITY` meters away without paying.
+    toll_zone: bool,
+    /// Distance to the nearest highway in meters, if one is within `HIGHWAY_SEARCH_RADIUS`.
+    nearest_highway_distance: Option<u32>,
+}
+
+fn main() -> Result<()> {
+    let cli = Cli::parse();
+    let config = valhalla::ConfigBuilder {
+        mjolnir: valhalla::config::Mjolnir {
+            tile_extract: cli.tiles.display().to_string(),
+            ..Default::default()
+        },
+        // Valhalla logs to stdout by default, which would mix with the output
+        logging: valhalla::config::Logging {
+            r#type: "std_err".to_string(),
+            ..Default::default()
+        },
+        ..Default::default()
+    }
+    .build();
+
+    let mut actor = Actor::new(&config).map_err(|e| anyhow!("failed to create Actor: {e}"))?;
+    let reader =
+        GraphReader::new(&config).map_err(|e| anyhow!("failed to open GraphReader: {e}"))?;
+
+    let verdict = analyze(&mut actor, reader, cli.coordinate, cli.locate_radius)?;
+    println!("{}", serde_json::to_string_pretty(&verdict)?);
+    Ok(())
+}
+
+fn analyze(
+    actor: &mut Actor,
+    reader: GraphReader,
+    coordinate: LatLon,
+    locate_radius: u32,
+) -> Result<Verdict> {
+    // Snap like the router does; the search starts at the far end of the snapped edge.
+    let edges = locate::locate(actor, coordinate, locate_radius)?;
+
+    // Private areas don't count
+    let node_filter =
+        |node: &NodeInfo| node.access().intersects(Access::AUTO) && !node.private_access();
+    let edge_filter = |edge: &DirectedEdge| edge.forwardaccess().intersects(Access::AUTO);
+    // Hand-rolled, as Valhalla's `exclude_tolls` only penalizes tolls.
+    let toll_free = |edge: &DirectedEdge| edge_filter(edge) && !edge.toll();
+    // `RoadClass` is ordered by importance: below primary is motorway and trunk.
+    let is_highway = |edge: &DirectedEdge| edge.road_class() < RoadClass::kPrimary;
+
+    // One cache for all three searches.
+    let mut cache = CachedGraphReader::new(reader);
+
+    let nearest_highway_distance = match dijkstra::search(
+        &mut cache,
+        &edges,
+        node_filter,
+        edge_filter,
+        is_highway,
+        HIGHWAY_SEARCH_RADIUS,
+    ) {
+        SearchResult::Found(distance) => Some(distance),
+        SearchResult::Exhausted | SearchResult::MaxDistanceReached => None,
+    };
+
+    // First: is there a toll edge nearby at all?
+    let toll_probe = dijkstra::search(
+        &mut cache,
+        &edges,
+        node_filter,
+        edge_filter,
+        |edge| edge.toll(),
+        TOLL_ZONE_REACHABILITY,
+    );
+    // Then: on toll-free edges only, can we still get far enough away?
+    let toll_free_reach = dijkstra::search(
+        &mut cache,
+        &edges,
+        node_filter,
+        toll_free,
+        |_| false,
+        TOLL_ZONE_REACHABILITY,
+    );
+
+    // A toll road in reach, *and* the toll-free graph runs out before you get far enough away.
+    // `Exhausted` also covers starting on the toll road itself, or running off the tileset edge.
+    let toll_zone =
+        matches!(toll_probe, SearchResult::Found(_)) && toll_free_reach == SearchResult::Exhausted;
+
+    Ok(Verdict {
+        toll_zone,
+        nearest_highway_distance,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn parses_coordinates() {
+        assert_eq!(parse_lat_lon("42.5,1.5").unwrap(), LatLon(42.5, 1.5));
+        assert_eq!(parse_lat_lon(" 42.5 , 1.5 ").unwrap(), LatLon(42.5, 1.5));
+        assert!(parse_lat_lon("42.5").is_err());
+        assert!(parse_lat_lon("north,east").is_err());
+    }
+}
