@@ -1,5 +1,6 @@
 # be aware: the python modules that need testing, need to be symlinked to the test/scripts folder with a .py extension
-if (Python_FOUND)
+# utrecht_tiles is only defined with ENABLE_DATA_TOOLS
+if (Python_FOUND AND ENABLE_DATA_TOOLS)
   add_custom_command(OUTPUT scripts.log
       COMMAND
         ${CMAKE_COMMAND} -E env
@@ -17,5 +18,5 @@ if (Python_FOUND)
   set_target_properties(run-scripts PROPERTIES FOLDER "Scripts")
   add_dependencies(check run-scripts)
 else()
-  message(WARNING "Python executable not found. Skipping run-scripts test target...")
+  message(WARNING "Python executable or data tools not available. Skipping run-scripts test target...")
 endif()

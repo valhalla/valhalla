@@ -400,17 +400,28 @@ endif()
 
 ## Python bindings
 # needs to be after defining the tool targets above
+# valhalla.mjolnir binds symbols libvalhalla only has with the data tools
+if(ENABLE_PYTHON_BINDINGS AND NOT ENABLE_DATA_TOOLS)
+  set(ENABLE_PYTHON_BINDINGS OFF)
+  message(WARNING "Python bindings require ENABLE_DATA_TOOLS, skipping Python bindings...")
+endif()
+set(Python_FIND_STRATEGY LOCATION)
+set(Python_FIND_REGISTRY NEVER)
+set(Python_FIND_IMPLEMENTATIONS CPython)
+set(Python_FIND_VIRTUALENV ONLY)
+# if python bindings are not enabled, the interpreter alone is still needed for
+# valhalla_build_extract and the script tests
 if(ENABLE_PYTHON_BINDINGS)
-  set(Python_FIND_STRATEGY LOCATION)
-  set(Python_FIND_REGISTRY NEVER)
-  set(Python_FIND_IMPLEMENTATIONS CPython)
-  set(Python_FIND_VIRTUALENV ONLY)
   find_package(Python COMPONENTS Interpreter Development Development.Module Development.SABIModule)
-  add_subdirectory(src/bindings/python)
   if (NOT Python_FOUND)
     set(ENABLE_PYTHON_BINDINGS OFF)
     message(WARNING "Python development version not found, skipping Python bindings...")
   endif()
+endif()
+if(ENABLE_PYTHON_BINDINGS)
+  add_subdirectory(src/bindings/python)
+else()
+  find_package(Python COMPONENTS Interpreter)
 endif()
 
 # add the scripts to the build folder as well
