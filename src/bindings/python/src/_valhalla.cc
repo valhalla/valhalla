@@ -1,3 +1,4 @@
+#include "midgard/module.h"
 #include "baldr/module.h"
 #include "baldr/utils/module.h"
 #include "config.h"
@@ -17,6 +18,8 @@ NB_MODULE(_valhalla, m) {
   pyvalhalla::baldr::init_graphid(m);
   pyvalhalla::baldr::init_graphtileheader(m);
   pyvalhalla::baldr::utils::init_graphreader(m);
+  pyvalhalla::midgard::init_pointll(m);
+  pyvalhalla::baldr::init_tilehierarchy(m);
   pyvalhalla::baldr::utils::init_graphtile(m);
   pyvalhalla::baldr::utils::init_predicted_speeds(m);
   pyvalhalla::midgard::utils::init_polyline(m);

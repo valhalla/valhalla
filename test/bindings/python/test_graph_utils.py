@@ -8,12 +8,17 @@ from pathlib import Path
 
 from valhalla.baldr import GraphId, GraphTileHeader
 from valhalla.baldr.utils import (
+    AABB2,
     GraphUtils,
+    PointLL,
+    TileHierarchy,
     get_tile_base_lon_lat,
     get_tile_id_from_lon_lat,
     get_tile_ids_from_bbox,
     get_tile_ids_from_ring,
 )
+from valhalla.midgard import AABB2 as MidgardAABB2
+from valhalla.midgard import PointLL as MidgardPointLL
 
 
 class TestBindings(unittest.TestCase):
@@ -140,6 +145,74 @@ class TestBindings(unittest.TestCase):
         with self.assertRaises(ValueError) as exc:
             get_tile_ids_from_bbox(-90.0, -180.0, 90.0, 180.0)
         self.assertIn("Invalid coordinate, remember it's (lon, lat)", str(exc.exception))
+
+        # explicit None and tuple levels behave like the default
+        self.assertEqual(
+            {g.value for g in get_tile_ids_from_bbox(*bbox, None)},
+            {g.value for g in get_tile_ids_from_bbox(*bbox)},
+        )
+        self.assertEqual(
+            {g.value for g in get_tile_ids_from_bbox(*bbox, (0, 2))},
+            {g.value for g in get_tile_ids_from_bbox(*bbox, [0, 2])},
+        )
+
+        # invalid level types raise ValueError
+        for bad_levels in (["0"], [True], [-1], [2**33]):
+            with self.assertRaises(ValueError, msg=f"levels={bad_levels}"):
+                get_tile_ids_from_bbox(*bbox, bad_levels)
+
+    def test_pointll_aabb2_bindings(self):
+        pt = PointLL(5.0, 52.0)
+        self.assertAlmostEqual(pt.lng(), 5.0)
+        self.assertAlmostEqual(pt.lat(), 52.0)
+        self.assertTrue(pt.is_valid())
+        self.assertIn("PointLL", repr(pt))
+
+        # midgard re-exports resolve to the same bound types
+        self.assertIs(PointLL, MidgardPointLL)
+        self.assertIs(AABB2, MidgardAABB2)
+
+        bbox = AABB2(0.0, 0.0, 2.0, 2.0)
+        self.assertEqual((bbox.minx(), bbox.miny(), bbox.maxx(), bbox.maxy()), (0.0, 0.0, 2.0, 2.0))
+        self.assertIn("AABB2", repr(bbox))
+
+        bbox_from_pts = AABB2(PointLL(0.0, 0.0), PointLL(2.0, 2.0))
+        self.assertEqual(
+            (bbox_from_pts.minx(), bbox_from_pts.miny(), bbox_from_pts.maxx(), bbox_from_pts.maxy()),
+            (0.0, 0.0, 2.0, 2.0),
+        )
+
+    def test_tile_hierarchy_single_level_binding(self):
+        bbox = AABB2(0.0, 0.0, 2.0, 2.0)
+
+        # single uint8_t level per call, no vector crosses the binding boundary
+        self.assertEqual(len(TileHierarchy.GetGraphIds(bbox, 0)), 2)
+        self.assertEqual(len(TileHierarchy.GetGraphIds(bbox, 1)), 9)
+        self.assertEqual(len(TileHierarchy.GetGraphIds(bbox, 2)), 81)
+
+        pt = PointLL(1.0, 1.0)
+        gid = TileHierarchy.GetGraphId(pt, 2)
+        self.assertTrue(gid.is_valid())
+        self.assertEqual(gid.level(), 2)
+
+        with self.assertRaises(ValueError) as exc:
+            TileHierarchy.GetGraphIds(bbox, 4)
+        self.assertIn("We only support", str(exc.exception))
+
+        with self.assertRaises(ValueError) as exc:
+            TileHierarchy.GetGraphId(pt, 4)
+        self.assertIn("We only support", str(exc.exception))
+
+    def test_get_tile_ids_from_bbox_uses_single_level_binding(self):
+        bbox = (0, 0, 2, 2)
+        expected = []
+        for level in (0, 1, 2):
+            expected.extend(TileHierarchy.GetGraphIds(AABB2(*bbox), level))
+
+        self.assertEqual(
+            [g.value for g in get_tile_ids_from_bbox(*bbox)],
+            [g.value for g in expected],
+        )
 
     def test_get_edge_shape(self):
         """Test GraphUtils.get_edge_shape with real Utrecht tiles."""

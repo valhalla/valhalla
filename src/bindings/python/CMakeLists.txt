@@ -24,6 +24,8 @@ nanobind_add_module(_valhalla
   ${CMAKE_CURRENT_SOURCE_DIR}/src/actor.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/exceptions.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/graph_id.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/tile_hierarchy.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/midgard/pointll.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/graph_tile_header.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/graph_reader.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/baldr/utils/graph_tile.cc
@@ -102,6 +104,7 @@ set(py_srcs
   valhalla/actor.py
   valhalla/baldr/__init__.py
   valhalla/baldr/utils/__init__.py
+  valhalla/baldr/utils/graph_tile.py
   valhalla/baldr/utils/graph_utils.py
   valhalla/baldr/utils/tar_index.py
   valhalla/midgard/__init__.py

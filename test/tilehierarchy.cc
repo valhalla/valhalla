@@ -1,6 +1,8 @@
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphid.h"
 #include "midgard/pointll.h"
+#include <stdexcept>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -53,6 +55,32 @@ TEST(TileHierarchy, Tiles) {
   bbox = AABB2<PointLL>{{-76.51, 40.49}, {-76.49, 40.51}};
   ids = TileHierarchy::GetGraphIds(bbox, 2);
   EXPECT_EQ(ids.size(), 4) << "Should have found 4 results.";
+}
+
+TEST(TileHierarchy, TilesMultipleLevels) {
+  AABB2<PointLL> bbox{{0, 0}, {2, 2}};
+
+  const auto level_0 = TileHierarchy::GetGraphIds(bbox, 0);
+  const auto level_2 = TileHierarchy::GetGraphIds(bbox, 2);
+
+  const auto selected_levels =
+      TileHierarchy::GetGraphIds(bbox, std::vector<uint32_t>{0, 2});
+
+  std::vector<GraphId> expected_selected = level_0;
+  expected_selected.insert(
+      expected_selected.end(), level_2.begin(), level_2.end());
+
+  EXPECT_EQ(selected_levels, expected_selected);
+
+  const auto all_levels =
+      TileHierarchy::GetGraphIds(bbox, std::vector<uint32_t>{});
+  const auto expected_all = TileHierarchy::GetGraphIds(bbox);
+
+  EXPECT_EQ(all_levels, expected_all);
+
+  EXPECT_THROW(
+      TileHierarchy::GetGraphIds(bbox, std::vector<uint32_t>{3}),
+      std::invalid_argument);
 }
 
 TEST(TileHierarchy, parent) {
