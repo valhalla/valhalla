@@ -1,3 +1,4 @@
+
 # Graph utilities
 
 Low-level access to Valhalla's tiled, hierarchical graph: tile identifiers,
@@ -12,6 +13,6 @@ configured `GraphReader`.
 
 ::: valhalla.baldr.utils.get_tile_id_from_lon_lat
 
-::: valhalla.baldr.utils.graph_tile.get_tile_ids_from_bbox
+::: valhalla.baldr.utils.get_tile_ids_from_bbox
 
 ::: valhalla.baldr.utils.get_tile_ids_from_ring
