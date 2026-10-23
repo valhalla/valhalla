@@ -63,10 +63,12 @@ constexpr float kSuburbanNodeDensity = 53.0f;
 constexpr float kMinNodeDensity = 1.0f;
 constexpr float kMaxNodeDensity = 1300.0f;
 // First relative density level of suburban and of urban areas
-constexpr uint32_t kSuburbanLevel = 4;
-constexpr uint32_t kUrbanLevel = 9;
+constexpr uint32_t kSuburbanLevel = 3;
+constexpr uint32_t kUrbanLevel = 7;
 // Non-rural street nodes per km^2 within kUrbanRadius at which an area is urban
-constexpr float kUrbanNodeDensity = 120.0f;
+constexpr float kUrbanNodeDensity = 140.0f;
+// Non-rural street nodes per km^2 within kUrbanRadius at the top of the urban band
+constexpr float kMaxUrbanNodeDensity = 900.0f;
 
 // `cell_id` is computed by shifting coordinate values by `kGridLevel`, meaning that a bigger
 // level produces bigger cells (as fewer bits remain from coordinate).
@@ -1014,11 +1016,17 @@ DensityIndex BuildDensityIndex(GraphReader& reader,
       continue;
     }
 
-    const bool urban = urban_density(UrbanCellId(node_ll)) >= kUrbanNodeDensity;
-    const uint32_t band_start = urban ? kUrbanLevel : kSuburbanLevel;
-    const uint32_t band_width = urban ? kMaxDensity - kUrbanLevel : kUrbanLevel - 1 - kSuburbanLevel;
-    it->second = band_start +
-                 std::round(LogPosition(density, kSuburbanNodeDensity, kMaxNodeDensity) * band_width);
+    // Urban levels follow the density within kUrbanRadius, suburban ones the local density
+    const float wide_density = urban_density(UrbanCellId(node_ll));
+    if (wide_density >= kUrbanNodeDensity) {
+      it->second = kUrbanLevel +
+                   std::round(LogPosition(wide_density, kUrbanNodeDensity, kMaxUrbanNodeDensity) *
+                              (kMaxDensity - kUrbanLevel));
+    } else {
+      it->second =
+          kSuburbanLevel + std::round(LogPosition(density, kSuburbanNodeDensity, kMaxNodeDensity) *
+                                      (kUrbanLevel - 1 - kSuburbanLevel));
+    }
   }
 
   return urban_index;
