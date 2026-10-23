@@ -399,14 +399,6 @@ bridge = {
 ["1"] = "true"
 }
 
---TODO: building_passage is for ped only
-tunnel = {
-["yes"] = "true",
-["no"] = "false",
-["1"] = "true",
-["building_passage"] = "true"
-}
-
 --TODO: snowmobile might not really be passable for much other than ped..
 toll = {
 ["yes"] = "true",
@@ -1907,7 +1899,11 @@ function filter_tags_generic(kv)
     end
   end
 
-  kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
+  if kv["tunnel"] and kv["tunnel"] ~= "no" then
+    kv["tunnel"] = "true"
+  else
+    kv["tunnel"] = "false"
+  end
   kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]
   kv["destination:forward"] = kv["destination:forward"]

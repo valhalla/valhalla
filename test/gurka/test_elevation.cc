@@ -3,14 +3,19 @@
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "midgard/aabb2.h"
 #include "midgard/pointll.h"
 #include "mjolnir/util.h"
+#include "skadi/sample.h"
 #include "test.h"
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 
 using namespace valhalla;
 using namespace valhalla::gurka;
@@ -448,6 +453,124 @@ TEST(Standalone, ElevationCompareToSkadi) {
     ASSERT_GT(edges->GetArray().Size(), 0u);
     for (const auto& edge : edges->GetArray()) {
       EXPECT_TRUE(edge.HasMember("mean_elevation")) << "omitted only when it is kNoElevationData";
+    }
+  }
+}
+
+// E6 Ekebergtunnelen / Svartdalstunnelen (Oslo), 30 m per character: both one-way tubes with all
+// their ramps, westbound on top. Portals keep their real heights.
+TEST(Standalone, OsloTunnelJunctions) {
+  constexpr float kRidge = 250.f;
+  const std::map<char, float> portals = {
+      {'A', 5},  {'B', 2},  {'C', 31}, {'D', 15},  {'P', 21},  {'R', 22},
+      {'T', 25}, {'S', 34}, {'Q', 42}, {'Y', 120}, {'Z', 118},
+  };
+  const std::string elevation_dir = "test/data/gurka_oslo_tunnels_elevation";
+
+  const std::string ascii_map = R"(
+                                                  r
+                                                  R
+                                                  |
+                                                  |  p
+      d-D----H--------1                  2--------O--P        V---S-s
+                       \                /                    /
+  b-B------F------------J--------------L---------N------W---X----------------------------------Z-z
+
+  a-A------E-----I---------K------------------M--------U---------------------------------------Y-y
+                /                              \        \
+     c-C----G--3                                4---T    5---Q-q
+                                                    t
+  )";
+  // near the equator a character is 30 m both ways
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 30, {10.75, 0.01});
+  const std::map<std::string, std::string> trunk_open = {{"highway", "trunk"}, {"oneway", "yes"}};
+  const std::map<std::string, std::string> link_open = {{"highway", "trunk_link"}, {"oneway", "yes"}};
+  const std::map<std::string, std::string> trunk_tunnel = {{"highway", "trunk"},
+                                                           {"tunnel", "yes"},
+                                                           {"oneway", "yes"}};
+  const std::map<std::string, std::string> link_tunnel = {{"highway", "trunk_link"},
+                                                          {"tunnel", "yes"},
+                                                          {"oneway", "yes"}};
+  const gurka::ways ways = {
+      {"zZ", trunk_open},        {"ZXWNLJFB", trunk_tunnel}, {"Bb", trunk_open},
+      {"XVS", link_tunnel},      {"Ss", link_open},          {"rR", trunk_open},
+      {"RO2L", trunk_tunnel},    {"pP", link_open},          {"PO", link_tunnel},
+      {"J1HD", link_tunnel},     {"Dd", link_open},          {"aA", trunk_open},
+      {"AEIKMUY", trunk_tunnel}, {"Yy", trunk_open},         {"cC", link_open},
+      {"CG3I", link_tunnel},     {"M4T", trunk_tunnel},      {"Tt", trunk_open},
+      {"qQ", link_open},         {"Q5U", link_tunnel},
+  };
+
+  // portal height within 40 m of a portal or its surface road, the ridge from 60 m on
+  std::vector<std::pair<midgard::PointLL, float>> valley;
+  std::vector<midgard::PointLL> points;
+  for (const auto& [portal, height] : portals) {
+    for (const char ch : {portal, static_cast<char>(std::tolower(portal))}) {
+      valley.emplace_back(layout.at(std::string(1, ch)), height);
+      points.push_back(valley.back().first);
+    }
+  }
+  midgard::AABB2<midgard::PointLL> bbox(points);
+  std::vector<int16_t> tile(3601 * 3601);
+  for (size_t row = 0; row < 3601; ++row) {
+    for (size_t col = 0; col < 3601; ++col) {
+      const midgard::PointLL ll(10 + col / 3600., 1 - row / 3600.);
+      double distance = std::numeric_limits<double>::max();
+      float ground = kRidge;
+      if (ll.lat() > bbox.miny() - 0.01 && ll.lat() < bbox.maxy() + 0.01 &&
+          ll.lng() > bbox.minx() - 0.01 && ll.lng() < bbox.maxx() + 0.01) {
+        for (const auto& [v, height] : valley) {
+          if (ll.Distance(v) < distance) {
+            distance = ll.Distance(v);
+            ground = height;
+          }
+        }
+      }
+      const auto ridge = std::clamp((distance - 40.) / 20., 0., 1.);
+      const auto height = static_cast<int16_t>(ground + (kRidge - ground) * ridge);
+      tile[row * 3601 + col] = ((height & 0xFF) << 8) | ((height >> 8) & 0xFF);
+    }
+  }
+  std::filesystem::create_directories(elevation_dir);
+  std::ofstream file(elevation_dir + "/N00E010.hgt", std::ios::binary | std::ios::trunc);
+  file.write(reinterpret_cast<const char*>(tile.data()), sizeof(int16_t) * tile.size());
+  file.close();
+
+  const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_oslo_tunnels",
+                                     {{"additional_data.elevation", elevation_dir}});
+
+  skadi::sample dem(elevation_dir);
+  auto height_at = [&](const std::string& node) { return dem.get(map.nodes.at(node)); };
+  float low = kRidge, high = 0.f;
+  for (const auto& [portal, height] : portals) {
+    EXPECT_NEAR(height_at(std::string(1, portal)), height, 1.) << portal;
+    low = std::min(low, height);
+    high = std::max(high, height);
+  }
+  for (const char ch : std::string("FJLNWXHOVEIKMUG"))
+    EXPECT_GT(height_at(std::string(1, ch)), high + 50.) << ch;
+
+  // every surface entry to every exit it can reach
+  const std::vector<std::pair<std::string, std::string>> routes = {
+      {"a", "t"}, {"a", "y"}, {"c", "t"}, {"c", "y"}, {"q", "y"}, {"z", "s"},
+      {"z", "b"}, {"z", "d"}, {"r", "b"}, {"r", "d"}, {"p", "b"}, {"p", "d"},
+  };
+  for (const auto& [from, to] : routes) {
+    SCOPED_TRACE(from + " -> " + to);
+    auto result =
+        gurka::do_action(Options::route, map, {from, to}, "auto", {{"/elevation_interval", "30"}});
+    std::vector<float> profile;
+    for (const auto& node : result.trip().routes(0).legs(0).node()) {
+      if (node.has_edge() && node.edge().tunnel())
+        profile.insert(profile.end(), node.edge().elevation().begin(), node.edge().elevation().end());
+    }
+    // portals keep their own height and everything in between blends the portal heights
+    ASSERT_FALSE(profile.empty());
+    EXPECT_NEAR(profile.front(), portals.at(std::toupper(from[0])), 1.f);
+    EXPECT_NEAR(profile.back(), portals.at(std::toupper(to[0])), 1.f);
+    for (float height : profile) {
+      EXPECT_GE(height, low - 1.f);
+      EXPECT_LE(height, high + 1.f);
     }
   }
 }
