@@ -12,9 +12,14 @@
 #include "skadi/sample.h"
 #include "skadi/util.h"
 
+#include <ankerl/unordered_dense.h>
 #include <boost/property_tree/ptree.hpp>
 
+#include <algorithm>
 #include <filesystem>
+#include <limits>
+#include <optional>
+#include <queue>
 #include <random>
 #include <thread>
 #include <utility>
@@ -30,6 +35,10 @@ constexpr double POSTING_INTERVAL = 60;
 
 // Do not compute grade for intervals less than 10 meters.
 constexpr double kMinimumInterval = 10.0f;
+
+// Structures with more nodes than this keep their ground samples, e.g. the elevated roads of
+// Shanghai (1.9k nodes) or Tokyo (1.3k).
+constexpr size_t kMaxStructureNodes = 250;
 
 using cache_t =
     std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, float, float, float, float>>;
@@ -67,6 +76,140 @@ std::vector<int8_t> encode_edge_elevation(const std::unique_ptr<valhalla::skadi:
   return encoded;
 }
 
+// Bridges, tunnels and ferries get no elevation of their own; it is interpolated between nodes.
+bool is_structure(const DirectedEdge& edge) {
+  return edge.bridge() || edge.tunnel() || edge.use() == Use::kFerry || edge.use() == Use::kRailFerry;
+}
+
+// The smallest id among the node and its copies on other hierarchy levels keys it on every level.
+GraphId node_key(const GraphTile& tile, const NodeInfo& node, GraphId id) {
+  for (uint32_t i = 0; i < node.transition_count(); ++i)
+    id = std::min(id, tile.transition(node.transition_index() + i)->endnode());
+  return id;
+}
+
+// A structure in memory: its enclosed nodes, the portals around them and the edges between, every
+// node keyed by node_key.
+struct Structure {
+  struct Node {
+    GraphId id;
+    bool portal = false;
+    double height = 0;
+    std::vector<std::pair<uint32_t, uint32_t>> edges;
+  };
+  std::vector<Node> nodes;
+  bool oversized = false;
+};
+
+// Reads the structure around an enclosed node breadth first, stopping at portals.
+Structure read_structure(GraphReader& graphreader,
+                         const GraphId& seed,
+                         const std::unique_ptr<valhalla::skadi::sample>& sample) {
+  Structure s;
+  ankerl::unordered_dense::map<GraphId, uint32_t> index;
+  auto add = [&](const GraphId& id) {
+    auto [it, inserted] = index.emplace(id, static_cast<uint32_t>(s.nodes.size()));
+    if (inserted) {
+      s.nodes.push_back({id});
+    }
+    return it->second;
+  };
+  add(seed);
+
+  for (uint32_t u = 0; u < s.nodes.size(); ++u) {
+    if (u == kMaxStructureNodes) {
+      s.oversized = true;
+      return s;
+    }
+
+    bool portal = false;
+    std::vector<std::pair<GraphId, uint32_t>> next;
+    auto scan = [&](const graph_tile_ptr& tile, const NodeInfo* node) {
+      for (uint32_t i = 0; i < node->edge_count() && !portal; ++i) {
+        const DirectedEdge* edge = tile->directededge(node->edge_index() + i);
+        if (edge->is_shortcut())
+          continue;
+        if (!is_structure(*edge)) {
+          portal = true;
+          return;
+        }
+        next.emplace_back(edge->endnode(), std::max(edge->length(), 1u));
+      }
+    };
+
+    const GraphId id = s.nodes[u].id;
+    auto tile = graphreader.GetGraphTile(id);
+    const NodeInfo* node = tile->node(id);
+    scan(tile, node);
+    for (uint32_t i = 0; i < node->transition_count(); ++i) {
+      const GraphId copy = tile->transition(node->transition_index() + i)->endnode();
+      auto copy_tile = graphreader.GetGraphTile(copy);
+      scan(copy_tile, copy_tile->node(copy));
+    }
+
+    if (portal) {
+      s.nodes[u].portal = true;
+      s.nodes[u].height = sample->get(tile->get_node_ll(id));
+      continue;
+    }
+
+    for (const auto& [end, length] : next) {
+      auto end_tile = graphreader.GetGraphTile(end);
+      const uint32_t v = add(node_key(*end_tile, *end_tile->node(end), end));
+      s.nodes[u].edges.emplace_back(v, length);
+      s.nodes[v].edges.emplace_back(u, length);
+    }
+  }
+  return s;
+}
+
+// Blends portal heights into enclosed nodes by inverse graph distance, which is plain linear
+// interpolation for a structure with two portals.
+void interpolate(const Structure& s,
+                 ankerl::unordered_dense::map<GraphId, std::optional<double>>& heights) {
+  std::vector<double> weights(s.nodes.size(), 0);
+  std::vector<double> weighted(s.nodes.size(), 0);
+  std::vector<uint64_t> distance(s.nodes.size());
+  using label_t = std::pair<uint64_t, uint32_t>;
+
+  // Expand from each portal and accumulate its impact on other nodes.
+  for (uint32_t p = 0; p < s.nodes.size(); ++p) {
+    if (!s.nodes[p].portal || s.nodes[p].height == valhalla::skadi::get_no_data_value()) {
+      continue;
+    }
+
+    std::fill(distance.begin(), distance.end(), std::numeric_limits<uint64_t>::max());
+    std::priority_queue<label_t, std::vector<label_t>, std::greater<>> queue;
+    distance[p] = 0;
+    queue.emplace(0, p);
+    while (!queue.empty()) {
+      const auto [d, u] = queue.top();
+      queue.pop();
+      if (d > distance[u] || (u != p && s.nodes[u].portal)) {
+        continue;
+      }
+
+      if (u != p) {
+        weighted[u] += s.nodes[p].height / d;
+        weights[u] += 1. / d;
+      }
+      for (const auto& [v, length] : s.nodes[u].edges) {
+        if (d + length < distance[v]) {
+          distance[v] = d + length;
+          queue.emplace(distance[v], v);
+        }
+      }
+    }
+  }
+
+  for (uint32_t u = 0; u < s.nodes.size(); ++u) {
+    if (!s.nodes[u].portal) {
+      heights[s.nodes[u].id] =
+          weights[u] > 0 ? std::optional<double>(weighted[u] / weights[u]) : std::nullopt;
+    }
+  }
+}
+
 void add_elevations_to_single_tile(GraphReader& graphreader,
                                    std::mutex& graphreader_lck,
                                    cache_t& cache,
@@ -80,11 +223,45 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
   tilebuilder.header_builder().set_has_elevation(true);
 
   // Iterate through the nodes edges, get the node lat,lng, sample and store elevation.
+  std::vector<uint32_t> enclosed_nodes;
   for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); ++i) {
     // Get a writeable reference to the node edge
     NodeInfo& nodeinfo = tilebuilder.node_builder(i);
     PointLL ll = nodeinfo.latlng(tilebuilder.header()->base_ll());
     nodeinfo.set_elevation(sample->get(ll));
+
+    bool enclosed = nodeinfo.edge_count() > 0;
+    for (uint32_t j = 0; j < nodeinfo.edge_count() && enclosed; ++j) {
+      const DirectedEdge& edge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+      enclosed = edge.is_shortcut() || is_structure(edge);
+    }
+    if (enclosed) {
+      enclosed_nodes.push_back(i);
+    }
+  }
+
+  // An enclosed node samples the terrain above or below it, so blend portal heights instead.
+  // Nodes enclosed by the same structure share one walk.
+  ankerl::unordered_dense::map<GraphId, std::optional<double>> structure_heights;
+  for (uint32_t i : enclosed_nodes) {
+    const GraphId id = node_key(tilebuilder, tilebuilder.node_builder(i),
+                                GraphId(tile_id.tileid(), tile_id.level(), i));
+    auto it = structure_heights.find(id);
+    if (it == structure_heights.end()) {
+      const Structure structure = read_structure(graphreader, id, sample);
+      if (structure.oversized) {
+        for (const auto& node : structure.nodes) {
+          structure_heights.try_emplace(node.id, std::nullopt);
+        }
+      } else {
+        interpolate(structure, structure_heights);
+      }
+      // the seed is a portal when a copy on another level has a regular edge
+      it = structure_heights.try_emplace(id, std::nullopt).first;
+    }
+    if (it->second) {
+      tilebuilder.node_builder(i).set_elevation(*it->second);
+    }
   }
 
   // Reserve twice the number of directed edges in the tile. We do not directly know
@@ -131,8 +308,8 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
 
       // Get the heights at each sampled point.
       std::vector<double> heights(resampled.size());
-      if (directededge.bridge() || directededge.tunnel() || directededge.use() == Use::kFerry) {
-        // Get height at beginning and end of bridge/tunnel
+      if (is_structure(directededge)) {
+        // Get height at beginning and end of the structure
         std::vector<PointLL> tmp;
         tmp.emplace_back(resampled.front());
         tmp.emplace_back(resampled.back());
@@ -182,8 +359,7 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
       // linearly interpolated between nodes and runtime does this.
       // Increment the new edge info offset.
       std::vector<int8_t> encoded;
-      if (!directededge.is_shortcut() && !directededge.bridge() && !directededge.tunnel() &&
-          directededge.use() != Use::kFerry && directededge.use() != Use::kRailFerry) {
+      if (!directededge.is_shortcut() && !is_structure(directededge)) {
         auto wayid = tilebuilder.edgeinfo(&directededge).wayid();
         encoded = encode_edge_elevation(sample, shape, length, wayid);
       }
@@ -197,10 +373,10 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
     float max_down_slope = forward ? std::get<3>(found->second) : std::get<5>(found->second);
     auto weighted_grade = forward ? std::get<0>(found->second) : std::get<1>(found->second);
 
-    // Clamp grade on tunnels/bridges. Successive, connected bridge/tunnel edges can
-    // lead to high grades. Note - elevation along a route is "fixed" for these cases
-    // but weighted grade can cause route issues.
-    if (directededge.bridge() || directededge.tunnel()) {
+    // Structure grades come from the ground height at both ends, which can be the terrain above
+    // a tunnel or a steep bank at a ferry landing. Note - elevation along a route is "fixed"
+    // for these cases but weighted grade can cause route issues.
+    if (is_structure(directededge)) {
       // Clamp grades to +/- 3% (weighted grade values between 4 and 8)
       weighted_grade = std::clamp(weighted_grade, 4u, 8u);
       max_up_slope = std::min(3.0f, max_up_slope);
