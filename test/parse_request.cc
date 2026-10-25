@@ -26,6 +26,7 @@ constexpr float kDefaultAuto_GateCost = 30.0f;                // Seconds
 constexpr float kDefaultAuto_GatePenalty = 300.0f;            // Seconds
 constexpr float kDefaultAuto_PrivateAccessPenalty = 450.0f;   // Seconds
 constexpr float kDefaultAuto_TollBoothCost = 15.0f;           // Seconds
+constexpr float kDefaultTrafficSignalDuration = 2.0f;         // Seconds
 constexpr float kDefaultAuto_TollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultAuto_FerryCost = 300.0f;              // Seconds
 constexpr float kDefaultAuto_CountryCrossingCost = 600.0f;    // Seconds
@@ -471,6 +472,8 @@ void test_default_base_auto_cost_options(const Costing::Type costing_type,
   validate("private_access_penalty", kDefaultAuto_PrivateAccessPenalty,
            options.private_access_penalty());
   validate("toll_booth_cost", kDefaultAuto_TollBoothCost, options.toll_booth_cost());
+  validate("traffic_signal_duration", kDefaultTrafficSignalDuration,
+           options.traffic_signal_duration());
   validate("toll_booth_penalty", kDefaultAuto_TollBoothPenalty, options.toll_booth_penalty());
   validate("alley_penalty", kDefaultAuto_AlleyPenalty, options.alley_penalty());
   validate("country_crossing_cost", kDefaultAuto_CountryCrossingCost,
@@ -802,6 +805,22 @@ void test_toll_booth_cost_parsing(const Costing::Type costing_type,
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
   const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.toll_booth_cost());
+}
+
+void test_traffic_signal_duration_parsing(const Costing::Type costing_type,
+                                          const float specified_value,
+                                          const float expected_value,
+                                          const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing_type);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "traffic_signal_duration";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  const auto& options = request.options().costings().find(costing_type)->second.options();
+  validate(key, expected_value, options.traffic_signal_duration());
 }
 
 void test_toll_booth_penalty_parsing(const Costing::Type costing_type,
@@ -2025,6 +2044,19 @@ TEST(ParseRequest, test_private_access_penalty) {
   test_private_access_penalty_parsing(costing, 60.f, 60.f);
   test_private_access_penalty_parsing(costing, -2.f, default_value);
   test_private_access_penalty_parsing(costing, 50000.f, default_value);
+}
+
+TEST(ParseRequest, test_traffic_signal_duration) {
+  std::vector<Costing::Type> costings = get_base_auto_costing_list();
+  costings.insert(costings.end(), {Costing::truck, Costing::motorcycle, Costing::motor_scooter});
+  for (auto costing : costings) {
+    test_traffic_signal_duration_parsing(costing, kDefaultTrafficSignalDuration,
+                                         kDefaultTrafficSignalDuration);
+    test_traffic_signal_duration_parsing(costing, 0.f, 0.f);
+    test_traffic_signal_duration_parsing(costing, 15.f, 15.f);
+    test_traffic_signal_duration_parsing(costing, -2.f, kDefaultTrafficSignalDuration);
+    test_traffic_signal_duration_parsing(costing, 50000.f, kDefaultTrafficSignalDuration);
+  }
 }
 
 TEST(ParseRequest, test_toll_booth_cost) {

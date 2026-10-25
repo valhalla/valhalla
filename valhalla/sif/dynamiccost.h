@@ -1361,6 +1361,7 @@ protected:
   sif::Cost ferry_transition_cost_;
   sif::Cost bike_share_cost_;
   sif::Cost rail_ferry_transition_cost_;
+  float traffic_signal_duration_; // Seconds added to the time at a traffic signal (no cost)
 
   // Penalties that all costing methods support
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
@@ -1447,6 +1448,7 @@ protected:
     // Transition costs (both time and cost)
     toll_booth_cost_ = {costing_options.toll_booth_cost() + costing_options.toll_booth_penalty(),
                         costing_options.toll_booth_cost()};
+    traffic_signal_duration_ = costing_options.traffic_signal_duration();
     country_crossing_cost_ = {costing_options.country_crossing_cost() +
                                   costing_options.country_crossing_penalty(),
                               costing_options.country_crossing_cost()};
@@ -1622,6 +1624,7 @@ struct BaseCostingOptionsConfig {
   bool disable_toll_booth_ = false;
   ranged_default_t<float> toll_booth_cost_;
   ranged_default_t<float> toll_booth_penalty_;
+  ranged_default_t<float> traffic_signal_duration_;
 
   bool disable_ferry_ = false;
   ranged_default_t<float> ferry_cost_;

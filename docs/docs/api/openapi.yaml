@@ -910,6 +910,15 @@ components:
               description: >
                 A penalty applied to the cost when a [toll booth](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. 
                 This penalty can be used to create paths that avoid toll roads.
+            traffic_signal_duration:
+              type: number
+              minimum: 0
+              maximum: 43200
+              default: 2
+              description: >
+                The time in seconds spent at each [traffic signal](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dtraffic_signals) along the route.
+                Added to the estimated and elapsed times only, so it does not change which route is chosen.
+                Used by auto, bus, taxi, truck, motorcycle and motor_scooter costings.
             service_penalty:
               type: number
               minimum: 0

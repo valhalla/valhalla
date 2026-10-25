@@ -270,3 +270,42 @@ TEST(Standalone, TrafficSignals) {
     EXPECT_EQ(node_info2->traffic_signal(), false);
   }
 }
+
+TEST(Standalone, TrafficSignalDuration) {
+  const std::string ascii_map = R"(
+        E        F
+        |        |
+    A---B--------C---D
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "tertiary"}}},    {"BC", {{"highway", "tertiary"}}},
+      {"CD", {{"highway", "tertiary"}}},    {"BE", {{"highway", "residential"}}},
+      {"CF", {{"highway", "residential"}}},
+  };
+  const gurka::nodes nodes = {{"B", {{"highway", "traffic_signals"}}},
+                              {"C", {{"highway", "traffic_signals"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_traffic_signal_duration");
+
+  for (const std::string costing : {"auto", "bus", "taxi", "truck", "motorcycle", "motor_scooter"}) {
+    const auto time = [&](const std::string& duration) {
+      std::unordered_map<std::string, std::string> options;
+      if (!duration.empty())
+        options["/costing_options/" + costing + "/traffic_signal_duration"] = duration;
+      auto route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing, options);
+      // the signal duration only adds time, so the route never changes
+      gurka::assert::raw::expect_path(route, {"AB", "BC", "CD"});
+      return route.directions().routes(0).legs(0).summary().time();
+    };
+
+    // two signals on the way: B and C
+    const double by_default = time("");
+    EXPECT_NEAR(time("2"), by_default, 0.01) << costing;
+    EXPECT_NEAR(time("30") - by_default, 2 * (30 - 2), 0.01) << costing;
+    EXPECT_NEAR(by_default - time("0"), 2 * 2, 0.01) << costing;
+    // out of range falls back to the default
+    EXPECT_NEAR(time("-5"), by_default, 0.01) << costing;
+  }
+}

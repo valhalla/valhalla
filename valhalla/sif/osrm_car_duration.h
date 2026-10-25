@@ -46,16 +46,19 @@ std::array<double, 360> lookup_table(bool right) {
 
 // This is a port of:
 // https://github.com/Project-OSRM/osrm-backend/blob/f5ebe8bc3b51831b7b19e73d4879ebbad0161a19/profiles/car.lua#L455
+// traffic_signal_duration is the time (seconds) spent at a traffic signal, the costing option of the
+// same name; shortcuts are built with the default.
 inline float OSRMCarTurnDuration(const valhalla::baldr::DirectedEdge* edge,
                                  const valhalla::baldr::NodeInfo* node,
-                                 const uint32_t idx_pred_opp) {
+                                 const uint32_t idx_pred_opp,
+                                 const float traffic_signal_duration = kTrafficLightPenalty) {
 
   // look up tables for turn penalties based on angle
   static const auto left_hand_lookup(lookup_table(false));
   static const auto right_hand_lookup(lookup_table(true));
 
   // start with the traffic light
-  double turn_duration = node->traffic_signal() ? kTrafficLightPenalty : 0;
+  double turn_duration = node->traffic_signal() ? traffic_signal_duration : 0;
 
   // const auto is_uturn = guidance::getTurnDirection(turn_angle) ==
   // guidance::DirectionModifier::UTurn; BUT for OSRM uturn is 0 angle only, not a range

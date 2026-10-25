@@ -477,7 +477,7 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, &pred, idx, edge_destonly);
-  c.secs += OSRMCarTurnDuration(edge, node, idx);
+  c.secs += OSRMCarTurnDuration(edge, node, idx, traffic_signal_duration_);
 
   const auto stopimpact = edge->stopimpact(idx);
   const auto turntype = edge->turntype(idx);
@@ -554,7 +554,7 @@ Cost MotorcycleCost::TransitionCostReverse(
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx, pred_label.destonly(), opp_edge_destonly);
-  c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
+  c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx(), traffic_signal_duration_);
 
   const auto stopimpact = edge->stopimpact(idx);
   const auto turntype = edge->turntype(idx);

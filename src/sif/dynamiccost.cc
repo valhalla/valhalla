@@ -89,6 +89,7 @@ constexpr float kDefaultRailFerryCost = 300.0f;          // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
+constexpr float kDefaultTrafficSignalDuration = 2.0f;    // Seconds, see kTrafficLightPenalty
 
 // Other options
 constexpr float kDefaultUseFerry = 0.5f;         // Default preference of using a ferry 0-1
@@ -166,6 +167,7 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       country_crossing_penalty_{0.f, kDefaultCountryCrossingPenalty, kMaxPenalty},
       toll_booth_cost_{0.f, kDefaultTollBoothCost, kMaxPenalty},
       toll_booth_penalty_{0.f, kDefaultTollBoothPenalty, kMaxPenalty},
+      traffic_signal_duration_{0.f, kDefaultTrafficSignalDuration, kMaxPenalty},
       ferry_cost_{0.f, kDefaultFerryCost, kMaxPenalty}, use_ferry_{0.f, kDefaultUseFerry, 1.f},
       rail_ferry_cost_{0.f, kDefaultRailFerryCost, kMaxPenalty},
       use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f}, service_penalty_{0.f, kDefaultServicePenalty,
@@ -547,6 +549,10 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // country_crossing_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.country_crossing_penalty_, json, "/country_crossing_penalty",
                           country_crossing_penalty, warnings);
+
+  // traffic_signal_duration
+  JSON_PBF_RANGED_DEFAULT(co, cfg.traffic_signal_duration_, json, "/traffic_signal_duration",
+                          traffic_signal_duration, warnings);
 
   if (!cfg.disable_toll_booth_) {
     // toll_booth_cost
