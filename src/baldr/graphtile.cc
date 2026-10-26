@@ -219,7 +219,9 @@ void store(const std::string& cache_location,
     // Windows apparently can't "+" string & char (which "preferred_separator" is on win)
     std::filesystem::path disk_location{cache_location};
     disk_location.append(suffix);
-    filesystem_utils::save(disk_location, raw_data);
+    if (!filesystem_utils::save(disk_location, raw_data)) {
+      LOG_ERROR("Failed to cache tile " + disk_location.string());
+    }
   }
 }
 
@@ -230,7 +232,8 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        uint64_t range_offset,
                                        uint64_t range_size,
                                        const std::filesystem::path& id_txt_path,
-                                       std::optional<uint64_t> id_checksum) {
+                                       std::optional<uint64_t> id_checksum,
+                                       long* http_code) {
   // Don't bother with invalid ids
   if (!graphid.is_valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
@@ -275,30 +278,31 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     result = tile_getter->get(tile_url, range_offset, range_size);
   }
 
+  if (http_code) {
+    *http_code = result.http_code_;
+  }
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
     return nullptr;
   }
 
-  if (!tile_getter->gzipped()) {
-    // inspect the header for the checksum
-    // it's a POD type and thus trivially copyable
-    GraphTileHeader header;
-    std::memcpy(&header, result.bytes_.data(), sizeof(header));
-    check_tile_checksum(header);
+  // a body that isn't a whole tile, e.g. an error page sent with a 200, is not cached
+  graph_tile_ptr tile;
+  try {
+    tile = tile_getter->gzipped()
+               ? DecompressTile(graphid, result.bytes_)
+               : graph_tile_ptr{new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(
+                                                           std::vector<char>(result.bytes_)))};
+  } catch (const std::runtime_error& e) {
+    LOG_WARN("Downloaded tile " + std::to_string(graphid) + " is invalid: " + e.what());
   }
+  if (!tile) {
+    return nullptr;
+  }
+  check_tile_checksum(*tile->header());
 
   // try to cache it on disk so we dont have to keep fetching it from url
   store(tile_dir, graphid, tile_getter, result.bytes_);
-
-  // turn the memory into a tile
-  if (tile_getter->gzipped()) {
-    auto tile = DecompressTile(graphid, result.bytes_);
-    check_tile_checksum(*tile.get()->header());
-    return tile;
-  }
-
-  return graph_tile_ptr{
-      new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(result.bytes_)))};
+  return tile;
 }
 
 GraphTile::~GraphTile() = default;
