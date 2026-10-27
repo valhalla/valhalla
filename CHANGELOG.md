@@ -13,6 +13,7 @@
    * FIXED: a `tile_url` download that got no response or a 408, 429, 500, 502, 503 or 504 is retried on the next request instead of never [#6417](https://github.com/valhalla/valhalla/pull/6417)
    * FIXED: a `tile_url` download that isn't a whole tile is no longer cached and no longer crashes [#6421](https://github.com/valhalla/valhalla/pull/6421)
    * FIXED: segfault in Python bindings (`get_tile_ids_from_ring`) [#6426](https://github.com/valhalla/valhalla/pull/6426)
+   * FIXED: don't skip past end time in frequency based transit schedules [#6399](https://github.com/valhalla/valhalla/pull/6399)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
@@ -21,6 +22,7 @@
    * UPDATED: timezone database to 2026e [#6415](https://github.com/valhalla/valhalla/pull/6415)
    * ADDED: `kCycleStreet` use [#6407](https://github.com/valhalla/valhalla/pull/6407)
    * CHANGED: a `tile_url` connection times out after 5 s instead of curl's default of 300 s, so a tile server that doesn't answer fails fast [#6424](https://github.com/valhalla/valhalla/pull/6424)
+   * BREAKING: warning instead of error on failed linear cost factor edge walk [#6443](https://github.com/valhalla/valhalla/pull/6443) 
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
