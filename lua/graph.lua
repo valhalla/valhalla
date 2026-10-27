@@ -399,6 +399,15 @@ bridge = {
 ["1"] = "true"
 }
 
+--TODO: building_passage is for ped only
+tunnel = {
+["yes"] = "true",
+["no"] = "false",
+["1"] = "true",
+["building_passage"] = "true",
+["avalanche_protector"] = "true"
+}
+
 --TODO: snowmobile might not really be passable for much other than ped..
 toll = {
 ["yes"] = "true",
@@ -915,11 +924,11 @@ function filter_tags_generic(kv)
     return 1
   end
 
-  --toss actual areas, but keep pedestrian areas 
+  --toss actual areas, but keep pedestrian areas
   if kv["area"] == "yes" then
     if kv["highway"] == "pedestrian" then
       kv["pedestrian_area"] = "true"
-    else 
+    else
     return 1
     end
   end
@@ -1899,11 +1908,7 @@ function filter_tags_generic(kv)
     end
   end
 
-  if kv["tunnel"] and kv["tunnel"] ~= "no" then
-    kv["tunnel"] = "true"
-  else
-    kv["tunnel"] = "false"
-  end
+  kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
   kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]
   kv["destination:forward"] = kv["destination:forward"]
