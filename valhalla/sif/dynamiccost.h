@@ -22,7 +22,6 @@
 
 #include <boost/container/small_vector.hpp>
 
-#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
@@ -246,50 +245,30 @@ constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1
                                                        1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                        2.5f, 2.8f, 3.1f, 3.5f};
 
-// Number of discretized use_curvature steps over the range [0.0, 1.0] at 0.01 intervals.
-// 0.0 = strongly avoid curvy roads, 0.5 = neutral, 1.0 = strongly prefer curvy roads.
-constexpr uint32_t kCurvatureSteps = 101;
+constexpr uint32_t kCurvatureSteps = 21;
+constexpr uint32_t kNeutralCurvatureStep = kCurvatureSteps / 2;
+constexpr uint32_t kCurvatureRuralDensity = 3;
+constexpr uint32_t kCurvatureUrbanDensity = 7;
+constexpr float kMaxStraightRoadFactor = 4.f;
+constexpr float kSuburbanCurvatureFactor = 0.5f;
+constexpr float kUrbanCurvatureFactor = 4.f;
 
-// Maximum internal discount exponent for the prefer-curvy direction (steps 51-100).
-// Mapped exponentially from use_curvature=0.5 (exp=0) to use_curvature=1.0 (exp=kMaxCurvatureExp).
-// Matches the effective saturation range of the original unbounded formula (~1000).
-constexpr float kMaxCurvatureExp = 1000.0f;
-
-// Curvature cost factor lookup table [use_curvature_step][edge_curvature_value].
-// Pre-computed at startup to avoid std::pow in the EdgeCost hot loop.
-// Edge curvature is a 4-bit field (0-15). use_curvature is discretized into 101 steps.
-//
-// Two asymmetric strategies, one per direction:
-//   Avoid-curvy (steps 0-50):  penalize high-curvature edges. Factors >= 1, A* admissible.
-//   Prefer-curvy (steps 51-100): discount high-curvature edges via exponential exponent mapping
-//     so that curvy roads approach zero cost, replicating the original formula at high values.
-inline const std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps>
-    kCurvatureFactor = []() {
-      std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps> arr{};
-      // The +0.1 offset ensures x > 0 so all exponents stay finite
-      // (without it, x=0 at the extreme curvature value, making pow(0, negative) undefined).
-      const float denom = static_cast<float>(baldr::kMaxCurvatureFactor) + 0.1f;
-      for (uint32_t s = 0; s < kCurvatureSteps; s++) {
-        for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
-          // x in (0,1]: 1.0 for straight edges (c=0), ~0.007 for max curvature (c=15).
-          const float x = 1.0f - static_cast<float>(c) / denom;
-          float factor;
-          if (s <= 50) {
-            // Avoid-curvy: pref in [-1, 0]. pow(x, pref) >= 1 for x in (0,1].
-            const float pref = static_cast<float>(s) / 50.0f - 1.0f;
-            factor = std::pow(x, pref);
-          } else {
-            // Prefer-curvy: exponent maps exponentially from 0 (step 50) to kMaxCurvatureExp
-            // (step 100). Curvy edges (x small) get factors approaching 0 — essentially free.
-            const float t = static_cast<float>(s - 50) / 50.0f;
-            const float exp_internal = std::pow(kMaxCurvatureExp + 1.0f, t) - 1.0f;
-            factor = std::pow(x, exp_internal);
-          }
-          arr[s][c] = factor;
-        }
-      }
-      return arr;
-    }();
+constexpr std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps>
+populate_curvaturefactor() {
+  std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps> curvaturefactor{};
+  for (uint32_t s = 0; s < kCurvatureSteps; s++) {
+    float strength = s <= kNeutralCurvatureStep
+                         ? 0.f
+                         : static_cast<float>(s - kNeutralCurvatureStep) / kNeutralCurvatureStep;
+    for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
+      float straightness =
+          static_cast<float>(baldr::kMaxCurvatureFactor - c) / baldr::kMaxCurvatureFactor;
+      curvaturefactor[s][c] = 1.f + kMaxStraightRoadFactor * strength * straightness;
+    }
+  }
+  return curvaturefactor;
+}
+constexpr auto kCurvatureFactor = populate_curvaturefactor();
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
@@ -1365,7 +1344,7 @@ protected:
 
   /**
    * Set the curvature step index from the costing preference value.
-   * @param use_curvature curvature preference in range [0, 1]: 0 = avoid curvy, 0.5 = neutral,
+   * @param use_curvature curvature preference in range [0, 1]: <= 0.5 = no effect,
    *                      1 = prefer curvy.
    */
   virtual void set_use_curvature(float use_curvature);
@@ -1406,6 +1385,9 @@ protected:
   float unlit_factor_;         // Avoid unlit edges factor.
   float speed_penalty_factor_; // Avoid faster edges than top speed factor.
   uint32_t curvature_step_;    // Index into kCurvatureFactor[curvature_step_][curvature].
+  uint32_t suburban_curvature_step_;
+  float suburban_curvature_factor_;
+  float urban_curvature_factor_;
 
   // Transition costs
   sif::Cost country_crossing_cost_;

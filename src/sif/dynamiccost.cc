@@ -461,6 +461,11 @@ void DynamicCost::set_use_lit(float use_lit) {
 void DynamicCost::set_use_curvature(float use_curvature) {
   curvature_step_ =
       static_cast<uint32_t>(std::round(use_curvature * static_cast<float>(kCurvatureSteps - 1)));
+  uint32_t step = std::max(curvature_step_, kNeutralCurvatureStep);
+  float strength = static_cast<float>(step - kNeutralCurvatureStep) / kNeutralCurvatureStep;
+  suburban_curvature_step_ = (step + kNeutralCurvatureStep) / 2;
+  suburban_curvature_factor_ = 1.f + kSuburbanCurvatureFactor * strength;
+  urban_curvature_factor_ = 1.f + kUrbanCurvatureFactor * strength;
 }
 
 void ParseBaseCostOptions(const rapidjson::Value& json,
@@ -613,7 +618,8 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_lit_, json, "/use_lit", use_lit, warnings);
 
   // use_curvature
-  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_curvature_, json, "/use_curvature", use_curvature);
+  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_curvature_, json, "/use_curvature", use_curvature,
+                             warnings);
 
   // closure_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor, warnings);
