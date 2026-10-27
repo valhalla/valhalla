@@ -22,6 +22,10 @@ constexpr uint32_t kMaxGraphTileId = 4194303;
 // Maximum id/index within a tile. 21 bits
 constexpr uint32_t kMaxGraphId = 2097151;
 
+// GraphTileHeader::checksum_ packs a 16-bit tileset build id in its high bits and a 48-bit per-tile
+// data hash in its low bits, used for remote tileset change detection/cache validation
+constexpr uint64_t kTileHashBits = 48;
+
 // Invalid edge label index
 constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
 
@@ -184,6 +188,9 @@ constexpr uint8_t kMaxBicycleNetwork = 15;
 // Maximum offset to edge information
 constexpr uint32_t kMaxEdgeInfoOffset = 33554431; // 2^25 bytes
 
+// Minimum length of an edge
+constexpr uint32_t kMinEdgeLength = 1;
+
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215; // 2^24 meters
 
@@ -310,6 +317,7 @@ enum class Use : uint8_t {
                         // connected at one node to another edge.
   kLivingStreet = 10,   // Streets with preference towards bicyclists and pedestrians
   kServiceRoad = 11,    // Generic service road (not driveway, alley, parking aisle, etc.)
+  kCycleStreet = 12,    // Road with priority for cyclists
 
   // Bicycle specific uses
   kCycleway = 20,     // Dedicated bicycle path
@@ -347,7 +355,10 @@ enum class Use : uint8_t {
   kEgressConnection = 52,   // Connection egress <-> station
   kPlatformConnection = 53, // Connection station <-> platform
   kTransitConnection = 54,  // Connection osm <-> egress
+
+  kSize = 64
 };
+
 inline std::string to_string(Use u) {
   static const std::unordered_map<uint8_t, std::string> UseStrings = {
       {static_cast<uint8_t>(Use::kRoad), "road"},
@@ -362,6 +373,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kCuldesac), "culdesac"},
       {static_cast<uint8_t>(Use::kLivingStreet), "living_street"},
       {static_cast<uint8_t>(Use::kServiceRoad), "service_road"},
+      {static_cast<uint8_t>(Use::kCycleStreet), "cycle_street"},
       {static_cast<uint8_t>(Use::kCycleway), "cycleway"},
       {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
       {static_cast<uint8_t>(Use::kSidewalk), "sidewalk"},
@@ -849,6 +861,11 @@ constexpr uint8_t kPredictedFlowMask = 4;
 constexpr uint8_t kCurrentFlowMask = 8;
 constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
+
+// Which restrictions a linear cost feature clears
+constexpr uint32_t kAllowNone = 0;
+constexpr uint32_t kAllowAll = std::numeric_limits<uint32_t>::max();
+
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
 constexpr uint64_t kInvalidSecondsOfWeek =

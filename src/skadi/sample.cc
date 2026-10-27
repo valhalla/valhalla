@@ -8,7 +8,9 @@
 #include "valhalla/baldr/curl_tilegetter.h"
 
 #include <boost/property_tree/ptree.hpp>
+#ifdef ENABLE_LZ4
 #include <lz4frame.h>
+#endif
 #include <sys/stat.h>
 
 #include <cmath>
@@ -127,6 +129,7 @@ public:
         return false;
       }
     } else if (format == format_t::LZ4) {
+#ifdef ENABLE_LZ4
       LZ4F_decompressionContext_t decode;
       LZ4F_decompressOptions_t options;
       LZ4F_createDecompressionContext(&decode, LZ4F_VERSION);
@@ -148,6 +151,11 @@ public:
       } while (result != 0);
 
       LZ4F_freeDecompressionContext(decode);
+#else
+      LOG_WARN("LZ4 elevation data found but LZ4 support is not compiled in");
+      format = format_t::UNKNOWN;
+      return false;
+#endif
     } else {
       LOG_WARN("Corrupt elevation data of unknown type");
       format = format_t::UNKNOWN;
@@ -159,7 +167,7 @@ public:
 
   static std::optional<std::pair<uint16_t, format_t>> parse_hgt_name(const std::string& name) {
     std::smatch m;
-    std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.(gz|lz4))?$");
+    std::regex e(".*[/\\\\]([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.(gz|lz4))?$");
     if (std::regex_search(name, m, e)) {
       // enum class format_t{ UNKNOWN = 0, GZIP = 1, RAW = 3, LZ4 = 4 };
       format_t fmt;

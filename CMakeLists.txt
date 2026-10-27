@@ -8,6 +8,25 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   add_link_options("-Wl,--disable-new-dtags")
 endif()
 
+if(WIN32)
+  # posix-semantics rename (Win10 1709+) is required; exercise exactly what rename_replace uses
+  # (the enum value, both flags, and the FILE_RENAME_INFO::Flags member) so a too-old SDK or a
+  # too-low _WIN32_WINNT both fail here rather than deep in the build
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles(
+    "#include <windows.h>\nint main() {\n  FILE_RENAME_INFO i{};\n  i.Flags = FILE_RENAME_FLAG_REPLACE_IF_EXISTS | FILE_RENAME_FLAG_POSIX_SEMANTICS;\n  (void)FileRenameInfoEx; return 0;\n}"
+    HAVE_FILE_RENAME_INFO_EX)
+  if(NOT HAVE_FILE_RENAME_INFO_EX)
+    message(FATAL_ERROR "Valhalla on Windows needs a Windows 10 1709 SDK or newer (posix-semantics rename)")
+  endif()
+
+  # /Z7 (embedded debug info) instead of /Zi: no mspdbsrv serialization under Ninja, sccache-friendly
+  if(POLICY CMP0141)
+    cmake_policy(SET CMP0141 NEW)
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+  endif()
+endif()
+
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
@@ -36,6 +55,7 @@ option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find 
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 option(ENABLE_GEOTIFF "Whether to include libgeotiff; currently only used for raster serialization of isotile grid" ON)
+option(ENABLE_LZ4 "Enable LZ4 decompression support for elevation tiles and OSM PBF files" ON)
 option(INSTALL_TEST_LIB "Install Valhalla's own test lib" OFF)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
@@ -103,7 +123,6 @@ include(ValhallaSourceGroups)
 # - CMake Find* modules are versioned with CMake, not the packages, see protobuf > 21.12
 # - it's more trivial to use custom installations via PKG_CONFIG_PATH env var
 pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
-pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
 
 # cURL
 set(curl_target "")
@@ -138,6 +157,8 @@ set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
 set(libosmium_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
 set(vtzero_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/vtzero/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
 set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
+set(flatbush_include_dir ${VALHALLA_SOURCE_DIR}/third_party/flatbush)
+
 if (PREFER_EXTERNAL_DEPS)
   # date
   # check if tz_private.h exists, e.g. arch linux doesn't distribute that..
@@ -200,6 +221,13 @@ if (PREFER_EXTERNAL_DEPS)
       set(dirent_include_dir ${DIRENT_INCLUDE_DIRS})
     endif()
   endif()
+  # flatbush
+  find_path(FLATBUSH_INCLUDE_DIRS "flatbush.h")
+  if (NOT FLATBUSH_INCLUDE_DIRS)
+    message(WARNING "No flatbush found in system libraries, using vendored flatbush...")
+  else()
+    set(flatbush_include_dirs ${FLATBUSH_INCLUDE_DIRS})
+  endif()
 endif()
 
 # Protobuf is non-trivial to include via pkg-config, pkg_check_modules has no way to check
@@ -228,6 +256,11 @@ set(GTIFF_TARGETS "")
 if (ENABLE_GEOTIFF AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDINGS OR ENABLE_NODE_BINDINGS))
   find_package(TIFF)
   find_package(GeoTIFF)
+  # libtiff >= 4.7 ships a cmake config whose target is TIFF::tiff, not the module's TIFF::TIFF
+  if (TIFF_FOUND AND NOT TARGET TIFF::TIFF AND TARGET TIFF::tiff)
+    add_library(TIFF::TIFF INTERFACE IMPORTED)
+    set_target_properties(TIFF::TIFF PROPERTIES INTERFACE_LINK_LIBRARIES TIFF::tiff)
+  endif()
   if (GeoTIFF_FOUND AND TIFF_FOUND)
     add_compile_definitions(ENABLE_GEOTIFF)
     set(GTIFF_TARGETS TIFF::TIFF geotiff_library)
@@ -237,20 +270,42 @@ if (ENABLE_GEOTIFF AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDING
   endif()
 endif()
 
+set(lz4_target "")
+if (ENABLE_LZ4)
+  pkg_check_modules(LZ4 IMPORTED_TARGET liblz4)
+  if (LZ4_FOUND)
+    target_compile_definitions(PkgConfig::LZ4 INTERFACE ENABLE_LZ4)
+    set(lz4_target PkgConfig::LZ4)
+  else()
+    message(WARNING "Unable to enable liblz4 support")
+  endif()
+endif()
+
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 
-# libprime_server
-# see https://gitlab.kitware.com/cmake/cmake/-/issues/19467
+# libprime_server: prefer the CMake config (>=0.11.0) so transitive deps come through
+# as proper imported targets; fall back to pkg-config for older installs.
 set(libprime_server_targets "")
 if(ENABLE_SERVICES)
-  pkg_check_modules(libprime_server IMPORTED_TARGET libprime_server>=0.6.3)
-  if (libprime_server_FOUND)
-    target_compile_definitions(PkgConfig::libprime_server INTERFACE ENABLE_SERVICES)
-    set(libprime_server_targets PkgConfig::libprime_server)
+  find_package(libprime_server 0.11.0 CONFIG QUIET)
+  if(libprime_server_FOUND)
+    set(libprime_server_targets libprime_server::prime_server)
   else()
-    set(ENABLE_SERVICES OFF)
-    message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
+    pkg_check_modules(libprime_server IMPORTED_TARGET libprime_server>=0.6.3)
+    if(libprime_server_FOUND)
+      set(libprime_server_targets PkgConfig::libprime_server)
+    else()
+      set(ENABLE_SERVICES OFF)
+      message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
+    endif()
   endif()
+  if(libprime_server_targets)
+    get_target_property(_prime_server_inc ${libprime_server_targets} INTERFACE_INCLUDE_DIRECTORIES)
+    if(_prime_server_inc)
+      include_directories(SYSTEM ${_prime_server_inc})
+    endif()
+  endif()
+  add_compile_definitions(ENABLE_SERVICES)
 endif()
 
 
@@ -261,6 +316,12 @@ if(ENABLE_DATA_TOOLS)
   # otherwise the system sqlite3 is found which doesn't allow for spatialite
   find_package(SQLite3 REQUIRED)
   pkg_check_modules(SpatiaLite REQUIRED IMPORTED_TARGET spatialite)
+  # make sure we can build tz.sqlite
+  find_program(SPATIALITE_TOOL_EXECUTABLE NAMES spatialite_tool)
+  find_program(SPATIALITE_EXECUTABLE NAMES spatialite)
+  if(NOT SPATIALITE_TOOL_EXECUTABLE OR NOT SPATIALITE_EXECUTABLE)
+    message(FATAL_ERROR "spatialite-tools not found: need both 'spatialite_tool' and 'spatialite', install the correct package for your system.")
+  endif()
   pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
   pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
   pkg_check_modules(OPENSSL REQUIRED IMPORTED_TARGET openssl)
@@ -281,7 +342,7 @@ endif()
 ## Executable targets
 
 ## Valhalla programs
-set(valhalla_programs 
+set(valhalla_programs
     valhalla_export_edges valhalla_expand_bounding_box valhalla_service)
 
 ## Valhalla data tools

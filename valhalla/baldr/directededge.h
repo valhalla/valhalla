@@ -170,10 +170,8 @@ public:
   /**
    * Sets the length of the edge in meters.
    * @param  length  Length of the edge in meters.
-   * @param  should_error  Bool indicating whether or not to error or warn on length > kMaxEdgeLength
-   *
    */
-  void set_length(const uint32_t length, bool should_error = true);
+  void set_length(const double length);
 
   /**
    * Get the weighted grade factor

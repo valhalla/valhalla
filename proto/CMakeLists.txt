@@ -1,19 +1,19 @@
 ## Protobuf
 set(protobuf_descriptors
-  api.proto
-  common.proto
-  directions.proto
-  info.proto
-  options.proto
-  sign.proto
-  trip.proto
-  transit.proto
-  transit_fetch.proto
-  incidents.proto
-  status.proto
-  matrix.proto
-  isochrone.proto
-  expansion.proto)
+ descriptors/api.proto
+ descriptors/common.proto
+ descriptors/directions.proto
+ descriptors/info.proto
+ descriptors/options.proto
+ descriptors/sign.proto
+ descriptors/trip.proto
+ descriptors/transit.proto
+ descriptors/transit_fetch.proto
+ descriptors/incidents.proto
+ descriptors/status.proto
+ descriptors/matrix.proto
+ descriptors/isochrone.proto
+ descriptors/expansion.proto)
 
 protobuf_generate_cpp(protobuf_srcs protobuf_hdrs ${protobuf_descriptors})
 

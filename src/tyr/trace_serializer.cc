@@ -172,6 +172,9 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeSurface)) {
         writer("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
       }
+      if (controller(kEdgeCurvature)) {
+        writer("curvature", static_cast<uint64_t>(edge.curvature()));
+      }
       if (controller(kEdgeDriveOnRight)) {
         writer("drive_on_right", static_cast<bool>(!edge.drive_on_left()));
       }
@@ -396,6 +399,9 @@ void serialize_edges(const AttributesController& controller,
         if (controller(kNodeTransitionTime)) {
           writer.set_precision(tyr::kDefaultPrecision);
           writer("transition_time", node.cost().transition_cost().seconds());
+        }
+        if (controller(kNodeStopImpact) && node.has_stop_impact_case()) {
+          writer("stop_impact", node.stop_impact());
         }
 
         // TODO transit info at node

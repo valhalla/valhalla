@@ -1,0 +1,109 @@
+{
+	"trip": {
+		"locations": [
+			{
+				"type": "break",
+				"lat": 52.51797,
+				"lon": 13.433304,
+				"date_time": "2026-05-21T22:29",
+				"time_zone_offset": "+02:00",
+				"time_zone_name": "Europe/Berlin",
+				"original_index": 0
+			},
+			{
+				"type": "break",
+				"lat": 52.520135,
+				"lon": 13.432346,
+				"date_time": "2026-05-21T22:30",
+				"time_zone_offset": "+02:00",
+				"time_zone_name": "Europe/Berlin",
+				"original_index": 1
+			},
+			{
+				"type": "break",
+				"lat": 52.519147,
+				"lon": 13.429769,
+				"date_time": "2026-05-21T22:32",
+				"time_zone_offset": "+02:00",
+				"time_zone_name": "Europe/Berlin",
+				"original_index": 2
+			},
+			{
+				"type": "break",
+				"lat": 52.519601,
+				"lon": 13.434275,
+				"date_time": "2026-05-21T22:34",
+				"time_zone_offset": "+02:00",
+				"time_zone_name": "Europe/Berlin",
+				"original_index": 3
+			}
+		],
+		"legs": [
+			{
+				"summary": {
+					"has_time_restrictions": false,
+					"has_toll": false,
+					"has_highway": false,
+					"has_ferry": false,
+					"min_lat": 52.517973,
+					"min_lon": 13.432346,
+					"max_lat": 52.520135,
+					"max_lon": 13.433451,
+					"time": 59.42,
+					"length": 0.312,
+					"cost": 143.359
+				},
+				"shape": "kdmdcBq|{rXYvGMzBa@`IqDWiAKeGw@sAQsAQsAQmEk@mJwAmB]iMuC}XmGsEgAoMyCeAWiCi@e@dC_@hBMv@_AvEIb@wM~r@"
+			},
+			{
+				"summary": {
+					"has_time_restrictions": false,
+					"has_toll": false,
+					"has_highway": false,
+					"has_ferry": false,
+					"min_lat": 52.518637,
+					"min_lon": 13.429766,
+					"max_lat": 52.520135,
+					"max_lon": 13.433451,
+					"time": 95.711,
+					"length": 0.459,
+					"cost": 220.182
+				},
+				"shape": "okqdcBs`zrXvM_s@Hc@~@wELw@^iBd@eChCh@dAVnMxCrEfA|XlGhMtClB\\_@hHGbAu@`MrDjJg@jKy@hQq@jNoAxWeBv\\kArUeBz\\sBdCyCUqBpB{B`I"
+			},
+			{
+				"summary": {
+					"has_time_restrictions": false,
+					"has_toll": false,
+					"has_highway": false,
+					"has_ferry": false,
+					"min_lat": 52.518637,
+					"min_lon": 13.429766,
+					"max_lat": 52.519821,
+					"max_lon": 13.434299,
+					"time": 97.288,
+					"length": 0.438,
+					"cost": 229.386
+				},
+				"shape": "qmodcBm_urXzBaIpBqBxCTrBeCdB{\\jAsUdBw\\nAyWp@kNx@iQf@kKsDkJt@aMFcA^iHmB]iMuC}XmGsEgAoMyCeAWiCi@f@kCPiAR}@z@sELq@|B_MzAsK~@oH"
+			}
+		],
+		"summary": {
+			"has_time_restrictions": false,
+			"has_toll": false,
+			"has_highway": false,
+			"has_ferry": false,
+			"min_lat": 52.517973,
+			"min_lon": 13.429766,
+			"max_lat": 52.520135,
+			"max_lon": 13.434299,
+			"time": 252.42,
+			"length": 1.21,
+			"cost": 592.928
+		},
+		"status_message": "Found route between points",
+		"status": 0,
+		"units": "kilometers",
+		"language": "en-US"
+	}
+}

@@ -35,19 +35,6 @@ constexpr float kCostThresholdPedestrianDivisor =
     28.0f; // 200 km distance threshold will result in a cost threshold of ~7200 (2 hours)
 
 /**
- * Status of a location. Tracks remaining locations to be found
- * and a threshold or iterations. When threshold goes to 0 expansion
- * stops for this location.
- */
-struct LocationStatus {
-  int threshold;
-  std::set<uint32_t> unfound_connections;
-
-  LocationStatus(const int t) : threshold(t) {
-  }
-};
-
-/**
  * Best connection. Information about the best connection found between
  * a source and target pair.
  */
@@ -128,6 +115,9 @@ protected:
   uint32_t min_iterations_;
   uint32_t max_iterations_;
 
+  // path distance (meters) from a location within which its tree expands with a zero heuristic
+  uint32_t dijkstra_distance_;
+
   // Access mode used by the costing method
   uint32_t access_mode_;
 
@@ -146,6 +136,7 @@ protected:
   // The path distance threshold being used for the currently executing query
   float current_pathdist_threshold_;
 
+  struct LocationStatus;
   // Status
   std::array<std::vector<LocationStatus>, 2> locs_status_;
 
@@ -244,10 +235,13 @@ protected:
    * these locations.
    * @param  graphreader  Graph reader for accessing routing graph.
    * @param  target       List of target locations.
+   * @param  time_info    Time info for the reverse trees; only valid with invariant
+   *                      time and a single departure time shared by all sources.
    * @param  source       List of source locations.
    */
   void SetTargets(baldr::GraphReader& graphreader,
                   const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+                  const baldr::TimeInfo& time_info,
                   const google::protobuf::RepeatedPtrField<valhalla::Location>& sources);
 
   /**
@@ -293,15 +287,19 @@ protected:
   /**
    * Get the minimum AStar heuristic for a given source/target, i.e. for a source we get
    * the minimum heuristic of all targets for the forward expansion, so that we direct
-   * the search towards the closest target/source.
+   * the search towards the closest target/source. Returns 0 while the expansion is still
+   * within dijkstra_distance_ of its own location, which makes it expand by true cost only.
    *
-   * @param loc_idx  either the source or target index
-   * @param node_ll  the current edge's end node's lat/lon
+   * @param loc_idx        either the source or target index
+   * @param node_ll        the current edge's end node's lat/lon
+   * @param path_distance  the label's path distance (meters) from its own location
    * @returns The heuristic for the closest target/source of the passed node
    */
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
-  float GetAstarHeuristic(const uint32_t loc_idx, const midgard::PointLL& node_ll) const;
+  float GetAstarHeuristic(const uint32_t loc_idx,
+                          const midgard::PointLL& node_ll,
+                          const uint32_t path_distance) const;
 
 private:
   class ReachedMap;

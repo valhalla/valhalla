@@ -18,13 +18,6 @@
 #include <stdexcept>
 #include <string>
 
-#ifndef _MSC_VER
-#include <sys/mman.h>
-#endif
-
-#include <fcntl.h>
-#include <sys/stat.h>
-
 namespace {
 bool json_deep_equality(const rapidjson::Value& j1, const rapidjson::Value& j2) {
   if (j1.GetType() != j2.GetType())
@@ -111,28 +104,8 @@ bool remove_child(boost::property_tree::ptree& pt, const std::string& path) {
 
 namespace test {
 
-struct MMap {
-  MMap(const char* filename) {
-    fd = open(filename, O_RDWR);
-    struct stat s;
-#ifdef _MSC_VER
-    _fstat64(fd, &s);
-#else
-    fstat(fd, &s);
-#endif
-    data = mmap(0, s.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    length = s.st_size;
-  }
-
-  ~MMap() {
-    munmap(data, length);
-    close(fd);
-  }
-
-  int fd;
-  void* data;
-  size_t length;
-};
+// a memmap that we can write to for traffic tar testing
+using MMap = valhalla::midgard::mem_map<char>;
 
 class MMapGraphMemory final : public valhalla::baldr::GraphMemory {
 public:
@@ -174,14 +147,18 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
 
   std::string defaults = R"(
     {
+      "logging": {
+        "color": false,
+        "type": "std_out"
+      },
       "additional_data": {
         "elevation": "%%/elevation/"
       },
       "httpd": {
         "service": {
-          "interrupt": "ipc://%%/interrupt",
-          "listen": "ipc://%%/listen",
-          "loopback": "ipc://%%/loopback"
+          "interrupt": "inproc://%%/interrupt",
+          "listen": "tcp://127.0.0.1:8002",
+          "loopback": "inproc://%%/loopback"
         }
       },
       "loki": {
@@ -199,12 +176,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "centroid",
           "status"
         ],
-        "logging": {
-          "color": false,
-          "type": "std_out"
-        },
         "service": {
-          "proxy": "ipc://%%/loki"
+          "proxy": "inproc://%%/loki"
         },
         "service_defaults": {
           "heading_tolerance": 60,
@@ -269,7 +242,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "turn_penalty_factor": 100
         },
         "service": {
-          "proxy": "ipc://%%/meili"
+          "proxy": "inproc://%%/meili"
         },
         "verbose": false
       },
@@ -296,10 +269,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "include_construction": true,
         "include_driving": true,
         "include_pedestrian": true,
-        "logging": {
-          "color": false,
-          "type": "std_out"
-        },
         "lru_mem_cache_hard_control": false,
         "max_cache_size": 1000000000,
         "max_concurrent_reader_users": 1,
@@ -314,12 +283,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "use_lru_mem_cache": false
       },
       "odin": {
-        "logging": {
-          "color": false,
-          "type": "std_out"
-        },
         "service": {
-          "proxy": "ipc://%%/odin"
+          "proxy": "inproc://%%/odin"
         }
       },
       "service_limits": {
@@ -457,13 +422,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         }
       },
       "thor": {
-        "logging": {
-          "color": false,
-          "long_request": 110.0,
-          "type": "std_out"
-        },
         "service": {
-          "proxy": "ipc://%%/thor"
+          "proxy": "inproc://%%/thor"
         },
         "source_to_target_algorithm": "select_optimal",
         "costmatrix": {
@@ -604,7 +564,9 @@ void build_live_traffic_data(const boost::property_tree::ptree& config,
 
       /* Write strings to files `test1.txt` and `test2.txt` */
       std::string blanktile = buffer.str();
-      std::string filename = valhalla::baldr::GraphTile::FileSuffix(tile_id);
+      // tar entries always use forward slash, even on windows
+      std::string filename =
+          valhalla::baldr::GraphTile::FileSuffix(tile_id, valhalla::baldr::SUFFIX_NON_COMPRESSED);
       auto e1 = mtar_write_file_header(&tar, filename.c_str(), blanktile.size());
       if (e1 != MTAR_ESUCCESS) {
         throw std::runtime_error("Could not write tar-file header");
@@ -630,12 +592,13 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
                                  const LiveTrafficCustomize& setter_cb) {
   // Now we have the tar-file and can go ahead with per edge customizations
   {
+    const auto traffic_path = config.get<std::string>("mjolnir.traffic_extract");
     const auto memory =
-        std::make_shared<MMap>(config.get<std::string>("mjolnir.traffic_extract").c_str());
+        std::make_shared<MMap>(traffic_path, std::filesystem::file_size(traffic_path));
 
     mtar_t tar;
     tar.pos = 0;
-    tar.stream = memory->data;
+    tar.stream = memory->get();
     tar.read = [](mtar_t* tar, void* data, unsigned size) -> int {
       memcpy(data, reinterpret_cast<char*>(tar->stream) + tar->pos, size);
       return MTAR_ESUCCESS;

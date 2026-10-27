@@ -384,6 +384,7 @@ bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
       {"expansion_type", Options_ExpansionProperties_expansion_type},
       {"flow_sources", Options_ExpansionProperties_flow_sources},
       {"travel_mode", Options_ExpansionProperties_travel_mode},
+      {"expansion_index", Options_ExpansionProperties_expansion_index},
   };
   auto i = actions.find(prop);
   if (i == actions.cend())

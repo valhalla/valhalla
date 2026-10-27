@@ -1,4 +1,7 @@
-name: Build Node.js bindings
+# TODO: make this like the python workflow. build and unit test the node bindings in the regular
+# linux, windows and osx builds (ENABLE_NODE_BINDINGS on) so every pr exercises them, and shrink
+# this workflow to just packaging and publishing the npm tarball on merge to master or on tags.
+name: node.js
 
 on:
   push:
@@ -33,21 +36,24 @@ concurrency:
 
 jobs:
   build_nodejs_bindings:
-    name: Build Node.js bindings (${{ matrix.os }}-${{ matrix.arch }})
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container }}
     strategy:
       matrix:
         include:
-          - os: linux
+          - name: linux
+            os: linux
             arch: x64
             runner: ubuntu-latest
             container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
-          - os: linux
+          - name: linux arm
+            os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
             container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
-          - os: macos
+          - name: osx
+            os: macos
             arch: arm64
             runner: macos-14
             container: null
@@ -58,10 +64,9 @@ jobs:
       # since we are running in a container, we need to set the ccache directory to folder accessible from GHA runner
       CCACHE_DIR: ${{ matrix.os == 'linux' && '.ccache' || '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 0
           fetch-tags: true
       
       - name: Setup ccache
@@ -80,7 +85,7 @@ jobs:
       # TODO: can we move this to manylinux image?
       - name: Setup Python alias (Linux)
         if: matrix.os == 'linux'
-        run: ln -s $(which python3.12) /usr/local/bin/python
+        run: ln -sf $(which python3.12) /usr/local/bin/python
 
       - name: Build Valhalla with Node.js bindings
         run: |
@@ -119,11 +124,11 @@ jobs:
           path: nodejs_dist.tar
   
   package_nodejs_bindings:
-    name: Package Node.js bindings for NPM
+    name: package
     runs-on: ubuntu-latest
     needs: [build_nodejs_bindings]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           sparse-checkout: |
             src/bindings/nodejs/
@@ -131,7 +136,6 @@ jobs:
             valhalla/valhalla.h
             proto/
           sparse-checkout-cone-mode: false
-          fetch-depth: 0
           fetch-tags: true
 
       - name: Download all binding artifacts
@@ -157,22 +161,25 @@ jobs:
           path: valhalla-npm-package/*.tgz
 
   verify_nodejs_package:
-    name: Verify NPM package (${{ matrix.os }}-${{ matrix.arch }})
+    name: verify ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     needs: [package_nodejs_bindings]
     container: ${{ matrix.container }}
     strategy:
       matrix:
         include:
-          - os: linux
+          - name: linux
+            os: linux
             arch: x64
             runner: ubuntu-latest
             container: node:18
-          - os: linux
+          - name: linux arm
+            os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
             container: node:18
-          - os: macos
+          - name: osx
+            os: macos
             arch: arm64
             runner: macos-14
             container: null
@@ -184,7 +191,7 @@ jobs:
           node-version: '18'
 
       - name: Checkout test files
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             src/bindings/nodejs/test/
@@ -224,7 +231,7 @@ jobs:
           node --test src/bindings/nodejs/test/test-integration.js
 
   publish_npm:
-    name: Publish to NPM
+    name: publish
     runs-on: ubuntu-latest
     needs: [verify_nodejs_package]
     if: ${{ (startsWith(github.ref, 'refs/tags/') || (github.event_name == 'schedule')) && (github.repository_owner == 'valhalla') }}
@@ -244,16 +251,11 @@ jobs:
           name: valhalla-npm-package
       
       - name: Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "[INFO] Downloaded package:"
           ls -lh *.tgz
-          
-          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]]; then
-            NPM_TAG="latest"
-          else
-            NPM_TAG="periodic"
-          fi
-          
-          echo "[INFO] Publishing to NPM with tag: ${NPM_TAG}..."
-          npm publish *.tgz --access public --tag ${NPM_TAG} --provenance
+          echo "[INFO] Publishing to NPM..."
+          npm publish *.tgz --access public --tag latest --provenance
 

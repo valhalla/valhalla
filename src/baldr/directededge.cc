@@ -115,18 +115,14 @@ void DirectedEdge::set_sign(const bool exit) {
 // ------------------------- Geographic attributes ------------------------- //
 
 // Sets the length of the edge in meters.
-void DirectedEdge::set_length(const uint32_t length, bool should_error) {
+void DirectedEdge::set_length(const double length) {
   if (length > kMaxEdgeLength) {
-    if (should_error) {
-      // Consider this a catastrophic error.
-      LOG_ERROR("Exceeding max. edge length: " + std::to_string(length));
-      throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
-    }
-    LOG_WARN("Exceeding max. edge length: " + std::to_string(length));
-    length_ = kMaxEdgeLength;
-  } else {
-    length_ = length;
+    // Consider this a catastrophic error.
+    LOG_ERROR("Exceeding max. edge length: " + std::to_string(length));
+    throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
   }
+
+  length_ = std::max(static_cast<uint32_t>(std::round(length)), kMinEdgeLength);
 }
 
 // Sets the weighted_grade factor (0-15) for the edge.
@@ -295,7 +291,6 @@ void DirectedEdge::set_lanecount(const uint32_t lanecount) {
 // all vehicles, at all times.
 void DirectedEdge::set_restrictions(const uint32_t mask) {
   if (mask >= (1 << kMaxTurnRestrictionEdges)) {
-    LOG_WARN("Restrictions mask exceeds allowable limit: " + std::to_string(mask));
     restrictions_ = (mask & ((1 << kMaxTurnRestrictionEdges) - 1));
   } else {
     restrictions_ = mask;
@@ -349,7 +344,6 @@ void DirectedEdge::set_reverseaccess(const uint32_t modes) {
 // Sets the average speed in KPH.
 void DirectedEdge::set_speed(const uint32_t speed) {
   if (speed > kMaxAssumedSpeed) {
-    LOG_WARN("Exceeding maximum.  Average speed: " + std::to_string(speed));
     speed_ = kMaxAssumedSpeed;
   } else {
     speed_ = speed;
@@ -359,7 +353,6 @@ void DirectedEdge::set_speed(const uint32_t speed) {
 // Sets the truck speed in KPH.
 void DirectedEdge::set_truck_speed(const uint32_t speed) {
   if (speed > kMaxAssumedSpeed) {
-    LOG_WARN("Exceeding maximum.  Truck speed: " + std::to_string(speed));
     truck_speed_ = kMaxAssumedSpeed;
   } else {
     truck_speed_ = speed;
@@ -429,7 +422,7 @@ void DirectedEdge::complex_restriction(const bool part_of) {
 // Set the density along the edges.
 void DirectedEdge::set_density(const uint32_t density) {
   if (density > kMaxDensity) {
-    LOG_WARN("Exceeding max. density: " + std::to_string(density));
+    LOG_DEBUG("Exceeding max. density: " + std::to_string(density));
     density_ = kMaxDensity;
   } else {
     density_ = density;

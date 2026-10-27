@@ -1,6 +1,7 @@
 #include "loki/search.h"
 #include "loki/worker.h"
 #include "midgard/pointll.h"
+#include "worker.h"
 
 #include <cmath>
 
@@ -172,8 +173,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
     options.mutable_locations()->Add()->CopyFrom(*shape->rbegin());
 
     for (auto& location : *options.mutable_locations()) {
-      location.set_node_snap_tolerance(0.f);
-      location.set_radius(10);
+      apply_trace_location_defaults(location);
     }
     parse_locations(options.mutable_locations(), request);
 

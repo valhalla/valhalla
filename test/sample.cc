@@ -5,7 +5,9 @@
 #include "pixels.h"
 
 #include <gtest/gtest.h>
+#ifdef ENABLE_LZ4
 #include <lz4frame.h>
+#endif
 
 #include <cmath>
 #include <filesystem>
@@ -71,6 +73,7 @@ TEST(Sample, create_tile) {
   // gzip it
   EXPECT_TRUE(baldr::deflate(src_func, dst_func)) << "Can't write gzipped elevation tile";
 
+#ifdef ENABLE_LZ4
   // lz4 it
   std::vector<char> lz4_buffer(tile.size() * sizeof(int16_t) * 2, 0);
   size_t out_bytes =
@@ -80,6 +83,7 @@ TEST(Sample, create_tile) {
 
   std::ofstream lzfile("test/data/samplelz4/N40/N40W077.hgt.lz4", std::ios::binary | std::ios::trunc);
   lzfile.write(static_cast<const char*>(static_cast<void*>(lz4_buffer.data())), out_bytes);
+#endif
 }
 
 void _get(const std::string& location) {
@@ -115,9 +119,11 @@ TEST(Sample, getgz) {
   _get("test/data/samplegz");
 };
 
+#ifdef ENABLE_LZ4
 TEST(Sample, getlz4) {
   _get("test/data/samplelz4");
 };
+#endif
 
 struct testable_sample_t : public skadi::sample {
   testable_sample_t(const std::string& dir) : sample(dir) {
@@ -142,7 +148,7 @@ struct testable_sample_t : public skadi::sample {
 };
 
 TEST(Sample, edges) {
-  testable_sample_t s("/dev/null");
+  testable_sample_t s("");
 
   // check 4 pixels
   auto n = .5f / 3600;
@@ -209,24 +215,29 @@ TEST(Sample, store) {
   for (const auto& p : pixels) {
     tile[p.first] = p.second;
   }
-  std::ofstream file("test/data/sample/N00/N00E005.hgt", std::ios::binary | std::ios::trunc);
-  file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
-             sizeof(int16_t) * tile.size());
+  {
+    std::ofstream file("test/data/sample/N00/N00E005.hgt", std::ios::binary | std::ios::trunc);
+    file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
+               sizeof(int16_t) * tile.size());
+  }
 
-  testable_sample_t s("test/data/sample");
+  {
+    testable_sample_t s("test/data/sample");
 
-  EXPECT_TRUE(s.store("/N00/N00E005.hgt", {}));
-  EXPECT_TRUE(s.store("/N00/N00E005.hgt.gz", {}));
+    EXPECT_TRUE(s.store("/N00/N00E005.hgt", {}));
+    EXPECT_TRUE(s.store("/N00/N00E005.hgt.gz", {}));
 
-  // can be archived only with ".gz" format.
-  EXPECT_FALSE(s.store("/N00/N00E005.hgt.tar", {}));
+    // can be archived only with ".gz" format.
+    EXPECT_FALSE(s.store("/N00/N00E005.hgt.tar", {}));
 
-  // empty file
-  EXPECT_FALSE(s.store("/N00/N00E009.hgt", {}));
+    // empty file
+    EXPECT_FALSE(s.store("/N00/N00E009.hgt", {}));
+  } // destroy s (drops mmaps) before removing the files on Windows
 
-  std::filesystem::remove("test/data/sample/N00/N00E009.hgt");
-  std::filesystem::remove("test/data/sample/N00/N00E005.hgt");
-  std::filesystem::remove("test/data/sample/N00/N00E005.hgt.gz");
+  std::error_code ec;
+  std::filesystem::remove("test/data/sample/N00/N00E009.hgt", ec);
+  std::filesystem::remove("test/data/sample/N00/N00E005.hgt", ec);
+  std::filesystem::remove("test/data/sample/N00/N00E005.hgt.gz", ec);
 }
 
 } // namespace

@@ -15,8 +15,8 @@ namespace meili {
 
 class State {
 public:
-  State(const StateId& stateid, const Location& candidate)
-      : stateid_(stateid), candidate_(candidate), labelset_(nullptr), label_idx_() {
+  State(const StateId& stateid, Location&& candidate)
+      : stateid_(stateid), candidate_(std::move(candidate)), labelset_(nullptr), label_idx_() {
   }
 
   const StateId& stateid() const {
@@ -164,13 +164,13 @@ public:
     return time;
   }
 
-  template <typename candidate_t> StateId AppendCandidate(const candidate_t& candidate) {
+  StateId AppendCandidate(Location&& candidate) {
     const auto& stateid = NewStateId();
-    AppendState(State(stateid, candidate));
+    AppendState(State(stateid, std::move(candidate)));
     return stateid;
   }
 
-  void AppendState(const State& state) {
+  void AppendState(State&& state) {
     if (columns_.empty()) {
       throw std::runtime_error("add measurement first");
     }
@@ -183,7 +183,7 @@ public:
                                std::to_string(state.stateid().id()));
     }
 
-    columns_.back().push_back(state);
+    columns_.back().push_back(std::move(state));
   }
 
 private:

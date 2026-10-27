@@ -46,7 +46,7 @@ struct linestring_handler_t {
 
 TEST(VectorTilesBasic, ConfigFail) {
   // zoom config with descending levels fails
-  auto config = test::make_config("/tmp");
+  auto config = test::make_config(std::filesystem::temp_directory_path().generic_string());
   auto& mvt_min_zoom_road_class = config.get_child("loki.service_defaults.mvt_min_zoom_road_class");
   auto it = mvt_min_zoom_road_class.begin();
   it->second.put_value(30);
@@ -111,7 +111,7 @@ TEST(VectorTilesBasic, TileRendering) {
   // make the vertical road cross the level 14 tile.
   constexpr double gridsize = 1000;
   const std::string ascii_map = R"(
-x
+
 A-B-C
   |
   |
@@ -120,20 +120,20 @@ A-B-C
   )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}, {"name", "Main Street"}}},
+      {"AB", {{"highway", "primary"}, {"name", "Main Street"}, {"maxweight", "7"}}},
       {"BC", {{"highway", "primary"}, {"name", "Main Street"}}},
       {"BD", {{"highway", "secondary"}, {"name", "Side Street"}}},
   };
 
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {2.315260, 48.869168});
   auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_vt_basic");
 
   std::string tile_data;
   [[maybe_unused]] auto api =
-      gurka::do_action(Options::tile, map, "x", 14, "auto", {}, nullptr, &tile_data);
+      gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
 
-  EXPECT_LT(tile_data.size(), 3550);
-  EXPECT_GT(tile_data.size(), 3450);
+  EXPECT_LT(tile_data.size(), 3950);
+  EXPECT_GT(tile_data.size(), 3750);
 
   // expect a non-verbose request to have a lot less size
   std::string tile_data_slim;
@@ -143,6 +143,7 @@ A-B-C
 
   vtzero::vector_tile tile{tile_data};
 
+  EXPECT_EQ(tile.count_layers(), 4);
   while (auto layer = tile.next_layer()) {
     EXPECT_TRUE(layer.num_features() > 0);
 
@@ -198,6 +199,31 @@ A-B-C
       for (const auto& prop : expected_props) {
         EXPECT_TRUE(found_props.count(prop) > 0) << "Node should have property: " << prop;
       }
+    } else if (layer_name == "access_restrictions") {
+      EXPECT_EQ(layer.version(), 2);
+      EXPECT_EQ(layer.extent(), 4096);
+
+      EXPECT_EQ(layer.num_features(), 2);
+
+      auto feature = layer.next_feature();
+      EXPECT_TRUE(feature.has_id());
+      EXPECT_GT(feature.id(), 0);
+
+      EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::LINESTRING);
+
+      std::set<std::string> expected_props = {"value", "modes", "type", "except_destination",
+                                              "edge_id"};
+      std::set<std::string> found_props;
+      while (auto property = feature.next_property()) {
+        std::string key = std::string(property.key());
+        found_props.insert(key);
+      }
+
+      // Check that all expected properties are present
+      for (const auto& prop : expected_props) {
+        EXPECT_TRUE(found_props.count(prop) > 0)
+            << "Access Restriction should have property: " << prop;
+      }
     } else {
       FAIL() << "Unexpected layer: " << layer_name;
     }
@@ -246,12 +272,12 @@ protected:
         {"KL", {{"highway", "service"}, {"name", "South Street"}}},
     };
 
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {2.315260, 48.869168});
     // just an anchor from which to determine xy of the /tile request
     const gurka::nodes nodes = {
         {"x", {{"bla", "bla"}}},
     };
 
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     const std::unordered_map<std::string, std::string> build_options =
         {{"loki.service_defaults.mvt_cache_dir", VALHALLA_BUILD_DIR "test/data/mvt_cache_dir"},
          {"loki.service_defaults.mvt_cache_min_zoom", "11"}};
@@ -356,17 +382,17 @@ TEST_F(VectorTiles, TileRenderingDifferentZoomLevels) {
   };
 
   uint32_t cache_count = 0;
-  test_tile(8, 3554, 3, 4, 1, cache_count);    // only primary & shortcut
-  test_tile(10, 3554, 3, 4, 1, cache_count);   // same as 8, adds nothing
-  test_tile(11, 4464, 6, 8, 2, cache_count);   // adds tertiary & shortcut
-  test_tile(12, 4464, 6, 8, 2, cache_count);   // same as 11, adds nothing
-  test_tile(13, 6528, 14, 20, 2, cache_count); // adds residential
-  test_tile(14, 7099, 17, 20, 2, cache_count); // adds service/other
+  test_tile(8, 3754, 3, 4, 1, cache_count);    // only primary & shortcut
+  test_tile(10, 3754, 3, 4, 1, cache_count);   // same as 8, adds nothing
+  test_tile(11, 4764, 6, 8, 2, cache_count);   // adds tertiary & shortcut
+  test_tile(12, 4684, 6, 8, 2, cache_count);   // same as 11, adds nothing
+  test_tile(13, 6788, 14, 20, 2, cache_count); // adds residential
+  test_tile(14, 7360, 17, 20, 2, cache_count); // adds service/other
   // per default we only cache from z11 on
   EXPECT_EQ(cache_count, 4);
 
   // execute the cache path
-  test_tile(14, 7099, 17, 20, 2, cache_count);
+  test_tile(14, 7360, 17, 20, 2, cache_count);
 
   // make sure we fail the request when z exceeds what the server supports
   EXPECT_THROW(

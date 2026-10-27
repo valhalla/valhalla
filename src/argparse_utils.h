@@ -13,13 +13,12 @@
  * Parses common command line arguments across executables. It
  * - alters the config ptree and sets the concurrency config, where it favors the command line arg,
  * then falls back to the config and finally to all threads
- * - sets the logging configuration
+ * - sets the logging configuration from the top-level "logging" section
  *
  * @param program The executable's name
  * @param opts    The command line options
  * @param result  The parsed result
  * @param config  The config which will be populated here
- * @param log     The logging config node's key. If empty, logging will not be configured.
  * @param use_threads Whether this program multi-threads
  * @param extra_help Optional function pointer to print more stuff to the end of the help message.
  *
@@ -30,7 +29,6 @@ bool parse_common_args(const std::string& program,
                        const cxxopts::Options& opts,
                        const cxxopts::ParseResult& result,
                        boost::property_tree::ptree* conf,
-                       const std::string& log,
                        const bool use_threads = false,
                        std::function<void()> extra_help = nullptr) {
 
@@ -59,13 +57,7 @@ bool parse_common_args(const std::string& program,
     }
 
     // configure logging
-    auto logging_subtree = conf->get_child_optional(log);
-    if (!log.empty() && logging_subtree) {
-      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                     std::unordered_map<std::string, std::string>>(
-          logging_subtree.get());
-      valhalla::midgard::logging::Configure(logging_config);
-    }
+    valhalla::midgard::logging::ConfigureFromPtree(*conf);
   }
 
   if (use_threads) {

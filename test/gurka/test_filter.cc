@@ -1,4 +1,5 @@
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 
 #include <gtest/gtest.h>
@@ -126,17 +127,66 @@ TEST(Standalone, FerryEdges) {
 
     const auto big = gurka::findEdge(reader, layout, "DEF", "F");
     EXPECT_EQ(std::get<1>(big)->speed(), 6);
-    EXPECT_EQ(std::get<1>(big)->length(), 6199); // merged
+    EXPECT_EQ(std::get<1>(big)->length(), 6200); // merged
     EXPECT_EQ(std::get<3>(big)->speed(), 6);
-    EXPECT_EQ(std::get<3>(big)->length(), 6199);
+    EXPECT_EQ(std::get<3>(big)->length(), 6200);
 
     // Small and big edges got merged.
     const auto small = gurka::findEdge(reader, layout, "DEF", "D");
     EXPECT_EQ(std::get<1>(small)->speed(), 6);
-    EXPECT_EQ(std::get<1>(small)->length(), 6199);
+    EXPECT_EQ(std::get<1>(small)->length(), 6200);
     EXPECT_EQ(std::get<3>(small)->speed(), 6);
-    EXPECT_EQ(std::get<3>(small)->length(), 6199);
+    EXPECT_EQ(std::get<3>(small)->length(), 6200);
     EXPECT_EQ(std::get<0>(big), std::get<2>(small));
     EXPECT_EQ(std::get<2>(big), std::get<0>(small));
   }
+}
+
+TEST(Standalone, MatchAggregatedLoop) {
+  const std::string ascii_map = R"(
+      d      c      b      a
+      |      4   3  |      |
+      D------C------B------A
+      |                    |
+      |1                   J------K
+      |                    |
+      F----2-G------H------I
+      |      |      |      |
+      f      g      h      i
+  )";
+
+  const gurka::ways ways = {
+      {"ABCDFGHIJA", {{"highway", "service"}, {"service", "parking_aisle"}, {"maxspeed", "30"}}},
+      // Footways that split the loop and which are filtered out with include_pedestrian=false
+      {"KJ", {{"highway", "service"}}},
+      {"Aa", {{"highway", "footway"}}},
+      {"Bb", {{"highway", "footway"}}},
+      {"Cc", {{"highway", "footway"}}},
+      {"Dd", {{"highway", "footway"}}},
+      {"Ff", {{"highway", "footway"}}},
+      {"Gg", {{"highway", "footway"}}},
+      {"Hh", {{"highway", "footway"}}},
+      {"Ii", {{"highway", "footway"}}},
+  };
+
+  const double gridsize = 5;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_filter_loop",
+                               {{"mjolnir.include_pedestrian", "false"}});
+
+  std::string trace_json;
+  [[maybe_unused]] auto api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4"}, "auto",
+                       {{"/elevation_interval", "30"}}, {}, &trace_json);
+
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+  ASSERT_FALSE(result.HasParseError());
+  ASSERT_TRUE(result.HasMember("edges"));
+  auto edges = result["edges"].GetArray();
+  // The loop is kept split (not aggregated back into a single loop edge), so the trace
+  // traverses multiple edges — all from the same parking_aisle way.
+  ASSERT_GE(edges.Size(), 2u);
+  EXPECT_STREQ(edges[0]["names"][0].GetString(), "ABCDFGHIJA");
+  EXPECT_STREQ(edges[1]["names"][0].GetString(), "ABCDFGHIJA");
 }

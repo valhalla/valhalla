@@ -2,6 +2,7 @@
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/time_info.h"
+#include "proto_conversions.h"
 #include "tyr/serializers.h"
 
 #include <cstdint>
@@ -31,7 +32,7 @@ OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de)
 void serialize_access_restrictions(const graph_tile_ptr& tile,
                                    rapidjson::writer_wrapper_t& writer,
                                    uint32_t edge_idx) {
-  for (const auto& res : tile->GetAccessRestrictions(edge_idx)) {
+  for (const auto& res : tile->GetAccessRestrictions(edge_idx).first) {
     res.json(writer);
   }
 }
@@ -113,8 +114,7 @@ void serialize_edges(const Location& location,
                      GraphReader& reader,
                      rapidjson::writer_wrapper_t& writer,
                      bool verbose) {
-  writer.start_array("edges");
-  for (const auto& edge : location.correlation().edges()) {
+  auto serialize_edge = [&](const PathEdge& edge) {
     writer.start_object();
     try {
       // get the osm way id
@@ -128,7 +128,18 @@ void serialize_edges(const Location& location,
 
         // incident information
         if (traffic.has_incidents) {
-          // TODO: incidents
+          writer.start_array("incidents");
+          auto inc_result = reader.GetIncidents(GraphId(edge.graph_id()), tile);
+
+          for (int index = inc_result.start_index; index < inc_result.end_index; ++index) {
+            writer.start_object();
+            const auto& loc = inc_result.tile->locations(index);
+            const auto& meta = inc_result.tile->metadata(loc.metadata_index());
+            tyr::serializeIncidentProperties(writer, meta, -1, -1, "", "");
+            writer.end_object();
+          }
+
+          writer.end_array();
         }
         writer.start_array("access_restrictions");
         serialize_access_restrictions(tile, writer, GraphId(edge.graph_id()).id());
@@ -146,6 +157,12 @@ void serialize_edges(const Location& location,
                edge.side_of_street() == Location_SideOfStreet_kLeft
                    ? "left"
                    : (edge.side_of_street() == Location_SideOfStreet_kRight ? "right" : "neither"));
+
+        writer.start_object("bounding_circle");
+        writer("lat", edge.bounding_circle().latlng().lat());
+        writer("lon", edge.bounding_circle().latlng().lng());
+        writer("radius", static_cast<uint64_t>(edge.bounding_circle().radius()));
+        writer.end_object();
 
         writer("linear_reference", linear_reference(directed_edge, edge.percent_along(), edge_info));
         writer.set_precision(5);
@@ -210,8 +227,21 @@ void serialize_edges(const Location& location,
       LOG_WARN("Expected edge not found in graph but found by loki::search!");
     }
     writer.end_object();
+  };
+
+  writer.start_array("edges");
+  for (const auto& edge : location.correlation().edges()) {
+    serialize_edge(edge);
   }
+
   writer.end_array();
+  if (location.correlation().filtered_edges_size() > 0) {
+    writer.start_array("filtered_edges");
+    for (const auto& edge : location.correlation().filtered_edges()) {
+      serialize_edge(edge);
+    }
+    writer.end_array();
+  }
 }
 
 void serialize_nodes(const Location& location,

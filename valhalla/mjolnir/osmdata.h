@@ -25,6 +25,21 @@ struct OSMWayNode {
   uint32_t way_shape_node_index = 0;
 };
 
+// Node coordinate for faster traversal where only shapes are needed.
+struct OSMWayNodeShape {
+  uint32_t lng7 = std::numeric_limits<uint32_t>::max();
+  uint32_t lat7 = std::numeric_limits<uint32_t>::max();
+
+  midgard::PointLL latlng() const {
+    // if either coord is borked we return invalid ll
+    if (lng7 == std::numeric_limits<uint32_t>::max() ||
+        lat7 == std::numeric_limits<uint32_t>::max()) {
+      return {};
+    }
+    return {lng7 * 1e-7 - 180, lat7 * 1e-7 - 90};
+  }
+};
+
 // Structure to store OSM node information for BSS
 struct OSMBSSNode {
   OSMNode node;
@@ -37,6 +52,12 @@ struct OSMBike {
   uint8_t bike_network;
   uint32_t name_index;
   uint32_t ref_index;
+};
+
+// OSM area data (stored within OSMData)
+struct OSMAreaMember {
+  uint64_t way_id;
+  bool is_outer;
 };
 
 // OSM lane connectivity (stored within OSMData)
@@ -52,6 +73,7 @@ using RestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMRestriction>;
 using ViaSet = std::unordered_set<uint64_t>;
 using AccessRestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMAccessRestriction>;
 using BikeMultiMap = std::unordered_multimap<uint64_t, OSMBike>;
+using AreaMultiMap = std::unordered_multimap<uint64_t, OSMAreaMember>;
 using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint64_t, OSMLaneConnectivity>;
 using LinguisticMultiMap = std::unordered_multimap<uint64_t, OSMLinguistic>;
 using ConditionalSpeedLimitsMultiMap =
@@ -96,10 +118,11 @@ struct OSMData {
    */
   static void cleanup_temp_files(const std::string& tile_dir);
 
-  uint64_t pbf_checksum_;         // MD5 of PBF files as 64bit int
-  uint64_t max_changeset_id_;     // The largest/newest changeset id encountered when parsing OSM data
-  uint64_t osm_node_count;        // Count of osm nodes
-  uint64_t osm_way_count;         // Count of osm ways
+  uint64_t max_changeset_id_; // The largest/newest changeset id encountered when parsing OSM data
+  uint64_t max_way_id = 0;  // Highest way id seen while parsing. Synthetic ids are assigned above it
+  uint64_t max_node_id = 0; // Highest node id seen. Synthetic ids are assigned above it
+  uint64_t osm_node_count;  // Count of osm nodes
+  uint64_t osm_way_count;   // Count of osm ways
   uint64_t osm_way_node_count;    // Count of osm nodes on osm ways
   uint64_t node_count;            // Count of all nodes in the graph
   uint64_t edge_count;            // Estimated count of edges in the graph
@@ -119,6 +142,9 @@ struct OSMData {
 
   // Stores bike information from the relations.  Indexed by the way Id.
   BikeMultiMap bike_relations;
+
+  // Stores area information from the relations. Indexed by the relation Id.
+  AreaMultiMap area_relations;
 
   // Map that stores an updated ref for a way. This needs to remain a map, since relations
   // update many ways at a time (so we can't move this into OSMWay unless that is mapped by Id).

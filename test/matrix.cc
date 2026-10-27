@@ -38,14 +38,14 @@ public:
   }
 
   bool Allowed(const DirectedEdge* edge,
-               const bool /*is_dest*/,
                const EdgeLabel& pred,
                const graph_tile_ptr& /*tile*/,
                const GraphId& edgeid,
                const uint64_t /*current_time*/,
                const uint32_t /*tz_index*/,
                uint8_t& /*restriction_idx*/,
-               uint8_t& /*destonly_access_restr_mask*/) const override {
+               uint8_t& /*destonly_access_restr_mask*/,
+               bool* /*edge_destonly*/) const override {
     if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
@@ -63,7 +63,8 @@ public:
                       const uint64_t /*current_time*/,
                       const uint32_t /*tz_index*/,
                       uint8_t& /*restriction_idx*/,
-                      uint8_t& /*destonly_access_restr_mask*/) const override {
+                      uint8_t& /*destonly_access_restr_mask*/,
+                      bool* /*edge_destonly*/) const override {
     if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
@@ -93,8 +94,8 @@ public:
                       const NodeInfo* /*node*/,
                       const EdgeLabel& /*pred*/,
                       const graph_tile_ptr& /*tile*/,
-                      const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/
-  ) const override {
+                      const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
+                      const bool /*edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -102,11 +103,12 @@ public:
                              const NodeInfo* /*node*/,
                              const DirectedEdge* /*opp_edge*/,
                              const DirectedEdge* /*opp_pred_edge*/,
+                             const EdgeLabel& /*pred_label*/,
                              const graph_tile_ptr& /*tile*/,
-                             const baldr::GraphId& /*edge_id*/,
                              const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
                              const bool /*has_measured_speed*/,
-                             const InternalTurn /*internal_turn*/) const override {
+                             const InternalTurn /*internal_turn*/,
+                             const bool /*opp_edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -223,7 +225,7 @@ TEST(Matrix, test_matrix) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -308,7 +310,7 @@ TEST(Matrix, test_timedistancematrix_forward) {
   Api request;
   ParseApi(test_request_more_sources, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -359,7 +361,7 @@ TEST(Matrix, test_timedistancematrix_reverse) {
   Api request;
   ParseApi(test_request_more_sources, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -396,7 +398,7 @@ TEST(Matrix, test_matrix_osrm) {
   ParseApi(test_request_osrm, Options::sources_to_targets, request);
 
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -438,7 +440,7 @@ TEST(Matrix, partial_matrix) {
   Api request;
   ParseApi(test_request_partial, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -486,7 +488,7 @@ TEST(Matrix, default_matrix) {
   EXPECT_TRUE(json.HasMember("sources_to_targets"));
 
   // contains 10 keys
-  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 10);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 11);
 
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("distance"));
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("time"));
@@ -630,7 +632,7 @@ TEST(StandAlone, MatrixReservationsDefault) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
@@ -658,7 +660,7 @@ TEST(StandAlone, MatrixReservationsSmall) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
@@ -683,7 +685,7 @@ TEST(StandAlone, MatrixNoReservations) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =

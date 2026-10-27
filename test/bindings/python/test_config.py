@@ -5,7 +5,7 @@ import os
 import unittest
 from pathlib import Path
 
-from valhalla.config import parse_and_validate_config
+from valhalla.config import get_config, parse_and_validate_config
 
 
 class TestParseAndValidateConfig(unittest.TestCase):
@@ -195,6 +195,27 @@ class TestParseAndValidateConfig(unittest.TestCase):
         with self.assertRaises(AttributeError) as exc:
             parse_and_validate_config(config)
         self.assertIn("mjolnir.tile_extract and mjolnir.tile_dir are missing", str(exc.exception))
+
+
+class TestGetConfig(unittest.TestCase):
+    """Test suite for get_config function."""
+
+    def test_get_config_does_not_raise(self):
+        """get_config() must build a config without raising."""
+        # Empty tile paths avoid the strict filesystem resolve, so this runs
+        # without any tile data present.
+        config = get_config(tile_extract="", tile_dir="")
+
+        # Logging config lives at the top level, not under mjolnir.
+        self.assertIn("logging", config)
+        self.assertNotIn("logging", config["mjolnir"])
+
+    def test_get_config_verbose_toggles_logging_type(self):
+        """verbose controls the top-level logging.type value."""
+        self.assertEqual(
+            get_config(tile_extract="", tile_dir="", verbose=True)["logging"]["type"], "std_out"
+        )
+        self.assertEqual(get_config(tile_extract="", tile_dir="", verbose=False)["logging"]["type"], "")
 
 
 if __name__ == "__main__":

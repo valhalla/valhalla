@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_LOKI_TILES_H__
 #define __VALHALLA_LOKI_TILES_H__
 
+#include "baldr/accessrestriction.h"
 #include "baldr/admininfo.h"
 #include "baldr/attributes_controller.h"
 #include "baldr/datetime.h"
@@ -8,8 +9,11 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/traffictile.h"
+#include "proto/incidents.pb.h"
+#include "proto_conversions.h"
 
 #include <vtzero/builder.hpp>
+#include <vtzero/types.hpp>
 
 #include <cassert>
 #include <random>
@@ -31,6 +35,64 @@ struct EdgeAttributeTile {
                                const baldr::EdgeInfo&,
                                const volatile baldr::TrafficSpeed*);
   prop_func_t prop_func;
+};
+
+class AccessRestrictionLayerBuilder : vtzero::layer_builder {
+public:
+  explicit AccessRestrictionLayerBuilder(vtzero::tile_builder& tile, const char* name);
+
+  void add_feature(const std::vector<vtzero::point>& geometry,
+                   baldr::GraphId forward_edge_id,
+                   baldr::GraphId reverse_edge_id,
+                   std::pair<std::span<const baldr::AccessRestriction>, size_t> forward_restrictions,
+                   std::pair<std::span<const baldr::AccessRestriction>, size_t> reverse_restrictions);
+
+protected:
+  vtzero::index_value key_edge_id_;
+  vtzero::index_value key_type_;
+  vtzero::index_value key_modes_;
+  vtzero::index_value key_except_destination_;
+  vtzero::index_value key_value_;
+};
+
+class IncidentLayersBuilder;
+struct IncidentsAttributeTile {
+  const char* key_name;
+  std::string_view attribute_flag;
+  vtzero::index_value IncidentLayersBuilder::*key_member;
+
+  using value_func_t = vtzero::encoded_property_value (*)(const IncidentsTile::Metadata&);
+  value_func_t value_func;
+};
+
+class IncidentLayersBuilder : public vtzero::layer_builder {
+public:
+  explicit IncidentLayersBuilder(vtzero::tile_builder& tile,
+                                 const char* name,
+                                 const baldr::AttributesController& controller);
+
+  void add_point_feature(const IncidentsTile::Metadata&, const vtzero::point&);
+  void add_line_feature(const IncidentsTile::Metadata&, const std::vector<vtzero::point>& geometry);
+  vtzero::index_value key_type_;
+  vtzero::index_value key_impact_;
+  vtzero::index_value key_description_;
+  vtzero::index_value key_sub_type_;
+  vtzero::index_value key_sub_type_description_;
+  vtzero::index_value key_start_time_;
+  vtzero::index_value key_end_time_;
+  vtzero::index_value key_road_closed_;
+  vtzero::index_value key_congestion_value_;
+  vtzero::index_value key_creation_time_;
+  vtzero::index_value key_long_description_;
+  vtzero::index_value key_clear_lanes_;
+  vtzero::index_value key_num_lanes_blocked_;
+  vtzero::index_value key_length_;
+  vtzero::index_value key_id_;
+  vtzero::index_value key_iso_3166_1_alpha2_;
+  vtzero::index_value key_iso_3166_1_alpha3_;
+
+protected:
+  const baldr::AttributesController controller_;
 };
 
 /**
@@ -133,6 +195,10 @@ public:
   vtzero::index_value key_stop_sign_rev_;
   vtzero::index_value key_yield_sign_fwd_;
   vtzero::index_value key_yield_sign_rev_;
+  vtzero::index_value key_freeflow_speed_fwd_;
+  vtzero::index_value key_freeflow_speed_rev_;
+  vtzero::index_value key_constrained_speed_fwd_;
+  vtzero::index_value key_constrained_speed_rev_;
   // Access properties (forward)
   vtzero::index_value key_access_fwd_;
   // Access properties (reverse)
@@ -346,6 +412,34 @@ static constexpr EdgeAttributeTile kForwardEdgeAttributes[] = {
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed*) {
           feature.add_property(layer_builder->*(key_member), e.forwardaccess());
+        },
+    },
+    {
+        "freeflow_speed:fwd",
+        baldr::kEdgeFreeflowSpeedFwd,
+        &EdgesLayerBuilder::key_freeflow_speed_fwd_,
+        [](EdgesLayerBuilder* layer_builder,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::linestring_feature_builder& feature,
+           const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          feature.add_property(layer_builder->*(key_member),
+                               vtzero::encoded_property_value(e.free_flow_speed()));
+        },
+    },
+    {
+        "constrained_speed:fwd",
+        baldr::kEdgeConstrainedSpeedFwd,
+        &EdgesLayerBuilder::key_constrained_speed_fwd_,
+        [](EdgesLayerBuilder* layer_builder,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::linestring_feature_builder& feature,
+           const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          feature.add_property(layer_builder->*(key_member),
+                               vtzero::encoded_property_value(e.constrained_flow_speed()));
         },
     },
 };
@@ -583,6 +677,34 @@ static constexpr EdgeAttributeTile kReverseEdgeAttributes[] = {
            const baldr::EdgeInfo&,
            const volatile baldr::TrafficSpeed*) {
           feature.add_property(layer_builder->*(key_member), e.forwardaccess());
+        },
+    },
+    {
+        "freeflow_speed:bwd",
+        baldr::kEdgeFreeflowSpeedBwd,
+        &EdgesLayerBuilder::key_freeflow_speed_rev_,
+        [](EdgesLayerBuilder* layer_builder,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::linestring_feature_builder& feature,
+           const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          feature.add_property(layer_builder->*(key_member),
+                               vtzero::encoded_property_value(e.free_flow_speed()));
+        },
+    },
+    {
+        "constrained_speed:bwd",
+        baldr::kEdgeConstrainedSpeedBwd,
+        &EdgesLayerBuilder::key_constrained_speed_rev_,
+        [](EdgesLayerBuilder* layer_builder,
+           vtzero::index_value valhalla::loki::EdgesLayerBuilder::*const key_member,
+           vtzero::linestring_feature_builder& feature,
+           const baldr::DirectedEdge& e,
+           const baldr::EdgeInfo&,
+           const volatile baldr::TrafficSpeed*) {
+          feature.add_property(layer_builder->*(key_member),
+                               vtzero::encoded_property_value(e.constrained_flow_speed()));
         },
     },
 };
@@ -1318,6 +1440,145 @@ static constexpr NodeAttributeTile kNodeAttributes[] = {
     },
 };
 
+static constexpr IncidentsAttributeTile kIncidentAttributes[] = {
+    {
+        "description",
+        baldr::kIncidentDescription,
+        &IncidentLayersBuilder::key_description_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.description());
+        },
+    },
+    {
+        "type",
+        baldr::kIncidentType,
+        &IncidentLayersBuilder::key_type_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(
+              static_cast<std::string>(incidentTypeToString(meta.type())));
+        },
+    },
+    {
+        "impact",
+        baldr::kIncidentImpact,
+        &IncidentLayersBuilder::key_impact_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(
+              static_cast<std::string>(incidentImpactToString(meta.impact())));
+        },
+    },
+    {
+        "sub_type",
+        baldr::kIncidentSubType,
+        &IncidentLayersBuilder::key_sub_type_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.sub_type());
+        },
+    },
+    {
+        "sub_type_description",
+        baldr::kIncidentSubTypeDescription,
+        &IncidentLayersBuilder::key_sub_type_description_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.sub_type_description());
+        },
+    },
+    {
+        "start_time",
+        baldr::kIncidentStartTime,
+        &IncidentLayersBuilder::key_start_time_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.start_time());
+        },
+    },
+    {
+        "end_time",
+        baldr::kIncidentEndTime,
+        &IncidentLayersBuilder::key_end_time_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.end_time());
+        },
+    },
+    {
+        "road_closed",
+        baldr::kIncidentRoadClosed,
+        &IncidentLayersBuilder::key_road_closed_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.road_closed());
+        },
+    },
+    {
+        "congestion_value",
+        baldr::kIncidentCongestionValue,
+        &IncidentLayersBuilder::key_congestion_value_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.congestion().value());
+        },
+    },
+    {
+        "creation_time",
+        baldr::kIncidentCreationTime,
+        &IncidentLayersBuilder::key_creation_time_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.creation_time());
+        },
+    },
+    {
+        "long_description",
+        baldr::kIncidentLongDescription,
+        &IncidentLayersBuilder::key_long_description_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.long_description());
+        },
+    },
+    {
+        "clear_lanes",
+        baldr::kIncidentClearLanes,
+        &IncidentLayersBuilder::key_clear_lanes_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.clear_lanes());
+        },
+    },
+    {
+        "num_lanes_blocked",
+        baldr::kIncidentNumLanesBlocked,
+        &IncidentLayersBuilder::key_num_lanes_blocked_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.num_lanes_blocked());
+        },
+    },
+    {
+        "length",
+        baldr::kIncidentLength,
+        &IncidentLayersBuilder::key_length_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.length());
+        },
+    },
+    {
+        "id",
+        baldr::kIncidentId,
+        &IncidentLayersBuilder::key_id_,
+        [](const IncidentsTile::Metadata& meta) { return vtzero::encoded_property_value(meta.id()); },
+    },
+    {
+        "iso_3166_1_alpha2",
+        baldr::kIncidentIso31661Alpha2,
+        &IncidentLayersBuilder::key_iso_3166_1_alpha2_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.iso_3166_1_alpha2());
+        },
+    },
+    {
+        "iso_3166_1_alpha3",
+        baldr::kIncidentIso31661Alpha3,
+        &IncidentLayersBuilder::key_iso_3166_1_alpha3_,
+        [](const IncidentsTile::Metadata& meta) {
+          return vtzero::encoded_property_value(meta.iso_3166_1_alpha3());
+        },
+    },
+};
+
 // map from MVT prop name to controller attribute flag for edge properties
 static const std::unordered_map<std::string_view, std::string_view> kEdgePropToAttributeFlag = {
     // Forward edge attributes
@@ -1329,6 +1590,8 @@ static const std::unordered_map<std::string_view, std::string_view> kEdgePropToA
     {"stop_sign:fwd", baldr::kEdgeStopSignFwd},
     {"yield_sign:fwd", baldr::kEdgeYieldFwd},
     {"access:fwd", baldr::kEdgeAccessFwd},
+    {"freeflow_speed:fwd", baldr::kEdgeFreeflowSpeedFwd},
+    {"constrained_speed:fwd", baldr::kEdgeConstrainedSpeedFwd},
     // Forward live speed
     {"live_speed:fwd", baldr::kEdgeLiveSpeedFwd},
     {"live_speed:fwd:speed1", baldr::kEdgeLiveSpeedFwd},
@@ -1348,6 +1611,8 @@ static const std::unordered_map<std::string_view, std::string_view> kEdgePropToA
     {"stop_sign:bwd", baldr::kEdgeStopSignBwd},
     {"yield_sign:bwd", baldr::kEdgeYieldBwd},
     {"access:bwd", baldr::kEdgeAccessBwd},
+    {"freeflow_speed:bwd", baldr::kEdgeFreeflowSpeedBwd},
+    {"constrained_speed:bwd", baldr::kEdgeConstrainedSpeedBwd},
     // Reverse live speed
     {"live_speed:bwd", baldr::kEdgeLiveSpeedBwd},
     {"live_speed:bwd:speed1", baldr::kEdgeLiveSpeedBwd},
@@ -1418,6 +1683,28 @@ static const std::unordered_map<std::string_view, std::string_view> kNodePropToA
     {"iso_3166_1", baldr::kAdminCountryCode},
     {"iso_3166_2", baldr::kAdminStateCode},
 };
+
+static const std::unordered_map<std::string_view, std::string_view> kIncidentPropToAttributeFlag = {
+    // incident
+    {"description", baldr::kIncidentDescription},
+    {"type", baldr::kIncidentType},
+    {"impact", baldr::kIncidentImpact},
+    {"sub_type", baldr::kIncidentSubType},
+    {"sub_type_description", baldr::kIncidentSubTypeDescription},
+    {"start_time", baldr::kIncidentStartTime},
+    {"end_time", baldr::kIncidentEndTime},
+    {"road_closed", baldr::kIncidentRoadClosed},
+    {"congestion_value", baldr::kIncidentCongestionValue},
+    {"creation_time", baldr::kIncidentCreationTime},
+    {"long_description", baldr::kIncidentLongDescription},
+    {"clear_lanes", baldr::kIncidentClearLanes},
+    {"num_lanes_blocked", baldr::kIncidentNumLanesBlocked},
+    {"length", baldr::kIncidentLength},
+    {"id", baldr::kIncidentId},
+    {"iso_3166_1_alpha2", baldr::kIncidentIso31661Alpha2},
+    {"iso_3166_1_alpha3", baldr::kIncidentIso31661Alpha3},
+};
+
 } // namespace detail
 
 } // namespace valhalla::loki

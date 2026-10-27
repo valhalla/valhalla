@@ -36,6 +36,11 @@ public:
   void search(google::protobuf::RepeatedPtrField<Location>& locations,
               const sif::cost_ptr_t& costing);
 
+  void edges_in_bounds(const midgard::AABB2<midgard::PointLL>& bounds,
+                       std::unordered_set<baldr::GraphId>& edge_container);
+
+  void clear();
+
 private:
   baldr::GraphReader& reader_;
 

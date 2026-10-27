@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <format>
+
 using namespace std;
 using namespace valhalla::baldr;
 
@@ -127,6 +129,15 @@ TEST(GraphId, TestOpEqualTo) {
   TryOpEqualTo(GraphId(0, 0, 0), GraphId(0, 0, 0));
   TryOpEqualTo(GraphId(10, 5, 1), GraphId(10, 5, 1));
   TryOpEqualTo(GraphId(5, 1, 50), GraphId(5, 1, 50));
+}
+
+TEST(GraphId, TestFormat) {
+  EXPECT_EQ(std::format("{}", GraphId(123, 2, 8)), "2/123/8");
+  EXPECT_EQ(std::format("edge {} of {}", GraphId(0, 0, 7), GraphId(1, 1, 2)), "edge 0/0/7 of 1/1/2");
+  EXPECT_EQ(std::format("{:>9}", GraphId(0, 0, 7)), "    0/0/7");
+  EXPECT_EQ(std::format("{}", GraphId(kMaxGraphTileId, kMaxGraphHierarchy, kMaxGraphId)),
+            "7/4194303/2097151");
+  EXPECT_EQ(std::to_string(GraphId(123, 2, 8)), "2/123/8");
 }
 
 } // namespace

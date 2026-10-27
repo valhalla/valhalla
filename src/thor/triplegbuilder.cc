@@ -1422,6 +1422,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_surface(GetTripLegSurface(directededge->surface()));
   }
 
+  // Set curvature if requested
+  if (controller(kEdgeCurvature)) {
+    trip_edge->set_curvature(directededge->curvature());
+  }
+
   if (directededge->destonly() && controller(kEdgeDestinationOnly)) {
     trip_edge->set_destination_only(directededge->destonly());
   }
@@ -2026,6 +2031,12 @@ void TripLegBuilder::Build(
       trip_node->mutable_cost()->mutable_transition_cost()->set_cost(edge_itr->transition_cost.cost);
     }
 
+    // transit lines store the line id in place of the stop impact
+    if (controller(kNodeStopImpact) && !is_first_edge && !edge_itr->is_disconnected &&
+        !directededge->IsTransitLine()) {
+      trip_node->set_stop_impact(directededge->stopimpact(prior_opp_local_index));
+    }
+
     // Add multi modal stuff
     multimodal_builder.Build(trip_node, edge_itr->trip_id, node, startnode, directededge, edge,
                              start_tile, graphtile, mode_costing, controller, graphreader);
@@ -2248,8 +2259,11 @@ void TripLegBuilder::Build(
 
     ////////////// Prepare for the next iteration
 
-    // Set the endnode of this directed edge as the startnode of the next edge.
-    startnode = directededge->endnode();
+    // Set the endnode of this directed edge as the startnode of the next edge, unless that edge is
+    // repeated because of a mid-edge intermediate location.
+    if (const auto next = std::next(edge_itr); next == path_end || next->edgeid != edge) {
+      startnode = directededge->endnode();
+    }
 
     // Save the opposing edge as the previous DirectedEdge (for name consistency)
     if (!directededge->IsTransitLine()) {
