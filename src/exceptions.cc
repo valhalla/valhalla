@@ -100,7 +100,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {230, {230, "Invalid DirectionsLeg_Maneuver_Type in method FormTurnInstruction", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_turn"}},
     {231, {231, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeTwoDirection", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_relative_two"}},
     {232, {232, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeThreeDirection", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_relative_three"}},
-    {233, {233, "Failed to edge walk line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},  
+    {233, {233, "Failed to edge walk line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},  // no longer used, replaced by warning code 216
     {234, {234, "Exceeded maximum allowed cost factor edges", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "too_many_cost_factor_edges"}},
     {299, {299, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {312, {312, "Insufficiently specified required parameter 'shape' or 'encoded_polyline'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_parse_failed"}},
