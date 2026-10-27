@@ -618,8 +618,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_lit_, json, "/use_lit", use_lit, warnings);
 
   // use_curvature
-  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_curvature_, json, "/use_curvature", use_curvature,
-                             warnings);
+  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_curvature_, json, "/use_curvature", use_curvature, warnings);
 
   // closure_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor, warnings);
