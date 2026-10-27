@@ -1260,6 +1260,7 @@ void BuildTileSet(const std::string& ways_file,
 
           // Downgrade classification of any footways that are not kServiceOther
           if ((directededge.use() == Use::kFootway || directededge.use() == Use::kSteps ||
+               directededge.use() == Use::kLadder ||
                directededge.use() == Use::kSidewalk || directededge.use() == Use::kPedestrian) &&
               directededge.classification() != RoadClass::kServiceOther) {
             directededge.set_classification(RoadClass::kServiceOther);

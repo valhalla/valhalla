@@ -22,6 +22,23 @@ TEST(Ladder, PedestrianAccess) {
       valhalla::Options::route, map, {"A", "D"}, "pedestrian");
 
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
+
+  const auto& nodes = result.trip().routes(0).legs(0).node();
+  bool found_ladder = false;
+  for (const auto& node : nodes) {
+    if (node.has_edge() && node.edge().use() == TripLeg_Use_kLadderUse) {
+      found_ladder = true;
+    }
+  }
+  EXPECT_TRUE(found_ladder);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  const auto* edge = std::get<1>(
+      gurka::findEdgeByNodes(reader, layout, "B", "C"));
+
+  EXPECT_EQ(edge->use(), baldr::Use::kLadder);
+  EXPECT_TRUE(edge->forwardaccess() & baldr::kPedestrianAccess);
+  EXPECT_FALSE(edge->forwardaccess() & baldr::kWheelchairAccess);
 }
 
 TEST(Ladder, WheelchairAccess) {

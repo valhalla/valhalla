@@ -1604,7 +1604,7 @@ function filter_tags_generic(kv)
      elseif (kv["highway"] == "steps" and kv["conveying"] ~= nil) then
         use = 34 --escalator
      elseif kv["highway"] == "ladder" then
-        use = 26 -- treat ladders as steps for access and costing
+        use = 36 -- ladder
      elseif kv["highway"] == "steps" then
         use = 26 --steps/stairs
      elseif kv["highway"] == "path" then
