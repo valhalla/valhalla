@@ -13,6 +13,7 @@
    * FIXED: a `tile_url` download that got no response or a 408, 429, 500, 502, 503 or 504 is retried on the next request instead of never [#6417](https://github.com/valhalla/valhalla/pull/6417)
    * FIXED: a `tile_url` download that isn't a whole tile is no longer cached and no longer crashes [#6421](https://github.com/valhalla/valhalla/pull/6421)
    * FIXED: segfault in Python bindings (`get_tile_ids_from_ring`) [#6426](https://github.com/valhalla/valhalla/pull/6426)
+   * FIXED: don't skip past end time in frequency based transit schedules [#6399](https://github.com/valhalla/valhalla/pull/6399)
    * FIXED: matrix, isochrone and trace requests report errors like 446 instead of "No suitable edges near location" (171), as route already does [#6416](https://github.com/valhalla/valhalla/pull/6416)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
