@@ -110,6 +110,13 @@ class Optional:
         self.type = t
 
 
+# Windows ZMQ has no ipc:// (AF_UNIX) -- fall back to loopback tcp://.
+def ipc_endpoint(ipc_path: str, tcp_port: int) -> str:
+    if sys.platform.startswith("win"):
+        return f"tcp://127.0.0.1:{tcp_port}"
+    return f"ipc://{ipc_path}"
+
+
 # global default configuration
 config = {
     "logging": {
@@ -136,6 +143,7 @@ config = {
         "traffic_extract": "/data/valhalla/traffic.tar",
         "incident_dir": Optional(str),
         "incident_log": Optional(str),
+        "incident_max_loading_latency": Optional(int),
         "shortcut_caching": Optional(bool),
         "graph_lua_name": Optional(str),
         "admin": "/data/valhalla/admin.sqlite",
@@ -167,7 +175,6 @@ config = {
             "infer_internal_intersections": True,
             "infer_turn_channels": True,
             "apply_country_overrides": True,
-            "grid_divisions_within_tile": 32,
             "use_admin_db": True,
             "use_direction_on_ways": False,
             "allow_alt_name": False,
@@ -212,11 +219,11 @@ config = {
             "mvt_cache_min_zoom": 11,
             "mvt_max_age": "1800",
         },
-        "service": {"proxy": "ipc:///tmp/loki"},
+        "service": {"proxy": ipc_endpoint("/tmp/loki", 8003)},
     },
     "thor": {
         "source_to_target_algorithm": "select_optimal",
-        "service": {"proxy": "ipc:///tmp/thor"},
+        "service": {"proxy": ipc_endpoint("/tmp/thor", 8004)},
         "max_reserved_labels_count_astar": 2000000,
         "max_reserved_labels_count_bidir_astar": 1000000,
         "max_reserved_labels_count_dijkstras": 4000000,
@@ -229,6 +236,7 @@ config = {
             "max_reserved_locations": 25,
             "max_iterations": 2800,
             "min_iterations": 100,
+            "dijkstra_distance": 0,
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": 400,
@@ -260,7 +268,7 @@ config = {
         },
     },
     "odin": {
-        "service": {"proxy": "ipc:///tmp/odin"},
+        "service": {"proxy": ipc_endpoint("/tmp/odin", 8005)},
         "markup_formatter": {
             "markup_enabled": False,
             "phoneme_format": "<TEXTUAL_STRING> (<span class=<QUOTES>phoneme<QUOTES>>/<VERBAL_STRING>/</span>)",
@@ -298,14 +306,14 @@ config = {
         "pedestrian": {"turn_penalty_factor": 100, "search_radius": 50},
         "bicycle": {"turn_penalty_factor": 140},
         "multimodal": {"turn_penalty_factor": 70},
-        "service": {"proxy": "ipc:///tmp/meili"},
+        "service": {"proxy": ipc_endpoint("/tmp/meili", 8006)},
         "grid": {"size": 500, "cache_size": 100240},
     },
     "httpd": {
         "service": {
             "listen": "tcp://*:8002",
-            "loopback": "ipc:///tmp/loopback",
-            "interrupt": "ipc:///tmp/interrupt",
+            "loopback": ipc_endpoint("/tmp/loopback", 8007),
+            "interrupt": ipc_endpoint("/tmp/interrupt", 8008),
             "drain_seconds": 28,
             "shutdown_seconds": 1,
             "timeout_seconds": -1,
@@ -410,6 +418,7 @@ config = {
         "max_timedep_distance_matrix": 0,
         "max_alternates": 2,
         "max_exclude_polygons_length": 10000,
+        "max_exclude_polygons_vertices": 100,
         "min_linear_cost_factor": 1,
         "max_linear_cost_edges": 50000,
         "max_distance_disable_hierarchy_culling": 0,
@@ -477,6 +486,7 @@ help_text = {
         "traffic_extract": "Location to read traffic from tar",
         "incident_dir": "Location to read incident tiles from",
         "incident_log": "Location to read change events of incident tiles",
+        "incident_max_loading_latency": "Maximum time in seconds for loading incident updates (default: 60)",
         "shortcut_caching": "Precaches the superseded edges of all shortcuts in the graph. Defaults to false",
         "graph_lua_name": "Location of the lua file to use for graph customization during tile building instead of default one",
         "admin": "Location of sqlite file holding admin polygons created with valhalla_build_admins",
@@ -508,7 +518,6 @@ help_text = {
             "infer_internal_intersections": "bool indicating whether or not to infer internal intersections during the graph enhancer phase or use the internal_intersection key from the pbf",
             "infer_turn_channels": "bool indicating whether or not to infer turn channels during the graph enhancer phase or use the turn_channel key from the pbf",
             "apply_country_overrides": "bool indicating whether or not to apply country overrides during the graph enhancer phase",
-            "grid_divisions_within_tile": "number of grid subdivisions within a tile. Used for spatial sorting of nodes within a tile. Set to 0 to disable spatial sorting of nodes",
             "use_admin_db": "bool indicating whether or not to use the administrative database during the graph enhancer phase or use the admin keys from the pbf that are set on the node",
             "use_direction_on_ways": "bool indicating whether or not to process the direction key on the ways or utilize the guidance relation tags during the parsing phase",
             "allow_alt_name": "bool indicating whether or not to process the alt_name key on the ways during the parsing phase",
@@ -556,6 +565,7 @@ help_text = {
             "max_reserved_locations": "Maximum amount of locations allowed to to keep reserved between requests for CostMatrix",
             "max_iterations": "Upper bound on the number of iterations per expansion once a path has been found. Must be a positive integer",
             "min_iterations": "Lower bound on the number of iterations per expansion once a path has been found. Must be a positive integer",
+            "dijkstra_distance": "Distance in meters from a source/target within which its tree expands with a zero heuristic, i.e. like Dijkstra. Makes the found connections independent of where the other locations lie, at the cost of expanding more edges. 0 disables it. Default 0.",
             "hierarchy_limits": {
                 "max_up_transitions": {
                     "1": "The default maximum up transitions for level 1 in CostMatrix",
@@ -760,6 +770,7 @@ help_text = {
         "max_timedep_distance_matrix": "Maximum b-line distance between 2 most distant locations in meters to allow a time-dependent matrix",
         "max_alternates": "Maximum number of alternate routes to allow in a request",
         "max_exclude_polygons_length": "Maximum total perimeter of all exclude_polygons in meters",
+        "max_exclude_polygons_vertices": "Maximum total number of vertices across all exclude_polygons",
         "min_linear_cost_factor": "Minimum allowed factor admissible for linear feature cost factors. Beware: low values approaching zero will render the A* heuristic unusable",
         "max_linear_cost_edges": "Maximum total number of linear cost edges",
         "max_distance_disable_hierarchy_culling": "Maximum search distance allowed with hierarchy culling disabled",
@@ -940,12 +951,13 @@ def main():
 
     # write output
     if args.output:
-        with args.output.open("w") as f:
+        with args.output.open("w", encoding="utf-8") as f:
             f.write(output_json)
             f.write("\n")
         print(f"Config written to: {args.output}", file=sys.stderr)
     else:
-        print(output_json)
+        sys.stdout.buffer.write(output_json.encode("utf-8"))
+        sys.stdout.buffer.write(b"\n")
 
 
 if __name__ == "__main__":

@@ -229,7 +229,7 @@ TEST(TaggedValuesStandalone, test_osm_node_ids) {
       {"W", {{"osm_id", "800000"}}},
       {"X", {{"osm_id", std::to_string(UINT64_MAX - 1)}}},
       {"Y", {{"osm_id", std::to_string(UINT64_MAX)}}},
-      {"Z", {{"osm_id", "0"}}},
+      {"Z", {{"osm_id", "1"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);

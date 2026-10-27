@@ -37,7 +37,7 @@ std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
   std::deque<GraphId> tilequeue;
   GraphReader reader(pt.get_child("mjolnir"));
   std::for_each(std::begin(tiles), std::end(tiles), [&](const auto& tile) {
-    auto tile_id = GraphTile::GetTileId(*tile_dir + tile);
+    auto tile_id = GraphId::FromTilePath(*tile_dir + tile);
     GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
     if (!reader.DoesTileExist(local_tile_id)) {
       LOG_WARN("Provided tile doesn't belong to the tile directory from config file");
@@ -93,11 +93,17 @@ int main(int argc, char** argv) {
     if (!result.count("tiles")) {
       std::cerr << "Tile file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
-    } else {
-      for (const auto& tile : result["concurrency"].as<std::vector<std::string>>()) {
-        if (std::filesystem::exists(tile) && std::filesystem::is_regular_file(tile))
-          return EXIT_FAILURE;
-      }
+    }
+
+    bool any_valid = false;
+    for (const auto& tile : result["tiles"].as<std::vector<std::string>>()) {
+      if (std::filesystem::exists(tile) && std::filesystem::is_regular_file(tile))
+        any_valid = true;
+      else
+        std::cerr << "Invalid tile file: " << tile << "\n";
+    }
+
+    if (!any_valid) {
       std::cerr << "All tile files are invalid\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
