@@ -14,6 +14,7 @@
    * FIXED: a `tile_url` download that isn't a whole tile is no longer cached and no longer crashes [#6421](https://github.com/valhalla/valhalla/pull/6421)
    * FIXED: segfault in Python bindings (`get_tile_ids_from_ring`) [#6426](https://github.com/valhalla/valhalla/pull/6426)
    * FIXED: don't skip past end time in frequency based transit schedules [#6399](https://github.com/valhalla/valhalla/pull/6399)
+   * FIXED: matrix, isochrone and trace requests report errors like 446 instead of "No suitable edges near location" (171), as route already does [#6416](https://github.com/valhalla/valhalla/pull/6416)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
