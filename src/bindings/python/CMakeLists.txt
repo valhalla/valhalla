@@ -145,9 +145,6 @@ else()
     "__version__ = \"${VERSION}\"\n")
 endif()
 
-# propagate up to the parent
-set(Python_FOUND ${Python_FOUND} PARENT_SCOPE)
-
 # copy valhalla python sources from src to build
 function(set_output_python rel_path)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${rel_path} ${CMAKE_CURRENT_BINARY_DIR}/${rel_path} COPYONLY)
