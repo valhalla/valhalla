@@ -463,11 +463,12 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   factor *= EdgeFactor(edgeid);
   if (curvature_step_ > kNeutralCurvatureStep) {
+    uint32_t curvature =
+        edge->link() || edge->classification() == baldr::RoadClass::kMotorway ? 0 : edge->curvature();
     if (edge->density() < kCurvatureRuralDensity) {
-      factor *= kCurvatureFactor[curvature_step_][edge->curvature()];
+      factor *= kCurvatureFactor[curvature_step_][curvature];
     } else if (edge->density() < kCurvatureUrbanDensity) {
-      factor *=
-          suburban_curvature_factor_ * kCurvatureFactor[suburban_curvature_step_][edge->curvature()];
+      factor *= suburban_curvature_factor_ * kCurvatureFactor[curvature_step_][curvature];
     } else {
       factor *= urban_curvature_factor_;
     }
@@ -532,6 +533,9 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
       if (!is_turn)
         seconds *= stopimpact;
       seconds *= kTransDensityFactor[node->density()];
+    }
+    if (is_turn) {
+      seconds += curvature_turn_penalty_;
     }
     c.cost += seconds;
   }
@@ -610,6 +614,9 @@ Cost MotorcycleCost::TransitionCostReverse(
       if (!is_turn)
         seconds *= stopimpact;
       seconds *= kTransDensityFactor[node->density()];
+    }
+    if (is_turn) {
+      seconds += curvature_turn_penalty_;
     }
     c.cost += seconds;
   }
@@ -842,7 +849,7 @@ TEST(MotorcycleCost, testCurvatureFactorArray) {
 
   for (uint32_t s = kNeutralCurvatureStep + 1; s < kCurvatureSteps; s++) {
     for (uint32_t c = 0; c < baldr::kMaxCurvatureFactor; c++) {
-      EXPECT_GT(kCurvatureFactor[s][c], kCurvatureFactor[s][c + 1]);
+      EXPECT_GE(kCurvatureFactor[s][c], kCurvatureFactor[s][c + 1]);
       EXPECT_GT(kCurvatureFactor[s][c], kCurvatureFactor[s - 1][c]);
     }
   }

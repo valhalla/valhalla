@@ -249,21 +249,36 @@ constexpr uint32_t kCurvatureSteps = 21;
 constexpr uint32_t kNeutralCurvatureStep = kCurvatureSteps / 2;
 constexpr uint32_t kCurvatureRuralDensity = 3;
 constexpr uint32_t kCurvatureUrbanDensity = 7;
-constexpr float kMaxStraightRoadFactor = 4.f;
-constexpr float kSuburbanCurvatureFactor = 0.5f;
-constexpr float kUrbanCurvatureFactor = 4.f;
+constexpr float kMaxStraightRoadFactor = 6.f;
+constexpr uint32_t kCurvatureExponent = 3;
+constexpr uint32_t kCurvatureStrengthExponent = 2;
+constexpr float kSuburbanCurvatureFactor = 0.3f;
+constexpr float kUrbanCurvatureFactor = 2.f;
+constexpr float kMaxCurvatureTurnPenalty = 30.f;
+
+constexpr float curvature_strength(uint32_t step) {
+  if (step <= kNeutralCurvatureStep) {
+    return 0.f;
+  }
+  float t = static_cast<float>(step - kNeutralCurvatureStep) / kNeutralCurvatureStep;
+  float strength = 1.f;
+  for (uint32_t e = 0; e < kCurvatureStrengthExponent; e++) {
+    strength *= t;
+  }
+  return strength;
+}
 
 constexpr std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps>
 populate_curvaturefactor() {
   std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps> curvaturefactor{};
   for (uint32_t s = 0; s < kCurvatureSteps; s++) {
-    float strength = s <= kNeutralCurvatureStep
-                         ? 0.f
-                         : static_cast<float>(s - kNeutralCurvatureStep) / kNeutralCurvatureStep;
+    float strength = curvature_strength(s);
     for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
-      float straightness =
-          static_cast<float>(baldr::kMaxCurvatureFactor - c) / baldr::kMaxCurvatureFactor;
-      curvaturefactor[s][c] = 1.f + kMaxStraightRoadFactor * strength * straightness;
+      float curviness = 1.f;
+      for (uint32_t e = 0; e < kCurvatureExponent; e++) {
+        curviness *= static_cast<float>(c) / baldr::kMaxCurvatureFactor;
+      }
+      curvaturefactor[s][c] = 1.f + kMaxStraightRoadFactor * strength * (1.f - curviness);
     }
   }
   return curvaturefactor;
@@ -1385,9 +1400,9 @@ protected:
   float unlit_factor_;         // Avoid unlit edges factor.
   float speed_penalty_factor_; // Avoid faster edges than top speed factor.
   uint32_t curvature_step_;    // Index into kCurvatureFactor[curvature_step_][curvature].
-  uint32_t suburban_curvature_step_;
   float suburban_curvature_factor_;
   float urban_curvature_factor_;
+  float curvature_turn_penalty_;
 
   // Transition costs
   sif::Cost country_crossing_cost_;

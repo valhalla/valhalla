@@ -461,11 +461,10 @@ void DynamicCost::set_use_lit(float use_lit) {
 void DynamicCost::set_use_curvature(float use_curvature) {
   curvature_step_ =
       static_cast<uint32_t>(std::round(use_curvature * static_cast<float>(kCurvatureSteps - 1)));
-  uint32_t step = std::max(curvature_step_, kNeutralCurvatureStep);
-  float strength = static_cast<float>(step - kNeutralCurvatureStep) / kNeutralCurvatureStep;
-  suburban_curvature_step_ = (step + kNeutralCurvatureStep) / 2;
+  float strength = curvature_strength(curvature_step_);
   suburban_curvature_factor_ = 1.f + kSuburbanCurvatureFactor * strength;
-  urban_curvature_factor_ = 1.f + kUrbanCurvatureFactor * strength;
+  urban_curvature_factor_ = kUrbanCurvatureFactor * kCurvatureFactor[curvature_step_][0];
+  curvature_turn_penalty_ = kMaxCurvatureTurnPenalty * strength;
 }
 
 void ParseBaseCostOptions(const rapidjson::Value& json,
