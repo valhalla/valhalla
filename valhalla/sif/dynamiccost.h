@@ -252,9 +252,9 @@ constexpr uint32_t kCurvatureUrbanDensity = 7;
 constexpr float kMaxStraightRoadFactor = 6.f;
 constexpr uint32_t kCurvatureExponent = 3;
 constexpr uint32_t kCurvatureStrengthExponent = 2;
-constexpr float kSuburbanCurvatureFactor = 0.3f;
+constexpr float kSuburbanCurvatureFactor = 0.1f;
 constexpr float kUrbanCurvatureFactor = 2.f;
-constexpr float kMaxCurvatureTurnPenalty = 30.f;
+constexpr float kMotorwayCurvatureFactor = 2.f;
 
 constexpr float curvature_strength(uint32_t step) {
   if (step <= kNeutralCurvatureStep) {
@@ -1402,7 +1402,7 @@ protected:
   uint32_t curvature_step_;    // Index into kCurvatureFactor[curvature_step_][curvature].
   float suburban_curvature_factor_;
   float urban_curvature_factor_;
-  float curvature_turn_penalty_;
+  float motorway_curvature_factor_;
 
   // Transition costs
   sif::Cost country_crossing_cost_;

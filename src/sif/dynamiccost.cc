@@ -464,7 +464,7 @@ void DynamicCost::set_use_curvature(float use_curvature) {
   float strength = curvature_strength(curvature_step_);
   suburban_curvature_factor_ = 1.f + kSuburbanCurvatureFactor * strength;
   urban_curvature_factor_ = kUrbanCurvatureFactor * kCurvatureFactor[curvature_step_][0];
-  curvature_turn_penalty_ = kMaxCurvatureTurnPenalty * strength;
+  motorway_curvature_factor_ = kMotorwayCurvatureFactor * kCurvatureFactor[curvature_step_][0];
 }
 
 void ParseBaseCostOptions(const rapidjson::Value& json,

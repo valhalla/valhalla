@@ -463,9 +463,13 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   factor *= EdgeFactor(edgeid);
   if (curvature_step_ > kNeutralCurvatureStep) {
-    uint32_t curvature =
-        edge->link() || edge->classification() == baldr::RoadClass::kMotorway ? 0 : edge->curvature();
-    if (edge->density() < kCurvatureRuralDensity) {
+    uint32_t curvature = (edge->link() || edge->roundabout() || edge->internal() ||
+                          edge->use() == baldr::Use::kRamp)
+                             ? 0
+                             : edge->curvature();
+    if (edge->classification() == baldr::RoadClass::kMotorway) {
+      factor *= motorway_curvature_factor_;
+    } else if (edge->density() < kCurvatureRuralDensity) {
       factor *= kCurvatureFactor[curvature_step_][curvature];
     } else if (edge->density() < kCurvatureUrbanDensity) {
       factor *= suburban_curvature_factor_ * kCurvatureFactor[curvature_step_][curvature];
@@ -533,9 +537,6 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
       if (!is_turn)
         seconds *= stopimpact;
       seconds *= kTransDensityFactor[node->density()];
-    }
-    if (is_turn) {
-      seconds += curvature_turn_penalty_;
     }
     c.cost += seconds;
   }
@@ -615,9 +616,6 @@ Cost MotorcycleCost::TransitionCostReverse(
         seconds *= stopimpact;
       seconds *= kTransDensityFactor[node->density()];
     }
-    if (is_turn) {
-      seconds += curvature_turn_penalty_;
-    }
     c.cost += seconds;
   }
 
@@ -662,7 +660,7 @@ namespace {
 
 class TestMotorcycleCost : public MotorcycleCost {
 public:
-  TestMotorcycleCost(const Costing& costing_options) : MotorcycleCost(costing_options){};
+  TestMotorcycleCost(const Costing& costing_options) : MotorcycleCost(costing_options) {};
 
   using MotorcycleCost::alley_penalty_;
   using MotorcycleCost::country_crossing_cost_;
