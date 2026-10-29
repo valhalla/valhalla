@@ -250,30 +250,16 @@ constexpr uint32_t kNeutralCurvatureStep = kCurvatureSteps / 2;
 constexpr uint32_t kCurvatureRuralDensity = 3;
 constexpr uint32_t kCurvatureUrbanDensity = 7;
 constexpr float kMaxStraightRoadFactor = 6.f;
-constexpr uint32_t kCurvatureExponent = 3;
-constexpr uint32_t kCurvyRoadCurvature = 8;
-constexpr uint32_t kExtremeCurvyRoadCurvature = 12;
-constexpr uint32_t kCurvatureStrengthExponent = 2;
-constexpr float kMaxHairpinFactor = 1.f;
-constexpr uint32_t kHairpinStrengthExponent = 4;
 constexpr float kSuburbanCurvatureFactor = 0.1f;
 constexpr float kUrbanCurvatureFactor = 2.f;
 constexpr float kMotorwayCurvatureFactor = 2.f;
 
-constexpr float curvature_pow(float base, uint32_t exponent) {
-  float result = 1.f;
-  for (uint32_t e = 0; e < exponent; e++) {
-    result *= base;
-  }
-  return result;
-}
-
-constexpr float curvature_strength(uint32_t step, uint32_t exponent = kCurvatureStrengthExponent) {
+constexpr float curvature_strength(uint32_t step) {
   if (step <= kNeutralCurvatureStep) {
     return 0.f;
   }
-  return curvature_pow(static_cast<float>(step - kNeutralCurvatureStep) / kNeutralCurvatureStep,
-                       exponent);
+  float t = static_cast<float>(step - kNeutralCurvatureStep) / kNeutralCurvatureStep;
+  return t * t;
 }
 
 constexpr std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps>
@@ -281,14 +267,10 @@ populate_curvaturefactor() {
   std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps> curvaturefactor{};
   for (uint32_t s = 0; s < kCurvatureSteps; s++) {
     float strength = curvature_strength(s);
-    float hairpin_strength = curvature_strength(s, kHairpinStrengthExponent);
     for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
-      float curviness = curvature_pow(
-          std::min(static_cast<float>(c) / kCurvyRoadCurvature, 1.f), kCurvatureExponent);
-      float hairpin_curviness = curvature_pow(
-          std::min(static_cast<float>(c) / kExtremeCurvyRoadCurvature, 1.f), kCurvatureExponent);
-      curvaturefactor[s][c] = (1.f + kMaxStraightRoadFactor * strength * (1.f - curviness)) *
-                              (1.f + kMaxHairpinFactor * hairpin_strength * (1.f - hairpin_curviness));
+      float straightness =
+          static_cast<float>(baldr::kMaxCurvatureFactor - c) / baldr::kMaxCurvatureFactor;
+      curvaturefactor[s][c] = 1.f + kMaxStraightRoadFactor * strength * straightness * straightness;
     }
   }
   return curvaturefactor;

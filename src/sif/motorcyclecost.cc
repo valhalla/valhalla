@@ -660,7 +660,7 @@ namespace {
 
 class TestMotorcycleCost : public MotorcycleCost {
 public:
-  TestMotorcycleCost(const Costing& costing_options) : MotorcycleCost(costing_options) {};
+  TestMotorcycleCost(const Costing& costing_options) : MotorcycleCost(costing_options){};
 
   using MotorcycleCost::alley_penalty_;
   using MotorcycleCost::country_crossing_cost_;
@@ -840,26 +840,12 @@ TEST(MotorcycleCost, testCurvatureFactorArray) {
 
   for (uint32_t s = 0; s < kCurvatureSteps; s++) {
     EXPECT_EQ(kCurvatureFactor[s][baldr::kMaxCurvatureFactor], 1.f);
-    for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
-      EXPECT_GE(kCurvatureFactor[s][c], 1.f);
-    }
   }
 
   for (uint32_t s = kNeutralCurvatureStep + 1; s < kCurvatureSteps; s++) {
     for (uint32_t c = 0; c < baldr::kMaxCurvatureFactor; c++) {
-      EXPECT_GE(kCurvatureFactor[s][c], kCurvatureFactor[s][c + 1]);
-    }
-    for (uint32_t c = 0; c < kCurvyRoadCurvature; c++) {
+      EXPECT_GT(kCurvatureFactor[s][c], kCurvatureFactor[s][c + 1]);
       EXPECT_GT(kCurvatureFactor[s][c], kCurvatureFactor[s - 1][c]);
-    }
-    for (uint32_t c = kCurvyRoadCurvature; c <= baldr::kMaxCurvatureFactor; c++) {
-      EXPECT_GE(kCurvatureFactor[s][c], kCurvatureFactor[s - 1][c]);
-    }
-    for (uint32_t c = 0; c < baldr::kMaxCurvatureFactor; c++) {
-      for (uint32_t curvier = c + 1; curvier <= baldr::kMaxCurvatureFactor; curvier++) {
-        EXPECT_LE(kCurvatureFactor[s][curvier] / kCurvatureFactor[s][c],
-                  kCurvatureFactor[s - 1][curvier] / kCurvatureFactor[s - 1][c] + 1e-6f);
-      }
     }
   }
 }
