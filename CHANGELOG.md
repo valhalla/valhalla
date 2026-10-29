@@ -7,6 +7,7 @@
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
    * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
    * FIXED: emergency only access on `service=emergency_access` [#6396](https://github.com/valhalla/valhalla/pull/6396)
+   * FIXED: `access=private` + `emergency=yes` no longer strips access for all other modes; it is now routable like plain `access=private` [#5911](https://github.com/valhalla/valhalla/pull/5911)
    * FIXED: crash and wrong node languages when building tiles from three or more input files [#6402](https://github.com/valhalla/valhalla/pull/6402)
    * FIXED: missing bounding circle on the opposing edge of a /locate response [#6410](https://github.com/valhalla/valhalla/pull/6410)
    * BREAKING: consistent incident serialization in route and locate [#6405](https://github.com/valhalla/valhalla/pull/6405)
@@ -152,7 +153,6 @@
 * **Bug Fix**
    * FIXED: Clamp grades on bridges and tunnels. [#5728](https://github.com/valhalla/valhalla/pull/5728)
    * FIXED: use pedestrian costing on end location in `auto_pedestrian` costing [#5903](https://github.com/valhalla/valhalla/pull/5903)
-   * FIXED: `access=private` + `emergency=yes` roads being unroutable due to all vehicular access bits being zeroed [#5911](https://github.com/valhalla/valhalla/pull/5911)
    * FIXED: Point at `begin_shape_index` should be on the edge even if trace has discontinuities [#5908](https://github.com/valhalla/valhalla/pull/5908)
    * FIXED: Empty "edges" in `/trace_attributes` response for `walk_or_snap`, that also causes SIGSEGV if elevation requested [#5945](https://github.com/valhalla/valhalla/pull/5945)
    * FIXED: keep `highway=platform` routable while classifying it as `service_other` instead of `primary` [#5913](https://github.com/valhalla/valhalla/pull/5913)
