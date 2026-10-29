@@ -1,10 +1,14 @@
 #include "baldr/graphreader.h"
 #include "baldr/connectivity_map.h"
 #include "baldr/tilehierarchy.h"
+#include "loki/worker.h"
+#include "test.h"
+#include "thor/worker.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -19,6 +23,92 @@ public:
   using SimpleTileCache::max_cache_size_;
   using SimpleTileCache::SimpleTileCache;
 };
+
+// returns the given HTTP codes in order, then repeats the last one
+class scripted_tile_getter_t : public tile_getter_t {
+public:
+  explicit scripted_tile_getter_t(std::vector<long> http_codes) : http_codes_(std::move(http_codes)) {
+  }
+
+  GET_response_t get(const std::string&, const uint64_t, const uint64_t) override {
+    GET_response_t response;
+    response.http_code_ = http_codes_[std::min(requests, http_codes_.size() - 1)];
+    ++requests;
+    if (response.http_code_ == 200) {
+      GraphTileHeader header;
+      header.set_end_offset(sizeof(header));
+      const auto* bytes = reinterpret_cast<const char*>(&header);
+      response.bytes_.assign(bytes, bytes + sizeof(header));
+      response.status_ = status_code_t::SUCCESS;
+    }
+    return response;
+  }
+
+  HEAD_response_t head(const std::string&, header_mask_t) override {
+    return {};
+  }
+
+  size_t requests = 0;
+
+private:
+  std::vector<long> http_codes_;
+};
+
+boost::property_tree::ptree tile_url_config() {
+  boost::property_tree::ptree pt;
+  pt.put("tile_url", "http://tiles.invalid/{tilePath}");
+  return pt;
+}
+
+TEST(TileUrl, FailureIsNotRequestedAgain) {
+  for (long http_code : {400, 401, 403, 404, 410}) {
+    SCOPED_TRACE(http_code);
+    auto getter = std::make_unique<scripted_tile_getter_t>(std::vector<long>{http_code, 200});
+    const auto& requests = getter->requests;
+    GraphReader reader(tile_url_config(), std::move(getter));
+    const GraphId tile_id(746, 2, 0);
+
+    EXPECT_EQ(reader.GetGraphTile(tile_id), nullptr);
+    reader.ClearRetryableFailures();
+    EXPECT_EQ(reader.GetGraphTile(tile_id), nullptr);
+    EXPECT_EQ(requests, 1);
+  }
+}
+
+TEST(TileUrl, RetryableFailureIsRequestedAgainAfterClear) {
+  for (long http_code : {0, 408, 429, 500, 502, 503, 504}) {
+    SCOPED_TRACE(http_code);
+    auto getter = std::make_unique<scripted_tile_getter_t>(std::vector<long>{http_code, 200});
+    const auto& requests = getter->requests;
+    GraphReader reader(tile_url_config(), std::move(getter));
+    const GraphId tile_id(746, 2, 0);
+
+    EXPECT_EQ(reader.GetGraphTile(tile_id), nullptr);
+    EXPECT_EQ(reader.GetGraphTile(tile_id), nullptr);
+    EXPECT_EQ(requests, 1);
+
+    reader.ClearRetryableFailures();
+    EXPECT_NE(reader.GetGraphTile(tile_id), nullptr);
+    EXPECT_EQ(requests, 2);
+  }
+}
+
+TEST(TileUrl, WorkersClearRetryableFailuresAfterEachRequest) {
+  const auto config = test::make_config("test/data/tile_url", {{"loki.use_connectivity", "false"}});
+  auto getter = std::make_unique<scripted_tile_getter_t>(std::vector<long>{503, 503, 200});
+  const auto& requests = getter->requests;
+  auto reader = std::make_shared<GraphReader>(tile_url_config(), std::move(getter));
+  valhalla::loki::loki_worker_t loki_worker(config, reader);
+  valhalla::thor::thor_worker_t thor_worker(config, reader);
+  const GraphId tile_id(746, 2, 0);
+
+  EXPECT_EQ(reader->GetGraphTile(tile_id), nullptr);
+  loki_worker.cleanup();
+  EXPECT_EQ(reader->GetGraphTile(tile_id), nullptr);
+  thor_worker.cleanup();
+  EXPECT_NE(reader->GetGraphTile(tile_id), nullptr);
+  EXPECT_EQ(requests, 3);
+}
 
 TEST(SimpleCache, QueryByPointOutOfRangeLL) {
   boost::property_tree::ptree pt;
@@ -885,6 +975,19 @@ TEST(CacheLruSoft, TrimOnExactlyFullCache) {
   EXPECT_TRUE(cache.Contains(tile2_id));
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
+}
+
+TEST(TileUrl, ConnectTimeout) {
+  boost::property_tree::ptree pt;
+  // a documentation address that never answers
+  pt.put("tile_url", "http://192.0.2.1/{tilePath}");
+  GraphReader reader(pt);
+
+  const auto start = std::chrono::steady_clock::now();
+  try {
+    reader.GetGraphTile(GraphId(0, 2, 0));
+  } catch (const std::runtime_error&) {}
+  EXPECT_LT(std::chrono::steady_clock::now() - start, std::chrono::seconds(10));
 }
 
 } // namespace
