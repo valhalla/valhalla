@@ -463,10 +463,10 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   factor *= EdgeFactor(edgeid);
   if (curvature_step_ > kNeutralCurvatureStep) {
-    uint32_t curvature = (edge->link() || edge->roundabout() || edge->internal() ||
-                          edge->use() == baldr::Use::kRamp)
-                             ? 0
-                             : edge->curvature();
+    uint32_t curvature =
+        (edge->link() || edge->roundabout() || edge->internal() || edge->use() != baldr::Use::kRoad)
+            ? 0
+            : edge->curvature();
     if (edge->classification() == baldr::RoadClass::kMotorway) {
       factor *= motorway_curvature_factor_;
     } else if (edge->density() < kCurvatureRuralDensity) {
@@ -848,7 +848,18 @@ TEST(MotorcycleCost, testCurvatureFactorArray) {
   for (uint32_t s = kNeutralCurvatureStep + 1; s < kCurvatureSteps; s++) {
     for (uint32_t c = 0; c < baldr::kMaxCurvatureFactor; c++) {
       EXPECT_GE(kCurvatureFactor[s][c], kCurvatureFactor[s][c + 1]);
+    }
+    for (uint32_t c = 0; c < kCurvyRoadCurvature; c++) {
       EXPECT_GT(kCurvatureFactor[s][c], kCurvatureFactor[s - 1][c]);
+    }
+    for (uint32_t c = kCurvyRoadCurvature; c <= baldr::kMaxCurvatureFactor; c++) {
+      EXPECT_GE(kCurvatureFactor[s][c], kCurvatureFactor[s - 1][c]);
+    }
+    for (uint32_t c = 0; c < baldr::kMaxCurvatureFactor; c++) {
+      for (uint32_t curvier = c + 1; curvier <= baldr::kMaxCurvatureFactor; curvier++) {
+        EXPECT_LE(kCurvatureFactor[s][curvier] / kCurvatureFactor[s][c],
+                  kCurvatureFactor[s - 1][curvier] / kCurvatureFactor[s - 1][c] + 1e-6f);
+      }
     }
   }
 }
