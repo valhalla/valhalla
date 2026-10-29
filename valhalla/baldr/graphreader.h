@@ -477,6 +477,15 @@ public:
   virtual graph_tile_ptr GetGraphTile(const GraphId& graphid);
 
   /**
+   * Get a copy of a tile's header without loading the tile: reads it from the
+   * mmapped extract or the header span of the file in tile_dir. Gzipped and remote
+   * tiles fall back to GetGraphTile (and thus populate the cache).
+   * @param graphid  the graphid of the tile
+   * @return the tile's header, or nullopt if the tile is not found
+   */
+  std::optional<GraphTileHeader> GetGraphTileHeader(const GraphId& graphid);
+
+  /**
    * Get a pointer to a graph tile object given a GraphId. This method also
    * supplies the current graph tile - so if the same tile is requested in
    * succession it does not have to look up the tile in the cache.
@@ -523,6 +532,11 @@ public:
   virtual void Trim() {
     cache_->Trim();
   }
+
+  /**
+   * Lets downloads that failed with a retryable status be tried again
+   */
+  void ClearRetryableFailures();
 
   /**
    * Returns the maximum number of threads that can
@@ -1003,8 +1017,9 @@ protected:
   // loads the remote index.bin into remote_tar_offsets_
   void load_remote_tar_offsets();
 
-  std::mutex _404s_lock;
-  std::unordered_set<GraphId> _404s;
+  // failed downloads and their HTTP status
+  std::mutex failed_downloads_lock_;
+  std::unordered_map<GraphId, long> failed_downloads_;
 
   std::unique_ptr<TileCache> cache_;
 

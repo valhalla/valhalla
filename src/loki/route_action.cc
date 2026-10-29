@@ -114,17 +114,6 @@ void loki_worker_t::route(Api& request) {
     locations->rbegin()->set_minimum_outbound_reachability(0);
     auto locations_size = locations->size();
 
-    // maybe squeeze in the first and last locations of each user specified feature for cost factor
-    // lines as we'll need those for edge walking
-    for (const auto& line : options.cost_factor_lines()) {
-      google::protobuf::RepeatedPtrField<Location> first_and_last;
-      first_and_last.Add()->CopyFrom(*line.shape().begin());
-      first_and_last.Add()->CopyFrom(*line.shape().rbegin());
-      Api dummy;
-      parse_locations(&first_and_last, dummy);
-      locations->MergeFrom(first_and_last);
-    }
-
     // in case of auto_pedestrian costing, we 1) only allow two locations
     // and 2) need two different costings for the start and end location.
     // Search::search does not allow for multiple costings per location so instead
@@ -141,6 +130,7 @@ void loki_worker_t::route(Api& request) {
       search_.search(start_loc, mode_costing[static_cast<size_t>(TravelMode::kDrive)]);
       google::protobuf::RepeatedPtrField<Location> end_loc(locations->begin() + 1,
                                                            locations->begin() + 2);
+      search_.clear();
       search_.search(end_loc, mode_costing[static_cast<size_t>(TravelMode::kPedestrian)]);
       // merge them again
       locations->at(0).CopyFrom(start_loc.at(0));
@@ -171,20 +161,6 @@ void loki_worker_t::route(Api& request) {
         }
       }
     }
-
-    // store the correlations for the cost factor lines
-    // todo(chris): make sure this'll work with auto_pedestrian as well
-    size_t i = 0;
-    for (auto& line : *options.mutable_cost_factor_lines()) {
-      size_t correlated_start_index = locations_size + 2 * i;
-      line.mutable_locations()->Add(std::move(locations->at(correlated_start_index)));
-      size_t correlated_end_index = locations_size + 2 * i + 1;
-      line.mutable_locations()->Add(std::move(locations->at(correlated_end_index)));
-      ++i;
-    }
-    // and remove the first and last cost factor lines from the locations again
-    locations->DeleteSubrange(locations_size, locations->size() - locations_size);
-
   } catch (const valhalla_exception_t& e) { throw e; } catch (const std::exception&) {
     throw valhalla_exception_t{171};
   }

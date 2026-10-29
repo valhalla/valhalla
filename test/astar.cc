@@ -30,6 +30,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <numeric>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -49,6 +50,41 @@ namespace vo = valhalla::odin;
 namespace vr = valhalla::tyr;
 
 namespace {
+
+/**
+ * Little helper to find multiple edges that share the same start and end node.
+ */
+std::vector<std::tuple<baldr::GraphId, const baldr::DirectedEdge*>>
+findEdgesByNodes(valhalla::baldr::GraphReader& reader,
+                 const valhalla::gurka::nodelayout& nodes,
+                 const std::string& begin_node_name,
+                 const std::string& end_node_name) {
+  std::vector<std::tuple<baldr::GraphId, const baldr::DirectedEdge*>> result;
+  // Iterate over all the tiles, there wont be many in unit tests..
+  for (auto tile_id : reader.GetTileSet()) {
+    auto tile = reader.GetGraphTile(tile_id);
+    // Iterate over all directed edges to find one with the name we want
+    for (const auto& e : tile->GetDirectedEdges()) {
+      // Bail if wrong end node
+      auto ll = reader.GetGraphTile(e.endnode())->get_node_ll(e.endnode());
+      if (!ll.ApproximatelyEqual(nodes.at(end_node_name))) {
+        continue;
+      }
+      // Bail if wrong begin node
+      auto edge_id = tile_id;
+      edge_id.set_id(&e - tile->directededge(0));
+      auto begin_node_id = reader.edge_startnode(edge_id);
+      ll = tile->get_node_ll(begin_node_id);
+      if (!ll.ApproximatelyEqual(nodes.at(begin_node_name))) {
+        continue;
+      }
+
+      // TODO: could check that the edges name contains the nodes (confirm connectivity)
+      result.push_back(std::make_tuple(edge_id, &e));
+    }
+  }
+  return result;
+}
 
 void locations_from_ll(Api& request, const std::vector<valhalla::midgard::PointLL>& nodes) {
   for (const auto& pt : nodes) {
@@ -329,6 +365,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   // this should go along the path from A to B
   assert_is_trivial_path(astar, *request.mutable_options()->mutable_locations(0),
@@ -362,6 +399,7 @@ TEST(Astar, TestTrivialPathTriangle) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   vt::TimeDepForward astar;
   // this should go along the path from E to F
@@ -385,6 +423,7 @@ void TestPartialDuration(vt::PathAlgorithm& astar) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
@@ -1022,6 +1061,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
@@ -1243,6 +1283,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
@@ -1419,6 +1460,7 @@ TEST(ComplexRestriction, WalkVias) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   bool is_forward = true;
   auto tile = reader->GetGraphTile(tile_id);
@@ -1449,7 +1491,9 @@ TEST(ComplexRestriction, WalkVias) {
   {
     locations->Clear();
     locations_from_nodes(request, {"V"}, node_locations);
+    loki_worker.cleanup();
     loki_worker.locate(request);
+    loki_worker.cleanup();
     ASSERT_EQ(locations->at(0).correlation().edges().size(), 2)
         << "Expected only 2 edges in snapping response";
 
@@ -1509,6 +1553,7 @@ TEST(Astar, BiDirTrivial) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
@@ -1596,6 +1641,7 @@ TEST(BiDiAstar, test_recost_path) {
 
   loki::loki_worker_t loki_worker(config);
   loki_worker.locate(request);
+  loki_worker.cleanup();
 
   auto origin = request.options().locations().at(0);
   auto dest = request.options().locations().at(1);
@@ -1647,11 +1693,9 @@ TEST(BiDiAstar, test_recost_path) {
   }
 }
 
-// TODO(nils): this test fails currently, because bidir A* has a problem with 2 shortcuts between the
-// same nodes: https://github.com/valhalla/valhalla/issues/4609
-TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
+TEST(BiDiAstar, test_recost_path_2) {
   const std::string ascii_map = R"(
-           X-----------Y
+           X---Z-------Y
           /             \
     1----A               E---2
           \             /
@@ -1664,9 +1708,8 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
       {"1A", {{"highway", "secondary"}}},
       // set speeds less than on ABCDE path to force the algorithm
       // to go through ABCDE nodes instead of AXY
-      {"AX", {{"highway", "primary"}, {"maxspeed", "70"}}},
-      {"XY", {{"highway", "primary"}, {"maxspeed", "70"}}},
-      {"YE", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      {"AXZ", {{"highway", "primary"}, {"maxspeed", "40"}}},
+      {"ZYE", {{"highway", "primary"}, {"maxspeed", "30"}}},
       {"E2", {{"highway", "secondary"}}},
   };
 
@@ -1675,51 +1718,90 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
   const std::string test_dir = VALHALLA_BUILD_DIR "test/data/astar_shortcuts_recosting";
   const auto map = gurka::buildtiles(nodes, ways, {}, {}, test_dir);
 
-  vb::GraphReader graphreader(map.config.get_child("mjolnir"));
+  vb::GraphReader reader(map.config.get_child("mjolnir"));
 
-  // before continue check that ABC is actually a shortcut
-  const auto ABCDE = gurka::findEdgeByNodes(graphreader, nodes, "A", "E");
-  ASSERT_TRUE(std::get<1>(ABCDE)->is_shortcut()) << "Expected ABCDE to be a shortcut";
+  // before continue check that ABCDE is actually a shortcut
+  const auto AtoE = findEdgesByNodes(reader, nodes, "A", "E");
+  EXPECT_EQ(AtoE.size(), 2);
+  ASSERT_TRUE(std::get<1>(AtoE[0])->is_shortcut()) << "Expected ABCDE to be a shortcut";
+  ASSERT_TRUE(std::get<1>(AtoE[1])->is_shortcut()) << "Expected AXYE to be a shortcut";
 
-  Options options;
-  create_costing_options(options, Costing::auto_);
-  vs::TravelMode travel_mode = vs::TravelMode::kDrive;
-  const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
+  std::vector<midgard::PointLL> expected_shape1{
+      nodes.at("A"), nodes.at("B"), nodes.at("C"), nodes.at("D"), nodes.at("E"),
+  };
+  std::vector<midgard::PointLL> expected_shape2{
+      nodes.at("A"), nodes.at("X"), nodes.at("Z"), nodes.at("Y"), nodes.at("E"),
+  };
 
-  std::vector<std::string> ns{"1", "2"};
-  auto* locations = options.mutable_locations();
-  for (const std::string& node : ns) {
-    auto* loc = locations->Add();
-    loc->mutable_ll()->set_lat(node_locations[node].lat());
-    loc->mutable_ll()->set_lng(node_locations[node].lng());
+  auto shape1 = reader.edgeinfo(std::get<0>(AtoE[0])).shape();
+  auto shape2 = reader.edgeinfo(std::get<0>(AtoE[1])).shape();
+
+  EXPECT_TRUE(test::shape_equality(shape1, expected_shape1))
+      << "Expected shapes to match: " << midgard::encode(shape1) << " vs "
+      << midgard::encode(expected_shape1) << "\n";
+
+  EXPECT_TRUE(test::shape_equality(shape2, expected_shape2))
+      << "Expected shapes to match: " << midgard::encode(shape2) << " vs "
+      << midgard::encode(expected_shape2) << "\n";
+
+  auto shortcut_ABCDE = std::get<1>(AtoE[0]);
+  auto shortcut_AXYE = std::get<1>(AtoE[1]);
+  EXPECT_NE(shortcut_ABCDE->shortcut(), shortcut_AXYE->shortcut())
+      << "Expected different shortcut masks: " << shortcut_ABCDE->shortcut() << " vs "
+      << shortcut_AXYE->shortcut();
+
+  EXPECT_GT(shortcut_ABCDE->speed(), shortcut_AXYE->speed());
+
+  Api request;
+  create_costing_options(*request.mutable_options(), Costing::auto_);
+  vs::TravelMode mode;
+
+  // auto reader = get_graph_reader(test_dir);
+  auto config = test::make_config(test_dir);
+
+  locations_from_nodes(request, {"1", "2"}, nodes);
+
+  loki::loki_worker_t loki_worker(config);
+  loki_worker.locate(request);
+
+  auto origin = request.options().locations().at(0);
+  auto dest = request.options().locations().at(1);
+  // hack hierarchy limits to allow to go through the shortcut
+  auto hl = request.mutable_options()
+                ->mutable_costings()
+                ->find(Costing::auto_)
+                ->second.mutable_options()
+                ->mutable_hierarchy_limits();
+  for (const auto& level : TileHierarchy::levels()) {
+    HierarchyLimits lims;
+    lims.set_expand_within_dist(0);
+    lims.set_max_up_transitions(0);
+    hl->insert({level.level, lims});
   }
+
+  const auto mode_costing = vs::CostFactory().CreateModeCosting(request.options(), mode);
 
   vt::BidirectionalAStar astar;
 
   // hack hierarchy limits to allow to go through the shortcut
   {
-    auto& hierarchy_limits =
-        mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
+    auto& hierarchy_limits = mode_costing[int(mode)]->GetHierarchyLimits(); // access mutable limits
     for (auto& hierarchy : hierarchy_limits) {
       sif::RelaxHierarchyLimits(hierarchy, 0.f, 0.f);
     }
   }
-  const auto path =
-      astar.GetBestPath(locations->at(0), locations->at(1), graphreader, mode_costing, travel_mode)
-          .front();
+  const auto path = astar.GetBestPath(origin, dest, reader, mode_costing, mode).front();
 
   // collect names of base edges
-  std::vector<std::string> expected_names = {"1A", "AB", "BC", "CD", "DE", "E2"};
+  std::vector<std::string> expected_names = {"1A", "ABC", "CDE", "E2"};
   std::vector<std::string> actual_names;
   for (const auto& info : path) {
-    const auto* edge = graphreader.directededge(info.edgeid);
+    const auto* edge = reader.directededge(info.edgeid);
     ASSERT_FALSE(edge->is_shortcut()) << "Final path shouldn't contain shortcuts";
 
-    const auto name = graphreader.edgeinfo(info.edgeid).GetNames()[0];
+    const auto name = reader.edgeinfo(info.edgeid).GetNames()[0];
     actual_names.emplace_back(name);
   }
-  // TODO(nils): it gets the wrong path! bidir A* has a problem with 2 shortcuts between the same
-  // nodes
   EXPECT_EQ(actual_names, expected_names);
 }
 
@@ -1775,14 +1857,14 @@ public:
   }
 
   bool Allowed(const DirectedEdge* edge,
-               const bool /*is_dest*/,
                const vs::EdgeLabel& pred,
                const graph_tile_ptr& /*tile*/,
                const GraphId& edgeid,
                const uint64_t /*current_time*/,
                const uint32_t /*tz_index*/,
                uint8_t& /*restriction_idx*/,
-               uint8_t& /*destonly_access_restr_mask*/) const override {
+               uint8_t& /*destonly_access_restr_mask*/,
+               bool* /*edge_destonly*/) const override {
     if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
@@ -1800,7 +1882,8 @@ public:
                       const uint64_t /*current_time*/,
                       const uint32_t /*tz_index*/,
                       uint8_t& /*restriction_idx*/,
-                      uint8_t& /*destonly_access_restr_mask*/) const override {
+                      uint8_t& /*destonly_access_restr_mask*/,
+                      bool* /*edge_destonly*/) const override {
     if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
@@ -1834,8 +1917,8 @@ public:
                           const NodeInfo* /*node*/,
                           const vs::EdgeLabel& /*pred*/,
                           const graph_tile_ptr& /*tile*/,
-                          const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/
-  ) const override {
+                          const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
+                          const bool /*edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -1843,11 +1926,12 @@ public:
                                  const NodeInfo* /*node*/,
                                  const DirectedEdge* /*opp_edge*/,
                                  const DirectedEdge* /*opp_pred_edge*/,
+                                 const vs::EdgeLabel& /*pred_label*/,
                                  const graph_tile_ptr& /*tile*/,
-                                 const baldr::GraphId& /*edge_id*/,
                                  const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
                                  const bool /*has_measured_speed*/,
-                                 const vs::InternalTurn /*internal_turn*/) const override {
+                                 const vs::InternalTurn /*internal_turn*/,
+                                 const bool /*opp_edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -1924,6 +2008,7 @@ TEST(StandAlone, AstarReverseTimeTrackingTest) {
     ParseApi(test_request, Options::route, request);
     ASSERT_EQ(request.options().reverse_time_tracking(), Options::rtt_heuristic);
     loki_worker.route(request);
+    loki_worker.cleanup();
     valhalla::thor::thor_worker_t::adjust_locations(request);
 
     sif::mode_costing_t mode_costing;
@@ -1971,6 +2056,7 @@ TEST(StandAlone, AstarReverseTimeTrackingTest) {
     ParseApi(test_request, Options::route, request);
     ASSERT_EQ(request.options().reverse_time_tracking(), Options::rtt_disabled);
     loki_worker.route(request);
+    loki_worker.cleanup();
     valhalla::thor::thor_worker_t::adjust_locations(request);
 
     sif::mode_costing_t mode_costing;

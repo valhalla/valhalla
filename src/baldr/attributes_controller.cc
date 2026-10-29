@@ -191,6 +191,7 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kNodeTransitEgressInfoLatLon, true},
     {kNodeTimeZone, true},
     {kNodeTransitionTime, true},
+    {kNodeStopImpact, false},
     {kNodeDriveOnRight, false},
     {kNodeElevation, false},
     {kNodeTaggedAccess, false},
@@ -225,6 +226,25 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kShapeAttributesSpeedLimit, false},
     {kShapeAttributesClosure, false},
     {kShapeAttributesCongestion, false},
+
+    // Incidents properties
+    {kIncidentId, false},
+    {kIncidentType, false},
+    {kIncidentDescription, false},
+    {kIncidentSubType, false},
+    {kIncidentSubTypeDescription, false},
+    {kIncidentStartTime, false},
+    {kIncidentEndTime, false},
+    {kIncidentImpact, false},
+    {kIncidentRoadClosed, false},
+    {kIncidentCongestionValue, false},
+    {kIncidentCreationTime, false},
+    {kIncidentLongDescription, false},
+    {kIncidentClearLanes, false},
+    {kIncidentNumLanesBlocked, false},
+    {kIncidentLength, false},
+    {kIncidentIso31661Alpha2, false},
+    {kIncidentIso31661Alpha3, false},
 };
 
 const std::unordered_set<std::string_view> AttributesController::kDefaultEnabledCategories =

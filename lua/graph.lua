@@ -923,9 +923,13 @@ function filter_tags_generic(kv)
     return 1
   end
 
-  --toss actual areas
+  --toss actual areas, but keep pedestrian areas 
   if kv["area"] == "yes" then
+    if kv["highway"] == "pedestrian" then
+      kv["pedestrian_area"] = "true"
+    else 
     return 1
+    end
   end
 
   --figure out what basic type of road it is
@@ -959,8 +963,9 @@ function filter_tags_generic(kv)
       kv[k] = v
     end
 
-    -- expects access=private not to be combined with other values
-    if kv["impassable"] == "yes" or access == "false" then
+    -- service=emergency_access is emergency-only; emergency=yes on its own just adds emergency access
+    -- and doesn't make an otherwise accessible (e.g. access=private) road unroutable for other modes
+    if kv["impassable"] == "yes" or access == "false" or kv["service"] == "emergency_access" then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
@@ -1059,7 +1064,7 @@ function filter_tags_generic(kv)
     local default_val = "true"
 
     -- handle inverse access cases like access=no + foot=yes
-    if kv["impassable"] == "yes" or access == "false" then
+    if kv["impassable"] == "yes" or access == "false" or kv["service"] == "emergency_access" then
       default_val = "false"
     end
 
@@ -1394,16 +1399,18 @@ function filter_tags_generic(kv)
   end
 
   --let all the :forward overrides through
-  local mv_forward = kv["motor_vehicle:forward"] or kv["vehicle:forward"]
-  if mv_forward ~= nil then
-    local access_forward = any_in(motor_vehicle, mv_forward)
-    kv["auto_forward"] = access_forward
-    kv["truck_forward"] = access_forward
-    kv["bus_forward"] = access_forward
-    kv["taxi_forward"] = access_forward
-    kv["moped_forward"] = access_forward
-    kv["motorcycle_forward"] = access_forward
-  end
+  local access_forward = any_in(motor_vehicle, kv["motor_vehicle:forward"] or kv["vehicle:forward"])
+  kv["auto_forward"] = any_in(motor_vehicle, kv["motorcar:forward"]) or access_forward or kv["auto_forward"]
+  kv["truck_forward"] = any_in(truck, kv["hgv:forward"]) or access_forward or kv["truck_forward"]
+  kv["bus_forward"] = any_in(bus, kv["bus:forward"]) or any_in(psv, kv["psv:forward"]) or
+                      access_forward or kv["bus_forward"]
+  kv["taxi_forward"] = any_in(taxi, kv["taxi:forward"]) or any_in(psv, kv["psv:forward"]) or
+                       access_forward or kv["taxi_forward"]
+  kv["moped_forward"] = any_in(moped, kv["moped:forward"]) or
+                        any_in(moped, kv["mofa:forward"]) or
+                        access_forward or kv["moped_forward"]
+  kv["motorcycle_forward"] = any_in(motor_vehicle, kv["motorcycle:forward"]) or access_forward or
+                             kv["motorcycle_forward"]
   if kv["foot:forward"] ~= nil then
     kv["pedestrian_forward"] = any_in(foot, kv["foot:forward"])
   end
@@ -1413,16 +1420,18 @@ function filter_tags_generic(kv)
   end
 
   --let all the :backward overrides through, some of this is redundant but the code is a mess...
-  local mv_backward = kv["motor_vehicle:backward"] or kv["vehicle:backward"]
-  if mv_backward ~= nil then
-    local access_backward = any_in(motor_vehicle, mv_backward)
-    kv["auto_backward"] = access_backward
-    kv["truck_backward"] = access_backward
-    kv["bus_backward"] = access_backward
-    kv["taxi_backward"] = access_backward
-    kv["moped_backward"] = access_backward
-    kv["motorcycle_backward"] = access_backward
-  end
+  local access_backward = any_in(motor_vehicle, kv["motor_vehicle:backward"] or kv["vehicle:backward"])
+  kv["auto_backward"] = any_in(motor_vehicle, kv["motorcar:backward"]) or access_backward or kv["auto_backward"]
+  kv["truck_backward"] = any_in(truck, kv["hgv:backward"]) or access_backward or kv["truck_backward"]
+  kv["bus_backward"] = any_in(bus, kv["bus:backward"]) or any_in(psv, kv["psv:backward"]) or
+                       access_backward or kv["bus_backward"]
+  kv["taxi_backward"] = any_in(taxi, kv["taxi:backward"]) or any_in(psv, kv["psv:backward"]) or
+                        access_backward or kv["taxi_backward"]
+  kv["moped_backward"] = any_in(moped, kv["moped:backward"]) or
+                         any_in(moped, kv["mofa:backward"]) or
+                         access_backward or kv["moped_backward"]
+  kv["motorcycle_backward"] = any_in(motor_vehicle, kv["motorcycle:backward"]) or access_backward or
+                              kv["motorcycle_backward"]
   if kv["foot:backward"] ~= nil then
     kv["pedestrian_backward"] = any_in(foot, kv["foot:backward"])
   end
@@ -1619,6 +1628,11 @@ function filter_tags_generic(kv)
     use = 40 --other
   elseif use == nil then
     use = 0 --general road, no special use
+  end
+
+  -- special use for cycle streets
+  if bicycle[kv["cyclestreet"]] == "true" or bicycle[kv["bicycle_road"]] == "true" then
+    use = 12
   end
 
   -- do not override 'construction' use
@@ -2044,7 +2058,6 @@ function nodes_proc (kv, nokeys)
   local initial_access = any_in(access, kv["access"])
   local access = initial_access or "true"
 
-  -- expect access=private not to be combined with other values
   if kv["impassable"] == "yes" then
     access = "false"
   end
@@ -2461,6 +2474,10 @@ function rels_proc (kv, nokeys)
        kv["restriction"] = nil
        return 0, kv
      end
+  end
+
+  if (kv["type"] == "multipolygon" and kv["highway"] == "pedestrian" and kv["area"] == "yes") then
+    return 0, kv
   end
 
   return 1, kv

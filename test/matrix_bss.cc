@@ -110,6 +110,7 @@ public:
     Api matrix_request;
     ParseApi(make_matrix_request(sources, targets), Options::sources_to_targets, matrix_request);
     loki_worker.matrix(matrix_request);
+    loki_worker.cleanup();
 
     timedist_matrix_bss.SourceToTarget(matrix_request, reader, mode_costing,
                                        sif::TravelMode::kPedestrian, 400000.0);
@@ -125,6 +126,7 @@ public:
         ParseApi(make_matrix_request(sources[i], targets[j]), valhalla::Options::route,
                  route_request);
         loki_worker.route(route_request);
+        loki_worker.cleanup();
         thor_worker.route(route_request);
         odin_worker.narrate(route_request);
 

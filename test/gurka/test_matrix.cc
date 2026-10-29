@@ -10,6 +10,8 @@
 
 #include <gtest/gtest.h>
 
+#include <numeric>
+
 using namespace valhalla;
 using namespace valhalla::thor;
 using namespace valhalla::midgard;
@@ -145,14 +147,14 @@ public:
   }
 
   bool Allowed(const DirectedEdge* edge,
-               const bool /*is_dest*/,
                const EdgeLabel& pred,
                const graph_tile_ptr& /*tile*/,
                const GraphId& edgeid,
                const uint64_t /*current_time*/,
                const uint32_t /*tz_index*/,
                uint8_t& /*restriction_idx*/,
-               uint8_t& /*destonly_access_restr_mask*/) const override {
+               uint8_t& /*destonly_access_restr_mask*/,
+               bool* /*edge_destonly*/) const override {
     if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
@@ -170,7 +172,8 @@ public:
                       const uint64_t /*current_time*/,
                       const uint32_t /*tz_index*/,
                       uint8_t& /*restriction_idx*/,
-                      uint8_t& /*destonly_access_restr_mask*/) const override {
+                      uint8_t& /*destonly_access_restr_mask*/,
+                      bool* /*edge_destonly*/) const override {
     if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
@@ -206,8 +209,8 @@ public:
                       const NodeInfo* /*node*/,
                       const EdgeLabel& /*pred*/,
                       const graph_tile_ptr& /*tile*/,
-                      const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/
-  ) const override {
+                      const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
+                      const bool /*edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -215,11 +218,12 @@ public:
                              const NodeInfo* /*node*/,
                              const DirectedEdge* /*opp_edge*/,
                              const DirectedEdge* /*opp_pred_edge*/,
+                             const EdgeLabel& /*pred_label*/,
                              const graph_tile_ptr& /*tile*/,
-                             const baldr::GraphId& /*edge_id*/,
                              const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
                              const bool /*has_measured_speed*/,
-                             const InternalTurn /*internal_turn*/) const override {
+                             const InternalTurn /*internal_turn*/,
+                             const bool /*opp_edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -907,6 +911,30 @@ TEST_P(TestConnectionCheck, MatrixSecondPass) {
   }
 }
 
+TEST(StandAlone, MatrixSecondPassUsesFilteredEdges) {
+  // a source heading of 0 leaves only the dead-end edge "Ao" as a candidate and puts "oC" into
+  // filtered_edges, so C is only reachable if the second pass merges the filtered edges back in
+  const std::string ascii_map = R"(
+    A
+    |
+    o---C
+  )";
+  const gurka::ways ways = {
+      {"Ao", {{"highway", "residential"}, {"oneway", "-1"}}},
+      {"oC", {{"highway", "residential"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
+  const auto map = gurka::buildtiles(layout, ways, {}, {},
+                                     VALHALLA_BUILD_DIR "test/data/matrix_second_pass_filtered_edges",
+                                     {{"thor.costmatrix.allow_second_pass", "1"}});
+
+  auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"o"}, {"C"}, "auto",
+                              {{"/sources/0/heading", "0"}});
+  EXPECT_TRUE(api.matrix().second_pass(0));
+  EXPECT_GT(api.matrix().distances(0), 0);
+  EXPECT_LT(api.matrix().distances(0), 100000000); // not kMaxCost
+}
+
 TEST_P(TestConnectionCheck, CostMatrixTrivialRoutes) {
   const std::string ascii_map = R"(
     A---B--2->-1--C---D
@@ -1306,6 +1334,32 @@ TEST_P(TestConnectionCheck, MultipleTrivialRoutes) {
 
 INSTANTIATE_TEST_SUITE_P(connection_check, TestConnectionCheck, ::testing::Values("1", "0"));
 
+TEST(StandAlone, TrivialRouteBeginEndNode) {
+  const std::string ascii_map = R"(
+    A--B--1------------C
+       |               |
+       E---------------F
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
+      {"BE", {{"highway", "residential"}}}, {"EF", {{"highway", "residential"}}},
+      {"FC", {{"highway", "residential"}}},
+  };
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_trivial_end_node", {});
+
+  auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"B"}, "auto",
+                                 {{"/shape_format", "polyline6"}});
+  EXPECT_EQ(matrix.matrix().distances(0), 300);
+  EXPECT_EQ(matrix.matrix().shapes(0), encode_shape({"1", "B"}, layout));
+
+  matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"B"}, {"1"}, "auto",
+                            {{"/shape_format", "polyline6"}});
+  EXPECT_EQ(matrix.matrix().distances(0), 300);
+  EXPECT_EQ(matrix.matrix().shapes(0), encode_shape({"B", "1"}, layout));
+}
+
 TEST(StandAlone, TrivialKeepExpanding) {
   // target candidates includes AB but should be penalized
   // so that path 1B, BC, Cx has less cost than the trivial one
@@ -1370,6 +1424,63 @@ TEST(StandAlone, TrivialCorrelation) {
       gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto", {}, nullptr);
 
   EXPECT_EQ(result.matrix().distances(0), 0);
+}
+
+TEST(StandAlone, CostMatrixInvariantReverseTree) {
+  // with invariant time and a single departure instant shared by all sources, the reverse
+  // trees cost edges with time-dependent speeds too, so path selection near the targets
+  // respects predicted traffic at the departure time
+  const std::string ascii_map = R"(
+    A----B----C----D
+         |         |
+         E---------F
+  )";
+  // the maxspeed 100 edges are the direct route; they get congested predicted speeds below
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"BC", {{"highway", "primary"}, {"maxspeed", "100"}}},
+      {"CD", {{"highway", "primary"}, {"maxspeed", "100"}}},
+      {"BE", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"EF", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"FD", {{"highway", "primary"}, {"maxspeed", "60"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_invariant_reverse",
+                               {{"service_limits.max_timedep_distance_matrix", "50000"},
+                                {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
+                                {"mjolnir.shortcuts", "0"}});
+
+  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
+    std::array<float, baldr::kBucketsPerWeek> historical;
+    historical.fill(e.speed() >= 90 ? 5 : 40);
+    return historical;
+  });
+
+  std::unordered_map<std::string, std::string> options = {
+      {"/costing_options/auto/speed_types/0", "predicted"},
+      {"/date_time/type", "3"},
+      {"/date_time/value", "2021-11-08T08:00"},
+      {"/prioritize_bidirectional", "1"},
+  };
+
+  // A-B-C-D is shorter (1.5 km) and wins with non-temporal speeds, but its BC/CD edges
+  // crawl at 5 km/h in predicted traffic; the detour A-B-E-F-D (1.9 km at 40 km/h) is the
+  // correct path at the departure time. The reverse tree starts at D on the congested CD,
+  // so it must see predicted speeds for the detour to win.
+  auto bidir =
+      gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"D"}, "auto", options);
+  EXPECT_EQ(bidir.matrix().algorithm(), Matrix::CostMatrix);
+  EXPECT_NEAR(bidir.matrix().distances(0), 1900, 10);
+
+  // the exact unidirectional algorithm agrees on both path and duration
+  options.erase("/prioritize_bidirectional");
+  auto exact =
+      gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"D"}, "auto", options);
+  EXPECT_EQ(exact.matrix().algorithm(), Matrix::TimeDistanceMatrix);
+  EXPECT_NEAR(exact.matrix().distances(0), 1900, 10);
+  EXPECT_NEAR(bidir.matrix().times(0), exact.matrix().times(0), 5);
 }
 
 TEST(StandAlone, MaxDistanceCutoff) {

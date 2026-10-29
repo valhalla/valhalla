@@ -46,7 +46,7 @@ namespace {
 void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
   static const std::unordered_set<std::string_view> kSupportedLayers =
       {valhalla::kEdgeLayerName, valhalla::kNodeLayerName, valhalla::kShortcutLayerName,
-       valhalla::kAccessRestrictionLayerName};
+       valhalla::kAccessRestrictionLayerName, valhalla::kIncidentLayerName};
 
   if (exclude_layers.has_value() && exclude_layers->IsArray()) {
     for (const auto& lyr : exclude_layers->GetArray()) {
@@ -345,6 +345,10 @@ void parse_location(valhalla::Location* location,
         rapidjson::get<bool>(*search_filter, "/exclude_ferry", false));
     location->mutable_search_filter()->set_level(
         rapidjson::get<float>(*search_filter, "/level", baldr::kMaxLevel));
+    // search_filter.exclude_steps
+    auto exclude_steps = rapidjson::get_optional<bool>(*search_filter, "/exclude_steps");
+    if (exclude_steps)
+      location->mutable_search_filter()->set_exclude_steps(*exclude_steps);
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
   } // or is it pbf
@@ -375,6 +379,9 @@ void parse_location(valhalla::Location* location,
   }
   if (!location->search_filter().has_level_case())
     location->mutable_search_filter()->set_level(baldr::kMaxLevel);
+  if (!location->search_filter().has_exclude_steps_case())
+    location->mutable_search_filter()->set_exclude_steps(request.options().costing_type() ==
+                                                         Costing::bicycle);
 
   float waiting_secs = rapidjson::get<float>(r_loc, "/waiting", 0.f);
   switch (location->type()) {
@@ -591,6 +598,25 @@ void parse_xyz(const rapidjson::Document& doc, valhalla::Options& options) {
   }
 }
 
+uint32_t AllowTypes_Parse(const rapidjson::Value::ConstObject& obj) {
+  static const std::unordered_map<std::string, uint32_t> types{
+      {"all", baldr::kAllowAll},
+  };
+
+  uint32_t mask = baldr::kAllowNone;
+  if (obj.HasMember("allow_types") && obj["allow_types"].IsArray()) {
+    for (const auto& allow_type : obj["allow_types"].GetArray()) {
+      if (allow_type.IsString()) {
+        auto i = types.find(allow_type.GetString());
+        if (i != types.cend()) {
+          mask |= i->second;
+        }
+      }
+    }
+  }
+  return mask;
+}
+
 void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
   auto json_obj = json_feat.GetObject();
   for (const auto& coords_j : json_obj["geometry"].GetObject()["coordinates"].GetArray()) {
@@ -598,13 +624,9 @@ void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatu
     shape_pt->mutable_ll()->set_lng(coords_j.GetArray()[0].GetFloat());
     shape_pt->mutable_ll()->set_lat(coords_j.GetArray()[1].GetFloat());
   }
-  if (json_obj["properties"].GetObject().HasMember("factor")) {
-    line_feat->set_cost_factor(json_obj["properties"].GetObject()["factor"].GetFloat());
-  } else if (json_obj["properties"].GetObject().HasMember("ignore_access_restrictions")) {
-    line_feat->set_ignore_access_restrictions(
-        json_obj["properties"].GetObject()["ignore_access_restrictions"].GetBool());
-    line_feat->set_cost_factor(1);
-  }
+  auto props = json_obj["properties"].GetObject();
+  line_feat->set_cost_factor(props.HasMember("factor") ? props["factor"].GetFloat() : 1.);
+  line_feat->set_allow_types(AllowTypes_Parse(props));
 }
 
 void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
@@ -619,12 +641,8 @@ void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* 
     shape_pt->mutable_ll()->set_lat(ll.lat());
   }
 
-  if (json_obj.HasMember("factor")) {
-    line_feat->set_cost_factor(json_obj["factor"].GetFloat());
-  } else if (json_obj.HasMember("ignore_access_restrictions")) {
-    line_feat->set_cost_factor(1);
-    line_feat->set_ignore_access_restrictions(json_obj["ignore_access_restrictions"].GetBool());
-  }
+  line_feat->set_cost_factor(json_obj.HasMember("factor") ? json_obj["factor"].GetFloat() : 1.);
+  line_feat->set_allow_types(AllowTypes_Parse(json_obj));
 }
 
 /**
@@ -1189,6 +1207,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
           } else { // or an encoded polyline and a cost factor
             parse_line(linear_feat, l);
           }
+
+          if (l->shape_size() == 0) {
+            throw valhalla_exception_t{173, "feature coordinates are empty"};
+          }
         }
       } catch (const std::exception& e) { throw valhalla_exception_t{173, std::string(e.what())}; }
     }
@@ -1517,6 +1539,15 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
   return add_warning;
 }
 
+void apply_trace_location_defaults(valhalla::Location& loc) {
+  loc.set_node_snap_tolerance(0.f);
+  loc.set_radius(10);
+  // Reachability test is not needed for edge walking because either
+  // - edge_walk relies on the shape that was produced by route
+  // - map_snap performs a Viterbi search that organically biases towards reachable edges
+  loc.set_minimum_reachability(0);
+}
+
 #ifdef ENABLE_SERVICES
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
   // block all but get and post
@@ -1623,6 +1654,12 @@ to_response(const std::string& data,
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
+}
+
+// if we shared zmq context across threads we can use inproc:// (shared mem) endpoints
+zmq::context_t& zmq_context() {
+  static zmq::context_t ctx;
+  return ctx;
 }
 
 #endif

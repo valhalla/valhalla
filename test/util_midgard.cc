@@ -702,8 +702,8 @@ TEST(UtilMidgard, SequenceSort) {
   }
 
   std::sort(in_mem.begin(), in_mem.end());
-  merge.sort(std::less<uint8_t>(), 1327);
-  standard.sort(std::less<uint8_t>(), 1327 * 5);
+  merge.sort(std::less<uint8_t>(), 4, 1327);
+  standard.sort(std::less<uint8_t>(), 4, 1327 * 5);
 
   EXPECT_TRUE(std::equal(in_mem.begin(), in_mem.end(), merge.begin()));
   EXPECT_TRUE(std::equal(in_mem.begin(), in_mem.end(), standard.begin()));

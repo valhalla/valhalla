@@ -7,7 +7,6 @@
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
 
-#include <boost/format.hpp>
 #include <openssl/evp.h>
 
 #include <algorithm>
@@ -515,16 +514,13 @@ void GraphTileBuilder::StoreTileData() {
               " vs in_mem stream " + std::to_string(curr) + " padding = " + std::to_string(padding));
   }
 
-  LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset "
-                           "= %5% textlist offset = %6% lane connections = %7%") %
-             filename % nodes_builder_.size() % directededges_builder_.size() %
-             signs_builder_.size() % edge_info_offset_ % text_list_offset_ %
-             lane_connectivity_builder_.size())
-                .str());
-  LOG_DEBUG((boost::format("   admins = %1%  departures = %2% stops = %3% routes = %4%") %
-             admins_builder_.size() % departure_builder_.size() % stop_builder_.size() %
-             route_builder_.size())
-                .str());
+  LOG_DEBUG("Write: {} nodes = {} directededges = {} signs {} edgeinfo offset = {} textlist offset "
+            "= {} lane connections = {}",
+            filename.string(), nodes_builder_.size(), directededges_builder_.size(),
+            signs_builder_.size(), edge_info_offset_, text_list_offset_,
+            lane_connectivity_builder_.size());
+  LOG_DEBUG("   admins = {}  departures = {} stops = {} routes = {}", admins_builder_.size(),
+            departure_builder_.size(), stop_builder_.size(), route_builder_.size());
 
   // Stamp the data hash into the header and rewrite it in place, then publish atomically.
   in_mem.finalize();
@@ -1236,7 +1232,11 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
       continue;
     }
 
-    std::tuple<PointLL, double> bounding_circle = get_bounding_circle(shape);
+    std::optional<circle_t> bounding_circle;
+    if (build_bounding_circles) {
+      bounding_circle = minimum_bounding_circle(shape, kMaxCircleBbox);
+    }
+
     // for each bin that got intersected
     auto intersection = tiles.Intersect(shape);
     for (const auto& i : intersection) {
@@ -1262,8 +1262,10 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
             PointLL center{minx + lng_offset, miny + lat_offset};
             DistanceApproximator<PointLL> approx(center);
 
-            circle = baldr::DiscretizedBoundingCircle(approx, center, std::get<0>(bounding_circle),
-                                                      std::get<1>(bounding_circle));
+            if (bounding_circle) {
+              circle = baldr::DiscretizedBoundingCircle(approx, center, bounding_circle->first,
+                                                        bounding_circle->second);
+            }
           }
           out_bins[bin].push_back(std::make_pair(edge_id, circle));
         }

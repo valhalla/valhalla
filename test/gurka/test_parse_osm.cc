@@ -49,6 +49,53 @@ TEST(ParseWays, OsmWayMarshalling) {
   EXPECT_EQ(tossed.speed_limit(), 0);
 }
 
+TEST(ParseWays, SurfaceLateriteAndClay) {
+  const std::string ascii_map = R"(A----B----C----D)";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"surface", "laterite"}}},
+      {"BC", {{"highway", "residential"}, {"surface", "clay"}}},
+      {"CD", {{"highway", "residential"}, {"surface", "mud"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  // stop after parsing ways so we can assert on the raw OSMWay structs
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_parse_ways_surface",
+                               {{"mjolnir.concurrency", "1"}}, mjolnir::BuildStage::kInitialize,
+                               mjolnir::BuildStage::kParseWays);
+
+  // laterite and clay should fall into the same bucket as mud/dirt/earth/ground
+  // rather than being left unclassified (has_surface_ == false)
+  EXPECT_EQ(gurka::findWay(map, "AB").surface(), baldr::Surface::kDirt);
+  EXPECT_EQ(gurka::findWay(map, "BC").surface(), baldr::Surface::kDirt);
+  EXPECT_EQ(gurka::findWay(map, "CD").surface(), baldr::Surface::kDirt);
+}
+
+TEST(ParseWays, SurfaceSyntheticAndNatural) {
+  const std::string ascii_map = R"(A----B----C----D----E----F----G----H)";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"surface", "rubber"}}},
+      {"BC", {{"highway", "residential"}, {"surface", "acrylic"}}},
+      {"CD", {{"highway", "residential"}, {"surface", "plastic"}}},
+      {"DE", {{"highway", "residential"}, {"surface", "stone"}}},
+      {"EF", {{"highway", "residential"}, {"surface", "soil"}}},
+      {"FG", {{"highway", "residential"}, {"surface", "rock"}}},
+      {"GH", {{"highway", "residential"}, {"surface", "artificial_turf"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_parse_ways_surface_2",
+                               {{"mjolnir.concurrency", "1"}}, mjolnir::BuildStage::kInitialize,
+                               mjolnir::BuildStage::kParseWays);
+
+  EXPECT_EQ(gurka::findWay(map, "AB").surface(), baldr::Surface::kPaved);
+  EXPECT_EQ(gurka::findWay(map, "BC").surface(), baldr::Surface::kPaved);
+  EXPECT_EQ(gurka::findWay(map, "CD").surface(), baldr::Surface::kPaved);
+  EXPECT_EQ(gurka::findWay(map, "DE").surface(), baldr::Surface::kPavedRough);
+  EXPECT_EQ(gurka::findWay(map, "EF").surface(), baldr::Surface::kDirt);
+  EXPECT_EQ(gurka::findWay(map, "FG").surface(), baldr::Surface::kPath);
+  EXPECT_EQ(gurka::findWay(map, "GH").surface(), baldr::Surface::kPath);
+}
+
 TEST(ParseNodes, TwoPhaseWayNodesFill) {
   const std::string ascii_map = R"(
     A----B----C
