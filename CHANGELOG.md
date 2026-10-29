@@ -7,6 +7,7 @@
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
    * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
    * FIXED: emergency only access on `service=emergency_access` [#6396](https://github.com/valhalla/valhalla/pull/6396)
+   * FIXED: `service=driveway`, `parking_aisle` and `drive-through` are now destination only for trucks too, like they already were for cars [#XXXX](https://github.com/valhalla/valhalla/pull/XXXX)
    * FIXED: crash and wrong node languages when building tiles from three or more input files [#6402](https://github.com/valhalla/valhalla/pull/6402)
    * FIXED: missing bounding circle on the opposing edge of a /locate response [#6410](https://github.com/valhalla/valhalla/pull/6410)
    * BREAKING: consistent incident serialization in route and locate [#6405](https://github.com/valhalla/valhalla/pull/6405)
