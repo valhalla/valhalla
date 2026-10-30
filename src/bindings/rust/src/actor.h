@@ -1,0 +1,162 @@
+#pragma once
+
+#include <valhalla/loki/worker.h>
+#include <valhalla/odin/worker.h>
+#include <valhalla/thor/worker.h>
+#include <valhalla/tyr/serializers.h>
+
+// actor.rs.h refers to these, so they have to be declared first
+struct Response;
+struct Actor;
+#include "valhalla/src/bindings/rust/src/actor.rs.h"
+
+/// Copy&paste of the `valhalla::tyr::actor_t` class, but without the parsing json request format.
+struct Actor final {
+  std::shared_ptr<valhalla::baldr::GraphReader> reader;
+
+  valhalla::loki::loki_worker_t loki_worker;
+  valhalla::thor::thor_worker_t thor_worker;
+  valhalla::odin::odin_worker_t odin_worker;
+
+  Actor(const boost::property_tree::ptree& config)
+      : reader(std::make_shared<valhalla::baldr::GraphReader>(config.get_child("mjolnir"))),
+        loki_worker(config, reader), thor_worker(config, reader), odin_worker(config) {
+    if (reader->GetTileSet().empty()) {
+      throw std::runtime_error("Failed to load tileset");
+    }
+  }
+
+  Response route(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::route, [this](valhalla::Api& api) {
+      loki_worker.route(api);
+      thor_worker.route(api);
+      return odin_worker.narrate(api);
+    });
+  }
+
+  Response locate(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::locate,
+               [this](valhalla::Api& api) { return loki_worker.locate(api); });
+  }
+
+  Response matrix(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::sources_to_targets, [this](valhalla::Api& api) {
+      loki_worker.matrix(api);
+      return thor_worker.matrix(api);
+    });
+  }
+
+  Response optimized_route(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::optimized_route, [this](valhalla::Api& api) {
+      loki_worker.matrix(api);
+      thor_worker.optimized_route(api);
+      return odin_worker.narrate(api);
+    });
+  }
+
+  Response isochrone(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::isochrone, [this](valhalla::Api& api) {
+      loki_worker.isochrones(api);
+      return thor_worker.isochrones(api);
+    });
+  }
+
+  Response trace_route(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::trace_route, [this](valhalla::Api& api) {
+      loki_worker.trace(api);
+      thor_worker.trace_route(api);
+      return odin_worker.narrate(api);
+    });
+  }
+
+  Response trace_attributes(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::trace_attributes, [this](valhalla::Api& api) {
+      loki_worker.trace(api);
+      return thor_worker.trace_attributes(api);
+    });
+  }
+
+  Response transit_available(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::transit_available,
+               [this](valhalla::Api& api) { return loki_worker.transit_available(api); });
+  }
+
+  Response expansion(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::expansion, [this](valhalla::Api& api) {
+      switch (api.options().expansion_action()) {
+        case valhalla::Options::route:
+          loki_worker.route(api);
+          break;
+        case valhalla::Options::isochrone:
+          loki_worker.isochrones(api);
+          break;
+        default:
+          loki_worker.matrix(api);
+          break;
+      }
+      return thor_worker.expansion(api);
+    });
+  }
+
+  Response centroid(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::centroid, [this](valhalla::Api& api) {
+      loki_worker.route(api);
+      thor_worker.centroid(api);
+      return odin_worker.narrate(api);
+    });
+  }
+
+  Response status(rust::Slice<const uint8_t> request) {
+    return act(request, valhalla::Options::status, [this](valhalla::Api& api) {
+      loki_worker.status(api);
+      thor_worker.status(api);
+      odin_worker.status(api);
+      return valhalla::tyr::serializeStatus(api);
+    });
+  }
+
+private:
+  // `request` is a serialized `valhalla::Options`
+  template <typename Fn>
+  Response act(rust::Slice<const uint8_t> request, valhalla::Options::Action action, Fn&& action_fn) {
+    google::protobuf::Arena arena;
+    auto* api = google::protobuf::Arena::Create<valhalla::Api>(&arena);
+    if (!api->mutable_options()->ParseFromArray(request.data(), request.size())) {
+      throw std::runtime_error("Failed to parse API request");
+    }
+
+    // This function sets many defaults in the API object and validates the request.
+    valhalla::ParseApi("", action, *api);
+    const auto format = api->options().format();
+
+    // Workers keep per-request state, reset it even if the action throws
+    struct CleanupGuard {
+      Actor& actor_;
+      explicit CleanupGuard(Actor& actor) : actor_(actor) {
+      }
+      ~CleanupGuard() {
+        actor_.loki_worker.cleanup();
+        actor_.thor_worker.cleanup();
+        actor_.odin_worker.cleanup();
+      }
+    } guard(*this);
+
+    std::string output = action_fn(*api);
+
+    return Response{
+        .data = std::make_unique<std::string>(std::move(output)),
+        .format = format,
+    };
+  }
+};
+
+std::unique_ptr<Actor> new_actor(const boost::property_tree::ptree& config) {
+  return std::make_unique<Actor>(config);
+}
+
+std::unique_ptr<std::string> parse_json_request(rust::Str json, int action) {
+  valhalla::Api api;
+  valhalla::ParseApi(static_cast<std::string>(json), static_cast<valhalla::Options::Action>(action),
+                     api);
+  return std::make_unique<std::string>(api.options().SerializeAsString());
+}
