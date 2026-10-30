@@ -19,6 +19,7 @@
    * UPDATED: timezone database to 2026e [#6415](https://github.com/valhalla/valhalla/pull/6415)
    * ADDED: `kCycleStreet` use [#6407](https://github.com/valhalla/valhalla/pull/6407)
    * CHANGED: a `tile_url` connection times out after 5 s instead of curl's default of 300 s, so a tile server that doesn't answer fails fast [#6424](https://github.com/valhalla/valhalla/pull/6424)
+   * ADDED: `use_curvature` costing option for motorcycle costing [#6449](https://github.com/valhalla/valhalla/pull/6449)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
@@ -468,7 +469,6 @@
    * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
    * CHANGED: added openssl as a linked library to all build configs when `ENABLE_DATA_TOOLS=ON` [#5626](https://github.com/valhalla/valhalla/pull/5626)
    * UPGRADED: C++17 to C++20 [#5575](https://github.com/valhalla/valhalla/pull/5575)
-   * ADDED: `use_curvature` costing option for motorcycle costing [#5491](https://github.com/valhalla/valhalla/pull/5491)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
