@@ -798,7 +798,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
                                     const graph_tile_ptr& tile,
                                     const std::function<LimitedGraphReader()>& reader_getter,
                                     const bool edge_destonly) const {
-  // Special cases: fixed penalty for steps/stairs
+  // TODO: Consider separate transition penalties for ladders and steps.
   if (edge->use() == Use::kSteps || edge->use() == Use::kLadder) {
     return {step_penalty_, 0.0f};
   }
@@ -855,7 +855,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   // is ignored for now.
   // TODO: do we want to update the cost if we have flow or speed from traffic.
 
-  // Special cases: fixed penalty for steps/stairs
+  // TODO: Consider separate transition penalties for ladders and steps.
   if (edge->use() == Use::kSteps || edge->use() == Use::kLadder) {
     return {step_penalty_, 0.0f};
   }
