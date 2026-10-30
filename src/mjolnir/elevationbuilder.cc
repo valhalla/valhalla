@@ -138,8 +138,11 @@ InterpolationGraph InterpolationGraph::build(GraphReader& graphreader,
     auto scan_edges = [&](const graph_tile_ptr& tile, const NodeInfo* node) {
       for (uint32_t i = 0; i < node->edge_count() && !outer; ++i) {
         const DirectedEdge* edge = tile->directededge(node->edge_index() + i);
-        if (edge->is_shortcut())
+        if (edge->is_shortcut()) {
+          // Shortcuts inherit tunnel/bridge flags but jump far past the nodes we care about,
+          // so following it would add a distant outer node.
           continue;
+        }
         if (is_interpolated(*edge)) {
           next_edges.emplace_back(edge->endnode(), edge->length());
         } else {
