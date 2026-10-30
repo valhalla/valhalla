@@ -61,8 +61,8 @@ The json basically looks like this:
 }]
  */
 
-constexpr uint32_t kMinSuburbanDensity = 5;
-constexpr uint32_t kMaxSuburbanDensity = 10;
+constexpr uint32_t kMinSuburbanDensity = 4;
+constexpr uint32_t kMaxSuburbanDensity = 7;
 constexpr uint32_t kUnconfiguredSpeed = 0;
 
 /**
