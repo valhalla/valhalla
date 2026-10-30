@@ -54,6 +54,7 @@ set(sources
   osmway.cc
   pbfadminparser.cc
   pbfgraphparser.cc
+  pedestrian_name_enricher.cc
   restrictionbuilder.cc
   servicedays.cc
   shortcutbuilder.cc
