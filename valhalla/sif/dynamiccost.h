@@ -252,7 +252,6 @@ constexpr uint32_t kCurvatureUrbanDensity = 7;
 constexpr float kMaxStraightRoadFactor = 6.f;
 constexpr float kSuburbanCurvatureFactor = 0.1f;
 constexpr float kUrbanCurvatureFactor = 2.f;
-constexpr float kMotorwayCurvatureFactor = 2.f;
 
 constexpr float curvature_strength(uint32_t step) {
   if (step <= kNeutralCurvatureStep) {
@@ -266,11 +265,15 @@ constexpr std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatu
 populate_curvaturefactor() {
   std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps> curvaturefactor{};
   for (uint32_t s = 0; s < kCurvatureSteps; s++) {
-    float strength = curvature_strength(s);
+    float strength =
+        curvature_strength(s); // strength grows quadratically with use_curvature in range [0.5, 1.0]
     for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
-      float straightness =
-          static_cast<float>(baldr::kMaxCurvatureFactor - c) / baldr::kMaxCurvatureFactor;
-      curvaturefactor[s][c] = 1.f + kMaxStraightRoadFactor * strength * straightness * straightness;
+      float straightness = static_cast<float>(baldr::kMaxCurvatureFactor - c) /
+                           baldr::kMaxCurvatureFactor; // inverted curvature
+      curvaturefactor[s][c] =
+          1.f +
+          kMaxStraightRoadFactor * strength * straightness *
+              straightness; // instead of favoring curvy roads, we increasingly avoid straight roads
     }
   }
   return curvaturefactor;
@@ -1394,7 +1397,6 @@ protected:
   uint32_t curvature_step_;    // Index into kCurvatureFactor[curvature_step_][curvature].
   float suburban_curvature_factor_;
   float urban_curvature_factor_;
-  float motorway_curvature_factor_;
 
   // Transition costs
   sif::Cost country_crossing_cost_;

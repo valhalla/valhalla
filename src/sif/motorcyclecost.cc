@@ -467,9 +467,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
         (edge->link() || edge->roundabout() || edge->internal() || edge->use() != baldr::Use::kRoad)
             ? 0
             : edge->curvature();
-    if (edge->classification() == baldr::RoadClass::kMotorway) {
-      factor *= motorway_curvature_factor_;
-    } else if (edge->density() < kCurvatureRuralDensity) {
+    if (edge->density() < kCurvatureRuralDensity) {
       factor *= kCurvatureFactor[curvature_step_][curvature];
     } else if (edge->density() < kCurvatureUrbanDensity) {
       factor *= suburban_curvature_factor_ * kCurvatureFactor[curvature_step_][curvature];
@@ -660,7 +658,7 @@ namespace {
 
 class TestMotorcycleCost : public MotorcycleCost {
 public:
-  TestMotorcycleCost(const Costing& costing_options) : MotorcycleCost(costing_options){};
+  TestMotorcycleCost(const Costing& costing_options) : MotorcycleCost(costing_options) {};
 
   using MotorcycleCost::alley_penalty_;
   using MotorcycleCost::country_crossing_cost_;
