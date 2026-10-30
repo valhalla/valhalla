@@ -80,6 +80,56 @@ TEST(Standalone, DestinationOnlyHGV) {
   }
 }
 
+TEST(Standalone, DestinationOnlyServiceUsesHGV) {
+  const std::string ascii_map = R"(
+      A----B--------------------C
+           |                    |
+           D--------------------E
+  )";
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto build_map = [&](const std::string& service) {
+    gurka::ways ways = {
+        {"AB", {{"highway", "unclassified"}}}, {"BC", {{"highway", "unclassified"}}},
+        {"CE", {{"highway", "unclassified"}}}, {"ED", {{"highway", "unclassified"}}},
+        {"BD", {{"highway", "service"}}},
+    };
+    if (!service.empty())
+      ways["BD"]["service"] = service;
+    return gurka::buildtiles(layout, ways, {}, {},
+                             "test/data/gurka_destination_only_service_hgv_" + service);
+  };
+
+  // a plain service road is a fine shortcut for both
+  auto plain_map = build_map("");
+  for (const auto& costing : {"auto", "truck"}) {
+    auto result = gurka::do_action(valhalla::Options::route, plain_map, {"A", "D"}, costing);
+    gurka::assert::raw::expect_path(result, {"AB", "BD"}, costing);
+  }
+
+  // service=driveway, parking_aisle and drive-through are destination only without any access
+  // tag, which has to apply to trucks just as it does to cars
+  for (const std::string service : {"driveway", "parking_aisle", "drive-through"}) {
+    auto map = build_map(service);
+
+    baldr::GraphReader reader(map.config.get_child("mjolnir"));
+    for (const auto& end_node : {"B", "D"}) {
+      const auto* edge = std::get<1>(gurka::findEdge(reader, layout, "BD", end_node));
+      EXPECT_TRUE(edge->destonly()) << service;
+      EXPECT_TRUE(edge->destonly_hgv()) << service;
+    }
+
+    for (const std::string costing : {"auto", "truck"}) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing);
+      gurka::assert::raw::expect_path(result, {"AB", "BC", "CE", "ED"}, service + " " + costing);
+
+      result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"D"}, costing);
+      EXPECT_EQ(result.matrix().distances(0), 4900) << service << " " << costing;
+    }
+  }
+}
+
 TEST(Standalone, DestinationOnlyDrivewaysMidNoAlternatives) {
   const std::string ascii_map = R"(
       A----B----C----D----E
