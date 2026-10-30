@@ -91,10 +91,8 @@ TEST(Standalone, DestinationOnlyServiceUsesHGV) {
 
   auto build_map = [&](const std::string& service) {
     gurka::ways ways = {
-        {"AB", {{"highway", "unclassified"}}},
-        {"BC", {{"highway", "unclassified"}}},
-        {"CE", {{"highway", "unclassified"}}},
-        {"ED", {{"highway", "unclassified"}}},
+        {"AB", {{"highway", "unclassified"}}}, {"BC", {{"highway", "unclassified"}}},
+        {"CE", {{"highway", "unclassified"}}}, {"ED", {{"highway", "unclassified"}}},
         {"BD", {{"highway", "service"}}},
     };
     if (!service.empty())
