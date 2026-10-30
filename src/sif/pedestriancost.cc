@@ -1199,13 +1199,13 @@ defaults.use_ferry_.max));
   }
 
   // transit_start_end_max_distance_
-  int_distributor.reset(make_distributor_from_range(kMultimodalStartEndMaxDistanceRange));
+  int_distributor.reset(make_distributor_from_range(kTransitTransferMaxDistanceRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_pedestriancost_from_json("transit_start_end_max_distance",
                                                    (*int_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->transit_start_end_max_distance_,
-                test::IsBetween(kMultimodalStartEndMaxDistanceRange.min,
-                                kMultimodalStartEndMaxDistanceRange.max));
+                test::IsBetween(kTransitTransferMaxDistanceRange.min,
+                                kTransitTransferMaxDistanceRange.max));
   }
 
   // transit_transfer_max_distance_
