@@ -1,6 +1,7 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
 #include "baldr/rapidjson_utils.h"
+#include "exceptions.h"
 #include "midgard/elevation_encoding.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -210,7 +211,8 @@ std::vector<std::string> EdgeInfo::GetNames() const {
     if (ni->name_offset_ < names_list_length_) {
       names.push_back(names_list_ + ni->name_offset_);
     } else {
-      throw std::runtime_error("GetNames: offset exceeds size of text list");
+      throw std::runtime_error(
+          text_offset_error_msg("GetNames", ni->name_offset_, names_list_length_));
     }
   }
   return names;
@@ -234,11 +236,13 @@ std::vector<std::pair<std::string, bool>> EdgeInfo::GetNames(bool include_tagged
           name_type_pairs.push_back({std::string(name + 1), false});
         }
       } else
-        throw std::runtime_error("GetNames: offset exceeds size of text list");
+        throw std::runtime_error(
+            text_offset_error_msg("GetNames", ni->name_offset_, names_list_length_));
     } else if (ni->name_offset_ < names_list_length_) {
       name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_});
     } else {
-      throw std::runtime_error("GetNames: offset exceeds size of text list");
+      throw std::runtime_error(
+          text_offset_error_msg("GetNames", ni->name_offset_, names_list_length_));
     }
   }
   return name_type_pairs;
@@ -273,7 +277,8 @@ std::vector<std::string> EdgeInfo::GetLinguisticTaggedValues() const {
         LOG_DEBUG("invalid_argument thrown for name: {}", name);
       }
     } else {
-      throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
+      throw std::runtime_error(
+          text_offset_error_msg("GetTaggedNames", ni->name_offset_, names_list_length_));
     }
   }
   return names;
@@ -301,12 +306,14 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
           name_type_pairs.push_back({std::string(name + 1), false, static_cast<uint8_t>(tag)});
         }
       } else {
-        throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
+        throw std::runtime_error(
+            text_offset_error_msg("GetNamesAndTypes", ni->name_offset_, names_list_length_));
       }
     } else if (ni->name_offset_ < names_list_length_) {
       name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_, 0});
     } else {
-      throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
+      throw std::runtime_error(
+          text_offset_error_msg("GetNamesAndTypes", ni->name_offset_, names_list_length_));
     }
   }
   return name_type_pairs;
@@ -333,7 +340,8 @@ std::vector<std::string> EdgeInfo::GetTaggedValues() const {
         LOG_DEBUG("invalid_argument thrown for tagged value: {}", value);
       }
     } else {
-      throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
+      throw std::runtime_error(
+          text_offset_error_msg("GetTaggedNames", ni->name_offset_, names_list_length_));
     }
   }
   return tagged_values;
@@ -362,7 +370,8 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
             LOG_DEBUG("logic_error thrown for tagged value: {}", value);
           }
         } else {
-          throw std::runtime_error("GetTags: offset exceeds size of text list");
+          throw std::runtime_error(
+              text_offset_error_msg("GetTags", ni->name_offset_, names_list_length_));
         }
       }
     }
@@ -424,7 +433,8 @@ EdgeInfo::GetLinguisticMap() const {
         LOG_DEBUG("invalid_argument thrown for name: {}", name);
       }
     } else {
-      throw std::runtime_error("GetLinguisticMap: offset exceeds size of text list");
+      throw std::runtime_error(
+          text_offset_error_msg("GetLinguisticMap", ni->name_offset_, names_list_length_));
     }
   }
 
