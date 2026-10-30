@@ -56,19 +56,24 @@ constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDeg
 // Radius (km) in which the density of non-rural nodes decides between suburban and urban
 constexpr float kUrbanRadius = 2.f;
 constexpr float kUrbanLatDeg = (kUrbanRadius * kMetersPerKm) / kMetersPerDegreeLat;
+
 // Street nodes per km^2 within kDensityRadius at which an area stops being rural
 constexpr float kSuburbanNodeDensity = 53.0f;
+
 // Street nodes per km^2 within kDensityRadius at the bottom of the rural and the top of the
 // suburban and urban bands; levels step geometrically in between
 constexpr float kMinNodeDensity = 1.0f;
 constexpr float kMaxNodeDensity = 490.0f;
+
 // Street nodes per km^2 within kDensityRadius below which suburban areas share the lowest suburban
 // level; most suburban nodes sit here and the sif density factors expect them to stay low
 constexpr float kMinSuburbanSpreadDensity = 145.0f;
 constexpr uint32_t kMaxRuralLevel = 2;
+
 // First relative density level of suburban and of urban areas
 constexpr uint32_t kSuburbanLevel = 4;
 constexpr uint32_t kUrbanLevel = 8;
+
 // Non-rural street nodes per km^2 within kUrbanRadius at which an area is urban
 constexpr float kUrbanNodeDensity = 140.0f;
 // Non-rural street nodes per km^2 within kUrbanRadius at the top of the urban band
