@@ -464,7 +464,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   factor *= EdgeFactor(edgeid);
   if (curvature_step_ > kNeutralCurvatureStep) {
     uint32_t curvature =
-        (edge->link() || edge->roundabout() || edge->internal() || edge->use() != baldr::Use::kRoad)
+        (edge->use() != baldr::Use::kRoad || edge->link() || edge->roundabout() || edge->internal())
             ? 0
             : edge->curvature();
     if (edge->density() < kCurvatureRuralDensity) {
