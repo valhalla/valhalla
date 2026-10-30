@@ -61,10 +61,14 @@ constexpr float kSuburbanNodeDensity = 53.0f;
 // Street nodes per km^2 within kDensityRadius at the bottom of the rural and the top of the
 // suburban and urban bands; levels step geometrically in between
 constexpr float kMinNodeDensity = 1.0f;
-constexpr float kMaxNodeDensity = 1300.0f;
+constexpr float kMaxNodeDensity = 490.0f;
+// Street nodes per km^2 within kDensityRadius below which suburban areas share the lowest suburban
+// level; most suburban nodes sit here and the sif density factors expect them to stay low
+constexpr float kMinSuburbanSpreadDensity = 145.0f;
+constexpr uint32_t kMaxRuralLevel = 2;
 // First relative density level of suburban and of urban areas
-constexpr uint32_t kSuburbanLevel = 3;
-constexpr uint32_t kUrbanLevel = 7;
+constexpr uint32_t kSuburbanLevel = 4;
+constexpr uint32_t kUrbanLevel = 8;
 // Non-rural street nodes per km^2 within kUrbanRadius at which an area is urban
 constexpr float kUrbanNodeDensity = 140.0f;
 // Non-rural street nodes per km^2 within kUrbanRadius at the top of the urban band
@@ -1011,8 +1015,8 @@ DensityIndex BuildDensityIndex(GraphReader& reader,
 
     const float density = local_density[cell_id];
     if (density < kSuburbanNodeDensity) {
-      it->second = std::round(LogPosition(density, kMinNodeDensity, kSuburbanNodeDensity) *
-                              (kSuburbanLevel - 1));
+      it->second =
+          std::round(LogPosition(density, kMinNodeDensity, kSuburbanNodeDensity) * kMaxRuralLevel);
       continue;
     }
 
@@ -1023,9 +1027,9 @@ DensityIndex BuildDensityIndex(GraphReader& reader,
                    std::round(LogPosition(wide_density, kUrbanNodeDensity, kMaxUrbanNodeDensity) *
                               (kMaxDensity - kUrbanLevel));
     } else {
-      it->second =
-          kSuburbanLevel + std::round(LogPosition(density, kSuburbanNodeDensity, kMaxNodeDensity) *
-                                      (kUrbanLevel - 1 - kSuburbanLevel));
+      it->second = kSuburbanLevel +
+                   std::round(LogPosition(density, kMinSuburbanSpreadDensity, kMaxNodeDensity) *
+                              (kUrbanLevel - 1 - kSuburbanLevel));
     }
   }
 
