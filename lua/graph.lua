@@ -963,8 +963,9 @@ function filter_tags_generic(kv)
       kv[k] = v
     end
 
-    -- expects access=private not to be combined with other values
-    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and kv["emergency"] == "yes") or (kv["service"] == "emergency_access") then
+    -- service=emergency_access is emergency-only; emergency=yes on its own just adds emergency access
+    -- and doesn't make an otherwise accessible (e.g. access=private) road unroutable for other modes
+    if kv["impassable"] == "yes" or access == "false" or kv["service"] == "emergency_access" then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
@@ -1063,7 +1064,7 @@ function filter_tags_generic(kv)
     local default_val = "true"
 
     -- handle inverse access cases like access=no + foot=yes
-    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
+    if kv["impassable"] == "yes" or access == "false" or kv["service"] == "emergency_access" then
       default_val = "false"
     end
 
@@ -2057,8 +2058,7 @@ function nodes_proc (kv, nokeys)
   local initial_access = any_in(access, kv["access"])
   local access = initial_access or "true"
 
-  -- expect access=private not to be combined with other values
-  if (kv["impassable"] == "yes" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
+  if kv["impassable"] == "yes" then
     access = "false"
   end
 

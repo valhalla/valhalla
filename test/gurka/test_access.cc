@@ -980,6 +980,51 @@ TEST(Standalone, ServiceEmergencyAccess) {
   }
 }
 
+TEST(Standalone, PrivateEmergencyAccess) {
+  const std::string ascii_map = R"(
+    A----B----C
+         |
+    F----E----D
+  )";
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto build_map = [&](const std::map<std::string, std::string>& extra, const std::string& dir) {
+    gurka::ways ways = {
+        {"ABC", {{"highway", "motorway"}, {"oneway", "yes"}}},
+        {"DEF", {{"highway", "motorway"}, {"oneway", "yes"}}},
+        {"BE", {{"highway", "service"}, {"access", "private"}}},
+    };
+    for (const auto& [k, v] : extra)
+      ways["BE"][k] = v;
+    return gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/" + dir,
+                             build_config);
+  };
+
+  // emergency=yes only adds emergency access on top of access=private, so the road stays
+  // usable as a private (destination only) road for the other motor vehicle modes
+  auto map = build_map({{"emergency", "yes"}}, "gurka_access_private_emergency");
+  for (const auto& costing : {"auto", "truck", "bus", "taxi"}) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, costing);
+    gurka::assert::raw::expect_path(result, {"ABC", "BE", "DEF"});
+  }
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  for (const auto& end_node : {"B", "E"}) {
+    const auto* edge = std::get<1>(gurka::findEdge(reader, layout, "BE", end_node));
+    EXPECT_TRUE(edge->forwardaccess() & baldr::kEmergencyAccess) << end_node;
+    EXPECT_TRUE(edge->forwardaccess() & baldr::kAutoAccess) << end_node;
+    EXPECT_TRUE(edge->forwardaccess() & baldr::kTruckAccess) << end_node;
+    EXPECT_TRUE(edge->destonly()) << end_node;
+  }
+
+  // service=emergency_access remains emergency only, regardless of access=private
+  auto emergency_map = build_map({{"emergency", "yes"}, {"service", "emergency_access"}},
+                                 "gurka_access_private_emergency_service");
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, emergency_map, {"A", "F"}, "auto"),
+               std::runtime_error);
+}
+
 class CombinedRestrictionTagValues : public ::testing::Test {
 protected:
   static gurka::nodelayout layout;
