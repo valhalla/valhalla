@@ -18,8 +18,7 @@ TEST(Ladder, PedestrianAccess) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ladder");
 
-  auto result = gurka::do_action(
-      valhalla::Options::route, map, {"A", "D"}, "pedestrian");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "pedestrian");
 
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
 
@@ -33,8 +32,7 @@ TEST(Ladder, PedestrianAccess) {
   EXPECT_TRUE(found_ladder);
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  const auto* edge = std::get<1>(
-      gurka::findEdgeByNodes(reader, layout, "B", "C"));
+  const auto* edge = std::get<1>(gurka::findEdgeByNodes(reader, layout, "B", "C"));
 
   EXPECT_EQ(edge->use(), baldr::Use::kLadder);
   EXPECT_TRUE(edge->forwardaccess() & baldr::kPedestrianAccess);
@@ -55,9 +53,7 @@ TEST(Ladder, WheelchairAccess) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ladder_wheelchair");
 
-  EXPECT_THROW(
-      gurka::do_action(
-          valhalla::Options::route, map, {"A", "D"}, "pedestrian",
-          {{"/costing_options/pedestrian/type", "wheelchair"}}),
-      std::runtime_error);
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "pedestrian",
+                                {{"/costing_options/pedestrian/type", "wheelchair"}}),
+               std::runtime_error);
 }
