@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "<LENGTH> masofada, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometr",
+        "1 kilometr",
+        "<METERS> metr",
+        "10 metrdan kam"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "Yarim mil",
+        "Chorak mil",
+        "<FEET> fut",
+        "10 futdan kam"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Yetib borish: <TIME>.",
+        "1": "Yetib borish: <TIME>, <TRANSIT_STOP> bekatida."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Yetib borish vaqti: <TIME>.",
+        "1": "Yetib borish vaqti: <TIME>, <TRANSIT_STOP> bekatida."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Biroz <RELATIVE_DIRECTION>ga buriling.",
+        "1": "Biroz <RELATIVE_DIRECTION>ga burilib, <STREET_NAMES> boʻylab yuring.",
+        "2": "Biroz <RELATIVE_DIRECTION>ga burilib, <BEGIN_STREET_NAMES> boʻylab yuring. <STREET_NAMES> boʻylab davom eting.",
+        "3": "Biroz <RELATIVE_DIRECTION>ga buriling va <STREET_NAMES> boʻylab davom eting.",
+        "4": "Biroz <RELATIVE_DIRECTION>ga buriling, <JUNCTION_NAME> chorrahasida.",
+        "5": "Biroz <RELATIVE_DIRECTION>ga buriling, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "chap",
+        "oʻng"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Biroz <RELATIVE_DIRECTION>ga buriling.",
+        "1": "Biroz <RELATIVE_DIRECTION>ga burilib, <STREET_NAMES> boʻylab yuring.",
+        "2": "Biroz <RELATIVE_DIRECTION>ga burilib, <BEGIN_STREET_NAMES> boʻylab yuring.",
+        "3": "Biroz <RELATIVE_DIRECTION>ga buriling va <STREET_NAMES> boʻylab davom eting.",
+        "4": "Biroz <RELATIVE_DIRECTION>ga buriling, <JUNCTION_NAME> chorrahasida.",
+        "5": "Biroz <RELATIVE_DIRECTION>ga buriling, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "chap",
+        "oʻng"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> endi <STREET_NAMES> deb ataladi."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> endi <STREET_NAMES> deb ataladi."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Toʻgʻri davom eting.",
+        "1": "<STREET_NAMES> boʻylab davom eting.",
+        "2": "<JUNCTION_NAME> chorrahasida davom eting.",
+        "3": "<TOWARD_SIGN> tomon davom eting."
+      },
+      "empty_street_name_labels": [
+        "Piyodalar yoʻlkasi",
+        "Velosiped yoʻlkasi",
+        "Togʻ velosipedlari yoʻlkasi",
+        "Piyodalar oʻtish joyi",
+        "Zinapoya",
+        "Koʻprik",
+        "Tunnel"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Toʻgʻri davom eting.",
+        "1": "Yana <LENGTH> davom eting.",
+        "2": "<STREET_NAMES> boʻylab davom eting.",
+        "3": "<STREET_NAMES> boʻylab yana <LENGTH> davom eting.",
+        "4": "<JUNCTION_NAME> chorrahasida davom eting.",
+        "5": "<JUNCTION_NAME> chorrahasida yana <LENGTH> davom eting.",
+        "6": "<TOWARD_SIGN> tomon davom eting.",
+        "7": "<TOWARD_SIGN> tomon yana <LENGTH> davom eting."
+      },
+      "empty_street_name_labels": [
+        "Piyodalar yoʻlkasi",
+        "Velosiped yoʻlkasi",
+        "Togʻ velosipedlari yoʻlkasi",
+        "Piyodalar oʻtish joyi",
+        "Zinapoya",
+        "Koʻprik",
+        "Tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometr",
+        "1 kilometr",
+        "<METERS> metr",
+        "10 metrdan kam"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "yarim mil",
+        "chorak mil",
+        "<FEET> fut",
+        "10 futdan kam"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Toʻgʻri davom eting.",
+        "1": "<STREET_NAMES> boʻylab davom eting.",
+        "2": "<JUNCTION_NAME> chorrahasida davom eting.",
+        "3": "<TOWARD_SIGN> tomon davom eting."
+      },
+      "empty_street_name_labels": [
+        "Piyodalar yoʻlkasi",
+        "Velosiped yoʻlkasi",
+        "Togʻ velosipedlari yoʻlkasi",
+        "Piyodalar oʻtish joyi",
+        "Zinapoya",
+        "Koʻprik",
+        "Tunnel"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Joʻnab ketish: <TIME>.",
+        "1": "Joʻnab ketish: <TIME>, <TRANSIT_STOP> bekatidan."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Joʻnab ketish vaqti: <TIME>.",
+        "1": "Joʻnab ketish vaqti: <TIME>, <TRANSIT_STOP> bekatidan."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Siz manzilga yetib keldingiz.",
+        "1": "Siz yetib keldingiz: <DESTINATION>.",
+        "2": "Manzilingiz <RELATIVE_DIRECTION> tomonda.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> tomonda."
+      },
+      "relative_directions": [
+        "chap",
+        "oʻng"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Siz manzilga yetib keldingiz.",
+        "1": "Siz yetib keldingiz: <DESTINATION>.",
+        "2": "Manzilingiz <RELATIVE_DIRECTION> tomonda.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> tomonda."
+      },
+      "relative_directions": [
+        "chap",
+        "oʻng"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Siz manzilga yetib borasiz.",
+        "1": "Siz yetib borasiz: <DESTINATION>.",
+        "2": "Manzilingiz <RELATIVE_DIRECTION> tomonda boʻladi.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> tomonda boʻladi."
+      },
+      "relative_directions": [
+        "chap",
+        "oʻng"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Liftdan foydalaning.",
+        "1": "<LEVEL> qavatga liftda boring."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Binoga kiring.",
+        "1": "Binoga kiring va <STREET_NAMES> boʻylab davom eting."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Paromga chiqing.",
+        "1": "<STREET_NAMES> orqali oʻting.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> orqali oʻting.",
+        "3": "Paromga chiqing, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "Piyodalar yoʻlkasi",
+        "Velosiped yoʻlkasi",
+        "Togʻ velosipedlari yoʻlkasi",
+        "Piyodalar oʻtish joyi",
+        "Zinapoya",
+        "Koʻprik",
+        "Tunnel"
+      ],
+      "ferry_label": "paromi"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Paromga chiqing.",
+        "1": "<STREET_NAMES> orqali oʻting.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> orqali oʻting.",
+        "3": "Paromga chiqing, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "Piyodalar yoʻlkasi",
+        "Velosiped yoʻlkasi",
+        "Togʻ velosipedlari yoʻlkasi",
+        "Piyodalar oʻtish joyi",
+        "Zinapoya",
+        "Koʻprik",
+        "Tunnel"
+      ],
+      "ferry_label": "paromi"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Aylanma harakatga kiring.",
+        "1": "Aylanma harakatga kiring va <ORDINAL_VALUE> chiqishdan chiqing.",
+        "2": "Aylanma harakatga kiring va <ORDINAL_VALUE> chiqishdan chiqib, <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab yuring.",
+        "3": "Aylanma harakatga kiring va <ORDINAL_VALUE> chiqishdan chiqib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> boʻylab yuring. <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab davom eting.",
+        "4": "Aylanma harakatga kiring va <ORDINAL_VALUE> chiqishdan chiqing, <TOWARD_SIGN> tomon.",
+        "5": "Aylanma harakatga kiring va chiqishdan chiqib, <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab yuring.",
+        "6": "Aylanma harakatga kiring va chiqishdan chiqib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> boʻylab yuring. <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab davom eting.",
+        "7": "Aylanma harakatga kiring va chiqishdan chiqing, <TOWARD_SIGN> tomon.",
+        "8": "Aylanma harakatga (<STREET_NAMES>) kiring",
+        "9": "Aylanma harakatga (<STREET_NAMES>) kiring va <ORDINAL_VALUE> chiqishdan chiqing.",
+        "10": "Aylanma harakatga (<STREET_NAMES>) kiring va <ORDINAL_VALUE> chiqishdan chiqib, <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab yuring.",
+        "11": "Aylanma harakatga (<STREET_NAMES>) kiring va <ORDINAL_VALUE> chiqishdan chiqib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> boʻylab yuring. <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab davom eting.",
+        "12": "Aylanma harakatga (<STREET_NAMES>) kiring va <ORDINAL_VALUE> chiqishdan chiqing, <TOWARD_SIGN> tomon.",
+        "13": "Aylanma harakatga (<STREET_NAMES>) kiring va chiqishdan chiqib, <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab yuring.",
+        "14": "Aylanma harakatga (<STREET_NAMES>) kiring va chiqishdan chiqib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> boʻylab yuring. <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab davom eting.",
+        "15": "Aylanma harakatga (<STREET_NAMES>) kiring va chiqishdan chiqing, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "ordinal_values": [
+        "birinchi",
+        "ikkinchi",
+        "uchinchi",
+        "toʻrtinchi",
+        "beshinchi",
+        "oltinchi",
+        "yettinchi",
+        "sakkizinchi",
+        "toʻqqizinchi",
+        "oʻninchi"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Aylanma harakatga kiring.",
+        "1": "Aylanma harakatga kiring va <ORDINAL_VALUE> chiqishdan chiqing.",
+        "2": "Aylanma harakatga kiring va <ORDINAL_VALUE> chiqishdan chiqib, <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab yuring.",
+        "3": "Aylanma harakatga kiring va <ORDINAL_VALUE> chiqishdan chiqib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> boʻylab yuring.",
+        "4": "Aylanma harakatga kiring va <ORDINAL_VALUE> chiqishdan chiqing, <TOWARD_SIGN> tomon.",
+        "5": "Aylanma harakatga kiring va chiqishdan chiqib, <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab yuring.",
+        "6": "Aylanma harakatga kiring va chiqishdan chiqib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> boʻylab yuring.",
+        "7": "Aylanma harakatga kiring va chiqishdan chiqing, <TOWARD_SIGN> tomon.",
+        "8": "Aylanma harakatga (<STREET_NAMES>) kiring",
+        "9": "Aylanma harakatga (<STREET_NAMES>) kiring va <ORDINAL_VALUE> chiqishdan chiqing.",
+        "10": "Aylanma harakatga (<STREET_NAMES>) kiring va <ORDINAL_VALUE> chiqishdan chiqib, <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab yuring.",
+        "11": "Aylanma harakatga (<STREET_NAMES>) kiring va <ORDINAL_VALUE> chiqishdan chiqib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> boʻylab yuring.",
+        "12": "Aylanma harakatga (<STREET_NAMES>) kiring va <ORDINAL_VALUE> chiqishdan chiqing, <TOWARD_SIGN> tomon.",
+        "13": "Aylanma harakatga (<STREET_NAMES>) kiring va chiqishdan chiqib, <ROUNDABOUT_EXIT_STREET_NAMES> boʻylab yuring.",
+        "14": "Aylanma harakatga (<STREET_NAMES>) kiring va chiqishdan chiqib, <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> boʻylab yuring.",
+        "15": "Aylanma harakatga (<STREET_NAMES>) kiring va chiqishdan chiqing, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "ordinal_values": [
+        "birinchi",
+        "ikkinchi",
+        "uchinchi",
+        "toʻrtinchi",
+        "beshinchi",
+        "oltinchi",
+        "yettinchi",
+        "sakkizinchi",
+        "toʻqqizinchi",
+        "oʻninchi"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Eskalatordan foydalaning.",
+        "1": "<LEVEL> qavatga eskalatorda boring."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomondagi chiqish yoʻliga buriling.",
+        "1": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN> raqamli chiqish yoʻliga buriling.",
+        "2": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> chiqish yoʻliga buriling.",
+        "3": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN> raqamli chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab yuring.",
+        "4": "<RELATIVE_DIRECTION> tomondagi chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "5": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN> raqamli chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "6": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "7": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN> raqamli chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab <TOWARD_SIGN> tomon yuring.",
+        "8": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqish yoʻliga buriling.",
+        "10": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab yuring.",
+        "12": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "14": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab <TOWARD_SIGN> tomon yuring.",
+        "15": "Chiqish yoʻliga buriling.",
+        "16": "<NUMBER_SIGN> raqamli chiqish yoʻliga buriling.",
+        "17": "<BRANCH_SIGN> chiqish yoʻliga buriling.",
+        "18": "<NUMBER_SIGN> raqamli chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab yuring.",
+        "19": "Chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "20": "<NUMBER_SIGN> raqamli chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "21": "<BRANCH_SIGN> chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "22": "<NUMBER_SIGN> raqamli chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab <TOWARD_SIGN> tomon yuring.",
+        "23": "<NAME_SIGN> chiqish yoʻliga buriling.",
+        "25": "<NAME_SIGN> chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab yuring.",
+        "27": "<NAME_SIGN> chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "29": "<NAME_SIGN> chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab <TOWARD_SIGN> tomon yuring."
+      },
+      "relative_directions": [
+        "Chap",
+        "Oʻng"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Binodan chiqing.",
+        "1": "Binodan chiqing va <STREET_NAMES> boʻylab davom eting."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Aylanma harakatdan chiqing.",
+        "1": "Aylanma harakatdan chiqib, <STREET_NAMES> boʻylab yuring.",
+        "2": "Aylanma harakatdan chiqib, <BEGIN_STREET_NAMES> boʻylab yuring. <STREET_NAMES> boʻylab davom eting.",
+        "3": "Aylanma harakatdan chiqing, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Aylanma harakatdan chiqing.",
+        "1": "Aylanma harakatdan chiqib, <STREET_NAMES> boʻylab yuring.",
+        "2": "Aylanma harakatdan chiqib, <BEGIN_STREET_NAMES> boʻylab yuring.",
+        "3": "Aylanma harakatdan chiqing, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomondagi chiqish yoʻliga buriling.",
+        "1": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN> raqamli chiqish yoʻliga buriling.",
+        "2": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> chiqish yoʻliga buriling.",
+        "3": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN> raqamli chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab yuring.",
+        "4": "<RELATIVE_DIRECTION> tomondagi chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "5": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN> raqamli chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "6": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "7": "<RELATIVE_DIRECTION> tomondagi <NUMBER_SIGN> raqamli chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab <TOWARD_SIGN> tomon yuring.",
+        "8": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqish yoʻliga buriling.",
+        "10": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab yuring.",
+        "12": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "14": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab <TOWARD_SIGN> tomon yuring.",
+        "15": "Chiqish yoʻliga buriling.",
+        "16": "<NUMBER_SIGN> raqamli chiqish yoʻliga buriling.",
+        "17": "<BRANCH_SIGN> chiqish yoʻliga buriling.",
+        "18": "<NUMBER_SIGN> raqamli chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab yuring.",
+        "19": "Chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "20": "<NUMBER_SIGN> raqamli chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "21": "<BRANCH_SIGN> chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "22": "<NUMBER_SIGN> raqamli chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab <TOWARD_SIGN> tomon yuring.",
+        "23": "<NAME_SIGN> chiqish yoʻliga buriling.",
+        "25": "<NAME_SIGN> chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab yuring.",
+        "27": "<NAME_SIGN> chiqish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "29": "<NAME_SIGN> chiqish yoʻliga burilib, <BRANCH_SIGN> boʻylab <TOWARD_SIGN> tomon yuring."
+      },
+      "relative_directions": [
+        "Chap",
+        "Oʻng"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Chiqish yoʻli: <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>da qoling, yoʻl ayrilishida.",
+        "1": "<RELATIVE_DIRECTION>da qoling va <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing.",
+        "2": "<RELATIVE_DIRECTION>da qoling va <STREET_NAMES> boʻylab yuring.",
+        "3": "<RELATIVE_DIRECTION>da qoling, <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing va <STREET_NAMES> boʻylab yuring.",
+        "4": "<RELATIVE_DIRECTION>da qoling, <TOWARD_SIGN> tomon.",
+        "5": "<RELATIVE_DIRECTION>da qoling va <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing, <TOWARD_SIGN> tomon.",
+        "6": "<RELATIVE_DIRECTION>da qoling va <STREET_NAMES> boʻylab <TOWARD_SIGN> tomon yuring.",
+        "7": "<RELATIVE_DIRECTION>da qoling, <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing va <STREET_NAMES> boʻylab <TOWARD_SIGN> tomon yuring."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "Chap",
+        "Toʻgʻri",
+        "Oʻng"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>da qoling va <STREET_NAMES> boʻylab davom eting.",
+        "1": "<RELATIVE_DIRECTION>da qoling, <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing va <STREET_NAMES> boʻylab davom eting.",
+        "2": "<RELATIVE_DIRECTION>da qoling va <STREET_NAMES> boʻylab <TOWARD_SIGN> tomon davom eting.",
+        "3": "<RELATIVE_DIRECTION>da qoling, <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing va <STREET_NAMES> boʻylab <TOWARD_SIGN> tomon davom eting."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "Chap",
+        "Toʻgʻri",
+        "Oʻng"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>da qoling va <STREET_NAMES> boʻylab davom eting.",
+        "1": "<RELATIVE_DIRECTION>da qoling, <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing va <STREET_NAMES> boʻylab davom eting.",
+        "2": "<RELATIVE_DIRECTION>da qoling va <STREET_NAMES> boʻylab <TOWARD_SIGN> tomon davom eting.",
+        "3": "<RELATIVE_DIRECTION>da qoling, <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing va <STREET_NAMES> boʻylab <TOWARD_SIGN> tomon davom eting."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "Chap",
+        "Toʻgʻri",
+        "Oʻng"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>da qoling, yoʻl ayrilishida.",
+        "1": "<RELATIVE_DIRECTION>da qoling va <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing.",
+        "2": "<RELATIVE_DIRECTION>da qoling va <STREET_NAMES> boʻylab yuring.",
+        "3": "<RELATIVE_DIRECTION>da qoling, <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing va <STREET_NAMES> boʻylab yuring.",
+        "4": "<RELATIVE_DIRECTION>da qoling, <TOWARD_SIGN> tomon.",
+        "5": "<RELATIVE_DIRECTION>da qoling va <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing, <TOWARD_SIGN> tomon.",
+        "6": "<RELATIVE_DIRECTION>da qoling va <STREET_NAMES> boʻylab <TOWARD_SIGN> tomon yuring.",
+        "7": "<RELATIVE_DIRECTION>da qoling, <NUMBER_SIGN> raqamli chiqish yoʻliga chiqing va <STREET_NAMES> boʻylab <TOWARD_SIGN> tomon yuring."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "Chap",
+        "Toʻgʻri",
+        "Oʻng"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "<LEVEL> qavatga oʻting."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Harakatga qoʻshiling.",
+        "1": "<RELATIVE_DIRECTION> qatorga qoʻshiling.",
+        "2": "Harakatga qoʻshilib, <STREET_NAMES> boʻylab yuring.",
+        "3": "<RELATIVE_DIRECTION> qatorga qoʻshilib, <STREET_NAMES> boʻylab yuring.",
+        "4": "Harakatga qoʻshiling, <TOWARD_SIGN> tomon.",
+        "5": "<RELATIVE_DIRECTION> qatorga qoʻshiling, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "Chap",
+        "Oʻng"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Harakatga qoʻshiling.",
+        "1": "<RELATIVE_DIRECTION> qatorga qoʻshiling.",
+        "2": "Harakatga qoʻshilib, <STREET_NAMES> boʻylab yuring.",
+        "3": "<RELATIVE_DIRECTION> qatorga qoʻshilib, <STREET_NAMES> boʻylab yuring.",
+        "4": "Harakatga qoʻshiling, <TOWARD_SIGN> tomon.",
+        "5": "<RELATIVE_DIRECTION> qatorga qoʻshiling, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "Chap",
+        "Oʻng"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Avtomobilingizni toʻxtatib qoʻying"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "<OBJECT_LABEL> yonidan oʻting.",
+        "1": "<OBJECT_LABEL>dagi svetoforlardan oʻting."
+      },
+      "object_labels": [
+        "Darvoza",
+        "Toʻsiq ustunchalari",
+        "Yoʻllar kesishmasi"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> yuring."
+      },
+      "transit_stop_count_labels": {
+        "one": "bekat",
+        "other": "bekat"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Yana <LENGTH> davom eting.",
+        "1": "<STREET_NAMES> boʻylab yana <LENGTH> davom eting."
+      },
+      "empty_street_name_labels": [
+        "Piyodalar yoʻlkasi",
+        "Velosiped yoʻlkasi",
+        "Togʻ velosipedlari yoʻlkasi",
+        "Piyodalar oʻtish joyi",
+        "Zinapoya",
+        "Koʻprik",
+        "Tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometr",
+        "1 kilometr",
+        "<METERS> metr",
+        "10 metrdan kam"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "yarim mil",
+        "chorak mil",
+        "<FEET> fut",
+        "10 futdan kam"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomondagi kirish yoʻliga buriling.",
+        "1": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> kirish yoʻliga buriling.",
+        "2": "<RELATIVE_DIRECTION> tomondagi kirish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "3": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> kirish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "4": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> kirish yoʻliga buriling.",
+        "5": "<RELATIVE_DIRECTION>ga burilib, kirish yoʻliga oʻting.",
+        "6": "<RELATIVE_DIRECTION>ga burilib, <BRANCH_SIGN> kirish yoʻliga oʻting.",
+        "7": "<RELATIVE_DIRECTION>ga burilib, kirish yoʻliga oʻting, <TOWARD_SIGN> tomon.",
+        "8": "<RELATIVE_DIRECTION>ga burilib, <BRANCH_SIGN> kirish yoʻliga oʻting, <TOWARD_SIGN> tomon.",
+        "9": "<RELATIVE_DIRECTION>ga burilib, <NAME_SIGN> kirish yoʻliga oʻting.",
+        "10": "Kirish yoʻliga buriling.",
+        "11": "<BRANCH_SIGN> kirish yoʻliga buriling.",
+        "12": "Kirish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "13": "<BRANCH_SIGN> kirish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "14": "<NAME_SIGN> kirish yoʻliga buriling."
+      },
+      "relative_directions": [
+        "Chap",
+        "Oʻng"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Kirish yoʻliga oʻtish uchun toʻgʻri yuring.",
+        "1": "<BRANCH_SIGN> kirish yoʻliga oʻtish uchun toʻgʻri yuring.",
+        "2": "Kirish yoʻliga oʻtish uchun toʻgʻri yuring, <TOWARD_SIGN> tomon.",
+        "3": "<BRANCH_SIGN> kirish yoʻliga oʻtish uchun toʻgʻri yuring, <TOWARD_SIGN> tomon.",
+        "4": "<NAME_SIGN> kirish yoʻliga oʻtish uchun toʻgʻri yuring."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Kirish yoʻliga oʻtish uchun toʻgʻri yuring.",
+        "1": "<BRANCH_SIGN> kirish yoʻliga oʻtish uchun toʻgʻri yuring.",
+        "2": "Kirish yoʻliga oʻtish uchun toʻgʻri yuring, <TOWARD_SIGN> tomon.",
+        "3": "<BRANCH_SIGN> kirish yoʻliga oʻtish uchun toʻgʻri yuring, <TOWARD_SIGN> tomon.",
+        "4": "<NAME_SIGN> kirish yoʻliga oʻtish uchun toʻgʻri yuring."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> tomondagi kirish yoʻliga buriling.",
+        "1": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> kirish yoʻliga buriling.",
+        "2": "<RELATIVE_DIRECTION> tomondagi kirish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "3": "<RELATIVE_DIRECTION> tomondagi <BRANCH_SIGN> kirish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "4": "<RELATIVE_DIRECTION> tomondagi <NAME_SIGN> kirish yoʻliga buriling.",
+        "5": "<RELATIVE_DIRECTION>ga burilib, kirish yoʻliga oʻting.",
+        "6": "<RELATIVE_DIRECTION>ga burilib, <BRANCH_SIGN> kirish yoʻliga oʻting.",
+        "7": "<RELATIVE_DIRECTION>ga burilib, kirish yoʻliga oʻting, <TOWARD_SIGN> tomon.",
+        "8": "<RELATIVE_DIRECTION>ga burilib, <BRANCH_SIGN> kirish yoʻliga oʻting, <TOWARD_SIGN> tomon.",
+        "9": "<RELATIVE_DIRECTION>ga burilib, <NAME_SIGN> kirish yoʻliga oʻting.",
+        "10": "Kirish yoʻliga buriling.",
+        "11": "<BRANCH_SIGN> kirish yoʻliga buriling.",
+        "12": "Kirish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "13": "<BRANCH_SIGN> kirish yoʻliga buriling, <TOWARD_SIGN> tomon.",
+        "14": "<NAME_SIGN> kirish yoʻliga buriling."
+      },
+      "relative_directions": [
+        "Chap",
+        "Oʻng"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Keskin <RELATIVE_DIRECTION>ga buriling.",
+        "1": "Keskin <RELATIVE_DIRECTION>ga burilib, <STREET_NAMES> boʻylab yuring.",
+        "2": "Keskin <RELATIVE_DIRECTION>ga burilib, <BEGIN_STREET_NAMES> boʻylab yuring. <STREET_NAMES> boʻylab davom eting.",
+        "3": "Keskin <RELATIVE_DIRECTION>ga buriling va <STREET_NAMES> boʻylab davom eting.",
+        "4": "Keskin <RELATIVE_DIRECTION>ga buriling, <JUNCTION_NAME> chorrahasida.",
+        "5": "Keskin <RELATIVE_DIRECTION>ga buriling, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "chap",
+        "oʻng"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Keskin <RELATIVE_DIRECTION>ga buriling.",
+        "1": "Keskin <RELATIVE_DIRECTION>ga burilib, <STREET_NAMES> boʻylab yuring.",
+        "2": "Keskin <RELATIVE_DIRECTION>ga burilib, <BEGIN_STREET_NAMES> boʻylab yuring.",
+        "3": "Keskin <RELATIVE_DIRECTION>ga buriling va <STREET_NAMES> boʻylab davom eting.",
+        "4": "Keskin <RELATIVE_DIRECTION>ga buriling, <JUNCTION_NAME> chorrahasida.",
+        "5": "Keskin <RELATIVE_DIRECTION>ga buriling, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "chap",
+        "oʻng"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> tomon yuring.",
+        "1": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab yuring.",
+        "2": "<CARDINAL_DIRECTION> tomon, <BEGIN_STREET_NAMES> boʻylab yuring. <STREET_NAMES> boʻylab davom eting.",
+        "4": "<CARDINAL_DIRECTION> tomon haydang.",
+        "5": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab haydang.",
+        "6": "<CARDINAL_DIRECTION> tomon, <BEGIN_STREET_NAMES> boʻylab haydang. <STREET_NAMES> boʻylab davom eting.",
+        "8": "<CARDINAL_DIRECTION> tomon piyoda yuring.",
+        "9": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab piyoda yuring.",
+        "10": "<CARDINAL_DIRECTION> tomon, <BEGIN_STREET_NAMES> boʻylab piyoda yuring. <STREET_NAMES> boʻylab davom eting.",
+        "16": "<CARDINAL_DIRECTION> tomon velosipedda yuring.",
+        "17": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab velosipedda yuring.",
+        "18": "<CARDINAL_DIRECTION> tomon, <BEGIN_STREET_NAMES> boʻylab velosipedda yuring. <STREET_NAMES> boʻylab davom eting."
+      },
+      "cardinal_directions": [
+        "Shimol",
+        "Shimoli-sharq",
+        "Sharq",
+        "Janubi-sharq",
+        "Janub",
+        "Janubi-gʻarb",
+        "Gʻarb",
+        "Shimoli-gʻarb"
+      ],
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> tomon yuring.",
+        "1": "<CARDINAL_DIRECTION> tomon <LENGTH> davomida yuring.",
+        "2": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab yuring.",
+        "3": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab <LENGTH> davomida yuring.",
+        "4": "<CARDINAL_DIRECTION> tomon, <BEGIN_STREET_NAMES> boʻylab yuring.",
+        "5": "<CARDINAL_DIRECTION> tomon haydang.",
+        "6": "<CARDINAL_DIRECTION> tomon <LENGTH> davomida haydang.",
+        "7": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab haydang.",
+        "8": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab <LENGTH> davomida haydang.",
+        "9": "<CARDINAL_DIRECTION> tomon, <BEGIN_STREET_NAMES> boʻylab haydang.",
+        "10": "<CARDINAL_DIRECTION> tomon piyoda yuring.",
+        "11": "<CARDINAL_DIRECTION> tomon <LENGTH> davomida piyoda yuring.",
+        "12": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab piyoda yuring.",
+        "13": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab <LENGTH> davomida piyoda yuring.",
+        "14": "<CARDINAL_DIRECTION> tomon, <BEGIN_STREET_NAMES> boʻylab piyoda yuring.",
+        "15": "<CARDINAL_DIRECTION> tomon velosipedda yuring.",
+        "16": "<CARDINAL_DIRECTION> tomon <LENGTH> davomida velosipedda yuring.",
+        "17": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab velosipedda yuring.",
+        "18": "<CARDINAL_DIRECTION> tomon, <STREET_NAMES> boʻylab <LENGTH> davomida velosipedda yuring.",
+        "19": "<CARDINAL_DIRECTION> tomon, <BEGIN_STREET_NAMES> boʻylab velosipedda yuring."
+      },
+      "cardinal_directions": [
+        "Shimol",
+        "Shimoli-sharq",
+        "Sharq",
+        "Janubi-sharq",
+        "Janub",
+        "Janubi-gʻarb",
+        "Gʻarb",
+        "Shimoli-gʻarb"
+      ],
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometr",
+        "1 kilometr",
+        "<METERS> metr",
+        "10 metrdan kam"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "yarim mil",
+        "chorak mil",
+        "<FEET> fut",
+        "10 futdan kam"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Zinapoyadan foydalaning.",
+        "1": "<LEVEL> qavatga zinapoya orqali boring."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> orqali boring. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_NAME> orqali <TRANSIT_HEADSIGN> tomon boring. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "Tramvay",
+        "Metro",
+        "Poyezd",
+        "Avtobus",
+        "Parom",
+        "Kanat yoʻli",
+        "Gondola",
+        "Funikulyor"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bekat",
+        "other": "bekat"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Bekatdan chiqing.",
+        "1": "<TRANSIT_STOP> bekatidan chiqing.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>dan chiqing."
+      },
+      "station_label": "bekati"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Bekatdan chiqing.",
+        "1": "<TRANSIT_STOP> bekatidan chiqing.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>dan chiqing."
+      },
+      "station_label": "bekati"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Bekatga kiring.",
+        "1": "<TRANSIT_STOP> bekatiga kiring.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>ga kiring."
+      },
+      "station_label": "bekati"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Bekatga kiring.",
+        "1": "<TRANSIT_STOP> bekatiga kiring.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>ga kiring."
+      },
+      "station_label": "bekati"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Bekatda koʻchib oʻting.",
+        "1": "<TRANSIT_STOP> bekatida koʻchib oʻting.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>da koʻchib oʻting."
+      },
+      "station_label": "bekati"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Bekatda koʻchib oʻting.",
+        "1": "<TRANSIT_STOP> bekatida koʻchib oʻting.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>da koʻchib oʻting."
+      },
+      "station_label": "bekati"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> orqali davom eting. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_NAME> orqali <TRANSIT_HEADSIGN> tomon davom eting. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "Tramvay",
+        "Metro",
+        "Poyezd",
+        "Avtobus",
+        "Parom",
+        "Kanat yoʻli",
+        "Gondola",
+        "Funikulyor"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bekat",
+        "other": "bekat"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> orqali davom eting.",
+        "1": "<TRANSIT_NAME> orqali <TRANSIT_HEADSIGN> tomon davom eting."
+      },
+      "empty_transit_name_labels": [
+        "Tramvay",
+        "Metro",
+        "Poyezd",
+        "Avtobus",
+        "Parom",
+        "Kanat yoʻli",
+        "Gondola",
+        "Funikulyor"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Koʻchib oʻting va <TRANSIT_NAME> orqali boring. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Koʻchib oʻting va <TRANSIT_NAME> orqali <TRANSIT_HEADSIGN> tomon boring. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "tramvay",
+        "metro",
+        "poyezd",
+        "avtobus",
+        "parom",
+        "kanat yoʻli",
+        "gondola",
+        "funikulyor"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bekat",
+        "other": "bekat"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Koʻchib oʻting va <TRANSIT_NAME> orqali boring.",
+        "1": "Koʻchib oʻting va <TRANSIT_NAME> orqali <TRANSIT_HEADSIGN> tomon boring."
+      },
+      "empty_transit_name_labels": [
+        "tramvay",
+        "metro",
+        "poyezd",
+        "avtobus",
+        "parom",
+        "kanat yoʻli",
+        "gondola",
+        "funikulyor"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> orqali boring.",
+        "1": "<TRANSIT_NAME> orqali <TRANSIT_HEADSIGN> tomon boring."
+      },
+      "empty_transit_name_labels": [
+        "Tramvay",
+        "Metro",
+        "Poyezd",
+        "Avtobus",
+        "Parom",
+        "Kanat yoʻli",
+        "Gondola",
+        "Funikulyor"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>ga buriling.",
+        "1": "<RELATIVE_DIRECTION>ga burilib, <STREET_NAMES> boʻylab yuring.",
+        "2": "<RELATIVE_DIRECTION>ga burilib, <BEGIN_STREET_NAMES> boʻylab yuring. <STREET_NAMES> boʻylab davom eting.",
+        "3": "<RELATIVE_DIRECTION>ga buriling va <STREET_NAMES> boʻylab davom eting.",
+        "4": "<RELATIVE_DIRECTION>ga buriling, <JUNCTION_NAME> chorrahasida.",
+        "5": "<RELATIVE_DIRECTION>ga buriling, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "Chap",
+        "Oʻng"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>ga buriling.",
+        "1": "<RELATIVE_DIRECTION>ga burilib, <STREET_NAMES> boʻylab yuring.",
+        "2": "<RELATIVE_DIRECTION>ga burilib, <BEGIN_STREET_NAMES> boʻylab yuring.",
+        "3": "<RELATIVE_DIRECTION>ga buriling va <STREET_NAMES> boʻylab davom eting.",
+        "4": "<RELATIVE_DIRECTION>ga buriling, <JUNCTION_NAME> chorrahasida.",
+        "5": "<RELATIVE_DIRECTION>ga buriling, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "Chap",
+        "Oʻng"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>ga qayrilib oling.",
+        "1": "<RELATIVE_DIRECTION>ga qayrilib olib, <STREET_NAMES> boʻylab yuring.",
+        "2": "<RELATIVE_DIRECTION>ga qayrilib oling va <STREET_NAMES> boʻylab davom eting.",
+        "3": "<RELATIVE_DIRECTION>ga qayrilib oling, <CROSS_STREET_NAMES> bilan kesishmada.",
+        "4": "<RELATIVE_DIRECTION>ga qayrilib oling, <CROSS_STREET_NAMES> bilan kesishmada, soʻng <STREET_NAMES> boʻylab yuring.",
+        "5": "<RELATIVE_DIRECTION>ga qayrilib oling, <CROSS_STREET_NAMES> bilan kesishmada va <STREET_NAMES> boʻylab davom eting.",
+        "6": "<RELATIVE_DIRECTION>ga qayrilib oling, <JUNCTION_NAME> chorrahasida.",
+        "7": "<RELATIVE_DIRECTION>ga qayrilib oling, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "Chap",
+        "Oʻng"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION>ga qayrilib oling.",
+        "1": "<RELATIVE_DIRECTION>ga qayrilib olib, <STREET_NAMES> boʻylab yuring.",
+        "2": "<RELATIVE_DIRECTION>ga qayrilib oling va <STREET_NAMES> boʻylab davom eting.",
+        "3": "<RELATIVE_DIRECTION>ga qayrilib oling, <CROSS_STREET_NAMES> bilan kesishmada.",
+        "4": "<RELATIVE_DIRECTION>ga qayrilib oling, <CROSS_STREET_NAMES> bilan kesishmada, soʻng <STREET_NAMES> boʻylab yuring.",
+        "5": "<RELATIVE_DIRECTION>ga qayrilib oling, <CROSS_STREET_NAMES> bilan kesishmada va <STREET_NAMES> boʻylab davom eting.",
+        "6": "<RELATIVE_DIRECTION>ga qayrilib oling, <JUNCTION_NAME> chorrahasida.",
+        "7": "<RELATIVE_DIRECTION>ga qayrilib oling, <TOWARD_SIGN> tomon."
+      },
+      "empty_street_name_labels": [
+        "piyodalar yoʻlkasi",
+        "velosiped yoʻlkasi",
+        "togʻ velosipedlari yoʻlkasi",
+        "piyodalar oʻtish joyi",
+        "zinapoya",
+        "koʻprik",
+        "tunnel"
+      ],
+      "relative_directions": [
+        "Chap",
+        "Oʻng"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Soʻng <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Soʻng, <LENGTH> masofada, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometr",
+        "1 kilometr",
+        "<METERS> metr",
+        "10 metrdan kam"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "yarim mil",
+        "chorak mil",
+        "<FEET> fut",
+        "10 futdan kam"
+      ]
+    }
+  },
+  "posix_locale": "uz_UZ.UTF-8",
+  "aliases": [
+    "uz"
+  ]
+}
