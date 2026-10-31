@@ -15,6 +15,7 @@ set(sources
   node_search.cc
   route_action.cc
   search.cc
+  street_name.cc
   tile_action.cc
   trace_route_action.cc
   worker.cc)
