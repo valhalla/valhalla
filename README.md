@@ -18,9 +18,9 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 
 ## Build Status
 
-| Linux | macOS & Windows | Code Coverage | Timezone DB
-| ----- | --------------- | ------------- | -----------
-| [![Build Linux](https://github.com/valhalla/valhalla/actions/workflows/linux.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/linux.yml) | [![Windows & macOS CI](https://github.com/valhalla/valhalla/actions/workflows/osx_win_python_builds.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/osx_win_python_builds.yml) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) | [![timezone_db](https://img.shields.io/badge/tzdb%20version-2025c-blue.svg)](https://github.com/valhalla/valhalla/actions/workflows/publish_tz_db.yml)
+| Linux | macOS | Windows | Code Coverage | Timezone DB |
+| ----- | ----- | ------- | ------------- | ----------- |
+| [![Build Linux](https://github.com/valhalla/valhalla/actions/workflows/linux.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/linux.yml) | [![Build OSX](https://github.com/valhalla/valhalla/actions/workflows/osx.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/osx.yml) | [![Build Windows](https://github.com/valhalla/valhalla/actions/workflows/windows.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/windows.yml) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) | [![timezone_db](https://img.shields.io/badge/tzdb%20version-2025c-blue.svg)](https://github.com/valhalla/valhalla/actions/workflows/publish_tz_db.yml) |
 
 ## Generative AI usage
 
@@ -31,7 +31,7 @@ While we absolutely accept AI usage for Valhalla (and its related projects), we 
 3. contrived AI logic with weird generic variable names should be rewritten to match human perception
 4. non-obvious code changes should be commented on _inline_ (not in the PR description!)
 
-2. & 3. are pretty subjective, where we have a lot more patience. However, PRs ignoring these guidelines entirely, might be closed without further notice. And the worst offenders might get blocked from the Valhalla organization.
+2\. & 3. are pretty subjective, where we have a lot more patience. However, PRs ignoring these guidelines entirely, might be closed without further notice. And the worst offenders might get blocked from the Valhalla organization.
 
 ## License
 

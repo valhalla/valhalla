@@ -7,7 +7,6 @@
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
 
-#include <boost/format.hpp>
 #include <openssl/evp.h>
 
 #include <algorithm>
@@ -515,16 +514,13 @@ void GraphTileBuilder::StoreTileData() {
               " vs in_mem stream " + std::to_string(curr) + " padding = " + std::to_string(padding));
   }
 
-  LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset "
-                           "= %5% textlist offset = %6% lane connections = %7%") %
-             filename % nodes_builder_.size() % directededges_builder_.size() %
-             signs_builder_.size() % edge_info_offset_ % text_list_offset_ %
-             lane_connectivity_builder_.size())
-                .str());
-  LOG_DEBUG((boost::format("   admins = %1%  departures = %2% stops = %3% routes = %4%") %
-             admins_builder_.size() % departure_builder_.size() % stop_builder_.size() %
-             route_builder_.size())
-                .str());
+  LOG_DEBUG("Write: {} nodes = {} directededges = {} signs {} edgeinfo offset = {} textlist offset "
+            "= {} lane connections = {}",
+            filename.string(), nodes_builder_.size(), directededges_builder_.size(),
+            signs_builder_.size(), edge_info_offset_, text_list_offset_,
+            lane_connectivity_builder_.size());
+  LOG_DEBUG("   admins = {}  departures = {} stops = {} routes = {}", admins_builder_.size(),
+            departure_builder_.size(), stop_builder_.size(), route_builder_.size());
 
   // Stamp the data hash into the header and rewrite it in place, then publish atomically.
   in_mem.finalize();

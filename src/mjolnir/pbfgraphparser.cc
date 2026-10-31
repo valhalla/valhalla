@@ -438,6 +438,9 @@ struct graph_parser {
         case Use::kServiceRoad:
           way_.set_use(Use::kServiceRoad);
           break;
+        case Use::kCycleStreet:
+          way_.set_use(Use::kCycleStreet);
+          break;
         case Use::kTrack:
           way_.set_use(Use::kTrack);
           break;
@@ -998,15 +1001,11 @@ struct graph_parser {
         }
       }
 
-      std::vector<std::string> conditions = GetTagTokens(tokens.at(1), ';');
-      for (const auto& c : conditions) {
-        std::vector<uint64_t> values = get_time_range(c);
-        for (const auto& v : values) {
-          ConditionalSpeedLimit limit = {};
-          limit.td_ = TimeDomain(v);
-          limit.speed_ = speed;
-          osmdata_.conditional_speeds.emplace(osmid_, limit);
-        }
+      for (const auto& v : get_time_range(tokens.at(1))) {
+        ConditionalSpeedLimit limit = {};
+        limit.td_ = TimeDomain(v);
+        limit.speed_ = speed;
+        osmdata_.conditional_speeds.emplace(osmid_, limit);
       }
     };
     tag_handlers_["truck_route"] = [this]() {
@@ -1499,11 +1498,16 @@ struct graph_parser {
                  value.find("pavingstone") != std::string::npos ||
                  value.find("paving_stones") != std::string::npos ||
                  value.find("sett") != std::string::npos ||
-                 value.find("grass_paver") != std::string::npos) {
+                 value.find("grass_paver") != std::string::npos ||
+                 value.find("rubber") != std::string::npos ||
+                 value.find("acrylic") != std::string::npos ||
+                 value.find("plastic") != std::string::npos) {
         way_.set_surface(Surface::kPaved);
 
       } else if (value.find("cobblestone") != std::string::npos ||
-                 value.find("brick") != std::string::npos) {
+                 value.find("brick") != std::string::npos ||
+                 // exact match, otherwise pebblestone and stepping_stones would land here
+                 value == "stone") {
         way_.set_surface(Surface::kPavedRough);
 
       } else if (value.find("compacted") != std::string::npos ||
@@ -1516,7 +1520,8 @@ struct graph_parser {
                  value.find("earth") != std::string::npos ||
                  value.find("ground") != std::string::npos ||
                  value.find("mud") != std::string::npos || value.find("clay") != std::string::npos ||
-                 value.find("laterite") != std::string::npos) {
+                 value.find("laterite") != std::string::npos ||
+                 value.find("soil") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
       } else if (value.find("gravel") != std::string::npos || // gravel, fine_gravel
@@ -1524,6 +1529,8 @@ struct graph_parser {
                  value.find("sand") != std::string::npos) {
         way_.set_surface(Surface::kGravel);
       } else if (value.find("grass") != std::string::npos ||
+                 value.find("artificial_turf") != std::string::npos ||
+                 value.find("rock") != std::string::npos ||
                  value.find("stepping_stones") != std::string::npos) {
         way_.set_surface(Surface::kPath);
         // We have to set a flag as surface may come before Road classes and Uses
@@ -2670,20 +2677,12 @@ struct graph_parser {
           } else if (tag_.first.starts_with("emergency:conditional")) {
             mode = kEmergencyAccess;
           }
-          std::string tmp = tokens.at(1);
-          boost::algorithm::trim(tmp);
-          std::vector<std::string> conditions = GetTagTokens(tmp, ';');
-
-          for (const auto& condition : conditions) {
-            std::vector<uint64_t> values = get_time_range(condition);
-
-            for (const auto& v : values) {
-              OSMAccessRestriction restriction;
-              restriction.set_type(static_cast<AccessType>(type));
-              restriction.set_modes(mode);
-              restriction.set_value(v);
-              osmdata_.access_restrictions.insert({osmid_, restriction});
-            }
+          for (const auto& v : get_time_range(tokens.at(1))) {
+            OSMAccessRestriction restriction;
+            restriction.set_type(static_cast<AccessType>(type));
+            restriction.set_modes(mode);
+            restriction.set_value(v);
+            osmdata_.access_restrictions.insert({osmid_, restriction});
           }
         }
       } else if (!is_lang_pronunciation) {
@@ -3053,6 +3052,7 @@ struct graph_parser {
               case Use::kDriveThru:
               case Use::kLivingStreet:
               case Use::kServiceRoad:
+              case Use::kCycleStreet:
                 way_.set_surface(Surface::kPavedSmooth);
                 break;
               case Use::kCycleway:
@@ -4242,28 +4242,25 @@ struct graph_parser {
               } // else
             }   // if (condition.empty())
 
-            std::vector<std::string> conditions = GetTagTokens(condition, ';');
-
-            if (conditions.size()) {
-              restriction.set_from(from_way_id);
-              restriction.set_vias(vias);
-              // for bi-directional we need to create the restriction in reverse.  flip the to and
-              // from. also in order to avoid duplicate data in the from and to restrictions, we
-              // only need to store the mode, from, and to for the to_restrictions.
-              to_restriction.set_from(restriction.to());
-              to_restriction.set_to(from_way_id);
-              to_restriction.set_modes(restriction.modes());
-              complex_restrictions_to_->push_back(to_restriction);
-            } else {
+            // could have multiple time domains
+            const std::vector<uint64_t> values = get_time_range(condition);
+            if (values.empty()) {
               return; // bad data
             }
 
-            for (const auto& c : conditions) {
-              std::vector<uint64_t> values = get_time_range(c);
-              for (const auto& v : values) { // could have multiple time domains
-                restriction.set_time_domain(v);
-                complex_restrictions_from_->push_back(restriction);
-              }
+            restriction.set_from(from_way_id);
+            restriction.set_vias(vias);
+            // for bi-directional we need to create the restriction in reverse.  flip the to and
+            // from. also in order to avoid duplicate data in the from and to restrictions, we
+            // only need to store the mode, from, and to for the to_restrictions.
+            to_restriction.set_from(restriction.to());
+            to_restriction.set_to(from_way_id);
+            to_restriction.set_modes(restriction.modes());
+            complex_restrictions_to_->push_back(to_restriction);
+
+            for (const auto& v : values) {
+              restriction.set_time_domain(v);
+              complex_restrictions_from_->push_back(restriction);
             }
             return;
           } // if (isConditional)
@@ -5500,11 +5497,13 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // being used in a way.
   // TODO: we know how many knows we expect, stop early once we have that many
   LOG_INFO("Parsing nodes...");
+  bool create = true;
   for (auto& file : input_files) {
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     parser.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr, nullptr,
-                 nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, true));
+                 nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, create));
+    create = false;
     parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
 
     osmium::io::Reader reader(file, osmium::osm_entity_bits::node);

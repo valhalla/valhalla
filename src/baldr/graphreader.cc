@@ -23,6 +23,22 @@ constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; // 1 gig
 constexpr size_t AVERAGE_TILE_SIZE = 2097152;         // 2 megs
 constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
 
+// the codes curl --retry retries, plus 0 for no response
+bool is_retryable(long http_code) {
+  switch (http_code) {
+    case 0:
+    case 408:
+    case 429:
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return true;
+    default:
+      return false;
+  }
+}
+
 struct tile_index_entry {
   uint64_t offset;  // byte offset from the beginning of the tar
   uint32_t tile_id; // just level and tileindex hence fitting in 32bits
@@ -633,10 +649,10 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
       return nullptr;
     }
 
-    // we record missing tiles from URL (tar or plain) so we don't bother to get them again
+    // don't request a failed download again
     {
-      std::lock_guard<std::mutex> lock(_404s_lock);
-      if (_404s.find(base) != _404s.end()) {
+      std::lock_guard<std::mutex> lock(failed_downloads_lock_);
+      if (failed_downloads_.contains(base)) {
         // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
         return nullptr;
       }
@@ -647,16 +663,19 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
     uint64_t tar_offset = tar_has_tile ? pos->second.offset : 0;
     uint64_t tar_size = tar_has_tile ? pos->second.size : 0;
     tile = nullptr;
+    // a tile not in the index is a 404
+    long http_code = 404;
     // either we find its tar offset or it's a plain tiles URL
     if (tar_has_tile || !is_tar_url_) {
       tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_, tar_offset,
-                                     tar_size, url_id_txt_path_, url_id_txt_checksum_);
+                                     tar_size, url_id_txt_path_, url_id_txt_checksum_, &http_code);
     }
 
     if (!tile) {
-      LOG_WARN("Failed to download tile " + std::to_string(base) + " from " + tile_url_);
-      std::lock_guard<std::mutex> lock(_404s_lock);
-      _404s.insert(base);
+      LOG_WARN("Failed to download tile " + std::to_string(base) + " from " + tile_url_ +
+               " with HTTP status " + std::to_string(http_code));
+      std::lock_guard<std::mutex> lock(failed_downloads_lock_);
+      failed_downloads_.emplace(base, http_code);
       return nullptr;
     }
     // LOG_DEBUG("Url cache hit " + GraphTile::FileSuffix(base));
@@ -667,6 +686,11 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
   // Keep a copy in the cache and return it
   const size_t size = tile->header()->end_offset();
   return cache_->Put(base, std::move(tile), size);
+}
+
+void GraphReader::ClearRetryableFailures() {
+  std::lock_guard<std::mutex> lock(failed_downloads_lock_);
+  std::erase_if(failed_downloads_, [](const auto& failure) { return is_retryable(failure.second); });
 }
 
 std::optional<GraphTileHeader> GraphReader::GetGraphTileHeader(const GraphId& graphid) {
@@ -979,7 +1003,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
           if (i->is_regular_file() || i->is_symlink()) {
             // add it if it can be parsed as a valid tile file name
             try {
-              tiles.emplace(GraphId::FromTilePath(i->path().string()));
+              tiles.emplace(GraphId::FromTilePath(i->path()));
             } catch (...) {}
           }
         }
@@ -1011,7 +1035,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
         if (i->is_regular_file() || i->is_symlink()) {
           // add it if it can be parsed as a valid tile file name
           try {
-            tiles.emplace(GraphId::FromTilePath(i->path().string()));
+            tiles.emplace(GraphId::FromTilePath(i->path()));
           } catch (...) {}
         }
       }

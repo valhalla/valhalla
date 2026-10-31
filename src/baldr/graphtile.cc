@@ -195,7 +195,7 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data,
     file.close();
     if (file.fail())
       success = false;
-    std::filesystem::rename(tmp_location, disk_location, ec);
+    filesystem_utils::rename_replace(tmp_location, disk_location, ec);
     if (ec)
       success = false;
   } else {
@@ -219,7 +219,9 @@ void store(const std::string& cache_location,
     // Windows apparently can't "+" string & char (which "preferred_separator" is on win)
     std::filesystem::path disk_location{cache_location};
     disk_location.append(suffix);
-    filesystem_utils::save(disk_location, raw_data);
+    if (!filesystem_utils::save(disk_location, raw_data)) {
+      LOG_ERROR("Failed to cache tile " + disk_location.string());
+    }
   }
 }
 
@@ -230,7 +232,8 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        uint64_t range_offset,
                                        uint64_t range_size,
                                        const std::filesystem::path& id_txt_path,
-                                       std::optional<uint64_t> id_checksum) {
+                                       std::optional<uint64_t> id_checksum,
+                                       long* http_code) {
   // Don't bother with invalid ids
   if (!graphid.is_valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
@@ -267,39 +270,39 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
   tile_getter_t::GET_response_t result;
   if (range_size == 0) {
     // requesting plain tiles
-    auto fname =
-        valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
-                                               valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
+    auto fname = valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
+                                                        valhalla::baldr::SUFFIX_NON_COMPRESSED);
     result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
   } else {
     // or HTTP range on a tar
     result = tile_getter->get(tile_url, range_offset, range_size);
   }
 
+  if (http_code) {
+    *http_code = result.http_code_;
+  }
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
     return nullptr;
   }
 
-  if (!tile_getter->gzipped()) {
-    // inspect the header for the checksum
-    // it's a POD type and thus trivially copyable
-    GraphTileHeader header;
-    std::memcpy(&header, result.bytes_.data(), sizeof(header));
-    check_tile_checksum(header);
+  // a body that isn't a whole tile, e.g. an error page sent with a 200, is not cached
+  graph_tile_ptr tile;
+  try {
+    tile = tile_getter->gzipped()
+               ? DecompressTile(graphid, result.bytes_)
+               : graph_tile_ptr{new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(
+                                                           std::vector<char>(result.bytes_)))};
+  } catch (const std::runtime_error& e) {
+    LOG_WARN("Downloaded tile " + std::to_string(graphid) + " is invalid: " + e.what());
   }
+  if (!tile) {
+    return nullptr;
+  }
+  check_tile_checksum(*tile->header());
 
   // try to cache it on disk so we dont have to keep fetching it from url
   store(tile_dir, graphid, tile_getter, result.bytes_);
-
-  // turn the memory into a tile
-  if (tile_getter->gzipped()) {
-    auto tile = DecompressTile(graphid, result.bytes_);
-    check_tile_checksum(*tile.get()->header());
-    return tile;
-  }
-
-  return graph_tile_ptr{
-      new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(result.bytes_)))};
+  return tile;
 }
 
 GraphTile::~GraphTile() = default;
@@ -487,7 +490,6 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
 
 std::string GraphTile::FileSuffix(const GraphId& graphid,
                                   const std::string& fname_suffix,
-                                  bool is_file_path,
                                   const TileLevel* tiles) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
@@ -529,7 +531,8 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
   const size_t tile_id_strlen = max_length + max_length / 3;
   assert(tile_id_strlen % 4 == 0);
 
-  const char separator = is_file_path ? std::filesystem::path::preferred_separator : '/';
+  // always forward slash: valid for windows file apis too, and required for urls and tar entries
+  const char separator = '/';
 
   std::string tile_id_str(tile_id_strlen, '0');
   size_t ind = tile_id_strlen - 1;
@@ -978,6 +981,9 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
       while (departure_time < current_time && departure_time < end_time) {
         departure_time += frequency;
       }
+
+      if (departure_time >= end_time)
+        continue;
 
       // make a new departure with a guess for departure time          ;
       return new TransitDeparture(d.lineid(), d.tripid(), d.routeindex(), d.blockid(),

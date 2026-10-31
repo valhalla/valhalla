@@ -1,0 +1,1150 @@
+{
+  "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "En <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilómetros",
+        "1 kilómetro",
+        "<METERS> metros",
+        "menos de 10 metros"
+      ],
+      "us_customary_lengths": [
+        "<MILES> millas",
+        "1 milla",
+        "media milla",
+        "un cuarto de milla",
+        "<FEET> pies",
+        "menos de 10 pies"
+      ]
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Llegada: <TIME>.",
+        "1": "Llegada: <TIME> en <TRANSIT_STOP>."
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Llegada a las <TIME>.",
+        "1": "Llegada a las <TIME> en <TRANSIT_STOP>."
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Siga por la <RELATIVE_DIRECTION>.",
+        "1": "Siga por la <RELATIVE_DIRECTION> en dirección a <STREET_NAMES>.",
+        "2": "Siga por la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Siga por la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Siga por la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Siga por la <RELATIVE_DIRECTION>.",
+        "1": "Siga por la <RELATIVE_DIRECTION> en dirección a <STREET_NAMES>.",
+        "2": "Siga por la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Siga por la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Siga por la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> se convierte en <STREET_NAMES>."
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> se convierte en <STREET_NAMES>."
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Continúe.",
+        "1": "Continúe en <STREET_NAMES>.",
+        "2": "Continúe en <JUNCTION_NAME>.",
+        "3": "Continúe en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ]
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Continúe.",
+        "1": "Continúe durante <LENGTH>.",
+        "2": "Continúe en <STREET_NAMES>.",
+        "3": "Continúe en <STREET_NAMES> durante <LENGTH>.",
+        "4": "Continúe en <JUNCTION_NAME>.",
+        "5": "Continúe en <JUNCTION_NAME> durante <LENGTH>.",
+        "6": "Continúe en dirección a <TOWARD_SIGN>.",
+        "7": "Continúe dirección a <TOWARD_SIGN> durante <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilómetros",
+        "1 kilómetro",
+        "<METERS> metros",
+        "menos de 10 metros"
+      ],
+      "us_customary_lengths": [
+        "<MILES> millas",
+        "1 milla",
+        "media milla",
+        "un cuarto de milla",
+        "<FEET> pies",
+        "menos de 10 pies"
+      ]
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Continúe.",
+        "1": "Continúe en <STREET_NAMES>.",
+        "2": "Continúe en <JUNCTION_NAME>.",
+        "3": "Continúe en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ]
+    },
+    "depart": {
+      "phrases": {
+        "0": "Salida: <TIME>.",
+        "1": "Salida: <TIME> desde <TRANSIT_STOP>."
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Salida a las <TIME>.",
+        "1": "Salida a las <TIME> desde <TRANSIT_STOP>."
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Ha llegado a su destino.",
+        "1": "Ha llegado a <DESTINATION>.",
+        "2": "Su destino está a la <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> está a la <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Ha llegado a su destino.",
+        "1": "Ha llegado a <DESTINATION>.",
+        "2": "Su destino está a la <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> está a la <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Llegará a su destino.",
+        "1": "Llegará a <DESTINATION>.",
+        "2": "Su destino estará a la <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> estará a la <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Tome el ascensor.",
+        "1": "Tome el ascensor a <LEVEL>."
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Entre al edificio.",
+        "1": "Entre al edificio, y continúe por <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
+      ]
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Tome el ferri.",
+        "1": "Tome la <STREET_NAMES>.",
+        "2": "Tome la <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Tome el ferri en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "ferry_label": "Ferri"
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Tome el ferri.",
+        "1": "Tome la <STREET_NAMES>.",
+        "2": "Tome la <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Tome el ferri en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "ferry_label": "Ferri"
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Haga la rotonda.",
+        "1": "Haga la rotonda y tome la salida <ORDINAL_VALUE>.",
+        "2": "Haga la rotonda y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Haga la rotonda y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continúe en <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Haga la rotonda y tome la salida <ORDINAL_VALUE> en dirección a <TOWARD_SIGN>.",
+        "5": "Haga la rotonda y tome la salida hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Haga la rotonda y tome la salida hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continúe en <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Haga la rotonda y tome la salida en dirección a <TOWARD_SIGN>.",
+        "8": "Incorpórese a <STREET_NAMES>",
+        "9": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE>.",
+        "10": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continúe en <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> en dirección a <TOWARD_SIGN>.",
+        "13": "Incorpórese a <STREET_NAMES> y tome la salida hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Incorpórese a <STREET_NAMES> y tome la salida hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continúe en <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Incorpórese a <STREET_NAMES> y tome la salida en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "ordinal_values": [
+        "1.º",
+        "2.º",
+        "3.º",
+        "4.º",
+        "5.º",
+        "6.º",
+        "7.º",
+        "8.º",
+        "9.º",
+        "10.º"
+      ]
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Haga la rotonda.",
+        "1": "Haga la rotonda y tome la salida <ORDINAL_VALUE>.",
+        "2": "Haga la rotonda y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Haga la rotonda y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Haga la rotonda y tome la salida <ORDINAL_VALUE> en dirección a <TOWARD_SIGN>.",
+        "5": "Haga la rotonda y tome la salida hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Haga la rotonda y tome la salida hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Haga la rotonda y tome la salida en dirección a <TOWARD_SIGN>.",
+        "8": "Incorpórese a <STREET_NAMES>",
+        "9": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE>.",
+        "10": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> en dirección a <TOWARD_SIGN>.",
+        "13": "Incorpórese a <STREET_NAMES> y tome la salida hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Incorpórese a <STREET_NAMES> y tome la salida hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Incorpórese a <STREET_NAMES> y tome la salida en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "ordinal_values": [
+        "1.º",
+        "2.º",
+        "3.º",
+        "4.º",
+        "5.º",
+        "6.º",
+        "7.º",
+        "8.º",
+        "9.º",
+        "10.º"
+      ]
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Tome la escalera mecánica.",
+        "1": "Tome la escalera mecánica a <LEVEL>."
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Tome la salida a la <RELATIVE_DIRECTION>.",
+        "1": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION>.",
+        "2": "Tome la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
+        "3": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN>.",
+        "4": "Tome la salida a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "5": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "6": "Tome la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "7": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "8": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
+        "10": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN>.",
+        "12": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "14": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "15": "Tome la salida.",
+        "16": "Tome la salida <NUMBER_SIGN>.",
+        "17": "Tome la salida <BRANCH_SIGN>.",
+        "18": "Tome la salida <NUMBER_SIGN> hacia <BRANCH_SIGN>.",
+        "19": "Tome la salida en dirección a <TOWARD_SIGN>.",
+        "20": "Tome la salida <NUMBER_SIGN> en dirección a <TOWARD_SIGN>.",
+        "21": "Tome la salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "22": "Tome la salida <NUMBER_SIGN> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "23": "Tome la salida <NAME_SIGN>.",
+        "25": "Tome la salida <NAME_SIGN> hacia <BRANCH_SIGN>.",
+        "27": "Tome la salida <NAME_SIGN> en dirección a <TOWARD_SIGN>.",
+        "29": "Tome la salida <NAME_SIGN> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Salga del edificio.",
+        "1": "Salga del edificio, y continúe por <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
+      ]
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Salga de la rotonda.",
+        "1": "Salga de la rotonda hacia <STREET_NAMES>.",
+        "2": "Salga de la rotonda hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "3": "Salga de la rotonda en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Salga de la rotonda.",
+        "1": "Salga de la rotonda hacia <STREET_NAMES>.",
+        "2": "Salga de la rotonda hacia <BEGIN_STREET_NAMES>.",
+        "3": "Salga de la rotonda en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Tome la salida a la <RELATIVE_DIRECTION>.",
+        "1": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION>.",
+        "2": "Tome la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
+        "3": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN>.",
+        "4": "Tome la salida a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "5": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "6": "Tome la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "7": "Toma la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "8": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
+        "10": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN>.",
+        "12": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "14": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "15": "Tome la salida.",
+        "16": "Tome la salida <NUMBER_SIGN>.",
+        "17": "Tome la salida <BRANCH_SIGN>.",
+        "18": "Tome la salida <NUMBER_SIGN> hacia <BRANCH_SIGN>.",
+        "19": "Tome la salida en dirección a <TOWARD_SIGN>.",
+        "20": "Tome la salida <NUMBER_SIGN> en dirección a <TOWARD_SIGN>.",
+        "21": "Tome la salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "22": "Tome la salida <NUMBER_SIGN> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "23": "Tome la salida <NAME_SIGN>.",
+        "25": "Toma la salida <NAME_SIGN> hacia <BRANCH_SIGN>.",
+        "27": "Tome la salida <NAME_SIGN> en dirección a <TOWARD_SIGN>.",
+        "29": "Tome la salida <NAME_SIGN> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Salida <EXIT_NUMBERS>"
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Manténgase a la <RELATIVE_DIRECTION> en la bifurcación.",
+        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN>.",
+        "2": "Manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <STREET_NAMES>.",
+        "4": "Manténgase a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "5": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en dirección a <TOWARD_SIGN>.",
+        "6": "Manténgase a la <RELATIVE_DIRECTION> para tomar la <STREET_NAMES> en dirección a <TOWARD_SIGN>.",
+        "7": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <STREET_NAMES> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "recto",
+        "derecha"
+      ]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> y permanecer en <STREET_NAMES>.",
+        "2": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES> en dirección a <TOWARD_SIGN>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> y permanecer en <STREET_NAMES> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "recto",
+        "derecha"
+      ]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> y permanecer en <STREET_NAMES>.",
+        "2": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES> en dirección a <TOWARD_SIGN>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> y permanecer en <STREET_NAMES> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "recto",
+        "derecha"
+      ]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Manténgase a la <RELATIVE_DIRECTION> en la bifurcación.",
+        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN>.",
+        "2": "Manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <STREET_NAMES>.",
+        "4": "Manténgase a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "5": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en dirección a <TOWARD_SIGN>.",
+        "6": "Manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES> en dirección a <TOWARD_SIGN>.",
+        "7": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <STREET_NAMES> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "recto",
+        "derecha"
+      ]
+    },
+    "level_change": {
+      "phrases": {
+        "0": "Continue to <LEVEL>."
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Incorpórese.",
+        "1": "Incorpórese a la <RELATIVE_DIRECTION>.",
+        "2": "Incorpórese a <STREET_NAMES>.",
+        "3": "Incorpórese a la <RELATIVE_DIRECTION> a <STREET_NAMES>.",
+        "4": "Incorpórese en dirección a <TOWARD_SIGN>.",
+        "5": "Incorpórese a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Incorpórese.",
+        "1": "Incorpórese a la <RELATIVE_DIRECTION>.",
+        "2": "Incorpórese a <STREET_NAMES>.",
+        "3": "Incorpórese a la <RELATIVE_DIRECTION> a <STREET_NAMES>.",
+        "4": "Incorpórese en dirección a <TOWARD_SIGN>.",
+        "5": "Incorpórese a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "park_vehicle": {
+      "phrases": {
+        "0": "Park your vehicle"
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Pase <OBJECT_LABEL>.",
+        "1": "Pass traffic signals on <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "la cancela",
+        "los bolardos",
+        "ways intersection"
+      ]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Viaje <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "parada",
+        "other": "paradas"
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Continúe durante <LENGTH>.",
+        "1": "Continúe en <STREET_NAMES> durante <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilómetros",
+        "1 kilómetro",
+        "<METERS> metros",
+        "menos de 10 metros"
+      ],
+      "us_customary_lengths": [
+        "<MILES> millas",
+        "1 milla",
+        "media milla",
+        "un cuarto de milla",
+        "<FEET> pies",
+        "menos de 10 pies"
+      ]
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Tome la vía de salida a la <RELATIVE_DIRECTION>.",
+        "1": "Tome la vía de salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
+        "2": "Tome la vía de salida a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "3": "Tome la vía de salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "4": "Tome la vía de salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
+        "5": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida.",
+        "6": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <BRANCH_SIGN>.",
+        "7": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida en dirección a <TOWARD_SIGN>.",
+        "8": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "9": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <NAME_SIGN>.",
+        "10": "Tome la vía de salida.",
+        "11": "Tome la vía de salida <BRANCH_SIGN>.",
+        "12": "Tome la vía de salida en dirección a <TOWARD_SIGN>.",
+        "13": "Tome la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "14": "Tome la vía de salida <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Siga recto para tomar la vía de salida.",
+        "1": "Siga recto para tomar la vía de salida <BRANCH_SIGN>.",
+        "2": "Siga recto para tomar la vía de salida en dirección a <TOWARD_SIGN>.",
+        "3": "Siga recto para tomar la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "4": "Siga recto para tomar la vía de salida <NAME_SIGN>."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Siga recto para tomar la vía de salida.",
+        "1": "Siga recto para tomar la vía de salida <BRANCH_SIGN>.",
+        "2": "Siga recto para tomar la vía de salida en dirección a <TOWARD_SIGN>.",
+        "3": "Siga recto para tomar la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "4": "Siga recto para tomar la vía de salida <NAME_SIGN>."
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Tome la vía de salida a la <RELATIVE_DIRECTION>.",
+        "1": "Tome la vía de salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
+        "2": "Tome la vía de salida a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "3": "Tome la vía de salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "4": "Tome la vía de salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
+        "5": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida.",
+        "6": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <BRANCH_SIGN>.",
+        "7": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida en dirección a <TOWARD_SIGN>.",
+        "8": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "9": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <NAME_SIGN>.",
+        "10": "Tome la vía de salida.",
+        "11": "Tome la vía de salida <BRANCH_SIGN>.",
+        "12": "Tome la vía de salida en dirección a <TOWARD_SIGN>.",
+        "13": "Tome la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "14": "Tome la vía de salida <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Gire completamente a la <RELATIVE_DIRECTION>.",
+        "1": "Gire completamente a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Gire completamente a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "3": "Gire completamente a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Gire completamente a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Gire completamente a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Gire completamente a la <RELATIVE_DIRECTION>.",
+        "1": "Gire completamente a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Gire completamente a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>.",
+        "3": "Gire completamente a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Gire completamente a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Gire completamente a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "start": {
+      "phrases": {
+        "0": "Diríjase al <CARDINAL_DIRECTION>.",
+        "1": "Diríjase al <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "2": "Diríjase al <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "4": "Conduzca hacia el <CARDINAL_DIRECTION>.",
+        "5": "Conduzca hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "6": "Conduzca hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "8": "Camine hacia el <CARDINAL_DIRECTION>.",
+        "9": "Camine hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "10": "Camine hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "16": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION>.",
+        "17": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "18": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "norte",
+        "noreste",
+        "este",
+        "sureste",
+        "sur",
+        "suroeste",
+        "oeste",
+        "noroeste"
+      ],
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ]
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Diríjase hacia el <CARDINAL_DIRECTION>.",
+        "1": "Diríjase hacia el <CARDINAL_DIRECTION> durante <LENGTH>.",
+        "2": "Diríjase hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "3": "Diríjase hacia el <CARDINAL_DIRECTION> por <STREET_NAMES> durante <LENGTH>.",
+        "4": "Diríjase hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>.",
+        "5": "Conduzca hacia el <CARDINAL_DIRECTION>.",
+        "6": "Conduzca hacia el <CARDINAL_DIRECTION> durante <LENGTH>.",
+        "7": "Conduzca hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "8": "Conduzca hacia el <CARDINAL_DIRECTION> por <STREET_NAMES> durante <LENGTH>.",
+        "9": "Conduzca hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>.",
+        "10": "Camine hacia el <CARDINAL_DIRECTION>.",
+        "11": "Camine hacia el <CARDINAL_DIRECTION> durante <LENGTH>.",
+        "12": "Camine hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "13": "Camine hacia el <CARDINAL_DIRECTION> por <STREET_NAMES> durante <LENGTH>.",
+        "14": "Camine hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>.",
+        "15": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION>.",
+        "16": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> durante <LENGTH>.",
+        "17": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "18": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> por <STREET_NAMES> durante <LENGTH>.",
+        "19": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "norte",
+        "noreste",
+        "este",
+        "sureste",
+        "sur",
+        "suroeste",
+        "oeste",
+        "noroeste"
+      ],
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilómetros",
+        "1 kilómetro",
+        "<METERS> metros",
+        "menos de 10 metros"
+      ],
+      "us_customary_lengths": [
+        "<MILES> millas",
+        "1 milla",
+        "media milla",
+        "un cuarto de milla",
+        "<FEET> pies",
+        "menos de 10 pies"
+      ]
+    },
+    "steps": {
+      "phrases": {
+        "0": "Tome las escaleras.",
+        "1": "Tome las escaleras a <LEVEL>."
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Tome el <TRANSIT_NAME>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
+        "1": "Tome el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+      },
+      "empty_transit_name_labels": [
+        "tranvía",
+        "metro",
+        "tren",
+        "autobús",
+        "ferri",
+        "teleférico",
+        "góndola",
+        "funicular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "parada",
+        "other": "paradas"
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Salga de la estación.",
+        "1": "Baje en la <TRANSIT_STOP>.",
+        "2": "Baje en la <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Estación"
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Salga de la estación.",
+        "1": "Baje en la <TRANSIT_STOP>.",
+        "2": "Baje en la <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Estación"
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Entre en la estación.",
+        "1": "Entre en la <TRANSIT_STOP>.",
+        "2": "Entre en la <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Estación"
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Entre en la estación.",
+        "1": "Entre en la <TRANSIT_STOP>.",
+        "2": "Entre en la <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Estación"
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Haga transbordo en la estación.",
+        "1": "Haga transbordo en la <TRANSIT_STOP>.",
+        "2": "Haga transbordo en la <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Estación"
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Haga transbordo en la estación.",
+        "1": "Haga transbordo en la <TRANSIT_STOP>.",
+        "2": "Haga transbordo en la <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Estación"
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Permanezca en el <TRANSIT_NAME>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
+        "1": "Permanezca en el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+      },
+      "empty_transit_name_labels": [
+        "tranvía",
+        "metro",
+        "tren",
+        "autobús",
+        "ferri",
+        "teleférico",
+        "góndola",
+        "funicular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "parada",
+        "other": "paradas"
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Permanezca en el <TRANSIT_NAME>.",
+        "1": "Permanezca en el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "tranvía",
+        "metro",
+        "tren",
+        "autobús",
+        "ferri",
+        "teleférico",
+        "góndola",
+        "funicular"
+      ]
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Haga transbordo para tomar el <TRANSIT_NAME>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
+        "1": "Haga transbordo para tomar el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+      },
+      "empty_transit_name_labels": [
+        "tranvía",
+        "metro",
+        "tren",
+        "autobús",
+        "ferri",
+        "teleférico",
+        "góndola",
+        "funicular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "parada",
+        "other": "paradas"
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Haga transbordo para tomar el <TRANSIT_NAME>.",
+        "1": "Haga transbordo para tomar el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "tranvía",
+        "metro",
+        "tren",
+        "autobús",
+        "ferri",
+        "teleférico",
+        "góndola",
+        "funicular"
+      ]
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Tome el <TRANSIT_NAME>.",
+        "1": "Tome el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "tranvía",
+        "metro",
+        "tren",
+        "autobús",
+        "ferri",
+        "teleférico",
+        "góndola",
+        "funicular"
+      ]
+    },
+    "turn": {
+      "phrases": {
+        "0": "Gire a la <RELATIVE_DIRECTION>.",
+        "1": "Gire a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Gire a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "3": "Gire a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Gire a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Gire a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Gire a la <RELATIVE_DIRECTION>.",
+        "1": "Gire a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Gire a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>.",
+        "3": "Gire a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Gire a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Gire a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Haga un cambio de sentido a la <RELATIVE_DIRECTION>.",
+        "1": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "3": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES>.",
+        "4": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES> hacia <STREET_NAMES>.",
+        "5": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES> para permanecer en <STREET_NAMES>.",
+        "6": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "7": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Haga un cambio de sentido a la <RELATIVE_DIRECTION>.",
+        "1": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "3": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES>.",
+        "4": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES> hacia <STREET_NAMES>.",
+        "5": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES> para permanecer en <STREET_NAMES>.",
+        "6": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "7": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk",
+        "las escaleras",
+        "el puente",
+        "el túnel"
+      ],
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ]
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Después <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Después, en <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilómetros",
+        "1 kilómetro",
+        "<METERS> metros",
+        "menos de 10 metros"
+      ],
+      "us_customary_lengths": [
+        "<MILES> millas",
+        "1 milla",
+        "media milla",
+        "un cuarto de milla",
+        "<FEET> pies",
+        "menos de 10 pies"
+      ]
+    }
+  },
+  "posix_locale": "es_ES.UTF-8",
+  "aliases": [
+    "es"
+  ]
+}
