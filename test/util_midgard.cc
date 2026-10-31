@@ -28,24 +28,27 @@ TEST(UtilMidgard, TestRangedDefaultT) {
 
   for (unsigned i = 0; i < 100; ++i) {
     valhalla::sif::ranged_default_t<float> testRange{lower, defaultDistributor(generator), upper};
+    bool clamped = false;
 
     float testVal = testDistributor(generator);
 
-    float finalVal = testRange(testVal);
+    float finalVal = testRange(testVal, clamped);
 
     if (testVal < testRange.min || testVal > testRange.max) {
       // Was outside of range so finalVal should now be snapped to default
       EXPECT_EQ(finalVal, testRange.def) << "Final value did not snap to the range default value";
+      EXPECT_TRUE(clamped);
     } else {
       // Was inside of range so finalVal should still be the same number
       EXPECT_EQ(finalVal, testVal) << "Final value moved invalidly";
+      EXPECT_FALSE(clamped);
     }
 
     // Test Edge cases because random distribution is unlikely to land exactly on boundaries
-    finalVal = testRange(testRange.min);
+    finalVal = testRange(testRange.min, clamped);
     EXPECT_EQ(finalVal, testRange.min) << "Final value invalidly moves on lower bound";
 
-    finalVal = testRange(testRange.max);
+    finalVal = testRange(testRange.max, clamped);
     EXPECT_EQ(finalVal, testRange.max) << "Final value invalidly moves on upper bound";
   }
 }
@@ -699,8 +702,8 @@ TEST(UtilMidgard, SequenceSort) {
   }
 
   std::sort(in_mem.begin(), in_mem.end());
-  merge.sort(std::less<uint8_t>(), 1327);
-  standard.sort(std::less<uint8_t>(), 1327 * 5);
+  merge.sort(std::less<uint8_t>(), 4, 1327);
+  standard.sort(std::less<uint8_t>(), 4, 1327 * 5);
 
   EXPECT_TRUE(std::equal(in_mem.begin(), in_mem.end(), merge.begin()));
   EXPECT_TRUE(std::equal(in_mem.begin(), in_mem.end(), standard.begin()));
@@ -754,15 +757,49 @@ TEST(UtilMidgard, PolygonArea) {
   }
 }
 
+TEST(UtilMidgard, Enumerate) {
+  std::vector<int> values = {10, 20, 30, 40, 50};
+
+  size_t expected_index = 0;
+  for (const auto& [i, value] : enumerate(values)) {
+    EXPECT_EQ(i, expected_index);
+    EXPECT_EQ(value, values[expected_index]);
+    ++expected_index;
+  }
+  EXPECT_EQ(expected_index, values.size());
+
+  // Test with filtered range (lazy evaluation)
+  auto filtered = values | std::views::filter([](int x) { return x > 20; });
+  std::vector<std::pair<size_t, int>> enumerated_results;
+  for (const auto& [i, value] : enumerate(filtered)) {
+    enumerated_results.emplace_back(i, value);
+  }
+
+  ASSERT_EQ(enumerated_results.size(), 3);
+  EXPECT_EQ(enumerated_results[0].first, 0);
+  EXPECT_EQ(enumerated_results[0].second, 30);
+  EXPECT_EQ(enumerated_results[1].first, 1);
+  EXPECT_EQ(enumerated_results[1].second, 40);
+  EXPECT_EQ(enumerated_results[2].first, 2);
+  EXPECT_EQ(enumerated_results[2].second, 50);
+}
+
 TEST(UtilMidgard, ToFloat) {
   EXPECT_FLOAT_EQ(to_float("123.456"), 123.456f);
   EXPECT_FLOAT_EQ(to_float("-42.5"), -42.5f);
   EXPECT_FLOAT_EQ(to_float("0.0"), 0.0f);
   EXPECT_FLOAT_EQ(to_float<double>("3.14159"), 3.14159);
   EXPECT_FLOAT_EQ(to_float("123.456extra"), 123.456f);
+  EXPECT_FLOAT_EQ(to_float("+1.1"), 1.1f);
+  EXPECT_FLOAT_EQ(to_float("+0"), 0);
+  EXPECT_FLOAT_EQ(to_float("-0"), 0);
+  EXPECT_FLOAT_EQ(to_float("-1"), -1);
 
   EXPECT_THROW(to_float("not_a_number"), std::invalid_argument);
   EXPECT_THROW(to_float(""), std::invalid_argument);
+  EXPECT_THROW(to_float("+"), std::invalid_argument);
+  EXPECT_THROW(to_float("++1.1"), std::invalid_argument);
+  EXPECT_THROW(to_float("+-1.1"), std::invalid_argument);
 }
 
 TEST(UtilMidgard, ToInt) {
@@ -772,9 +809,16 @@ TEST(UtilMidgard, ToInt) {
   EXPECT_EQ(to_int<int64_t>("9223372036854775807"), 9223372036854775807LL);
   EXPECT_EQ(to_int<uint32_t>("4294967295"), 4294967295U);
   EXPECT_EQ(to_int("123.456"), 123);
+  EXPECT_EQ(to_int("+1"), 1);
+  EXPECT_EQ(to_int("+0"), 0);
+  EXPECT_EQ(to_int("-0"), 0);
+  EXPECT_EQ(to_int("-1"), -1);
 
   EXPECT_THROW(to_int("not_a_number"), std::invalid_argument);
   EXPECT_THROW(to_int(""), std::invalid_argument);
+  EXPECT_THROW(to_int("+"), std::invalid_argument);
+  EXPECT_THROW(to_int("++1"), std::invalid_argument);
+  EXPECT_THROW(to_int("+-1"), std::invalid_argument);
 }
 
 } // namespace

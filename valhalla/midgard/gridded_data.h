@@ -21,6 +21,8 @@ namespace midgard {
 // compute an optimal generalization factor when creating contours.
 constexpr float kOptimalGeneralization = std::numeric_limits<float>::max();
 
+constexpr float NODATA_VALUE = static_cast<float>(std::numeric_limits<uint16_t>::max());
+
 /**
  * Class to store data in a gridded/tiled data structure. Contains methods
  * to mark each tile with data using a compare operator.
@@ -441,7 +443,7 @@ public:
           box[1] = std::min(std::max(i - 1, 0), box[1]);
           // +1 extra because range is exclusive
           box[2] = std::max(std::min(j + 2, this->ncolumns_ - 1), box[2]);
-          box[3] = std::max(std::min(i + 2, this->ncolumns_ - 1), box[3]);
+          box[3] = std::max(std::min(i + 2, this->nrows_ - 1), box[3]);
         }
       }
     }

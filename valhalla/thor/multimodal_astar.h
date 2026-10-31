@@ -1,0 +1,172 @@
+#ifndef VALHALLA_THOR_MULTIMODAL_ASTAR_H
+#define VALHALLA_THOR_MULTIMODAL_ASTAR_H
+
+#include <valhalla/baldr/double_bucket_queue.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/sif/dynamiccost.h>
+#include <valhalla/sif/edgelabel.h>
+#include <valhalla/thor/astarheuristic.h>
+#include <valhalla/thor/edgestatus.h>
+#include <valhalla/thor/pathalgorithm.h>
+#include <valhalla/thor/pathinfo.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <map>
+#include <utility>
+#include <vector>
+
+namespace valhalla {
+namespace thor {
+
+/**
+ * MultimodalAStar is a unidirectional path algorithm that allows expansion
+ * with two costings.
+ */
+class MultimodalAStar : public PathAlgorithm {
+public:
+  /**
+   * Constructor.
+   * @param config A config object of key, value pairs
+   */
+  explicit MultimodalAStar(const boost::property_tree::ptree& config = {});
+
+  /**
+   * Destructor
+   */
+  virtual ~MultimodalAStar();
+
+  /**
+   * Form path between and origin and destination location using the supplied
+   * costing method.
+   * @param  origin       Origin location
+   * @param  dest         Destination location
+   * @param  graphreader  Graph reader for accessing routing graph.
+   * @param  mode_costing Costing methods for each mode.
+   * @param  mode         Travel mode to use.
+   * @return Returns the path edges (and elapsed time/modes at end of
+   *          each edge).
+   */
+  virtual std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const sif::mode_costing_t& mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance()) override;
+
+  /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual const char* name() const override {
+    return "multimodal_a*";
+  }
+
+  /**
+   * Clear the temporary information generated during path construction.
+   */
+  virtual void Clear() override;
+
+protected:
+  sif::TravelMode mode_; // Current travel mode
+
+  sif::TravelMode start_mode_; // Start travel mode
+  sif::TravelMode other_mode_; // Not the start travel mode
+  sif::TravelMode end_mode_;   // End travel mode
+
+  // A* heuristic
+  AStarHeuristic start_astarheuristic_;
+  AStarHeuristic end_astarheuristic_;
+
+  // Current costing mode
+  sif::cost_ptr_t start_costing_;
+  sif::cost_ptr_t other_costing_;
+
+  // Vector of edge labels (requires access by index).
+  std::vector<sif::BDEdgeLabel> edgelabels_;
+
+  // Adjacency list - approximate double bucket sort
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
+
+  // Edge status per costing
+  std::array<EdgeStatus, 2> edge_status_;
+  std::array<std::vector<HierarchyLimits>, 2> hierarchy_limits_;
+
+  // Destinations, id and cost
+  std::map<uint64_t, sif::Cost> destinations_;
+
+  // where mode transitions are possible
+  baldr::NodeType mode_transition_;
+
+  // Maximum distance for the walking part
+  uint32_t max_walking_distance_{0};
+  size_t max_mode_transitions_{0};
+
+  /**
+   * Initializes the hierarchy limits, A* heuristic, and adjacency list.
+   * @param  origll  Lat,lng of the origin.
+   * @param  destll  Lat,lng of the destination.
+   */
+  virtual void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
+
+  /**
+   * Expand from the node along the forward search path. Immediately expands
+   * from the end node of any transition edge (so no transition edges are added
+   * to the adjacency list or EdgeLabel list). Does not expand transition
+   * edges if from_transition is false.
+   * @param  graphreader       Graph tile reader.
+   * @param  node              Graph Id of the node being expanded.
+   * @param  pred              Predecessor edge label (for costing).
+   * @param  pred_idx          Predecessor index into the EdgeLabel list.
+   * @param  from_transition   True if this method is called from a transition
+   *                           edge.
+   * @param  from_mode_change  True if this method is called from a mode change
+   * @param  dest              Location information of the destination.
+   * @param  best_path         Current best path as a pair of {distance,cost}
+   */
+  void ExpandForward(baldr::GraphReader& graphreader,
+                     const baldr::GraphId& node,
+                     const sif::BDEdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const bool from_transition,
+                     const bool from_mode_change,
+                     const sif::TravelMode mode,
+                     const valhalla::Location& dest,
+                     std::pair<int32_t, float>& best_path,
+                     size_t mode_transition_count);
+
+  /**
+   * Add edges at the origin to the adjacency list.
+   * @param  graphreader  Graph tile reader.
+   * @param  origin       Location information of the origin.
+   * @param  dest         Location information of the destination.
+   */
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 valhalla::Location& origin,
+                 const valhalla::Location& dest);
+
+  /**
+   * Set the destination edge(s).
+   * @param   graphreader  Graph tile reader.
+   * @param   dest         Location information of the destination.
+   */
+  void SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+
+  /**
+   * Form the path from the adjacency list. Recovers the path from the
+   * destination backwards towards the origin (using predecessor information)
+   * @param   dest  Index in the edge labels of the destination edge.
+   * @return  Returns the path info, a list of GraphIds representing the
+   *          directed edges along the path - ordered from origin to
+   *          destination - along with travel modes and elapsed time.
+   */
+  std::vector<PathInfo> FormPath(baldr::GraphReader& graphreader, const uint32_t dest);
+};
+
+} // namespace thor
+} // namespace valhalla
+
+#endif // VALHALLA_THOR_MULTIMODAL_ASTAR_H

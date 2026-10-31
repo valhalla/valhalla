@@ -25,10 +25,10 @@ std::string thor_worker_t::trace_attributes(Api& request) {
   auto _ = measure_scope_time(request);
 
   // Parse request
-  adjust_scores(*request.mutable_options());
+  adjust_locations(request);
   parse_costing(request);
   parse_measurements(request);
-  const auto& options = request.options();
+  const Options options = request.options(); // copy `options` to have them as a backup for a fallback
   controller = AttributesController(options, true);
 
   /*
@@ -77,6 +77,10 @@ std::string thor_worker_t::trace_attributes(Api& request) {
         LOG_WARN(ShapeMatch_Enum_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
+          // Reset request to avoid `route_match` interference
+          request.Clear();
+          request.mutable_options()->CopyFrom(options);
+
           map_match_results = map_match(request);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{

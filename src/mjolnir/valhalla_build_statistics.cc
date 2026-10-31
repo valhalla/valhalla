@@ -412,8 +412,8 @@ void build(const boost::property_tree::ptree& pt,
         if (ar_modes) {
           // since only truck restrictions exist, we can still get all restrictions
           // later we may only want to get just the truck ones for stats.
-          auto res = tile->GetAccessRestrictions(idx, kAllAccess);
-          if (res.size() == 0) {
+          auto res = tile->GetAccessRestrictions(idx).first;
+          if (res.empty()) {
             LOG_ERROR(
                 "Directed edge marked as having access restriction but none found ; tile level = " +
                 std::to_string(tile_id.level()));
@@ -585,7 +585,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, true))
       return EXIT_SUCCESS;
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;

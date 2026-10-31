@@ -1,4 +1,5 @@
 #include "midgard/point_tile_index.h"
+#include "midgard/boost_geom_types.h"
 
 #include <list>
 
@@ -135,6 +136,7 @@ template PointTileIndex::PointTileIndex(double, const std::vector<GeoPoint<float
 template PointTileIndex::PointTileIndex(double, const std::vector<GeoPoint<double>>&);
 template PointTileIndex::PointTileIndex(double, const std::list<GeoPoint<float>>&);
 template PointTileIndex::PointTileIndex(double, const std::list<GeoPoint<double>>&);
+template PointTileIndex::PointTileIndex(double, const bg::linestring_2d_t&);
 
 } // namespace midgard
 } // namespace valhalla

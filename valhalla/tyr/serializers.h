@@ -68,11 +68,7 @@ std::string serializeHeight(const Api& request,
  * @param projections  The correlated locations
  * @param reader       A graph reader to get at each correlated points info
  */
-std::string
-serializeLocate(const Api& request,
-                const std::vector<baldr::Location>& locations,
-                const std::unordered_map<baldr::Location, baldr::PathLocation>& projections,
-                baldr::GraphReader& reader);
+std::string serializeLocate(const Api& request, baldr::GraphReader& reader);
 
 /**
  * Turn a list of locations into a list of locations with a bool that says whether transit tiles are
@@ -82,9 +78,7 @@ serializeLocate(const Api& request,
  * @param locations  The input locations
  * @param found      Which locations had transit
  */
-std::string serializeTransitAvailable(const Api& request,
-                                      const std::vector<baldr::Location>& locations,
-                                      const std::unordered_set<baldr::Location>& found);
+std::string serializeTransitAvailable(const Api& request);
 
 /**
  * Turn trip paths and the match results of each into attributes based on the filter specified
@@ -180,6 +174,10 @@ inline void update_bridge_elevations(std::vector<float>& elevation,
  */
 inline std::vector<float>
 get_elevation(const TripLeg& path_leg, const float interval, const float start_distance = 0.0f) {
+  if (path_leg.node_size() == 0) {
+    return {};
+  }
+
   // Store the first elevation if start_distance == 0
   std::vector<float> elevation;
   auto first_elevation = path_leg.node(0).edge().elevation(0);
@@ -249,6 +247,16 @@ get_elevation(const TripLeg& path_leg, const float interval, const float start_d
   return elevation;
 }
 
+/**
+ * Serialize an incident.
+ */
+void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
+                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
+                                 const int begin_shape_index,
+                                 const int end_shape_index,
+                                 const std::string& road_class,
+                                 const std::string& key_prefix);
+
 } // namespace tyr
 } // namespace valhalla
 
@@ -276,13 +284,6 @@ void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
                bool tracepoints = false);
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
-
-void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
-                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
-                                 const int begin_shape_index,
-                                 const int end_shape_index,
-                                 const std::string& road_class,
-                                 const std::string& key_prefix);
 
 } // namespace osrm
 

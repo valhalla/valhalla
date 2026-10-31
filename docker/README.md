@@ -2,9 +2,10 @@
 
 # Valhalla Docker images
 
-We provide Docker images for various architectures of two images:
+We provide Docker images for various architectures of three images:
 - [**base image**](https://github.com/valhalla/valhalla/pkgs/container/valhalla): reflects the "plain" image, which contains the whole library & all executables, but no `docker-entrypoint` script
 - [**scripted image**](https://github.com/valhalla/valhalla/pkgs/container/valhalla-scripted): is based on the "base image" but lets the user configure the whole tile build parameters per environment variables (with sensible defaults) auto-magically, also removes some debugging executables
+- [**dev image**](https://github.com/valhalla/valhalla/pkgs/container/valhalla-dev): is based on the "base image" and additionally contains everything you need to develop your own applications that consume Valhalla's C++ libraries (most notably the test library as well as googletest)
 
 The "base image" is more catered towards individuals knowing how to configure a Valhalla tile build correctly and wanting to implement non-supported (in the "scripted image") use cases.
 
@@ -89,7 +90,7 @@ At this point Valhalla is running, but there is no graph tiles yet. Follow the s
 
 #### Build Valhalla with transit
 
-Valhalla supports reading raw GTFS feeds to build transit into its graph, see the [docs](https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference/#sample-json-payloads-for-multimodal-requests-with-transit) for more details.
+Valhalla supports reading raw GTFS feeds to build transit into its graph, see the [docs](https://valhalla.github.io/valhalla/api/route/api-reference/#sample-json-payloads-for-multimodal-requests-with-transit) for more details.
 
 Put the unzipped GTFS feeds as subfolders in the main gtfs folder, e.g. `gtfs_feeds/berlin/`, otherwise the files will not be found.
 
@@ -142,7 +143,7 @@ In the case where you have a pre-built `valhalla_tiles.tar` package from another
 If you want to verify that the image is working correctly, there's a small test script in `./tests`.
 
 ```shell script
-./tests/test.sh
+./docker/test.sh
 ```
 
 > [!TIP]

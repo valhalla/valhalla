@@ -1,13 +1,13 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/thor/*.h)
 
 set(sources
-  astar_bss.cc
   alternates.cc
   bidirectional_astar.cc
   costmatrix.cc
   dijkstras.cc
   matrix_action.cc
-  multimodal.cc
+  multimodal_astar.cc
+  multimodal_transit.cc
   route_action.cc
   timedistancebssmatrix.cc
   timedistancematrix.cc

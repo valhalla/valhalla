@@ -9,6 +9,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
+#ifdef HAVE_EXPAT
+#include <osmium/io/xml_input.hpp>
+#endif
 #include <osmium/osm/entity_bits.hpp>
 
 #include <string>

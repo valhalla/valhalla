@@ -15,9 +15,6 @@ if ! test -d "${CUSTOM_FILES}"; then
   mkdir "${CUSTOM_FILES}"
 fi
 
-# temp valhalla config location
-TMP_CONFIG_FILE="${CUSTOM_FILES}/valhalla_default.json"
-
 CONFIG_FILE="${CUSTOM_FILES}/valhalla.json"
 TILE_DIR="${CUSTOM_FILES}/${tileset_name:-valhalla_tiles}"
 TILE_TAR="${CUSTOM_FILES}/${tileset_name:-valhalla_tiles}.tar"

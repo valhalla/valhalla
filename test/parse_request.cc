@@ -117,6 +117,7 @@ constexpr float kDefaultBicycle_UseFerry = 0.5f;               // Factor between
 constexpr float kDefaultBicycle_UseHills = 0.25f;
 constexpr float kDefaultBicycle_AvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultBicycle_UseLivingStreets = 0.5f;  // Factor between 0 and 1
+constexpr float kDefaultBicycle_StepsFactor = 8.0f;
 constexpr float kDefaultBicycle_ServicePenalty = 15.0f;   // Seconds
 const std::string kDefaultBicycle_BicycleType = "hybrid"; // Bicycle type
 constexpr float kDefaultBicycle_CyclingSpeed[] = {
@@ -137,7 +138,7 @@ constexpr float kDefaultTruck_TollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultTruck_TollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultTruck_CountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultTruck_CountryCrossingPenalty = 0.0f;   // Seconds
-constexpr float kDefaultTruck_LowClassPenalty = 30.0f;         // Seconds
+constexpr float kDefaultTruck_LowClassPenalty = 15.0f;         // Seconds
 constexpr float kDefaultTruck_TruckWeight = 21.77f;            // Metric Tons (48,000 lbs)
 constexpr float kDefaultTruck_TruckAxleLoad = 9.07f;           // Metric Tons (20,000 lbs)
 constexpr uint32_t kDefaultTruck_TruckAxles = 5;               // Count
@@ -615,6 +616,7 @@ void test_default_bicycle_cost_options(const Costing::Type costing_type,
   validate("use_hills", kDefaultBicycle_UseHills, options.use_hills());
   validate("avoid_bad_surfaces", kDefaultBicycle_AvoidBadSurfaces, options.avoid_bad_surfaces());
   validate("use_living_streets", kDefaultBicycle_UseLivingStreets, options.use_living_streets());
+  validate("steps_factor", kDefaultBicycle_StepsFactor, options.steps_factor());
   validate("service_penalty", kDefaultBicycle_ServicePenalty, options.service_penalty());
   validate("cycling_speed",
            kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kHybrid)],
@@ -1249,6 +1251,22 @@ void test_avoid_bad_surfaces_parsing(const Costing::Type costing_type,
   validate(key, expected_value, options.avoid_bad_surfaces());
 }
 
+void test_steps_factor_parsing(const Costing::Type costing_type,
+                               const float specified_value,
+                               const float expected_value,
+                               const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing_type);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "steps_factor";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  const auto& options = request.options().costings().find(costing_type)->second.options();
+  validate(key, expected_value, options.steps_factor());
+}
+
 void test_transit_start_end_max_distance_parsing(const Costing::Type costing_type,
                                                  const uint32_t specified_value,
                                                  const uint32_t expected_value,
@@ -1626,10 +1644,11 @@ void test_closure_factor_parsing(const Costing::Type costing_type,
 
 // utility functions for testing disable_hierarchy_pruning
 // Create costing options (reference: /test/astar.cc)
-void create_costing_options(Options& options, Costing::Type type) {
+void create_costing_options(Api& request, Costing::Type type) {
   const rapidjson::Document doc;
-  options.set_costing_type(type);
-  sif::ParseCosting(doc, "/costing_options", options);
+  request.mutable_options()->set_costing_type(type);
+  sif::ParseCosting(doc, "/costing_options", *request.mutable_options(),
+                    *request.mutable_info()->mutable_warnings());
 }
 
 // Set disable_hierarchy_pruning to true in costing options
@@ -1645,11 +1664,12 @@ protected:
   // Test the hierarchy limits are actually disabled when disable_hierarchy_pruning = true
   void doTest(Costing::Type costing_type) {
     // Set costing options
-    Options options;
-    set_disable_hierarchy_pruning(options, costing_type);
-    create_costing_options(options, costing_type);
+    Api request;
+    set_disable_hierarchy_pruning(*request.mutable_options(), costing_type);
+    create_costing_options(request, costing_type);
     valhalla::sif::TravelMode travel_mode;
-    const auto mode_costing = valhalla::sif::CostFactory().CreateModeCosting(options, travel_mode);
+    const auto mode_costing =
+        valhalla::sif::CostFactory().CreateModeCosting(request.options(), travel_mode);
 
     // Check hierarchy limits
     const auto& hierarchy_limits = mode_costing[int(travel_mode)]->GetHierarchyLimits();
@@ -2638,6 +2658,18 @@ TEST(ParseRequest, test_avoid_bad_surfaces) {
   test_avoid_bad_surfaces_parsing(costing, 0.5f, 0.5f);
   test_avoid_bad_surfaces_parsing(costing, -2.f, default_value);
   test_avoid_bad_surfaces_parsing(costing, 2.f, default_value);
+}
+
+TEST(ParseRequest, test_steps_factor) {
+  Costing::Type costing = Costing::bicycle;
+  float default_value = kDefaultBicycle_StepsFactor;
+  test_steps_factor_parsing(costing, default_value, default_value);
+  test_steps_factor_parsing(costing, 1.f, 1.f);
+  test_steps_factor_parsing(costing, 2.5f, 2.5f);
+  test_steps_factor_parsing(costing, 0.5f, 0.5f);
+  test_steps_factor_parsing(costing, 0.05f, default_value);
+  test_steps_factor_parsing(costing, 200.f, 200.f);
+  test_steps_factor_parsing(costing, 200000.f, default_value);
 }
 
 TEST(ParseRequest, test_cycling_speed) {

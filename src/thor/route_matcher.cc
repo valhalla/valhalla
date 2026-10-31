@@ -87,7 +87,7 @@ end_node_t GetEndEdges(GraphReader& reader, const valhalla::Location& destinatio
   for (const auto& edge : destination.correlation().edges()) {
     // If destination is at a node - skip any outbound edge
     GraphId graphid(edge.graph_id());
-    if (edge.begin_node() || !graphid.Is_Valid()) {
+    if (edge.begin_node() || !graphid.is_valid()) {
       continue;
     }
 
@@ -133,7 +133,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                       size_t& correlated_index,
                       const graph_tile_ptr& tile,
                       const GraphId& node,
-                      end_node_t& end_nodes,
+                      const end_node_t& end_nodes,
                       EdgeLabel& prev_edge_label,
                       Cost& elapsed,
                       std::vector<PathInfo>& path_infos,
@@ -147,8 +147,13 @@ bool expand_from_node(const mode_costing_t& mode_costing,
   if (n != end_nodes.end() &&
       valhalla::midgard::equal<float>((distances[correlated_index].second + n->second.second),
                                       distances.back().second, kTotalDistanceEpsilon)) {
-    end_node = node;
-    return true;
+
+    if (!path_infos.back().is_shortcut) {
+      end_node = node;
+      return true;
+    } else { // can't end on a shortcut
+      return false;
+    }
   }
 
   // Get the last edge followed from this index
@@ -292,7 +297,7 @@ valhalla::baldr::TimeInfo init_time_info(valhalla::baldr::GraphReader& reader,
   // a local date time which we convert to epoch by finding the first timezone
   for (const auto& e : options.locations(0).correlation().edges()) {
     GraphId graphid(e.graph_id());
-    if (!graphid.Is_Valid() || !reader.GetGraphTile(graphid, tile))
+    if (!graphid.is_valid() || !reader.GetGraphTile(graphid, tile))
       continue;
     directededge = tile->directededge(graphid);
     if (reader.GetGraphTile(directededge->endnode(), tile)) {
@@ -374,7 +379,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
     // Process and validate begin edge
     GraphId graphid(edge.graph_id());
-    if (!graphid.Is_Valid()) {
+    if (!graphid.is_valid()) {
       throw std::runtime_error("Invalid begin edge id");
     }
     auto begin_edge_tile = reader.GetGraphTile(graphid);
@@ -548,6 +553,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
           // Add end edge
           path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, 0.f, -1);
+          options.mutable_shape(0)->mutable_correlation()->mutable_edges()->Add()->CopyFrom(edge);
+          options.mutable_shape()->rbegin()->mutable_correlation()->mutable_edges()->Add()->CopyFrom(
+              end.second.first);
           return true;
         }
       }

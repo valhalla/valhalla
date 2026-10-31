@@ -1,4 +1,4 @@
-name: Build Linux
+name: linux
 
 on:
   push:
@@ -50,29 +50,17 @@ env:
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
 
 jobs:
-  lint_format:
-    name: Lint & Format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Run Formatter & Linter
-        run: |
-          sudo apt-get update --assume-yes
-          env DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes --quiet sudo python3-pip python3-requests git curl file
-          ./scripts/format.sh && ./scripts/error_on_dirty.sh
+  lint:
+    uses: ./.github/workflows/format.yml
 
   release_build:
-    name: Release build
+    name: release
     runs-on: ubuntu-24.04
-    needs: [lint_format]
+    needs: [lint]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 1
 
       - uses: actions/setup-python@v6
         with:
@@ -81,7 +69,7 @@ jobs:
       - name: Install deps
         run: |
           ./scripts/install-linux-deps.sh
-          python -m pip install requests shapely
+          python -m pip install requests shapely numpy
       
       - name: Get timestamp & ccache dir
         run: |
@@ -92,10 +80,10 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
           restore-keys: |
@@ -116,16 +104,16 @@ jobs:
         if: always()
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
 
       - name: Run tests
         run: |
-          ASAN_OPTIONS="detect_leaks=0" make -C build -j$(nproc) check
+          ASAN_OPTIONS="detect_leaks=0:symbolize=1" make -C build -j$(nproc) check
           # remove the huge trace logs
           rm -f build/test/*.log
       
@@ -141,14 +129,13 @@ jobs:
           detached: true
 
   debug_build:
-    name: Debug build
+    name: debug
     runs-on: ubuntu-latest
-    needs: [lint_format]
+    needs: [lint]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 1
 
       - uses: actions/setup-python@v6
         with:
@@ -157,7 +144,7 @@ jobs:
       - name: Install deps
         run: |
           ./scripts/install-linux-deps.sh
-          python -m pip install requests shapely
+          python -m pip install requests shapely numpy
 
       - name: Get timestamp & ccache dir
         run: |
@@ -168,10 +155,10 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}
           restore-keys: |
@@ -193,10 +180,10 @@ jobs:
         if: always()
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}
       
@@ -226,14 +213,13 @@ jobs:
           detached: true
 
   arm_build:
-    name: ARM build
+    name: arm
     runs-on: ubuntu-24.04-arm
-    needs: [lint_format]
+    needs: [lint]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 1
 
       - uses: actions/setup-python@v6
         with:
@@ -242,7 +228,7 @@ jobs:
       - name: Install deps
         run: |
           ./scripts/install-linux-deps.sh
-          python -m pip install requests shapely
+          python -m pip install requests shapely numpy
 
       - name: Get timestamp & ccache dir
         run: |
@@ -253,10 +239,10 @@ jobs:
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
           restore-keys: |
@@ -275,12 +261,15 @@ jobs:
         if: always()
         uses: tespkg/actions-cache/save@v1
         with:
-          endpoint: hel1.your-objectstorage.com
+          endpoint: fsn1.your-objectstorage.com
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
+          bucket: gha-cache-2
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
+
+      - name: Verify Python .pyi stubs are up to date
+        run: ./scripts/regenerate_python_stubs.sh build
       
       - name: Run clang-tidy
         run: scripts/clang-tidy-only-diff.sh $(nproc)

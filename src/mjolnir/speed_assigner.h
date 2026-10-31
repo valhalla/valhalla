@@ -4,6 +4,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
+#include "mjolnir/util.h"
 
 #include <array>
 #include <cstdint>
@@ -210,9 +211,11 @@ public:
           if (code.empty())
             throw std::runtime_error("Cannot have empty country code");
           if (cs.HasMember("iso3166-2")) {
-            code.push_back('.');
-            if (code.size() == (code += cs["iso3166-2"].GetString()).size())
+            std::string state = cs["iso3166-2"].GetString();
+            if (state.empty())
               throw std::runtime_error("Cannot have empty state code");
+            code.push_back('.');
+            code += state;
           }
         }
         if (tables.count(code))
@@ -256,6 +259,11 @@ public:
     // See if we can get a valid speed loaded from configuration
     auto configured_speed = FromConfig(directededge, density, country_code, state_code);
     if (configured_speed != kUnconfiguredSpeed) {
+      if (configured_speed > valhalla::baldr::kMaxAssumedSpeed) {
+        LOG_DEBUG("SpeedAssigner exceeded maximum speed: " + std::to_string(configured_speed));
+        valhalla::mjolnir::build_stats::get().increment(
+            valhalla::mjolnir::build_stats::kExceededMaxAssignerSpeed);
+      }
       directededge.set_speed(configured_speed);
       directededge.set_speed_type(valhalla::baldr::SpeedType::kClassified);
       return true;

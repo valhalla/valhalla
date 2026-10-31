@@ -77,6 +77,10 @@ std::string serializeExpansion(Api& request, const std::string& algo) {
       writer("flow_mask_free_flow", static_cast<bool>(flow_sources & baldr::kFreeFlowMask));
       writer("flow_mask_constrained", static_cast<bool>(flow_sources & baldr::kConstrainedFlowMask));
     }
+    if (exp_props.count(Options_ExpansionProperties_travel_mode))
+      writer("travel_mode", TravelMode_Enum_Name(expansion.travel_modes(i)));
+    if (exp_props.count(Options_ExpansionProperties_expansion_index))
+      writer("expansion_index", static_cast<uint64_t>(expansion.expansion_index(i)));
 
     writer.end_object(); // properties
     writer.end_object(); // feature

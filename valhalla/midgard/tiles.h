@@ -4,13 +4,26 @@
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/ellipse.h>
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 namespace valhalla {
 namespace midgard {
+
+enum class Neighbor : uint8_t {
+  kBottomLeft = 0,
+  kLeft = 1,
+  kTopLeft = 2,
+  kTop = 3,
+  kTopRight = 4,
+  kRight = 5,
+  kBottomRight = 6,
+  kBottom = 7,
+};
 
 /**
  * A class that provides a uniform (square) tiling system for a specified
@@ -302,6 +315,73 @@ public:
   }
 
   /**
+   * Identify a neighboring bin given a global (ie not tile local) bin.
+   *
+   * @param global_x the global column number of the input bin
+   * @param global_y the global row number of the input bin
+   * @param which    which neighbor to return
+   *
+   * @return the tile local bin given as a pair of tile id, tile local bin id.
+   */
+  std::pair<uint32_t, unsigned short>
+  GetNeighboringBin(int global_x, int global_y, Neighbor which) const {
+    // starting at lower left, moving clockwise
+
+    // clang-format off
+    static short dx[8] = {-1, -1, -1, 0, 1, 1,  1, 0};
+    static short dy[8] = {-1, 0,   1, 1, 1, 0, -1, -1};
+    // clang-format on
+
+    // new global
+    int nx = wrapx_ && ((global_x == ncolumns_ * nsubdivisions_) || global_x == 0)
+                 ? global_x
+                 : global_x + dx[static_cast<uint8_t>(which)];
+    int ny = global_y + dy[static_cast<uint8_t>(which)];
+
+    // convert back to tile/bin ids
+    int new_tileid = (nx / nsubdivisions_) + (ny / nsubdivisions_) * ncolumns_;
+    int new_binid = (nx % nsubdivisions_) + (ny % nsubdivisions_) * nsubdivisions_;
+    return std::make_pair(new_tileid, new_binid);
+  }
+
+  /**
+   * Collects the neighboring bins for a given bin (subdivision).
+   *
+   * @param tileid   the tile of the input bin
+   * @param binid    the tile local bin identifier of the input bin
+   * @param four_way whether to return 4 or 8 (including diagonal) neighbors
+   *
+   * @return a vector of neighboring bins given as a pair of tile id and bin id, in clockwise order,
+   * starting from lower left.
+   */
+  template <bool four_way, int neighbour_count = four_way ? 4 : 8>
+  std::array<std::pair<uint32_t, unsigned short>, neighbour_count>
+  GetNeighboringBins(uint32_t tileid, short binid) const {
+    std::array<std::pair<uint32_t, unsigned short>, neighbour_count> neighbors;
+
+    // tile coords
+    int tx = tileid % ncolumns_;
+    int ty = tileid / ncolumns_;
+    // bin coords within tile
+    int bx = binid % nsubdivisions_;
+    int by = binid / nsubdivisions_;
+    // global coords
+    int global_x = tx * nsubdivisions_ + bx;
+    int global_y = ty * nsubdivisions_ + by;
+
+    // skip diagonal neighbors in four way mode
+    constexpr auto start = four_way ? 1 : 0;
+    constexpr auto step = four_way ? 2 : 1;
+
+    int neighbor_idx = 0;
+    for (uint8_t i = start; i < 8; i += step) {
+      neighbors[neighbor_idx++] = GetNeighboringBin(global_x, global_y, static_cast<Neighbor>(i));
+    }
+
+    return neighbors;
+  }
+
+  /**
    * Get the neighboring tileid above or north.
    * @param  tileid   Tile Id.
    * @return  Returns the tile Id of the tile to the north. Return tileid
@@ -388,6 +468,11 @@ public:
    */
   std::function<std::tuple<int32_t, unsigned short, double>()>
   ClosestFirst(const coord_t& seed) const;
+
+  /**
+   * Returns the bounding box of a bin given its tile and bin ID within the tile
+   */
+  AABB2<coord_t> BinBBox(int32_t tile, unsigned short bin) const;
 
 protected:
   // Does the tile bounds wrap in the x direction (e.g. at longitude = 180)

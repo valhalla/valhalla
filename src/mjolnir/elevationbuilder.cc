@@ -7,6 +7,7 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
 #include "scoped_timer.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
@@ -59,50 +60,11 @@ std::vector<int8_t> encode_edge_elevation(const std::unique_ptr<valhalla::skadi:
       diff = d < diff ? diff : d;
       LOG_DEBUG("  " + std::to_string(heights[i]));
     }
-    LOG_WARN("edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
-             std::to_string(diff) + " meters.");
+    LOG_DEBUG("edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
+              std::to_string(diff) + " meters.");
+    build_stats::get().increment(build_stats::kExceededElevationDiff);
   }
   return encoded;
-}
-
-/**
- * Encode elevation for a bridge, tunnel, ferry.
- */
-std::vector<int8_t> encode_btf_elevation(const std::unique_ptr<valhalla::skadi::sample>& sample,
-                                         const std::vector<PointLL>& shape,
-                                         const uint32_t length,
-                                         uint32_t wayid) {
-  // Compute a uniform sampling interval along the edge based on its length.
-  double interval = sampling_interval(length);
-
-  // Sample at the first and last shape point
-  double h1 = sample->get(shape.front());
-  double h2 = sample->get(shape.back());
-
-  // Use linear interpolation from h1 to h2 along the length of the edge
-  uint32_t n = static_cast<uint32_t>(length / interval) + 1;
-  std::vector<double> heights(n);
-  heights.front() = h1;
-  float delta = (h2 - h1) / n;
-  for (uint32_t i = 1; i < n - 1; ++i) {
-    heights[i] = heights[i - 1] + delta;
-  }
-  heights.back() = h2;
-
-  // Encode the elevation.
-  bool error = false;
-  auto e = encode_elevation(heights, error);
-  if (error) {
-    double diff = 0;
-    for (size_t i = 1; i < heights.size(); i++) {
-      auto d = std::abs(heights[i] - heights[i - 1]);
-      diff = d < diff ? diff : d;
-      LOG_DEBUG("  " + std::to_string(heights[i]));
-    }
-    LOG_WARN("BTF edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
-             std::to_string(diff) + " meters.");
-  }
-  return e;
 }
 
 void add_elevations_to_single_tile(GraphReader& graphreader,
@@ -215,12 +177,14 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
       new_offsets[edge_info_offset] = ei_offset;
 
       // Encode elevation along the edge and add to EdgeInfo along with the mean elevation.
-      // Bridges, tunnels, ferries are special cases. Increment the new edge info offset.
+      // Skip for shortcuts as they are resolved into underlying edges before reading elevation.
+      // Skip for bridges, tunnels and ferries/rail-shuttles as elevation for them should be
+      // linearly interpolated between nodes and runtime does this.
+      // Increment the new edge info offset.
       std::vector<int8_t> encoded;
-      auto wayid = tilebuilder.edgeinfo(&directededge).wayid();
-      if (directededge.bridge() || directededge.tunnel() || directededge.use() == Use::kFerry) {
-        encoded = encode_btf_elevation(sample, shape, length, wayid);
-      } else {
+      if (!directededge.is_shortcut() && !directededge.bridge() && !directededge.tunnel() &&
+          directededge.use() != Use::kFerry && directededge.use() != Use::kRailFerry) {
+        auto wayid = tilebuilder.edgeinfo(&directededge).wayid();
         encoded = encode_edge_elevation(sample, shape, length, wayid);
       }
       ei_offset += tilebuilder.set_elevation(edge_info_offset, mean_elevation, encoded);
@@ -229,10 +193,20 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
     // Edge elevation information. If the edge is forward (with respect to the shape)
     // use the first value, otherwise use the second.
     bool forward = directededge.forward();
-    directededge.set_weighted_grade(forward ? std::get<0>(found->second)
-                                            : std::get<1>(found->second));
     float max_up_slope = forward ? std::get<2>(found->second) : std::get<4>(found->second);
     float max_down_slope = forward ? std::get<3>(found->second) : std::get<5>(found->second);
+    auto weighted_grade = forward ? std::get<0>(found->second) : std::get<1>(found->second);
+
+    // Clamp grade on tunnels/bridges. Successive, connected bridge/tunnel edges can
+    // lead to high grades. Note - elevation along a route is "fixed" for these cases
+    // but weighted grade can cause route issues.
+    if (directededge.bridge() || directededge.tunnel()) {
+      // Clamp grades to +/- 3% (weighted grade values between 4 and 8)
+      weighted_grade = std::clamp(weighted_grade, 4u, 8u);
+      max_up_slope = std::min(3.0f, max_up_slope);
+      max_down_slope = std::max(-3.0f, max_down_slope);
+    }
+    directededge.set_weighted_grade(weighted_grade);
     directededge.set_max_up_slope(max_up_slope);
     directededge.set_max_down_slope(max_down_slope);
   }

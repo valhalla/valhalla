@@ -3,6 +3,7 @@
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/admininfo.h>
+#include <valhalla/baldr/boundingcircle.h>
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>
@@ -39,6 +40,7 @@
 #include <iterator>
 #include <list>
 #include <memory>
+#include <optional>
 
 namespace valhalla {
 namespace baldr {
@@ -182,7 +184,8 @@ public:
    * @param  range_offset HTTP range offsete in case of a tar URL
    * @param  range_size HTTP range offsete in case of a tar URL
    * @param  id_txt_path the file path to the tile_dir's id.txt
-   * @param  id_creation_time the timestamp according to the id.txt
+   * @param  id_checksum the (optional) expected checksum of the tileset
+   * @param  http_code set to the response's HTTP code, 0 if none
    * @return the graph tile or nullptr
    */
 
@@ -193,7 +196,8 @@ public:
                                      uint64_t range_offset = 0,
                                      uint64_t range_size = 0,
                                      const std::filesystem::path& id_txt_path = "",
-                                     uint64_t id_checksum = 0);
+                                     std::optional<uint64_t> id_checksum = std::nullopt,
+                                     long* http_code = nullptr);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -212,22 +216,13 @@ public:
    * Gets the directory like filename suffix given the graphId
    * @param  graphid      Graph Id to construct filename.
    * @param  gzipped      Modifies the suffix if you expect gzipped file names
-   * @param  is_file_path Determines the 1000 separator to be used for file or URL access
    * @param  tiles        Allows passing a custom tile definition rather than pulling from static
    *                      hierarchy, which is useful for testing
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
   static std::string FileSuffix(const GraphId& graphid,
                                 const std::string& suffix = valhalla::baldr::SUFFIX_NON_COMPRESSED,
-                                bool is_file_path = true,
                                 const TileLevel* tiles = nullptr);
-
-  /**
-   * Get the tile Id given the full path to the file.
-   * @param  fname    Filename with complete path.
-   * @return  Returns the tile Id.
-   */
-  static GraphId GetTileId(const std::string& fname);
 
   /**
    * Get the bounding box of this graph tile.
@@ -256,7 +251,7 @@ public:
    * @return  Returns a pointer to the node.
    */
   const NodeInfo* node(const GraphId& node) const {
-    assert(node.Tile_Base() == header_->graphid().Tile_Base());
+    assert(node.tile_base() == header_->graphid().tile_base());
     if (node.id() < header_->nodecount()) {
       return &nodes_[node.id()];
     }
@@ -288,7 +283,7 @@ public:
    * @param  nodeid  GraphId of the node.
    */
   midgard::PointLL get_node_ll(const GraphId& nodeid) const {
-    assert(nodeid.Tile_Base() == header_->graphid().Tile_Base());
+    assert(nodeid.tile_base() == header_->graphid().tile_base());
     return node(nodeid)->latlng(base_ll_);
   }
 
@@ -298,7 +293,7 @@ public:
    * @return  Returns a pointer to the edge.
    */
   const DirectedEdge* directededge(const GraphId& edge) const {
-    assert(edge.Tile_Base() == header_->graphid().Tile_Base());
+    assert(edge.tile_base() == header_->graphid().tile_base());
     if (edge.id() < header_->directededgecount()) {
       return &directededges_[edge.id()];
     }
@@ -329,7 +324,7 @@ public:
    * @return  Returns a pointer to the edge extension.
    */
   const DirectedEdgeExt* ext_directededge(const GraphId& edge) const {
-    assert(edge.Tile_Base() == header_->graphid().Tile_Base());
+    assert(edge.tile_base() == header_->graphid().tile_base());
 
     // Testing against directededgecount since the number of directed edges
     // should be the same as the number of directed edge extensions
@@ -713,12 +708,43 @@ public:
    * Convenience method to get the access restrictions for an edge given the
    * edge Id.
    * @param   edgeid  Directed edge Id.
+   * @return  Returns a span of AccessRestrictions and the start index.
+   */
+  std::pair<std::span<const AccessRestriction>, size_t>
+  GetAccessRestrictions(const uint32_t edgeid) const;
+
+  /**
+   * Convenience method to get the access restrictions for an edge given the
+   * edge Id.
+   * @param   edgeid  Directed edge Id.
    * @param   access  Access.  Used to obtain the restrictions for the access
    *                   that we are interested in (see graphconstants.h)
-   * @return  Returns a list (vector) of AccessRestrictions.
+   * @return  Returns a lazy filtered view of AccessRestrictions.
    */
-  std::vector<AccessRestriction> GetAccessRestrictions(const uint32_t edgeid,
-                                                       const uint32_t access) const;
+  auto GetAccessRestrictions(const uint32_t edgeid, const uint32_t access) const {
+    auto all_restrictions = GetAccessRestrictions(edgeid);
+    return all_restrictions.first |
+           std::views::filter([access](const auto& r) { return r.modes() & access; });
+  }
+
+  /**
+   * Get a specific access restriction by index from the filtered results.
+   * @param   edgeid  Directed edge Id.
+   * @param   access  Access mode filter.
+   * @param   index   Index of the restriction in the filtered results.
+   * @return  Pointer to the AccessRestriction if found, nullptr otherwise.
+   */
+  const AccessRestriction* GetAccessRestrictionAtIndex(const uint32_t edgeid,
+                                                       const uint32_t access,
+                                                       const size_t index) const {
+    auto restrictions = GetAccessRestrictions(edgeid, access);
+    auto it = std::ranges::begin(restrictions);
+    auto end = std::ranges::end(restrictions);
+
+    for (size_t i = 0; i < index && it != end; ++i, ++it) {}
+
+    return (it != end) ? &(*it) : nullptr;
+  }
 
   /**
    * Get an iterable list of GraphIds given a bin in the tile
@@ -734,6 +760,21 @@ public:
    * @return iterable container of graphids contained in the bin
    */
   std::span<GraphId> GetBin(size_t index) const;
+
+  /**
+   * Get an iterable list of bounding circles given a bin in the tile
+   * @param  column the bin's column
+   * @param  row the bin's row
+   * @return iterable container of bounding circles that intersect the bin
+   */
+  std::span<DiscretizedBoundingCircle> GetBoundingCircles(size_t column, size_t row) const;
+
+  /**
+   * Get an iterable list of bounding circles given a bin in the tile
+   * @param  index the bin's index in the row major array
+   * @return iterable container of bounding circles that intersect the bin
+   */
+  std::span<DiscretizedBoundingCircle> GetBoundingCircles(size_t index) const;
 
   /**
    * Get lane connections ending on this edge.
@@ -785,7 +826,9 @@ public:
     float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
-    if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
+    auto invalid_time = seconds == kInvalidSecondsOfWeek;
+    if (!invalid_time && (flow_mask & kCurrentFlowMask) && traffic_tile() &&
+        live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       // it is important to copy the speed to a local variable to avoid race conditions when traffic
       // data is updated by background process
@@ -823,7 +866,6 @@ public:
 
     // use predicted speed if a time was passed in, the predicted speed layer was requested, and if
     // the edge has predicted speed
-    auto invalid_time = seconds == kInvalidSecondsOfWeek;
     if (!invalid_time && (flow_mask & kPredictedFlowMask) && de->has_predicted_speed()) {
       seconds %= midgard::kSecondsPerWeek;
       uint32_t idx = de - directededges_;
@@ -997,6 +1039,10 @@ protected:
   // List of edge graph ids. The list is broken up in bins which have
   // indices in the tile header.
   GraphId* edge_bins_{};
+
+  // List of edge bounding circles. The list is broken up in bins which
+  // share the same indices as the edge bins
+  DiscretizedBoundingCircle* bounding_circles_{};
 
   // Lane connectivity data.
   LaneConnectivity* lane_connectivity_{};

@@ -8,7 +8,9 @@
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # don't install googletest
-set(INSTALL_GTEST OFF)
+# unless you want the test library
+set(INSTALL_GTEST ${INSTALL_TEST_LIB})
+
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
 
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
@@ -16,17 +18,24 @@ set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
+enable_testing()
+include(GoogleTest)
+
 # common things that the tests need
 find_package(Threads)
-set(TEST_SRCS test.h test.cc)
+set(TEST_SRCS test.cc)
+set(TEST_HDRS test.h)
 if(ENABLE_DATA_TOOLS)
-  list(APPEND TEST_SRCS gurka/gurka.h gurka/gurka.cc)
+  list(APPEND TEST_SRCS gurka/gurka.cc)
+  list(APPEND TEST_HDRS gurka/gurka.h)
 endif()
 if(ENABLE_HTTP AND ENABLE_SERVICES)
-  list(APPEND TEST_SRCS tile_server.h tile_server.cc)
+  list(APPEND TEST_SRCS tile_server.cc)
+  list(APPEND TEST_HDRS tile_server.h)
 endif()
 add_library(valhalla_test
   ${TEST_SRCS}
+  ${TEST_HDRS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
   )
@@ -37,11 +46,12 @@ target_include_directories(valhalla_test SYSTEM PUBLIC
   ${unordered_dense_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   ${libosmium_include_dirs}
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
+  ${vtzero_include_dirs})
 target_link_libraries(valhalla_test
   valhalla gtest gtest_main gmock
   $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
-  ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
+  ${CMAKE_THREAD_LIBS_INIT} ${lz4_target})
 target_compile_definitions(valhalla_test PUBLIC
   VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
   VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
@@ -57,10 +67,27 @@ if (ENABLE_GEOTIFF)
   endif()
 endif()
 
+# optionally install the test library as well
+if (INSTALL_TEST_LIB)
+  install(TARGETS valhalla_test
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT development)
+
+  install(FILES ${TEST_HDRS}
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
+    COMPONENT development)
+endif()
+
+
+# stop if the user just wants the library
+if (NOT ENABLE_TESTS)
+  return()
+endif()
+
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgeinfo edgestatus ellipse encode
-  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
+  enhancedtrippath factory graphid graphtile hilbert graphtileheader gridded_data grid_range_query grid_traversal instructions json laneconnectivity linesegment2 logging maneuversbuilder map_matcher_factory mapmatch_config
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll pointtileindex
   polyline2 predictedspeeds queue routing sample sequence sign signs statsd streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
@@ -69,9 +96,9 @@ set(tests aabb2 access_restriction actor admin attributes_controller configurati
   incident_loading worker_nullptr_tiles curl_tilegetter filesystem_utils narrativebuilder util_odin)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar astar_bikeshare complexrestriction countryaccess graphbuilder graphparser
+  list(APPEND tests astar multimodal_astar complexrestriction countryaccess graphbuilder graphparser
     graphtilebuilder graphreader hierarchylimits isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
-    names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban tar_index
+    names node_search reach recover_shortcut refs servicedays shape_attributes signinfo summary urban tar_index
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP AND ENABLE_SERVICES)
     list(APPEND tests http_tiles)
@@ -102,178 +129,256 @@ foreach(test ${tests})
   endif()
 endforeach()
 
-set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
-foreach(test ${cost_tests})
-  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  set_target_properties(${test} PROPERTIES
-    FOLDER "Tests"
-    COMPILE_DEFINITIONS INLINE_TEST)
-  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  target_link_libraries(${test} valhalla_test)
-endforeach()
+## Cost tests
+set(cost_inline_test_sources
+  ${VALHALLA_SOURCE_DIR}/src/sif/autocost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/bicyclecost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/motorcyclecost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/motorscootercost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/pedestriancost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/transitcost.cc
+  ${VALHALLA_SOURCE_DIR}/src/sif/truckcost.cc)
 
-set(tyr_tests route_serializer_osrm)
-foreach(test ${tyr_tests})
-  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
-  set_target_properties(${test} PROPERTIES
-    FOLDER "Tests"
-    COMPILE_DEFINITIONS INLINE_TEST)
-  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
-  target_link_libraries(${test} valhalla_test)
-endforeach()
+add_executable(cost_inline_tests EXCLUDE_FROM_ALL ${cost_inline_test_sources})
+set_target_properties(cost_inline_tests PROPERTIES
+  FOLDER "Tests"
+  COMPILE_DEFINITIONS INLINE_TEST)
+create_source_groups("Source Files" ${cost_inline_test_sources})
+target_link_libraries(cost_inline_tests valhalla_test)
+gtest_discover_tests(cost_inline_tests TEST_PREFIX "CostInline.")
+
+## Tyr tests
+set(tyr_inline_test_sources
+  ${VALHALLA_SOURCE_DIR}/src/tyr/route_serializer_osrm.cc)
+
+add_executable(tyr_inline_tests EXCLUDE_FROM_ALL ${tyr_inline_test_sources})
+set_target_properties(tyr_inline_tests PROPERTIES
+  FOLDER "Tests"
+  COMPILE_DEFINITIONS INLINE_TEST)
+create_source_groups("Source Files" ${tyr_inline_test_sources})
+target_link_libraries(tyr_inline_tests valhalla_test)
+gtest_discover_tests(tyr_inline_tests TEST_PREFIX "TyrInline.")
 
 ## Test-specific data, properties and dependencies
 target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
 
+# JSON config -> file so `--config <path>` survives cmd.exe (raw bracket [=[...]=] callers
+# get ${VAR} expansion via string(CONFIGURE)). Injects a top-level null logger to silence
+# tile-build chatter. Idempotent; add the returned path to DEPENDS for rebuild on JSON edit.
+function(valhalla_test_config NAME JSON OUT_VAR)
+  set(_path "${CMAKE_BINARY_DIR}/test/configs/${NAME}.json")
+  string(CONFIGURE "${JSON}" _expanded)
+  string(REGEX REPLACE "^{" "{\"logging\":{\"type\":\"\"}," _content "${_expanded}")
+  set(_existing "")
+  if(EXISTS "${_path}")
+    file(READ "${_path}" _existing)
+  endif()
+  if(NOT "${_existing}" STREQUAL "${_content}")
+    file(WRITE "${_path}" "${_content}")
+  endif()
+  set(${OUT_VAR} "${_path}" PARENT_SCOPE)
+endfunction()
+
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   DEPENDS ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/
-  COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones > ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp
+  COMMAND ${CMAKE_COMMAND} -E env SPATIALITE=${SPATIALITE_EXECUTABLE} SPATIALITE_TOOL=${SPATIALITE_TOOL_EXECUTABLE}
+    bash -c "${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones >${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp 2> ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.log || (cat ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.log >&2 && exit 1)"
   COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   COMMENT "Building tz.sqlite..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
+  VERBATIM)
 add_custom_target(build_timezones DEPENDS ${CMAKE_BINARY_DIR}/test/data/tz.sqlite)
 set_target_properties(build_timezones PROPERTIES FOLDER "Tests")
 
+# the four configs below all feed the single utrecht traffic.tar command that follows
+# initialize/parseways stage (only one with the finer grid_divisions)
+valhalla_test_config(utrecht_tiles_initial
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","include_construction":true,"hierarchy":true,"shortcuts":true,"concurrency":1,"data_processing":{"grid_divisions_within_tile":32}}}]=]
+  utrecht_tiles_initial_cfg)
+# parserelations, parsenodes and build-through-cleanup stages
+valhalla_test_config(utrecht_tiles_main
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","include_construction":true,"hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
+  utrecht_tiles_main_cfg)
+# valhalla_add_predicted_traffic
+valhalla_test_config(utrecht_tiles_traffic
+  [=[{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","concurrency":1}}]=]
+  utrecht_tiles_traffic_cfg)
+# valhalla_build_extract
+valhalla_test_config(utrecht_tiles_extract
+  [=[{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","tile_extract":"test/data/utrecht_tiles/tiles.tar","traffic_extract":"test/data/utrecht_tiles/traffic.tar","concurrency":1}}]=]
+  utrecht_tiles_extract_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.tar
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/utrecht_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","include_construction":true,"hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""},"data_processing":{"grid_divisions_within_tile":32}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${utrecht_tiles_initial_cfg}
       -s initialize -e parseways
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","include_construction":true,"hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${utrecht_tiles_main_cfg}
       -s parserelations -e parserelations
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","include_construction":true,"hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${utrecht_tiles_main_cfg}
       -s parsenodes -e parsenodes
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","include_construction":true,"hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${utrecht_tiles_main_cfg}
       -s build -e cleanup
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_add_predicted_traffic>
+      --config ${utrecht_tiles_traffic_cfg}
       -t ${VALHALLA_SOURCE_DIR}/test/data/traffic_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_extract
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","tile_extract":"test/data/utrecht_tiles/tiles.tar","traffic_extract":"test/data/utrecht_tiles/traffic.tar","concurrency":1,"logging":{"type":""}}}'
+  COMMAND ${Python_EXECUTABLE} ${CMAKE_BINARY_DIR}/valhalla_build_extract
+      --config ${utrecht_tiles_extract_cfg}
       --with-traffic --overwrite
   COMMENT "Building Utrecht Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf ${CMAKE_BINARY_DIR}/valhalla_build_extract)
+  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones
+          ${utrecht_tiles_initial_cfg} ${utrecht_tiles_main_cfg}
+          ${utrecht_tiles_traffic_cfg} ${utrecht_tiles_extract_cfg}
+          ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf ${CMAKE_BINARY_DIR}/valhalla_build_extract)
 add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.tar)
 set_target_properties(utrecht_tiles PROPERTIES FOLDER "Tests")
 
+valhalla_test_config(whitelion_tiles
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/whitelion_tiles","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
+  whitelion_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/whitelion_tiles","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${whitelion_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf
   COMMENT "Building Whitelion Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf)
+  DEPENDS valhalla_build_tiles ${whitelion_tiles_cfg} ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf)
 add_custom_target(whitelion_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph)
 set_target_properties(whitelion_tiles PROPERTIES FOLDER "Tests")
 
+valhalla_test_config(whitelion_tiles_reverse
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/whitelion_tiles_reverse","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
+  whitelion_tiles_reverse_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles_reverse/2/000/814/309.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/whitelion_tiles_reverse","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${whitelion_tiles_reverse_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk_reversed_oneway.osm.pbf
   COMMENT "Building reversed Whitelion Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk_reversed_oneway.osm.pbf)
+  DEPENDS valhalla_build_tiles ${whitelion_tiles_reverse_cfg} ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk_reversed_oneway.osm.pbf)
 add_custom_target(reversed_whitelion_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles_reverse/2/000/814/309.gph)
 set_target_properties(reversed_whitelion_tiles PROPERTIES FOLDER "Tests")
 
+valhalla_test_config(bayfront_singapore_tiles
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/bayfront_singapore_tiles","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
+  bayfront_singapore_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/bayfront_singapore_tiles/1/033/043.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/bayfront_singapore_tiles","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${bayfront_singapore_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/bayfront_singapore.osm.pbf
       COMMENT "Building Singapore, Bayfront tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/bayfront_singapore.osm.pbf)
+  DEPENDS valhalla_build_tiles ${bayfront_singapore_tiles_cfg} ${VALHALLA_SOURCE_DIR}/test/data/bayfront_singapore.osm.pbf)
 add_custom_target(bayfront_singapore_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/bayfront_singapore_tiles/1/033/043.gph)
 set_target_properties(bayfront_singapore_tiles PROPERTIES FOLDER "Tests")
 
+valhalla_test_config(roma_tiles
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/roma_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
+  roma_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/roma_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/roma_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${roma_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf
   COMMENT "Building Roma Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf)
+  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${roma_tiles_cfg} ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf)
 add_custom_target(roma_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph)
 set_target_properties(roma_tiles PROPERTIES FOLDER "Tests")
 
+valhalla_test_config(paris_bss_tiles
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/paris_bss_tiles","timezone":"test/data/tz.sqlite","hierarchy": true,"import_bike_share_stations": true,"shortcuts":true,"concurrency":1}}]=]
+  paris_bss_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/paris_bss_tiles/0/003/105.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/paris_bss_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/paris_bss_tiles","timezone":"test/data/tz.sqlite","hierarchy": true,"import_bike_share_stations": true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${paris_bss_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/paris_bss.osm.pbf
   COMMENT "Building Paris BSS Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/paris_bss.osm.pbf)
+  DEPENDS valhalla_build_tiles ${paris_bss_tiles_cfg} ${VALHALLA_SOURCE_DIR}/test/data/paris_bss.osm.pbf)
 add_custom_target(paris_bss_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/paris_bss_tiles/0/003/105.gph)
 
+valhalla_test_config(melborne_tiles
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/melborne_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
+  melborne_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/melborne_tiles/0/001/251.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/melborne_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/melborne_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${melborne_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/melborne.osm.pbf
   COMMENT "Building Melborne Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/melborne.osm.pbf)
+  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${melborne_tiles_cfg} ${VALHALLA_SOURCE_DIR}/test/data/melborne.osm.pbf)
 add_custom_target(melborne_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/melborne_tiles/0/001/251.gph)
 set_target_properties(melborne_tiles PROPERTIES FOLDER "Tests")
 
+valhalla_test_config(ny_ar_tiles
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/ny_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
+  ny_ar_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/ny_ar_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/ny_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${ny_ar_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf
   COMMENT "Building New York Access Restriction Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles build_timezones ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf)
+  DEPENDS valhalla_build_tiles build_timezones ${ny_ar_tiles_cfg} ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf)
 add_custom_target(ny_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph)
 set_target_properties(ny_ar_tiles PROPERTIES FOLDER "Tests")
 
+valhalla_test_config(pa_ar_tiles
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/pa_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
+  pa_ar_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/pa_ar_tiles/2/000/749/212.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/pa_ar_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/pa_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${pa_ar_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/pa-access-restriction.osm.pbf
   COMMENT "Building PA Access Restriction Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles build_timezones ${VALHALLA_SOURCE_DIR}/test/data/pa-access-restriction.osm.pbf)
+  DEPENDS valhalla_build_tiles build_timezones ${pa_ar_tiles_cfg} ${VALHALLA_SOURCE_DIR}/test/data/pa-access-restriction.osm.pbf)
 add_custom_target(pa_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/pa_ar_tiles/2/000/749/212.gph)
 set_target_properties(pa_ar_tiles PROPERTIES FOLDER "Tests")
 
+valhalla_test_config(nh_ar_tiles
+  [=[{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/nh_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1}}]=]
+  nh_ar_tiles_cfg)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/nh_ar_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/nh_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
+      --config ${nh_ar_tiles_cfg}
       ${VALHALLA_SOURCE_DIR}/test/data/nh-access-restriction.osm.pbf
   COMMENT "Building New Hampshire Access Restriction Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles build_timezones ${VALHALLA_SOURCE_DIR}/test/data/nh-access-restriction.osm.pbf)
+  DEPENDS valhalla_build_tiles build_timezones ${nh_ar_tiles_cfg} ${VALHALLA_SOURCE_DIR}/test/data/nh-access-restriction.osm.pbf)
 add_custom_target(nh_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph)
 set_target_properties(nh_ar_tiles PROPERTIES FOLDER "Tests")
 
-file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
-add_custom_command(OUTPUT .locales.timestamp
-  COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
-       $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
-       $<$<BOOL:${APPLE}>:         localedef -i /usr/share/locale/$\{loc\} ./$\{loc\} || true ; > \
-     done \
-     && touch ${CMAKE_CURRENT_BINARY_DIR}/.locales.timestamp"
-  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/locales
-  DEPENDS ${locales}
-  COMMENT "Compile locale definition files..."
-  VERBATIM)
-add_custom_target(localedef DEPENDS .locales.timestamp)
-set_target_properties(localedef PROPERTIES FOLDER "Tests")
+# we have to skip this on windows, it automatically resolves whatever locales it has installed
+if(NOT WIN32)
+  file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
+  add_custom_command(OUTPUT .locales.timestamp
+    COMMAND /bin/bash -ec "for loc in $(jq --raw-output .posix_locale *.json); do \
+         $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
+         $<$<BOOL:${APPLE}>:         localedef -i /usr/share/locale/$\{loc\} ./$\{loc\} || true ; > \
+       done \
+       && touch ${CMAKE_CURRENT_BINARY_DIR}/.locales.timestamp"
+    WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/locales
+    DEPENDS ${locales}
+    COMMENT "Compile locale definition files..."
+    VERBATIM)
+  add_custom_target(localedef DEPENDS .locales.timestamp)
+  set_target_properties(localedef PROPERTIES FOLDER "Tests")
+endif()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/test/data)
 add_custom_command(OUTPUT test/data/sample/N00
@@ -304,9 +409,9 @@ set (destination "${CMAKE_BINARY_DIR}/test/data/tile_src")
 #)
 
 ## Test run targets
-foreach(test ${tests} ${cost_tests} ${tyr_tests})
+foreach(test ${tests} ${cost_inline_tests} ${tyr_inline_tests})
   add_custom_command(OUTPUT ${test}.log
-    COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/${test}
+    COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales bash ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh $<TARGET_FILE:${test}>
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS ${test}
     VERBATIM)
@@ -314,62 +419,146 @@ foreach(test ${tests} ${cost_tests} ${tyr_tests})
 endforeach()
 
 ## Run test dependencies
-## TODO: fix apple tests!
-if(NOT APPLE)
+## TODO: fix apple and windows tests!
+if(NOT APPLE AND NOT WIN32)
   add_dependencies(run-util_odin localedef)
   add_dependencies(run-narrativebuilder localedef)
 endif()
 
-add_dependencies(run-sample test_directories)
+add_dependencies(sample test_directories)
 if(ENABLE_DATA_TOOLS)
-  add_dependencies(run-mapmatch utrecht_tiles)
-  add_dependencies(run-hierarchylimits utrecht_tiles)
-  add_dependencies(run-isochrone utrecht_tiles)
-  add_dependencies(run-matrix utrecht_tiles)
-  add_dependencies(run-matrix_bss paris_bss_tiles)
-  add_dependencies(run-timedep_paths utrecht_tiles)
-  add_dependencies(run-trivial_paths utrecht_tiles)
+  add_dependencies(actor utrecht_tiles)
+  add_dependencies(mapmatch utrecht_tiles)
+  add_dependencies(hierarchylimits utrecht_tiles)
+  add_dependencies(isochrone utrecht_tiles)
+  add_dependencies(matrix utrecht_tiles)
+  add_dependencies(matrix_bss paris_bss_tiles)
+  add_dependencies(timedep_paths utrecht_tiles)
+  add_dependencies(trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)
-  add_dependencies(run-multipoint_routes utrecht_tiles)
-  add_dependencies(run-reach utrecht_tiles)
-  add_dependencies(run-shape_attributes utrecht_tiles)
-  add_dependencies(run-summary utrecht_tiles)
-  add_dependencies(run-urban utrecht_tiles)
-  add_dependencies(run-thor_worker utrecht_tiles)
-  add_dependencies(run-recover_shortcut utrecht_tiles)
-  add_dependencies(run-minbb utrecht_tiles)
-  add_dependencies(run-astar_bikeshare paris_bss_tiles)
-  add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
-  add_dependencies(run-alternates utrecht_tiles)
-  add_dependencies(run-tar_index utrecht_tiles)
-  add_dependencies(run-graphtile utrecht_tiles)
-  add_dependencies(run-graphbuilder build_timezones)
+  add_dependencies(multipoint_routes utrecht_tiles)
+  add_dependencies(reach utrecht_tiles)
+  add_dependencies(shape_attributes utrecht_tiles)
+  add_dependencies(summary utrecht_tiles)
+  add_dependencies(urban utrecht_tiles)
+  add_dependencies(thor_worker utrecht_tiles)
+  add_dependencies(recover_shortcut utrecht_tiles)
+  add_dependencies(minbb utrecht_tiles)
+  add_dependencies(worker_nullptr_tiles whitelion_tiles)
+  add_dependencies(multimodal_astar paris_bss_tiles utrecht_tiles)
+  add_dependencies(astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
+  add_dependencies(alternates utrecht_tiles)
+  add_dependencies(tar_index utrecht_tiles)
+  add_dependencies(graphtile utrecht_tiles)
+  add_dependencies(graphbuilder build_timezones)
   if(ENABLE_HTTP AND ENABLE_SERVICES)
-    # http_tiles needs the proper .tar file with index.bin
-    add_dependencies(run-http_tiles utrecht_tiles run-scripts)
+    # http_tiles needs the proper .tar file with index.bin; run-scripts is a run-time setup step
+    add_dependencies(http_tiles utrecht_tiles)
+    add_dependencies(run-http_tiles run-scripts)
   endif()
 endif()
 
 if(ENABLE_SERVICES)
-  add_dependencies(run-skadi_service test_directories)
+  add_dependencies(skadi_service test_directories)
 endif()
 
 # ENABLE_DATA_TOOLS is needed for utrecht_tiles
 if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
+  # Prefer .venv Python if available (better compatibility with DYLD_INSERT_LIBRARIES on macOS)
+  set(TEST_PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
+  if(EXISTS "${VALHALLA_SOURCE_DIR}/.venv/bin/python3")
+    set(TEST_PYTHON_EXECUTABLE "${VALHALLA_SOURCE_DIR}/.venv/bin/python3")
+    message(STATUS "Using .venv Python for tests: ${TEST_PYTHON_EXECUTABLE}")
+  endif()
+
+  # Find ASan runtime library for LD_PRELOAD (if sanitizers are enabled)
+  # This approach avoids false positives from NumPy's internal allocations by preloading
+  # the ASan runtime before Python starts, allowing ASan to intercept all allocations.
+  # On Linux, both libasan and the C++ standard library must be preloaded together.
+  # See: https://github.com/wjakob/nanobind/blob/master/docs/lowlevel.rst#sanitizing-python-sessions
+  # LD_PRELOAD/DYLD_INSERT_LIBRARIES are POSIX-only; skip on Windows.
+  set(ASAN_PRELOAD_ENV "")
+  if(ENABLE_SANITIZERS AND NOT WIN32)
+    # Step 1: Find ASan library (try Clang naming, then GCC naming on Linux)
+    if(APPLE)
+      set(san_candidates "libclang_rt.asan_osx_dynamic.dylib")
+    else()
+      set(san_candidates "libclang_rt.asan.so" "libasan.so")
+    endif()
+
+    foreach(san_libname ${san_candidates})
+      execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${san_libname}
+        OUTPUT_VARIABLE san_libpath
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      # Check if we got a real path (not just the input echoed back)
+      if(san_libpath AND NOT san_libpath STREQUAL san_libname)
+        break()  # Found it
+      endif()
+    endforeach()
+
+    if(san_libpath AND NOT san_libpath STREQUAL san_libname)
+      # Step 2: On Linux, also find C++ standard library (libstdc++ or libc++)
+      if(NOT APPLE)
+        foreach(cxx_libname "libstdc++.so" "libc++.so")
+          execute_process(
+            COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${cxx_libname}
+            OUTPUT_VARIABLE cxx_libpath
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+          )
+          if(cxx_libpath AND NOT cxx_libpath STREQUAL cxx_libname)
+            break()  # Found it
+          endif()
+        endforeach()
+
+        if(cxx_libpath AND NOT cxx_libpath STREQUAL cxx_libname)
+          set(ASAN_PRELOAD_ENV "LD_PRELOAD=${san_libpath}:${cxx_libpath}")
+        else()
+          message(WARNING "Could not find libstdc++.so or libc++.so. Python tests may fail with __cxa_throw errors.")
+          set(ASAN_PRELOAD_ENV "LD_PRELOAD=${san_libpath}")
+        endif()
+      else()
+        # macOS: Only ASan library needed
+        set(ASAN_PRELOAD_ENV "DYLD_INSERT_LIBRARIES=${san_libpath}")
+      endif()
+      message(STATUS "Python tests will use sanitizer preload: ${ASAN_PRELOAD_ENV}")
+    else()
+      message(WARNING "Sanitizers enabled but ASan runtime not found. Python tests may fail.")
+    endif()
+  endif()
+
+  # Build environment variables into bash export statements
+  # We use bash for output redirection/error handling, so we export variables within bash
+  set(PYTHON_TEST_EXPORTS "export LOCPATH=${VALHALLA_SOURCE_DIR}/locales; export PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python;")
+
+  # Add sanitizer-specific options only when sanitizers are enabled. POSIX-only
+  if(ENABLE_SANITIZERS AND NOT WIN32)
+    set(PYTHON_TEST_EXPORTS "${PYTHON_TEST_EXPORTS} export ASAN_OPTIONS=detect_leaks=0:symbolize=1;")
+    # Add preload if library was found
+    if(ASAN_PRELOAD_ENV)
+      set(PYTHON_TEST_EXPORTS "${PYTHON_TEST_EXPORTS} export ${ASAN_PRELOAD_ENV};")
+    endif()
+  endif()
+
+  # Call Python with exports in a single bash command (simpler than wrapper script)
   add_custom_command(OUTPUT python_valhalla.log
-    COMMAND
-      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-      PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python
-      ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log && exit 1)"
+    COMMAND bash -cx "\
+      set -o pipefail; \
+      ${PYTHON_TEST_EXPORTS} \
+      ${TEST_PYTHON_EXECUTABLE} -m unittest discover \
+        -s ${VALHALLA_SOURCE_DIR}/test/bindings/python \
+        -v \
+      2>&1 | tee ${CMAKE_BINARY_DIR}/test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_config.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_graph_utils.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_predicted_speeds.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
       _valhalla
-      graph_utils
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
   set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")
@@ -397,7 +586,7 @@ if(ENABLE_NODE_BINDINGS AND ENABLE_DATA_TOOLS)
       COMMAND
         ${ASAN_PRELOAD}
         NODE_PATH=${CMAKE_BINARY_DIR}/src/bindings/nodejs/lib
-        /bin/bash -cx "${NODE_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/tests.js > ${CMAKE_BINARY_DIR}/test/nodejs_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/nodejs_valhalla.log && exit 1)"
+        bash -cx "${NODE_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/tests.js > ${CMAKE_BINARY_DIR}/test/nodejs_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/nodejs_valhalla.log && exit 1)"
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       DEPENDS
         ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/tests.js

@@ -38,14 +38,14 @@ public:
   }
 
   bool Allowed(const DirectedEdge* edge,
-               const bool /*is_dest*/,
                const EdgeLabel& pred,
                const graph_tile_ptr& /*tile*/,
                const GraphId& edgeid,
                const uint64_t /*current_time*/,
                const uint32_t /*tz_index*/,
                uint8_t& /*restriction_idx*/,
-               uint8_t& /*destonly_access_restr_mask*/) const override {
+               uint8_t& /*destonly_access_restr_mask*/,
+               bool* /*edge_destonly*/) const override {
     if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
@@ -63,7 +63,8 @@ public:
                       const uint64_t /*current_time*/,
                       const uint32_t /*tz_index*/,
                       uint8_t& /*restriction_idx*/,
-                      uint8_t& /*destonly_access_restr_mask*/) const override {
+                      uint8_t& /*destonly_access_restr_mask*/,
+                      bool* /*edge_destonly*/) const override {
     if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
@@ -93,8 +94,8 @@ public:
                       const NodeInfo* /*node*/,
                       const EdgeLabel& /*pred*/,
                       const graph_tile_ptr& /*tile*/,
-                      const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/
-  ) const override {
+                      const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
+                      const bool /*edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -102,11 +103,12 @@ public:
                              const NodeInfo* /*node*/,
                              const DirectedEdge* /*opp_edge*/,
                              const DirectedEdge* /*opp_pred_edge*/,
+                             const EdgeLabel& /*pred_label*/,
                              const graph_tile_ptr& /*tile*/,
-                             const baldr::GraphId& /*edge_id*/,
                              const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
                              const bool /*has_measured_speed*/,
-                             const InternalTurn /*internal_turn*/) const override {
+                             const InternalTurn /*internal_turn*/,
+                             const bool /*opp_edge_destonly*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -223,7 +225,7 @@ TEST(Matrix, test_matrix) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -308,7 +310,7 @@ TEST(Matrix, test_timedistancematrix_forward) {
   Api request;
   ParseApi(test_request_more_sources, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -359,7 +361,7 @@ TEST(Matrix, test_timedistancematrix_reverse) {
   Api request;
   ParseApi(test_request_more_sources, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -396,7 +398,7 @@ TEST(Matrix, test_matrix_osrm) {
   ParseApi(test_request_osrm, Options::sources_to_targets, request);
 
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -438,7 +440,7 @@ TEST(Matrix, partial_matrix) {
   Api request;
   ParseApi(test_request_partial, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  thor_worker_t::adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_locations(request);
 
   GraphReader reader(cfg.get_child("mjolnir"));
 
@@ -486,7 +488,7 @@ TEST(Matrix, default_matrix) {
   EXPECT_TRUE(json.HasMember("sources_to_targets"));
 
   // contains 10 keys
-  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 10);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 11);
 
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("distance"));
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("time"));
@@ -565,6 +567,133 @@ TEST(Matrix, slim_matrix) {
   EXPECT_FALSE(json.HasMember("sources"));
   EXPECT_FALSE(json.HasMember("targets"));
   EXPECT_TRUE(json.HasMember("units"));
+}
+
+class TestCostMatrix : public thor::CostMatrix {
+public:
+  explicit TestCostMatrix(const boost::property_tree::ptree& pt = {}) : thor::CostMatrix(pt) {
+    EXPECT_EQ(pt.get<int>("costmatrix.max_reserved_locations", 25), max_reserved_locations_count_);
+    EXPECT_EQ(pt.get<int>("max_reserved_labels_count_bidir_dijkstras", 2e6),
+              max_reserved_labels_count_);
+    EXPECT_EQ(pt.get<bool>("clear_reserved_memory", false), clear_reserved_memory_);
+  }
+
+  void Clear() {
+    // grab the sizes before clearing
+    decltype(locs_count_) location_counts = locs_count_;
+
+    // the number of edge labels for each expansion
+    std::vector<std::vector<size_t>> edgelabel_counts;
+    for (const size_t is_fwd : {0, 1}) {
+      auto& counts = edgelabel_counts.emplace_back();
+      for (size_t i = 0; i < locs_count_[is_fwd]; ++i) {
+        counts.push_back(edgelabel_[is_fwd][i].size());
+      }
+    }
+
+    // now we can clear
+    CostMatrix::Clear();
+
+    if (clear_reserved_memory_) {
+      for (const size_t is_fwd : {0, 1}) {
+        EXPECT_EQ(edgelabel_[is_fwd].capacity(), 0);
+        EXPECT_EQ(astar_heuristics_[is_fwd].capacity(), 0);
+        EXPECT_EQ(adjacency_[is_fwd].capacity(), 0);
+        EXPECT_EQ(edgestatus_[is_fwd].capacity(), 0);
+      }
+    } else {
+      for (const size_t is_fwd : {0, 1}) {
+        size_t expected_location_count =
+            std::min(location_counts[is_fwd], max_reserved_locations_count_);
+        EXPECT_EQ(edgelabel_[is_fwd].capacity(), expected_location_count);
+        EXPECT_EQ(astar_heuristics_[is_fwd].capacity(), expected_location_count);
+        EXPECT_EQ(adjacency_[is_fwd].capacity(), expected_location_count);
+        EXPECT_EQ(edgestatus_[is_fwd].capacity(), expected_location_count);
+
+        for (size_t i = 0; i < expected_location_count; ++i) {
+          EXPECT_EQ(edgelabel_[is_fwd][i].capacity(), (size_t)max_reserved_labels_count_);
+        }
+      }
+    }
+  }
+  using CostMatrix::clear_reserved_memory_;
+  using CostMatrix::locs_count_;
+  using CostMatrix::max_reserved_labels_count_;
+  using CostMatrix::max_reserved_locations_count_;
+};
+
+TEST(StandAlone, MatrixReservationsDefault) {
+  boost::property_tree::ptree conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+  loki::loki_worker_t loki_worker(conf);
+  TestCostMatrix matrix(conf.get_child("mjolnir"));
+  EXPECT_EQ(matrix.max_reserved_labels_count_, 2e6);
+  EXPECT_EQ(matrix.max_reserved_locations_count_, 25);
+  EXPECT_EQ(matrix.clear_reserved_memory_, false);
+  Api request;
+  ParseApi(test_request, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_locations(request);
+
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
+  GraphReader reader(cfg.get_child("mjolnir"));
+  matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  EXPECT_EQ(matrix.locs_count_[0], 4);
+  EXPECT_EQ(matrix.locs_count_[1], 4);
+  matrix.Clear();
+}
+
+TEST(StandAlone, MatrixReservationsSmall) {
+  boost::property_tree::ptree conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+
+  conf.put("mjolnir.costmatrix.max_reserved_locations", "1");
+  conf.put("mjolnir.max_reserved_labels_count_bidir_dijkstras", "20");
+
+  loki::loki_worker_t loki_worker(conf);
+  TestCostMatrix matrix(conf.get_child("mjolnir"));
+  EXPECT_EQ(matrix.max_reserved_labels_count_, 20);
+  EXPECT_EQ(matrix.max_reserved_locations_count_, 1);
+  EXPECT_EQ(matrix.clear_reserved_memory_, false);
+
+  Api request;
+  ParseApi(test_request, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_locations(request);
+
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
+  GraphReader reader(cfg.get_child("mjolnir"));
+  matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  matrix.Clear();
+}
+
+TEST(StandAlone, MatrixNoReservations) {
+  boost::property_tree::ptree conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+
+  conf.put("mjolnir.clear_reserved_memory", "1");
+
+  loki::loki_worker_t loki_worker(conf);
+  TestCostMatrix matrix(conf.get_child("mjolnir"));
+  EXPECT_EQ(matrix.max_reserved_labels_count_, 2e6);
+  EXPECT_EQ(matrix.max_reserved_locations_count_, 25);
+  EXPECT_EQ(matrix.clear_reserved_memory_, true);
+
+  Api request;
+  ParseApi(test_request, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_locations(request);
+
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
+  GraphReader reader(cfg.get_child("mjolnir"));
+  matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  matrix.Clear();
 }
 
 /**************************************************************************************************/

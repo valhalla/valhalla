@@ -16,10 +16,7 @@ jobs:
     name: Publish tzdb on GHA artifacts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
-          fetch-depth: 0
+      - uses: actions/checkout@v6
 
       - name: Compile tzdb
         shell: bash

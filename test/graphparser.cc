@@ -37,6 +37,8 @@ std::string access_file = "test_access.bin";
 std::string from_restriction_file = "test_from_complex_restrictions.bin";
 std::string to_restriction_file = "test_to_complex_restrictions.bin";
 std::string bss_nodes_file = "test_bss_nodes.bin";
+std::string edge_shapes_file = "test_edge_shapes.bin";
+std::string edge_node_ids_file = "test_edge_node_ids.bin";
 std::string linguistic_node_file = "test_linguistic_node.bin";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
@@ -73,37 +75,6 @@ void DoConfig() {
   file.close();
 }
 
-// must do clean up here vs TearDown() as we are building data
-// in the same directory multiple times
-void CleanUp() {
-  if (std::filesystem::exists(ways_file))
-    std::filesystem::remove(ways_file);
-
-  if (std::filesystem::exists(way_nodes_file))
-    std::filesystem::remove(way_nodes_file);
-
-  if (std::filesystem::exists(nodes_file))
-    std::filesystem::remove(nodes_file);
-
-  if (std::filesystem::exists(edges_file))
-    std::filesystem::remove(edges_file);
-
-  if (std::filesystem::exists(access_file))
-    std::filesystem::remove(access_file);
-
-  if (std::filesystem::exists(from_restriction_file))
-    std::filesystem::remove(from_restriction_file);
-
-  if (std::filesystem::exists(to_restriction_file))
-    std::filesystem::remove(to_restriction_file);
-
-  if (std::filesystem::exists(bss_nodes_file))
-    std::filesystem::remove(bss_nodes_file);
-
-  if (std::filesystem::exists(linguistic_node_file))
-    std::filesystem::remove(linguistic_node_file);
-}
-
 void BollardsGatesAndAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(config_file, conf);
@@ -122,10 +93,10 @@ void BollardsGatesAndAccess(const std::string& config_file) {
                              way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   // bus access tests.
   auto way_85744121 = GetWay(85744121, ways);
@@ -253,8 +224,6 @@ void BollardsGatesAndAccess(const std::string& config_file) {
 
   EXPECT_TRUE((bike_network & kMcn) && (bike_network & kRcn) && way_75786176.bike_network() == 0)
       << "rcn and mtb not marked on way 75786176.";
-
-  CleanUp();
 }
 
 void RemovableBollards(const std::string& config_file) {
@@ -274,7 +243,7 @@ void RemovableBollards(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   // Is a bollard=rising is saved as a gate...with foot flag and bike set.
   auto node = GetNode(2425784125, way_nodes);
@@ -283,8 +252,6 @@ void RemovableBollards(const std::string& config_file) {
   EXPECT_EQ(node.access(), kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
                                kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
                                kBicycleAccess | kMopedAccess | kMotorcycleAccess);
-
-  CleanUp();
 }
 
 void Exits(const std::string& config_file) {
@@ -304,7 +271,7 @@ void Exits(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   auto node = GetNode(33698177, way_nodes);
   EXPECT_TRUE(node.intersection());
@@ -321,8 +288,6 @@ void Exits(const std::string& config_file) {
   EXPECT_TRUE(node.intersection());
   EXPECT_EQ(osmdata.node_names.name(node.exit_to_index()), "PA441")
       << "node exit_to not set correctly .";
-
-  CleanUp();
 }
 
 void Baltimore(const std::string& config_file) {
@@ -342,7 +307,7 @@ void Baltimore(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   // bike_forward and reverse is set to false by default.  Meaning defaults for
   // highway = pedestrian.  Bike overrides bicycle=designated and/or cycleway=shared_lane
@@ -413,7 +378,7 @@ void Baltimore(const std::string& config_file) {
   EXPECT_TRUE(way_192573108.bike_backward());
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false, true);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
   auto node = GetNode(49473254, way_nodes);
 
   EXPECT_TRUE(node.intersection()) << "Toll Booth 49473254";
@@ -435,8 +400,6 @@ void Baltimore(const std::string& config_file) {
     } else
       FAIL() << "98040438 restriction test failed.";
   }
-
-  CleanUp();
 }
 
 void Bike(const std::string& config_file) {
@@ -456,7 +419,7 @@ void Bike(const std::string& config_file) {
                              bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   // http://www.openstreetmap.org/way/6885577#map=14/51.9774/5.7718
   // direction of this way for oneway is flipped.  Confirmed on opencyclemap.org.
@@ -519,8 +482,6 @@ void Bike(const std::string& config_file) {
   EXPECT_TRUE(way_156539491.bus_backward());
   EXPECT_TRUE(way_156539491.moped_forward());
   EXPECT_TRUE(way_156539491.bike_backward());
-
-  CleanUp();
 }
 
 void Bus(const std::string& config_file) {
@@ -539,7 +500,7 @@ void Bus(const std::string& config_file) {
                              way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   auto way_14327599 = GetWay(14327599, ways);
   EXPECT_FALSE(way_14327599.auto_forward());
@@ -588,8 +549,6 @@ void Bus(const std::string& config_file) {
   EXPECT_FALSE(way_225895737.moped_backward());
   EXPECT_FALSE(way_225895737.bus_backward());
   EXPECT_FALSE(way_225895737.bike_backward());
-
-  CleanUp();
 }
 
 void BicycleTrafficSignals(const std::string& config_file) {
@@ -608,7 +567,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
                              way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  way_nodes.sort(node_predicate);
+  way_nodes.sort(node_predicate, 2);
 
   auto node = GetNode(42439096, way_nodes);
   EXPECT_TRUE(node.intersection());
@@ -625,8 +584,6 @@ void BicycleTrafficSignals(const std::string& config_file) {
     EXPECT_FALSE(node.intersection())
       << "Bike rental at a shop not marked as intersection."
   */
-
-  CleanUp();
 }
 
 TEST(GraphParser, TestBollardsGatesAndAccess) {
@@ -690,7 +647,8 @@ TEST(GraphParser, TestImportBssNode) {
                                edges_file);
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
+                      edge_shapes_file, edge_node_ids_file, from_restriction_file,
+                      to_restriction_file, linguistic_node_file, tiles);
 
   BssBuilder::Build(conf, osmdata, bss_nodes_file);
 
@@ -727,7 +685,7 @@ TEST(GraphParser, TestImportBssNode) {
     auto search = taggedValue.equal_range(valhalla::baldr::TaggedValue::kBssInfo);
     ASSERT_NE(search.first, search.second) << "BSS Tag TaggedValue::kBssInfo not found in EdgeInfo";
     valhalla::BikeShareStationInfo bss_station_info;
-    bss_station_info.ParseFromString(search.first->second);
+    ASSERT_TRUE(bss_station_info.ParseFromString(search.first->second));
 
     ASSERT_EQ(bss_station_info.ref(), "2");
     ASSERT_EQ(bss_station_info.network(), "Atac Bikesharing");
@@ -760,7 +718,6 @@ TEST(GraphParser, TestImportBssNode) {
                        kPedestrianAccess);
   check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 2), kPedestrianAccess,
                        kBicycleAccess);
-  CleanUp();
 }
 
 } // namespace
@@ -772,6 +729,13 @@ public:
   }
 
   void TearDown() override {
+    // runs after every test body has returned, so the sequences are closed and
+    // these unlink cleanly on all platforms
+    for (const auto& f : {ways_file, way_nodes_file, nodes_file, edges_file, access_file,
+                          from_restriction_file, to_restriction_file, bss_nodes_file,
+                          linguistic_node_file, edge_shapes_file, edge_node_ids_file}) {
+      std::filesystem::remove(f);
+    }
   }
 };
 

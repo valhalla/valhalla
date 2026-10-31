@@ -45,6 +45,7 @@ cp src/bindings/nodejs/README.md valhalla-npm-package/
 cp src/bindings/nodejs/.npmignore valhalla-npm-package/
 cp -rp src/bindings/nodejs/lib valhalla-npm-package/
 cp -rp src/bindings/nodejs/bin valhalla-npm-package/
+cp -rp proto valhalla-npm-package/
 
 for exe in valhalla_build_config valhalla_build_elevation valhalla_build_extract valhalla_build_timezones valhalla_get_elevation; do
   cp -p scripts/${exe} valhalla-npm-package/

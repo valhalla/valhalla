@@ -526,7 +526,7 @@ TEST(Standalone, MultiEdgeSteps) {
 }
 /****************************************************************************************/
 
-class Levels : public ::testing::Test {
+class TestLevels : public ::testing::Test {
 protected:
   static gurka::map map;
   static std::string ascii_map;
@@ -556,11 +556,11 @@ protected:
   }
 };
 
-gurka::map Levels::map = {};
-std::string Levels::ascii_map = {};
-gurka::nodelayout Levels::layout = {};
+gurka::map TestLevels::map = {};
+std::string TestLevels::ascii_map = {};
+gurka::nodelayout TestLevels::layout = {};
 
-TEST_F(Levels, EdgeInfoIncludes) {
+TEST_F(TestLevels, EdgeInfoIncludes) {
   baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
 
   std::vector<std::pair<std::array<std::string, 2>, std::vector<float>>> values = {
@@ -586,7 +586,7 @@ TEST_F(Levels, EdgeInfoIncludes) {
   }
 }
 
-TEST_F(Levels, EdgeInfoJson) {
+TEST_F(TestLevels, EdgeInfoJson) {
   auto graphreader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
   std::vector<std::string> locs = {
@@ -600,7 +600,7 @@ TEST_F(Levels, EdgeInfoJson) {
       "s", // HI
       "r", // IJ
   };
-  auto result =
+  [[maybe_unused]] auto result =
       gurka::do_action(valhalla::Options::locate, map, locs, "pedestrian", {}, graphreader, &json);
 
   std::unordered_map<std::string, std::vector<range_t>> expected_levels_map = {
@@ -699,4 +699,50 @@ TEST(StandAlone, GenericLevelChange) {
   // int maneuver_index = 0;
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, 1, "Continue to Level 1.", "", "",
                                                             "", "");
+}
+
+TEST(StandAlone, ElevatorNodeReverseSearchAcrossTiles) {
+  constexpr double gridsize_metres = 100;
+
+  // C and D lie west of the prime meridian, A, B and E east of it, so the tile boundary cuts the
+  // corridor CA in half: the elevator node A and its neighbour C end up in different tiles.
+  const std::string ascii_map = R"(
+      C---A---B
+      |       |
+      |       |
+      |       |
+      |       |
+      D-------E
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+      {"CA", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "0"}}},
+      {"CD", {{"highway", "corridor"}, {"indoor", "yes"}}},
+      {"DE", {{"highway", "corridor"}, {"indoor", "yes"}}},
+      {"EB", {{"highway", "corridor"}, {"indoor", "yes"}}},
+  };
+
+  const gurka::nodes nodes = {
+      {"A", {{"highway", "elevator"}, {"indoor", "yes"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-.001, .01});
+  auto map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_elevator_cross_tile", build_config);
+
+  // both directions of CA, one per tile
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  ASSERT_NE(std::get<0>(gurka::findEdge(reader, layout, "CA", "A")).tileid(),
+            std::get<0>(gurka::findEdge(reader, layout, "CA", "C")).tileid());
+  ASSERT_EQ(reader.nodeinfo(gurka::findNode(reader, layout, "A"))->type(),
+            baldr::NodeType::kElevator);
+
+  // arrive_by walks the search backwards from C: over the elevator node A it needs the levels of
+  // CA, which the tile of A does not hold. The penalty then pushes the route around via D and E.
+  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "C"}, "pedestrian",
+                                 {{"/date_time/type", "2"},
+                                  {"/date_time/value", "2024-01-01T10:00"},
+                                  {"/costing_options/pedestrian/elevator_penalty", "400"}});
+  gurka::assert::raw::expect_path(result, {"EB", "DE", "CD"});
 }

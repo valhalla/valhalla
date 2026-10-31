@@ -1,13 +1,6 @@
 #include "meili/transition_cost_model.h"
 #include "meili/routing.h"
 
-namespace {
-inline float GreatCircleDistance(const valhalla::meili::Measurement& left,
-                                 const valhalla::meili::Measurement& right) {
-  return left.lnglat().Distance(right.lnglat());
-}
-} // namespace
-
 namespace valhalla {
 namespace meili {
 
@@ -77,8 +70,8 @@ float TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) co
     const auto& left_measurement = container_.measurement(lhs.time());
     const auto& right_measurement = container_.measurement(rhs.time());
     return CalculateTransitionCost(label->turn_cost(), label->cost().cost,
-                                   GreatCircleDistance(left_measurement, right_measurement),
-                                   label->cost().secs, ClockDistance(lhs.time(), rhs.time()));
+                                   left_measurement.distance(right_measurement), label->cost().secs,
+                                   ClockDistance(lhs.time(), rhs.time()));
   }
 
   // No path found
@@ -111,23 +104,23 @@ void TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) co
 
   // Prepare locations and stateids
   const auto& right_column = container_.column(right.stateid().time());
-  std::vector<baldr::PathLocation> locations;
+  std::vector<const Location*> locations;
   locations.reserve(1 + right_column.size());
-  locations.push_back(left.candidate());
+  locations.push_back(&left.candidate());
   LOG_TRACE("Routing from: " + std::to_string(left.stateid().time()) + "." +
             std::to_string(left.stateid().id()) + " [" +
-            std::to_string(locations.back().edges.front().projected.lng()) + "," +
-            std::to_string(locations.back().edges.front().projected.lat()) + "],");
+            std::to_string(locations.back()->correlation().edges().begin()->ll().lng()) + "," +
+            std::to_string(locations.back()->correlation().edges().begin()->ll().lat()) + "],");
   std::vector<StateId> unreached_stateids;
   unreached_stateids.reserve(right_column.size());
   for (const auto& state : right_column) {
     // if (!vs_.Predecessor(state.stateid()).IsValid()) {
-    locations.push_back(state.candidate());
+    locations.push_back(&state.candidate());
     unreached_stateids.push_back(state.stateid());
     LOG_TRACE("Routing to: " + std::to_string(state.stateid().time()) + "." +
               std::to_string(state.stateid().id()) + "   [" +
-              std::to_string(locations.back().edges.front().projected.lng()) + "," +
-              std::to_string(locations.back().edges.front().projected.lat()) + "],");
+              std::to_string(locations.back()->correlation().edges().begin()->ll().lng()) + "," +
+              std::to_string(locations.back()->correlation().edges().begin()->ll().lat()) + "],");
     //}
   }
 
@@ -137,7 +130,7 @@ void TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) co
   const midgard::DistanceApproximator<midgard::PointLL> approximator(right_measurement.lnglat());
 
   auto max_route_distance =
-      std::min(GreatCircleDistance(left_measurement, right_measurement) * max_route_distance_factor_,
+      std::min(left_measurement.distance(right_measurement) * max_route_distance_factor_,
                breakage_distance_);
   // Route, we have to make sure that the max distance is greater
   // than 0 otherwise we wont be able to get any labels into the

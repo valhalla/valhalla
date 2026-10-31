@@ -1,4 +1,6 @@
 #include "loki/worker.h"
+#include "exceptions.h"
+#include "loki/linear_cost_factors.h"
 #include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
@@ -6,6 +8,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
+#include <format>
 #include <functional>
 #include <stdexcept>
 #include <string>
@@ -17,8 +20,86 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
 
+namespace {
+constexpr std::string_view kDefaultMaxAge = "1800";
+}
+
 namespace valhalla {
 namespace loki {
+std::pair<bool, bool> loki_worker_t::parse_location(valhalla::Location& location) {
+  // we need to support both `minimum_reachability` and its directed (inbound/outbound) variants
+  std::pair<bool, bool> modified_search_cutoff{false, false};
+  bool has_reachability =
+      (location.has_minimum_reachability_case() || location.has_minimum_inbound_reachability_case() ||
+       location.has_minimum_outbound_reachability_case());
+  bool has_direction_agnostic_reachability = location.has_minimum_reachability_case();
+
+  location.set_minimum_inbound_reachability(
+      !has_reachability
+          ? default_reachability
+          : std::min(has_direction_agnostic_reachability ? location.minimum_reachability()
+                                                         : location.minimum_inbound_reachability(),
+                     max_reachability));
+
+  location.set_minimum_outbound_reachability(
+      !has_reachability
+          ? default_reachability
+          : std::min(has_direction_agnostic_reachability ? location.minimum_reachability()
+                                                         : location.minimum_outbound_reachability(),
+                     max_reachability));
+
+  if (!location.has_radius_case())
+    location.set_radius(default_radius);
+  else if (location.radius() > max_radius)
+    location.set_radius(max_radius);
+
+  if (!location.has_heading_tolerance_case())
+    location.set_heading_tolerance(default_heading_tolerance);
+
+  if (!location.has_node_snap_tolerance_case())
+    location.set_node_snap_tolerance(default_node_snap_tolerance);
+
+  const bool has_level =
+      location.has_search_filter() && location.search_filter().level() != baldr::kMaxLevel;
+
+  if (!location.has_search_cutoff_case() && !has_level) {
+    // no level and no cutoff, provide regular default
+    location.set_search_cutoff(default_search_cutoff);
+  } else if (location.has_search_cutoff_case() && has_level) {
+    // level and cutoff, clamp value to limit candidate search in case of bogus level input
+    if (location.search_cutoff() > kMaxIndoorSearchCutoff) {
+      modified_search_cutoff.second = true;
+      location.set_search_cutoff(kMaxIndoorSearchCutoff);
+    }
+  } else if (!location.has_search_cutoff_case() && has_level) {
+    // level and no cutoff, set special default
+    location.set_search_cutoff(kDefaultIndoorSearchCutoff);
+    modified_search_cutoff.first = true;
+  }
+  // if there is a level search filter and
+  if (!location.has_street_side_tolerance_case())
+    location.set_street_side_tolerance(default_street_side_tolerance);
+
+  if (!location.has_street_side_cutoff_case())
+    location.set_street_side_cutoff(valhalla::RoadClass::kServiceOther);
+
+  if (!location.has_street_side_max_distance_case())
+    location.set_street_side_max_distance(default_street_side_max_distance);
+
+  if (!location.has_search_filter() || !location.search_filter().has_min_road_class_case())
+    location.mutable_search_filter()->set_min_road_class(valhalla::RoadClass::kServiceOther);
+  if (!location.search_filter().has_max_road_class_case())
+    location.mutable_search_filter()->set_max_road_class(valhalla::RoadClass::kMotorway);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_exclude_closures_case())
+    location.mutable_search_filter()->set_exclude_closures(true);
+  if (!location.search_filter().has_level())
+    location.mutable_search_filter()->set_level(baldr::kMaxLevel);
+
+  return modified_search_cutoff;
+}
+
 void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
                                     Api& request,
                                     std::optional<valhalla_exception_t> required_exception) {
@@ -26,45 +107,7 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 
   if (locations->size()) {
     for (auto& location : *locations) {
-      if (!location.has_minimum_reachability_case())
-        location.set_minimum_reachability(default_reachability);
-      else if (location.minimum_reachability() > max_reachability)
-        location.set_minimum_reachability(max_reachability);
-
-      if (!location.has_radius_case())
-        location.set_radius(default_radius);
-      else if (location.radius() > max_radius)
-        location.set_radius(max_radius);
-
-      if (!location.has_heading_tolerance_case())
-        location.set_heading_tolerance(default_heading_tolerance);
-
-      if (!location.has_node_snap_tolerance_case())
-        location.set_node_snap_tolerance(default_node_snap_tolerance);
-
-      const bool has_level =
-          location.has_search_filter() && location.search_filter().level() != baldr::kMaxLevel;
-
-      if (!location.has_search_cutoff_case() && !has_level) {
-        // no level and no cutoff, provide regular default
-        location.set_search_cutoff(default_search_cutoff);
-      } else if (location.has_search_cutoff_case() && has_level) {
-        // level and cutoff, clamp value to limit candidate search in case of bogus level input
-        if (location.search_cutoff() > kMaxIndoorSearchCutoff) {
-          has_303 = true;
-          location.set_search_cutoff(kMaxIndoorSearchCutoff);
-        }
-      } else if (!location.has_search_cutoff_case() && has_level) {
-        // level and no cutoff, set special default
-        location.set_search_cutoff(kDefaultIndoorSearchCutoff);
-        has_302 = true;
-      }
-      // if there is a level search filter and
-      if (!location.has_street_side_tolerance_case())
-        location.set_street_side_tolerance(default_street_side_tolerance);
-
-      if (!location.has_street_side_max_distance_case())
-        location.set_street_side_max_distance(default_street_side_max_distance);
+      std::tie(has_302, has_303) = parse_location(location);
     }
     if (has_302)
       add_warning(request, 302, std::to_string(kDefaultIndoorSearchCutoff));
@@ -106,18 +149,19 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     // For the begin and end of multimodal we expect you to be walking
     if (options.costing_type() == Costing::multimodal) {
       options.set_costing_type(Costing::pedestrian);
-      costing = factory.Create(options);
+      mode_costing = factory.CreateModeCosting(options, mode);
       options.set_costing_type(Costing::multimodal);
     } // otherwise use the provided costing
     else {
-      costing = factory.Create(options);
+      mode_costing = factory.CreateModeCosting(options, mode);
     }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   if (options.exclude_polygons_size()) {
-    const auto edges =
-        edges_in_rings(options.exclude_polygons(), *reader, costing, max_exclude_polygons_length);
+    const auto edges = edges_in_rings(options, *reader, mode_costing[static_cast<size_t>(mode)],
+                                      max_exclude_polygons_length, max_exclude_polygons_vertices);
     auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
+    co.mutable_exclude_edges()->Reserve(edges.size());
     for (const auto& edge_id : edges) {
       auto* avoid = co.add_exclude_edges();
       avoid->set_id(edge_id);
@@ -133,25 +177,26 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       throw valhalla_exception_t{157, std::to_string(max_exclude_locations)};
     }
     try {
-      auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
-      auto results = loki::Search(exclude_locations, *reader, costing);
+      parse_locations(options.mutable_exclude_locations(), api);
+      search_.search(*options.mutable_exclude_locations(), mode_costing[static_cast<size_t>(mode)]);
+      search_.clear();
       std::unordered_set<uint64_t> avoids;
       auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
-      for (const auto& result : results) {
-        for (const auto& edge : result.second.edges) {
-          auto inserted = avoids.insert(edge.id);
+      for (const auto& result : options.exclude_locations()) {
+        for (const auto& edge : result.correlation().edges()) {
+          auto inserted = avoids.insert(GraphId(edge.graph_id()));
 
           // If this edge Id was inserted add it to the request options (along with percent along)
           // Also insert shortcut edge if one includes this edge
           if (inserted.second) {
             // Add edge and percent along to pbf
             auto* avoid = co.add_exclude_edges();
-            avoid->set_id(edge.id);
-            avoid->set_percent_along(edge.percent_along);
+            avoid->set_id(GraphId(edge.graph_id()));
+            avoid->set_percent_along(edge.percent_along());
 
             // Check if a shortcut exists
-            GraphId shortcut = reader->GetShortcut(edge.id);
-            if (shortcut.Is_Valid()) {
+            GraphId shortcut = reader->GetShortcut(GraphId(edge.graph_id()));
+            if (shortcut.is_valid()) {
               // Check if this shortcut has not been added
               auto shortcut_inserted = avoids.insert(shortcut);
               if (shortcut_inserted.second) {
@@ -172,6 +217,8 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   }
 
+  resolve_linear_cost_factors(api);
+
   // If more alternates are requested than we support we cap it
   if (options.action() != Options::trace_attributes && options.alternates() > max_alternates)
     options.set_alternates(max_alternates);
@@ -179,11 +226,81 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     options.set_alternates(max_trace_alternates);
 }
 
+/**
+ * resolves user supplied  features into
+ * the edges they cover. A none costing is used on purpose: the features describe geometry, not
+ * something the requested mode has to be able to travel on.
+ */
+void loki_worker_t::resolve_linear_cost_factors(Api& api) {
+
+  auto& options = *api.mutable_options();
+
+  // nothing to do
+  if (options.cost_factor_lines().empty()) {
+    return;
+  }
+
+  // first correlate the end points
+  google::protobuf::RepeatedPtrField<Location> endpoints;
+  endpoints.Reserve(2 * options.cost_factor_lines_size());
+
+  for (const auto& line : options.cost_factor_lines()) {
+    if (line.shape().empty()) {
+      throw valhalla_exception_t{173, "feature coordinates are empty"};
+    }
+    endpoints.Add()->CopyFrom(*line.shape().begin());
+    endpoints.Add()->CopyFrom(*line.shape().rbegin());
+  }
+
+  for (auto& endpoint : endpoints) {
+    apply_trace_location_defaults(endpoint);
+    parse_location(endpoint);
+  }
+
+  // the provided lines represent subsequent edge shapes
+  // so we don't care about costing
+  auto none_costing = factory.Create(Costing::none_);
+  sif::mode_costing_t none_mode_costing;
+  const auto none_mode = none_costing->travel_mode();
+  none_mode_costing[static_cast<size_t>(none_mode)] = none_costing;
+
+  try {
+    search_.search(endpoints, none_costing);
+    search_.clear();
+  } catch (const std::exception&) {
+    throw valhalla_exception_t{173, "No edges near start/end of linear cost feature."};
+  }
+
+  int i = 0;
+  for (auto& line : *options.mutable_cost_factor_lines()) {
+    if (endpoints.at(2 * i).correlation().edges().empty() ||
+        endpoints.at(2 * i + 1).correlation().edges().empty()) {
+      throw valhalla_exception_t{173, "No edges near start/end of linear cost feature."};
+    }
+
+    // move the correlated start and end back into place
+    line.mutable_locations()->Add(std::move(endpoints.at(2 * i)));
+    line.mutable_locations()->Add(std::move(endpoints.at(2 * i + 1)));
+    ++i;
+  }
+
+  const auto failed_lines = add_cost_factor_edges(none_mode_costing, none_mode, *reader, options,
+                                                  min_linear_cost_factor, max_linear_cost_edges);
+  if (!failed_lines.empty()) {
+    std::string indices;
+    for (const auto idx : failed_lines) {
+      indices += (indices.empty() ? "" : ", ") + std::to_string(idx);
+    }
+    add_warning(api, 216, indices);
+  }
+}
+
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : service_worker_t(config), config(config),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
+      search_(*reader),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
                            ? new connectivity_map_t(config.get_child("mjolnir"), reader)
                            : nullptr),
@@ -194,7 +311,12 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")),
-      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)) {
+      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)),
+      candidate_query_(*reader,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
+
+  bbox_intersection_.reserve(1e5); // TODO: how much memory should we reserve for this?
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -203,7 +325,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (!Options_Action_Enum_Parse(path, &action)) {
       throw std::runtime_error("Action not supported " + path);
     }
-    actions.insert(action);
+    actions[action] = true;
     action_str.append("'/" + path + "' ");
   }
   // Make sure we have at least something to support!
@@ -211,19 +333,43 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     throw std::runtime_error("The config actions for Loki are incorrectly loaded");
   }
 
+  // get /tile parameters
+  size_t i = 0;
+  const auto max_road_classes = min_zoom_road_class_.size();
+  for (const auto& zoom : config.get_child("loki.service_defaults.mvt_min_zoom_road_class")) {
+    if (i >= max_road_classes) {
+      break;
+    }
+    min_zoom_road_class_[i] = zoom.second.get_value<uint32_t>();
+    if (i > 0 && min_zoom_road_class_[i] < min_zoom_road_class_[i - 1]) {
+      throw std::runtime_error("mvt_min_zoom_road_class doesn't accept descending zoom levels");
+    }
+    ++i;
+  }
+  if (i != max_road_classes) {
+    throw std::runtime_error(
+        std::format("mvt_min_zoom_road_class out of bounds, expected {} elements but got {}",
+                    max_road_classes, i));
+  }
+
+  mvt_headers.emplace_back("Cache-Control",
+                           std::format("public, max-age={}",
+                                       config.get<std::string>("loki.service_defaults.mvt_max_age",
+                                                               kDefaultMaxAge.data())));
+
   // Build max_locations and max_distance maps
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
-        kv.first == "max_exclude_polygons_length" ||
+        kv.first == "max_exclude_polygons_length" || kv.first == "max_exclude_polygons_vertices" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
         kv.first == "status" || kv.first == "allow_hard_exclusions" ||
         kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
         kv.first == "max_linear_cost_edges") {
       continue;
     }
-    if (kv.first != "trace") {
+    if (kv.first != "trace" && kv.first != "auto_pedestrian") {
       max_locations.emplace(kv.first,
                             config.get<size_t>("service_limits." + kv.first + ".max_locations"));
       if (kv.first == "centroid" && max_locations["centroid"] > 127)
@@ -237,6 +383,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                                                                ".max_matrix_location_pairs"));
     }
   }
+
+  // overwrite config value with hardcoded one since multi-location routes
+  // don't make sense for auto_pedestrian
+  max_locations.emplace("auto_pedestrian", 2);
   // this should never happen
   if (max_locations.empty()) {
     throw std::runtime_error("Missing max_locations configuration");
@@ -254,13 +404,21 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     throw std::runtime_error("Missing max_matrix_location_pairs configuration");
   }
 
-  min_transit_walking_dis =
-      config.get<size_t>("service_limits.pedestrian.min_transit_walking_distance");
-  max_transit_walking_dis =
-      config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
+  // we renamed this parameter, but never had a default in code, so fall back to the old name
+  auto val = config.get_optional<size_t>("service_limits.pedestrian.min_multimodal_walking_distance");
+  if (!val)
+    val = config.get_optional<size_t>("service_limits.pedestrian.min_transit_walking_distance");
+  min_multimodal_walking_dist = *val;
+
+  val = config.get_optional<size_t>("service_limits.pedestrian.max_multimodal_walking_distance");
+  if (!val)
+    val = config.get_optional<size_t>("service_limits.pedestrian.max_transit_walking_distance");
+  max_multimodal_walking_dist = *val;
 
   max_exclude_locations = config.get<size_t>("service_limits.max_exclude_locations");
   max_exclude_polygons_length = config.get<float>("service_limits.max_exclude_polygons_length");
+  max_exclude_polygons_vertices =
+      config.get<size_t>("service_limits.max_exclude_polygons_vertices", 100);
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");
@@ -284,6 +442,12 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
+  min_linear_cost_factor = config.get<double>("service_limits.min_linear_cost_factor", 1.0);
+  max_linear_cost_edges = config.get<uint64_t>("service_limits.max_linear_cost_edges", 50000);
+  mvt_cache_dir_ = config.get<std::string>("loki.service_defaults.mvt_cache_dir", "");
+  if (!mvt_cache_dir_.empty() && !std::filesystem::exists(mvt_cache_dir_))
+    std::filesystem::create_directory(mvt_cache_dir_);
+  mvt_cache_min_zoom_ = config.get<uint32_t>("loki.service_defaults.mvt_cache_min_zoom");
 
   // signal that the worker started successfully
   started();
@@ -294,6 +458,9 @@ void loki_worker_t::cleanup() {
   if (reader->OverCommitted()) {
     reader->Trim();
   }
+  reader->ClearRetryableFailures();
+  bbox_intersection_.clear();
+  search_.clear();
 }
 
 void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
@@ -348,7 +515,6 @@ void loki_worker_t::check_hierarchy_distance(Api& request) {
     costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
   }
 }
-
 #ifdef ENABLE_SERVICES
 prime_server::worker_t::result_t
 loki_worker_t::work(const std::list<zmq::message_t>& job,
@@ -369,7 +535,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     const auto& options = request.options();
 
     // check there is a valid action
-    if (actions.find(options.action()) == actions.cend()) {
+    if (!actions[options.action()]) {
       throw valhalla_exception_t{106, action_str};
     }
 
@@ -419,6 +585,9 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         }
         result.messages.emplace_back(request.SerializeAsString());
         break;
+      case Options::tile:
+        result = to_response(render_tile(request), info, request, mvt_headers);
+        break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
         throw valhalla_exception_t{107};
@@ -441,7 +610,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
 void run_service(const boost::property_tree::ptree& config) {
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
-                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+                        config.get<unsigned int>("httpd.service.shutdown_seconds", 1));
 
   // gets requests from the http server
   auto upstream_endpoint = config.get<std::string>("loki.service.proxy") + "_out";
@@ -451,11 +620,9 @@ void run_service(const boost::property_tree::ptree& config) {
   auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
   auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
-  // listen for requests
-  zmq::context_t context;
   loki_worker_t loki_worker(config);
-  prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-                                interrupt_endpoint,
+  prime_server::worker_t worker(zmq_context(), upstream_endpoint, downstream_endpoint,
+                                loopback_endpoint, interrupt_endpoint,
                                 std::bind(&loki_worker_t::work, std::ref(loki_worker),
                                           std::placeholders::_1, std::placeholders::_2,
                                           std::placeholders::_3),

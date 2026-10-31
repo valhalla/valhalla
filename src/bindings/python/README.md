@@ -1,11 +1,11 @@
 ## Valhalla Python bindings
 
-[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/) [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)](https://pypi.org/project/pyvalhalla-weekly/)
+[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/)
 
-This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
+This folder ([`src/bindings/python`](https://github.com/valhalla/valhalla/tree/master/src/bindings/python)) contains the Python bindings for the [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
 > [!NOTE]
-> `pyvalhalla(-weekly)` packages are currently only published for:
+> `pyvalhalla` packages are currently only published for:
 > - `linux-x86_x64`
 > - `linux-aarch64`
 > - `win-amd64`
@@ -17,9 +17,6 @@ On top of the (very) high-level Python bindings, we package some data-building V
 
 We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`/`aarch64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. To install on Python < 3.12, make sure to install the system dependencies as described in [the docs](https://valhalla.github.io/valhalla/building/#platform-specific-builds) before trying a `pip install pyvalhalla`.
 
-`pip install pyvalhalla` to install the most recent Valhalla **release**.  
-`pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
-
 Or manually in the current Python environment with e.g.
 
 ```shell
@@ -27,7 +24,6 @@ git clone https://github.com/valhalla/valhalla
 cd valhalla
 pip install .
 ```
-
 
 In case you need to do a source installation (from `sdist`), follow the [build instructions](https://valhalla.github.io/valhalla/building/) for your platform to install the needed dependencies. Then a simple `pip install pyvalhalla` should work fine for Linux/OSX. On Windows one needs to install C++ developer tools, see also below in the developer notes for external `vcpkg` usage to resolve dependencies.
 
@@ -60,6 +56,10 @@ In case you need to do a source installation (from `sdist`), follow the [build i
 >
 > Both commands have to repeated for each build.
 
+#### Typing support
+
+We (try to) include full typing support for pyvalhalla. If you're using `mypy` with strict typing policies, you'll need to install pyvalhalla appropriately with `pip install pyvalhalla[typing]`.
+
 ### Usage
 
 #### Bindings
@@ -89,7 +89,96 @@ actor = Actor(config)
 route = actor.route({"locations": [...]})
 ```
 
+#### Error Handling
+
+When a routing operation fails, a `ValhallaError` is raised (a subclass of `RuntimeError`) with structured fields from Valhalla's internal error codes:
+
+```python
+from valhalla import Actor, ValhallaError, get_config
+
+actor = Actor(get_config(tile_extract='./valhalla_tiles.tar'))
+
+try:
+    actor.route({"locations": [{"lat": 0.0, "lon": 0.0}, {"lat": 0.1, "lon": 0.1}], "costing": "auto"})
+except ValhallaError as e:
+    print(e.code)          # 171
+    print(e.message)       # "No suitable edges near location"
+    print(e.http_code)     # 400
+    print(e.http_message)  # "Bad Request"
+```
+
+#### Graph Utilities
+
+Access to low-level graph data structures for advanced use cases:
+
+```python
+from valhalla.baldr import GraphId
+from valhalla.baldr.utils import GraphUtils
+
+# Create a GraphId from its string representation or numeric value
+edge_id = GraphId("2/421920/20")  # format: "level/tileid/id"
+# or
+edge_id = GraphId(674464020)
+
+# Initialize GraphUtils with config (reuse for multiple queries)
+# Accepts: file path (str/Path), JSON string, or dict
+config = "/path/to/valhalla.json"
+# or dict config
+config = {"mjolnir": {"tile_extract": "/path/to/tiles.tar"}}
+graph = GraphUtils(config)
+
+# Get the polyline geometry for an edge
+shape = graph.get_edge_shape(edge_id)
+
+# shape is a list of (lon, lat) tuples
+print(f"Edge has {len(shape)} coordinate points")
+for lon, lat in shape:
+    print(f"  ({lon:.6f}, {lat:.6f})")
+
+# Convert to GeoJSON LineString
+geojson = {
+    "type": "Feature",
+    "geometry": {
+        "type": "LineString",
+        "coordinates": [[lon, lat] for lon, lat in shape]
+    }
+}
+```
+
+#### Speed Compression Utilities
+
+Valhalla uses DCT-2 (Discrete Cosine Transform) to compress historical speed profiles. These utilities allow you to work with compressed speed data:
+
+```python
+import numpy as np
+from valhalla.baldr.utils import (
+    compress_speed_buckets,
+    decompress_speed_bucket,
+    encode_compressed_speeds,
+    decode_compressed_speeds,
+    BUCKETS_PER_WEEK,
+    COEFFICIENT_COUNT,
+)
+
+# Compress 2016 speed buckets (7 days × 288 five-minute intervals)
+speeds = np.full(BUCKETS_PER_WEEK, 50.0, dtype=np.float32)  # 50 KPH constant
+coefficients = compress_speed_buckets(speeds)
+
+# Decompress a specific bucket (e.g., Monday 10:00 AM)
+bucket_idx = 120  # (24 hours × 12 buckets/hour) × 0 days + 10 × 12
+speed = decompress_speed_bucket(coefficients, bucket_idx)
+
+# Encode coefficients for storage/transmission
+encoded = encode_compressed_speeds(coefficients)
+print(f"Compressed to {len(encoded)} characters")
+
+# Decode from string
+coefficients_restored = decode_compressed_speeds(encoded)
+```
+
 #### Valhalla executables
+
+##### C++ executables
 
 To access the C++ (native) executables, there are 2 options:
 
@@ -109,6 +198,16 @@ There are also some additional commands we added:
 
 To find out which Valhalla executables are currently included, run `python -m valhalla --help`. We limit the number of executables to control the wheel size. However, we're open to include any other executable if there's a good reason.
 
+##### Pure Python scripts
+
+The following tools are implemented in pure Python and installed as console scripts:
+
+- `valhalla_build_config`: Generate or merge Valhalla configuration JSON files
+- `valhalla_build_elevation`: Download elevation (DEM) tiles for a given region
+- `valhalla_build_extract`: Create tar extracts from routing tiles
+
+These are invoked directly, e.g. `valhalla_build_config -h` or `valhalla_build_extract -h`. They do **not** go through the `python -m valhalla` module mechanism.
+
 ### Building from source
 
 Note, building the bindings from source is usually best done by building Valhalla with `cmake -B build -DENABLE_PYTHON_BINDING=ON ...`. However, if you want to package your own `pyvalhalla` bindings for some reason (e.g. fork in a bigger team), you can follow the below instructions, which are also executed by our CI.
@@ -116,6 +215,12 @@ Note, building the bindings from source is usually best done by building Valhall
 The Python build respects a few CMake configuration variables:
 
 - `VALHALLA_VERSION_MODIFIER` (optional): Will append a string to the actual Valhalla version string, e.g. `$(git rev-parse --short HEAD)` will append the current branch's commit hash.
+
+#### Type stubs (`.pyi`)
+
+The `.pyi` files alongside each compiled module are **auto-generated by `nanobind_add_stub` from the C++ bindings** — do not edit by hand. They refresh on every build with `-DENABLE_PYTHON_BINDINGS=On`; a CI guard fails if the committed stubs drift from the live bindings. To regenerate manually: `./scripts/regenerate_python_stubs.sh <build-dir>`.
+
+Docstring placement: prose for a class/method that has a Python wrapper (e.g. `Actor`, `Actor.route`) lives as a string literal in the Python wrapper file — intellisense tools don't work well with that level of abstraction. Prose for things **without** a Python wrapper (e.g. `ValhallaError`, free functions in `_graph_utils` and `predicted_speeds`) stays in the C++ `.def(...)` / `nb::class_(...)` arg, where stubgen picks it up for the `.pyi`.
 
 #### `cibuildwheel`
 
@@ -162,6 +267,22 @@ docker exec -t valhalla-py /valhalla-py/src/bindings/python/scripts/build_manyli
 
 This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.13 installations.
 
-### Testing (**`linux` only**)
+### Testing
+
+#### Test wheel (**`linux` only**)
 
 We have a small [test script](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/test/test_pyvalhalla_package.sh) which makes sure that all the executables are working properly. If run locally for some reason, install a `pyvalhalla` wheel first. We run this in CI in a fresh Docker container with no dependencies installed, mostly to verify dynamic linking of the vendored dependencies.
+
+#### Running the unit tests locally
+
+The binding tests live in `test/bindings/python/`. The tile-dependent ones read `test/bindings/python/valhalla.json`, whose `tile_dir` points at `test/data/utrecht_tiles`, so one needs to execute the tests in the build directory:
+
+```shell
+# build the tile fixture once (needs ENABLE_DATA_TOOLS=ON)
+cmake --build build/Release --target utrecht_tiles -j$(nproc)
+
+# run from the build dir so test/data/utrecht_tiles/* resolves there
+( cd <build_dir> && python -m unittest discover -s ../../test/bindings/python -v )
+```
+
+The CMake target `run-python_valhalla` is the canonical entry point.

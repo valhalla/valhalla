@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -476,6 +477,15 @@ public:
   virtual graph_tile_ptr GetGraphTile(const GraphId& graphid);
 
   /**
+   * Get a copy of a tile's header without loading the tile: reads it from the
+   * mmapped extract or the header span of the file in tile_dir. Gzipped and remote
+   * tiles fall back to GetGraphTile (and thus populate the cache).
+   * @param graphid  the graphid of the tile
+   * @return the tile's header, or nullopt if the tile is not found
+   */
+  std::optional<GraphTileHeader> GetGraphTileHeader(const GraphId& graphid);
+
+  /**
    * Get a pointer to a graph tile object given a GraphId. This method also
    * supplies the current graph tile - so if the same tile is requested in
    * succession it does not have to look up the tile in the cache.
@@ -484,7 +494,7 @@ public:
    * @return graph_tile_ptr& reference to the tile parameter
    */
   graph_tile_ptr& GetGraphTile(const GraphId& graphid, graph_tile_ptr& tile) {
-    return !tile || tile->id() != graphid.Tile_Base() ? tile = GetGraphTile(graphid) : tile;
+    return !tile || tile->id() != graphid.tile_base() ? tile = GetGraphTile(graphid) : tile;
   }
 
   /**
@@ -495,7 +505,7 @@ public:
    */
   graph_tile_ptr GetGraphTile(const midgard::PointLL& pointll, const uint8_t level) {
     GraphId id = TileHierarchy::GetGraphId(pointll, level);
-    return id.Is_Valid() ? GetGraphTile(id) : nullptr;
+    return id.is_valid() ? GetGraphTile(id) : nullptr;
   }
 
   /**
@@ -522,6 +532,11 @@ public:
   virtual void Trim() {
     cache_->Trim();
   }
+
+  /**
+   * Lets downloads that failed with a retryable status be tried again
+   */
+  void ClearRetryableFailures();
 
   /**
    * Returns the maximum number of threads that can
@@ -607,7 +622,7 @@ public:
    */
   const DirectedEdge* GetOpposingEdge(const GraphId& edgeid, graph_tile_ptr& opp_tile) {
     GraphId oppedgeid = GetOpposingEdgeId(edgeid, opp_tile);
-    return oppedgeid.Is_Valid() ? opp_tile->directededge(oppedgeid) : nullptr;
+    return oppedgeid.is_valid() ? opp_tile->directededge(oppedgeid) : nullptr;
   }
 
   /**
@@ -784,7 +799,7 @@ public:
    *         the one containing edgeid
    */
   std::pair<GraphId, GraphId> GetDirectedEdgeNodes(const GraphId& edgeid, graph_tile_ptr& edge_tile) {
-    if (edge_tile && edge_tile->id().Tile_Base() == edgeid.Tile_Base()) {
+    if (edge_tile && edge_tile->id().tile_base() == edgeid.tile_base()) {
       return GetDirectedEdgeNodes(edge_tile, edge_tile->directededge(edgeid));
     } else {
       edge_tile = GetGraphTile(edgeid);
@@ -829,7 +844,7 @@ public:
    */
   GraphId edge_startnode(const GraphId& edgeid, graph_tile_ptr& tile) {
     GraphId opp_edgeid = GetOpposingEdgeId(edgeid, tile);
-    if (opp_edgeid.Is_Valid()) {
+    if (opp_edgeid.is_valid()) {
       const auto de = directededge(opp_edgeid, tile);
       if (de) {
         return de->endnode();
@@ -978,8 +993,6 @@ protected:
     uint64_t checksum;
   };
   std::shared_ptr<const tile_extract_t> tile_extract_;
-  static std::shared_ptr<const GraphReader::tile_extract_t>
-  get_extract_instance(const boost::property_tree::ptree& pt);
 
   // Information about where the tiles are kept
   const std::string tile_dir_;
@@ -990,7 +1003,8 @@ protected:
   const std::string tile_url_;
   const std::filesystem::path url_id_txt_path_;
   const bool is_tar_url_;
-  const uint64_t url_id_txt_checksum_;
+  // tileset build id recorded in id.txt; unset until the first downloaded tile establishes it
+  const std::optional<uint64_t> url_id_txt_checksum_;
 
   // for remote tar's we grab the index.bin when loading the remote_tar_offsets
   // so we know all tiles' offset & size
@@ -1003,22 +1017,24 @@ protected:
   // loads the remote index.bin into remote_tar_offsets_
   void load_remote_tar_offsets();
 
-  std::mutex _404s_lock;
-  std::unordered_set<GraphId> _404s;
+  // failed downloads and their HTTP status
+  std::mutex failed_downloads_lock_;
+  std::unordered_map<GraphId, long> failed_downloads_;
 
   std::unique_ptr<TileCache> cache_;
 
   bool enable_incidents_;
 
   /**
-   * Loads the tile_dir/id.txt URL & MD5 hash and validates whether the URLs match
+   * Loads the tile_dir/id.txt, validates its URL matches the configured one, and returns the build
+   * id on the 2nd line.
    *
    * @param id_txt_path the filesystem::path to the id.txt
    * @param tile_url    the tile url in the config to match to the one in id.txt
-   * @return the checksum on the 2nd line of id.txt
+   * @return the build id on the 2nd line of id.txt, or nullopt if id.txt has none yet
    */
-  uint64_t load_id_txt_checksum(const std::filesystem::path& id_txt_path,
-                                const std::string& tile_url);
+  std::optional<uint64_t> load_id_txt_checksum(const std::filesystem::path& id_txt_path,
+                                               const std::string& tile_url);
 };
 
 class LimitedGraphReader {

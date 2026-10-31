@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHTILEHEADER_H_
 #define VALHALLA_BALDR_GRAPHTILEHEADER_H_
 
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/midgard/logging.h>
@@ -18,7 +19,7 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 11;
+constexpr size_t kEmptySlots = 10;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -246,6 +247,17 @@ public:
       LOG_ERROR("Tile exceeded maximum directededge count: " + std::to_string(count));
     }
     directededgecount_ = count;
+  }
+
+  /**
+   * Checks for the presence of bounding circles.
+   *
+   * @return false if the bounding circle offset is
+   * either 0 or equal to the overall tile size (during early Valhalla 3.x versions, unused offset
+   * slots were set to tile_size), else true.
+   */
+  bool has_bounding_circles() const {
+    return boundingcircles_offset_ != 0 && boundingcircles_offset_ != tile_size_;
   }
 
   /**
@@ -585,31 +597,56 @@ public:
   }
 
   /**
-   * Get the checksum hash of the tile
-   * @return return the 64bit hash of tile's input checksum
+   * Get the offset to the start of the bounding circles
+   * @return the byte offset to the start of the bounding circles
    */
-  uint64_t checksum() const {
-    return checksum_;
+  uint32_t bounding_circle_offset() const {
+    return boundingcircles_offset_ == tile_size_ ? 0 : boundingcircles_offset_;
   }
 
   /**
-   * Sets the checksum hash of the tile
-   * @param checksum the 64bit hash for tile's input checksum
+   * Sets the offset to the start of the bounding circles
+   * @param offset the offset in bytes to the beginning of the bounding circles
    */
-  void set_checksum(uint64_t checksum) {
+  void set_bounding_circle_offset(uint32_t offset) {
+    boundingcircles_offset_ = offset;
+  }
+
+  /**
+   * Get the per-tile data hash, the low bits of checksum_. Unique per tile but reproducible across
+   * builds of the same data.
+   * @return the 48-bit hash of the tile's data
+   */
+  uint64_t tile_checksum() const {
+    return checksum_ & ((uint64_t(1) << kTileHashBits) - 1);
+  }
+
+  /**
+   * Sets the raw checksum_ field:
+   * build id packed in the high bits, per-tile data hash in the low bits.
+   * @param checksum the 64bit value for the tile's checksum_
+   */
+  void set_raw_checksum(uint64_t checksum) {
     checksum_ = checksum;
   }
 
+  /**
+   * Returns the tileset build id packed into the high bits of checksum_.
+   * It stays the same across every tile of a build.
+   */
+  uint16_t build_id() const {
+    return static_cast<uint16_t>(checksum_ >> kTileHashBits);
+  }
+
 protected:
-  // TODO when c++20 bitfields can be initialized here
   // GraphId (tileid and level) of this tile. Data quality metrics.
-  uint64_t graphid_ : 46;
-  uint64_t density_ : 4;
-  uint64_t name_quality_ : 4;
-  uint64_t speed_quality_ : 4;
-  uint64_t exit_quality_ : 4;
-  uint64_t has_elevation_ : 1;        // Does this tile have elevation data
-  uint64_t has_ext_directededge_ : 1; // Does this tile have extended directed edge data
+  uint64_t graphid_ : 46 = 0;
+  uint64_t density_ : 4 = 0;
+  uint64_t name_quality_ : 4 = 0;
+  uint64_t speed_quality_ : 4 = 0;
+  uint64_t exit_quality_ : 4 = 0;
+  uint64_t has_elevation_ : 1 = 0;        // Does this tile have elevation data
+  uint64_t has_ext_directededge_ : 1 = 0; // Does this tile have extended directed edge data
 
   // TODO: in v4, don't store this its superfluous information, the graphid has all we need
   // Base lon, lat of the tile
@@ -623,33 +660,33 @@ protected:
 
   // Record counts (for fixed size records). Node and directed edge have a max of
   // kMaxGraphId which is 21 bits.
-  uint64_t nodecount_ : 21;             // Number of nodes
-  uint64_t directededgecount_ : 21;     // Number of directed edges
-  uint64_t predictedspeeds_count_ : 21; // Number of predictive speed records
-  uint64_t spare1_ : 1;
+  uint64_t nodecount_ : 21 = 0;             // Number of nodes
+  uint64_t directededgecount_ : 21 = 0;     // Number of directed edges
+  uint64_t predictedspeeds_count_ : 21 = 0; // Number of predictive speed records
+  uint64_t spare1_ : 1 = 0;
 
   // Currently there can only be twice as many transitions as there are nodes,
   // but in practice the number should be much less.
-  uint32_t transitioncount_ : 22; // Number of node transitions
-  uint32_t spare3_ : 10;          // TODO: DELETE ME IN V4
-  uint32_t turnlane_count_ : 21;  // Number of turnlane records
-  uint32_t spare4_ : 11;          // TODO: DELETE ME IN V4
-  uint64_t transfercount_ : 16;   // Number of transit transfer records
-  uint64_t spare2_ : 7;
+  uint32_t transitioncount_ : 22 = 0; // Number of node transitions
+  uint32_t spare3_ : 10 = 0;          // TODO: DELETE ME IN V4
+  uint32_t turnlane_count_ : 21 = 0;  // Number of turnlane records
+  uint32_t spare4_ : 11 = 0;          // TODO: DELETE ME IN V4
+  uint64_t transfercount_ : 16 = 0;   // Number of transit transfer records
+  uint64_t spare2_ : 7 = 0;
 
   // Number of transit records
-  uint64_t departurecount_ : 24;
-  uint64_t stopcount_ : 16;
-  uint64_t spare5_ : 1; // TODO: DELETE ME IN V4
-  uint64_t routecount_ : 12;
-  uint64_t schedulecount_ : 12;
+  uint64_t departurecount_ : 24 = 0;
+  uint64_t stopcount_ : 16 = 0;
+  uint64_t spare5_ : 1 = 0; // TODO: DELETE ME IN V4
+  uint64_t routecount_ : 12 = 0;
+  uint64_t schedulecount_ : 12 = 0;
 
   // Counts
-  uint64_t signcount_ : 24;                // Number of signs
-  uint64_t spare6_ : 16;                   // TODO: DELETE ME IN V4
-  uint64_t access_restriction_count_ : 24; // Number of access restriction records
-  uint64_t admincount_ : 16;               // Number of admin records
-  uint64_t spare7_ : 24;                   // TODO: DELETE ME IN V4
+  uint64_t signcount_ : 24 = 0;                // Number of signs
+  uint64_t spare6_ : 16 = 0;                   // TODO: DELETE ME IN V4
+  uint64_t access_restriction_count_ : 24 = 0; // Number of access restriction records
+  uint64_t admincount_ : 16 = 0;               // Number of admin records
+  uint64_t spare7_ : 24 = 0;                   // TODO: DELETE ME IN V4
 
   // Note all of the comments about deleting spare in v4
   // There are typos in the bitfield containing spare2_ above
@@ -701,6 +738,9 @@ protected:
 
   // GraphTile data size in bytes
   uint32_t tile_size_ = 0;
+
+  // Offset to the start of the bounding circles; 0 means no bounding circles are present
+  uint32_t boundingcircles_offset_ = 0;
 
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,

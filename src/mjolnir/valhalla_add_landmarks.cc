@@ -27,10 +27,8 @@ int main(int argc, char** argv) {
       ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
     // clang-format on
 
-    options.parse_positional({"input_files"});
-    options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, true))
       return EXIT_SUCCESS;
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
