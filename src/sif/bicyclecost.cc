@@ -678,7 +678,6 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->use() == Use::kLivingStreet) {
     roadway_stress = livingstreet_factor_;
   } else if (edge->use() == Use::kCycleStreet) {
-    // cars are only guests here, so road class and speed add no stress
     roadway_stress = cyclestreet_factor_;
   } else if (edge->use() == Use::kTrack) {
     roadway_stress = track_factor_;
@@ -962,7 +961,7 @@ namespace {
 
 class TestBicycleCost : public BicycleCost {
 public:
-  TestBicycleCost(const Costing& costing_options) : BicycleCost(costing_options){};
+  TestBicycleCost(const Costing& costing_options) : BicycleCost(costing_options) {};
 
   using BicycleCost::alley_penalty_;
   using BicycleCost::country_crossing_cost_;
