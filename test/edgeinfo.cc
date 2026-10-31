@@ -252,6 +252,19 @@ TEST(EdgeInfo, TaggedValueSize_ConditionalSpeedLimits) {
   EXPECT_EQ(size, tagged_value.size()) << "TaggedValueSize should match actual size";
 }
 
+TEST(EdgeInfo, TaggedValueSize_ReverseSpeedLimit) {
+  // ReverseSpeedLimit: tag byte + 1-byte speed limit + null terminator
+  std::string tagged_value;
+  tagged_value += static_cast<char>(TaggedValue::kReverseSpeedLimit);
+  tagged_value += static_cast<char>(80);
+  tagged_value += '\0'; // null terminator
+
+  size_t size = EdgeInfo::TaggedValueSize(tagged_value.data());
+
+  EXPECT_EQ(size, 3) << "ReverseSpeedLimit tagged value size mismatch";
+  EXPECT_EQ(size, tagged_value.size()) << "TaggedValueSize should match actual size";
+}
+
 TEST(EdgeInfo, TaggedValueSize_Linguistic) {
   // Linguistic: tag byte + multiple linguistic entries + null terminator
   std::string tagged_value;

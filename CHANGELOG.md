@@ -77,6 +77,7 @@
    * CHANGED: Rewrite conditional time range parsing without regex [#6230](https://github.com/valhalla/valhalla/pull/6230)
    * ADDED: `thor.costmatrix.dijkstra_distance` config parameter [#6257](https://github.com/valhalla/valhalla/pull/6257)
    * ADDED: support `linear_cost_factors` in `/sources_to_targets` and `/optimized_route` [#6329](https://github.com/valhalla/valhalla/pull/6329)
+   * ADDED: store the reverse speed limit as an `EdgeInfo` tagged value when `maxspeed:forward` and `maxspeed:backward` differ [#5983](https://github.com/valhalla/valhalla/pull/5983)
 
 ## Release Date: 2026-07-24 Valhalla 3.8.3
 * **Removed**

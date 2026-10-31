@@ -155,12 +155,12 @@ public:
   }
 
   /**
-   * Gets the speed limit in KPH.
+   * Gets the speed limit in KPH for one direction of travel.
+   * @param forward  Direction relative to the stored shape, i.e. DirectedEdge::forward(). The
+   *                 reverse direction falls back to the forward limit when no tag is stored.
    * @return  Returns the speed limit in KPH.
    */
-  uint32_t speed_limit() const {
-    return ei_.speed_limit_;
-  }
+  uint32_t speed_limit(const bool forward) const;
 
   /**
    * Does this EdgeInfo have elevation data.
@@ -322,9 +322,10 @@ public:
 
   /**
    * the json representation of the object
-   * @param writer The writer json object to represent the edge info
+   * @param writer  The writer json object to represent the edge info
+   * @param forward Direction relative to the stored shape for the speed limit, see speed_limit()
    */
-  void json(rapidjson::writer_wrapper_t& writer) const;
+  void json(rapidjson::writer_wrapper_t& writer, const bool forward) const;
 
   // Operator EqualTo based on nodea and nodeb.
   bool operator==(const EdgeInfo& rhs) const;

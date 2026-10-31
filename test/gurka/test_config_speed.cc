@@ -199,7 +199,7 @@ TEST(Standalone, DefaultSpeedConfig) {
       if (edge.link() && !(edge.forwardaccess() & baldr::kVehicularAccess))
         continue;
 
-      int diff = info.speed_limit() - edge.speed();
+      int diff = info.speed_limit(edge.forward()) - edge.speed();
       if (edge.use() == baldr::Use::kFerry || edge.use() == baldr::Use::kRailFerry)
         EXPECT_LT(diff, 0)
             << name << " should have had a negative difference in speed limit and default speed";
@@ -352,7 +352,7 @@ TEST(Standalone, SuburbanSpeedConfig) {
       if (edge.link() && !(edge.forwardaccess() & baldr::kVehicularAccess))
         continue;
 
-      int diff = info.speed_limit() - edge.speed();
+      int diff = info.speed_limit(edge.forward()) - edge.speed();
       if (edge.use() == baldr::Use::kFerry || edge.use() == baldr::Use::kRailFerry)
         EXPECT_LT(diff, 0)
             << name << " should have had a negative difference in speed limit and default speed";
