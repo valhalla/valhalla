@@ -2,6 +2,7 @@
 * **Removed**
 * **Enhancement**
    * CHANGED: replace `memset` with C++20 default member initializers for bitfields in `DirectedEdge`, `NodeInfo`, and `GraphTileHeader`; drop empty default constructors where possible [#6128](https://github.com/valhalla/valhalla/issues/6128)
+   * ADDED: slight preference for `kCycleStreet` in bicycle costing [#6452](https://github.com/valhalla/valhalla/pull/6452) 
 * **Bug Fix**
    * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
