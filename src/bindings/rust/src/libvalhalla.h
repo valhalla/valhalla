@@ -62,8 +62,8 @@ inline rust::Slice<const valhalla::baldr::NodeInfo> nodes(const valhalla::baldr:
 
 inline rust::Slice<const valhalla::baldr::DirectedEdge>
 node_edges(const valhalla::baldr::GraphTile& tile, const valhalla::baldr::NodeInfo& node) {
-  auto slice = tile.GetDirectedEdges(&node);
-  return rust::Slice(slice.data(), slice.size());
+  auto edges = tile.GetDirectedEdges();
+  return rust::Slice(edges.data() + node.edge_index(), node.edge_count());
 }
 
 inline rust::Slice<const valhalla::baldr::NodeTransition>
