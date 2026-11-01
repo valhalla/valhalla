@@ -46,7 +46,7 @@ fn edgeinfo(c: &mut Criterion) {
 }
 
 fn write_traffic(c: &mut Criterion) {
-    // the C++ tests use the same traffic.tar, so write to a copy
+    // other tests read the same traffic.tar, so write to a copy
     let traffic_copy = tempfile::NamedTempFile::new().unwrap();
     std::fs::copy(UTRECHT_TRAFFIC, traffic_copy.path()).unwrap();
     let config = ConfigBuilder {

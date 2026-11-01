@@ -78,7 +78,7 @@ fn graph_tile_can_outlive_reader() {
 
 #[test]
 fn traffic_tile_can_outlive_reader() {
-    // the C++ tests use the same traffic.tar, so write to a copy
+    // other tests read the same traffic.tar, so write to a copy
     let traffic_copy = tempfile::NamedTempFile::new().unwrap();
     std::fs::copy(utrecht_tiles("traffic.tar"), traffic_copy.path()).unwrap();
     let reader = utrecht_reader(traffic_copy.path().to_str().unwrap());
