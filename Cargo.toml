@@ -85,12 +85,12 @@ proto = ["dep:prost", "dep:prost-build"]
 [dependencies]
 bitflags = "2"
 # Lock to specific version to avoid accidentally upgrading to a version that somehow breaks compatibility.
-cxx = { version = "=1.0.203", features = ["c++20"] }
+cxx = { version = "=1.0.205", features = ["c++20"] }
 prost = { version = "0.14", optional = true }
 
 [build-dependencies]
 cmake = "0.1"
-cxx-build = "=1.0.203"
+cxx-build = "=1.0.205"
 miniserde = "0.1"    # For compile_commands.json parsing
 pkg-config = "0.3"
 prost-build = { version = "0.14", optional = true }
@@ -99,7 +99,7 @@ prost-build = { version = "0.14", optional = true }
 miniserde = "0.1"
 pretty_assertions = "1"
 tempfile = { version = "3", default-features = false }
-criterion = { version = "0.7", default-features = false }
+criterion = { version = "0.8", default-features = false }
 
 [[test]]
 name = "actor_test"
