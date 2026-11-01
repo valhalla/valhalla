@@ -154,9 +154,9 @@ std::unique_ptr<Actor> new_actor(const boost::property_tree::ptree& config) {
   return std::make_unique<Actor>(config);
 }
 
-std::unique_ptr<std::string> parse_json_request(rust::Str json, int action) {
+std::unique_ptr<std::string> parse_json_api(rust::Str json, int action) {
   valhalla::Api api;
   valhalla::ParseApi(static_cast<std::string>(json), static_cast<valhalla::Options::Action>(action),
                      api);
-  return std::make_unique<std::string>(api.options().SerializeAsString());
+  return std::make_unique<std::string>(api.SerializeAsString());
 }

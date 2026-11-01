@@ -347,3 +347,42 @@ fn parse_api() {
         panic!("Expected JSON response, got: {response:?}");
     };
 }
+
+#[test]
+fn parse_json_api_warnings() {
+    // `use_highways` is out of its [0, 1] range, so Valhalla replaces it with the default and warns about it
+    let json = r#"{"costing":"auto","costing_options":{"auto":{"use_highways":2}},"locations":[{"lat":52.08946,"lon":5.11006},{"lat":52.09068,"lon":5.12136}]}"#;
+    let api =
+        Actor::parse_json_api(json, proto::options::Action::Route).expect("Failed to parse API");
+
+    let warnings = api
+        .info
+        .as_ref()
+        .map(|info| info.warnings.as_slice())
+        .unwrap_or_default();
+    assert!(
+        warnings
+            .iter()
+            .any(|w| w.code == 500 && w.description.contains("use_highways")),
+        "Expected a warning about use_highways, got: {warnings:?}"
+    );
+
+    let options = api.options.expect("Expected options to be present");
+    let auto_costings = match options
+        .costings
+        .get(&(proto::costing::Type::Auto as i32))
+        .and_then(|costing| costing.has_options.as_ref())
+    {
+        Some(proto::costing::HasOptions::Options(auto_costings)) => auto_costings,
+        _ => panic!("Expected auto costing options to be present"),
+    };
+    assert_eq!(
+        auto_costings.has_use_highways,
+        Some(proto::costing::options::HasUseHighways::UseHighways(0.5))
+    );
+
+    // Same options, without the warnings
+    let request = Actor::parse_json_request(json, proto::options::Action::Route)
+        .expect("Failed to parse request");
+    assert_eq!(request, options);
+}
