@@ -38,7 +38,7 @@ TEST(Traffic, TileConstruction) {
       std::make_unique<UnmanagedGraphMemory>(reinterpret_cast<char*>(&testdata), sizeof(TestTile));
   TrafficTile tile(std::move(memory));
 
-  auto const volatile& speed = tile.trafficspeed(2);
+  auto speed = tile.trafficspeed(2);
   EXPECT_TRUE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
   EXPECT_EQ(speed.get_overall_speed(), 98);
@@ -49,7 +49,7 @@ TEST(Traffic, TileConstruction) {
   EXPECT_EQ(3, TRAFFIC_TILE_VERSION);
   // Test with an invalid version
   testdata.header.traffic_tile_version = 78;
-  auto const volatile& invalid_speed = tile.trafficspeed(2);
+  auto invalid_speed = tile.trafficspeed(2);
   EXPECT_FALSE(invalid_speed.speed_valid());
 }
 
@@ -57,7 +57,7 @@ TEST(Traffic, NullTileConstruction) {
   using namespace valhalla::baldr;
   TrafficTile tile(nullptr); // Should not segfault
 
-  auto volatile& speed = tile.trafficspeed(99);
+  auto speed = tile.trafficspeed(99);
   EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 }
