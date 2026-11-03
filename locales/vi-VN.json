@@ -176,8 +176,8 @@
         "3": "<DESTINATION> nằm ở <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "trái",
-        "phải"
+        "bên trái",
+        "bên phải"
       ]
     },
     "destination_verbal": {
@@ -188,8 +188,8 @@
         "3": "<DESTINATION> nằm ở <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "trái",
-        "phải"
+        "bên trái",
+        "bên phải"
       ]
     },
     "destination_verbal_alert": {
@@ -200,8 +200,8 @@
         "3": "<DESTINATION> sẽ nằm ở <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "trái",
-        "phải"
+        "bên trái",
+        "bên phải"
       ]
     },
     "elevator": {
