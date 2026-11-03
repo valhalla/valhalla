@@ -405,6 +405,9 @@ struct graph_parser {
         case Use::kSteps:
           way_.set_use(Use::kSteps);
           break;
+        case Use::kLadder:
+          way_.set_use(Use::kLadder);
+          break;
         case Use::kEscalator:
           way_.set_use(Use::kEscalator);
           break;
