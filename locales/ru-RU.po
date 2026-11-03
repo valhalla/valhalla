@@ -2518,7 +2518,7 @@ msgstr "север"
 
 msgctxt "instructions.start_verbal.replacement.cardinal_directions.1"
 msgid "northeast"
-msgstr "северо-запад"
+msgstr "северо-восток"
 
 msgctxt "instructions.start_verbal.replacement.cardinal_directions.2"
 msgid "east"
