@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
+
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
 #endif
@@ -661,7 +663,7 @@ TEST_F(DestinationOnlyZones, ReverseSearchAddsPenaltyOnceOnZoneEntry) {
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   // the reverse search labels the opposing edges, so check both directions
   auto cost_of = [&](const std::string& a, const std::string& b) {
-    for (const auto& ends : {std::pair{a, b}, std::pair{b, a}}) {
+    for (const auto& ends : std::array{std::pair{a, b}, std::pair{b, a}}) {
       auto id = static_cast<uint64_t>(
           std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, ends.first, ends.second)));
       auto found = costs.find(id);

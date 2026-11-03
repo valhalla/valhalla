@@ -462,6 +462,19 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   factor *= EdgeFactor(edgeid);
+  if (curvature_step_ > kNeutralCurvatureStep) {
+    uint32_t curvature =
+        (edge->use() != baldr::Use::kRoad || edge->link() || edge->roundabout() || edge->internal())
+            ? 0
+            : edge->curvature();
+    if (edge->density() < kCurvatureRuralDensity) {
+      factor *= kCurvatureFactor[curvature_step_][curvature];
+    } else if (edge->density() < kCurvatureUrbanDensity) {
+      factor *= suburban_curvature_factor_ * kCurvatureFactor[curvature_step_][curvature];
+    } else {
+      factor *= urban_curvature_factor_;
+    }
+  }
 
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
@@ -816,6 +829,25 @@ EXPECT_THAT(ctorTester->use_tolls , test::IsBetween(kUseTollsRange.min, kUseToll
    }
    **/
 }
+TEST(MotorcycleCost, testCurvatureFactorArray) {
+  for (uint32_t s = 0; s <= kNeutralCurvatureStep; s++) {
+    for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
+      EXPECT_EQ(kCurvatureFactor[s][c], 1.f);
+    }
+  }
+
+  for (uint32_t s = 0; s < kCurvatureSteps; s++) {
+    EXPECT_EQ(kCurvatureFactor[s][baldr::kMaxCurvatureFactor], 1.f);
+  }
+
+  for (uint32_t s = kNeutralCurvatureStep + 1; s < kCurvatureSteps; s++) {
+    for (uint32_t c = 0; c < baldr::kMaxCurvatureFactor; c++) {
+      EXPECT_GT(kCurvatureFactor[s][c], kCurvatureFactor[s][c + 1]);
+      EXPECT_GT(kCurvatureFactor[s][c], kCurvatureFactor[s - 1][c]);
+    }
+  }
+}
+
 } // namespace
 
 #endif

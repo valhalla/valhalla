@@ -108,10 +108,10 @@ void init_graphtile(nb::module_& m) {
           ring.push_back({x, y});
         }
 
+        nb::gil_scoped_release release;
         return valhalla::bindings::get_tile_ids_from_ring(std::move(ring), std::move(levels));
       },
       nb::arg("ring_coords"), nb::arg("levels") = std::vector<uint32_t>{},
-      nb::call_guard<nb::gil_scoped_release>(),
       "Returns all tile GraphIds for the specified levels (default: all),\n"
       "which intersect or are contained within the polygon ring. The ring is\n"
       "assumed and coerced to be an outer ring. It's automatically closed if\n"
