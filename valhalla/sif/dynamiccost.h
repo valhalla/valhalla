@@ -247,8 +247,8 @@ constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1
 
 constexpr uint32_t kCurvatureSteps = 21;
 constexpr uint32_t kNeutralCurvatureStep = kCurvatureSteps / 2;
-constexpr uint32_t kCurvatureRuralDensity = 3;
-constexpr uint32_t kCurvatureUrbanDensity = 7;
+constexpr uint32_t kCurvatureRuralDensity = 4;
+constexpr uint32_t kCurvatureUrbanDensity = 8;
 constexpr float kMaxStraightRoadFactor = 6.f;
 constexpr float kSuburbanCurvatureFactor = 0.1f;
 constexpr float kUrbanCurvatureFactor = 2.f;
