@@ -1408,14 +1408,22 @@ components:
               description: > 
                 A riders's desire for adventure in their routes.  This is a range of values from 0 to 1, where 0 will avoid trails, tracks, unclassified or bad surfaces and values towards 1 will 
                 tend to avoid major roads and route on secondary roads.
+            use_curvature:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+              description: >
+                This value indicates the preference for curvy roads over straight roads. Values above `0.5` increasingly penalize straight roads outside urban areas, roads in built-up areas,
+                up to `1` which strongly prefers curvy rural roads. Values of `0.5` and below have no effect.
             top_speed:
               type: integer
               minimum: 10
               maximum: 252
               default: 140
               description: >
-                Top speed the vehicle can go in km/h. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 km/h. The default value is 140 km/h 
-                for motorcycle. 
+                Top speed the vehicle can go in km/h. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 km/h. The default value is 140 km/h
+                for motorcycle.
             use_distance:
               type: number
               minimum: 0
