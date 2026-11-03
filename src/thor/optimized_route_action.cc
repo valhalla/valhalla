@@ -20,12 +20,11 @@ void thor_worker_t::optimized_route(Api& request) {
   auto costing = parse_costing(request);
   controller = AttributesController(options);
 
-  if (check_hierarchy_limits(mode_costing[int(mode)]->GetHierarchyLimits(), mode_costing[int(mode)],
+  const bool matrix_hierarchy_warning =
+      check_hierarchy_limits(mode_costing[int(mode)]->GetHierarchyLimits(), mode_costing[int(mode)],
                              options.costings().find(options.costing_type())->second.options(),
                              hierarchy_limits_config_costmatrix, allow_hierarchy_limits_modifications,
-                             mode_costing[int(mode)]->UseHierarchyLimits())) {
-    add_warning(request, allow_hierarchy_limits_modifications ? 210 : 209);
-  }
+                             mode_costing[int(mode)]->UseHierarchyLimits());
 
   costmatrix_.set_interrupt(interrupt);
   // Use CostMatrix to find costs from each location to every other location
@@ -66,6 +65,21 @@ void thor_worker_t::optimized_route(Api& request) {
 
   // run the route
   path_depart_at(request, costing);
+
+  // Avoid reporting the same hierarchy warning twice.
+  if (matrix_hierarchy_warning) {
+    const unsigned warning_code = allow_hierarchy_limits_modifications ? 210 : 209;
+    bool already_warned = false;
+    for (const auto& warning : request.info().warnings()) {
+      if (warning.code() == warning_code) {
+        already_warned = true;
+        break;
+      }
+    }
+    if (!already_warned) {
+      add_warning(request, warning_code);
+    }
+  }
 }
 
 } // namespace thor

@@ -309,7 +309,7 @@ TEST(StandAlone, Warnings) {
 
   // optimized route, disallowed customization
   result = gurka::do_action(valhalla::Options::optimized_route, map_no_mod, req);
-  ASSERT_FALSE(result.info().warnings().empty());
+  ASSERT_EQ(result.info().warnings().size(), 1);
   EXPECT_EQ(result.info().warnings(0).code(), 209);
 
   // double leg route, no customization
@@ -354,10 +354,8 @@ TEST(StandAlone, Warnings) {
 
   // optimized route, clamped customization
   result = gurka::do_action(valhalla::Options::optimized_route, map_mod, req);
-  ASSERT_FALSE(result.info().warnings().empty());
-  for (const auto& warning : result.info().warnings()) {
-    EXPECT_EQ(warning.code(), 210);
-  }
+  ASSERT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings(0).code(), 210);
 
   // single leg route, allowed customization
   req = std::format(R"({{
