@@ -788,7 +788,7 @@ struct bin_handler_t {
         }
 
         // record candidates for matching street name hint
-        if (pp.location->street_hint().empty() || c_itr->sq_distance < p_itr->sq_hint_radius) {
+        if (p_itr->location->street_hint().empty() || c_itr->sq_distance < p_itr->sq_hint_radius) {
           auto& hinted = p_itr->hint_pool.emplace_back();
           hinted.sq_distance = c_itr->sq_distance;
           hinted.distance = c_itr->distance;

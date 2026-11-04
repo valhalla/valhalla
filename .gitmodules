@@ -46,3 +46,6 @@
 [submodule "third_party/flatbush"]
 	path = third_party/flatbush
 	url = https://github.com/chusitoo/flatbush.git
+[submodule "third_party/utf8proc"]
+	path = third_party/utf8proc
+	url = https://github.com/JuliaStrings/utf8proc.git

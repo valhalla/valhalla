@@ -16,6 +16,7 @@ set(sources
   route_action.cc
   search.cc
   street_name.cc
+  street_name_extra.h
   tile_action.cc
   trace_route_action.cc
   worker.cc)
@@ -26,6 +27,7 @@ set(system_includes
 
 valhalla_module(NAME loki
   SOURCES ${sources}
+  SOURCES_WITH_WARNINGS ${utf8proc_dir}/utf8proc.c
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
@@ -41,6 +43,7 @@ valhalla_module(NAME loki
       ${unordered_dense_include_dir}
       ${vtzero_include_dirs}
       ${flatbush_include_dir}
+      ${utf8proc_dir}
   DEPENDS
     valhalla::meili
     valhalla::skadi
@@ -49,3 +52,5 @@ valhalla_module(NAME loki
     ${valhalla_protobuf_targets}
     Boost::boost
     ${libprime_server_targets})
+
+target_compile_definitions(valhalla-loki PRIVATE UTF8PROC_STATIC)

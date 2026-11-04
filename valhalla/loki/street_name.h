@@ -11,16 +11,22 @@ namespace valhalla {
 namespace loki {
 namespace street_name {
 
-// a hint is used iff some candidate within the hint radius scores at least this
-constexpr float kTau = 0.6f;
-
 // (name, is route number) as returned by EdgeInfo::GetNames(bool)
 using names_t = std::vector<std::pair<std::string, bool>>;
 
-// hint radius in meters for an edge density in [0, kMaxDensity]
-double hint_radius(uint32_t density);
+// a name reduced to comparable form. tokens keeps the word boundaries for the token-level rules,
+// stripped drops them, which is what makes `Hermannstrasse` and `Hermann Strasse` the same string
+struct normalized_t {
+  std::vector<std::u32string> tokens;
+  std::u32string stripped;
+};
 
-std::string normalize(std::string_view name);
+// lowercases, transliterates and splits on anything that isn't alphanumeric, used on both the hint
+// and the candidate names
+normalized_t normalize(std::string_view name);
+
+// the retry pass: collapses the digraphs people swap for the plain vowel, which loses information
+normalized_t collapse_digraphs(const normalized_t& light);
 
 // one score in [0, 1] per candidate, the max over its names. All candidates' names form the rarity
 // corpus, so a pool has to be scored as a whole.
